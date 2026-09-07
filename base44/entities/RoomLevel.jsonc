@@ -1,0 +1,20 @@
+{
+  "name": "RoomLevel",
+  "type": "object",
+  "properties": {
+    "room_id": "string",
+    "level": {
+      "type": "number",
+      "default": 1
+    },
+    "xp": {
+      "type": "number",
+      "default": 0
+    },
+    "tier": "string"
+  },
+  "required": [
+    "room_id",
+    "tier"
+  ]
+}

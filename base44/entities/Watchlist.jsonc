@@ -1,0 +1,12 @@
+{
+  "name": "Watchlist",
+  "type": "object",
+  "properties": {
+    "user_id": "string",
+    "movie_id": "string"
+  },
+  "required": [
+    "user_id",
+    "movie_id"
+  ]
+}

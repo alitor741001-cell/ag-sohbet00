@@ -1,0 +1,21 @@
+{
+  "name": "Notification",
+  "type": "object",
+  "properties": {
+    "user_id": "string",
+    "type": "string",
+    "title": "string",
+    "body": "string",
+    "link": "string",
+    "is_read": {
+      "type": "boolean",
+      "default": false
+    },
+    "ref_id": "string"
+  },
+  "required": [
+    "user_id",
+    "type",
+    "title"
+  ]
+}

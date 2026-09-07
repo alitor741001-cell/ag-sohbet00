@@ -1,0 +1,27 @@
+{
+  "name": "ChatMessage",
+  "type": "object",
+  "properties": {
+    "room_id": "string",
+    "user_id": "string",
+    "user_name": "string",
+    "user_avatar": "string",
+    "content": "string",
+    "type": {
+      "type": "string",
+      "enum": [
+        "text",
+        "system",
+        "emoji",
+        "gift"
+      ],
+      "default": "text"
+    },
+    "reply_to": "string"
+  },
+  "required": [
+    "room_id",
+    "user_id",
+    "user_name"
+  ]
+}

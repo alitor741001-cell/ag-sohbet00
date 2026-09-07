@@ -1,0 +1,25 @@
+{
+  "name": "XpFrame",
+  "type": "object",
+  "properties": {
+    "name": "string",
+    "label": "string",
+    "image_url": "string",
+    "min_level": {
+      "type": "number",
+      "default": 0
+    },
+    "color": "string",
+    "opening": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    }
+  },
+  "required": [
+    "name",
+    "label",
+    "image_url"
+  ]
+}

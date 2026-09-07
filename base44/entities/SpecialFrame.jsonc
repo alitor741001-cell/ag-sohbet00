@@ -1,0 +1,29 @@
+{
+  "name": "SpecialFrame",
+  "type": "object",
+  "properties": {
+    "name": "string",
+    "label": "string",
+    "image_url": "string",
+    "color": "string",
+    "opening": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    },
+    "group": {
+      "type": "string",
+      "default": "normal"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "name",
+    "label",
+    "image_url"
+  ]
+}

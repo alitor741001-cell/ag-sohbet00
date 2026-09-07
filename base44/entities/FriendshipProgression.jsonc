@@ -1,0 +1,20 @@
+{
+  "name": "FriendshipProgression",
+  "type": "object",
+  "properties": {
+    "friendship_id": "string",
+    "level": {
+      "type": "number",
+      "default": 0
+    },
+    "xp": {
+      "type": "number",
+      "default": 0
+    },
+    "frame_tier": "string"
+  },
+  "required": [
+    "friendship_id",
+    "frame_tier"
+  ]
+}

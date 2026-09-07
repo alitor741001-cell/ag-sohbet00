@@ -1,0 +1,19 @@
+{
+  "name": "UpdateAnnouncement",
+  "type": "object",
+  "properties": {
+    "version": "string",
+    "title": "string",
+    "body": "string",
+    "date": "string",
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "version",
+    "title",
+    "body"
+  ]
+}

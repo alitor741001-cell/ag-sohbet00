@@ -1,0 +1,28 @@
+{
+  "name": "Conversation",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "dm",
+        "group"
+      ],
+      "default": "dm"
+    },
+    "participants": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "last_message": "string",
+    "last_message_at": "string",
+    "room_id": "string"
+  },
+  "required": [
+    "last_message",
+    "last_message_at",
+    "room_id"
+  ]
+}

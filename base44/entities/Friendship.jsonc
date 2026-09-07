@@ -1,0 +1,25 @@
+{
+  "name": "Friendship",
+  "type": "object",
+  "properties": {
+    "user_id": "string",
+    "friend_id": "string",
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "accepted",
+        "blocked"
+      ],
+      "default": "pending"
+    },
+    "progression_level": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "user_id",
+    "friend_id"
+  ]
+}

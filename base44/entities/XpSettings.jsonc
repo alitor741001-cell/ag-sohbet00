@@ -1,0 +1,21 @@
+{
+  "name": "XpSettings",
+  "type": "object",
+  "properties": {
+    "xp_per_message": {
+      "type": "number",
+      "default": 1
+    },
+    "xp_per_room_join": {
+      "type": "number",
+      "default": 10
+    },
+    "level_thresholds": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    }
+  },
+  "required": []
+}

@@ -1,0 +1,25 @@
+{
+  "name": "PaymentMethod",
+  "type": "object",
+  "properties": {
+    "name": "string",
+    "type": {
+      "type": "string",
+      "enum": [
+        "shopier",
+        "stripe",
+        "manual"
+      ],
+      "default": "shopier"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "config": "string"
+  },
+  "required": [
+    "name",
+    "config"
+  ]
+}
