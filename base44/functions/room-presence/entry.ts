@@ -133,9 +133,13 @@ export default async function(req) {
           text: `${profileMeta}${frameMeta}${roleMeta}${titlePrefix}${entryName}odaya katıldı.`, type: 'system'
         });
       }
-      // Can Ablam rolündeki kullanıcı girince kalpli karşılama görseli göster
-      // (yönetici bile olsa bu rol varsa sadece kalp efektini göster)
-      if (me.display_role === 'can_ablam') {
+      // ADMİN KRALİÇESİ rolündeki kullanıcı girince pembe kalpli karşılama görseli göster
+      if (me.display_role === 'queen_admin') {
+        await base44.asServiceRole.entities.RoomMessage.create({
+          room_id, user_id: user.id, user_name: name, user_avatar: user.avatar || '',
+          text: '{{QUEEN_ADMIN_WELCOME}}', type: 'system'
+        });
+      } else if (me.display_role === 'can_ablam') {
         await base44.asServiceRole.entities.RoomMessage.create({
           room_id, user_id: user.id, user_name: name, user_avatar: user.avatar || '',
           text: '{{CAN_ABLAM_WELCOME}}', type: 'system'

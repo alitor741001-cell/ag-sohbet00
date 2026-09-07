@@ -30,6 +30,7 @@ import SubscriptionPrompt from '@/components/SubscriptionPrompt';
 import AdminRoomWelcome from '@/components/admin/AdminWelcomeSplash';
 import CanAblamWelcome from '@/components/player/CanAblamWelcome';
 import CanAbimWelcome from '@/components/player/CanAbimWelcome';
+import QueenAdminWelcome from '@/components/player/QueenAdminWelcome';
 
 export default function WatchParty() {
   const { id } = useParams();
@@ -79,7 +80,7 @@ export default function WatchParty() {
 
   const [roomNameEdit, setRoomNameEdit] = useState('');
   const [welcomeQueue, setWelcomeQueue] = useState([]);
-  const WELCOME_PRIORITY = { admin: 0, canAblam: 1, canAbim: 2 };
+  const WELCOME_PRIORITY = { queenAdmin: 0, admin: 1, canAblam: 2, canAbim: 3 };
   const enqueueWelcome = (type) => {
     setWelcomeQueue((q) => {
       if (q.includes(type)) return q;
@@ -143,6 +144,8 @@ export default function WatchParty() {
     base44.entities.RoomMessage.filter({ room_id: id }, '-created_date', 20)
       .then((items) => {
         const now = Date.now();
+        const queenRecent = items.find((m) => (m.text || '').includes('{{QUEEN_ADMIN_WELCOME}}') && now - new Date(m.created_date).getTime() < 10000);
+        if (queenRecent) enqueueWelcome('queenAdmin');
         const adminRecent = items.find((m) => (m.text || '').includes('{{ADMIN_WELCOME}}') && now - new Date(m.created_date).getTime() < 10000);
         if (adminRecent) enqueueWelcome('admin');
         const cabRecent = items.find((m) => (m.text || '').includes('{{CAN_ABLAM_WELCOME}}') && now - new Date(m.created_date).getTime() < 10000);
@@ -154,6 +157,7 @@ export default function WatchParty() {
     const unsub = base44.entities.RoomMessage.subscribe((ev) => {
       if (ev.type !== 'create' || ev.data?.room_id !== id) return;
       const txt = ev.data?.text || '';
+      if (txt.includes('{{QUEEN_ADMIN_WELCOME}}')) enqueueWelcome('queenAdmin');
       if (txt.includes('{{ADMIN_WELCOME}}')) enqueueWelcome('admin');
       if (txt.includes('{{CAN_ABLAM_WELCOME}}')) enqueueWelcome('canAblam');
       if (txt.includes('{{CAN_ABIM_WELCOME}}')) enqueueWelcome('canAbim');
@@ -433,13 +437,13 @@ export default function WatchParty() {
         if (p.user_id === user.id || p.user_id === room.owner_id) return false;
         const presence = presenceMapRef.current[p.user_id];
         if (!presence) return false;
-        return !presence.online || (Date.now() - new Date(presence.last_seen).getTime() > 30000);
+        return !presence.online || (Date.now() - new Date(presence.last_seen).getTime() > 60000);
       });
       for (const u of offlineUsers) {
         await base44.functions.invoke('room-presence', { action: 'kick', room_id: id, target_id: u.user_id }).catch(() => {});
       }
     };
-    const interval = setInterval(check, 30000);
+    const interval = setInterval(check, 10000);
     return () => clearInterval(interval);
   }, [canMod, id, user?.id, room?.owner_id]);
 
@@ -771,6 +775,7 @@ export default function WatchParty() {
       />
 
       <MoviePickerSheet open={moviePickerOpen} onClose={() => setMoviePickerOpen(false)} onSelect={changeMovie} currentMovieId={movie?.id} />
+      {welcomeQueue[0] === 'queenAdmin' && <QueenAdminWelcome onDone={dequeueWelcome} />}
       {welcomeQueue[0] === 'admin' && <AdminRoomWelcome onDone={dequeueWelcome} />}
       {welcomeQueue[0] === 'canAblam' && <CanAblamWelcome onDone={dequeueWelcome} />}
       {welcomeQueue[0] === 'canAbim' && <CanAbimWelcome onDone={dequeueWelcome} />}
