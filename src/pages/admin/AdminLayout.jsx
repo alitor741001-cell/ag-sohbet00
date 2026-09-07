@@ -12,8 +12,8 @@ import LiveChatButton from '@/components/layout/LiveChatButton';
 
 const SIDEBAR_BG = '#111116';
 const SIDEBAR_TEXT = '#e0e0e0';
-const SIDEBAR_HEADING = '#a855f7';
-const SIDEBAR_SELECTED = 'linear-gradient(135deg, rgba(124,58,237,0.25), rgba(124,58,237,0.1))';
+const SIDEBAR_HEADING = '#ef4444';
+const SIDEBAR_SELECTED = 'linear-gradient(135deg, rgba(239,68,68,0.25), rgba(107,114,128,0.12))';
 const LOGOUT_COLOR = '#ef4444';
 
 const navGroups = [
@@ -125,8 +125,8 @@ export default function AdminLayout() {
         })}>
         {({ isActive }) => (
           <>
-            <Icon className="w-4 h-4 shrink-0" style={{ color: isActive ? '#c084fc' : SIDEBAR_HEADING }} /> {n.label}
-            <ChevronRight className="w-3.5 h-3.5 ml-auto" style={{ color: isActive ? '#c084fc' : '#4a4a55' }} />
+            <Icon className="w-4 h-4 shrink-0" style={{ color: isActive ? '#f87171' : SIDEBAR_HEADING }} /> {n.label}
+            <ChevronRight className="w-3.5 h-3.5 ml-auto" style={{ color: isActive ? '#f87171' : '#4a4a55' }} />
           </>
         )}
       </NavLink>
@@ -159,7 +159,7 @@ export default function AdminLayout() {
   return (
     <div className="dark min-h-screen bg-black text-white flex">
       <aside className={`fixed lg:sticky top-0 z-40 h-screen w-64 flex flex-col pt-[max(env(safe-area-inset-top),0rem)] lg:pt-0 transition-transform ${open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
-        style={{ background: SIDEBAR_BG, borderRight: '1px solid rgba(168,85,247,0.1)' }}>
+        style={{ background: SIDEBAR_BG, borderRight: '1px solid rgba(239,68,68,0.18)' }}>
         <div className="px-4 py-4 flex items-center justify-between">
           <Link to="/admin" className="text-lg font-extrabold tracking-tight" style={{ color: SIDEBAR_TEXT }}>
             <span className="text-gradient">FILM</span>KEYFİ <span className="block text-[10px] font-normal tracking-widest mt-0.5" style={{ color: SIDEBAR_HEADING }}>ADMIN PANEL</span>
@@ -169,7 +169,7 @@ export default function AdminLayout() {
         <nav className="flex-1 overflow-y-auto px-2">
           {navGroups.map(renderGroup)}
         </nav>
-        <div className="p-3 space-y-2" style={{ borderTop: '1px solid rgba(168,85,247,0.1)' }}>
+        <div className="p-3 space-y-2" style={{ borderTop: '1px solid rgba(239,68,68,0.18)' }}>
           <div className="flex items-center gap-2.5 rounded-xl p-2.5" style={{ background: '#16161e' }}>
             {user?.avatar ? <Image src={user.avatar} className="w-9 h-9 rounded-full object-cover shrink-0" fittingType="fill" /> : <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold shrink-0" style={{ background: 'linear-gradient(135deg, #7c3aed, #6b21a8)', color: '#fff' }}>{(user?.username || user?.full_name || user?.email || 'A')[0].toUpperCase()}</div>}
             <div className="min-w-0 flex-1">
@@ -189,7 +189,7 @@ export default function AdminLayout() {
       <div className="flex-1 min-w-0 overflow-x-hidden bg-black text-white"
         onTouchStart={(e) => { touchX.current = e.touches[0].clientX; touchY.current = e.touches[0].clientY; }}
         onTouchEnd={(e) => { const dx = e.changedTouches[0].clientX - (touchX.current ?? 0); const dy = e.changedTouches[0].clientY - (touchY.current ?? 0); if (Math.abs(dx) > Math.abs(dy) * 1.5 && dx > 50 && (touchX.current ?? 999) < 80) setOpen(true); else if (Math.abs(dx) > Math.abs(dy) * 1.5 && dx < -50) setOpen(false); }}>
-        <header className="lg:hidden sticky top-0 z-20 border-b border-purple-500/10 min-h-14 flex items-center px-4 pb-2 pt-[max(env(safe-area-inset-top),0.75rem)] bg-[#111116]/95 backdrop-blur"
+        <header className="lg:hidden sticky top-0 z-20 border-b border-red-500/20 min-h-14 flex items-center px-4 pb-2 pt-[max(env(safe-area-inset-top),0.75rem)] bg-[#111116]/95 backdrop-blur"
           style={{ touchAction: 'pan-y' }}>
           <button onClick={() => setOpen(true)}><Menu className="w-6 h-6 text-white" /></button>
           <span className="ml-1 hidden min-[390px]:block font-bold text-white whitespace-nowrap">Admin Panel</span>
@@ -206,7 +206,7 @@ export default function AdminLayout() {
             </div>
           </div>
         </header>
-        <header className="hidden lg:flex sticky top-0 z-20 border-b border-purple-500/10 h-14 items-center px-6 bg-[#111116]/95 backdrop-blur">
+        <header className="hidden lg:flex sticky top-0 z-20 border-b border-red-500/20 h-14 items-center px-6 bg-[#111116]/95 backdrop-blur">
           <span className="font-bold text-white">Admin Panel</span>
           <div className="ml-auto flex items-center gap-3">
             <LiveChatButton />
