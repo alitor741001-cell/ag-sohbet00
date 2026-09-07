@@ -107,6 +107,14 @@
   body {
     @apply bg-background text-foreground font-body antialiased;
     overscroll-behavior-x: none;
+    overscroll-behavior-y: none;
+  }
+
+  /* Interactive elements: disable text selection for native-app feel */
+  button, nav, [role="tab"], [role="menuitem"], [role="option"], [role="button"], summary, .no-select {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
   }
 
   ::-webkit-scrollbar { width: 8px; height: 8px; }

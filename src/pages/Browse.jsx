@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import MovieCard from '@/components/movie/MovieCard';
 import EmptyState, { SkeletonRow } from '@/components/movie/EmptyState';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Film, Search, SlidersHorizontal } from 'lucide-react';
 
 export default function Browse({ type, title }) {
@@ -31,6 +32,8 @@ export default function Browse({ type, title }) {
   const years = [...new Set(movies.map((m) => m.year).filter(Boolean))].sort((a, b) => b - a);
   const subtitle = type === 'movie' ? 'Binlerce film arasından seçim yap' : 'Binlerce dizi arasından seçim yap';
 
+  const sortLabels = { popular: 'Sırala: En Popüler', rating: 'Sırala: En Yüksek Puan', newest: 'Sırala: En Yeni' };
+
   return (
     <div className="mx-auto min-h-screen w-full max-w-7xl bg-[#0a0a0f] px-3 py-5 text-white sm:px-5 lg:px-8">
       <h1 className="text-2xl font-extrabold">{title}</h1>
@@ -51,15 +54,25 @@ export default function Browse({ type, title }) {
       )}
 
       <div className="flex items-center gap-2 mb-4">
-        <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="flex-1 bg-[#16161e] border border-white/5 rounded-lg px-3 py-2 text-sm text-gray-300 outline-none cursor-pointer">
-          <option value="popular">Sırala: En Popüler</option>
-          <option value="rating">Sırala: En Yüksek Puan</option>
-          <option value="newest">Sırala: En Yeni</option>
-        </select>
-        <select value={yearFilter} onChange={(e) => setYearFilter(e.target.value)} className="flex-1 bg-[#16161e] border border-white/5 rounded-lg px-3 py-2 text-sm text-gray-300 outline-none cursor-pointer">
-          <option value="all">Yıl: Tümü</option>
-          {years.map((y) => <option key={y} value={String(y)}>{y}</option>)}
-        </select>
+        <Select value={sortBy} onValueChange={setSortBy}>
+          <SelectTrigger className="flex-1 h-10 bg-[#16161e] border border-white/5 rounded-lg text-sm text-gray-300">
+            <SelectValue>{sortLabels[sortBy]}</SelectValue>
+          </SelectTrigger>
+          <SelectContent className="bg-[#16161e] border-white/10 text-gray-300">
+            <SelectItem value="popular">Sırala: En Popüler</SelectItem>
+            <SelectItem value="rating">Sırala: En Yüksek Puan</SelectItem>
+            <SelectItem value="newest">Sırala: En Yeni</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={yearFilter} onValueChange={setYearFilter}>
+          <SelectTrigger className="flex-1 h-10 bg-[#16161e] border border-white/5 rounded-lg text-sm text-gray-300">
+            <SelectValue>{yearFilter === 'all' ? 'Yıl: Tümü' : `Yıl: ${yearFilter}`}</SelectValue>
+          </SelectTrigger>
+          <SelectContent className="bg-[#16161e] border-white/10 text-gray-300">
+            <SelectItem value="all">Yıl: Tümü</SelectItem>
+            {years.map((y) => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
+          </SelectContent>
+        </Select>
         <button className="p-2.5 rounded-lg bg-[#16161e] border border-white/5 text-gray-400 hover:text-purple-400"><SlidersHorizontal className="w-4 h-4" /></button>
       </div>
 
