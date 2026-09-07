@@ -17,28 +17,39 @@ export default function Watch() {
   const [videoError, setVideoError] = useState('');
   const [expired, setExpired] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [retry, setRetry] = useState(0);
 
   useEffect(() => {
-    base44.entities.Movie.filter({ id }, '-created_date', 1).then(async (matches) => {
-      const m = matches[0] || null;
-      setMovie(m);
-      if (!m) { setLoading(false); return; }
-      let ep = null;
-      if (epId) {
-        const eps = await base44.entities.Episode.filter({ series_id: id }, 'season', 100).catch(() => []);
-        ep = eps.find((e) => e.id === epId) || eps[0] || null;
-        setEpisode(ep);
-      }
+    if (ul || !user) return;
+    let active = true;
+    setLoading(true); setSrc(''); setVideoError(''); setExpired(false); setEpisode(null); setMovie(null);
+    const load = async () => {
       try {
+        const matches = await base44.entities.Movie.filter({ id }, '-created_date', 1);
+        if (!active) return;
+        const m = matches[0] || null;
+        setMovie(m);
+        if (!m) return;
+        let ep = null;
+        if (epId) {
+          const eps = await base44.entities.Episode.filter({ series_id: id }, 'season', 100);
+          if (!active) return;
+          ep = eps.find((item) => item.id === epId);
+          if (!ep) throw new Error('Bölüm bulunamadı. İçerik sayfasından tekrar seçin.');
+          setEpisode(ep);
+        }
         const res = await base44.functions.invoke('authorize-video', { movie_id: id, episode_id: ep?.id });
-        setSrc(res.data.url);
-      } catch (e) {
-        if (e.response?.data?.expired) setExpired(true);
-        else setVideoError(e.response?.data?.error || 'Video yüklenemedi');
-      }
-      setLoading(false);
-    }).catch(() => setLoading(false));
-  }, [id, epId]);
+        if (active) setSrc(res.data.url);
+      } catch (error) {
+        if (!active) return;
+        setExpired(!!error.response?.data?.expired);
+        const message = error.response?.data?.error || error.message;
+        setVideoError(message === 'not-found' ? 'Video servisine ulaşılamadı. Lütfen yeniden deneyin.' : message || 'Video yüklenemedi');
+      } finally { if (active) setLoading(false); }
+    };
+    load();
+    return () => { active = false; };
+  }, [id, epId, ul, user?.id, retry]);
 
   useEffect(() => {
     if (!user || !movie) return;
@@ -49,11 +60,11 @@ export default function Watch() {
 
   if (ul || loading) return <div className="h-[60vh] flex items-center justify-center"><div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
 
-  if (!membershipActive(user)) {
+  if (expired || !membershipActive(user)) {
     return <SubscriptionPrompt />;
   }
 
-  if (!movie) return <p className="p-6">İçerik bulunamadı.</p>;
+  if (!movie) return <div className="p-6 space-y-3"><p>{videoError || 'İçerik bulunamadı.'}</p>{videoError && <button onClick={() => setRetry((value) => value + 1)} className="rounded-lg bg-primary px-4 py-2 text-primary-foreground">Yeniden Dene</button>}</div>;
 
   return (
     <div className="mx-auto w-full max-w-7xl px-3 py-4 sm:px-6 lg:px-8">
@@ -65,6 +76,7 @@ export default function Watch() {
       {videoError ? <div className="aspect-video bg-card border border-border rounded-xl flex flex-col items-center justify-center text-center p-6">
           <Lock className="w-10 h-10 text-muted-foreground mb-3" />
           <p className="font-semibold mb-1">{videoError}</p>
+          <button onClick={() => setRetry((value) => value + 1)} className="mt-3 rounded-lg bg-primary px-4 py-2 text-primary-foreground">Yeniden Dene</button>
         </div> :
        src ? <div className="aspect-video w-full overflow-hidden rounded-xl bg-black"><VideoPlayer src={src} title={movie.title} watermark={user} isOwner={true} isTimeSource={true} /></div> :
         <div className="aspect-video bg-card border border-border rounded-xl flex flex-col items-center justify-center text-center p-6">

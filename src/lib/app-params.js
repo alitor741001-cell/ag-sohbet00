@@ -39,11 +39,14 @@ const getAppParams = () => {
 		storage.removeItem('base44_access_token');
 		storage.removeItem('token');
 	}
+	// Deployment versions are request/build scoped, not persistent user preferences.
+	// A saved preview version can otherwise keep published requests on a removed deployment.
+	storage.removeItem('base44_functions_version');
 	return {
 		appId: getAppParamValue("app_id", { defaultValue: import.meta.env.VITE_BASE44_APP_ID }),
 		token: getAppParamValue("access_token", { removeFromUrl: true }),
 		fromUrl: getAppParamValue("from_url", { defaultValue: window.location.href }),
-		functionsVersion: getAppParamValue("functions_version", { defaultValue: import.meta.env.VITE_BASE44_FUNCTIONS_VERSION }),
+		functionsVersion: new URLSearchParams(window.location.search).get('functions_version') || import.meta.env.VITE_BASE44_FUNCTIONS_VERSION || undefined,
 		appBaseUrl: getAppParamValue("app_base_url", { defaultValue: import.meta.env.VITE_BASE44_APP_BASE_URL }),
 	}
 }

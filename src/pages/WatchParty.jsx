@@ -57,6 +57,8 @@ export default function WatchParty() {
   const [joinCount, setJoinCount] = useState(0);
 
   const [joinError, setJoinError] = useState('');
+  const [roomLoadError, setRoomLoadError] = useState('');
+  const [roomRetry, setRoomRetry] = useState(0);
   const [waitingForApproval, setWaitingForApproval] = useState(false);
   const [joinRejected, setJoinRejected] = useState(false);
   const [joinRequests, setJoinRequests] = useState([]);
@@ -108,16 +110,23 @@ export default function WatchParty() {
   useEffect(() => {
     if (ul || !user) return;
     if (!hasMembership) { setLoading(false); return; }
+    let active = true;
+    setLoading(true); setRoomLoadError('');
     base44.functions.invoke('room-presence', { action: 'get', room_id: id })
       .then((res) => {
+        if (!active) return;
         const r = res.data?.room;
-        if (!r) { setLoading(false); return; }
-        setRoom(r);
-        setSyncState({ is_playing: r.is_playing, current_time: r.current_time, last_sync: r.last_sync });
-        setLoading(false);
+        setRoom(r || null);
+        if (r) setSyncState({ is_playing: r.is_playing, current_time: r.current_time, last_sync: r.last_sync });
       })
-      .catch(() => setLoading(false));
-  }, [id, ul, user?.id, hasMembership]);
+      .catch((error) => {
+        if (!active) return;
+        const message = error.response?.data?.error || error.message;
+        setRoomLoadError(message === 'not-found' ? 'Oda servisine ulaşılamadı. Lütfen yeniden deneyin.' : message || 'Oda yüklenemedi.');
+      })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [id, ul, user?.id, hasMembership, roomRetry]);
 
   // Film değiştiğinde yeni filmi yükle (ilk yükleme dahil)
   useEffect(() => {
@@ -611,6 +620,7 @@ export default function WatchParty() {
 
   if (ul || loading) return <div className="h-screen flex items-center justify-center bg-background"><div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
   if (!hasMembership) return <SubscriptionPrompt />;
+  if (roomLoadError) return <div className="p-6 space-y-4"><p role="alert">{roomLoadError}</p><button onClick={() => setRoomRetry((value) => value + 1)} className="rounded-lg bg-primary px-4 py-2 text-primary-foreground">Yeniden Dene</button><Link to="/acik-odalar" className="ml-4 text-primary">Odalara Dön</Link></div>;
   if (!room) return <div className="p-6">Oda bulunamadı.</div>;
   if (room.status === 'closed') return <div className="p-10 text-center"><p className="text-xl font-bold mb-2">Oda kapatıldı</p><Link to="/" className="text-primary">Ana sayfaya dön</Link></div>;
   if (joinError) return <div className="fixed inset-0 bg-black flex items-center justify-center p-6"><div className="bg-card border border-border rounded-xl p-5 w-full max-w-xs text-center"><h2 className="font-bold mb-2">Odaya katılamadınız</h2><p className="text-sm text-muted-foreground mb-4">{joinError}</p><button onClick={() => navigate(-1)} className="w-full bg-primary text-primary-foreground py-2.5 rounded-lg text-sm font-semibold">Geri Dön</button></div></div>;

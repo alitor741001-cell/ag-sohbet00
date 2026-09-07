@@ -199,14 +199,18 @@ export default function ChatPanel({ conversation, userId, onBack, online, embedd
 
   const handleSubmit = async (event) => {
     event?.preventDefault?.();
-    if (!text.trim()) return;
+    if (!canMessage || sending || uploading || !text.trim()) return;
     const messageText = text.trim();
     setText('');
     try {
       await sendMsg(messageText);
       clearTimeout(typingTimerRef.current);
       if (myTypingIdRef.current) { base44.entities.DmTyping.delete(myTypingIdRef.current).catch(() => {}); myTypingIdRef.current = null; }
-    } catch {}
+    } catch (error) {
+      setText((draft) => draft || messageText);
+      const detail = error.response?.data?.error || error.message;
+      toast({ title: 'Mesaj gönderilemedi', description: detail === 'not-found' ? 'Mesaj servisine ulaşılamadı. Yazınız korundu; sayfayı yenileyip tekrar deneyin.' : detail, variant: 'destructive', duration: 6000 });
+    }
   };
 
   const changeText = (value) => {
