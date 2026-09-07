@@ -11,6 +11,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import LoginRedirect from '@/components/LoginRedirect';
 // Add page imports here
 import AppLayout from '@/components/layout/AppLayout';
+import StartupSplash from '@/components/layout/StartupSplash';
 import { ThemeProvider } from '@/lib/ThemeContext';
 import RoomLevelProvider from '@/components/levels/RoomLevelProvider';
 import XpProvider from '@/components/xp/XpProvider';
@@ -68,8 +69,8 @@ const AuthenticatedApp = () => {
   // Show loading spinner while checking app public settings or auth
   if (isLoadingPublicSettings || isLoadingAuth) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
+      <div className="fixed inset-0 flex items-center justify-center bg-catalog">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-muted border-t-primary"></div>
       </div>
     );
   }
@@ -87,7 +88,7 @@ const AuthenticatedApp = () => {
 
   // Render the main app
   return (
-    <Suspense fallback={<div className="fixed inset-0 flex items-center justify-center bg-background"><div className="h-8 w-8 animate-spin rounded-full border-4 border-muted border-t-primary" /></div>}>
+    <Suspense fallback={<div className="fixed inset-0 flex items-center justify-center bg-catalog"><div className="h-8 w-8 animate-spin rounded-full border-4 border-muted border-t-primary" /></div>}>
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
@@ -159,6 +160,7 @@ function App() {
         <RoomLevelProvider>
         <XpProvider>
         <ThemeProvider>
+          <StartupSplash />
           <Router>
             <ScrollToTop />
             <AuthenticatedApp />
