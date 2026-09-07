@@ -2,28 +2,68 @@
   "name": "SpecialFrame",
   "type": "object",
   "properties": {
-    "name": "string",
-    "label": "string",
-    "image_url": "string",
-    "color": "string",
+    "name": {
+      "type": "string"
+    },
+    "image_url": {
+      "type": "string"
+    },
     "opening": {
       "type": "array",
       "items": {
-        "type": "number"
-      }
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "minItems": 4,
+      "maxItems": 4,
+      "default": [
+        0.24,
+        0.24,
+        0.52,
+        0.52
+      ]
     },
-    "group": {
+    "theme_color": {
       "type": "string",
-      "default": "normal"
+      "default": "#ff4500"
     },
-    "is_active": {
+    "text_color": {
+      "type": "string",
+      "default": "#ffaa00"
+    },
+    "glow_color": {
+      "type": "string",
+      "default": "#ff4500"
+    },
+    "title": {
+      "type": "string"
+    },
+    "active": {
       "type": "boolean",
       "default": true
     }
   },
   "required": [
     "name",
-    "label",
     "image_url"
-  ]
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
 }

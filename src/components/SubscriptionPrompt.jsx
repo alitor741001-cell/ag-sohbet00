@@ -1,19 +1,26 @@
 import { useNavigate } from 'react-router-dom';
-import { Crown, Lock } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { CreditCard, Clock } from 'lucide-react';
 
-export default function SubscriptionPrompt({ title = 'Abonelik Gerekli', description = 'Bu içeriği görüntülemek için aktif aboneliğinizin olması gerekiyor.' }) {
+export default function SubscriptionPrompt({ onSubscribe }) {
   const navigate = useNavigate();
+  const go = () => { if (onSubscribe) onSubscribe(); else navigate('/abonelik'); };
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] p-6 text-center">
-      <div className="w-16 h-16 rounded-full bg-purple-500/10 border border-purple-500/30 flex items-center justify-center mb-4">
-        <Lock className="w-8 h-8 text-purple-400" />
+    <div className="min-h-[60vh] flex items-center justify-center p-4">
+      <div className="max-w-md w-full text-center bg-card border border-border rounded-2xl p-8">
+        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-amber-500/15 flex items-center justify-center">
+          <Clock className="w-8 h-8 text-amber-500" />
+        </div>
+        <h1 className="text-2xl font-extrabold mb-2">Aboneliğiniz Sona Erdi</h1>
+        <p className="text-sm text-muted-foreground mb-6">Aboneliğinizi yenileyerek filmleri izlemeye devam edebilirsiniz.</p>
+        <div className="bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/30 rounded-xl p-4 mb-6">
+          <p className="font-bold text-lg">1 Aylık Abonelik</p>
+          <p className="text-sm text-muted-foreground">30 Gün · Tüm içeriklere erişim</p>
+          <p className="text-3xl font-extrabold text-gradient mt-1">50 ₺</p>
+        </div>
+        <button onClick={go} className="w-full bg-primary text-primary-foreground py-3 rounded-lg font-bold flex items-center justify-center gap-2">
+          <CreditCard className="w-5 h-5" /> TEKRAR ABONE OL
+        </button>
       </div>
-      <h2 className="text-xl font-bold text-white mb-2">{title}</h2>
-      <p className="text-sm text-muted-foreground mb-6 max-w-sm">{description}</p>
-      <Button onClick={() => navigate('/abonelik')} className="bg-purple-600 hover:bg-purple-700 text-white">
-        <Crown className="w-4 h-4 mr-2" /> Aboneliği Aktif Et
-      </Button>
     </div>
   );
 }

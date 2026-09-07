@@ -64,14 +64,6 @@
       "type": "string",
       "format": "date-time"
     },
-    "playback_admin_locked": {
-      "type": "boolean",
-      "default": false
-    },
-    "playback_admin_id": {
-      "type": "string",
-      "default": ""
-    },
     "status": {
       "type": "string",
       "enum": [

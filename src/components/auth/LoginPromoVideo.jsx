@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import PromoPlaylist from '@/components/PromoPlaylist';
 
+// Giriş ekranında yayınlanmış tanıtım videosunu arka plan oynatır.
+// Klipler sırayla oynar, bitince başa döner. Yayınlanan video yoksa null.
 export default function LoginPromoVideo() {
   const [video, setVideo] = useState(null);
 

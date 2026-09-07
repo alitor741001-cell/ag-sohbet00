@@ -1,97 +1,57 @@
 import { useState } from 'react';
-import { base44 } from '@/api/base44Client';
-import ProfileFrame from '@/components/ProfileFrame';
-import RoleBadge from '@/components/RoleBadge';
-import { UserPlus, Check, X, MessageSquare, Search, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { toast } from '@/components/ui/use-toast';
+import { MoreVertical, MessageCircle, UserMinus, Ban, DoorOpen } from 'lucide-react';
+import { Image } from '@/components/ui/image';
+import ProfileFrame from '@/components/ProfileFrame';
+import XpAvatar from '@/components/xp/XpAvatar';
+import useMessageProfiles from '@/hooks/useMessageProfiles';
+import FriendSearch from '@/components/friends/FriendSearch';
+import FriendRequests from '@/components/friends/FriendRequests';
+import FriendshipLevelBadge from '@/components/friends/FriendshipLevelBadge';
+import AccountStatusAvatar, { getAccountState } from '@/components/friends/AccountStatusAvatar';
+import { useMessageRealtime } from '@/components/messages/MessageRealtimeProvider';
 
-export default function FriendsPanel({ friends, requests, user }) {
-  const [search, setSearch] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
-  const [searching, setSearching] = useState(false);
+export default function FriendsPanel({ relations, userId, invoke, onChat, isOnline, getRoomId, rooms }) {
+  const [menuFor, setMenuFor] = useState(null);
   const navigate = useNavigate();
+  const { getProgression } = useMessageRealtime();
+  const friends = relations.filter((r) => r.status === 'accepted');
+  const friendIds = friends.map((r) => r.requester_id === userId ? r.recipient_id : r.requester_id);
+  const profiles = useMessageProfiles(friendIds);
+  const action = async (type, relation) => { await invoke({ action: type, friendship_id: relation.id }); setMenuFor(null); };
 
-  const acceptRequest = async (req) => {
-    try {
-      await base44.entities.Friendship.update(req.id, { status: 'accepted' });
-      await base44.entities.Friendship.create({ user_id: user.id, friend_id: req.user_id, status: 'accepted' });
-      toast({ title: 'Arkadaşlık isteği kabul edildi' });
-    } catch (err) { toast({ title: 'Hata', description: err.message, variant: 'destructive' }); }
+  const getFriendRoom = (friendId) => {
+    const roomId = getRoomId ? getRoomId(friendId) : '';
+    if (!roomId) return null;
+    const room = rooms?.find((r) => r.id === roomId && r.status === 'active');
+    if (!room) return null;
+    const isPublic = !room.hidden && !room.password;
+    return { room, isPublic };
   };
 
-  const rejectRequest = async (req) => {
-    try { await base44.entities.Friendship.delete(req.id); toast({ title: 'İstek reddedildi' }); }
-    catch (err) { toast({ title: 'Hata', description: err.message, variant: 'destructive' }); }
-  };
-
-  const searchUsers = async () => {
-    if (!search.trim()) { setSearchResults([]); return; }
-    setSearching(true);
-    try {
-      const users = await base44.entities.User.list();
-      setSearchResults(users.filter((u) => u.id !== user.id && (u.username?.toLowerCase().includes(search.toLowerCase()) || u.full_name?.toLowerCase().includes(search.toLowerCase()))).slice(0, 10));
-    } catch {} finally { setSearching(false); }
-  };
-
-  const sendRequest = async (targetUser) => {
-    try {
-      await base44.entities.Friendship.create({ user_id: user.id, friend_id: targetUser.id, status: 'pending' });
-      toast({ title: 'Arkadaşlık isteği gönderildi' });
-    } catch (err) { toast({ title: 'Hata', description: err.message, variant: 'destructive' }); }
-  };
-
-  return (
-    <div>
-      <div className="relative mb-6">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <input value={search} onChange={(e) => setSearch(e.target.value)} onKeyUp={searchUsers} placeholder="Kullanıcı ara..." className="w-full bg-white/5 border border-border rounded-lg pl-10 pr-4 py-2.5 text-sm text-white" />
-        {searching && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />}
-      </div>
-
-      {searchResults.length > 0 && (
-        <div className="mb-6">
-          <h3 className="text-sm font-semibold text-muted-foreground mb-2">Arama sonuçları</h3>
-          <div className="space-y-2">
-            {searchResults.map((u) => (
-              <div key={u.id} className="flex items-center gap-3 p-3 rounded-lg bg-white/5">
-                <ProfileFrame user={u} src={u.avatar} size={40} />
-                <div className="flex-1"><p className="text-sm font-medium text-white">{u.full_name || u.username}</p><p className="text-xs text-muted-foreground">@{u.username}</p></div>
-                <button onClick={() => sendRequest(u)} className="px-3 py-1.5 rounded-lg bg-purple-600 text-white text-xs font-medium hover:bg-purple-700 flex items-center gap-1"><UserPlus className="w-3 h-3" /> Ekle</button>
-              </div>
-            ))}
-          </div>
+  return <div className="space-y-4"><FriendSearch invoke={invoke} /><FriendRequests relations={relations} userId={userId} invoke={invoke} /><section className="bg-card border border-border rounded-xl overflow-hidden"><h2 className="font-bold p-4 border-b border-border">Arkadaşlarım</h2>
+    {!friends.length ? <p className="p-6 text-sm text-center text-muted-foreground">Henüz arkadaşınız yok.</p> : friends.map((r) => {
+      const friendId = r.requester_id === userId ? r.recipient_id : r.requester_id;
+      const name = r.requester_id === userId ? r.recipient_name : r.requester_name;
+      const avatar = r.requester_id === userId ? r.recipient_avatar : r.requester_avatar;
+      const member = r.requester_id === userId ? r.recipient_member_id : r.requester_member_id;
+      const online = isOnline(friendId);
+      const friendRoom = getFriendRoom(friendId);
+      const profile = profiles[friendId];
+      const accountState = getAccountState(profile, name);
+      return <div key={r.id} className="border-b last:border-0 border-border p-3">
+        <div className="flex items-center gap-3">
+          <button onClick={() => { if (!accountState) navigate(`/kullanici/${friendId}`); }} disabled={!!accountState} className="flex items-center gap-3 flex-1 min-w-0 text-left disabled:cursor-default">
+            <div className="relative shrink-0">{accountState ? <AccountStatusAvatar status={accountState.status} className="h-10 w-10" /> : profile?.profile_frame ? <ProfileFrame frame={profile.profile_frame} avatar={profile.avatar || avatar} name={name} size="sm" /> : <XpAvatar avatar={profile?.avatar || avatar} name={name} userId={friendId} size="sm" />}{!accountState && <span className={`absolute right-0 bottom-0 w-3 h-3 rounded-full border-2 border-card ${online ? 'bg-green-500' : 'bg-muted-foreground'}`} />}</div>
+            <div className="flex-1 min-w-0"><p className="font-semibold truncate">{accountState?.name || name}</p><p className={`text-xs truncate ${accountState ? 'text-destructive' : 'text-muted-foreground'}`}>{accountState ? accountState.message : friendRoom?.isPublic ? <span className="text-red-500 font-semibold">{friendRoom.room.owner_name}'in odasında</span> : online ? <span className="text-green-500">Çevrim içi</span> : 'Çevrim dışı'}{!accountState && member ? ` · ${member}` : ''}</p></div>
+          </button>
+          {!accountState && <FriendshipLevelBadge level={getProgression(friendId)?.level || 1} variant="list" />}
+          <button onClick={() => onChat(r)} className="shrink-0 flex items-center gap-1 bg-primary text-primary-foreground rounded-lg px-2.5 py-1.5 text-xs font-semibold"><MessageCircle className="w-3.5 h-3.5" /> Sohbet</button>
+          <button onClick={() => setMenuFor(menuFor === r.id ? null : r.id)} className="shrink-0 p-1.5 rounded-full hover:bg-secondary"><MoreVertical className="w-4 h-4 text-muted-foreground" /></button>
         </div>
-      )}
-
-      {requests.length > 0 && (
-        <div className="mb-6">
-          <h3 className="text-sm font-semibold text-muted-foreground mb-2">İstekler ({requests.length})</h3>
-          <div className="space-y-2">
-            {requests.map((req) => (
-              <div key={req.id} className="flex items-center gap-3 p-3 rounded-lg bg-white/5">
-                <ProfileFrame user={req.requester} src={req.requester?.avatar} size={40} />
-                <div className="flex-1"><p className="text-sm font-medium text-white">{req.requester?.full_name || req.requester?.username}</p><p className="text-xs text-muted-foreground">@{req.requester?.username}</p></div>
-                <button onClick={() => acceptRequest(req)} className="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center hover:bg-green-700"><Check className="w-4 h-4 text-white" /></button>
-                <button onClick={() => rejectRequest(req)} className="w-8 h-8 rounded-full bg-red-600 flex items-center justify-center hover:bg-red-700"><X className="w-4 h-4 text-white" /></button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <h3 className="text-sm font-semibold text-muted-foreground mb-2">Arkadaşlar ({friends.length})</h3>
-      {friends.length === 0 ? <p className="text-center text-muted-foreground py-12">Henüz arkadaş yok</p> : (
-        <div className="space-y-2">
-          {friends.map((f) => (
-            <div key={f.id} className="flex items-center gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/10">
-              <ProfileFrame user={f.friend} src={f.friend?.avatar} size={40} />
-              <div className="flex-1"><p className="text-sm font-medium text-white">{f.friend?.full_name || f.friend?.username}</p><p className="text-xs text-muted-foreground">@{f.friend?.username}</p></div>
-              <button onClick={() => navigate(`/kullanici/${f.friend_id}`)} className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20"><MessageSquare className="w-4 h-4 text-white" /></button>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
+        {friendRoom?.isPublic && <button onClick={() => navigate(`/oda/${friendRoom.room.id}`)} className="mt-2 w-full flex items-center justify-center gap-1.5 bg-primary/10 text-primary border border-primary/20 rounded-lg py-1.5 text-xs font-semibold"><DoorOpen className="w-3.5 h-3.5" /> Katıl</button>}
+        {menuFor === r.id && <div className="mt-2 flex gap-2"><button onClick={() => action('unfriend', r)} className="flex-1 flex items-center justify-center gap-1 bg-secondary rounded-lg py-1.5 text-xs font-semibold"><UserMinus className="w-3.5 h-3.5" /> Sil</button><button onClick={() => action('block', r)} className="flex-1 flex items-center justify-center gap-1 bg-destructive/15 text-destructive rounded-lg py-1.5 text-xs font-semibold"><Ban className="w-3.5 h-3.5" /> Engelle</button></div>}
+      </div>;
+    })}
+  </section></div>;
 }

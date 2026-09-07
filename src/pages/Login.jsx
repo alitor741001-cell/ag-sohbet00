@@ -43,7 +43,19 @@ export default function Login() {
     setError("");
     setLoading(true);
     try {
-      await base44.auth.loginViaEmailPassword(email.trim(), password);
+      let loginEmail = email;
+      if (!email.includes('@')) {
+        try {
+          const res = await base44.functions.invoke('lookup-username', { username: email });
+          loginEmail = res.data?.email || res.email;
+          if (!loginEmail) throw new Error('Kullanıcı bulunamadı');
+        } catch {
+          setError('Kullanıcı bulunamadı');
+          setLoading(false);
+          return;
+        }
+      }
+      await base44.auth.loginViaEmailPassword(loginEmail, password);
       const me = await base44.auth.me();
       if (me.is_banned || me.role === 'banned') {
         const reason = me.ban_reason || '';
@@ -89,6 +101,7 @@ export default function Login() {
 
   return (
     <AuthBackground>
+      {/* Logo */}
       <div className="text-center mb-8">
         <div className="inline-flex items-center gap-2 mb-2">
           <div className="w-10 h-10 rounded-xl bg-[#e50914] flex items-center justify-center">
@@ -99,6 +112,7 @@ export default function Login() {
         <p className="text-sm text-[#a0a0a0]">Filmini seç, keyfini çıkar.</p>
       </div>
 
+      {/* Login Box */}
       <div className="bg-[#141414]/95 backdrop-blur-sm rounded-2xl border border-[#2a2a2a] p-7 shadow-2xl">
         <div className="mb-6">
           <h2 className="text-xl font-bold text-white">Hoş Geldin!</h2>
@@ -154,12 +168,12 @@ export default function Login() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email" className="text-[#a0a0a0]">E-posta adresi</Label>
+            <Label htmlFor="email" className="text-[#a0a0a0]">E-posta veya kullanıcı adı</Label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#a0a0a0]" aria-hidden="true" />
               <Input
                 id="email"
-                type="email"
+                type="text"
                 autoComplete="email"
                 autoFocus
                 placeholder="ornek@email.com"
@@ -244,6 +258,7 @@ export default function Login() {
         <LegalLinks className="w-full mt-2 text-[11px] text-[#a0a0a0]" />
       </div>
 
+      {/* Footer Features */}
       <div className="grid grid-cols-2 gap-3 mt-6">
         {features.map((f) => (
           <div key={f.label} className="flex items-center gap-2 text-xs text-[#a0a0a0]">
@@ -253,6 +268,7 @@ export default function Login() {
         ))}
       </div>
 
+      {/* Mobil indirme butonları */}
       <div className="mt-6">
         <p className="text-center text-xs text-[#a0a0a0] mb-3">📱 Telefonuna indir, her zaman yanında</p>
         <DownloadButtons variant="light" />
@@ -260,6 +276,7 @@ export default function Login() {
 
       <p className="text-center text-xs text-[#555] mt-6">© 2024 Film Keyfi. Tüm hakları saklıdır.</p>
 
+      {/* Canlı destek butonu */}
       <SupportWidget />
     </AuthBackground>
   );

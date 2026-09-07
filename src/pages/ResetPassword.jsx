@@ -20,7 +20,7 @@ export default function ResetPassword() {
     e.preventDefault();
     setError("");
     if (newPassword !== confirmPassword) {
-      setError("Şifreler eşleşmiyor");
+      setError("Passwords do not match");
       return;
     }
     setLoading(true);
@@ -28,7 +28,7 @@ export default function ResetPassword() {
       await base44.auth.resetPassword({ resetToken, newPassword });
       window.location.href = "/login";
     } catch (err) {
-      setError(err.message || "Şifre yenilenemedi");
+      setError(err.message || "Failed to reset password");
     } finally {
       setLoading(false);
     }
@@ -38,16 +38,16 @@ export default function ResetPassword() {
     return (
       <AuthLayout
         icon={AlertTriangle}
-        title="Geçersiz yenileme bağlantısı"
-        subtitle="Şifre yenileme bağlantısı eksik veya geçersiz"
+        title="Invalid reset link"
+        subtitle="This password reset link is missing or invalid"
         footer={
           <Link to="/forgot-password" className="text-primary font-medium hover:underline">
-            Yeni bağlantı iste
+            Request a new link
           </Link>
         }
       >
         <p className="text-sm text-foreground text-center">
-          Kullandığınız bağlantı eksik görünüyor. Lütfen yeni bir şifre yenileme bağlantısı isteyin.
+          The link you used appears to be incomplete. Please request a new password reset email.
         </p>
       </AuthLayout>
     );
@@ -56,8 +56,8 @@ export default function ResetPassword() {
   return (
     <AuthLayout
       icon={Lock}
-      title="Yeni şifre"
-      subtitle="Yeni şifrenizi aşağıya girin"
+      title="New password"
+      subtitle="Enter your new password below"
     >
       {error && (
         <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
@@ -66,7 +66,7 @@ export default function ResetPassword() {
       )}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="password">Yeni şifre</Label>
+          <Label htmlFor="password">New Password</Label>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
             <Input
@@ -83,7 +83,7 @@ export default function ResetPassword() {
           </div>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="confirm">Yeni şifre tekrar</Label>
+          <Label htmlFor="confirm">Confirm Password</Label>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
             <Input
@@ -102,10 +102,10 @@ export default function ResetPassword() {
           {loading ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Yenileniyor...
+              Resetting...
             </>
           ) : (
-            "Şifreyi yenile"
+            "Reset password"
           )}
         </Button>
       </form>

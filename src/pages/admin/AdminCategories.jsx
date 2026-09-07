@@ -1,43 +1,83 @@
 import { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Loader2, Plus, Trash2, Tag } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { toast } from '@/components/ui/use-toast';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
+import { useToast } from '@/components/ui/use-toast';
 
 export default function AdminCategories() {
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+  const [items, setItems] = useState([]);
+  const [movies, setMovies] = useState([]);
   const [name, setName] = useState('');
+  const [editing, setEditing] = useState(null);
+  const [editName, setEditName] = useState('');
+  const [confirm, setConfirm] = useState(null);
 
-  useEffect(() => { load(); }, []);
-  const load = () => { base44.entities.Category.list().then((c) => { setCategories(c); setLoading(false); }).catch(() => setLoading(false)); };
+  const load = () => {
+    base44.entities.Category.list(200).then(setItems).catch(() => {});
+    base44.entities.Movie.list(500).then(setMovies).catch(() => {});
+  };
+  useEffect(load, []);
 
-  const add = async () => {
+  const add = async (e) => {
+    e.preventDefault();
     if (!name.trim()) return;
-    try { await base44.entities.Category.create({ name: name, slug: name.toLowerCase().replace(/ /g, '-'), is_active: true }); toast({ title: 'Kategori eklendi' }); setName(''); load(); }
-    catch (err) { toast({ title: 'Hata', description: err.message, variant: 'destructive' }); }
+    await base44.entities.Category.create({ name: name.trim(), slug: name.trim().toLowerCase() });
+    toast({ title: 'Kategori oluşturuldu' });
+    setName(''); load();
   };
 
-  const del = async (c) => { try { await base44.entities.Category.delete(c.id); toast({ title: 'Silindi' }); load(); } catch (err) { toast({ title: 'Hata', description: err.message, variant: 'destructive' }); } };
+  const startEdit = (c) => { setEditing(c.id); setEditName(c.name); };
+  const saveEdit = async (c) => {
+    if (!editName.trim()) return;
+    await base44.entities.Category.update(c.id, { name: editName.trim(), slug: editName.trim().toLowerCase() });
+    toast({ title: 'Kategori güncellendi' });
+    setEditing(null); load();
+  };
 
-  if (loading) return <div className="flex items-center justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-purple-500" /></div>;
+  const del = async () => {
+    await base44.entities.Category.delete(confirm.id);
+    toast({ title: 'Kategori silindi' });
+    setConfirm(null); load();
+  };
+
+  const countFilms = (c) => movies.filter((m) => m.category_id === c.id || m.category === c.name).length;
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-white mb-6">Kategoriler</h1>
-      <div className="max-w-md rounded-xl bg-card border border-border p-4 mb-6">
-        <div className="flex gap-2"><Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Kategori adı" /><Button onClick={add} className="bg-purple-600 hover:bg-purple-700 text-white"><Plus className="w-4 h-4 mr-1" /> Ekle</Button></div>
-      </div>
-      <div className="space-y-2">
-        {categories.map((c) => (
-          <div key={c.id} className="flex items-center justify-between p-3 rounded-lg bg-card border border-border">
-            <div className="flex items-center gap-2"><Tag className="w-4 h-4 text-purple-400" /><span className="text-white text-sm">{c.name}</span></div>
-            <button onClick={() => del(c)} className="w-8 h-8 rounded-lg bg-red-600/20 flex items-center justify-center hover:bg-red-600/30"><Trash2 className="w-4 h-4 text-red-400" /></button>
-          </div>
-        ))}
-      </div>
+      <h1 className="text-2xl font-extrabold mb-4">Kategoriler</h1>
+      <form onSubmit={add} className="flex gap-2 mb-4">
+        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Kategori adı (örn: Aksiyon)" className="flex-1 bg-secondary/60 rounded-lg px-3 py-2 text-sm outline-none border border-border" />
+        <button className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-semibold">OLUŞTUR</button>
+      </form>
+      {items.length === 0 ? <p className="text-muted-foreground text-sm">Henüz kategori yok.</p> :
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
+          {items.map((c) => (
+            <div key={c.id} className="bg-card border border-border rounded-lg p-3">
+              {editing === c.id ? (
+                <div className="flex gap-2">
+                  <input value={editName} onChange={(e) => setEditName(e.target.value)} className="flex-1 bg-secondary/60 rounded-lg px-2 py-1.5 text-sm outline-none border border-border" autoFocus />
+                  <button onClick={() => saveEdit(c)} className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-semibold">KAYDET</button>
+                  <button onClick={() => setEditing(null)} className="px-3 py-1.5 rounded-lg bg-secondary text-xs">İPTAL</button>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">{c.name}</p>
+                    <p className="text-xs text-muted-foreground">{countFilms(c)} film</p>
+                  </div>
+                  <div className="flex gap-1.5 shrink-0">
+                    <button onClick={() => startEdit(c)} className="px-2.5 py-1.5 rounded-lg bg-secondary text-xs font-semibold">DÜZENLE</button>
+                    <button onClick={() => setConfirm(c)} className="px-2.5 py-1.5 rounded-lg bg-red-500/20 text-red-400 text-xs font-semibold">SİL</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>}
+      <ConfirmDialog open={!!confirm} onOpenChange={(o) => !o && setConfirm(null)}
+        title="Kategoriyi sil?"
+        description={confirm ? `Bu kategoride ${countFilms(confirm)} film bulunuyor. Kategoriyi silmek istediğinize emin misiniz? (Filmler silinmeyecek.)` : ''}
+        onConfirm={del} />
     </div>
   );
 }

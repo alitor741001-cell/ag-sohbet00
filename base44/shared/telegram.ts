@@ -1,6 +1,5 @@
 // Telegram Bot API — shared module
-// Non-secret settings live in AppConfig; the bot token is server-side only.
-import { secrets } from 'base44:runtime';
+// Settings stored in AppConfig (admin-only RLS). Bot Token never returned to frontend.
 
 const DEFAULT_TEMPLATES: Record<string, string> = {
   new_user: `🔔 Yeni kullanıcı kayıt oldu.\n\nKullanıcı: {{username}}\nE-posta: {{email}}\nTarih: {{date}}\n\nAdmin panelinden kullanıcıyı görüntüle.`,
@@ -45,20 +44,19 @@ export async function getTelegramSettings(base44: any): Promise<TelegramSettings
     try {
       const parsed = JSON.parse(raw);
       settings.enabled = parsed.enabled ?? false;
+      settings.bot_token = parsed.bot_token || '';
       settings.chat_id = parsed.chat_id || '';
       settings.events = { ...DEFAULT_EVENTS, ...(parsed.events || {}) };
       settings.templates = { ...DEFAULT_TEMPLATES, ...(parsed.templates || {}) };
     } catch {}
   }
-  settings.bot_token = secrets.get('TELEGRAM_BOT_TOKEN') || '';
   return settings;
 }
 
 export async function saveTelegramSettings(base44: any, settings: TelegramSettings) {
   const configs = await base44.asServiceRole.entities.AppConfig.list(100).catch(() => []);
   const existing = configs.find((c: any) => c.key === 'telegram_settings');
-  const { bot_token: _secret, ...publicSettings } = settings;
-  const value = JSON.stringify(publicSettings);
+  const value = JSON.stringify(settings);
   if (existing) {
     await base44.asServiceRole.entities.AppConfig.update(existing.id, { value });
   } else {

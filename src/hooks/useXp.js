@@ -1,35 +1,27 @@
-import { useEffect, useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { useQuery } from '@tanstack/react-query';
+import { loadUserXp, loadXpConfig, userXpKey, xpConfigKey } from '@/components/xp/xpCache';
+import { resolveFrame, xpProgress, xpValue } from '@/lib/xp';
 
-const cache = {};
-
-export function useXp(userId) {
-  const [state, setState] = useState({ xp: 0, level: 1 });
-
-  useEffect(() => {
-    if (!userId) return;
-    if (cache[userId]) { setState(cache[userId]); return; }
-    base44.entities.UserXp.filter({ user_id: userId })
-      .then((items) => {
-        const data = items?.[0] || { xp: 0, level: 1 };
-        const xp = data.xp || 0;
-        const level = data.level || Math.floor(xp / 1000) + 1;
-        const result = { xp, level };
-        cache[userId] = result;
-        setState(result);
-      })
-      .catch(() => {});
-    const unsub = base44.entities.UserXp.subscribe((event) => {
-      if (event.data?.user_id !== userId) return;
-      const xp = event.data.xp || 0;
-      const level = event.data.level || Math.floor(xp / 1000) + 1;
-      cache[userId] = { xp, level };
-      setState({ xp, level });
-    });
-    return unsub;
-  }, [userId]);
-
-  return state;
+export function useXpConfig() {
+  const { data } = useQuery({ queryKey: xpConfigKey, queryFn: loadXpConfig, staleTime: Infinity });
+  return { frames: data?.frames || [], settings: data?.settings || { xp_per_message: 10, enabled: true } };
 }
 
-export default useXp;
+// Bir veya birden çok kullanıcının XP'si + çözümlenmiş çerçevesi (gerçek zamanlı güncellenir).
+export default function useXp(userIds) {
+  const ids = [...new Set((userIds || []).filter(Boolean))].sort();
+  const { frames } = useXpConfig();
+  const { data = {} } = useQuery({
+    queryKey: [...userXpKey, ids.join(',')],
+    queryFn: () => loadUserXp(ids),
+    enabled: ids.length > 0,
+    staleTime: Infinity,
+  });
+  const entries = ids.map((id) => {
+    const row = data[id];
+    const xp = xpValue(row);
+    const { current, next, manual } = resolveFrame(frames, xp, row?.manual_frame_id);
+    return [id, { xp, row: row || null, frame: current, nextFrame: next, manual, ...xpProgress(xp, current, next) }];
+  });
+  return Object.fromEntries(entries);
+}

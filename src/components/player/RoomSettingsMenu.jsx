@@ -1,41 +1,25 @@
-import { X, Users, Lock, Globe, LogOut } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
-import { useNavigate } from 'react-router-dom';
-import { toast } from '@/components/ui/use-toast';
+import { useRef } from 'react';
+import { X } from 'lucide-react';
+import RoomSettingsContent from '@/components/player/RoomSettingsContent';
 
-export default function RoomSettingsMenu({ room, onClose }) {
-  const navigate = useNavigate();
-
-  const leaveRoom = async () => {
-    try {
-      await base44.functions.invoke('update-presence', { action: 'leave', room_id: room.id });
-      navigate('/acik-odalar');
-    } catch (err) {
-      toast({ title: 'Hata', description: err.message, variant: 'destructive' });
-    }
-  };
+export default function RoomSettingsMenu({ open, onClose, room, canMod, participants, roomModerators, onAssignMod, onRemoveMod, roomName, setRoomName, onSaveName, password, setPassword, passwordOpen, setPasswordOpen, onVoice, onChat, onHidden, onPassword, onRemovePassword, onUnban, onPickMovie, onDeleteRoom, onToggleApproval }) {
+  const touchStart = useRef({ x: 0, y: 0 });
+  if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="w-full max-w-sm rounded-2xl bg-card border border-border p-5" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold text-white">Oda Ayarları</h3>
-          <button onClick={onClose} className="p-1 rounded-lg hover:bg-white/10"><X className="w-5 h-5 text-white" /></button>
-        </div>
-        <div className="space-y-3">
-          <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
-            <span className="text-sm text-muted-foreground">Gizlilik</span>
-            <span className="flex items-center gap-1 text-sm text-white">{room.is_private ? <><Lock className="w-4 h-4 text-amber-400" /> Gizli</> : <><Globe className="w-4 h-4 text-green-400" /> Açık</>}</span>
-          </div>
-          <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
-            <span className="text-sm text-muted-foreground">Katılımcı</span>
-            <span className="flex items-center gap-1 text-sm text-white"><Users className="w-4 h-4" /> {room.participants?.length || 0}</span>
-          </div>
-          <button onClick={leaveRoom} className="w-full flex items-center justify-center gap-2 py-3 rounded-lg bg-red-600/20 text-red-400 border border-red-500/30 hover:bg-red-600/30">
-            <LogOut className="w-4 h-4" /> Odadan Ayrıl
-          </button>
-        </div>
-      </div>
+    <div className="absolute right-0 top-0 bottom-0 z-[65] flex w-full max-w-sm flex-col border-l border-border bg-card/95 pt-[max(env(safe-area-inset-top),0.75rem)] pb-[max(env(safe-area-inset-bottom),0.5rem)] shadow-2xl backdrop-blur-xl slide-in-left"
+      onTouchStart={(e) => { touchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }; }}
+      onTouchEnd={(e) => { const dx = e.changedTouches[0].clientX - touchStart.current.x; const dy = e.changedTouches[0].clientY - touchStart.current.y; if (dx > 80 && dx > Math.abs(dy) * 1.5) onClose(); }}
+    >
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border"><p className="font-bold">Oda Ayarları</p><button onClick={onClose} className="rounded-lg p-1.5 hover:bg-secondary"><X className="w-4 h-4" /></button></div>
+      <RoomSettingsContent
+        room={room} canMod={canMod} participants={participants} roomModerators={roomModerators}
+        onAssignMod={onAssignMod} onRemoveMod={onRemoveMod} roomName={roomName} setRoomName={setRoomName}
+        onSaveName={onSaveName} password={password} setPassword={setPassword} passwordOpen={passwordOpen}
+        setPasswordOpen={setPasswordOpen} onVoice={onVoice} onChat={onChat} onHidden={onHidden}
+        onPassword={onPassword} onRemovePassword={onRemovePassword} onUnban={onUnban} onPickMovie={onPickMovie}
+        onDeleteRoom={onDeleteRoom} onToggleApproval={onToggleApproval}
+      />
     </div>
   );
 }

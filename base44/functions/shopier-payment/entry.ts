@@ -55,7 +55,7 @@ export default async function (req) {
 
     let manualActive = manualMethod ? manualMethod.enabled === true : false;
 
-    // Hiçbir ödeme yöntemi aktif değilse ��demeyi tamamen reddet
+    // Hiçbir ödeme yöntemi aktif değilse ödemeyi tamamen reddet
     if (!shopierActive && !manualActive) {
       return Response.json({ error: 'Şu anda aktif bir ödeme yöntemi bulunmuyor. Lütfen daha sonra tekrar deneyin.' }, { status: 403 });
     }

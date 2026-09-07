@@ -1,54 +1,207 @@
 import { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Search, Ban, CheckCircle, Trash2, Loader2 } from 'lucide-react';
-import { toast } from '@/components/ui/use-toast';
+import { useCurrentUser } from '@/lib/useCurrentUser';
+import { useToast } from '@/components/ui/use-toast';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
+import UserBadge from '@/components/admin/UserBadge';
+import RoleLabelEditor from '@/components/admin/RoleLabelEditor';
+import RoomLevelManager from '@/components/admin/RoomLevelManager';
+import useRoomLevels from '@/hooks/useRoomLevels';
 
-export default function AdminUsers() {
+
+const btn = 'px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap';
+
+export default function AdminUsers({ pendingOnly = false }) {
+  const { user: admin } = useCurrentUser();
+  const { toast } = useToast();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
+  const [confirm, setConfirm] = useState(null);
+  const [detail, setDetail] = useState(null);
+  const [idQuery, setIdQuery] = useState('');
+  const [nameQuery, setNameQuery] = useState('');
+  const [paidUserIds, setPaidUserIds] = useState(new Set());
+  const [onlineUsers, setOnlineUsers] = useState(new Set());
 
+  const { levels: roomLevels } = useRoomLevels(users.map((user) => user.id));
+
+
+  const filtered = users.filter((u) => {
+    if (idQuery.trim() && u.member_id !== idQuery.trim()) return false;
+    if (nameQuery.trim()) {
+      const q = nameQuery.trim().toLowerCase();
+      if (!(u.username || '').toLowerCase().includes(q) && !(u.full_name || '').toLowerCase().includes(q) && !(u.email || '').toLowerCase().includes(q)) return false;
+    }
+    return true;
+  });
+
+  const load = () => {
+    base44.entities.User.list('-created_date', 500).then((u) => {
+      setUsers(pendingOnly ? u.filter((x) => x.membership_status === 'pending') : u);
+      setLoading(false);
+    }).catch((e) => { setLoading(false); toast({ title: 'Liste yüklenemedi', description: e.message, variant: 'destructive' }); });
+    // Tamamlanmış ödemeleri yükle — "Onayla" butonunu gizlemek için
+    base44.entities.Payment.filter({ status: 'completed' }, '-created_date', 500).then((pays) => {
+      setPaidUserIds(new Set(pays.map((p) => p.user_id)));
+    }).catch(() => {});
+    base44.entities.UserPresence.filter({ online: true }, '-created_date', 500).then((presences) => {
+      setOnlineUsers(new Set(presences.map((p) => p.user_id)));
+    }).catch(() => {});
+  };
   useEffect(() => {
-    base44.entities.User.list().then((u) => { setUsers(u); setLoading(false); }).catch(() => setLoading(false));
-  }, []);
+    setLoading(true); load();
+    const off = base44.entities.User.subscribe(load);
+    return off;
+  }, [pendingOnly]);
 
-  const filtered = users.filter((u) => !search || u.full_name?.toLowerCase().includes(search.toLowerCase()) || u.email?.toLowerCase().includes(search.toLowerCase()) || u.username?.toLowerCase().includes(search.toLowerCase()));
+  const log = async (action, target) => { await base44.entities.AdminLog.create({ admin_id: admin?.id, admin_name: admin?.username || admin?.full_name, action, target }).catch(() => {}); };
+  const notify = async (uid, title, body) => { await base44.entities.Notification.create({ user_id: uid, title, body, type: 'info' }).catch(() => {}); };
 
-  const updateStatus = async (user, status) => {
+  const approve = async (u) => {
     try {
-      await base44.entities.User.update(user.id, { membership_status: status });
-      setUsers((prev) => prev.map((u) => u.id === user.id ? { ...u, membership_status: status } : u));
-      toast({ title: 'Durum güncellendi' });
-    } catch (err) { toast({ title: 'Hata', description: err.message, variant: 'destructive' }); }
+      const start = new Date(); const end = new Date(); end.setDate(end.getDate() + 30);
+      await base44.entities.User.update(u.id, { membership_status: 'active', membership_start: start.toISOString(), membership_end: end.toISOString() });
+      await notify(u.id, 'Üyeliğiniz onaylandı', 'Premium içeriklere erişebilirsiniz.');
+      await log('Üyelik onaylandı', u.email);
+      base44.functions.invoke('admin-notify', {
+        event: 'subscription_active',
+        ref_id: `sub_active_manual:${u.id}`,
+        title: 'Abonelik aktif edildi (Manuel)',
+        body: u.username || u.full_name || u.email,
+        link: '/admin/abonelikler',
+        telegram_data: { username: u.username || u.full_name || u.email, package: 'Manuel Aktivasyon', date: new Date().toLocaleString('tr-TR') }
+      }).catch(() => {});
+      toast({ title: 'Kullanıcı onaylandı.' }); load();
+    } catch (e) { toast({ title: 'Onaylanamadı', description: e.message, variant: 'destructive' }); }
+  };
+  const reject = async (u) => {
+    try {
+      await base44.entities.User.update(u.id, { membership_status: 'rejected' });
+      await notify(u.id, 'Üyelik talebi reddedildi', 'Lütfen destek ile iletişime geçin.');
+      await log('Üyelik reddedildi', u.email);
+      toast({ title: 'Kullanıcı reddedildi.' }); load();
+    } catch (e) { toast({ title: 'Reddedilemedi', description: e.message, variant: 'destructive' }); }
+  };
+  const toggleActive = async (u) => {
+    try {
+      const suspending = u.membership_status === 'active';
+      if (suspending) {
+        await base44.functions.invoke('role-management', { action: 'suspend_user', user_id: u.id, reason: 'Yönetici tarafından askıya alındı' });
+      } else if (u.is_suspended || u.membership_status === 'suspended') {
+        await base44.functions.invoke('role-management', { action: 'unsuspend_user', user_id: u.id });
+      } else {
+        await base44.entities.User.update(u.id, { membership_status: 'active' });
+      }
+      await log(suspending ? 'Kullanıcı askıya alındı' : 'Kullanıcı aktif edildi', u.email);
+      toast({ title: suspending ? 'Kullanıcı askıya alındı' : 'Kullanıcı aktif edildi' });
+      load();
+    } catch (e) { toast({ title: 'İşlem başarısız', description: e.message, variant: 'destructive' }); }
+  };
+  const extend = async (u) => {
+    try {
+      const base = u.membership_end && new Date(u.membership_end) > new Date() ? new Date(u.membership_end) : new Date();
+      base.setDate(base.getDate() + 30);
+      await base44.entities.User.update(u.id, { membership_end: base.toISOString(), membership_status: 'active' });
+      await notify(u.id, 'Üyeliğiniz uzatıldı', '30 gün eklendi.');
+      await log('Üyelik uzatıldı', u.email);
+      toast({ title: '30 gün uzatıldı' }); load();
+    } catch (e) { toast({ title: 'Uzatılamadı', description: e.message, variant: 'destructive' }); }
+  };
+  const resetPass = async (u) => {
+    try {
+      await base44.auth.resetPasswordRequest(u.email);
+      await log('Şifre sıfırlama isteği', u.email);
+      toast({ title: 'Şifre sıfırlama bağlantısı gönderildi' });
+    } catch (e) { toast({ title: 'Sıfırlama başarısız', description: e.message, variant: 'destructive' }); }
+  };
+  const testActivate = async (u) => {
+    try {
+      const res = await base44.functions.invoke('shopier-test-activate', { user_id: u.id });
+      toast({ title: 'Test ödeme ile abonelik aktif edildi', description: (res.data || res)?.plan || '' });
+      load();
+    } catch (e) { toast({ title: 'Test başarısız', description: e.message, variant: 'destructive' }); }
+  };
+  const del = async (u) => {
+    try {
+      await base44.functions.invoke('role-management', { action: 'delete_user', user_id: u.id });
+      toast({ title: 'Kullanıcı silindi.' }); setConfirm(null); load();
+    } catch (e) { toast({ title: 'Silinemedi', description: e.message, variant: 'destructive' }); }
   };
 
-  const banUser = async (user) => {
-    try {
-      await base44.entities.User.update(user.id, { role: 'banned' });
-      setUsers((prev) => prev.map((u) => u.id === user.id ? { ...u, role: 'banned' } : u));
-      toast({ title: 'Kullanıcı engellendi' });
-    } catch (err) { toast({ title: 'Hata', description: err.message, variant: 'destructive' }); }
-  };
-
-  if (loading) return <div className="flex items-center justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-purple-500" /></div>;
+  if (loading) return <p className="text-muted-foreground">Yükleniyor...</p>;
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-white mb-6">Kullanıcılar ({users.length})</h1>
-      <div className="relative mb-4"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Ara..." className="w-full bg-card border border-border rounded-lg pl-10 pr-4 py-2 text-sm text-white" /></div>
-      <div className="space-y-2">
-        {filtered.map((u) => (
-          <div key={u.id} className="flex items-center gap-3 p-3 rounded-lg bg-card border border-border">
-            <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-white font-semibold">{(u.full_name || u.username || '?').charAt(0)}</div>
-            <div className="flex-1 min-w-0"><p className="font-medium text-white truncate">{u.full_name || u.username}</p><p className="text-xs text-muted-foreground truncate">{u.email} · @{u.username}</p></div>
-            <span className={`text-xs px-2 py-1 rounded-full ${u.role === 'admin' ? 'bg-purple-500/20 text-purple-400' : u.role === 'banned' ? 'bg-red-500/20 text-red-400' : u.membership_status === 'active' ? 'bg-green-500/20 text-green-400' : 'bg-amber-500/20 text-amber-400'}`}>{u.role === 'admin' ? 'Admin' : u.role === 'banned' ? 'Engelli' : u.membership_status === 'active' ? 'Aktif' : 'Pasif'}</span>
-            <div className="flex gap-1">
-              {u.membership_status !== 'active' && <button onClick={() => updateStatus(u, 'active')} className="w-8 h-8 rounded-lg bg-green-600/20 flex items-center justify-center hover:bg-green-600/30" title="Aktif et"><CheckCircle className="w-4 h-4 text-green-400" /></button>}
-              {u.role !== 'banned' && <button onClick={() => banUser(u)} className="w-8 h-8 rounded-lg bg-red-600/20 flex items-center justify-center hover:bg-red-600/30" title="Engelle"><Ban className="w-4 h-4 text-red-400" /></button>}
+      <h1 className="text-2xl font-extrabold mb-4">{pendingOnly ? 'Kayıt Kontrol' : 'Kullanıcı Yönetimi'}</h1>
+      {!pendingOnly && <div className="mb-4"><RoleLabelEditor onUpdated={load} /></div>}
+      {!pendingOnly && (
+        <div className="flex flex-wrap gap-2 mb-4">
+          <input value={idQuery} onChange={(e) => setIdQuery(e.target.value)} placeholder="Üye No ile ara (8 haneli)" className="bg-card border border-border rounded-lg px-3 py-2 text-sm w-44 outline-none focus:ring-2 focus:ring-ring" />
+          <input value={nameQuery} onChange={(e) => setNameQuery(e.target.value)} placeholder="İsim / kullanıcı adı / e-posta ile ara" className="bg-card border border-border rounded-lg px-3 py-2 text-sm flex-1 min-w-[200px] outline-none focus:ring-2 focus:ring-ring" />
+        </div>
+      )}
+      {users.length === 0 ? <p className="text-muted-foreground text-sm">{pendingOnly ? 'Onay bekleyen kayıt yok.' : 'Kullanıcı yok.'}</p> :
+        filtered.length === 0 ? <p className="text-muted-foreground text-sm">Eşleşen kullanıcı bulunamadı.</p> :
+        <div className="space-y-2">
+          {filtered.map((u) => {
+            const isActive = u.membership_status === 'active';
+            return (
+              <div key={u.id} className="bg-card border border-border rounded-xl p-3 flex flex-wrap items-center gap-2">
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <UserBadge userId={u.id} name={u.username || u.full_name || '?'} avatar={u.avatar} memberId={u.member_id} size="md" displayRole={u.display_role} customRole={u.custom_role} profileFrame={u.profile_frame} frameScale={u.profile_frame_scale} />
+                  <div className="hidden sm:block min-w-0">
+                    <p className="text-xs text-muted-foreground truncate">{u.email}</p>
+                    {u.payment_reference && <p className="text-xs text-purple-400 font-mono truncate">Ref: {u.payment_reference}</p>}
+                  </div>
+                </div>
+                <span className={`text-xs px-2 py-1 rounded ${isActive ? 'bg-green-500/20 text-green-400' : u.membership_status === 'pending' ? 'bg-amber-500/20 text-amber-400' : 'bg-red-500/20 text-red-400'}`}>{isActive ? 'Aktif' : u.membership_status === 'pending' ? 'Beklemede' : 'Askıya Alındı'}</span>
+                {paidUserIds.has(u.id) && <span className="text-xs px-2 py-1 rounded bg-green-500/20 text-green-400 font-semibold">ÖDENDİ</span>}
+                {onlineUsers.has(u.id) ? <span className="text-xs px-2 py-1 rounded bg-green-500/20 text-green-400">Online</span> : <span className="text-xs px-2 py-1 rounded bg-muted text-muted-foreground">Offline</span>}
+                {u.is_banned && <span className="text-xs px-2 py-1 rounded bg-red-500/20 text-red-400 font-semibold" title={u.ban_reason}>🚫 ENGELLİ</span>}
+                {!pendingOnly && <RoomLevelManager user={u} level={roomLevels[u.id]} onUpdated={load} />}
+                <div className="flex flex-wrap gap-1.5">
+                {!pendingOnly && <button onClick={() => setDetail(u)} className={`${btn} bg-secondary hover:bg-secondary/70`}>GÖRÜNTÜLE</button>}
+                {!isActive && paidUserIds.has(u.id) && <button onClick={() => approve(u)} className={`${btn} bg-green-500/20 text-green-400 hover:bg-green-500/30`}>AKTİF ET</button>}
+                {!isActive && !paidUserIds.has(u.id) && <button onClick={() => approve(u)} className={`${btn} bg-green-500/20 text-green-400 hover:bg-green-500/30`}>ONAYLA</button>}
+                  {!pendingOnly && <button onClick={() => toggleActive(u)} className={`${btn} ${isActive ? 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30' : 'bg-green-500/20 text-green-400 hover:bg-green-500/30'}`}>{isActive ? 'ASKIYA AL' : 'AKTİF ET'}</button>}
+                  {pendingOnly && <button onClick={() => reject(u)} className={`${btn} bg-red-500/20 text-red-400 hover:bg-red-500/30`}>REDDET</button>}
+                  {!pendingOnly && <button onClick={() => testActivate(u)} className={`${btn} bg-purple-500/20 text-purple-400 hover:bg-purple-500/30`}>TEST ÖDEME</button>}
+                  {!pendingOnly && <button onClick={() => extend(u)} className={`${btn} bg-blue-500/20 text-blue-400 hover:bg-blue-500/30`}>+30 GÜN</button>}
+                  {!pendingOnly && <button onClick={() => resetPass(u)} className={`${btn} bg-purple-500/20 text-purple-400 hover:bg-purple-500/30`}>ŞİFRE SIFIRLA</button>}
+                  <button onClick={() => setConfirm(u)} className={`${btn} bg-red-500/20 text-red-400 hover:bg-red-500/30`}>SİL</button>
+                </div>
+              </div>
+            );
+          })}
+        </div>}
+
+      {detail && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={() => setDetail(null)}>
+          <div className="bg-card border border-border rounded-xl p-5 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+            <div className="mb-4"><UserBadge userId={detail.id} name={detail.username || detail.full_name || '?'} avatar={detail.avatar} memberId={detail.member_id} size="lg" displayRole={detail.display_role} customRole={detail.custom_role} profileFrame={detail.profile_frame} /></div>
+            <div className="space-y-1.5 text-sm">
+              <p><span className="text-muted-foreground">Kullanıcı adı:</span> {detail.username || detail.full_name || '-'}</p>
+              <p><span className="text-muted-foreground">Ortak oda seviyesi:</span> LVL {roomLevels[detail.id] || 1}</p>
+              <p><span className="text-muted-foreground">Üye No:</span> {detail.member_id || '-'}</p>
+              <p><span className="text-muted-foreground">Ödeme Referans No:</span> <span className="font-mono font-bold text-purple-400">{detail.payment_reference || '-'}</span></p>
+              <p><span className="text-muted-foreground">E-posta:</span> {detail.email}</p>
+              <p><span className="text-muted-foreground">Kayıt tarihi:</span> {detail.created_date ? new Date(detail.created_date).toLocaleDateString('tr-TR') : '-'}</p>
+              <p><span className="text-muted-foreground">Üyelik durumu:</span> {detail.membership_status || '-'}</p>
+              <p><span className="text-muted-foreground">Aktif/Pasif:</span> {detail.membership_status === 'active' ? 'Aktif' : 'Pasif'}</p>
+              <p><span className="text-muted-foreground">Üyelik başlangıcı:</span> {detail.membership_start ? new Date(detail.membership_start).toLocaleDateString('tr-TR') : '-'}</p>
+              <p><span className="text-muted-foreground">Üyelik bitişi:</span> {detail.membership_end ? new Date(detail.membership_end).toLocaleDateString('tr-TR') : '-'}</p>
+              <p><span className="text-muted-foreground">Kalan gün:</span> {detail.membership_end ? Math.max(0, Math.ceil((new Date(detail.membership_end) - new Date()) / 86400000)) : '-'}</p>
+              {detail.is_banned && <>
+                <p className="text-red-400 font-semibold mt-2">🚫 ENGELLİ</p>
+                {detail.ban_reason && <p><span className="text-muted-foreground">Engel nedeni:</span> {detail.ban_reason}</p>}
+                {detail.ban_description && <p><span className="text-muted-foreground">Açıklama:</span> {detail.ban_description}</p>}
+              </>}
             </div>
+            <button onClick={() => setDetail(null)} className="mt-4 bg-secondary px-4 py-2 rounded-lg text-sm w-full">Kapat</button>
           </div>
-        ))}
-      </div>
+        </div>
+      )}
+      <ConfirmDialog open={!!confirm} onOpenChange={(o) => !o && setConfirm(null)} title="Kullanıcıyı sil?" description={`${confirm?.email} kalıcı olarak silinecek.`} onConfirm={() => del(confirm)} />
     </div>
   );
 }

@@ -23,6 +23,7 @@ export default function SupportWidget() {
         setMessages([]);
         return;
       }
+      // Sadece sunucudan mesaj geldiyse güncelle — optimistic mesajlar silinmesin
       if (res.messages && res.messages.length > 0) {
         setMessages(res.messages);
       }

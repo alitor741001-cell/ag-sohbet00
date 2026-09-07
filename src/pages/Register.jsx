@@ -42,6 +42,7 @@ export default function Register() {
 
   useEffect(() => {
     fetchSettings();
+    // Admin ödeme yöntemi veya paket değişikliğini gerçek zamanlı yansıt
     const unsubMethods = base44.entities.PaymentMethod.subscribe(fetchSettings);
     const unsubPlans = base44.entities.SubscriptionPlan.subscribe(fetchSettings);
     return () => { unsubMethods?.(); unsubPlans?.(); };
@@ -59,6 +60,7 @@ export default function Register() {
     if (!acceptTerms) { setError("Kullanım koşullarını kabul etmelisiniz"); return; }
     if (password !== confirmPassword) { setError("Şifreler eşleşmiyor"); return; }
     if (password.length < 6) { setError("Şifre en az 6 karakter olmalı"); return; }
+    // Yeni kayıt izni kontrolü
     try {
       const ps = await base44.functions.invoke('public-settings', {});
       const settings = ps.data || ps;
@@ -70,6 +72,7 @@ export default function Register() {
     setLoading(true);
     try {
       await base44.auth.register({ email, password });
+      // Doğrulama ekranına geç — OTP doğrulanmadan giriş yapılmaz
       setShowOtp(true);
       toast({ title: "Kod gönderildi", description: `${email} adresine doğrulama kodu gönderildi.` });
     } catch (err) {
@@ -93,6 +96,7 @@ export default function Register() {
         });
       } catch {}
       await base44.functions.invoke('ensure-member-id').catch(() => {});
+      // Admin'e yeni kullanıcı bildirimi gönder (real-time + web push)
       base44.functions.invoke('admin-notify', {
         event: 'new_user',
         ref_id: `new_user:${email}`,
@@ -167,6 +171,7 @@ export default function Register() {
 
   return (
     <div className="min-h-screen relative bg-[#0a0a0a] overflow-hidden">
+      {/* Arka plan */}
       <div className="absolute inset-0 grid grid-cols-6 gap-1 opacity-15 pointer-events-none select-none">
         {[...Array(24)].map((_, i) => (
           <div key={i} style={{ backgroundImage: `linear-gradient(135deg, hsl(${(i * 23) % 360} 30% 15%), hsl(${(i * 17) % 360} 40% 8%))` }} />
@@ -175,10 +180,12 @@ export default function Register() {
       <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0a]/85 via-[#0a0a0a]/90 to-[#0a0a0a]/95 pointer-events-none" />
 
       <div className="relative z-10 max-w-5xl mx-auto px-4 py-8">
+        {/* Geri butonu */}
         <button onClick={() => navigate("/login")} className="inline-flex items-center gap-1.5 text-sm text-[#a0a0a0] hover:text-white mb-6">
           <ArrowLeft className="w-4 h-4" /> Geri Dön
         </button>
 
+        {/* İçerik */}
         <div className="max-w-md mx-auto">
           <div className="bg-[#141414]/95 backdrop-blur-sm rounded-2xl border border-[#2a2a2a] p-6 shadow-2xl">
             <h2 className="text-xl font-bold text-white mb-1">Hesap Oluştur</h2>
@@ -189,6 +196,7 @@ export default function Register() {
             {error && <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">{error}</div>}
 
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Profil foto */}
               <div className="flex flex-col items-center mb-2">
                 <label className="cursor-pointer">
                   <div className={`w-20 h-20 rounded-full border-2 border-dashed border-[#3a3a3a] flex items-center justify-center overflow-hidden bg-[#0a0a0a] hover:border-[#e50914] transition-colors`}>
@@ -249,6 +257,7 @@ export default function Register() {
               </Button>
             </form>
           </div>
+
         </div>
       </div>
     </div>

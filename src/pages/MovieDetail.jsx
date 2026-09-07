@@ -81,11 +81,10 @@ export default function MovieDetail() {
               <span className="bg-secondary px-2 py-0.5 rounded text-xs font-bold">{movie.quality}</span>
               {movie.age_rating && <span className="border border-border px-1.5 rounded text-xs">{movie.age_rating}</span>}
             </div>
-            {movie.genres?.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {movie.genres.map((g) => <span key={g} className="text-xs bg-secondary px-2 py-1 rounded">{g}</span>)}
-              </div>
-            )}
+            <p className="text-sm sm:text-base text-muted-foreground max-w-2xl">{movie.description}</p>
+            <div className="flex flex-wrap gap-2">
+              {movie.genres?.map((g) => <span key={g} className="text-xs bg-secondary px-2 py-1 rounded">{g}</span>)}
+            </div>
             <div className="space-y-1 text-sm">
               {movie.director && <p><span className="text-muted-foreground">Yönetmen:</span> {movie.director}</p>}
               {movie.cast?.length > 0 && <p><span className="text-muted-foreground">Oyuncular:</span> {movie.cast.join(', ')}</p>}

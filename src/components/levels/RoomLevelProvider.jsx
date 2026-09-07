@@ -1,27 +1,16 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-
-const RoomLevelContext = createContext(null);
-
-export function useRoomLevelContext() {
-  const ctx = useContext(RoomLevelContext);
-  return ctx || { levels: [], loading: false };
-}
+import { applyRoomLevel, roomLevelKey } from '@/components/levels/roomLevelCache';
 
 export default function RoomLevelProvider({ children }) {
-  const [levels, setLevels] = useState([]);
-  const [loading, setLoading] = useState(true);
-
+  const queryClient = useQueryClient();
   useEffect(() => {
-    base44.entities.RoomLevel.list('sort_order', 100).then((items) => {
-      setLevels(items || []);
-      setLoading(false);
-    }).catch(() => setLoading(false));
-    const unsub = base44.entities.RoomLevel.subscribe(() => {
-      base44.entities.RoomLevel.list('sort_order', 100).then(setLevels).catch(() => {});
+    const off = base44.entities.RoomLevel.subscribe((event) => {
+      if (event.type === 'delete') queryClient.invalidateQueries({ queryKey: roomLevelKey });
+      else applyRoomLevel(queryClient, event.data);
     });
-    return unsub;
-  }, []);
-
-  return <RoomLevelContext.Provider value={{ levels, loading }}>{children}</RoomLevelContext.Provider>;
+    return off;
+  }, [queryClient]);
+  return children;
 }

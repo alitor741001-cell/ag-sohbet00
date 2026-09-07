@@ -1,38 +1,107 @@
 import { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Loader2, Save } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { toast } from '@/components/ui/use-toast';
+import { useToast } from '@/components/ui/use-toast';
+import { useTheme } from '@/lib/ThemeContext';
+import { Wrench, UserPlus, Palette, Sun, Moon } from 'lucide-react';
+import RoleLabelEditor from '@/components/admin/RoleLabelEditor';
+
+function Toggle({ on, onChange, disabled }) {
+  return (
+    <button type="button" onClick={() => !disabled && onChange(!on)} disabled={disabled}
+      className={`relative w-12 h-6 rounded-full transition-colors shrink-0 ${on ? 'bg-primary' : 'bg-secondary border border-border'}`}>
+      <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${on ? 'translate-x-6' : 'translate-x-0'}`} />
+    </button>
+  );
+}
 
 export default function AdminSettings() {
-  const [settings, setSettings] = useState({ registration_open: true, payment_required: true, payment_available: true, maintenance_mode: false });
-  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+  const { theme, setTheme } = useTheme();
+  const [cfg, setCfg] = useState({});
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    base44.functions.invoke('public-settings', {}).then((res) => { const s = res.data || res; setSettings({ registration_open: s.registration_open !== false, payment_required: s.payment_required !== false, payment_available: s.payment_available !== false, maintenance_mode: s.maintenance_mode === true }); setLoading(false); }).catch(() => setLoading(false));
-  }, []);
+  const load = async () => {
+    const configs = await base44.entities.AppConfig.list(100).catch(() => []);
+    const get = (k, f = '') => configs.find((c) => c.key === k)?.value ?? f;
+    setCfg({
+      maintenance_mode: get('maintenance_mode', 'false') === 'true',
+      registration_open: get('registration_open', 'true') === 'true',
+      app_theme: get('app_theme', 'dark'),
+    });
+  };
+  useEffect(() => { load(); }, []);
 
-  const save = async () => {
+  const save = async (key, value) => {
     setSaving(true);
-    try { await base44.functions.invoke('admin-settings', { action: 'update', ...settings }); toast({ title: 'Ayarlar kaydedildi' }); }
-    catch (err) { toast({ title: 'Hata', description: err.message, variant: 'destructive' }); }
-    finally { setSaving(false); }
+    try {
+      const configs = await base44.entities.AppConfig.list(100).catch(() => []);
+      const existing = configs.find((c) => c.key === key);
+      const val = typeof value === 'boolean' ? String(value) : value;
+      if (existing) await base44.entities.AppConfig.update(existing.id, { value: val });
+      else await base44.entities.AppConfig.create({ key, value: val });
+      setCfg((prev) => ({ ...prev, [key]: value }));
+      toast({ title: 'Ayar kaydedildi' });
+    } catch { toast({ title: 'Hata', variant: 'destructive' }); }
+    setSaving(false);
   };
 
-  if (loading) return <div className="flex items-center justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-purple-500" /></div>;
+  const card = 'bg-card border border-border rounded-xl p-5 space-y-3';
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-white mb-6">Ayarlar</h1>
-      <div className="max-w-md space-y-4 rounded-xl bg-card border border-border p-4">
-        <label className="flex items-center justify-between"><span className="text-sm text-white">Kayıtlar Açık</span><input type="checkbox" checked={settings.registration_open} onChange={(e) => setSettings({ ...settings, registration_open: e.target.checked })} className="w-5 h-5 accent-purple-600" /></label>
-        <label className="flex items-center justify-between"><span className="text-sm text-white">Ödeme Zorunlu</span><input type="checkbox" checked={settings.payment_required} onChange={(e) => setSettings({ ...settings, payment_required: e.target.checked })} className="w-5 h-5 accent-purple-600" /></label>
-        <label className="flex items-center justify-between"><span className="text-sm text-white">Ödeme Aktif</span><input type="checkbox" checked={settings.payment_available} onChange={(e) => setSettings({ ...settings, payment_available: e.target.checked })} className="w-5 h-5 accent-purple-600" /></label>
-        <label className="flex items-center justify-between"><span className="text-sm text-white">Bakım Modu</span><input type="checkbox" checked={settings.maintenance_mode} onChange={(e) => setSettings({ ...settings, maintenance_mode: e.target.checked })} className="w-5 h-5 accent-purple-600" /></label>
-        <Button onClick={save} disabled={saving} className="w-full bg-purple-600 hover:bg-purple-700 text-white">{saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />} Kaydet</Button>
+      <h1 className="text-2xl font-extrabold mb-6">Ayarlar</h1>
+      <div className="max-w-lg space-y-4">
+        {/* Bakım Modu */}
+        <div className={card}>
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <div className="p-2 rounded-lg bg-amber-500/15 text-amber-500"><Wrench className="w-5 h-5" /></div>
+              <div>
+                <h3 className="font-bold">Bakım Modu</h3>
+                <p className="text-sm text-muted-foreground">Açıkken normal kullanıcılar siteye giremez. Adminler etkilenmez.</p>
+              </div>
+            </div>
+            <Toggle on={cfg.maintenance_mode} disabled={saving} onChange={(v) => save('maintenance_mode', v)} />
+          </div>
+        </div>
+
+        {/* Yeni Kayıt İzni */}
+        <div className={card}>
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <div className="p-2 rounded-lg bg-blue-500/15 text-blue-500"><UserPlus className="w-5 h-5" /></div>
+              <div>
+                <h3 className="font-bold">Yeni Kayıt İzni</h3>
+                <p className="text-sm text-muted-foreground">Kapalıyken yeni kullanıcı kaydı engellenir. Mevcut kullanıcılar giriş yapabilir.</p>
+              </div>
+            </div>
+            <Toggle on={cfg.registration_open} disabled={saving} onChange={(v) => save('registration_open', v)} />
+          </div>
+        </div>
+
+        {/* Tema */}
+        <div className={card}>
+          <div className="flex items-start gap-3 mb-3">
+            <div className="p-2 rounded-lg bg-accent/15 text-accent"><Palette className="w-5 h-5" /></div>
+            <div>
+              <h3 className="font-bold">Tema / Görünüm</h3>
+              <p className="text-sm text-muted-foreground">Varsayılan tema seçimi. Kullanıcılar kendi tercihlerini değiştirebilir.</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              { v: 'dark', label: 'Karanlık', Icon: Moon },
+              { v: 'light', label: 'Aydınlık', Icon: Sun },
+            ].map(({ v, label, Icon }) => (
+              <button key={v} onClick={() => { setTheme(v); save('app_theme', v); }} className={`flex flex-col items-center gap-1.5 py-3 rounded-lg border transition-colors ${(theme === v) ? 'border-primary bg-primary/10 text-primary' : 'border-border hover:bg-secondary'}`}>
+                <Icon className="w-5 h-5" />
+                <span className="text-xs font-semibold">{label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <RoleLabelEditor />
       </div>
     </div>
   );

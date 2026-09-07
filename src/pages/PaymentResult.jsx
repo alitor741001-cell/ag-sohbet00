@@ -21,6 +21,7 @@ export default function PaymentResult() {
           setMessage(reason === 'invalid_signature' ? 'Ödeme doğrulanamadı.' : 'Ödeme başarısız oldu.');
           return;
         }
+        // Başarı — webhook'un işlemesi için bekleme (15 deneme × 1.5sn = ~22sn)
         let attempts = 0;
         const checkActive = async () => {
           const u = await base44.auth.me();
@@ -40,6 +41,7 @@ export default function PaymentResult() {
     verify();
   }, []);
 
+  // Başarılı ödeme sonrası otomatik ana sayfaya yönlendir
   useEffect(() => {
     if (status === 'success') {
       const t = setTimeout(() => navigate('/'), 2500);

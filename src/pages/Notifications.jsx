@@ -19,6 +19,7 @@ export default function Notifications() {
   useEffect(() => {
     load();
     const unsub = base44.entities.Notification.subscribe(load);
+    // Polling yedeği — realtime kaçırsa diye 10sn'de bir yenile
     const interval = setInterval(load, 10000);
     return () => { unsub(); clearInterval(interval); };
   }, [user?.id]);

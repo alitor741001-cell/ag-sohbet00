@@ -1,38 +1,48 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useFrameCatalog } from '@/lib/FrameCatalogContext';
-import { makePreparedTransparent, getPreparedTransparent } from '@/components/xp/frameTransparency';
+import { Image } from '@/components/ui/image';
+import TransparentFrameImage from '@/components/xp/TransparentFrameImage';
+import FramedPortrait from '@/components/profile/FramedPortrait';
 
-export default function ProfileFrame({ user, src, size = 80, className = '', showFrame = true }) {
-  const { getFrame } = useFrameCatalog();
-  const [frameUrl, setFrameUrl] = useState('');
+const SIZES = {
+  xs: { avatar: 'h-7 w-7 text-[10px]', sprite: 'h-12 w-12' },
+  sm: { avatar: 'h-10 w-10 text-xs', sprite: 'h-20 w-[4.25rem]' },
+  md: { avatar: 'h-12 w-12 text-sm', sprite: 'h-24 w-20' },
+  lg: { avatar: 'h-32 w-32 text-3xl', sprite: 'h-60 w-56' },
+};
 
-  const frameKey = user?.frame || user?.special_frame || user?.xp_frame;
-  const frame = frameKey ? getFrame(frameKey) : null;
-  const avatarUrl = src || user?.avatar;
-
-  useEffect(() => {
-    if (!frame?.image_url) { setFrameUrl(''); return; }
-    const cached = getPreparedTransparent(frame.image_url, frame.opening);
-    if (cached) { setFrameUrl(cached); return; }
-    let active = true;
-    makePreparedTransparent(frame.image_url, frame.opening).then((url) => { if (active) setFrameUrl(url); }).catch(() => {});
-    return () => { active = false; };
-  }, [frame?.image_url, frame?.opening]);
+export default function ProfileFrame({ frame, children, size = 'md', className = '', avatar, name, frameScale = 100, panX = 0, panY = 0 }) {
+  const [frameMetrics, setFrameMetrics] = useState(null);
+  const { frames } = useFrameCatalog();
+  const frameInfo = frames[frame];
+  const dims = SIZES[size] || SIZES.md;
+  if (frameInfo?.prepared) return <FramedPortrait info={frameInfo} avatar={avatar} name={name} size={size} className={className} scale={frameScale} panX={panX} panY={panY} />;
+  if (!frame || !frameInfo?.image_url) return children || (
+    <div className={`relative shrink-0 overflow-hidden rounded-full ${dims.avatar} ${className}`}>
+      {avatar
+        ? <Image src={avatar} className="h-full w-full object-cover object-center" fittingType="fill" focalPointX={0.5} focalPointY={0.5} />
+        : <span className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary to-accent font-bold text-white">{(name || '?')[0]}</span>}
+    </div>
+  );
+  const artworkClass = frameInfo.sprite
+    ? 'h-[240%] w-[168%] -translate-x-1/2 -translate-y-[42%]'
+    : 'h-[168%] w-[168%] -translate-x-1/2 -translate-y-1/2';
+  const avatarScale = (frameMetrics?.avatarScale || 1) * (Math.min(180, Math.max(80, Number(frameScale) || 100)) / 100);
+  const px = Math.max(-100, Math.min(100, Number(panX) || 0));
+  const py = Math.max(-100, Math.min(100, Number(panY) || 0));
 
   return (
-    <div className={`relative inline-block ${className}`} style={{ width: size, height: size }}>
-      {avatarUrl ? (
-        <img src={avatarUrl} alt={user?.full_name || ''} className="absolute rounded-full object-cover" style={{ width: '100%', height: '100%' }} />
-      ) : (
-        <div className="absolute rounded-full bg-muted flex items-center justify-center" style={{ width: '100%', height: '100%' }}>
-          <span className="text-muted-foreground font-semibold" style={{ fontSize: size * 0.35 }}>
-            {(user?.full_name || user?.username || '?').charAt(0).toUpperCase()}
-          </span>
+    <div className={`relative shrink-0 overflow-visible ${frameInfo.sprite ? dims.sprite : dims.avatar} ${className}`} title={frameInfo.label}>
+      <div className={`relative mx-auto ${dims.avatar}`}>
+        <div className="absolute inset-0 overflow-hidden rounded-full" style={{ transform: `scale(${avatarScale}) translate(${px}%, ${py}%)` }}>
+          {avatar
+            ? <Image src={avatar} className="h-full w-full object-cover object-center" fittingType="fill" focalPointX={0.5} focalPointY={0.5} />
+            : <span className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary to-accent font-bold text-white">{(name || '?')[0]}</span>}
         </div>
-      )}
-      {showFrame && frameUrl && (
-        <img src={frameUrl} alt="" className="absolute inset-0 pointer-events-none" style={{ width: '100%', height: '100%' }} />
-      )}
+        <div className={`pointer-events-none absolute left-1/2 top-1/2 z-[2] max-w-none overflow-visible ${artworkClass}`}>
+          <TransparentFrameImage src={frameInfo.image_url} crop={frameInfo.sprite} animated={false} onMetrics={setFrameMetrics} />
+        </div>
+      </div>
     </div>
   );
 }

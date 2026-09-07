@@ -15,6 +15,7 @@ const documents = {
     ['Kart Verilerinin Saklanmaması','Kart numarası, CVV/CVC güvenlik kodu ve son kullanma tarihi Film Keyfi sunucularına kaydedilmez ve tarafımızca saklanmaz. Yalnızca ödeme durumu, işlem numarası, tutar ve tarih gibi aboneliğin doğrulanması için gerekli işlem bilgileri tutulabilir.'],
     ['Kullanım Amaçları','Bilgiler hesabı yönetmek, aboneliği doğrulamak, güvenliği sağlamak, destek sunmak ve hizmet kalitesini geliştirmek amacıyla kullanılır.'],
     ['Hesap ve Veri Güvenliği','Yetkisiz erişimi önlemek için erişim kontrolleri ve uygun teknik tedbirler uygulanır. Kullanıcı, hesabına ait şifre ve doğrulama bilgilerinin gizliliğini korumakla sorumludur.'],
+
     ['Paylaşım ve Güvenlik','Veriler yalnızca hizmetin çalışması için gerekli sağlayıcılarla ve yasal zorunluluk durumlarında paylaşılır. Yetkisiz erişime karşı uygun teknik önlemler uygulanır.'],
     ['Haklarınız','Hesabınızla ilişkili veriler hakkında bilgi, düzeltme veya silme talebinizi destek alanından iletebilirsiniz.'] ] },
   cookies: { title: 'Çerez Politikası', sections: [

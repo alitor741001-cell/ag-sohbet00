@@ -47,12 +47,17 @@ const frameCacheKey = (src, crop) => `v3|${src}|${crop ? `${crop.col},${crop.row
 export const getTransparentFrame = (src, crop) => resolvedCache.get(frameCacheKey(src, crop)) || '';
 export const getFrameMetrics = (src, crop) => metricsCache.get(frameCacheKey(src, crop)) || null;
 
+// Hazır çerçeveler için: açıklık koordinatlarını kullanarak orta daireyi şeffaf yap.
+// opening = [x, y, w, h] normalize (0-1) koordinatlar. Görsel boyutu değişmez, kırpılmaz.
 const preparedCacheKey = (src, opening) => `prep2|${src}|${opening ? opening.join(',') : 'none'}`;
 
+// Görselin dış kenarlarından başlayarak koyu/uniform arka planı flood-fill ile şeffaflaştırır.
+// Sadece kenarlardan bağlantılı olan arka plan silinir — çerçeve tasarımına dokunulmaz.
 function clearOuterBackground(data, width, height) {
   const corners = [[0, 0], [width - 1, 0], [0, height - 1], [width - 1, height - 1]];
   const samples = corners.map(([x, y]) => rgbAt(data, y * width + x));
   const base = samples[0];
+  // Köşeler birbirinden çok farklıysa gerçek bir düz arka plan yok — dokunma.
   if (samples.some((sample) => distance(sample, base) > 40)) return;
   const tolerance = 62;
   const visited = new Uint8Array(width * height);

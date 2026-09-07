@@ -1,27 +1,25 @@
 import { useState } from 'react';
 
+// Bir PromoVideo'nun kliplerini arka arkaya, döngüsel oynatan oynatıcı.
+// Tek klipte loop, çoklu klipte sırayla ilerleyip başa döner.
+// muted + playsInline + autoplay => iOS Safari ve Android Chrome'da otomatik oynar.
 export default function PromoPlaylist({ clips, controls, className, muted = true }) {
-  const [index, setIndex] = useState(0);
-
-  if (!clips?.length) return null;
-
-  const src = clips[index % clips.length];
-  const isSingleClip = clips.length === 1;
-
+  const [idx, setIdx] = useState(0);
+  if (!clips || !clips.length) return null;
+  const src = clips[idx % clips.length];
+  const single = clips.length <= 1;
   return (
     <video
       key={src}
       src={src}
       autoPlay
       muted={muted}
-      loop={isSingleClip}
+      loop={single}
       controls={controls}
       playsInline
       preload="auto"
       className={className}
-      onEnded={() => {
-        if (!isSingleClip) setIndex((current) => (current + 1) % clips.length);
-      }}
+      onEnded={() => { if (!single) setIdx((i) => (i + 1) % clips.length); }}
     />
   );
 }

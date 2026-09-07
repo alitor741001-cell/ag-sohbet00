@@ -14,6 +14,7 @@ export default function useRoleCelebration() {
 
   useEffect(() => {
     if (!user?.id) return;
+    // Initialize refs with current values (don't celebrate on first load)
     if (prevRoleRef.current === null) {
       prevRoleRef.current = user.display_role || '';
       prevCustomRef.current = JSON.stringify(user.custom_role || null);
@@ -26,6 +27,7 @@ export default function useRoleCelebration() {
       const newCustom = JSON.stringify(ev.data.custom_role || null);
       const newFrame = ev.data.profile_frame || '';
 
+      // Role or custom role changed
       if (newRole !== prevRoleRef.current || newCustom !== prevCustomRef.current) {
         const roleInfo = getRoleInfo({ display_role: newRole, custom_role: ev.data.custom_role });
         if (roleInfo.label) {
@@ -35,12 +37,14 @@ export default function useRoleCelebration() {
             description: 'Tebrikler! Yeni rolünüz profilinizde görünüyor.',
           });
         } else if (prevRoleRef.current || prevCustomRef.current !== 'null') {
+          // Role was removed
           toast({ title: 'Rolünüz kaldırıldı', description: 'Profiliniz güncellendi.' });
         }
         prevRoleRef.current = newRole;
         prevCustomRef.current = newCustom;
       }
 
+      // Frame changed
       if (newFrame !== prevFrameRef.current) {
         if (newFrame) {
           fireConfetti('#fbbf24');

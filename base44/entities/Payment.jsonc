@@ -2,33 +2,107 @@
   "name": "Payment",
   "type": "object",
   "properties": {
-    "user_id": "string",
+    "user_id": {
+      "type": "string"
+    },
+    "user_name": {
+      "type": "string"
+    },
+    "user_email": {
+      "type": "string"
+    },
+    "payment_reference": {
+      "type": "string"
+    },
+    "plan_id": {
+      "type": "string"
+    },
+    "plan_name": {
+      "type": "string"
+    },
     "amount": {
       "type": "number"
     },
-    "currency": {
-      "type": "string",
-      "default": "TRY"
+    "payment_method": {
+      "type": "string"
+    },
+    "payment_method_name": {
+      "type": "string"
     },
     "status": {
       "type": "string",
       "enum": [
         "pending",
-        "completed",
-        "failed",
-        "refunded"
+        "approved",
+        "rejected"
       ],
       "default": "pending"
     },
-    "method": "string",
-    "plan_id": "string",
-    "plan_name": "string",
-    "transaction_id": "string",
-    "shopier_order_id": "string"
+    "transaction_id": {
+      "type": "string"
+    },
+    "bank_name": {
+      "type": "string"
+    },
+    "account_holder": {
+      "type": "string"
+    },
+    "iban": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "rejection_reason": {
+      "type": "string"
+    },
+    "approved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "approved_by": {
+      "type": "string"
+    },
+    "subscription_id": {
+      "type": "string"
+    },
+    "currency": {
+      "type": "string",
+      "default": "TRY"
+    }
   },
   "required": [
     "user_id",
-    "method",
-    "plan_id"
-  ]
+    "amount",
+    "plan_id",
+    "payment_method",
+    "status"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.user_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "data.user_id": "{{user.id}}"
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
 }

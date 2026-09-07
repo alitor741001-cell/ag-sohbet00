@@ -1,27 +1,26 @@
 import { getRoleInfo } from '@/lib/roles';
 
-export default function RoleBadge({ user, size = 'sm' }) {
-  if (!user) return null;
+export default function RoleBadge({ user, size = 'sm', showLabel = true, className = '' }) {
   const roleInfo = getRoleInfo(user);
-  if (!roleInfo?.label) return null;
+  if (!roleInfo || !roleInfo.label) return null;
 
   const sizeClasses = {
-    xs: 'text-[10px] px-1.5 py-0.5',
-    sm: 'text-xs px-2 py-0.5',
-    md: 'text-sm px-2.5 py-1',
-    lg: 'text-base px-3 py-1.5',
+    sm: 'text-[9px] px-1.5 py-0.5 gap-0.5',
+    md: 'text-[10px] px-2 py-0.5 gap-1',
+    lg: 'text-xs px-2.5 py-1 gap-1',
   };
 
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full font-semibold border ${sizeClasses[size]}`}
+      className={`inline-flex items-center rounded-full font-bold whitespace-nowrap ${sizeClasses[size]} ${className}`}
       style={{
+        backgroundColor: `${roleInfo.color}25`,
         color: roleInfo.color,
-        borderColor: `${roleInfo.color}50`,
-        backgroundColor: `${roleInfo.color}15`,
+        boxShadow: roleInfo.neon ? `0 0 6px -1px ${roleInfo.color}80` : 'none',
       }}
     >
-      {roleInfo.label}
+      <span>{roleInfo.icon}</span>
+      {showLabel && <span>{roleInfo.label}</span>}
     </span>
   );
 }

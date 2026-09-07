@@ -10,7 +10,7 @@ const frameCatalog = {
   admin_mavi_kirmizi: frame('Admin', '#e11d48', '9919c4134_admin.png', [0.20734, 0.2177, 0.58453, 0.54705]),
   turgay: frame('Turgay Mavi', '#1565c0', '0e9d1406c_turgay-mavi.png', [0.22329, 0.22807, 0.55183, 0.51435]),
   admin_kralicesi: frame('Admin Kraliçesi', '#db2777', '9c7a08ed0_admin-kralicesi.png', [0.21053, 0.22967, 0.57576, 0.50558]),
-  turgay_ate: frame('Turgay Ateş', '#f97316', '8166ccea1_turgay-ates.png', [0.22807, 0.24641, 0.54386, 0.51834]),
+  turgay_ates: frame('Turgay Ateş', '#f97316', '8166ccea1_turgay-ates.png', [0.22807, 0.24641, 0.54386, 0.51834]),
   ahu: frame('Ahu', '#d4a74d', '0582220e2_ahu.png', [0.20734, 0.20813, 0.58134, 0.5614]),
   kurt_kral: frame('Kurt Kral', '#dc2626', '86ed472f0_kurt-kral.png', [0.24721, 0.24721, 0.50558, 0.4992]),
   ask: frame('Aşk', '#dc2626', '136ec4ead_ask.png', [0.22329, 0.21531, 0.56778, 0.57018]),

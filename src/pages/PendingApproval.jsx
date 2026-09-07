@@ -9,7 +9,6 @@ export default function PendingApproval() {
   const [user, setUser] = useState(null);
   const [checking, setChecking] = useState(false);
   const [paymentAvailable, setPaymentAvailable] = useState(true);
-  const userIdRef = useRef(null);
 
   const check = async () => {
     try {
@@ -36,12 +35,15 @@ export default function PendingApproval() {
     }
   };
 
+  const userIdRef = useRef(null);
+
   useEffect(() => {
     check();
     const interval = setInterval(() => {
       setChecking(true);
       check().finally(() => setChecking(false));
     }, 3000);
+    // Gerçek zamanlı: admin üyeliği onayladığında veritabanından anında olay gelir
     const unsub = base44.entities.User.subscribe((event) => {
       if (event.type === 'update' && event.data?.id === userIdRef.current && event.data?.membership_status === 'active') {
         window.location.href = '/';
@@ -58,16 +60,19 @@ export default function PendingApproval() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center px-4 py-8 relative overflow-hidden">
+      {/* Arka plan ızgarası */}
       <div className="absolute inset-0 grid grid-cols-4 gap-1 opacity-15 pointer-events-none select-none">
         {[...Array(16)].map((_, i) => (
           <div key={i} style={{ backgroundImage: `linear-gradient(135deg, hsl(${(i * 23) % 360} 30% 15%), hsl(${(i * 17) % 360} 40% 8%))` }} />
         ))}
       </div>
       <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0a]/85 via-[#0a0a0a]/90 to-[#0a0a0a]/95 pointer-events-none" />
+      {/* Mor parıltı */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 rounded-full bg-purple-600/10 blur-3xl pointer-events-none" />
 
       <div className="relative z-10 w-full max-w-md">
         <div className="relative">
+          {/* Gradient çerçeve */}
           <div className="absolute -inset-[1px] rounded-3xl bg-gradient-to-br from-purple-500/40 via-pink-500/30 to-purple-600/40 blur-[2px]" />
           <div className="relative bg-[#141414]/95 backdrop-blur-xl rounded-3xl border border-white/10 p-8 shadow-2xl">
             {showPayment ? (
@@ -127,7 +132,7 @@ export default function PendingApproval() {
 
                 <div className="text-center mb-5">
                   <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-purple-400 bg-purple-500/10 border border-purple-500/20 px-3 py-1 rounded-full mb-3">
-                    <Sparkles className="w-3 h-3" /> ONAY BEKLİYOR
+                    <Sparkles className="w-3 h-3" /> ONAY BEKLENİYOR
                   </span>
                   <h1 className="text-2xl font-extrabold text-white mb-2">Hesabınız İnceleniyor</h1>
                   <p className="text-sm text-[#a0a0a0] leading-relaxed">

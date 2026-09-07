@@ -3,19 +3,31 @@
   "type": "object",
   "properties": {
     "xp_per_message": {
-      "type": "number",
-      "default": 1
-    },
-    "xp_per_room_join": {
-      "type": "number",
+      "type": "integer",
+      "minimum": 0,
       "default": 10
     },
-    "level_thresholds": {
-      "type": "array",
-      "items": {
-        "type": "number"
-      }
+    "enabled": {
+      "type": "boolean",
+      "default": true
     }
   },
-  "required": []
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
 }

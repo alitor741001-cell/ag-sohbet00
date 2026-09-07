@@ -1,63 +1,87 @@
 import { useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Button } from '@/components/ui/button';
-import { X, Flag, Loader2 } from 'lucide-react';
-import { toast } from '@/components/ui/use-toast';
+import { useCurrentUser } from '@/lib/useCurrentUser';
+import { useToast } from '@/components/ui/use-toast';
+import { Flag, X, Image as ImageIcon } from 'lucide-react';
+import { Image } from '@/components/ui/image';
 
-const reasons = [
-  'Taciz veya hakaret',
-  'Uygunsuz içerik',
-  'Spam veya reklam',
-  'Sahte hesap',
-  'Diğer',
-];
+const REASONS = ['Spam', 'Taciz / Hakaret', 'Uygunsuz İçerik', 'Sahte Profil', 'Tehdit', 'Diğer'];
 
-export default function ReportDialog({ open, onClose, targetUserId, targetName }) {
-  const [reason, setReason] = useState('');
+export default function ReportDialog({ targetId, targetName, context, contextId, onClose }) {
+  const { user } = useCurrentUser();
+  const { toast } = useToast();
+  const [reason, setReason] = useState(REASONS[0]);
   const [detail, setDetail] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [fileUrl, setFileUrl] = useState('');
+  const [lightbox, setLightbox] = useState(null);
 
-  if (!open) return null;
+  const onFile = async (e) => {
+    const f = e.target.files?.[0]; if (!f) return;
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(f.type)) { toast({ title: 'Sadece JPG, PNG, WEBP', variant: 'destructive' }); e.target.value = ''; return; }
+    if (f.size > 10 * 1024 * 1024) { toast({ title: 'Maksimum 10 MB', variant: 'destructive' }); e.target.value = ''; return; }
+    setUploading(true);
+    try { const { file_url } = await base44.integrations.Core.UploadFile({ file: f }); setFileUrl(file_url); }
+    catch { toast({ title: 'Yükleme hatası', variant: 'destructive' }); }
+    finally { setUploading(false); e.target.value = ''; }
+  };
 
   const submit = async () => {
-    if (!reason) return;
-    setLoading(true);
+    if (!user || !targetId) return;
+    setSending(true);
     try {
-      await base44.functions.invoke('admin-notify', {
-        event: 'user_report',
-        ref_id: `report:${targetUserId}`,
-        title: `Kullanıcı şikayeti: ${targetName || targetUserId}`,
-        body: `Sebep: ${reason}${detail ? ` — ${detail}` : ''}`,
-        link: '/admin/sikayetler',
+      const report = await base44.entities.Report.create({
+        reporter_id: user.id,
+        reporter_name: user.username || user.full_name || 'Kullanıcı',
+        target_id: targetId,
+        target_name: targetName || '',
+        context,
+        context_id: contextId || '',
+        reason: `${reason}${detail ? ' — ' + detail : ''}`,
+        file_url: fileUrl || '',
       });
-      toast({ title: 'Şikayet gönderildi', description: 'İncelenecek.' });
-      setReason(''); setDetail(''); onClose();
-    } catch (err) {
-      toast({ title: 'Hata', description: err.message, variant: 'destructive' });
-    } finally { setLoading(false); }
+      // Admin'e realtime + web push bildirimi
+      if (report?.id) {
+        base44.functions.invoke('admin-notify', {
+          event: 'report',
+          ref_id: `report:${report.id}`,
+          title: 'Yeni şikayet bildirimi geldi',
+          body: `${targetName || 'Bilinmeyen'} — ${reason}`,
+          link: '/admin/sikayetler',
+          telegram_data: { username: user.username || user.full_name, subject: targetName || 'Bilinmeyen', message: `${reason}${detail ? ' — ' + detail : ''}`, date: new Date().toLocaleString('tr-TR') }
+        }).catch(() => {});
+      }
+      toast({ title: 'Şikayetiniz alındı', description: 'İnceleyeceğiz.' });
+      onClose();
+    } catch { toast({ title: 'Gönderilemedi', variant: 'destructive' }); }
+    finally { setSending(false); }
   };
 
   return (
-    <div className="fixed inset-0 z-[200] bg-black/75 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="w-full max-w-md rounded-2xl bg-card border border-border p-6" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold text-white flex items-center gap-2"><Flag className="w-5 h-5 text-red-400" /> Kullanıcı Şikayet Et</h3>
-          <button onClick={onClose} className="p-1 rounded-lg hover:bg-white/10"><X className="w-5 h-5" /></button>
+    <div className="fixed inset-0 z-[100] bg-black/70 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-card border border-border rounded-xl p-5 w-full max-w-sm max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-bold flex items-center gap-2"><Flag className="w-5 h-5 text-destructive" /> Şikayet Et</h3>
+          <button onClick={onClose}><X className="w-5 h-5" /></button>
         </div>
-        <p className="text-sm text-muted-foreground mb-4">{targetName} kullanıcısını şikayet etme sebebini seçin.</p>
-        <div className="space-y-2 mb-4">
-          {reasons.map((r) => (
-            <button key={r} onClick={() => setReason(r)} className={`w-full text-left px-3 py-2 rounded-lg border text-sm transition-colors ${reason === r ? 'border-purple-500 bg-purple-500/10 text-white' : 'border-border text-muted-foreground hover:text-white'}`}>{r}</button>
-          ))}
+        <p className="text-sm text-muted-foreground mb-3"><b>{targetName}</b> kullanıcısını şikayet ediyorsunuz</p>
+        <select value={reason} onChange={(e) => setReason(e.target.value)} className="w-full bg-secondary/60 rounded-lg px-3 py-2.5 text-sm mb-2 outline-none">
+          {REASONS.map((r) => <option key={r} value={r}>{r}</option>)}
+        </select>
+        <textarea value={detail} onChange={(e) => setDetail(e.target.value)} placeholder="Açıklama (opsiyonel)" rows={2} className="w-full bg-secondary/60 rounded-lg px-3 py-2.5 text-sm mb-3 outline-none focus:ring-2 focus:ring-ring" />
+        <div className="mb-3">
+          <label className="flex items-center gap-2 cursor-pointer text-sm text-muted-foreground">
+            <ImageIcon className="w-4 h-4" />
+            {uploading ? 'Yükleniyor...' : fileUrl ? 'Fotoğraf eklendi ✓' : 'Fotoğraf ekle (opsiyonel)'}
+            <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={onFile} disabled={uploading} />
+          </label>
+          {fileUrl && <div className="mt-2 relative"><Image src={fileUrl} alt="ek" className="w-full max-h-32 rounded-lg cursor-pointer" fittingType="fit" onClick={() => setLightbox(fileUrl)} /><button onClick={() => setFileUrl('')} className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-1"><X className="w-3 h-3" /></button></div>}
         </div>
-        <textarea value={detail} onChange={(e) => setDetail(e.target.value)} placeholder="Ek detay (opsiyonel)" className="w-full bg-background border border-border rounded-lg p-3 text-sm text-white mb-4 resize-none" rows={3} />
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={onClose} className="flex-1">İptal</Button>
-          <Button onClick={submit} disabled={!reason || loading} className="flex-1 bg-red-600 hover:bg-red-700 text-white">
-            {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null} Şikayet Et
-          </Button>
-        </div>
+        <button onClick={submit} disabled={sending || uploading} className="w-full bg-destructive text-destructive-foreground py-2.5 rounded-lg text-sm font-semibold disabled:opacity-50">{sending ? 'Gönderiliyor...' : 'Şikayet Gönder'}</button>
       </div>
+      {lightbox && <div onClick={() => setLightbox(null)} className="fixed inset-0 z-[110] bg-black/90 flex items-center justify-center p-4"><button className="absolute top-4 right-4 text-white p-2"><X className="w-6 h-6" /></button><Image src={lightbox} className="max-w-full max-h-full rounded-lg" fittingType="fit" /></div>}
     </div>
   );
 }

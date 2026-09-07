@@ -1,12 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
 import { findProfanity } from '../../shared/profanity.ts';
-
-const cleanUser = (user) => ({
-  id: user.id,
-  name: user.username || user.full_name || 'Kullanıcı',
-  member_id: user.member_id || '',
-  avatar: user.avatar || ''
-});
+import { incrementFriendshipProgression } from '../../shared/friendshipProgression.ts';
 
 export default async function(req) {
   try {
@@ -15,177 +9,215 @@ export default async function(req) {
     if (!user) return Response.json({ error: 'Oturum gerekli' }, { status: 401 });
     const body = await req.json();
     const action = body.action;
+    const userName = user.username || user.full_name || 'Kullanıcı';
+    const userAvatar = user.avatar || '';
 
-    if (action === 'admin_clear_all') {
-      if (user.role !== 'admin') return Response.json({ error: 'Bu işlem için yetkiniz yok' }, { status: 403 });
-      await base44.asServiceRole.entities.DirectMessage.deleteMany({});
-      return Response.json({ ok: true });
-    }
-
-    if (action === 'search') {
-      const memberId = String(body.member_id || '').trim();
-      if (!/^\d{8}$/.test(memberId)) return Response.json({ error: '8 haneli üye numarası girin' }, { status: 400 });
-      const matches = await base44.asServiceRole.entities.User.filter({ member_id: memberId }, '-created_date', 2);
-      const target = matches.find((item) => item.id !== user.id);
-      if (!target) return Response.json({ user: null });
-      const blocked = await base44.asServiceRole.entities.Friendship.filter({
-        $or: [
-          { requester_id: user.id, recipient_id: target.id, status: 'blocked' },
-          { requester_id: target.id, recipient_id: user.id, status: 'blocked' }
-        ]
-      }, '-created_date', 1);
-      return Response.json({ user: blocked.length ? null : cleanUser(target) });
-    }
-
-    if (action === 'request') {
-      const targetId = String(body.user_id || '');
+    // start: Yeni sohbet başlat veya mevcut aktif sohbeti aç
+    // Kullanıcı sohbeti sildiyse (deleted_for içinde) YENİ sohbet oluşturulur
+    if (action === 'start') {
+      const targetId = String(body.target_id || '');
       if (!targetId || targetId === user.id) return Response.json({ error: 'Geçersiz kullanıcı' }, { status: 400 });
-      const target = await base44.asServiceRole.entities.User.get(targetId);
-      if (!target) return Response.json({ error: 'Kullanıcı bulunamadı' }, { status: 404 });
-      const existing = await base44.asServiceRole.entities.Friendship.filter({
+      const target = await base44.asServiceRole.entities.User.get(targetId).catch(() => null);
+      if (!target) return Response.json({ error: 'Bu hesap yönetici tarafından silinmiştir.' }, { status: 404 });
+      if (target.is_banned || target.role === 'banned' || target.membership_status === 'blocked') return Response.json({ error: 'Bu hesap yönetici tarafından engellenmiştir.' }, { status: 403 });
+      if (target.is_suspended || target.membership_status === 'suspended') return Response.json({ error: 'Bu hesap yönetici tarafından askıya alınmıştır.' }, { status: 403 });
+      const targetName = target.username || target.full_name || 'Kullanıcı';
+      const targetAvatar = target.avatar || '';
+      const isAdminChat = user.role === 'admin' || target.role === 'admin';
+      if (!isAdminChat) {
+        const friendships = await base44.asServiceRole.entities.Friendship.filter({
+          $or: [{ requester_id: user.id, recipient_id: targetId }, { requester_id: targetId, recipient_id: user.id }],
+          status: 'accepted'
+        }, '-created_date', 1).catch(() => []);
+        if (!friendships.length) return Response.json({ error: 'Yalnızca arkadaşlarınıza mesaj gönderebilirsiniz' }, { status: 403 });
+      }
+
+      // İki kullanıcı arasındaki sohbetleri user1_id/user2_id ile bul (members array filter güvenilir değil)
+      const allConvos = await base44.asServiceRole.entities.Conversation.filter({
         $or: [
-          { requester_id: user.id, recipient_id: targetId },
-          { requester_id: targetId, recipient_id: user.id }
+          { user1_id: user.id, user2_id: targetId },
+          { user1_id: targetId, user2_id: user.id }
         ]
-      }, '-created_date', 20);
-      if (existing.some((item) => item.status === 'pending' || item.status === 'accepted' || item.status === 'blocked')) {
-        return Response.json({ error: 'Arkadaşlık isteği zaten mevcut' }, { status: 409 });
+      }, '-created_date', 10).catch(() => []);
+      const between = allConvos || [];
+      // Mevcut sohbet varsa onu kullan — silinmişse bile geri aç (yeni oluşturma)
+      if (between.length > 0) {
+        const convo = between[0];
+        if ((convo.deleted_for || []).includes(user.id)) {
+          const newDeletedFor = (convo.deleted_for || []).filter((id) => id !== user.id);
+          // Clean slate: son mesajı temizle — tekrar açınca eski mesaj görünmesin
+          await base44.asServiceRole.entities.Conversation.update(convo.id, { deleted_for: newDeletedFor, last_message_text: '', last_message_at: null });
+          return Response.json({ conversation: { ...convo, deleted_for: newDeletedFor, last_message_text: '', last_message_at: null } });
+        }
+        return Response.json({ conversation: convo });
       }
-      const me = cleanUser(user); const other = cleanUser(target);
-      const friendship = await base44.asServiceRole.entities.Friendship.create({
-        requester_id: me.id, requester_name: me.name, requester_member_id: me.member_id, requester_avatar: me.avatar,
-        recipient_id: other.id, recipient_name: other.name, recipient_member_id: other.member_id, recipient_avatar: other.avatar,
-        members: [me.id, other.id], status: 'pending'
+
+      // Hiç sohbet yoksa yeni oluştur
+      const conversation = await base44.asServiceRole.entities.Conversation.create({
+        user1_id: user.id, user1_name: userName, user1_avatar: userAvatar,
+        user2_id: targetId, user2_name: targetName, user2_avatar: targetAvatar,
+        members: [user.id, targetId], deleted_for: [],
+        last_message_text: '', last_sender_id: '', last_sender_name: '',
+        unread_user1: 0, unread_user2: 0
       });
-      await base44.asServiceRole.entities.Notification.create({ user_id: other.id, title: 'Yeni arkadaşlık isteği', body: `${me.name} size arkadaşlık isteği gönderdi.`, type: 'friend_request', link: '/arkadaslar' });
-      return Response.json({ friendship });
+      return Response.json({ conversation });
     }
 
-    if (action === 'respond') {
-      const friendship = await base44.asServiceRole.entities.Friendship.get(String(body.friendship_id || ''));
-      if (!friendship || friendship.recipient_id !== user.id || friendship.status !== 'pending') {
-        return Response.json({ error: 'Bu istek işlenemiyor' }, { status: 403 });
-      }
-      const status = body.accept ? 'accepted' : 'rejected';
-      const updated = await base44.asServiceRole.entities.Friendship.update(friendship.id, { status });
-      if (status === 'accepted') await base44.asServiceRole.entities.Notification.create({ user_id: friendship.requester_id, title: 'Arkadaşlık isteği kabul edildi', body: `${friendship.recipient_name} artık arkadaşınız.`, type: 'friend_accepted', link: '/arkadaslar' });
-      return Response.json({ friendship: updated });
-    }
-
-    if (action === 'typing') {
-      const friendship = await base44.asServiceRole.entities.Friendship.get(String(body.friendship_id || ''));
-      if (!friendship || friendship.status !== 'accepted' || !friendship.members.includes(user.id)) return Response.json({ error: 'Bu işlem için yetkiniz yok' }, { status: 403 });
-      await base44.asServiceRole.entities.Friendship.update(friendship.id, { typing_user_id: body.typing ? user.id : '', typing_updated_at: new Date().toISOString() });
-      return Response.json({ ok: true });
-    }
-
-    if (action === 'mark_read') {
-      const friendship = await base44.asServiceRole.entities.Friendship.get(String(body.friendship_id || ''));
-      if (!friendship || !friendship.members.includes(user.id)) return Response.json({ error: 'Bu işlem için yetkiniz yok' }, { status: 403 });
-      const received = await base44.asServiceRole.entities.DirectMessage.filter({ friendship_id: friendship.id, recipient_id: user.id }, '-created_date', 500);
-      const unread = received.filter((message) => !(message.read_by || []).includes(user.id));
-      if (unread.length) await base44.asServiceRole.entities.DirectMessage.bulkUpdate(unread.map((message) => ({ id: message.id, read_by: [...new Set([...(message.read_by || []), user.id])] })));
-      return Response.json({ ok: true });
-    }
-
-    if (action === 'clear_chat') {
-      const friendship = await base44.asServiceRole.entities.Friendship.get(String(body.friendship_id || ''));
-      if (!friendship || !friendship.members.includes(user.id)) return Response.json({ error: 'Bu işlem için yetkiniz yok' }, { status: 403 });
-      const clearedAt = { ...(friendship.cleared_at || {}) };
-      clearedAt[user.id] = new Date().toISOString();
-      await base44.asServiceRole.entities.Friendship.update(friendship.id, { cleared_at: clearedAt });
-      return Response.json({ ok: true });
-    }
-
-    if (action === 'refriend') {
-      const friendship = await base44.asServiceRole.entities.Friendship.get(String(body.friendship_id || ''));
-      if (!friendship || !friendship.members.includes(user.id)) return Response.json({ error: 'Bu işlem için yetkiniz yok' }, { status: 403 });
-      if (friendship.status !== 'removed' && friendship.status !== 'rejected') return Response.json({ error: 'Bu arkadaşlık geri eklenemez' }, { status: 400 });
-      // İsteyeni requester yap ki karşı taraf onaylayabilsin
-      const isRequester = friendship.requester_id === user.id;
-      const myName = user.username || user.full_name || 'Kullanıcı';
-      const myMemberId = user.member_id || '';
-      const myAvatar = user.avatar || '';
-      const otherId = friendship.members.find((id) => id !== user.id);
-      const otherName = isRequester ? friendship.recipient_name : friendship.requester_name;
-      const otherMemberId = isRequester ? friendship.recipient_member_id : friendship.requester_member_id;
-      const otherAvatar = isRequester ? friendship.recipient_avatar : friendship.requester_avatar;
-      const update = isRequester ? { status: 'pending' } : {
-        status: 'pending',
-        requester_id: user.id, requester_name: myName, requester_member_id: myMemberId, requester_avatar: myAvatar,
-        recipient_id: otherId, recipient_name: otherName, recipient_member_id: otherMemberId, recipient_avatar: otherAvatar
-      };
-      await base44.asServiceRole.entities.Friendship.update(friendship.id, update);
-      await base44.asServiceRole.entities.Notification.create({ user_id: otherId, title: 'Yeni arkadaşlık isteği', body: `${myName} sizi arkadaş olarak eklemek istiyor.`, type: 'friend_request', link: '/arkadaslar' });
-      return Response.json({ ok: true });
-    }
-
-    if (['hide', 'unfriend', 'block', 'unblock'].includes(action)) {
-      const friendship = await base44.asServiceRole.entities.Friendship.get(String(body.friendship_id || ''));
-      if (!friendship || !friendship.members.includes(user.id)) return Response.json({ error: 'Bu işlem için yetkiniz yok' }, { status: 403 });
-      if (action === 'hide') {
-        const hiddenFor = [...new Set([...(friendship.hidden_for || []), user.id])];
-        await base44.asServiceRole.entities.Friendship.update(friendship.id, { hidden_for: hiddenFor });
-      } else if (action === 'unfriend') {
-        await base44.asServiceRole.entities.Friendship.update(friendship.id, { status: 'removed' });
-        const otherId = friendship.members.find((id) => id !== user.id);
-        const myName = user.username || user.full_name || 'Kullanıcı';
-        const otherName = friendship.requester_id === otherId ? friendship.requester_name : friendship.recipient_name;
-        const conversations = await base44.asServiceRole.entities.Conversation.filter({ $or: [{ user1_id: user.id, user2_id: otherId }, { user1_id: otherId, user2_id: user.id }] }, '-created_date', 1).catch(() => []);
-        const conversation = conversations[0] || await base44.asServiceRole.entities.Conversation.create({ user1_id: user.id, user1_name: myName, user1_avatar: user.avatar || '', user2_id: otherId, user2_name: otherName || 'Kullanıcı', user2_avatar: '', members: [user.id, otherId], deleted_for: [], last_message_text: '', unread_user1: 0, unread_user2: 0 });
-        const content = `${myName} sizi arkadaşlıktan çıkardı.`;
-        await base44.asServiceRole.entities.ChatMessage.create({ conversation_id: conversation.id, sender_id: user.id, sender_name: myName, receiver_id: otherId, content, deleted_for: [], read_by: [user.id] });
-        const conversationUpdate: any = { deleted_for: (conversation.deleted_for || []).filter((id) => id !== otherId), last_message_text: content, last_message_at: new Date().toISOString(), last_sender_id: user.id, last_sender_name: myName };
-        if (conversation.user1_id === otherId) conversationUpdate.unread_user1 = (conversation.unread_user1 || 0) + 1;
-        else conversationUpdate.unread_user2 = (conversation.unread_user2 || 0) + 1;
-        await base44.asServiceRole.entities.Conversation.update(conversation.id, conversationUpdate);
-      } else if (action === 'block') {
-        const blockedBy = [...new Set([...(friendship.blocked_by || []), user.id])];
-        await base44.asServiceRole.entities.Friendship.update(friendship.id, { status: 'blocked', blocked_by: blockedBy });
-      } else {
-        if (!(friendship.blocked_by || []).includes(user.id)) return Response.json({ error: 'Bu engeli kaldıramazsınız' }, { status: 403 });
-        const blockedBy = (friendship.blocked_by || []).filter((id) => id !== user.id);
-        await base44.asServiceRole.entities.Friendship.update(friendship.id, { status: blockedBy.length ? 'blocked' : 'accepted', blocked_by: blockedBy });
-      }
-      return Response.json({ ok: true });
-    }
-
+    // send: Mesaj gönder
     if (action === 'send') {
-      const text = String(body.text || '').trim();
-      if (!text || text.length > 2000) return Response.json({ error: 'Mesaj 1-2000 karakter olmalıdır' }, { status: 400 });
-      const friendship = await base44.asServiceRole.entities.Friendship.get(String(body.friendship_id || ''));
-      if (!friendship || friendship.status !== 'accepted' || !friendship.members.includes(user.id)) {
-        return Response.json({ error: 'Yalnızca arkadaşlarınıza mesaj gönderebilirsiniz' }, { status: 403 });
+      const conversationId = String(body.conversation_id || '');
+      const content = String(body.content || '').trim();
+      if (!conversationId || !content) return Response.json({ error: 'eksik parametre' }, { status: 400 });
+      if (content.length > 2000) return Response.json({ error: 'Mesaj 1-2000 karakter olmalıdır' }, { status: 400 });
+
+      const conversation = await base44.asServiceRole.entities.Conversation.get(conversationId).catch(() => null);
+      if (!conversation) return Response.json({ error: 'Sohbet bulunamadı' }, { status: 404 });
+      if (!(conversation.members || []).includes(user.id)) return Response.json({ error: 'Bu sohbette yetkiniz yok' }, { status: 403 });
+      if ((conversation.deleted_for || []).includes(user.id)) return Response.json({ error: 'Bu sohbeti sildiniz' }, { status: 403 });
+
+      // Arkadaşlık durumu kontrolü — admin sohbetlerinde arkadaşlık şartı aranmaz
+      const friendId = conversation.user1_id === user.id ? conversation.user2_id : conversation.user1_id;
+      const friendUser = await base44.asServiceRole.entities.User.get(friendId).catch(() => null);
+      if (!friendUser) return Response.json({ error: 'Bu hesap yönetici tarafından silinmiştir.' }, { status: 404 });
+      if (friendUser.is_banned || friendUser.role === 'banned' || friendUser.membership_status === 'blocked') return Response.json({ error: 'Bu hesap yönetici tarafından engellenmiştir.' }, { status: 403 });
+      if (friendUser.is_suspended || friendUser.membership_status === 'suspended') return Response.json({ error: 'Bu hesap yönetici tarafından askıya alınmıştır.' }, { status: 403 });
+      const isAdminChat = user.role === 'admin' || friendUser.role === 'admin';
+      if (!isAdminChat) {
+        const friendships = await base44.asServiceRole.entities.Friendship.filter({
+          $or: [
+            { requester_id: user.id, recipient_id: friendId },
+            { requester_id: friendId, recipient_id: user.id }
+          ]
+        }, '-created_date', 10).catch(() => []);
+        const friendship = friendships[0];
+        if (!friendship || friendship.status !== 'accepted') return Response.json({ error: 'Yalnızca arkadaşlarınıza mesaj gönderebilirsiniz' }, { status: 403 });
       }
-      // Küfür/argo filtresi
-      const badWords = findProfanity(text);
+
+      // Küfür filtresi
+      const badWords = findProfanity(content);
       if (badWords.length) {
-        const senderName = user.username || user.full_name || 'Kullanıcı';
         await base44.asServiceRole.entities.Report.create({
-          reporter_id: user.id, reporter_name: senderName,
-          target_id: user.id, target_name: senderName,
-          context: 'dm', context_id: friendship.id,
-          reason: `Küfür/Argo filtre: "${text}" (${badWords.join(', ')})`,
+          reporter_id: user.id, reporter_name: userName,
+          target_id: user.id, target_name: userName,
+          context: 'dm', context_id: conversationId,
+          reason: `Küfür/Argo filtre: "${content}" (${badWords.join(', ')})`,
           status: 'pending'
         }).catch(() => {});
         return Response.json({ error: 'Mesajınız uygunsuz içerik tespit edildiği için engellendi.', filtered: true }, { status: 400 });
       }
-      const recipientId = friendship.requester_id === user.id ? friendship.recipient_id : friendship.requester_id;
-      const senderName = friendship.requester_id === user.id ? friendship.requester_name : friendship.recipient_name;
-      const recipientName = friendship.requester_id === user.id ? friendship.recipient_name : friendship.requester_name;
-      const visibleToBoth = (friendship.hidden_for || []).filter((id) => id !== user.id && id !== recipientId);
-      if (visibleToBoth.length !== (friendship.hidden_for || []).length) await base44.asServiceRole.entities.Friendship.update(friendship.id, { hidden_for: visibleToBoth });
-      const message = await base44.asServiceRole.entities.DirectMessage.create({ friendship_id: friendship.id, sender_id: user.id, sender_name: senderName, recipient_id: recipientId, recipient_name: recipientName, participants: friendship.members, read_by: [user.id], text });
-      return Response.json({ message });
+
+      const receiverId = conversation.user1_id === user.id ? conversation.user2_id : conversation.user1_id;
+      const receiverName = conversation.user1_id === user.id ? conversation.user2_name : conversation.user1_name;
+
+      const message = await base44.asServiceRole.entities.ChatMessage.create({
+        conversation_id: conversationId,
+        sender_id: user.id, sender_name: userName,
+        receiver_id: receiverId,
+        content, deleted_for: [], read_by: [user.id]
+      });
+
+      // Sohbeti güncelle — son mesaj ve okunmamış sayısı
+      const updates: any = {
+        deleted_for: (conversation.deleted_for || []).filter((id) => id !== receiverId),
+        last_message_text: content,
+        last_message_at: new Date().toISOString(),
+        last_sender_id: user.id, last_sender_name: userName
+      };
+      if (conversation.user1_id === user.id) {
+        updates.unread_user2 = (conversation.unread_user2 || 0) + 1;
+      } else {
+        updates.unread_user1 = (conversation.unread_user1 || 0) + 1;
+      }
+      await base44.asServiceRole.entities.Conversation.update(conversationId, updates);
+      const progression = isAdminChat ? null : await incrementFriendshipProgression(base44, user.id, receiverId, message.id);
+
+      return Response.json({ message, progression });
     }
 
-    if (action === 'start_admin_chat') {
-      // Kullanıcı adminle arkadaş olmadan da özel mesaj başlatabilir — arkadaşlık kaydı OLUŞMAZ.
-      // Kendi dışındaki bir yöneticiyi bul.
-      const admins = await base44.asServiceRole.entities.User.filter({ role: 'admin' }, 'created_date', 50);
-      const target = admins.find((a) => a.id !== user.id);
-      if (!target) return Response.json({ error: 'Yönetici bulunamadı' }, { status: 404 });
-      return Response.json({ admin_id: target.id, admin_name: target.username || target.full_name || 'Yönetici' });
+    // delete_conversation: Sohbeti SADECE bu kullanıcı için sil + tüm mesajları temizle (clean slate)
+    if (action === 'delete_conversation') {
+      const conversationId = String(body.conversation_id || '');
+      const conversation = await base44.asServiceRole.entities.Conversation.get(conversationId).catch(() => null);
+      if (!conversation) return Response.json({ error: 'Sohbet bulunamadı' }, { status: 404 });
+      if (!(conversation.members || []).includes(user.id)) return Response.json({ error: 'yetkisiz' }, { status: 403 });
+      const deletedFor = [...new Set([...(conversation.deleted_for || []), user.id])];
+      const hideUpdate: any = { deleted_for: deletedFor };
+      if (conversation.user1_id === user.id) hideUpdate.unread_user1 = 0;
+      else hideUpdate.unread_user2 = 0;
+      await base44.asServiceRole.entities.Conversation.update(conversationId, hideUpdate);
+      // Tüm mesajları bu kullanıcı için sil — tekrar açınca eski mesajlar görünmesin
+      const messages = await base44.asServiceRole.entities.ChatMessage.filter({ conversation_id: conversationId }, 'created_date', 500).catch(() => []);
+      if (messages.length) {
+        await base44.asServiceRole.entities.ChatMessage.bulkUpdate(messages.map((m) => ({ id: m.id, deleted_for: [...new Set([...(m.deleted_for || []), user.id])] })));
+      }
+      return Response.json({ ok: true });
+    }
+
+    // toggle_offline: Bu sohbette çevrim dışı görün (sadece bu sohbet, odalar etkilenmez)
+    if (action === 'toggle_offline') {
+      const conversationId = String(body.conversation_id || '');
+      const conversation = await base44.asServiceRole.entities.Conversation.get(conversationId).catch(() => null);
+      if (!conversation) return Response.json({ error: 'Sohbet bulunamadı' }, { status: 404 });
+      if (!(conversation.members || []).includes(user.id)) return Response.json({ error: 'yetkisiz' }, { status: 403 });
+      const offlineFor = conversation.offline_for || [];
+      const showOnline = typeof body.online === 'boolean' ? body.online : offlineFor.includes(user.id);
+      const newOfflineFor = showOnline
+        ? offlineFor.filter((id) => id !== user.id)
+        : [...new Set([...offlineFor, user.id])];
+      await base44.asServiceRole.entities.Conversation.update(conversationId, { offline_for: newOfflineFor });
+      return Response.json({ ok: true, offline_for: newOfflineFor });
+    }
+
+    // toggle_read_receipts: Okundu tiklerini bu kullanıcı için aç/kapat
+    if (action === 'toggle_read_receipts') {
+      const conversationId = String(body.conversation_id || '');
+      const conversation = await base44.asServiceRole.entities.Conversation.get(conversationId).catch(() => null);
+      if (!conversation) return Response.json({ error: 'Sohbet bulunamadı' }, { status: 404 });
+      if (!(conversation.members || []).includes(user.id)) return Response.json({ error: 'yetkisiz' }, { status: 403 });
+      const disabledFor = conversation.read_receipts_disabled_for || [];
+      const enabled = typeof body.enabled === 'boolean' ? body.enabled : disabledFor.includes(user.id);
+      const nextDisabledFor = enabled
+        ? disabledFor.filter((id) => id !== user.id)
+        : [...new Set([...disabledFor, user.id])];
+      await base44.asServiceRole.entities.Conversation.update(conversationId, { read_receipts_disabled_for: nextDisabledFor });
+      return Response.json({ ok: true, read_receipts_disabled_for: nextDisabledFor });
+    }
+
+    // delete_message: Tek mesajı SADECE bu kullanıcı için sil
+    // Karşı taraf mesajı görmeye devam eder
+    if (action === 'delete_message') {
+      const messageId = String(body.message_id || '');
+      const message = await base44.asServiceRole.entities.ChatMessage.get(messageId).catch(() => null);
+      if (!message) return Response.json({ error: 'Mesaj bulunamadı' }, { status: 404 });
+      if (message.sender_id !== user.id && message.receiver_id !== user.id) return Response.json({ error: 'yetkisiz' }, { status: 403 });
+      const deletedFor = [...new Set([...(message.deleted_for || []), user.id])];
+      await base44.asServiceRole.entities.ChatMessage.update(messageId, { deleted_for: deletedFor });
+      return Response.json({ ok: true });
+    }
+
+    // mark_read: Sohbetteki tüm mesajları okundu işaretle
+    if (action === 'mark_read') {
+      const conversationId = String(body.conversation_id || '');
+      const conversation = await base44.asServiceRole.entities.Conversation.get(conversationId).catch(() => null);
+      if (!conversation) return Response.json({ error: 'Sohbet bulunamadı' }, { status: 404 });
+      if (!(conversation.members || []).includes(user.id)) return Response.json({ error: 'yetkisiz' }, { status: 403 });
+      const messages = await base44.asServiceRole.entities.ChatMessage.filter({ conversation_id: conversationId, receiver_id: user.id }, 'created_date', 500).catch(() => []);
+      const unread = (messages || []).filter((m) => !(m.read_by || []).includes(user.id));
+      if (unread.length) {
+        await base44.asServiceRole.entities.ChatMessage.bulkUpdate(unread.map((m) => ({ id: m.id, read_by: [...new Set([...(m.read_by || []), user.id])] })));
+      }
+      const unreadUpdate = conversation.user1_id === user.id ? { unread_user1: 0 } : { unread_user2: 0 };
+      await base44.asServiceRole.entities.Conversation.update(conversationId, unreadUpdate);
+      return Response.json({ ok: true });
+    }
+
+    // typing: Yazıyor göstergesi
+    if (action === 'typing') {
+      const conversationId = String(body.conversation_id || '');
+      const conversation = await base44.asServiceRole.entities.Conversation.get(conversationId).catch(() => null);
+      if (!conversation || !(conversation.members || []).includes(user.id)) return Response.json({ error: 'yetkisiz' }, { status: 403 });
+      await base44.asServiceRole.entities.Conversation.update(conversationId, { typing_user_id: body.typing ? user.id : '', typing_updated_at: new Date().toISOString() });
+      return Response.json({ ok: true });
     }
 
     return Response.json({ error: 'Geçersiz işlem' }, { status: 400 });

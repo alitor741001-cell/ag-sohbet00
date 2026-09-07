@@ -1,85 +1,78 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import VideoPlayer from '@/components/player/VideoPlayer';
-import { Loader2, ArrowLeft, Star, Calendar, Clock, Plus, Heart, Users } from 'lucide-react';
-import { useCurrentUser } from '@/lib/useCurrentUser';
-import { toast } from '@/components/ui/use-toast';
+import { useCurrentUser, membershipActive } from '@/lib/useCurrentUser';
+import { Lock, ArrowLeft } from 'lucide-react';
+import SubscriptionPrompt from '@/components/SubscriptionPrompt';
 
 export default function Watch() {
   const { id } = useParams();
-  const navigate = useNavigate();
-  const { user } = useCurrentUser();
+  const [sp] = useSearchParams();
+  const epId = sp.get('ep');
+  const { user, loading: ul } = useCurrentUser();
   const [movie, setMovie] = useState(null);
+  const [episode, setEpisode] = useState(null);
+  const [src, setSrc] = useState('');
+  const [videoError, setVideoError] = useState('');
+  const [expired, setExpired] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [inList, setInList] = useState(false);
-  const [isFav, setIsFav] = useState(false);
 
   useEffect(() => {
-    base44.entities.Movie.get(id).then((m) => { setMovie(m); setLoading(false); }).catch(() => setLoading(false));
-  }, [id]);
+    base44.entities.Movie.filter({ id }, '-created_date', 1).then(async (matches) => {
+      const m = matches[0] || null;
+      setMovie(m);
+      if (!m) { setLoading(false); return; }
+      let ep = null;
+      if (epId) {
+        const eps = await base44.entities.Episode.filter({ series_id: id }, 'season', 100).catch(() => []);
+        ep = eps.find((e) => e.id === epId) || eps[0] || null;
+        setEpisode(ep);
+      }
+      try {
+        const res = await base44.functions.invoke('authorize-video', { movie_id: id, episode_id: ep?.id });
+        setSrc(res.data.url);
+      } catch (e) {
+        if (e.response?.data?.expired) setExpired(true);
+        else setVideoError(e.response?.data?.error || 'Video yüklenemedi');
+      }
+      setLoading(false);
+    }).catch(() => setLoading(false));
+  }, [id, epId]);
 
   useEffect(() => {
-    if (!user) return;
-    base44.entities.Watchlist.filter({ user_id: user.id, movie_id: id }).then((items) => setInList(items.length > 0)).catch(() => {});
-    base44.entities.Favorite.filter({ user_id: user.id, movie_id: id }).then((items) => setIsFav(items.length > 0)).catch(() => {});
-  }, [user?.id, id]);
+    if (!user || !movie) return;
+    base44.entities.WatchHistory.filter({ user_id: user.id, movie_id: id }).then((r) => {
+      if (r.length === 0) base44.entities.WatchHistory.create({ user_id: user.id, movie_id: id, movie_title: movie.title, progress: 0 }).catch(() => {});
+    }).catch(() => {});
+  }, [user?.id, movie?.id]);
 
-  const toggleList = async () => {
-    try {
-      if (inList) {
-        const items = await base44.entities.Watchlist.filter({ user_id: user.id, movie_id: id });
-        if (items[0]) await base44.entities.Watchlist.delete(items[0].id);
-        setInList(false); toast({ title: 'Listeden çıkarıldı' });
-      } else {
-        await base44.entities.Watchlist.create({ user_id: user.id, movie_id: id });
-        setInList(true); toast({ title: 'Listeye eklendi' });
-      }
-    } catch (err) { toast({ title: 'Hata', description: err.message, variant: 'destructive' }); }
-  };
+  if (ul || loading) return <div className="h-[60vh] flex items-center justify-center"><div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
 
-  const toggleFav = async () => {
-    try {
-      if (isFav) {
-        const items = await base44.entities.Favorite.filter({ user_id: user.id, movie_id: id });
-        if (items[0]) await base44.entities.Favorite.delete(items[0].id);
-        setIsFav(false); toast({ title: 'Favorilerden çıkarıldı' });
-      } else {
-        await base44.entities.Favorite.create({ user_id: user.id, movie_id: id });
-        setIsFav(true); toast({ title: 'Favorilere eklendi' });
-      }
-    } catch (err) { toast({ title: 'Hata', description: err.message, variant: 'destructive' }); }
-  };
+  if (!membershipActive(user)) {
+    return <SubscriptionPrompt />;
+  }
 
-  if (loading) return <div className="flex items-center justify-center min-h-screen"><Loader2 className="w-8 h-8 animate-spin text-purple-500" /></div>;
-  if (!movie) return <div className="flex flex-col items-center justify-center min-h-screen"><p className="text-muted-foreground mb-4">Film bulunamadı</p><button onClick={() => navigate('/')} className="text-purple-400">Ana sayfa</button></div>;
+  if (!movie) return <p className="p-6">İçerik bulunamadı.</p>;
 
   return (
-    <div className="min-h-screen pt-16">
-      <div className="max-w-5xl mx-auto px-4 py-4">
-        <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-white mb-4"><ArrowLeft className="w-4 h-4" /> Geri</button>
-        <div className="aspect-video rounded-2xl overflow-hidden bg-black mb-4">
-          <VideoPlayer src={movie.video_url} poster={movie.backdrop_url} />
-        </div>
-        <div className="flex items-start justify-between gap-4 mb-4">
-          <div>
-            <h1 className="text-2xl font-bold text-white mb-2">{movie.title}</h1>
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              {movie.year && <span className="flex items-center gap-1"><Calendar className="w-4 h-4" /> {movie.year}</span>}
-              {movie.duration > 0 && <span className="flex items-center gap-1"><Clock className="w-4 h-4" /> {Math.floor(movie.duration / 60)}s {movie.duration % 60}dk</span>}
-              {movie.rating > 0 && <span className="flex items-center gap-1"><Star className="w-4 h-4 text-amber-400" /> {movie.rating}</span>}
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <button onClick={toggleList} className={`w-10 h-10 rounded-full flex items-center justify-center ${inList ? 'bg-purple-600 text-white' : 'bg-white/10 text-white'}`}><Plus className="w-5 h-5" /></button>
-            <button onClick={toggleFav} className={`w-10 h-10 rounded-full flex items-center justify-center ${isFav ? 'bg-red-600 text-white' : 'bg-white/10 text-white'}`}><Heart className="w-5 h-5" /></button>
-            <button onClick={() => navigate('/oda-kur', { state: { movieId: id } })} className="px-4 h-10 rounded-full bg-purple-600 text-white text-sm font-medium flex items-center gap-2 hover:bg-purple-700"><Users className="w-4 h-4" /> Oda Kur</button>
-          </div>
-        </div>
-        {movie.description && <p className="text-muted-foreground mb-4">{movie.description}</p>}
-        {movie.cast?.length > 0 && <div className="mb-4"><h3 className="font-semibold text-white mb-2">Oyuncular</h3><p className="text-sm text-muted-foreground">{movie.cast.join(', ')}</p></div>}
-        {movie.director && <div className="mb-4"><h3 className="font-semibold text-white mb-2">Yönetmen</h3><p className="text-sm text-muted-foreground">{movie.director}</p></div>}
+    <div className="mx-auto w-full max-w-7xl px-3 py-4 sm:px-6 lg:px-8">
+      <div className="flex items-center justify-between mb-3">
+        <Link to={`/izle/${id}`} className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="w-4 h-4" /> Geri</Link>
       </div>
+      <h1 className="text-xl sm:text-2xl font-bold mb-1">{movie.title}{episode ? ` · ${episode.title}` : ''}</h1>
+      <p className="text-sm text-muted-foreground mb-4">{movie.year} · {movie.quality} · {movie.language || 'TR'}</p>
+      {videoError ? <div className="aspect-video bg-card border border-border rounded-xl flex flex-col items-center justify-center text-center p-6">
+          <Lock className="w-10 h-10 text-muted-foreground mb-3" />
+          <p className="font-semibold mb-1">{videoError}</p>
+        </div> :
+       src ? <div className="aspect-video w-full overflow-hidden rounded-xl bg-black"><VideoPlayer src={src} title={movie.title} watermark={user} isOwner={true} isTimeSource={true} /></div> :
+        <div className="aspect-video bg-card border border-border rounded-xl flex flex-col items-center justify-center text-center p-6">
+          <Lock className="w-10 h-10 text-muted-foreground mb-3" />
+          <p className="font-semibold mb-1">Video kaynağı bulunamadı</p>
+          <p className="text-sm text-muted-foreground">Bu içeriğe ait video bağlantısı henüz eklenmemiş.</p>
+        </div>}
+      <p className="text-sm text-muted-foreground mt-4 max-w-3xl">{movie.description}</p>
     </div>
   );
 }

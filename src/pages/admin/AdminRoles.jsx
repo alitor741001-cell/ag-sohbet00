@@ -1,49 +1,23 @@
 import { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Loader2, Search, Shield, UserCog } from 'lucide-react';
-import { toast } from '@/components/ui/use-toast';
+import UserBadge from '@/components/admin/UserBadge';
+import RoleFrameManager from '@/components/admin/RoleFrameManager';
+import FrameDisplaySettings from '@/components/admin/FrameDisplaySettings';
+import CustomRoleForm from '@/components/admin/CustomRoleForm';
+import FrameAssignmentSummary from '@/components/admin/FrameAssignmentSummary';
+import AvatarPositioner from '@/components/profile/AvatarPositioner';
+import FrameUploadStudio from '@/components/admin/FrameUploadStudio';
+import XpFrameManager from '@/components/admin/XpFrameManager';
 
 export default function AdminRoles() {
   const [users, setUsers] = useState([]);
+  const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-
-  useEffect(() => {
-    base44.entities.User.list().then((u) => { setUsers(u); setLoading(false); }).catch(() => setLoading(false));
-  }, []);
-
-  const setRole = async (user, role) => {
-    try {
-      await base44.entities.User.update(user.id, { role });
-      setUsers((prev) => prev.map((u) => u.id === user.id ? { ...u, role } : u));
-      toast({ title: 'Rol güncellendi', description: `${user.full_name || user.email} → ${role === 'admin' ? 'Admin' : role === 'moderator' ? 'Moderatör' : 'Kullanıcı'}` });
-    } catch (err) { toast({ title: 'Hata', description: err.message, variant: 'destructive' }); }
-  };
-
-  if (loading) return <div className="flex items-center justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-purple-500" /></div>;
-
-  const filtered = users.filter((u) => !search || u.full_name?.toLowerCase().includes(search.toLowerCase()) || u.email?.toLowerCase().includes(search.toLowerCase()));
-  const roleLabel = (r) => r === 'admin' ? 'Admin' : r === 'moderator' ? 'Moderatör' : r === 'banned' ? 'Engelli' : 'Kullanıcı';
-  const roleColor = (r) => r === 'admin' ? 'bg-purple-500/20 text-purple-400' : r === 'moderator' ? 'bg-blue-500/20 text-blue-400' : r === 'banned' ? 'bg-red-500/20 text-red-400' : 'bg-muted text-muted-foreground';
-
-  return (
-    <div>
-      <h1 className="text-2xl font-bold text-white mb-6">Roller</h1>
-      <div className="relative mb-4"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Kullanıcı ara..." className="w-full bg-card border border-border rounded-lg pl-10 pr-4 py-2 text-sm text-white" /></div>
-      <div className="space-y-2">
-        {filtered.map((u) => (
-          <div key={u.id} className="flex items-center gap-3 p-3 rounded-lg bg-card border border-border">
-            <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-white font-semibold">{(u.full_name || '?').charAt(0)}</div>
-            <div className="flex-1 min-w-0"><p className="font-medium text-white truncate">{u.full_name || u.email}</p><p className="text-xs text-muted-foreground truncate">{u.email}</p></div>
-            <span className={`text-xs px-2 py-1 rounded-full ${roleColor(u.role)}`}>{roleLabel(u.role)}</span>
-            <div className="flex gap-1">
-              {u.role !== 'admin' && <button onClick={() => setRole(u, 'admin')} className="px-2 py-1 rounded-lg bg-purple-600/20 text-purple-400 text-xs hover:bg-purple-600/30 flex items-center gap-1"><Shield className="w-3 h-3" /> Admin</button>}
-              {u.role !== 'moderator' && <button onClick={() => setRole(u, 'moderator')} className="px-2 py-1 rounded-lg bg-blue-600/20 text-blue-400 text-xs hover:bg-blue-600/30 flex items-center gap-1"><UserCog className="w-3 h-3" /> Mod</button>}
-              {u.role !== 'user' && <button onClick={() => setRole(u, 'user')} className="px-2 py-1 rounded-lg bg-muted text-muted-foreground text-xs hover:bg-muted/70">Kullanıcı</button>}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+  const [showSummary, setShowSummary] = useState(false);
+  const load = () => base44.entities.User.list('-created_date', 500).then((items) => { setUsers(items); setLoading(false); });
+  useEffect(() => { load(); const off = base44.entities.User.subscribe(load); return off; }, []);
+  const filtered = users.filter((user) => `${user.username || ''} ${user.full_name || ''} ${user.email || ''} ${user.member_id || ''}`.toLowerCase().includes(query.toLowerCase()));
+  const frameCount = users.filter((u) => u.profile_frame).length;
+  if (loading) return <p className="text-muted-foreground">Yükleniyor...</p>;
+  return <div><h1 className="mb-1 text-2xl font-extrabold">Roller ve Çerçeveler</h1><p className="mb-4 text-sm text-muted-foreground">Rol, çerçeve boyutu ve odaya giriş görünümünü yönetin.</p><FrameUploadStudio /><XpFrameManager /><button onClick={() => setShowSummary(!showSummary)} className="mb-3 rounded-lg border border-border bg-card px-4 py-2 text-sm font-semibold">{showSummary ? 'Çerçeve Özetini Gizle' : `Çerçeve Özeti (${frameCount})`}</button>{showSummary && <div className="mb-4 rounded-xl border border-border bg-card p-4"><h2 className="mb-3 font-bold">Kimde Çerçeve Var</h2><FrameAssignmentSummary users={users} onUpdated={load} /></div>}<input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Kullanıcı ara" className="mb-4 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm" /><div className="space-y-4">{filtered.map((user) => <article key={user.id} className="rounded-xl border border-border bg-card p-4"><UserBadge userId={user.id} name={user.username || user.full_name || '?'} avatar={user.avatar} memberId={user.member_id} size="md" displayRole={user.display_role} customRole={user.custom_role} profileFrame={user.profile_frame} frameScale={user.profile_frame_scale} />{user.profile_frame_expires_at && <p className="mt-1 text-xs text-amber-400">Bitiş: {new Date(user.profile_frame_expires_at).toLocaleDateString('tr-TR')}</p>}<div className="mt-4 flex flex-wrap gap-2"><RoleFrameManager user={user} onUpdated={load} /><CustomRoleForm user={user} onUpdated={load} /></div>{user.profile_frame && <div className="mt-4"><AvatarPositioner user={user} targetUserId={user.id} onSaved={load} /></div>}{user.profile_frame && <div className="mt-4"><FrameDisplaySettings user={user} onUpdated={load} /></div>}</article>)}</div></div>;
 }

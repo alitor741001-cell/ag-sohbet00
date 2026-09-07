@@ -1,87 +1,142 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { useCurrentUser } from '@/lib/useCurrentUser';
-import ProfileFrame from '@/components/ProfileFrame';
-import RoleBadge from '@/components/RoleBadge';
+import { useCurrentUser, membershipActive } from '@/lib/useCurrentUser';
+import { Image } from '@/components/ui/image';
+import { ArrowLeft, Crown, Hash, MessageCircle, UserPlus, Copy, Flag } from 'lucide-react';
 import ReportDialog from '@/components/ReportDialog';
-import { Loader2, MessageSquare, UserPlus, Flag, Film, Heart } from 'lucide-react';
-import { toast } from '@/components/ui/use-toast';
+import { useToast } from '@/components/ui/use-toast';
+import RoleBadge from '@/components/RoleBadge';
+import ProfileFrame from '@/components/ProfileFrame';
+import { getRoleInfo } from '@/lib/roles';
+import ProfileRoomActions from '@/components/profile/ProfileRoomActions';
+import useRoomLevels from '@/hooks/useRoomLevels';
+import RoomLevelBadge from '@/components/levels/RoomLevelBadge';
+import useXp from '@/hooks/useXp';
+import XpAvatar from '@/components/xp/XpAvatar';
+import XpStatsCard from '@/components/xp/XpStatsCard';
+import AccountStatusAvatar, { getAccountState } from '@/components/friends/AccountStatusAvatar';
+import { daysInApp } from '@/lib/xp';
 
-export default function UserProfile() {
-  const { id } = useParams();
+export default function UserProfile({ userId, roomIdOverride, onBack, onMessage, embedded = false }) {
+  const { id: routeUserId } = useParams();
+  const id = userId || routeUserId;
+  const roomId = roomIdOverride || new URLSearchParams(window.location.search).get('room');
   const navigate = useNavigate();
-  const { user: currentUser } = useCurrentUser();
-  const [profileUser, setProfileUser] = useState(null);
-  const [watchlist, setWatchlist] = useState([]);
-  const [isFriend, setIsFriend] = useState(false);
+  const { user: me } = useCurrentUser();
+  const { toast } = useToast();
+  const [profile, setProfile] = useState(null);
+  const [relation, setRelation] = useState(null);
+  const [requesting, setRequesting] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [showReport, setShowReport] = useState(false);
+  const [err, setErr] = useState('');
+  const { levels: roomLevels } = useRoomLevels([id]);
+  const xpStats = useXp([id])[id];
 
   useEffect(() => {
-    (async () => {
-      try {
-        const u = await base44.entities.User.get(id);
-        setProfileUser(u);
-        const items = await base44.entities.Watchlist.filter({ user_id: id });
-        const enriched = await Promise.all((items || []).slice(0, 12).map(async (w) => {
-          try { return { ...w, movie: await base44.entities.Movie.get(w.movie_id) }; } catch (err) { return w; }
-        }));
-        setWatchlist(enriched);
-        if (currentUser) {
-          const friendships = await base44.entities.Friendship.filter({ user_id: currentUser.id, friend_id: id });
-          setIsFriend(friendships.length > 0);
-        }
-      } catch {}
-      finally { setLoading(false); }
-    })();
-  }, [id, currentUser?.id]);
+    let active = true;
+    setProfile(null); setErr(''); setLoading(true);
+    const load = () => base44.functions.invoke('user-profile', { user_id: id })
+      .then((res) => { if (active) { setProfile(res.data); setErr(''); } })
+      .catch((e) => { if (active) { if (e?.response?.status === 404) setProfile({ account_status: 'deleted' }); else setErr(e.response?.data?.error || e.message); } })
+      .finally(() => { if (active) setLoading(false); });
+    load();
+    const off = base44.entities.User.subscribe((event) => { if ((event.data?.id || event.id) === id) load(); });
+    return () => { active = false; off(); };
+  }, [id]);
+
+  useEffect(() => {
+    if (!me?.id || me.id === id) return;
+    let active = true;
+    setRelation(null);
+    const load = () => base44.entities.Friendship.filter({ members: me.id }, '-updated_date', 200)
+      .then((items) => { if (active) setRelation(items.find((item) => item.members?.includes(id)) || null); });
+    load();
+    const off = base44.entities.Friendship.subscribe(load);
+    return () => { active = false; off(); };
+  }, [id, me?.id]);
 
   const addFriend = async () => {
+    setRequesting(true);
     try {
-      await base44.entities.Friendship.create({ user_id: currentUser.id, friend_id: id, status: 'pending' });
+      const response = await base44.functions.invoke('friend-service', { action: 'request', user_id: id });
+      setRelation(response.data.friendship);
       toast({ title: 'Arkadaşlık isteği gönderildi' });
-      setIsFriend(true);
-    } catch (err) { toast({ title: 'Hata', description: err.message, variant: 'destructive' }); }
+    } catch (error) {
+      toast({ title: 'İstek gönderilemedi', description: error.response?.data?.error || error.message, variant: 'destructive' });
+    } finally { setRequesting(false); }
   };
 
-  if (loading) return <div className="flex items-center justify-center min-h-screen"><Loader2 className="w-8 h-8 animate-spin text-purple-500" /></div>;
-  if (!profileUser) return <div className="flex flex-col items-center justify-center min-h-screen"><p className="text-muted-foreground">Kullanıcı bulunamadı</p></div>;
+  const startChat = async () => {
+    if (onMessage) { onMessage(id); return; }
+    try {
+      const res = await base44.functions.invoke('dm-service', { action: 'start', target_id: id });
+      if (res?.data?.conversation) {
+        navigate(`/arkadaslar?view=chats&chat=${res.data.conversation.id}`);
+      }
+    } catch (error) {
+      toast({ title: 'Sohbet açılamadı', description: error.response?.data?.error || error.message, variant: 'destructive' });
+    }
+  };
+
+  if (loading) return <div className="h-screen flex items-center justify-center"><div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
+
+  const isSelf = me?.id === id;
+  const accountState = getAccountState(profile);
+
+  if (accountState && !isSelf) return (
+    <div className={`${embedded ? 'fixed inset-0 z-[100] bg-background pt-[env(safe-area-inset-top)]' : ''} flex min-h-screen items-center justify-center p-4`}>
+      <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 text-center">
+        <AccountStatusAvatar status={profile.account_status} className="mx-auto h-28 w-28" />
+        <h1 className="mt-4 text-xl font-bold">{accountState.name}</h1>
+        <p className="mt-2 text-sm text-destructive">{accountState.message}</p>
+        <button onClick={() => onBack ? onBack() : navigate(-1)} className="mt-5 rounded-lg bg-secondary px-5 py-2 text-sm font-semibold">Geri</button>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen pt-20 pb-24 px-4 max-w-4xl mx-auto">
-      <div className="relative mb-6">
-        <div className="h-24 rounded-2xl bg-gradient-to-r from-purple-600/30 to-pink-600/30" />
-        <div className="flex flex-col sm:flex-row items-center sm:items-end gap-4 -mt-12 px-4">
-          <ProfileFrame user={profileUser} src={profileUser.avatar} size={96} />
-          <div className="flex-1 text-center sm:text-left pb-2">
-            <div className="flex items-center gap-2 justify-center sm:justify-start">
-              <h1 className="text-xl font-bold text-white">{profileUser.full_name || profileUser.username}</h1>
-              <RoleBadge user={profileUser} />
-            </div>
-            <p className="text-sm text-muted-foreground">@{profileUser.username}</p>
+    <div className={`${embedded ? 'fixed inset-0 z-[100] overflow-y-auto overscroll-contain bg-background pt-[env(safe-area-inset-top)]' : ''}`}>
+    <div className="w-full min-w-0 px-4 sm:px-6 py-6 pb-[calc(2rem+env(safe-area-inset-bottom))] max-w-2xl mx-auto">
+      <button onClick={() => onBack ? onBack() : navigate(-1)} className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground mb-4"><ArrowLeft className="w-4 h-4" /> Geri</button>
+      {err ? <p className="text-center text-destructive py-10">{err}</p> : profile && (
+        <div className="bg-card border border-border rounded-2xl p-6 flex flex-col items-center text-center">
+          <div className="relative mb-8">
+            {profile.profile_frame ? (
+              <ProfileFrame frame={profile.profile_frame} size="lg" avatar={profile.avatar} name={profile.username || profile.full_name} frameScale={profile.profile_frame_scale} panX={profile.profile_avatar_x} panY={profile.profile_avatar_y}>
+                {profile.avatar ? <Image src={profile.avatar} className="w-28 h-28 rounded-full object-cover" fittingType="fill" /> :
+                  <div className="w-28 h-28 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-4xl font-bold">{(profile.username || profile.full_name || '?')[0]}</div>}
+              </ProfileFrame>
+            ) : (
+              <XpAvatar avatar={profile.avatar} name={profile.username || profile.full_name} frame={xpStats?.frame} size="lg" />
+            )}
           </div>
-          {currentUser?.id !== id && (
-            <div className="flex gap-2 pb-2">
-              {!isFriend && <button onClick={addFriend} className="px-4 py-2 rounded-lg bg-purple-600 text-white text-sm font-medium flex items-center gap-1 hover:bg-purple-700"><UserPlus className="w-4 h-4" /> Ekle</button>}
-              <button onClick={() => navigate('/arkadaslar')} className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center hover:bg-white/20"><MessageSquare className="w-4 h-4 text-white" /></button>
-              <button onClick={() => setShowReport(true)} className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center hover:bg-white/20"><Flag className="w-4 h-4 text-red-400" /></button>
-            </div>
-          )}
-        </div>
-      </div>
-      <h3 className="font-semibold text-white mb-3 flex items-center gap-2"><Film className="w-5 h-5" /> Listesi</h3>
-      {watchlist.length === 0 ? <p className="text-muted-foreground text-sm">Liste boş</p> : (
-        <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
-          {watchlist.map((w) => (
-            <button key={w.id} onClick={() => w.movie && navigate(`/izle/${w.movie_id}`)} className="text-left">
-              <div className="aspect-[2/3] rounded-lg overflow-hidden bg-muted">{w.movie?.poster_url ? <img src={w.movie.poster_url} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><Film className="w-6 h-6 text-muted-foreground" /></div>}</div>
-              <p className="text-xs text-white truncate mt-1">{w.movie?.title}</p>
-            </button>
-          ))}
+          <h1 className="max-w-full text-2xl font-extrabold flex flex-wrap justify-center items-center gap-2 [overflow-wrap:anywhere]">{profile.title || profile.username || profile.full_name || 'Kullanıcı'} {(profile.role === 'admin' || profile.role === 'moderator') && <Crown className="w-5 h-5 text-amber-400" />}</h1>
+          {getRoleInfo(profile).label && <div className="mt-1.5"><RoleBadge user={profile} size="md" /></div>}
+          {['admin', 'moderator'].includes(profile.role) && <p className="mt-2 text-sm font-bold text-primary">{profile.role === 'admin' ? 'YÖNETİCİ' : 'MODERATÖR'}</p>}
+          <div className="mt-3"><RoomLevelBadge level={roomLevels[id]} profile /></div>
+          <div className="mt-4 w-full"><XpStatsCard stats={xpStats} days={daysInApp(profile.created_date)} compact /></div>
+          {profile.title && <p className="text-base font-semibold text-gradient mt-1">{profile.title}</p>}
+          {profile.username && profile.username !== profile.title && <p className="text-sm text-muted-foreground">@{profile.username}</p>}
+          <div className="mt-4 inline-flex items-center gap-2 bg-secondary/60 rounded-full pl-4 pr-1.5 py-1.5">
+            <Hash className="w-4 h-4 text-primary" />
+            <span className="font-mono text-lg font-bold tracking-wider">{profile.member_id}</span>
+            <button onClick={() => { navigator.clipboard?.writeText(profile.member_id || ''); toast({ title: 'Üye No kopyalandı' }); }} className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center shrink-0 active:scale-95 transition"><Copy className="w-4 h-4" /></button>
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">Üye No</p>
+          {profile.created_date && <p className="text-xs text-muted-foreground mt-3">Katılım: {new Date(profile.created_date).toLocaleDateString('tr-TR')}</p>}
+          {!isSelf && (!relation || ['removed', 'rejected'].includes(relation.status)) && <button onClick={addFriend} disabled={requesting} className="mt-5 inline-flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2 rounded-lg text-sm font-semibold disabled:opacity-50"><UserPlus className="w-4 h-4" />{requesting ? 'Gönderiliyor...' : 'Arkadaş Ekle'}</button>}
+          {!isSelf && relation?.status === 'pending' && <p className="mt-5 text-sm font-semibold text-amber-400">Arkadaşlık isteği bekliyor</p>}
+          {!isSelf && relation?.status === 'accepted' && <div className="mt-5 flex flex-col items-center gap-3"><p className="text-sm font-semibold text-green-400">Arkadaşsınız</p><button onClick={startChat} className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2 rounded-lg text-sm font-semibold"><MessageCircle className="w-4 h-4" /> Mesaj Yaz</button></div>}
+          {!isSelf && relation?.status !== 'accepted' && (me?.role === 'admin' || profile.role === 'admin') && <button onClick={startChat} className="mt-3 rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground">Mesaj Yaz</button>}
+          <ProfileRoomActions userId={id} me={me} roomId={roomId} />
+          {isSelf && <Link to="/profil" className="mt-5 bg-primary text-primary-foreground px-5 py-2 rounded-lg text-sm font-semibold">Profili Düzenle</Link>}
+          {!isSelf && <button onClick={() => setReportOpen(true)} className="mt-3 inline-flex items-center gap-2 bg-destructive/10 text-destructive border border-destructive/20 px-4 py-2 rounded-lg text-sm font-semibold"><Flag className="w-4 h-4" /> Şikayet Et</button>}
         </div>
       )}
-      <ReportDialog open={showReport} onClose={() => setShowReport(false)} targetUserId={id} targetName={profileUser.full_name || profileUser.username} />
+      {reportOpen && <ReportDialog targetId={id} targetName={profile?.username || profile?.full_name} context="profile" onClose={() => setReportOpen(false)} />}
+    </div>
     </div>
   );
 }

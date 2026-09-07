@@ -90,6 +90,7 @@ const SECTIONS = [
 export default function SecurityProtocol() {
   return (
     <div className="min-h-screen bg-background pb-16">
+      {/* Hero */}
       <div className="relative overflow-hidden border-b border-border">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-accent/5 to-transparent" />
         <div className="relative max-w-3xl mx-auto px-4 py-12 sm:py-16">
@@ -108,6 +109,7 @@ export default function SecurityProtocol() {
         </div>
       </div>
 
+      {/* Sections */}
       <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
         {SECTIONS.map((s) => {
           const Icon = s.icon;
@@ -141,6 +143,7 @@ export default function SecurityProtocol() {
           );
         })}
 
+        {/* Important Note */}
         <div className="bg-gradient-to-br from-accent/10 to-primary/5 border border-accent/20 rounded-2xl p-5 sm:p-6">
           <div className="flex items-start gap-3 mb-2">
             <Info className="w-5 h-5 text-accent shrink-0 mt-0.5" />
