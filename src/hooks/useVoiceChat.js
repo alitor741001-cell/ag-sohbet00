@@ -1,0 +1,1 @@
+export function useVoiceChat() { return { connected: false, participants: [], toggleMute: () => {}, leave: () => {} }; }

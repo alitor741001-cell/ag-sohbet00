@@ -1,0 +1,1 @@
+export default function useConversations() { return { conversations: [], loading: false, optimisticHide: () => {} }; }

@@ -1,0 +1,1 @@
+export default function AdminWelcomeSplash() { return null; }

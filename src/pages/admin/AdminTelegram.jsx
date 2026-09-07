@@ -1,0 +1,1 @@
+export default function AdminTelegram() { return <div className="p-6"><h1 className="text-2xl font-bold">Telegram</h1></div>; }

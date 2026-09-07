@@ -1,0 +1,1 @@
+export default function useXp() { return { xp: 0, level: 1 }; }

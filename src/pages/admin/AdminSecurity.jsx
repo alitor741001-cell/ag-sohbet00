@@ -1,0 +1,1 @@
+export default function AdminSecurity() { return <div className="p-6"><h1 className="text-2xl font-bold">Güvenlik</h1></div>; }

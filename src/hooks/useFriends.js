@@ -1,0 +1,1 @@
+export default function useFriends() { return { user: null, relations: [], loading: false, invoke: async () => {}, reload: async () => {} }; }

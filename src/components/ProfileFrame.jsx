@@ -1,0 +1,1 @@
+export default function ProfileFrame({ children }) { return <>{children}</>; }
