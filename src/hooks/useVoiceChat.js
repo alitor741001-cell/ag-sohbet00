@@ -106,19 +106,32 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled }) {
       refreshState();
     };
     const onDisconnected = () => { setConnectionState('disconnected'); setError('🌐 Bağlantı yeniden kuruluyor.'); };
-    const attachCurrentRemoteAudio = () => {
-      room.remoteParticipants.forEach((participant) => {
-        participant.audioTrackPublications.forEach((publication) => {
-          if (publication.track) attachRemoteAudio(publication.track);
-        });
+    const subscribeParticipantAudio = (participant) => {
+      participant.audioTrackPublications.forEach((publication) => {
+        if (!publication.isSubscribed) publication.setSubscribed(true);
+        if (publication.track) attachRemoteAudio(publication.track);
       });
+    };
+    const attachCurrentRemoteAudio = () => {
+      room.remoteParticipants.forEach(subscribeParticipantAudio);
+    };
+    const onParticipantConnected = (participant) => {
+      subscribeParticipantAudio(participant);
+      refreshState();
+    };
+    const onTrackPublished = (publication) => {
+      if (publication.source === Track.Source.Microphone || publication.kind === Track.Kind.Audio) {
+        publication.setSubscribed(true);
+        if (publication.track) attachRemoteAudio(publication.track);
+      }
+      refreshState();
     };
 
     room.on(RoomEvent.TrackSubscribed, attachRemoteAudio);
     room.on(RoomEvent.TrackUnsubscribed, onUnsubscribed);
-    room.on(RoomEvent.ParticipantConnected, refreshState);
+    room.on(RoomEvent.ParticipantConnected, onParticipantConnected);
     room.on(RoomEvent.ParticipantDisconnected, refreshState);
-    room.on(RoomEvent.TrackPublished, refreshState);
+    room.on(RoomEvent.TrackPublished, onTrackPublished);
     room.on(RoomEvent.TrackUnpublished, refreshState);
     room.on(RoomEvent.TrackMuted, refreshState);
     room.on(RoomEvent.TrackUnmuted, refreshState);
@@ -157,10 +170,14 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled }) {
 
     // Mikrofon izninden bağımsız olarak her kullanıcı etkileşiminde uzak sesi hazır tut.
     // Dinleyici kalıcıdır; sonradan yayınlanan sesler de sayfa değiştirmeden başlar.
-    const startAudioOnInteraction = () => { retryAudio(); };
+    const startAudioOnInteraction = () => { attachCurrentRemoteAudio(); retryAudio(); };
     document.addEventListener('pointerdown', startAudioOnInteraction, { passive: true });
     document.addEventListener('touchend', startAudioOnInteraction, { passive: true });
     document.addEventListener('keydown', startAudioOnInteraction);
+    const recoveryTimer = window.setInterval(() => {
+      attachCurrentRemoteAudio();
+      if (room.canPlaybackAudio && audioElementsRef.current.size > 0) retryAudio();
+    }, 2000);
 
     return () => {
       cancelled = true;
@@ -173,6 +190,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled }) {
       document.removeEventListener('pointerdown', startAudioOnInteraction);
       document.removeEventListener('touchend', startAudioOnInteraction);
       document.removeEventListener('keydown', startAudioOnInteraction);
+      window.clearInterval(recoveryTimer);
       setActive(false);
       setSpeakingIds([]);
       setParticipantMicStates({});
