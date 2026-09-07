@@ -4,8 +4,12 @@ function getContext() {
   if (audioContext) return audioContext;
   const AudioContext = window.AudioContext || window.webkitAudioContext;
   if (!AudioContext) return null;
-  audioContext = new AudioContext();
-  return audioContext;
+  try {
+    audioContext = new AudioContext();
+    return audioContext;
+  } catch {
+    return null;
+  }
 }
 
 export async function unlockVoicePlayback() {
@@ -17,14 +21,29 @@ export async function unlockVoicePlayback() {
 }
 
 export function createVoiceOutput(track, roomId) {
-  const element = track.attach();
-  element.autoplay = true;
-  element.playsInline = true;
-  element.style.display = 'none';
-  element.dataset.livekitVoice = roomId;
-  element.dataset.livekitTrack = track.sid;
-  document.body.appendChild(element);
-  return element;
+  const context = getContext();
+  const mediaTrack = track.mediaStreamTrack;
+  if (!context || !mediaTrack) {
+    const element = track.attach();
+    element.autoplay = true;
+    element.playsInline = true;
+    element.style.display = 'none';
+    document.body.appendChild(element);
+    return element;
+  }
+
+  const stream = new MediaStream([mediaTrack]);
+  const source = context.createMediaStreamSource(stream);
+  const gain = context.createGain();
+  source.connect(gain).connect(context.destination);
+
+  return {
+    dataset: { livekitVoice: roomId, livekitTrack: track.sid, livekitMediaTrack: mediaTrack.id },
+    play: unlockVoicePlayback,
+    remove() { source.disconnect(); gain.disconnect(); },
+    get muted() { return gain.gain.value === 0; },
+    set muted(value) { gain.gain.value = value ? 0 : 1; },
+  };
 }
 
 if (typeof window !== 'undefined') {

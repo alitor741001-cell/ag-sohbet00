@@ -52,10 +52,17 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled }) {
 
   const attachRemoteAudio = useCallback((track) => {
     if (track.kind !== Track.Kind.Audio) return;
-    if ([...audioElementsRef.current].some((element) => element.dataset.livekitTrack === track.sid)) return;
+    const mediaTrackId = track.mediaStreamTrack?.id || '';
+    const existing = [...audioElementsRef.current].find((element) => element.dataset.livekitTrack === track.sid);
+    if (existing?.dataset.livekitMediaTrack === mediaTrackId) return;
+    if (existing) {
+      audioElementsRef.current.delete(existing);
+      existing.remove();
+    }
     const element = createVoiceOutput(track, roomId);
     element.dataset.livekitVoice = roomId;
     element.dataset.livekitTrack = track.sid;
+    element.dataset.livekitMediaTrack = mediaTrackId;
     element.muted = deafenedRef.current;
     audioElementsRef.current.add(element);
     // Mikrofon izninden bağımsız, önceden açılmış kalıcı ses kanalından oynat.
@@ -155,10 +162,24 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled }) {
         if (cancelled) return;
         setConnectionState('connected');
         setError('');
-        // Mikrofon izni istemeden mevcut tüm uzak sesleri hemen bağla ve oynat.
+        // Hoparlörü mikrofon izninden bağımsız başlat, ardından mikrofonu hemen yayınla.
         attachCurrentRemoteAudio();
-        retryAudio();
+        await retryAudio();
         setAudioBlocked(!room.canPlaybackAudio);
+        if (!mutedByModeratorRef.current && voiceEnabledRef.current) {
+          setRequesting(true);
+          try {
+            await room.localParticipant.setMicrophoneEnabled(true, {
+              echoCancellation: true,
+              noiseSuppression: true,
+              autoGainControl: true,
+            });
+          } catch (micError) {
+            setError(friendlyMicError(micError));
+          } finally {
+            setRequesting(false);
+          }
+        }
         refreshState();
       } catch (connectError) {
         if (cancelled || connectError?.name === 'AbortError') return;
