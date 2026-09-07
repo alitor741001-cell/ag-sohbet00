@@ -4,7 +4,7 @@ import VolumeSlider from './VolumeSlider';
 import useMediaVolume from './useMediaVolume';
 const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
-export default function VideoPlayer({ src, title, onTimeUpdate, onPlayPause, onSeek, onEnded, onControlsChange, syncState, isOwner, isTimeSource, subtitles, fullscreenRef, watermark, controlsRaised = false }) {
+export default function VideoPlayer({ src, title, onTimeUpdate, onPlayPause, onSeek, onEnded, onControlsChange, syncState, isOwner, isTimeSource, subtitles, fullscreenRef, watermark, controlsRaised = false, suppressControls = false }) {
   const videoRef = useRef(null);
   const containerRef = useRef(null);
   const [playing, setPlaying] = useState(false);
@@ -134,6 +134,10 @@ export default function VideoPlayer({ src, title, onTimeUpdate, onPlayPause, onS
     return () => { document.removeEventListener('fullscreenchange', h); v?.removeEventListener('webkitendfullscreen', endFs); };
   }, []);
 
+  useEffect(() => {
+    if (suppressControls) setShowControls(false);
+  }, [suppressControls]);
+
   const moveBar = (e) => {
     if (!isOwner) return;
     const v = videoRef.current; if (!v || !v.duration) return;
@@ -144,6 +148,7 @@ export default function VideoPlayer({ src, title, onTimeUpdate, onPlayPause, onS
   };
 
   const showCtrl = () => {
+    if (suppressControls) return;
     setShowControls(true);
     onControlsChange?.(true);
     clearTimeout(hideTimer.current);
@@ -162,7 +167,7 @@ export default function VideoPlayer({ src, title, onTimeUpdate, onPlayPause, onS
       {buffering && <div className="absolute inset-0 flex items-center justify-center pointer-events-none"><div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>}
       {audioError && <div className="absolute left-3 right-3 top-14 z-50 rounded-lg border border-amber-500/60 bg-black/90 px-3 py-2 text-center text-xs text-amber-300">Ses sistemi: {audioError} (native kontrol kullanılıyor)</div>}
 
-      {isOwner && !playing && !buffering && (
+      {isOwner && !playing && !buffering && !suppressControls && (
         <button onClick={togglePlay} className="absolute inset-0 flex items-center justify-center">
           <span className="w-20 h-20 rounded-full bg-primary/90 flex items-center justify-center hover:scale-110 transition-transform">
             <Play className="w-10 h-10 fill-white text-white ml-1" />
@@ -174,7 +179,7 @@ export default function VideoPlayer({ src, title, onTimeUpdate, onPlayPause, onS
         <div className="absolute bottom-20 left-1/2 -translate-x-1/2 bg-black/70 text-white text-sm px-3 py-1 rounded pointer-events-none">{subtitles}</div>
       )}
 
-      <div className={`absolute inset-x-0 z-[60] pointer-events-auto p-3 sm:p-4 bg-gradient-to-t from-black/90 to-transparent transition-opacity ${controlsRaised ? 'bottom-24' : 'bottom-0'} ${showControls ? 'opacity-100' : 'opacity-0'}`} style={{ paddingBottom: controlsRaised ? undefined : 'calc(0.75rem + env(safe-area-inset-bottom))' }}>
+      <div className={`absolute inset-x-0 z-[60] pointer-events-auto p-3 sm:p-4 bg-gradient-to-t from-black/90 to-transparent transition-opacity ${controlsRaised ? 'bottom-24' : 'bottom-0'} ${(suppressControls || !showControls) ? 'opacity-0 pointer-events-none' : 'opacity-100'}`} style={{ paddingBottom: controlsRaised ? undefined : 'calc(0.75rem + env(safe-area-inset-bottom))' }}>
         <div className="flex items-center gap-2 mb-2 text-white text-xs">
           {isOwner && <span>{fmt(current)}</span>}
           {isOwner && <div className="flex-1 h-1.5 bg-white/30 rounded-full cursor-pointer relative" onClick={moveBar}>
