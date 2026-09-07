@@ -10,5 +10,5 @@ export default function WelcomeOverlay() {
 
   if (!visible) return null;
 
-  return <div className="welcome-overlay"><span className="welcome-neon">HOŞ GELDİNİZ</span></div>;
+  return <div className="welcome-overlay flex-1 text-center overflow-hidden lg:hidden"><span className="welcome-neon">HOŞ GELDİNİZ</span></div>;
 }

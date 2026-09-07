@@ -1202,11 +1202,6 @@ h1, h2, h3, p, a, button, label {
 
 /* === HOŞ GELDİNİZ NEON KARŞILAMA === */
 .welcome-overlay {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  z-index: 2;
-  transform: translate(-50%, -50%);
   pointer-events: none;
   white-space: nowrap;
 }
