@@ -29,6 +29,7 @@ export default function AppLayout() {
   const { toast } = useToast();
   // RoleCelebrationOverlay renders a full-screen animated character when role changes
   const isRoom = pathname.startsWith('/oda/');
+  const isHome = pathname === '/';
 
   // Bakım modu: admin olmayan kullanıcılar bakım ekranı görür
   const isAdmin = user?.role === 'admin';
@@ -224,7 +225,7 @@ export default function AppLayout() {
     return <MessageRealtimeProvider userId={user?.id}><div className="min-h-screen bg-background"><RoutePreloader /><RoleCelebrationOverlay /><Outlet /></div></MessageRealtimeProvider>;
   }
   return (
-    <MessageRealtimeProvider userId={user?.id}><div className="min-h-screen w-full min-w-0 overflow-x-clip bg-background">
+    <MessageRealtimeProvider userId={user?.id}><div className={`min-h-screen w-full min-w-0 overflow-x-clip ${isHome ? 'bg-catalog' : 'bg-background'}`}>
       <RoutePreloader />
       <RoleCelebrationOverlay />
       <WhatsNewModal />

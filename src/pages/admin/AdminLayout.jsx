@@ -156,7 +156,7 @@ export default function AdminLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] flex">
+    <div className="dark min-h-screen bg-black text-white flex">
       <aside className={`fixed lg:sticky top-0 z-40 h-screen w-64 flex flex-col pt-[max(env(safe-area-inset-top),0rem)] lg:pt-0 transition-transform ${open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
         style={{ background: SIDEBAR_BG, borderRight: '1px solid rgba(168,85,247,0.1)' }}>
         <div className="px-4 py-4 flex items-center justify-between">
@@ -185,7 +185,7 @@ export default function AdminLayout() {
         </div>
       </aside>
       {open && <div className="fixed inset-0 bg-black/50 z-30 lg:hidden" onClick={() => setOpen(false)} />}
-      <div className="flex-1 min-w-0 overflow-x-hidden"
+      <div className="flex-1 min-w-0 overflow-x-hidden bg-black text-white"
         onTouchStart={(e) => { touchX.current = e.touches[0].clientX; touchY.current = e.touches[0].clientY; }}
         onTouchEnd={(e) => { const dx = e.changedTouches[0].clientX - (touchX.current ?? 0); const dy = e.changedTouches[0].clientY - (touchY.current ?? 0); if (Math.abs(dx) > Math.abs(dy) * 1.5 && dx > 50 && (touchX.current ?? 999) < 80) setOpen(true); else if (Math.abs(dx) > Math.abs(dy) * 1.5 && dx < -50) setOpen(false); }}>
         <header className="lg:hidden sticky top-0 z-20 border-b border-purple-500/10 min-h-14 flex items-center px-4 pb-2 pt-[max(env(safe-area-inset-top),0.75rem)] bg-[#111116]/95 backdrop-blur"
@@ -221,7 +221,7 @@ export default function AdminLayout() {
             </div>
           </div>
         </header>
-        <div className="w-full min-w-0 overflow-x-clip p-3 sm:p-5 xl:p-6">
+        <div className="w-full min-h-[calc(100vh-3.5rem)] min-w-0 overflow-x-clip bg-black p-3 sm:p-5 xl:p-6">
           <Outlet />
         </div>
       </div>

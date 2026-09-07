@@ -310,7 +310,7 @@ export default function ChatOverlay({ roomId, chatEnabled, isOwner, isAdmin, onC
           ))}
           </div>
           ) : (
-          <div className="flex-1 min-h-0 overflow-y-auto bg-card/95 text-white" style={{ touchAction: 'pan-y', WebkitOverflowScrolling: 'touch' }}>
+          <div className="dark flex-1 min-h-0 overflow-y-auto bg-black text-white" style={{ touchAction: 'pan-y', WebkitOverflowScrolling: 'touch' }}>
           <RoomSettingsContent {...(settingsProps || {})} />
           </div>
           )}

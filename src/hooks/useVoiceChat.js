@@ -106,6 +106,13 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled }) {
       refreshState();
     };
     const onDisconnected = () => { setConnectionState('disconnected'); setError('🌐 Bağlantı yeniden kuruluyor.'); };
+    const attachCurrentRemoteAudio = () => {
+      room.remoteParticipants.forEach((participant) => {
+        participant.audioTrackPublications.forEach((publication) => {
+          if (publication.track) attachRemoteAudio(publication.track);
+        });
+      });
+    };
 
     room.on(RoomEvent.TrackSubscribed, attachRemoteAudio);
     room.on(RoomEvent.TrackUnsubscribed, onUnsubscribed);
@@ -119,7 +126,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled }) {
     room.on(RoomEvent.LocalTrackUnpublished, refreshState);
     room.on(RoomEvent.ActiveSpeakersChanged, updateSpeakers);
     room.on(RoomEvent.Reconnecting, () => { setConnectionState('reconnecting'); setError('🌐 Bağlantı yeniden kuruluyor.'); });
-    room.on(RoomEvent.Reconnected, () => { setConnectionState('connected'); setError(''); refreshState(); });
+    room.on(RoomEvent.Reconnected, () => { setConnectionState('connected'); setError(''); attachCurrentRemoteAudio(); retryAudio(); refreshState(); });
     room.on(RoomEvent.Disconnected, onDisconnected);
     room.on(RoomEvent.AudioPlaybackStatusChanged, () => { setAudioBlocked(!room.canPlaybackAudio); refreshState(); });
 
@@ -135,8 +142,9 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled }) {
         if (cancelled) return;
         setConnectionState('connected');
         setError('');
-        // Bağlantı kurulur kurulmaz ses çalmayı dene — önceki etkileşim açtıysa anında çalışır.
-        room.startAudio().catch(() => {});
+        // Mikrofon izni istemeden mevcut tüm uzak sesleri hemen bağla ve oynat.
+        attachCurrentRemoteAudio();
+        retryAudio();
         setAudioBlocked(!room.canPlaybackAudio);
         refreshState();
       } catch (connectError) {

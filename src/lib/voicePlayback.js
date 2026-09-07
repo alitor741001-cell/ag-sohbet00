@@ -39,7 +39,6 @@ export function createVoiceOutput(track, roomId) {
     remove() {
       source.disconnect();
       gain.disconnect();
-      mediaTrack.stop?.();
     },
     get muted() { return gain.gain.value === 0; },
     set muted(value) { gain.gain.value = value ? 0 : 1; },
