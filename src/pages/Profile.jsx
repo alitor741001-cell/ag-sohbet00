@@ -63,9 +63,9 @@ export default function Profile() {
   };
   const clearHistory = async () => { await base44.entities.WatchHistory.deleteMany({ user_id: user.id }); setHistoryMovies([]); toast({ title: 'İzleme geçmişi temizlendi' }); };
   const renew = async () => { try { await base44.entities.MembershipRenewal.create({ user_id: user.id, user_name: user.username || user.full_name, current_package: pkg?.name || 'Yok', requested_package: pkg?.name || 'STANDARD', status: 'pending' }); await base44.entities.Notification.create({ user_id: user.id, title: 'Yenileme talebiniz alındı', body: 'Talebiniz admin onayı bekliyor.', type: 'info' }); toast({ title: 'Yenileme talebi gönderildi' }); } catch { toast({ title: 'Hata', variant: 'destructive' }); } };
-  if (!user) return <div className="p-6">Yükleniyor...</div>;
+  if (!user) return <div className="dark min-h-screen bg-black p-6 text-white">Yükleniyor...</div>;
   const expired = user.membership_end && new Date(user.membership_end) < new Date();
-  return <div className="mx-auto max-w-3xl px-4 py-7 sm:px-6">
+  return <div className="dark mx-auto min-h-screen max-w-3xl bg-black px-4 py-7 text-white sm:px-6">
     <ProfileHeader user={user} pkg={pkg} expired={expired} avatar={form.avatar} onAvatar={onAvatar} onUpdated={reload} uploading={uploading} />
     <MembershipNotice user={user} expired={expired} onRenew={renew} />
     <ProfileTabs active={tab} isAdmin={user.role === 'admin'} onChange={(nextTab) => { setTab(nextTab); navigate(nextTab === 'settings' ? '/profil?tab=settings' : '/profil', { replace: true }); }} />

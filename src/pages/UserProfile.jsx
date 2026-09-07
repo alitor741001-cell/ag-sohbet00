@@ -80,13 +80,13 @@ export default function UserProfile({ userId, roomIdOverride, onBack, onMessage,
     }
   };
 
-  if (loading) return <div className="h-screen flex items-center justify-center"><div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
+  if (loading) return <div className="dark h-screen bg-black text-white flex items-center justify-center"><div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
 
   const isSelf = me?.id === id;
   const accountState = getAccountState(profile);
 
   if (accountState && !isSelf) return (
-    <div className={`${embedded ? 'fixed inset-0 z-[100] bg-background pt-[env(safe-area-inset-top)]' : ''} flex min-h-screen items-center justify-center p-4`}>
+    <div className={`dark ${embedded ? 'fixed inset-0 z-[100] bg-black pt-[env(safe-area-inset-top)]' : 'bg-black'} flex min-h-screen items-center justify-center p-4 text-white`}>
       <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 text-center">
         <AccountStatusAvatar status={profile.account_status} className="mx-auto h-28 w-28" />
         <h1 className="mt-4 text-xl font-bold">{accountState.name}</h1>
@@ -97,7 +97,7 @@ export default function UserProfile({ userId, roomIdOverride, onBack, onMessage,
   );
 
   return (
-    <div className={`${embedded ? 'fixed inset-0 z-[100] overflow-y-auto overscroll-contain bg-background pt-[env(safe-area-inset-top)]' : ''}`}>
+    <div className={`dark bg-black text-white ${embedded ? 'fixed inset-0 z-[100] overflow-y-auto overscroll-contain pt-[env(safe-area-inset-top)]' : ''}`}>
     <div className="w-full min-w-0 px-4 sm:px-6 py-6 pb-[calc(2rem+env(safe-area-inset-bottom))] max-w-2xl mx-auto">
       <button onClick={() => onBack ? onBack() : navigate(-1)} className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground mb-4"><ArrowLeft className="w-4 h-4" /> Geri</button>
       {err ? <p className="text-center text-destructive py-10">{err}</p> : profile && (
