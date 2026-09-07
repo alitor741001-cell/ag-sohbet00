@@ -1,1 +1,8 @@
-export default function AdminSecurity() { return <div className="p-6"><h1 className="text-2xl font-bold">Güvenlik</h1></div>; }
+export default function AdminSecurity() {
+  return (
+    <div>
+      <h1 className="text-2xl font-bold text-white mb-6">Güvenlik</h1>
+      <p className="text-muted-foreground">Bu sayfa yakında hazır olacak.</p>
+    </div>
+  );
+}
