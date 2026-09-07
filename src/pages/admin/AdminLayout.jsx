@@ -10,7 +10,7 @@ import { Image } from '@/components/ui/image';
 import AdminNotifBell from '@/components/admin/AdminNotifBell';
 import LiveChatButton from '@/components/layout/LiveChatButton';
 
-const SIDEBAR_BG = '#111116';
+const SIDEBAR_BG = '#1A1414';
 const SIDEBAR_TEXT = '#e0e0e0';
 const SIDEBAR_HEADING = '#ef4444';
 const SIDEBAR_SELECTED = 'linear-gradient(135deg, rgba(239,68,68,0.25), rgba(107,114,128,0.12))';
@@ -89,13 +89,13 @@ export default function AdminLayout() {
 
   if (user.twofa_enabled && !twofaOk) {
     return (
-      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center p-4">
-        <div className="bg-[#16161e] border border-purple-500/20 rounded-xl p-6 w-full max-w-sm">
-          <div className="flex items-center gap-2 mb-3"><KeyRound className="w-5 h-5 text-purple-400" /><h1 className="text-lg font-bold text-white">Admin 2FA Doğrulama</h1></div>
+      <div className="min-h-screen bg-[#131010] flex items-center justify-center p-4">
+        <div className="bg-[#241A1A] border border-red-500/25 rounded-xl p-6 w-full max-w-sm">
+          <div className="flex items-center gap-2 mb-3"><KeyRound className="w-5 h-5 text-red-400" /><h1 className="text-lg font-bold text-white">Admin 2FA Doğrulama</h1></div>
           <p className="text-sm text-gray-400 mb-4">Admin paneline erişim için authenticator kodunuzu girin.</p>
-          <input value={twofaCode} onChange={(e) => setTwofaCode(e.target.value)} maxLength={6} placeholder="6 haneli kod" className="w-full bg-[#0d0d12] rounded-lg px-3 py-2.5 text-sm text-white outline-none focus:ring-2 focus:ring-purple-500/40 mb-2 border border-white/5" />
+          <input value={twofaCode} onChange={(e) => setTwofaCode(e.target.value)} maxLength={6} placeholder="6 haneli kod" className="w-full bg-[#1A1414] rounded-lg px-3 py-2.5 text-sm text-white outline-none focus:ring-2 focus:ring-red-500/40 mb-2 border border-white/5" />
           {twofaErr && <p className="text-xs text-red-400 mb-2">{twofaErr}</p>}
-          <button onClick={verify2fa} disabled={verifying || twofaCode.length !== 6} className="w-full text-white py-2.5 rounded-lg text-sm font-semibold disabled:opacity-50" style={{ background: 'linear-gradient(135deg, #7c3aed, #6b21a8)' }}>{verifying ? 'Doğrulanıyor...' : 'Doğrula'}</button>
+          <button onClick={verify2fa} disabled={verifying || twofaCode.length !== 6} className="w-full text-white py-2.5 rounded-lg text-sm font-semibold disabled:opacity-50" style={{ background: 'linear-gradient(135deg, #dc2626, #991b1b)' }}>{verifying ? 'Doğrulanıyor...' : 'Doğrula'}</button>
           <button onClick={() => base44.auth.logout('/login')} className="w-full mt-2 text-sm text-gray-400 py-2">Çıkış</button>
         </div>
       </div>
@@ -157,7 +157,7 @@ export default function AdminLayout() {
   };
 
   return (
-    <div className="dark min-h-screen bg-black text-white flex">
+    <div className="dark min-h-screen bg-background text-white flex">
       <aside className={`fixed lg:sticky top-0 z-40 h-screen w-64 flex flex-col pt-[max(env(safe-area-inset-top),0rem)] lg:pt-0 transition-transform ${open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
         style={{ background: SIDEBAR_BG, borderRight: '1px solid rgba(239,68,68,0.18)' }}>
         <div className="px-4 py-4 flex items-center justify-between">
@@ -170,8 +170,8 @@ export default function AdminLayout() {
           {navGroups.map(renderGroup)}
         </nav>
         <div className="p-3 space-y-2" style={{ borderTop: '1px solid rgba(239,68,68,0.18)' }}>
-          <div className="flex items-center gap-2.5 rounded-xl p-2.5" style={{ background: '#16161e' }}>
-            {user?.avatar ? <Image src={user.avatar} className="w-9 h-9 rounded-full object-cover shrink-0" fittingType="fill" /> : <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold shrink-0" style={{ background: 'linear-gradient(135deg, #7c3aed, #6b21a8)', color: '#fff' }}>{(user?.username || user?.full_name || user?.email || 'A')[0].toUpperCase()}</div>}
+          <div className="flex items-center gap-2.5 rounded-xl p-2.5" style={{ background: '#241A1A' }}>
+            {user?.avatar ? <Image src={user.avatar} className="w-9 h-9 rounded-full object-cover shrink-0" fittingType="fill" /> : <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold shrink-0" style={{ background: 'linear-gradient(135deg, #dc2626, #991b1b)', color: '#fff' }}>{(user?.username || user?.full_name || user?.email || 'A')[0].toUpperCase()}</div>}
             <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold truncate flex items-center gap-1" style={{ color: SIDEBAR_TEXT }}>👑 {user?.username || user?.full_name || 'Admin'}</p>
               <p className="text-[10px] truncate" style={{ color: '#6b7280' }}>{user?.email}</p>
@@ -185,11 +185,11 @@ export default function AdminLayout() {
           </button>
         </div>
       </aside>
-      {open && <div className="fixed inset-0 bg-black/50 z-30 lg:hidden" onClick={() => setOpen(false)} />}
-      <div className="flex-1 min-w-0 overflow-x-hidden bg-black text-white"
+      {open && <div className="fixed inset-0 bg-background/50 z-30 lg:hidden" onClick={() => setOpen(false)} />}
+      <div className="flex-1 min-w-0 overflow-x-hidden bg-background text-white"
         onTouchStart={(e) => { touchX.current = e.touches[0].clientX; touchY.current = e.touches[0].clientY; }}
         onTouchEnd={(e) => { const dx = e.changedTouches[0].clientX - (touchX.current ?? 0); const dy = e.changedTouches[0].clientY - (touchY.current ?? 0); if (Math.abs(dx) > Math.abs(dy) * 1.5 && dx > 50 && (touchX.current ?? 999) < 80) setOpen(true); else if (Math.abs(dx) > Math.abs(dy) * 1.5 && dx < -50) setOpen(false); }}>
-        <header className="lg:hidden sticky top-0 z-20 border-b border-red-500/20 min-h-14 flex items-center px-4 pb-2 pt-[max(env(safe-area-inset-top),0.75rem)] bg-[#111116]/95 backdrop-blur"
+        <header className="lg:hidden sticky top-0 z-20 border-b border-red-500/20 min-h-14 flex items-center px-4 pb-2 pt-[max(env(safe-area-inset-top),0.75rem)] bg-[#1A1414]/95 backdrop-blur"
           style={{ touchAction: 'pan-y' }}>
           <button onClick={() => setOpen(true)}><Menu className="w-6 h-6 text-white" /></button>
           <span className="ml-1 hidden min-[390px]:block font-bold text-white whitespace-nowrap">Admin Panel</span>
@@ -197,8 +197,8 @@ export default function AdminLayout() {
             <LiveChatButton />
             <ThemeToggle />
             <AdminNotifBell notifGranted={notifGranted} />
-            <div className="flex shrink-0 items-center gap-1 rounded-lg bg-[#16161e] p-1">
-              {user?.avatar ? <Image src={user.avatar} className="w-7 h-7 rounded-full shrink-0" fittingType="fill" /> : <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ background: 'linear-gradient(135deg, #7c3aed, #6b21a8)' }}>{(user.username || user.full_name || user.email || 'A')[0].toUpperCase()}</div>}
+            <div className="flex shrink-0 items-center gap-1 rounded-lg bg-[#241A1A] p-1">
+              {user?.avatar ? <Image src={user.avatar} className="w-7 h-7 rounded-full shrink-0" fittingType="fill" /> : <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ background: 'linear-gradient(135deg, #dc2626, #991b1b)' }}>{(user.username || user.full_name || user.email || 'A')[0].toUpperCase()}</div>}
               <div className="hidden min-[430px]:block">
                 <p className="text-xs font-semibold leading-tight text-white">Yönetici</p>
                 <p className="text-[10px] text-gray-400 leading-tight max-w-[90px] truncate">{user.email}</p>
@@ -206,14 +206,14 @@ export default function AdminLayout() {
             </div>
           </div>
         </header>
-        <header className="hidden lg:flex sticky top-0 z-20 border-b border-red-500/20 h-14 items-center px-6 bg-[#111116]/95 backdrop-blur">
+        <header className="hidden lg:flex sticky top-0 z-20 border-b border-red-500/20 h-14 items-center px-6 bg-[#1A1414]/95 backdrop-blur">
           <span className="font-bold text-white">Admin Panel</span>
           <div className="ml-auto flex items-center gap-3">
             <LiveChatButton />
             <ThemeToggle />
             <AdminNotifBell notifGranted={notifGranted} />
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#16161e]">
-              {user?.avatar ? <Image src={user.avatar} className="w-8 h-8 rounded-full shrink-0" fittingType="fill" /> : <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white" style={{ background: 'linear-gradient(135deg, #7c3aed, #6b21a8)' }}>{(user.username || user.full_name || user.email || 'A')[0].toUpperCase()}</div>}
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#241A1A]">
+              {user?.avatar ? <Image src={user.avatar} className="w-8 h-8 rounded-full shrink-0" fittingType="fill" /> : <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white" style={{ background: 'linear-gradient(135deg, #dc2626, #991b1b)' }}>{(user.username || user.full_name || user.email || 'A')[0].toUpperCase()}</div>}
               <div>
                 <p className="text-sm font-semibold leading-tight text-white">Yönetici</p>
                 <p className="text-xs text-gray-400 leading-tight max-w-[160px] truncate">{user.email}</p>
@@ -222,7 +222,7 @@ export default function AdminLayout() {
             </div>
           </div>
         </header>
-        <div className="w-full min-h-[calc(100vh-3.5rem)] min-w-0 overflow-x-clip bg-black p-3 sm:p-5 xl:p-6">
+        <div className="w-full min-h-[calc(100vh-3.5rem)] min-w-0 overflow-x-clip bg-background p-3 sm:p-5 xl:p-6">
           <Outlet />
         </div>
       </div>
