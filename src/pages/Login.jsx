@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LogIn, Mail, Lock, Loader2, Eye, EyeOff, ArrowRight, Film, Sparkles, MessageSquare, Lock as LockIcon, Users, AlertCircle } from "lucide-react";
 import AuthBackground from "@/components/auth/AuthBackground";
+import { Image } from "@/components/ui/image";
 import SupportWidget from "@/components/auth/SupportWidget";
 import DownloadButtons from "@/components/DownloadButtons";
 import { safeReturnTo } from "@/lib/authReturnTo";
@@ -104,9 +105,7 @@ export default function Login() {
       {/* Logo */}
       <div className="text-center mb-8">
         <div className="inline-flex items-center gap-2 mb-2">
-          <div className="w-10 h-10 rounded-xl bg-[#e50914] flex items-center justify-center">
-            <Film className="w-5 h-5 text-white" />
-          </div>
+          <Image src="https://media.base44.com/images/public/6a77d66e4da6de214628ee62/b44910060_351A5169-7769-4C41-8816-B20112620648.png" alt="FILMKEYFİ" className="w-12 h-12 rounded-xl" fittingType="fill" />
           <h1 className="text-2xl font-bold tracking-tight text-white">FİLM KEYFİ</h1>
         </div>
         <p className="text-sm text-[#a0a0a0]">Filmini seç, keyfini çıkar.</p>

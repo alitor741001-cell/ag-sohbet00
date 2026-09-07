@@ -1,6 +1,7 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { Image } from '@/components/ui/image';
 import ProfileDropdown from '@/components/layout/ProfileDropdown';
 import SearchSuggestions from '@/components/search/SearchSuggestions';
 import LiveChatButton from '@/components/layout/LiveChatButton';
@@ -45,7 +46,8 @@ export default function Navbar() {
       </div>
 
       <div className="relative max-w-[1600px] mx-auto px-4 sm:px-6 h-16 flex items-center gap-4">
-        <Link to="/" className="flex items-center gap-1 shrink-0">
+        <Link to="/" className="flex items-center gap-2 shrink-0">
+          <Image src="https://media.base44.com/images/public/6a77d66e4da6de214628ee62/b44910060_351A5169-7769-4C41-8816-B20112620648.png" alt="FILMKEYFİ" className="h-10 w-10 rounded-lg" fittingType="fill" />
           <span className="text-xl font-extrabold tracking-tight">
             <span className="text-gradient">FILM</span>
             <span className="text-white/90">KEYFİ</span>
