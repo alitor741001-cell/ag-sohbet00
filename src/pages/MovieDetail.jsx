@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Image } from '@/components/ui/image';
-import { Play, Plus, Check, Heart, Share2, Star, Clock, Globe, Captions, Calendar } from 'lucide-react';
+import { Play, Plus, Check, Heart, Share2, Star, Clock, Globe, Captions, Calendar, ArrowLeft } from 'lucide-react';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
 import MovieCard from '@/components/movie/MovieCard';
@@ -64,6 +64,9 @@ export default function MovieDetail() {
       <div className="relative h-[50vh] sm:h-[60vh] -mt-16 w-full overflow-hidden">
         <Image src={movie.backdrop || movie.poster} alt={movie.title} className="absolute inset-0 w-full h-full object-cover" fittingType="fill" />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
+        <button onClick={() => navigate(-1)} className="absolute left-4 z-20 w-10 h-10 rounded-full glass border border-border flex items-center justify-center active:scale-90 transition" style={{ top: 'calc(4rem + max(env(safe-area-inset-top), 1.5rem) + 0.5rem)' }}>
+          <ArrowLeft className="w-5 h-5" />
+        </button>
       </div>
       <div className="px-4 sm:px-6 -mt-32 sm:-mt-40 relative">
         <div className="flex flex-col sm:flex-row gap-6">

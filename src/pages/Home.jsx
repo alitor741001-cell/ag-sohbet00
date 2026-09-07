@@ -5,6 +5,7 @@ import Hero from '@/components/movie/Hero';
 import ContentRow from '@/components/movie/ContentRow';
 import CategoryRow from '@/components/movie/CategoryRow';
 import { SkeletonRow } from '@/components/movie/EmptyState';
+import PullToRefresh from '@/components/PullToRefresh';
 
 
 export default function Home() {
@@ -13,30 +14,30 @@ export default function Home() {
   const [rows, setRows] = useState({ featured: [], popular: [], new: [], most: [], action: [], scifi: [], comedy: [], horror: [], drama: [], anim: [] });
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchAll = async () => {
-      try {
-        const all = await base44.entities.Movie.filter({ published: true }, '-views', 200);
-        const feat = all.filter((m) => m.featured);
-        setFeatured(feat[0] || all[0] || null);
-        setRows({
-          featured: feat.slice(0, 12),
-          popular: all.filter((m) => m.popular).slice(0, 12),
-          new: [...all].sort((a, b) => (b.year || 0) - (a.year || 0)).slice(0, 12),
-          most: [...all].sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 12),
-          action: all.filter((m) => m.genres?.includes('Aksiyon')).slice(0, 12),
-          scifi: all.filter((m) => m.genres?.includes('Bilim Kurgu')).slice(0, 12),
-          comedy: all.filter((m) => m.genres?.includes('Komedi')).slice(0, 12),
-          horror: all.filter((m) => m.genres?.includes('Korku')).slice(0, 12),
-          drama: all.filter((m) => m.genres?.includes('Dram')).slice(0, 12),
-          anim: all.filter((m) => m.genres?.includes('Animasyon')).slice(0, 12),
-        });
-      } finally { setLoading(false); }
-    };
-    fetchAll();
-  }, []);
+  const fetchAll = async () => {
+    try {
+      const all = await base44.entities.Movie.filter({ published: true }, '-views', 200);
+      const feat = all.filter((m) => m.featured);
+      setFeatured(feat[0] || all[0] || null);
+      setRows({
+        featured: feat.slice(0, 12),
+        popular: all.filter((m) => m.popular).slice(0, 12),
+        new: [...all].sort((a, b) => (b.year || 0) - (a.year || 0)).slice(0, 12),
+        most: [...all].sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 12),
+        action: all.filter((m) => m.genres?.includes('Aksiyon')).slice(0, 12),
+        scifi: all.filter((m) => m.genres?.includes('Bilim Kurgu')).slice(0, 12),
+        comedy: all.filter((m) => m.genres?.includes('Komedi')).slice(0, 12),
+        horror: all.filter((m) => m.genres?.includes('Korku')).slice(0, 12),
+        drama: all.filter((m) => m.genres?.includes('Dram')).slice(0, 12),
+        anim: all.filter((m) => m.genres?.includes('Animasyon')).slice(0, 12),
+      });
+    } finally { setLoading(false); }
+  };
+
+  useEffect(() => { fetchAll(); }, []);
 
   return (
+    <PullToRefresh onRefresh={fetchAll}>
     <div className="min-h-screen bg-catalog text-white">
       <Hero movie={featured} />
       <CategoryRow />
@@ -57,5 +58,6 @@ export default function Home() {
         )}
       </div>
     </div>
+    </PullToRefresh>
   );
 }

@@ -4,6 +4,7 @@ import MovieCard from '@/components/movie/MovieCard';
 import EmptyState, { SkeletonRow } from '@/components/movie/EmptyState';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Film, Search, SlidersHorizontal } from 'lucide-react';
+import PullToRefresh from '@/components/PullToRefresh';
 
 export default function Browse({ type, title }) {
   const [movies, setMovies] = useState([]);
@@ -14,12 +15,15 @@ export default function Browse({ type, title }) {
   const [sortBy, setSortBy] = useState('popular');
   const [yearFilter, setYearFilter] = useState('all');
 
-  useEffect(() => {
-    Promise.all([
+  const fetchAll = async () => {
+    const [m, c] = await Promise.all([
       base44.entities.Movie.filter({ published: true, type }, '-views', 300).catch(() => []),
       base44.entities.Category.list('name', 200).catch(() => []),
-    ]).then(([m, c]) => { setMovies(m); setCats(c); setLoading(false); });
-  }, [type]);
+    ]);
+    setMovies(m); setCats(c); setLoading(false);
+  };
+
+  useEffect(() => { fetchAll(); }, [type]);
 
   const catName = (id) => cats.find((c) => c.id === id)?.name;
   let filtered = activeCat === 'all' ? movies : movies.filter((m) => m.category_id === activeCat || m.category === catName(activeCat));
@@ -35,6 +39,7 @@ export default function Browse({ type, title }) {
   const sortLabels = { popular: 'Sırala: En Popüler', rating: 'Sırala: En Yüksek Puan', newest: 'Sırala: En Yeni' };
 
   return (
+    <PullToRefresh onRefresh={fetchAll}>
     <div className="mx-auto min-h-screen w-full max-w-7xl bg-[#0a0a0f] px-3 py-5 text-white sm:px-5 lg:px-8">
       <h1 className="text-2xl font-extrabold">{title}</h1>
       <p className="text-sm text-gray-400 mt-1 mb-4">{subtitle}</p>
@@ -82,5 +87,6 @@ export default function Browse({ type, title }) {
           {filtered.map((m) => <MovieCard key={m.id} movie={m} />)}
         </div>}
     </div>
+    </PullToRefresh>
   );
 }
