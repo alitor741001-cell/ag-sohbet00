@@ -105,7 +105,7 @@ export default function Login() {
       {/* Logo */}
       <div className="text-center mb-8">
         <div className="inline-flex items-center gap-2 mb-2">
-          <Image src="https://media.base44.com/images/public/6a77d66e4da6de214628ee62/b44910060_351A5169-7769-4C41-8816-B20112620648.png" alt="FILMKEYFİ" className="w-12 h-12 rounded-xl" fittingType="fill" />
+          <Image src="https://media.base44.com/images/public/6a77d66e4da6de214628ee62/3108d3b4e_351A5169-7769-4C41-8816-B20112620648.png" alt="FILMKEYFİ" className="w-12 h-12 rounded-xl" fittingType="fill" />
           <h1 className="text-2xl font-bold tracking-tight text-white">FİLM KEYFİ</h1>
         </div>
         <p className="text-sm text-[#a0a0a0]">Filmini seç, keyfini çıkar.</p>

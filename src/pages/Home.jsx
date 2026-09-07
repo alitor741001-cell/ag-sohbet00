@@ -5,6 +5,7 @@ import Hero from '@/components/movie/Hero';
 import ContentRow from '@/components/movie/ContentRow';
 import CategoryRow from '@/components/movie/CategoryRow';
 import { SkeletonRow } from '@/components/movie/EmptyState';
+import WelcomeOverlay from '@/components/WelcomeOverlay';
 
 
 export default function Home() {
@@ -38,6 +39,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-catalog text-white">
+      <WelcomeOverlay />
       <Hero movie={featured} />
       <CategoryRow />
       <div className="mt-4">

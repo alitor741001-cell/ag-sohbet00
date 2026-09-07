@@ -1,7 +1,7 @@
 import React from "react";
 import { Image } from "@/components/ui/image";
 
-const LOGO_URL = "https://media.base44.com/images/public/6a77d66e4da6de214628ee62/b44910060_351A5169-7769-4C41-8816-B20112620648.png";
+const LOGO_URL = "https://media.base44.com/images/public/6a77d66e4da6de214628ee62/3108d3b4e_351A5169-7769-4C41-8816-B20112620648.png";
 
 export default function AuthLayout({ icon: Icon, title, subtitle, footer, children }) {
   return (
