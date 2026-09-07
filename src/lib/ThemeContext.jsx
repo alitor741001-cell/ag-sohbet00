@@ -8,8 +8,7 @@ function applyTheme(theme) {
 }
 
 function getSystemTheme() {
-  if (typeof window === 'undefined' || !window.matchMedia) return 'dark';
-  return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  return 'dark';
 }
 
 export function ThemeProvider({ children }) {
@@ -28,15 +27,8 @@ export function ThemeProvider({ children }) {
     applyTheme(theme);
   }, [theme]);
 
-  // Listen for real-time system theme changes when user hasn't set a manual preference
-  useEffect(() => {
-    if (userOverrideRef.current) return;
-    if (typeof window === 'undefined' || !window.matchMedia) return;
-    const mql = window.matchMedia('(prefers-color-scheme: dark)');
-    const handler = (e) => setThemeState(e.matches ? 'dark' : 'light');
-    mql.addEventListener('change', handler);
-    return () => mql.removeEventListener('change', handler);
-  }, []);
+  // App is always dark — no system theme following
+  // (kept for API compatibility but does nothing)
 
   const setTheme = useCallback((t) => {
     userOverrideRef.current = true;

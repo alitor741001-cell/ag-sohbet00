@@ -50,7 +50,7 @@ export default function CreateRoom() {
     } finally { setOpening(false); }
   };
 
-  const inputCls = "w-full bg-[#16161e] rounded-xl px-3 py-2.5 text-sm text-white outline-none focus:ring-2 focus:ring-purple-500/40 border border-white/5 placeholder:text-gray-500";
+  const inputCls = "w-full bg-[hsl(var(--secondary))] rounded-xl px-3 py-2.5 text-sm text-white outline-none focus:ring-2 focus:ring-primary/40 border border-white/5 placeholder:text-gray-500";
 
   const toggleCards = [
     { key: 'chat_enabled', icon: MessageSquare, label: 'Sohbet açık' },
@@ -59,20 +59,20 @@ export default function CreateRoom() {
   ];
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-3 py-5 text-white sm:px-6 sm:py-7">
+    <div className="dark mx-auto w-full max-w-3xl px-3 py-5 text-white sm:px-6 sm:py-7">
       {/* Hero Panel */}
-      <div className="relative rounded-2xl overflow-hidden mb-6 p-5" style={{ background: 'linear-gradient(135deg, rgba(124,58,237,0.15), rgba(219,39,119,0.08))', border: '1px solid rgba(168,85,247,0.2)' }}>
-        <div className="absolute -right-6 -bottom-6 w-28 h-28 rounded-full blur-2xl opacity-30" style={{ background: 'radial-gradient(circle, #7c3aed, transparent 70%)' }} />
+      <div className="relative rounded-2xl overflow-hidden mb-6 p-5" style={{ background: 'linear-gradient(135deg, rgba(220,38,38,0.15), rgba(153,27,27,0.08))', border: '1px solid rgba(239,68,68,0.2)' }}>
+        <div className="absolute -right-6 -bottom-6 w-28 h-28 rounded-full blur-2xl opacity-30" style={{ background: 'radial-gradient(circle, #dc2626, transparent 70%)' }} />
         <div className="relative flex items-center gap-4">
-          <span className="w-12 h-12 rounded-full flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.2)' }}>
-            <Users className="w-6 h-6 text-purple-400" />
+          <span className="w-12 h-12 rounded-full flex items-center justify-center shrink-0" style={{ background: 'rgba(220,38,38,0.2)' }}>
+            <Users className="w-6 h-6 text-primary" />
           </span>
           <div className="flex-1">
             <h1 className="text-xl font-extrabold">Oda Kur</h1>
             <p className="text-sm text-gray-400">Arkadaşlarınla birlikte izlemek için bir Watch Party odası oluştur.</p>
           </div>
         </div>
-        <button onClick={openMyRoom} disabled={opening} className="relative mt-4 w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-white active:scale-95 transition-transform disabled:opacity-60" style={{ background: 'linear-gradient(135deg, #7c3aed, #6b21a8)' }}>
+        <button onClick={openMyRoom} disabled={opening} className="relative mt-4 w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-white active:scale-95 transition-transform disabled:opacity-60" style={{ background: 'linear-gradient(135deg, #dc2626, #991b1b)' }}>
           <Home className="w-5 h-5" /> {opening ? 'Açılıyor...' : 'Kendi Odamı Aç'}
         </button>
       </div>
@@ -91,21 +91,21 @@ export default function CreateRoom() {
         <div>
           <div className="flex items-center justify-between mb-1.5">
             <label className="text-sm font-medium text-gray-300">Film / Dizi Seç</label>
-            <Link to="/filmler" className="text-xs text-purple-400 hover:underline">Tümünü Gör →</Link>
+            <Link to="/filmler" className="text-xs text-primary hover:underline">Tümünü Gör →</Link>
           </div>
           {movies.length === 0 ? (
-            <p className="text-sm text-gray-500 py-4 text-center bg-[#16161e] rounded-xl">Yüklü içerik yok.</p>
+            <p className="text-sm text-gray-500 py-4 text-center bg-[hsl(var(--secondary))] rounded-xl">Yüklü içerik yok.</p>
           ) : (
             <div className="flex gap-2 overflow-x-auto no-scrollbar p-1 -m-1">
               {movies.map((m) => (
                 <button key={m.id} type="button" onClick={() => setForm({ ...form, movie_id: m.id, name: nameEdited ? form.name : m.title })}
-                  className={`relative shrink-0 w-28 rounded-xl overflow-hidden border-2 transition-all ${form.movie_id === m.id ? 'border-purple-500 ring-2 ring-purple-500/30' : 'border-transparent hover:border-white/10'}`}>
+                  className={`relative shrink-0 w-28 rounded-xl overflow-hidden border-2 transition-all ${form.movie_id === m.id ? 'border-primary ring-2 ring-primary/30' : 'border-transparent hover:border-white/10'}`}>
                   <Image src={m.poster || m.backdrop} alt={m.title} className="aspect-[2/3] w-full" fittingType="fill" />
                   <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 to-transparent p-1.5">
                     <p className="text-xs font-medium text-white line-clamp-2">{m.title}</p>
                   </div>
                   {form.movie_id === m.id && (
-                    <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #7c3aed, #db2777)' }}>
+                    <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #dc2626, #991b1b)' }}>
                       <Check className="w-3 h-3 text-white" />
                     </div>
                   )}
@@ -123,11 +123,11 @@ export default function CreateRoom() {
               <input className={inputCls + ' pr-10'} type={showPass ? 'text' : 'password'} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="Boş = şifresiz" />
               <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">{showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}</button>
             </div>
-            <button type="button" onClick={() => setForm({ ...form, password: Math.random().toString(36).slice(2, 8).toUpperCase() })} className="mt-2 text-xs px-3 py-1.5 rounded-lg border border-purple-500/40 text-purple-400 hover:bg-purple-500/10">Oluştur</button>
+            <button type="button" onClick={() => setForm({ ...form, password: Math.random().toString(36).slice(2, 8).toUpperCase() })} className="mt-2 text-xs px-3 py-1.5 rounded-lg border border-primary/40 text-primary hover:bg-primary/10">Oluştur</button>
           </div>
           <div>
             <label className="text-sm font-medium block mb-1.5 text-gray-300">Maks. Kullanıcı</label>
-            <div className="flex items-center gap-2 bg-[#16161e] rounded-xl border border-white/5 px-2 py-2">
+            <div className="flex items-center gap-2 bg-[hsl(var(--secondary))] rounded-xl border border-white/5 px-2 py-2">
               <button type="button" onClick={() => setForm({ ...form, max_users: Math.max(2, Number(form.max_users) - 1) })} className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-gray-300 hover:bg-white/10"><Minus className="w-4 h-4" /></button>
               <span className="flex-1 text-center text-sm font-bold">{form.max_users}</span>
               <button type="button" onClick={() => setForm({ ...form, max_users: Math.min(250, Number(form.max_users) + 1) })} className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-gray-300 hover:bg-white/10"><Plus className="w-4 h-4" /></button>
@@ -143,11 +143,11 @@ export default function CreateRoom() {
             const active = form[key];
             return (
               <button key={key} type="button" onClick={() => setForm({ ...form, [key]: !active })}
-                className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all ${active ? 'border-purple-500 bg-purple-500/10' : 'border-white/10 bg-[#16161e]'}`}>
-                <span className={`w-5 h-5 rounded-full flex items-center justify-center ${active ? 'bg-purple-500' : 'border border-white/20'}`}>
+                className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all ${active ? 'border-primary bg-primary/10' : 'border-white/10 bg-[hsl(var(--secondary))]'}`}>
+                <span className={`w-5 h-5 rounded-full flex items-center justify-center ${active ? 'bg-primary' : 'border border-white/20'}`}>
                   {active && <Check className="w-3 h-3 text-white" />}
                 </span>
-                <Icon className={`w-5 h-5 ${active ? 'text-purple-400' : 'text-gray-500'}`} />
+                <Icon className={`w-5 h-5 ${active ? 'text-primary' : 'text-gray-500'}`} />
                 <span className={`text-xs font-medium text-center ${active ? 'text-white' : 'text-gray-400'}`}>{label}</span>
               </button>
             );
@@ -155,7 +155,7 @@ export default function CreateRoom() {
         </div>
 
         {/* Submit */}
-        <button type="submit" disabled={saving || !user} className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold text-white active:scale-95 transition-transform disabled:opacity-50" style={{ background: 'linear-gradient(135deg, #e11d48, #7c3aed)' }}>
+        <button type="submit" disabled={saving || !user} className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold text-white active:scale-95 transition-transform disabled:opacity-50" style={{ background: 'linear-gradient(135deg, #dc2626, #991b1b)' }}>
           <Video className="w-5 h-5" /> {saving ? 'Oda oluşturuluyor...' : 'Odayı Oluştur'}
         </button>
       </form>
