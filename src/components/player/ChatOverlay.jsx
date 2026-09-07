@@ -218,7 +218,7 @@ export default function ChatOverlay({ roomId, chatEnabled, isOwner, isAdmin, onC
         </div>
       </div>
       {(voiceEnabled || onSettings || onDirect) && (
-        <div className="flex items-center gap-1.5 px-3 py-2 border-b border-white/10">
+        <div className="room-voice-bar flex items-center gap-1.5 px-3 py-2 border-b border-white/10">
           <VoiceControls voice={voice} />
           {onDirect && <button onClick={onDirect} className="relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1a1a1a] text-xs font-semibold hover:bg-[#2a2a2a] whitespace-nowrap text-white"><MessagesSquare className="w-4 h-4" /> Mesaj{directUnread > 0 && <span className="absolute -right-1 -top-1 min-w-4 h-4 rounded-full px-1 text-[9px] font-bold text-white flex items-center justify-center" style={{ background: '#ffcc00', color: '#000' }}>{directUnread > 99 ? '99+' : directUnread}</span>}</button>}
         </div>

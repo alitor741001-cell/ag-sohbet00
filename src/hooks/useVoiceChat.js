@@ -146,7 +146,16 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled }) {
     room.on(RoomEvent.LocalTrackUnpublished, refreshState);
     room.on(RoomEvent.ActiveSpeakersChanged, updateSpeakers);
     room.on(RoomEvent.Reconnecting, () => { setConnectionState('reconnecting'); setError('🌐 Bağlantı yeniden kuruluyor.'); });
-    room.on(RoomEvent.Reconnected, () => { setConnectionState('connected'); setError(''); attachCurrentRemoteAudio(); retryAudio(); refreshState(); });
+    room.on(RoomEvent.Reconnected, async () => {
+      setConnectionState('connected');
+      setError('');
+      attachCurrentRemoteAudio();
+      await retryAudio();
+      if (!mutedByModeratorRef.current && voiceEnabledRef.current && room.localParticipant.getTrackPublication(Track.Source.Microphone)?.isMuted) {
+        room.localParticipant.setMicrophoneEnabled(true, { echoCancellation: true, noiseSuppression: true, autoGainControl: true }).catch(() => {});
+      }
+      refreshState();
+    });
     room.on(RoomEvent.Disconnected, onDisconnected);
     room.on(RoomEvent.AudioPlaybackStatusChanged, () => { setAudioBlocked(!room.canPlaybackAudio); refreshState(); });
 
@@ -195,6 +204,14 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled }) {
     document.addEventListener('pointerdown', startAudioOnInteraction, { passive: true });
     document.addEventListener('touchend', startAudioOnInteraction, { passive: true });
     document.addEventListener('keydown', startAudioOnInteraction);
+    const restoreOnVisible = () => {
+      if (document.visibilityState === 'visible') {
+        attachCurrentRemoteAudio();
+        retryAudio();
+      }
+    };
+    document.addEventListener('visibilitychange', restoreOnVisible);
+    window.addEventListener('orientationchange', startAudioOnInteraction);
     const recoveryTimer = window.setInterval(() => {
       attachCurrentRemoteAudio();
       if (room.canPlaybackAudio && audioElementsRef.current.size > 0) retryAudio();
@@ -211,6 +228,8 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled }) {
       document.removeEventListener('pointerdown', startAudioOnInteraction);
       document.removeEventListener('touchend', startAudioOnInteraction);
       document.removeEventListener('keydown', startAudioOnInteraction);
+      document.removeEventListener('visibilitychange', restoreOnVisible);
+      window.removeEventListener('orientationchange', startAudioOnInteraction);
       window.clearInterval(recoveryTimer);
       setActive(false);
       setSpeakingIds([]);
