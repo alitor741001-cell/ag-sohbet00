@@ -1,0 +1,6 @@
+import { useEffect, useRef } from 'react';
+export default function VideoPlayer({ src, title, onTimeUpdate, onPlayPause, onSeek, onEnded, isOwner = true }) {
+  const videoRef = useRef(null);
+  useEffect(() => { const video = videoRef.current; if (!video) return; const time = () => onTimeUpdate?.(video.currentTime); const play = () => onPlayPause?.(true); const pause = () => onPlayPause?.(false); const seeked = () => onSeek?.(video.currentTime); video.addEventListener('timeupdate', time); video.addEventListener('play', play); video.addEventListener('pause', pause); video.addEventListener('seeked', seeked); return () => { video.removeEventListener('timeupdate', time); video.removeEventListener('play', play); video.removeEventListener('pause', pause); video.removeEventListener('seeked', seeked); }; }, [onTimeUpdate, onPlayPause, onSeek]);
+  return <video ref={videoRef} src={src} title={title} controls={isOwner} playsInline preload="auto" className="h-full w-full bg-black object-contain" onEnded={onEnded} />;
+}
