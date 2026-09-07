@@ -1,0 +1,9 @@
+{
+  "name": "FILMKEYF\u0130",
+  "site": {
+    "installCommand": "npm install",
+    "buildCommand": "npm run build",
+    "serveCommand": "npm run dev",
+    "outputDirectory": "./dist"
+  }
+}
