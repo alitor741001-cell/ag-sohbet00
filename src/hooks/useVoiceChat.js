@@ -78,11 +78,13 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled }) {
 
   const retryAudio = useCallback(async () => {
     try {
-      await Promise.all([
-        roomRef.current?.startAudio(),
-        unlockVoicePlayback(),
-        ...[...audioElementsRef.current].map((element) => element.play()),
-      ]);
+      // Mikrofon izni, LiveKit'in genel oynatıcısı ve uzak ses çıkışları
+      // birbirinden bağımsızdır; birinin reddi diğerini durdurmamalıdır.
+      await unlockVoicePlayback().catch(() => {});
+      await roomRef.current?.startAudio().catch(() => {});
+      const outputs = [...audioElementsRef.current];
+      const results = await Promise.allSettled(outputs.map((element) => element.play()));
+      if (outputs.length && results.every((result) => result.status === 'rejected')) throw results[0].reason;
       setAudioBlocked(false);
       setError('');
       refreshState();
@@ -184,6 +186,9 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled }) {
               autoGainControl: true,
             });
           } catch (micError) {
+            // Mikrofon reddedilse bile kullanıcı dinleyici olarak bağlı kalır.
+            attachCurrentRemoteAudio();
+            await retryAudio();
             setError(friendlyMicError(micError));
           } finally {
             setRequesting(false);

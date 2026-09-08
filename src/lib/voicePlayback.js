@@ -14,7 +14,8 @@ function getContext() {
 
 export async function unlockVoicePlayback() {
   const context = getContext();
-  if (!context) throw new Error('Ses çıkışı desteklenmiyor.');
+  // Web Audio bulunmayan cihazlarda yerel <audio> oynatımı kullanılabilir.
+  if (!context) return true;
   if (context.state === 'suspended') await context.resume();
   if (context.state !== 'running') throw new Error('Ses çıkışı kullanıcı etkileşimi bekliyor.');
   return true;
@@ -23,26 +24,61 @@ export async function unlockVoicePlayback() {
 export function createVoiceOutput(track, roomId) {
   const context = getContext();
   const mediaTrack = track.mediaStreamTrack;
-  if (!context || !mediaTrack) {
-    const element = track.attach();
-    element.autoplay = true;
-    element.playsInline = true;
-    element.style.display = 'none';
-    document.body.appendChild(element);
-    return element;
+  const element = track.attach();
+  element.autoplay = true;
+  element.playsInline = true;
+  element.style.display = 'none';
+  document.body.appendChild(element);
+
+  let source = null;
+  let gain = null;
+  let useWebAudio = false;
+  let muted = false;
+
+  if (context && mediaTrack) {
+    try {
+      source = context.createMediaStreamSource(new MediaStream([mediaTrack]));
+      gain = context.createGain();
+      source.connect(gain).connect(context.destination);
+      useWebAudio = true;
+      element.muted = true;
+    } catch {
+      useWebAudio = false;
+    }
   }
 
-  const stream = new MediaStream([mediaTrack]);
-  const source = context.createMediaStreamSource(stream);
-  const gain = context.createGain();
-  source.connect(gain).connect(context.destination);
-
   return {
-    dataset: { livekitVoice: roomId, livekitTrack: track.sid, livekitMediaTrack: mediaTrack.id },
-    play: unlockVoicePlayback,
-    remove() { source.disconnect(); gain.disconnect(); },
-    get muted() { return gain.gain.value === 0; },
-    set muted(value) { gain.gain.value = value ? 0 : 1; },
+    dataset: { livekitVoice: roomId, livekitTrack: track.sid, livekitMediaTrack: mediaTrack?.id || '' },
+    async play() {
+      if (useWebAudio) {
+        try {
+          await unlockVoicePlayback();
+          element.muted = true;
+          element.play().catch(() => {});
+          return;
+        } catch {
+          source?.disconnect();
+          gain?.disconnect();
+          source = null;
+          gain = null;
+          useWebAudio = false;
+        }
+      }
+      element.muted = muted;
+      await element.play();
+    },
+    remove() {
+      source?.disconnect();
+      gain?.disconnect();
+      track.detach(element);
+      element.remove();
+    },
+    get muted() { return muted; },
+    set muted(value) {
+      muted = value;
+      if (gain) gain.gain.value = value ? 0 : 1;
+      element.muted = useWebAudio ? true : value;
+    },
   };
 }
 
