@@ -29,9 +29,9 @@ export default function PullToRefresh({ onRefresh, children }) {
   }, [pull, refreshing, onRefresh]);
 
   return (
-    <div onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}>
-      <div style={{ height: pull, overflow: 'hidden' }} className="flex items-end justify-center">
-        <RefreshCw className={`w-5 h-5 text-primary ${refreshing ? 'animate-spin' : ''}`} style={{ opacity: Math.min(pull / THRESHOLD, 1), marginBottom: 8 }} />
+    <div className="relative" onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}>
+      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 z-20 flex justify-center overflow-hidden" style={{ height: THRESHOLD }}>
+        <RefreshCw className={`mt-2 h-5 w-5 text-primary ${refreshing ? 'animate-spin' : ''}`} style={{ opacity: Math.min(pull / THRESHOLD, 1), transform: `translateY(${Math.max(-28, pull - THRESHOLD)}px)` }} />
       </div>
       {children}
     </div>
