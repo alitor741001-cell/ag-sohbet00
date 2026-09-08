@@ -48,6 +48,7 @@ export default function Friends() {
       const adminId = res?.data?.admin_id;
       if (!adminId) { toast({ title: 'Yönetici bulunamadı' }); return; }
       const convoRes = await base44.functions.invoke('dm-service', { action: 'start', target_id: adminId });
+      if (convoRes?.data?.warning) toast({ description: convoRes.data.warning, duration: 6000 });
       if (convoRes?.data?.conversation) { setSelected(convoRes.data.conversation); setView('chat'); }
     } catch (e) {
       toast({ title: 'Başlatılamadı', description: e.response?.data?.error || e.message, variant: 'destructive' });
@@ -58,6 +59,7 @@ export default function Friends() {
     const friendId = relation.requester_id === user.id ? relation.recipient_id : relation.requester_id;
     try {
       const res = await base44.functions.invoke('dm-service', { action: 'start', target_id: friendId });
+      if (res?.data?.warning) toast({ description: res.data.warning, duration: 6000 });
       if (res?.data?.conversation) { setSelected(res.data.conversation); setView('chat'); }
     } catch (e) {
       toast({ title: 'Sohbet açılamadı', description: e.response?.data?.error || e.message, variant: 'destructive' });

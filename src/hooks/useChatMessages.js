@@ -107,6 +107,9 @@ export default function useChatMessages(conversationId) {
           return upsertMessage(withoutTemp, realMsg);
         });
       }
+      if (res?.data?.warning) {
+        toast({ description: res.data.warning, duration: 6000 });
+      }
     } catch (err) {
       setMessages((prev) => prev.filter((m) => m.id !== tempId));
       throw err;
