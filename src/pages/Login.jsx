@@ -177,7 +177,7 @@ export default function Login() {
                 autoFocus
                 placeholder="ornek@email.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => { setEmail(e.target.value); if (error) setError(""); }}
                 className="pl-10 h-12 bg-[#0a0a0a] border-[#2a2a2a] text-white placeholder:text-[#555] focus:border-[#e50914]"
                 required
               />
@@ -193,7 +193,7 @@ export default function Login() {
                 autoComplete="current-password"
                 placeholder="••••••••"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => { setPassword(e.target.value); if (error) setError(""); }}
                 className="pl-10 pr-10 h-12 bg-[#0a0a0a] border-[#2a2a2a] text-white placeholder:text-[#555] focus:border-[#e50914]"
                 required
               />

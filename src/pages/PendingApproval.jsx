@@ -45,8 +45,12 @@ export default function PendingApproval() {
     }, 3000);
     // Gerçek zamanlı: admin üyeliği onayladığında veritabanından anında olay gelir
     const unsub = base44.entities.User.subscribe((event) => {
-      if (event.type === 'update' && event.data?.id === userIdRef.current && event.data?.membership_status === 'active') {
+      const changedId = event.data?.id || event.id;
+      if (changedId !== userIdRef.current) return;
+      if (event.type === 'update' && event.data?.membership_status === 'active') {
         window.location.href = '/';
+      } else if (event.type === 'delete') {
+        base44.auth.logout('/login?removed=1');
       }
     });
     return () => { clearInterval(interval); unsub?.(); };

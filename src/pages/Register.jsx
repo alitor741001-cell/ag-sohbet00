@@ -29,6 +29,8 @@ export default function Register() {
   const [socialLoading, setSocialLoading] = useState('');
   const [showOtp, setShowOtp] = useState(false);
   const [otpCode, setOtpCode] = useState("");
+  const [resending, setResending] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
   const [paymentRequired, setPaymentRequired] = useState(true);
   const [paymentAvailable, setPaymentAvailable] = useState(true);
 
@@ -47,6 +49,12 @@ export default function Register() {
     const unsubPlans = base44.entities.SubscriptionPlan.subscribe(fetchSettings);
     return () => { unsubMethods?.(); unsubPlans?.(); };
   }, []);
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = setTimeout(() => setResendCooldown((value) => value - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [resendCooldown]);
 
   const onAvatar = async (e) => {
     const file = e.target.files?.[0]; if (!file) return;
@@ -71,7 +79,7 @@ export default function Register() {
     } catch { /* devam et */ }
     setLoading(true);
     try {
-      await base44.auth.register({ email, password });
+      await base44.auth.register({ email: email.trim().toLowerCase(), password });
       // Doğrulama ekranına geç — OTP doğrulanmadan giriş yapılmaz
       setShowOtp(true);
       toast({ title: "Kod gönderildi", description: `${email} adresine doğrulama kodu gönderildi.` });
@@ -86,7 +94,7 @@ export default function Register() {
     setError("");
     setLoading(true);
     try {
-      const result = await base44.auth.verifyOtp({ email, otpCode });
+      const result = await base44.auth.verifyOtp({ email: email.trim().toLowerCase(), otpCode });
       if (!result?.access_token) throw new Error("Doğrulama kodu geçersiz");
       base44.auth.setToken(result.access_token);
       try {
@@ -120,12 +128,18 @@ export default function Register() {
   };
 
   const handleResend = async () => {
+    if (resending || resendCooldown > 0) return;
     setError("");
+    setResending(true);
     try {
-      await base44.auth.resendOtp(email);
-      toast({ title: "Kod gönderildi", description: "E-postanızı kontrol edin." });
+      await base44.auth.resendOtp(email.trim().toLowerCase());
+      setOtpCode("");
+      setResendCooldown(60);
+      toast({ title: "Yeni kod gönderildi", description: `${email} adresine yeni doğrulama kodu gönderildi.` });
     } catch (err) {
-      setError(err.message || "Kod gönderilemedi");
+      setError(err.message || "Kod gönderilemedi. Lütfen tekrar deneyin.");
+    } finally {
+      setResending(false);
     }
   };
 
@@ -153,7 +167,7 @@ export default function Register() {
           <p className="text-sm text-[#a0a0a0] mb-6">{email} adresine bir kod gönderdik</p>
           {error && <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">{error}</div>}
           <div className="flex justify-center mb-6">
-            <InputOTP maxLength={6} value={otpCode} onChange={setOtpCode} autoFocus autoComplete="one-time-code">
+            <InputOTP maxLength={6} value={otpCode} onChange={(value) => { setOtpCode(value); if (error) setError(""); }} autoFocus autoComplete="one-time-code">
               <InputOTPGroup>
                 <InputOTPSlot index={0} /><InputOTPSlot index={1} /><InputOTPSlot index={2} />
                 <InputOTPSlot index={3} /><InputOTPSlot index={4} /><InputOTPSlot index={5} />
@@ -163,7 +177,7 @@ export default function Register() {
           <Button className="w-full h-12 font-semibold bg-[#e50914] hover:bg-[#f6121d] text-white" onClick={handleVerify} disabled={loading || otpCode.length < 6}>
             {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Doğrulanıyor...</> : "Doğrula"}
           </Button>
-          <p className="text-center text-sm text-[#a0a0a0] mt-4">Kod gelmedi mi? <button onClick={handleResend} className="text-[#e50914] font-medium hover:underline">Tekrar gönder</button></p>
+          <p className="text-center text-sm text-[#a0a0a0] mt-4">Kod gelmedi mi? <button type="button" onClick={handleResend} disabled={resending || resendCooldown > 0} className="text-[#e50914] font-medium hover:underline disabled:text-[#666] disabled:no-underline">{resending ? "Gönderiliyor..." : resendCooldown > 0 ? `Tekrar gönder (${resendCooldown})` : "Tekrar gönder"}</button></p>
         </div>
       </AuthBackground>
     );
@@ -223,14 +237,14 @@ export default function Register() {
                 <Label htmlFor="email" className="text-[#a0a0a0]">E-posta adresiniz</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#a0a0a0]" />
-                  <Input id="email" type="email" autoComplete="email" placeholder="ornek@mail.com" value={email} onChange={(e) => setEmail(e.target.value)} className="pl-10 h-11 bg-[#0a0a0a] border-[#2a2a2a] text-white placeholder:text-[#555] focus:border-[#e50914]" required />
+                  <Input id="email" type="email" autoComplete="email" placeholder="ornek@mail.com" value={email} onChange={(e) => { setEmail(e.target.value); if (error) setError(""); }} className="pl-10 h-11 bg-[#0a0a0a] border-[#2a2a2a] text-white placeholder:text-[#555] focus:border-[#e50914]" required />
                 </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password" className="text-[#a0a0a0]">Şifre</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#a0a0a0]" />
-                  <Input id="password" type={showPassword ? "text" : "password"} placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} className="pl-10 pr-10 h-11 bg-[#0a0a0a] border-[#2a2a2a] text-white placeholder:text-[#555] focus:border-[#e50914]" required />
+                  <Input id="password" type={showPassword ? "text" : "password"} placeholder="••••••••" value={password} onChange={(e) => { setPassword(e.target.value); if (error) setError(""); }} className="pl-10 pr-10 h-11 bg-[#0a0a0a] border-[#2a2a2a] text-white placeholder:text-[#555] focus:border-[#e50914]" required />
                   <button type="button" onClick={() => setShowPassword((s) => !s)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#a0a0a0] hover:text-white">{showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}</button>
                 </div>
               </div>
@@ -238,7 +252,7 @@ export default function Register() {
                 <Label htmlFor="confirm" className="text-[#a0a0a0]">Şifre tekrar</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#a0a0a0]" />
-                  <Input id="confirm" type={showConfirm ? "text" : "password"} placeholder="••••••••" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="pl-10 pr-10 h-11 bg-[#0a0a0a] border-[#2a2a2a] text-white placeholder:text-[#555] focus:border-[#e50914]" required />
+                  <Input id="confirm" type={showConfirm ? "text" : "password"} placeholder="••••••••" value={confirmPassword} onChange={(e) => { setConfirmPassword(e.target.value); if (error) setError(""); }} className="pl-10 pr-10 h-11 bg-[#0a0a0a] border-[#2a2a2a] text-white placeholder:text-[#555] focus:border-[#e50914]" required />
                   <button type="button" onClick={() => setShowConfirm((s) => !s)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#a0a0a0] hover:text-white">{showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}</button>
                 </div>
               </div>

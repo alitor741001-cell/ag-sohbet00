@@ -22,6 +22,31 @@ export const AuthProvider = ({ children }) => {
     checkAppState();
   }, []);
 
+  useEffect(() => {
+    if (!user?.id) return;
+    const unsubscribe = base44.entities.User.subscribe((event) => {
+      const changedId = event.data?.id || event.id;
+      if (changedId !== user.id) return;
+      if (event.type === 'delete') {
+        triggerBanNotice('removed');
+        setUser(null);
+        setIsAuthenticated(false);
+        base44.auth.logout('/login?removed=1');
+        return;
+      }
+      if (event.type === 'update' && event.data) {
+        setUser((current) => current ? { ...current, ...event.data } : current);
+        if (event.data.is_banned || event.data.is_suspended || event.data.membership_status === 'suspended') {
+          const suspended = event.data.is_suspended || event.data.membership_status === 'suspended';
+          triggerBanNotice(suspended ? 'suspended' : 'banned', suspended ? event.data.suspend_reason : event.data.ban_reason, suspended ? event.data.suspend_description : event.data.ban_description);
+          setIsAuthenticated(false);
+          base44.auth.logout(`/login?${suspended ? 'suspended' : 'banned'}=1`);
+        }
+      }
+    });
+    return () => unsubscribe?.();
+  }, [user?.id]);
+
   const checkAppState = async () => {
     try {
       setIsLoadingPublicSettings(true);
