@@ -12,7 +12,7 @@ export function membershipEmail({ name, status }) {
     ? "Hesabınız yönetici tarafından onaylandı. FILMKEYFİ'nin tüm premium içeriklerine, odalarına ve özelliklerine artık erişebilirsiniz. İyi seyirler!"
     : 'FILMKEYFİ premium üyeliğinizin süresi dolmuştur. Tüm verileriniz korunur; üyeliğinizi yeniden aktif ederek kaldığınız yerden devam edebilirsiniz.';
   const button = active ? 'İzlemeye Başla' : 'Üyeliği Aktif Et';
-  const href = active ? 'https://flimkeyfii.base44.app/' : 'https://flimkeyfii.base44.app/abonelik';
+  const href = active ? 'https://flimkeyfii.com/' : 'https://flimkeyfii.com/abonelik';
 
   return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background-color:#0a0a0f;font-family:Arial,sans-serif;">
@@ -31,7 +31,7 @@ export function membershipEmail({ name, status }) {
 </td></tr></table>
 </td></tr>
 <tr><td align="center" style="padding:20px 24px;background-color:#101014;border-top:1px solid #542126;">
-<p style="margin:0;font-size:13px;line-height:20px;color:#9ca3af;">Bu e-posta FILMKEYFİ tarafından gönderilmiştir.<br>flimkeyfii.base44.app</p>
+<p style="margin:0;font-size:13px;line-height:20px;color:#9ca3af;">Bu e-posta FILMKEYFİ tarafından gönderilmiştir.<br><a href="https://flimkeyfii.com" style="color:#9ca3af;text-decoration:none;">flimkeyfii.com</a></p>
 </td></tr>
 </table>
 </td></tr></table></body></html>`;
