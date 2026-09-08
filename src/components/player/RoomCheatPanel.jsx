@@ -1,69 +1,35 @@
 import { useEffect, useRef, useState } from 'react';
-import { Image } from '@/components/ui/image';
-import { getRoleInfo } from '@/lib/roles';
+import RoomCheatNotice from '@/components/player/RoomCheatNotice';
 
-const EFFECT_COLORS = {
-  flame: '#ff4500',
-  lightning: '#3b82f6',
-  heart: '#ec4899',
-  diamond: '#ff1744',
-  star: '#facc15',
-  gold: '#fbbf24',
-  smoke: '#4caf50',
-  solid: '#ffffff',
-};
-
-export default function RoomCheatPanel({ participants, currentUserId, profiles = {} }) {
+export default function RoomCheatPanel({ participants = [], visible, profiles = {} }) {
   const [notifications, setNotifications] = useState([]);
-  const prevRef = useRef([]);
-  const initializedRef = useRef(false);
+  const previous = useRef(null);
+  const profileCache = useRef({});
+  profileCache.current = { ...profileCache.current, ...profiles };
 
   useEffect(() => {
-    const list = participants || [];
-    const prev = prevRef.current;
-    const prevIds = new Set(prev.map((p) => p.user_id));
-    const currIds = new Set(list.map((p) => p.user_id));
+    const prev = previous.current;
+    previous.current = participants;
+    if (!prev) return;
+    const oldIds = new Set(prev.map((p) => p.user_id));
+    const newIds = new Set(participants.map((p) => p.user_id));
+    const changes = [
+      ...participants.filter((p) => !oldIds.has(p.user_id)).map((participant) => ({ participant, type: 'join' })),
+      ...prev.filter((p) => !newIds.has(p.user_id)).map((participant) => ({ participant, type: 'leave' })),
+    ].map((event) => ({ ...event, id: `${event.participant.user_id}-${event.type}-${Date.now()}` }));
+    if (changes.length) setNotifications((items) => [...items, ...changes].slice(-10));
+  }, [participants]);
 
-    if (initializedRef.current) {
-      const joined = list.filter((p) => !prevIds.has(p.user_id) && p.user_id !== currentUserId);
-      const left = prev.filter((p) => !currIds.has(p.user_id) && p.user_id !== currentUserId);
-      joined.forEach((p) => setTimeout(() => addNotif(p, 'join'), 1500));
-      left.forEach((p) => setTimeout(() => addNotif(p, 'leave'), 1500));
-    }
-
-    prevRef.current = list;
-    initializedRef.current = true;
-  }, [participants, currentUserId]);
-
-  const addNotif = (participant, type) => {
-    const id = Date.now() + '-' + Math.random().toString(36).slice(2);
-    setNotifications((current) => [...current, { id, participant, type, exiting: false }]);
-    setTimeout(() => setNotifications((current) => current.map((n) => (n.id === id ? { ...n, exiting: true } : n))), 3500);
-    setTimeout(() => setNotifications((current) => current.filter((n) => n.id !== id)), 4000);
-  };
+  useEffect(() => {
+    if (!visible || !notifications.length) return;
+    const timer = setTimeout(() => setNotifications([]), 5000);
+    return () => clearTimeout(timer);
+  }, [visible, notifications]);
 
   if (!notifications.length) return null;
-
   return (
-    <div className="absolute top-2 left-1/2 -translate-x-1/2 z-[56] flex flex-col items-center gap-1.5 pointer-events-none w-max max-w-[90%]">
-      {notifications.map((n) => {
-        const profile = profiles[n.participant.user_id] || {};
-        const roleInfo = getRoleInfo({ ...profile, display_role: profile.display_role || profile.role });
-        const msgEffect = roleInfo.msg_effect || roleInfo.name_effect;
-        const borderColor = EFFECT_COLORS[msgEffect] || roleInfo.color || '#ff1744';
-        const nameColor = EFFECT_COLORS[roleInfo.name_effect] || roleInfo.color || '#ffffff';
-        const avatar = n.participant.avatar || profile.avatar;
-        const name = profile.title || n.participant.name || 'Kullanıcı';
-        return (
-          <div key={n.id} className={`flex min-w-56 items-center gap-2 rounded-2xl border bg-black/95 px-3 py-2 shadow-2xl backdrop-blur-xl ${n.exiting ? (n.type === 'join' ? 'room-notif-out-left' : 'room-notif-out-right') : 'room-notif-in'}`} style={{ borderColor, boxShadow: `0 0 22px ${borderColor}66, inset 0 0 16px ${borderColor}22` }}>
-            {avatar ? <Image src={avatar} className="h-9 w-9 shrink-0 rounded-full border" style={{ borderColor }} fittingType="fill" /> : <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border bg-black text-sm font-black" style={{ borderColor, color: borderColor }}>{name[0]}</span>}
-            <span className="min-w-0 flex-1 text-center leading-tight">
-              <span className="block truncate text-xs font-bold" style={{ color: nameColor }}>{name}</span>
-              <small className="block text-[10px] font-semibold opacity-70" style={{ color: nameColor }}>{n.type === 'join' ? 'odaya katıldı' : 'odadan ayrıldı'}</small>
-            </span>
-          </div>
-        );
-      })}
+    <div aria-live="polite" className="w-full shrink-0 space-y-2 overflow-y-auto border-b border-border bg-card p-2 max-h-[30dvh]">
+      {notifications.map((notice) => <RoomCheatNotice key={notice.id} notice={notice} profile={profileCache.current[notice.participant.user_id]} />)}
     </div>
   );
 }

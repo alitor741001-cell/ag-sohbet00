@@ -29,8 +29,7 @@ import RoomLevelBadge from '@/components/levels/RoomLevelBadge';
 import XpAvatar from '@/components/xp/XpAvatar';
 import UserProfile from '@/pages/UserProfile';
 import SubscriptionPrompt from '@/components/SubscriptionPrompt';
-import RoomFrameWelcome from '@/components/player/RoomFrameWelcome';
-import RoomWelcomeVisual from '@/components/player/RoomWelcomeVisual';
+
 
 export default function WatchParty() {
   const { id } = useParams();
@@ -80,17 +79,7 @@ export default function WatchParty() {
   const [chatClearToken, setChatClearToken] = useState(0);
 
   const [roomNameEdit, setRoomNameEdit] = useState('');
-  const [welcomeQueue, setWelcomeQueue] = useState([]);
-  const WELCOME_PRIORITY = { queenAdmin: 0, admin: 1, canAblam: 2, canAbim: 3, gul: 4 };
-  const enqueueWelcome = (type, message) => {
-    const key = message?.id || `${type}-${message?.created_date || ''}`;
-    const frame = (message?.text || '').match(/\{\{PFRAME\|([^|}]+)/)?.[1] || '';
-    setWelcomeQueue((queue) => {
-      if (queue.some((item) => item.key === key)) return queue;
-      return [...queue, { key, type, frame }].sort((a, b) => (WELCOME_PRIORITY[a.type] ?? 9) - (WELCOME_PRIORITY[b.type] ?? 9));
-    });
-  };
-  const dequeueWelcome = () => setWelcomeQueue((q) => q.slice(1));
+
   const profileTarget = new URLSearchParams(location.search).get('profile');
   const openUserProfile = (userId) => {
     if (!userId) return;
@@ -141,34 +130,7 @@ export default function WatchParty() {
   // Oda adını düzenleme alanını odadan başlat
   useEffect(() => { setRoomNameEdit(room?.name || ''); }, [room?.name]);
 
-  // Yönetici / Can Ablam odaya girince karşılama görselini tüm kullanıcılara göster
-  useEffect(() => {
-    base44.entities.RoomMessage.filter({ room_id: id }, '-created_date', 20)
-      .then((items) => {
-        const now = Date.now();
-        const queenRecent = items.find((m) => (m.text || '').includes('{{QUEEN_ADMIN_WELCOME}}') && now - new Date(m.created_date).getTime() < 10000);
-        if (queenRecent) enqueueWelcome('queenAdmin', queenRecent);
-        const adminRecent = items.find((m) => (m.text || '').includes('{{ADMIN_WELCOME}}') && now - new Date(m.created_date).getTime() < 10000);
-        if (adminRecent) enqueueWelcome('admin', adminRecent);
-        const cabRecent = items.find((m) => (m.text || '').includes('{{CAN_ABLAM_WELCOME}}') && now - new Date(m.created_date).getTime() < 10000);
-        if (cabRecent) enqueueWelcome('canAblam', cabRecent);
-        const canAbimRecent = items.find((m) => (m.text || '').includes('{{CAN_ABIM_WELCOME}}') && now - new Date(m.created_date).getTime() < 10000);
-        if (canAbimRecent) enqueueWelcome('canAbim', canAbimRecent);
-        const gulRecent = items.find((m) => (m.text || '').includes('{{GUL_WELCOME}}') && now - new Date(m.created_date).getTime() < 10000);
-        if (gulRecent) enqueueWelcome('gul', gulRecent);
-      })
-      .catch(() => {});
-    const unsub = base44.entities.RoomMessage.subscribe((ev) => {
-      if (ev.type !== 'create' || ev.data?.room_id !== id) return;
-      const txt = ev.data?.text || '';
-      if (txt.includes('{{QUEEN_ADMIN_WELCOME}}')) enqueueWelcome('queenAdmin', ev.data);
-      if (txt.includes('{{ADMIN_WELCOME}}')) enqueueWelcome('admin', ev.data);
-      if (txt.includes('{{CAN_ABLAM_WELCOME}}')) enqueueWelcome('canAblam', ev.data);
-      if (txt.includes('{{CAN_ABIM_WELCOME}}')) enqueueWelcome('canAbim', ev.data);
-      if (txt.includes('{{GUL_WELCOME}}')) enqueueWelcome('gul', ev.data);
-    });
-    return unsub;
-  }, [id]);
+
 
   // Kişisel oda: film yoksa sadece oda sahibine otomatik film seçme panelini aç
   useEffect(() => {
@@ -721,13 +683,13 @@ export default function WatchParty() {
             <div className="text-muted-foreground text-sm p-6 text-center">Video kaynağı yok</div>}
         </div>
 
-        {chatOpen && (
-          <div className="room-side-panel absolute bottom-0 right-0 top-0 z-40 flex w-full max-w-md flex-col border-l border-white/10 bg-black pt-[max(env(safe-area-inset-top),0.75rem)] pb-[max(env(safe-area-inset-bottom),0.5rem)] pl-[max(env(safe-area-inset-left),0px)] pr-[max(env(safe-area-inset-right),0px)] shadow-2xl"
+        {(
+          <div hidden={!chatOpen} className="room-side-panel absolute bottom-0 right-0 top-0 z-40 flex w-full max-w-md flex-col border-l border-white/10 bg-black pt-[max(env(safe-area-inset-top),0.75rem)] pb-[max(env(safe-area-inset-bottom),0.5rem)] pl-[max(env(safe-area-inset-left),0px)] pr-[max(env(safe-area-inset-right),0px)] shadow-2xl"
             onTouchStart={(e) => { touchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }; }}
             onTouchEnd={(e) => { const dx = e.changedTouches[0].clientX - touchStart.current.x; const dy = e.changedTouches[0].clientY - touchStart.current.y; if (dx > 80 && dx > Math.abs(dy) * 1.5) setChatOpen(false); }}
           >
-            <RoomCheatPanel participants={room?.participants || []} currentUserId={user?.id} profiles={viewerProfiles} />
-            <ChatOverlay roomId={id} chatEnabled={chatEnabled} isOwner={canMod} isAdmin={isMod} onClose={() => setChatOpen(false)} autoDeleteMinutes={autoDeleteMinutes} countdownText={countdownText} clearToken={chatClearToken} onSetAutoDelete={setAutoDelete} voice={voice} voiceEnabled={room.voice_enabled} onDirect={() => { setDirectTarget(null); setDirectOpen(!directOpen); setChatOpen(false); setShowViewers(false); setShowSettings(false); }} onDirectUser={openDirectMessage} directUnread={directUnread} ownerId={room?.owner_id} roomModerators={room?.room_moderators || []} participants={room?.participants || []} recentParticipants={room?.recent_participants || []} viewerProfiles={viewerProfiles} presenceMap={presenceMap} onProfileCard={openUserProfile} onToggleChat={toggleChat} settingsProps={{ room, canMod, participants: room?.participants || [], roomModerators: room?.room_moderators || [], onAssignMod: assignMod, onRemoveMod: removeMod, roomName: roomNameEdit, setRoomName: setRoomNameEdit, onSaveName: saveRoomName, password: pwSetInput, setPassword: setPwSetInput, passwordOpen: showPwSet, setPasswordOpen: setShowPwSet, onVoice: toggleVoice, onChat: toggleChat, onHidden: toggleHidden, onPassword: () => savePassword(), onRemovePassword: () => setShowPwRemoveConfirm(true), onUnban: unbanUser, onPickMovie: () => setMoviePickerOpen(true), onDeleteRoom: deleteRoom, onToggleApproval: toggleApproval }} />
+            <RoomCheatPanel participants={room?.participants || []} visible={chatOpen} profiles={viewerProfiles} />
+            {chatOpen && <ChatOverlay roomId={id} chatEnabled={chatEnabled} isOwner={canMod} isAdmin={isMod} onClose={() => setChatOpen(false)} autoDeleteMinutes={autoDeleteMinutes} countdownText={countdownText} clearToken={chatClearToken} onSetAutoDelete={setAutoDelete} voice={voice} voiceEnabled={room.voice_enabled} onDirect={() => { setDirectTarget(null); setDirectOpen(!directOpen); setChatOpen(false); setShowViewers(false); setShowSettings(false); }} onDirectUser={openDirectMessage} directUnread={directUnread} ownerId={room?.owner_id} roomModerators={room?.room_moderators || []} participants={room?.participants || []} recentParticipants={room?.recent_participants || []} viewerProfiles={viewerProfiles} presenceMap={presenceMap} onProfileCard={openUserProfile} onToggleChat={toggleChat} settingsProps={{ room, canMod, participants: room?.participants || [], roomModerators: room?.room_moderators || [], onAssignMod: assignMod, onRemoveMod: removeMod, roomName: roomNameEdit, setRoomName: setRoomNameEdit, onSaveName: saveRoomName, password: pwSetInput, setPassword: setPwSetInput, passwordOpen: showPwSet, setPasswordOpen: setShowPwSet, onVoice: toggleVoice, onChat: toggleChat, onHidden: toggleHidden, onPassword: () => savePassword(), onRemovePassword: () => setShowPwRemoveConfirm(true), onUnban: unbanUser, onPickMovie: () => setMoviePickerOpen(true), onDeleteRoom: deleteRoom, onToggleApproval: toggleApproval }} />}
           </div>
         )}
 
@@ -783,12 +745,7 @@ export default function WatchParty() {
 
       <MoviePickerSheet open={moviePickerOpen} onClose={() => setMoviePickerOpen(false)} onSelect={changeMovie} currentMovieId={movie?.id} />
       {joinCount > 0 && room?.movie_id && isOwner && <RoomCatalogIntro key={id} />}
-      {welcomeQueue[0] && (
-        <>
-          <RoomWelcomeVisual type={welcomeQueue[0].type} />
-          <RoomFrameWelcome key={welcomeQueue[0].key} type={welcomeQueue[0].type} frame={welcomeQueue[0].frame} onDone={dequeueWelcome} />
-        </>
-      )}
+
       {profileTarget && <UserProfile userId={profileTarget} roomIdOverride={id} onBack={closeUserProfile} onMessage={(userId) => { closeUserProfile(); openDirectMessage(userId); }} embedded />}
     </div>
   );
