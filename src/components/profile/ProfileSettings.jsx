@@ -5,7 +5,7 @@ import { useToast } from '@/components/ui/use-toast';
 import BlockedUsers from '@/components/profile/BlockedUsers';
 import XpFrameSelector from '@/components/profile/XpFrameSelector';
 import ProfileFrames from '@/components/profile/ProfileFrames';
-import AvatarPositioner from '@/components/profile/AvatarPositioner';
+
 import FrameEntranceToggle from '@/components/profile/FrameEntranceToggle';
 import useFriends from '@/hooks/useFriends';
 
@@ -26,7 +26,6 @@ export default function ProfileSettings({ user, onUpdated }) {
   return <div className="space-y-5">
     {!isAdmin && <XpFrameSelector user={user} />}
     {!isAdmin && <ProfileFrames user={user} onUpdated={onUpdated} />}
-    {!isAdmin && user.profile_frame && <AvatarPositioner user={user} onSaved={onUpdated} />}
     {!isAdmin && user.profile_frame && <FrameEntranceToggle user={user} onSaved={onUpdated} />}
     <form onSubmit={submit} className="rounded-2xl border border-border bg-card p-5 space-y-3"><h2 className="flex items-center gap-2 font-bold"><KeyRound className="w-5 h-5" />Şifre Değiştir</h2><Password label="Mevcut Şifre" value={form.current} onChange={(current) => setForm({ ...form, current })} /><Password label="Yeni Şifre" value={form.next} onChange={(next) => setForm({ ...form, next })} /><Password label="Yeni Şifre Tekrar" value={form.confirm} onChange={(confirm) => setForm({ ...form, confirm })} /><button disabled={saving} className="rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50">{saving ? 'Değiştiriliyor...' : 'Şifreyi Değiştir'}</button></form>
     <BlockedUsersSection />

@@ -16,26 +16,41 @@ import { useToast } from '@/components/ui/use-toast';
 export default function ProfileHeader({ user, pkg, expired, avatar, onAvatar, onUpdated, uploading }) {
   const { toast } = useToast();
   const [zoom, setZoom] = useState(user.profile_frame_scale || 100);
-  const [zoomSaving, setZoomSaving] = useState(false);
+  const [panY, setPanY] = useState(user.profile_avatar_y || 0);
+  const [panX, setPanX] = useState(user.profile_avatar_x || 0);
+  const [posSaving, setPosSaving] = useState(false);
   const name = user.username || user.full_name || 'Kullanıcı';
   const status = user.role === 'admin' ? 'Kurucu · Süresiz' : user.membership_status === 'pending' ? 'Onay Bekliyor' : expired ? 'Süresi Doldu' : pkg?.name || 'Aktif Üyelik';
   const hasRole = user.display_role || user.custom_role?.name;
   const { levels: roomLevels } = useRoomLevels([user.id]);
   const xpStats = useXp([user.id])[user.id];
-  const adjust = (delta) => setZoom((z) => Math.min(180, Math.max(80, z + delta)));
-  const saveZoom = async (val) => {
-    setZoomSaving(true);
+  const saveField = async (payload) => {
+    setPosSaving(true);
     try {
-      await base44.functions.invoke('update-profile', { profile_frame_scale: Number(val) });
+      await base44.functions.invoke('update-profile', payload);
       await onUpdated?.();
-      toast({ title: 'Profil yakınlaştırma kaydedildi' });
     } catch (error) { toast({ title: 'Kaydedilemedi', description: error.response?.data?.error || error.message, variant: 'destructive' }); }
-    finally { setZoomSaving(false); }
+    finally { setPosSaving(false); }
+  };
+  const adjustY = (delta) => {
+    const v = Math.max(-100, Math.min(100, (user.profile_avatar_y || 0) + delta));
+    setPanY(v);
+    saveField({ profile_avatar_y: v });
+  };
+  const adjustX = (delta) => {
+    const v = Math.max(-100, Math.min(100, (user.profile_avatar_x || 0) + delta));
+    setPanX(v);
+    saveField({ profile_avatar_x: v });
+  };
+  const adjustZoom = (delta) => {
+    const v = Math.min(180, Math.max(80, zoom + delta));
+    setZoom(v);
+    saveField({ profile_frame_scale: v });
   };
   return <header className="flex flex-col items-center text-center mb-6">
     <div className="relative mb-4">
       {user.profile_frame ? (
-        <ProfileFrame frame={user.profile_frame} size="lg" avatar={avatar || user.avatar} name={name} frameScale={zoom} panX={user.profile_avatar_x} panY={user.profile_avatar_y} />
+        <ProfileFrame frame={user.profile_frame} size="lg" avatar={avatar || user.avatar} name={name} frameScale={zoom} panX={panX} panY={panY} />
       ) : (
         <XpAvatar avatar={avatar || user.avatar} name={name} frame={xpStats?.frame} size="lg" />
       )}
@@ -45,10 +60,22 @@ export default function ProfileHeader({ user, pkg, expired, avatar, onAvatar, on
       </label>
     </div>
     {user.profile_frame && (
-      <div className="mb-3 flex items-center gap-2">
-        <button onClick={() => { const v = Math.max(80, zoom - 5); setZoom(v); saveZoom(v); }} disabled={zoomSaving || zoom <= 80} className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary border border-border disabled:opacity-40"><Minus className="w-4 h-4" /></button>
-        <span className="min-w-[3rem] text-xs font-semibold text-muted-foreground">%{zoom}</span>
-        <button onClick={() => { const v = Math.min(180, zoom + 5); setZoom(v); saveZoom(v); }} disabled={zoomSaving || zoom >= 180} className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary border border-border disabled:opacity-40"><Plus className="w-4 h-4" /></button>
+      <div className="mb-3 flex flex-col items-center gap-2">
+        <div className="flex items-center gap-2">
+          <button onClick={() => adjustY(-5)} disabled={posSaving || panY <= -100} className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary border border-border disabled:opacity-40" aria-label="Aşağı"><Minus className="w-4 h-4" /></button>
+          <span className="min-w-[3.5rem] text-xs font-semibold text-muted-foreground">Y: %{panY}</span>
+          <button onClick={() => adjustY(5)} disabled={posSaving || panY >= 100} className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary border border-border disabled:opacity-40" aria-label="Yukarı"><Plus className="w-4 h-4" /></button>
+        </div>
+        <div className="flex items-center gap-2">
+          <button onClick={() => adjustX(-5)} disabled={posSaving || panX <= -100} className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary border border-border disabled:opacity-40" aria-label="Sol"><Minus className="w-4 h-4" /></button>
+          <span className="min-w-[3.5rem] text-xs font-semibold text-muted-foreground">X: %{panX}</span>
+          <button onClick={() => adjustX(5)} disabled={posSaving || panX >= 100} className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary border border-border disabled:opacity-40" aria-label="Sağ"><Plus className="w-4 h-4" /></button>
+        </div>
+        <div className="flex items-center gap-2">
+          <button onClick={() => adjustZoom(-5)} disabled={posSaving || zoom <= 80} className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary border border-border disabled:opacity-40"><Minus className="w-4 h-4" /></button>
+          <span className="min-w-[3rem] text-xs font-semibold text-muted-foreground">%{zoom}</span>
+          <button onClick={() => adjustZoom(5)} disabled={posSaving || zoom >= 180} className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary border border-border disabled:opacity-40"><Plus className="w-4 h-4" /></button>
+        </div>
       </div>
     )}
     <div className="flex items-center gap-2">
