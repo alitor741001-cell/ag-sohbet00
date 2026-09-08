@@ -17,6 +17,14 @@ export default function AdminPackages() {
 
   const load = () => { base44.entities.Package.list(50).then(setPkgs).catch(() => {}); };
   useEffect(load, []);
+  useEffect(() => {
+    const unsub = base44.entities.Package.subscribe((ev) => {
+      if (ev.type === 'create') setPkgs((prev) => [ev.data, ...prev.filter((p) => p.id !== ev.data.id)]);
+      if (ev.type === 'update') setPkgs((prev) => prev.map((p) => p.id === ev.data.id ? { ...p, ...ev.data } : p));
+      if (ev.type === 'delete') setPkgs((prev) => prev.filter((p) => p.id !== ev.data.id));
+    });
+    return unsub;
+  }, []);
   const log = async (action, target) => { await base44.entities.AdminLog.create({ admin_id: admin?.id, admin_name: admin?.username, action, target }).catch(() => {}); };
 
   const save = async (e) => {

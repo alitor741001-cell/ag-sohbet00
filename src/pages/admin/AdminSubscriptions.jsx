@@ -7,10 +7,19 @@ export default function AdminSubscriptions() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const isActive = (x) => x.membership_status === 'active' || x.subscription_status === 'ACTIVE';
     base44.entities.User.list(500).then((u) => {
-      setUsers(u.filter((x) => x.membership_status === 'active' || x.subscription_status === 'ACTIVE'));
+      setUsers(u.filter(isActive));
       setLoading(false);
     }).catch(() => setLoading(false));
+    const unsub = base44.entities.User.subscribe((ev) => {
+      if (ev.type === 'delete') { setUsers((prev) => prev.filter((u) => u.id !== ev.data.id)); return; }
+      setUsers((prev) => {
+        const merged = { ...(prev.find((u) => u.id === ev.data.id) || {}), ...ev.data, id: ev.data.id };
+        return isActive(merged) ? [merged, ...prev.filter((u) => u.id !== ev.data.id)] : prev.filter((u) => u.id !== ev.data.id);
+      });
+    });
+    return unsub;
   }, []);
 
   if (loading) return <div className="h-64 flex items-center justify-center"><div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;

@@ -37,6 +37,17 @@ export default function AdminRooms() {
     }).catch(() => setLoading(false));
   };
   useEffect(load, []);
+  useEffect(() => {
+    const unsub = base44.entities.Room.subscribe((ev) => {
+      if (ev.type === 'create') {
+        setRooms((prev) => [ev.data, ...prev.filter((r) => r.id !== ev.data.id)]);
+        if (ev.data.owner_id) base44.functions.invoke('user-profile', { user_id: ev.data.owner_id }).then((p) => setOwners((prev) => ({ ...prev, [ev.data.owner_id]: p }))).catch(() => {});
+      }
+      if (ev.type === 'update') setRooms((prev) => prev.map((r) => r.id === ev.data.id ? { ...r, ...ev.data } : r));
+      if (ev.type === 'delete') setRooms((prev) => prev.filter((r) => r.id !== ev.data.id));
+    });
+    return unsub;
+  }, []);
 
   const log = async (action, target) => { await base44.entities.AdminLog.create({ admin_id: admin?.id, admin_name: admin?.username, action, target }).catch(() => {}); };
   const close = async (r) => { await base44.entities.Room.update(r.id, { status: 'closed' }); await log('Oda kapatıldı', r.name); toast({ title: 'Kapatıldı' }); load(); };

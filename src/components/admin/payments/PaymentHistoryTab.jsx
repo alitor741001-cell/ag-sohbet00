@@ -21,7 +21,15 @@ export default function PaymentHistoryTab() {
     } catch {}
     setLoading(false);
   };
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    const unsub = base44.entities.Payment.subscribe((ev) => {
+      if (ev.type === 'create') setPayments((prev) => [ev.data, ...prev.filter((p) => p.id !== ev.data.id)]);
+      if (ev.type === 'update') setPayments((prev) => prev.map((p) => p.id === ev.data.id ? { ...p, ...ev.data } : p));
+      if (ev.type === 'delete') setPayments((prev) => prev.filter((p) => p.id !== ev.data.id));
+    });
+    return unsub;
+  }, []);
 
   if (loading) return <div className="py-20 text-center text-gray-400">Yükleniyor...</div>;
 

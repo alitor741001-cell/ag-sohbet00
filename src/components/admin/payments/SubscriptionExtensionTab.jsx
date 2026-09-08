@@ -18,7 +18,17 @@ export default function SubscriptionExtensionTab() {
     setUsers(items);
     setLoading(false);
   };
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    const unsub = base44.entities.User.subscribe((ev) => {
+      if (ev.type === 'delete') { setUsers((prev) => prev.filter((u) => u.id !== ev.data.id)); return; }
+      setUsers((prev) => {
+        const merged = { ...(prev.find((u) => u.id === ev.data.id) || {}), ...ev.data, id: ev.data.id };
+        return [merged, ...prev.filter((u) => u.id !== ev.data.id)];
+      });
+    });
+    return unsub;
+  }, []);
   const toggle = (id) => setSelected((current) => current.includes(id) ? current.filter((x) => x !== id) : [...current, id]);
   const toggleAll = () => setSelected(selected.length === activeUsers.length ? [] : activeUsers.map((u) => u.id));
   const extend = async () => {

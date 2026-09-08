@@ -53,6 +53,16 @@ export default function AdminRoomMessages() {
     }).catch(() => {});
   }, []);
 
+  // Oda listesi gerçek zamanlı — yeni/ güncellen/silinen odalar anlık yansır
+  useEffect(() => {
+    const unsub = base44.entities.Room.subscribe((ev) => {
+      if (ev.type === 'create') setRooms((prev) => [ev.data, ...prev.filter((r) => r.id !== ev.data.id)]);
+      if (ev.type === 'update') setRooms((prev) => prev.map((r) => r.id === ev.data.id ? { ...r, ...ev.data } : r));
+      if (ev.type === 'delete') setRooms((prev) => prev.filter((r) => r.id !== ev.data.id));
+    });
+    return unsub;
+  }, []);
+
   // Subscribe to new messages — unread tracking + active room updates
   useEffect(() => {
     const unsub = base44.entities.RoomMessage.subscribe((ev) => {

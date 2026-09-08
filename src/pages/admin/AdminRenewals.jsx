@@ -13,6 +13,14 @@ export default function AdminRenewals() {
 
   const load = () => { base44.entities.MembershipRenewal.list(200).then(setItems).catch(() => {}); };
   useEffect(load, []);
+  useEffect(() => {
+    const unsub = base44.entities.MembershipRenewal.subscribe((ev) => {
+      if (ev.type === 'create') setItems((prev) => [ev.data, ...prev.filter((i) => i.id !== ev.data.id)]);
+      if (ev.type === 'update') setItems((prev) => prev.map((i) => i.id === ev.data.id ? { ...i, ...ev.data } : i));
+      if (ev.type === 'delete') setItems((prev) => prev.filter((i) => i.id !== ev.data.id));
+    });
+    return unsub;
+  }, []);
   const log = async (action, target) => { await base44.entities.AdminLog.create({ admin_id: admin?.id, admin_name: admin?.username, action, target }).catch(() => {}); };
 
   const approve = async (r) => {
