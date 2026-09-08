@@ -1,25 +1,21 @@
 import { Image } from '@/components/ui/image';
-import { getLevelBadgeFrame } from '@/lib/levelBadgeSprite';
+import { LEVEL_BADGE_SPRITE, getLevelBadgeFrame } from '@/lib/levelBadgeSprite';
 
 export default function LevelSpriteBadge({ level, profile = false }) {
   const frame = getLevelBadgeFrame(level);
-  const height = profile ? 72 : 44;
-  const width = Math.round((frame.width / frame.height) * height);
+  const scale = profile ? 0.92 : 0.68;
+  const width = Math.round(frame.width * scale);
+  const height = Math.round(frame.height * scale);
 
   return (
-    <span
-      className="relative inline-block shrink-0"
-      style={{ width, height }}
-      role="img"
-      aria-label={frame.level === 1000 ? 'Maksimum seviye' : `Seviye ${frame.level}`}
-    >
+    <span className="relative inline-block shrink-0 overflow-hidden" style={{ width, height }} role="img" aria-label={frame.level === 1000 ? 'Maksimum seviye' : `Seviye ${frame.level}`}>
       <Image
-        src={frame.src}
+        src={LEVEL_BADGE_SPRITE}
         alt=""
         aria-hidden="true"
         loading="eager"
-        fittingType="fit"
-        className="pointer-events-none h-full w-full object-contain"
+        className="pointer-events-none absolute"
+        style={{ width: 1024 * scale, height: 341 * scale, maxWidth: 'none', left: -frame.x * scale, top: -frame.y * scale }}
       />
     </span>
   );

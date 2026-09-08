@@ -1,4 +1,4 @@
-export const LEVEL_BADGE_SPRITE = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/cb3eaa14f_3782A150-DDD3-4D18-8B3E-82C62A7860C7.png';
+export const LEVEL_BADGE_SPRITE = 'https://base44.app/api/apps/6a77d66e4da6de214628ee62/files/mp/public/6a77d66e4da6de214628ee62/ebbf9551c_filmkeyfi-level-badges-transparent.png';
 
 export const LEVEL_BADGE_FRAMES = [
   [1, 2, 24, 128, 69], [10, 132, 24, 130, 69], [25, 263, 24, 130, 69], [50, 394, 24, 127, 69],
