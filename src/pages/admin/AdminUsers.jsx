@@ -96,7 +96,10 @@ export default function AdminUsers({ pendingOnly = false }) {
         await base44.entities.User.update(u.id, { membership_status: 'active' });
       }
       await log(suspending ? 'Kullanıcı askıya alındı' : 'Kullanıcı aktif edildi', u.email);
-      toast({ title: suspending ? 'Kullanıcı askıya alındı' : 'Kullanıcı aktif edildi' });
+      if (!suspending) {
+        await base44.functions.invoke('send-approval-email', { user_id: u.id }).catch(() => {});
+      }
+      toast({ title: suspending ? 'Kullanıcı askıya alındı' : 'Kullanıcı aktif edildi ve e-posta gönderildi' });
       load();
     } catch (e) { toast({ title: 'İşlem başarısız', description: e.message, variant: 'destructive' }); }
   };
