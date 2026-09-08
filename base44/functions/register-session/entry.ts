@@ -19,9 +19,11 @@ export default async function(req) {
     const geo = await geoLookup(ip);
 
     // Önceki aktif oturum varsa ve bu cihazın oturumu değilse — hesap başka cihazdan açılıyor, admin paneline bildir
-    // Admin hesapları için bu bildirim atlanır (admin birden fazla cihazdan giriş yapabilir)
+    // Admin hesapları ve çoklu cihaz muaf e-postalar için bu bildirim atlanır
+    const MULTI_DEVICE_EMAILS = ['alitor7474@gmail.com'];
     const isAdmin = user.role === 'admin';
-    if (!isAdmin && prevSession && deviceSession !== prevSession) {
+    const isMultiDevice = isAdmin || MULTI_DEVICE_EMAILS.includes((user.email || '').toLowerCase());
+    if (!isMultiDevice && prevSession && deviceSession !== prevSession) {
       await base44.asServiceRole.entities.AdminLog.create({
         admin_id: user.id, admin_name: userName,
         action: 'Hesap başka cihazdan açıldı', target: user.email || user.id,
@@ -34,9 +36,9 @@ export default async function(req) {
       }).catch(() => {});
     }
 
-    // Admin hesapları için önceki oturumlar pasife çekilmez ve active_session_id güncellenmez
-    // — admin birden fazla cihazdan aynı anda giriş yapabilir
-    if (!isAdmin) {
+    // Admin hesapları ve çoklu cihaz muaf e-postalar için önceki oturumlar pasife çekilmez ve active_session_id güncellenmez
+    // — bu hesaplar birden fazla cihazdan aynı anda giriş yapabilir
+    if (!isMultiDevice) {
       if (prevSession) {
         await base44.asServiceRole.entities.UserSession.updateMany(
           { user_id: user.id, status: 'active' },
@@ -63,7 +65,7 @@ export default async function(req) {
         last_login: new Date().toISOString()
       });
     } else {
-      // Admin için sadece yeni oturum kaydı oluştur (öncekileri kapatma)
+      // Admin / çoklu cihaz muaf hesap için sadece yeni oturum kaydı oluştur (öncekileri kapatma)
       await base44.asServiceRole.entities.UserSession.create({
         user_id: user.id,
         user_name: userName,

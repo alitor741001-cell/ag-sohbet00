@@ -81,8 +81,9 @@ export default function AppLayout() {
           window.location.href = '/';
           return;
         }
-        // Cihaz/session kontrolü (adminler hariç — çoklu cihaz girişine izin)
-        if (u?.role !== 'admin') {
+        // Cihaz/session kontrolü (adminler ve çoklu cihaz muaf hesaplar hariç)
+        const MULTI_DEVICE_EMAILS = ['alitor7474@gmail.com'];
+        if (u?.role !== 'admin' && !MULTI_DEVICE_EMAILS.includes((u?.email || '').toLowerCase())) {
           const stored = localStorage.getItem('filmkeyfi_session_' + u.id);
           if (stored && u?.active_session_id && stored !== u.active_session_id) {
             triggerBanNotice('kicked');
