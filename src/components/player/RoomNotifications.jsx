@@ -7,6 +7,8 @@ export default function RoomNotifications({ participants, currentUserId, profile
   const [notifications, setNotifications] = useState([]);
   const prevRef = useRef([]);
   const initializedRef = useRef(false);
+  const profilesRef = useRef(profiles);
+  profilesRef.current = profiles;
 
   useEffect(() => {
     const list = participants || [];
@@ -19,16 +21,16 @@ export default function RoomNotifications({ participants, currentUserId, profile
       const left = prev.filter((p) => !currIds.has(p.user_id) && p.user_id !== currentUserId);
       // Çerçeve giriş animasyonu kapalıysa normal "katıldı/ayrıldı" bildirimi göster.
       // Açıkysa özel frame giriş/çıkış kartı çıkar, bu bildirimi gizle.
-      const hasFrameEntrance = (p) => {
-        const prof = profiles[p.user_id] || {};
-        if (!prof.profile_frame) return false;
-        const automatic = prof.profile_frame.startsWith('lvl_');
-        return automatic || !!prof.profile_frame_entrance_enabled;
+      const shouldShowNotification = (participant) => {
+        const profile = profilesRef.current[participant.user_id] || {};
+        const automaticFrame = profile.profile_frame?.startsWith('lvl_');
+        const hasFrameEntrance = automaticFrame || !!profile.profile_frame_entrance_enabled;
+        const hasSpecialWelcome = ['queen_admin', 'can_ablam', 'can_abim'].includes(profile.display_role);
+        return !hasFrameEntrance && !hasSpecialWelcome;
       };
-      // Özel karşılama görseli olan rollerde normal katıldı/ayrıldı bildirimini gizle.
-      const hasSpecialWelcome = (p) => ['can_ablam', 'can_abim'].includes((profiles[p.user_id] || {}).display_role);
-      joined.forEach((p) => { if (!hasFrameEntrance(p) && !hasSpecialWelcome(p)) addNotif(p, 'join'); });
-      left.forEach((p) => { if (!hasFrameEntrance(p) && !hasSpecialWelcome(p)) addNotif(p, 'leave'); });
+      // Profil bilgisi geldikten sonra kontrol et; özel rollerde normal bildirim hiç oluşmasın.
+      joined.forEach((participant) => setTimeout(() => { if (shouldShowNotification(participant)) addNotif(participant, 'join'); }, 1200));
+      left.forEach((participant) => setTimeout(() => { if (shouldShowNotification(participant)) addNotif(participant, 'leave'); }, 1200));
     }
 
     prevRef.current = list;

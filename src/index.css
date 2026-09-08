@@ -1235,11 +1235,17 @@ button:active, nav a:active, a[role="button"]:active {
 .room-frame-edge-left, .room-frame-edge-right { top: 0; bottom: 0; width: 3px; }
 .room-frame-edge-top { top: 0; } .room-frame-edge-right { right: 0; } .room-frame-edge-bottom { bottom: 0; } .room-frame-edge-left { left: 0; }
 .room-edge-particles { position: absolute; inset: 0; overflow: hidden; }
-.room-edge-particle { position: absolute; left: var(--edge-x); bottom: -2rem; color: var(--edge-color); animation-delay: var(--edge-delay); animation-duration: var(--edge-duration); animation-iteration-count: infinite; animation-timing-function: ease-out; }
-.room-edge-heart .room-edge-particle { font-size: 1.4rem; text-shadow: 0 0 9px var(--edge-color); animation-name: room-heart-rise; }
-.room-edge-fire .room-edge-particle { width: 13px; height: 28px; border-radius: 50% 50% 35% 35%; background: radial-gradient(ellipse at center 80%, #fff 0 8%, #fde047 18%, var(--edge-color) 58%, transparent 76%); filter: drop-shadow(0 0 8px var(--edge-color)); transform-origin: center bottom; animation-name: room-flame-rise; }
+.room-edge-particle { position: absolute; color: var(--edge-color); animation-delay: var(--edge-delay); animation-duration: var(--edge-duration); animation-iteration-count: infinite; animation-timing-function: ease-out; }
+.room-edge-side-top { left: var(--edge-pos); top: -6px; animation-name: room-edge-from-top; }
+.room-edge-side-right { right: -6px; top: var(--edge-pos); animation-name: room-edge-from-right; }
+.room-edge-side-bottom { left: var(--edge-pos); bottom: -6px; animation-name: room-edge-from-bottom; }
+.room-edge-side-left { left: -6px; top: var(--edge-pos); animation-name: room-edge-from-left; }
+.room-edge-heart .room-edge-particle { font-size: 1.4rem; text-shadow: 0 0 9px var(--edge-color); }
+.room-edge-fire .room-edge-particle { width: 13px; height: 28px; border-radius: 50% 50% 35% 35%; background: radial-gradient(ellipse at center 80%, #fff 0 8%, #fde047 18%, var(--edge-color) 58%, transparent 76%); filter: drop-shadow(0 0 8px var(--edge-color)); transform-origin: center bottom; }
 @keyframes room-edge-life { 0% { opacity: 0; } 8%, 86% { opacity: 1; } 100% { opacity: 0; } }
 @keyframes room-edge-glow { from { opacity: .55; } to { opacity: 1; } }
-@keyframes room-heart-rise { 0% { transform: translateY(0) scale(.55) rotate(-12deg); opacity: 0; } 14% { opacity: 1; } 100% { transform: translateY(-108vh) scale(1.15) rotate(18deg); opacity: 0; } }
-@keyframes room-flame-rise { 0% { transform: translateY(0) scale(.65) skewX(-5deg); opacity: 0; } 12% { opacity: 1; } 45% { transform: translateY(-22vh) scale(1.15) skewX(7deg); } 100% { transform: translateY(-72vh) scale(.3) skewX(-8deg); opacity: 0; } }
+@keyframes room-edge-from-top { 0% { transform: translateY(0) scale(.45); opacity: 0; } 18% { opacity: 1; } 100% { transform: translateY(70px) scale(1.05); opacity: 0; } }
+@keyframes room-edge-from-right { 0% { transform: translateX(0) scale(.45); opacity: 0; } 18% { opacity: 1; } 100% { transform: translateX(-70px) scale(1.05); opacity: 0; } }
+@keyframes room-edge-from-bottom { 0% { transform: translateY(0) scale(.45); opacity: 0; } 18% { opacity: 1; } 100% { transform: translateY(-70px) scale(1.05); opacity: 0; } }
+@keyframes room-edge-from-left { 0% { transform: translateX(0) scale(.45); opacity: 0; } 18% { opacity: 1; } 100% { transform: translateX(70px) scale(1.05); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .room-frame-welcome { animation: room-edge-life 5s ease-in-out forwards; } .room-frame-edge { animation: none; } .room-edge-particle { animation-duration: 3s; } }

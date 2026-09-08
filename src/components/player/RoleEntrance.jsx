@@ -3,6 +3,7 @@ import { base44 } from '@/api/base44Client';
 import ProfileFrameEntrance from '@/components/player/ProfileFrameEntrance';
 
 const ADMIN_ROLES = ['founder', 'queen_admin', 'admin_helper'];
+const SPECIAL_WELCOME_ROLES = ['queen_admin', 'can_ablam', 'can_abim'];
 
 export default function RoleEntrance({ roomId, joinTrigger = 0, userId }) {
   const [queue, setQueue] = useState([]);
@@ -19,6 +20,7 @@ export default function RoleEntrance({ roomId, joinTrigger = 0, userId }) {
     processed.current.add(message.id);
     const roleMatch = (message.text || '').match(/\{\{ROLE\|([^|}]+)/);
     const roleKey = roleMatch ? roleMatch[1] : '';
+    if (SPECIAL_WELCOME_ROLES.includes(roleKey)) return;
     const hideName = ADMIN_ROLES.includes(roleKey);
     setQueue((items) => [...items.slice(-4), { key: message.id, frame: match[1], scale: Number(match[2]) || 100, panX: Number(match[3]) || 0, panY: Number(match[4]) || 0, avatar: message.user_avatar || '', name: message.user_name || 'Kullanıcı', hideName, isEntry }]);
   }, [roomId]);
