@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Check, X, Eye, Clock } from 'lucide-react';
+import { Check, X, Eye, Clock, Trash2 } from 'lucide-react';
 
 export default function PaymentRequestsTab() {
   const [payments, setPayments] = useState([]);
@@ -31,6 +31,18 @@ export default function PaymentRequestsTab() {
       setPayments((prev) => prev.filter((p) => p.id !== payment.id));
     } catch (e) {
       alert(e.response?.data?.error || e.message || 'Onaylanamadı');
+    }
+    setProcessing(null);
+  };
+
+  const deletePayment = async (payment) => {
+    if (!confirm(`${payment.user_name} kullanıcısının ödeme talebini silmek istediğinize emin misiniz?`)) return;
+    setProcessing(payment.id);
+    try {
+      await base44.entities.Payment.delete(payment.id);
+      setPayments((prev) => prev.filter((p) => p.id !== payment.id));
+    } catch (e) {
+      alert(e.response?.data?.error || e.message || 'Silinemedi');
     }
     setProcessing(null);
   };
@@ -75,6 +87,7 @@ export default function PaymentRequestsTab() {
                   <button onClick={() => setDetail(p)} className="flex-1 sm:flex-none p-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300"><Eye className="w-4 h-4" /></button>
                   <button onClick={() => approve(p)} disabled={processing === p.id} className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-green-500/10 text-green-400 text-sm font-semibold disabled:opacity-50"><Check className="w-4 h-4" /> Onayla</button>
                   <button onClick={() => setRejecting(p)} disabled={processing === p.id} className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-red-500/10 text-red-400 text-sm font-semibold disabled:opacity-50"><X className="w-4 h-4" /> Reddet</button>
+                  <button onClick={() => deletePayment(p)} disabled={processing === p.id} className="flex-1 sm:flex-none p-2 rounded-lg bg-white/5 hover:bg-red-500/10 text-gray-400 hover:text-red-400 disabled:opacity-50"><Trash2 className="w-4 h-4" /></button>
                 </div>
               </div>
               <p className="text-xs text-gray-500 mt-2">İşlem No: {p.transaction_id} • {new Date(p.created_date).toLocaleString('tr-TR')}</p>
