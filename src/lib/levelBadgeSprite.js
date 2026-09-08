@@ -8,7 +8,7 @@ export const LEVEL_BADGE_FRAMES = [
   [650, 1, 173, 130, 72], [700, 129, 173, 132, 72], [750, 261, 173, 132, 72], [850, 392, 173, 130, 72],
   [900, 520, 173, 129, 72], [950, 775, 173, 127, 72], [975, 900, 173, 124, 72],
   [990, 263, 246, 145, 84], [995, 406, 246, 148, 84], [1000, 550, 242, 220, 91],
-].map(([level, x, y, width, height]) => ({ level, x, y, width, height }));
+].map(([level, x, y, width, height]) => ({ level, x, y, width, height, src: `/level-badges/lvl-${level}.png` }));
 
 export function getLevelBadgeFrame(value) {
   const level = Math.min(1000, Math.max(1, Math.floor(Number(value) || 1)));
