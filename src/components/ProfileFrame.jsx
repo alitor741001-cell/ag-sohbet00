@@ -1,14 +1,13 @@
 import { useState } from 'react';
 import { useFrameCatalog } from '@/lib/FrameCatalogContext';
-import { Image } from '@/components/ui/image';
 import TransparentFrameImage from '@/components/xp/TransparentFrameImage';
 import FramedPortrait from '@/components/profile/FramedPortrait';
 
 const SIZES = {
-  xs: { avatar: 'h-7 w-7 text-[10px]', sprite: 'h-12 w-12' },
-  sm: { avatar: 'h-10 w-10 text-xs', sprite: 'h-20 w-[4.25rem]' },
-  md: { avatar: 'h-12 w-12 text-sm', sprite: 'h-24 w-20' },
-  lg: { avatar: 'h-32 w-32 text-3xl', sprite: 'h-60 w-56' },
+  xs: { avatar: 'h-8 w-8 text-[10px]', sprite: 'h-16 w-16' },
+  sm: { avatar: 'h-12 w-12 text-xs', sprite: 'h-24 w-24' },
+  md: { avatar: 'h-16 w-16 text-sm', sprite: 'h-32 w-28' },
+  lg: { avatar: 'h-40 w-40 text-3xl', sprite: 'h-72 w-64' },
 };
 
 export default function ProfileFrame({ frame, children, size = 'md', className = '', avatar, name, frameScale = 100, panX = 0, panY = 0 }) {
@@ -20,7 +19,7 @@ export default function ProfileFrame({ frame, children, size = 'md', className =
   if (!frame || !frameInfo?.image_url) return children || (
     <div className={`relative shrink-0 overflow-hidden rounded-full ${dims.avatar} ${className}`}>
       {avatar
-        ? <Image src={avatar} className="h-full w-full object-cover object-center" fittingType="fill" focalPointX={0.5} focalPointY={0.5} />
+        ? <img src={avatar} alt={name || 'Profil'} className="h-full w-full object-cover object-center" referrerPolicy="no-referrer" draggable={false} />
         : <span className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary to-accent font-bold text-white">{(name || '?')[0]}</span>}
     </div>
   );
@@ -36,7 +35,7 @@ export default function ProfileFrame({ frame, children, size = 'md', className =
       <div className={`relative mx-auto ${dims.avatar}`}>
         <div className="absolute inset-0 overflow-hidden rounded-full" style={{ transform: `scale(${avatarScale}) translate(${px}%, ${py}%)` }}>
           {avatar
-            ? <Image src={avatar} className="h-full w-full object-cover object-center" fittingType="fill" focalPointX={0.5} focalPointY={0.5} />
+            ? <img src={avatar} alt={name || 'Profil'} className="h-full w-full object-cover object-center" referrerPolicy="no-referrer" draggable={false} />
             : <span className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary to-accent font-bold text-white">{(name || '?')[0]}</span>}
         </div>
         <div className={`pointer-events-none absolute left-1/2 top-1/2 z-[2] max-w-none overflow-visible ${artworkClass}`}>

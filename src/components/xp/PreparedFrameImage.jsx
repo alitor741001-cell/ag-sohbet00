@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react';
 import { getPreparedTransparent, makePreparedTransparent } from '@/components/xp/frameTransparency';
 
 // Hazır çerçeveler için: açıklık koordinatlarını kullanarak orta daireyi şeffaf yapar.
-// Görsel boyutu değişmez, kırpılmaz — sadece orta dairesel alan şeffaf olur.
+// Ham görseli anında gösterir, arka planda işlenmiş versiyonu hazırlar ve hazır olunca değiştirir.
+// Böylece çerçeve açılışta pop-in yapmaz — anında görünür.
 export default function PreparedFrameImage({ src, opening, className = '' }) {
-  const [transparentSrc, setTransparentSrc] = useState(() => getPreparedTransparent(src, opening));
+  const [transparentSrc, setTransparentSrc] = useState(() => getPreparedTransparent(src, opening) || src);
 
   useEffect(() => {
     let active = true;
@@ -12,15 +13,15 @@ export default function PreparedFrameImage({ src, opening, className = '' }) {
     if (cached) {
       setTransparentSrc(cached);
     } else {
-      setTransparentSrc('');
+      // Ham görseli anında göster — işlenmiş versiyon hazırlanınca değiştir
+      setTransparentSrc(src);
       makePreparedTransparent(src, opening).then((url) => {
         if (active) setTransparentSrc(url);
-      });
+      }).catch(() => {});
     }
     return () => { active = false; };
   }, [src, opening]);
 
-  if (!transparentSrc) return null;
   return (
     <img
       src={transparentSrc}
