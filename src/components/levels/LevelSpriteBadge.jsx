@@ -3,7 +3,7 @@ import { LEVEL_BADGE_SPRITE, getLevelBadgeFrame } from '@/lib/levelBadgeSprite';
 
 export default function LevelSpriteBadge({ level, profile = false }) {
   const frame = getLevelBadgeFrame(level);
-  const scale = profile ? 0.92 : 0.68;
+  const scale = profile ? 0.92 : 0.56;
   const width = Math.round(frame.width * scale);
   const height = Math.round(frame.height * scale);
 
