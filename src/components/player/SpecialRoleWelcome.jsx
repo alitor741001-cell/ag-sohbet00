@@ -32,5 +32,6 @@ export default function SpecialRoleWelcome({ roomId }) {
   useEffect(() => {
     if (!current && queue.length) { setCurrent(queue[0]); setQueue((items) => items.slice(1)); }
   }, [current, queue]);
-  return current ? <RoomWelcomeVisual key={current.id} type={current.type} onDone={() => setCurrent(null)} /> : null;
+  const finishCurrent = useCallback(() => setCurrent(null), []);
+  return current ? <RoomWelcomeVisual key={current.id} type={current.type} onDone={finishCurrent} /> : null;
 }
