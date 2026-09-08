@@ -17,6 +17,7 @@ import LiveKitDebugPanel from '@/components/player/LiveKitDebugPanel';
 import RoomDirectMessages from '@/components/player/RoomDirectMessages';
 import RoomNotifications from '@/components/player/RoomNotifications';
 import MoviePickerSheet from '@/components/player/MoviePickerSheet';
+import RoomCatalogIntro from '@/components/player/RoomCatalogIntro';
 import RoleBadge from '@/components/RoleBadge';
 import ProfileFrame from '@/components/ProfileFrame';
 import useSocialBadges from '@/hooks/useSocialBadges';
@@ -776,6 +777,7 @@ export default function WatchParty() {
       />
 
       <MoviePickerSheet open={moviePickerOpen} onClose={() => setMoviePickerOpen(false)} onSelect={changeMovie} currentMovieId={movie?.id} />
+      {joinCount > 0 && room?.movie_id && <RoomCatalogIntro key={id} />}
       {welcomeQueue[0] && (
         <>
           <RoomWelcomeVisual type={welcomeQueue[0].type} />

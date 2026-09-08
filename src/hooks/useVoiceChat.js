@@ -248,6 +248,24 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled }) {
     }
   }, [participants, refreshState, user?.id]);
 
+  // Sesli sohbet kapatıldığında tüm mikrofonları ve uzak sesleri anlık kapat;
+  // tekrar açıldığında mikrofon izni tekrar istenmeden sesleri geri aç.
+  useEffect(() => {
+    const room = roomRef.current;
+    if (!room) return;
+    if (!voiceEnabled) {
+      room.localParticipant.setMicrophoneEnabled(false).then(refreshState).catch(() => {});
+      audioElementsRef.current.forEach((element) => { element.muted = true; });
+      setActive(false);
+    } else {
+      if (!mutedByModeratorRef.current) {
+        room.localParticipant.setMicrophoneEnabled(true, { echoCancellation: true, noiseSuppression: true, autoGainControl: true }).then(refreshState).catch(() => {});
+      }
+      audioElementsRef.current.forEach((element) => { element.muted = deafenedRef.current; });
+      retryAudio();
+    }
+  }, [voiceEnabled]);
+
   const toggleMute = useCallback(async () => {
     const room = roomRef.current;
     if (!room || requesting || mutedByModeratorRef.current || connectionState !== 'connected') return;
