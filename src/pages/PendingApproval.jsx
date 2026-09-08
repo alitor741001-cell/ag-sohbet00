@@ -12,6 +12,12 @@ export default function PendingApproval() {
 
   const check = async () => {
     try {
+      const accessResponse = await base44.functions.invoke('subscription-check', {}).catch(() => null);
+      const access = accessResponse?.data || accessResponse;
+      if (access?.hasAccess) {
+        window.location.replace('/');
+        return;
+      }
       const me = await base44.auth.me();
       setUser(me);
       userIdRef.current = me.id;
@@ -42,7 +48,7 @@ export default function PendingApproval() {
     const interval = setInterval(() => {
       setChecking(true);
       check().finally(() => setChecking(false));
-    }, 3000);
+    }, 1000);
     // Gerçek zamanlı: admin üyeliği onayladığında veritabanından anında olay gelir
     const unsub = base44.entities.User.subscribe((event) => {
       const changedId = event.data?.id || event.id;

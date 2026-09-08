@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import { safeErrorResponse } from '../../shared/security.ts';
+import { membershipEmail } from '../../shared/membershipEmails.ts';
 
 export default async function(req) {
   try {
@@ -30,11 +31,21 @@ export default async function(req) {
       return Response.json({ error: 'Numara oluşturulamadı' }, { status: 500 });
     }
 
+    const isNewMember = !me.member_id;
     const updates = {};
     if (!me.member_id) updates.member_id = memberId;
     if (!me.payment_reference) updates.payment_reference = paymentRef;
     if (Object.keys(updates).length > 0) {
       await base44.asServiceRole.entities.User.update(user.id, updates);
+    }
+
+    if (isNewMember) {
+      const displayName = me.username || me.full_name || 'Kullanıcı';
+      await base44.asServiceRole.integrations.Core.SendEmail({
+        to: me.email,
+        subject: '✅ FILMKEYFİ — Üyeliğiniz Aktif Edilmiştir',
+        body: membershipEmail({ name: displayName, status: 'active' }),
+      });
     }
 
     return Response.json({ member_id: memberId, payment_reference: paymentRef });
