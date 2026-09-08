@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import { rateLimit } from '../../shared/security.ts';
+import { accountDeletedEmail } from '../../shared/membershipEmails.ts';
 
 export default async function(req) {
   try {
@@ -12,6 +13,8 @@ export default async function(req) {
     if (!rl.allowed) return Response.json({ error: 'çok fazla deneme, daha sonra tekrar deneyin' }, { status: 429 });
 
     const userId = user.id;
+    const userEmail = user.email;
+    const userName = user.username || user.full_name || userEmail;
     const sr = base44.asServiceRole.entities;
 
     // Kullanıcıya ait kişisel verileri GDPR uyumlu şekilde temizle
@@ -32,6 +35,16 @@ export default async function(req) {
 
     // Kullanıcının sahip olduğu odaları kapat
     await sr.Room.deleteMany({ owner_id: userId }).catch(() => {});
+
+    // Hesap silindi e-postası gönder (kullanıcı silinmeden önce)
+    try {
+      await base44.asServiceRole.integrations.Core.SendEmail({
+        to: userEmail,
+        subject: 'Hesabınız Silinmiştir - FILMKEYFİ',
+        body: accountDeletedEmail({ name: userName }),
+        from_name: 'FILMKEYFİ',
+      });
+    } catch (e) { console.error('[delete-account email error]', e?.message || String(e)); }
 
     // Son olarak kullanıcı kaydını sil
     await sr.User.delete(userId);
