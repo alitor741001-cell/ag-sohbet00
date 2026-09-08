@@ -71,6 +71,7 @@ export default function AdminUsers({ pendingOnly = false }) {
         link: '/admin/abonelikler',
         telegram_data: { username: u.username || u.full_name || u.email, package: 'Manuel Aktivasyon', date: new Date().toLocaleString('tr-TR') }
       }).catch(() => {});
+      base44.functions.invoke('send-approval-email', { user_id: u.id }).catch(() => {});
       toast({ title: 'Kullanıcı onaylandı.' }); load();
     } catch (e) { toast({ title: 'Onaylanamadı', description: e.message, variant: 'destructive' }); }
   };
