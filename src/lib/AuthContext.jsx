@@ -4,6 +4,7 @@ import { appParams } from '@/lib/app-params';
 import { createAxiosClient } from '@base44/sdk/dist/utils/axios-client';
 import { detectConnectionType } from '@/lib/connectionType';
 import { triggerBanNotice } from '@/lib/banNotice';
+import { isMultiDeviceExempt } from '@/lib/sessionPolicy';
 
 const AuthContext = createContext();
 
@@ -122,8 +123,8 @@ export const AuthProvider = ({ children }) => {
           const res = await base44.functions.invoke('register-session', { connection_type: detectConnectionType() });
           if (res?.data?.session_id) localStorage.setItem(sessionKey, res.data.session_id);
         } catch {}
-      } else if (currentUser.role !== 'admin' && currentUser.active_session_id && storedSession !== currentUser.active_session_id) {
-        // Hesap başka cihazdan açılmış — bu cihazı kapat (admin hariç)
+      } else if (!isMultiDeviceExempt(currentUser) && currentUser.active_session_id && storedSession !== currentUser.active_session_id) {
+        // Hesap başka cihazdan açılmış — muaf hesaplar hariç bu cihazı kapat
         await base44.auth.logout();
         localStorage.removeItem(sessionKey);
         window.location.href = '/login?kicked=1';

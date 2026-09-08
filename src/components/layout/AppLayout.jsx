@@ -17,6 +17,7 @@ import { useToast } from '@/components/ui/use-toast';
 import MessageRealtimeProvider from '@/components/messages/MessageRealtimeProvider';
 import RoutePreloader from '@/components/layout/RoutePreloader';
 import { isBasicPath } from '@/lib/access';
+import { isMultiDeviceExempt } from '@/lib/sessionPolicy';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function AppLayout() {
@@ -83,8 +84,7 @@ export default function AppLayout() {
           return;
         }
         // Cihaz/session kontrolü (adminler ve çoklu cihaz muaf hesaplar hariç)
-        const MULTI_DEVICE_EMAILS = ['alitor7474@gmail.com'];
-        if (u?.role !== 'admin' && !MULTI_DEVICE_EMAILS.includes((u?.email || '').toLowerCase())) {
+        if (!isMultiDeviceExempt(u)) {
           const stored = localStorage.getItem('filmkeyfi_session_' + u.id);
           if (stored && u?.active_session_id && stored !== u.active_session_id) {
             triggerBanNotice('kicked');
