@@ -38,6 +38,13 @@ export const ROLE_DEFINITIONS: Record<string, any> = {
     name_effect: 'gold',
     lion_profile: true,
   },
+  'gul': {
+    label: 'GÜL', icon: '🌹', color: '#ff1744', neon: true, priority: 86,
+    entry_animation: 'heart-entry', exit_animation: 'heart-exit',
+    show_in_room: false, moderator: false, hide_username_entry: false,
+    name_effect: 'heart',
+    heart_profile: true,
+  },
   'nargileciler': {
     label: 'NARGİLECİLER', icon: '🪔', color: '#4caf50', neon: true, priority: 86,
     entry_animation: 'nargile-entry', exit_animation: 'nargile-exit',

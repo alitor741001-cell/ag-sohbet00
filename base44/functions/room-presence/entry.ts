@@ -121,7 +121,7 @@ export default async function(req) {
       const roleInfo = getRoleInfo(me, labelOverrides);
       const frameInfo = await getSpecialFrameInfo(base44, me, true);
       const profileMeta = profileFrameMeta(me);
-      if (!['queen_admin', 'can_ablam', 'can_abim'].includes(me.display_role) && (!already || roleInfo.label || frameInfo || profileMeta)) {
+      if (!['queen_admin', 'admin_helper', 'can_ablam', 'can_abim', 'gul'].includes(me.display_role) && (!already || roleInfo.label || frameInfo || profileMeta)) {
         const roleMeta = roleInfo.label ? `{{ROLE|${roleInfo.key || ''}|${roleInfo.color || ''}|${roleInfo.animation || 'pulse'}}}` : '';
         const frameMeta = frameInfo ? `{{FRAME|${frameInfo.id}|${frameInfo.theme_color}|${frameInfo.text_color}|${frameInfo.glow_color}|${frameInfo.title}}}` : '';
         const titlePrefix = frameInfo?.title
@@ -148,6 +148,11 @@ export default async function(req) {
         await base44.asServiceRole.entities.RoomMessage.create({
           room_id, user_id: user.id, user_name: name, user_avatar: user.avatar || '',
           text: '{{CAN_ABIM_WELCOME}}', type: 'system'
+        });
+      } else if (me.display_role === 'gul') {
+        await base44.asServiceRole.entities.RoomMessage.create({
+          room_id, user_id: user.id, user_name: name, user_avatar: user.avatar || '',
+          text: '{{GUL_WELCOME}}', type: 'system'
         });
       } else if (isAdmin) {
         // Yönetici girişinde tüm kullanıcılara ateş efektli karşılama göster
@@ -440,7 +445,7 @@ export default async function(req) {
         ? `${frameInfoLeave.title} `
         : (roleInfoLeave.label && roleInfoLeave.show_in_room ? `${roleInfoLeave.icon} ${roleInfoLeave.label} ` : '');
       const leaveName = frameInfoLeave ? `${name} ` : (roleInfoLeave.hide_username_entry ? '' : `${name} `);
-      if (!isAdmin && !['queen_admin', 'can_ablam', 'can_abim'].includes(me.display_role)) {
+      if (!isAdmin && !['queen_admin', 'admin_helper', 'can_ablam', 'can_abim', 'gul'].includes(me.display_role)) {
         await base44.asServiceRole.entities.RoomMessage.create({
           room_id, user_id: user.id, user_name: name, user_avatar: user.avatar || '',
           text: `${profileMetaLeave}${frameMetaLeave}${roleMetaLeave}${titlePrefixLeave}${leaveName}odadan ayrıldı.`, type: 'system'
@@ -470,12 +475,12 @@ export default async function(req) {
       ? `${frameInfoLeave2.title} `
       : (roleInfoLeave2.label && roleInfoLeave2.show_in_room ? `${roleInfoLeave2.icon} ${roleInfoLeave2.label} ` : '');
     const leaveName2 = frameInfoLeave2 ? `${name} ` : (roleInfoLeave2.hide_username_entry ? '' : `${name} `);
-    if (!isAdmin && !['queen_admin', 'can_ablam', 'can_abim'].includes(me.display_role)) {
-      await base44.asServiceRole.entities.RoomMessage.create({
-        room_id, user_id: user.id, user_name: name, user_avatar: user.avatar || '',
-        text: `${profileMetaLeave2}${frameMetaLeave2}${roleMetaLeave2}${titlePrefixLeave2}${leaveName2}odadan ayrıldı.`, type: 'system'
-      });
-    }
+    if (!isAdmin && !['queen_admin', 'admin_helper', 'can_ablam', 'can_abim', 'gul'].includes(me.display_role)) {
+        await base44.asServiceRole.entities.RoomMessage.create({
+          room_id, user_id: user.id, user_name: name, user_avatar: user.avatar || '',
+          text: `${profileMetaLeave2}${frameMetaLeave2}${roleMetaLeave2}${titlePrefixLeave2}${leaveName2}odadan ayrıldı.`, type: 'system'
+        });
+      }
     if (ownershipTransferred) {
       await base44.asServiceRole.entities.RoomMessage.create({
         room_id, user_id: owner_id, user_name: owner_name,

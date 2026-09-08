@@ -2,14 +2,14 @@ import { useEffect } from 'react';
 import { useFrameCatalog } from '@/lib/FrameCatalogContext';
 import RoomEdgeParticles from '@/components/player/RoomEdgeParticles';
 
-const FALLBACK_COLORS = { queenAdmin: '#ff1493', admin: '#ff4500', canAblam: '#ff1744', canAbim: '#3b82f6' };
+const FALLBACK_COLORS = { queenAdmin: '#ff1493', admin: '#ff4500', canAblam: '#ff1744', canAbim: '#3b82f6', gul: '#ff1744' };
 
 export default function RoomFrameWelcome({ type, frame, onDone }) {
   const { frames } = useFrameCatalog();
   const info = frames[frame];
   const color = info?.theme_color || info?.glow_color || FALLBACK_COLORS[type] || '#ef4444';
   const signature = `${frame || ''} ${info?.label || ''} ${info?.image_url || ''}`.toLocaleLowerCase('tr-TR');
-  const mode = /kalp|heart|queen|kraliçe|ablam/.test(signature) || ['queenAdmin', 'canAblam'].includes(type)
+  const mode = /kalp|heart|queen|kraliçe|ablam|gül|gul/.test(signature) || ['queenAdmin', 'canAblam', 'gul'].includes(type)
     ? 'heart'
     : /ateş|alev|fire|flame|yanan|admin/.test(signature) || type === 'admin' ? 'fire' : 'none';
 

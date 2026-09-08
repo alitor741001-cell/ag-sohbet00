@@ -16,6 +16,7 @@ import RoomSettingsMenu from '@/components/player/RoomSettingsMenu';
 import LiveKitDebugPanel from '@/components/player/LiveKitDebugPanel';
 import RoomDirectMessages from '@/components/player/RoomDirectMessages';
 import RoomNotifications from '@/components/player/RoomNotifications';
+import RoomCheatPanel from '@/components/player/RoomCheatPanel';
 import MoviePickerSheet from '@/components/player/MoviePickerSheet';
 import RoomCatalogIntro from '@/components/player/RoomCatalogIntro';
 import RoleBadge from '@/components/RoleBadge';
@@ -80,7 +81,7 @@ export default function WatchParty() {
 
   const [roomNameEdit, setRoomNameEdit] = useState('');
   const [welcomeQueue, setWelcomeQueue] = useState([]);
-  const WELCOME_PRIORITY = { queenAdmin: 0, admin: 1, canAblam: 2, canAbim: 3 };
+  const WELCOME_PRIORITY = { queenAdmin: 0, admin: 1, canAblam: 2, canAbim: 3, gul: 4 };
   const enqueueWelcome = (type, message) => {
     const key = message?.id || `${type}-${message?.created_date || ''}`;
     const frame = (message?.text || '').match(/\{\{PFRAME\|([^|}]+)/)?.[1] || '';
@@ -153,6 +154,8 @@ export default function WatchParty() {
         if (cabRecent) enqueueWelcome('canAblam', cabRecent);
         const canAbimRecent = items.find((m) => (m.text || '').includes('{{CAN_ABIM_WELCOME}}') && now - new Date(m.created_date).getTime() < 10000);
         if (canAbimRecent) enqueueWelcome('canAbim', canAbimRecent);
+        const gulRecent = items.find((m) => (m.text || '').includes('{{GUL_WELCOME}}') && now - new Date(m.created_date).getTime() < 10000);
+        if (gulRecent) enqueueWelcome('gul', gulRecent);
       })
       .catch(() => {});
     const unsub = base44.entities.RoomMessage.subscribe((ev) => {
@@ -162,6 +165,7 @@ export default function WatchParty() {
       if (txt.includes('{{ADMIN_WELCOME}}')) enqueueWelcome('admin', ev.data);
       if (txt.includes('{{CAN_ABLAM_WELCOME}}')) enqueueWelcome('canAblam', ev.data);
       if (txt.includes('{{CAN_ABIM_WELCOME}}')) enqueueWelcome('canAbim', ev.data);
+      if (txt.includes('{{GUL_WELCOME}}')) enqueueWelcome('gul', ev.data);
     });
     return unsub;
   }, [id]);
@@ -679,6 +683,7 @@ export default function WatchParty() {
       {/* Tam ekran video + alt kontrol alanı */}
       <div ref={playerWrapRef} className="flex-1 flex min-h-0 relative" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
         <RoomNotifications participants={room?.participants || []} currentUserId={user?.id} profiles={viewerProfiles} />
+        <RoomCheatPanel participants={room?.participants || []} currentUserId={user?.id} profiles={viewerProfiles} />
         {joinRequests.length > 0 && (
           <div className="absolute top-[max(env(safe-area-inset-top),3.5rem)] left-3 z-[65] space-y-1.5 max-w-[80%]">
             {joinRequests.map((req) => (
