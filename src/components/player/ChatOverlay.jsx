@@ -19,7 +19,7 @@ import useRoomLevels from '@/hooks/useRoomLevels';
 
 const EMOJIS = ['😀', '😂', '😍', '🔥', '👍', '👏', '😱', '😢', '🎬', '🍿', '❤️', '🎉'];
 
-export default function ChatOverlay({ roomId, chatEnabled, isOwner, isAdmin, onClose, autoDeleteMinutes = 0, countdownText = '', onSetAutoDelete, voice, voiceEnabled, onSettings, onDirect, onDirectUser, directUnread = 0, ownerId, roomModerators = [], participants = [], recentParticipants = [], viewerProfiles = {}, presenceMap = {}, onProfileCard, settingsProps, onToggleChat }) {
+export default function ChatOverlay({ roomId, chatEnabled, isOwner, isAdmin, onClose, autoDeleteMinutes = 0, countdownText = '', clearToken = 0, onSetAutoDelete, voice, voiceEnabled, onSettings, onDirect, onDirectUser, directUnread = 0, ownerId, roomModerators = [], participants = [], recentParticipants = [], viewerProfiles = {}, presenceMap = {}, onProfileCard, settingsProps, onToggleChat }) {
   const { user } = useCurrentUser();
   const { toast } = useToast();
   const [messages, setMessages] = useState([]);
@@ -151,6 +151,14 @@ export default function ChatOverlay({ roomId, chatEnabled, isOwner, isAdmin, onC
     window.addEventListener('online', reconnect);
     return () => { unsub(); window.removeEventListener('online', reconnect); };
   }, [roomId]);
+
+  // Otomatik silme süresi doldğunda açık panelde anlık temizle
+  useEffect(() => {
+    if (clearToken > 0) {
+      setMessages([]);
+      setLoading(false);
+    }
+  }, [clearToken]);
 
   const send = (e) => {
     e?.preventDefault();
