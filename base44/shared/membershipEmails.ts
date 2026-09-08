@@ -20,6 +20,7 @@ export function membershipEmail({ name, status }) {
 <tr><td align="center" valign="top" style="padding:24px 12px;">
 <table role="presentation" width="500" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:500px;background-color:#17171d;border:1px solid #542126;border-radius:20px;border-collapse:separate;overflow:hidden;">
 <tr><td align="center" style="padding:32px 24px 20px;background-color:#21171a;">
+<img src="https://media.base44.com/images/public/6a77d66e4da6de214628ee62/3108d3b4e_351A5169-7769-4C41-8816-B20112620648.png" width="72" height="72" alt="FILMKEYFİ" style="display:block;width:72px;height:72px;margin:0 auto 14px;border:0;border-radius:14px;">
 <div style="font-size:30px;line-height:36px;font-weight:900;letter-spacing:2px;color:#ef4444;">FILMKEYFİ</div>
 <div style="margin-top:7px;font-size:11px;line-height:16px;color:#9ca3af;letter-spacing:3px;text-transform:uppercase;">Sinematik Deneyim</div>
 </td></tr>
