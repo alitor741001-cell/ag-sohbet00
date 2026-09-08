@@ -47,7 +47,7 @@ export default function RoomCheatPanel({ participants, currentUserId, profiles =
   if (!notifications.length) return null;
 
   return (
-    <div className="absolute top-[max(env(safe-area-inset-top),3.5rem)] left-1/2 -translate-x-1/2 z-[56] flex flex-col items-center gap-1.5 pointer-events-none w-max max-w-[85%]">
+    <div className="absolute top-2 left-1/2 -translate-x-1/2 z-[56] flex flex-col items-center gap-1.5 pointer-events-none w-max max-w-[90%]">
       {notifications.map((n) => {
         const profile = profilesRef.current[n.participant.user_id] || {};
         const roleInfo = getRoleInfo(profile);
