@@ -3,7 +3,8 @@ import { base44 } from '@/api/base44Client';
 import { useToast } from '@/components/ui/use-toast';
 import { useFrameCatalog } from '@/lib/FrameCatalogContext';
 import { Image } from '@/components/ui/image';
-import PreparedFrameImage from '@/components/xp/PreparedFrameImage';
+import usePreparedPortrait from '@/components/xp/usePreparedPortrait';
+import PortraitPhoto from '@/components/profile/PortraitPhoto';
 import { Minus, Plus, Upload, Save, RotateCcw, Move, ChevronDown, X } from 'lucide-react';
 
 // Profil fotoğrafını çerçeve içinde sürükleyerek kaydırma ve yakınlaştırma aracı.
@@ -13,6 +14,7 @@ export default function AvatarPositioner({ user, targetUserId, onSaved }) {
   const { frames } = useFrameCatalog();
   const frame = user.profile_frame;
   const info = frame ? frames[frame] : null;
+  const portrait = usePreparedPortrait(info?.image_url, info?.opening);
   const isAdmin = !!targetUserId && targetUserId !== user?.id;
   const [avatar, setAvatar] = useState(user.avatar || '');
   const [scale, setScale] = useState(user.profile_frame_scale || 100);
@@ -26,10 +28,11 @@ export default function AvatarPositioner({ user, targetUserId, onSaved }) {
 
   if (!info) return <p className="rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground">Çerçeve takılı değil. Önce bir çerçeve seçin, sonra fotoğrafı konumlandırabilirsiniz.</p>;
 
-  const [ox, oy, ow, oh] = info.opening;
-  const diameter = Math.min(ow, oh);
-  const left = ox + (ow - diameter) / 2;
-  const top = oy + (oh - diameter) / 2;
+  const [left, top, openingWidth, openingHeight] = portrait?.bounds || info.opening;
+  const effectiveScale = Math.max(100, Number(scale) || 100);
+  const panLimit = (1 - 100 / effectiveScale) * 50;
+  const boundedX = Math.max(-panLimit, Math.min(panLimit, panX));
+  const boundedY = Math.max(-panLimit, Math.min(panLimit, panY));
 
   const onUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -42,23 +45,23 @@ export default function AvatarPositioner({ user, targetUserId, onSaved }) {
 
   const onPointerDown = (e) => {
     const rect = windowRef.current?.getBoundingClientRect();
-    drag.current = { active: true, startX: e.clientX, startY: e.clientY, origX: panX, origY: panY, width: rect?.width || 1 };
+    drag.current = { active: true, startX: e.clientX, startY: e.clientY, origX: boundedX, origY: boundedY, width: rect?.width || 1, height: rect?.height || 1 };
     e.currentTarget.setPointerCapture(e.pointerId);
   };
   const onPointerMove = (e) => {
     if (!drag.current.active) return;
-    const s = scale / 100;
+    const s = effectiveScale / 100;
     const dx = ((e.clientX - drag.current.startX) / drag.current.width) * 100 / s;
-    const dy = ((e.clientY - drag.current.startY) / drag.current.width) * 100 / s;
-    setPanX(Math.max(-100, Math.min(100, Math.round(drag.current.origX + dx))));
-    setPanY(Math.max(-100, Math.min(100, Math.round(drag.current.origY + dy))));
+    const dy = ((e.clientY - drag.current.startY) / drag.current.height) * 100 / s;
+    setPanX(Math.max(-panLimit, Math.min(panLimit, drag.current.origX + dx)));
+    setPanY(Math.max(-panLimit, Math.min(panLimit, drag.current.origY + dy)));
   };
   const onPointerUp = (e) => { drag.current.active = false; try { e.currentTarget.releasePointerCapture(e.pointerId); } catch {} };
 
   const save = async () => {
     setSaving(true);
     try {
-      const payload = { avatar, profile_frame_scale: Number(scale), profile_avatar_x: Number(panX), profile_avatar_y: Number(panY) };
+      const payload = { avatar, profile_frame_scale: effectiveScale, profile_avatar_x: boundedX, profile_avatar_y: boundedY };
       if (isAdmin) await base44.entities.User.update(targetUserId, payload);
       else await base44.functions.invoke('update-profile', payload);
       await onSaved?.();
@@ -76,14 +79,13 @@ export default function AvatarPositioner({ user, targetUserId, onSaved }) {
         <button onClick={() => setOpen((o) => !o)} className="rounded-lg bg-secondary p-2 text-muted-foreground" aria-label={open ? 'Kapat' : 'Aç'}><X className="w-4 h-4" /></button>
       </div>
     </div>
-    {open && <><p className="mt-1 text-xs text-muted-foreground">Sürükleyerek kaydır, yakınlaştır ile mükemmel yeri bul.</p>
+    {open && <><p className="mt-1 text-xs text-muted-foreground">Yakınlaştırıp sürükleyerek konumlandır; fotoğraf çerçevenin içini boşluksuz doldurur.</p>
+    {!portrait && <p role="status" className="mt-2 text-xs text-muted-foreground">Çerçeve hazırlanıyor...</p>}
     <div className="mt-3 flex flex-col items-center gap-4 sm:flex-row sm:items-start">
       <div className="relative h-56 w-56 shrink-0 select-none" style={{ touchAction: 'none' }}>
-        <div ref={windowRef} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerUp} className="absolute cursor-grab overflow-hidden rounded-full ring-1 ring-border/30 active:cursor-grabbing" style={{ left: `${left * 100}%`, top: `${top * 100}%`, width: `${diameter * 100}%`, height: `${diameter * 100}%` }}>
-          {avatar ? <div className="h-full w-full" style={{ transform: `scale(${scale / 100}) translate(${panX}%, ${panY}%)` }}><Image src={avatar} alt="Profil" className="h-full w-full object-cover" fittingType="fill" /></div>
-          : <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">Fotoğraf yok</div>}
-        </div>
-        <div className="pointer-events-none absolute inset-0"><PreparedFrameImage src={info.image_url} opening={info.opening} /></div>
+        <PortraitPhoto portrait={portrait} avatar={avatar} name={user.username || user.full_name} scale={effectiveScale} panX={boundedX} panY={boundedY} />
+        {portrait && <Image src={portrait.src} alt="" aria-hidden="true" loading="eager" fittingType="fit" className="pointer-events-none absolute inset-0 h-full w-full" />}
+        <div ref={windowRef} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerUp} className="absolute cursor-grab active:cursor-grabbing" style={{ left: `${left * 100}%`, top: `${top * 100}%`, width: `${openingWidth * 100}%`, height: `${openingHeight * 100}%` }} />
       </div>
       <div className="w-full max-w-xs space-y-3">
         <label className="flex items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-secondary/30 px-4 py-3 text-sm font-semibold cursor-pointer">
@@ -91,16 +93,16 @@ export default function AvatarPositioner({ user, targetUserId, onSaved }) {
           <input type="file" accept="image/*" className="hidden" onChange={onUpload} disabled={uploading} />
         </label>
         <div>
-          <div className="mb-1 flex justify-between text-xs font-semibold"><span className="flex items-center gap-1"><Move className="w-3 h-3" />Kaydır (X)</span><span>{panX}</span></div>
-          <input type="range" min="-100" max="100" step="1" value={panX} onChange={(e) => setPanX(Number(e.target.value))} className="w-full accent-primary" />
+          <div className="mb-1 flex justify-between text-xs font-semibold"><span className="flex items-center gap-1"><Move className="w-3 h-3" />Kaydır (X)</span><span>{Math.round(boundedX)}</span></div>
+          <input type="range" min={-panLimit} max={panLimit} step="0.1" value={boundedX} onChange={(e) => setPanX(Number(e.target.value))} className="w-full accent-primary" />
         </div>
         <div>
-          <div className="mb-1 flex justify-between text-xs font-semibold"><span>Kaydır (Y)</span><span>{panY}</span></div>
-          <input type="range" min="-100" max="100" step="1" value={panY} onChange={(e) => setPanY(Number(e.target.value))} className="w-full accent-primary" />
+          <div className="mb-1 flex justify-between text-xs font-semibold"><span>Kaydır (Y)</span><span>{Math.round(boundedY)}</span></div>
+          <input type="range" min={-panLimit} max={panLimit} step="0.1" value={boundedY} onChange={(e) => setPanY(Number(e.target.value))} className="w-full accent-primary" />
         </div>
         <div>
-          <div className="mb-1 flex justify-between text-xs font-semibold"><span>Yakınlaştır</span><span>%{scale}</span></div>
-          <div className="flex items-center gap-2"><button onClick={() => setScale((s) => Math.max(80, s - 5))} className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary border border-border"><Minus className="w-4 h-4" /></button><input type="range" min="80" max="180" step="1" value={scale} onChange={(e) => setScale(Number(e.target.value))} className="flex-1 accent-primary" /><button onClick={() => setScale((s) => Math.min(180, s + 5))} className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary border border-border"><Plus className="w-4 h-4" /></button></div>
+          <div className="mb-1 flex justify-between text-xs font-semibold"><span>Yakınlaştır</span><span>%{effectiveScale}</span></div>
+          <div className="flex items-center gap-2"><button onClick={() => setScale((s) => Math.max(100, s - 5))} className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary border border-border"><Minus className="w-4 h-4" /></button><input type="range" min="100" max="180" step="1" value={effectiveScale} onChange={(e) => setScale(Number(e.target.value))} className="flex-1 accent-primary" /><button onClick={() => setScale((s) => Math.min(180, s + 5))} className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary border border-border"><Plus className="w-4 h-4" /></button></div>
         </div>
         <button onClick={save} disabled={saving} className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50 flex items-center justify-center gap-2"><Save className="w-4 h-4" />{saving ? 'Kaydediliyor...' : 'Konumu Kaydet'}</button>
       </div>
