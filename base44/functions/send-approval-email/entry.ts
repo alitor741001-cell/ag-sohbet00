@@ -19,7 +19,8 @@ export default async function(req) {
 
     await base44.asServiceRole.integrations.Core.SendEmail({
       to: target.email,
-      subject: '✅ FILMKEYFİ — Üyeliğiniz Aktif Edilmiştir',
+      from_name: 'FILMKEYFİ',
+      subject: 'FILMKEYFİ - Üyeliğiniz Aktif Edilmiştir',
       body: htmlBody,
     });
 

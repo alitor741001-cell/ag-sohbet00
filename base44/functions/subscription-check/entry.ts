@@ -37,7 +37,8 @@ export default async function (req) {
       const htmlBody = membershipEmail({ name: displayName, status: 'expired' });
       await base44.asServiceRole.integrations.Core.SendEmail({
         to: me.email,
-        subject: '🎬 FILMKEYFİ — Üyeliğiniz Bitmiştir',
+        from_name: 'FILMKEYFİ',
+        subject: 'FILMKEYFİ - Üyeliğiniz Bitmiştir',
         body: htmlBody,
       }).catch(() => {});
     }
