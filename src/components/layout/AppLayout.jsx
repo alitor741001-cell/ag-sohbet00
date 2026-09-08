@@ -18,7 +18,6 @@ import MessageRealtimeProvider from '@/components/messages/MessageRealtimeProvid
 import RoutePreloader from '@/components/layout/RoutePreloader';
 import { isBasicPath } from '@/lib/access';
 import { isMultiDeviceExempt } from '@/lib/sessionPolicy';
-import { motion, AnimatePresence } from 'framer-motion';
 
 export default function AppLayout() {
   const { pathname } = useLocation();
@@ -234,12 +233,8 @@ export default function AppLayout() {
       <RoleCelebrationOverlay />
       <WhatsNewModal />
       <Navbar />
-      <main className="relative mx-auto w-full min-w-0 max-w-[1600px] overflow-x-clip pt-[calc(4rem+max(env(safe-area-inset-top),1.5rem))] pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pt-16 lg:pb-8" style={{ touchAction: 'pan-y' }}>
-        <AnimatePresence mode="popLayout" initial={false}>
-          <motion.div key={pathname} className="w-full" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2, ease: 'easeOut' }} style={{ willChange: 'transform, opacity' }}>
-            <Outlet />
-          </motion.div>
-        </AnimatePresence>
+      <main className="mx-auto w-full min-w-0 max-w-[1600px] overflow-x-clip pt-[calc(4rem+max(env(safe-area-inset-top),1.5rem))] pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pt-16 lg:pb-8" style={{ touchAction: 'pan-y' }}>
+        <Outlet />
       </main>
       <BottomNav />
     </div></MessageRealtimeProvider>
