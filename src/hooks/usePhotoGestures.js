@@ -2,7 +2,6 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 
 const MIN_ZOOM = 100;
 const MAX_ZOOM = 180;
-const SAVE_DELAY = 500;
 
 function pinchDistance(touches) {
   const dx = touches[0].clientX - touches[1].clientX;
@@ -26,7 +25,7 @@ function clampPan(zoom, panX, panY) {
  * Pinch-to-zoom + pan gesture hook for the profile photo.
  * Mobile: two-finger pinch zooms, one-finger drag pans.
  * Desktop: mouse wheel zooms, mouse drag pans.
- * Reports zoom/pan changes and debounces a save via onCommit.
+ * State changes are local only; call `commit()` to persist via onCommit.
  */
 export default function usePhotoGestures({ initialZoom = 100, initialPanX = 0, initialPanY = 0, onCommit }) {
   const [zoom, setZoom] = useState(initialZoom);
@@ -35,7 +34,6 @@ export default function usePhotoGestures({ initialZoom = 100, initialPanX = 0, i
 
   const stateRef = useRef({ zoom: initialZoom, panX: initialPanX, panY: initialPanY });
   const gestureRef = useRef(null);
-  const commitTimer = useRef(null);
   const onCommitRef = useRef(onCommit);
 
   useEffect(() => { onCommitRef.current = onCommit; }, [onCommit]);
@@ -53,31 +51,16 @@ export default function usePhotoGestures({ initialZoom = 100, initialPanX = 0, i
   }, []);
 
   const commit = useCallback(() => {
-    if (commitTimer.current) clearTimeout(commitTimer.current);
-    commitTimer.current = setTimeout(() => {
-      const { zoom: z, panX: px, panY: py } = stateRef.current;
-      onCommitRef.current?.({
-        profile_frame_scale: Math.round(z),
-        profile_avatar_x: Math.round(px),
-        profile_avatar_y: Math.round(py),
-      });
-    }, SAVE_DELAY);
+    const { zoom: z, panX: px, panY: py } = stateRef.current;
+    return onCommitRef.current?.({
+      profile_frame_scale: Math.round(z),
+      profile_avatar_x: Math.round(px),
+      profile_avatar_y: Math.round(py),
+    });
   }, []);
-
-  // Button helpers (Y/X position buttons)
-  const adjustY = useCallback((delta) => {
-    update(stateRef.current.zoom, stateRef.current.panX, stateRef.current.panY + delta);
-    commit();
-  }, [update, commit]);
-
-  const adjustX = useCallback((delta) => {
-    update(stateRef.current.zoom, stateRef.current.panX + delta, stateRef.current.panY);
-    commit();
-  }, [update, commit]);
 
   const isInteractive = (target) => target.closest?.('label, button, input');
 
-  // --- Touch ---
   const onTouchStart = useCallback((e) => {
     if (isInteractive(e.target)) return;
     if (e.touches.length === 2) {
@@ -112,20 +95,16 @@ export default function usePhotoGestures({ initialZoom = 100, initialPanX = 0, i
       gestureRef.current = { type: 'pan', startX: e.touches[0].clientX, startY: e.touches[0].clientY, startPanX: stateRef.current.panX, startPanY: stateRef.current.panY, size: rect.width };
     } else {
       gestureRef.current = null;
-      commit();
     }
-  }, [commit]);
+  }, []);
 
-  // --- Mouse wheel ---
   const onWheel = useCallback((e) => {
     if (isInteractive(e.target)) return;
     e.preventDefault();
     const delta = -e.deltaY * 0.15;
     update(stateRef.current.zoom + delta, stateRef.current.panX, stateRef.current.panY);
-    commit();
-  }, [update, commit]);
+  }, [update]);
 
-  // --- Mouse drag ---
   const onMouseDown = useCallback((e) => {
     if (isInteractive(e.target)) return;
     const rect = e.currentTarget.getBoundingClientRect();
@@ -143,14 +122,12 @@ export default function usePhotoGestures({ initialZoom = 100, initialPanX = 0, i
       update(z, g.startPanX + dx, g.startPanY + dy);
     };
     const onMouseUp = () => {
-      if (gestureRef.current?.type === 'mouse-pan') { gestureRef.current = null; commit(); }
+      if (gestureRef.current?.type === 'mouse-pan') { gestureRef.current = null; }
     };
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseup', onMouseUp);
     return () => { window.removeEventListener('mousemove', onMouseMove); window.removeEventListener('mouseup', onMouseUp); };
-  }, [update, commit]);
+  }, [update]);
 
-  useEffect(() => () => { if (commitTimer.current) clearTimeout(commitTimer.current); }, []);
-
-  return { zoom, panX, panY, adjustY, adjustX, handlers: { onTouchStart, onTouchMove, onTouchEnd, onWheel, onMouseDown } };
+  return { zoom, panX, panY, commit, handlers: { onTouchStart, onTouchMove, onTouchEnd, onWheel, onMouseDown } };
 }

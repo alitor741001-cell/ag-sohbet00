@@ -1,4 +1,5 @@
-import { Camera, Crown, Loader2, LogOut, Minus, Plus } from 'lucide-react';
+import { useState } from 'react';
+import { Camera, Check, Crown, Loader2, LogOut, Pencil } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Image } from '@/components/ui/image';
@@ -15,22 +16,30 @@ import usePhotoGestures from '@/hooks/usePhotoGestures';
 
 export default function ProfileHeader({ user, pkg, expired, avatar, onAvatar, onUpdated, uploading }) {
   const { toast } = useToast();
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
   const name = user.username || user.full_name || 'Kullanıcı';
   const status = user.role === 'admin' ? 'Kurucu · Süresiz' : user.membership_status === 'pending' ? 'Onay Bekliyor' : expired ? 'Süresi Doldu' : pkg?.name || 'Aktif Üyelik';
   const hasRole = user.display_role || user.custom_role?.name;
   const { levels: roomLevels } = useRoomLevels([user.id]);
   const xpStats = useXp([user.id])[user.id];
-  const { zoom, panX, panY, adjustY, adjustX, handlers } = usePhotoGestures({
+  const { zoom, panX, panY, commit, handlers } = usePhotoGestures({
     initialZoom: user.profile_frame_scale || 100,
     initialPanX: user.profile_avatar_x || 0,
     initialPanY: user.profile_avatar_y || 0,
     onCommit: async (payload) => {
-      try { await base44.functions.invoke('update-profile', payload); await onUpdated?.(); }
-      catch (error) { toast({ title: 'Kaydedilemedi', description: error.response?.data?.error || error.message, variant: 'destructive' }); }
+      await base44.functions.invoke('update-profile', payload);
+      await onUpdated?.();
     },
   });
+  const handleSave = async () => {
+    setSaving(true);
+    try { await commit(); }
+    catch (error) { toast({ title: 'Kaydedilemedi', description: error.response?.data?.error || error.message, variant: 'destructive' }); }
+    finally { setSaving(false); setEditing(false); }
+  };
   return <header className="flex flex-col items-center text-center mb-6">
-    <div className="relative mb-4" style={user.profile_frame ? { touchAction: 'none' } : undefined} {...(user.profile_frame ? handlers : {})}>
+    <div className={`relative mb-4 ${editing ? 'rounded-full ring-2 ring-primary' : ''}`} style={editing && user.profile_frame ? { touchAction: 'none' } : undefined} {...(editing && user.profile_frame ? handlers : {})}>
       {user.profile_frame ? (
         <ProfileFrame frame={user.profile_frame} size="lg" avatar={avatar || user.avatar} name={name} frameScale={zoom} panX={panX} panY={panY} />
       ) : (
@@ -42,17 +51,18 @@ export default function ProfileHeader({ user, pkg, expired, avatar, onAvatar, on
       </label>
     </div>
     {user.profile_frame && (
-      <div className="mb-3 flex flex-col items-center gap-2">
-        <div className="flex items-center gap-2">
-          <button onClick={() => adjustY(-5)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary border border-border" aria-label="Aşağı"><Minus className="w-4 h-4" /></button>
-          <span className="min-w-[3.5rem] text-xs font-semibold text-muted-foreground">Y: %{Math.round(panY)}</span>
-          <button onClick={() => adjustY(5)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary border border-border" aria-label="Yukarı"><Plus className="w-4 h-4" /></button>
-        </div>
-        <div className="flex items-center gap-2">
-          <button onClick={() => adjustX(-5)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary border border-border" aria-label="Sol"><Minus className="w-4 h-4" /></button>
-          <span className="min-w-[3.5rem] text-xs font-semibold text-muted-foreground">X: %{Math.round(panX)}</span>
-          <button onClick={() => adjustX(5)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary border border-border" aria-label="Sağ"><Plus className="w-4 h-4" /></button>
-        </div>
+      <div className="mb-3">
+        {editing ? (
+          <button onClick={handleSave} disabled={saving} className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60">
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+            Profili Kaydet
+          </button>
+        ) : (
+          <button onClick={() => setEditing(true)} className="inline-flex items-center gap-2 rounded-full bg-secondary px-5 py-2 text-sm font-semibold">
+            <Pencil className="h-4 w-4" />
+            Profili Düzenle
+          </button>
+        )}
       </div>
     )}
     <div className="flex items-center gap-2">
