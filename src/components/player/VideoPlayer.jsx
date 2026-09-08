@@ -95,10 +95,10 @@ export default function VideoPlayer({ src, title, onTimeUpdate, onPlayPause, onS
     setDuration(v.duration);
     v.playbackRate = speed;
     applyCurrentVolume();
-    // initial sync for participants (and admin)
-    if (!isTimeSource && syncState) {
+    // Odaya yeniden giren sahip/admin dahil herkes kayıtlı izleme konumundan başlar.
+    if (syncState) {
       const target = syncState.current_time || 0;
-      if (Math.abs(v.currentTime - target) > 3) seekTo(target);
+      if (Math.abs(v.currentTime - target) > 1) seekTo(target);
     }
     if (syncState?.is_playing) v.play().catch(() => {});
   };

@@ -25,7 +25,7 @@ export default function RoomNotifications({ participants, currentUserId, profile
         const profile = profilesRef.current[participant.user_id] || {};
         const automaticFrame = profile.profile_frame?.startsWith('lvl_');
         const hasFrameEntrance = automaticFrame || !!profile.profile_frame_entrance_enabled;
-        const hasSpecialWelcome = ['queen_admin', 'can_ablam', 'can_abim'].includes(profile.display_role);
+        const hasSpecialWelcome = profile.role === 'admin' || ['queen_admin', 'can_ablam', 'can_abim'].includes(profile.display_role);
         return !hasFrameEntrance && !hasSpecialWelcome;
       };
       // Profil bilgisi geldikten sonra kontrol et; özel rollerde normal bildirim hiç oluşmasın.
