@@ -132,7 +132,7 @@ export default function ChatOverlay({ roomId, chatEnabled, isOwner, isAdmin, onC
     return /\{\{(?:[A-Z_]+_WELCOME|PFRAME\||ROLE\||FRAME\|)/.test(t);
   };
   const load = () => {
-    base44.entities.RoomMessage.filter({ room_id: roomId }, 'created_date', 200)
+    base44.entities.RoomMessage.filter({ room_id: roomId }, '-created_date', 200)
       .then((r) => { setMessages((current) => mergeMessages(current, r.filter((m) => !isHiddenMarker(m)))); setLoading(false); setTimeout(scrollToBottom, 100); })
       .catch(() => setLoading(false));
   };
@@ -268,9 +268,9 @@ export default function ChatOverlay({ roomId, chatEnabled, isOwner, isAdmin, onC
                 (() => {
                   const frame = parseFrameMetadata((m.text || '').replace(/\{\{PFRAME\|[^}]*\}\}/g, ''));
                   const { text: cleanText, color: roleColor, roleKey, hasRole } = parseRoleMetadata(frame.rest);
-                  if (/odaya katıldı|odadan ayrıldı/.test(m.text || '')) {
+                  if (/odaya katıldı|odadan ayrıldı|kişisel odasını açtı/.test(m.text || '')) {
                     const profile = profiles[m.user_id] || viewerProfiles[m.user_id] || {};
-                    return <RoomCheatNotice profile={{ ...profile, display_role: profile.display_role || roleKey }} notice={{ participant: { name: m.user_name, avatar: m.user_avatar }, type: (m.text || '').includes('odadan ayrıldı') ? 'leave' : 'join' }} />;
+                    return <RoomCheatNotice isOwner={m.user_id === ownerId} profile={{ ...profile, display_role: profile.display_role || roleKey }} notice={{ participant: { name: m.user_name, avatar: m.user_avatar }, type: (m.text || '').includes('odadan ayrıldı') ? 'leave' : 'join' }} />;
                   }
                   const color = roleColor || frame.textColor || '#8b5cf6';
                   const isRole = hasRole || !!frame.frameId;
