@@ -193,6 +193,7 @@ const Image = React.forwardRef(
     }, [src])
 
     const imageProps = {
+      decoding: "async",
       ...props,
       referrerPolicy: props.referrerPolicy || "no-referrer",
       onError: () => setImgSrc(FALLBACK_IMAGE_URL),

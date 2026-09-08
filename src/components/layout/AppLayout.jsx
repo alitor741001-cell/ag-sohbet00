@@ -58,6 +58,7 @@ export default function AppLayout() {
     if (!user) return;
     let tick = 0;
     const check = async () => {
+      if (document.visibilityState === 'hidden') return;
       try {
         const u = await base44.auth.me();
         // Ban / askıya alma / silme
@@ -171,6 +172,7 @@ export default function AppLayout() {
   useEffect(() => {
     if (!user) return;
     const beat = async () => {
+      if (document.visibilityState === 'hidden') return;
       const sessionId = localStorage.getItem('filmkeyfi_session_' + user.id);
       if (!sessionId) return;
       const payload = { session_id: sessionId, connection_type: detectConnectionType() };
@@ -233,8 +235,8 @@ export default function AppLayout() {
       <WhatsNewModal />
       <Navbar />
       <main className="mx-auto w-full min-w-0 max-w-[1600px] overflow-x-clip pt-[calc(4rem+max(env(safe-area-inset-top),1.5rem))] pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pt-16 lg:pb-8" style={{ touchAction: 'pan-y' }}>
-        <AnimatePresence mode="wait">
-          <motion.div key={pathname} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2, ease: 'easeOut' }}>
+        <AnimatePresence mode="sync" initial={false}>
+          <motion.div key={pathname} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2, ease: 'easeOut' }} style={{ willChange: 'transform, opacity' }}>
             <Outlet />
           </motion.div>
         </AnimatePresence>

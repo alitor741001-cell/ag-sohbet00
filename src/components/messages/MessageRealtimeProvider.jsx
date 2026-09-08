@@ -79,6 +79,7 @@ export default function MessageRealtimeProvider({ userId, children }) {
       });
     });
     const typingPoll = setInterval(() => {
+      if (document.visibilityState === 'hidden') return;
       setTypingMap((current) => {
         const now = Date.now(); let changed = false; const next = {};
         Object.entries(current).forEach(([cid, info]) => { if (now - new Date(info.updated_at || 0).getTime() < 3000) next[cid] = info; else changed = true; });

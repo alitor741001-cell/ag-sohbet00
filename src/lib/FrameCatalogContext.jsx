@@ -17,14 +17,35 @@ export function FrameCatalogProvider({ children }) {
     return { ...FRAME_DEFINITIONS, ...custom };
   }, [specialFrames]);
 
-  // Önceden ısıtma: tüm çerçeveleri arka planda işleyip cache'e al.
-  // Böylece profil/arkadaş sayfaları açıldığında çerçeveler anında görünür.
+  // Ağır canvas işlemlerini tek seferde yapmak yerine tarayıcının boş anlarına yay.
   useEffect(() => {
-    Object.values(frames).forEach((info) => {
-      if (!info?.image_url) return;
-      if (info.prepared) makePreparedTransparent(info.image_url, info.opening);
-      else if (info.sprite) makeTransparentFrame(info.image_url, info.sprite);
-    });
+    const queue = Object.values(frames).filter((info) => info?.image_url);
+    let cancelled = false;
+    let idleId;
+    let timeoutId;
+    const prepareNext = () => {
+      if (cancelled || document.hidden) return;
+      const info = queue.shift();
+      if (!info) return;
+      const task = info.prepared
+        ? makePreparedTransparent(info.image_url, info.opening)
+        : info.sprite ? makeTransparentFrame(info.image_url, info.sprite) : null;
+      Promise.resolve(task).catch(() => {}).finally(scheduleNext);
+    };
+    const scheduleNext = () => {
+      if (cancelled || !queue.length) return;
+      if (window.requestIdleCallback) idleId = window.requestIdleCallback(prepareNext);
+      else timeoutId = window.setTimeout(prepareNext, 600);
+    };
+    scheduleNext();
+    const resume = () => { if (!document.hidden && queue.length) scheduleNext(); };
+    document.addEventListener('visibilitychange', resume);
+    return () => {
+      cancelled = true;
+      document.removeEventListener('visibilitychange', resume);
+      if (idleId && window.cancelIdleCallback) window.cancelIdleCallback(idleId);
+      if (timeoutId) window.clearTimeout(timeoutId);
+    };
   }, [frames]);
 
   return <FrameCatalogContext.Provider value={{ frames, refreshFrames }}>{children}</FrameCatalogContext.Provider>;
