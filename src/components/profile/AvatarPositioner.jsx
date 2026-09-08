@@ -5,7 +5,7 @@ import { useFrameCatalog } from '@/lib/FrameCatalogContext';
 import { Image } from '@/components/ui/image';
 import usePreparedPortrait from '@/components/xp/usePreparedPortrait';
 import PortraitPhoto from '@/components/profile/PortraitPhoto';
-import { Minus, Plus, Upload, Save, RotateCcw, Move, ChevronDown, X } from 'lucide-react';
+import { Minus, Plus, Camera, Save, RotateCcw, Move, ChevronDown, X } from 'lucide-react';
 
 // Profil fotoğrafını çerçeve içinde sürükleyerek kaydırma ve yakınlaştırma aracı.
 // `targetUserId` verilirse admin modu (başka kullanıcının profilini düzenler), yoksa kendi profili.
@@ -89,7 +89,7 @@ export default function AvatarPositioner({ user, targetUserId, onSaved }) {
       </div>
       <div className="w-full max-w-xs space-y-3">
         <label className="flex items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-secondary/30 px-4 py-3 text-sm font-semibold cursor-pointer">
-          <Upload className="w-4 h-4" /> {uploading ? 'Yükleniyor...' : 'Fotoğraf Yükle'}
+          <Camera className="w-4 h-4" /> {uploading ? 'Yükleniyor...' : 'Fotoğraf Yükle'}
           <input type="file" accept="image/*" className="hidden" onChange={onUpload} disabled={uploading} />
         </label>
         <div>
