@@ -19,6 +19,7 @@ import RoomNotifications from '@/components/player/RoomNotifications';
 
 import MoviePickerSheet from '@/components/player/MoviePickerSheet';
 import RoomCatalogIntro from '@/components/player/RoomCatalogIntro';
+import SpecialRoleWelcome from '@/components/player/SpecialRoleWelcome';
 import RoleBadge from '@/components/RoleBadge';
 import ProfileFrame from '@/components/ProfileFrame';
 import useSocialBadges from '@/hooks/useSocialBadges';
@@ -745,6 +746,7 @@ export default function WatchParty() {
 
       <MoviePickerSheet open={moviePickerOpen} onClose={() => setMoviePickerOpen(false)} onSelect={changeMovie} currentMovieId={movie?.id} />
       {joinCount > 0 && room?.movie_id && isOwner && <RoomCatalogIntro key={id} />}
+      <SpecialRoleWelcome roomId={id} />
 
       {profileTarget && <UserProfile userId={profileTarget} roomIdOverride={id} onBack={closeUserProfile} onMessage={(userId) => { closeUserProfile(); openDirectMessage(userId); }} embedded />}
     </div>

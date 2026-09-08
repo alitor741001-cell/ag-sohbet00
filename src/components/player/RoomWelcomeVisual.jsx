@@ -12,7 +12,7 @@ const VISUALS = {
   gul: GULWelcome,
 };
 
-export default function RoomWelcomeVisual({ type }) {
+export default function RoomWelcomeVisual({ type, onDone }) {
   const WelcomeVisual = VISUALS[type];
-  return WelcomeVisual ? <WelcomeVisual /> : null;
+  return WelcomeVisual ? <WelcomeVisual onDone={onDone} /> : null;
 }
