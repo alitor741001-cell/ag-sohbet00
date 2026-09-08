@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Image } from '@/components/ui/image';
 import { getRoleInfo } from '@/lib/roles';
 
-const NAME_EFFECT_COLORS = {
+const EFFECT_COLORS = {
   flame: '#ff4500',
   lightning: '#3b82f6',
   heart: '#ec4899',
@@ -17,8 +17,6 @@ export default function RoomCheatPanel({ participants, currentUserId, profiles =
   const [notifications, setNotifications] = useState([]);
   const prevRef = useRef([]);
   const initializedRef = useRef(false);
-  const profilesRef = useRef(profiles);
-  profilesRef.current = profiles;
 
   useEffect(() => {
     const list = participants || [];
@@ -29,8 +27,8 @@ export default function RoomCheatPanel({ participants, currentUserId, profiles =
     if (initializedRef.current) {
       const joined = list.filter((p) => !prevIds.has(p.user_id) && p.user_id !== currentUserId);
       const left = prev.filter((p) => !currIds.has(p.user_id) && p.user_id !== currentUserId);
-      joined.forEach((participant) => setTimeout(() => addNotif(participant, 'join'), 1200));
-      left.forEach((participant) => setTimeout(() => addNotif(participant, 'leave'), 1200));
+      joined.forEach((p) => setTimeout(() => addNotif(p, 'join'), 1500));
+      left.forEach((p) => setTimeout(() => addNotif(p, 'leave'), 1500));
     }
 
     prevRef.current = list;
@@ -49,10 +47,11 @@ export default function RoomCheatPanel({ participants, currentUserId, profiles =
   return (
     <div className="absolute top-2 left-1/2 -translate-x-1/2 z-[56] flex flex-col items-center gap-1.5 pointer-events-none w-max max-w-[90%]">
       {notifications.map((n) => {
-        const profile = profilesRef.current[n.participant.user_id] || {};
-        const roleInfo = getRoleInfo(profile);
-        const borderColor = roleInfo.color || '#ff1744';
-        const nameColor = NAME_EFFECT_COLORS[profile.name_effect] || roleInfo.color || '#ffffff';
+        const profile = profiles[n.participant.user_id] || {};
+        const roleInfo = getRoleInfo({ ...profile, display_role: profile.display_role || profile.role });
+        const msgEffect = roleInfo.msg_effect || roleInfo.name_effect;
+        const borderColor = EFFECT_COLORS[msgEffect] || roleInfo.color || '#ff1744';
+        const nameColor = EFFECT_COLORS[roleInfo.name_effect] || roleInfo.color || '#ffffff';
         const avatar = n.participant.avatar || profile.avatar;
         const name = profile.title || n.participant.name || 'Kullanıcı';
         return (
