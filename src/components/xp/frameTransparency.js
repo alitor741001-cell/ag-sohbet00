@@ -49,7 +49,7 @@ export const getFrameMetrics = (src, crop) => metricsCache.get(frameCacheKey(src
 
 // Hazır çerçeveler için: açıklık koordinatlarını kullanarak orta daireyi şeffaf yap.
 // opening = [x, y, w, h] normalize (0-1) koordinatlar. Görsel boyutu değişmez, kırpılmaz.
-const preparedCacheKey = (src, opening) => `prep2|${src}|${opening ? opening.join(',') : 'none'}`;
+const preparedCacheKey = (src, opening) => `prep3|${src}|${opening ? opening.join(',') : 'none'}`;
 
 // Görselin dış kenarlarından başlayarak koyu/uniform arka planı flood-fill ile şeffaflaştırır.
 // Sadece kenarlardan bağlantılı olan arka plan silinir — çerçeve tasarımına dokunulmaz.
@@ -57,9 +57,36 @@ function clearOuterBackground(data, width, height) {
   const corners = [[0, 0], [width - 1, 0], [0, height - 1], [width - 1, height - 1]];
   const samples = corners.map(([x, y]) => rgbAt(data, y * width + x));
   const base = samples[0];
-  // Köşeler birbirinden çok farklıysa gerçek bir düz arka plan yok — dokunma.
-  if (samples.some((sample) => distance(sample, base) > 40)) return;
-  const tolerance = 62;
+  // Köşeler birbirinden çok farklıysa gerçek bir düz arka plan yok — ama yine de
+  // her köşeden ayrı ayrı flood-fill dene, çerçeve ortası temizlensin.
+  const tolerance = 80;
+  if (samples.some((sample) => distance(sample, base) > 40)) {
+    // Köşeler farklı: her köşeyi kendi rengiyle ayrı ayrı temizle
+    for (const [cx, cy] of corners) {
+      const cornerColor = rgbAt(data, cy * width + cx);
+      if (data[(cy * width + cx) * 4 + 3] === 0) continue;
+      const visited = new Uint8Array(width * height);
+      const stack = [];
+      const push = (x, y) => {
+        if (x < 0 || y < 0 || x >= width || y >= height) return;
+        const index = y * width + x;
+        if (visited[index]) return;
+        visited[index] = 1;
+        stack.push(index);
+      };
+      push(cx, cy);
+      while (stack.length) {
+        const index = stack.pop();
+        if (data[index * 4 + 3] === 0) continue;
+        if (distance(rgbAt(data, index), cornerColor) > tolerance) continue;
+        data[index * 4 + 3] = 0;
+        const x = index % width;
+        const y = (index - x) / width;
+        push(x + 1, y); push(x - 1, y); push(x, y + 1); push(x, y - 1);
+      }
+    }
+    return;
+  }
   const visited = new Uint8Array(width * height);
   const stack = [];
   const push = (x, y) => {
@@ -101,7 +128,8 @@ export function makePreparedTransparent(src, opening) {
       if (opening) {
         const cx = (opening[0] + opening[2] / 2) * canvas.width;
         const cy = (opening[1] + opening[3] / 2) * canvas.height;
-        const r = (Math.min(opening[2], opening[3]) / 2) * Math.min(canvas.width, canvas.height) * 0.98;
+        // Yarıçapı açıklığın tam boyutuna çıkar — ortada siyahlık kalmasın
+        const r = (Math.min(opening[2], opening[3]) / 2) * Math.min(canvas.width, canvas.height) * 1.0;
         ctx.globalCompositeOperation = 'destination-out';
         ctx.beginPath();
         ctx.arc(cx, cy, r, 0, Math.PI * 2);
