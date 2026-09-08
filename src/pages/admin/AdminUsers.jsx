@@ -50,8 +50,10 @@ export default function AdminUsers({ pendingOnly = false }) {
   };
   useEffect(() => {
     setLoading(true); load();
-    const off = base44.entities.User.subscribe(load);
-    return off;
+    const offUsers = base44.entities.User.subscribe(load);
+    const offPayments = base44.entities.Payment.subscribe(load);
+    const offPresence = base44.entities.UserPresence.subscribe(load);
+    return () => { offUsers?.(); offPayments?.(); offPresence?.(); };
   }, [pendingOnly]);
 
   const log = async (action, target) => { await base44.entities.AdminLog.create({ admin_id: admin?.id, admin_name: admin?.username || admin?.full_name, action, target }).catch(() => {}); };
@@ -71,8 +73,8 @@ export default function AdminUsers({ pendingOnly = false }) {
         link: '/admin/abonelikler',
         telegram_data: { username: u.username || u.full_name || u.email, package: 'Manuel Aktivasyon', date: new Date().toLocaleString('tr-TR') }
       }).catch(() => {});
-      base44.functions.invoke('send-approval-email', { user_id: u.id }).catch(() => {});
-      toast({ title: 'Kullanıcı onaylandı.' }); load();
+      await base44.functions.invoke('send-approval-email', { user_id: u.id });
+      toast({ title: 'Kullanıcı onaylandı ve e-posta gönderildi.' }); load();
     } catch (e) { toast({ title: 'Onaylanamadı', description: e.message, variant: 'destructive' }); }
   };
   const reject = async (u) => {

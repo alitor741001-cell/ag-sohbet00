@@ -23,7 +23,10 @@ export default function PaymentsDashboard() {
       setLoading(false);
     };
     load();
-  }, []);
+    const offPayments = base44.entities.Payment.subscribe(load);
+    const offSubscriptions = base44.entities.Subscription.subscribe(load);
+    return () => { offPayments?.(); offSubscriptions?.(); };
+    }, []);
 
   if (loading) return <div className="py-20 text-center text-gray-400">Yükleniyor...</div>;
 

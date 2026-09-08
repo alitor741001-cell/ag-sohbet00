@@ -17,7 +17,11 @@ export default function PaymentRequestsTab() {
     } catch {}
     setLoading(false);
   };
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    const unsubscribe = base44.entities.Payment.subscribe(load);
+    return () => unsubscribe?.();
+  }, []);
 
   const approve = async (payment) => {
     if (!confirm(`${payment.user_name} kullanıcısının ödemesini onaylamak istediğinize emin misiniz?`)) return;

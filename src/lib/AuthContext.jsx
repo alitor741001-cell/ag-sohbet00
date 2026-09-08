@@ -36,6 +36,10 @@ export const AuthProvider = ({ children }) => {
       }
       if (event.type === 'update' && event.data) {
         setUser((current) => current ? { ...current, ...event.data } : current);
+        if (event.data.membership_status === 'active' && ['/onay-bekleniyor', '/abonelik'].includes(window.location.pathname)) {
+          window.location.replace('/');
+          return;
+        }
         if (event.data.is_banned || event.data.is_suspended || event.data.membership_status === 'suspended') {
           const suspended = event.data.is_suspended || event.data.membership_status === 'suspended';
           triggerBanNotice(suspended ? 'suspended' : 'banned', suspended ? event.data.suspend_reason : event.data.ban_reason, suspended ? event.data.suspend_description : event.data.ban_description);

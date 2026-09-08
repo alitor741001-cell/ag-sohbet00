@@ -149,6 +149,8 @@ export default async function(req) {
         type: 'success', read: false,
       }).catch(() => {});
 
+      await base44.functions.invoke('send-approval-email', { user_id: payment.user_id });
+
       return Response.json({ data: { success: true, subscription } });
     }
 

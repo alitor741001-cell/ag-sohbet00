@@ -45,7 +45,10 @@ export default function AdminNotifications() {
   );
 
   useEffect(() => {
-    base44.entities.User.list(500).then(setUsers).catch(() => {});
+    const loadUsers = () => base44.entities.User.list(500).then(setUsers).catch(() => {});
+    loadUsers();
+    const unsubscribe = base44.entities.User.subscribe(loadUsers);
+    return () => unsubscribe?.();
   }, []);
 
   const handleNotifPermission = async () => {
