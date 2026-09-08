@@ -24,14 +24,14 @@ export function membershipEmail({ name, status }) {
 </td></tr>
 <tr><td align="center" style="padding:28px 28px 32px;">
 <div style="font-size:44px;line-height:50px;margin-bottom:16px;">${icon}</div>
-<h1 style="margin:0 0 14px;font-size:24px;line-height:32px;font-weight:700;color:#ffffff;">${title}</h1>
-<p style="margin:0 0 26px;font-size:16px;line-height:25px;color:#b0b4bd;">Merhaba <strong style="color:#ef4444;">${escapeHtml(name)}</strong>,<br>${message}</p>
+<h1 style="margin:0 0 16px;font-size:26px;line-height:34px;font-weight:800;color:#ffffff;">${title}</h1>
+<p style="margin:0 0 28px;font-size:17px;line-height:27px;color:#e5e7eb;">Merhaba <strong style="color:#f87171;">${escapeHtml(name)}</strong>,<br>${message}</p>
 <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" bgcolor="#dc2626" style="border-radius:10px;">
-<a href="${href}" style="display:inline-block;padding:14px 30px;font-size:16px;line-height:20px;font-weight:700;color:#ffffff;text-decoration:none;">${button}</a>
+<a href="${href}" style="display:inline-block;padding:15px 34px;font-size:17px;line-height:22px;font-weight:700;color:#ffffff;text-decoration:none;">${button}</a>
 </td></tr></table>
 </td></tr>
 <tr><td align="center" style="padding:20px 24px;background-color:#101014;border-top:1px solid #542126;">
-<p style="margin:0;font-size:12px;line-height:19px;color:#6b7280;">Bu e-posta FILMKEYFİ tarafından gönderilmiştir.<br>flimkeyfii.base44.app</p>
+<p style="margin:0;font-size:13px;line-height:20px;color:#9ca3af;">Bu e-posta FILMKEYFİ tarafından gönderilmiştir.<br>flimkeyfii.base44.app</p>
 </td></tr>
 </table>
 </td></tr></table></body></html>`;
