@@ -28,6 +28,7 @@ import XpAvatar from '@/components/xp/XpAvatar';
 import UserProfile from '@/pages/UserProfile';
 import SubscriptionPrompt from '@/components/SubscriptionPrompt';
 import RoomFrameWelcome from '@/components/player/RoomFrameWelcome';
+import RoomWelcomeVisual from '@/components/player/RoomWelcomeVisual';
 
 export default function WatchParty() {
   const { id } = useParams();
@@ -773,7 +774,12 @@ export default function WatchParty() {
       />
 
       <MoviePickerSheet open={moviePickerOpen} onClose={() => setMoviePickerOpen(false)} onSelect={changeMovie} currentMovieId={movie?.id} />
-      {welcomeQueue[0] && <RoomFrameWelcome key={welcomeQueue[0].key} type={welcomeQueue[0].type} frame={welcomeQueue[0].frame} onDone={dequeueWelcome} />}
+      {welcomeQueue[0] && (
+        <>
+          <RoomWelcomeVisual type={welcomeQueue[0].type} />
+          <RoomFrameWelcome key={welcomeQueue[0].key} type={welcomeQueue[0].type} frame={welcomeQueue[0].frame} onDone={dequeueWelcome} />
+        </>
+      )}
       {profileTarget && <UserProfile userId={profileTarget} roomIdOverride={id} onBack={closeUserProfile} onMessage={(userId) => { closeUserProfile(); openDirectMessage(userId); }} embedded />}
     </div>
   );
