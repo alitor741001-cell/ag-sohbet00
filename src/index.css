@@ -1228,3 +1228,18 @@ button:active, nav a:active, a[role="button"]:active {
   box-shadow: 0 0 8px rgba(255,255,255,0.3), 0 0 18px rgba(239,68,68,0.7), 0 0 34px rgba(220,38,38,0.35);
   filter: brightness(1.2);
 }
+
+.room-frame-welcome { position: fixed; inset: 0; z-index: 200; pointer-events: none; overflow: hidden; animation: room-edge-life 5s ease-in-out forwards; }
+.room-frame-edge { position: absolute; background: var(--edge-color); filter: blur(1px); box-shadow: 0 0 10px var(--edge-color), 0 0 28px var(--edge-color), 0 0 52px var(--edge-color); animation: room-edge-glow .75s ease-in-out infinite alternate; }
+.room-frame-edge-top, .room-frame-edge-bottom { left: 0; right: 0; height: 3px; }
+.room-frame-edge-left, .room-frame-edge-right { top: 0; bottom: 0; width: 3px; }
+.room-frame-edge-top { top: 0; } .room-frame-edge-right { right: 0; } .room-frame-edge-bottom { bottom: 0; } .room-frame-edge-left { left: 0; }
+.room-edge-particles { position: absolute; inset: 0; overflow: hidden; }
+.room-edge-particle { position: absolute; left: var(--edge-x); bottom: -2rem; color: var(--edge-color); animation-delay: var(--edge-delay); animation-duration: var(--edge-duration); animation-iteration-count: infinite; animation-timing-function: ease-out; }
+.room-edge-heart .room-edge-particle { font-size: 1.4rem; text-shadow: 0 0 9px var(--edge-color); animation-name: room-heart-rise; }
+.room-edge-fire .room-edge-particle { width: 13px; height: 28px; border-radius: 50% 50% 35% 35%; background: radial-gradient(ellipse at center 80%, #fff 0 8%, #fde047 18%, var(--edge-color) 58%, transparent 76%); filter: drop-shadow(0 0 8px var(--edge-color)); transform-origin: center bottom; animation-name: room-flame-rise; }
+@keyframes room-edge-life { 0% { opacity: 0; } 8%, 86% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes room-edge-glow { from { opacity: .55; } to { opacity: 1; } }
+@keyframes room-heart-rise { 0% { transform: translateY(0) scale(.55) rotate(-12deg); opacity: 0; } 14% { opacity: 1; } 100% { transform: translateY(-108vh) scale(1.15) rotate(18deg); opacity: 0; } }
+@keyframes room-flame-rise { 0% { transform: translateY(0) scale(.65) skewX(-5deg); opacity: 0; } 12% { opacity: 1; } 45% { transform: translateY(-22vh) scale(1.15) skewX(7deg); } 100% { transform: translateY(-72vh) scale(.3) skewX(-8deg); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .room-frame-welcome { animation: room-edge-life 5s ease-in-out forwards; } .room-frame-edge { animation: none; } .room-edge-particle { animation-duration: 3s; } }

@@ -27,10 +27,7 @@ import RoomLevelBadge from '@/components/levels/RoomLevelBadge';
 import XpAvatar from '@/components/xp/XpAvatar';
 import UserProfile from '@/pages/UserProfile';
 import SubscriptionPrompt from '@/components/SubscriptionPrompt';
-import AdminRoomWelcome from '@/components/admin/AdminWelcomeSplash';
-import CanAblamWelcome from '@/components/player/CanAblamWelcome';
-import CanAbimWelcome from '@/components/player/CanAbimWelcome';
-import QueenAdminWelcome from '@/components/player/QueenAdminWelcome';
+import RoomFrameWelcome from '@/components/player/RoomFrameWelcome';
 
 export default function WatchParty() {
   const { id } = useParams();
@@ -81,11 +78,12 @@ export default function WatchParty() {
   const [roomNameEdit, setRoomNameEdit] = useState('');
   const [welcomeQueue, setWelcomeQueue] = useState([]);
   const WELCOME_PRIORITY = { queenAdmin: 0, admin: 1, canAblam: 2, canAbim: 3 };
-  const enqueueWelcome = (type) => {
-    setWelcomeQueue((q) => {
-      if (q.includes(type)) return q;
-      const next = [...q, type].sort((a, b) => (WELCOME_PRIORITY[a] || 9) - (WELCOME_PRIORITY[b] || 9));
-      return next;
+  const enqueueWelcome = (type, message) => {
+    const key = message?.id || `${type}-${message?.created_date || ''}`;
+    const frame = (message?.text || '').match(/\{\{PFRAME\|([^|}]+)/)?.[1] || '';
+    setWelcomeQueue((queue) => {
+      if (queue.some((item) => item.key === key)) return queue;
+      return [...queue, { key, type, frame }].sort((a, b) => (WELCOME_PRIORITY[a.type] ?? 9) - (WELCOME_PRIORITY[b.type] ?? 9));
     });
   };
   const dequeueWelcome = () => setWelcomeQueue((q) => q.slice(1));
@@ -145,22 +143,22 @@ export default function WatchParty() {
       .then((items) => {
         const now = Date.now();
         const queenRecent = items.find((m) => (m.text || '').includes('{{QUEEN_ADMIN_WELCOME}}') && now - new Date(m.created_date).getTime() < 10000);
-        if (queenRecent) enqueueWelcome('queenAdmin');
+        if (queenRecent) enqueueWelcome('queenAdmin', queenRecent);
         const adminRecent = items.find((m) => (m.text || '').includes('{{ADMIN_WELCOME}}') && now - new Date(m.created_date).getTime() < 10000);
-        if (adminRecent) enqueueWelcome('admin');
+        if (adminRecent) enqueueWelcome('admin', adminRecent);
         const cabRecent = items.find((m) => (m.text || '').includes('{{CAN_ABLAM_WELCOME}}') && now - new Date(m.created_date).getTime() < 10000);
-        if (cabRecent) enqueueWelcome('canAblam');
+        if (cabRecent) enqueueWelcome('canAblam', cabRecent);
         const canAbimRecent = items.find((m) => (m.text || '').includes('{{CAN_ABIM_WELCOME}}') && now - new Date(m.created_date).getTime() < 10000);
-        if (canAbimRecent) enqueueWelcome('canAbim');
+        if (canAbimRecent) enqueueWelcome('canAbim', canAbimRecent);
       })
       .catch(() => {});
     const unsub = base44.entities.RoomMessage.subscribe((ev) => {
       if (ev.type !== 'create' || ev.data?.room_id !== id) return;
       const txt = ev.data?.text || '';
-      if (txt.includes('{{QUEEN_ADMIN_WELCOME}}')) enqueueWelcome('queenAdmin');
-      if (txt.includes('{{ADMIN_WELCOME}}')) enqueueWelcome('admin');
-      if (txt.includes('{{CAN_ABLAM_WELCOME}}')) enqueueWelcome('canAblam');
-      if (txt.includes('{{CAN_ABIM_WELCOME}}')) enqueueWelcome('canAbim');
+      if (txt.includes('{{QUEEN_ADMIN_WELCOME}}')) enqueueWelcome('queenAdmin', ev.data);
+      if (txt.includes('{{ADMIN_WELCOME}}')) enqueueWelcome('admin', ev.data);
+      if (txt.includes('{{CAN_ABLAM_WELCOME}}')) enqueueWelcome('canAblam', ev.data);
+      if (txt.includes('{{CAN_ABIM_WELCOME}}')) enqueueWelcome('canAbim', ev.data);
     });
     return unsub;
   }, [id]);
@@ -775,10 +773,7 @@ export default function WatchParty() {
       />
 
       <MoviePickerSheet open={moviePickerOpen} onClose={() => setMoviePickerOpen(false)} onSelect={changeMovie} currentMovieId={movie?.id} />
-      {welcomeQueue[0] === 'queenAdmin' && <QueenAdminWelcome onDone={dequeueWelcome} />}
-      {welcomeQueue[0] === 'admin' && <AdminRoomWelcome onDone={dequeueWelcome} />}
-      {welcomeQueue[0] === 'canAblam' && <CanAblamWelcome onDone={dequeueWelcome} />}
-      {welcomeQueue[0] === 'canAbim' && <CanAbimWelcome onDone={dequeueWelcome} />}
+      {welcomeQueue[0] && <RoomFrameWelcome key={welcomeQueue[0].key} type={welcomeQueue[0].type} frame={welcomeQueue[0].frame} onDone={dequeueWelcome} />}
       {profileTarget && <UserProfile userId={profileTarget} roomIdOverride={id} onBack={closeUserProfile} onMessage={(userId) => { closeUserProfile(); openDirectMessage(userId); }} embedded />}
     </div>
   );
