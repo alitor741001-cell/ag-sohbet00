@@ -71,20 +71,16 @@ export const AuthProvider = ({ children }) => {
         const appSettings = await appClient.get(`/prod/public-settings/by-id/${appParams.appId}`);
         setAppPublicSettings(appSettings);
 
-        // Uygulama seviyesi ayarları yükle (bakım modu, kayıt izni, tema)
-        try {
-          const ps = await base44.functions.invoke('public-settings', {});
-          setPublicSettings(ps.data || ps);
-        } catch {}
-
-        // If we got the app public settings successfully, check if user is authenticated
-        if (appParams.token) {
-          await checkUserAuth();
-        } else {
-          setIsLoadingAuth(false);
-          setIsAuthenticated(false);
-          setAuthChecked(true);
-        }
+        // Bağımsız kontrolleri paralel çalıştır; ikisi tamamlanmadan uygulamayı açma.
+        await Promise.all([
+          base44.functions.invoke('public-settings', {})
+            .then((ps) => setPublicSettings(ps.data || ps)).catch(() => {}),
+          appParams.token ? checkUserAuth() : Promise.resolve().then(() => {
+            setIsLoadingAuth(false);
+            setIsAuthenticated(false);
+            setAuthChecked(true);
+          }),
+        ]);
         setIsLoadingPublicSettings(false);
       } catch (appError) {
         console.error('App state check failed:', appError);

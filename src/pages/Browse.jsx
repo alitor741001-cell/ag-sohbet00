@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import MovieCard from '@/components/movie/MovieCard';
 import EmptyState, { SkeletonRow } from '@/components/movie/EmptyState';
@@ -7,23 +8,25 @@ import { Film, Search, SlidersHorizontal } from 'lucide-react';
 import PullToRefresh from '@/components/PullToRefresh';
 
 export default function Browse({ type, title }) {
-  const [movies, setMovies] = useState([]);
-  const [cats, setCats] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const movieQuery = useQuery({
+    queryKey: ['browse-published-movies', type],
+    queryFn: () => base44.entities.Movie.filter({ published: true, type }, '-views', 300),
+    staleTime: 0, gcTime: 5 * 60 * 1000,
+  });
+  const categoryQuery = useQuery({
+    queryKey: ['browse-categories'],
+    queryFn: () => base44.entities.Category.list('name', 200),
+    staleTime: 0, gcTime: 5 * 60 * 1000,
+  });
+  const movies = movieQuery.data || [];
+  const cats = categoryQuery.data || [];
+  const loading = movieQuery.isPending || categoryQuery.isPending;
   const [activeCat, setActiveCat] = useState('all');
   const [query, setQuery] = useState('');
   const [sortBy, setSortBy] = useState('popular');
   const [yearFilter, setYearFilter] = useState('all');
 
-  const fetchAll = async () => {
-    const [m, c] = await Promise.all([
-      base44.entities.Movie.filter({ published: true, type }, '-views', 300).catch(() => []),
-      base44.entities.Category.list('name', 200).catch(() => []),
-    ]);
-    setMovies(m); setCats(c); setLoading(false);
-  };
-
-  useEffect(() => { fetchAll(); }, [type]);
+  const fetchAll = () => Promise.all([movieQuery.refetch(), categoryQuery.refetch()]);
 
   const catName = (id) => cats.find((c) => c.id === id)?.name;
   let filtered = activeCat === 'all' ? movies : movies.filter((m) => m.category_id === activeCat || m.category === catName(activeCat));

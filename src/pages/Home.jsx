@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { useCurrentUser } from '@/lib/useCurrentUser';
+
 import Hero from '@/components/movie/Hero';
 import ContentRow from '@/components/movie/ContentRow';
 import CategoryRow from '@/components/movie/CategoryRow';
@@ -9,32 +10,31 @@ import PullToRefresh from '@/components/PullToRefresh';
 
 
 export default function Home() {
-  const { user } = useCurrentUser();
-  const [featured, setFeatured] = useState(null);
-  const [rows, setRows] = useState({ featured: [], popular: [], new: [], most: [], action: [], scifi: [], comedy: [], horror: [], drama: [], anim: [] });
-  const [loading, setLoading] = useState(true);
-
-  const fetchAll = async () => {
-    try {
-      const all = await base44.entities.Movie.filter({ published: true }, '-views', 200);
-      const feat = all.filter((m) => m.featured);
-      setFeatured(feat[0] || all[0] || null);
-      setRows({
+  const { data: all, isPending: loading, refetch: fetchAll } = useQuery({
+    queryKey: ['home-published-movies'],
+    queryFn: () => base44.entities.Movie.filter({ published: true }, '-views', 200),
+    staleTime: 0,
+    gcTime: 5 * 60 * 1000,
+  });
+  const { featured, rows } = useMemo(() => {
+    const movies = all || [];
+    const feat = movies.filter((m) => m.featured);
+    return {
+      featured: feat[0] || movies[0] || null,
+      rows: {
         featured: feat.slice(0, 12),
-        popular: all.filter((m) => m.popular).slice(0, 12),
-        new: [...all].sort((a, b) => (b.year || 0) - (a.year || 0)).slice(0, 12),
-        most: [...all].sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 12),
-        action: all.filter((m) => m.genres?.includes('Aksiyon')).slice(0, 12),
-        scifi: all.filter((m) => m.genres?.includes('Bilim Kurgu')).slice(0, 12),
-        comedy: all.filter((m) => m.genres?.includes('Komedi')).slice(0, 12),
-        horror: all.filter((m) => m.genres?.includes('Korku')).slice(0, 12),
-        drama: all.filter((m) => m.genres?.includes('Dram')).slice(0, 12),
-        anim: all.filter((m) => m.genres?.includes('Animasyon')).slice(0, 12),
-      });
-    } finally { setLoading(false); }
-  };
-
-  useEffect(() => { fetchAll(); }, []);
+        popular: movies.filter((m) => m.popular).slice(0, 12),
+        new: [...movies].sort((a, b) => (b.year || 0) - (a.year || 0)).slice(0, 12),
+        most: [...movies].sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 12),
+        action: movies.filter((m) => m.genres?.includes('Aksiyon')).slice(0, 12),
+        scifi: movies.filter((m) => m.genres?.includes('Bilim Kurgu')).slice(0, 12),
+        comedy: movies.filter((m) => m.genres?.includes('Komedi')).slice(0, 12),
+        horror: movies.filter((m) => m.genres?.includes('Korku')).slice(0, 12),
+        drama: movies.filter((m) => m.genres?.includes('Dram')).slice(0, 12),
+        anim: movies.filter((m) => m.genres?.includes('Animasyon')).slice(0, 12),
+      },
+    };
+  }, [all]);
 
   return (
     <PullToRefresh onRefresh={fetchAll}>
