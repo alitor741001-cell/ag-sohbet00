@@ -1124,12 +1124,11 @@ h1, h2, h3, p, a, button, label {
 
 .room-side-panel[hidden] { display: none !important; }
 
-/* Sadece bağımsız mobil özel sohbet: klavye alanını ikinci kez çıkarmadan görünür ekrana otur. */
+/* Bağımsız mobil özel sohbet: alt navigasyonun hemen üstüne sabitlenir —
+   klavye açılsa da kapatılsa da aşa-yukarı oynamaz, altta boşluk kalmaz. */
 @media (max-width: 639px) {
   .standalone-private-chat {
-    top: var(--chat-visible-top, 0px);
-    height: var(--chat-visible-height, 100dvh);
-    bottom: auto;
+    bottom: calc(4rem + env(safe-area-inset-bottom)) !important;
   }
 }
 

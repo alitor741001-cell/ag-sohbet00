@@ -13,7 +13,6 @@ import XpAvatar from '@/components/xp/XpAvatar';
 import UserProfile from '@/pages/UserProfile';
 import AccountStatusAvatar, { getAccountState } from '@/components/friends/AccountStatusAvatar';
 import { useMessageRealtime } from '@/components/messages/MessageRealtimeProvider';
-import useChatViewport from '@/components/friends/useChatViewport';
 
 
 export default function ChatPanel({ conversation, userId, onBack, online, embedded, getLastSeen }) {
@@ -38,7 +37,6 @@ export default function ChatPanel({ conversation, userId, onBack, online, embedd
   const [lightbox, setLightbox] = useState(null);
   const [profilePopup, setProfilePopup] = useState(false);
   const messagesRef = useRef(null);
-  const sectionStyle = useChatViewport(embedded, messagesRef);
   const myTypingIdRef = useRef(null);
   const typingTimerRef = useRef(null);
   const touchStart = useRef({ x: 0, y: 0 });
@@ -290,7 +288,7 @@ export default function ChatPanel({ conversation, userId, onBack, online, embedd
   };
 
 
-  return <section style={sectionStyle} className={embedded ? "room-direct-chat dark relative inset-auto z-auto h-full min-h-0 flex flex-col bg-black text-white" : "standalone-private-chat dark fixed top-0 left-0 right-0 bottom-0 z-[60] min-h-0 flex flex-col overflow-hidden border-y border-white/10 bg-black text-white sm:relative sm:inset-auto sm:z-auto sm:h-[72vh] sm:min-h-[72vh] sm:rounded-xl sm:border sm:pt-0"} onTouchStart={(e) => { touchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }; }} onTouchEnd={(e) => { const dx = e.changedTouches[0].clientX - touchStart.current.x; const dy = e.changedTouches[0].clientY - touchStart.current.y; if (dx > 80 && dx > Math.abs(dy) * 1.5) onBack(); }}>
+  return <section className={embedded ? "room-direct-chat dark relative inset-auto z-auto h-full min-h-0 flex flex-col bg-black text-white" : "standalone-private-chat dark fixed top-0 left-0 right-0 bottom-0 z-[60] min-h-0 flex flex-col overflow-hidden border-y border-white/10 bg-black text-white sm:relative sm:inset-auto sm:z-auto sm:h-[72vh] sm:min-h-[72vh] sm:rounded-xl sm:border sm:pt-0"} onTouchStart={(e) => { touchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }; }} onTouchEnd={(e) => { const dx = e.changedTouches[0].clientX - touchStart.current.x; const dy = e.changedTouches[0].clientY - touchStart.current.y; if (dx > 80 && dx > Math.abs(dy) * 1.5) onBack(); }}>
     <header className="room-direct-header relative shrink-0 px-3 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 border-b border-white/10 bg-black/95 backdrop-blur"><div className="flex items-center justify-between"><button onClick={onBack} className="p-2 rounded-full hover:bg-secondary" aria-label="Geri dön"><ArrowLeft className="w-6 h-6" /></button>{!accountState && <button onClick={() => setSettingsOpen(true)} className="p-2 rounded-full hover:bg-secondary" aria-label="Sohbet ayarları"><Settings className="w-5 h-5" /></button>}</div><div className={`room-direct-profile flex flex-col items-center gap-1 ${accountState ? '' : 'cursor-pointer active:opacity-70'}`} onClick={() => { if (!accountState) setProfilePopup(true); }}>{accountState ? <AccountStatusAvatar status={accountState.status} className="h-12 w-12" /> : friendProfile?.profile_frame ? <ProfileFrame frame={friendProfile.profile_frame} avatar={friendProfile.avatar || avatar} name={name} size="sm" frameScale={friendProfile.profile_frame_scale} /> : <XpAvatar avatar={friendProfile?.avatar || avatar} name={name} userId={friendId} size="md" />}<h2 className="font-bold text-sm truncate max-w-[70%]">{accountState?.name || name}</h2><p className={`text-[11px] ${accountState ? 'text-destructive' : friendTyping || friendVisibleOnline ? 'text-green-500' : 'text-muted-foreground'}`}>{accountState ? accountState.message : friendTyping ? `${name} yazıyor...` : online ? '• Çevrim içi' : friendLastSeen ? `Son görülme: ${new Date(friendLastSeen).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}` : 'Çevrim dışı'}</p></div>
     </header>
     {settingsOpen && <ChatSettingsPanel name={name} avatar={avatar} friendProfile={friendProfile} isBlocked={(friendship?.status === 'blocked' && (friendship?.blocked_by || []).includes(userId))} isFriend={friendship?.status === 'accepted'} requestSent={friendship?.status === 'pending' && friendship?.requester_id === userId} showFriendButton={!!friendship} onlineEnabled={onlineEnabled} readReceiptsEnabled={readReceiptsEnabled} onToggleReadReceipts={toggleReadReceipts} onToggleOnline={toggleOnline} onBlock={(friendship?.status === 'blocked' && (friendship?.blocked_by || []).includes(userId)) ? unblock : block} onUnfriend={unfriend} onRefriend={refriend} onClearChat={clearChat} onReport={() => { setSettingsOpen(false); setReportOpen(true); }} onClose={() => setSettingsOpen(false)} blocking={blocking || unblocking} unfriending={unfriending} clearing={clearing} />}
