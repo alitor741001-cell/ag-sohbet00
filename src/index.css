@@ -1124,11 +1124,10 @@ h1, h2, h3, p, a, button, label {
 
 .room-side-panel[hidden] { display: none !important; }
 
-/* Bağımsız mobil özel sohbet: alt navigasyonun hemen üstüne sabitlenir —
-   klavye açılsa da kapatılsa da aşa-yukarı oynamaz, altta boşluk kalmaz. */
+/* Bağımsız mobil özel sohbet: tam ekran sabit — alt navigasyonu tamamen kaplar. */
 @media (max-width: 639px) {
   .standalone-private-chat {
-    bottom: calc(4rem + env(safe-area-inset-bottom)) !important;
+    bottom: 0 !important;
   }
 }
 
