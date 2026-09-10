@@ -1124,6 +1124,15 @@ h1, h2, h3, p, a, button, label {
 
 .room-side-panel[hidden] { display: none !important; }
 
+/* Sadece bağımsız mobil özel sohbet: klavye alanını ikinci kez çıkarmadan görünür ekrana otur. */
+@media (max-width: 639px) {
+  .standalone-private-chat {
+    top: var(--chat-visible-top, 0px);
+    height: var(--chat-visible-height, 100dvh);
+    bottom: auto;
+  }
+}
+
 /* İzleme odası: telefon ve tablet landscape panel yerleşimi */
 @media (orientation: landscape) and (max-height: 720px) {
   :root {
