@@ -45,22 +45,19 @@ export default function ChatPanel({ conversation, userId, onBack, online, embedd
 
 
 
-  // Sayfa kaymasını önle — iOS Safari input focus'ta body'yi otomatik kaydırır
+  // Sayfa kaymasını önle — body'yi fixed yapmak sohbetin fixed çerçevesini bozar,
+  // bu yüzden yalnızca taşmayı kapatıyoruz.
   useEffect(() => {
     if (embedded) return;
     const body = document.body;
-    const prev = { overflow: body.style.overflow, position: body.style.position, top: body.style.top, width: body.style.width };
-    const scrollY = window.scrollY;
+    const html = document.documentElement;
+    const prevBody = body.style.overflow;
+    const prevHtml = html.style.overflow;
     body.style.overflow = 'hidden';
-    body.style.position = 'fixed';
-    body.style.top = `-${scrollY}px`;
-    body.style.width = '100%';
+    html.style.overflow = 'hidden';
     return () => {
-      body.style.overflow = prev.overflow;
-      body.style.position = prev.position;
-      body.style.top = prev.top;
-      body.style.width = prev.width;
-      window.scrollTo(0, scrollY);
+      body.style.overflow = prevBody;
+      html.style.overflow = prevHtml;
     };
   }, [embedded]);
 
