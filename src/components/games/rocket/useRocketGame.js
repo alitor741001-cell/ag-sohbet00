@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import { multiplierAt, colorForMult, MULT_COLOR_CLASS, DEFAULT_ROCKET_BET } from './rocketConfig';
+import { multiplierAt, colorForMult, MULT_COLOR_CLASS, DEFAULT_ROCKET_BET, formatMult } from './rocketConfig';
 
 // Sunucu istek limiti nedeniyle seyrek poll edilir; çarpan yerel saatle akıcı kalır.
 const POLL_RUNNING = 3000;
@@ -68,8 +68,13 @@ export default function useRocketGame() {
   useEffect(() => {
     let timer;
     let running = false;
+    // Panel kapandığında döngü kesin olarak ölür: uçuştaki bir istek
+    // yanıtlandığında arka planda yeni bir döngü başlatamaz. Aksi halde
+    // kapanan her oyun arka planda yoklamaya devam edip istek limitini
+    // dolduruyor ve bahis/çekilme istekleri reddediliyordu.
+    let cancelled = false;
     const loop = async () => {
-      if (running) return;
+      if (running || cancelled) return;
       running = true;
       // Sekme arka plandayken sunucu yoklanmaz: istek bütçesi oyuncunun
       // butonlarına kalır, limit hatası oluşmaz.
@@ -79,6 +84,7 @@ export default function useRocketGame() {
         return;
       }
       await fetchState();
+      if (cancelled) return;
       // Kalkış anı geçtiyse uçuş sürüyor sayılır: çakılma daha çabuk yakalanır.
       const localNow = serverNowRef.current + (Date.now() - fetchedAtRef.current);
       const flying =
@@ -91,12 +97,15 @@ export default function useRocketGame() {
     };
     // Sıradaki yoklamayı öne çeker: ek istek yapmadan anında tazeleme.
     pollNowRef.current = () => {
-      if (running) return;
+      if (running || cancelled) return;
       clearTimeout(timer);
       loop();
     };
     loop();
-    return () => clearTimeout(timer);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, [fetchState]);
 
   // Sekmeye dönüldüğünde durum hemen tazelenir.
@@ -188,6 +197,21 @@ export default function useRocketGame() {
     pollNowRef.current();
   }, [phase, liveMult, data?.auto1, data?.auto2, myBets[1], myBets[2]]);
 
+  // Çakılma, oyuncunun otomatik hedefinin altında kaldıysa kaybın sebebi
+  // açıkça yazılır: "hedefe geldi ama çekmedi" yanılgısı bu durumda oluşur.
+  let missMessage = '';
+  if (phase === 'crashed') {
+    const mine = (data?.bets || []).filter((b) => b.user_id === data?.me);
+    for (const slot of [1, 2]) {
+      const target = slot === 2 ? data?.auto2 : data?.auto1;
+      const row = mine.find((b) => (b.slot === 2 ? 2 : 1) === slot && b.status === 'lost');
+      if (row && target > 0 && target > (round?.crash_at ?? 0)) {
+        missMessage = `Çakılma ${formatMult(round.crash_at)} — otomatik hedef ${formatMult(target)}'e ulaşmadı.`;
+        break;
+      }
+    }
+  }
+
   return {
     status,
     round,
@@ -204,7 +228,7 @@ export default function useRocketGame() {
     liveMult,
     liveColor: MULT_COLOR_CLASS[colorForMult(liveMult)],
     countdown,
-    message,
+    message: message || missMessage,
     placeBet,
     cashout,
     changeBet,
