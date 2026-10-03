@@ -2,11 +2,20 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Gamepad2, Play, X } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import { GAME_COVER } from './slotAssets';
+import { ROCKET_COVER } from './rocketAssets';
 import SlotGame from './SlotGame';
+import CrashRocketGame from './CrashRocketGame';
 
 // Sinematik geçişin toplam süresi.
 const TRANSITION_MS = 700;
-const GAME_ID = 'slot-frenzy';
+const SLOT_ID = 'slot-frenzy';
+const ROCKET_ID = 'crash-rocket';
+
+// Oyun merkezi kartları: kapak görseli durur, dokununca oyun açılır.
+const GAMES = [
+  { id: SLOT_ID, title: 'SLOT FRENZY', cover: GAME_COVER, originWidth: 1058, originHeight: 1008 },
+  { id: ROCKET_ID, title: 'CRASH ROCKET', cover: ROCKET_COVER, originWidth: 1135, originHeight: 928 },
+];
 
 /** Oyun merkezi: sohbet alanındaki kumanda butonuyla açılan ayrı panel. */
 export default function GamePanel({ open, onClose, roomId }) {
@@ -16,9 +25,9 @@ export default function GamePanel({ open, onClose, roomId }) {
 
   useEffect(() => () => window.clearTimeout(timerRef.current), []);
 
-  const openGame = useCallback(() => {
+  const openGame = useCallback((gameId) => {
     window.clearTimeout(timerRef.current);
-    setSelected(GAME_ID);
+    setSelected(gameId);
     setPhase('opening');
     timerRef.current = window.setTimeout(() => setPhase('idle'), TRANSITION_MS);
   }, []);
@@ -55,35 +64,42 @@ export default function GamePanel({ open, onClose, roomId }) {
             </header>
 
             {/* Panelde sadece oyunun logosu durur: dokununca oyun açılır. */}
-            <div className="flex min-h-0 flex-1 flex-col justify-center overflow-y-auto p-3">
-              <button
-                type="button"
-                onClick={openGame}
-                className="group relative block w-full overflow-hidden rounded-2xl border border-slot-gold/40 active:scale-[0.99]"
-              >
-                <Image
-                  src={GAME_COVER}
-                  alt="Slot Frenzy Grand Win"
-                  className="w-full"
-                  fittingType="fill"
-                  originWidth={1058}
-                  originHeight={1008}
-                  quality={92}
-                />
-                <span className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-2 bg-black/70 px-3 py-2">
-                  <span className="text-xs font-black tracking-wide text-slot-gold">SLOT FRENZY</span>
-                  <span className="flex items-center gap-1 text-[10px] font-black text-white">
-                    <Play className="h-3 w-3" /> OYNA
+            <div className="flex min-h-0 flex-1 flex-col justify-center gap-3 overflow-y-auto p-3">
+              {GAMES.map((game) => (
+                <button
+                  key={game.id}
+                  type="button"
+                  onClick={() => openGame(game.id)}
+                  className="group relative block w-full overflow-hidden rounded-2xl border border-slot-gold/40 active:scale-[0.99]"
+                >
+                  <Image
+                    src={game.cover}
+                    alt={game.title}
+                    className="w-full"
+                    fittingType="fill"
+                    originWidth={game.originWidth}
+                    originHeight={game.originHeight}
+                    quality={92}
+                  />
+                  <span className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-2 bg-black/70 px-3 py-2">
+                    <span className="text-xs font-black tracking-wide text-slot-gold">{game.title}</span>
+                    <span className="flex items-center gap-1 text-[10px] font-black text-white">
+                      <Play className="h-3 w-3" /> OYNA
+                    </span>
                   </span>
-                </span>
-              </button>
+                </button>
+              ))}
             </div>
           </div>
         )}
 
         {selected && (
           <div className={`game-layer bg-slot ${phase === 'opening' ? 'game-zoom-in' : phase === 'closing' ? 'game-zoom-out' : ''}`}>
-            <SlotGame onExit={onClose} onBack={closeGame} roomId={roomId} />
+            {selected === ROCKET_ID ? (
+              <CrashRocketGame onExit={onClose} onBack={closeGame} />
+            ) : (
+              <SlotGame onExit={onClose} onBack={closeGame} roomId={roomId} />
+            )}
           </div>
         )}
 
