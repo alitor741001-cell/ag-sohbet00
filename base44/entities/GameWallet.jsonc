@@ -32,6 +32,13 @@
       "type": "number",
       "default": 0
     },
+    "rocket_paid_bets": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
     "grand": {
       "type": "number",
       "default": 0

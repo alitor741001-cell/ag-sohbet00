@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import rocketRequests from '@/components/games/rocket/rocketRequests';
 import {
   multiplierAt,
   colorForMult,
@@ -31,7 +31,7 @@ function friendlyError(e) {
   const status = e?.response?.status;
   const serverText = e?.response?.data?.error;
   if (!e?.response || status >= 500 || /rate|limit/i.test(serverText || e?.message || '')) {
-    return 'Sunucu yoğun — birkaç saniye sonra tekrar dene.';
+    return 'İşlem doğrulanamadı — bağlantı yeniden kurulduğunda durum güncellenecek.';
   }
   return serverText || e?.message || 'İşlem başarısız';
 }
@@ -65,7 +65,8 @@ export default function useRocketGame() {
   const phaseRef = useRef(null);
   const launchAtRef = useRef(null);
   const hasDataRef = useRef(false);
-  const autoFireRef = useRef(0);
+  const autoFireRef = useRef(new Set());
+  const roundNoRef = useRef(null);
   const pollNowRef = useRef(() => {});
   const busyRef = useRef(new Set());
   const cooldownRef = useRef(0);
@@ -81,6 +82,18 @@ export default function useRocketGame() {
       setMessage(res.error);
       return;
     }
+    if (res.patch) {
+      setData((prev) => {
+        if (!prev) return prev;
+        if (prev.round?.round_no !== res.round_no) return { ...prev, coins: res.coins };
+        const bets = prev.bets.filter((b) => !(b.user_id === prev.me && (b.slot === 2 ? 2 : 1) === res.slot));
+        if (res.bet && !res.bet.cancelled) bets.push(res.bet);
+        return { ...prev, coins: res.coins, bets };
+      });
+      setMessage(res.notice || '');
+      return;
+    }
+    roundNoRef.current = res.round?.round_no;
     serverNowRef.current = res.now;
     fetchedAtRef.current = Date.now();
     phaseRef.current = res.round?.status;
@@ -93,8 +106,7 @@ export default function useRocketGame() {
 
   const fetchState = useCallback(async () => {
     try {
-      const response = await base44.functions.invoke('rocket-game', { action: 'state' });
-      applyResult(response.data);
+      applyResult(await rocketRequests({ action: 'state', recover: !hasDataRef.current || Date.now() < cooldownRef.current }));
     } catch (e) {
       // Yoğunluk hatasında mevcut durum korunur, yoklama bir süre bekler.
       cooldownRef.current = Date.now() + POLL_COOLDOWN;
@@ -186,15 +198,14 @@ export default function useRocketGame() {
   }, [data]);
 
   useEffect(() => () => {
-    clearTimeout(autoSaveRef.current[1]);
-    clearTimeout(autoSaveRef.current[2]);
+    Object.values(autoSaveRef.current).forEach(clearTimeout);
   }, []);
 
   // Oyun defteri yalnız açıldığında istenir: düzenli yoklamaya ek yük bindirmez.
   const loadLedger = useCallback(async () => {
     try {
-      const response = await base44.functions.invoke('rocket-game', { action: 'ledger' });
-      if (response.data && !response.data.error) setLedger(response.data);
+      const result = await rocketRequests({ action: 'ledger' });
+      if (result && !result.error) setLedger(result);
     } catch (e) {
       setMessage(friendlyError(e));
     }
@@ -214,11 +225,11 @@ export default function useRocketGame() {
         }
       }
       try {
-        const response = await base44.functions.invoke('rocket-game', payload);
-        applyResult(response.data);
-        return response.data;
+        const result = await rocketRequests(payload);
+        applyResult(result);
+        return result;
       } catch (e) {
-        // Tekrar denemek istek limitini daha da doldurur: hata doğrudan bildirilir.
+        // Bounded retries are exhausted; do not pretend an unconfirmed payout succeeded.
         cooldownRef.current = Date.now() + POLL_COOLDOWN;
         setMessage(friendlyError(e));
         return null;
@@ -250,7 +261,9 @@ export default function useRocketGame() {
     );
   }, [act]);
 
-  const cashout = useCallback((slot) => act({ action: 'cashout', slot }, { slot, lockMult: true }), [act]);
+  const cashout = useCallback((slot) => act(
+    { action: 'cashout', slot, round_no: roundNoRef.current }, { slot, lockMult: true }
+  ), [act]);
 
   // Bahis miktarı istemcide değişir; sunucuya yalnız bahis konulurken yazılır.
   const changeBet = useCallback((slot, direction) => {
@@ -260,11 +273,15 @@ export default function useRocketGame() {
   }, []);
 
   // Otomatik hedef sunucuya kısa bir gecikmeyle yazılır: ok tuşları anında tepki verir.
-  const persistAuto = useCallback((slot, value) => {
+  const persistAuto = useCallback((slot, value, delay = AUTO_SAVE_MS) => {
     clearTimeout(autoSaveRef.current[slot]);
-    autoSaveRef.current[slot] = setTimeout(() => {
-      act({ action: 'setAutoValue', slot, value }, { key: `auto:${slot}` });
-    }, AUTO_SAVE_MS);
+    autoSaveRef.current[slot] = setTimeout(async () => {
+      const result = await act({ action: 'setAutoValue', slot, value }, { key: `auto:${slot}` });
+      // An edit made during a save must not be dropped by the duplicate guard.
+      if (autoAmtRef.current[slot] !== value || (!result && busyRef.current.has(`auto:${slot}`))) {
+        persistAuto(slot, autoAmtRef.current[slot]);
+      }
+    }, delay);
   }, [act]);
 
   const changeAuto = useCallback((slot, direction) => {
@@ -278,8 +295,8 @@ export default function useRocketGame() {
     clearTimeout(autoSaveRef.current[slot]);
     autoAmtRef.current = { ...autoAmtRef.current, [slot]: value };
     setAutoAmt(autoAmtRef.current);
-    return act({ action: 'setAutoValue', slot, value }, { key: `auto:${slot}` });
-  }, [act]);
+    persistAuto(slot, value, 0);
+  }, [persistAuto]);
 
   // Yerel akıcı çarpan: sunucu saati + yerel geçen süre.
   const round = data?.round;
@@ -312,18 +329,24 @@ export default function useRocketGame() {
     if (!myBets[slot]) myBets[slot] = b;
   });
 
-  // Otomatik çekilme: yerel çarpan hedefe ulaştığı an sunucuya haber verilir,
-  // kazanç beklemeden yatırılır. Bahis nakde dönünce tetikleme durur.
+  // One target-specific settlement per slot, not repeated extra state polls.
+  // The server uses the stored target and crash point, never a client multiplier.
   useEffect(() => {
     if (phase !== 'running') return;
-    const pending = [1, 2].some(
-      (slot) => myBets[slot] && autoAmt[slot] > 0 && liveMult >= autoAmt[slot]
-    );
-    if (!pending || Date.now() - autoFireRef.current < 1500) return;
-    autoFireRef.current = Date.now();
-    // Ek istek yapılmaz: sıradaki yoklama öne çekilir.
-    pollNowRef.current();
-  }, [phase, liveMult, autoAmt[1], autoAmt[2], myBets[1], myBets[2]]);
+    for (const slot of [1, 2]) {
+      const bet = myBets[slot];
+      const target = bet?.auto_at ?? 0;
+      const key = `${round?.round_no}:${slot}`;
+      if (!bet || target <= 1 || liveMult < target || busyRef.current.has(`cashout:${slot}`) || autoFireRef.current.has(key)) continue;
+      autoFireRef.current.add(key);
+      act({ action: 'cashout', automatic: true, slot, round_no: round.round_no }, { slot, lockMult: true })
+        .then((result) => {
+          if (!result || result.bet?.status === 'active') {
+            autoSaveRef.current[`retry:${slot}`] = setTimeout(() => autoFireRef.current.delete(key), POLL_COOLDOWN);
+          }
+        });
+    }
+  }, [phase, liveMult, round?.round_no, myBets[1], myBets[2], act]);
 
   // Çakılma, oyuncunun otomatik hedefinin altında kaldıysa kaybın sebebi
   // açıkça yazılır: "hedefe geldi ama çekmedi" yanılgısı bu durumda oluşur.

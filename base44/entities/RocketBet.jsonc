@@ -46,6 +46,18 @@
     "payout": {
       "type": "number",
       "default": 0
+    },
+    "settlement_version": {
+      "type": "integer",
+      "default": 0
+    },
+    "payout_credited": {
+      "type": "boolean",
+      "default": false
+    },
+    "cancelled": {
+      "type": "boolean",
+      "default": false
     }
   },
   "required": [
