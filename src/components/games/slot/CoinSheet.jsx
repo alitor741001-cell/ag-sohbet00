@@ -3,7 +3,7 @@ import { X } from 'lucide-react';
 
 const format = (value) => new Intl.NumberFormat('tr-TR').format(Math.max(0, Math.round(value || 0)));
 
-export default function CoinSheet({ open, onClose, coins, unlimited, bonusReady, bonusAmount, message, onClaim }) {
+export default function CoinSheet({ open, onClose, coins, bonusReady, bonusAmount, message, onClaim }) {
   if (!open) return null;
 
   return (
@@ -26,7 +26,7 @@ export default function CoinSheet({ open, onClose, coins, unlimited, bonusReady,
         </div>
 
         <p className="mt-2 text-center font-mono text-3xl font-black tabular-nums text-white">
-          {unlimited ? '∞' : format(coins)}
+          {format(coins)}
         </p>
         <p className="text-center text-[10px] font-black tracking-widest text-slot-gold/80">MEVCUT BAKİYE</p>
 

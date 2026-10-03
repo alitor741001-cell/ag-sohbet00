@@ -11,8 +11,9 @@ const BONUS_COOLDOWN_MS = 6 * 60 * 60 * 1000;
 const MIN_BET = 10;
 const MAX_BET = 1000;
 const DEFAULT_BET = 100;
-// Bakiye gerçek: bahis bakiyeden düşer, kazanç eklenir.
-const UNLIMITED_COINS = false;
+// Bakiye gerçek: bahis bakiyeden düşer, kazanç eklenir; "sınırsız" mod yoktur.
+// Eski sürümden kalan devasa bakiyeler bu sınırın üzerindeyse normale çekilir.
+const LEGACY_MAX_COINS = 1000000000;
 
 function jackpotValues() {
   const seconds = Math.floor(Date.now() / 1000);
@@ -39,7 +40,7 @@ function canClaimBonus(wallet) {
 function walletView(wallet, isAdmin = false) {
   return {
     coins: wallet.coins ?? START_COINS,
-    unlimited: UNLIMITED_COINS,
+    unlimited: false,
     no_limit: false,
     bet: wallet.bet ?? DEFAULT_BET,
     lines: LINES,
@@ -61,7 +62,15 @@ async function loadWallet(base44, user) {
   const found = await base44.asServiceRole.entities.GameWallet.filter({ user_id: user.id }, '-created_date', 1);
   const isAdmin = user.role === 'admin';
   // Bakiye gerçek: harcadıkça azalır, kazandıkça çoğalır; otomatik tamamlama yok.
-  if (found[0]) return found[0];
+  if (found[0]) {
+    // Eski "sınırsız" bakiyeler tek seferde normale çekilir: yönetici 500 bin.
+    if ((found[0].coins ?? 0) > LEGACY_MAX_COINS) {
+      return base44.asServiceRole.entities.GameWallet.update(found[0].id, {
+        coins: isAdmin ? ADMIN_COINS : START_COINS,
+      });
+    }
+    return found[0];
+  }
   return base44.asServiceRole.entities.GameWallet.create({
     user_id: user.id,
     user_name: user.full_name || '',
@@ -177,7 +186,7 @@ export default async function (req) {
     if (action === 'bonus') {
       if (!canClaimBonus(wallet)) return Response.json({ error: 'Bonus henüz hazır değil.' }, { status: 400 });
       const updated = await base44.asServiceRole.entities.GameWallet.update(wallet.id, {
-        coins: UNLIMITED_COINS ? START_COINS : (wallet.coins ?? START_COINS) + BONUS_COINS,
+        coins: (wallet.coins ?? START_COINS) + BONUS_COINS,
         last_bonus_at: new Date().toISOString(),
       });
       return Response.json({ ...walletView(updated, isAdmin), grid: null, wins: [], win: 0 });

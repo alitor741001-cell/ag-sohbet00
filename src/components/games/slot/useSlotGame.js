@@ -4,7 +4,7 @@ import { BET_STEP, LINES, MAX_BET, MIN_BET } from './slotConfig';
 
 const sleep = (ms) => new Promise((resolve) => { window.setTimeout(resolve, ms); });
 
-const SPIN_DURATION_MS = 6000;
+const SPIN_DURATION_MS = 5000;
 const SETTLE_MS = 800;
 // Bu tur sayısından sonra turların bir kısmı yavaş döner.
 const SLOW_AFTER_SPINS = 4;
@@ -13,7 +13,6 @@ const SLOW_CHANCE = 0.3;
 export default function useSlotGame({ roomId } = {}) {
   const [status, setStatus] = useState('loading');
   const [coins, setCoins] = useState(0);
-  const [unlimited, setUnlimited] = useState(false);
   const [noLimit, setNoLimit] = useState(false);
   const [grand, setGrand] = useState(0);
   const [bet, setBet] = useState(100);
@@ -46,7 +45,6 @@ export default function useSlotGame({ roomId } = {}) {
   const applyState = useCallback((data) => {
     if (!data) return;
     if (typeof data.coins === 'number') setCoins(data.coins);
-    if (typeof data.unlimited === 'boolean') setUnlimited(data.unlimited);
     if (typeof data.no_limit === 'boolean') setNoLimit(data.no_limit);
     if (typeof data.grand === 'number') setGrand(data.grand);
     if (typeof data.bet === 'number') setBet(data.bet);
@@ -180,7 +178,6 @@ export default function useSlotGame({ roomId } = {}) {
   return {
     status,
     coins,
-    unlimited,
     noLimit,
     grand,
     bet,

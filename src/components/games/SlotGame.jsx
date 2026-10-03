@@ -187,7 +187,6 @@ export default function SlotGame({ onExit, onBack, roomId }) {
         open={coinOpen}
         onClose={() => setCoinOpen(false)}
         coins={game.coins}
-        unlimited={game.unlimited}
         bonusReady={game.bonusReady}
         bonusAmount={game.bonusAmount}
         message={game.message}
