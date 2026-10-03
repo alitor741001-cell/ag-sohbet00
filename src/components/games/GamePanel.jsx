@@ -5,14 +5,19 @@ import { GAME_COVER } from './slotAssets';
 import { ROCKET_COVER } from './rocketAssets';
 import SlotGame from './SlotGame';
 import CrashRocketGame from './CrashRocketGame';
+import LuckyOlympusGame from './LuckyOlympusGame';
+import { LUCKY_OLYMPUS_COVER, LUCKY_OLYMPUS_COVER_W, LUCKY_OLYMPUS_COVER_H } from './luckyOlympusAssets';
 
 // Sinematik geçişin toplam süresi.
 const TRANSITION_MS = 700;
 const SLOT_ID = 'slot-frenzy';
 const ROCKET_ID = 'crash-rocket';
+const LUCKY_ID = 'lucky-olympus';
 
 // Oyun merkezi kartları: kapak görseli durur, dokununca oyun açılır.
+// Yeni oyun kartı kendi tanıtım görseliyle birebir durur: altına şerit konmaz.
 const GAMES = [
+  { id: LUCKY_ID, title: 'LUCKY OLYMPUS', cover: LUCKY_OLYMPUS_COVER, originWidth: LUCKY_OLYMPUS_COVER_W, originHeight: LUCKY_OLYMPUS_COVER_H, plain: true },
   { id: SLOT_ID, title: 'SLOT FRENZY', cover: GAME_COVER, originWidth: 1058, originHeight: 1008 },
   { id: ROCKET_ID, title: 'CRASH ROCKET', cover: ROCKET_COVER, originWidth: 1135, originHeight: 928 },
 ];
@@ -81,12 +86,14 @@ export default function GamePanel({ open, onClose, roomId }) {
                     originHeight={game.originHeight}
                     quality={92}
                   />
-                  <span className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-2 bg-black/70 px-3 py-2">
-                    <span className="text-xs font-black tracking-wide text-slot-gold">{game.title}</span>
-                    <span className="flex items-center gap-1 text-[10px] font-black text-white">
-                      <Play className="h-3 w-3" /> OYNA
+                  {!game.plain && (
+                    <span className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-2 bg-black/70 px-3 py-2">
+                      <span className="text-xs font-black tracking-wide text-slot-gold">{game.title}</span>
+                      <span className="flex items-center gap-1 text-[10px] font-black text-white">
+                        <Play className="h-3 w-3" /> OYNA
+                      </span>
                     </span>
-                  </span>
+                  )}
                 </button>
               ))}
             </div>
@@ -97,6 +104,8 @@ export default function GamePanel({ open, onClose, roomId }) {
           <div className={`game-layer bg-slot ${phase === 'opening' ? 'game-zoom-in' : phase === 'closing' ? 'game-zoom-out' : ''}`}>
             {selected === ROCKET_ID ? (
               <CrashRocketGame onExit={onClose} onBack={closeGame} />
+            ) : selected === LUCKY_ID ? (
+              <LuckyOlympusGame onBack={closeGame} />
             ) : (
               <SlotGame onExit={onClose} onBack={closeGame} roomId={roomId} />
             )}
