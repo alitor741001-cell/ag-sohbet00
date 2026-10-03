@@ -16,6 +16,10 @@
       "type": "number",
       "default": 100
     },
+    "grand": {
+      "type": "number",
+      "default": 0
+    },
     "lines": {
       "type": "number",
       "default": 50

@@ -77,7 +77,7 @@ export default function SlotGame({ onExit, onBack, roomId }) {
             />
 
             {/* Görselin kendi rakam alanları: bakiye, WIN, BET, LINES, TOTAL BET ve üst ödüller */}
-            <SlotReadout coins={game.coins} win={game.win} bet={game.bet} lines={game.lines} />
+            <SlotReadout coins={game.coins} win={game.win} bet={game.bet} lines={game.lines} grand={game.grand} />
 
             {/* Görselin kendi butonları — görünmez dokunma alanları */}
             <button

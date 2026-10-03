@@ -1428,14 +1428,13 @@ button:active, nav a:active, a[role="button"]:active {
     radial-gradient(circle at 50% 0%, hsl(var(--slot-purple) / 0.4), transparent 62%),
     repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.025) 0 2px, transparent 2px 5px);
 }
-/* Arkadaki oyun görselinin kendi nesneleri döner */
-.slot-bg-roll { animation: slot-bg-roll 0.5s linear infinite; }
+/* Tur sırasında makara penceresindeki nesneler aşağı doğru kayar. */
+.slot-bg-roll { animation: slot-bg-roll 0.34s linear infinite; }
 @keyframes slot-bg-roll {
-  0% { transform: translateY(-7%) scale(1.06); filter: blur(1.8px) brightness(1.12); }
-  50% { transform: translateY(7%) scale(1.06); filter: blur(1.8px) brightness(1.12); }
-  100% { transform: translateY(-7%) scale(1.06); filter: blur(1.8px) brightness(1.12); }
+  0% { background-position-y: 62%; filter: blur(1.6px) brightness(1.12); }
+  100% { background-position-y: 38%; filter: blur(1.6px) brightness(1.12); }
 }
-@media (prefers-reduced-motion: reduce) { .slot-bg-roll { animation-duration: 1s; } }
+@media (prefers-reduced-motion: reduce) { .slot-bg-roll { animation-duration: 0.9s; } }
 
 .slot-bokeh {
   background-image:

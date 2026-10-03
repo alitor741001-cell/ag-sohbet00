@@ -14,8 +14,11 @@ function Cell({ box, value, tone = 'text-white', size = 'text-[13px]' }) {
   );
 }
 
-/** Görselin kendi rakam alanlarına yazılan canlı değerler + sıfırlanan üst ödül rakamları. */
-export default function SlotReadout({ coins, win, bet, lines }) {
+/** Görselin kendi rakam alanlarına yazılan canlı değerler; GRAND havuzu turlarda büyür. */
+export default function SlotReadout({ coins, win, bet, lines, grand }) {
+  const [mega, grandBox, minor, major, mini] = SLOT_FIELDS.jackpots;
+  const emptyRewards = [mega, minor, major, mini];
+
   return (
     <>
       <Cell box={SLOT_FIELDS.lines} value={format(lines)} />
@@ -24,7 +27,8 @@ export default function SlotReadout({ coins, win, bet, lines }) {
       <Cell box={SLOT_FIELDS.bet} value={format(bet)} />
       <Cell box={SLOT_FIELDS.balance} value={format(coins)} />
 
-      {SLOT_FIELDS.jackpots.map((box, index) => (
+      <Cell box={grandBox} value={format(grand)} tone="text-slot-gold" size="text-[12px]" />
+      {emptyRewards.map((box, index) => (
         <Cell key={index} box={box} value="0" tone="text-slot-gold/90" size="text-[12px]" />
       ))}
     </>

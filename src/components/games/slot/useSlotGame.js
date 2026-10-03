@@ -11,6 +11,7 @@ export default function useSlotGame({ roomId } = {}) {
   const [status, setStatus] = useState('loading');
   const [coins, setCoins] = useState(0);
   const [unlimited, setUnlimited] = useState(false);
+  const [grand, setGrand] = useState(0);
   const [bet, setBet] = useState(100);
   const [lines, setLines] = useState(LINES);
   const [spins, setSpins] = useState(0);
@@ -29,6 +30,7 @@ export default function useSlotGame({ roomId } = {}) {
     if (!data) return;
     if (typeof data.coins === 'number') setCoins(data.coins);
     if (typeof data.unlimited === 'boolean') setUnlimited(data.unlimited);
+    if (typeof data.grand === 'number') setGrand(data.grand);
     if (typeof data.bet === 'number') setBet(data.bet);
     if (typeof data.lines === 'number') setLines(data.lines);
     if (typeof data.spins === 'number') setSpins(data.spins);
@@ -138,6 +140,7 @@ export default function useSlotGame({ roomId } = {}) {
     status,
     coins,
     unlimited,
+    grand,
     bet,
     lines,
     spins,

@@ -7,8 +7,10 @@ const BONUS_COOLDOWN_MS = 6 * 60 * 60 * 1000;
 const MIN_BET = 10;
 const MAX_BET = 1000;
 const DEFAULT_BET = 100;
-// Sınırsız coin modu: bakiyeden düşmez, bakiye bitmez.
-const UNLIMITED_COINS = true;
+// Bakiye gerçek: bahis bakiyeden düşer, kazanç eklenir.
+const UNLIMITED_COINS = false;
+// Her turda toplam bahsin bu oranı GRAND ödül havuzuna eklenir.
+const GRAND_RATE = 0.1;
 
 function jackpotValues() {
   const seconds = Math.floor(Date.now() / 1000);
@@ -26,6 +28,12 @@ function bonusReady(wallet) {
   return Date.now() - new Date(wallet.last_bonus_at).getTime() >= BONUS_COOLDOWN_MS;
 }
 
+function canClaimBonus(wallet) {
+  if (bonusReady(wallet)) return true;
+  // Bakiye bir tura yetmiyorsa bonus beklemeden alınabilir.
+  return (wallet.coins ?? START_COINS) < (wallet.bet ?? DEFAULT_BET) * LINES;
+}
+
 function walletView(wallet) {
   return {
     coins: wallet.coins ?? START_COINS,
@@ -33,8 +41,9 @@ function walletView(wallet) {
     bet: wallet.bet ?? DEFAULT_BET,
     lines: LINES,
     spins: wallet.spins ?? 0,
+    grand: wallet.grand ?? 0,
     jackpots: jackpotValues(),
-    bonus_ready: bonusReady(wallet),
+    bonus_ready: canClaimBonus(wallet),
     bonus_amount: BONUS_COINS,
   };
 }
@@ -55,6 +64,7 @@ async function loadWallet(base44, user) {
     bet: DEFAULT_BET,
     lines: LINES,
     spins: 0,
+    grand: 0,
     total_won: 0,
   });
 }
@@ -100,7 +110,7 @@ export default async function (req) {
     }
 
     if (action === 'bonus') {
-      if (!bonusReady(wallet)) return Response.json({ error: 'Bonus henüz hazır değil.' }, { status: 400 });
+      if (!canClaimBonus(wallet)) return Response.json({ error: 'Bonus henüz hazır değil.' }, { status: 400 });
       const updated = await base44.asServiceRole.entities.GameWallet.update(wallet.id, {
         coins: UNLIMITED_COINS ? START_COINS : (wallet.coins ?? START_COINS) + BONUS_COINS,
         last_bonus_at: new Date().toISOString(),
@@ -116,17 +126,24 @@ export default async function (req) {
 
       const grid = spinReels();
       const result = evaluateGrid(grid, bet);
-      const bigWin = cost > 0 && result.total >= cost * BIG_WIN_MULTIPLE;
+      // Jackpot sembolü geldiğinde biriken GRAND havuzu ödenir, havuz sıfırlanır.
+      const jackpotHit = result.wins.some((item) => item.symbol === 'jackpot');
+      const pool = wallet.grand ?? 0;
+      const jackpotPayout = jackpotHit ? pool : 0;
+      const total = result.total + jackpotPayout;
+      const grand = jackpotHit ? 0 : pool + Math.round(cost * GRAND_RATE);
+      const bigWin = cost > 0 && total >= cost * BIG_WIN_MULTIPLE;
       const name = user.username || user.full_name || 'Kullanıcı';
       let celebrated = false;
       if (bigWin && typeof body.room_id === 'string' && body.room_id) {
-        celebrated = await announceBigWin(base44, user, body.room_id, result.total, name).catch(() => false);
+        celebrated = await announceBigWin(base44, user, body.room_id, total, name).catch(() => false);
       }
       const updated = await base44.asServiceRole.entities.GameWallet.update(wallet.id, {
-        coins: UNLIMITED_COINS ? START_COINS : coins - cost + result.total,
+        coins: coins - cost + total,
         bet,
+        grand,
         spins: (wallet.spins ?? 0) + 1,
-        total_won: (wallet.total_won ?? 0) + result.total,
+        total_won: (wallet.total_won ?? 0) + total,
         last_spin_at: new Date().toISOString(),
       });
 
@@ -134,9 +151,10 @@ export default async function (req) {
         ...walletView(updated),
         grid,
         wins: result.wins,
-        win: result.total,
+        win: total,
+        jackpot: jackpotPayout,
         cost,
-        big_win: bigWin ? result.total : 0,
+        big_win: bigWin ? total : 0,
         celebrated,
       });
     }
