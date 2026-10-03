@@ -53,8 +53,8 @@ export default function SlotGame({ onExit, onBack, roomId }) {
   const scale = Math.min(cover || 0, (fit || 0) * MAX_CROP);
   const width = ART_WIDTH * scale;
   const height = ART_HEIGHT * scale;
-  // Şerit, görselin üstünde kalan boşluğu tamamen kaplar (en az 3 satır).
-  const tickerHeight = Math.max(78, Math.round((panelHeight || 0) - height));
+  // Şerit, görselin üstünde kalan boşluğu kaplar ve orada biter — filmkeyfi yazısını kapatmaz.
+  const tickerHeight = Math.max(26, Math.round((panelHeight || 0) - height));
   const ready = game.status === 'ready';
 
   return (
@@ -91,10 +91,15 @@ export default function SlotGame({ onExit, onBack, roomId }) {
               onClick={game.spinning ? game.stop : game.spin}
               disabled={!ready || game.stopping || game.stopRequested}
               aria-label={game.spinning ? 'Makaraları durdur' : 'Turu başlat'}
-              className={`absolute flex items-center justify-center rounded-full active:brightness-125 ${game.spinning ? 'border-2 border-slot-gold bg-slot-red text-slot-text font-black text-xs shadow-lg' : ''}`}
+              className="absolute flex items-center justify-center active:brightness-125"
               style={SLOT_LAYOUT.spin}
             >
-              {game.spinning && (game.stopping || game.stopRequested ? 'DURUYOR' : 'DURDUR')}
+              {/* Durdurma, SPIN düğmesinin tam üstüne gelir: yalnızca rengi değişir, yana taşmaz. */}
+              {game.spinning && (
+                <span className="absolute inset-0 m-auto flex aspect-square w-full items-center justify-center rounded-full border-2 border-slot-gold bg-slot-red font-black tracking-wide text-slot-text shadow-lg">
+                  <span className="text-[clamp(0.65rem,3.4vw,1.05rem)]">STOP</span>
+                </span>
+              )}
             </button>
             <button
               type="button"

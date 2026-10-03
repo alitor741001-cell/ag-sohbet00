@@ -55,7 +55,7 @@ export default function WinnerTicker({ height = VISIBLE_ROWS * ROW_HEIGHT }) {
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none relative w-full overflow-hidden border-b border-white/10 bg-black/70 backdrop-blur-sm"
+      className="pointer-events-none relative w-full overflow-hidden border-b-2 border-slot-gold/40 bg-black/70 backdrop-blur-sm"
       style={{ height }}
     >
       {loop.length ? (
