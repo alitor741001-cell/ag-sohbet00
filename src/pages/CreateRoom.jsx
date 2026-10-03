@@ -31,13 +31,15 @@ export default function CreateRoom() {
     const movie = movies.find((m) => m.id === form.movie_id);
     setSaving(true);
     try {
-      const res = await base44.functions.invoke('create-room', {
-        name: form.name, movie_id: form.movie_id, movie_title: movie?.title || '',
-        password: form.password, max_users: Number(form.max_users),
-        chat_enabled: form.chat_enabled, voice_enabled: form.voice_enabled, hidden: form.hidden
-      });
-      toast({ title: 'Oda oluşturuldu' });
-      navigate(`/oda/${res.data.id}`);
+      const res = await base44.functions.invoke('create-room', voiceOnly
+        ? { name: form.name, room_type: 'voice', password: form.password, hidden: form.hidden }
+        : {
+            name: form.name, movie_id: form.movie_id, movie_title: movie?.title || '',
+            password: form.password, max_users: Number(form.max_users),
+            chat_enabled: form.chat_enabled, voice_enabled: form.voice_enabled, hidden: form.hidden
+          });
+      toast({ title: voiceOnly ? 'Sesli oda oluşturuldu' : 'Oda oluşturuldu' });
+      navigate(voiceOnly ? `/sesli-oda/${res.data.id}` : `/oda/${res.data.id}`);
     } catch (err) { toast({ title: 'Hata', description: err.response?.data?.error || err.message, variant: 'destructive' }); }
     finally { setSaving(false); }
   };
