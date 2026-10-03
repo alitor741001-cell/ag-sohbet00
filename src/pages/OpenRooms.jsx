@@ -152,8 +152,8 @@ export default function OpenRooms() {
             <span className="text-xs text-gray-400">Aktif Oda</span>
             <span className="w-2 h-2 rounded-full bg-green-400" />
           </div>
-          <Link to="/oda-kur" className="flex min-h-11 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">
-            <Plus className="w-4 h-4" /> Oda Kur
+          <Link to={tab === 'voice' ? '/sesli-oda-kur' : '/oda-kur'} className="flex min-h-11 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">
+            <Plus className="w-4 h-4" /> {tab === 'voice' ? 'Sesli Oda Kur' : 'Oda Kur'}
           </Link>
         </div>
       </div>

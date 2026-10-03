@@ -162,6 +162,11 @@ export default function CreateRoom() {
           })}
         </div>
 
+        {/* Film seçilmezse sesli oda olarak açılır */}
+        {form.voice_enabled && !form.movie_id && (
+          <p className="text-xs text-amber-400">Film seçmene gerek yok: bu oda sesli sohbet odası olarak açılır, burada film izlenmez.</p>
+        )}
+
         {/* Submit */}
         <button type="submit" disabled={saving || !user} className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold text-white active:scale-95 transition-transform disabled:opacity-50" style={{ background: 'linear-gradient(135deg, #dc2626, #991b1b)' }}>
           <Video className="w-5 h-5" /> {saving ? 'Oda oluşturuluyor...' : 'Odayı Oluştur'}
