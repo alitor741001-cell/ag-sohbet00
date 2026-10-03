@@ -7,6 +7,13 @@ const POLL_RUNNING = 3500;
 const POLL_IDLE = 4000;
 const CLOCK_TICK = 50;
 
+// Bahis süresi dolduğu an tur yerel olarak da uçuşa geçer: sunucu yanıtı
+// beklenmez, mekik geri sayım 0 olduğu saniyede havalanır.
+function phaseAt(status, launchAt, now) {
+  if (status === 'betting' && launchAt !== null && now >= launchAt) return 'running';
+  return status;
+}
+
 /** Crash Rocket oyun durumu: sunucudan poll edilir, çarpan yerel saatle akıcı gösterilir. */
 export default function useRocketGame() {
   const [data, setData] = useState(null);
@@ -17,6 +24,7 @@ export default function useRocketGame() {
   const serverNowRef = useRef(Date.now());
   const fetchedAtRef = useRef(Date.now());
   const phaseRef = useRef(null);
+  const launchAtRef = useRef(null);
   const hasDataRef = useRef(false);
 
   const applyResult = useCallback((res) => {
@@ -28,6 +36,7 @@ export default function useRocketGame() {
     serverNowRef.current = res.now;
     fetchedAtRef.current = Date.now();
     phaseRef.current = res.round?.status;
+    launchAtRef.current = res.round?.phase_ends_at ? new Date(res.round.phase_ends_at).getTime() : null;
     hasDataRef.current = true;
     setData(res);
     setStatus('ready');
@@ -51,8 +60,12 @@ export default function useRocketGame() {
     let timer;
     const loop = async () => {
       await fetchState();
-      const delay = phaseRef.current === 'running' ? POLL_RUNNING : POLL_IDLE;
-      timer = setTimeout(loop, delay);
+      // Kalkış anı geçtiyse uçuş sürüyor sayılır: çakılma daha çabuk yakalanır.
+      const localNow = serverNowRef.current + (Date.now() - fetchedAtRef.current);
+      const flying =
+        phaseRef.current === 'running' ||
+        (phaseRef.current === 'betting' && launchAtRef.current !== null && localNow >= launchAtRef.current);
+      timer = setTimeout(loop, flying ? POLL_RUNNING : POLL_IDLE);
     };
     loop();
     return () => clearTimeout(timer);
@@ -86,17 +99,22 @@ export default function useRocketGame() {
   // Yerel akıcı çarpan: sunucu saati + yerel geçen süre.
   const round = data?.round;
   const serverNow = serverNowRef.current + (clock - fetchedAtRef.current);
+  const launchAt = round?.phase_ends_at ? new Date(round.phase_ends_at).getTime() : null;
+  // Geri sayım 0'a indiği saniyede uçuş başlar; sunucu yanıtı beklenmez.
+  const phase = phaseAt(round?.status, launchAt, serverNow);
+
   let liveMult = 1;
-  if (round?.status === 'running' && round.started_at) {
-    liveMult = multiplierAt(serverNow - new Date(round.started_at).getTime());
-  } else if (round?.status === 'crashed') {
-    liveMult = round.crash_at || 1;
+  if (phase === 'running') {
+    const startAt = round?.started_at ? new Date(round.started_at).getTime() : launchAt;
+    liveMult = startAt ? multiplierAt(serverNow - startAt) : 1;
+  } else if (phase === 'crashed') {
+    liveMult = round?.crash_at || 1;
   }
 
   // Bahis aşaması geri sayımı: tur başlamadan kaç saniye kaldı.
   let countdown = null;
-  if (round?.status === 'betting' && round.phase_ends_at) {
-    countdown = Math.max(0, Math.ceil((new Date(round.phase_ends_at).getTime() - serverNow) / 1000));
+  if (phase === 'betting' && launchAt) {
+    countdown = Math.max(0, Math.ceil((launchAt - serverNow) / 1000));
   }
 
   // İki bahis alanı için aktif bahisler.
@@ -110,6 +128,7 @@ export default function useRocketGame() {
   return {
     status,
     round,
+    phase,
     bets: data?.bets || [],
     history: data?.history || [],
     coins: data?.coins ?? 0,

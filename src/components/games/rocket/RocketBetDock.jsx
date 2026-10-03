@@ -6,7 +6,7 @@ import RocketAutoDialog from './RocketAutoDialog';
 
 /** Alt panel: iki bağımsız bahis alanı ve aralarında film makarası göbeği. */
 export default function RocketBetDock({ game }) {
-  const phase = game.round?.status;
+  const phase = game.phase;
   const [autoEdit, setAutoEdit] = useState(null);
 
   const build = (slot, tone) => {
