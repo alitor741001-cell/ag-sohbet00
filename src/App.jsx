@@ -15,6 +15,8 @@ import StartupSplash from '@/components/layout/StartupSplash';
 import { ThemeProvider } from '@/lib/ThemeContext';
 import RoomLevelProvider from '@/components/levels/RoomLevelProvider';
 import XpProvider from '@/components/xp/XpProvider';
+import DirectCallProvider from '@/lib/DirectCallContext';
+import DirectCallOverlay from '@/components/friends/DirectCallOverlay';
 import { FrameCatalogProvider } from '@/lib/FrameCatalogContext';
 import { Navigate } from 'react-router-dom';
 import '@/lib/voicePlayback';
@@ -160,11 +162,14 @@ function App() {
         <RoomLevelProvider>
         <XpProvider>
         <ThemeProvider>
-          <StartupSplash />
-          <Router>
-            <ScrollToTop />
-            <AuthenticatedApp />
-          </Router>
+          <DirectCallProvider>
+            <StartupSplash />
+            <Router>
+              <ScrollToTop />
+              <AuthenticatedApp />
+            </Router>
+            <DirectCallOverlay />
+          </DirectCallProvider>
           <Toaster />
         </ThemeProvider>
         </XpProvider>

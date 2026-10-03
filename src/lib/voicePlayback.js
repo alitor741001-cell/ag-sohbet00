@@ -82,6 +82,52 @@ export function createVoiceOutput(track, roomId) {
   };
 }
 
+let activeRingtone = null;
+
+/** Çalan telefon sesi — birebir arama zilini üretir ve durdurma fonksiyonu döner. */
+export function startRingtone({ freq = 880, interval = 2000 } = {}) {
+  activeRingtone?.();
+  const context = getContext();
+  if (!context) return () => {};
+  let stopped = false;
+  let timer = null;
+
+  const beep = (offset) => {
+    if (stopped) return;
+    const startAt = context.currentTime + offset;
+    const osc = context.createOscillator();
+    const gain = context.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.0001, startAt);
+    gain.gain.exponentialRampToValueAtTime(0.2, startAt + 0.04);
+    gain.gain.exponentialRampToValueAtTime(0.0001, startAt + 0.4);
+    osc.connect(gain).connect(context.destination);
+    osc.start(startAt);
+    osc.stop(startAt + 0.45);
+  };
+
+  const pattern = () => {
+    if (stopped) return;
+    context.resume?.().catch(() => {});
+    beep(0);
+    beep(0.5);
+    if (navigator.vibrate) navigator.vibrate([320, 160, 320]);
+  };
+
+  pattern();
+  timer = setInterval(pattern, interval);
+
+  const stop = () => {
+    stopped = true;
+    clearInterval(timer);
+    if (navigator.vibrate) navigator.vibrate(0);
+    if (activeRingtone === stop) activeRingtone = null;
+  };
+  activeRingtone = stop;
+  return stop;
+}
+
 if (typeof window !== 'undefined') {
   const unlock = () => { unlockVoicePlayback().catch(() => {}); };
   window.addEventListener('pointerdown', unlock, { capture: true, passive: true });

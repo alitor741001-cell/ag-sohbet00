@@ -1,0 +1,104 @@
+{
+  "name": "DirectCall",
+  "type": "object",
+  "properties": {
+    "caller_id": {
+      "type": "string"
+    },
+    "caller_name": {
+      "type": "string"
+    },
+    "caller_avatar": {
+      "type": "string"
+    },
+    "caller_frame": {
+      "type": "string"
+    },
+    "caller_frame_scale": {
+      "type": "number"
+    },
+    "callee_id": {
+      "type": "string"
+    },
+    "callee_name": {
+      "type": "string"
+    },
+    "callee_avatar": {
+      "type": "string"
+    },
+    "callee_frame": {
+      "type": "string"
+    },
+    "callee_frame_scale": {
+      "type": "number"
+    },
+    "conversation_id": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "ringing",
+        "accepted",
+        "rejected",
+        "ended",
+        "cancelled"
+      ],
+      "default": "ringing"
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "accepted_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "ended_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "ended_by": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "caller_id",
+    "callee_id"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.caller_id": "{{user.id}}"
+        },
+        {
+          "data.callee_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "data.caller_id": "{{user.id}}"
+    },
+    "update": {
+      "$or": [
+        {
+          "data.caller_id": "{{user.id}}"
+        },
+        {
+          "data.callee_id": "{{user.id}}"
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
