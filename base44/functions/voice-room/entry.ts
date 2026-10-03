@@ -4,7 +4,7 @@ import { isModerator } from '../../shared/roles.ts';
 import { upsertNotification } from '../../shared/upsertNotification.ts';
 
 const SEAT_OPTIONS = [2, 5, 8, 9, 12, 15, 20, 30];
-const ACTIONS = ['seat-take', 'seat-leave', 'seat-lock', 'seat-kick', 'set-seat-count', 'invite'];
+const ACTIONS = ['seat-take', 'seat-leave', 'seat-lock', 'seat-kick', 'set-seat-count', 'invite', 'seat-invite', 'seat-invite-clear'];
 
 const emptySeat = (index, locked = false) => ({
   index, user_id: '', name: '', avatar: '', frame: '', frame_scale: 100, locked, muted: false,
@@ -66,6 +66,10 @@ export default async function (req: Request): Promise<Response> {
         frame_scale: Number(me?.profile_frame_scale) || 100,
       };
       await persist(next);
+      const pendingInvites = (Array.isArray(room.seat_invites) ? room.seat_invites : []).filter((item) => item.user_id !== user.id);
+      if (pendingInvites.length !== (Array.isArray(room.seat_invites) ? room.seat_invites : []).length) {
+        await base44.asServiceRole.entities.Room.update(room_id, { seat_invites: pendingInvites });
+      }
       await say(`${displayName} ${index + 1}. koltuğa oturdu.`);
       return respond(next);
     }
@@ -150,6 +154,42 @@ export default async function (req: Request): Promise<Response> {
       }
       if (!invited) return Response.json({ error: 'Davet edilecek kişi bulunamadı.' }, { status: 404 });
       return Response.json({ ok: true, invited });
+    }
+
+    // Koltuğa davet — davet edilenin ekranında "Otur / Aya kalk" seçeneği çıkar
+    if (action === 'seat-invite') {
+      if (!canMod && !mySeat) return Response.json({ error: 'Koltuk daveti için bir koltuğa otur.' }, { status: 403 });
+      if (!target_id || target_id === user.id) return Response.json({ error: 'Geçersiz kişi.' }, { status: 400 });
+      if (seats.some((seat) => seat.user_id === target_id)) return Response.json({ error: 'Kişi zaten bir koltukta.' }, { status: 409 });
+      const targetUser = await base44.asServiceRole.entities.User.get(target_id).catch(() => null);
+      if (!targetUser) return Response.json({ error: 'Kullanıcı bulunamadı.' }, { status: 404 });
+
+      const requested = Number(seat_index);
+      let index = Number.isInteger(requested) ? requested : -1;
+      if (index < 0 || index >= seats.length || seats[index].user_id || seats[index].locked) {
+        index = seats.findIndex((seat) => !seat.user_id && !seat.locked);
+      }
+      if (index < 0) return Response.json({ error: 'Boş koltuk yok.' }, { status: 409 });
+
+      const invites = (Array.isArray(room.seat_invites) ? room.seat_invites : [])
+        .filter((item) => item.user_id !== target_id)
+        .concat({
+          user_id: target_id,
+          name: targetUser.username || targetUser.full_name || 'Kullanıcı',
+          seat_index: index,
+          invited_by: user.id,
+          invited_by_name: displayName,
+          created_at: new Date().toISOString(),
+        });
+      await base44.asServiceRole.entities.Room.update(room_id, { seat_invites: invites });
+      return Response.json({ ok: true, seat_index: index });
+    }
+
+    // Daveti kapat — kişi oturmayı kabul etti ya da aya kalktı
+    if (action === 'seat-invite-clear') {
+      const invites = (Array.isArray(room.seat_invites) ? room.seat_invites : []).filter((item) => item.user_id !== user.id);
+      await base44.asServiceRole.entities.Room.update(room_id, { seat_invites: invites });
+      return Response.json({ ok: true });
     }
 
     return Response.json({ error: 'geçersiz işlem' }, { status: 400 });

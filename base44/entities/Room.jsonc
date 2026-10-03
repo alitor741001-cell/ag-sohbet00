@@ -89,6 +89,34 @@
       },
       "default": []
     },
+    "seat_invites": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "seat_index": {
+            "type": "integer"
+          },
+          "invited_by": {
+            "type": "string"
+          },
+          "invited_by_name": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "default": []
+    },
     "chat_auto_delete_minutes": {
       "type": "integer",
       "default": 0

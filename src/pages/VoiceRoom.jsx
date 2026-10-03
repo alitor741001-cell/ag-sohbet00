@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Armchair, Eye, Loader2, Lock, LogOut, MessageSquare, Mic, MicOff, Minimize2, MoreHorizontal, Radio, Shield, ShieldAlert, Unlock, UserMinus, UserRound } from 'lucide-react';
+import { Armchair, Eye, Loader2, Lock, LogOut, MessageSquare, Mic, MicOff, Minimize2, MoreHorizontal, Radio, Shield, ShieldAlert, Unlock, UserMinus, UserPlus, UserRound } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useVoiceChat } from '@/hooks/useVoiceChat';
@@ -10,6 +10,7 @@ import VoiceSeatGrid from '@/components/voice/VoiceSeatGrid';
 import VoiceControlBar from '@/components/voice/VoiceControlBar';
 import VoiceChatDock from '@/components/voice/VoiceChatDock';
 import VoiceViewerSheet from '@/components/voice/VoiceViewerSheet';
+import VoiceSeatInvitePrompt from '@/components/voice/VoiceSeatInvitePrompt';
 import VoiceRoomMenu from '@/components/voice/VoiceRoomMenu';
 import VoiceSeatSheet from '@/components/voice/VoiceSeatSheet';
 import InviteSheet from '@/components/voice/InviteSheet';
@@ -49,6 +50,10 @@ export default function VoiceRoom() {
   const sawSelfRef = useRef(false);
 
   const seats = useMemo(() => (Array.isArray(room?.seats) ? room.seats : []), [room?.seats]);
+  const myInvite = useMemo(
+    () => (Array.isArray(room?.seat_invites) ? room.seat_invites.find((item) => item.user_id === user?.id) : null),
+    [room?.seat_invites, user?.id]
+  );
   const participants = useMemo(() => room?.participants || [], [room?.participants]);
   const moderators = room?.room_moderators || [];
   const mySeatIndex = seats.findIndex((seat) => seat.user_id === user?.id);
@@ -239,6 +244,19 @@ export default function VoiceRoom() {
     setInviteOpen(true);
   };
 
+  const inviteToSeat = async (targetId) => {
+    if (!targetId) return;
+    const ok = await invokeVoice({ action: 'seat-invite', target_id: targetId });
+    if (ok) toast({ title: 'Koltuk daveti gönderildi', description: 'Karşı tarafın ekranında "Otur / Aya kalk" seçenekleri çıkacak.' });
+  };
+
+  const acceptSeatInvite = async (index) => {
+    const ok = await invokeVoice({ action: 'seat-take', seat_index: index });
+    if (ok) await invokeVoice({ action: 'seat-invite-clear' });
+  };
+
+  const declineSeatInvite = () => { invokeVoice({ action: 'seat-invite-clear' }); };
+
   const sendInvites = async (ids) => {
     const ok = await invokeVoice({ action: 'invite', target_ids: ids });
     if (ok) { toast({ title: 'Davet gönderildi', description: `${ids.length} kişi davet edildi.` }); setInviteOpen(false); }
@@ -383,7 +401,7 @@ export default function VoiceRoom() {
     { key: 'mic', icon: (profileSelf ? voice.muted : profileMuted) ? MicOff : Mic, label: 'Mikrofon', disabled: !profileSelf && !canMod, onClick: profileSelf ? handleMic : () => toggleMuteFor(profileTarget) },
     { key: 'chat', icon: MessageSquare, label: 'Sohbet', disabled: profileSelf, onClick: () => { setDmUserId(profileTarget); setProfileUserId(null); } },
     { key: 'seat', icon: Armchair, label: 'Koltuk', disabled: !profileSelf && !canMod, onClick: handleProfileSeat },
-    { key: 'room', icon: Radio, label: 'Yayın odası', onClick: () => { setProfileUserId(null); setMinimized(true); } },
+    { key: 'invite', icon: UserPlus, label: 'Davet et', disabled: profileSelf || (!canMod && !seated), onClick: () => { const target = profileTarget; setProfileUserId(null); inviteToSeat(target); } },
   ] : [];
 
   if (minimized) {
@@ -552,6 +570,13 @@ export default function VoiceRoom() {
         ownerId={room?.owner_id}
         moderators={moderators}
         onSelect={openProfile}
+      />
+
+      <VoiceSeatInvitePrompt
+        invite={myInvite}
+        roomName={room?.name}
+        onAccept={acceptSeatInvite}
+        onDecline={declineSeatInvite}
       />
 
       {dmUserId && (
