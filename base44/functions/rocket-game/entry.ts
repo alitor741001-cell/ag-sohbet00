@@ -110,34 +110,28 @@ async function ensureRound(base44) {
   if (round.status === 'running') {
     const elapsed = now - new Date(round.started_at).getTime();
     const m = multiplierAt(elapsed);
-    const active = await base44.asServiceRole.entities.RocketBet.filter(
-      { round_id: round.id, status: 'active' },
-      '-created_date',
-      500
-    );
 
-    if (active.length) {
-      // Otomatik çekilme: hedefi çakılma noktasından önceyse hedefte nakde çevrilir.
-      const autoCashed = active.filter(
-        (b) => (b.auto_at ?? 0) > 0 && b.auto_at <= round.crash_at && m >= b.auto_at
+    // Otomatik hedefi olan bahisler yalnızca gerektiği an sorgulanır: her istekte
+    // yüzlerce bahis satırı çekilmez, sunucu yoğunluğu oluşmaz.
+    if (m >= 1.1) {
+      const autos = await base44.asServiceRole.entities.RocketBet.filter(
+        { round_id: round.id, status: 'active', auto_at: { $gt: 0 } },
+        '-created_date',
+        200
       );
-      for (const bet of autoCashed) {
-        await settleRocketBet(base44, bet, bet.auto_at);
-      }
-
-      if (m >= round.crash_at) {
-        const cashedIds = autoCashed.map((b) => b.id);
-        const losers = active.filter((b) => !cashedIds.includes(b.id));
-        if (losers.length) {
-          await base44.asServiceRole.entities.RocketBet.updateMany(
-            { round_id: round.id, status: 'active', id: { $in: losers.map((b) => b.id) } },
-            { $set: { status: 'lost' } }
-          );
+      for (const bet of autos) {
+        if (bet.auto_at <= round.crash_at && m >= bet.auto_at) {
+          await settleRocketBet(base44, bet, bet.auto_at);
         }
       }
     }
 
     if (m >= round.crash_at) {
+      // Hedefine ulaşanlar yukarıda nakde çevrildi; kalan aktifler tek sorguda kaybeder.
+      await base44.asServiceRole.entities.RocketBet.updateMany(
+        { round_id: round.id, status: 'active' },
+        { $set: { status: 'lost' } }
+      );
       round = await base44.asServiceRole.entities.RocketRound.update(round.id, {
         status: 'crashed',
         ended_at: new Date(now).toISOString(),

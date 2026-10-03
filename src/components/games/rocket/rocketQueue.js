@@ -8,9 +8,15 @@ function pump() {
   clearTimeout(wakeTimer);
   if (running || !jobs.length) return;
   const wait = blockedUntil - Date.now();
-  if (wait > 0) { wakeTimer = setTimeout(pump, wait); return; }
-  jobs.sort((a, b) => a.priority - b.priority);
-  const job = jobs.shift();
+  // Yoğunluk molası yalnızca tazeleme isteklerini bekletir; bahis ve çekilme
+  // her zaman sıraya girer, oyuncu butona bastığı an cevap alır.
+  const runnable = jobs.filter((job) => wait <= 0 || job.priority <= 2);
+  if (!runnable.length) {
+    wakeTimer = setTimeout(pump, Math.max(250, wait));
+    return;
+  }
+  const job = runnable.sort((a, b) => a.priority - b.priority)[0];
+  jobs.splice(jobs.indexOf(job), 1);
   running = true;
   Promise.resolve().then(job.run).then(job.resolve, job.reject).finally(() => {
     running = false;

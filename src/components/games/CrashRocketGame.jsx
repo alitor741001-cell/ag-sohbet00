@@ -31,7 +31,7 @@ export default function CrashRocketGame({ onExit, onBack }) {
 
       <RocketLedger open={ledgerOpen} onClose={() => setLedgerOpen(false)} data={game.ledger} />
 
-      {game.status === 'loading' && (
+      {(game.status === 'loading' || game.status === 'error') && (
         <div className="absolute inset-0 z-30 flex items-center justify-center bg-[#0a0f1d]/80">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-white/15 border-t-[#00d4ff]" />
         </div>

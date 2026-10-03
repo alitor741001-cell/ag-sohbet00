@@ -7,14 +7,14 @@ import {
   DEFAULT_ROCKET_BET,
   ROCKET_BET_LEVELS,
   ROCKET_AUTO_LEVELS,
-  formatMult,
 } from './rocketConfig';
 
-// Sunucu istek limiti nedeniyle seyrek poll edilir; çarpan yerel saatle akıcı kalır.
-const POLL_RUNNING = 4000;
-const POLL_IDLE = 9000;
-// Sunucu reddi sonrası yoklama bekler: istek bütçesi oyuncunun butonlarına kalır.
-const POLL_COOLDOWN = 12000;
+// Uçuş boyunca sık tazelenir: çakılma anı gecikmeden görünür. Bahis aşamasında
+// geri sayım yerel saatle aktığı için seyrek yoklama yeterlidir.
+const POLL_FLIGHT = 1200;
+const POLL_BETTING = 7000;
+// Sunucu reddi sonrası yenilemeler bekler; butonlar beklemez.
+const POLL_COOLDOWN = 15000;
 const CLOCK_TICK = 50;
 // Otomatik hedef ok tuşlarına hızlı basmak tek istek üretir.
 const AUTO_SAVE_MS = 600;
@@ -26,14 +26,12 @@ function phaseAt(status, launchAt, now) {
   return status;
 }
 
-// Sunucu reddi oyuncuya ham "500" yerine anlaşılır dille söylenir.
-function friendlyError(e) {
+// Yalnızca oyun kuralı reddi oyuncuya söylenir; bağlantı ve yoğunluk hataları
+// sessizce kendini toparlar, ekrana uyarı düşmez.
+function gameMessage(e) {
   const status = e?.response?.status;
-  const serverText = e?.response?.data?.error;
-  if (!e?.response || status >= 500 || /rate|limit/i.test(serverText || e?.message || '')) {
-    return 'İşlem doğrulanamadı — bağlantı yeniden kurulduğunda durum güncellenecek.';
-  }
-  return serverText || e?.message || 'İşlem başarısız';
+  if (!e?.response || status >= 500 || status === 429) return '';
+  return e?.response?.data?.error || '';
 }
 
 // Kademe listesindeki en yakın basamaktan bir adım ileri/geri gider.
@@ -103,7 +101,7 @@ export default function useRocketGame() {
         if (res.bet && !res.bet.cancelled) bets.push(res.bet);
         return { ...prev, coins: res.coins, bets };
       });
-      setMessage(res.notice || '');
+      setMessage('');
       return;
     }
     roundNoRef.current = res.round?.round_no;
@@ -122,14 +120,11 @@ export default function useRocketGame() {
       const result = await rocketRequests({ action: 'state', recover: needsRecoveryRef.current });
       applyResult(result);
       needsRecoveryRef.current = false;
-    } catch (e) {
+    } catch {
       needsRecoveryRef.current = true;
       // Yoğunluk hatasında mevcut durum korunur, yoklama bir süre bekler.
       cooldownRef.current = Date.now() + POLL_COOLDOWN;
-      if (!hasDataRef.current) {
-        setStatus('error');
-        setMessage(friendlyError(e));
-      }
+      if (!hasDataRef.current) setStatus('error');
     }
   }, [applyResult]);
 
@@ -172,7 +167,7 @@ export default function useRocketGame() {
       // Çakılma sonrası yeni tur kısa sürede yakalanır, bahis aşaması seyrek yoklanır.
       const quick = flying || phaseRef.current === 'crashed';
       // Stagger players' refreshes instead of a synchronized request burst.
-      timer = setTimeout(loop, (quick ? POLL_RUNNING : POLL_IDLE) + Math.random() * 500);
+      timer = setTimeout(loop, (quick ? POLL_FLIGHT : POLL_BETTING) + Math.random() * 250);
       running = false;
     };
     // Sıradaki yoklamayı öne çeker: ek istek yapmadan anında tazeleme.
@@ -224,7 +219,7 @@ export default function useRocketGame() {
       const result = await rocketRequests({ action: 'ledger' });
       if (result && !result.error) setLedger(result);
     } catch (e) {
-      setMessage(friendlyError(e));
+      setMessage(gameMessage(e));
     }
   }, []);
 
@@ -249,7 +244,7 @@ export default function useRocketGame() {
         // Reconcile interrupted credits even if the next refresh is a new round.
         needsRecoveryRef.current = true;
         cooldownRef.current = Date.now() + POLL_COOLDOWN;
-        setMessage(friendlyError(e));
+        setMessage(gameMessage(e));
         return null;
       } finally {
         busyRef.current.delete(key);
@@ -347,6 +342,15 @@ export default function useRocketGame() {
     if (!myBets[slot]) myBets[slot] = b;
   });
 
+  // Bahis süresi dolduğu an tek istek gider: tur gecikmeden uçuşa geçer ve
+  // çakılma anı sunucudan zamanında öğrenilir.
+  useEffect(() => {
+    if (phase !== 'betting' || !launchAt) return undefined;
+    const wait = Math.max(0, launchAt - (serverNowRef.current + (Date.now() - fetchedAtRef.current))) + 300;
+    const id = setTimeout(() => pollNowRef.current(), wait);
+    return () => clearTimeout(id);
+  }, [phase, launchAt]);
+
   // One target-specific settlement per slot, not repeated extra state polls.
   // The server uses the stored target and crash point, never a client multiplier.
   useEffect(() => {
@@ -365,21 +369,6 @@ export default function useRocketGame() {
         });
     }
   }, [phase, liveMult, round?.round_no, myBets[1], myBets[2], act]);
-
-  // Çakılma, oyuncunun otomatik hedefinin altında kaldıysa kaybın sebebi
-  // açıkça yazılır: "hedefe geldi ama çekmedi" yanılgısı bu durumda oluşur.
-  let missMessage = '';
-  if (phase === 'crashed') {
-    const mine = (data?.bets || []).filter((b) => b.user_id === data?.me);
-    for (const slot of [1, 2]) {
-      const target = slot === 2 ? data?.auto2 : data?.auto1;
-      const row = mine.find((b) => (b.slot === 2 ? 2 : 1) === slot && b.status === 'lost');
-      if (row && target > 0 && target > (round?.crash_at ?? 0)) {
-        missMessage = `Çakılma ${formatMult(round.crash_at)} — otomatik hedef ${formatMult(target)}'e ulaşmadı.`;
-        break;
-      }
-    }
-  }
 
   return {
     status,
@@ -401,7 +390,7 @@ export default function useRocketGame() {
     loadLedger,
     busy,
     pendingMult,
-    message: message || missMessage,
+    message,
     placeBet,
     cashout,
     changeBet,
