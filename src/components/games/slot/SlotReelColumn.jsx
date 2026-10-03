@@ -1,7 +1,7 @@
 import React, { useLayoutEffect, useRef, useState } from 'react';
 import SlotSymbol from '@/components/games/slot/SlotSymbol';
 
-export default function SlotReelColumn({ index, random, landing, stopping }) {
+export default function SlotReelColumn({ index, random, landing, stopping, slow }) {
   const stripRef = useRef(null);
   const [finish, setFinish] = useState(null);
   const loop = [...random, ...random];
@@ -22,7 +22,7 @@ export default function SlotReelColumn({ index, random, landing, stopping }) {
     <span ref={stripRef} key={finish ? 'finish' : 'loop'}
       className={`absolute left-0 top-0 w-full ${finish ? 'slot-reel-settle' : 'slot-reel-loop'}`}
       style={{ height: `${tiles.length / 3 * 100}%`, '--reel-from': `${finish?.from || 0}%`,
-        animationDuration: `${finish ? 0.36 + index * 0.1 : 0.85 + index * 0.065}s` }}>
+        animationDuration: `${finish ? 0.36 + index * 0.1 : (0.85 + index * 0.065) * (slow ? 2.3 : 1)}s` }}>
       {tiles.map((symbol, i) => <SlotSymbol key={i} symbol={symbol} top={`${i / tiles.length * 100}%`} height={`${100 / tiles.length}%`} />)}
     </span>
   </span>;

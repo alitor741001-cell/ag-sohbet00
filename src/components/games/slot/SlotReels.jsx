@@ -6,7 +6,7 @@ import '@/components/games/slot/slotReels.css';
 
 const randomRun = () => Array.from({ length: 15 }, () => SYMBOL_IDS[Math.floor(Math.random() * SYMBOL_IDS.length)]);
 
-export default function SlotReels({ spinning, stopping, grid }) {
+export default function SlotReels({ spinning, stopping, slow, grid }) {
   const [strips, setStrips] = useState([]);
   useEffect(() => {
     setStrips(spinning ? Array.from({ length: 5 }, randomRun) : []);
@@ -14,7 +14,7 @@ export default function SlotReels({ spinning, stopping, grid }) {
   if (!spinning && !grid) return null;
   return <div aria-hidden="true" className="pointer-events-none absolute overflow-hidden" style={SLOT_LAYOUT.reelWindow}>
     {spinning && strips.length ? strips.map((random, index) => (
-      <SlotReelColumn key={index} index={index} random={random} stopping={stopping}
+      <SlotReelColumn key={index} index={index} random={random} stopping={stopping} slow={slow}
         landing={[0, 1, 2].map(row => grid?.[index]?.[row] || 'ten')} />
     )) : grid && [0, 1, 2, 3, 4].map(col => (
       <span key={col} className="absolute top-0 h-full" style={{ left: `${col * 20}%`, width: '20%' }}>

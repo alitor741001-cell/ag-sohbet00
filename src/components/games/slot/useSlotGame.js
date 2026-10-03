@@ -4,8 +4,11 @@ import { BET_STEP, LINES, MAX_BET, MIN_BET } from './slotConfig';
 
 const sleep = (ms) => new Promise((resolve) => { window.setTimeout(resolve, ms); });
 
-const SPIN_DURATION_MS = 10000;
+const SPIN_DURATION_MS = 6000;
 const SETTLE_MS = 800;
+// Bu tur sayısından sonra turların bir kısmı yavaş döner.
+const SLOW_AFTER_SPINS = 4;
+const SLOW_CHANCE = 0.3;
 
 export default function useSlotGame({ roomId } = {}) {
   const [status, setStatus] = useState('loading');
@@ -29,6 +32,8 @@ export default function useSlotGame({ roomId } = {}) {
   const [message, setMessage] = useState('');
   const busyRef = useRef(false);
   const stopRef = useRef(null);
+  const roundRef = useRef(0);
+  const [slow, setSlow] = useState(false);
   const [stopping, setStopping] = useState(false);
   const [stopRequested, setStopRequested] = useState(false);
   const stop = useCallback(() => {
@@ -78,6 +83,9 @@ export default function useSlotGame({ roomId } = {}) {
       return;
     }
     busyRef.current = true;
+    roundRef.current += 1;
+    // Birkaç turdan sonra arada sırada makaralar yavaş döner.
+    setSlow(roundRef.current > SLOW_AFTER_SPINS && Math.random() < SLOW_CHANCE);
     setStopRequested(false);
     setStopping(false);
     setSpinning(true);
@@ -187,6 +195,7 @@ export default function useSlotGame({ roomId } = {}) {
     stop,
     grid,
     wins,
+    slow,
     win,
     bigWin,
     jackpotHit,

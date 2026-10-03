@@ -67,7 +67,7 @@ export default function SlotGame({ onExit, onBack, roomId }) {
             />
 
             {/* Tur sırasında her makaranın sembolleri değişerek aşağı doğru kayar. */}
-            <SlotReels spinning={game.spinning} stopping={game.stopping} grid={game.grid} />
+            <SlotReels spinning={game.spinning} stopping={game.stopping} slow={game.slow} grid={game.grid} />
 
             {/* Kazanan semboller ve aralarından geçen kazanç çizgileri — yeni tur başlayana kadar ekranda kalır. */}
             {!game.spinning && <SlotWinLines wins={game.wins} />}
