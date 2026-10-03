@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
 import { useSize } from '@/hooks/use-size';
+import { Image } from '@/components/ui/image';
 import { ROCKET_SHIP } from '../rocketAssets';
 import { flightAngle, flightPoint } from './rocketPath';
 
@@ -19,25 +20,21 @@ export default function RocketTrail({ progress, phase }) {
 
   return (
     <div ref={ref} className="pointer-events-none absolute inset-0 overflow-hidden">
-      <div
-        className="absolute -translate-x-1/2 -translate-y-1/2"
-        style={{ left: `${point.x * 100}%`, top: `${point.y * 100}%` }}
-      >
-        <div className={`rk-engine-glow h-24 w-24 rounded-full ${flying ? 'rk-engine' : ''}`} />
-      </div>
-
       {flying && <div className="rk-streak absolute inset-0" />}
-
-      <img
-        src={ROCKET_SHIP}
-        alt=""
-        className={`rk-ship absolute w-[30%] max-w-[9rem] ${flying ? 'rk-engine' : ''}`}
-        style={{
-          left: `${point.x * 100}%`,
-          top: `${point.y * 100}%`,
-          transform: `translate(-50%, -60%) rotate(${angle.toFixed(1)}deg)`,
-        }}
-      />
+      {phase !== 'crashed' && (
+        <div
+          className="absolute w-[24%] max-w-[7rem]"
+          style={{
+            left: `${point.x * 100}%`,
+            top: `${point.y * 100}%`,
+            transform: `translate(-50%, -50%) rotate(${angle.toFixed(2)}deg)`,
+            transition: flying ? 'left 60ms linear, top 60ms linear, transform 60ms linear' : 'none',
+          }}
+        >
+          {flying && <div className="rk-engine-glow rk-engine pointer-events-none absolute left-1/2 top-[75%] h-full w-1/2 -translate-x-1/2" />}
+          <Image src={ROCKET_SHIP} alt="Uçan roket" fittingType="fit" className="rk-ship relative block aspect-square w-full" />
+        </div>
+      )}
     </div>
   );
 }

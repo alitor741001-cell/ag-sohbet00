@@ -11,7 +11,7 @@ const PHASE_TEXT = { betting: 'Bahisler açık', running: 'Yükseliyor', crashed
 const PHASE_CLASS = { betting: 'text-[#7fe4ff]', running: 'text-[#7fe4ff]', crashed: 'text-red-400' };
 
 // Çarpan her ikiye katlandığında mekik yolda belirgin şekilde ilerler.
-const travel = (mult) => Math.min(1, Math.max(0, Math.log(Math.max(1, mult)) / Math.log(12)));
+const travel = (mult) => 1 - 1 / (1 + Math.log(Math.max(1, mult)) / 1.5);
 
 /** Oyun sahnesi: uzay arka planı, canlı roket uçuşu, oyuncular ve çarpan göstergesi. */
 export default function RocketStage({ game }) {
