@@ -1,0 +1,117 @@
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
+import { LINES, spinReels, evaluateGrid } from '../../shared/slotEngine.ts';
+
+const START_COINS = 100000;
+const BONUS_COINS = 25000;
+const BONUS_COOLDOWN_MS = 6 * 60 * 60 * 1000;
+const MIN_BET = 10;
+const MAX_BET = 1000;
+const DEFAULT_BET = 100;
+
+function jackpotValues() {
+  const seconds = Math.floor(Date.now() / 1000);
+  return {
+    mega: 1250000 + (Math.floor(seconds / 4) % 250000),
+    grand: 250000 + (Math.floor(seconds / 3) % 80000),
+    minor: 25000 + (Math.floor(seconds / 2) % 9000),
+    mini: 5000 + (Math.floor(seconds / 2) % 2500),
+  };
+}
+
+function bonusReady(wallet) {
+  if (!wallet.last_bonus_at) return true;
+  return Date.now() - new Date(wallet.last_bonus_at).getTime() >= BONUS_COOLDOWN_MS;
+}
+
+function walletView(wallet) {
+  return {
+    coins: wallet.coins ?? START_COINS,
+    bet: wallet.bet ?? DEFAULT_BET,
+    lines: LINES,
+    spins: wallet.spins ?? 0,
+    jackpots: jackpotValues(),
+    bonus_ready: bonusReady(wallet),
+    bonus_amount: BONUS_COINS,
+  };
+}
+
+function clampBet(value, fallback) {
+  const numeric = Math.round(Number(value));
+  if (!Number.isFinite(numeric) || numeric <= 0) return fallback;
+  return Math.max(MIN_BET, Math.min(MAX_BET, numeric));
+}
+
+async function loadWallet(base44, user) {
+  const found = await base44.asServiceRole.entities.GameWallet.filter({ user_id: user.id }, '-created_date', 1);
+  if (found[0]) return found[0];
+  return base44.asServiceRole.entities.GameWallet.create({
+    user_id: user.id,
+    user_name: user.full_name || '',
+    coins: START_COINS,
+    bet: DEFAULT_BET,
+    lines: LINES,
+    spins: 0,
+    total_won: 0,
+  });
+}
+
+export default async function (req) {
+  try {
+    const base44 = createClientFromRequest(req);
+    let user = null;
+    try {
+      user = await base44.auth.me();
+    } catch (error) {
+      user = null;
+    }
+    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const body = await req.json().catch(() => ({}));
+    const action = body.action || 'state';
+    const wallet = await loadWallet(base44, user);
+
+    if (action === 'bet') {
+      const bet = clampBet(body.bet, wallet.bet ?? DEFAULT_BET);
+      const updated = await base44.asServiceRole.entities.GameWallet.update(wallet.id, { bet });
+      return Response.json({ ...walletView({ ...updated, last_bonus_at: wallet.last_bonus_at }), grid: null, wins: [], win: 0 });
+    }
+
+    if (action === 'bonus') {
+      if (!bonusReady(wallet)) return Response.json({ error: 'Bonus henüz hazır değil.' }, { status: 400 });
+      const updated = await base44.asServiceRole.entities.GameWallet.update(wallet.id, {
+        coins: (wallet.coins ?? START_COINS) + BONUS_COINS,
+        last_bonus_at: new Date().toISOString(),
+      });
+      return Response.json({ ...walletView(updated), grid: null, wins: [], win: 0 });
+    }
+
+    if (action === 'spin') {
+      const bet = clampBet(body.bet, wallet.bet ?? DEFAULT_BET);
+      const cost = bet * LINES;
+      const coins = wallet.coins ?? START_COINS;
+      if (coins < cost) return Response.json({ error: 'Yetersiz coin.' }, { status: 400 });
+
+      const grid = spinReels();
+      const result = evaluateGrid(grid, bet);
+      const updated = await base44.asServiceRole.entities.GameWallet.update(wallet.id, {
+        coins: coins - cost + result.total,
+        bet,
+        spins: (wallet.spins ?? 0) + 1,
+        total_won: (wallet.total_won ?? 0) + result.total,
+        last_spin_at: new Date().toISOString(),
+      });
+
+      return Response.json({
+        ...walletView(updated),
+        grid,
+        wins: result.wins,
+        win: result.total,
+        cost,
+      });
+    }
+
+    return Response.json({ ...walletView(wallet), grid: null, wins: [], win: 0 });
+  } catch (error) {
+    return Response.json({ error: error.message }, { status: 500 });
+  }
+}

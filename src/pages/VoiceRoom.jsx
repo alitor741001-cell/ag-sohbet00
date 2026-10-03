@@ -20,6 +20,7 @@ import VoiceProfileCard from '@/components/voice/VoiceProfileCard';
 import VoiceMenuButton from '@/components/voice/VoiceMenuButton';
 import VoiceRoomBubble from '@/components/voice/VoiceRoomBubble';
 import RoomDirectMessages from '@/components/player/RoomDirectMessages';
+import GamePanel from '@/components/games/GamePanel';
 
 export default function VoiceRoom() {
   const { id } = useParams();
@@ -44,6 +45,7 @@ export default function VoiceRoom() {
   const [dmOpen, setDmOpen] = useState(false);
   const [minimized, setMinimized] = useState(false);
   const [exitOpen, setExitOpen] = useState(false);
+  const [gamesOpen, setGamesOpen] = useState(false);
 
   const keyboardInset = useKeyboardInset();
 
@@ -501,8 +503,10 @@ export default function VoiceRoom() {
         micActive={!voice.muted}
         deafened={voice.deafened}
         chatOpen={chatOpen}
+        gamesOpen={gamesOpen}
         onToggleMic={handleMic}
         onToggleSpeaker={voice.toggleDeafen}
+        onOpenGames={() => setGamesOpen((value) => !value)}
         onOpenPrivateChat={() => setDmOpen(true)}
         onToggleChat={() => setChatOpen((value) => !value)}
       />
@@ -602,6 +606,8 @@ export default function VoiceRoom() {
       )}
 
       <InviteSheet open={inviteOpen} onClose={() => setInviteOpen(false)} onInvite={sendInvites} />
+
+      <GamePanel open={gamesOpen} onClose={() => setGamesOpen(false)} />
 
       {notice && joined && (
         <p className="pointer-events-none absolute left-1/2 top-20 z-[170] -translate-x-1/2 rounded-full bg-black/80 px-4 py-2 text-xs text-white">{notice}</p>

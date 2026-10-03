@@ -51,10 +51,20 @@
     --sidebar-border: 240 10% 88%;
     --sidebar-ring: 265 83% 58%;
     --catalog-surface: 0 5% 7%;
-
-
-
-  }
+    /* OYUN PANELİ — slot teması */
+    --slot-bg: 234 41% 5%;
+    --slot-surface: 236 38% 9%;
+    --slot-panel: 238 34% 13%;
+    --slot-border: 240 28% 24%;
+    --slot-gold: 48 89% 60%;
+    --slot-gold-deep: 43 87% 44%;
+    --slot-green: 145 63% 49%;
+    --slot-green-deep: 145 63% 34%;
+    --slot-red: 6 78% 57%;
+    --slot-purple: 283 39% 61%;
+    --slot-blue: 204 70% 53%;
+    --slot-text: 0 0% 100%;
+    }
 
   .dark {
     /* KARANLIK TEMA — sinema neon */
@@ -99,6 +109,19 @@
     --sidebar-border: 0 4% 18%;
     --sidebar-ring: 0 84% 60%;
     --catalog-surface: 0 5% 7%;
+    /* OYUN PANELİ — slot teması */
+    --slot-bg: 234 41% 5%;
+    --slot-surface: 236 38% 9%;
+    --slot-panel: 238 34% 13%;
+    --slot-border: 240 28% 24%;
+    --slot-gold: 48 89% 60%;
+    --slot-gold-deep: 43 87% 44%;
+    --slot-green: 145 63% 49%;
+    --slot-green-deep: 145 63% 34%;
+    --slot-red: 6 78% 57%;
+    --slot-purple: 283 39% 61%;
+    --slot-blue: 204 70% 53%;
+    --slot-text: 0 0% 100%;
 
 
 
@@ -1264,3 +1287,49 @@ button:active, nav a:active, a[role="button"]:active {
 @keyframes room-edge-from-bottom { 0% { transform: translateY(0) scale(.45); opacity: 0; } 18% { opacity: 1; } 100% { transform: translateY(-70px) scale(1.05); opacity: 0; } }
 @keyframes room-edge-from-left { 0% { transform: translateX(0) scale(.45); opacity: 0; } 18% { opacity: 1; } 100% { transform: translateX(70px) scale(1.05); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .room-frame-welcome { animation: room-edge-life 5s ease-in-out forwards; } .room-frame-edge { animation: none; } .room-edge-particle { animation-duration: 3s; } }
+
+/* === OYUN PANELİ — SLOT FRENZİ === */
+.slot-metal {
+  background: linear-gradient(180deg, hsl(var(--slot-gold-deep) / 0.4), hsl(var(--slot-bg) / 0.92) 45%, hsl(var(--slot-gold-deep) / 0.28));
+  border: 1px solid hsl(var(--slot-gold) / 0.55);
+  box-shadow: inset 0 1px 0 hsl(var(--slot-gold) / 0.45), inset 0 -2px 6px rgba(0, 0, 0, 0.7), 0 4px 14px rgba(0, 0, 0, 0.6);
+}
+.slot-gold-text {
+  background: linear-gradient(180deg, #fff6c2, hsl(var(--slot-gold)) 45%, hsl(var(--slot-gold-deep)));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.slot-logo-text {
+  background: linear-gradient(90deg, #ffffff, hsl(var(--slot-gold)) 55%, hsl(var(--slot-blue)));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.slot-auto {
+  background: linear-gradient(180deg, #ffe27a, hsl(var(--slot-gold-deep)));
+  border: 1px solid hsl(var(--slot-gold) / 0.9);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.5), 0 3px 10px rgba(0, 0, 0, 0.5);
+}
+.slot-auto:active { filter: brightness(0.92); }
+.slot-spin {
+  background: radial-gradient(circle at 35% 25%, #7ff0a8, hsl(var(--slot-green)) 45%, hsl(var(--slot-green-deep)));
+  border: 2px solid hsl(var(--slot-gold) / 0.85);
+  box-shadow: 0 0 22px hsl(var(--slot-green) / 0.55), inset 0 -4px 10px rgba(0, 0, 0, 0.35), inset 0 3px 8px rgba(255, 255, 255, 0.35);
+}
+.slot-cell {
+  background: radial-gradient(circle at 50% 30%, hsl(var(--slot-panel)), hsl(var(--slot-bg)));
+  border: 1px solid hsl(var(--slot-gold) / 0.35);
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+.slot-cell-win { animation: slot-win 0.6s ease-in-out infinite alternate; }
+@keyframes slot-win {
+  from { border-color: hsl(var(--slot-green) / 0.8); box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.6), 0 0 6px hsl(var(--slot-green) / 0.5); }
+  to { border-color: hsl(var(--slot-green)); box-shadow: inset 0 0 14px hsl(var(--slot-green) / 0.35), 0 0 16px hsl(var(--slot-green) / 0.9); }
+}
+.slot-rolling { animation: slot-roll 0.12s linear infinite; }
+@keyframes slot-roll {
+  0% { transform: translateY(-6%); }
+  100% { transform: translateY(6%); }
+}
+.slot-progress-fill { background: linear-gradient(90deg, hsl(var(--slot-gold-deep)), hsl(var(--slot-gold))); }

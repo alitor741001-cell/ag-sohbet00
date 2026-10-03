@@ -1,0 +1,72 @@
+{
+  "name": "GameWallet",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "user_name": {
+      "type": "string"
+    },
+    "coins": {
+      "type": "number",
+      "default": 100000
+    },
+    "bet": {
+      "type": "number",
+      "default": 100
+    },
+    "lines": {
+      "type": "number",
+      "default": 50
+    },
+    "spins": {
+      "type": "integer",
+      "default": 0
+    },
+    "total_won": {
+      "type": "number",
+      "default": 0
+    },
+    "last_bonus_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "last_spin_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "user_id"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.user_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

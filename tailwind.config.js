@@ -44,6 +44,20 @@ module.exports = {
   			},
   			border: 'hsl(var(--border))',
 			catalog: 'hsl(var(--catalog-surface))',
+			slot: {
+				DEFAULT: 'hsl(var(--slot-bg) / <alpha-value>)',
+				surface: 'hsl(var(--slot-surface) / <alpha-value>)',
+				panel: 'hsl(var(--slot-panel) / <alpha-value>)',
+				border: 'hsl(var(--slot-border) / <alpha-value>)',
+				gold: 'hsl(var(--slot-gold) / <alpha-value>)',
+				'gold-deep': 'hsl(var(--slot-gold-deep) / <alpha-value>)',
+				green: 'hsl(var(--slot-green) / <alpha-value>)',
+				'green-deep': 'hsl(var(--slot-green-deep) / <alpha-value>)',
+				red: 'hsl(var(--slot-red) / <alpha-value>)',
+				purple: 'hsl(var(--slot-purple) / <alpha-value>)',
+				blue: 'hsl(var(--slot-blue) / <alpha-value>)',
+				text: 'hsl(var(--slot-text) / <alpha-value>)'
+			},
   			input: 'hsl(var(--input))',
   			ring: 'hsl(var(--ring))',
   			chart: {
