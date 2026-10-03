@@ -1,5 +1,8 @@
 export const LINES = 50;
 
+// Bahis kademeleri: total bet = bahis x 50 satır.
+export const BET_LEVELS = [10, 20, 50, 100, 500, 1000, 5000, 8000, 10000];
+
 // Toplam bahsin bu katı ve üzeri kazançlar "büyük ödül" sayılır.
 export const BIG_WIN_MULTIPLE = 10;
 

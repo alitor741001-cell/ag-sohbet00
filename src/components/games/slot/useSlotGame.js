@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import { BET_STEP, LINES, MAX_BET, MIN_BET } from './slotConfig';
-
-const sleep = (ms) => new Promise((resolve) => { window.setTimeout(resolve, ms); });
+import { BET_LEVELS, LINES, MAX_BET, MIN_BET } from './slotConfig';
 
 const SPIN_DURATION_MS = 5000;
 const SETTLE_MS = 800;
@@ -34,10 +32,23 @@ export default function useSlotGame({ roomId } = {}) {
   const roundRef = useRef(0);
   const [slow, setSlow] = useState(false);
   const [stopping, setStopping] = useState(false);
-  const [stopRequested, setStopRequested] = useState(false);
+  // Bekleme; STOP'a basıldığında (ya da süre dolduğunda) sona erer.
+  const wait = useCallback((ms) => new Promise((resolve) => {
+    let timer = null;
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      if (timer) window.clearTimeout(timer);
+      stopRef.current = null;
+      resolve();
+    };
+    timer = window.setTimeout(finish, ms);
+    stopRef.current = finish;
+  }), []);
+  // STOP: tur hangi aşamada olursa olsun bekleme hemen biter ve sonuç gösterilir.
   const stop = useCallback(() => {
     if (!busyRef.current) return;
-    setStopRequested(true);
     stopRef.current?.();
   }, []);
   useEffect(() => () => { stopRef.current?.(); }, []);
@@ -84,7 +95,6 @@ export default function useSlotGame({ roomId } = {}) {
     roundRef.current += 1;
     // Birkaç turdan sonra arada sırada makaralar yavaş döner.
     setSlow(roundRef.current > SLOW_AFTER_SPINS && Math.random() < SLOW_CHANCE);
-    setStopRequested(false);
     setStopping(false);
     setSpinning(true);
     setWin(0);
@@ -93,23 +103,17 @@ export default function useSlotGame({ roomId } = {}) {
     setWins([]);
     setGrid(null);
     setMessage('');
-    const duration = new Promise((resolve) => {
-      const timer = window.setTimeout(() => {
-        setStopRequested(true);
-        resolve();
-      }, SPIN_DURATION_MS - SETTLE_MS);
-      stopRef.current = () => { window.clearTimeout(timer); resolve(); };
-    });
     try {
       const [response] = await Promise.all([
         base44.functions.invoke('slot-game', { action: 'spin', bet, room_id: roomId }),
-        duration,
+        wait(SPIN_DURATION_MS - SETTLE_MS),
       ]);
       const data = response.data || {};
       setGrid(data.grid || null);
       setWins(data.wins || []);
       setStopping(true);
-      await sleep(SETTLE_MS);
+      // Makaraların yerine oturması; STOP'a basılırsa beklemeden sonuç gösterilir.
+      await wait(SETTLE_MS);
       applyState(data);
       setWin(data.win || 0);
       setBigWin(data.big_win || 0);
@@ -119,14 +123,12 @@ export default function useSlotGame({ roomId } = {}) {
       setAuto(false);
       setMessage(raw && !/rate limit/i.test(raw) ? raw : 'Çok hızlı oynuyorsun, birkaç saniye bekle.');
     } finally {
-      stopRef.current?.();
       stopRef.current = null;
       setStopping(false);
-      setStopRequested(false);
       setSpinning(false);
       busyRef.current = false;
     }
-  }, [applyState, bet, coins, lines, noLimit, roomId, status]);
+  }, [applyState, bet, coins, lines, noLimit, roomId, status, wait]);
 
   const saveBet = useCallback(async (next) => {
     setBet(next);
@@ -140,17 +142,18 @@ export default function useSlotGame({ roomId } = {}) {
 
   const changeBet = useCallback((direction) => {
     if (busyRef.current) return;
-    const next = Math.min(MAX_BET, Math.max(MIN_BET, bet + direction * BET_STEP));
+    const index = BET_LEVELS.indexOf(bet);
+    const nextIndex = Math.min(BET_LEVELS.length - 1, Math.max(0, (index < 0 ? 0 : index) + direction));
+    const next = BET_LEVELS[nextIndex];
     if (next === bet) return;
     saveBet(next);
   }, [bet, saveBet]);
 
   const maxBet = useCallback(() => {
     if (busyRef.current) return;
-    const affordable = noLimit ? MAX_BET : Math.floor(coins / lines / BET_STEP) * BET_STEP;
-    const next = Math.min(MAX_BET, Math.max(MIN_BET, affordable));
-    if (next === bet) return;
-    saveBet(next);
+    const affordable = noLimit ? MAX_BET : BET_LEVELS.filter((value) => value * lines <= coins).pop() || MIN_BET;
+    if (affordable === bet) return;
+    saveBet(affordable);
   }, [bet, coins, lines, noLimit, saveBet]);
 
   const claimBonus = useCallback(async () => {
@@ -188,7 +191,6 @@ export default function useSlotGame({ roomId } = {}) {
     bonusAmount,
     spinning,
     stopping,
-    stopRequested,
     stop,
     grid,
     wins,

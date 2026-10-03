@@ -16,6 +16,8 @@ import SlotStopButton from './slot/SlotStopButton';
 
 // Görsel alanı doldururken en fazla bu oranda kırpılır; panelde siyah boşluk kalmaz.
 const MAX_CROP = 1.06;
+// Üstte kazanan şeridi için ayrılan alan: şerit + görselin üstündeki boşluk.
+const TICKER_SPACE = 34;
 const WIN_FLASH_MS = 2400;
 // Bu tutarın üzerindeki kazançlarda kutlama ekranı açılır.
 const PRIZE_THRESHOLD = 20000;
@@ -51,11 +53,13 @@ export default function SlotGame({ onExit, onBack, roomId }) {
   const panelHeight = size?.height || 0;
   const fit = Math.min(panelWidth / ART_WIDTH, panelHeight / ART_HEIGHT);
   const cover = Math.max(panelWidth / ART_WIDTH, panelHeight / ART_HEIGHT);
-  const scale = Math.min(cover || 0, (fit || 0) * MAX_CROP);
+  // Üstte kazanan şeridine yer ayrılır: görselin üstünde en az 34px boşluk kalır.
+  const reserve = Math.max(0, (panelHeight || 0) - TICKER_SPACE) / ART_HEIGHT;
+  const scale = Math.min(cover || 0, (fit || 0) * MAX_CROP, reserve || 0);
   const width = ART_WIDTH * scale;
   const height = ART_HEIGHT * scale;
-  // Şerit, görselin üstünde kalan boşluğu kaplar ve orada biter — filmkeyfi yazısını kapatmaz.
-  const tickerHeight = Math.max(26, Math.round((panelHeight || 0) - height));
+  // Şerit, görselin üstünde kalan boşluğun 8px üstünde biter — filmkeyfi yazısını kapatmaz.
+  const tickerHeight = Math.max(26, Math.round((panelHeight || 0) - height) - 8);
   const ready = game.status === 'ready';
 
   return (
@@ -90,7 +94,7 @@ export default function SlotGame({ onExit, onBack, roomId }) {
             <button
               type="button"
               onClick={game.spinning ? game.stop : game.spin}
-              disabled={!ready || game.stopping || game.stopRequested}
+              disabled={!ready}
               aria-label={game.spinning ? 'Makaraları durdur' : 'Turu başlat'}
               className="absolute flex items-center justify-center active:brightness-125"
               style={SLOT_LAYOUT.spin}

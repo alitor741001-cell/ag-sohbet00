@@ -1,5 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
-import { LINES, BIG_WIN_MULTIPLE, spinReels, evaluateGrid } from '../../shared/slotEngine.ts';
+import { LINES, BET_LEVELS, BIG_WIN_MULTIPLE, spinReels, evaluateGrid } from '../../shared/slotEngine.ts';
 
 const START_COINS = 100000;
 // Yönetici bakiyesi: 500 bin coin. Sınırsız (∞) mod yok.
@@ -8,8 +8,6 @@ const ADMIN_COINS = 500000;
 const BIG_WIN_TABLE_MIN = 20000;
 const BONUS_COINS = 25000;
 const BONUS_COOLDOWN_MS = 6 * 60 * 60 * 1000;
-const MIN_BET = 10;
-const MAX_BET = 1000;
 const DEFAULT_BET = 100;
 // Bakiye gerçek: bahis bakiyeden düşer, kazanç eklenir; "sınırsız" mod yoktur.
 // Eski sürümden kalan devasa bakiyeler bu sınırın üzerindeyse normale çekilir.
@@ -42,7 +40,7 @@ function walletView(wallet, isAdmin = false) {
     coins: wallet.coins ?? START_COINS,
     unlimited: false,
     no_limit: false,
-    bet: wallet.bet ?? DEFAULT_BET,
+    bet: nearestBet(wallet.bet ?? DEFAULT_BET),
     lines: LINES,
     spins: wallet.spins ?? 0,
     grand: wallet.grand ?? 0,
@@ -52,10 +50,19 @@ function walletView(wallet, isAdmin = false) {
   };
 }
 
+// Bahis yalnızca tanımlı kademelerden biri olabilir: en yakın kademeye oturtulur.
+function nearestBet(value) {
+  const numeric = Math.round(Number(value));
+  if (!Number.isFinite(numeric) || numeric <= 0) return DEFAULT_BET;
+  return BET_LEVELS.reduce((best, level) => (
+    Math.abs(level - numeric) < Math.abs(best - numeric) ? level : best
+  ), BET_LEVELS[0]);
+}
+
 function clampBet(value, fallback) {
   const numeric = Math.round(Number(value));
   if (!Number.isFinite(numeric) || numeric <= 0) return fallback;
-  return Math.max(MIN_BET, Math.min(MAX_BET, numeric));
+  return nearestBet(numeric);
 }
 
 async function loadWallet(base44, user) {
