@@ -3,9 +3,6 @@ import { Gamepad2, Play, X } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import { GAME_COVER } from './slotAssets';
 import SlotGame from './SlotGame';
-import BigWinBoard from './BigWinBoard';
-import WinnerBoard from './WinnerBoard';
-import WinHistory from './WinHistory';
 
 // Sinematik geçişin toplam süresi.
 const TRANSITION_MS = 700;
@@ -57,9 +54,8 @@ export default function GamePanel({ open, onClose, roomId }) {
               </button>
             </header>
 
-            <div className="min-h-0 flex-1 overflow-y-auto p-3">
-              <BigWinBoard />
-              <WinnerBoard />
+            {/* Panelde sadece oyunun logosu durur: dokununca oyun açılır. */}
+            <div className="flex min-h-0 flex-1 flex-col justify-center overflow-y-auto p-3">
               <button
                 type="button"
                 onClick={openGame}
@@ -81,7 +77,6 @@ export default function GamePanel({ open, onClose, roomId }) {
                   </span>
                 </span>
               </button>
-              <WinHistory />
             </div>
           </div>
         )}

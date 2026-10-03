@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Gamepad2, Send, Smile } from 'lucide-react';
+import { Send, Smile } from 'lucide-react';
 import EmojiPicker from '@/components/player/EmojiPicker';
 import VoiceChatMessage from '@/components/voice/VoiceChatMessage';
 import SlotWinMessage from '@/components/games/SlotWinMessage';
@@ -11,7 +11,7 @@ import useRoomLevels from '@/hooks/useRoomLevels';
  * Oda alt bölümü: mesaj akışı klavye ikonuna basmadan da alt barın üstündeki boş alanda durur,
  * yazma alanı açıldığında ve klavye kalktığında akış onunla birlikte yukarı kayar.
  */
-export default function VoiceChatDock({ messages = [], onSend, onCloseComposer, composerOpen, currentUserId, ownerId, moderators = [], onOpenProfile, onOpenGames }) {
+export default function VoiceChatDock({ messages = [], onSend, onCloseComposer, composerOpen, currentUserId, ownerId, moderators = [], onOpenProfile }) {
   const [text, setText] = useState('');
   const [emojiOpen, setEmojiOpen] = useState(false);
   const inputRef = useRef(null);
@@ -95,14 +95,6 @@ export default function VoiceChatDock({ messages = [], onSend, onCloseComposer, 
               enterKeyHint="send"
               className="h-10 min-w-0 flex-1 bg-transparent px-1 text-base text-white outline-none placeholder:text-white/45"
             />
-            <button
-              type="button"
-              onClick={onOpenGames}
-              aria-label="Oyun merkezi"
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white/60 transition-transform active:scale-95"
-            >
-              <Gamepad2 className="h-5 w-5" />
-            </button>
             <button
               type="button"
               onClick={() => setEmojiOpen((value) => !value)}

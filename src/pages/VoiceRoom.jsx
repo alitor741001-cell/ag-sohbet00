@@ -487,7 +487,6 @@ export default function VoiceRoom() {
         onSend={sendMessage}
         onCloseComposer={() => setChatOpen(false)}
         composerOpen={chatOpen}
-        onOpenGames={() => setGamesOpen(true)}
         currentUserId={user?.id}
         ownerId={room?.owner_id}
         moderators={moderators}
@@ -506,6 +505,8 @@ export default function VoiceRoom() {
         chatOpen={chatOpen}
         onToggleMic={handleMic}
         onToggleSpeaker={voice.toggleDeafen}
+        gamesOpen={gamesOpen}
+        onOpenGames={() => setGamesOpen(true)}
         onOpenPrivateChat={() => setDmOpen(true)}
         onToggleChat={() => setChatOpen((value) => !value)}
       />
