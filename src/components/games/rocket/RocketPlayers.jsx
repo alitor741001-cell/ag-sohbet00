@@ -3,41 +3,39 @@ import { Ticket, Users } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import { format, formatMult } from './rocketConfig';
 
-/** Aynı oyuncunun iki bahis alanı tek satırda toplanır. */
-function groupBets(bets) {
-  const map = new Map();
-  bets.forEach((b) => {
-    const row =
-      map.get(b.user_id) || {
-        user_id: b.user_id,
-        name: b.user_name,
-        avatar: b.user_avatar,
-        activeTotal: 0,
-        cashout_at: 0,
-        active: false,
-      };
-    if (b.status === 'active') {
-      row.active = true;
-      row.activeTotal += b.bet || 0;
-    }
-    if (b.status === 'cashed') row.cashout_at = Math.max(row.cashout_at, b.cashout_at || 0);
-    map.set(b.user_id, row);
-  });
-  return Array.from(map.values());
+/** Her bahis alanı kendi satırında görünür: aynı oyuncunun iki bahsi ayrı yazılır. */
+function betRows(bets) {
+  return bets.map((b, index) => ({
+    key: b.id || `${b.user_id}:${b.slot ?? 1}:${index}`,
+    user_id: b.user_id,
+    name: b.user_name,
+    avatar: b.user_avatar,
+    amount: b.bet || 0,
+    active: b.status === 'active',
+    cashout_at: b.status === 'cashed' ? b.cashout_at || 0 : 0,
+  }));
 }
 
-/** Sol panel: oyuncular katıldıkça profil ve bahis miktarları canlı görünür. */
+/** Sol panel: bahisler ayrı satırlarda, üstte tur boyunca yatırılan toplam coin. */
 export default function RocketPlayers({ bets, me }) {
-  const rows = groupBets(bets || []);
+  const rows = betRows(bets || []);
   const active = rows.filter((r) => r.active);
   const cashed = rows.filter((r) => !r.active && r.cashout_at > 0).sort((a, b) => b.cashout_at - a.cashout_at);
   const ordered = [...active, ...cashed].slice(0, 30);
+  // Yeni turda bahisler o turun kayıtlarıyla gelir: yatırılan toplam kendiliğinden sıfırlanır.
+  const totalStake = rows.reduce((sum, r) => sum + r.amount, 0);
+  const playerCount = new Set(rows.map((r) => r.user_id)).size;
 
   return (
     <aside className="rk-glass absolute bottom-2 left-2 top-2 flex w-[32%] max-w-[9.5rem] flex-col overflow-hidden rounded-xl">
       <div className="flex shrink-0 items-center gap-1 border-b border-white/10 px-2 py-1.5">
         <Users className="h-3 w-3 shrink-0 text-[#00d4ff]" />
-        <span className="truncate text-[10px] font-black text-white">Oyuncular {rows.length}</span>
+        <span className="truncate text-[10px] font-black text-white">Oyuncular {playerCount}</span>
+      </div>
+
+      <div className="flex shrink-0 items-center justify-between gap-1 border-b border-white/10 px-2 py-1">
+        <span className="truncate text-[9px] font-bold text-white/50">Yatırılan</span>
+        <span className="shrink-0 text-[9px] font-black text-[#ffb800]">{format(totalStake)}</span>
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto px-1 py-1 no-scrollbar">
@@ -46,7 +44,7 @@ export default function RocketPlayers({ bets, me }) {
         )}
         {ordered.map((row) => (
           <div
-            key={row.user_id}
+            key={row.key}
             className={`mb-1 flex items-center gap-1 rounded-lg px-1 py-1 ${
               row.user_id === me ? 'bg-[#ffb800]/20 ring-1 ring-[#ffb800]/50' : 'bg-black/35'
             }`}
@@ -70,7 +68,7 @@ export default function RocketPlayers({ bets, me }) {
             {row.active ? (
               <>
                 <Ticket className="h-2.5 w-2.5 shrink-0 text-[#ffb800]" />
-                <span className="shrink-0 text-[9px] font-black text-white">{format(row.activeTotal)}</span>
+                <span className="shrink-0 text-[9px] font-black text-white">{format(row.amount)}</span>
               </>
             ) : (
               <span className="shrink-0 text-[9px] font-black text-emerald-400">{formatMult(row.cashout_at)}</span>

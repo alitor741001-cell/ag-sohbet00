@@ -105,7 +105,12 @@ export default function useRocketGame() {
       return;
     }
     roundNoRef.current = res.round?.round_no;
-    serverNowRef.current = res.now;
+    // Yoklama gecikmesi saati geriye çekmez: ilerleme saniyesi düşerken bir an
+    // yükselmez, geri sayım tek yönde akar.
+    serverNowRef.current = Math.max(
+      hasDataRef.current ? serverNowRef.current + (Date.now() - fetchedAtRef.current) : 0,
+      res.now
+    );
     fetchedAtRef.current = Date.now();
     phaseRef.current = res.round?.status;
     launchAtRef.current = res.round?.phase_ends_at ? new Date(res.round.phase_ends_at).getTime() : null;
