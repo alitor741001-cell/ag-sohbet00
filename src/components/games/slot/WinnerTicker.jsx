@@ -49,9 +49,13 @@ function TickerRow({ winner }) {
 export default function WinnerTicker({ height = VISIBLE_ROWS * TICKER_ROW_HEIGHT }) {
   const { winners, status } = useBigWins();
   const rows = winners.slice(0, 8);
-  // Kesintisiz kayma için satırlar iki kopya halinde döner.
-  const loop = rows.length ? [...rows, ...rows] : [];
-  const duration = Math.max(8, rows.length * SECONDS_PER_ROW);
+  // Kayma kutunun yarısı kadar indiği için liste, kutuyu her an dolduracak
+  // şekilde (kutunun en az iki katı) çift kopya halinde tekrarlanır.
+  const fillRows = Math.ceil(height / TICKER_ROW_HEIGHT) * 2;
+  const repeat = rows.length ? Math.max(2, Math.ceil(fillRows / rows.length / 2) * 2) : 0;
+  const loop = repeat ? Array.from({ length: repeat }, () => rows).flat() : [];
+  // Kayma hızı satır başına aynı kalır.
+  const duration = Math.max(8, Math.round((loop.length / 2) * SECONDS_PER_ROW));
 
   return (
     <div
@@ -60,11 +64,13 @@ export default function WinnerTicker({ height = VISIBLE_ROWS * TICKER_ROW_HEIGHT
       style={{ height }}
     >
       {loop.length ? (
-        <ul className="winner-ticker-scroll" style={{ animationDuration: `${duration}s` }}>
-          {loop.map((winner, index) => (
-            <TickerRow key={`${winner.id}-${index}`} winner={winner} />
-          ))}
-        </ul>
+        <div className="winner-ticker-fade h-full">
+          <ul className="winner-ticker-scroll" style={{ animationDuration: `${duration}s` }}>
+            {loop.map((winner, index) => (
+              <TickerRow key={`${winner.id}-${index}`} winner={winner} />
+            ))}
+          </ul>
+        </div>
       ) : (
         <p className="flex h-full items-center justify-center px-2 text-center text-[10px] font-bold text-white/70">
           {status === 'loading' ? 'Kazananlar yükleniyor...' : '20.000+ coin kazananlar burada görünür.'}
