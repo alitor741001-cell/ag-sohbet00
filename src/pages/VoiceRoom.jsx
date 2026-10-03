@@ -30,7 +30,6 @@ export default function VoiceRoom() {
   const [needsPassword, setNeedsPassword] = useState(false);
   const [password, setPassword] = useState('');
   const [notice, setNotice] = useState('');
-  const [messages, setMessages] = useState([]);
   const [chatOpen, setChatOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -160,20 +159,6 @@ export default function VoiceRoom() {
     }
   }, [room?.status, joined]);
 
-  // Sohbet akışı
-  useEffect(() => {
-    if (!id) return;
-    base44.entities.RoomMessage.filter({ room_id: id }, '-created_date', 80)
-      .then((list) => setMessages([...list].reverse()))
-      .catch(() => {});
-    const unsubscribe = base44.entities.RoomMessage.subscribe((event) => {
-      const data = event?.data;
-      if (!data || data.room_id !== id || event.type !== 'create') return;
-      setMessages((prev) => (prev.some((item) => item.id === event.id) ? prev : [...prev, { ...data, id: event.id }]));
-    });
-    return unsubscribe;
-  }, [id]);
-
   // Sekme kapanırken / sayfadan çıkılırken odadan ayrıl.
   useEffect(() => () => {
     if (!joinedRef.current) return;
@@ -204,9 +189,6 @@ export default function VoiceRoom() {
     await base44.functions.invoke('room-presence', { action: 'leave', room_id: id }).catch(() => {});
     navigate('/acik-odalar');
   }, [id, seated, navigate]);
-
-  // Profil kartı: sohbet satırı, canlı akış veya dolu koltuğa dokununca açılır.
-  const openProfile = (userId) => { if (userId) setProfileUserId(userId); };
 
   // Dolu koltuk profil kartını, boş koltuk beyaz koltuk menüsünü açar.
   const handleSeatPress = (index) => {
@@ -444,16 +426,7 @@ export default function VoiceRoom() {
         </p>
       </div>
 
-      {chatOpen && (
-        <VoiceChatOverlay
-          messages={messages}
-          onSend={sendMessage}
-          currentUserId={user?.id}
-          ownerId={room?.owner_id}
-          moderators={moderators}
-          onOpenProfile={openProfile}
-        />
-      )}
+      {chatOpen && <VoiceChatOverlay onSend={sendMessage} />}
 
       {(voice.remoteMuted || voice.error) && (
         <p className="px-3 pb-1 text-center text-[11px] text-amber-400">
