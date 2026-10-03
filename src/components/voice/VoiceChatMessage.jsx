@@ -14,8 +14,8 @@ function VoiceChatMessage({ message, profile, level, ownerId, moderators = [], c
   const isMod = !isOwner && (moderators.includes(message.user_id) || isModerator(profile));
 
   return (
-    <article className="min-w-0 text-sm leading-relaxed [overflow-wrap:anywhere]">
-      {memberId && <span className="mr-1 inline-block rounded border border-emerald-400/40 bg-emerald-500/10 px-1 align-middle text-[9px] font-black leading-4 text-emerald-300">#{memberId}</span>}
+    <article className="min-w-0 text-sm leading-relaxed [overflow-wrap:anywhere] [text-shadow:0_1px_4px_rgba(0,0,0,0.9)]">
+      {memberId && <span className="mr-1 inline-block rounded border border-white/25 bg-white/10 px-1 align-middle text-[9px] font-black leading-4 text-white/85">#{memberId}</span>}
       <RoleBadge user={profile} size="sm" className="mr-1 align-middle" />
       <span className="mr-1 inline-block h-[30px] w-[54px] shrink-0 overflow-hidden align-middle">
         <span className="block origin-top-left scale-[0.36]"><RoomLevelBadge level={level} /></span>
@@ -23,7 +23,7 @@ function VoiceChatMessage({ message, profile, level, ownerId, moderators = [], c
       {isOwner && <Crown className="mr-0.5 inline h-3 w-3 align-middle text-amber-400" />}
       {isMod && <Shield className="mr-0.5 inline h-3 w-3 align-middle text-sky-400" />}
       <button type="button" onClick={() => onOpenProfile?.(message.user_id)} className="align-middle text-xs font-bold hover:underline">
-        <RoleNameEffect nameEffect={role.name_effect} color={role.color} className={role.name_effect ? undefined : 'text-emerald-400'}>
+        <RoleNameEffect nameEffect={role.name_effect} color={role.color} className={role.name_effect ? undefined : 'text-white'}>
           {message.user_name || 'Kullanıcı'}{message.user_id === currentUserId && ' (Sen)'}
         </RoleNameEffect>
       </button>

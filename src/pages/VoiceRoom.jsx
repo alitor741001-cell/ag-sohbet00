@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Armchair, Eye, Loader2, Lock, LogOut, MessageSquare, Mic, MicOff, Minimize2, MoreHorizontal, Radio, Shield, ShieldAlert, Unlock, UserMinus, UserRound, X } from 'lucide-react';
+import { Armchair, Eye, Loader2, Lock, LogOut, MessageSquare, Mic, MicOff, Minimize2, MoreHorizontal, Radio, Shield, ShieldAlert, Unlock, UserMinus, UserRound } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useVoiceChat } from '@/hooks/useVoiceChat';
+import useKeyboardInset from '@/hooks/useKeyboardInset';
 import { useToast } from '@/components/ui/use-toast';
 import VoiceSeatGrid from '@/components/voice/VoiceSeatGrid';
 import VoiceControlBar from '@/components/voice/VoiceControlBar';
-import VoiceChat from '@/components/voice/VoiceChat';
-import VoiceLiveFeed from '@/components/voice/VoiceLiveFeed';
+import VoiceChatOverlay from '@/components/voice/VoiceChatOverlay';
 import VoiceRoomMenu from '@/components/voice/VoiceRoomMenu';
 import VoiceSeatSheet from '@/components/voice/VoiceSeatSheet';
 import InviteSheet from '@/components/voice/InviteSheet';
@@ -17,7 +17,6 @@ import VoiceProfileCard from '@/components/voice/VoiceProfileCard';
 import VoiceMenuButton from '@/components/voice/VoiceMenuButton';
 import VoiceRoomBubble from '@/components/voice/VoiceRoomBubble';
 import RoomDirectMessages from '@/components/player/RoomDirectMessages';
-import { plainText } from '@/components/voice/voiceText';
 
 export default function VoiceRoom() {
   const { id } = useParams();
@@ -33,7 +32,6 @@ export default function VoiceRoom() {
   const [notice, setNotice] = useState('');
   const [messages, setMessages] = useState([]);
   const [chatOpen, setChatOpen] = useState(false);
-  const [feedOpen, setFeedOpen] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [seatIndex, setSeatIndex] = useState(null);
@@ -41,6 +39,8 @@ export default function VoiceRoom() {
   const [dmUserId, setDmUserId] = useState(null);
   const [minimized, setMinimized] = useState(false);
   const [exitOpen, setExitOpen] = useState(false);
+
+  const keyboardInset = useKeyboardInset();
 
   const joinedRef = useRef(false);
   const joinTriedRef = useRef(false);
@@ -320,8 +320,6 @@ export default function VoiceRoom() {
     }
   }, [id, toast]);
 
-  const lastMessage = messages[messages.length - 1];
-
   if (loading) {
     return (
       <div className="fixed inset-0 z-[150] flex items-center justify-center bg-catalog">
@@ -391,10 +389,13 @@ export default function VoiceRoom() {
   }
 
   return (
-    <div className="fixed inset-0 z-[150] flex flex-col bg-catalog text-white">
+    <div
+      className="fixed inset-0 z-[150] flex flex-col bg-catalog text-white"
+      style={{ paddingBottom: chatOpen ? keyboardInset : 0 }}
+    >
       <div className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-gradient-to-b from-primary/25 to-transparent" />
 
-      <header className="relative flex items-center justify-between gap-2 px-3 pb-2 pt-[max(0.75rem,env(safe-area-inset-top))]">
+      <header className="relative flex shrink-0 items-center justify-between gap-2 px-3 pb-2 pt-[max(0.75rem,env(safe-area-inset-top))]">
         <div className="min-w-0">
           <p className="flex items-center gap-1.5 truncate text-sm font-bold">
             <Radio className="h-4 w-4 shrink-0 text-primary" /> {room?.name}
@@ -443,22 +444,15 @@ export default function VoiceRoom() {
         </p>
       </div>
 
-      {feedOpen ? (
-        <VoiceLiveFeed
+      {chatOpen && (
+        <VoiceChatOverlay
           messages={messages}
+          onSend={sendMessage}
+          currentUserId={user?.id}
           ownerId={room?.owner_id}
           moderators={moderators}
-          currentUserId={user?.id}
           onOpenProfile={openProfile}
-          onOpenChat={() => setChatOpen(true)}
         />
-      ) : (
-        <button type="button" onClick={() => setChatOpen(true)} className="relative mx-3 mb-2 flex shrink-0 items-center gap-2 rounded-2xl border border-white/10 bg-black/40 px-3 py-2 text-left">
-          <MessageSquare className="h-4 w-4 shrink-0 text-white/60" />
-          <span className="min-w-0 flex-1 truncate text-[11px] text-white/70">
-            {lastMessage ? `${lastMessage.type === 'system' ? '' : `${lastMessage.user_name}: `}${plainText(lastMessage.text)}` : 'Sohbete katıl...'}
-          </span>
-        </button>
       )}
 
       {(voice.remoteMuted || voice.error) && (
@@ -471,32 +465,10 @@ export default function VoiceRoom() {
         micActive={!voice.muted}
         deafened={voice.deafened}
         chatOpen={chatOpen}
-        feedOpen={feedOpen}
         onToggleMic={handleMic}
         onToggleSpeaker={voice.toggleDeafen}
         onToggleChat={() => setChatOpen((value) => !value)}
-        onToggleFeed={() => setFeedOpen((value) => !value)}
       />
-
-      {chatOpen && (
-        <div className="absolute inset-x-0 bottom-0 z-[160] flex h-[62vh] flex-col rounded-t-3xl border-t border-white/10 bg-[#101016]">
-          <div className="flex shrink-0 items-center justify-between px-4 py-2">
-            <p className="text-sm font-bold">Sohbet</p>
-            <button type="button" onClick={() => setChatOpen(false)} aria-label="Sohbeti kapat" className="rounded-full bg-white/10 p-1.5">
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-          <VoiceChat
-            messages={messages}
-            onSend={sendMessage}
-            currentUserId={user?.id}
-            ownerId={room?.owner_id}
-            moderators={moderators}
-            onOpenProfile={openProfile}
-            className="min-h-0 flex-1"
-          />
-        </div>
-      )}
 
       <VoiceRoomMenu
         open={menuOpen}
