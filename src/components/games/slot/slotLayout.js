@@ -13,7 +13,7 @@ const frame = (x, y, w, h) => ({
 
 // Görselin kendi butonları — görünmez dokunma alanları.
 export const SLOT_LAYOUT = {
-  // Makara alanı — tur sırasında görselin kendisi burada döner.
+  // Makara alanı — tur sırasında semboller burada kayar.
   reelWindow: frame(25, 435, 968, 670),
   spin: frame(760, 1264, 236, 248),
   auto: frame(596, 1352, 160, 140),
@@ -23,16 +23,35 @@ export const SLOT_LAYOUT = {
   betPlus: frame(480, 1330, 104, 110),
 };
 
-// Makara penceresi beş sütuna bölünür: turda her sütun kendi sembolleriyle aşağı kayar.
-const REEL_WINDOW_X = 25;
-const REEL_WINDOW_HEIGHT = 670;
-const REEL_COLUMN_WIDTH = 968 / 5;
+// Makara ızgarası: 5 sütun x 3 satır sembol hücresi.
+const CELL_WIDTH = 968 / 5;
+const CELL_HEIGHT = 670 / 3;
+const CELL_X = 25;
+const CELL_Y = 435;
 
-export const REEL_COLUMNS = [0, 1, 2, 3, 4].map((index) => ({
-  left: `${index * 20}%`,
-  backgroundSize: `${((ART_WIDTH / REEL_COLUMN_WIDTH) * 100).toFixed(1)}% ${((ART_HEIGHT / REEL_WINDOW_HEIGHT) * 100).toFixed(1)}%`,
-  backgroundPositionX: `${(((REEL_WINDOW_X + index * REEL_COLUMN_WIDTH) / (ART_WIDTH - REEL_COLUMN_WIDTH)) * 100).toFixed(2)}%`,
-}));
+// Bir sembol hücresini görselden kırpıp gösteren arka plan ölçüleri.
+export const CELL_STYLE = {
+  backgroundSize: `${((ART_WIDTH / CELL_WIDTH) * 100).toFixed(1)}% ${((ART_HEIGHT / CELL_HEIGHT) * 100).toFixed(1)}%`,
+  x: [0, 1, 2, 3, 4].map((index) => `${(((CELL_X + index * CELL_WIDTH) / (ART_WIDTH - CELL_WIDTH)) * 100).toFixed(2)}%`),
+  y: [0, 1, 2].map((index) => `${(((CELL_Y + index * CELL_HEIGHT) / (ART_HEIGHT - CELL_HEIGHT)) * 100).toFixed(2)}%`),
+};
+
+// Oyun motorunun sembolleri görseldeki hücrelerle birebir eşleşir.
+export const SYMBOL_CELLS = {
+  ten: { col: 0, row: 0 },
+  jack: { col: 0, row: 1 },
+  queen: { col: 0, row: 2 },
+  king: { col: 1, row: 0 },
+  ace: { col: 1, row: 1 },
+  gem: { col: 1, row: 2 },
+  eagle: { col: 2, row: 0 },
+  tiger: { col: 2, row: 1 },
+  lion: { col: 3, row: 1 },
+  free: { col: 3, row: 0 },
+  jackpot: { col: 3, row: 2 },
+};
+
+export const SYMBOL_IDS = Object.keys(SYMBOL_CELLS);
 
 // Görselde yazılı olan rakam alanları — canlı değerler bu kutulara yazılır.
 export const SLOT_FIELDS = {
@@ -41,7 +60,7 @@ export const SLOT_FIELDS = {
   win: frame(585, 1268, 150, 54),
   bet: frame(330, 1370, 104, 56),
   balance: frame(90, 1456, 170, 54),
-  // En üstteki ödül rakamları sıfırlanır.
+  // En üstteki ödül rakamları sıfırlanır; GRAND havuzu canlıdır.
   jackpots: [
     frame(168, 296, 200, 48),
     frame(402, 296, 222, 48),

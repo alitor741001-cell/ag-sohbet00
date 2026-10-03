@@ -5,7 +5,7 @@ import { BET_STEP, LINES, MAX_BET, MIN_BET } from './slotConfig';
 const sleep = (ms) => new Promise((resolve) => { window.setTimeout(resolve, ms); });
 
 // Tur animasyonunun görünür kalması için en kısa dönüş süresi.
-const SPIN_MIN_MS = 1100;
+const SPIN_MIN_MS = 1250;
 
 export default function useSlotGame({ roomId } = {}) {
   const [status, setStatus] = useState('loading');
@@ -20,6 +20,7 @@ export default function useSlotGame({ roomId } = {}) {
   const [bonusReady, setBonusReady] = useState(false);
   const [bonusAmount, setBonusAmount] = useState(0);
   const [spinning, setSpinning] = useState(false);
+  const [grid, setGrid] = useState(null);
   const [win, setWin] = useState(0);
   const [bigWin, setBigWin] = useState(0);
   const [jackpotHit, setJackpotHit] = useState(false);
@@ -78,6 +79,7 @@ export default function useSlotGame({ roomId } = {}) {
       ]);
       const data = response.data || {};
       applyState(data);
+      setGrid(data.grid || null);
       setWin(data.win || 0);
       setBigWin(data.big_win || 0);
       setJackpotHit((data.wins || []).some((item) => item.symbol === 'jackpot'));
@@ -151,6 +153,7 @@ export default function useSlotGame({ roomId } = {}) {
     bonusReady,
     bonusAmount,
     spinning,
+    grid,
     win,
     bigWin,
     jackpotHit,
