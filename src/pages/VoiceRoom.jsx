@@ -194,10 +194,19 @@ export default function VoiceRoom() {
     navigate('/acik-odalar');
   }, [id, seated, navigate]);
 
+  const openProfile = (userId) => { if (userId) navigate(`/kullanici/${userId}`); };
+
+  // Boş koltuğa dokunma: yöneticiler koltuk menüsünü açar, üyeler doğrudan oturur.
   const handleSeatPress = (index) => {
     const seat = seats[index];
-    if (seat?.user_id) { setSeatIndex(index); return; }
+    if (seat?.user_id || canMod) { setSeatIndex(index); return; }
     invokeVoice({ action: 'seat-take', seat_index: index });
+  };
+
+  const handleTakeSeat = () => {
+    const index = seatIndex;
+    setSeatIndex(null);
+    if (index !== null) invokeVoice({ action: 'seat-take', seat_index: index });
   };
 
   const handleMic = () => {
@@ -418,7 +427,15 @@ export default function VoiceRoom() {
               <X className="h-4 w-4" />
             </button>
           </div>
-          <VoiceChat messages={messages} onSend={sendMessage} currentUserId={user?.id} className="min-h-0 flex-1" />
+          <VoiceChat
+            messages={messages}
+            onSend={sendMessage}
+            currentUserId={user?.id}
+            ownerId={room?.owner_id}
+            moderators={moderators}
+            onOpenProfile={openProfile}
+            className="min-h-0 flex-1"
+          />
         </div>
       )}
 
@@ -444,14 +461,14 @@ export default function VoiceRoom() {
         userId={user?.id}
         ownerId={room?.owner_id}
         canMod={canMod}
-        isOwner={isOwner}
         targetIsMod={!!sheetTarget && moderators.includes(sheetTarget)}
+        onTakeSeat={handleTakeSeat}
         onLeaveSeat={() => { setSeatIndex(null); invokeVoice({ action: 'seat-leave' }); }}
         onKick={handleKickFromRoom}
         onToggleMute={handleToggleSeatMute}
         onToggleMod={() => { const makeMod = !moderators.includes(sheetTarget); setSeatIndex(null); handleToggleMod(sheetTarget, makeMod); }}
         onToggleLock={() => invokeVoice({ action: 'seat-lock', seat_index: seatIndex, locked: !sheetSeat?.locked })}
-        onOpenProfile={() => { setSeatIndex(null); navigate(`/kullanici/${sheetTarget}`); }}
+        onOpenProfile={() => { setSeatIndex(null); openProfile(sheetTarget); }}
       />
 
       <InviteSheet open={inviteOpen} onClose={() => setInviteOpen(false)} onInvite={sendInvites} />
