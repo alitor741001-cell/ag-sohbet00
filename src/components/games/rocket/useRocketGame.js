@@ -1,0 +1,112 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { base44 } from '@/api/base44Client';
+import { multiplierAt, colorForMult, MULT_COLOR_CLASS } from './rocketConfig';
+
+// Sunucu istek limiti nedeniyle seyrek poll edilir; çarpan yerel saatle akıcı kalır.
+const POLL_RUNNING = 3000;
+const POLL_IDLE = 5000;
+const CLOCK_TICK = 50;
+
+/** Crash Rocket oyun durumu: sunucudan poll edilir, çarpan yerel saatle akıcı gösterilir. */
+export default function useRocketGame() {
+  const [data, setData] = useState(null);
+  const [status, setStatus] = useState('loading');
+  const [message, setMessage] = useState('');
+  const [clock, setClock] = useState(Date.now());
+
+  const serverNowRef = useRef(Date.now());
+  const fetchedAtRef = useRef(Date.now());
+  const phaseRef = useRef(null);
+  const hasDataRef = useRef(false);
+
+  const applyResult = useCallback((res) => {
+    if (!res) return;
+    if (res.error) {
+      setMessage(res.error);
+      return;
+    }
+    serverNowRef.current = res.now;
+    fetchedAtRef.current = Date.now();
+    phaseRef.current = res.round?.status;
+    hasDataRef.current = true;
+    setData(res);
+    setStatus('ready');
+    setMessage('');
+  }, []);
+
+  const fetchState = useCallback(async () => {
+    try {
+      const response = await base44.functions.invoke('rocket-game', { action: 'state' });
+      applyResult(response.data);
+    } catch (e) {
+      // Geçici istek limiti hatasında mevcut durum korunur.
+      if (!hasDataRef.current) {
+        setStatus('error');
+        setMessage(e.message || 'Bağlantı hatası');
+      }
+    }
+  }, [applyResult]);
+
+  useEffect(() => {
+    let timer;
+    const loop = async () => {
+      await fetchState();
+      const delay = phaseRef.current === 'running' ? POLL_RUNNING : POLL_IDLE;
+      timer = setTimeout(loop, delay);
+    };
+    loop();
+    return () => clearTimeout(timer);
+  }, [fetchState]);
+
+  useEffect(() => {
+    const id = setInterval(() => setClock(Date.now()), CLOCK_TICK);
+    return () => clearInterval(id);
+  }, []);
+
+  const act = useCallback(
+    async (payload) => {
+      try {
+        const response = await base44.functions.invoke('rocket-game', payload);
+        applyResult(response.data);
+        return response.data;
+      } catch (e) {
+        setMessage(e.message || 'İşlem başarısız');
+        return null;
+      }
+    },
+    [applyResult]
+  );
+
+  const placeBet = useCallback(() => act({ action: 'bet', amount: data?.bet ?? 500 }), [act, data?.bet]);
+  const cashout = useCallback(() => act({ action: 'cashout' }), [act]);
+  const changeBet = useCallback((dir) => act({ action: 'changeBet', direction: dir }), [act]);
+
+  // Yerel akıcı çarpan: sunucu saati + yerel geçen süre.
+  const round = data?.round;
+  const serverNow = serverNowRef.current + (clock - fetchedAtRef.current);
+  let liveMult = 1;
+  if (round?.status === 'running' && round.started_at) {
+    liveMult = multiplierAt(serverNow - new Date(round.started_at).getTime());
+  } else if (round?.status === 'crashed') {
+    liveMult = round.crash_at || 1;
+  }
+
+  const myBet = data?.bets?.find((b) => b.user_id === data?.me && b.status === 'active') || null;
+
+  return {
+    status,
+    round,
+    bets: data?.bets || [],
+    history: data?.history || [],
+    coins: data?.coins ?? 0,
+    bet: data?.bet ?? 500,
+    me: data?.me,
+    myBet,
+    liveMult,
+    liveColor: MULT_COLOR_CLASS[colorForMult(liveMult)],
+    message,
+    placeBet,
+    cashout,
+    changeBet,
+  };
+}

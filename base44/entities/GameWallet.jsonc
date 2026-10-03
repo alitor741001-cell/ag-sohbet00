@@ -16,6 +16,10 @@
       "type": "number",
       "default": 100
     },
+    "rocket_bet": {
+      "type": "number",
+      "default": 500
+    },
     "grand": {
       "type": "number",
       "default": 0
