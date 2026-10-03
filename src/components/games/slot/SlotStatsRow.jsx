@@ -6,7 +6,7 @@ function StatPill({ label, value, tone }) {
   return (
     <div className="slot-panel-3d flex-1 rounded-full border border-slot-gold/50 px-2 py-1 text-center">
       <p className="text-[9px] font-black tracking-widest text-slot-gold">{label}</p>
-      <p className={`font-mono text-sm font-black tabular-nums ${tone || 'text-slot-text'}`}>{format(value)}</p>
+      <p className={`slot-digits font-mono text-sm font-black tabular-nums ${tone || ''}`}>{format(value)}</p>
     </div>
   );
 }

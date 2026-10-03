@@ -13,7 +13,7 @@ export default function SlotActionDeck({ coins, spinning, disabled, onCoin, onMa
         className="slot-panel-3d flex h-12 shrink-0 items-center gap-1 rounded-xl border border-slot-gold/50 px-2"
       >
         <span className="text-base leading-none">🪙</span>
-        <span className="font-mono text-[11px] font-black tabular-nums text-slot-text">{format(coins)}</span>
+        <span className="slot-digits font-mono text-[11px] font-black tabular-nums text-white">{format(coins)}</span>
         <span className="slot-coin-plus flex h-5 w-5 items-center justify-center rounded-full text-sm font-black">+</span>
       </button>
 

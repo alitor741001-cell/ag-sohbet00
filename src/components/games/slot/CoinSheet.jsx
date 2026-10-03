@@ -25,7 +25,7 @@ export default function CoinSheet({ open, onClose, coins, bonusReady, bonusAmoun
           </button>
         </div>
 
-        <p className="mt-2 text-center font-mono text-3xl font-black tabular-nums text-slot-text">{format(coins)}</p>
+        <p className="slot-digits mt-2 text-center font-mono text-3xl font-black tabular-nums text-white">{format(coins)}</p>
         <p className="text-center text-[10px] font-black tracking-widest text-slot-gold/80">MEVCUT BAKİYE</p>
 
         <button

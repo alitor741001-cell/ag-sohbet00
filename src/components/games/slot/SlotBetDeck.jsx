@@ -18,7 +18,7 @@ export default function SlotBetDeck({ bet, auto, spinning, onBet, onAuto }) {
         </button>
         <div className="min-w-0 flex-1 text-center">
           <p className="text-[9px] font-black tracking-[0.2em] text-slot-gold">BET</p>
-          <p className="font-mono text-lg font-black leading-tight tabular-nums text-slot-text">{format(bet)}</p>
+          <p className="slot-digits font-mono text-lg font-black leading-tight tabular-nums text-white">{format(bet)}</p>
         </div>
         <button
           type="button"
