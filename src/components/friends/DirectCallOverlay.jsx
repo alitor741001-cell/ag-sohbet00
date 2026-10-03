@@ -1,4 +1,6 @@
-import { Mic, MicOff, Phone, PhoneOff, Volume2, VolumeX } from 'lucide-react';
+import { ArrowLeft, Mic, MicOff, Phone, PhoneOff, Volume2, VolumeX } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import CallBubble from '@/components/friends/CallBubble';
 import { useDirectCall } from '@/lib/DirectCallContext';
 import XpAvatar from '@/components/xp/XpAvatar';
 import ProfileFrame from '@/components/ProfileFrame';
@@ -11,10 +13,11 @@ const formatDuration = (total) => {
 };
 
 export default function DirectCallOverlay() {
-  const { call, phase, seconds, muted, speaker, error, acceptCall, rejectCall, endCall, toggleMute, toggleSpeaker } = useDirectCall();
+  const navigate = useNavigate();
+  const { call, role, phase, seconds, muted, speaker, error, minimized, minimizeCall, restoreCall, acceptCall, rejectCall, endCall, toggleMute, toggleSpeaker } = useDirectCall();
   if (!call || phase === 'idle') return null;
 
-  const other = phase === 'incoming'
+  const other = role === 'callee'
     ? { id: call.caller_id, name: call.caller_name, avatar: call.caller_avatar, frame: call.caller_frame, frameScale: call.caller_frame_scale }
     : { id: call.callee_id, name: call.callee_name, avatar: call.callee_avatar, frame: call.callee_frame, frameScale: call.callee_frame_scale };
 
@@ -24,9 +27,12 @@ export default function DirectCallOverlay() {
       ? 'Sesli arama isteği'
       : 'Bağlanıyor...';
 
+  if (minimized && phase !== 'incoming') return <CallBubble avatar={other.avatar} name={other.name} onOpen={restoreCall} />;
+
   return (
-    <section className="fixed inset-0 z-[230] flex flex-col bg-black text-white" style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
+    <section className="fixed inset-0 z-[230] flex flex-col bg-catalog text-primary-foreground" style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
       <div className="pointer-events-none absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-primary/25 to-transparent" />
+      {phase !== 'incoming' && <button type="button" aria-label="Aramayı küçült ve ana ekrana dön" onClick={() => { minimizeCall(); navigate('/'); }} className="absolute left-4 z-10 rounded-full bg-secondary p-3 text-secondary-foreground" style={{ top: 'calc(1rem + env(safe-area-inset-top))' }}><ArrowLeft className="h-6 w-6" /></button>}
       <p className="relative pt-10 text-center text-[11px] uppercase tracking-[0.35em] text-white/50">
         {phase === 'incoming' ? 'Gelen arama' : phase === 'outgoing' ? 'Aranıyor' : 'Sesli arama'}
       </p>
@@ -56,7 +62,7 @@ export default function DirectCallOverlay() {
             <CallCircleButton tone="gray" onClick={toggleMute} label={muted ? 'Sesi aç' : 'Sessiz'}>
               {muted ? <MicOff className="h-7 w-7" /> : <Mic className="h-7 w-7" />}
             </CallCircleButton>
-            <CallCircleButton tone="gray" onClick={toggleSpeaker} label={speaker ? 'Hoparlör' : 'Ahize'}>
+            <CallCircleButton tone="gray" onClick={toggleSpeaker} label={speaker ? 'Sesi kapat' : 'Sesi aç'}>
               {speaker ? <Volume2 className="h-7 w-7" /> : <VolumeX className="h-7 w-7" />}
             </CallCircleButton>
             <CallCircleButton tone="red" onClick={endCall} label="Kapat"><PhoneOff className="h-7 w-7" /></CallCircleButton>

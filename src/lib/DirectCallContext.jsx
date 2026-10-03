@@ -1,7 +1,9 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { Room, RoomEvent, Track } from 'livekit-client';
+import { RoomEvent, Track } from 'livekit-client';
+import NativeCallAudio, { NativeCallTrack } from '@/lib/NativeCallAudio';
+import { claimCallAudioFocus, releaseCallAudioFocus } from '@/lib/callAudioFocus';
 import { base44 } from '@/api/base44Client';
-import { createVoiceOutput, ensureMicTrack, releaseMic, resetAudioRouting, setSpeakerMode, startRingtone } from '@/lib/callAudio';
+import { createVoiceOutput, ensureMicTrack, releaseMic, resetAudioRouting, startRingtone, unlockVoicePlayback } from '@/lib/callAudio';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 
 const DirectCallContext = createContext(null);
@@ -17,7 +19,7 @@ const ROOM_OPTIONS = {
   webAudioMix: false,
   audioCaptureDefaults: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
 };
-const MIC_PUBLICATION = { name: 'microphone', source: Track.Source.Microphone, dtx: false, stopMicTrackOnMute: false };
+const MIC_PUBLICATION = { name: 'microphone', source: Track.Source.Microphone, dtx: false, red: false, forceStereo: false, audioPreset: { maxBitrate: 32000 }, stopMicTrackOnMute: false };
 
 export default function DirectCallProvider({ children }) {
   const { user } = useCurrentUser();
@@ -28,6 +30,7 @@ export default function DirectCallProvider({ children }) {
   const [muted, setMuted] = useState(false);
   const [speaker, setSpeaker] = useState(true);
   const [error, setError] = useState('');
+  const [minimized, setMinimized] = useState(false);
 
   const roomRef = useRef(null);
   const tokenRef = useRef(null);
@@ -80,6 +83,8 @@ export default function DirectCallProvider({ children }) {
     // Mikrofon serbest bırakılır: sonraki arama temiz akışla başlar, izin tekrar sorulmaz.
     releaseMic();
     resetAudioRouting();
+    releaseCallAudioFocus();
+    setMinimized(false);
     phaseRef.current = 'idle';
     mutedRef.current = false;
     speakerRef.current = true;
@@ -96,12 +101,12 @@ export default function DirectCallProvider({ children }) {
 
   const attachRemoteAudio = useCallback((track) => {
     if (track.kind !== Track.Kind.Audio) return;
-    if ([...audioRef.current].some((output) => output.dataset.livekitTrack === track.sid)) return;
-    // Karşı taraf kabul edene kadar sessiz tutulur; kabulde anında açılır.
-    const output = createVoiceOutput(track, 'direct-call', { startMuted: phaseRef.current !== 'active' });
+    const existing = [...audioRef.current].find((output) => output.dataset.livekitTrack === track.sid);
+    if (existing?.dataset.livekitMediaTrack === track.mediaStreamTrack?.id) return;
+    if (existing) { existing.remove(); audioRef.current.delete(existing); }
+    const output = createVoiceOutput(track, 'direct-call', { startMuted: phaseRef.current !== 'active' || !speakerRef.current, nativeOnly: true });
     audioRef.current.add(output);
-    roomRef.current?.startAudio?.().catch(() => {});
-    output.play().catch(() => {});
+    output.play().catch(() => { if (phaseRef.current === 'active') setError('Karşı tarafı duymak için ekrana dokunun.'); });
   }, []);
 
   const attachAllRemoteAudio = useCallback(() => {
@@ -115,7 +120,7 @@ export default function DirectCallProvider({ children }) {
 
   const armOutputs = useCallback((active) => {
     audioRef.current.forEach((output) => {
-      output.muted = !active;
+      output.muted = !active || !speakerRef.current;
       if (active) output.play().catch(() => {});
     });
   }, []);
@@ -143,6 +148,7 @@ export default function DirectCallProvider({ children }) {
     };
     track.addEventListener('mute', recover);
     track.addEventListener('ended', recover);
+    if (track.muted || track.readyState !== 'live') recover();
   }, []);
 
   const publishMic = useCallback(async (room) => {
@@ -158,7 +164,8 @@ export default function DirectCallProvider({ children }) {
         if (!micTrack || micTrack.readyState !== 'live') throw new Error('mikrofon yok');
         micTrackRef.current = micTrack;
         micTrack.enabled = !mutedRef.current;
-        await room.localParticipant.publishTrack(micTrack, MIC_PUBLICATION);
+        const localTrack = new NativeCallTrack(micTrack, micTrack.getConstraints(), true);
+        await room.localParticipant.publishTrack(localTrack, MIC_PUBLICATION);
         if (roomRef.current !== room) return;
         publishedRef.current = room;
         watchMic(room, micTrack);
@@ -183,7 +190,7 @@ export default function DirectCallProvider({ children }) {
           if (connectingRef.current !== task) return null;
           const data = response?.data;
           if (!data?.url || !data?.token) throw new Error('token yok');
-          const room = new Room(ROOM_OPTIONS);
+          const room = new NativeCallAudio(ROOM_OPTIONS);
           roomRef.current = room;
           room.on(RoomEvent.TrackSubscribed, attachRemoteAudio);
           room.on(RoomEvent.ParticipantConnected, attachAllRemoteAudio);
@@ -220,10 +227,13 @@ export default function DirectCallProvider({ children }) {
   // Zil çalarken ses kanalını ve mikrofonu hazırla — kabulde gecikme olmasın.
   const prepareSession = useCallback((callId) => {
     // Gelen çağrıda mikrofonu kullanıcı cevaplamadan açma.
-    connect(callId, { publish: false });
+    claimCallAudioFocus().then(() => {
+      if (callRef.current?.id === callId) connect(callId, { publish: false });
+    }).catch(() => setError('Mikrofon başka bir görüşmede kullanılıyor.'));
   }, [connect]);
 
   const beginLocalCall = useCallback((record, nextRole, nextPhase) => {
+    setMinimized(false);
     callRef.current = record;
     roleRef.current = nextRole;
     setCall(record);
@@ -242,26 +252,26 @@ export default function DirectCallProvider({ children }) {
       setPhase('active');
     }
     armOutputs(true);
-    if (isCallee) connect(callId, { publish: true });
+    connect(callId, { publish: true });
   }, [armOutputs, connect, publishMic]);
 
   // caller: arama başlat — başarısızsa hata mesajı döner, null dönerse başarılı
   const startCall = useCallback(async ({ calleeId, conversationId }) => {
     if (phaseRef.current !== 'idle' || !userRef.current?.id || !calleeId) return 'Şu an arama başlatılamaz.';
     // Mikrofon iznini ağ yanıtından önce, doğrudan kullanıcı dokunuşunda başlat.
-    const microphone = ensureMicTrack();
-    microphone.catch(() => {});
     try {
-      await microphone;
+      await claimCallAudioFocus();
+      await ensureMicTrack();
+      unlockVoicePlayback();
       const response = await base44.functions.invoke('direct-call', { action: 'start', callee_id: calleeId, conversation_id: conversationId });
       const record = response.data?.call;
-      if (!record) { releaseMic(); return response.data?.error || 'Arama başlatılamadı.'; }
+      if (!record) { releaseMic(); releaseCallAudioFocus(); return response.data?.error || 'Arama başlatılamadı.'; }
       beginLocalCall(record, 'caller', 'outgoing');
       ringtoneRef.current = startRingtone();
       await connect(record.id, { publish: true });
       return null;
     } catch (invokeError) {
-      if (phaseRef.current === 'idle') releaseMic();
+      if (phaseRef.current === 'idle') { releaseMic(); releaseCallAudioFocus(); }
       return invokeError?.name === 'NotAllowedError' ? 'Mikrofon izni verilmedi.' : invokeError?.response?.data?.error || invokeError?.message || 'Arama başlatılamadı.';
     }
   }, [beginLocalCall, connect]);
@@ -272,8 +282,10 @@ export default function DirectCallProvider({ children }) {
     if (!current || phaseRef.current !== 'incoming') return;
     stopRingtone();
     // Safari için izin isteği cevaplama dokunuşunun içinde başlar.
-    ensureMicTrack().catch((micError) => setError(micError?.name === 'NotAllowedError' ? 'Mikrofon izni verilmedi.' : 'Mikrofon başlatılamadı.'));
-    activateCall(current.id, true);
+    unlockVoicePlayback();
+    claimCallAudioFocus().then(() => {
+      if (callRef.current?.id === current.id) activateCall(current.id, true);
+    }).catch(() => setError('Mikrofon başka bir görüşmede kullanılıyor.'));
     try {
       const response = await base44.functions.invoke('direct-call', { action: 'accept', call_id: current.id });
       setCall(response.data?.call || { ...current, status: 'accepted', accepted_at: new Date().toISOString() });
@@ -309,12 +321,15 @@ export default function DirectCallProvider({ children }) {
     if (track && track.readyState === 'live') track.enabled = !next;
   }, []);
 
-  // Hoparlör açıkken tam ses, kapalıyken çıkış ahizeye yönlendirilir.
+  // Hoparlör tuşu yalnız karşı tarafın sesini keser; mikrofon yayını devam eder.
   const toggleSpeaker = useCallback(() => {
     const next = !speakerRef.current;
     speakerRef.current = next;
     setSpeaker(next);
-    setSpeakerMode(next);
+    audioRef.current.forEach((output) => {
+      output.muted = !next || phaseRef.current !== 'active';
+      if (next) output.play().catch(() => {});
+    });
   }, []);
 
   // Gelen/biten arama senkronizasyonu — gerçek zamanlı abonelik + yedek sorgu
@@ -402,10 +417,12 @@ export default function DirectCallProvider({ children }) {
   useEffect(() => () => teardown(), [teardown]);
 
   const value = useMemo(() => ({
-    call, role, phase, seconds, muted, speaker, error,
+    call, role, phase, seconds, muted, speaker, error, minimized,
     startCall, acceptCall, rejectCall, endCall, toggleMute, toggleSpeaker,
+    minimizeCall: () => setMinimized(true),
+    restoreCall: () => { setMinimized(false); armOutputs(phaseRef.current === 'active'); },
     clearError: () => setError(''),
-  }), [call, role, phase, seconds, muted, speaker, error, startCall, acceptCall, rejectCall, endCall, toggleMute, toggleSpeaker]);
+  }), [call, role, phase, seconds, muted, speaker, error, minimized, armOutputs, startCall, acceptCall, rejectCall, endCall, toggleMute, toggleSpeaker]);
 
   return <DirectCallContext.Provider value={value}>{children}</DirectCallContext.Provider>;
 }

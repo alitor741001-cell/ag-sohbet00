@@ -166,8 +166,8 @@ function App() {
             <Router>
               <ScrollToTop />
               <AuthenticatedApp />
+              <DirectCallOverlay />
             </Router>
-            <DirectCallOverlay />
           </DirectCallProvider>
           <Toaster />
         </ThemeProvider>

@@ -6,7 +6,7 @@
 // çalınır; ahize/hoparlör seçimi iOS'ta navigator.audioSession, diğer
 // cihazlarda setSinkId ile yapılır.
 
-const MIC_OPTIONS = { echoCancellation: true, noiseSuppression: true, autoGainControl: true };
+const MIC_OPTIONS = { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: { ideal: 1 } };
 const EARPIECE_RE = /earpiece|receiver|handset|ahize|kulak|communication/i;
 
 let micStream = null;
@@ -147,7 +147,7 @@ if (typeof window !== 'undefined') {
  * LiveKit track'ini yönlendirilebilir bir <audio> elementine bağlar.
  * Dönen nesne arayüz tarafında element gibi kullanılır (dataset, play, remove, muted).
  */
-export function createVoiceOutput(track, roomId, { startMuted = false } = {}) {
+export function createVoiceOutput(track, roomId, { startMuted = false, nativeOnly = false } = {}) {
   const element = track.attach();
   element.autoplay = true;
   element.playsInline = true;
@@ -163,9 +163,11 @@ export function createVoiceOutput(track, roomId, { startMuted = false } = {}) {
       livekitMediaTrack: track.mediaStreamTrack?.id || '',
     },
     element,
-    async play() {
-      await routeOutput(output);
-      await element.play();
+    play() {
+      // Invoke play synchronously to retain the Safari user-gesture permission.
+      // Direct calls never change the recording session while output is playing.
+      if (!nativeOnly) routeOutput(output).catch(() => {});
+      return element.play();
     },
     remove() {
       outputs.delete(output);
