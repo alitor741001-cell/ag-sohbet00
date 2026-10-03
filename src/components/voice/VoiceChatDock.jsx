@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Send, Smile } from 'lucide-react';
+import { Gamepad2, Send, Smile } from 'lucide-react';
 import EmojiPicker from '@/components/player/EmojiPicker';
 import VoiceChatMessage from '@/components/voice/VoiceChatMessage';
+import SlotWinMessage from '@/components/games/SlotWinMessage';
 import { plainText } from '@/components/voice/voiceText';
 import useMessageProfiles from '@/hooks/useMessageProfiles';
 import useRoomLevels from '@/hooks/useRoomLevels';
@@ -10,7 +11,7 @@ import useRoomLevels from '@/hooks/useRoomLevels';
  * Oda alt bölümü: mesaj akışı klavye ikonuna basmadan da alt barın üstündeki boş alanda durur,
  * yazma alanı açıldığında ve klavye kalktığında akış onunla birlikte yukarı kayar.
  */
-export default function VoiceChatDock({ messages = [], onSend, onCloseComposer, composerOpen, currentUserId, ownerId, moderators = [], onOpenProfile }) {
+export default function VoiceChatDock({ messages = [], onSend, onCloseComposer, composerOpen, currentUserId, ownerId, moderators = [], onOpenProfile, onOpenGames }) {
   const [text, setText] = useState('');
   const [emojiOpen, setEmojiOpen] = useState(false);
   const inputRef = useRef(null);
@@ -49,6 +50,9 @@ export default function VoiceChatDock({ messages = [], onSend, onCloseComposer, 
         <div className="absolute inset-x-0 bottom-full z-10 flex max-h-[34vh] flex-col justify-end overflow-y-auto overscroll-contain pb-1 [mask-image:linear-gradient(to_bottom,transparent,black_14%)] [-webkit-mask-image:linear-gradient(to_bottom,transparent,black_14%)]">
           <div className="flex flex-col gap-1.5 px-4">
             {messages.map((message) => {
+              if (message.type === 'slot_win') {
+                return <SlotWinMessage key={message.id} message={message} />;
+              }
               if (message.type === 'system') {
                 return <p key={message.id} className="break-words px-2 text-center text-[11px] font-semibold italic text-amber-300 [overflow-wrap:anywhere] [text-shadow:0_0_10px_rgba(251,191,36,0.45)]">{plainText(message.text)}</p>;
               }
@@ -91,6 +95,14 @@ export default function VoiceChatDock({ messages = [], onSend, onCloseComposer, 
               enterKeyHint="send"
               className="h-10 min-w-0 flex-1 bg-transparent px-1 text-base text-white outline-none placeholder:text-white/45"
             />
+            <button
+              type="button"
+              onClick={onOpenGames}
+              aria-label="Oyun merkezi"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white/60 transition-transform active:scale-95"
+            >
+              <Gamepad2 className="h-5 w-5" />
+            </button>
             <button
               type="button"
               onClick={() => setEmojiOpen((value) => !value)}
