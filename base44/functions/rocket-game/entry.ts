@@ -337,6 +337,34 @@ export default async function (req) {
       return Response.json({ ...view, notice: 'Çakıldı — bahis kaybedildi.' });
     }
 
+    // Oyun defteri: oyuncunun kendi bahis dökümü, yatırılan ve kazanılan toplam.
+    if (action === 'ledger') {
+      const bets = await base44.asServiceRole.entities.RocketBet.filter(
+        { user_id: user.id },
+        '-created_date',
+        200
+      );
+      const rounds = await base44.asServiceRole.entities.RocketRound.list('-round_no', 80);
+      const crashByNo = {};
+      rounds.forEach((r) => {
+        crashByNo[r.round_no] = r.crash_at;
+      });
+      const entries = bets.map((b) => ({
+        round_no: b.round_no,
+        slot: betSlot(b),
+        bet: b.bet ?? 0,
+        status: b.status,
+        cashout_at: b.cashout_at ?? 0,
+        payout: b.payout ?? 0,
+        crash_at: crashByNo[b.round_no] ?? 0,
+      }));
+      return Response.json({
+        entries,
+        total_bet: entries.reduce((sum, e) => sum + e.bet, 0),
+        total_won: entries.reduce((sum, e) => sum + e.payout, 0),
+      });
+    }
+
     // state
     const round = await ensureRound(base44);
     return Response.json(await buildView(base44, user, round));

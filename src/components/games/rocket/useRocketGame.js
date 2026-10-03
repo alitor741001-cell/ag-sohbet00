@@ -27,6 +27,7 @@ export default function useRocketGame() {
   const [status, setStatus] = useState('loading');
   const [message, setMessage] = useState('');
   const [clock, setClock] = useState(Date.now());
+  const [ledger, setLedger] = useState(null);
 
   const serverNowRef = useRef(Date.now());
   const fetchedAtRef = useRef(Date.now());
@@ -118,6 +119,16 @@ export default function useRocketGame() {
   useEffect(() => {
     const id = setInterval(() => setClock(Date.now()), CLOCK_TICK);
     return () => clearInterval(id);
+  }, []);
+
+  // Oyun defteri yalnız açıldığında istenir: düzenli yoklamaya ek yük bindirmez.
+  const loadLedger = useCallback(async () => {
+    try {
+      const response = await base44.functions.invoke('rocket-game', { action: 'ledger' });
+      if (response.data && !response.data.error) setLedger(response.data);
+    } catch (e) {
+      setMessage(friendlyError(e));
+    }
   }, []);
 
   const act = useCallback(
@@ -228,6 +239,8 @@ export default function useRocketGame() {
     liveMult,
     liveColor: MULT_COLOR_CLASS[colorForMult(liveMult)],
     countdown,
+    ledger,
+    loadLedger,
     message: message || missMessage,
     placeBet,
     cashout,
