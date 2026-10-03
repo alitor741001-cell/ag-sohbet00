@@ -1344,10 +1344,14 @@ button:active, nav a:active, a[role="button"]:active {
   background-image: linear-gradient(160deg, hsl(var(--game-gold-soft)), hsl(var(--game-gold)) 38%, hsl(40 62% 30%) 58%, hsl(var(--game-gold-soft)) 86%);
 }
 .zeus-surface {
-  background-image: radial-gradient(120% 70% at 50% 0%, hsl(var(--game-violet) / 0.38), transparent 66%), linear-gradient(180deg, hsl(var(--game-deep)) 0%, hsl(var(--game-deepest)) 100%);
+  background-image: linear-gradient(180deg, hsl(var(--game-deep) / 0.78) 0%, hsl(var(--game-deepest) / 0.92) 100%), url('https://media.base44.com/images/public/6a77d66e4da6de214628ee62/06edfd650_generated_image.png');
+  background-size: cover, cover;
+  background-position: center, center;
 }
 .space-surface {
-  background-image: radial-gradient(95% 55% at 50% 22%, hsl(var(--game-blue) / 0.5), transparent 72%), linear-gradient(180deg, hsl(var(--game-space-light)) 0%, hsl(var(--game-space)) 100%);
+  background-image: linear-gradient(180deg, hsl(var(--game-space-light) / 0.72) 0%, hsl(var(--game-space) / 0.9) 100%), url('https://media.base44.com/images/public/6a77d66e4da6de214628ee62/35bd2615a_generated_image.png');
+  background-size: cover, cover;
+  background-position: center, center;
 }
 @keyframes zeus-pulse { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.18); } }
 .zeus-pulse { animation: zeus-pulse 2.6s ease-in-out infinite; }
