@@ -172,10 +172,6 @@ export default function useRocketGame() {
     return () => clearInterval(id);
   }, []);
 
-  useEffect(() => {
-    multRef.current = liveMult;
-  }, [liveMult]);
-
   // Bahis ve otomatik hedef değerleri ilk yüklemede sunucudan bir kez alınır.
   useEffect(() => {
     if (seededRef.current || !data) return;
@@ -299,6 +295,8 @@ export default function useRocketGame() {
   } else if (phase === 'crashed') {
     liveMult = round?.crash_at || 1;
   }
+  // Çek'e basıldığı an sabitlenecek çarpan için son değer tutulur.
+  multRef.current = liveMult;
 
   // Bahis aşaması geri sayımı: tur başlamadan kaç saniye kaldı.
   let countdown = null;
