@@ -1,0 +1,83 @@
+{
+  "name": "GameProfile",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "user_name": {
+      "type": "string"
+    },
+    "coins": {
+      "type": "integer",
+      "default": 1000
+    },
+    "level": {
+      "type": "integer",
+      "default": 1
+    },
+    "xp": {
+      "type": "integer",
+      "default": 0
+    },
+    "total_spins": {
+      "type": "integer",
+      "default": 0
+    },
+    "total_wagered": {
+      "type": "integer",
+      "default": 0
+    },
+    "total_won": {
+      "type": "integer",
+      "default": 0
+    },
+    "daily_date": {
+      "type": "string",
+      "default": ""
+    },
+    "daily_wagered": {
+      "type": "integer",
+      "default": 0
+    },
+    "recent_request_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    }
+  },
+  "required": [
+    "user_id"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.user_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

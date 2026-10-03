@@ -44,6 +44,18 @@ module.exports = {
   			},
   			border: 'hsl(var(--border))',
 			catalog: 'hsl(var(--catalog-surface))',
+			game: {
+				bg: 'hsl(var(--game-bg) / <alpha-value>)',
+				panel: 'hsl(var(--game-panel) / <alpha-value>)',
+				border: 'hsl(var(--game-border) / <alpha-value>)',
+				gold: 'hsl(var(--game-gold) / <alpha-value>)',
+				pink: 'hsl(var(--game-pink) / <alpha-value>)',
+				violet: 'hsl(var(--game-violet) / <alpha-value>)',
+				neon: 'hsl(var(--game-neon) / <alpha-value>)',
+				green: 'hsl(var(--game-green) / <alpha-value>)',
+				red: 'hsl(var(--game-red) / <alpha-value>)',
+				fg: 'hsl(var(--game-fg) / <alpha-value>)'
+			},
   			input: 'hsl(var(--input))',
   			ring: 'hsl(var(--ring))',
   			chart: {

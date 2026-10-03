@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Send, X, Smile, Trash2, MessageSquareOff, Image as ImageIcon, MessagesSquare, Shield, Crown, Sparkles } from 'lucide-react';
 import VoiceControls from '@/components/player/VoiceControls';
+import GameCenter from '@/components/games/GameCenter';
 import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
@@ -26,6 +27,7 @@ export default function ChatOverlay({ roomId, chatEnabled, isOwner, isAdmin, onC
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState('');
   const [showEmoji, setShowEmoji] = useState(false);
+  const [gamesOpen, setGamesOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const [uploading, setUploading] = useState(false);
@@ -230,7 +232,7 @@ export default function ChatOverlay({ roomId, chatEnabled, isOwner, isAdmin, onC
       </div>
       {(voiceEnabled || onSettings || onDirect) && (
         <div className="room-voice-bar flex items-center gap-1.5 px-3 py-2 border-b border-white/10">
-          <VoiceControls voice={voice} />
+          <VoiceControls voice={voice} onOpenGames={() => setGamesOpen(true)} />
           {onDirect && <button onClick={onDirect} className="relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#1a1a1a] text-xs font-semibold hover:bg-[#2a2a2a] whitespace-nowrap text-white"><MessagesSquare className="w-4 h-4" /> Mesaj{directUnread > 0 && <span className="absolute -right-1 -top-1 min-w-4 h-4 rounded-full px-1 text-[9px] font-bold text-white flex items-center justify-center" style={{ background: '#ffcc00', color: '#000' }}>{directUnread > 99 ? '99+' : directUnread}</span>}</button>}
         </div>
       )}
@@ -360,6 +362,8 @@ export default function ChatOverlay({ roomId, chatEnabled, isOwner, isAdmin, onC
         {uploading && <span className="text-xs text-[#888] animate-pulse shrink-0">...</span>}
       </div>}
 
+
+      <GameCenter open={gamesOpen} onClose={() => setGamesOpen(false)} />
 
       {lightbox && <div onClick={() => setLightbox(null)} className="fixed inset-0 z-[110] bg-black/90 flex items-center justify-center p-4"><button className="absolute top-4 right-4 text-white p-2"><X className="w-6 h-6" /></button><Image src={lightbox} className="max-w-full max-h-full rounded-lg" fittingType="fit" /></div>}
     </div>

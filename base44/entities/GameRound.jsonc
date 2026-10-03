@@ -1,0 +1,88 @@
+{
+  "name": "GameRound",
+  "type": "object",
+  "properties": {
+    "round_number": {
+      "type": "integer",
+      "default": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "waiting",
+        "running",
+        "crashed"
+      ],
+      "default": "waiting"
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "crashed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "crash_point": {
+      "type": "number",
+      "default": 0
+    },
+    "players": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "avatar": {
+            "type": "string"
+          },
+          "bet": {
+            "type": "integer"
+          },
+          "cashout_multiplier": {
+            "type": "number"
+          },
+          "payout": {
+            "type": "integer"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "playing",
+              "cashed",
+              "lost"
+            ]
+          },
+          "target": {
+            "type": "number"
+          }
+        }
+      },
+      "default": []
+    }
+  },
+  "required": [],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

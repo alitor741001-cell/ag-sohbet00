@@ -5,11 +5,6 @@ import { createVoiceOutput, unlockVoicePlayback } from '@/lib/callAudio';
 import { hasDirectCallAudioFocus, subscribeCallAudioFocus } from '@/lib/callAudioFocus';
 
 const initialDebug = { participantCount: 0, remoteParticipants: 0, remoteTracks: 0, playback: 'hazır' };
-const NOISE_KEY = 'voice-noise-suppression';
-// Gürültü engelleme tercihi cihazda saklanır (varsayılan: açık).
-const readNoiseSuppression = () => {
-  try { return localStorage.getItem(NOISE_KEY) !== 'off'; } catch { return true; }
-};
 const friendlyMicError = (error) => {
   if (error?.name === 'NotAllowedError') return '🎤 Mikrofon izni verilmedi.';
   if (error?.name === 'NotReadableError') return '🎤 Mikrofon kullanılamıyor.';
@@ -30,8 +25,6 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
   const [active, setActive] = useState(false);
   const [requesting, setRequesting] = useState(false);
   const [deafened, setDeafened] = useState(false);
-  const [noiseSuppression, setNoiseSuppression] = useState(readNoiseSuppression);
-  const noiseSuppressionRef = useRef(noiseSuppression);
   const [remoteMuted, setRemoteMuted] = useState(false);
   const [localSpeaking, setLocalSpeaking] = useState(false);
   const [speakingIds, setSpeakingIds] = useState([]);
@@ -67,9 +60,6 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
       playback: room.canPlaybackAudio ? 'oynatılıyor' : 'engellendi',
     });
   }, []);
-
-  // Mikrofon seçenekleri: gürültü engelleme tercihi burada uygulanır.
-  const micOptions = () => ({ echoCancellation: true, autoGainControl: true, noiseSuppression: noiseSuppressionRef.current });
 
   const attachRemoteAudio = useCallback((track) => {
     if (track.kind !== Track.Kind.Audio) return;
@@ -194,7 +184,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
       attachCurrentRemoteAudio();
       await retryAudio();
       if (!hasDirectCallAudioFocus() && !mutedByModeratorRef.current && voiceEnabledRef.current && micEnabledRef.current && room.localParticipant.getTrackPublication(Track.Source.Microphone)?.isMuted) {
-        room.localParticipant.setMicrophoneEnabled(true, micOptions()).catch(() => {});
+        room.localParticipant.setMicrophoneEnabled(true, { echoCancellation: true, noiseSuppression: true, autoGainControl: true }).catch(() => {});
       }
       refreshState();
     });
@@ -220,7 +210,11 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
         if (!hasDirectCallAudioFocus() && !mutedByModeratorRef.current && voiceEnabledRef.current && micEnabledRef.current) {
           setRequesting(true);
           try {
-            await room.localParticipant.setMicrophoneEnabled(true, micOptions());
+            await room.localParticipant.setMicrophoneEnabled(true, {
+              echoCancellation: true,
+              noiseSuppression: true,
+              autoGainControl: true,
+            });
           } catch (micError) {
             // Mikrofon reddedilse bile kullanıcı dinleyici olarak bağlı kalır.
             attachCurrentRemoteAudio();
@@ -301,7 +295,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
       setActive(false);
     } else {
       if (!mutedByModeratorRef.current && micEnabledRef.current) {
-        room.localParticipant.setMicrophoneEnabled(true, micOptions()).then(refreshState).catch(() => {});
+        room.localParticipant.setMicrophoneEnabled(true, { echoCancellation: true, noiseSuppression: true, autoGainControl: true }).then(refreshState).catch(() => {});
       }
       audioElementsRef.current.forEach((element) => { element.muted = deafenedRef.current; });
       retryAudio();
@@ -316,7 +310,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
     micAppliedRef.current = next;
     const room = roomRef.current;
     if (!room || hasDirectCallAudioFocus() || connectionState !== 'connected' || mutedByModeratorRef.current) return;
-    room.localParticipant.setMicrophoneEnabled(next, micOptions())
+    room.localParticipant.setMicrophoneEnabled(next, { echoCancellation: true, noiseSuppression: true, autoGainControl: true })
       .then(refreshState)
       .catch(() => {});
   }, [micEnabled, connectionState, refreshState]);
@@ -329,7 +323,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
     setError('');
     try {
       if (active) await room.localParticipant.setMicrophoneEnabled(false);
-      else await room.localParticipant.setMicrophoneEnabled(true, micOptions());
+      else await room.localParticipant.setMicrophoneEnabled(true, { echoCancellation: true, noiseSuppression: true, autoGainControl: true });
       refreshState();
     } catch (micError) {
       console.error('[LiveKit] Microphone toggle failed', micError);
@@ -347,17 +341,5 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
     if (!next) retryAudio();
   }, [retryAudio]);
 
-  // Gürültü engelleme: mikrofon ayarlarına anında uygulanır ve sonraki açılışlarda geçerli olur.
-  const toggleNoiseSuppression = useCallback(() => {
-    const next = !noiseSuppressionRef.current;
-    noiseSuppressionRef.current = next;
-    setNoiseSuppression(next);
-    try { localStorage.setItem(NOISE_KEY, next ? 'on' : 'off'); } catch {}
-    const media = roomRef.current?.localParticipant.getTrackPublication(Track.Source.Microphone)?.track?.mediaStreamTrack;
-    if (media?.applyConstraints) {
-      media.applyConstraints({ noiseSuppression: next, echoCancellation: true, autoGainControl: true }).catch(() => {});
-    }
-  }, []);
-
-  return { muted: !active, remoteMuted, deafened, noiseSuppression, toggleNoiseSuppression, localSpeaking, speakingIds, participantMicStates, active, error, requesting, connectionState, audioBlocked, retryAudio, toggleMute, toggleDeafen, debug, voiceEnabled };
+  return { muted: !active, remoteMuted, deafened, localSpeaking, speakingIds, participantMicStates, active, error, requesting, connectionState, audioBlocked, retryAudio, toggleMute, toggleDeafen, debug, voiceEnabled };
 }
