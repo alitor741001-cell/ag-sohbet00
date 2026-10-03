@@ -1,4 +1,4 @@
-import { Gamepad2, Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
+import { Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
 
 const connectionLabels = {
   connected: '🟢 Bağlandı',
@@ -7,7 +7,7 @@ const connectionLabels = {
   disconnected: '🔴 Bağlantı kesildi',
 };
 
-export default function VoiceControls({ voice, onOpenGames }) {
+export default function VoiceControls({ voice }) {
   const speaking = voice.localSpeaking && voice.active && !voice.remoteMuted;
   const micLabel = voice.requesting ? 'HAZIRLANIYOR' : voice.remoteMuted ? 'YÖNETİCİ KAPATTI' : speaking ? 'KONUŞUYOR' : voice.active ? 'MİKROFONU KAPAT' : 'MİKROFONU AÇ';
   const control = 'flex min-w-[44px] flex-col items-center gap-1 rounded-xl px-2 py-1.5 transition-colors disabled:opacity-50';
@@ -22,12 +22,6 @@ export default function VoiceControls({ voice, onOpenGames }) {
         <span className={`flex h-7 w-7 items-center justify-center rounded-full ${voice.deafened ? 'bg-primary text-primary-foreground' : 'bg-white/10'}`}>{voice.deafened ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}</span>
         <span className="text-[8px] font-bold">{voice.deafened ? 'HOPARLÖR KAPALI' : 'HOPARLÖR AÇIK'}</span>
       </button>
-      {onOpenGames && (
-        <button onClick={onOpenGames} className={`${control} text-white/85`}>
-          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-game-pink text-white"><Gamepad2 className="w-4 h-4" /></span>
-          <span className="text-[8px] font-bold">OYUN MERKEZİ</span>
-        </button>
-      )}
     </div>
     {voice.error && <button onClick={voice.audioBlocked ? voice.retryAudio : undefined} className="w-full rounded-lg border border-destructive/40 bg-black/95 p-2 text-left text-[10px] leading-relaxed text-destructive-foreground shadow-xl">{voice.error}</button>}
   </div>;

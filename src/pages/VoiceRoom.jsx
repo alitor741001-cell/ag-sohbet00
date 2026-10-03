@@ -20,7 +20,6 @@ import VoiceProfileCard from '@/components/voice/VoiceProfileCard';
 import VoiceMenuButton from '@/components/voice/VoiceMenuButton';
 import VoiceRoomBubble from '@/components/voice/VoiceRoomBubble';
 import RoomDirectMessages from '@/components/player/RoomDirectMessages';
-import GameCenter from '@/components/games/GameCenter';
 
 export default function VoiceRoom() {
   const { id } = useParams();
@@ -43,7 +42,6 @@ export default function VoiceRoom() {
   const [profileUserId, setProfileUserId] = useState(null);
   const [dmUserId, setDmUserId] = useState(null);
   const [dmOpen, setDmOpen] = useState(false);
-  const [gamesOpen, setGamesOpen] = useState(false);
   const [minimized, setMinimized] = useState(false);
   const [exitOpen, setExitOpen] = useState(false);
 
@@ -505,7 +503,6 @@ export default function VoiceRoom() {
         chatOpen={chatOpen}
         onToggleMic={handleMic}
         onToggleSpeaker={voice.toggleDeafen}
-        onOpenGames={() => setGamesOpen(true)}
         onOpenPrivateChat={() => setDmOpen(true)}
         onToggleChat={() => setChatOpen((value) => !value)}
       />
@@ -603,8 +600,6 @@ export default function VoiceRoom() {
           <RoomDirectMessages initialUserId={dmUserId} onClose={() => { setDmOpen(false); setDmUserId(null); }} />
         </div>
       )}
-
-      <GameCenter open={gamesOpen} onClose={() => setGamesOpen(false)} />
 
       <InviteSheet open={inviteOpen} onClose={() => setInviteOpen(false)} onInvite={sendInvites} />
 
