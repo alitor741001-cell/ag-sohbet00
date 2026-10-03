@@ -14,7 +14,7 @@ const formatDuration = (total) => {
 
 export default function DirectCallOverlay() {
   const navigate = useNavigate();
-  const { call, role, phase, seconds, muted, speaker, error, minimized, minimizeCall, restoreCall, acceptCall, rejectCall, endCall, toggleMute, toggleSpeaker } = useDirectCall();
+  const { call, role, phase, seconds, muted, speaker, error, minimized, remoteMuted, minimizeCall, restoreCall, acceptCall, rejectCall, endCall, toggleMute, toggleSpeaker } = useDirectCall();
   if (!call || phase === 'idle') return null;
 
   const other = role === 'callee'
@@ -27,7 +27,7 @@ export default function DirectCallOverlay() {
       ? 'Sesli arama isteği'
       : 'Bağlanıyor...';
 
-  if (minimized && phase !== 'incoming') return <CallBubble avatar={other.avatar} name={other.name} onOpen={restoreCall} />;
+  if (minimized && phase !== 'incoming') return <CallBubble avatar={other.avatar} name={other.name} muted={remoteMuted} onOpen={restoreCall} />;
 
   return (
     <section className="fixed inset-0 z-[230] flex flex-col bg-catalog text-primary-foreground" style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
@@ -47,6 +47,11 @@ export default function DirectCallOverlay() {
         <div className="text-center">
           <h2 className="text-2xl font-bold">{other.name || 'Kullanıcı'}</h2>
           <p className={`mt-1 text-sm ${phase === 'active' ? 'font-mono tracking-widest text-white/80' : 'text-white/60'}`}>{statusText}</p>
+          {remoteMuted && phase === 'active' && (
+            <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1 text-xs text-secondary-foreground">
+              <MicOff className="h-3.5 w-3.5" /> {other.name || 'Karşı taraf'} sessize alındı
+            </p>
+          )}
         </div>
         {error && <p className="text-xs text-red-400">{error}</p>}
       </div>

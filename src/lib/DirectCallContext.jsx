@@ -31,6 +31,7 @@ export default function DirectCallProvider({ children }) {
   const [speaker, setSpeaker] = useState(true);
   const [error, setError] = useState('');
   const [minimized, setMinimized] = useState(false);
+  const [remoteMuted, setRemoteMuted] = useState(false);
 
   const roomRef = useRef(null);
   const tokenRef = useRef(null);
@@ -47,6 +48,7 @@ export default function DirectCallProvider({ children }) {
   const mutedRef = useRef(false);
   const speakerRef = useRef(true);
   const micTrackRef = useRef(null);
+  const publishedTrackRef = useRef(null);
 
   useEffect(() => { userRef.current = user; }, [user]);
   useEffect(() => { phaseRef.current = phase; }, [phase]);
@@ -79,7 +81,9 @@ export default function DirectCallProvider({ children }) {
     publishingRef.current = null;
     callRef.current = null;
     publishedRef.current = null;
+    publishedTrackRef.current = null;
     micTrackRef.current = null;
+    setRemoteMuted(false);
     // Mikrofon serbest bırakılır: sonraki arama temiz akışla başlar, izin tekrar sorulmaz.
     releaseMic();
     resetAudioRouting();
@@ -109,6 +113,15 @@ export default function DirectCallProvider({ children }) {
     output.play().catch(() => { if (phaseRef.current === 'active') setError('Karşı tarafı duymak için ekrana dokunun.'); });
   }, []);
 
+  // Karşı tarafın mikrofonu kapalıysa oda yayınlarından damıtılır.
+  const syncRemoteMute = useCallback(() => {
+    let muted = false;
+    roomRef.current?.remoteParticipants.forEach((participant) => {
+      participant.audioTrackPublications.forEach((publication) => { if (publication.isMuted) muted = true; });
+    });
+    setRemoteMuted(muted);
+  }, []);
+
   const attachAllRemoteAudio = useCallback(() => {
     roomRef.current?.remoteParticipants.forEach((participant) => {
       participant.audioTrackPublications.forEach((publication) => {
@@ -116,7 +129,8 @@ export default function DirectCallProvider({ children }) {
         if (publication.track) attachRemoteAudio(publication.track);
       });
     });
-  }, [attachRemoteAudio]);
+    syncRemoteMute();
+  }, [attachRemoteAudio, syncRemoteMute]);
 
   const armOutputs = useCallback((active) => {
     audioRef.current.forEach((output) => {
@@ -165,7 +179,10 @@ export default function DirectCallProvider({ children }) {
         micTrackRef.current = micTrack;
         micTrack.enabled = !mutedRef.current;
         const localTrack = new NativeCallTrack(micTrack, micTrack.getConstraints(), true);
+        publishedTrackRef.current = localTrack;
         await room.localParticipant.publishTrack(localTrack, MIC_PUBLICATION);
+        // Karşı taraf katılmadan önce susturulduysa ses durumu sunucuya bildirilir.
+        if (mutedRef.current) localTrack.mute().catch(() => {});
         if (roomRef.current !== room) return;
         publishedRef.current = room;
         watchMic(room, micTrack);
@@ -201,12 +218,22 @@ export default function DirectCallProvider({ children }) {
             }
           });
           room.on(RoomEvent.Reconnected, attachAllRemoteAudio);
+          // Karşı taraf mikrofonunu kapattığında yayın bilgisi üzerinden yakalanır.
+          room.on(RoomEvent.TrackMuted, (publication, participant) => {
+            if (participant?.identity === room.localParticipant.identity || publication.kind !== Track.Kind.Audio) return;
+            setRemoteMuted(true);
+          });
+          room.on(RoomEvent.TrackUnmuted, (publication, participant) => {
+            if (participant?.identity === room.localParticipant.identity || publication.kind !== Track.Kind.Audio) return;
+            setRemoteMuted(false);
+          });
           room.on(RoomEvent.TrackUnsubscribed, (track) => {
             audioRef.current.forEach((output) => {
               if (output.dataset.livekitTrack !== track.sid) return;
               audioRef.current.delete(output);
               output.remove();
             });
+            syncRemoteMute();
           });
           await room.connect(data.url, data.token, { autoSubscribe: true });
           if (connectingRef.current !== task) { room.disconnect(); return null; }
@@ -311,12 +338,17 @@ export default function DirectCallProvider({ children }) {
     teardown();
   }, [teardown]);
 
-  // Sessize alma yayını kapatmaz, track'i duraklatır: izin yeniden istenmez,
-  // tuş anında tepki verir ve mikrofon akışı kopmaz.
+  // Sessize alma mikrofon akışını kapatmaz; yayın üzerinden susturulur ki
+  // karşı taraf "sessize alındı" bilgisini alır ve izin yeniden istenmez.
   const toggleMute = useCallback(() => {
     const next = !mutedRef.current;
     mutedRef.current = next;
     setMuted(next);
+    const publishedTrack = publishedTrackRef.current;
+    if (publishedTrack) {
+      (next ? publishedTrack.mute() : publishedTrack.unmute()).catch(() => {});
+      return;
+    }
     const track = micTrackRef.current;
     if (track && track.readyState === 'live') track.enabled = !next;
   }, []);
@@ -417,12 +449,12 @@ export default function DirectCallProvider({ children }) {
   useEffect(() => () => teardown(), [teardown]);
 
   const value = useMemo(() => ({
-    call, role, phase, seconds, muted, speaker, error, minimized,
+    call, role, phase, seconds, muted, speaker, error, minimized, remoteMuted,
     startCall, acceptCall, rejectCall, endCall, toggleMute, toggleSpeaker,
     minimizeCall: () => setMinimized(true),
     restoreCall: () => { setMinimized(false); armOutputs(phaseRef.current === 'active'); },
     clearError: () => setError(''),
-  }), [call, role, phase, seconds, muted, speaker, error, minimized, armOutputs, startCall, acceptCall, rejectCall, endCall, toggleMute, toggleSpeaker]);
+  }), [call, role, phase, seconds, muted, speaker, error, minimized, remoteMuted, armOutputs, startCall, acceptCall, rejectCall, endCall, toggleMute, toggleSpeaker]);
 
   return <DirectCallContext.Provider value={value}>{children}</DirectCallContext.Provider>;
 }
