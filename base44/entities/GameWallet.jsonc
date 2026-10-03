@@ -39,6 +39,21 @@
       },
       "default": []
     },
+    "lucky_bet": {
+      "type": "number",
+      "default": 2000
+    },
+    "lucky_free_spins": {
+      "type": "integer",
+      "default": 0
+    },
+    "lucky_mult": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "default": []
+    },
     "grand": {
       "type": "number",
       "default": 0

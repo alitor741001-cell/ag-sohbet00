@@ -1,0 +1,46 @@
+/* Lucky Olympus: makara akışı ve çarpan birleşme efekti. */
+.lucky-strip {
+  animation-name: lucky-roll;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  will-change: transform;
+}
+
+@keyframes lucky-roll {
+  from { transform: translateY(0); }
+  to { transform: translateY(-71.43%); }
+}
+
+.lucky-merging {
+  animation: lucky-merge 1.1s ease-out both;
+}
+
+@keyframes lucky-merge {
+  0% { transform: scale(0.6); opacity: 0; }
+  35% { transform: scale(1.25); opacity: 1; }
+  70% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(0.9); opacity: 0; }
+}
+
+.lucky-winner {
+  animation: lucky-pulse 1.1s ease-in-out infinite;
+}
+
+@keyframes lucky-pulse {
+  0%, 100% { box-shadow: inset 0 0 0 2px hsl(var(--slot-gold) / 0.5); }
+  50% { box-shadow: inset 0 0 14px hsl(var(--slot-gold) / 0.9); }
+}
+
+.lucky-free-badge {
+  animation: lucky-breathe 1.6s ease-in-out infinite;
+}
+
+@keyframes lucky-breathe {
+  0%, 100% { transform: scale(1); filter: brightness(1); }
+  50% { transform: scale(1.06); filter: brightness(1.25); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lucky-strip { animation-duration: 1.4s !important; }
+  .lucky-free-badge, .lucky-winner { animation: none; }
+}

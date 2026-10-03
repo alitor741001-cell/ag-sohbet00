@@ -105,7 +105,7 @@ export default function GamePanel({ open, onClose, roomId }) {
             {selected === ROCKET_ID ? (
               <CrashRocketGame onExit={onClose} onBack={closeGame} />
             ) : selected === LUCKY_ID ? (
-              <LuckyOlympusGame onBack={closeGame} />
+              <LuckyOlympusGame onBack={closeGame} onExit={onClose} />
             ) : (
               <SlotGame onExit={onClose} onBack={closeGame} roomId={roomId} />
             )}
