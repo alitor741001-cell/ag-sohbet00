@@ -14,6 +14,9 @@ export const boxStyle = (box) => ({
 // Görseldeki 5x4 ızgaranın üzerine oturan canlı makara alanı (%).
 export const REEL_BOX = { left: 4.5, top: 30, width: 91, height: 42.5 };
 
+// Görseldeki profil simgesi: oyun merkezine dönüş dokunma alanı (%).
+export const BACK_BOX = { left: 1.5, top: 2.6, width: 9, height: 6 };
+
 // Üst şerit: canlı bakiye ve görseldeki üç yuvarlak düğme.
 export const BALANCE_BOX = { left: 4, top: 2.9, width: 23, height: 5 };
 export const TOP_BUTTONS = { top: 0.9, size: 7.6, lefts: [70.2, 80.7, 89.7] };
