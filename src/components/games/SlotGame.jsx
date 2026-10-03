@@ -5,33 +5,43 @@ import { useSize } from '@/hooks/use-size';
 import { SLOT_ART } from './slotAssets';
 import { ART_HEIGHT, ART_WIDTH, SLOT_LAYOUT } from './slot/slotLayout';
 import useSlotGame from './slot/useSlotGame';
-import SlotControlStrip from './slot/SlotControlStrip';
 import CoinSheet from './slot/CoinSheet';
 
 const ART_RATIO = ART_WIDTH / ART_HEIGHT;
-const STRIP_HEIGHT = 54;
+const WIN_FLASH_MS = 2400;
+
+const format = (value) => new Intl.NumberFormat('tr-TR').format(Math.max(0, Math.round(value || 0)));
 
 export default function SlotGame({ onExit, onBack, roomId }) {
   const game = useSlotGame({ roomId });
   const [coinOpen, setCoinOpen] = useState(false);
+  const [flash, setFlash] = useState(0);
   const frameRef = useRef(null);
   const size = useSize(frameRef);
 
-  // Büyük ödülde oyun paneli kapanır; kutlama oda sohbetinde görünür.
+  // Büyük ödülde panel kapanır; kutlama oda sohbetinde görünür.
   useEffect(() => {
     if (game.bigWin > 0) onExit?.();
   }, [game.bigWin, onExit]);
 
-  // Görsel asla kırpılmaz: kutu, görselin oranını korur ve altında kontrol şeridine yer bırakır.
-  const availableHeight = Math.max(0, (size?.height || 0) - STRIP_HEIGHT);
-  const artWidth = Math.min(size?.width || 0, availableHeight * ART_RATIO);
-  const artHeight = artWidth / ART_RATIO;
+  // Kazanç ekranda kısa süre parlar, sonra kendiliğinden kaybolur.
+  useEffect(() => {
+    if (!game.win) return undefined;
+    setFlash(game.win);
+    const timer = window.setTimeout(() => setFlash(0), WIN_FLASH_MS);
+    return () => window.clearTimeout(timer);
+  }, [game.win]);
+
+  // Görsel asla kırpılmaz: kutu görselin oranını korur ve paneli tamamen doldurur.
+  const width = Math.min(size?.width || 0, (size?.height || 0) * ART_RATIO);
+  const height = width / ART_RATIO;
+  const ready = game.status === 'ready';
 
   return (
     <div ref={frameRef} className="relative flex h-full min-h-0 w-full flex-col overflow-hidden bg-slot">
       <div className="flex min-h-0 flex-1 items-center justify-center">
-        {artWidth > 0 && (
-          <div className="relative" style={{ width: artWidth, height: artHeight }}>
+        {width > 0 && (
+          <div className="relative" style={{ width, height }}>
             <Image
               src={SLOT_ART.shell}
               alt="filmkeyfi slot"
@@ -56,7 +66,7 @@ export default function SlotGame({ onExit, onBack, roomId }) {
             <button
               type="button"
               onClick={game.spin}
-              disabled={game.status !== 'ready' || game.spinning}
+              disabled={!ready || game.spinning}
               aria-label="Turu başlat"
               className="absolute rounded-full active:brightness-125"
               style={SLOT_LAYOUT.spin}
@@ -64,7 +74,7 @@ export default function SlotGame({ onExit, onBack, roomId }) {
             <button
               type="button"
               onClick={game.toggleAuto}
-              disabled={game.status !== 'ready'}
+              disabled={!ready}
               aria-label="Otomatik tur"
               className={`absolute rounded-2xl ${game.auto ? 'ring-2 ring-slot-green' : ''}`}
               style={SLOT_LAYOUT.auto}
@@ -72,7 +82,7 @@ export default function SlotGame({ onExit, onBack, roomId }) {
             <button
               type="button"
               onClick={game.maxBet}
-              disabled={game.status !== 'ready'}
+              disabled={!ready}
               aria-label="Maksimum bahis"
               className="absolute rounded-xl active:brightness-125"
               style={SLOT_LAYOUT.max}
@@ -83,6 +93,22 @@ export default function SlotGame({ onExit, onBack, roomId }) {
               aria-label="Coin yükle"
               className="absolute rounded-full active:brightness-125"
               style={SLOT_LAYOUT.balance}
+            />
+            <button
+              type="button"
+              onClick={() => game.changeBet(-1)}
+              disabled={game.spinning}
+              aria-label="Bahsi azalt"
+              className="absolute rounded-lg active:brightness-125"
+              style={SLOT_LAYOUT.betMinus}
+            />
+            <button
+              type="button"
+              onClick={() => game.changeBet(1)}
+              disabled={game.spinning}
+              aria-label="Bahsi artır"
+              className="absolute rounded-lg active:brightness-125"
+              style={SLOT_LAYOUT.betPlus}
             />
 
             <button
@@ -107,6 +133,16 @@ export default function SlotGame({ onExit, onBack, roomId }) {
                 Oyun yükleniyor...
               </p>
             )}
+
+            {flash > 0 && (
+              <p
+                key={flash}
+                className="game-win-float pointer-events-none absolute left-1/2 top-[40%] z-10 rounded-full border border-slot-gold/60 bg-black/70 px-4 py-1.5 font-mono text-lg font-black text-slot-gold"
+              >
+                WIN {format(flash)}
+              </p>
+            )}
+
             {game.message && !coinOpen && (
               <p className="absolute left-1/2 top-[5%] z-10 w-max max-w-[90%] -translate-x-1/2 rounded-full bg-black/70 px-3 py-1.5 text-center text-[11px] font-bold text-slot-gold">
                 {game.message}
@@ -115,20 +151,6 @@ export default function SlotGame({ onExit, onBack, roomId }) {
           </div>
         )}
       </div>
-
-      <SlotControlStrip
-        coins={game.coins}
-        unlimited={game.unlimited}
-        win={game.win}
-        bet={game.bet}
-        auto={game.auto}
-        spinning={game.spinning}
-        disabled={game.status !== 'ready'}
-        onCoin={() => setCoinOpen(true)}
-        onBet={game.changeBet}
-        onAuto={game.toggleAuto}
-        onMax={game.maxBet}
-      />
 
       <CoinSheet
         open={coinOpen}

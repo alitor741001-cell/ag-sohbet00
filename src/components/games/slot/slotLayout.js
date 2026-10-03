@@ -17,5 +17,7 @@ export const SLOT_LAYOUT = {
   spin: frame(760, 1264, 236, 248),
   auto: frame(596, 1352, 160, 140),
   max: frame(382, 1434, 200, 90),
-  balance: frame(24, 1440, 220, 78),
+  balance: frame(18, 1428, 320, 102),
+  betMinus: frame(186, 1330, 100, 110),
+  betPlus: frame(480, 1330, 104, 110),
 };
