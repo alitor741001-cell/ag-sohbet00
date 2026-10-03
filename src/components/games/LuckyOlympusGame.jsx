@@ -41,31 +41,31 @@ export default function LuckyOlympusGame({ onBack, onExit }) {
     setSoundEnabled(next);
   };
 
-  if (game.status === 'loading' || game.status === 'error') {
-    return (
-      <div className="relative flex h-full w-full flex-col bg-slot">
-        <button
-          type="button"
-          onClick={onBack}
-          aria-label="Oyun merkezine dön"
-          className="absolute left-2 top-2 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white"
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </button>
-        <div className="flex flex-1 items-center justify-center">
-          {game.status === 'loading' ? (
-            <span className="h-8 w-8 animate-spin rounded-full border-4 border-slot-border border-t-slot-gold" />
-          ) : (
-            <p className="px-6 text-center text-sm font-bold text-slot-gold">Oyun yüklenemedi. Tekrar dene.</p>
-          )}
-        </div>
-      </div>
-    );
-  }
+  const loading = game.status === 'loading' || game.status === 'error';
 
   return (
     <div ref={boxRef} className="relative h-full w-full overflow-hidden bg-slot">
-      {frame && (
+      {loading && (
+        <>
+          <button
+            type="button"
+            onClick={onBack}
+            aria-label="Oyun merkezine dön"
+            className="absolute left-2 top-2 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <div className="flex h-full w-full items-center justify-center">
+            {game.status === 'loading' ? (
+              <span className="h-8 w-8 animate-spin rounded-full border-4 border-slot-border border-t-slot-gold" />
+            ) : (
+              <p className="px-6 text-center text-sm font-bold text-slot-gold">Oyun yüklenemedi. Tekrar dene.</p>
+            )}
+          </div>
+        </>
+      )}
+
+      {!loading && frame && (
         <div className="absolute" style={{ left: frame.left, top: frame.top, width: frame.width, height: frame.height }}>
           <Image
             src={LUCKY_OLYMPUS_SCREEN}
