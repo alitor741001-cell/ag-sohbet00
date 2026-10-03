@@ -1,15 +1,16 @@
 // Crash Rocket oyun motoru: çarpan formülü, çakılma dağılımı ve bahis kademeleri.
 // Backend (entry.ts) ile frontend (rocketConfig.js) aynı değerleri kullanır.
 
-export const BETTING_MS = 6000;
+export const BETTING_MS = 20000;
 export const GAP_MS = 4000;
 export const MAX_R = 500;
 export const HOUSE_EDGE = 0.99;
-export const ROCKET_BASE = 1.12;
+export const ROCKET_BASE = 1.09;
 export const DEFAULT_ROCKET_BET = 500;
 export const ROCKET_BET_LEVELS = [500, 1000, 2500, 5000, 10000, 25000, 50000, 100000];
 
-// Geçen süreye göre çarpan: m = 1.12^(saniye). ~54 saniyede 500x'e ulaşır.
+// Geçen süreye göre çarpan: m = 1.09^(saniye). Uçuş uzun tutulur ki oyuncu
+// geri çekmek için gerçek bir zaman penceresi bulsun: 2x ~8 sn, 10x ~27 sn.
 export function multiplierAt(ms) {
   if (ms <= 0) return 1;
   return Math.pow(ROCKET_BASE, ms / 1000);

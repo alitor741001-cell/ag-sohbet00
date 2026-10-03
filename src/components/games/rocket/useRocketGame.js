@@ -3,8 +3,8 @@ import { base44 } from '@/api/base44Client';
 import { multiplierAt, colorForMult, MULT_COLOR_CLASS, DEFAULT_ROCKET_BET } from './rocketConfig';
 
 // Sunucu istek limiti nedeniyle seyrek poll edilir; çarpan yerel saatle akıcı kalır.
-const POLL_RUNNING = 3000;
-const POLL_IDLE = 5000;
+const POLL_RUNNING = 2500;
+const POLL_IDLE = 2500;
 const CLOCK_TICK = 50;
 
 /** Crash Rocket oyun durumu: sunucudan poll edilir, çarpan yerel saatle akıcı gösterilir. */
@@ -31,7 +31,7 @@ export default function useRocketGame() {
     hasDataRef.current = true;
     setData(res);
     setStatus('ready');
-    setMessage('');
+    setMessage(res.notice || '');
   }, []);
 
   const fetchState = useCallback(async () => {
@@ -92,6 +92,12 @@ export default function useRocketGame() {
     liveMult = round.crash_at || 1;
   }
 
+  // Bahis aşaması geri sayımı: tur başlamadan kaç saniye kaldı.
+  let countdown = null;
+  if (round?.status === 'betting' && round.phase_ends_at) {
+    countdown = Math.max(0, Math.ceil((new Date(round.phase_ends_at).getTime() - serverNow) / 1000));
+  }
+
   // İki bahis alanı için aktif bahisler.
   const myBets = { 1: null, 2: null };
   (data?.bets || []).forEach((b) => {
@@ -114,6 +120,7 @@ export default function useRocketGame() {
     myBets,
     liveMult,
     liveColor: MULT_COLOR_CLASS[colorForMult(liveMult)],
+    countdown,
     message,
     placeBet,
     cashout,

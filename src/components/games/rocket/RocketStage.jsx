@@ -1,14 +1,10 @@
 import React from 'react';
-import { Crown } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import { ROCKET_BG } from '../rocketAssets';
-import { formatMult } from './rocketConfig';
 import { flightPoint } from './rocketPath';
 import RocketPlayers from './RocketPlayers';
 import RocketTrail from './RocketTrail';
-
-const PHASE_TEXT = { betting: 'Bahisler açık', running: 'Yükseliyor', crashed: 'Çakıldı' };
-const PHASE_CLASS = { betting: 'text-[#7fe4ff]', running: 'text-[#7fe4ff]', crashed: 'text-red-400' };
+import RocketReadout from './RocketReadout';
 
 // Çarpan her ikiye katlandığında mekik yolda belirgin şekilde ilerler.
 const travel = (mult) => 1 - 1 / (1 + Math.log(Math.max(1, mult)) / 1.5);
@@ -29,19 +25,7 @@ export default function RocketStage({ game }) {
       <RocketTrail progress={travel(mult)} phase={phase} />
       <RocketPlayers bets={game.bets} me={game.me} />
 
-      <div className="pointer-events-none absolute inset-y-0 left-[36%] right-0 flex flex-col items-center justify-center gap-1">
-        <Crown className="h-4 w-4 text-[#ffb800]" />
-        <p className="rocket-script text-[16px] leading-none text-white/85">Hayal Et · İzle · Keyfini Çıkar</p>
-        <p
-          key={`${roundNo}-${phase}`}
-          className={`rk-mult text-[52px] leading-none ${crashed ? 'rk-mult-crash' : ''}`}
-        >
-          {formatMult(mult)}
-        </p>
-        <p className={`text-[10px] font-black uppercase tracking-[0.3em] ${PHASE_CLASS[phase] || 'text-white/60'}`}>
-          {PHASE_TEXT[phase] || ''}
-        </p>
-      </div>
+      <RocketReadout phase={phase} mult={mult} countdown={game.countdown} roundNo={roundNo} />
 
       {crashed && (
         <div

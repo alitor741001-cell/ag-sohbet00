@@ -254,14 +254,26 @@ export default async function (req) {
 
     if (action === 'cashout') {
       const slot = body.slot === 2 ? 2 : 1;
-      let round = await ensureRound(base44);
-      const existing = await base44.asServiceRole.entities.RocketBet.filter(
-        { round_id: round.id, user_id: user.id, status: 'active' },
+      const round = await ensureRound(base44);
+      const mine = await base44.asServiceRole.entities.RocketBet.filter(
+        { round_id: round.id, user_id: user.id },
         '-created_date',
-        5
+        8
       );
-      const myBet = existing.find((b) => betSlot(b) === slot);
-      if (!myBet) return Response.json({ error: 'Bu alanda aktif bahsin yok.' }, { status: 400 });
+      const myBet = mine.find((b) => betSlot(b) === slot && b.status === 'active');
+
+      // Aktif bahis yoksa buton sessiz kalmaz: sebebi oyuncuya bildirilir.
+      if (!myBet) {
+        const last = mine.find((b) => betSlot(b) === slot);
+        const notice =
+          last?.status === 'lost'
+            ? 'Çakıldı — bahis kaybedildi.'
+            : last?.status === 'cashed'
+              ? 'Bu bahis zaten çekildi.'
+              : 'Bu alanda aktif bahsin yok.';
+        const view = await buildView(base44, user, round);
+        return Response.json({ ...view, notice });
+      }
 
       const wallet = await loadWallet(base44, user);
 
@@ -290,8 +302,9 @@ export default async function (req) {
         return Response.json(await buildView(base44, user, round));
       }
 
-      // Çakıldıysa bahis zaten kaybedildi.
-      return Response.json(await buildView(base44, user, round));
+      // Çakıldıysa bahis kaybedildi: buton yine de görünür bir yanıt verir.
+      const view = await buildView(base44, user, round);
+      return Response.json({ ...view, notice: 'Çakıldı — bahis kaybedildi.' });
     }
 
     // state
