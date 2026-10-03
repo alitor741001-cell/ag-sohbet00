@@ -1,0 +1,84 @@
+/* === CRASH ROCKET — UÇUŞ === */
+/* Mekik ve çevresindeki uzayın süzüldüğü katman: kenarları yumuşak maskeyle
+   alttaki sabit görsele karışır, böylece dikiş görünmez. */
+.rocket-sky {
+  -webkit-mask-image: radial-gradient(ellipse 42% 40% at 76% 40%, #000 0 55%, transparent 92%);
+  mask-image: radial-gradient(ellipse 42% 40% at 76% 40%, #000 0 55%, transparent 92%);
+}
+
+@keyframes rocket-streak {
+  0% { transform: translate3d(0, 0, 0) rotate(35deg); opacity: 0; }
+  14% { opacity: 1; }
+  100% { transform: translate3d(-16vw, 19vh, 0) rotate(35deg); opacity: 0; }
+}
+.rocket-streak {
+  position: absolute;
+  width: 2px;
+  border-radius: 9999px;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.55) 45%, rgba(255, 255, 255, 0));
+  animation-name: rocket-streak;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+@keyframes rocket-engine {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.12); }
+}
+.rocket-engine-glow {
+  border-radius: 9999px;
+  mix-blend-mode: screen;
+  background: radial-gradient(ellipse at center, rgba(255, 196, 90, 0.9), rgba(255, 120, 0, 0.4) 45%, rgba(255, 70, 0, 0) 76%);
+  animation: rocket-engine 0.7s ease-in-out infinite;
+}
+
+@keyframes rocket-shake {
+  0% { transform: translate3d(calc(var(--shake, 0px) * -1), calc(var(--shake, 0px) * 0.6), 0) scale(1.03); }
+  25% { transform: translate3d(var(--shake, 0px), calc(var(--shake, 0px) * -0.6), 0) scale(1.03); }
+  50% { transform: translate3d(calc(var(--shake, 0px) * -0.7), 0, 0) scale(1.03); }
+  75% { transform: translate3d(calc(var(--shake, 0px) * 0.7), var(--shake, 0px), 0) scale(1.03); }
+  100% { transform: translate3d(calc(var(--shake, 0px) * -1), calc(var(--shake, 0px) * 0.6), 0) scale(1.03); }
+}
+.rocket-shaking {
+  animation: rocket-shake 0.16s linear infinite;
+}
+
+@keyframes rocket-flash {
+  0% { opacity: 0; transform: scale(0.55); }
+  14% { opacity: 1; transform: scale(1.06); }
+  100% { opacity: 0; transform: scale(1.55); }
+}
+.rocket-flash {
+  border-radius: 9999px;
+  animation: rocket-flash 0.75s ease-out forwards;
+  background: radial-gradient(circle at center, #fff 0%, #ffd27f 20%, rgba(255, 110, 0, 0.75) 46%, rgba(255, 60, 0, 0) 72%);
+}
+
+@keyframes rocket-smoke-in {
+  from { opacity: 0; transform: scale(0.7); }
+  to { opacity: 1; transform: scale(1); }
+}
+.rocket-smoke {
+  animation: rocket-smoke-in 0.5s ease-out forwards;
+}
+.rocket-smoke-core {
+  border-radius: 9999px;
+  filter: blur(3px);
+  background: radial-gradient(circle at 45% 42%, rgba(255, 150, 60, 0.5), rgba(96, 74, 70, 0.7) 38%, rgba(20, 18, 26, 0.85) 66%, rgba(10, 10, 16, 0) 86%);
+}
+
+@keyframes rocket-ember {
+  0% { transform: translate3d(0, 0, 0) scale(1); opacity: 1; }
+  100% { transform: translate3d(var(--ember-x, 0px), var(--ember-y, 0px), 0) scale(0.3); opacity: 0; }
+}
+.rocket-ember {
+  animation: rocket-ember var(--ember-dur, 1.2s) ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rocket-shaking,
+  .rocket-streak,
+  .rocket-engine-glow {
+    animation: none !important;
+  }
+}

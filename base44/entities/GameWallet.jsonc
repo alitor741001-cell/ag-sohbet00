@@ -20,6 +20,18 @@
       "type": "number",
       "default": 500
     },
+    "rocket_bet_2": {
+      "type": "number",
+      "default": 500
+    },
+    "rocket_auto": {
+      "type": "number",
+      "default": 0
+    },
+    "rocket_auto_2": {
+      "type": "number",
+      "default": 0
+    },
     "grand": {
       "type": "number",
       "default": 0

@@ -6,7 +6,7 @@ import { ROCKET_LAYOUT } from './rocketLayout';
 export default function RocketRecent({ history }) {
   return (
     <div
-      className="absolute flex items-center gap-1 overflow-x-auto rounded-md bg-black/55 px-1.5 py-1 no-scrollbar"
+      className="absolute flex items-center gap-1 overflow-x-auto rounded-md bg-black/80 px-1.5 py-1 no-scrollbar"
       style={ROCKET_LAYOUT.recentValues}
     >
       {history.length === 0 && (

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import { multiplierAt, colorForMult, MULT_COLOR_CLASS } from './rocketConfig';
+import { multiplierAt, colorForMult, MULT_COLOR_CLASS, DEFAULT_ROCKET_BET } from './rocketConfig';
 
 // Sunucu istek limiti nedeniyle seyrek poll edilir; çarpan yerel saatle akıcı kalır.
 const POLL_RUNNING = 3000;
@@ -77,9 +77,10 @@ export default function useRocketGame() {
     [applyResult]
   );
 
-  const placeBet = useCallback(() => act({ action: 'bet', amount: data?.bet ?? 500 }), [act, data?.bet]);
-  const cashout = useCallback(() => act({ action: 'cashout' }), [act]);
-  const changeBet = useCallback((dir) => act({ action: 'changeBet', direction: dir }), [act]);
+  const placeBet = useCallback((slot) => act({ action: 'bet', slot }), [act]);
+  const cashout = useCallback((slot) => act({ action: 'cashout', slot }), [act]);
+  const changeBet = useCallback((slot, direction) => act({ action: 'changeBet', slot, direction }), [act]);
+  const changeAuto = useCallback((slot, direction) => act({ action: 'setAuto', slot, direction }), [act]);
 
   // Yerel akıcı çarpan: sunucu saati + yerel geçen süre.
   const round = data?.round;
@@ -91,7 +92,13 @@ export default function useRocketGame() {
     liveMult = round.crash_at || 1;
   }
 
-  const myBet = data?.bets?.find((b) => b.user_id === data?.me && b.status === 'active') || null;
+  // İki bahis alanı için aktif bahisler.
+  const myBets = { 1: null, 2: null };
+  (data?.bets || []).forEach((b) => {
+    if (b.user_id !== data?.me || b.status !== 'active') return;
+    const slot = b.slot === 2 ? 2 : 1;
+    if (!myBets[slot]) myBets[slot] = b;
+  });
 
   return {
     status,
@@ -99,14 +106,18 @@ export default function useRocketGame() {
     bets: data?.bets || [],
     history: data?.history || [],
     coins: data?.coins ?? 0,
-    bet: data?.bet ?? 500,
+    bet1: data?.bet1 ?? DEFAULT_ROCKET_BET,
+    bet2: data?.bet2 ?? DEFAULT_ROCKET_BET,
+    auto1: data?.auto1 ?? 0,
+    auto2: data?.auto2 ?? 0,
     me: data?.me,
-    myBet,
+    myBets,
     liveMult,
     liveColor: MULT_COLOR_CLASS[colorForMult(liveMult)],
     message,
     placeBet,
     cashout,
     changeBet,
+    changeAuto,
   };
 }

@@ -13,6 +13,37 @@ const START_COINS = 100000;
 const ADMIN_COINS = 500000;
 const LEGACY_MAX_COINS = 1000000000;
 
+// Otomatik çekilme kademeleri: 0 = kapalı.
+const AUTO_LEVELS = [0, 1.1, 1.2, 1.5, 2, 3, 5, 10];
+
+const betSlot = (bet) => (bet.slot === 2 ? 2 : 1);
+const betField = (slot) => (slot === 2 ? 'rocket_bet_2' : 'rocket_bet');
+const autoField = (slot) => (slot === 2 ? 'rocket_auto_2' : 'rocket_auto');
+const walletBet = (wallet, slot) =>
+  (slot === 2 ? wallet.rocket_bet_2 : wallet.rocket_bet) ?? DEFAULT_ROCKET_BET;
+const walletAuto = (wallet, slot) =>
+  (slot === 2 ? wallet.rocket_auto_2 : wallet.rocket_auto) ?? 0;
+
+function shiftAuto(current, direction) {
+  const index = AUTO_LEVELS.indexOf(AUTO_LEVELS.includes(current) ? current : 0);
+  const next = index + (direction > 0 ? 1 : -1);
+  return AUTO_LEVELS[Math.min(AUTO_LEVELS.length - 1, Math.max(0, next))];
+}
+
+// Otomatik çekilme kazançlarını ilgili oyuncuların cüzdanına ekler.
+async function creditWallets(base44, credits) {
+  const ids = Object.keys(credits);
+  for (const userId of ids) {
+    const found = await base44.asServiceRole.entities.GameWallet.filter({ user_id: userId }, '-created_date', 1);
+    if (!found[0]) continue;
+    const amount = credits[userId];
+    await base44.asServiceRole.entities.GameWallet.update(found[0].id, {
+      coins: (found[0].coins ?? 0) + amount,
+      total_won: (found[0].total_won ?? 0) + amount,
+    });
+  }
+}
+
 async function loadWallet(base44, user) {
   const found = await base44.asServiceRole.entities.GameWallet.filter({ user_id: user.id }, '-created_date', 1);
   const isAdmin = user.role === 'admin';
@@ -30,6 +61,7 @@ async function loadWallet(base44, user) {
     coins: isAdmin ? ADMIN_COINS : START_COINS,
     bet: 100,
     rocket_bet: DEFAULT_ROCKET_BET,
+    rocket_bet_2: DEFAULT_ROCKET_BET,
     lines: 50,
     spins: 0,
     grand: 0,
@@ -65,17 +97,46 @@ async function ensureRound(base44) {
 
   if (round.status === 'running') {
     const elapsed = now - new Date(round.started_at).getTime();
-    if (multiplierAt(elapsed) >= round.crash_at) {
-      const active = await base44.asServiceRole.entities.RocketBet.filter(
-        { round_id: round.id, status: 'active' },
-        '-created_date',
-        500
+    const m = multiplierAt(elapsed);
+    const active = await base44.asServiceRole.entities.RocketBet.filter(
+      { round_id: round.id, status: 'active' },
+      '-created_date',
+      500
+    );
+
+    if (active.length) {
+      // Otomatik çekilme: hedefi çakılma noktasından önceyse hedefte nakde çevrilir.
+      const autoCashed = active.filter(
+        (b) => (b.auto_at ?? 0) > 0 && b.auto_at <= round.crash_at && m >= b.auto_at
       );
-      if (active.length) {
+      if (autoCashed.length) {
         await base44.asServiceRole.entities.RocketBet.bulkUpdate(
-          active.map((b) => ({ id: b.id, status: 'lost' }))
+          autoCashed.map((b) => ({
+            id: b.id,
+            status: 'cashed',
+            cashout_at: b.auto_at,
+            payout: Math.round(b.bet * b.auto_at),
+          }))
         );
+        const credits = {};
+        autoCashed.forEach((b) => {
+          credits[b.user_id] = (credits[b.user_id] || 0) + Math.round(b.bet * b.auto_at);
+        });
+        await creditWallets(base44, credits);
       }
+
+      if (m >= round.crash_at) {
+        const cashedIds = autoCashed.map((b) => b.id);
+        const losers = active.filter((b) => !cashedIds.includes(b.id));
+        if (losers.length) {
+          await base44.asServiceRole.entities.RocketBet.bulkUpdate(
+            losers.map((b) => ({ id: b.id, status: 'lost' }))
+          );
+        }
+      }
+    }
+
+    if (m >= round.crash_at) {
       round = await base44.asServiceRole.entities.RocketRound.update(round.id, {
         status: 'crashed',
         ended_at: new Date(now).toISOString(),
@@ -103,6 +164,8 @@ async function buildView(base44, user, round) {
       user_id: b.user_id,
       user_name: b.user_name,
       user_avatar: b.user_avatar,
+      slot: betSlot(b),
+      auto_at: b.auto_at ?? 0,
       bet: b.bet,
       status: b.status,
       cashout_at: b.cashout_at,
@@ -110,7 +173,10 @@ async function buildView(base44, user, round) {
     })),
     history: history.map((h) => ({ round_no: h.round_no, crash_at: h.crash_at })),
     coins: wallet.coins ?? 0,
-    bet: wallet.rocket_bet ?? DEFAULT_ROCKET_BET,
+    bet1: wallet.rocket_bet ?? DEFAULT_ROCKET_BET,
+    bet2: wallet.rocket_bet_2 ?? DEFAULT_ROCKET_BET,
+    auto1: wallet.rocket_auto ?? 0,
+    auto2: wallet.rocket_auto_2 ?? 0,
     me: user.id,
   };
 }
@@ -130,9 +196,20 @@ export default async function (req) {
     const action = body.action || 'state';
 
     if (action === 'changeBet') {
+      const slot = body.slot === 2 ? 2 : 1;
       const wallet = await loadWallet(base44, user);
-      const next = shiftRocketBet(wallet.rocket_bet ?? DEFAULT_ROCKET_BET, body.direction || 1);
-      await base44.asServiceRole.entities.GameWallet.update(wallet.id, { rocket_bet: next });
+      const next = shiftRocketBet(walletBet(wallet, slot), body.direction || 1);
+      await base44.asServiceRole.entities.GameWallet.update(wallet.id, { [betField(slot)]: next });
+      const round = await ensureRound(base44);
+      return Response.json(await buildView(base44, user, round));
+    }
+
+    // Otomatik çekilme çarpanı: kapalı → 1.10 → 1.20 → 1.50 → 2 → 3 → 5 → 10 → kapalı
+    if (action === 'setAuto') {
+      const slot = body.slot === 2 ? 2 : 1;
+      const wallet = await loadWallet(base44, user);
+      const next = shiftAuto(walletAuto(wallet, slot), body.direction || 1);
+      await base44.asServiceRole.entities.GameWallet.update(wallet.id, { [autoField(slot)]: next });
       const round = await ensureRound(base44);
       return Response.json(await buildView(base44, user, round));
     }
@@ -142,21 +219,24 @@ export default async function (req) {
       if (round.status !== 'betting') {
         return Response.json({ error: 'Bahis aşaması kapalı.' }, { status: 400 });
       }
+      const slot = body.slot === 2 ? 2 : 1;
       const existing = await base44.asServiceRole.entities.RocketBet.filter(
         { round_id: round.id, user_id: user.id, status: 'active' },
         '-created_date',
-        1
+        5
       );
-      if (existing[0]) return Response.json({ error: 'Bu turda zaten bahsin var.' }, { status: 400 });
+      if (existing.some((b) => betSlot(b) === slot)) {
+        return Response.json({ error: 'Bu alanda zaten bahsin var.' }, { status: 400 });
+      }
 
       const wallet = await loadWallet(base44, user);
-      const bet = nearestRocketBet(body.amount ?? wallet.rocket_bet ?? DEFAULT_ROCKET_BET);
+      const bet = nearestRocketBet(body.amount ?? walletBet(wallet, slot));
       const coins = wallet.coins ?? 0;
       if (coins < bet) return Response.json({ error: 'Yetersiz coin.' }, { status: 400 });
 
       await base44.asServiceRole.entities.GameWallet.update(wallet.id, {
         coins: coins - bet,
-        rocket_bet: bet,
+        [betField(slot)]: bet,
       });
       await base44.asServiceRole.entities.RocketBet.create({
         round_id: round.id,
@@ -164,21 +244,24 @@ export default async function (req) {
         user_id: user.id,
         user_name: user.username || user.full_name || 'Kullanıcı',
         user_avatar: user.avatar || '',
+        slot,
         bet,
+        auto_at: walletAuto(wallet, slot),
         status: 'active',
       });
       return Response.json(await buildView(base44, user, round));
     }
 
     if (action === 'cashout') {
+      const slot = body.slot === 2 ? 2 : 1;
       let round = await ensureRound(base44);
       const existing = await base44.asServiceRole.entities.RocketBet.filter(
         { round_id: round.id, user_id: user.id, status: 'active' },
         '-created_date',
-        1
+        5
       );
-      const myBet = existing[0];
-      if (!myBet) return Response.json({ error: 'Aktif bahsin yok.' }, { status: 400 });
+      const myBet = existing.find((b) => betSlot(b) === slot);
+      if (!myBet) return Response.json({ error: 'Bu alanda aktif bahsin yok.' }, { status: 400 });
 
       const wallet = await loadWallet(base44, user);
 

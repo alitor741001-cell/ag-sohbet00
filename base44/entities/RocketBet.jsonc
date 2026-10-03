@@ -18,7 +18,15 @@
     "user_avatar": {
       "type": "string"
     },
+    "slot": {
+      "type": "integer",
+      "default": 1
+    },
     "bet": {
+      "type": "number",
+      "default": 0
+    },
+    "auto_at": {
       "type": "number",
       "default": 0
     },

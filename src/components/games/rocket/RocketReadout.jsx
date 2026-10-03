@@ -10,7 +10,7 @@ export default function RocketReadout({ coins, liveMult, round }) {
   let cls = 'text-white';
   if (phase === 'running') {
     big = formatMult(liveMult);
-    cls = `${MULT_COLOR_CLASS[colorForMult(liveMult)]} drop-shadow-[0_0_14px_rgba(255,255,255,0.4)]`;
+    cls = `${MULT_COLOR_CLASS[colorForMult(liveMult)]} drop-shadow-[0_0_16px_rgba(255,255,255,0.45)]`;
   } else if (phase === 'betting') {
     big = 'HAZIRLANIYOR';
     cls = 'text-sky-300';
@@ -22,16 +22,20 @@ export default function RocketReadout({ coins, liveMult, round }) {
   return (
     <>
       <div
-        className="absolute flex items-center justify-end gap-1 rounded-lg bg-black/55 px-2"
+        className="absolute flex items-center justify-end gap-1 rounded-lg bg-black/60 px-2"
         style={ROCKET_LAYOUT.coinBox}
       >
         <Coins className="h-4 w-4 text-amber-300" />
         <span className="font-mono text-sm font-black text-amber-200">{format(coins)}</span>
       </div>
-      <div className="absolute flex items-center justify-center" style={ROCKET_LAYOUT.bigMultiplier}>
+      {/* Görselin kendi çarpan yazısı, hareketli katmanla kaymasın diye bu alan kapatılır. */}
+      <div
+        className="absolute flex items-center justify-center rounded-2xl bg-black/30 backdrop-blur-md"
+        style={ROCKET_LAYOUT.bigMultiplier}
+      >
         <span
           className={`text-3xl font-black ${cls}`}
-          style={{ textShadow: '0 2px 12px rgba(0,0,0,0.85)' }}
+          style={{ textShadow: '0 2px 14px rgba(0,0,0,0.9)' }}
         >
           {big}
         </span>
