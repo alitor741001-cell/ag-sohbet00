@@ -12,30 +12,31 @@ const DEFAULT_BET = 100;
 // Jackpot: ekranda 5 jackpot sembolü geldiğinde bahsin 120 katı ödenir.
 const JACKPOT_SYMBOLS = 5;
 const JACKPOT_MULTIPLE = 120;
+// Ücretsiz çevirme: ekranda 3 'free' sembolü gelince 3 çevirme hakkı verilir.
+const FREE_SYMBOLS = 3;
+const FREE_SPINS = 3;
 // Havuzlar: kaybedilenler o anki bahis kademesinin havuzunda birikir.
-const POOL_SETTINGS = {
-  mini: { base: 5000, cap: 25000 },
-  big: { base: 25000, cap: 50000 },
-  mega: { base: 250000, cap: 400000 },
-  xmega: { base: 400000, cap: 500000 },
-};
-const POOL_KEYS = Object.keys(POOL_SETTINGS);
+const POOL_BASE = { mini: 5000, big: 25000, mega: 250000, xmega: 400000 };
+const POOL_KEYS = Object.keys(POOL_BASE);
 
-// Toplam bahis kademesi hangi havuzu besler.
+// Toplam bahis kademesi hangi havuzu besler (küçük bahisler MINI'de birikir).
 function poolKeyForTotalBet(totalBet) {
-  if (totalBet >= 5000 && totalBet <= 25000) return 'mini';
-  if (totalBet > 25000 && totalBet <= 50000) return 'big';
-  if (totalBet >= 250000 && totalBet <= 400000) return 'mega';
-  if (totalBet > 400000) return 'xmega';
-  return null;
+  if (totalBet <= 25000) return 'mini';
+  if (totalBet <= 50000) return 'big';
+  return 'mega';
 }
 
 // Havuz tutarları: kayıtlı değer yoksa taban değerden başlar.
 function poolValues(wallet) {
   return POOL_KEYS.reduce((pools, key) => {
-    pools[key] = wallet[`pool_${key}`] ?? POOL_SETTINGS[key].base;
+    pools[key] = wallet[`pool_${key}`] ?? POOL_BASE[key];
     return pools;
   }, {});
+}
+
+// Jackpot havuzu: diğer havuzlarda birikenlerin toplamıdır.
+function jackpotTotal(pools) {
+  return POOL_KEYS.reduce((sum, key) => sum + pools[key], 0);
 }
 // Bakiye gerçek: bahis bakiyeden düşer, kazanç eklenir; "sınırsız" mod yoktur.
 // Eski sürümden kalan devasa bakiyeler bu sınırın üzerindeyse normale çekilir.
@@ -53,6 +54,8 @@ function canClaimBonus(wallet) {
 }
 
 function walletView(wallet, isAdmin = false) {
+  const pools = poolValues(wallet);
+  const jackpot = jackpotTotal(pools);
   return {
     coins: wallet.coins ?? START_COINS,
     unlimited: false,
@@ -60,8 +63,9 @@ function walletView(wallet, isAdmin = false) {
     bet: nearestBet(wallet.bet ?? DEFAULT_BET),
     lines: LINES,
     spins: wallet.spins ?? 0,
-    grand: wallet.grand ?? 0,
-    pools: { jackpot: wallet.grand ?? 0, ...poolValues(wallet) },
+    grand: jackpot,
+    pools: { jackpot, ...pools },
+    free_spins: wallet.free_spins ?? 0,
     bonus_ready: canClaimBonus(wallet),
     bonus_amount: BONUS_COINS,
   };
@@ -219,9 +223,12 @@ export default async function (req) {
 
     if (action === 'spin') {
       const bet = clampBet(body.bet, wallet.bet ?? DEFAULT_BET);
-      const cost = bet * LINES;
+      const stake = bet * LINES;
+      // Ücretsiz çevirme hakkı varsa tur bedava oynanır.
+      const isFree = (wallet.free_spins ?? 0) > 0;
+      const cost = isFree ? 0 : stake;
       const coins = wallet.coins ?? START_COINS;
-      if (coins < cost) return Response.json({ error: 'Yetersiz coin.' }, { status: 400 });
+      if (!isFree && coins < cost) return Response.json({ error: 'Yetersiz coin.' }, { status: 400 });
 
       const grid = spinReels();
       const result = evaluateGrid(grid, bet);
@@ -229,16 +236,18 @@ export default async function (req) {
       const jackpotHit = grid.flat().filter((symbol) => symbol === 'jackpot').length >= JACKPOT_SYMBOLS;
       const jackpotPayout = jackpotHit ? bet * JACKPOT_MULTIPLE : 0;
       const total = result.total + jackpotPayout;
-      // Kaybedilen miktar (bahis − kazanç) ana Jackpot havuzunda birikir.
+      // Ücretsiz çevirme: 3 'free' sembolü gelince 3 hak verilir, sonraki turlar bedava.
+      const freeCount = grid.flat().filter((symbol) => symbol === 'free').length;
+      const freeTrigger = freeCount >= FREE_SYMBOLS;
+      const freeSpins = Math.max(0, (wallet.free_spins ?? 0) - (isFree ? 1 : 0)) + (freeTrigger ? FREE_SPINS : 0);
+      // Kaybedilen miktar (bahis − kazanç), o anki bahis kademesinin havuzunda birikir.
       const lost = Math.max(0, cost - total);
-      const grand = (wallet.grand ?? 0) + lost;
-      // Ayrıca o anki bahis kademesinin havuzunda birikir.
       const pools = poolValues(wallet);
-      const poolKey = poolKeyForTotalBet(cost);
-      if (poolKey && lost > 0) {
-        pools[poolKey] = Math.min(POOL_SETTINGS[poolKey].cap, pools[poolKey] + lost);
-      }
-      const bigWin = cost > 0 && total >= cost * BIG_WIN_MULTIPLE;
+      const poolKey = poolKeyForTotalBet(stake);
+      if (poolKey && lost > 0) pools[poolKey] += lost;
+      // Jackpot havuzu: bütün havuzlarda birikenlerin toplamı.
+      const grand = jackpotTotal(pools);
+      const bigWin = stake > 0 && total >= stake * BIG_WIN_MULTIPLE;
       const name = user.username || user.full_name || 'Kullanıcı';
       // Tabloda gösterilecek sembol: jackpot önceliklidir, yoksa en yüksek kazançlı sembol.
       const bestWin = result.wins.reduce((best, item) => (!best || item.amount > best.amount ? item : best), null);
@@ -257,6 +266,7 @@ export default async function (req) {
         pool_big: pools.big,
         pool_mega: pools.mega,
         pool_xmega: pools.xmega,
+        free_spins: freeSpins,
         spins: (wallet.spins ?? 0) + 1,
         total_won: (wallet.total_won ?? 0) + total,
         last_spin_at: new Date().toISOString(),
@@ -284,6 +294,7 @@ export default async function (req) {
         win: total,
         jackpot: jackpotPayout,
         jackpot_hit: jackpotHit,
+        free_trigger: freeTrigger,
         cost,
         big_win: bigWin ? total : 0,
         celebrated,

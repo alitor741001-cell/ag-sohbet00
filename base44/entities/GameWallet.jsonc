@@ -36,6 +36,10 @@
       "type": "number",
       "default": 400000
     },
+    "free_spins": {
+      "type": "integer",
+      "default": 0
+    },
     "lines": {
       "type": "number",
       "default": 50

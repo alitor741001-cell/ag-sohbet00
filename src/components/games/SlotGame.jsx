@@ -15,6 +15,7 @@ import WinnerTicker from './slot/WinnerTicker';
 import SlotStopButton from './slot/SlotStopButton';
 import SlotPoolLabels from './slot/SlotPoolLabels';
 import SlotTierAlert from './slot/SlotTierAlert';
+import FreeSpinBadge from './slot/FreeSpinBadge';
 import { tierOfBet } from './slot/slotConfig';
 
 // Görsel alanı doldururken en fazla bu oranda kırpılır; panelde siyah boşluk kalmaz.
@@ -195,7 +196,9 @@ export default function SlotGame({ onExit, onBack, roomId }) {
         </button>
       </div>
 
-      <SlotTierAlert tier={tier} top={tickerHeight + 12} />
+      <FreeSpinBadge count={game.freeSpins} top={tickerHeight + 10} />
+
+      <SlotTierAlert tier={tier} top={tickerHeight + 56} />
 
       <SlotWinOverlay
         open={!!prize}

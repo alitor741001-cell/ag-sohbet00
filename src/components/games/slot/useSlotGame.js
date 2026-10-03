@@ -14,6 +14,7 @@ export default function useSlotGame({ roomId } = {}) {
   const [noLimit, setNoLimit] = useState(false);
   const [grand, setGrand] = useState(0);
   const [pools, setPools] = useState(null);
+  const [freeSpins, setFreeSpins] = useState(0);
   const [bet, setBet] = useState(100);
   const [lines, setLines] = useState(LINES);
   const [spins, setSpins] = useState(0);
@@ -60,6 +61,7 @@ export default function useSlotGame({ roomId } = {}) {
     if (typeof data.no_limit === 'boolean') setNoLimit(data.no_limit);
     if (typeof data.grand === 'number') setGrand(data.grand);
     if (data.pools) setPools(data.pools);
+    if (typeof data.free_spins === 'number') setFreeSpins(data.free_spins);
     if (typeof data.bet === 'number') setBet(data.bet);
     if (typeof data.lines === 'number') setLines(data.lines);
     if (typeof data.spins === 'number') setSpins(data.spins);
@@ -87,7 +89,8 @@ export default function useSlotGame({ roomId } = {}) {
 
   const spin = useCallback(async () => {
     if (busyRef.current || status !== 'ready') return;
-    const cost = bet * lines;
+    // Ücretsiz çevirme hakkı varsa tur bedavadır.
+    const cost = freeSpins > 0 ? 0 : bet * lines;
     if (!noLimit && coins < cost) {
       setAuto(false);
       setMessage('Yetersiz coin. Coin yanındaki + ile bonus al.');
@@ -130,7 +133,7 @@ export default function useSlotGame({ roomId } = {}) {
       setSpinning(false);
       busyRef.current = false;
     }
-  }, [applyState, bet, coins, lines, noLimit, roomId, status, wait]);
+  }, [applyState, bet, coins, freeSpins, lines, noLimit, roomId, status, wait]);
 
   const saveBet = useCallback(async (next) => {
     setBet(next);
@@ -186,6 +189,7 @@ export default function useSlotGame({ roomId } = {}) {
     noLimit,
     grand,
     pools,
+    freeSpins,
     bet,
     lines,
     spins,
