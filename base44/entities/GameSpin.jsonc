@@ -8,6 +8,12 @@
     "user_name": {
       "type": "string"
     },
+    "user_avatar": {
+      "type": "string"
+    },
+    "symbol": {
+      "type": "string"
+    },
     "bet": {
       "type": "number",
       "default": 100

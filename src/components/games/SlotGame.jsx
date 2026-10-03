@@ -12,7 +12,8 @@ import SlotReadout from './slot/SlotReadout';
 import SlotWinOverlay from './slot/SlotWinOverlay';
 import CoinSheet from './slot/CoinSheet';
 
-const ART_RATIO = ART_WIDTH / ART_HEIGHT;
+// Görsel alanı doldururken en fazla bu oranda kırpılır; panelde siyah boşluk kalmaz.
+const MAX_CROP = 1.06;
 const WIN_FLASH_MS = 2400;
 // Bu tutarın üzerindeki kazançlarda kutlama ekranı açılır.
 const PRIZE_THRESHOLD = 20000;
@@ -43,19 +44,25 @@ export default function SlotGame({ onExit, onBack, roomId }) {
     return undefined;
   }, [game.spins]);
 
-  // Görsel asla kırpılmaz: kutu görselin oranını korur, arkadaki dolgu boşluk bırakmaz.
-  const width = Math.min(size?.width || 0, (size?.height || 0) * ART_RATIO);
-  const height = width / ART_RATIO;
+  // Panel boşluğa siyah bırakmaz: görsel alanı doldurur, en fazla %6 kırpılır.
+  const panelWidth = size?.width || 0;
+  const panelHeight = size?.height || 0;
+  const fit = Math.min(panelWidth / ART_WIDTH, panelHeight / ART_HEIGHT);
+  const cover = Math.max(panelWidth / ART_WIDTH, panelHeight / ART_HEIGHT);
+  const scale = Math.min(cover || 0, (fit || 0) * MAX_CROP);
+  const width = ART_WIDTH * scale;
+  const height = ART_HEIGHT * scale;
   const ready = game.status === 'ready';
 
   return (
     <div ref={frameRef} className="relative flex h-full min-h-0 w-full flex-col overflow-hidden bg-slot">
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-        <Image src={SLOT_ART.shell} alt="" className="h-full w-full" fittingType="fill" quality={30} />
-        <div className="absolute inset-0 bg-black/75" />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+        <Image src={SLOT_ART.shell} alt="" className="h-full w-full scale-125 blur-2xl" fittingType="fill" quality={25} />
+        <div className="absolute inset-0 bg-slot/65" />
       </div>
 
-      <div className="relative flex min-h-0 flex-1 items-center justify-center">
+      {/* Görsel alta yaslanır: alt tarafta boşluk ve siyahlık kalmaz. */}
+      <div className="relative flex min-h-0 flex-1 items-end justify-center">
         {width > 0 && (
           <div className="relative" style={{ width, height }}>
             <Image
@@ -126,23 +133,6 @@ export default function SlotGame({ onExit, onBack, roomId }) {
               style={SLOT_LAYOUT.betPlus}
             />
 
-            <button
-              type="button"
-              onClick={onBack}
-              aria-label="Oyun listesine dön"
-              className="absolute left-[1.5%] top-[1%] flex h-9 w-9 items-center justify-center rounded-full bg-black/45 text-white backdrop-blur-sm active:scale-95"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </button>
-            <button
-              type="button"
-              onClick={onExit}
-              aria-label="Oyunu kapat"
-              className="absolute right-[1.5%] top-[1%] flex h-9 w-9 items-center justify-center rounded-full bg-black/45 text-white backdrop-blur-sm active:scale-95"
-            >
-              <X className="h-5 w-5" />
-            </button>
-
             {game.status === 'loading' && (
               <p className="absolute inset-x-0 top-[62%] -translate-y-1/2 text-center text-xs font-bold text-white/80">
                 Oyun yükleniyor...
@@ -166,6 +156,24 @@ export default function SlotGame({ onExit, onBack, roomId }) {
           </div>
         )}
       </div>
+
+      {/* Kontroller panelin kendi köşesinde durur: görsel kırpılsa da kaybolmaz. */}
+      <button
+        type="button"
+        onClick={onBack}
+        aria-label="Oyun listesine dön"
+        className="absolute left-2 top-2 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm active:scale-95"
+      >
+        <ChevronLeft className="h-5 w-5" />
+      </button>
+      <button
+        type="button"
+        onClick={onExit}
+        aria-label="Oyunu kapat"
+        className="absolute right-2 top-2 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm active:scale-95"
+      >
+        <X className="h-5 w-5" />
+      </button>
 
       <SlotWinOverlay
         open={!!prize}

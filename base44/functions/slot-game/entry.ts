@@ -2,8 +2,10 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import { LINES, BIG_WIN_MULTIPLE, spinReels, evaluateGrid } from '../../shared/slotEngine.ts';
 
 const START_COINS = 100000;
-// Yönetici bakiyesi: 500.000 milyon coin. Sınırsız (∞) mod yok.
-const ADMIN_COINS = 500000000000;
+// Yönetici bakiyesi: 500 bin coin. Sınırsız (∞) mod yok.
+const ADMIN_COINS = 500000;
+// Bu tutar ve üzeri kazançlar büyük kazanç tablosuna girer.
+const BIG_WIN_TABLE_MIN = 20000;
 const BONUS_COINS = 25000;
 const BONUS_COOLDOWN_MS = 6 * 60 * 60 * 1000;
 const MIN_BET = 10;
@@ -58,16 +60,8 @@ function clampBet(value, fallback) {
 async function loadWallet(base44, user) {
   const found = await base44.asServiceRole.entities.GameWallet.filter({ user_id: user.id }, '-created_date', 1);
   const isAdmin = user.role === 'admin';
-  // Yönetici bakiyesi her zaman 500.000 milyon coin'in altına düşmez.
-  if (found[0]) {
-    if (isAdmin && (found[0].coins ?? 0) < ADMIN_COINS) {
-      return base44.asServiceRole.entities.GameWallet.update(found[0].id, {
-        coins: ADMIN_COINS,
-        admin_granted: true,
-      });
-    }
-    return found[0];
-  }
+  // Bakiye gerçek: harcadıkça azalır, kazandıkça çoğalır; otomatik tamamlama yok.
+  if (found[0]) return found[0];
   return base44.asServiceRole.entities.GameWallet.create({
     user_id: user.id,
     user_name: user.full_name || '',
@@ -130,6 +124,24 @@ export default async function (req) {
       return Response.json({ leaders, me: user.id });
     }
 
+    // Büyük kazanç tablosu: 20.000 coin ve üzeri turlar, profil ve gelen sembolle.
+    if (action === 'bigwins') {
+      const spins = await base44.asServiceRole.entities.GameSpin.list('-created_date', 80);
+      const winners = spins
+        .filter((spin) => (spin.win ?? 0) >= BIG_WIN_TABLE_MIN)
+        .slice(0, 12)
+        .map((spin) => ({
+          id: spin.id,
+          user_id: spin.user_id,
+          name: spin.user_name || 'Kullanıcı',
+          avatar: spin.user_avatar || '',
+          won: spin.win ?? 0,
+          symbol: spin.symbol || '',
+          at: spin.created_date,
+        }));
+      return Response.json({ winners, me: user.id, min: BIG_WIN_TABLE_MIN });
+    }
+
     const wallet = await loadWallet(base44, user);
     // Yönetici hesabında coin sınırı yoktur.
     const isAdmin = user.role === 'admin';
@@ -184,10 +196,13 @@ export default async function (req) {
       const pool = wallet.grand ?? 0;
       const jackpotPayout = jackpotHit ? pool : 0;
       const total = result.total + jackpotPayout;
-      // Kazanç olmayan turların bahsi ortadaki GRAND havuzunda birikir.
-      const grand = jackpotHit ? 0 : pool + (result.total === 0 ? cost : 0);
+      // Kaybedilen miktar (bahis − kazanç) ortadaki GRAND havuzunda birikir.
+      const grand = jackpotHit ? 0 : pool + Math.max(0, cost - result.total);
       const bigWin = cost > 0 && total >= cost * BIG_WIN_MULTIPLE;
       const name = user.username || user.full_name || 'Kullanıcı';
+      // Tabloda gösterilecek sembol: jackpot önceliklidir, yoksa en yüksek kazançlı sembol.
+      const bestWin = result.wins.reduce((best, item) => (!best || item.amount > best.amount ? item : best), null);
+      const bestSymbol = jackpotHit ? 'jackpot' : bestWin?.symbol || '';
       let celebrated = false;
       if (bigWin && typeof body.room_id === 'string' && body.room_id) {
         celebrated = await announceBigWin(base44, user, body.room_id, total, name).catch(() => false);
@@ -205,6 +220,8 @@ export default async function (req) {
       await base44.asServiceRole.entities.GameSpin.create({
         user_id: user.id,
         user_name: name,
+        user_avatar: user.avatar || '',
+        symbol: bestSymbol,
         bet,
         cost,
         win: total,

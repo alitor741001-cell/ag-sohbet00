@@ -29,6 +29,9 @@ const CELL_HEIGHT = 670 / 3;
 const CELL_X = 25;
 const CELL_Y = 435;
 
+// Sembol hücresinin yükseklik/genişlik oranı — küçük ikonlar da bu oranı kullanır.
+export const CELL_ASPECT = CELL_HEIGHT / CELL_WIDTH;
+
 // Bir sembol hücresini görselden kırpıp gösteren arka plan ölçüleri.
 export const CELL_STYLE = {
   backgroundSize: `${((ART_WIDTH / CELL_WIDTH) * 100).toFixed(1)}% ${((ART_HEIGHT / CELL_HEIGHT) * 100).toFixed(1)}%`,
