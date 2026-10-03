@@ -4,4 +4,4 @@ export const LUCKY_OLYMPUS_COVER =
 export const LUCKY_OLYMPUS_COVER_W = 1024;
 export const LUCKY_OLYMPUS_COVER_H = 1028;
 export const LUCKY_OLYMPUS_SCREEN =
-  'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/9b0f29c59_IMG_1307.jpeg';
+  'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/9d571ee7e_IMG_1307.jpeg';
