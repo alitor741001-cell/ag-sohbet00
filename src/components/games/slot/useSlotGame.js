@@ -28,6 +28,8 @@ export default function useSlotGame({ roomId } = {}) {
   const [jackpotHit, setJackpotHit] = useState(false);
   const [wins, setWins] = useState([]);
   const [auto, setAuto] = useState(false);
+  // Kazanılan bedava turlar sırayla kendiliğinden döner.
+  const [autoFree, setAutoFree] = useState(false);
   const [message, setMessage] = useState('');
   const busyRef = useRef(false);
   const stopRef = useRef(null);
@@ -123,9 +125,12 @@ export default function useSlotGame({ roomId } = {}) {
       setWin(data.win || 0);
       setBigWin(data.big_win || 0);
       setJackpotHit(!!data.jackpot_hit);
+      // Kalan bedava tur varsa sıra kendiliğinden devam eder.
+      setAutoFree((data.free_spins ?? 0) > 0);
     } catch (error) {
       const raw = error?.response?.data?.error;
       setAuto(false);
+      setAutoFree(false);
       setMessage(raw && !/rate limit/i.test(raw) ? raw : 'Çok hızlı oynuyorsun, birkaç saniye bekle.');
     } finally {
       stopRef.current = null;
@@ -182,6 +187,13 @@ export default function useSlotGame({ roomId } = {}) {
     const timer = window.setTimeout(() => { spin(); }, 850);
     return () => window.clearTimeout(timer);
   }, [auto, spin, spinning, status]);
+
+  // Bedava turlar kendiliğinden döner ve bakiyeden coin harcamaz (tur bedeli 0).
+  useEffect(() => {
+    if (auto || !autoFree || spinning || status !== 'ready') return undefined;
+    const timer = window.setTimeout(() => { spin(); }, 900);
+    return () => window.clearTimeout(timer);
+  }, [auto, autoFree, spin, spinning, status]);
 
   return {
     status,

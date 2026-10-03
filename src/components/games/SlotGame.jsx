@@ -160,7 +160,7 @@ export default function SlotGame({ onExit, onBack, roomId }) {
             {flash > 0 && !prize && (
               <p
                 key={flash}
-                className="game-win-float pointer-events-none absolute left-1/2 top-[62%] z-10 rounded-full border border-slot-gold/60 bg-black/70 px-4 py-1.5 font-mono text-lg font-black text-slot-gold"
+                className="game-win-float pointer-events-none absolute left-1/2 top-[54%] z-10 rounded-full border border-slot-gold/60 bg-black/70 px-3 py-1 font-mono text-sm font-black text-slot-gold"
               >
                 WIN {format(flash)}
               </p>
