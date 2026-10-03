@@ -44,6 +44,51 @@
       "type": "boolean",
       "default": false
     },
+    "room_type": {
+      "type": "string",
+      "enum": [
+        "watch",
+        "voice"
+      ],
+      "default": "watch"
+    },
+    "seat_count": {
+      "type": "integer",
+      "default": 0
+    },
+    "seats": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "index": {
+            "type": "integer"
+          },
+          "user_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "avatar": {
+            "type": "string"
+          },
+          "frame": {
+            "type": "string"
+          },
+          "frame_scale": {
+            "type": "number"
+          },
+          "locked": {
+            "type": "boolean"
+          },
+          "muted": {
+            "type": "boolean"
+          }
+        }
+      },
+      "default": []
+    },
     "chat_auto_delete_minutes": {
       "type": "integer",
       "default": 0

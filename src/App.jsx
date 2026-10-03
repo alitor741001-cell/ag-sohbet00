@@ -26,6 +26,8 @@ const MovieDetail = lazy(() => import('@/pages/MovieDetail'));
 const Watch = lazy(() => import('@/pages/Watch'));
 const WatchParty = lazy(() => import('@/pages/WatchParty'));
 const CreateRoom = lazy(() => import('@/pages/CreateRoom'));
+const VoiceRoomCreate = lazy(() => import('@/pages/VoiceRoomCreate'));
+const VoiceRoom = lazy(() => import('@/pages/VoiceRoom'));
 const Profile = lazy(() => import('@/pages/Profile'));
 const MyList = lazy(() => import('@/pages/MyList'));
 const Search = lazy(() => import('@/pages/Search'));
@@ -109,6 +111,8 @@ const AuthenticatedApp = () => {
           <Route path="/video/:id" element={<Watch />} />
           <Route path="/oda/:id" element={<WatchParty />} />
           <Route path="/oda-kur" element={<CreateRoom />} />
+          <Route path="/sesli-oda-kur" element={<VoiceRoomCreate />} />
+          <Route path="/sesli-oda/:id" element={<VoiceRoom />} />
           <Route path="/listem" element={<MyList />} />
           <Route path="/ara" element={<Search />} />
           <Route path="/destek" element={<Support />} />

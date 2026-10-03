@@ -75,6 +75,9 @@ export default function CreateRoom() {
         <button onClick={openMyRoom} disabled={opening} className="relative mt-4 w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-white active:scale-95 transition-transform disabled:opacity-60" style={{ background: 'linear-gradient(135deg, #dc2626, #991b1b)' }}>
           <Home className="w-5 h-5" /> {opening ? 'Açılıyor...' : 'Kendi Odamı Aç'}
         </button>
+        <Link to="/sesli-oda-kur" className="relative mt-2 w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-white border border-red-500/40 bg-red-500/10 active:scale-95 transition-transform">
+          <Mic className="w-5 h-5" /> Sesli Sohbet Odası Aç
+        </Link>
       </div>
 
       <form onSubmit={submit} className="space-y-5">

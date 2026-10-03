@@ -29,7 +29,7 @@ export default function AppLayout() {
   const { publicSettings } = useAuth();
   const { toast } = useToast();
   // RoleCelebrationOverlay renders a full-screen animated character when role changes
-  const isRoom = pathname.startsWith('/oda/');
+  const isRoom = pathname.startsWith('/oda/') || pathname.startsWith('/sesli-oda/') || pathname === '/sesli-oda-kur';
   const isDarkSurface = pathname === '/' || pathname === '/profil' || pathname.startsWith('/kullanici/');
 
   // Bakım modu: admin olmayan kullanıcılar bakım ekranı görür

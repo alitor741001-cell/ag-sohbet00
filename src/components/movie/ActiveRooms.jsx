@@ -15,7 +15,8 @@ export default function ActiveRooms() {
       try {
         const active = await base44.entities.Room.filter({ status: 'active' }, '-updated_date', 50);
         if (cancelled) return;
-        const visible = active.filter((r) => (r.participants || []).length > 0);
+        // Sesli sohbet odaları kendi listesinde gösterilir, film odalarına karışmaz.
+        const visible = active.filter((r) => (r.participants || []).length > 0 && r.room_type !== 'voice');
         const unique = [...new Map(visible.map((r) => [r.id, r])).values()];
         setRooms(unique);
         const movieIds = [...new Set(unique.map((r) => r.movie_id).filter(Boolean))];

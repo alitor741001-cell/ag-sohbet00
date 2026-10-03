@@ -1,14 +1,16 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { Users, Lock, Loader2, Shield, Star, DoorOpen, Search, SlidersHorizontal, Plus } from 'lucide-react';
+import { Users, Lock, Loader2, Shield, Star, DoorOpen, Search, SlidersHorizontal, Plus, Mic } from 'lucide-react';
 import { Image } from '@/components/ui/image';
+import VoiceRoomCard from '@/components/voice/VoiceRoomCard';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 
 export default function OpenRooms() {
   const { user } = useCurrentUser();
   const [rooms, setRooms] = useState([]);
   const [personalRooms, setPersonalRooms] = useState([]);
+  const [voiceRooms, setVoiceRooms] = useState([]);
   const [movies, setMovies] = useState({});
   const [owners, setOwners] = useState({});
   const [loading, setLoading] = useState(true);
@@ -23,6 +25,10 @@ export default function OpenRooms() {
     setOwners((prev) => ({ ...prev, ...profiles }));
   };
 
+  // Sesli sohbet odaları ayrı listede gösterilir.
+  const voiceVisible = (room) => !!room && room.room_type === 'voice' && room.status === 'active' && (user?.role === 'admin' || !room.hidden)
+    && ((room.participants?.length || 0) > 0 || room.owner_id === user?.id);
+
   useEffect(() => {
     const isAdmin = user?.role === 'admin';
     const load = async () => {
@@ -31,10 +37,11 @@ export default function OpenRooms() {
           base44.entities.Room.filter({ status: 'active' }, '-created_date', 200).catch(() => []),
           base44.entities.Movie.list('-created_date', 500).catch(() => []),
         ]);
-        const normal = r.filter((x) => !x.is_personal && (isAdmin || !x.hidden) && (x.participants?.length || 0) > 0);
+        const normal = r.filter((x) => !x.is_personal && x.room_type !== 'voice' && (isAdmin || !x.hidden) && (x.participants?.length || 0) > 0);
         const personal = r.filter((x) => x.is_personal && (isAdmin || !x.hidden) && x.status === 'active');
         setRooms(normal);
         setPersonalRooms(personal);
+        setVoiceRooms(r.filter((x) => voiceVisible(x)));
         const map = {}; m.forEach((mv) => { map[mv.id] = mv; });
         setMovies(map);
         fetchOwners([...normal, ...personal]);
@@ -44,15 +51,25 @@ export default function OpenRooms() {
     const unsub = base44.entities.Room.subscribe((ev) => {
       const isAdmin2 = user?.role === 'admin';
       const isVisible = (x) => x.status === 'active' && (isAdmin2 || !x.hidden);
-      if (ev.type === 'create' && ev.data?.status === 'active' && (isAdmin2 || !ev.data.hidden)) {
-        if (ev.data.is_personal) {
-          setPersonalRooms((p) => [ev.data, ...p.filter((x) => x.id !== ev.data.id)]);
-        } else if ((ev.data.participants?.length || 0) > 0) {
-          setRooms((p) => [ev.data, ...p.filter((x) => x.id !== ev.data.id)]);
+      if (ev.type === 'create') {
+        if (ev.data?.room_type === 'voice') {
+          if (voiceVisible(ev.data)) setVoiceRooms((p) => [ev.data, ...p.filter((x) => x.id !== ev.data.id)]);
+          return;
         }
-        fetchOwners([ev.data]);
+        if (ev.data?.status === 'active' && (isAdmin2 || !ev.data.hidden)) {
+          if (ev.data.is_personal) {
+            setPersonalRooms((p) => [ev.data, ...p.filter((x) => x.id !== ev.data.id)]);
+          } else if ((ev.data.participants?.length || 0) > 0) {
+            setRooms((p) => [ev.data, ...p.filter((x) => x.id !== ev.data.id)]);
+          }
+          fetchOwners([ev.data]);
+        }
       }
       if (ev.type === 'update') {
+        if (ev.data.room_type === 'voice') {
+          setVoiceRooms((p) => (voiceVisible(ev.data) ? [ev.data, ...p.filter((x) => x.id !== ev.data.id)] : p.filter((x) => x.id !== ev.data.id)));
+          return;
+        }
         if (ev.data.is_personal) {
           setPersonalRooms((p) => isVisible(ev.data) ? p.map((x) => x.id === ev.data.id ? ev.data : x).concat([ev.data]).filter((x, i, arr) => arr.findIndex((y) => y.id === x.id) === i) : p.filter((x) => x.id !== ev.data.id));
           setRooms((p) => p.filter((x) => x.id !== ev.data.id));
@@ -67,12 +84,13 @@ export default function OpenRooms() {
       if (ev.type === 'delete') {
         setRooms((p) => p.filter((x) => x.id !== ev.id));
         setPersonalRooms((p) => p.filter((x) => x.id !== ev.id));
+        setVoiceRooms((p) => p.filter((x) => x.id !== ev.id));
       }
     });
     return unsub;
-  }, [user?.role]);
+  }, [user?.id, user?.role]);
 
-  const activeCount = rooms.length + personalRooms.length;
+  const activeCount = rooms.length + personalRooms.length + voiceRooms.length;
 
   const RoomCard = ({ r, isPersonal }) => {
     const mv = movies[r.movie_id];
@@ -123,7 +141,7 @@ export default function OpenRooms() {
       <div className="mb-1 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-extrabold">Odalar</h1>
-          <p className="text-sm text-gray-400 mt-1">Aktif Watch Party odalarına katıl.</p>
+          <p className="text-sm text-gray-400 mt-1">Film odaları ve sesli sohbet odalarına katıl.</p>
         </div>
         <div className="flex w-full items-center justify-between gap-2 sm:w-auto">
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#16161e] border border-white/5">
@@ -144,6 +162,9 @@ export default function OpenRooms() {
         <button onClick={() => setTab('open')} className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-sm font-bold transition-all ${tab === 'open' ? 'text-white' : 'text-gray-400'}`} style={tab === 'open' ? { background: 'linear-gradient(135deg, #7c3aed, #6b21a8)' } : {}}>
           <DoorOpen className="w-4 h-4" /> Açık Odalar
         </button>
+        <button onClick={() => setTab('voice')} className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-sm font-bold transition-all ${tab === 'voice' ? 'text-white' : 'text-gray-400'}`} style={tab === 'voice' ? { background: 'linear-gradient(135deg, #dc2626, #991b1b)' } : {}}>
+          <Mic className="w-4 h-4" /> Sesli Odalar
+        </button>
         <button onClick={() => setTab('personal')} className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-sm font-bold transition-all ${tab === 'personal' ? 'text-white' : 'text-gray-400'}`} style={tab === 'personal' ? { background: 'linear-gradient(135deg, #7c3aed, #6b21a8)' } : {}}>
           <Star className="w-4 h-4" /> Özel Odalar
         </button>
@@ -154,7 +175,7 @@ export default function OpenRooms() {
         <input
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Oda numarası veya özel oda kodu ara..."
+          placeholder={tab === 'voice' ? 'Sesli oda ara...' : 'Oda numarası veya özel oda kodu ara...'}
           className="w-full pl-9 pr-10 py-2.5 rounded-xl bg-[#16161e] border border-white/5 text-sm text-white placeholder:text-gray-500 outline-none focus:border-purple-500/50"
         />
         <SlidersHorizontal className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
@@ -176,6 +197,33 @@ export default function OpenRooms() {
               {rooms.filter((r) => !searchQuery.trim() || String(r.room_number) === searchQuery.trim()).map((r) => <RoomCard key={r.id} r={r} isPersonal={false} />)}
             </div>
           )
+          ) : tab === 'voice' ? (
+          <div className="space-y-3">
+            <Link to="/sesli-oda-kur" className="flex items-center gap-3 rounded-2xl border border-red-500/20 bg-[#16161e] p-3 active:scale-[0.99] transition-transform">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-500/15">
+                <Mic className="h-5 w-5 text-red-400" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-bold text-white">Sesli sohbet odası kur</span>
+                <span className="block text-xs text-gray-400">Koltuk sayısını seç, mikrofonları aç.</span>
+              </span>
+              <span className="shrink-0 text-gray-400">→</span>
+            </Link>
+            {voiceRooms.length === 0 ? (
+              <div className="py-16 text-center">
+                <div className="relative mx-auto mb-4 h-24 w-24">
+                  <div className="absolute inset-0 rounded-full opacity-40 blur-2xl" style={{ background: 'radial-gradient(circle, #dc2626, transparent 70%)' }} />
+                  <Mic className="relative mx-auto h-16 w-16 text-red-400" />
+                </div>
+                <p className="mb-1 text-lg font-bold text-white">Açık sesli oda yok.</p>
+                <Link to="/sesli-oda-kur" className="text-sm text-red-400 hover:underline">İlk sesli odayı sen kur!</Link>
+              </div>
+            ) : (
+              voiceRooms
+                .filter((r) => !searchQuery.trim() || (r.name || '').toLowerCase().includes(searchQuery.trim().toLowerCase()))
+                .map((r) => <VoiceRoomCard key={r.id} room={r} />)
+            )}
+          </div>
         ) : (
           personalRooms.length === 0 ? (
             <div className="text-center py-20">

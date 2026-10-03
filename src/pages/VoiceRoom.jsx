@@ -1,0 +1,464 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Loader2, Lock, LogOut, MessageSquare, MoreHorizontal, Radio, ShieldAlert, X } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
+import { useCurrentUser } from '@/lib/useCurrentUser';
+import { useVoiceChat } from '@/hooks/useVoiceChat';
+import { useToast } from '@/components/ui/use-toast';
+import VoiceSeatGrid from '@/components/voice/VoiceSeatGrid';
+import VoiceControlBar from '@/components/voice/VoiceControlBar';
+import VoiceChat from '@/components/voice/VoiceChat';
+import VoiceRoomMenu from '@/components/voice/VoiceRoomMenu';
+import VoiceSeatSheet from '@/components/voice/VoiceSeatSheet';
+import InviteSheet from '@/components/voice/InviteSheet';
+import { plainText } from '@/components/voice/voiceText';
+
+export default function VoiceRoom() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { user } = useCurrentUser();
+  const { toast } = useToast();
+
+  const [room, setRoom] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [joined, setJoined] = useState(false);
+  const [needsPassword, setNeedsPassword] = useState(false);
+  const [password, setPassword] = useState('');
+  const [notice, setNotice] = useState('');
+  const [messages, setMessages] = useState([]);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [seatIndex, setSeatIndex] = useState(null);
+
+  const joinedRef = useRef(false);
+  const joinTriedRef = useRef(false);
+  const sawSelfRef = useRef(false);
+
+  const seats = useMemo(() => (Array.isArray(room?.seats) ? room.seats : []), [room?.seats]);
+  const participants = useMemo(() => room?.participants || [], [room?.participants]);
+  const moderators = room?.room_moderators || [];
+  const mySeatIndex = seats.findIndex((seat) => seat.user_id === user?.id);
+  const seated = mySeatIndex >= 0;
+  const isOwner = !!user && room?.owner_id === user.id;
+  const canMod = isOwner || moderators.includes(user?.id) || user?.role === 'admin';
+
+  const seatsView = useMemo(
+    () => seats.map((seat) => ({
+      ...seat,
+      muted: seat.user_id ? !!participants.find((person) => person.user_id === seat.user_id)?.muted : false,
+    })),
+    [seats, participants]
+  );
+
+  const voice = useVoiceChat({
+    roomId: id,
+    user,
+    participants,
+    voiceEnabled: joined && !!room?.voice_enabled,
+    micEnabled: seated,
+  });
+
+  const syncRoom = useCallback(async () => {
+    const response = await base44.functions.invoke('room-presence', { action: 'get', room_id: id }).catch(() => null);
+    const record = response?.data?.room;
+    if (record) setRoom(record);
+    return record;
+  }, [id]);
+
+  // Odayı yükle — sesli oda değilse normal oda sayfasına yönlendir.
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const response = await base44.functions.invoke('room-presence', { action: 'get', room_id: id });
+        if (cancelled) return;
+        const record = response.data?.room;
+        if (!record) { setNotice('Oda bulunamadı.'); return; }
+        if (record.room_type !== 'voice') { navigate(`/oda/${id}`, { replace: true }); return; }
+        setRoom(record);
+        const alreadyInside = (record.participants || []).some((person) => person.user_id === user?.id);
+        if (alreadyInside) {
+          sawSelfRef.current = true;
+          joinedRef.current = true;
+          setJoined(true);
+        }
+      } catch (error) {
+        if (!cancelled) setNotice(error?.response?.data?.error || 'Oda yüklenemedi.');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    load();
+    return () => { cancelled = true; };
+  }, [id, user?.id, navigate]);
+
+  const attemptJoin = useCallback(async (pw = '') => {
+    try {
+      await base44.functions.invoke('room-presence', { action: 'join', room_id: id, password: pw });
+      sawSelfRef.current = true;
+      joinedRef.current = true;
+      setJoined(true);
+      setNeedsPassword(false);
+      setPassword('');
+      setNotice('');
+      await syncRoom();
+      return true;
+    } catch (error) {
+      const data = error?.response?.data || {};
+      setNeedsPassword(!!data.needsPassword);
+      setNotice(data.error || 'Odaya katılamadınız.');
+      return false;
+    }
+  }, [id, syncRoom]);
+
+  // Şifresiz odalara otomatik katıl.
+  useEffect(() => {
+    if (loading || joined || !room || !user || needsPassword || joinTriedRef.current) return;
+    joinTriedRef.current = true;
+    attemptJoin('');
+  }, [loading, joined, room, user, needsPassword, attemptJoin]);
+
+  // Oda kaydını canlı takip et (koltuklar, katılımcılar, ayarlar).
+  useEffect(() => {
+    if (!id) return;
+    const unsubscribe = base44.entities.Room.subscribe((event) => {
+      if (event.id !== id) return;
+      if (event.type === 'delete') { setNotice('Oda kapatıldı.'); return; }
+      if (event.type === 'update' || event.type === 'create') setRoom((prev) => (prev ? { ...prev, ...event.data } : event.data));
+    });
+    return unsubscribe;
+  }, [id]);
+
+  // Odadan atılma kontrolü.
+  useEffect(() => {
+    if (!joined || !user) return;
+    if (participants.some((person) => person.user_id === user.id)) { sawSelfRef.current = true; return; }
+    if (sawSelfRef.current && joinedRef.current) {
+      joinedRef.current = false;
+      setJoined(false);
+      setNotice('Odadan çıkarıldınız.');
+    }
+  }, [participants, joined, user?.id]);
+
+  useEffect(() => {
+    if (joined && room?.status === 'closed') {
+      joinedRef.current = false;
+      setJoined(false);
+      setNotice('Oda kapatıldı.');
+    }
+  }, [room?.status, joined]);
+
+  // Sohbet akışı
+  useEffect(() => {
+    if (!id) return;
+    base44.entities.RoomMessage.filter({ room_id: id }, '-created_date', 80)
+      .then((list) => setMessages([...list].reverse()))
+      .catch(() => {});
+    const unsubscribe = base44.entities.RoomMessage.subscribe((event) => {
+      const data = event?.data;
+      if (!data || data.room_id !== id || event.type !== 'create') return;
+      setMessages((prev) => (prev.some((item) => item.id === event.id) ? prev : [...prev, { ...data, id: event.id }]));
+    });
+    return unsubscribe;
+  }, [id]);
+
+  // Sekme kapanırken / sayfadan çıkılırken odadan ayrıl.
+  useEffect(() => () => {
+    if (!joinedRef.current) return;
+    joinedRef.current = false;
+    base44.functions.invoke('voice-room', { action: 'seat-leave', room_id: id }).catch(() => {});
+    base44.functions.invoke('room-presence', { action: 'leave', room_id: id }).catch(() => {});
+  }, [id]);
+
+  const invokeVoice = async (payload) => {
+    try {
+      const response = await base44.functions.invoke('voice-room', { room_id: id, ...payload });
+      const data = response?.data || {};
+      if (Array.isArray(data.seats)) {
+        setRoom((prev) => (prev ? { ...prev, seats: data.seats, seat_count: data.seat_count ?? data.seats.length } : prev));
+      }
+      return true;
+    } catch (error) {
+      toast({ title: 'İşlem başarısız', description: error?.response?.data?.error || error.message, variant: 'destructive' });
+      return false;
+    }
+  };
+
+  const leaveRoom = useCallback(async () => {
+    joinedRef.current = false;
+    sawSelfRef.current = false;
+    setJoined(false);
+    if (seated) await base44.functions.invoke('voice-room', { action: 'seat-leave', room_id: id }).catch(() => {});
+    await base44.functions.invoke('room-presence', { action: 'leave', room_id: id }).catch(() => {});
+    navigate('/acik-odalar');
+  }, [id, seated, navigate]);
+
+  const handleSeatPress = (index) => {
+    const seat = seats[index];
+    if (seat?.user_id) { setSeatIndex(index); return; }
+    invokeVoice({ action: 'seat-take', seat_index: index });
+  };
+
+  const handleMic = () => {
+    if (!seated) {
+      toast({ title: 'Konuşmak için bir koltuğa otur', description: 'Yukarıdaki boş bir koltuğa dokun.' });
+      return;
+    }
+    voice.toggleMute();
+  };
+
+  const handleInvite = () => {
+    if (!seated && !canMod) {
+      toast({ title: 'Davet etmek için bir koltuğa otur' });
+      return;
+    }
+    setInviteOpen(true);
+  };
+
+  const sendInvites = async (ids) => {
+    const ok = await invokeVoice({ action: 'invite', target_ids: ids });
+    if (ok) { toast({ title: 'Davet gönderildi', description: `${ids.length} kişi davet edildi.` }); setInviteOpen(false); }
+    return ok;
+  };
+
+  const handleSetPassword = async (pw) => {
+    try {
+      await base44.functions.invoke('room-presence', { action: 'set-password', room_id: id, password: pw });
+      await syncRoom();
+      toast({ title: pw ? 'Oda kilitlendi' : 'Oda kilidi kaldırıldı' });
+    } catch (error) {
+      toast({ title: 'İşlem başarısız', description: error?.response?.data?.error || error.message, variant: 'destructive' });
+    }
+  };
+
+  const handleToggleHidden = async () => {
+    try {
+      const response = await base44.functions.invoke('room-presence', { action: 'toggle-hidden', room_id: id });
+      await syncRoom();
+      toast({ title: response.data?.hidden ? 'Oda gizlendi' : 'Oda herkese açık' });
+    } catch (error) {
+      toast({ title: 'İşlem başarısız', description: error?.response?.data?.error || error.message, variant: 'destructive' });
+    }
+  };
+
+  const handleToggleMod = async (targetId, makeMod) => {
+    try {
+      await base44.functions.invoke('room-presence', { action: makeMod ? 'assign-mod' : 'remove-mod', room_id: id, target_id: targetId });
+      await syncRoom();
+      toast({ title: makeMod ? 'Yönetici yapıldı' : 'Yöneticilik kaldırıldı' });
+    } catch (error) {
+      toast({ title: 'İşlem başarısız', description: error?.response?.data?.error || error.message, variant: 'destructive' });
+    }
+  };
+
+  const handleToggleSeatMute = async () => {
+    const target = seatIndex === null ? null : seats[seatIndex]?.user_id;
+    if (!target) return;
+    const muted = !!participants.find((person) => person.user_id === target)?.muted;
+    try {
+      await base44.functions.invoke('room-presence', { action: 'toggle-mute', room_id: id, target_id: target });
+      await syncRoom();
+      toast({ title: muted ? 'Mikrofonu açıldı' : 'Mikrofonu kapatıldı' });
+    } catch (error) {
+      toast({ title: 'İşlem başarısız', description: error?.response?.data?.error || error.message, variant: 'destructive' });
+    }
+  };
+
+  const handleKickFromRoom = async () => {
+    const target = seatIndex === null ? null : seats[seatIndex]?.user_id;
+    if (!target) return;
+    setSeatIndex(null);
+    await invokeVoice({ action: 'seat-kick', target_id: target });
+    try {
+      await base44.functions.invoke('room-presence', { action: 'kick', room_id: id, target_id: target });
+      toast({ title: 'Kişi odadan atıldı' });
+    } catch (error) {
+      toast({ title: 'İşlem başarısız', description: error?.response?.data?.error || error.message, variant: 'destructive' });
+    }
+  };
+
+  const sendMessage = useCallback(async (text) => {
+    try {
+      await base44.functions.invoke('send-room-message', { room_id: id, text });
+    } catch (error) {
+      toast({ title: 'Mesaj gönderilemedi', description: error?.response?.data?.error || error.message, variant: 'destructive' });
+    }
+  }, [id, toast]);
+
+  const lastMessage = messages[messages.length - 1];
+
+  if (loading) {
+    return (
+      <div className="fixed inset-0 z-[150] flex items-center justify-center bg-catalog">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (notice && !joined && !needsPassword) {
+    return (
+      <div className="fixed inset-0 z-[150] flex flex-col items-center justify-center gap-4 bg-catalog px-6 text-center text-white">
+        <ShieldAlert className="h-10 w-10 text-red-500" />
+        <p className="max-w-xs text-sm text-white/70">{notice}</p>
+        <button type="button" onClick={() => navigate('/acik-odalar')} className="rounded-xl bg-white/10 px-5 py-2.5 text-sm font-bold">
+          Odalara dön
+        </button>
+      </div>
+    );
+  }
+
+  if (!joined && needsPassword) {
+    return (
+      <div className="fixed inset-0 z-[150] flex flex-col items-center justify-center gap-4 bg-catalog px-6 text-white">
+        <Lock className="h-10 w-10 text-amber-400" />
+        <p className="text-sm text-white/70">{room?.name || 'Oda'} kilitli. Şifreyi gir.</p>
+        <form onSubmit={(event) => { event.preventDefault(); attemptJoin(password); }} className="w-full max-w-xs space-y-3">
+          <input
+            type="password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            placeholder="Oda şifresi"
+            className="h-11 w-full rounded-xl bg-white/10 px-4 text-sm text-white outline-none placeholder:text-white/40"
+          />
+          {notice && <p className="text-center text-xs text-red-400">{notice}</p>}
+          <button type="submit" className="w-full rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground">Odaya gir</button>
+        </form>
+        <button type="button" onClick={() => navigate('/acik-odalar')} className="text-xs text-white/50">Vazgeç</button>
+      </div>
+    );
+  }
+
+  if (!joined) {
+    return (
+      <div className="fixed inset-0 z-[150] flex flex-col items-center justify-center gap-3 bg-catalog text-white">
+        <Loader2 className="h-7 w-7 animate-spin text-primary" />
+        <p className="text-xs text-white/60">Odaya bağlanılıyor...</p>
+      </div>
+    );
+  }
+
+  const sheetSeat = seatIndex === null ? null : seats[seatIndex];
+  const sheetTarget = sheetSeat?.user_id || null;
+
+  return (
+    <div className="fixed inset-0 z-[150] flex flex-col bg-catalog text-white">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-gradient-to-b from-primary/25 to-transparent" />
+
+      <header className="relative flex items-center justify-between gap-2 px-3 pb-2 pt-[max(0.75rem,env(safe-area-inset-top))]">
+        <div className="min-w-0">
+          <p className="flex items-center gap-1.5 truncate text-sm font-bold">
+            <Radio className="h-4 w-4 shrink-0 text-primary" /> {room?.name}
+          </p>
+          <p className="truncate text-[11px] text-white/60">
+            {seats.length} koltuk • {participants.length} kişi • {room?.owner_name || 'Kullanıcı'}
+          </p>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <button type="button" onClick={leaveRoom} aria-label="Odadan çık" className="flex h-11 w-11 items-center justify-center rounded-full bg-red-600 active:scale-95 transition-transform">
+            <LogOut className="h-5 w-5" />
+          </button>
+          <button type="button" onClick={() => setMenuOpen(true)} aria-label="Oda ayarları" className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 active:scale-95 transition-transform">
+            <MoreHorizontal className="h-5 w-5" />
+          </button>
+        </div>
+      </header>
+
+      <div className="relative min-h-0 flex-1 overflow-y-auto px-3 pb-4 pt-1">
+        {room?.password && (
+          <p className="mb-3 flex items-center justify-center gap-1.5 text-[11px] text-amber-400">
+            <Lock className="h-3 w-3" /> Şifreli oda
+          </p>
+        )}
+        <VoiceSeatGrid
+          seats={seatsView}
+          userId={user?.id}
+          ownerId={room?.owner_id}
+          moderators={moderators}
+          speakingIds={voice.speakingIds}
+          localSpeaking={voice.localSpeaking}
+          onSelectSeat={handleSeatPress}
+        />
+        <p className="mt-5 text-center text-[11px] text-white/50">
+          {seated
+            ? (voice.muted ? 'Mikrofonun kapalı — konuşmak için mikrofon tuşuna bas.' : 'Koltuktayken mikrofonun açık, konuşabilirsin.')
+            : 'Sese çıkmak için boş bir koltuğa dokun.'}
+        </p>
+      </div>
+
+      <button type="button" onClick={() => setChatOpen(true)} className="relative mx-3 mb-2 flex shrink-0 items-center gap-2 rounded-2xl border border-white/10 bg-black/40 px-3 py-2 text-left">
+        <MessageSquare className="h-4 w-4 shrink-0 text-white/60" />
+        <span className="min-w-0 flex-1 truncate text-[11px] text-white/70">
+          {lastMessage ? `${lastMessage.type === 'system' ? '' : `${lastMessage.user_name}: `}${plainText(lastMessage.text)}` : 'Sohbete katıl...'}
+        </span>
+      </button>
+
+      {(voice.remoteMuted || voice.error) && (
+        <p className="px-3 pb-1 text-center text-[11px] text-amber-400">
+          {voice.remoteMuted ? 'Yönetici mikrofonunu kapattı.' : voice.error}
+        </p>
+      )}
+
+      <VoiceControlBar
+        micActive={!voice.muted}
+        deafened={voice.deafened}
+        chatOpen={chatOpen}
+        onToggleMic={handleMic}
+        onToggleSpeaker={voice.toggleDeafen}
+        onToggleChat={() => setChatOpen((value) => !value)}
+        onInvite={handleInvite}
+        onExit={leaveRoom}
+      />
+
+      {chatOpen && (
+        <div className="absolute inset-x-0 bottom-0 z-[160] flex h-[62vh] flex-col rounded-t-3xl border-t border-white/10 bg-[#101016]">
+          <div className="flex shrink-0 items-center justify-between px-4 py-2">
+            <p className="text-sm font-bold">Sohbet</p>
+            <button type="button" onClick={() => setChatOpen(false)} aria-label="Sohbeti kapat" className="rounded-full bg-white/10 p-1.5">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <VoiceChat messages={messages} onSend={sendMessage} currentUserId={user?.id} className="min-h-0 flex-1" />
+        </div>
+      )}
+
+      <VoiceRoomMenu
+        open={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        room={room}
+        userId={user?.id}
+        participants={participants}
+        isOwner={isOwner}
+        canMod={canMod}
+        onSeatCount={(count) => invokeVoice({ action: 'set-seat-count', seat_count: count })}
+        onSetPassword={handleSetPassword}
+        onToggleHidden={handleToggleHidden}
+        onToggleMod={handleToggleMod}
+      />
+
+      <VoiceSeatSheet
+        open={seatIndex !== null}
+        onClose={() => setSeatIndex(null)}
+        seat={sheetSeat}
+        index={seatIndex ?? 0}
+        userId={user?.id}
+        ownerId={room?.owner_id}
+        canMod={canMod}
+        isOwner={isOwner}
+        targetIsMod={!!sheetTarget && moderators.includes(sheetTarget)}
+        onLeaveSeat={() => { setSeatIndex(null); invokeVoice({ action: 'seat-leave' }); }}
+        onKick={handleKickFromRoom}
+        onToggleMute={handleToggleSeatMute}
+        onToggleMod={() => { const makeMod = !moderators.includes(sheetTarget); setSeatIndex(null); handleToggleMod(sheetTarget, makeMod); }}
+        onToggleLock={() => invokeVoice({ action: 'seat-lock', seat_index: seatIndex, locked: !sheetSeat?.locked })}
+        onOpenProfile={() => { setSeatIndex(null); navigate(`/kullanici/${sheetTarget}`); }}
+      />
+
+      <InviteSheet open={inviteOpen} onClose={() => setInviteOpen(false)} onInvite={sendInvites} />
+
+      {notice && joined && (
+        <p className="pointer-events-none absolute left-1/2 top-20 z-[170] -translate-x-1/2 rounded-full bg-black/80 px-4 py-2 text-xs text-white">{notice}</p>
+      )}
+    </div>
+  );
+}

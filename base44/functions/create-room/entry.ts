@@ -14,8 +14,12 @@ export default async function(req) {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
     const body = await req.json();
-    let { name, movie_id, movie_title, password, max_users, chat_enabled, voice_enabled, hidden } = body || {};
-    if (!name || !movie_id) return Response.json({ error: 'isim ve film gerekli' }, { status: 400 });
+    let { name, movie_id, movie_title, password, max_users, chat_enabled, voice_enabled, hidden, room_type, seat_count } = body || {};
+    // Sesli sohbet odası: film gerekmez, koltuk düzeni seçilir.
+    const isVoiceRoom = room_type === 'voice';
+    if (!name || (!isVoiceRoom && !movie_id)) {
+      return Response.json({ error: isVoiceRoom ? 'oda ismi gerekli' : 'isim ve film gerekli' }, { status: 400 });
+    }
 
     // Input sanitization
     name = sanitizeText(name, 80);
@@ -33,7 +37,29 @@ export default async function(req) {
     // max_users doğrula
     const mu = Math.min(Math.max(Number(max_users) || 10, 2), 50);
 
+    // Sesli oda koltuk kapasitesi
+    const SEAT_OPTIONS = [2, 5, 8, 9, 12, 15, 20, 30];
+    const requestedSeats = Number(seat_count) || 0;
+    const voiceSeats = SEAT_OPTIONS.includes(requestedSeats) ? requestedSeats : 8;
+
     const owner_name = user.username || user.full_name || 'Kullanıcı';
+    // Oluşturan kişi ilk koltuğa oturur.
+    const seats = isVoiceRoom
+      ? Array.from({ length: voiceSeats }, (_, index) => ({
+          index,
+          locked: false,
+          muted: false,
+          ...(index === 0
+            ? {
+                user_id: user.id,
+                name: owner_name,
+                avatar: user.avatar || '',
+                frame: user.profile_frame || '',
+                frame_scale: Number(user.profile_frame_scale) || 100,
+              }
+            : {}),
+        }))
+      : [];
     const salt = [...crypto.getRandomValues(new Uint8Array(16))].map((b) => b.toString(16).padStart(2, '0')).join('');
     const hashed = password ? (salt + ':' + await sha256Hex(salt, String(password).slice(0, 100))) : '';
 
@@ -44,13 +70,16 @@ export default async function(req) {
     while (usedNumbers.has(room_number)) room_number++;
 
     const room = await base44.asServiceRole.entities.Room.create({
-      name, movie_id, movie_title: movie_title || '',
+      name, movie_id: isVoiceRoom ? 'voice' : movie_id, movie_title: isVoiceRoom ? '' : (movie_title || ''),
       owner_id: user.id, owner_name,
       password: hashed ? 'protected' : '',
       room_number,
-      max_users: mu,
+      max_users: isVoiceRoom ? Math.min(250, voiceSeats + 50) : mu,
       chat_enabled: chat_enabled !== false,
-      voice_enabled: !!voice_enabled,
+      voice_enabled: isVoiceRoom ? true : !!voice_enabled,
+      room_type: isVoiceRoom ? 'voice' : 'watch',
+      seat_count: isVoiceRoom ? voiceSeats : 0,
+      seats,
       is_playing: false, current_time: 0, status: 'active', hidden: !!hidden,
       chat_auto_delete_minutes: 3,
       chat_auto_delete_at: new Date(Date.now() + 3 * 60000).toISOString(),
@@ -62,7 +91,7 @@ export default async function(req) {
     }
     await base44.asServiceRole.entities.RoomMessage.create({
       room_id: room.id, user_id: user.id, user_name: owner_name,
-      text: `${owner_name} odaya katıldı.`, type: 'system'
+      text: isVoiceRoom ? `${owner_name} sesli odayı kurdu (${voiceSeats} koltuk).` : `${owner_name} odaya katıldı.`, type: 'system'
     });
     return Response.json({ id: room.id });
   } catch (e) {

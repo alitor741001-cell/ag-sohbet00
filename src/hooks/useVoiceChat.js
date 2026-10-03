@@ -11,7 +11,7 @@ const friendlyMicError = (error) => {
   return '🎤 Mikrofon başlatılamadı.';
 };
 
-export function useVoiceChat({ roomId, user, participants, voiceEnabled }) {
+export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnabled }) {
   const roomRef = useRef(null);
   const [callAudioPaused, setCallAudioPaused] = useState(hasDirectCallAudioFocus);
   useEffect(() => subscribeCallAudioFocus((paused) => {
@@ -34,7 +34,11 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled }) {
   const [debug, setDebug] = useState(initialDebug);
   const [everVoiceEnabled, setEverVoiceEnabled] = useState(voiceEnabled);
   const voiceEnabledRef = useRef(voiceEnabled);
+  // Koltuk düzeni: mikrofon yayını yalnızca koltukta oturan kişide açık kalır.
+  const micEnabledRef = useRef(micEnabled !== false);
+  const micAppliedRef = useRef(micEnabled !== false);
   useEffect(() => { voiceEnabledRef.current = voiceEnabled; if (voiceEnabled) setEverVoiceEnabled(true); }, [voiceEnabled]);
+  useEffect(() => { micEnabledRef.current = micEnabled !== false; }, [micEnabled]);
 
   const refreshState = useCallback(() => {
     const room = roomRef.current;
@@ -159,7 +163,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled }) {
       setError('');
       attachCurrentRemoteAudio();
       await retryAudio();
-      if (!hasDirectCallAudioFocus() && !mutedByModeratorRef.current && voiceEnabledRef.current && room.localParticipant.getTrackPublication(Track.Source.Microphone)?.isMuted) {
+      if (!hasDirectCallAudioFocus() && !mutedByModeratorRef.current && voiceEnabledRef.current && micEnabledRef.current && room.localParticipant.getTrackPublication(Track.Source.Microphone)?.isMuted) {
         room.localParticipant.setMicrophoneEnabled(true, { echoCancellation: true, noiseSuppression: true, autoGainControl: true }).catch(() => {});
       }
       refreshState();
@@ -183,7 +187,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled }) {
         attachCurrentRemoteAudio();
         await retryAudio();
         setAudioBlocked(!room.canPlaybackAudio);
-        if (!hasDirectCallAudioFocus() && !mutedByModeratorRef.current && voiceEnabledRef.current) {
+        if (!hasDirectCallAudioFocus() && !mutedByModeratorRef.current && voiceEnabledRef.current && micEnabledRef.current) {
           setRequesting(true);
           try {
             await room.localParticipant.setMicrophoneEnabled(true, {
@@ -269,13 +273,26 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled }) {
       audioElementsRef.current.forEach((element) => { element.muted = true; });
       setActive(false);
     } else {
-      if (!mutedByModeratorRef.current) {
+      if (!mutedByModeratorRef.current && micEnabledRef.current) {
         room.localParticipant.setMicrophoneEnabled(true, { echoCancellation: true, noiseSuppression: true, autoGainControl: true }).then(refreshState).catch(() => {});
       }
       audioElementsRef.current.forEach((element) => { element.muted = deafenedRef.current; });
       retryAudio();
     }
   }, [voiceEnabled]);
+
+  // Koltuğa oturunca mikrofon açılır, koltuktan kalkınca kapanır (izin tekrar istenmez).
+  useEffect(() => {
+    if (micEnabled === undefined) return;
+    const next = micEnabled !== false;
+    if (micAppliedRef.current === next) return;
+    micAppliedRef.current = next;
+    const room = roomRef.current;
+    if (!room || hasDirectCallAudioFocus() || connectionState !== 'connected' || mutedByModeratorRef.current) return;
+    room.localParticipant.setMicrophoneEnabled(next, { echoCancellation: true, noiseSuppression: true, autoGainControl: true })
+      .then(refreshState)
+      .catch(() => {});
+  }, [micEnabled, connectionState, refreshState]);
 
   const toggleMute = useCallback(async () => {
     const room = roomRef.current;
