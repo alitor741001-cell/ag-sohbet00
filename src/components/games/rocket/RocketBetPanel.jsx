@@ -12,6 +12,7 @@ export default function RocketBetPanel({
   auto,
   locked,
   label,
+  badge,
   sub,
   disabled,
   onAmount,
@@ -64,6 +65,12 @@ export default function RocketBetPanel({
         onClick={onAction}
       >
         <span>{label}</span>
+        {/* Kazanç çarpanı, yatırılan coinin yanında rozet olarak görünür. */}
+        {badge && (
+          <span className="rounded bg-black/25 px-1 text-[10px] font-black leading-tight">
+            {badge}
+          </span>
+        )}
         {sub && <span className="rk-action-sub">{sub}</span>}
       </button>
     </div>

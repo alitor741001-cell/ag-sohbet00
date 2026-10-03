@@ -18,10 +18,16 @@ export default function RocketBetDock({ game }) {
       rows.find((b) => b.status === 'cashed') ||
       rows.find((b) => b.status === 'lost');
     const active = row?.status === 'active';
-    const amount = slot === 2 ? game.bet2 : game.bet1;
+    // Oynanmış bahis varsa panel kendi yatırdığı coini gösterir; seçilen miktar
+    // yalnızca bahis yokken görünür.
+    const amount = row ? row.bet ?? 0 : slot === 2 ? game.bet2 : game.bet1;
     const auto = slot === 2 ? game.auto2 : game.auto1;
+    const pending = !!game.busy?.[slot];
+    // Dokunulduğu an sabitlenen çarpan: buton beklerken kazanç donar.
+    const shown = game.pendingMult?.[slot] || game.liveMult;
 
     let label = 'BAHİS YAP';
+    let badge = '';
     let sub = '';
     let disabled = false;
 
@@ -30,11 +36,12 @@ export default function RocketBetDock({ game }) {
       sub = active ? 'iade' : '';
     } else if (phase === 'running') {
       if (active) {
-        label = 'ÇEK';
-        sub = `${formatMult(game.liveMult)} · ${format(amount * game.liveMult)}`;
+        label = pending ? 'ÇEKİLİYOR' : 'ÇEK';
+        sub = `${format(amount)} · ${formatMult(shown)} · ${format(amount * shown)}`;
       } else if (row?.status === 'cashed') {
         label = 'ÇEKİLDİ';
-        sub = `${formatMult(row.cashout_at)} · +${format(row.payout)}`;
+        badge = formatMult(row.cashout_at);
+        sub = `${format(row.bet ?? 0)} · +${format(row.payout)}`;
       } else {
         label = 'UÇUŞTA';
         disabled = true;
@@ -42,9 +49,11 @@ export default function RocketBetDock({ game }) {
     } else if (phase === 'crashed') {
       if (row?.status === 'cashed') {
         label = 'ÇEKİLDİ';
-        sub = formatMult(row.cashout_at);
+        badge = formatMult(row.cashout_at);
+        sub = `${format(row.bet ?? 0)} · +${format(row.payout)}`;
       } else if (row?.status === 'lost' || active) {
         label = 'KAYBETTİ';
+        sub = format(row?.bet ?? amount);
       } else {
         label = 'BEKLE';
       }
@@ -54,12 +63,16 @@ export default function RocketBetDock({ game }) {
       disabled = true;
     }
 
+    // İsteği süren butona tekrar basmak yeni istek açmaz.
+    if (pending) disabled = true;
+
     return {
       tone,
       amount,
       auto,
       locked: active,
       label,
+      badge,
       sub,
       disabled,
       onAmount: (direction) => game.changeBet(slot, direction),

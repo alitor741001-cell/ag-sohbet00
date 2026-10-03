@@ -37,6 +37,16 @@ function clampAuto(value) {
   return Math.min(100, Math.round(n * 100) / 100);
 }
 
+// Bahis hâlâ oynanabilir mi: aynı anda gelen ikinci istek ödeme yapmasın.
+async function stillActive(base44, round, user, slot, betId) {
+  const rows = await base44.asServiceRole.entities.RocketBet.filter(
+    { round_id: round.id, user_id: user.id },
+    '-created_date',
+    8
+  );
+  return rows.some((b) => b.id === betId && betSlot(b) === slot && b.status === 'active');
+}
+
 // Hedef değişince o tur için konulmuş aktif bahse de uygulanır.
 async function syncAutoToBet(base44, round, user, slot, autoAt) {
   const bets = await base44.asServiceRole.entities.RocketBet.filter(
@@ -276,7 +286,8 @@ export default async function (req) {
         user_avatar: user.avatar || '',
         slot,
         bet,
-        auto_at: walletAuto(wallet, slot),
+        // Oyuncunun ekranda gördüğü otomatik hedef bahisle birlikte yazılır.
+        auto_at: clampAuto(body.auto ?? walletAuto(wallet, slot)),
         status: 'active',
       });
       return Response.json(await buildView(base44, user, round));
@@ -309,6 +320,10 @@ export default async function (req) {
 
       // Bahis aşamasında geri çek = iade.
       if (round.status === 'betting') {
+        if (!(await stillActive(base44, round, user, slot, myBet.id))) {
+          const view = await buildView(base44, user, round);
+          return Response.json({ ...view, notice: 'Bu bahsin iptal edilmiş.' });
+        }
         await base44.asServiceRole.entities.GameWallet.update(wallet.id, {
           coins: (wallet.coins ?? 0) + myBet.bet,
         });
@@ -318,16 +333,22 @@ export default async function (req) {
 
       // Uçuşta geri çek = çarpan anında nakde çevir. (running ise çakılmamış.)
       if (round.status === 'running') {
+        // Üst üste iki istek gelirse yalnız biri ödeme yapar: bahis önce
+        // nakde çevrilir, ikinci istek kaydı "çekilmiş" görüp durur.
+        if (!(await stillActive(base44, round, user, slot, myBet.id))) {
+          const view = await buildView(base44, user, round);
+          return Response.json({ ...view, notice: 'Bu bahis zaten çekildi.' });
+        }
         const m = multiplierAt(Date.now() - new Date(round.started_at).getTime());
         const payout = Math.round(myBet.bet * m);
-        await base44.asServiceRole.entities.GameWallet.update(wallet.id, {
-          coins: (wallet.coins ?? 0) + payout,
-          total_won: (wallet.total_won ?? 0) + payout,
-        });
         await base44.asServiceRole.entities.RocketBet.update(myBet.id, {
           status: 'cashed',
           cashout_at: m,
           payout,
+        });
+        await base44.asServiceRole.entities.GameWallet.update(wallet.id, {
+          coins: (wallet.coins ?? 0) + payout,
+          total_won: (wallet.total_won ?? 0) + payout,
         });
         return Response.json(await buildView(base44, user, round));
       }
