@@ -9,6 +9,7 @@ import { useToast } from '@/components/ui/use-toast';
 import VoiceSeatGrid from '@/components/voice/VoiceSeatGrid';
 import VoiceControlBar from '@/components/voice/VoiceControlBar';
 import VoiceChatOverlay from '@/components/voice/VoiceChatOverlay';
+import VoiceViewerSheet from '@/components/voice/VoiceViewerSheet';
 import VoiceRoomMenu from '@/components/voice/VoiceRoomMenu';
 import VoiceSeatSheet from '@/components/voice/VoiceSeatSheet';
 import InviteSheet from '@/components/voice/InviteSheet';
@@ -30,7 +31,9 @@ export default function VoiceRoom() {
   const [needsPassword, setNeedsPassword] = useState(false);
   const [password, setPassword] = useState('');
   const [notice, setNotice] = useState('');
+  const [messages, setMessages] = useState([]);
   const [chatOpen, setChatOpen] = useState(false);
+  const [viewerOpen, setViewerOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [seatIndex, setSeatIndex] = useState(null);
@@ -159,6 +162,20 @@ export default function VoiceRoom() {
     }
   }, [room?.status, joined]);
 
+  // Sohbet akışı
+  useEffect(() => {
+    if (!id) return;
+    base44.entities.RoomMessage.filter({ room_id: id }, '-created_date', 80)
+      .then((list) => setMessages([...list].reverse()))
+      .catch(() => {});
+    const unsubscribe = base44.entities.RoomMessage.subscribe((event) => {
+      const data = event?.data;
+      if (!data || data.room_id !== id || event.type !== 'create') return;
+      setMessages((prev) => (prev.some((item) => item.id === event.id) ? prev : [...prev, { ...data, id: event.id }]));
+    });
+    return unsubscribe;
+  }, [id]);
+
   // Sekme kapanırken / sayfadan çıkılırken odadan ayrıl.
   useEffect(() => () => {
     if (!joinedRef.current) return;
@@ -189,6 +206,9 @@ export default function VoiceRoom() {
     await base44.functions.invoke('room-presence', { action: 'leave', room_id: id }).catch(() => {});
     navigate('/acik-odalar');
   }, [id, seated, navigate]);
+
+  // Profil kartı açıcı — sohbet satırı ve izleyici listesinden kullanılır.
+  const openProfile = (userId) => { if (userId) setProfileUserId(userId); };
 
   // Dolu koltuk profil kartını, boş koltuk beyaz koltuk menüsünü açar.
   const handleSeatPress = (index) => {
@@ -387,14 +407,16 @@ export default function VoiceRoom() {
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <span
+          <button
+            type="button"
+            onClick={() => setViewerOpen(true)}
             title={`Odada ${participants.length} kişi var`}
-            aria-label={`Odada ${participants.length} kişi var`}
-            className="flex h-11 min-w-11 items-center justify-center gap-1.5 rounded-full bg-white/10 px-3"
+            aria-label={`Odada ${participants.length} kişi var — kimler izliyor gör`}
+            className="flex h-11 min-w-11 items-center justify-center gap-1.5 rounded-full bg-white/10 px-3 transition-transform active:scale-95"
           >
             <Eye className="h-5 w-5 text-white/80" />
             <span className="text-sm font-bold tabular-nums">{participants.length}</span>
-          </span>
+          </button>
           <button type="button" onClick={() => setMenuOpen(true)} aria-label="Oda ayarları" className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 active:scale-95 transition-transform">
             <MoreHorizontal className="h-5 w-5" />
           </button>
@@ -426,7 +448,16 @@ export default function VoiceRoom() {
         </p>
       </div>
 
-      {chatOpen && <VoiceChatOverlay onSend={sendMessage} />}
+      {chatOpen && (
+        <VoiceChatOverlay
+          messages={messages}
+          onSend={sendMessage}
+          currentUserId={user?.id}
+          ownerId={room?.owner_id}
+          moderators={moderators}
+          onOpenProfile={openProfile}
+        />
+      )}
 
       {(voice.remoteMuted || voice.error) && (
         <p className="px-3 pb-1 text-center text-[11px] text-amber-400">
@@ -512,6 +543,17 @@ export default function VoiceRoom() {
           <VoiceMenuButton icon={LogOut} label="Odadan çık" danger onClick={() => { setExitOpen(false); leaveRoom(); }} />
         </div>
       </VoiceCard>
+
+      <VoiceViewerSheet
+        open={viewerOpen}
+        onClose={() => setViewerOpen(false)}
+        participants={participants}
+        seats={seats}
+        userId={user?.id}
+        ownerId={room?.owner_id}
+        moderators={moderators}
+        onSelect={openProfile}
+      />
 
       {dmUserId && (
         <div className="absolute inset-0 z-[190] flex min-h-0 flex-col bg-[#101016]">
