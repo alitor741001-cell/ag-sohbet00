@@ -4,8 +4,8 @@ import { BET_STEP, LINES, MAX_BET, MIN_BET } from './slotConfig';
 
 const sleep = (ms) => new Promise((resolve) => { window.setTimeout(resolve, ms); });
 
-// Son makara sütunu durana kadar sonucu bekleten en kısa dönüş süresi.
-const SPIN_MIN_MS = 1600;
+const SPIN_DURATION_MS = 10000;
+const SETTLE_MS = 800;
 
 export default function useSlotGame({ roomId } = {}) {
   const [status, setStatus] = useState('loading');
@@ -27,6 +27,15 @@ export default function useSlotGame({ roomId } = {}) {
   const [auto, setAuto] = useState(false);
   const [message, setMessage] = useState('');
   const busyRef = useRef(false);
+  const stopRef = useRef(null);
+  const [stopping, setStopping] = useState(false);
+  const [stopRequested, setStopRequested] = useState(false);
+  const stop = useCallback(() => {
+    if (!busyRef.current) return;
+    setStopRequested(true);
+    stopRef.current?.();
+  }, []);
+  useEffect(() => () => { stopRef.current?.(); }, []);
 
   const applyState = useCallback((data) => {
     if (!data) return;
@@ -68,18 +77,29 @@ export default function useSlotGame({ roomId } = {}) {
       return;
     }
     busyRef.current = true;
+    setStopRequested(false);
+    setStopping(false);
     setSpinning(true);
     setWin(0);
     setBigWin(0);
     setMessage('');
+    const duration = new Promise((resolve) => {
+      const timer = window.setTimeout(() => {
+        setStopRequested(true);
+        resolve();
+      }, SPIN_DURATION_MS - SETTLE_MS);
+      stopRef.current = () => { window.clearTimeout(timer); resolve(); };
+    });
     try {
       const [response] = await Promise.all([
         base44.functions.invoke('slot-game', { action: 'spin', bet, room_id: roomId }),
-        sleep(SPIN_MIN_MS),
+        duration,
       ]);
       const data = response.data || {};
-      applyState(data);
       setGrid(data.grid || null);
+      setStopping(true);
+      await sleep(SETTLE_MS);
+      applyState(data);
       setWin(data.win || 0);
       setBigWin(data.big_win || 0);
       setJackpotHit((data.wins || []).some((item) => item.symbol === 'jackpot'));
@@ -88,6 +108,10 @@ export default function useSlotGame({ roomId } = {}) {
       setAuto(false);
       setMessage(raw && !/rate limit/i.test(raw) ? raw : 'Çok hızlı oynuyorsun, birkaç saniye bekle.');
     } finally {
+      stopRef.current?.();
+      stopRef.current = null;
+      setStopping(false);
+      setStopRequested(false);
       setSpinning(false);
       busyRef.current = false;
     }
@@ -153,6 +177,9 @@ export default function useSlotGame({ roomId } = {}) {
     bonusReady,
     bonusAmount,
     spinning,
+    stopping,
+    stopRequested,
+    stop,
     grid,
     win,
     bigWin,

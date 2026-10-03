@@ -1,0 +1,4 @@
+.slot-reel-loop { animation: slot-reel-loop linear infinite; will-change: transform; }
+@keyframes slot-reel-loop { from { transform: translateY(-50%); } to { transform: translateY(0); } }
+.slot-reel-settle { animation: slot-reel-settle cubic-bezier(.12,.62,.25,1) both; will-change: transform; }
+@keyframes slot-reel-settle { from { transform: translateY(var(--reel-from)); } to { transform: translateY(0); } }

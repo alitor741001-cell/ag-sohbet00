@@ -66,7 +66,7 @@ export default function SlotGame({ onExit, onBack, roomId }) {
             />
 
             {/* Tur sırasında her makaranın sembolleri değişerek aşağı doğru kayar. */}
-            <SlotReels spinning={game.spinning} grid={game.grid} />
+            <SlotReels spinning={game.spinning} stopping={game.stopping} grid={game.grid} />
 
             {/* Görselin kendi rakam alanları: bakiye, WIN, BET, LINES, TOTAL BET ve üst ödüller */}
             <SlotReadout coins={game.coins} win={game.win} bet={game.bet} lines={game.lines} grand={game.grand} />
@@ -74,12 +74,14 @@ export default function SlotGame({ onExit, onBack, roomId }) {
             {/* Görselin kendi butonları — görünmez dokunma alanları */}
             <button
               type="button"
-              onClick={game.spin}
-              disabled={!ready || game.spinning}
-              aria-label="Turu başlat"
-              className="absolute rounded-full active:brightness-125"
+              onClick={game.spinning ? game.stop : game.spin}
+              disabled={!ready || game.stopping || game.stopRequested}
+              aria-label={game.spinning ? 'Makaraları durdur' : 'Turu başlat'}
+              className={`absolute flex items-center justify-center rounded-full active:brightness-125 ${game.spinning ? 'border-2 border-slot-gold bg-slot-red text-slot-text font-black text-xs shadow-lg' : ''}`}
               style={SLOT_LAYOUT.spin}
-            />
+            >
+              {game.spinning && (game.stopping || game.stopRequested ? 'DURUYOR' : 'DURDUR')}
+            </button>
             <button
               type="button"
               onClick={game.toggleAuto}
