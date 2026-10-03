@@ -19,7 +19,6 @@ import DirectCallProvider from '@/lib/DirectCallContext';
 import DirectCallOverlay from '@/components/friends/DirectCallOverlay';
 import { FrameCatalogProvider } from '@/lib/FrameCatalogContext';
 import { Navigate } from 'react-router-dom';
-import '@/lib/voicePlayback';
 
 const Home = lazy(() => import('@/pages/Home'));
 const Browse = lazy(() => import('@/pages/Browse'));

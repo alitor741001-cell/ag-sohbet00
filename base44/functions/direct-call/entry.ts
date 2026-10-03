@@ -60,6 +60,11 @@ export default async function(req) {
         : null;
       const silent = (conversation?.dnd_for || []).includes(calleeId);
 
+      // Aranan kişi bu sohbette aramaları kapattıysa yalnızca yöneticiler arayabilir.
+      if ((conversation?.call_disabled_for || []).includes(calleeId) && user.role !== 'admin') {
+        return Response.json({ error: `${calleeName} bu sohbette aramaları kapattı.` }, { status: 403 });
+      }
+
       const created = await base44.asServiceRole.entities.DirectCall.create({
         caller_id: user.id,
         caller_name: meName,

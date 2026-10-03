@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Room, RoomEvent, Track } from 'livekit-client';
 import { base44 } from '@/api/base44Client';
-import { createVoiceOutput, unlockVoicePlayback } from '@/lib/voicePlayback';
+import { createVoiceOutput, unlockVoicePlayback } from '@/lib/callAudio';
 
 const initialDebug = { participantCount: 0, remoteParticipants: 0, remoteTracks: 0, playback: 'hazır' };
 const friendlyMicError = (error) => {

@@ -201,6 +201,22 @@ export default async function(req) {
       return Response.json({ ok: true, dnd_for: nextDndFor });
     }
 
+    // toggle_calls: Bu sohbette aramaları kapat/aç
+    // Açıkken karşı taraf bu kullanıcıyı arayamaz; yöneticiler aramaya devam eder.
+    if (action === 'toggle_calls') {
+      const conversationId = String(body.conversation_id || '');
+      const conversation = await base44.asServiceRole.entities.Conversation.get(conversationId).catch(() => null);
+      if (!conversation) return Response.json({ error: 'Sohbet bulunamadı' }, { status: 404 });
+      if (!(conversation.members || []).includes(user.id)) return Response.json({ error: 'yetkisiz' }, { status: 403 });
+      const callDisabledFor = conversation.call_disabled_for || [];
+      const enabled = typeof body.enabled === 'boolean' ? body.enabled : !callDisabledFor.includes(user.id);
+      const nextCallDisabledFor = enabled
+        ? [...new Set([...callDisabledFor, user.id])]
+        : callDisabledFor.filter((id) => id !== user.id);
+      await base44.asServiceRole.entities.Conversation.update(conversationId, { call_disabled_for: nextCallDisabledFor });
+      return Response.json({ ok: true, call_disabled_for: nextCallDisabledFor });
+    }
+
     // delete_message: Tek mesajı SADECE bu kullanıcı için sil
     // Karşı taraf mesajı görmeye devam eder
     if (action === 'delete_message') {
