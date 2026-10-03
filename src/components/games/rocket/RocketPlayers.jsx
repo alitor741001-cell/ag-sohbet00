@@ -1,7 +1,7 @@
 import React from 'react';
+import { Ticket, Users } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import { format, formatMult } from './rocketConfig';
-import { ROCKET_LAYOUT } from './rocketLayout';
 
 /** Aynı oyuncunun iki bahis alanı tek satırda toplanır. */
 function groupBets(bets) {
@@ -26,59 +26,58 @@ function groupBets(bets) {
   return Array.from(map.values());
 }
 
-/** Sol panel: oyuncular katıldıkça profilleri ve bahis miktarları görünür. */
+/** Sol panel: oyuncular katıldıkça profil ve bahis miktarları canlı görünür. */
 export default function RocketPlayers({ bets, me }) {
-  const rows = groupBets(bets);
+  const rows = groupBets(bets || []);
   const active = rows.filter((r) => r.active);
-  const cashed = rows
-    .filter((r) => !r.active && r.cashout_at > 0)
-    .sort((a, b) => b.cashout_at - a.cashout_at);
-  const ordered = [...active, ...cashed].slice(0, 24);
+  const cashed = rows.filter((r) => !r.active && r.cashout_at > 0).sort((a, b) => b.cashout_at - a.cashout_at);
+  const ordered = [...active, ...cashed].slice(0, 30);
 
   return (
-    <>
-      <div
-        className="absolute flex items-center rounded-md bg-black/70 px-2 text-[11px] font-black text-white"
-        style={ROCKET_LAYOUT.playersHeader}
-      >
-        Oyuncular {rows.length}
+    <aside className="rk-glass absolute bottom-2 left-2 top-2 flex w-[32%] max-w-[9.5rem] flex-col overflow-hidden rounded-xl">
+      <div className="flex shrink-0 items-center gap-1 border-b border-white/10 px-2 py-1.5">
+        <Users className="h-3 w-3 shrink-0 text-[#00d4ff]" />
+        <span className="truncate text-[10px] font-black text-white">Oyuncular {rows.length}</span>
       </div>
-      <div
-        className="absolute overflow-y-auto rounded-lg bg-black/60 p-1 no-scrollbar"
-        style={ROCKET_LAYOUT.playersList}
-      >
-        <div className="flex flex-col gap-1">
-          {ordered.length === 0 && <p className="px-1 py-2 text-[10px] text-white/50">Henüz oyuncu yok</p>}
-          {ordered.map((row) => (
-            <div
-              key={row.user_id}
-              className={`flex items-center gap-1.5 rounded px-1 py-1 ${
-                row.user_id === me ? 'bg-amber-500/25 ring-1 ring-amber-400/60' : 'bg-black/50'
-              }`}
-            >
-              {row.avatar ? (
-                <Image
-                  src={row.avatar}
-                  alt=""
-                  className="h-5 w-5 shrink-0 rounded-full"
-                  fittingType="fill"
-                  quality={60}
-                />
-              ) : (
-                <div className="h-5 w-5 shrink-0 rounded-full bg-slot-panel" />
-              )}
-              <span className="min-w-0 flex-1 truncate text-[10px] font-bold text-white/90">
-                {row.name || 'Oyuncu'}
+
+      <div className="min-h-0 flex-1 overflow-y-auto px-1 py-1 no-scrollbar">
+        {ordered.length === 0 && (
+          <p className="px-1 py-2 text-[9px] leading-tight text-white/40">Henüz oyuncu yok</p>
+        )}
+        {ordered.map((row) => (
+          <div
+            key={row.user_id}
+            className={`mb-1 flex items-center gap-1 rounded-lg px-1 py-1 ${
+              row.user_id === me ? 'bg-[#ffb800]/20 ring-1 ring-[#ffb800]/50' : 'bg-black/35'
+            }`}
+          >
+            {row.avatar ? (
+              <Image
+                src={row.avatar}
+                alt=""
+                className="h-5 w-5 shrink-0 rounded-full"
+                fittingType="fill"
+                quality={60}
+              />
+            ) : (
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/10 text-[9px] font-black text-white/70">
+                {(row.name || '?').trim().charAt(0).toUpperCase()}
               </span>
-              {row.active ? (
-                <span className="text-[10px] font-black text-amber-200">{format(row.activeTotal)}</span>
-              ) : (
-                <span className="text-[10px] font-black text-emerald-400">{formatMult(row.cashout_at)}</span>
-              )}
-            </div>
-          ))}
-        </div>
+            )}
+            <span className="min-w-0 flex-1 truncate text-[9px] font-bold text-white/85">
+              {row.name || 'Oyuncu'}
+            </span>
+            {row.active ? (
+              <>
+                <Ticket className="h-2.5 w-2.5 shrink-0 text-[#ffb800]" />
+                <span className="shrink-0 text-[9px] font-black text-white">{format(row.activeTotal)}</span>
+              </>
+            ) : (
+              <span className="shrink-0 text-[9px] font-black text-emerald-400">{formatMult(row.cashout_at)}</span>
+            )}
+          </div>
+        ))}
       </div>
-    </>
+    </aside>
   );
 }

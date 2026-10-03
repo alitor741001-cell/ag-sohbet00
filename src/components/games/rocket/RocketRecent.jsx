@@ -1,28 +1,22 @@
 import React from 'react';
-import { formatMult, colorForMult, MULT_PILL_CLASS } from './rocketConfig';
-import { ROCKET_LAYOUT } from './rocketLayout';
+import { colorForMult, formatMult, MULT_PILL_CLASS } from './rocketConfig';
 
-/** Üst sağ şerit: son turların çakılma çarpanları, renk bantlarına göre. */
+/** Son turların çakılma çarpanları: 0-2 mavi, 2-8 yeşil, 8-25 sarı, 25-500 kırmızı. */
 export default function RocketRecent({ history }) {
+  const rows = (history || []).slice(0, 7);
+
   return (
-    <div
-      className="absolute flex items-center gap-1 overflow-x-auto rounded-md bg-black/80 px-1.5 py-1 no-scrollbar"
-      style={ROCKET_LAYOUT.recentValues}
-    >
-      {history.length === 0 && (
-        <span className="text-[10px] font-bold text-white/40">Son kazançlar burada görünür</span>
-      )}
-      {history.slice(0, 7).map((h) => {
-        const c = colorForMult(h.crash_at);
-        return (
-          <span
-            key={h.round_no}
-            className={`shrink-0 rounded border px-1.5 py-0.5 text-[9px] font-black ${MULT_PILL_CLASS[c]}`}
-          >
-            {formatMult(h.crash_at)}
-          </span>
-        );
-      })}
+    <div className="flex min-w-0 items-center gap-1 overflow-x-auto no-scrollbar">
+      <span className="shrink-0 text-[8px] font-bold text-white/45">Son Kazançlar</span>
+      {rows.length === 0 && <span className="text-[8px] text-white/30">—</span>}
+      {rows.map((h) => (
+        <span
+          key={h.round_no}
+          className={`shrink-0 rounded border px-1.5 py-0.5 text-[9px] font-black ${MULT_PILL_CLASS[colorForMult(h.crash_at)]}`}
+        >
+          {formatMult(h.crash_at)}
+        </span>
+      ))}
     </div>
   );
 }
