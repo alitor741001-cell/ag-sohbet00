@@ -8,7 +8,7 @@ import useKeyboardInset from '@/hooks/useKeyboardInset';
 import { useToast } from '@/components/ui/use-toast';
 import VoiceSeatGrid from '@/components/voice/VoiceSeatGrid';
 import VoiceControlBar from '@/components/voice/VoiceControlBar';
-import VoiceChatOverlay from '@/components/voice/VoiceChatOverlay';
+import VoiceChatDock from '@/components/voice/VoiceChatDock';
 import VoiceViewerSheet from '@/components/voice/VoiceViewerSheet';
 import VoiceRoomMenu from '@/components/voice/VoiceRoomMenu';
 import VoiceSeatSheet from '@/components/voice/VoiceSeatSheet';
@@ -448,16 +448,15 @@ export default function VoiceRoom() {
         </p>
       </div>
 
-      {chatOpen && (
-        <VoiceChatOverlay
-          messages={messages}
-          onSend={sendMessage}
-          currentUserId={user?.id}
-          ownerId={room?.owner_id}
-          moderators={moderators}
-          onOpenProfile={openProfile}
-        />
-      )}
+      <VoiceChatDock
+        messages={messages}
+        onSend={sendMessage}
+        composerOpen={chatOpen}
+        currentUserId={user?.id}
+        ownerId={room?.owner_id}
+        moderators={moderators}
+        onOpenProfile={openProfile}
+      />
 
       {(voice.remoteMuted || voice.error) && (
         <p className="px-3 pb-1 text-center text-[11px] text-amber-400">

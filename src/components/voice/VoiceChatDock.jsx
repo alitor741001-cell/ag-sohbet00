@@ -6,8 +6,11 @@ import { plainText } from '@/components/voice/voiceText';
 import useMessageProfiles from '@/hooks/useMessageProfiles';
 import useRoomLevels from '@/hooks/useRoomLevels';
 
-/** Oda alt barı — yazma alanı ve hemen üstündeki boş alana düşen mesaj akışı. */
-export default function VoiceChatOverlay({ messages = [], onSend, currentUserId, ownerId, moderators = [], onOpenProfile }) {
+/**
+ * Oda alt bölümü: mesaj akışı klavye ikonuna basmadan da alt barın üstündeki boş alanda durur,
+ * yazma alanı açıldığında ve klavye kalktığında akış onunla birlikte yukarı kayar.
+ */
+export default function VoiceChatDock({ messages = [], onSend, composerOpen, currentUserId, ownerId, moderators = [], onOpenProfile }) {
   const [text, setText] = useState('');
   const [emojiOpen, setEmojiOpen] = useState(false);
   const inputRef = useRef(null);
@@ -21,8 +24,8 @@ export default function VoiceChatOverlay({ messages = [], onSend, currentUserId,
   const { levels } = useRoomLevels(userIds);
 
   useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
+    if (composerOpen) inputRef.current?.focus();
+  }, [composerOpen]);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: 'end' });
@@ -59,41 +62,45 @@ export default function VoiceChatOverlay({ messages = [], onSend, currentUserId,
         </div>
       )}
 
-      {emojiOpen && (
-        <div className="mx-3 mb-1 overflow-hidden rounded-2xl border border-white/10">
-          <EmojiPicker onSelect={(emoji) => setText((prev) => prev + emoji)} />
-        </div>
-      )}
+      {composerOpen && (
+        <>
+          {emojiOpen && (
+            <div className="mx-3 mb-1 overflow-hidden rounded-2xl border border-white/10">
+              <EmojiPicker onSelect={(emoji) => setText((prev) => prev + emoji)} />
+            </div>
+          )}
 
-      <form
-        onSubmit={submit}
-        className="mx-3 mb-2 mt-1.5 flex items-center gap-1 rounded-full border border-white/15 bg-black/50 px-3 py-1.5 backdrop-blur-md"
-      >
-        <input
-          ref={inputRef}
-          value={text}
-          onChange={(event) => setText(event.target.value)}
-          placeholder="Selam…"
-          autoComplete="off"
-          enterKeyHint="send"
-          className="h-10 min-w-0 flex-1 bg-transparent px-1 text-base text-white outline-none placeholder:text-white/45"
-        />
-        <button
-          type="button"
-          onClick={() => setEmojiOpen((value) => !value)}
-          aria-label="Emoji ekle"
-          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-transform active:scale-95 ${emojiOpen ? 'bg-white/20 text-white' : 'text-white/60'}`}
-        >
-          <Smile className="h-5 w-5" />
-        </button>
-        <button
-          type="submit"
-          aria-label="Gönder"
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-transform active:scale-95"
-        >
-          <Send className="h-5 w-5" />
-        </button>
-      </form>
+          <form
+            onSubmit={submit}
+            className="mx-3 mb-2 mt-1.5 flex items-center gap-1 rounded-full border border-white/15 bg-black/50 px-3 py-1.5 backdrop-blur-md"
+          >
+            <input
+              ref={inputRef}
+              value={text}
+              onChange={(event) => setText(event.target.value)}
+              placeholder="Selam…"
+              autoComplete="off"
+              enterKeyHint="send"
+              className="h-10 min-w-0 flex-1 bg-transparent px-1 text-base text-white outline-none placeholder:text-white/45"
+            />
+            <button
+              type="button"
+              onClick={() => setEmojiOpen((value) => !value)}
+              aria-label="Emoji ekle"
+              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-transform active:scale-95 ${emojiOpen ? 'bg-white/20 text-white' : 'text-white/60'}`}
+            >
+              <Smile className="h-5 w-5" />
+            </button>
+            <button
+              type="submit"
+              aria-label="Gönder"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-transform active:scale-95"
+            >
+              <Send className="h-5 w-5" />
+            </button>
+          </form>
+        </>
+      )}
     </div>
   );
 }
