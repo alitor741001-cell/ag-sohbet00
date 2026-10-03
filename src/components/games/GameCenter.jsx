@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { Loader2, RefreshCw } from 'lucide-react';
 import GameHeader from '@/components/games/GameHeader';
 import GameTabs from '@/components/games/GameTabs';
-import GameFooter from '@/components/games/GameFooter';
 import SlotGame from '@/components/games/SlotGame';
+import JackpotSlot from '@/components/games/JackpotSlot';
 import CrashGame from '@/components/games/CrashGame';
 import GameHistorySheet from '@/components/games/GameHistorySheet';
 import GameHelpSheet from '@/components/games/GameHelpSheet';
@@ -61,7 +61,7 @@ export default function GameCenter({ open, onClose }) {
         />
         <GameTabs value={game} disabled={disabled} onChange={(next) => { sounds.play('click'); setGame(next); }} />
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-2.5 pb-4 pt-3">
+        <div className="min-h-0 flex-1 overflow-y-auto px-2.5 pb-2">
           {session.loading ? (
             <div className="flex h-full flex-col items-center justify-center gap-3 text-sm text-white/70">
               <Loader2 className="h-7 w-7 animate-spin text-game-gold" />
@@ -69,8 +69,10 @@ export default function GameCenter({ open, onClose }) {
             </div>
           ) : session.profile ? (
             game === 'crash'
-              ? <CrashGame session={session} />
-              : <SlotGame variant={game} session={session} />
+              ? <CrashGame session={session} onOpenHelp={() => { sounds.play('click'); setSheet('help'); }} onOpenHistory={() => { sounds.play('click'); setSheet('history'); }} />
+              : game === 'jackpot'
+                ? <JackpotSlot session={session} />
+                : <SlotGame session={session} />
           ) : (
             <div className="flex h-full flex-col items-center justify-center gap-3 text-sm text-white/70">
               Oyun merkezi yüklenemedi.
@@ -84,13 +86,6 @@ export default function GameCenter({ open, onClose }) {
             </div>
           )}
         </div>
-
-        <GameFooter
-          onOpenHelp={() => { sounds.play('click'); setSheet('help'); }}
-          muted={muted}
-          onToggleSound={toggleSound}
-          onOpenSettings={() => { sounds.play('click'); setSheet('settings'); }}
-        />
 
         <GameHistorySheet open={sheet === 'history'} onClose={() => setSheet(null)} session={session} />
         <GameHelpSheet open={sheet === 'help'} onClose={() => setSheet(null)} session={session} />

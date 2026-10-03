@@ -1,41 +1,35 @@
 const GAMES = [
-  { id: 'slot', label: 'Slot', icon: '🎰' },
-  { id: 'crash', label: 'Crash', icon: '🚀' },
+  { id: 'slot', label: 'Slot', icon: '⚡' },
   { id: 'jackpot', label: 'Jackpot', icon: '👑' },
+  { id: 'crash', label: 'Crash', icon: '🚀' },
 ];
 
 /** Oyun değiştirme çubuğu. */
 export default function GameTabs({ value, onChange, disabled = {} }) {
   return (
-    <div className="shrink-0 border-b border-white/10 bg-game-panel/70 px-2.5 py-2">
-      <p className="mb-1.5 text-[9px] font-black tracking-[0.22em] text-white/45">OYUN DEĞİŞTİR</p>
-      <div className="flex items-center gap-1.5">
-        {GAMES.map((game) => {
-          const active = value === game.id;
-          const isOff = !!disabled[game.id];
-          return (
-            <button
-              key={game.id}
-              type="button"
-              disabled={isOff}
-              onClick={() => onChange(game.id)}
-              className={`flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl border px-2 py-2 text-xs font-bold transition-transform active:scale-95 ${
-                active
-                  ? 'border-game-gold/70 bg-game-gold/15 text-game-gold shadow-[0_0_18px_-6px_hsl(var(--game-gold))]'
-                  : isOff
-                    ? 'border-white/5 bg-white/5 text-white/30'
-                    : 'border-white/10 bg-white/5 text-white/75'
-              }`}
-            >
-              <span className="text-sm">{game.icon}</span>
-              <span className="truncate">{game.label}</span>
-              {isOff && <span className="text-[9px]">kapalı</span>}
-            </button>
-          );
-        })}
-      </div>
+    <div className="relative z-10 flex shrink-0 items-center gap-1.5 px-2.5 pb-2">
+      {GAMES.map((game) => {
+        const active = value === game.id;
+        const isOff = !!disabled[game.id];
+        return (
+          <button
+            key={game.id}
+            type="button"
+            disabled={isOff}
+            onClick={() => onChange(game.id)}
+            className={`flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl border px-2 py-1.5 text-[11px] font-black tracking-wide transition-transform active:scale-95 ${
+              active
+                ? 'gold-plate border-game-gold/70 text-[hsl(40_45%_16%)] shadow-[0_0_18px_-6px_hsl(var(--game-gold))]'
+                : isOff
+                  ? 'border-white/10 bg-black/30 text-white/25'
+                  : 'border-game-gold/25 bg-black/40 text-game-cream/80'
+            }`}
+          >
+            <span className="text-sm">{game.icon}</span>
+            <span className="truncate">{game.label}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }
-
-export { GAMES };

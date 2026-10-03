@@ -62,6 +62,17 @@
     --game-green: 145 72% 48%;
     --game-red: 0 85% 58%;
     --game-fg: 0 0% 100%;
+    --game-deep: 273 38% 19%;
+    --game-deepest: 277 44% 11%;
+    --game-gold-soft: 44 72% 78%;
+    --game-spin: 141 42% 37%;
+    --game-spin-light: 96 42% 52%;
+    --game-cream: 42 48% 86%;
+    --game-space: 217 66% 11%;
+    --game-space-light: 214 52% 21%;
+    --game-blue: 209 62% 38%;
+    --game-neon-blue: 199 93% 60%;
+    --game-orange: 16 74% 47%;
   }
 
   .dark {
@@ -118,6 +129,17 @@
     --game-green: 145 72% 48%;
     --game-red: 0 85% 58%;
     --game-fg: 0 0% 100%;
+    --game-deep: 273 38% 19%;
+    --game-deepest: 277 44% 11%;
+    --game-gold-soft: 44 72% 78%;
+    --game-spin: 141 42% 37%;
+    --game-spin-light: 96 42% 52%;
+    --game-cream: 42 48% 86%;
+    --game-space: 217 66% 11%;
+    --game-space-light: 214 52% 21%;
+    --game-blue: 209 62% 38%;
+    --game-neon-blue: 199 93% 60%;
+    --game-orange: 16 74% 47%;
   }
 }
 
@@ -1316,3 +1338,20 @@ button:active, nav a:active, a[role="button"]:active {
 @media (prefers-reduced-motion: reduce) {
   .game-symbol-win, .game-float, .game-glow, .game-spin-icon, .game-ring { animation: none !important; }
 }
+
+/* === ZEUS / JACKPOT / CRASH ÖZEL YÜZEYLER === */
+.gold-plate {
+  background-image: linear-gradient(160deg, hsl(var(--game-gold-soft)), hsl(var(--game-gold)) 38%, hsl(40 62% 30%) 58%, hsl(var(--game-gold-soft)) 86%);
+}
+.zeus-surface {
+  background-image: radial-gradient(120% 70% at 50% 0%, hsl(var(--game-violet) / 0.38), transparent 66%), linear-gradient(180deg, hsl(var(--game-deep)) 0%, hsl(var(--game-deepest)) 100%);
+}
+.space-surface {
+  background-image: radial-gradient(95% 55% at 50% 22%, hsl(var(--game-blue) / 0.5), transparent 72%), linear-gradient(180deg, hsl(var(--game-space-light)) 0%, hsl(var(--game-space)) 100%);
+}
+@keyframes zeus-pulse { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.18); } }
+.zeus-pulse { animation: zeus-pulse 2.6s ease-in-out infinite; }
+@keyframes rocket-flame { 0%, 100% { opacity: 0.95; transform: scaleY(1); } 50% { opacity: 0.6; transform: scaleY(1.2); } }
+.rocket-flame { animation: rocket-flame 0.3s ease-in-out infinite; }
+@keyframes ticker-scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+.ticker-scroll { animation: ticker-scroll 32s linear infinite; }

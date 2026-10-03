@@ -146,6 +146,17 @@ async function ensureRound(svc, config) {
   return created;
 }
 
+/** Tur kimliği geçersizse veya tur silinmişse null döner — istemci 500 yerine normal cevap alır. */
+async function roundById(svc, rawId) {
+  const id = String(rawId || '');
+  if (!/^[a-f0-9]{24}$/i.test(id)) return null;
+  try {
+    return await svc.entities.GameRound.get(id);
+  } catch {
+    return null;
+  }
+}
+
 /** Tur 'waiting' ise koşuya geçirir, koşuyorsa çarpanı/pAtlama durumunu döner. */
 async function roundState(svc, round, secret) {
   if (!round) return { round: null, multiplier: 1, crashed: false };
@@ -292,9 +303,7 @@ export default async function (req) {
 
     if (action === 'crash-round' || action === 'crash-state') {
       if (!config.crash_enabled) return Response.json({ error: 'Crash oyunu şu an kapalı' }, { status: 400 });
-      let round = payload.round_id
-        ? (await svc.entities.GameRound.filter({ id: String(payload.round_id) }, '-created_date', 1))[0] || null
-        : null;
+      let round = await roundById(svc, payload.round_id);
       let secret = null;
       if (round) secret = (await svc.entities.GameRoundSecret.filter({ round_id: round.id }, '-created_date', 1))[0] || null;
       if (action === 'crash-round' || !round) {
@@ -314,7 +323,7 @@ export default async function (req) {
 
     if (action === 'crash-bet') {
       if (!config.crash_enabled) return Response.json({ error: 'Crash oyunu şu an kapalı' }, { status: 400 });
-      const round = (await svc.entities.GameRound.filter({ id: String(payload.round_id || '') }, '-created_date', 1))[0] || null;
+      const round = await roundById(svc, payload.round_id);
       if (!round) return Response.json({ error: 'Tur bulunamadı, sayfayı yenile' }, { status: 400 });
       if (round.status !== 'waiting') return Response.json({ error: 'Bu turun bahis süresi geçti' }, { status: 400 });
       const roundStartMs = round.started_at ? new Date(round.started_at).getTime() : 0;
@@ -357,7 +366,7 @@ export default async function (req) {
     }
 
     if (action === 'crash-cashout') {
-      const round = (await svc.entities.GameRound.filter({ id: String(payload.round_id || '') }, '-created_date', 1))[0] || null;
+      const round = await roundById(svc, payload.round_id);
       if (!round) return Response.json({ error: 'Tur bulunamadı' }, { status: 400 });
       const players = Array.isArray(round.players) ? round.players : [];
       const index = players.findIndex((player) => player.user_id === user.id);
