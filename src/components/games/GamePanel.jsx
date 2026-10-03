@@ -3,7 +3,7 @@ import { Gamepad2, X } from 'lucide-react';
 import GameList from './GameList';
 import SlotGame from './SlotGame';
 
-export default function GamePanel({ open, onClose }) {
+export default function GamePanel({ open, onClose, roomId }) {
   const [selected, setSelected] = useState(null);
 
   if (!open) return null;
@@ -26,7 +26,7 @@ export default function GamePanel({ open, onClose }) {
       )}
 
       {selected ? (
-        <SlotGame onExit={onClose} onBack={() => setSelected(null)} />
+        <SlotGame onExit={onClose} onBack={() => setSelected(null)} roomId={roomId} />
       ) : (
         <GameList onSelect={setSelected} />
       )}

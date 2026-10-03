@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ChevronLeft, X } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import { SLOT_DECOR } from './slotAssets';
@@ -9,9 +9,14 @@ import SlotBetDeck from './slot/SlotBetDeck';
 import SlotActionDeck from './slot/SlotActionDeck';
 import CoinSheet from './slot/CoinSheet';
 
-export default function SlotGame({ onExit, onBack }) {
-  const game = useSlotGame();
+export default function SlotGame({ onExit, onBack, roomId }) {
+  const game = useSlotGame({ roomId });
   const [coinOpen, setCoinOpen] = useState(false);
+
+  // Büyük ödülde oyun paneli kapanır; kutlama oda sohbetinde görünür.
+  useEffect(() => {
+    if (game.bigWin > 0) onExit?.();
+  }, [game.bigWin, onExit]);
 
   return (
     <div className="relative flex h-full min-h-0 flex-col bg-slot">

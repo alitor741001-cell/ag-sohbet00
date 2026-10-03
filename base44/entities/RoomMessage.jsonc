@@ -24,7 +24,8 @@
       "type": "string",
       "enum": [
         "user",
-        "system"
+        "system",
+        "slot_win"
       ],
       "default": "user"
     }

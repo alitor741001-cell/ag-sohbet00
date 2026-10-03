@@ -7,7 +7,7 @@ const sleep = (ms) => new Promise((resolve) => { window.setTimeout(resolve, ms);
 // Tur animasyonunun görünür kalması için en kısa dönüş süresi.
 const SPIN_MIN_MS = 800;
 
-export default function useSlotGame() {
+export default function useSlotGame({ roomId } = {}) {
   const [status, setStatus] = useState('loading');
   const [coins, setCoins] = useState(0);
   const [unlimited, setUnlimited] = useState(false);
@@ -19,6 +19,7 @@ export default function useSlotGame() {
   const [bonusAmount, setBonusAmount] = useState(0);
   const [spinning, setSpinning] = useState(false);
   const [win, setWin] = useState(0);
+  const [bigWin, setBigWin] = useState(0);
   const [auto, setAuto] = useState(false);
   const [message, setMessage] = useState('');
   const busyRef = useRef(false);
@@ -77,22 +78,26 @@ export default function useSlotGame() {
     busyRef.current = true;
     setSpinning(true);
     setWin(0);
+    setBigWin(0);
     setMessage('');
     try {
       const [response] = await Promise.all([
-        base44.functions.invoke('slot-game', { action: 'spin', bet }),
+        base44.functions.invoke('slot-game', { action: 'spin', bet, room_id: roomId }),
         sleep(SPIN_MIN_MS),
       ]);
       const data = response.data || {};
       applyState(data);
       setWin(data.win || 0);
+      setBigWin(data.big_win || 0);
     } catch (error) {
-      setMessage(error?.response?.data?.error || 'Tur başlatılamadı.');
+      const raw = error?.response?.data?.error;
+      setAuto(false);
+      setMessage(raw && !/rate limit/i.test(raw) ? raw : 'Çok hızlı oynuyorsun, birkaç saniye bekle.');
     } finally {
       setSpinning(false);
       busyRef.current = false;
     }
-  }, [applyState, bet, coins, lines, status, unlimited]);
+  }, [applyState, bet, coins, lines, roomId, status, unlimited]);
 
   const saveBet = useCallback(async (next) => {
     setBet(next);
@@ -153,6 +158,7 @@ export default function useSlotGame() {
     bonusAmount,
     spinning,
     win,
+    bigWin,
     auto,
     message,
     spin,

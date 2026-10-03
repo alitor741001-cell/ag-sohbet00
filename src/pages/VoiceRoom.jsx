@@ -607,7 +607,7 @@ export default function VoiceRoom() {
 
       <InviteSheet open={inviteOpen} onClose={() => setInviteOpen(false)} onInvite={sendInvites} />
 
-      <GamePanel open={gamesOpen} onClose={() => setGamesOpen(false)} />
+      <GamePanel open={gamesOpen} onClose={() => setGamesOpen(false)} roomId={id} />
 
       {notice && joined && (
         <p className="pointer-events-none absolute left-1/2 top-20 z-[170] -translate-x-1/2 rounded-full bg-black/80 px-4 py-2 text-xs text-white">{notice}</p>

@@ -102,11 +102,28 @@ module.exports = {
   				to: {
   					height: '0'
   				}
+  			},
+  			'slot-win-coin': {
+  				'0%': { transform: 'translateY(-20%) rotate(-25deg)', opacity: '0' },
+  				'12%': { opacity: '1' },
+  				'100%': { transform: 'translateY(38vh) rotate(25deg)', opacity: '0' }
+  			},
+  			'slot-win-pop': {
+  				'0%': { transform: 'scale(0.7)', opacity: '0' },
+  				'60%': { transform: 'scale(1.06)', opacity: '1' },
+  				'100%': { transform: 'scale(1)', opacity: '1' }
+  			},
+  			'slot-win-sheen': {
+  				'0%': { transform: 'translateX(0)' },
+  				'60%, 100%': { transform: 'translateX(500%)' }
   			}
   		},
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
-  			'accordion-up': 'accordion-up 0.2s ease-out'
+  			'accordion-up': 'accordion-up 0.2s ease-out',
+  			'slot-win-coin': 'slot-win-coin 2.2s linear infinite',
+  			'slot-win-pop': 'slot-win-pop 0.5s ease-out both',
+  			'slot-win-sheen': 'slot-win-sheen 2.6s ease-in-out infinite'
   		}
   	}
   },

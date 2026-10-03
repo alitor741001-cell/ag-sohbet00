@@ -1,5 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
-import { LINES, spinReels, evaluateGrid } from '../../shared/slotEngine.ts';
+import { LINES, BIG_WIN_MULTIPLE, spinReels, evaluateGrid } from '../../shared/slotEngine.ts';
 
 const START_COINS = 100000;
 const BONUS_COINS = 25000;
@@ -59,6 +59,25 @@ async function loadWallet(base44, user) {
   });
 }
 
+// Büyük ödülü oda sohbetine duyurur (tutar sunucuda hesaplanır).
+async function announceBigWin(base44, user, roomId, amount, name) {
+  const room = await base44.asServiceRole.entities.Room.get(roomId).catch(() => null);
+  if (!room) return false;
+  const isOwner = room.owner_id === user.id;
+  const isParticipant = (room.participants || []).some((person) => person.user_id === user.id);
+  if (!isOwner && !isParticipant) return false;
+  const formatted = new Intl.NumberFormat('tr-TR').format(Math.round(amount));
+  await base44.asServiceRole.entities.RoomMessage.create({
+    room_id: roomId,
+    user_id: user.id,
+    user_name: name,
+    user_avatar: user.avatar || '',
+    type: 'slot_win',
+    text: `🎰 BÜYÜK ÖDÜL! ${name}, slot oyununda ${formatted} coin kazandı!`,
+  });
+  return true;
+}
+
 export default async function (req) {
   try {
     const base44 = createClientFromRequest(req);
@@ -97,6 +116,12 @@ export default async function (req) {
 
       const grid = spinReels();
       const result = evaluateGrid(grid, bet);
+      const bigWin = cost > 0 && result.total >= cost * BIG_WIN_MULTIPLE;
+      const name = user.username || user.full_name || 'Kullanıcı';
+      let celebrated = false;
+      if (bigWin && typeof body.room_id === 'string' && body.room_id) {
+        celebrated = await announceBigWin(base44, user, body.room_id, result.total, name).catch(() => false);
+      }
       const updated = await base44.asServiceRole.entities.GameWallet.update(wallet.id, {
         coins: UNLIMITED_COINS ? START_COINS : coins - cost + result.total,
         bet,
@@ -111,6 +136,8 @@ export default async function (req) {
         wins: result.wins,
         win: result.total,
         cost,
+        big_win: bigWin ? result.total : 0,
+        celebrated,
       });
     }
 

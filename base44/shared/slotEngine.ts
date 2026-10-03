@@ -1,5 +1,8 @@
 export const LINES = 50;
 
+// Toplam bahsin bu katı ve üzeri kazançlar "büyük ödül" sayılır.
+export const BIG_WIN_MULTIPLE = 10;
+
 export const SYMBOLS = [
   { id: 'ten', weight: 14, pays: [10, 30, 100] },
   { id: 'jack', weight: 13, pays: [12, 40, 150] },
