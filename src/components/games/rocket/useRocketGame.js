@@ -196,6 +196,13 @@ export default function useRocketGame() {
     return () => clearInterval(id);
   }, []);
 
+  // Uyarı ekranda 2 saniye kalır, sonra kendiliğinden kaybolur.
+  useEffect(() => {
+    if (!message) return undefined;
+    const id = setTimeout(() => setMessage(''), 2000);
+    return () => clearTimeout(id);
+  }, [message]);
+
   // Bahis ve otomatik hedef değerleri ilk yüklemede sunucudan bir kez alınır.
   useEffect(() => {
     if (seededRef.current || !data) return;
