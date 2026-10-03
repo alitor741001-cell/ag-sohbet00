@@ -2,8 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Send, Smile } from 'lucide-react';
 import EmojiPicker from '@/components/player/EmojiPicker';
 import VoiceChatMessage from '@/components/voice/VoiceChatMessage';
-import SlotWinMessage from '@/components/games/SlotWinMessage';
-import SlotWinCelebration from '@/components/games/SlotWinCelebration';
 import { plainText } from '@/components/voice/voiceText';
 import useMessageProfiles from '@/hooks/useMessageProfiles';
 import useRoomLevels from '@/hooks/useRoomLevels';
@@ -15,8 +13,6 @@ import useRoomLevels from '@/hooks/useRoomLevels';
 export default function VoiceChatDock({ messages = [], onSend, onCloseComposer, composerOpen, currentUserId, ownerId, moderators = [], onOpenProfile }) {
   const [text, setText] = useState('');
   const [emojiOpen, setEmojiOpen] = useState(false);
-  const [celebration, setCelebration] = useState(null);
-  const celebratedRef = useRef(null);
   const inputRef = useRef(null);
   const endRef = useRef(null);
 
@@ -34,21 +30,6 @@ export default function VoiceChatDock({ messages = [], onSend, onCloseComposer, 
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: 'end' });
   }, [messages.length]);
-
-  // Yeni bir büyük ödül mesajı geldiğinde sohbet üzerinde kutlama efekti oynar.
-  useEffect(() => {
-    const win = [...messages].reverse().find((message) => message.type === 'slot_win');
-    if (!win || win.id === celebratedRef.current) return;
-    celebratedRef.current = win.id;
-    const age = Date.now() - new Date(win.created_date || 0).getTime();
-    if (age >= 0 && age < 20000) setCelebration({ id: win.id, text: win.text });
-  }, [messages]);
-
-  useEffect(() => {
-    if (!celebration) return undefined;
-    const timer = window.setTimeout(() => setCelebration(null), 5200);
-    return () => window.clearTimeout(timer);
-  }, [celebration]);
 
   const submit = (event) => {
     event.preventDefault();
@@ -68,9 +49,6 @@ export default function VoiceChatDock({ messages = [], onSend, onCloseComposer, 
         <div className="absolute inset-x-0 bottom-full z-10 flex max-h-[34vh] flex-col justify-end overflow-y-auto overscroll-contain pb-1 [mask-image:linear-gradient(to_bottom,transparent,black_14%)] [-webkit-mask-image:linear-gradient(to_bottom,transparent,black_14%)]">
           <div className="flex flex-col gap-1.5 px-4">
             {messages.map((message) => {
-              if (message.type === 'slot_win') {
-                return <SlotWinMessage key={message.id} message={message} />;
-              }
               if (message.type === 'system') {
                 return <p key={message.id} className="break-words px-2 text-center text-[11px] font-semibold italic text-amber-300 [overflow-wrap:anywhere] [text-shadow:0_0_10px_rgba(251,191,36,0.45)]">{plainText(message.text)}</p>;
               }
@@ -89,12 +67,6 @@ export default function VoiceChatDock({ messages = [], onSend, onCloseComposer, 
             })}
             <div ref={endRef} />
           </div>
-        </div>
-      )}
-
-      {celebration && (
-        <div className="pointer-events-none absolute inset-x-0 bottom-full z-20 h-[34vh]">
-          <SlotWinCelebration key={celebration.id} text={celebration.text} />
         </div>
       )}
 

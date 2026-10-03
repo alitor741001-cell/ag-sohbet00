@@ -1,4 +1,4 @@
-import { Gamepad2, Keyboard, MessageCircle, MessageSquare, Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
+import { Keyboard, MessageCircle, MessageSquare, Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
 
 const TONES = {
   gray: 'bg-white/10 text-white',
@@ -24,8 +24,8 @@ function RoundButton({ onClick, label, tone = 'gray', active, size = 'lg', child
   );
 }
 
-/** Alt kontrol çubuğu: sohbet, mikrofon, hoparlör, oyunlar ve özel sohbet. */
-export default function VoiceControlBar({ micActive, deafened, chatOpen, gamesOpen, onToggleMic, onToggleSpeaker, onOpenGames, onOpenPrivateChat, onToggleChat }) {
+/** Alt kontrol çubuğu: sohbet, mikrofon, hoparlör ve özel sohbet. */
+export default function VoiceControlBar({ micActive, deafened, chatOpen, onToggleMic, onToggleSpeaker, onOpenPrivateChat, onToggleChat }) {
   return (
     <div className="flex shrink-0 items-center justify-between gap-2 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2">
       <RoundButton tone={chatOpen ? 'active' : 'gray'} active={chatOpen} onClick={onToggleChat} label={chatOpen ? 'Sohbeti kapat' : 'Sohbeti aç'}>
@@ -37,9 +37,6 @@ export default function VoiceControlBar({ micActive, deafened, chatOpen, gamesOp
         </RoundButton>
         <RoundButton size="md" tone={deafened ? 'red' : 'gray'} onClick={onToggleSpeaker} label="Hoparlör">
           {deafened ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
-        </RoundButton>
-        <RoundButton size="md" tone={gamesOpen ? 'active' : 'gray'} active={gamesOpen} onClick={onOpenGames} label="Oyunlar">
-          <Gamepad2 className="h-5 w-5" />
         </RoundButton>
         <RoundButton size="md" onClick={onOpenPrivateChat} label="Özel sohbet">
           <MessageCircle className="h-5 w-5" />
