@@ -4,7 +4,7 @@ import { Image } from '@/components/ui/image';
 import { useSize } from '@/hooks/use-size';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { SLOT_ART } from './slotAssets';
-import { ART_HEIGHT, ART_WIDTH, SLOT_LAYOUT } from './slot/slotLayout';
+import { ART_HEIGHT, ART_WIDTH, LOGO_TOP, SLOT_LAYOUT } from './slot/slotLayout';
 import useSlotGame from './slot/useSlotGame';
 import SlotReels from './slot/SlotReels';
 import SlotWinLines from './slot/SlotWinLines';
@@ -20,10 +20,9 @@ import { tierOfBet } from './slot/slotConfig';
 
 // Görsel alanı doldururken en fazla bu oranda kırpılır; panelde siyah boşluk kalmaz.
 const MAX_CROP = 1.06;
-// Üstte kazanan şeridi için ayrılan alan: iki tam satır + görselin üstündeki boşluk.
-const TICKER_SPACE = TICKER_ROW_HEIGHT * 2 + 8;
-// Şeritte gösterilen en fazla satır sayısı.
-const MAX_TICKER_ROWS = 3;
+// Şeritte her zaman görünen en az satır sayısı.
+const MIN_TICKER_ROWS = 2;
+const MIN_TICKER_SPACE = TICKER_ROW_HEIGHT * MIN_TICKER_ROWS;
 const WIN_FLASH_MS = 2400;
 // Bu tutarın üzerindeki kazançlarda kutlama ekranı açılır.
 const PRIZE_THRESHOLD = 20000;
@@ -68,21 +67,20 @@ export default function SlotGame({ onExit, onBack, roomId }) {
   const fit = Math.min(panelWidth / ART_WIDTH, panelHeight / ART_HEIGHT);
   const cover = Math.max(panelWidth / ART_WIDTH, panelHeight / ART_HEIGHT);
   // Üstte kazanan şeridine ve çentiğe yer ayrılır: şerit görselin üstündeki yazıyı kapatmaz.
-  const reserve = Math.max(0, (panelHeight || 0) - TICKER_SPACE - safeTop) / ART_HEIGHT;
+  const reserve = Math.max(0, (panelHeight || 0) - MIN_TICKER_SPACE - safeTop) / ((1 - LOGO_TOP) * ART_HEIGHT);
   const scale = Math.min(cover || 0, (fit || 0) * MAX_CROP, reserve || 0);
   const width = ART_WIDTH * scale;
   const height = ART_HEIGHT * scale;
-  // Şerit, görselin üstünde kalan boşluğun 8px üstünde biter — filmkeyfi yazısını kapatmaz.
-  const available = Math.max(0, (panelHeight || 0) - height - 8 - safeTop);
-  // Şerit yüksekliği tam satırlara yuvarlanır: altın çizgi bir satırın ortasından geçmez.
-  const tickerHeight = Math.min(
-    Math.max(TICKER_ROW_HEIGHT, Math.round(available / TICKER_ROW_HEIGHT) * TICKER_ROW_HEIGHT),
-    TICKER_ROW_HEIGHT * MAX_TICKER_ROWS,
-  );
-  // Şeridin bittiği yer: altındaki rozet bu altın çizginin hemen altına hizalanır.
-  const tickerBottom = safeTop + tickerHeight;
   // Görselin üst kenarı: görselin içindeki yazılar buradan ölçülür.
   const artTop = Math.max(0, (panelHeight || 0) - height);
+  // Şerit, "filmkeyfi" yazısının hemen üstündeki altın çizgiye kadar iner.
+  const goldLine = artTop + LOGO_TOP * height;
+  const tickerHeight = Math.max(MIN_TICKER_SPACE, Math.round(goldLine - safeTop));
+  // Şeridin bittiği yer: altındaki rozet bu altın çizginin altına hizalanır.
+  const tickerBottom = safeTop + tickerHeight;
+  // Yazının altındaki boş şerit: FREE rozeti ve kademe uyarısı buraya oturur.
+  const badgeTop = artTop + Math.round(height * 0.105);
+  const alertTop = badgeTop + (game.freeSpins > 0 ? 36 : 0);
   const ready = game.status === 'ready';
   // Bahis kademesi: kademe atlayınca üstte kırmızı uyarı çıkar.
   const tier = tierOfBet(game.bet, game.lines);
@@ -215,9 +213,9 @@ export default function SlotGame({ onExit, onBack, roomId }) {
         </button>
       </div>
 
-      <FreeSpinBadge count={game.freeSpins} top={tickerBottom + 6} />
+      <FreeSpinBadge count={game.freeSpins} top={badgeTop} />
 
-      <SlotTierAlert tier={tier} top={artTop + 64} />
+      <SlotTierAlert tier={tier} top={alertTop} />
 
       <SlotWinOverlay
         open={!!prize}

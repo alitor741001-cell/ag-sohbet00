@@ -17,6 +17,6 @@
 
 /* Alt kenarda satırlar altın çizgiye yapışmadan yumuşakça kaybolur. */
 .winner-ticker-fade {
-  mask-image: linear-gradient(to bottom, #000 62%, transparent 100%);
-  -webkit-mask-image: linear-gradient(to bottom, #000 62%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 26px), transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 26px), transparent 100%);
 }
