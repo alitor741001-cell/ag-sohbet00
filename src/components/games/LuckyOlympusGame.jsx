@@ -38,6 +38,7 @@ export default function LuckyOlympusGame({ onBack, onExit }) {
   // Durum şeridi: tur mesajı, kalan ücretsiz dönüş ve biriken çarpanlar.
   const status = [game.banner];
   if (game.freeSpins > 0) status.push(`Ücretsiz dönüş ${game.freeSpins}`);
+  if (game.auto) status.push('Otomatik açık');
   if (merged.length) status.push(`Çarpan ${merged.map((item) => `x${item.merged}`).join(' ')}`);
 
   const toggleSound = () => {
@@ -107,7 +108,6 @@ export default function LuckyOlympusGame({ onBack, onExit }) {
             coins={game.coins}
             buyCost={game.buyCost}
             spinning={game.spinning}
-            auto={game.auto}
             busy={game.busy}
             banner={status.join(' • ')}
             onSpin={game.runSpin}
