@@ -2,44 +2,58 @@ import React, { useEffect, useRef, useState } from 'react';
 import { ChevronLeft, X } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import { useSize } from '@/hooks/use-size';
+import { useCurrentUser } from '@/lib/useCurrentUser';
 import { SLOT_ART } from './slotAssets';
 import { ART_HEIGHT, ART_WIDTH, SLOT_LAYOUT } from './slot/slotLayout';
 import useSlotGame from './slot/useSlotGame';
+import SlotReadout from './slot/SlotReadout';
+import SlotWinOverlay from './slot/SlotWinOverlay';
 import CoinSheet from './slot/CoinSheet';
 
 const ART_RATIO = ART_WIDTH / ART_HEIGHT;
 const WIN_FLASH_MS = 2400;
+// Bu tutarın üzerindeki kazançlarda kutlama ekranı açılır.
+const PRIZE_THRESHOLD = 20000;
 
 const format = (value) => new Intl.NumberFormat('tr-TR').format(Math.max(0, Math.round(value || 0)));
 
 export default function SlotGame({ onExit, onBack, roomId }) {
+  const { user } = useCurrentUser();
   const game = useSlotGame({ roomId });
   const [coinOpen, setCoinOpen] = useState(false);
   const [flash, setFlash] = useState(0);
+  const [prize, setPrize] = useState(null);
   const frameRef = useRef(null);
   const size = useSize(frameRef);
 
-  // Büyük ödülde panel kapanır; kutlama oda sohbetinde görünür.
+  // Her turun sonucu: büyük kazançta kutlama ekranı, küçük kazançta kısa parıltı.
   useEffect(() => {
-    if (game.bigWin > 0) onExit?.();
-  }, [game.bigWin, onExit]);
+    if (!game.spins) return undefined;
+    if (game.win >= PRIZE_THRESHOLD) {
+      setPrize({ amount: game.win, jackpot: game.jackpotHit });
+      return undefined;
+    }
+    if (game.win > 0) {
+      setFlash(game.win);
+      const timer = window.setTimeout(() => setFlash(0), WIN_FLASH_MS);
+      return () => window.clearTimeout(timer);
+    }
+    return undefined;
+  }, [game.spins]);
 
-  // Kazanç ekranda kısa süre parlar, sonra kendiliğinden kaybolur.
-  useEffect(() => {
-    if (!game.win) return undefined;
-    setFlash(game.win);
-    const timer = window.setTimeout(() => setFlash(0), WIN_FLASH_MS);
-    return () => window.clearTimeout(timer);
-  }, [game.win]);
-
-  // Görsel asla kırpılmaz: kutu görselin oranını korur ve paneli tamamen doldurur.
+  // Görsel asla kırpılmaz: kutu görselin oranını korur, arkadaki dolgu boşluk bırakmaz.
   const width = Math.min(size?.width || 0, (size?.height || 0) * ART_RATIO);
   const height = width / ART_RATIO;
   const ready = game.status === 'ready';
 
   return (
     <div ref={frameRef} className="relative flex h-full min-h-0 w-full flex-col overflow-hidden bg-slot">
-      <div className="flex min-h-0 flex-1 items-center justify-center">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+        <Image src={SLOT_ART.shell} alt="" className="h-full w-full" fittingType="fill" quality={30} />
+        <div className="absolute inset-0 bg-black/75" />
+      </div>
+
+      <div className="relative flex min-h-0 flex-1 items-center justify-center">
         {width > 0 && (
           <div className="relative" style={{ width, height }}>
             <Image
@@ -61,6 +75,9 @@ export default function SlotGame({ onExit, onBack, roomId }) {
                 backgroundPosition: '50% 50%',
               }}
             />
+
+            {/* Görselin kendi rakam alanları: bakiye, WIN, BET, LINES, TOTAL BET ve üst ödüller */}
+            <SlotReadout coins={game.coins} win={game.win} bet={game.bet} lines={game.lines} />
 
             {/* Görselin kendi butonları — görünmez dokunma alanları */}
             <button
@@ -129,28 +146,36 @@ export default function SlotGame({ onExit, onBack, roomId }) {
             </button>
 
             {game.status === 'loading' && (
-              <p className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-center text-xs font-bold text-white/80">
+              <p className="absolute inset-x-0 top-[62%] -translate-y-1/2 text-center text-xs font-bold text-white/80">
                 Oyun yükleniyor...
               </p>
             )}
 
-            {flash > 0 && (
+            {flash > 0 && !prize && (
               <p
                 key={flash}
-                className="game-win-float pointer-events-none absolute left-1/2 top-[40%] z-10 rounded-full border border-slot-gold/60 bg-black/70 px-4 py-1.5 font-mono text-lg font-black text-slot-gold"
+                className="game-win-float pointer-events-none absolute left-1/2 top-[62%] z-10 rounded-full border border-slot-gold/60 bg-black/70 px-4 py-1.5 font-mono text-lg font-black text-slot-gold"
               >
                 WIN {format(flash)}
               </p>
             )}
 
-            {game.message && !coinOpen && (
-              <p className="absolute left-1/2 top-[5%] z-10 w-max max-w-[90%] -translate-x-1/2 rounded-full bg-black/70 px-3 py-1.5 text-center text-[11px] font-bold text-slot-gold">
+            {game.message && !coinOpen && !prize && (
+              <p className="absolute left-1/2 top-[74%] z-10 w-max max-w-[90%] -translate-x-1/2 rounded-full bg-black/70 px-3 py-1.5 text-center text-[11px] font-bold text-slot-gold">
                 {game.message}
               </p>
             )}
           </div>
         )}
       </div>
+
+      <SlotWinOverlay
+        open={!!prize}
+        jackpot={!!prize?.jackpot}
+        amount={prize?.amount || 0}
+        winner={user?.full_name || user?.username || ''}
+        onAccept={() => setPrize(null)}
+      />
 
       <CoinSheet
         open={coinOpen}

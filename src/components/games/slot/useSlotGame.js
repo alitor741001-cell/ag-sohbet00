@@ -20,6 +20,7 @@ export default function useSlotGame({ roomId } = {}) {
   const [spinning, setSpinning] = useState(false);
   const [win, setWin] = useState(0);
   const [bigWin, setBigWin] = useState(0);
+  const [jackpotHit, setJackpotHit] = useState(false);
   const [auto, setAuto] = useState(false);
   const [message, setMessage] = useState('');
   const busyRef = useRef(false);
@@ -75,6 +76,7 @@ export default function useSlotGame({ roomId } = {}) {
       applyState(data);
       setWin(data.win || 0);
       setBigWin(data.big_win || 0);
+      setJackpotHit((data.wins || []).some((item) => item.symbol === 'jackpot'));
     } catch (error) {
       const raw = error?.response?.data?.error;
       setAuto(false);
@@ -145,6 +147,7 @@ export default function useSlotGame({ roomId } = {}) {
     spinning,
     win,
     bigWin,
+    jackpotHit,
     auto,
     message,
     spin,
