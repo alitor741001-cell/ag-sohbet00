@@ -26,6 +26,7 @@ export default function useRocketGame() {
   const phaseRef = useRef(null);
   const launchAtRef = useRef(null);
   const hasDataRef = useRef(false);
+  const autoFireRef = useRef(0);
 
   const applyResult = useCallback((res) => {
     if (!res) return;
@@ -124,6 +125,19 @@ export default function useRocketGame() {
     const slot = b.slot === 2 ? 2 : 1;
     if (!myBets[slot]) myBets[slot] = b;
   });
+
+  // Otomatik çekilme: yerel çarpan hedefe ulaştığı an sunucuya haber verilir,
+  // kazanç beklemeden yatırılır. Bahis nakde dönünce tetikleme durur.
+  useEffect(() => {
+    if (phase !== 'running') return;
+    const pending = [1, 2].some((slot) => {
+      const target = slot === 2 ? data?.auto2 : data?.auto1;
+      return myBets[slot] && target > 0 && liveMult >= target;
+    });
+    if (!pending || Date.now() - autoFireRef.current < 1500) return;
+    autoFireRef.current = Date.now();
+    fetchState();
+  }, [phase, liveMult, data?.auto1, data?.auto2, myBets[1], myBets[2], fetchState]);
 
   return {
     status,

@@ -32,6 +32,9 @@ export default function RocketBetDock({ game }) {
       if (active) {
         label = 'ÇEK';
         sub = `${formatMult(game.liveMult)} · ${format(amount * game.liveMult)}`;
+      } else if (row?.status === 'cashed') {
+        label = 'ÇEKİLDİ';
+        sub = `${formatMult(row.cashout_at)} · +${format(row.payout)}`;
       } else {
         label = 'UÇUŞTA';
         disabled = true;
