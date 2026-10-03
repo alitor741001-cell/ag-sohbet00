@@ -1,4 +1,4 @@
-import { Keyboard, MessageSquare, Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
+import { Keyboard, MessageCircle, MessageSquare, Mic, MicOff, Volume2, VolumeX, Waves } from 'lucide-react';
 
 const TONES = {
   gray: 'bg-white/10 text-white',
@@ -24,8 +24,8 @@ function RoundButton({ onClick, label, tone = 'gray', active, size = 'lg', child
   );
 }
 
-/** Alt kontrol çubuğu: sohbet/klavye, mikrofon ve hoparlör. */
-export default function VoiceControlBar({ micActive, deafened, chatOpen, onToggleMic, onToggleSpeaker, onToggleChat }) {
+/** Alt kontrol çubuğu: sohbet, mikrofon, hoparlör, özel sohbet ve gürültü engelleme. */
+export default function VoiceControlBar({ micActive, deafened, noiseSuppression, chatOpen, onToggleMic, onToggleSpeaker, onToggleNoise, onOpenPrivateChat, onToggleChat }) {
   return (
     <div className="flex shrink-0 items-center justify-between gap-2 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2">
       <RoundButton tone={chatOpen ? 'active' : 'gray'} active={chatOpen} onClick={onToggleChat} label={chatOpen ? 'Sohbeti kapat' : 'Sohbeti aç'}>
@@ -38,8 +38,13 @@ export default function VoiceControlBar({ micActive, deafened, chatOpen, onToggl
         <RoundButton size="md" tone={deafened ? 'red' : 'gray'} onClick={onToggleSpeaker} label="Hoparlör">
           {deafened ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
         </RoundButton>
+        <RoundButton size="md" onClick={onOpenPrivateChat} label="Özel sohbet">
+          <MessageCircle className="h-5 w-5" />
+        </RoundButton>
+        <RoundButton size="md" tone={noiseSuppression ? 'active' : 'gray'} active={noiseSuppression} onClick={onToggleNoise} label="Gürültü engelleme">
+          <Waves className="h-5 w-5" />
+        </RoundButton>
       </div>
-      <span aria-hidden="true" className="h-14 w-14 shrink-0" />
     </div>
   );
 }

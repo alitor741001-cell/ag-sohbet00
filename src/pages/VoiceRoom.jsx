@@ -41,6 +41,7 @@ export default function VoiceRoom() {
   const [seatIndex, setSeatIndex] = useState(null);
   const [profileUserId, setProfileUserId] = useState(null);
   const [dmUserId, setDmUserId] = useState(null);
+  const [dmOpen, setDmOpen] = useState(false);
   const [minimized, setMinimized] = useState(false);
   const [exitOpen, setExitOpen] = useState(false);
 
@@ -49,6 +50,7 @@ export default function VoiceRoom() {
   const joinedRef = useRef(false);
   const joinTriedRef = useRef(false);
   const sawSelfRef = useRef(false);
+  const keepSeatRef = useRef(false);
 
   const seats = useMemo(() => (Array.isArray(room?.seats) ? room.seats : []), [room?.seats]);
   const myInvite = useMemo(
@@ -186,6 +188,8 @@ export default function VoiceRoom() {
   useEffect(() => () => {
     if (!joinedRef.current) return;
     joinedRef.current = false;
+    // Profil sayfasına gidilirken oda ve koltuk korunur.
+    if (keepSeatRef.current) return;
     base44.functions.invoke('voice-room', { action: 'seat-leave', room_id: id }).catch(() => {});
     base44.functions.invoke('room-presence', { action: 'leave', room_id: id }).catch(() => {});
   }, [id]);
@@ -215,6 +219,13 @@ export default function VoiceRoom() {
 
   // Profil kartı açıcı — sohbet satırı ve izleyici listesinden kullanılır.
   const openProfile = (userId) => { if (userId) setProfileUserId(userId); };
+
+  // Profil sayfasına giderken odadan ve koltuktan düşmeyi engeller.
+  const openFullProfile = (userId) => {
+    if (!userId) return;
+    keepSeatRef.current = true;
+    navigate(`/kullanici/${userId}`);
+  };
 
   // Dolu koltuk profil kartını, boş koltuk beyaz koltuk menüsünü açar.
   const handleSeatPress = (index) => {
@@ -401,7 +412,7 @@ export default function VoiceRoom() {
   const profileActions = profileTarget ? [
     { key: 'mic', icon: (profileSelf ? voice.muted : profileMuted) ? MicOff : Mic, label: 'Mikrofon', disabled: !profileSelf && !canMod, onClick: profileSelf ? handleMic : () => toggleMuteFor(profileTarget) },
     { key: 'chat', icon: MessageSquare, label: 'Sohbet', disabled: profileSelf, onClick: () => { setDmUserId(profileTarget); setProfileUserId(null); } },
-    { key: 'seat', icon: Armchair, label: 'Koltuk', disabled: !profileSelf && !canMod, onClick: handleProfileSeat },
+    { key: 'seat', icon: Armchair, label: profileSelf ? (seated ? 'Ayağa kalk' : 'Otur') : 'Koltuk', disabled: !profileSelf && !canMod, onClick: handleProfileSeat },
     { key: 'invite', icon: UserPlus, label: 'Davet et', disabled: profileSelf || (!canMod && !seated), onClick: () => { const target = profileTarget; setProfileUserId(null); inviteToSeat(target); } },
   ] : [];
 
@@ -489,9 +500,12 @@ export default function VoiceRoom() {
       <VoiceControlBar
         micActive={!voice.muted}
         deafened={voice.deafened}
+        noiseSuppression={voice.noiseSuppression}
         chatOpen={chatOpen}
         onToggleMic={handleMic}
         onToggleSpeaker={voice.toggleDeafen}
+        onToggleNoise={voice.toggleNoiseSuppression}
+        onOpenPrivateChat={() => setDmOpen(true)}
         onToggleChat={() => setChatOpen((value) => !value)}
       />
 
@@ -528,7 +542,7 @@ export default function VoiceRoom() {
                 <VoiceMenuButton
                   icon={UserRound}
                   label="Profili gör"
-                  onClick={() => { const target = profileTarget; setProfileUserId(null); navigate(`/kullanici/${target}`); }}
+                  onClick={() => { const target = profileTarget; setProfileUserId(null); openFullProfile(target); }}
                 />
               )}
               {canMod && profileSeat && (
@@ -583,9 +597,9 @@ export default function VoiceRoom() {
         onDecline={declineSeatInvite}
       />
 
-      {dmUserId && (
+      {(dmOpen || dmUserId) && (
         <div className="absolute inset-0 z-[190] flex min-h-0 flex-col bg-[#101016]">
-          <RoomDirectMessages initialUserId={dmUserId} onClose={() => setDmUserId(null)} />
+          <RoomDirectMessages initialUserId={dmUserId} onClose={() => { setDmOpen(false); setDmUserId(null); }} />
         </div>
       )}
 
