@@ -1,4 +1,4 @@
-import { LogOut, MessageSquare, Mic, MicOff, UserPlus, Volume2, VolumeX } from 'lucide-react';
+import { MessageSquare, Mic, MicOff, Sparkles, UserPlus, Volume2, VolumeX } from 'lucide-react';
 
 const TONES = {
   gray: 'bg-white/10 text-white',
@@ -19,12 +19,12 @@ function RoundButton({ onClick, label, tone = 'gray', active, children }) {
   );
 }
 
-/** Alt kontrol çubuğu: çıkış, mikrofon, hoparlör, sohbet ve davet. */
-export default function VoiceControlBar({ micActive, deafened, chatOpen, onToggleMic, onToggleSpeaker, onToggleChat, onInvite, onExit }) {
+/** Alt kontrol çubuğu: canlı akış, mikrofon, hoparlör, sohbet ve davet. */
+export default function VoiceControlBar({ micActive, deafened, chatOpen, feedOpen, onToggleMic, onToggleSpeaker, onToggleChat, onToggleFeed, onInvite }) {
   return (
     <div className="flex shrink-0 items-center justify-between gap-2 border-t border-white/10 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2.5">
-      <RoundButton tone="red" onClick={onExit} label="Odadan çık">
-        <LogOut className="h-6 w-6" />
+      <RoundButton tone={feedOpen ? 'green' : 'gray'} active={feedOpen} onClick={onToggleFeed} label="Canlı mesaj akışı">
+        <Sparkles className="h-6 w-6" />
       </RoundButton>
       <div className="flex items-center gap-2 sm:gap-3">
         <RoundButton tone={micActive ? 'green' : 'gray'} active={micActive} onClick={onToggleMic} label="Mikrofon">

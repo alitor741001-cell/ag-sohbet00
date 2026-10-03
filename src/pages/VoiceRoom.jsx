@@ -8,6 +8,7 @@ import { useToast } from '@/components/ui/use-toast';
 import VoiceSeatGrid from '@/components/voice/VoiceSeatGrid';
 import VoiceControlBar from '@/components/voice/VoiceControlBar';
 import VoiceChat from '@/components/voice/VoiceChat';
+import VoiceLiveFeed from '@/components/voice/VoiceLiveFeed';
 import VoiceRoomMenu from '@/components/voice/VoiceRoomMenu';
 import VoiceSeatSheet from '@/components/voice/VoiceSeatSheet';
 import InviteSheet from '@/components/voice/InviteSheet';
@@ -27,6 +28,7 @@ export default function VoiceRoom() {
   const [notice, setNotice] = useState('');
   const [messages, setMessages] = useState([]);
   const [chatOpen, setChatOpen] = useState(false);
+  const [feedOpen, setFeedOpen] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [seatIndex, setSeatIndex] = useState(null);
@@ -395,12 +397,23 @@ export default function VoiceRoom() {
         </p>
       </div>
 
-      <button type="button" onClick={() => setChatOpen(true)} className="relative mx-3 mb-2 flex shrink-0 items-center gap-2 rounded-2xl border border-white/10 bg-black/40 px-3 py-2 text-left">
-        <MessageSquare className="h-4 w-4 shrink-0 text-white/60" />
-        <span className="min-w-0 flex-1 truncate text-[11px] text-white/70">
-          {lastMessage ? `${lastMessage.type === 'system' ? '' : `${lastMessage.user_name}: `}${plainText(lastMessage.text)}` : 'Sohbete katıl...'}
-        </span>
-      </button>
+      {feedOpen ? (
+        <VoiceLiveFeed
+          messages={messages}
+          ownerId={room?.owner_id}
+          moderators={moderators}
+          currentUserId={user?.id}
+          onOpenProfile={openProfile}
+          onOpenChat={() => setChatOpen(true)}
+        />
+      ) : (
+        <button type="button" onClick={() => setChatOpen(true)} className="relative mx-3 mb-2 flex shrink-0 items-center gap-2 rounded-2xl border border-white/10 bg-black/40 px-3 py-2 text-left">
+          <MessageSquare className="h-4 w-4 shrink-0 text-white/60" />
+          <span className="min-w-0 flex-1 truncate text-[11px] text-white/70">
+            {lastMessage ? `${lastMessage.type === 'system' ? '' : `${lastMessage.user_name}: `}${plainText(lastMessage.text)}` : 'Sohbete katıl...'}
+          </span>
+        </button>
+      )}
 
       {(voice.remoteMuted || voice.error) && (
         <p className="px-3 pb-1 text-center text-[11px] text-amber-400">
@@ -412,11 +425,12 @@ export default function VoiceRoom() {
         micActive={!voice.muted}
         deafened={voice.deafened}
         chatOpen={chatOpen}
+        feedOpen={feedOpen}
         onToggleMic={handleMic}
         onToggleSpeaker={voice.toggleDeafen}
         onToggleChat={() => setChatOpen((value) => !value)}
+        onToggleFeed={() => setFeedOpen((value) => !value)}
         onInvite={handleInvite}
-        onExit={leaveRoom}
       />
 
       {chatOpen && (
