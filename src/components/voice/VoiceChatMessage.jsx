@@ -15,6 +15,11 @@ function VoiceChatMessage({ message, profile, level, ownerId, moderators = [], c
 
   return (
     <article className="min-w-0 text-sm leading-relaxed [overflow-wrap:anywhere] [text-shadow:0_1px_4px_rgba(0,0,0,0.9)]">
+      <span className="mr-1 inline-flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/25 bg-white/10 align-middle">
+        {profile?.avatar
+          ? <img src={profile.avatar} alt="" referrerPolicy="no-referrer" draggable={false} className="h-full w-full object-cover object-center" />
+          : <span className="text-[10px] font-bold text-white/80">{(message.user_name || '?').trim().charAt(0)}</span>}
+      </span>
       {memberId && <span className="mr-1 inline-block rounded border border-white/25 bg-white/10 px-1 align-middle text-[9px] font-black leading-4 text-white/85">#{memberId}</span>}
       <RoleBadge user={profile} size="sm" className="mr-1 align-middle" />
       <span className="mr-1 inline-block h-[30px] w-[54px] shrink-0 overflow-hidden align-middle">
