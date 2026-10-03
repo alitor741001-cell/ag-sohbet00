@@ -2,9 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { SLOT_ART } from '../slotAssets';
 import { CELL_STYLE, SLOT_LAYOUT, SYMBOL_CELLS, SYMBOL_IDS } from './slotLayout';
 
-// Kaydırılan şerit: üstte dolgu semboller, ortada turun sonucu, altta rastgele semboller.
-const FILLER = 3;
-const SCROLL = 9;
+// Tur sırasında makaranın içinden geçen rastgele sembol sayısı (15 = 5 pencere boyu akış).
+const RUN = 15;
 const FALLBACK = 'ten';
 
 const shuffle = (list) => {
@@ -46,13 +45,13 @@ function ReelFrame({ children }) {
   );
 }
 
-/** Makara ızgarası: tur sırasında semboller aşağı kayar ve turun sonucu üzerine oturur. */
+/** Makara ızgarası: turda her sütun kendi hızında döner, semboller akar ve turun sonucu üzerine oturur. */
 export default function SlotReels({ spinning, grid }) {
   const [strips, setStrips] = useState([]);
 
-  // Her turda sütunların sembol dizilimi yeniden karılır.
+  // Şeritler yalnızca tur boyunca vardır; her turda yeniden karılır ve animasyon baştan başlar.
   useEffect(() => {
-    if (spinning) setStrips([0, 1, 2, 3, 4].map(() => randomRun(FILLER + SCROLL)));
+    setStrips(spinning ? [0, 1, 2, 3, 4].map(() => randomRun(RUN)) : []);
   }, [spinning]);
 
   if (spinning && strips.length) {
@@ -60,15 +59,18 @@ export default function SlotReels({ spinning, grid }) {
       <ReelFrame>
         {strips.map((random, index) => {
           const landing = [0, 1, 2].map((row) => grid?.[index]?.[row] || random[row]);
-          const tiles = [...random.slice(0, FILLER), ...landing, ...random.slice(FILLER)];
+          // Şeridin en üstünde turun sonucu, altında makaranın içinden akan rastgele semboller.
+          const tiles = [...landing, ...random];
+          const rows = tiles.length / 3;
           return (
             <span key={index} className="absolute top-0 h-full overflow-hidden" style={{ left: `${index * 20}%`, width: '20%' }}>
               <span
                 className="slot-reel-scroll absolute left-0 w-full"
                 style={{
                   top: 0,
-                  height: `${(tiles.length / 3) * 100}%`,
-                  animationDuration: `${(0.95 + index * 0.05).toFixed(2)}s`,
+                  height: `${rows * 100}%`,
+                  '--reel-from': `-${(((rows - 1) / rows) * 100).toFixed(2)}%`,
+                  animationDuration: `${(1 + index * 0.12).toFixed(2)}s`,
                 }}
               >
                 {tiles.map((symbol, position) => (

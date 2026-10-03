@@ -4,8 +4,8 @@ import { BET_STEP, LINES, MAX_BET, MIN_BET } from './slotConfig';
 
 const sleep = (ms) => new Promise((resolve) => { window.setTimeout(resolve, ms); });
 
-// Tur animasyonunun görünür kalması için en kısa dönüş süresi.
-const SPIN_MIN_MS = 1250;
+// Son makara sütunu durana kadar sonucu bekleten en kısa dönüş süresi.
+const SPIN_MIN_MS = 1600;
 
 export default function useSlotGame({ roomId } = {}) {
   const [status, setStatus] = useState('loading');

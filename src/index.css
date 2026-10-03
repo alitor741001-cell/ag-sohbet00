@@ -1431,12 +1431,13 @@ button:active, nav a:active, a[role="button"]:active {
 /* Tur sırasında her makara sütunu sembolleriyle birlikte aşağı kayar, sonuç üzerine oturur. */
 .slot-reel-scroll {
   animation-name: slot-reel-scroll;
-  animation-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1);
+  animation-timing-function: cubic-bezier(0.12, 0.78, 0.2, 1);
   animation-fill-mode: forwards;
+  will-change: transform;
 }
 @keyframes slot-reel-scroll {
-  from { transform: translateY(-80%); }
-  to { transform: translateY(-20%); }
+  from { transform: translateY(var(--reel-from, -83%)); }
+  to { transform: translateY(0); }
 }
 @media (prefers-reduced-motion: reduce) { .slot-reel-scroll { animation-duration: 0.6s !important; } }
 

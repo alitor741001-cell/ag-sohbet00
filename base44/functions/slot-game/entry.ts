@@ -2,6 +2,8 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import { LINES, BIG_WIN_MULTIPLE, spinReels, evaluateGrid } from '../../shared/slotEngine.ts';
 
 const START_COINS = 100000;
+// Yönetici hesabına bir kez yatırılan bakiye; sınırsız (∞) mod kaldırıldı.
+const ADMIN_COINS = 5000000000;
 const BONUS_COINS = 25000;
 const BONUS_COOLDOWN_MS = 6 * 60 * 60 * 1000;
 const MIN_BET = 10;
@@ -9,8 +11,6 @@ const MAX_BET = 1000;
 const DEFAULT_BET = 100;
 // Bakiye gerçek: bahis bakiyeden düşer, kazanç eklenir.
 const UNLIMITED_COINS = false;
-// Her turda toplam bahsin bu oranı GRAND ödül havuzuna eklenir.
-const GRAND_RATE = 0.1;
 
 function jackpotValues() {
   const seconds = Math.floor(Date.now() / 1000);
@@ -38,7 +38,7 @@ function walletView(wallet, isAdmin = false) {
   return {
     coins: wallet.coins ?? START_COINS,
     unlimited: UNLIMITED_COINS,
-    no_limit: UNLIMITED_COINS || isAdmin,
+    no_limit: false,
     bet: wallet.bet ?? DEFAULT_BET,
     lines: LINES,
     spins: wallet.spins ?? 0,
@@ -57,11 +57,22 @@ function clampBet(value, fallback) {
 
 async function loadWallet(base44, user) {
   const found = await base44.asServiceRole.entities.GameWallet.filter({ user_id: user.id }, '-created_date', 1);
-  if (found[0]) return found[0];
+  const isAdmin = user.role === 'admin';
+  // Yönetici hesabına 5 milyar coin bir kez yatırılır; bakiyesi normal coin gibi harcanır.
+  if (found[0]) {
+    if (isAdmin && !found[0].admin_granted) {
+      return base44.asServiceRole.entities.GameWallet.update(found[0].id, {
+        coins: ADMIN_COINS,
+        admin_granted: true,
+      });
+    }
+    return found[0];
+  }
   return base44.asServiceRole.entities.GameWallet.create({
     user_id: user.id,
     user_name: user.full_name || '',
-    coins: START_COINS,
+    coins: isAdmin ? ADMIN_COINS : START_COINS,
+    admin_granted: isAdmin,
     bet: DEFAULT_BET,
     lines: LINES,
     spins: 0,
@@ -163,12 +174,8 @@ export default async function (req) {
     if (action === 'spin') {
       const bet = clampBet(body.bet, wallet.bet ?? DEFAULT_BET);
       const cost = bet * LINES;
-      let coins = wallet.coins ?? START_COINS;
-      if (coins < cost) {
-        // Yönetici hesabında sınır yok: bakiye bir tura yetmiyorsa otomatik tamamlanır.
-        if (isAdmin) coins = Math.max(coins, START_COINS);
-        else if (!UNLIMITED_COINS) return Response.json({ error: 'Yetersiz coin.' }, { status: 400 });
-      }
+      const coins = wallet.coins ?? START_COINS;
+      if (coins < cost) return Response.json({ error: 'Yetersiz coin.' }, { status: 400 });
 
       const grid = spinReels();
       const result = evaluateGrid(grid, bet);
@@ -177,7 +184,8 @@ export default async function (req) {
       const pool = wallet.grand ?? 0;
       const jackpotPayout = jackpotHit ? pool : 0;
       const total = result.total + jackpotPayout;
-      const grand = jackpotHit ? 0 : pool + Math.round(cost * GRAND_RATE);
+      // Kazanç olmayan turların bahsi ortadaki GRAND havuzunda birikir.
+      const grand = jackpotHit ? 0 : pool + (result.total === 0 ? cost : 0);
       const bigWin = cost > 0 && total >= cost * BIG_WIN_MULTIPLE;
       const name = user.username || user.full_name || 'Kullanıcı';
       let celebrated = false;
