@@ -3,6 +3,7 @@ import { Gamepad2, Play, X } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import { GAME_COVER } from './slotAssets';
 import SlotGame from './SlotGame';
+import WinnerBoard from './WinnerBoard';
 
 // Sinematik geçişin toplam süresi.
 const TRANSITION_MS = 700;
@@ -55,6 +56,7 @@ export default function GamePanel({ open, onClose, roomId }) {
             </header>
 
             <div className="min-h-0 flex-1 overflow-y-auto p-3">
+              <WinnerBoard />
               <button
                 type="button"
                 onClick={openGame}

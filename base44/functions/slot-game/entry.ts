@@ -102,6 +102,23 @@ export default async function (req) {
 
     const body = await req.json().catch(() => ({}));
     const action = body.action || 'state';
+
+    // Canlı kazanan tablosu: en çok coin kazanan kullanıcılar.
+    if (action === 'leaders') {
+      const wallets = await base44.asServiceRole.entities.GameWallet.list('-total_won', 12);
+      const leaders = wallets
+        .filter((item) => (item.total_won ?? 0) > 0)
+        .slice(0, 5)
+        .map((item, index) => ({
+          rank: index + 1,
+          user_id: item.user_id,
+          name: item.user_name || 'Kullanıcı',
+          won: item.total_won ?? 0,
+          coins: item.coins ?? 0,
+        }));
+      return Response.json({ leaders, me: user.id });
+    }
+
     const wallet = await loadWallet(base44, user);
     // Yönetici hesabında coin sınırı yoktur.
     const isAdmin = user.role === 'admin';
