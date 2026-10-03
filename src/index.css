@@ -1321,6 +1321,18 @@ button:active, nav a:active, a[role="button"]:active {
   border: 2px solid hsl(var(--slot-gold) / 0.85);
   box-shadow: 0 0 22px hsl(var(--slot-green) / 0.55), inset 0 -4px 10px rgba(0, 0, 0, 0.35), inset 0 3px 8px rgba(255, 255, 255, 0.35);
 }
+/* STOP düğmesi: SPIN ile aynı işçilik, kırmızı gövde ve çapraz desen. */
+.slot-stop {
+  background-image:
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.09) 0 6px, transparent 6px 13px),
+    radial-gradient(circle at 35% 25%, #ff9a8a, hsl(var(--slot-red)) 45%, #7f1d1d);
+  border: 2px solid hsl(var(--slot-gold) / 0.9);
+  box-shadow: 0 0 22px hsl(var(--slot-red) / 0.6), inset 0 -4px 10px rgba(0, 0, 0, 0.45), inset 0 3px 8px rgba(255, 255, 255, 0.35);
+}
+.slot-stop-ring {
+  border: 2px dashed hsl(var(--slot-gold) / 0.65);
+  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.35);
+}
 .slot-cell {
   background: radial-gradient(circle at 50% 30%, hsl(var(--slot-panel)), hsl(var(--slot-bg)));
   border: 1px solid hsl(var(--slot-gold) / 0.35);

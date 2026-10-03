@@ -12,6 +12,7 @@ import SlotReadout from './slot/SlotReadout';
 import SlotWinOverlay from './slot/SlotWinOverlay';
 import CoinSheet from './slot/CoinSheet';
 import WinnerTicker from './slot/WinnerTicker';
+import SlotStopButton from './slot/SlotStopButton';
 
 // Görsel alanı doldururken en fazla bu oranda kırpılır; panelde siyah boşluk kalmaz.
 const MAX_CROP = 1.06;
@@ -95,11 +96,7 @@ export default function SlotGame({ onExit, onBack, roomId }) {
               style={SLOT_LAYOUT.spin}
             >
               {/* Durdurma, SPIN düğmesinin tam üstüne gelir: yalnızca rengi değişir, yana taşmaz. */}
-              {game.spinning && (
-                <span className="absolute inset-0 m-auto flex aspect-square w-full items-center justify-center rounded-full border-2 border-slot-gold bg-slot-red font-black tracking-wide text-slot-text shadow-lg">
-                  <span className="text-[clamp(0.65rem,3.4vw,1.05rem)]">STOP</span>
-                </span>
-              )}
+              {game.spinning && <SlotStopButton />}
             </button>
             <button
               type="button"
