@@ -4,7 +4,6 @@ import { Image } from '@/components/ui/image';
 import { SLOT_DECOR } from './slotAssets';
 import useSlotGame from './slot/useSlotGame';
 import SlotDecor from './slot/SlotDecor';
-import SlotGrid from './slot/SlotGrid';
 import SlotStatsRow from './slot/SlotStatsRow';
 import SlotBetDeck from './slot/SlotBetDeck';
 import SlotActionDeck from './slot/SlotActionDeck';
@@ -24,14 +23,16 @@ export default function SlotGame({ onExit, onBack }) {
           fittingType="fill"
         />
 
-        <div className="slot-velvet absolute bottom-[42%] left-[10%] right-[10%] top-[36.5%] overflow-hidden rounded-lg">
-          <SlotGrid
-            grid={game.displayGrid}
-            rollingReels={game.rollingReels}
-            tick={game.tick}
-            winCells={game.winCells}
-          />
-        </div>
+        <div
+          className={`absolute bottom-[42%] left-[10%] right-[10%] top-[36.5%] overflow-hidden rounded-lg ${
+            game.spinning ? 'slot-bg-roll' : ''
+          }`}
+          style={{
+            backgroundImage: `url(${SLOT_DECOR.shell})`,
+            backgroundSize: '125% auto',
+            backgroundPosition: '50% 46.5%',
+          }}
+        />
 
         <button
           type="button"
@@ -69,6 +70,7 @@ export default function SlotGame({ onExit, onBack }) {
             />
             <SlotActionDeck
               coins={game.coins}
+              unlimited={game.unlimited}
               spinning={game.spinning}
               disabled={game.status !== 'ready'}
               onCoin={() => setCoinOpen(true)}
@@ -88,6 +90,7 @@ export default function SlotGame({ onExit, onBack }) {
         open={coinOpen}
         onClose={() => setCoinOpen(false)}
         coins={game.coins}
+        unlimited={game.unlimited}
         bonusReady={game.bonusReady}
         bonusAmount={game.bonusAmount}
         message={game.message}

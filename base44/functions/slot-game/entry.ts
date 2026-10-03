@@ -7,6 +7,8 @@ const BONUS_COOLDOWN_MS = 6 * 60 * 60 * 1000;
 const MIN_BET = 10;
 const MAX_BET = 1000;
 const DEFAULT_BET = 100;
+// Sınırsız coin modu: bakiyeden düşmez, bakiye bitmez.
+const UNLIMITED_COINS = true;
 
 function jackpotValues() {
   const seconds = Math.floor(Date.now() / 1000);
@@ -27,6 +29,7 @@ function bonusReady(wallet) {
 function walletView(wallet) {
   return {
     coins: wallet.coins ?? START_COINS,
+    unlimited: UNLIMITED_COINS,
     bet: wallet.bet ?? DEFAULT_BET,
     lines: LINES,
     spins: wallet.spins ?? 0,
@@ -80,7 +83,7 @@ export default async function (req) {
     if (action === 'bonus') {
       if (!bonusReady(wallet)) return Response.json({ error: 'Bonus henüz hazır değil.' }, { status: 400 });
       const updated = await base44.asServiceRole.entities.GameWallet.update(wallet.id, {
-        coins: (wallet.coins ?? START_COINS) + BONUS_COINS,
+        coins: UNLIMITED_COINS ? START_COINS : (wallet.coins ?? START_COINS) + BONUS_COINS,
         last_bonus_at: new Date().toISOString(),
       });
       return Response.json({ ...walletView(updated), grid: null, wins: [], win: 0 });
@@ -90,12 +93,12 @@ export default async function (req) {
       const bet = clampBet(body.bet, wallet.bet ?? DEFAULT_BET);
       const cost = bet * LINES;
       const coins = wallet.coins ?? START_COINS;
-      if (coins < cost) return Response.json({ error: 'Yetersiz coin.' }, { status: 400 });
+      if (!UNLIMITED_COINS && coins < cost) return Response.json({ error: 'Yetersiz coin.' }, { status: 400 });
 
       const grid = spinReels();
       const result = evaluateGrid(grid, bet);
       const updated = await base44.asServiceRole.entities.GameWallet.update(wallet.id, {
-        coins: coins - cost + result.total,
+        coins: UNLIMITED_COINS ? START_COINS : coins - cost + result.total,
         bet,
         spins: (wallet.spins ?? 0) + 1,
         total_won: (wallet.total_won ?? 0) + result.total,

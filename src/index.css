@@ -1428,6 +1428,15 @@ button:active, nav a:active, a[role="button"]:active {
     radial-gradient(circle at 50% 0%, hsl(var(--slot-purple) / 0.4), transparent 62%),
     repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.025) 0 2px, transparent 2px 5px);
 }
+/* Arkadaki oyun görselinin kendi nesneleri döner */
+.slot-bg-roll { animation: slot-bg-roll 0.5s linear infinite; }
+@keyframes slot-bg-roll {
+  0% { transform: translateY(-7%) scale(1.06); filter: blur(1.8px) brightness(1.12); }
+  50% { transform: translateY(7%) scale(1.06); filter: blur(1.8px) brightness(1.12); }
+  100% { transform: translateY(-7%) scale(1.06); filter: blur(1.8px) brightness(1.12); }
+}
+@media (prefers-reduced-motion: reduce) { .slot-bg-roll { animation-duration: 1s; } }
+
 .slot-bokeh {
   background-image:
     radial-gradient(circle at 10% 22%, rgba(74, 144, 226, 0.45) 0 3px, transparent 5px),
