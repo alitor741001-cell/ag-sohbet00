@@ -6,6 +6,7 @@ export const SYMBOLS = [
   { id: 'queen', weight: 12, pays: [15, 50, 200] },
   { id: 'king', weight: 11, pays: [20, 70, 300] },
   { id: 'ace', weight: 9, pays: [25, 100, 500] },
+  { id: 'gem', weight: 5, pays: [30, 150, 800] },
   { id: 'eagle', weight: 6, pays: [40, 200, 1000] },
   { id: 'tiger', weight: 5, pays: [60, 300, 1500] },
   { id: 'lion', weight: 3, wild: true, pays: [100, 600, 3000] },

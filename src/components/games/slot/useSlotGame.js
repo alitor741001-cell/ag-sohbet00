@@ -10,7 +10,7 @@ export default function useSlotGame() {
   const [bet, setBet] = useState(100);
   const [lines, setLines] = useState(LINES);
   const [spins, setSpins] = useState(0);
-  const [jackpots, setJackpots] = useState({ mega: 0, grand: 0, minor: 0, mini: 0 });
+  const [jackpots, setJackpots] = useState({ mega: 0, grand: 0, minor: 0, major: 0, mini: 0 });
   const [bonusReady, setBonusReady] = useState(false);
   const [bonusAmount, setBonusAmount] = useState(0);
   const [displayGrid, setDisplayGrid] = useState(INITIAL_GRID);
@@ -65,6 +65,7 @@ export default function useSlotGame() {
         mega: prev.mega + 7,
         grand: prev.grand + 3,
         minor: prev.minor + 1,
+        major: prev.major + 2,
         mini: prev.mini + 1,
       }));
     }, 1000);

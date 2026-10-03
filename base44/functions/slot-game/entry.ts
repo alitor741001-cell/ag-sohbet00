@@ -14,6 +14,7 @@ function jackpotValues() {
     mega: 1250000 + (Math.floor(seconds / 4) % 250000),
     grand: 250000 + (Math.floor(seconds / 3) % 80000),
     minor: 25000 + (Math.floor(seconds / 2) % 9000),
+    major: 120000 + (Math.floor(seconds / 3) % 45000),
     mini: 5000 + (Math.floor(seconds / 2) % 2500),
   };
 }

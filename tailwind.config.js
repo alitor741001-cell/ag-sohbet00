@@ -55,6 +55,8 @@ module.exports = {
 				'green-deep': 'hsl(var(--slot-green-deep) / <alpha-value>)',
 				red: 'hsl(var(--slot-red) / <alpha-value>)',
 				purple: 'hsl(var(--slot-purple) / <alpha-value>)',
+				orange: 'hsl(var(--slot-orange) / <alpha-value>)',
+				pink: 'hsl(var(--slot-pink) / <alpha-value>)',
 				blue: 'hsl(var(--slot-blue) / <alpha-value>)',
 				text: 'hsl(var(--slot-text) / <alpha-value>)'
 			},

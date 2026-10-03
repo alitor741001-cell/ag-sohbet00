@@ -5,17 +5,26 @@ export const MIN_BET = 10;
 export const MAX_BET = 1000;
 export const BET_STEP = 10;
 
+const CARD_TONES = {
+  ten: 'slot-card-purple',
+  jack: 'slot-card-blue',
+  queen: 'slot-card-green',
+  king: 'slot-card-red',
+  ace: 'slot-card-gold',
+};
+
 export const SLOT_SYMBOLS = {
-  ten: { label: '10' },
-  jack: { label: 'J' },
-  queen: { label: 'Q' },
-  king: { label: 'K' },
-  ace: { label: 'A' },
+  ten: { label: '10', cardClass: CARD_TONES.ten },
+  jack: { label: 'J', cardClass: CARD_TONES.jack },
+  queen: { label: 'Q', cardClass: CARD_TONES.queen },
+  king: { label: 'K', cardClass: CARD_TONES.king },
+  ace: { label: 'A', cardClass: CARD_TONES.ace },
+  gem: { image: SYMBOL_IMAGES.gem },
   eagle: { image: SYMBOL_IMAGES.eagle },
   tiger: { image: SYMBOL_IMAGES.tiger },
   lion: { image: SYMBOL_IMAGES.lion, wild: true },
-  jackpot: { image: SYMBOL_IMAGES.jackpot },
   free: { image: SYMBOL_IMAGES.free },
+  jackpot: { image: SYMBOL_IMAGES.jackpot },
 };
 
 const TUMBLE_POOL = [
@@ -29,6 +38,8 @@ const TUMBLE_POOL = [
   'king',
   'ace',
   'ace',
+  'gem',
+  'gem',
   'eagle',
   'tiger',
   'lion',
@@ -41,11 +52,11 @@ export const randomSymbol = () => TUMBLE_POOL[Math.floor(Math.random() * TUMBLE_
 export const randomColumn = () => [randomSymbol(), randomSymbol(), randomSymbol()];
 
 export const INITIAL_GRID = [
-  ['queen', 'lion', 'ace'],
+  ['queen', 'lion', 'gem'],
   ['king', 'eagle', 'jack'],
   ['ten', 'tiger', 'queen'],
   ['ace', 'jackpot', 'king'],
-  ['jack', 'free', 'ten'],
+  ['gem', 'free', 'ten'],
 ];
 
 export function winCellsOf(wins) {
