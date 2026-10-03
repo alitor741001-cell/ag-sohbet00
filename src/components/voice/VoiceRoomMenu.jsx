@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Eye, EyeOff, Lock, Shield, Unlock } from 'lucide-react';
+import { Eye, EyeOff, Lock, Shield, Unlock, UserPlus } from 'lucide-react';
 import SeatCountPicker from '@/components/voice/SeatCountPicker';
 import VoiceSheet from '@/components/voice/VoiceSheet';
 
@@ -12,7 +12,7 @@ const Section = ({ title, children, hint }) => (
 );
 
 /** "…" menüsü: koltuk sayısı, oda kilidi (şifre), oda gizliliği ve yöneticilik. */
-export default function VoiceRoomMenu({ open, onClose, room, userId, participants = [], isOwner, canMod, onSeatCount, onSetPassword, onToggleHidden, onToggleMod }) {
+export default function VoiceRoomMenu({ open, onClose, room, userId, participants = [], isOwner, canMod, onSeatCount, onSetPassword, onToggleHidden, onToggleMod, onInvite }) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const locked = !!room?.password;
@@ -21,6 +21,16 @@ export default function VoiceRoomMenu({ open, onClose, room, userId, participant
 
   return (
     <VoiceSheet open={open} onClose={onClose} title="Oda ayarları">
+      {onInvite && (
+        <button
+          type="button"
+          onClick={() => { onClose(); onInvite(); }}
+          className="mb-4 flex w-full items-center justify-center gap-2 rounded-xl bg-white/10 py-2.5 text-sm font-bold text-white active:scale-95 transition-transform"
+        >
+          <UserPlus className="h-4 w-4" /> Arkadaşlarını davet et
+        </button>
+      )}
+
       {!canMod && <p className="mb-3 rounded-xl bg-white/5 p-3 text-xs text-white/60">Oda ayarlarını yalnızca oda sahibi ve yöneticiler değiştirebilir.</p>}
 
       {canMod && (

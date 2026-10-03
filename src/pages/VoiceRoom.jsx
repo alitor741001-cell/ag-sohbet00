@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Loader2, Lock, LogOut, MessageSquare, MoreHorizontal, Radio, ShieldAlert, X } from 'lucide-react';
+import { Armchair, Loader2, Lock, LogOut, MessageSquare, Mic, MicOff, Minimize2, MoreHorizontal, Radio, Shield, ShieldAlert, Unlock, UserMinus, UserRound, X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useVoiceChat } from '@/hooks/useVoiceChat';
@@ -12,6 +12,11 @@ import VoiceLiveFeed from '@/components/voice/VoiceLiveFeed';
 import VoiceRoomMenu from '@/components/voice/VoiceRoomMenu';
 import VoiceSeatSheet from '@/components/voice/VoiceSeatSheet';
 import InviteSheet from '@/components/voice/InviteSheet';
+import VoiceCard from '@/components/voice/VoiceCard';
+import VoiceProfileCard from '@/components/voice/VoiceProfileCard';
+import VoiceMenuButton from '@/components/voice/VoiceMenuButton';
+import VoiceRoomBubble from '@/components/voice/VoiceRoomBubble';
+import RoomDirectMessages from '@/components/player/RoomDirectMessages';
 import { plainText } from '@/components/voice/voiceText';
 
 export default function VoiceRoom() {
@@ -32,6 +37,10 @@ export default function VoiceRoom() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [seatIndex, setSeatIndex] = useState(null);
+  const [profileUserId, setProfileUserId] = useState(null);
+  const [dmUserId, setDmUserId] = useState(null);
+  const [minimized, setMinimized] = useState(false);
+  const [exitOpen, setExitOpen] = useState(false);
 
   const joinedRef = useRef(false);
   const joinTriedRef = useRef(false);
@@ -196,13 +205,14 @@ export default function VoiceRoom() {
     navigate('/acik-odalar');
   }, [id, seated, navigate]);
 
-  const openProfile = (userId) => { if (userId) navigate(`/kullanici/${userId}`); };
+  // Profil kartı: sohbet satırı, canlı akış veya dolu koltuğa dokununca açılır.
+  const openProfile = (userId) => { if (userId) setProfileUserId(userId); };
 
-  // Boş koltuğa dokunma: yöneticiler koltuk menüsünü açar, üyeler doğrudan oturur.
+  // Dolu koltuk profil kartını, boş koltuk beyaz koltuk menüsünü açar.
   const handleSeatPress = (index) => {
     const seat = seats[index];
-    if (seat?.user_id || canMod) { setSeatIndex(index); return; }
-    invokeVoice({ action: 'seat-take', seat_index: index });
+    if (seat?.user_id) { setProfileUserId(seat.user_id); return; }
+    setSeatIndex(index);
   };
 
   const handleTakeSeat = () => {
@@ -263,12 +273,11 @@ export default function VoiceRoom() {
     }
   };
 
-  const handleToggleSeatMute = async () => {
-    const target = seatIndex === null ? null : seats[seatIndex]?.user_id;
-    if (!target) return;
-    const muted = !!participants.find((person) => person.user_id === target)?.muted;
+  const toggleMuteFor = async (targetId) => {
+    if (!targetId) return;
+    const muted = !!participants.find((person) => person.user_id === targetId)?.muted;
     try {
-      await base44.functions.invoke('room-presence', { action: 'toggle-mute', room_id: id, target_id: target });
+      await base44.functions.invoke('room-presence', { action: 'toggle-mute', room_id: id, target_id: targetId });
       await syncRoom();
       toast({ title: muted ? 'Mikrofonu açıldı' : 'Mikrofonu kapatıldı' });
     } catch (error) {
@@ -276,17 +285,31 @@ export default function VoiceRoom() {
     }
   };
 
-  const handleKickFromRoom = async () => {
-    const target = seatIndex === null ? null : seats[seatIndex]?.user_id;
-    if (!target) return;
-    setSeatIndex(null);
-    await invokeVoice({ action: 'seat-kick', target_id: target });
+  const kickFromRoom = async (targetId) => {
+    if (!targetId) return;
+    await invokeVoice({ action: 'seat-kick', target_id: targetId });
     try {
-      await base44.functions.invoke('room-presence', { action: 'kick', room_id: id, target_id: target });
+      await base44.functions.invoke('room-presence', { action: 'kick', room_id: id, target_id: targetId });
       toast({ title: 'Kişi odadan atıldı' });
     } catch (error) {
       toast({ title: 'İşlem başarısız', description: error?.response?.data?.error || error.message, variant: 'destructive' });
     }
+  };
+
+  // Profil kartındaki koltuk eylemi: kendi koltuğumda kalk/otur, başkasında yönetici olarak indir.
+  const handleProfileSeat = () => {
+    const target = profileUserId;
+    if (!target) return;
+    setProfileUserId(null);
+    if (target === user?.id) {
+      if (seated) { invokeVoice({ action: 'seat-leave' }); return; }
+      const free = seats.findIndex((item) => !item.user_id && !item.locked);
+      if (free < 0) { toast({ title: 'Boş koltuk yok' }); return; }
+      invokeVoice({ action: 'seat-take', seat_index: free });
+      return;
+    }
+    if (!canMod) return;
+    invokeVoice({ action: 'seat-kick', target_id: target });
   };
 
   const sendMessage = useCallback(async (text) => {
@@ -350,7 +373,22 @@ export default function VoiceRoom() {
   }
 
   const sheetSeat = seatIndex === null ? null : seats[seatIndex];
-  const sheetTarget = sheetSeat?.user_id || null;
+  const profileTarget = profileUserId;
+  const profileSeatIndex = profileTarget ? seats.findIndex((item) => item.user_id === profileTarget) : -1;
+  const profileSeat = profileSeatIndex >= 0 ? seats[profileSeatIndex] : null;
+  const profileSelf = !!profileTarget && profileTarget === user?.id;
+  const profileMuted = !!profileTarget && !!participants.find((person) => person.user_id === profileTarget)?.muted;
+  const profileIsMod = !!profileTarget && moderators.includes(profileTarget);
+  const profileActions = profileTarget ? [
+    { key: 'mic', icon: (profileSelf ? voice.muted : profileMuted) ? MicOff : Mic, label: 'Mikrofon', disabled: !profileSelf && !canMod, onClick: profileSelf ? handleMic : () => toggleMuteFor(profileTarget) },
+    { key: 'chat', icon: MessageSquare, label: 'Sohbet', disabled: profileSelf, onClick: () => { setDmUserId(profileTarget); setProfileUserId(null); } },
+    { key: 'seat', icon: Armchair, label: 'Koltuk', disabled: !profileSelf && !canMod, onClick: handleProfileSeat },
+    { key: 'room', icon: Radio, label: 'Yayın odası', onClick: () => { setProfileUserId(null); setMinimized(true); } },
+  ] : [];
+
+  if (minimized) {
+    return <VoiceRoomBubble name={room?.name} muted={voice.muted} onOpen={() => setMinimized(false)} />;
+  }
 
   return (
     <div className="fixed inset-0 z-[150] flex flex-col bg-catalog text-white">
@@ -366,7 +404,7 @@ export default function VoiceRoom() {
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <button type="button" onClick={leaveRoom} aria-label="Odadan çık" className="flex h-11 w-11 items-center justify-center rounded-full bg-red-600 active:scale-95 transition-transform">
+          <button type="button" onClick={() => setExitOpen(true)} aria-label="Odadan çık" className="flex h-11 w-11 items-center justify-center rounded-full bg-red-600 active:scale-95 transition-transform">
             <LogOut className="h-5 w-5" />
           </button>
           <button type="button" onClick={() => setMenuOpen(true)} aria-label="Oda ayarları" className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 active:scale-95 transition-transform">
@@ -430,7 +468,6 @@ export default function VoiceRoom() {
         onToggleSpeaker={voice.toggleDeafen}
         onToggleChat={() => setChatOpen((value) => !value)}
         onToggleFeed={() => setFeedOpen((value) => !value)}
-        onInvite={handleInvite}
       />
 
       {chatOpen && (
@@ -465,6 +502,7 @@ export default function VoiceRoom() {
         onSetPassword={handleSetPassword}
         onToggleHidden={handleToggleHidden}
         onToggleMod={handleToggleMod}
+        onInvite={handleInvite}
       />
 
       <VoiceSeatSheet
@@ -472,18 +510,61 @@ export default function VoiceRoom() {
         onClose={() => setSeatIndex(null)}
         seat={sheetSeat}
         index={seatIndex ?? 0}
-        userId={user?.id}
-        ownerId={room?.owner_id}
         canMod={canMod}
-        targetIsMod={!!sheetTarget && moderators.includes(sheetTarget)}
         onTakeSeat={handleTakeSeat}
-        onLeaveSeat={() => { setSeatIndex(null); invokeVoice({ action: 'seat-leave' }); }}
-        onKick={handleKickFromRoom}
-        onToggleMute={handleToggleSeatMute}
-        onToggleMod={() => { const makeMod = !moderators.includes(sheetTarget); setSeatIndex(null); handleToggleMod(sheetTarget, makeMod); }}
         onToggleLock={() => invokeVoice({ action: 'seat-lock', seat_index: seatIndex, locked: !sheetSeat?.locked })}
-        onOpenProfile={() => { setSeatIndex(null); openProfile(sheetTarget); }}
       />
+
+      <VoiceCard open={!!profileTarget} title="Profil" onClose={() => setProfileUserId(null)}>
+        {profileTarget && (
+          <VoiceProfileCard userId={profileTarget} actions={profileActions}>
+            <div className="mt-2 space-y-2">
+              {!profileSelf && (
+                <VoiceMenuButton
+                  icon={UserRound}
+                  label="Profili gör"
+                  onClick={() => { const target = profileTarget; setProfileUserId(null); navigate(`/kullanici/${target}`); }}
+                />
+              )}
+              {canMod && profileSeat && (
+                <VoiceMenuButton
+                  icon={profileSeat.locked ? Unlock : Lock}
+                  label={profileSeat.locked ? 'Koltuğun kilidini aç' : 'Koltuğu kilitle'}
+                  onClick={() => invokeVoice({ action: 'seat-lock', seat_index: profileSeatIndex, locked: !profileSeat.locked })}
+                />
+              )}
+              {!profileSelf && canMod && (
+                <VoiceMenuButton
+                  icon={Shield}
+                  label={profileIsMod ? 'Yönetici yetkisini al' : 'Yönetici yap'}
+                  onClick={() => { const target = profileTarget; const makeMod = !profileIsMod; setProfileUserId(null); handleToggleMod(target, makeMod); }}
+                />
+              )}
+              {!profileSelf && canMod && (
+                <VoiceMenuButton
+                  icon={UserMinus}
+                  label="Odadan at"
+                  danger
+                  onClick={() => { const target = profileTarget; setProfileUserId(null); kickFromRoom(target); }}
+                />
+              )}
+            </div>
+          </VoiceProfileCard>
+        )}
+      </VoiceCard>
+
+      <VoiceCard open={exitOpen} title="Oda" onClose={() => setExitOpen(false)}>
+        <div className="space-y-2">
+          <VoiceMenuButton icon={Minimize2} label="Odayı küçült" onClick={() => { setExitOpen(false); setMinimized(true); }} />
+          <VoiceMenuButton icon={LogOut} label="Odadan çık" danger onClick={() => { setExitOpen(false); leaveRoom(); }} />
+        </div>
+      </VoiceCard>
+
+      {dmUserId && (
+        <div className="absolute inset-0 z-[190] flex min-h-0 flex-col bg-[#101016]">
+          <RoomDirectMessages initialUserId={dmUserId} onClose={() => setDmUserId(null)} />
+        </div>
+      )}
 
       <InviteSheet open={inviteOpen} onClose={() => setInviteOpen(false)} onInvite={sendInvites} />
 
