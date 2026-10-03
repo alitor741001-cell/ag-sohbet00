@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Room, RoomEvent, Track } from 'livekit-client';
 import { base44 } from '@/api/base44Client';
-import { createVoiceOutput, ensureMicTrack, resetAudioRouting, setSpeakerMode, startRingtone } from '@/lib/callAudio';
+import { createVoiceOutput, ensureMicTrack, releaseMic, resetAudioRouting, setSpeakerMode, startRingtone } from '@/lib/callAudio';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 
 const DirectCallContext = createContext(null);
@@ -71,7 +71,9 @@ export default function DirectCallProvider({ children }) {
     }
     tokenRef.current = null;
     publishedRef.current = null;
-    if (micTrackRef.current) micTrackRef.current.enabled = true;
+    micTrackRef.current = null;
+    // Mikrofon serbest bırakılır: sonraki arama temiz akışla başlar, izin tekrar sorulmaz.
+    releaseMic();
     resetAudioRouting();
     phaseRef.current = 'idle';
     mutedRef.current = false;
@@ -115,19 +117,42 @@ export default function DirectCallProvider({ children }) {
 
   // --- Bağlantı ---
 
+  // Mikrofon sessize düşerse (eski iOS ses oturumu kesintisi) yayın sessiz kalmasın:
+  // kısa bir beklemeden sonra temiz akışla yeniden yayınlanır.
+  const watchMic = useCallback((room, track) => {
+    const recover = async () => {
+      await new Promise((resolve) => setTimeout(resolve, 800));
+      if (publishedRef.current !== room || micTrackRef.current !== track) return;
+      if (track.readyState === 'live' && !track.muted) return;
+      try {
+        const next = await ensureMicTrack({ fresh: true });
+        if (!next || next.readyState !== 'live' || publishedRef.current !== room) return;
+        next.enabled = !mutedRef.current;
+        micTrackRef.current = next;
+        await room.localParticipant.publishTrack(next, MIC_PUBLICATION);
+        room.localParticipant.unpublishTrack(track, true).catch(() => {});
+        watchMic(room, next);
+      } catch {}
+    };
+    track.addEventListener('mute', recover);
+    track.addEventListener('ended', recover);
+  }, []);
+
   const publishMic = useCallback(async (room) => {
     if (!room || publishedRef.current === room) return;
     try {
-      const micTrack = await ensureMicTrack();
+      // Her aramada temiz akış: eski iOS sürümlerinde aramadan önce açılan mikrofon sessiz kalıyor.
+      const micTrack = await ensureMicTrack({ fresh: true });
       if (!micTrack || micTrack.readyState !== 'live') throw new Error('mikrofon yok');
       micTrackRef.current = micTrack;
       micTrack.enabled = !mutedRef.current;
       await room.localParticipant.publishTrack(micTrack, MIC_PUBLICATION);
       publishedRef.current = room;
+      watchMic(room, micTrack);
     } catch (micError) {
       setError(micError?.name === 'NotAllowedError' ? '🎤 Mikrofon izni verilmedi.' : '🎤 Mikrofon başlatılamadı.');
     }
-  }, []);
+  }, [watchMic]);
 
   const connect = useCallback(async (callId, { publish = false } = {}) => {
     const me = userRef.current;
@@ -213,7 +238,7 @@ export default function DirectCallProvider({ children }) {
       const record = response.data?.call;
       if (!record) return response.data?.error || 'Arama başlatılamadı.';
       beginLocalCall(record, 'caller', 'outgoing');
-      ringtoneRef.current = startRingtone({ freq: 420 });
+      ringtoneRef.current = startRingtone();
       await connect(record.id, { publish: true });
       return null;
     } catch (invokeError) {
@@ -285,7 +310,7 @@ export default function DirectCallProvider({ children }) {
           beginLocalCall(record, 'callee', 'incoming');
           stopRingtone();
           // Rahatsız etme açıkken gelen arama sessiz bildirilir
-          if (!record.silent) ringtoneRef.current = startRingtone({ freq: 880 });
+          if (!record.silent) ringtoneRef.current = startRingtone();
           prepareSession(record.id);
         }
         return;
