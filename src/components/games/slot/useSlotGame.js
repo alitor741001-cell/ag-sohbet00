@@ -13,6 +13,7 @@ export default function useSlotGame({ roomId } = {}) {
   const [coins, setCoins] = useState(0);
   const [noLimit, setNoLimit] = useState(false);
   const [grand, setGrand] = useState(0);
+  const [pools, setPools] = useState(null);
   const [bet, setBet] = useState(100);
   const [lines, setLines] = useState(LINES);
   const [spins, setSpins] = useState(0);
@@ -58,6 +59,7 @@ export default function useSlotGame({ roomId } = {}) {
     if (typeof data.coins === 'number') setCoins(data.coins);
     if (typeof data.no_limit === 'boolean') setNoLimit(data.no_limit);
     if (typeof data.grand === 'number') setGrand(data.grand);
+    if (data.pools) setPools(data.pools);
     if (typeof data.bet === 'number') setBet(data.bet);
     if (typeof data.lines === 'number') setLines(data.lines);
     if (typeof data.spins === 'number') setSpins(data.spins);
@@ -117,7 +119,7 @@ export default function useSlotGame({ roomId } = {}) {
       applyState(data);
       setWin(data.win || 0);
       setBigWin(data.big_win || 0);
-      setJackpotHit((data.wins || []).some((item) => item.symbol === 'jackpot'));
+      setJackpotHit(!!data.jackpot_hit);
     } catch (error) {
       const raw = error?.response?.data?.error;
       setAuto(false);
@@ -183,6 +185,7 @@ export default function useSlotGame({ roomId } = {}) {
     coins,
     noLimit,
     grand,
+    pools,
     bet,
     lines,
     spins,

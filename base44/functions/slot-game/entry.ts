@@ -9,20 +9,37 @@ const BIG_WIN_TABLE_MIN = 20000;
 const BONUS_COINS = 25000;
 const BONUS_COOLDOWN_MS = 6 * 60 * 60 * 1000;
 const DEFAULT_BET = 100;
+// Jackpot: ekranda 5 jackpot sembolü geldiğinde bahsin 120 katı ödenir.
+const JACKPOT_SYMBOLS = 5;
+const JACKPOT_MULTIPLE = 120;
+// Havuzlar: kaybedilenler o anki bahis kademesinin havuzunda birikir.
+const POOL_SETTINGS = {
+  mini: { base: 5000, cap: 25000 },
+  big: { base: 25000, cap: 50000 },
+  mega: { base: 250000, cap: 400000 },
+  xmega: { base: 400000, cap: 500000 },
+};
+const POOL_KEYS = Object.keys(POOL_SETTINGS);
+
+// Toplam bahis kademesi hangi havuzu besler.
+function poolKeyForTotalBet(totalBet) {
+  if (totalBet >= 5000 && totalBet <= 25000) return 'mini';
+  if (totalBet > 25000 && totalBet <= 50000) return 'big';
+  if (totalBet >= 250000 && totalBet <= 400000) return 'mega';
+  if (totalBet > 400000) return 'xmega';
+  return null;
+}
+
+// Havuz tutarları: kayıtlı değer yoksa taban değerden başlar.
+function poolValues(wallet) {
+  return POOL_KEYS.reduce((pools, key) => {
+    pools[key] = wallet[`pool_${key}`] ?? POOL_SETTINGS[key].base;
+    return pools;
+  }, {});
+}
 // Bakiye gerçek: bahis bakiyeden düşer, kazanç eklenir; "sınırsız" mod yoktur.
 // Eski sürümden kalan devasa bakiyeler bu sınırın üzerindeyse normale çekilir.
 const LEGACY_MAX_COINS = 1000000000;
-
-function jackpotValues() {
-  const seconds = Math.floor(Date.now() / 1000);
-  return {
-    mega: 1250000 + (Math.floor(seconds / 4) % 250000),
-    grand: 250000 + (Math.floor(seconds / 3) % 80000),
-    minor: 25000 + (Math.floor(seconds / 2) % 9000),
-    major: 120000 + (Math.floor(seconds / 3) % 45000),
-    mini: 5000 + (Math.floor(seconds / 2) % 2500),
-  };
-}
 
 function bonusReady(wallet) {
   if (!wallet.last_bonus_at) return true;
@@ -44,7 +61,7 @@ function walletView(wallet, isAdmin = false) {
     lines: LINES,
     spins: wallet.spins ?? 0,
     grand: wallet.grand ?? 0,
-    jackpots: jackpotValues(),
+    pools: { jackpot: wallet.grand ?? 0, ...poolValues(wallet) },
     bonus_ready: canClaimBonus(wallet),
     bonus_amount: BONUS_COINS,
   };
@@ -208,13 +225,19 @@ export default async function (req) {
 
       const grid = spinReels();
       const result = evaluateGrid(grid, bet);
-      // Jackpot sembolü geldiğinde biriken GRAND havuzu ödenir, havuz sıfırlanır.
-      const jackpotHit = result.wins.some((item) => item.symbol === 'jackpot');
-      const pool = wallet.grand ?? 0;
-      const jackpotPayout = jackpotHit ? pool : 0;
+      // Ekranda 5 jackpot sembolü geldiğinde jackpot çıkar: bahsin 120 katı ödenir.
+      const jackpotHit = grid.flat().filter((symbol) => symbol === 'jackpot').length >= JACKPOT_SYMBOLS;
+      const jackpotPayout = jackpotHit ? bet * JACKPOT_MULTIPLE : 0;
       const total = result.total + jackpotPayout;
-      // Kaybedilen miktar (bahis − kazanç) ortadaki GRAND havuzunda birikir.
-      const grand = jackpotHit ? 0 : pool + Math.max(0, cost - result.total);
+      // Kaybedilen miktar (bahis − kazanç) ana Jackpot havuzunda birikir.
+      const lost = Math.max(0, cost - total);
+      const grand = (wallet.grand ?? 0) + lost;
+      // Ayrıca o anki bahis kademesinin havuzunda birikir.
+      const pools = poolValues(wallet);
+      const poolKey = poolKeyForTotalBet(cost);
+      if (poolKey && lost > 0) {
+        pools[poolKey] = Math.min(POOL_SETTINGS[poolKey].cap, pools[poolKey] + lost);
+      }
       const bigWin = cost > 0 && total >= cost * BIG_WIN_MULTIPLE;
       const name = user.username || user.full_name || 'Kullanıcı';
       // Tabloda gösterilecek sembol: jackpot önceliklidir, yoksa en yüksek kazançlı sembol.
@@ -230,6 +253,10 @@ export default async function (req) {
         coins: coins - cost + total,
         bet,
         grand,
+        pool_mini: pools.mini,
+        pool_big: pools.big,
+        pool_mega: pools.mega,
+        pool_xmega: pools.xmega,
         spins: (wallet.spins ?? 0) + 1,
         total_won: (wallet.total_won ?? 0) + total,
         last_spin_at: new Date().toISOString(),
@@ -256,6 +283,7 @@ export default async function (req) {
         wins: result.wins,
         win: total,
         jackpot: jackpotPayout,
+        jackpot_hit: jackpotHit,
         cost,
         big_win: bigWin ? total : 0,
         celebrated,

@@ -20,6 +20,22 @@
       "type": "number",
       "default": 0
     },
+    "pool_mini": {
+      "type": "number",
+      "default": 5000
+    },
+    "pool_big": {
+      "type": "number",
+      "default": 25000
+    },
+    "pool_mega": {
+      "type": "number",
+      "default": 250000
+    },
+    "pool_xmega": {
+      "type": "number",
+      "default": 400000
+    },
     "lines": {
       "type": "number",
       "default": 50

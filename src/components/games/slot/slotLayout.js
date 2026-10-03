@@ -56,6 +56,10 @@ export const SYMBOL_CELLS = {
 
 export const SYMBOL_IDS = Object.keys(SYMBOL_CELLS);
 
+// Havuz etiketleri: görselde yazan adların üzerine yeni adlar yazılır.
+const LABEL_HEIGHT = 34;
+const poolLabel = (x, y, w, h) => frame(x - w * 0.025, y - LABEL_HEIGHT - 2, w * 1.05, LABEL_HEIGHT);
+
 // Görselde yazılı olan rakam alanları — canlı değerler bu kutulara yazılır.
 export const SLOT_FIELDS = {
   lines: frame(92, 1268, 126, 54),
@@ -63,7 +67,7 @@ export const SLOT_FIELDS = {
   win: frame(585, 1268, 150, 54),
   bet: frame(330, 1370, 104, 56),
   balance: frame(90, 1456, 170, 54),
-  // En üstteki ödül rakamları sıfırlanır; GRAND havuzu canlıdır.
+  // Ödül havuzları: kaybedilenler o anki bahis kademesinin havuzunda birikir.
   jackpots: [
     frame(168, 296, 200, 48),
     frame(402, 296, 222, 48),
@@ -72,3 +76,10 @@ export const SLOT_FIELDS = {
     frame(851, 358, 147, 46),
   ],
 };
+
+// Görselde yazan havuz adlarının üzerine yazılan yeni adlar.
+export const SLOT_POOL_LABELS = [
+  { text: 'X MEGA', tone: 'text-slot-pink', box: poolLabel(24, 358, 158, 46) },
+  { text: 'BIG', tone: 'text-slot-blue', box: poolLabel(662, 296, 192, 48) },
+  { text: 'JACKPOT', tone: 'text-slot-gold', box: poolLabel(402, 296, 222, 48) },
+];

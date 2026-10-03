@@ -17,7 +17,7 @@ export const SYMBOLS = [
   { id: 'tiger', weight: 5, pays: [60, 300, 1500] },
   { id: 'lion', weight: 3, wild: true, pays: [100, 600, 3000] },
   { id: 'free', weight: 2, scatter: true, pays: [20, 100, 500] },
-  { id: 'jackpot', weight: 1, pays: [150, 1000, 5000] },
+  { id: 'jackpot', weight: 5, pays: [150, 1000, 5000] },
 ];
 
 const SYMBOL_MAP = SYMBOLS.reduce((acc, symbol) => {

@@ -13,6 +13,9 @@ import SlotWinOverlay from './slot/SlotWinOverlay';
 import CoinSheet from './slot/CoinSheet';
 import WinnerTicker from './slot/WinnerTicker';
 import SlotStopButton from './slot/SlotStopButton';
+import SlotPoolLabels from './slot/SlotPoolLabels';
+import SlotTierAlert from './slot/SlotTierAlert';
+import { tierOfBet } from './slot/slotConfig';
 
 // Görsel alanı doldururken en fazla bu oranda kırpılır; panelde siyah boşluk kalmaz.
 const MAX_CROP = 1.06;
@@ -61,6 +64,8 @@ export default function SlotGame({ onExit, onBack, roomId }) {
   // Şerit, görselin üstünde kalan boşluğun 8px üstünde biter — filmkeyfi yazısını kapatmaz.
   const tickerHeight = Math.max(26, Math.round((panelHeight || 0) - height) - 8);
   const ready = game.status === 'ready';
+  // Bahis kademesi: kademe atlayınca üstte kırmızı uyarı çıkar.
+  const tier = tierOfBet(game.bet, game.lines);
 
   return (
     <div ref={frameRef} className="relative flex h-full min-h-0 w-full flex-col overflow-hidden bg-slot">
@@ -88,7 +93,10 @@ export default function SlotGame({ onExit, onBack, roomId }) {
             {!game.spinning && <SlotWinLines wins={game.wins} />}
 
             {/* Görselin kendi rakam alanları: bakiye, WIN, BET, LINES, TOTAL BET ve üst ödüller */}
-            <SlotReadout coins={game.coins} win={game.win} bet={game.bet} lines={game.lines} grand={game.grand} />
+            <SlotReadout coins={game.coins} win={game.win} bet={game.bet} lines={game.lines} pools={game.pools} />
+
+            {/* Görselde yazan havuz adlarının üzerine yeni adlar yazılır. */}
+            <SlotPoolLabels />
 
             {/* Görselin kendi butonları — görünmez dokunma alanları */}
             <button
@@ -186,6 +194,8 @@ export default function SlotGame({ onExit, onBack, roomId }) {
           <X className="h-5 w-5" />
         </button>
       </div>
+
+      <SlotTierAlert tier={tier} top={tickerHeight + 12} />
 
       <SlotWinOverlay
         open={!!prize}
