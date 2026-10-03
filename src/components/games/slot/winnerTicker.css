@@ -1,0 +1,16 @@
+/* Kazanan şeridi: içerik yukarı doğru sürekli kayar (iki kopya ile kesintisiz döner). */
+@keyframes winner-ticker-scroll {
+  from { transform: translateY(0); }
+  to { transform: translateY(-50%); }
+}
+
+.winner-ticker-scroll {
+  animation-name: winner-ticker-scroll;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .winner-ticker-scroll { animation-duration: 60s !important; }
+}

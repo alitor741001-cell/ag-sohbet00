@@ -1,11 +1,8 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React from 'react';
 import { Crown } from 'lucide-react';
 import { Image } from '@/components/ui/image';
-import { base44 } from '@/api/base44Client';
 import SlotSymbolIcon from './slot/SlotSymbolIcon';
-
-// Tablo, yeni büyük kazançlar geldikçe kendini yeniler.
-const REFRESH_MS = 12000;
+import useBigWins from './slot/useBigWins';
 
 // Sembolün kısa adı — ikonun yanında okunur.
 const SYMBOL_LABELS = {
@@ -26,26 +23,7 @@ const format = (value) => new Intl.NumberFormat('tr-TR').format(Math.max(0, Math
 
 /** Büyük kazanç tablosu: 20.000 coin üzeri turlar, profil, isim, tutar ve gelen sembol. */
 export default function BigWinBoard() {
-  const [winners, setWinners] = useState([]);
-  const [me, setMe] = useState('');
-  const [status, setStatus] = useState('loading');
-
-  const load = useCallback(async () => {
-    try {
-      const response = await base44.functions.invoke('slot-game', { action: 'bigwins' });
-      setWinners(response.data?.winners || []);
-      setMe(response.data?.me || '');
-      setStatus('ready');
-    } catch (error) {
-      setStatus('error');
-    }
-  }, []);
-
-  useEffect(() => {
-    load();
-    const timer = window.setInterval(load, REFRESH_MS);
-    return () => window.clearInterval(timer);
-  }, [load]);
+  const { winners, me, status } = useBigWins();
 
   return (
     <section className="mb-3 rounded-2xl border border-slot-gold/40 bg-slot-surface p-3">

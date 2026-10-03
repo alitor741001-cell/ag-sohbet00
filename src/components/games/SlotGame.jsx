@@ -11,6 +11,7 @@ import SlotWinLines from './slot/SlotWinLines';
 import SlotReadout from './slot/SlotReadout';
 import SlotWinOverlay from './slot/SlotWinOverlay';
 import CoinSheet from './slot/CoinSheet';
+import WinnerTicker from './slot/WinnerTicker';
 
 // Görsel alanı doldururken en fazla bu oranda kırpılır; panelde siyah boşluk kalmaz.
 const MAX_CROP = 1.06;
@@ -156,6 +157,9 @@ export default function SlotGame({ onExit, onBack, roomId }) {
           </div>
         )}
       </div>
+
+      {/* Üstte, logonun üzerindeki karanlık alanda yukarı doğru kayan kazanan şeridi. */}
+      <WinnerTicker />
 
       {/* Kontroller panelin kendi köşesinde durur: görsel kırpılsa da kaybolmaz. */}
       <button

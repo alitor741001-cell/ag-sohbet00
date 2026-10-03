@@ -146,6 +146,7 @@ export default async function (req) {
           avatar: spin.user_avatar || '',
           won: spin.win ?? 0,
           symbol: spin.symbol || '',
+          symbols: (spin.symbols || []).length ? spin.symbols : (spin.symbol ? [spin.symbol] : []),
           at: spin.created_date,
         }));
       return Response.json({ winners, me: user.id, min: BIG_WIN_TABLE_MIN });
@@ -212,6 +213,8 @@ export default async function (req) {
       // Tabloda gösterilecek sembol: jackpot önceliklidir, yoksa en yüksek kazançlı sembol.
       const bestWin = result.wins.reduce((best, item) => (!best || item.amount > best.amount ? item : best), null);
       const bestSymbol = jackpotHit ? 'jackpot' : bestWin?.symbol || '';
+      // Şeritte gösterilecek semboller: jackpot ve kazandıran semboller (en fazla 3).
+      const symbols = [...new Set([...(jackpotHit ? ['jackpot'] : []), ...result.wins.map((item) => item.symbol)])].slice(0, 3);
       let celebrated = false;
       if (bigWin && typeof body.room_id === 'string' && body.room_id) {
         celebrated = await announceBigWin(base44, user, body.room_id, total, name).catch(() => false);
@@ -231,6 +234,7 @@ export default async function (req) {
         user_name: name,
         user_avatar: user.avatar || '',
         symbol: bestSymbol,
+        symbols,
         bet,
         cost,
         win: total,
