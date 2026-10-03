@@ -1,28 +1,39 @@
 import { base44 } from '@/api/base44Client';
+import { deferRocketRequests, enqueueRocketRequest } from '@/components/games/rocket/rocketQueue';
 
-// One connection queue for both slots and polling; no overlapping requests.
-let tail = Promise.resolve();
+const pending = new Map();
 const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 export default function rocketRequests(payload) {
+  const action = payload.action || 'state';
+  const key = JSON.stringify(payload);
+  if (pending.has(key)) return pending.get(key);
   const run = async () => {
+    // Refreshes do not retry: the next scheduled refresh reconciles state.
+    const retries = ['cashout', 'setAutoValue', 'ledger'].includes(action) ? 2 : 0;
     for (let attempt = 0; ; attempt += 1) {
       try {
-        const response = await base44.functions.invoke('rocket-game', payload);
-        return response.data;
+        return await enqueueRocketRequest(action, async () => {
+          try {
+            const response = await base44.functions.invoke('rocket-game', payload);
+            return response.data;
+          } catch (error) {
+            if (error?.response?.status === 429) {
+              const seconds = Number(error.response.headers?.['retry-after']);
+              deferRocketRequests(Number.isFinite(seconds) && seconds > 0
+                ? Math.min(120000, seconds * 1000) : 15000 + Math.random() * 3000);
+            }
+            throw error;
+          }
+        });
       } catch (error) {
         const status = error?.response?.status;
-        const transient = !error?.response || status === 429 || status >= 500;
-        // Only idempotent reads/cashouts/settings may retry, never a new bet.
-        if (!transient || payload.action === 'bet' || attempt >= 2) throw error;
-        const retryAfter = Number(error?.response?.headers?.['retry-after']);
-        const wait = Number.isFinite(retryAfter) && retryAfter > 0
-          ? Math.min(60000, retryAfter * 1000)
-          : status === 429 ? (attempt === 0 ? 5000 : 12000) : (attempt === 0 ? 800 : 2400);
-        await pause(wait);
+        if ((error.response && status !== 429 && status < 500) || attempt >= retries) throw error;
+        // Release the queue while waiting so polling cannot hold up a cashout.
+        if (status !== 429) await pause((attempt + 1) * 800 + Math.random() * 400);
       }
     }
   };
-  const result = tail.then(run, run);
-  tail = result.catch(() => {});
+  const result = run().finally(() => pending.delete(key));
+  pending.set(key, result);
   return result;
 }

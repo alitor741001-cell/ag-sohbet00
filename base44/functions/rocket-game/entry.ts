@@ -49,7 +49,11 @@ async function syncAutoToBet(base44, round, user, slot, autoAt) {
     5
   );
   const mine = bets.find((b) => betSlot(b) === slot);
-  if (mine) await base44.asServiceRole.entities.RocketBet.update(mine.id, { auto_at: autoAt });
+  if (!mine) return null;
+  const result = await base44.asServiceRole.entities.RocketBet.updateMany(
+    { id: mine.id, status: 'active' }, { $set: { auto_at: autoAt } }
+  );
+  return result.updated ? { ...mine, auto_at: autoAt } : null;
 }
 
 async function loadWallet(base44, user) {
@@ -197,7 +201,8 @@ export default async function (req) {
     try {
       user = await base44.auth.me();
     } catch (e) {
-      user = null;
+      if (e?.status === 401 || e?.response?.status === 401) user = null;
+      else throw e;
     }
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -209,30 +214,24 @@ export default async function (req) {
       const wallet = await loadWallet(base44, user);
       const next = shiftRocketBet(walletBet(wallet, slot), body.direction || 1);
       await base44.asServiceRole.entities.GameWallet.update(wallet.id, { [betField(slot)]: next });
-      const round = await ensureRound(base44);
-      return Response.json(await buildView(base44, user, round));
+      return Response.json({ settings: true, values: { [slot === 2 ? 'bet2' : 'bet1']: next } });
     }
 
-    // Otomatik çekilme hedefi kademeyle değiştirilir.
-    if (action === 'setAuto') {
+    // Settings only update this player's target, never settle the entire room.
+    if (action === 'setAuto' || action === 'setAutoValue') {
       const slot = body.slot === 2 ? 2 : 1;
       const wallet = await loadWallet(base44, user);
-      const next = shiftAuto(walletAuto(wallet, slot), body.direction || 1);
-      await base44.asServiceRole.entities.GameWallet.update(wallet.id, { [autoField(slot)]: next });
-      const round = await ensureRound(base44);
-      await syncAutoToBet(base44, round, user, slot, next);
-      return Response.json(await buildView(base44, user, round));
-    }
-
-    // Elle yazılan hedef (örn. 7x): kademe dışı değerler de kaydedilir.
-    if (action === 'setAutoValue') {
-      const slot = body.slot === 2 ? 2 : 1;
-      const value = clampAuto(body.value);
-      const wallet = await loadWallet(base44, user);
-      await base44.asServiceRole.entities.GameWallet.update(wallet.id, { [autoField(slot)]: value });
-      const round = await ensureRound(base44);
-      await syncAutoToBet(base44, round, user, slot, value);
-      return Response.json(await buildView(base44, user, round));
+      const value = action === 'setAuto' ? shiftAuto(walletAuto(wallet, slot), body.direction || 1) : clampAuto(body.value);
+      if (walletAuto(wallet, slot) !== value) {
+        await base44.asServiceRole.entities.GameWallet.update(wallet.id, { [autoField(slot)]: value });
+      }
+      const number = Number(body.round_no);
+      const rows = Number.isInteger(number) && number > 0
+        ? await base44.asServiceRole.entities.RocketRound.filter({ round_no: number }, '-created_date', 1)
+        : [await latestRound(base44)];
+      const round = rows[0];
+      const bet = round ? await syncAutoToBet(base44, round, user, slot, value) : null;
+      return Response.json({ settings: true, round_no: round?.round_no, bet, values: { [slot === 2 ? 'auto2' : 'auto1']: value } });
     }
 
     if (action === 'bet') {
@@ -260,7 +259,7 @@ export default async function (req) {
         { $inc: { coins: -bet }, $set: { [betField(slot)]: bet, [autoField(slot)]: clampAuto(body.auto ?? walletAuto(wallet, slot)) } }
       );
       if (!debit.updated) return Response.json({ error: 'Yetersiz coin.' }, { status: 400 });
-      await base44.asServiceRole.entities.RocketBet.create({
+      const placed = await base44.asServiceRole.entities.RocketBet.create({
         round_id: round.id,
         round_no: round.round_no,
         user_id: user.id,
@@ -272,7 +271,8 @@ export default async function (req) {
         auto_at: clampAuto(body.auto ?? walletAuto(wallet, slot)),
         status: 'active',
       });
-      return Response.json(await buildView(base44, user, round));
+      const updatedWallet = await loadWallet(base44, user);
+      return Response.json({ patch: true, now: Date.now(), round_no: round.round_no, slot, bet: placed, coins: updatedWallet.coins });
     }
 
     if (action === 'cashout') {
@@ -358,6 +358,10 @@ export default async function (req) {
     return Response.json(await buildView(base44, user, round));
   } catch (error) {
     console.error('Rocket operation failed:', error.message);
-    return Response.json({ error: error.message }, { status: /rate|limit/i.test(error.message || '') ? 429 : 500 });
+    const limited = error?.status === 429 || error?.response?.status === 429 || /rate|limit/i.test(error.message || '');
+    return Response.json({ error: error.message }, {
+      status: limited ? 429 : 500,
+      headers: limited ? { 'Retry-After': '15' } : {},
+    });
   }
 }

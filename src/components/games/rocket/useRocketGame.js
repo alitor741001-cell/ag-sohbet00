@@ -65,6 +65,7 @@ export default function useRocketGame() {
   const phaseRef = useRef(null);
   const launchAtRef = useRef(null);
   const hasDataRef = useRef(false);
+  const needsRecoveryRef = useRef(true);
   const autoFireRef = useRef(new Set());
   const roundNoRef = useRef(null);
   const pollNowRef = useRef(() => {});
@@ -82,10 +83,22 @@ export default function useRocketGame() {
       setMessage(res.error);
       return;
     }
+    if (res.settings) {
+      setData((prev) => {
+        if (!prev) return prev;
+        const next = { ...prev, ...res.values };
+        if (res.bet && prev.round?.round_no === res.round_no) {
+          next.bets = prev.bets.map((bet) => bet.id === res.bet.id ? res.bet : bet);
+        }
+        return next;
+      });
+      setMessage('');
+      return;
+    }
     if (res.patch) {
       setData((prev) => {
         if (!prev) return prev;
-        if (prev.round?.round_no !== res.round_no) return { ...prev, coins: res.coins };
+        if (prev.round?.round_no !== res.round_no) return { ...prev, coins: res.coins ?? prev.coins };
         const bets = prev.bets.filter((b) => !(b.user_id === prev.me && (b.slot === 2 ? 2 : 1) === res.slot));
         if (res.bet && !res.bet.cancelled) bets.push(res.bet);
         return { ...prev, coins: res.coins, bets };
@@ -106,8 +119,11 @@ export default function useRocketGame() {
 
   const fetchState = useCallback(async () => {
     try {
-      applyResult(await rocketRequests({ action: 'state', recover: !hasDataRef.current || Date.now() < cooldownRef.current }));
+      const result = await rocketRequests({ action: 'state', recover: needsRecoveryRef.current });
+      applyResult(result);
+      needsRecoveryRef.current = false;
     } catch (e) {
+      needsRecoveryRef.current = true;
       // Yoğunluk hatasında mevcut durum korunur, yoklama bir süre bekler.
       cooldownRef.current = Date.now() + POLL_COOLDOWN;
       if (!hasDataRef.current) {
@@ -155,7 +171,8 @@ export default function useRocketGame() {
         (phaseRef.current === 'betting' && launchAtRef.current !== null && localNow >= launchAtRef.current);
       // Çakılma sonrası yeni tur kısa sürede yakalanır, bahis aşaması seyrek yoklanır.
       const quick = flying || phaseRef.current === 'crashed';
-      timer = setTimeout(loop, quick ? POLL_RUNNING : POLL_IDLE);
+      // Stagger players' refreshes instead of a synchronized request burst.
+      timer = setTimeout(loop, (quick ? POLL_RUNNING : POLL_IDLE) + Math.random() * 500);
       running = false;
     };
     // Sıradaki yoklamayı öne çeker: ek istek yapmadan anında tazeleme.
@@ -229,7 +246,8 @@ export default function useRocketGame() {
         applyResult(result);
         return result;
       } catch (e) {
-        // Bounded retries are exhausted; do not pretend an unconfirmed payout succeeded.
+        // Reconcile interrupted credits even if the next refresh is a new round.
+        needsRecoveryRef.current = true;
         cooldownRef.current = Date.now() + POLL_COOLDOWN;
         setMessage(friendlyError(e));
         return null;
@@ -276,7 +294,7 @@ export default function useRocketGame() {
   const persistAuto = useCallback((slot, value, delay = AUTO_SAVE_MS) => {
     clearTimeout(autoSaveRef.current[slot]);
     autoSaveRef.current[slot] = setTimeout(async () => {
-      const result = await act({ action: 'setAutoValue', slot, value }, { key: `auto:${slot}` });
+      const result = await act({ action: 'setAutoValue', slot, value, round_no: roundNoRef.current }, { key: `auto:${slot}` });
       // An edit made during a save must not be dropped by the duplicate guard.
       if (autoAmtRef.current[slot] !== value || (!result && busyRef.current.has(`auto:${slot}`))) {
         persistAuto(slot, autoAmtRef.current[slot]);
