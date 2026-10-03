@@ -185,6 +185,22 @@ export default async function(req) {
       return Response.json({ ok: true, read_receipts_disabled_for: nextDisabledFor });
     }
 
+    // toggle_dnd: Bu sohbette rahatsız etme modunu aç/kapat
+    // Açıkken bu sohbetten gelen aramalar sessiz bildirilir (zil + titreşim yok)
+    if (action === 'toggle_dnd') {
+      const conversationId = String(body.conversation_id || '');
+      const conversation = await base44.asServiceRole.entities.Conversation.get(conversationId).catch(() => null);
+      if (!conversation) return Response.json({ error: 'Sohbet bulunamadı' }, { status: 404 });
+      if (!(conversation.members || []).includes(user.id)) return Response.json({ error: 'yetkisiz' }, { status: 403 });
+      const dndFor = conversation.dnd_for || [];
+      const enabled = typeof body.enabled === 'boolean' ? body.enabled : !dndFor.includes(user.id);
+      const nextDndFor = enabled
+        ? [...new Set([...dndFor, user.id])]
+        : dndFor.filter((id) => id !== user.id);
+      await base44.asServiceRole.entities.Conversation.update(conversationId, { dnd_for: nextDndFor });
+      return Response.json({ ok: true, dnd_for: nextDndFor });
+    }
+
     // delete_message: Tek mesajı SADECE bu kullanıcı için sil
     // Karşı taraf mesajı görmeye devam eder
     if (action === 'delete_message') {

@@ -34,6 +34,7 @@ export function createVoiceOutput(track, roomId) {
   let gain = null;
   let useWebAudio = false;
   let muted = false;
+  let level = 1;
 
   if (context && mediaTrack) {
     try {
@@ -46,6 +47,12 @@ export function createVoiceOutput(track, roomId) {
       useWebAudio = false;
     }
   }
+
+  const applyLevel = () => {
+    if (gain) gain.gain.value = muted ? 0 : level;
+    element.volume = level;
+    element.muted = useWebAudio ? true : muted;
+  };
 
   return {
     dataset: { livekitVoice: roomId, livekitTrack: track.sid, livekitMediaTrack: mediaTrack?.id || '' },
@@ -64,7 +71,7 @@ export function createVoiceOutput(track, roomId) {
           useWebAudio = false;
         }
       }
-      element.muted = muted;
+      applyLevel();
       await element.play();
     },
     remove() {
@@ -76,8 +83,21 @@ export function createVoiceOutput(track, roomId) {
     get muted() { return muted; },
     set muted(value) {
       muted = value;
-      if (gain) gain.gain.value = value ? 0 : 1;
-      element.muted = useWebAudio ? true : value;
+      applyLevel();
+    },
+    /** Hoparlör açıkken tam ses; kapalıyken çıkış ahize seviyesine (kulağa) alınır. */
+    async setSpeaker(on) {
+      level = on ? 1 : 0.35;
+      applyLevel();
+      if (typeof element.setSinkId !== 'function' || !navigator.mediaDevices?.enumerateDevices) return;
+      try {
+        const outputs = (await navigator.mediaDevices.enumerateDevices())
+          .filter((device) => device.kind === 'audiooutput');
+        const target = on
+          ? outputs.find((device) => /speaker|hoparl/i.test(device.label))
+          : outputs.find((device) => /earpiece|receiver|handset|ahize|communications|kulakl/i.test(device.label));
+        if (target) await element.setSinkId(target.deviceId);
+      } catch {}
     },
   };
 }

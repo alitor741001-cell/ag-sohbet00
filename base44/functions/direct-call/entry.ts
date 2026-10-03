@@ -54,6 +54,12 @@ export default async function(req) {
         return Response.json({ error: `${calleeName} şu an başka bir aramada.` }, { status: 409 });
       }
 
+      // Aranan kişi bu sohbette rahatsız etme modunu açtıysa zil sessiz çalar
+      const conversation = conversationId
+        ? await base44.asServiceRole.entities.Conversation.get(conversationId).catch(() => null)
+        : null;
+      const silent = (conversation?.dnd_for || []).includes(calleeId);
+
       const created = await base44.asServiceRole.entities.DirectCall.create({
         caller_id: user.id,
         caller_name: meName,
@@ -67,6 +73,7 @@ export default async function(req) {
         callee_frame_scale: callee.profile_frame_scale || 100,
         conversation_id: conversationId,
         status: 'ringing',
+        silent,
         started_at: new Date().toISOString(),
       });
       return Response.json({ call: created });

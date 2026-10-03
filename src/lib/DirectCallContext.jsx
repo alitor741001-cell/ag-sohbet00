@@ -2,12 +2,12 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { Room, RoomEvent, Track } from 'livekit-client';
 import { base44 } from '@/api/base44Client';
 import { createVoiceOutput, startRingtone, unlockVoicePlayback } from '@/lib/voicePlayback';
+import { ensureMicTrack } from '@/lib/micStream';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 
 const DirectCallContext = createContext(null);
 export const useDirectCall = () => useContext(DirectCallContext);
 
-const MIC_OPTIONS = { echoCancellation: true, noiseSuppression: true, autoGainControl: true };
 const ENDED_STATUSES = ['rejected', 'ended', 'cancelled', 'missed'];
 const CALL_TIMEOUT_MS = 45000;
 
@@ -18,6 +18,7 @@ export default function DirectCallProvider({ children }) {
   const [phase, setPhase] = useState('idle');
   const [seconds, setSeconds] = useState(0);
   const [muted, setMuted] = useState(false);
+  const [speaker, setSpeaker] = useState(true);
   const [error, setError] = useState('');
 
   const roomRef = useRef(null);
@@ -29,12 +30,15 @@ export default function DirectCallProvider({ children }) {
   const callRef = useRef(null);
   const roleRef = useRef(null);
   const mutedRef = useRef(false);
+  const speakerRef = useRef(true);
+  const micTrackRef = useRef(null);
 
   useEffect(() => { userRef.current = user; }, [user]);
   useEffect(() => { phaseRef.current = phase; }, [phase]);
   useEffect(() => { callRef.current = call; }, [call]);
   useEffect(() => { roleRef.current = role; }, [role]);
   useEffect(() => { mutedRef.current = muted; }, [muted]);
+  useEffect(() => { speakerRef.current = speaker; }, [speaker]);
 
   const stopRingtone = useCallback(() => {
     ringtoneRef.current?.();
@@ -49,15 +53,20 @@ export default function DirectCallProvider({ children }) {
     const room = roomRef.current;
     if (room) {
       room.removeAllListeners();
-      room.localParticipant.setMicrophoneEnabled(false).catch(() => {});
+      // Mikrofon yayından çıkarılır ama durdurulmaz: oturum boyunca aynı izinle kullanılır.
+      const micTrack = micTrackRef.current;
+      if (micTrack) room.localParticipant.unpublishTrack(micTrack, false).catch(() => {});
       room.disconnect();
       roomRef.current = null;
     }
+    mutedRef.current = false;
+    speakerRef.current = true;
     setCall(null);
     setRole(null);
     setPhase('idle');
     setSeconds(0);
     setMuted(false);
+    setSpeaker(true);
     setError('');
   }, [stopRingtone]);
 
@@ -65,6 +74,7 @@ export default function DirectCallProvider({ children }) {
     if (track.kind !== Track.Kind.Audio) return;
     if ([...audioRef.current].some((element) => element.dataset.livekitTrack === track.sid)) return;
     const element = createVoiceOutput(track, 'direct-call');
+    element.setSpeaker?.(speakerRef.current);
     audioRef.current.add(element);
     Promise.all([roomRef.current?.startAudio(), element.play(), unlockVoicePlayback()]).catch(() => {});
   }, []);
@@ -108,7 +118,12 @@ export default function DirectCallProvider({ children }) {
       attachAllRemoteAudio();
       if (publish) {
         try {
-          await room.localParticipant.setMicrophoneEnabled(true, MIC_OPTIONS);
+          // Oturumdaki tek mikrofon akışı: ilk aramada izin bir kez istenir.
+          const micTrack = await ensureMicTrack();
+          if (!micTrack) throw new Error('mikrofon yok');
+          micTrackRef.current = micTrack;
+          await room.localParticipant.publishTrack(micTrack, { name: 'microphone', source: Track.Source.Microphone });
+          micTrack.enabled = !mutedRef.current;
         } catch (micError) {
           setError(micError?.name === 'NotAllowedError' ? '🎤 Mikrofon izni verilmedi.' : '🎤 Mikrofon başlatılamadı.');
         }
@@ -174,14 +189,22 @@ export default function DirectCallProvider({ children }) {
     teardown();
   }, [teardown]);
 
-  const toggleMute = useCallback(async () => {
-    const room = roomRef.current;
-    if (!room) return;
+  // Sessize alma yayını kapatmaz, track'i duraklatır: izin yeniden istenmez,
+  // tuş anında tepki verir ve mikrofon akışı kopmaz.
+  const toggleMute = useCallback(() => {
     const next = !mutedRef.current;
-    try {
-      await room.localParticipant.setMicrophoneEnabled(!next, MIC_OPTIONS);
-      setMuted(next);
-    } catch {}
+    mutedRef.current = next;
+    setMuted(next);
+    const track = micTrackRef.current;
+    if (track && track.readyState === 'live') track.enabled = !next;
+  }, []);
+
+  // Hoparlör açıkken tam ses, kapalıyken çıkış ahize seviyesine alınır.
+  const toggleSpeaker = useCallback(() => {
+    const next = !speakerRef.current;
+    speakerRef.current = next;
+    setSpeaker(next);
+    audioRef.current.forEach((element) => element.setSpeaker?.(next));
   }, []);
 
   // Gelen/biten arama senkronizasyonu — gerçek zamanlı abonelik + yedek sorgu
@@ -198,7 +221,8 @@ export default function DirectCallProvider({ children }) {
         if (record.callee_id === myId && record.status === 'ringing' && phaseRef.current === 'idle') {
           beginLocalCall(record, 'callee', 'incoming');
           stopRingtone();
-          ringtoneRef.current = startRingtone({ freq: 880 });
+          // Rahatsız etme açıkken gelen arama sessiz bildirilir
+          if (!record.silent) ringtoneRef.current = startRingtone({ freq: 880 });
         }
         return;
       }
@@ -270,10 +294,10 @@ export default function DirectCallProvider({ children }) {
   useEffect(() => () => teardown(), [teardown]);
 
   const value = useMemo(() => ({
-    call, role, phase, seconds, muted, error,
-    startCall, acceptCall, rejectCall, endCall, toggleMute,
+    call, role, phase, seconds, muted, speaker, error,
+    startCall, acceptCall, rejectCall, endCall, toggleMute, toggleSpeaker,
     clearError: () => setError(''),
-  }), [call, role, phase, seconds, muted, error, startCall, acceptCall, rejectCall, endCall, toggleMute]);
+  }), [call, role, phase, seconds, muted, speaker, error, startCall, acceptCall, rejectCall, endCall, toggleMute, toggleSpeaker]);
 
   return <DirectCallContext.Provider value={value}>{children}</DirectCallContext.Provider>;
 }

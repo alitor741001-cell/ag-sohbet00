@@ -35,6 +35,10 @@
     "conversation_id": {
       "type": "string"
     },
+    "silent": {
+      "type": "boolean",
+      "default": false
+    },
     "status": {
       "type": "string",
       "enum": [

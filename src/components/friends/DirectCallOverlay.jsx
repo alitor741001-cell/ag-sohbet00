@@ -1,4 +1,4 @@
-import { Mic, MicOff, Phone, PhoneOff } from 'lucide-react';
+import { Mic, MicOff, Phone, PhoneOff, Volume2, VolumeX } from 'lucide-react';
 import { useDirectCall } from '@/lib/DirectCallContext';
 import XpAvatar from '@/components/xp/XpAvatar';
 import ProfileFrame from '@/components/ProfileFrame';
@@ -11,7 +11,7 @@ const formatDuration = (total) => {
 };
 
 export default function DirectCallOverlay() {
-  const { call, phase, seconds, muted, error, acceptCall, rejectCall, endCall, toggleMute } = useDirectCall();
+  const { call, phase, seconds, muted, speaker, error, acceptCall, rejectCall, endCall, toggleMute, toggleSpeaker } = useDirectCall();
   if (!call || phase === 'idle') return null;
 
   const other = phase === 'incoming'
@@ -45,7 +45,7 @@ export default function DirectCallOverlay() {
         {error && <p className="text-xs text-red-400">{error}</p>}
       </div>
 
-      <div className="relative flex shrink-0 items-center justify-center gap-14 pb-12">
+      <div className="relative flex shrink-0 items-center justify-center gap-9 pb-12">
         {phase === 'incoming' ? (
           <>
             <CallCircleButton tone="red" onClick={rejectCall} label="Reddet"><PhoneOff className="h-7 w-7" /></CallCircleButton>
@@ -55,6 +55,9 @@ export default function DirectCallOverlay() {
           <>
             <CallCircleButton tone="gray" onClick={toggleMute} label={muted ? 'Sesi aç' : 'Sessiz'}>
               {muted ? <MicOff className="h-7 w-7" /> : <Mic className="h-7 w-7" />}
+            </CallCircleButton>
+            <CallCircleButton tone="gray" onClick={toggleSpeaker} label={speaker ? 'Hoparlör' : 'Ahize'}>
+              {speaker ? <Volume2 className="h-7 w-7" /> : <VolumeX className="h-7 w-7" />}
             </CallCircleButton>
             <CallCircleButton tone="red" onClick={endCall} label="Kapat"><PhoneOff className="h-7 w-7" /></CallCircleButton>
           </>
