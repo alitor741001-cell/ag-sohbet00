@@ -158,26 +158,26 @@ export default function SlotGame({ onExit, onBack, roomId }) {
         )}
       </div>
 
-      {/* Üstte, logonun üzerindeki karanlık alanda yukarı doğru kayan kazanan şeridi. */}
-      <WinnerTicker />
-
-      {/* Kontroller panelin kendi köşesinde durur: görsel kırpılsa da kaybolmaz. */}
-      <button
-        type="button"
-        onClick={onBack}
-        aria-label="Oyun listesine dön"
-        className="absolute left-2 top-2 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm active:scale-95"
-      >
-        <ChevronLeft className="h-5 w-5" />
-      </button>
-      <button
-        type="button"
-        onClick={onExit}
-        aria-label="Oyunu kapat"
-        className="absolute right-2 top-2 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm active:scale-95"
-      >
-        <X className="h-5 w-5" />
-      </button>
+      {/* Üst şerit: kazanan akışı iki tuşun arasını doldurur, çentiğin altında ortalanır. */}
+      <div className="absolute inset-x-2 top-[max(0.5rem,env(safe-area-inset-top))] z-20 flex items-center gap-2">
+        <button
+          type="button"
+          onClick={onBack}
+          aria-label="Oyun listesine dön"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm active:scale-95"
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </button>
+        <WinnerTicker />
+        <button
+          type="button"
+          onClick={onExit}
+          aria-label="Oyunu kapat"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm active:scale-95"
+        >
+          <X className="h-5 w-5" />
+        </button>
+      </div>
 
       <SlotWinOverlay
         open={!!prize}
