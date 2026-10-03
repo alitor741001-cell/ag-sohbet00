@@ -1428,13 +1428,17 @@ button:active, nav a:active, a[role="button"]:active {
     radial-gradient(circle at 50% 0%, hsl(var(--slot-purple) / 0.4), transparent 62%),
     repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.025) 0 2px, transparent 2px 5px);
 }
-/* Tur sırasında makara penceresindeki nesneler aşağı doğru kayar. */
-.slot-bg-roll { animation: slot-bg-roll 0.34s linear infinite; }
-@keyframes slot-bg-roll {
-  0% { background-position-y: 62%; filter: blur(1.6px) brightness(1.12); }
-  100% { background-position-y: 38%; filter: blur(1.6px) brightness(1.12); }
+/* Tur sırasında her makara sütunu sembolleriyle birlikte bir sembol boyu aşağı kayar. */
+.slot-reel-spin {
+  animation-name: slot-reel-spin;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
 }
-@media (prefers-reduced-motion: reduce) { .slot-bg-roll { animation-duration: 0.9s; } }
+@keyframes slot-reel-spin {
+  0% { background-position: var(--reel-x) 62.75%; filter: blur(1.5px) brightness(1.14); }
+  100% { background-position: var(--reel-x) 37.25%; filter: blur(1.5px) brightness(1.14); }
+}
+@media (prefers-reduced-motion: reduce) { .slot-reel-spin { animation-duration: 0.9s !important; } }
 
 .slot-bokeh {
   background-image:

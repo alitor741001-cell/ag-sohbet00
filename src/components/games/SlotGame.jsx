@@ -4,7 +4,7 @@ import { Image } from '@/components/ui/image';
 import { useSize } from '@/hooks/use-size';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { SLOT_ART } from './slotAssets';
-import { ART_HEIGHT, ART_WIDTH, SLOT_LAYOUT } from './slot/slotLayout';
+import { ART_HEIGHT, ART_WIDTH, REEL_COLUMNS, SLOT_LAYOUT } from './slot/slotLayout';
 import useSlotGame from './slot/useSlotGame';
 import SlotReadout from './slot/SlotReadout';
 import SlotWinOverlay from './slot/SlotWinOverlay';
@@ -64,17 +64,25 @@ export default function SlotGame({ onExit, onBack, roomId }) {
               quality={92}
             />
 
-            {/* Tur sırasında makaralar görselin kendi üzerinde döner. */}
-            <div
-              aria-hidden="true"
-              className={`pointer-events-none absolute overflow-hidden ${game.spinning ? 'slot-bg-roll' : ''}`}
-              style={{
-                ...SLOT_LAYOUT.reelWindow,
-                backgroundImage: `url(${SLOT_ART.shell})`,
-                backgroundSize: '105.2% 230.6%',
-                backgroundPosition: '50% 50%',
-              }}
-            />
+            {/* Tur sırasında her makara kendi sembolleriyle aşağı doğru kayar. */}
+            <div aria-hidden="true" className="pointer-events-none absolute overflow-hidden" style={SLOT_LAYOUT.reelWindow}>
+              {REEL_COLUMNS.map((column, index) => (
+                <span
+                  key={index}
+                  className={`absolute top-0 h-full ${game.spinning ? 'slot-reel-spin' : ''}`}
+                  style={{
+                    left: column.left,
+                    width: '20%',
+                    backgroundImage: `url(${SLOT_ART.shell})`,
+                    backgroundSize: column.backgroundSize,
+                    backgroundPosition: `${column.backgroundPositionX} 50%`,
+                    '--reel-x': column.backgroundPositionX,
+                    animationDelay: `${index * -0.055}s`,
+                    animationDuration: `${(0.3 + index * 0.03).toFixed(2)}s`,
+                  }}
+                />
+              ))}
+            </div>
 
             {/* Görselin kendi rakam alanları: bakiye, WIN, BET, LINES, TOTAL BET ve üst ödüller */}
             <SlotReadout coins={game.coins} win={game.win} bet={game.bet} lines={game.lines} grand={game.grand} />

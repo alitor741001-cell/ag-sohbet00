@@ -5,12 +5,13 @@ import { BET_STEP, LINES, MAX_BET, MIN_BET } from './slotConfig';
 const sleep = (ms) => new Promise((resolve) => { window.setTimeout(resolve, ms); });
 
 // Tur animasyonunun görünür kalması için en kısa dönüş süresi.
-const SPIN_MIN_MS = 800;
+const SPIN_MIN_MS = 1100;
 
 export default function useSlotGame({ roomId } = {}) {
   const [status, setStatus] = useState('loading');
   const [coins, setCoins] = useState(0);
   const [unlimited, setUnlimited] = useState(false);
+  const [noLimit, setNoLimit] = useState(false);
   const [grand, setGrand] = useState(0);
   const [bet, setBet] = useState(100);
   const [lines, setLines] = useState(LINES);
@@ -30,6 +31,7 @@ export default function useSlotGame({ roomId } = {}) {
     if (!data) return;
     if (typeof data.coins === 'number') setCoins(data.coins);
     if (typeof data.unlimited === 'boolean') setUnlimited(data.unlimited);
+    if (typeof data.no_limit === 'boolean') setNoLimit(data.no_limit);
     if (typeof data.grand === 'number') setGrand(data.grand);
     if (typeof data.bet === 'number') setBet(data.bet);
     if (typeof data.lines === 'number') setLines(data.lines);
@@ -59,7 +61,7 @@ export default function useSlotGame({ roomId } = {}) {
   const spin = useCallback(async () => {
     if (busyRef.current || status !== 'ready') return;
     const cost = bet * lines;
-    if (!unlimited && coins < cost) {
+    if (!noLimit && coins < cost) {
       setAuto(false);
       setMessage('Yetersiz coin. Coin yanındaki + ile bonus al.');
       return;
@@ -87,7 +89,7 @@ export default function useSlotGame({ roomId } = {}) {
       setSpinning(false);
       busyRef.current = false;
     }
-  }, [applyState, bet, coins, lines, roomId, status, unlimited]);
+  }, [applyState, bet, coins, lines, noLimit, roomId, status]);
 
   const saveBet = useCallback(async (next) => {
     setBet(next);
@@ -108,11 +110,11 @@ export default function useSlotGame({ roomId } = {}) {
 
   const maxBet = useCallback(() => {
     if (busyRef.current) return;
-    const affordable = unlimited ? MAX_BET : Math.floor(coins / lines / BET_STEP) * BET_STEP;
+    const affordable = noLimit ? MAX_BET : Math.floor(coins / lines / BET_STEP) * BET_STEP;
     const next = Math.min(MAX_BET, Math.max(MIN_BET, affordable));
     if (next === bet) return;
     saveBet(next);
-  }, [bet, coins, lines, saveBet, unlimited]);
+  }, [bet, coins, lines, noLimit, saveBet]);
 
   const claimBonus = useCallback(async () => {
     if (!bonusReady) {
@@ -140,6 +142,7 @@ export default function useSlotGame({ roomId } = {}) {
     status,
     coins,
     unlimited,
+    noLimit,
     grand,
     bet,
     lines,

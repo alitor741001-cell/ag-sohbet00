@@ -34,10 +34,11 @@ function canClaimBonus(wallet) {
   return (wallet.coins ?? START_COINS) < (wallet.bet ?? DEFAULT_BET) * LINES;
 }
 
-function walletView(wallet) {
+function walletView(wallet, isAdmin = false) {
   return {
     coins: wallet.coins ?? START_COINS,
     unlimited: UNLIMITED_COINS,
+    no_limit: UNLIMITED_COINS || isAdmin,
     bet: wallet.bet ?? DEFAULT_BET,
     lines: LINES,
     spins: wallet.spins ?? 0,
@@ -102,11 +103,13 @@ export default async function (req) {
     const body = await req.json().catch(() => ({}));
     const action = body.action || 'state';
     const wallet = await loadWallet(base44, user);
+    // Yönetici hesabında coin sınırı yoktur.
+    const isAdmin = user.role === 'admin';
 
     if (action === 'bet') {
       const bet = clampBet(body.bet, wallet.bet ?? DEFAULT_BET);
       const updated = await base44.asServiceRole.entities.GameWallet.update(wallet.id, { bet });
-      return Response.json({ ...walletView({ ...updated, last_bonus_at: wallet.last_bonus_at }), grid: null, wins: [], win: 0 });
+      return Response.json({ ...walletView({ ...updated, last_bonus_at: wallet.last_bonus_at }, isAdmin), grid: null, wins: [], win: 0 });
     }
 
     if (action === 'bonus') {
@@ -115,14 +118,18 @@ export default async function (req) {
         coins: UNLIMITED_COINS ? START_COINS : (wallet.coins ?? START_COINS) + BONUS_COINS,
         last_bonus_at: new Date().toISOString(),
       });
-      return Response.json({ ...walletView(updated), grid: null, wins: [], win: 0 });
+      return Response.json({ ...walletView(updated, isAdmin), grid: null, wins: [], win: 0 });
     }
 
     if (action === 'spin') {
       const bet = clampBet(body.bet, wallet.bet ?? DEFAULT_BET);
       const cost = bet * LINES;
-      const coins = wallet.coins ?? START_COINS;
-      if (!UNLIMITED_COINS && coins < cost) return Response.json({ error: 'Yetersiz coin.' }, { status: 400 });
+      let coins = wallet.coins ?? START_COINS;
+      if (coins < cost) {
+        // Yönetici hesabında sınır yok: bakiye bir tura yetmiyorsa otomatik tamamlanır.
+        if (isAdmin) coins = Math.max(coins, START_COINS);
+        else if (!UNLIMITED_COINS) return Response.json({ error: 'Yetersiz coin.' }, { status: 400 });
+      }
 
       const grid = spinReels();
       const result = evaluateGrid(grid, bet);
@@ -148,7 +155,7 @@ export default async function (req) {
       });
 
       return Response.json({
-        ...walletView(updated),
+        ...walletView(updated, isAdmin),
         grid,
         wins: result.wins,
         win: total,
@@ -159,7 +166,7 @@ export default async function (req) {
       });
     }
 
-    return Response.json({ ...walletView(wallet), grid: null, wins: [], win: 0 });
+    return Response.json({ ...walletView(wallet, isAdmin), grid: null, wins: [], win: 0 });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

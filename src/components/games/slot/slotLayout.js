@@ -23,6 +23,17 @@ export const SLOT_LAYOUT = {
   betPlus: frame(480, 1330, 104, 110),
 };
 
+// Makara penceresi beş sütuna bölünür: turda her sütun kendi sembolleriyle aşağı kayar.
+const REEL_WINDOW_X = 25;
+const REEL_WINDOW_HEIGHT = 670;
+const REEL_COLUMN_WIDTH = 968 / 5;
+
+export const REEL_COLUMNS = [0, 1, 2, 3, 4].map((index) => ({
+  left: `${index * 20}%`,
+  backgroundSize: `${((ART_WIDTH / REEL_COLUMN_WIDTH) * 100).toFixed(1)}% ${((ART_HEIGHT / REEL_WINDOW_HEIGHT) * 100).toFixed(1)}%`,
+  backgroundPositionX: `${(((REEL_WINDOW_X + index * REEL_COLUMN_WIDTH) / (ART_WIDTH - REEL_COLUMN_WIDTH)) * 100).toFixed(2)}%`,
+}));
+
 // Görselde yazılı olan rakam alanları — canlı değerler bu kutulara yazılır.
 export const SLOT_FIELDS = {
   lines: frame(92, 1268, 126, 54),
