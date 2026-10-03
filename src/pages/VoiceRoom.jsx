@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Armchair, Loader2, Lock, LogOut, MessageSquare, Mic, MicOff, Minimize2, MoreHorizontal, Radio, Shield, ShieldAlert, Unlock, UserMinus, UserRound, X } from 'lucide-react';
+import { Armchair, Eye, Loader2, Lock, LogOut, MessageSquare, Mic, MicOff, Minimize2, MoreHorizontal, Radio, Shield, ShieldAlert, Unlock, UserMinus, UserRound, X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useVoiceChat } from '@/hooks/useVoiceChat';
@@ -404,11 +404,19 @@ export default function VoiceRoom() {
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <button type="button" onClick={() => setExitOpen(true)} aria-label="Odadan çık" className="flex h-11 w-11 items-center justify-center rounded-full bg-red-600 active:scale-95 transition-transform">
-            <LogOut className="h-5 w-5" />
-          </button>
+          <span
+            title={`Odada ${participants.length} kişi var`}
+            aria-label={`Odada ${participants.length} kişi var`}
+            className="flex h-11 min-w-11 items-center justify-center gap-1.5 rounded-full bg-white/10 px-3"
+          >
+            <Eye className="h-5 w-5 text-white/80" />
+            <span className="text-sm font-bold tabular-nums">{participants.length}</span>
+          </span>
           <button type="button" onClick={() => setMenuOpen(true)} aria-label="Oda ayarları" className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 active:scale-95 transition-transform">
             <MoreHorizontal className="h-5 w-5" />
+          </button>
+          <button type="button" onClick={() => setExitOpen(true)} aria-label="Odadan çık" className="flex h-11 w-11 items-center justify-center rounded-full bg-red-600 active:scale-95 transition-transform">
+            <LogOut className="h-5 w-5" />
           </button>
         </div>
       </header>
