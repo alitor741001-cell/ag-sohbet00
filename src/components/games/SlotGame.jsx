@@ -158,25 +158,27 @@ export default function SlotGame({ onExit, onBack, roomId }) {
         )}
       </div>
 
-      {/* Üst şerit: kazanan akışı iki tuşun arasını doldurur, çentiğin altında ortalanır. */}
-      <div className="absolute inset-x-2 top-[max(0.5rem,env(safe-area-inset-top))] z-20 flex items-center gap-2">
-        <button
-          type="button"
-          onClick={onBack}
-          aria-label="Oyun listesine dön"
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm active:scale-95"
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </button>
+      {/* Üst şerit: kazanan akışı enine boyuna siyah alanı kaplar, çentiğin altında kalır. */}
+      <div className="absolute inset-x-0 top-0 z-20 flex flex-col pt-[env(safe-area-inset-top)]">
         <WinnerTicker />
-        <button
-          type="button"
-          onClick={onExit}
-          aria-label="Oyunu kapat"
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm active:scale-95"
-        >
-          <X className="h-5 w-5" />
-        </button>
+        <div className="flex items-center justify-between px-2 pt-2">
+          <button
+            type="button"
+            onClick={onBack}
+            aria-label="Oyun listesine dön"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm active:scale-95"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <button
+            type="button"
+            onClick={onExit}
+            aria-label="Oyunu kapat"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm active:scale-95"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
       </div>
 
       <SlotWinOverlay

@@ -6,7 +6,7 @@ import useBigWins from './useBigWins';
 import './winnerTicker.css';
 
 // Şeritte aynı anda görünen satır sayısı ve her satırın yüksekliği.
-const VISIBLE_ROWS = 2;
+const VISIBLE_ROWS = 3;
 const ROW_HEIGHT = 26;
 // Bir satırın ekranda kalma süresi — şeridin kayma hızı.
 const SECONDS_PER_ROW = 2.8;
@@ -55,7 +55,7 @@ export default function WinnerTicker() {
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none relative min-w-0 flex-1 overflow-hidden rounded-xl border border-white/10 bg-black/70 backdrop-blur-sm"
+      className="pointer-events-none relative w-full overflow-hidden border-b border-white/10 bg-black/70 backdrop-blur-sm"
       style={{ height: VISIBLE_ROWS * ROW_HEIGHT }}
     >
       {loop.length ? (
