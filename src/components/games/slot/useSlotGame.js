@@ -24,6 +24,7 @@ export default function useSlotGame({ roomId } = {}) {
   const [win, setWin] = useState(0);
   const [bigWin, setBigWin] = useState(0);
   const [jackpotHit, setJackpotHit] = useState(false);
+  const [wins, setWins] = useState([]);
   const [auto, setAuto] = useState(false);
   const [message, setMessage] = useState('');
   const busyRef = useRef(false);
@@ -82,6 +83,9 @@ export default function useSlotGame({ roomId } = {}) {
     setSpinning(true);
     setWin(0);
     setBigWin(0);
+    // Yeni tur: önceki turun sembolleri ve kazanç çizgileri temizlenir.
+    setWins([]);
+    setGrid(null);
     setMessage('');
     const duration = new Promise((resolve) => {
       const timer = window.setTimeout(() => {
@@ -97,6 +101,7 @@ export default function useSlotGame({ roomId } = {}) {
       ]);
       const data = response.data || {};
       setGrid(data.grid || null);
+      setWins(data.wins || []);
       setStopping(true);
       await sleep(SETTLE_MS);
       applyState(data);
@@ -181,6 +186,7 @@ export default function useSlotGame({ roomId } = {}) {
     stopRequested,
     stop,
     grid,
+    wins,
     win,
     bigWin,
     jackpotHit,

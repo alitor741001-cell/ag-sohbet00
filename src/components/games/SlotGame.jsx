@@ -7,6 +7,7 @@ import { SLOT_ART } from './slotAssets';
 import { ART_HEIGHT, ART_WIDTH, SLOT_LAYOUT } from './slot/slotLayout';
 import useSlotGame from './slot/useSlotGame';
 import SlotReels from './slot/SlotReels';
+import SlotWinLines from './slot/SlotWinLines';
 import SlotReadout from './slot/SlotReadout';
 import SlotWinOverlay from './slot/SlotWinOverlay';
 import CoinSheet from './slot/CoinSheet';
@@ -67,6 +68,9 @@ export default function SlotGame({ onExit, onBack, roomId }) {
 
             {/* Tur sırasında her makaranın sembolleri değişerek aşağı doğru kayar. */}
             <SlotReels spinning={game.spinning} stopping={game.stopping} grid={game.grid} />
+
+            {/* Kazanan semboller ve aralarından geçen kazanç çizgileri — yeni tur başlayana kadar ekranda kalır. */}
+            {!game.spinning && <SlotWinLines wins={game.wins} />}
 
             {/* Görselin kendi rakam alanları: bakiye, WIN, BET, LINES, TOTAL BET ve üst ödüller */}
             <SlotReadout coins={game.coins} win={game.win} bet={game.bet} lines={game.lines} grand={game.grand} />
