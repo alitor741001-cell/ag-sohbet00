@@ -24,7 +24,10 @@ export default function CreateRoom() {
   const submit = async (e) => {
     e.preventDefault();
     if (saving) return;
-    if (!form.name || !form.movie_id) { toast({ title: 'Oda adı ve içerik seçin', variant: 'destructive' }); return; }
+    // Sesli sohbet açıkken film seçilmezse oda sesli sohbet odası olarak açılır.
+    const voiceOnly = !form.movie_id && form.voice_enabled;
+    if (!form.name) { toast({ title: 'Oda adı gerekli', variant: 'destructive' }); return; }
+    if (!form.movie_id && !form.voice_enabled) { toast({ title: 'Film seçin veya sesli sohbeti açın', variant: 'destructive' }); return; }
     const movie = movies.find((m) => m.id === form.movie_id);
     setSaving(true);
     try {
