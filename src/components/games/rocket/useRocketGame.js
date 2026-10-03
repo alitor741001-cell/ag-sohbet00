@@ -3,8 +3,8 @@ import { base44 } from '@/api/base44Client';
 import { multiplierAt, colorForMult, MULT_COLOR_CLASS, DEFAULT_ROCKET_BET } from './rocketConfig';
 
 // Sunucu istek limiti nedeniyle seyrek poll edilir; çarpan yerel saatle akıcı kalır.
-const POLL_RUNNING = 3500;
-const POLL_IDLE = 4000;
+const POLL_RUNNING = 3000;
+const POLL_IDLE = 8000;
 const CLOCK_TICK = 50;
 
 // Bahis süresi dolduğu an tur yerel olarak da uçuşa geçer: sunucu yanıtı
@@ -12,6 +12,13 @@ const CLOCK_TICK = 50;
 function phaseAt(status, launchAt, now) {
   if (status === 'betting' && launchAt !== null && now >= launchAt) return 'running';
   return status;
+}
+
+// Sunucu reddi oyuncuya ham hata kodu yerine anlaşılır dille söylenir.
+function friendlyError(e) {
+  const text = e?.message || '';
+  if (/rate limit/i.test(text)) return 'Sunucu yoğun — tekrar denendi.';
+  return text || 'İşlem başarısız';
 }
 
 /** Crash Rocket oyun durumu: sunucudan poll edilir, çarpan yerel saatle akıcı gösterilir. */
@@ -27,6 +34,7 @@ export default function useRocketGame() {
   const launchAtRef = useRef(null);
   const hasDataRef = useRef(false);
   const autoFireRef = useRef(0);
+  const pollNowRef = useRef(() => {});
 
   const applyResult = useCallback((res) => {
     if (!res) return;
@@ -59,18 +67,44 @@ export default function useRocketGame() {
 
   useEffect(() => {
     let timer;
+    let running = false;
     const loop = async () => {
+      if (running) return;
+      running = true;
+      // Sekme arka plandayken sunucu yoklanmaz: istek bütçesi oyuncunun
+      // butonlarına kalır, limit hatası oluşmaz.
+      if (document.visibilityState === 'hidden') {
+        timer = setTimeout(loop, 10000);
+        running = false;
+        return;
+      }
       await fetchState();
       // Kalkış anı geçtiyse uçuş sürüyor sayılır: çakılma daha çabuk yakalanır.
       const localNow = serverNowRef.current + (Date.now() - fetchedAtRef.current);
       const flying =
         phaseRef.current === 'running' ||
         (phaseRef.current === 'betting' && launchAtRef.current !== null && localNow >= launchAtRef.current);
-      timer = setTimeout(loop, flying ? POLL_RUNNING : POLL_IDLE);
+      // Çakılma sonrası yeni tur kısa sürede yakalanır, bahis aşaması seyrek yoklanır.
+      const quick = flying || phaseRef.current === 'crashed';
+      timer = setTimeout(loop, quick ? POLL_RUNNING : POLL_IDLE);
+      running = false;
+    };
+    // Sıradaki yoklamayı öne çeker: ek istek yapmadan anında tazeleme.
+    pollNowRef.current = () => {
+      if (running) return;
+      clearTimeout(timer);
+      loop();
     };
     loop();
     return () => clearTimeout(timer);
   }, [fetchState]);
+
+  // Sekmeye dönüldüğünde durum hemen tazelenir.
+  useEffect(() => {
+    const onVisible = () => document.visibilityState === 'visible' && pollNowRef.current();
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, []);
 
   useEffect(() => {
     const id = setInterval(() => setClock(Date.now()), CLOCK_TICK);
@@ -78,21 +112,35 @@ export default function useRocketGame() {
   }, []);
 
   const act = useCallback(
-    async (payload) => {
+    async (payload, retryOnFail = false) => {
+      const send = async () => (await base44.functions.invoke('rocket-game', payload)).data;
       try {
-        const response = await base44.functions.invoke('rocket-game', payload);
-        applyResult(response.data);
-        return response.data;
+        const result = await send();
+        applyResult(result);
+        return result;
       } catch (e) {
-        setMessage(e.message || 'İşlem başarısız');
+        // Bahis/çekilme gibi kaybolmaması gereken aksiyonlar sunucu reddinde
+        // bir kez tekrarlanır.
+        if (retryOnFail) {
+          await new Promise((resolve) => setTimeout(resolve, 900));
+          try {
+            const result = await send();
+            applyResult(result);
+            return result;
+          } catch (retryError) {
+            setMessage(friendlyError(retryError));
+            return null;
+          }
+        }
+        setMessage(friendlyError(e));
         return null;
       }
     },
     [applyResult]
   );
 
-  const placeBet = useCallback((slot) => act({ action: 'bet', slot }), [act]);
-  const cashout = useCallback((slot) => act({ action: 'cashout', slot }), [act]);
+  const placeBet = useCallback((slot) => act({ action: 'bet', slot }, true), [act]);
+  const cashout = useCallback((slot) => act({ action: 'cashout', slot }, true), [act]);
   const changeBet = useCallback((slot, direction) => act({ action: 'changeBet', slot, direction }), [act]);
   const changeAuto = useCallback((slot, direction) => act({ action: 'setAuto', slot, direction }), [act]);
   const setAutoTarget = useCallback((slot, value) => act({ action: 'setAutoValue', slot, value }), [act]);
@@ -136,8 +184,9 @@ export default function useRocketGame() {
     });
     if (!pending || Date.now() - autoFireRef.current < 1500) return;
     autoFireRef.current = Date.now();
-    fetchState();
-  }, [phase, liveMult, data?.auto1, data?.auto2, myBets[1], myBets[2], fetchState]);
+    // Ek istek yapılmaz: sıradaki yoklama öne çekilir.
+    pollNowRef.current();
+  }, [phase, liveMult, data?.auto1, data?.auto2, myBets[1], myBets[2]]);
 
   return {
     status,
