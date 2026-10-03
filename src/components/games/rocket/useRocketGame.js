@@ -17,6 +17,10 @@ const POLL_CRASHED = 700;
 const POLL_BETTING = 7000;
 // Sunucu reddi sonrası yenilemeler bekler; butonlar beklemez.
 const POLL_COOLDOWN = 15000;
+// Uçuş sırasında bekleme kısa tutulur: çakılma anı ve gerçek çarpan yakalanır.
+const POLL_COOLDOWN_FLIGHT = 2500;
+// Görsel uçuş, son sunucu onayından en fazla bu kadar ileri gidebilir.
+const FLIGHT_LEAD_MS = 2500;
 const CLOCK_TICK = 50;
 // Otomatik hedef ok tuşlarına hızlı basmak tek istek üretir.
 const AUTO_SAVE_MS = 600;
@@ -153,24 +157,25 @@ export default function useRocketGame() {
         running = false;
         return;
       }
+      // Kalkış anı geçtiyse uçuş sürüyor sayılır: çakılma daha çabuk yakalanır.
+      const localNow = serverNowRef.current + (Date.now() - fetchedAtRef.current);
+      const flying =
+        phaseRef.current === 'running' ||
+        (phaseRef.current === 'betting' && launchAtRef.current !== null && localNow >= launchAtRef.current);
       // Oyuncunun isteği sürerken yoklama yapılmaz: buton anında karşılık bulur.
       if (busyRef.current.size) {
         timer = setTimeout(loop, 1200);
         running = false;
         return;
       }
+      // Yoğunluk molasında uçuş bekletilmez: çakılma anı gecikmeden öğrenilir.
       if (Date.now() < cooldownRef.current) {
-        timer = setTimeout(loop, POLL_COOLDOWN);
+        timer = setTimeout(loop, flying ? POLL_COOLDOWN_FLIGHT : POLL_COOLDOWN);
         running = false;
         return;
       }
       await fetchState();
       if (cancelled) return;
-      // Kalkış anı geçtiyse uçuş sürüyor sayılır: çakılma daha çabuk yakalanır.
-      const localNow = serverNowRef.current + (Date.now() - fetchedAtRef.current);
-      const flying =
-        phaseRef.current === 'running' ||
-        (phaseRef.current === 'betting' && launchAtRef.current !== null && localNow >= launchAtRef.current);
       // Uçuşta sık, çakılma sonrası daha sık, bahis aşamasında seyrek tazelenir.
       const next = phaseRef.current === 'crashed'
         ? POLL_CRASHED
@@ -329,17 +334,26 @@ export default function useRocketGame() {
 
   // Yerel akıcı çarpan: sunucu saati + yerel geçen süre.
   const round = data?.round;
-  const serverNow = serverNowRef.current + (clock - fetchedAtRef.current);
+  const sinceSync = clock - fetchedAtRef.current;
+  const serverNow = serverNowRef.current + sinceSync;
+  // Görsel uçuş sadece son onaydan bu yana ilerler: sekme arka planda kalır ya
+  // da yoklama gecikirse roket, gerçek çakılma noktasını aşan bir çarpan göstermez.
+  const displayNow = serverNowRef.current + Math.min(sinceSync, FLIGHT_LEAD_MS);
   const launchAt = round?.phase_ends_at ? new Date(round.phase_ends_at).getTime() : null;
   // Geri sayım 0'a indiği saniyede uçuş başlar; sunucu yanıtı beklenmez.
   const phase = phaseAt(round?.status, launchAt, serverNow);
 
   let liveMult = 1;
+  let displayMult = 1;
   if (phase === 'running') {
     const startAt = round?.started_at ? new Date(round.started_at).getTime() : launchAt;
-    liveMult = startAt ? multiplierAt(serverNow - startAt) : 1;
+    if (startAt) {
+      liveMult = multiplierAt(serverNow - startAt);
+      displayMult = multiplierAt(displayNow - startAt);
+    }
   } else if (phase === 'crashed') {
     liveMult = round?.crash_at || 1;
+    displayMult = liveMult;
   }
   // Çek'e basıldığı an sabitlenecek çarpan için son değer tutulur.
   multRef.current = liveMult;
@@ -400,6 +414,7 @@ export default function useRocketGame() {
     me: data?.me,
     myBets,
     liveMult,
+    displayMult,
     liveColor: MULT_COLOR_CLASS[colorForMult(liveMult)],
     countdown,
     ledger,

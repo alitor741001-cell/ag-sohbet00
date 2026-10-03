@@ -14,7 +14,7 @@ export default function RocketStage({ game }) {
   const phase = game.phase;
   const roundNo = game.round?.round_no || 0;
   const crashed = phase === 'crashed';
-  const mult = crashed ? game.round?.crash_at || 1 : phase === 'running' ? game.liveMult : 1;
+  const mult = crashed ? game.round?.crash_at || 1 : phase === 'running' ? game.displayMult : 1;
   const point = flightPoint(travel(mult));
 
   return (

@@ -134,12 +134,7 @@
   font-family: 'Great Vibes', 'Segoe Script', cursive;
 }
 
-/* Mekik görseli siyah zeminli üretildi: screen ile siyah tamamen kaybolur. */
-.rk-ship {
-  mix-blend-mode: screen;
-  -webkit-mask-image: radial-gradient(ellipse at 58% 52%, #000 55%, transparent 92%);
-  mask-image: radial-gradient(ellipse at 58% 52%, #000 55%, transparent 92%);
-}
+/* Mekik görseli kendi şeffaf zeminini taşır: karışım ve maske gerekmez. */
 .rk-engine-glow {
   background: radial-gradient(ellipse at 50% 15%, hsl(var(--slot-text)) 0%, hsl(var(--slot-blue) / .9) 18%, hsl(var(--slot-orange) / .6) 40%, transparent 72%);
   transform-origin: center top;

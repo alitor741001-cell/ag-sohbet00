@@ -24,7 +24,7 @@ export default function RocketBetDock({ game }) {
     const auto = slot === 2 ? game.auto2 : game.auto1;
     const pending = !!game.busy?.[slot];
     // Dokunulduğu an sabitlenen çarpan: buton beklerken kazanç donar.
-    const shown = game.pendingMult?.[slot] || game.liveMult;
+    const shown = game.pendingMult?.[slot] || game.displayMult;
 
     let label = 'BAHİS YAP';
     let badge = '';
