@@ -2,8 +2,8 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import { LINES, BIG_WIN_MULTIPLE, spinReels, evaluateGrid } from '../../shared/slotEngine.ts';
 
 const START_COINS = 100000;
-// Yönetici hesabına bir kez yatırılan bakiye; sınırsız (∞) mod kaldırıldı.
-const ADMIN_COINS = 5000000000;
+// Yönetici bakiyesi: 500.000 milyon coin. Sınırsız (∞) mod yok.
+const ADMIN_COINS = 500000000000;
 const BONUS_COINS = 25000;
 const BONUS_COOLDOWN_MS = 6 * 60 * 60 * 1000;
 const MIN_BET = 10;
@@ -58,9 +58,9 @@ function clampBet(value, fallback) {
 async function loadWallet(base44, user) {
   const found = await base44.asServiceRole.entities.GameWallet.filter({ user_id: user.id }, '-created_date', 1);
   const isAdmin = user.role === 'admin';
-  // Yönetici hesabına 5 milyar coin bir kez yatırılır; bakiyesi normal coin gibi harcanır.
+  // Yönetici bakiyesi her zaman 500.000 milyon coin'in altına düşmez.
   if (found[0]) {
-    if (isAdmin && !found[0].admin_granted) {
+    if (isAdmin && (found[0].coins ?? 0) < ADMIN_COINS) {
       return base44.asServiceRole.entities.GameWallet.update(found[0].id, {
         coins: ADMIN_COINS,
         admin_granted: true,
