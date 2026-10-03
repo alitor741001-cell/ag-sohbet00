@@ -17,7 +17,7 @@ const ROOM_OPTIONS = {
   webAudioMix: false,
   audioCaptureDefaults: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
 };
-const MIC_PUBLICATION = { name: 'microphone', source: Track.Source.Microphone };
+const MIC_PUBLICATION = { name: 'microphone', source: Track.Source.Microphone, dtx: false, stopMicTrackOnMute: false };
 
 export default function DirectCallProvider({ children }) {
   const { user } = useCurrentUser();
@@ -32,6 +32,8 @@ export default function DirectCallProvider({ children }) {
   const roomRef = useRef(null);
   const tokenRef = useRef(null);
   const publishedRef = useRef(null);
+  const connectingRef = useRef(null);
+  const publishingRef = useRef(null);
   const audioRef = useRef(new Set());
   const ringtoneRef = useRef(null);
   const timerRef = useRef(null);
@@ -70,6 +72,9 @@ export default function DirectCallProvider({ children }) {
       roomRef.current = null;
     }
     tokenRef.current = null;
+    connectingRef.current = null;
+    publishingRef.current = null;
+    callRef.current = null;
     publishedRef.current = null;
     micTrackRef.current = null;
     // Mikrofon serbest bırakılır: sonraki arama temiz akışla başlar, izin tekrar sorulmaz.
@@ -117,97 +122,110 @@ export default function DirectCallProvider({ children }) {
 
   // --- Bağlantı ---
 
-  // Mikrofon sessize düşerse (eski iOS ses oturumu kesintisi) yayın sessiz kalmasın:
-  // kısa bir beklemeden sonra temiz akışla yeniden yayınlanır.
   const watchMic = useCallback((room, track) => {
+    let recovering = false;
     const recover = async () => {
-      await new Promise((resolve) => setTimeout(resolve, 800));
-      if (publishedRef.current !== room || micTrackRef.current !== track) return;
-      if (track.readyState === 'live' && !track.muted) return;
+      if (recovering || publishedRef.current !== room || micTrackRef.current !== track) return;
+      recovering = true;
       try {
+        const publication = room.localParticipant.getTrackPublication(Track.Source.Microphone);
         const next = await ensureMicTrack({ fresh: true });
-        if (!next || next.readyState !== 'live' || publishedRef.current !== room) return;
+        if (roomRef.current !== room || micTrackRef.current !== track) return;
+        if (!next || next.readyState !== 'live' || !publication?.track) throw new Error('mikrofon yok');
         next.enabled = !mutedRef.current;
+        await publication.track.replaceTrack(next, true);
         micTrackRef.current = next;
-        await room.localParticipant.publishTrack(next, MIC_PUBLICATION);
-        room.localParticipant.unpublishTrack(track, true).catch(() => {});
         watchMic(room, next);
-      } catch {}
+        setError('');
+      } catch (micError) {
+        if (roomRef.current === room) setError(micError?.name === 'NotAllowedError' ? 'Mikrofon izni verilmedi.' : 'Mikrofon bağlantısı kesildi.');
+      } finally { recovering = false; }
     };
     track.addEventListener('mute', recover);
     track.addEventListener('ended', recover);
   }, []);
 
   const publishMic = useCallback(async (room) => {
-    if (!room || publishedRef.current === room) return;
-    try {
-      // Her aramada temiz akış: eski iOS sürümlerinde aramadan önce açılan mikrofon sessiz kalıyor.
-      const micTrack = await ensureMicTrack({ fresh: true });
-      if (!micTrack || micTrack.readyState !== 'live') throw new Error('mikrofon yok');
-      micTrackRef.current = micTrack;
-      micTrack.enabled = !mutedRef.current;
-      await room.localParticipant.publishTrack(micTrack, MIC_PUBLICATION);
-      publishedRef.current = room;
-      watchMic(room, micTrack);
-    } catch (micError) {
-      setError(micError?.name === 'NotAllowedError' ? '🎤 Mikrofon izni verilmedi.' : '🎤 Mikrofon başlatılamadı.');
-    }
+    if (!room || roomRef.current !== room || publishedRef.current === room) return;
+    if (publishingRef.current?.room === room) return publishingRef.current.promise;
+    const task = { room, promise: null };
+    publishingRef.current = task;
+    task.promise = (async () => {
+      try {
+        // Dokunma anında alınmış canlı mikrofonu yeniden açmadan doğrudan yayınla.
+        const micTrack = await ensureMicTrack();
+        if (roomRef.current !== room) return;
+        if (!micTrack || micTrack.readyState !== 'live') throw new Error('mikrofon yok');
+        micTrackRef.current = micTrack;
+        micTrack.enabled = !mutedRef.current;
+        await room.localParticipant.publishTrack(micTrack, MIC_PUBLICATION);
+        if (roomRef.current !== room) return;
+        publishedRef.current = room;
+        watchMic(room, micTrack);
+        setError('');
+      } catch (micError) {
+        if (roomRef.current === room) setError(micError?.name === 'NotAllowedError' ? 'Mikrofon izni verilmedi.' : 'Mikrofon başlatılamadı.');
+      } finally {
+        if (publishingRef.current === task) publishingRef.current = null;
+      }
+    })();
+    return task.promise;
   }, [watchMic]);
 
   const connect = useCallback(async (callId, { publish = false } = {}) => {
-    const me = userRef.current;
-    const displayName = me?.username || me?.full_name || 'Kullanıcı';
-    let room = roomRef.current;
     try {
-      if (!room) {
-        // Token zil çalarken önceden alınır: cevaplandığı an ağ turu beklenmez.
-        if (tokenRef.current?.callId !== callId) {
-          tokenRef.current = {
-            callId,
-            promise: base44.functions.invoke('livekitToken', { callId, participantName: displayName }),
-          };
-        }
-        const response = await tokenRef.current.promise;
-        const data = response?.data;
-        if (!data?.url || !data?.token) throw new Error('token yok');
-
-        room = new Room(ROOM_OPTIONS);
-        roomRef.current = room;
-
-        room.on(RoomEvent.TrackSubscribed, attachRemoteAudio);
-        room.on(RoomEvent.ParticipantConnected, attachAllRemoteAudio);
-        room.on(RoomEvent.TrackPublished, (publication) => {
-          if (publication.kind === Track.Kind.Audio) {
-            publication.setSubscribed(true);
-            if (publication.track) attachRemoteAudio(publication.track);
-          }
-        });
-        room.on(RoomEvent.Reconnected, () => { attachAllRemoteAudio(); room.startAudio().catch(() => {}); });
-        room.on(RoomEvent.TrackUnsubscribed, (track) => {
-          audioRef.current.forEach((output) => {
-            if (output.dataset.livekitTrack !== track.sid) return;
-            audioRef.current.delete(output);
-            output.remove();
+      if (!connectingRef.current) {
+        const task = { callId, promise: null };
+        connectingRef.current = task;
+        task.promise = (async () => {
+          const me = userRef.current;
+          const response = await base44.functions.invoke('livekitToken', { callId, participantName: me?.username || me?.full_name || 'Kullanıcı' });
+          if (connectingRef.current !== task) return null;
+          const data = response?.data;
+          if (!data?.url || !data?.token) throw new Error('token yok');
+          const room = new Room(ROOM_OPTIONS);
+          roomRef.current = room;
+          room.on(RoomEvent.TrackSubscribed, attachRemoteAudio);
+          room.on(RoomEvent.ParticipantConnected, attachAllRemoteAudio);
+          room.on(RoomEvent.TrackPublished, (publication) => {
+            if (publication.kind === Track.Kind.Audio) {
+              publication.setSubscribed(true);
+              if (publication.track) attachRemoteAudio(publication.track);
+            }
           });
-        });
-
-        await room.connect(data.url, data.token, { autoSubscribe: true });
-        await room.startAudio().catch(() => {});
+          room.on(RoomEvent.Reconnected, attachAllRemoteAudio);
+          room.on(RoomEvent.TrackUnsubscribed, (track) => {
+            audioRef.current.forEach((output) => {
+              if (output.dataset.livekitTrack !== track.sid) return;
+              audioRef.current.delete(output);
+              output.remove();
+            });
+          });
+          await room.connect(data.url, data.token, { autoSubscribe: true });
+          if (connectingRef.current !== task) { room.disconnect(); return null; }
+          return room;
+        })();
       }
+      const task = connectingRef.current;
+      if (task.callId !== callId) return;
+      const room = await task.promise;
+      if (!room || roomRef.current !== room) return;
       attachAllRemoteAudio();
       if (publish) await publishMic(room);
     } catch {
-      setError('🌐 Ses bağlantısı kurulamadı.');
+      if (callRef.current?.id === callId) setError('Ses bağlantısı kurulamadı.');
     }
   }, [attachAllRemoteAudio, attachRemoteAudio, publishMic]);
 
   // Zil çalarken ses kanalını ve mikrofonu hazırla — kabulde gecikme olmasın.
   const prepareSession = useCallback((callId) => {
-    ensureMicTrack().catch(() => {});
+    // Gelen çağrıda mikrofonu kullanıcı cevaplamadan açma.
     connect(callId, { publish: false });
   }, [connect]);
 
   const beginLocalCall = useCallback((record, nextRole, nextPhase) => {
+    callRef.current = record;
+    roleRef.current = nextRole;
     setCall(record);
     setRole(nextRole);
     setPhase(nextPhase);
@@ -224,25 +242,27 @@ export default function DirectCallProvider({ children }) {
       setPhase('active');
     }
     armOutputs(true);
-    if (isCallee) {
-      if (roomRef.current) publishMic(roomRef.current);
-      else connect(callId, { publish: true });
-    }
+    if (isCallee) connect(callId, { publish: true });
   }, [armOutputs, connect, publishMic]);
 
   // caller: arama başlat — başarısızsa hata mesajı döner, null dönerse başarılı
   const startCall = useCallback(async ({ calleeId, conversationId }) => {
     if (phaseRef.current !== 'idle' || !userRef.current?.id || !calleeId) return 'Şu an arama başlatılamaz.';
+    // Mikrofon iznini ağ yanıtından önce, doğrudan kullanıcı dokunuşunda başlat.
+    const microphone = ensureMicTrack();
+    microphone.catch(() => {});
     try {
+      await microphone;
       const response = await base44.functions.invoke('direct-call', { action: 'start', callee_id: calleeId, conversation_id: conversationId });
       const record = response.data?.call;
-      if (!record) return response.data?.error || 'Arama başlatılamadı.';
+      if (!record) { releaseMic(); return response.data?.error || 'Arama başlatılamadı.'; }
       beginLocalCall(record, 'caller', 'outgoing');
       ringtoneRef.current = startRingtone();
       await connect(record.id, { publish: true });
       return null;
     } catch (invokeError) {
-      return invokeError?.response?.data?.error || invokeError?.message || 'Arama başlatılamadı.';
+      if (phaseRef.current === 'idle') releaseMic();
+      return invokeError?.name === 'NotAllowedError' ? 'Mikrofon izni verilmedi.' : invokeError?.response?.data?.error || invokeError?.message || 'Arama başlatılamadı.';
     }
   }, [beginLocalCall, connect]);
 
@@ -251,6 +271,8 @@ export default function DirectCallProvider({ children }) {
     const current = callRef.current;
     if (!current || phaseRef.current !== 'incoming') return;
     stopRingtone();
+    // Safari için izin isteği cevaplama dokunuşunun içinde başlar.
+    ensureMicTrack().catch((micError) => setError(micError?.name === 'NotAllowedError' ? 'Mikrofon izni verilmedi.' : 'Mikrofon başlatılamadı.'));
     activateCall(current.id, true);
     try {
       const response = await base44.functions.invoke('direct-call', { action: 'accept', call_id: current.id });

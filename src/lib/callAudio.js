@@ -12,6 +12,7 @@ const EARPIECE_RE = /earpiece|receiver|handset|ahize|kulak|communication/i;
 let micStream = null;
 let micTrack = null;
 let micPending = null;
+let micGeneration = 0;
 
 let speakerOn = true;
 const outputs = new Set();
@@ -24,8 +25,14 @@ function releaseMicStream() {
 
 async function acquireMic() {
   if (!navigator.mediaDevices?.getUserMedia) throw new Error('mikrofon desteklenmiyor');
+  const generation = micGeneration;
   const next = await navigator.mediaDevices.getUserMedia({ audio: MIC_OPTIONS });
+  if (generation !== micGeneration) {
+    next.getTracks().forEach((track) => track.stop());
+    throw new Error('arama sonlandı');
+  }
   const track = next.getAudioTracks()[0] || null;
+  if (!track) { next.getTracks().forEach((item) => item.stop()); throw new Error('mikrofon yok'); }
   const stale = micStream;
   micStream = next;
   micTrack = track;
@@ -43,18 +50,18 @@ async function acquireMic() {
 export function ensureMicTrack({ fresh = false } = {}) {
   if (!fresh && micTrack && micTrack.readyState === 'live' && !micTrack.muted) return Promise.resolve(micTrack);
   if (!micPending) {
-    micPending = acquireMic()
-      .catch((error) => {
-        if (micTrack && micTrack.readyState === 'live') return micTrack;
-        throw error;
-      })
-      .finally(() => { micPending = null; });
+    const pending = acquireMic().finally(() => {
+      if (micPending === pending) micPending = null;
+    });
+    micPending = pending;
   }
   return micPending;
 }
 
 /** Görüşme bitince mikrofonu serbest bırak: sonraki arama temiz bir akışla başlar. */
 export function releaseMic() {
+  micGeneration += 1;
+  micPending = null;
   releaseMicStream();
 }
 
