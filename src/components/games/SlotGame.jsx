@@ -53,6 +53,8 @@ export default function SlotGame({ onExit, onBack, roomId }) {
   const scale = Math.min(cover || 0, (fit || 0) * MAX_CROP);
   const width = ART_WIDTH * scale;
   const height = ART_HEIGHT * scale;
+  // Şerit, görselin üstünde kalan boşluğu tamamen kaplar (en az 3 satır).
+  const tickerHeight = Math.max(78, Math.round((panelHeight || 0) - height));
   const ready = game.status === 'ready';
 
   return (
@@ -158,27 +160,25 @@ export default function SlotGame({ onExit, onBack, roomId }) {
         )}
       </div>
 
-      {/* Üst şerit: kazanan akışı enine boyuna siyah alanı kaplar, çentiğin altında kalır. */}
-      <div className="absolute inset-x-0 top-0 z-20 flex flex-col pt-[env(safe-area-inset-top)]">
-        <WinnerTicker />
-        <div className="flex items-center justify-between px-2 pt-2">
-          <button
-            type="button"
-            onClick={onBack}
-            aria-label="Oyun listesine dön"
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm active:scale-95"
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </button>
-          <button
-            type="button"
-            onClick={onExit}
-            aria-label="Oyunu kapat"
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm active:scale-95"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
+      {/* Üst şerit: kazanan akışı, görselin üstünde kalan alanı tamamen kaplar; tuşlar köşelerde. */}
+      <div className="absolute inset-x-0 top-0 z-20 pt-[env(safe-area-inset-top)]">
+        <WinnerTicker height={tickerHeight} />
+        <button
+          type="button"
+          onClick={onBack}
+          aria-label="Oyun listesine dön"
+          className="absolute left-2 top-[env(safe-area-inset-top)] mt-2 flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm active:scale-95"
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </button>
+        <button
+          type="button"
+          onClick={onExit}
+          aria-label="Oyunu kapat"
+          className="absolute right-2 top-[env(safe-area-inset-top)] mt-2 flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm active:scale-95"
+        >
+          <X className="h-5 w-5" />
+        </button>
       </div>
 
       <SlotWinOverlay

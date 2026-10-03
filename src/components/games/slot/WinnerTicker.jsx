@@ -45,7 +45,7 @@ function TickerRow({ winner }) {
 }
 
 /** Oyun ekranının üstünde yukarı doğru kayan 20.000+ coin kazanan şeridi. */
-export default function WinnerTicker() {
+export default function WinnerTicker({ height = VISIBLE_ROWS * ROW_HEIGHT }) {
   const { winners, status } = useBigWins();
   const rows = winners.slice(0, 8);
   // Kesintisiz kayma için satırlar iki kopya halinde döner.
@@ -56,7 +56,7 @@ export default function WinnerTicker() {
     <div
       aria-hidden="true"
       className="pointer-events-none relative w-full overflow-hidden border-b border-white/10 bg-black/70 backdrop-blur-sm"
-      style={{ height: VISIBLE_ROWS * ROW_HEIGHT }}
+      style={{ height }}
     >
       {loop.length ? (
         <ul className="winner-ticker-scroll" style={{ animationDuration: `${duration}s` }}>
