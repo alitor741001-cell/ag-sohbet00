@@ -11,6 +11,7 @@ import VoiceControlBar from '@/components/voice/VoiceControlBar';
 import VoiceChatDock from '@/components/voice/VoiceChatDock';
 import VoiceViewerSheet from '@/components/voice/VoiceViewerSheet';
 import VoiceSeatInvitePrompt from '@/components/voice/VoiceSeatInvitePrompt';
+import VoiceOwnerBadge from '@/components/voice/VoiceOwnerBadge';
 import VoiceRoomMenu from '@/components/voice/VoiceRoomMenu';
 import VoiceSeatSheet from '@/components/voice/VoiceSeatSheet';
 import InviteSheet from '@/components/voice/InviteSheet';
@@ -417,11 +418,13 @@ export default function VoiceRoom() {
 
       <header className="relative flex shrink-0 items-center justify-between gap-2 px-3 pb-2 pt-[max(0.75rem,env(safe-area-inset-top))]">
         <div className="min-w-0">
-          <p className="flex items-center gap-1.5 truncate text-sm font-bold">
-            <Radio className="h-4 w-4 shrink-0 text-primary" /> {room?.name}
-          </p>
+          <div className="flex min-w-0 items-center gap-1.5">
+            <Radio className="h-4 w-4 shrink-0 text-primary" />
+            <p className="min-w-0 truncate text-sm font-bold">{room?.name}</p>
+            <VoiceOwnerBadge userId={room?.owner_id} fallbackName={room?.owner_name} />
+          </div>
           <p className="truncate text-[11px] text-white/60">
-            {seats.length} koltuk • {participants.length} kişi • {room?.owner_name || 'Kullanıcı'}
+            {seats.length} koltuk • {participants.length} kişi
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
@@ -469,6 +472,7 @@ export default function VoiceRoom() {
       <VoiceChatDock
         messages={messages}
         onSend={sendMessage}
+        onCloseComposer={() => setChatOpen(false)}
         composerOpen={chatOpen}
         currentUserId={user?.id}
         ownerId={room?.owner_id}

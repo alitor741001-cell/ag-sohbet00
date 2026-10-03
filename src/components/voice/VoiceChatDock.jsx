@@ -10,7 +10,7 @@ import useRoomLevels from '@/hooks/useRoomLevels';
  * Oda alt bölümü: mesaj akışı klavye ikonuna basmadan da alt barın üstündeki boş alanda durur,
  * yazma alanı açıldığında ve klavye kalktığında akış onunla birlikte yukarı kayar.
  */
-export default function VoiceChatDock({ messages = [], onSend, composerOpen, currentUserId, ownerId, moderators = [], onOpenProfile }) {
+export default function VoiceChatDock({ messages = [], onSend, onCloseComposer, composerOpen, currentUserId, ownerId, moderators = [], onOpenProfile }) {
   const [text, setText] = useState('');
   const [emojiOpen, setEmojiOpen] = useState(false);
   const inputRef = useRef(null);
@@ -37,7 +37,10 @@ export default function VoiceChatDock({ messages = [], onSend, composerOpen, cur
     if (!value) return;
     setText('');
     setEmojiOpen(false);
+    // Gönderince yazma alanı ve klavye kapansın (tüm telefonlarda aynı davranış).
+    inputRef.current?.blur();
     onSend(value);
+    onCloseComposer?.();
   };
 
   return (

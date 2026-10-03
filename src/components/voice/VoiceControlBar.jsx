@@ -6,13 +6,18 @@ const TONES = {
   active: 'bg-primary text-primary-foreground',
 };
 
-function RoundButton({ onClick, label, tone = 'gray', active, children }) {
+const SIZES = {
+  md: 'h-12 w-12',
+  lg: 'h-14 w-14',
+};
+
+function RoundButton({ onClick, label, tone = 'gray', active, size = 'lg', children }) {
   return (
     <button
       type="button"
       onClick={onClick}
       aria-label={label}
-      className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full backdrop-blur-md transition-transform active:scale-95 ${TONES[tone] || TONES.gray} ${active ? 'ring-2 ring-white/30' : ''}`}
+      className={`flex ${SIZES[size] || SIZES.lg} shrink-0 items-center justify-center rounded-full backdrop-blur-md transition-transform active:scale-95 ${TONES[tone] || TONES.gray} ${active ? 'ring-2 ring-white/30' : ''}`}
     >
       {children}
     </button>
@@ -26,12 +31,12 @@ export default function VoiceControlBar({ micActive, deafened, chatOpen, onToggl
       <RoundButton tone={chatOpen ? 'active' : 'gray'} active={chatOpen} onClick={onToggleChat} label={chatOpen ? 'Sohbeti kapat' : 'Sohbeti aç'}>
         {chatOpen ? <Keyboard className="h-6 w-6" /> : <MessageSquare className="h-6 w-6" />}
       </RoundButton>
-      <div className="flex items-center gap-3">
-        <RoundButton tone={micActive ? 'active' : 'gray'} active={micActive} onClick={onToggleMic} label="Mikrofon">
-          {micActive ? <Mic className="h-6 w-6" /> : <MicOff className="h-6 w-6" />}
+      <div className="flex items-center gap-2">
+        <RoundButton size="md" tone={micActive ? 'active' : 'gray'} active={micActive} onClick={onToggleMic} label="Mikrofon">
+          {micActive ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
         </RoundButton>
-        <RoundButton tone={deafened ? 'red' : 'gray'} onClick={onToggleSpeaker} label="Hoparlör">
-          {deafened ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
+        <RoundButton size="md" tone={deafened ? 'red' : 'gray'} onClick={onToggleSpeaker} label="Hoparlör">
+          {deafened ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
         </RoundButton>
       </div>
       <span aria-hidden="true" className="h-14 w-14 shrink-0" />

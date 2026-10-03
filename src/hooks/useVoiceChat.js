@@ -21,6 +21,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
   const audioElementsRef = useRef(new Set());
   const mutedByModeratorRef = useRef(false);
   const deafenedRef = useRef(false);
+  const remoteAudioControlRef = useRef(null);
   const [active, setActive] = useState(false);
   const [requesting, setRequesting] = useState(false);
   const [deafened, setDeafened] = useState(false);
@@ -62,6 +63,8 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
 
   const attachRemoteAudio = useCallback((track) => {
     if (track.kind !== Track.Kind.Audio) return;
+    // Hoparlör kapalıyken ses elementi oluşturma; açıldığında yeniden bağlanır.
+    if (deafenedRef.current) return;
     const mediaTrackId = track.mediaStreamTrack?.id || '';
     const existing = [...audioElementsRef.current].find((element) => element.dataset.livekitTrack === track.sid);
     if (existing?.dataset.livekitMediaTrack === mediaTrackId) return;
@@ -125,7 +128,22 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
       refreshState();
     };
     const onDisconnected = () => { setConnectionState('disconnected'); setError('🌐 Bağlantı yeniden kuruluyor.'); };
+    // Hoparlör kapatıldığında uzak ses yayınını tamamen kes, açıldığında geri bağla.
+    const setRemoteAudioActive = (active) => {
+      room.remoteParticipants.forEach((participant) => {
+        participant.audioTrackPublications.forEach((publication) => {
+          if (active) {
+            if (!publication.isSubscribed) publication.setSubscribed(true).catch(() => {});
+            if (publication.track) attachRemoteAudio(publication.track);
+          } else {
+            publication.setSubscribed(false).catch(() => {});
+          }
+        });
+      });
+    };
+    remoteAudioControlRef.current = setRemoteAudioActive;
     const subscribeParticipantAudio = (participant) => {
+      if (deafenedRef.current) return;
       participant.audioTrackPublications.forEach((publication) => {
         if (!publication.isSubscribed) publication.setSubscribed(true);
         if (publication.track) attachRemoteAudio(publication.track);
@@ -140,8 +158,10 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
     };
     const onTrackPublished = (publication) => {
       if (publication.source === Track.Source.Microphone || publication.kind === Track.Kind.Audio) {
-        publication.setSubscribed(true);
-        if (publication.track) attachRemoteAudio(publication.track);
+        if (!deafenedRef.current) {
+          publication.setSubscribed(true);
+          if (publication.track) attachRemoteAudio(publication.track);
+        }
       }
       refreshState();
     };
@@ -234,6 +254,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
 
     return () => {
       cancelled = true;
+      remoteAudioControlRef.current = null;
       room.removeAllListeners();
       audioElementsRef.current.forEach((element) => element.remove());
       audioElementsRef.current.clear();
@@ -316,8 +337,9 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
     deafenedRef.current = next;
     setDeafened(next);
     audioElementsRef.current.forEach((element) => { element.muted = next; });
+    remoteAudioControlRef.current?.(!next);
     if (!next) retryAudio();
-  }, [deafened, retryAudio]);
+  }, [retryAudio]);
 
   return { muted: !active, remoteMuted, deafened, localSpeaking, speakingIds, participantMicStates, active, error, requesting, connectionState, audioBlocked, retryAudio, toggleMute, toggleDeafen, debug, voiceEnabled };
 }
