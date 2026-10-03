@@ -45,7 +45,6 @@ export default function SlotControlStrip({ coins, unlimited, win, bet, auto, spi
           <p className="text-[8px] font-black tracking-[0.2em] text-slot-gold/80">BET</p>
           <p className="font-mono text-sm font-black leading-tight tabular-nums text-white">{format(bet)}</p>
         </div>
-        <StepKey icon={Plus} label="Bahsi artır" disabled={spinning} onClick={() => onBet(1)} />
       </div>
 
       <button
