@@ -11,16 +11,16 @@ export default function SlotGrid({ grid, rollingReels, tick, winCells }) {
   );
 
   return (
-    <div className="grid grid-cols-5 gap-1">
+    <div className="grid h-full grid-cols-5 gap-1">
       {columns.map((column, reel) => (
-        <div key={reel} className="slot-reel-column flex flex-col gap-1 rounded-lg py-1">
+        <div key={reel} className="slot-reel-column flex h-full min-h-0 flex-col gap-1 rounded-lg py-1">
           {column.map((id, row) => {
             const key = `${reel}-${row}`;
             const isWin = winCells.indexOf(key) >= 0;
             return (
               <div
                 key={key}
-                className={`slot-cell flex aspect-square items-center justify-center overflow-hidden rounded-lg ${
+                className={`slot-cell flex min-h-0 flex-1 items-center justify-center overflow-hidden rounded-md ${
                   isWin ? 'slot-cell-win' : ''
                 } ${rolling.has(reel) ? 'slot-rolling' : ''}`}
               >

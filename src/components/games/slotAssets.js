@@ -10,6 +10,7 @@ export const SYMBOL_IMAGES = {
 };
 
 export const SLOT_DECOR = {
+  shell: `${MEDIA}/1d1c57871_29A2726D-C2F6-4EEA-BA4F-1A97AA7FC02D.png`,
   popcorn: `${MEDIA}/d57d537e0_generated_image.png`,
   reel: `${MEDIA}/994711750_generated_image.png`,
   chair: `${MEDIA}/47d2f8db3_generated_image.png`,
