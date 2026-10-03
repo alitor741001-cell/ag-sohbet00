@@ -9,7 +9,7 @@ export default function CoinSheet({ open, onClose, coins, unlimited, bonusReady,
   return (
     <div className="absolute inset-0 z-[190] flex items-end bg-black/70 p-3" onClick={onClose} role="presentation">
       <div
-        className="slot-panel-3d w-full rounded-2xl border border-slot-gold/50 p-4"
+        className="w-full rounded-2xl border border-slot-gold/40 bg-slot-surface p-4"
         onClick={(event) => event.stopPropagation()}
         role="presentation"
       >
@@ -25,7 +25,7 @@ export default function CoinSheet({ open, onClose, coins, unlimited, bonusReady,
           </button>
         </div>
 
-        <p className="slot-digits mt-2 text-center font-mono text-3xl font-black tabular-nums text-white">
+        <p className="mt-2 text-center font-mono text-3xl font-black tabular-nums text-white">
           {unlimited ? '∞' : format(coins)}
         </p>
         <p className="text-center text-[10px] font-black tracking-widest text-slot-gold/80">MEVCUT BAKİYE</p>
@@ -34,7 +34,7 @@ export default function CoinSheet({ open, onClose, coins, unlimited, bonusReady,
           type="button"
           onClick={onClaim}
           disabled={!bonusReady}
-          className="slot-auto mt-4 w-full rounded-xl py-3 text-xs font-black tracking-widest text-slot disabled:opacity-60"
+          className="mt-4 w-full rounded-xl border border-slot-gold/50 bg-slot-panel py-3 text-xs font-black tracking-widest text-slot-gold disabled:opacity-50"
         >
           {bonusReady ? `GÜNLÜK BONUS  +${format(bonusAmount)}` : 'BONUS HAZIR DEĞİL'}
         </button>
