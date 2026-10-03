@@ -3,8 +3,8 @@ import { base44 } from '@/api/base44Client';
 import { multiplierAt, colorForMult, MULT_COLOR_CLASS, DEFAULT_ROCKET_BET } from './rocketConfig';
 
 // Sunucu istek limiti nedeniyle seyrek poll edilir; çarpan yerel saatle akıcı kalır.
-const POLL_RUNNING = 2500;
-const POLL_IDLE = 2500;
+const POLL_RUNNING = 3500;
+const POLL_IDLE = 4000;
 const CLOCK_TICK = 50;
 
 /** Crash Rocket oyun durumu: sunucudan poll edilir, çarpan yerel saatle akıcı gösterilir. */
@@ -81,6 +81,7 @@ export default function useRocketGame() {
   const cashout = useCallback((slot) => act({ action: 'cashout', slot }), [act]);
   const changeBet = useCallback((slot, direction) => act({ action: 'changeBet', slot, direction }), [act]);
   const changeAuto = useCallback((slot, direction) => act({ action: 'setAuto', slot, direction }), [act]);
+  const setAutoTarget = useCallback((slot, value) => act({ action: 'setAutoValue', slot, value }), [act]);
 
   // Yerel akıcı çarpan: sunucu saati + yerel geçen süre.
   const round = data?.round;
@@ -126,5 +127,6 @@ export default function useRocketGame() {
     cashout,
     changeBet,
     changeAuto,
+    setAutoTarget,
   };
 }

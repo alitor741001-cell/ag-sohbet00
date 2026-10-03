@@ -1,7 +1,7 @@
 // Crash Rocket frontend config — backend ile aynı değerler.
 export const ROCKET_BET_LEVELS = [500, 1000, 2500, 5000, 10000, 25000, 50000, 100000];
 // Otomatik çekilme kademeleri: 0 = kapalı.
-export const ROCKET_AUTO_LEVELS = [0, 1.1, 1.2, 1.5, 2, 3, 5, 10];
+export const ROCKET_AUTO_LEVELS = [0, 1.1, 1.2, 1.5, 2, 3, 5, 7, 10];
 export const ROCKET_BASE = 1.09;
 export const DEFAULT_ROCKET_BET = 500;
 export const BETTING_MS = 20000;

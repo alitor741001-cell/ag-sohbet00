@@ -16,6 +16,7 @@ export default function RocketBetPanel({
   disabled,
   onAmount,
   onAuto,
+  onAutoEdit,
   onAction,
 }) {
   const gold = tone === 'gold';
@@ -23,16 +24,22 @@ export default function RocketBetPanel({
   return (
     <div className={`rk-panel flex-1 ${gold ? 'rk-panel-gold' : 'rk-panel-blue'}`}>
       <div className="flex items-center gap-1">
-        <button type="button" className="rk-ctrl" disabled={locked} onClick={() => onAuto(-1)} aria-label="Otomatik çekilme azalt">
+        <button type="button" className="rk-ctrl" onClick={() => onAuto(-1)} aria-label="Otomatik çekilme azalt">
           <ChevronLeft className="h-3.5 w-3.5" />
         </button>
-        <div className="min-w-0 flex-1 text-center">
+        {/* Hedef elle de yazılabilir: bahis oynandıktan sonra da değiştirilebilir. */}
+        <button
+          type="button"
+          className="min-w-0 flex-1 rounded-lg py-0.5 text-center active:brightness-125"
+          onClick={onAutoEdit}
+          aria-label="Otomatik çekilme hedefini yaz"
+        >
           <p className="rk-label">OTOMATİK ÇEKİLME</p>
-          <p className={`rk-value ${auto > 0 ? (gold ? 'text-[#ffd35c]' : 'text-[#7fe4ff]') : 'text-white/40'}`}>
+          <p className={`rk-value underline decoration-dotted underline-offset-2 ${auto > 0 ? (gold ? 'text-[#ffd35c]' : 'text-[#7fe4ff]') : 'text-white/40'}`}>
             {formatAuto(auto)}
           </p>
-        </div>
-        <button type="button" className="rk-ctrl" disabled={locked} onClick={() => onAuto(1)} aria-label="Otomatik çekilme artır">
+        </button>
+        <button type="button" className="rk-ctrl" onClick={() => onAuto(1)} aria-label="Otomatik çekilme artır">
           <ChevronRight className="h-3.5 w-3.5" />
         </button>
       </div>

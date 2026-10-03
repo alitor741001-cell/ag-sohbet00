@@ -14,7 +14,7 @@ const ADMIN_COINS = 500000;
 const LEGACY_MAX_COINS = 1000000000;
 
 // Otomatik çekilme kademeleri: 0 = kapalı.
-const AUTO_LEVELS = [0, 1.1, 1.2, 1.5, 2, 3, 5, 10];
+const AUTO_LEVELS = [0, 1.1, 1.2, 1.5, 2, 3, 5, 7, 10];
 
 const betSlot = (bet) => (bet.slot === 2 ? 2 : 1);
 const betField = (slot) => (slot === 2 ? 'rocket_bet_2' : 'rocket_bet');
@@ -28,6 +28,24 @@ function shiftAuto(current, direction) {
   const index = AUTO_LEVELS.indexOf(AUTO_LEVELS.includes(current) ? current : 0);
   const next = index + (direction > 0 ? 1 : -1);
   return AUTO_LEVELS[Math.min(AUTO_LEVELS.length - 1, Math.max(0, next))];
+}
+
+// Elle yazılan hedef: 1 veya altı, geçersiz değer otomatiği kapatır (0).
+function clampAuto(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n) || n <= 1) return 0;
+  return Math.min(100, Math.round(n * 100) / 100);
+}
+
+// Hedef değişince o tur için konulmuş aktif bahse de uygulanır.
+async function syncAutoToBet(base44, round, user, slot, autoAt) {
+  const bets = await base44.asServiceRole.entities.RocketBet.filter(
+    { round_id: round.id, user_id: user.id, status: 'active' },
+    '-created_date',
+    5
+  );
+  const mine = bets.find((b) => betSlot(b) === slot);
+  if (mine) await base44.asServiceRole.entities.RocketBet.update(mine.id, { auto_at: autoAt });
 }
 
 // Otomatik çekilme kazançlarını ilgili oyuncuların cüzdanına ekler.
@@ -204,13 +222,25 @@ export default async function (req) {
       return Response.json(await buildView(base44, user, round));
     }
 
-    // Otomatik çekilme çarpanı: kapalı → 1.10 → 1.20 → 1.50 → 2 → 3 → 5 → 10 → kapalı
+    // Otomatik çekilme hedefi kademeyle değiştirilir.
     if (action === 'setAuto') {
       const slot = body.slot === 2 ? 2 : 1;
       const wallet = await loadWallet(base44, user);
       const next = shiftAuto(walletAuto(wallet, slot), body.direction || 1);
       await base44.asServiceRole.entities.GameWallet.update(wallet.id, { [autoField(slot)]: next });
       const round = await ensureRound(base44);
+      await syncAutoToBet(base44, round, user, slot, next);
+      return Response.json(await buildView(base44, user, round));
+    }
+
+    // Elle yazılan hedef (örn. 7x): kademe dışı değerler de kaydedilir.
+    if (action === 'setAutoValue') {
+      const slot = body.slot === 2 ? 2 : 1;
+      const value = clampAuto(body.value);
+      const wallet = await loadWallet(base44, user);
+      await base44.asServiceRole.entities.GameWallet.update(wallet.id, { [autoField(slot)]: value });
+      const round = await ensureRound(base44);
+      await syncAutoToBet(base44, round, user, slot, value);
       return Response.json(await buildView(base44, user, round));
     }
 
