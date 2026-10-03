@@ -5,9 +5,10 @@ import SlotSymbolIcon from './SlotSymbolIcon';
 import useBigWins from './useBigWins';
 import './winnerTicker.css';
 
-// Şeritte aynı anda görünen satır sayısı ve her satırın yüksekliği.
+// Her satırın yüksekliği: şerit yüksekliği tam satırlara yuvarlanır.
+export const TICKER_ROW_HEIGHT = 26;
+// Şeritte aynı anda görünen satır sayısı (varsayılan yükseklik).
 const VISIBLE_ROWS = 3;
-const ROW_HEIGHT = 26;
 // Bir satırın ekranda kalma süresi — şeridin kayma hızı.
 const SECONDS_PER_ROW = 2.8;
 
@@ -45,7 +46,7 @@ function TickerRow({ winner }) {
 }
 
 /** Oyun ekranının üstünde yukarı doğru kayan 20.000+ coin kazanan şeridi. */
-export default function WinnerTicker({ height = VISIBLE_ROWS * ROW_HEIGHT }) {
+export default function WinnerTicker({ height = VISIBLE_ROWS * TICKER_ROW_HEIGHT }) {
   const { winners, status } = useBigWins();
   const rows = winners.slice(0, 8);
   // Kesintisiz kayma için satırlar iki kopya halinde döner.

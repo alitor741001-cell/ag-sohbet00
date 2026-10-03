@@ -21,7 +21,7 @@ export default function SlotTierAlert({ tier, top = 0 }) {
       className="pointer-events-none absolute inset-x-0 z-30 flex animate-in justify-center fade-in zoom-in duration-300"
       style={{ top }}
     >
-      <span className="rounded-full border border-slot-red/70 bg-black/85 px-5 py-1.5 text-lg font-black tracking-[0.22em] text-slot-red shadow-[0_0_20px_rgba(239,68,68,0.6)]">
+      <span className="rounded-full border border-slot-red/70 bg-black/85 px-4 py-1 text-base font-black tracking-[0.22em] text-slot-red shadow-[0_0_20px_rgba(239,68,68,0.6)]">
         {tier}
       </span>
     </div>

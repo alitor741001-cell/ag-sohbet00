@@ -11,7 +11,7 @@ import SlotWinLines from './slot/SlotWinLines';
 import SlotReadout from './slot/SlotReadout';
 import SlotWinOverlay from './slot/SlotWinOverlay';
 import CoinSheet from './slot/CoinSheet';
-import WinnerTicker from './slot/WinnerTicker';
+import WinnerTicker, { TICKER_ROW_HEIGHT } from './slot/WinnerTicker';
 import SlotStopButton from './slot/SlotStopButton';
 import SlotPoolLabels from './slot/SlotPoolLabels';
 import SlotTierAlert from './slot/SlotTierAlert';
@@ -20,8 +20,10 @@ import { tierOfBet } from './slot/slotConfig';
 
 // Görsel alanı doldururken en fazla bu oranda kırpılır; panelde siyah boşluk kalmaz.
 const MAX_CROP = 1.06;
-// Üstte kazanan şeridi için ayrılan alan: şerit + görselin üstündeki boşluk.
-const TICKER_SPACE = 34;
+// Üstte kazanan şeridi için ayrılan alan: iki tam satır + görselin üstündeki boşluk.
+const TICKER_SPACE = TICKER_ROW_HEIGHT * 2 + 8;
+// Şeritte gösterilen en fazla satır sayısı.
+const MAX_TICKER_ROWS = 3;
 const WIN_FLASH_MS = 2400;
 // Bu tutarın üzerindeki kazançlarda kutlama ekranı açılır.
 const PRIZE_THRESHOLD = 20000;
@@ -35,7 +37,15 @@ export default function SlotGame({ onExit, onBack, roomId }) {
   const [flash, setFlash] = useState(0);
   const [prize, setPrize] = useState(null);
   const frameRef = useRef(null);
+  const topRef = useRef(null);
   const size = useSize(frameRef);
+  // Çentik/güvenli alan yüksekliği: şerit görselin üstündeki yazıyı kapatmasın.
+  const [safeTop, setSafeTop] = useState(0);
+
+  useEffect(() => {
+    if (!topRef.current) return;
+    setSafeTop(parseFloat(window.getComputedStyle(topRef.current).paddingTop) || 0);
+  }, []);
 
   // Her turun sonucu: büyük kazançta kutlama ekranı, küçük kazançta kısa parıltı.
   useEffect(() => {
@@ -58,12 +68,19 @@ export default function SlotGame({ onExit, onBack, roomId }) {
   const fit = Math.min(panelWidth / ART_WIDTH, panelHeight / ART_HEIGHT);
   const cover = Math.max(panelWidth / ART_WIDTH, panelHeight / ART_HEIGHT);
   // Üstte kazanan şeridine yer ayrılır: görselin üstünde en az 34px boşluk kalır.
-  const reserve = Math.max(0, (panelHeight || 0) - TICKER_SPACE) / ART_HEIGHT;
+  const reserve = Math.max(0, (panelHeight || 0) - TICKER_SPACE - safeTop) / ART_HEIGHT;
   const scale = Math.min(cover || 0, (fit || 0) * MAX_CROP, reserve || 0);
   const width = ART_WIDTH * scale;
   const height = ART_HEIGHT * scale;
   // Şerit, görselin üstünde kalan boşluğun 8px üstünde biter — filmkeyfi yazısını kapatmaz.
-  const tickerHeight = Math.max(26, Math.round((panelHeight || 0) - height) - 8);
+  const available = Math.max(0, (panelHeight || 0) - height - 8 - safeTop);
+  // Şerit yüksekliği tam satırlara yuvarlanır: altın çizgi bir satırın ortasından geçmez.
+  const tickerHeight = Math.min(
+    Math.max(TICKER_ROW_HEIGHT, Math.round(available / TICKER_ROW_HEIGHT) * TICKER_ROW_HEIGHT),
+    TICKER_ROW_HEIGHT * MAX_TICKER_ROWS,
+  );
+  // Şeridin bittiği yer: altındaki uyarılar bu çizginin altına hizalanır.
+  const tickerBottom = safeTop + tickerHeight;
   const ready = game.status === 'ready';
   // Bahis kademesi: kademe atlayınca üstte kırmızı uyarı çıkar.
   const tier = tierOfBet(game.bet, game.lines);
@@ -176,7 +193,7 @@ export default function SlotGame({ onExit, onBack, roomId }) {
       </div>
 
       {/* Üst şerit: kazanan akışı, görselin üstünde kalan alanı tamamen kaplar; tuşlar köşelerde. */}
-      <div className="absolute inset-x-0 top-0 z-20 pt-[env(safe-area-inset-top)]">
+      <div ref={topRef} className="absolute inset-x-0 top-0 z-20 pt-[env(safe-area-inset-top)]">
         <WinnerTicker height={tickerHeight} />
         <button
           type="button"
@@ -196,9 +213,9 @@ export default function SlotGame({ onExit, onBack, roomId }) {
         </button>
       </div>
 
-      <FreeSpinBadge count={game.freeSpins} top={tickerHeight + 10} />
+      <FreeSpinBadge count={game.freeSpins} top={tickerBottom + 6} />
 
-      <SlotTierAlert tier={tier} top={tickerHeight + 56} />
+      <SlotTierAlert tier={tier} top={tickerBottom + 72} />
 
       <SlotWinOverlay
         open={!!prize}
