@@ -12,6 +12,8 @@ import {
 // Uçuş boyunca sık tazelenir: çakılma anı gecikmeden görünür. Bahis aşamasında
 // geri sayım yerel saatle aktığı için seyrek yoklama yeterlidir.
 const POLL_FLIGHT = 1200;
+// Çakılma sonrası yeni tur kısa sürede yakalanır: başa sarma anında görünür.
+const POLL_CRASHED = 700;
 const POLL_BETTING = 7000;
 // Sunucu reddi sonrası yenilemeler bekler; butonlar beklemez.
 const POLL_COOLDOWN = 15000;
@@ -169,10 +171,12 @@ export default function useRocketGame() {
       const flying =
         phaseRef.current === 'running' ||
         (phaseRef.current === 'betting' && launchAtRef.current !== null && localNow >= launchAtRef.current);
-      // Çakılma sonrası yeni tur kısa sürede yakalanır, bahis aşaması seyrek yoklanır.
-      const quick = flying || phaseRef.current === 'crashed';
+      // Uçuşta sık, çakılma sonrası daha sık, bahis aşamasında seyrek tazelenir.
+      const next = phaseRef.current === 'crashed'
+        ? POLL_CRASHED
+        : (flying ? POLL_FLIGHT : POLL_BETTING);
       // Stagger players' refreshes instead of a synchronized request burst.
-      timer = setTimeout(loop, (quick ? POLL_FLIGHT : POLL_BETTING) + Math.random() * 250);
+      timer = setTimeout(loop, next + Math.random() * 250);
       running = false;
     };
     // Sıradaki yoklamayı öne çeker: ek istek yapmadan anında tazeleme.

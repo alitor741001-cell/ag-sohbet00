@@ -2,7 +2,8 @@
 // Backend (entry.ts) ile frontend (rocketConfig.js) aynı değerleri kullanır.
 
 export const BETTING_MS = 20000;
-export const GAP_MS = 4000;
+// Çakılma anı ekranda kısa süre kalır, ardından yeni tur hemen başlar.
+export const GAP_MS = 2000;
 export const MAX_R = 500;
 export const HOUSE_EDGE = 0.99;
 export const ROCKET_BASE = 1.09;
