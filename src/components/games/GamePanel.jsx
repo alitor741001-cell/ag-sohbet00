@@ -4,6 +4,7 @@ import { Image } from '@/components/ui/image';
 import { GAME_COVER } from './slotAssets';
 import SlotGame from './SlotGame';
 import WinnerBoard from './WinnerBoard';
+import WinHistory from './WinHistory';
 
 // Sinematik geçişin toplam süresi.
 const TRANSITION_MS = 700;
@@ -78,6 +79,7 @@ export default function GamePanel({ open, onClose, roomId }) {
                   </span>
                 </span>
               </button>
+              <WinHistory />
             </div>
           </div>
         )}

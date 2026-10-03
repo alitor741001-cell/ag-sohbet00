@@ -123,6 +123,28 @@ export default async function (req) {
     // Yönetici hesabında coin sınırı yoktur.
     const isAdmin = user.role === 'admin';
 
+    // Kazanç geçmişi: kullanıcının son turları ve toplam kazancı.
+    if (action === 'history') {
+      const spins = await base44.entities.GameSpin.filter({ user_id: user.id }, '-created_date', 20);
+      return Response.json({
+        spins: spins.map((spin) => ({
+          id: spin.id,
+          bet: spin.bet ?? 0,
+          cost: spin.cost ?? 0,
+          win: spin.win ?? 0,
+          coins: spin.coins_after ?? 0,
+          big_win: !!spin.big_win,
+          jackpot: spin.jackpot ?? 0,
+          at: spin.created_date,
+        })),
+        summary: {
+          total_won: wallet.total_won ?? 0,
+          spins: wallet.spins ?? 0,
+          coins: wallet.coins ?? START_COINS,
+        },
+      });
+    }
+
     if (action === 'bet') {
       const bet = clampBet(body.bet, wallet.bet ?? DEFAULT_BET);
       const updated = await base44.asServiceRole.entities.GameWallet.update(wallet.id, { bet });
@@ -169,6 +191,18 @@ export default async function (req) {
         spins: (wallet.spins ?? 0) + 1,
         total_won: (wallet.total_won ?? 0) + total,
         last_spin_at: new Date().toISOString(),
+      });
+
+      // Tur, kazanç geçmişine işlenir.
+      await base44.asServiceRole.entities.GameSpin.create({
+        user_id: user.id,
+        user_name: name,
+        bet,
+        cost,
+        win: total,
+        coins_after: updated.coins ?? 0,
+        big_win: bigWin,
+        jackpot: jackpotPayout,
       });
 
       return Response.json({
