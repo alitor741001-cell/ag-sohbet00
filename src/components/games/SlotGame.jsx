@@ -67,7 +67,7 @@ export default function SlotGame({ onExit, onBack, roomId }) {
   const panelHeight = size?.height || 0;
   const fit = Math.min(panelWidth / ART_WIDTH, panelHeight / ART_HEIGHT);
   const cover = Math.max(panelWidth / ART_WIDTH, panelHeight / ART_HEIGHT);
-  // Üstte kazanan şeridine yer ayrılır: görselin üstünde en az 34px boşluk kalır.
+  // Üstte kazanan şeridine ve çentiğe yer ayrılır: şerit görselin üstündeki yazıyı kapatmaz.
   const reserve = Math.max(0, (panelHeight || 0) - TICKER_SPACE - safeTop) / ART_HEIGHT;
   const scale = Math.min(cover || 0, (fit || 0) * MAX_CROP, reserve || 0);
   const width = ART_WIDTH * scale;
@@ -79,8 +79,10 @@ export default function SlotGame({ onExit, onBack, roomId }) {
     Math.max(TICKER_ROW_HEIGHT, Math.round(available / TICKER_ROW_HEIGHT) * TICKER_ROW_HEIGHT),
     TICKER_ROW_HEIGHT * MAX_TICKER_ROWS,
   );
-  // Şeridin bittiği yer: altındaki uyarılar bu çizginin altına hizalanır.
+  // Şeridin bittiği yer: altındaki rozet bu altın çizginin hemen altına hizalanır.
   const tickerBottom = safeTop + tickerHeight;
+  // Görselin üst kenarı: görselin içindeki yazılar buradan ölçülür.
+  const artTop = Math.max(0, (panelHeight || 0) - height);
   const ready = game.status === 'ready';
   // Bahis kademesi: kademe atlayınca üstte kırmızı uyarı çıkar.
   const tier = tierOfBet(game.bet, game.lines);
@@ -215,7 +217,7 @@ export default function SlotGame({ onExit, onBack, roomId }) {
 
       <FreeSpinBadge count={game.freeSpins} top={tickerBottom + 6} />
 
-      <SlotTierAlert tier={tier} top={tickerBottom + 72} />
+      <SlotTierAlert tier={tier} top={artTop + 64} />
 
       <SlotWinOverlay
         open={!!prize}
