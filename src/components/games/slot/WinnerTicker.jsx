@@ -32,7 +32,6 @@ function TickerRow({ winner }) {
         )}
       </span>
       <span className="max-w-[4rem] truncate text-[10px] font-bold text-white">{winner.name || 'Kullanıcı'}</span>
-      <span className="shrink-0 text-[9px] text-white/75">şanslı çekilişten</span>
       <span className="flex shrink-0 items-center gap-px">
         {symbolsOf(winner).map((symbol, index) => (
           <SlotSymbolIcon key={`${symbol}-${index}`} symbol={symbol} size={12} />
@@ -56,7 +55,7 @@ export default function WinnerTicker() {
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none absolute left-1/2 top-[48px] z-30 w-[88%] -translate-x-1/2 overflow-hidden rounded-xl border border-white/10 bg-black/65 backdrop-blur-sm"
+      className="pointer-events-none absolute left-1/2 top-1.5 z-30 w-[72%] -translate-x-1/2 overflow-hidden rounded-xl border border-white/10 bg-black/70 backdrop-blur-sm"
       style={{ height: VISIBLE_ROWS * ROW_HEIGHT }}
     >
       {loop.length ? (
