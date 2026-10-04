@@ -3,8 +3,12 @@ import { rateLimit, safeErrorResponse, logSecurity } from '../../shared/security
 import { isModerator, isSiteOwner, immuneToModeration, getRoleInfo, getRoleLabelOverrides, getSpecialFrameInfo } from '../../shared/roles.ts';
 import { upsertNotification } from '../../shared/upsertNotification.ts';
 import { hasActiveMembership } from '../../shared/membership.ts';
+import { effectiveVipLevel } from '../../shared/vip.ts';
 import { scoresAfterRoomLeave } from '../../shared/numberBoard.ts';
 import { appendRoomLog } from '../../shared/roomLog.ts';
+
+/** Gizli kullanıcı modunun gerektirdiği en düşük VIP seviyesi. */
+const HIDDEN_REQUIRED_VIP = 10;
 
 async function sha256Hex(salt, pw) {
   const data = new TextEncoder().encode(salt + pw);
@@ -67,7 +71,9 @@ export default async function(req) {
     const isRoomMod = (room.room_moderators || []).includes(user.id);
     const canModRoom = isOwner || isMod || isRoomMod;
     const hasVisibleRole = !!(me.display_role || me.custom_role?.name || me.special_frame_id || (me.profile_frame && (me.profile_frame.startsWith('lvl_') || me.profile_frame_entrance_enabled)));
-    const ghost = isAdmin && !isOwner && !hasVisibleRole;
+    // Gizli kullanıcı modu (VIP10+): odaya görünmeden katılır — giriş/çıkış bildirimi düşmez.
+    const hiddenUser = !!me.hidden_user && effectiveVipLevel(me) >= HIDDEN_REQUIRED_VIP;
+    const ghost = !isOwner && (hiddenUser || (isAdmin && !hasVisibleRole));
     const labelOverrides = await getRoleLabelOverrides(base44);
 
     if ((action === 'join' || action === 'request-join') && !hasActiveMembership(me)) {

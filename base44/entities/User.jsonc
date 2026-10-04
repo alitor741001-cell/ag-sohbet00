@@ -80,6 +80,10 @@
       "type": "string",
       "default": ""
     },
+    "hidden_user": {
+      "type": "boolean",
+      "default": false
+    },
     "loaded_coins": {
       "type": "number",
       "default": 0

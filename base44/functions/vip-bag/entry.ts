@@ -1,9 +1,12 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import { rateLimit, safeErrorResponse } from '../../shared/security.ts';
-import { applyVipToUser, vipDurationLabel } from '../../shared/vip.ts';
+import { applyVipToUser, vipDurationLabel, effectiveVipLevel } from '../../shared/vip.ts';
 import { findByMemberId } from '../../shared/giftBox.ts';
 
-const ACTIONS = ['list', 'use', 'send'];
+const ACTIONS = ['list', 'use', 'send', 'hidden'];
+
+/** Gizli kullanıcı modu bu VIP seviyesinden itibaren açılabilir. */
+const HIDDEN_REQUIRED_VIP = 10;
 
 /**
  * Mavi Çanta: coin yüklemesinden kazanılan VIP'ler burada bekler.
@@ -42,6 +45,17 @@ export default async function (req: Request): Promise<Response> {
         base44.asServiceRole.entities.VipItem.filter({ owner_id: user.id, status: { $ne: 'bag' } }, '-created_date', 20).catch(() => []),
       ]);
       return Response.json({ ok: true, items: bag.map(view), history: history.map(view) });
+    }
+
+    // Gizli kullanıcı modu: VIP10 ve üzeri hesaplarda açılır, altındaki hesaplarda açılmaz.
+    if (action === 'hidden') {
+      const level = effectiveVipLevel(me);
+      if (level < HIDDEN_REQUIRED_VIP) {
+        return Response.json({ error: `Gizli kullanıcı modu VIP${HIDDEN_REQUIRED_VIP} ve üzeri hesaplarda açılabilir.` }, { status: 403 });
+      }
+      const enabled = !!body?.enabled;
+      await base44.asServiceRole.entities.User.update(user.id, { hidden_user: enabled });
+      return Response.json({ ok: true, hidden_user: enabled, vip_level: level });
     }
 
     const picked = await base44.asServiceRole.entities.VipItem.get(String(body?.item_id || '')).catch(() => null);
