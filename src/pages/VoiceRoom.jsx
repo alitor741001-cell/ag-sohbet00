@@ -581,6 +581,14 @@ export default function VoiceRoom() {
     }
   };
 
+  // Sayaç ayarı: kişi koltuktan inince ya da odadan çıkınca sayacı sıfırlansın mı?
+  const saveBoardSettings = async (resetSeat, resetRoom) => {
+    // Seçim anında uygulanır, sunucu yanıtı aynı değerleri doğrular.
+    patchRoom({ number_board_reset_seat: resetSeat, number_board_reset_room: resetRoom });
+    const ok = await invokeVoice({ action: 'number-settings', reset_on_seat_leave: resetSeat, reset_on_room_leave: resetRoom });
+    if (ok) toast({ title: resetSeat || resetRoom ? 'Sayaç ayarı kaydedildi' : 'Sayaç sıfırlama kapatıldı' });
+  };
+
   const toggleChatBan = async () => {
     const ok = await invokeVoice({ action: 'chat-ban', banned: !chatBanned });
     if (ok) {
@@ -878,8 +886,18 @@ export default function VoiceRoom() {
     ...(!profileSelf && canKick ? [{ key: 'kick', icon: UserMinus, label: 'Odadan at', danger: true, onClick: cardAction(() => kickFromRoom(profileTarget)) }] : []),
   ] : [];
 
-  // Seçili kişinin koltuk puanı animasyonda gösterilir.
-  const overlayAlert = giftAlert ? { ...giftAlert, value: scores[giftAlert.toId] || 0 } : null;
+  // Seçili kişinin koltuk puanı animasyonda gösterilir; hediye alan kişinin profili ve ismi de sahnede yazar.
+  const overlayAlert = giftAlert ? (() => {
+    const person = [...seatsView, ...participants].find((item) => item?.user_id === giftAlert.toId) || null;
+    return {
+      ...giftAlert,
+      value: scores[giftAlert.toId] || 0,
+      recipientName: giftAlert.recipientName || person?.name || '',
+      recipientAvatar: person?.avatar || '',
+      recipientFrame: person?.frame || '',
+      recipientFrameScale: person?.frame_scale,
+    };
+  })() : null;
 
   return (
     <div
@@ -1017,6 +1035,7 @@ export default function VoiceRoom() {
         onInvite={handleInvite}
         boardActive={boardActive}
         onToggleBoard={async () => { setMenuOpen(false); await toggleBoard(); }}
+        onBoardSettings={saveBoardSettings}
         onClearChat={clearChat}
         onToggleChatBan={toggleChatBan}
         onOpenLog={() => setLogOpen(true)}

@@ -50,7 +50,7 @@ export default function GamePanel({ open, onClose, roomId }) {
       <div className="relative min-h-0 flex-1">
         {(!selected || transitioning) && (
           <div className={`game-layer ${phase === 'opening' ? 'game-dip' : phase === 'closing' ? 'game-rise' : ''}`}>
-            <header className="flex shrink-0 items-center gap-2 border-b border-slot-border bg-slot-surface px-3 py-2.5">
+            <header className="flex shrink-0 items-center gap-2 border-b border-slot-border bg-slot-surface px-3 pb-2.5 pt-[max(0.625rem,env(safe-area-inset-top))]">
               <Gamepad2 className="h-5 w-5 text-slot-gold" />
               <p className="min-w-0 flex-1 truncate text-sm font-black tracking-wide">Oyun Merkezi</p>
               <button
@@ -70,12 +70,12 @@ export default function GamePanel({ open, onClose, roomId }) {
                   key={game.id}
                   type="button"
                   onClick={() => openGame(game.id)}
-                  className="group relative block w-full overflow-hidden rounded-2xl border border-slot-gold/40 active:scale-[0.99]"
+                  className="group relative mx-auto block w-full max-w-[19rem] overflow-hidden rounded-2xl border border-slot-gold/40 active:scale-[0.99]"
                 >
                   <Image
                     src={game.cover}
                     alt={game.title}
-                    className="w-full"
+                    className="h-[clamp(7rem,22dvh,10rem)] w-full"
                     fittingType="fill"
                     originWidth={game.originWidth}
                     originHeight={game.originHeight}

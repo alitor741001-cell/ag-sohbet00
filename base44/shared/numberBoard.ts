@@ -33,15 +33,21 @@ export function withoutScore(scores: any, userId: string) {
   return (Array.isArray(scores) ? scores : []).filter((item) => item?.user_id !== userId);
 }
 
-/** Koltuktan inme anında uygulanacak sayı listesi — ayar kapalıysa değişiklik yok (null). */
+/**
+ * Koltuktan inme anında uygulanacak sayı listesi — ayar kapalıysa değişiklik yok (null).
+ * Tahta kapalıyken de sayı silinir: koltuğunda oturmayan kişinin sayısı geri gelmez.
+ */
 export function scoresAfterSeatLeave(room: any, userId: string) {
-  if (!isNumberBoardOpen(room) || !resetsOnSeatLeave(room)) return null;
+  if (!resetsOnSeatLeave(room)) return null;
   return withoutScore(room.number_scores, userId);
 }
 
-/** Odadan ayrılma anında uygulanacak sayı listesi — ayar kapalıysa değişiklik yok (null). */
+/**
+ * Odadan ayrılma anında uygulanacak sayı listesi — ayar kapalıysa değişiklik yok (null).
+ * Uyanıklık yapıp odadan çıkan kişinin sayısı da bu yolla silinir.
+ */
 export function scoresAfterRoomLeave(room: any, userId: string) {
-  if (!isNumberBoardOpen(room) || !resetsOnRoomLeave(room)) return null;
+  if (!resetsOnRoomLeave(room)) return null;
   return withoutScore(room.number_scores, userId);
 }
 

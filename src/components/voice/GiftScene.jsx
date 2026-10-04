@@ -1,5 +1,6 @@
 import { formatK, tierForK, toneColor } from '@/lib/giftTone';
 import { giftScene } from '@/lib/giftScene';
+import ProfileFrame from '@/components/ProfileFrame';
 import VoiceSeatScore from '@/components/voice/VoiceSeatScore';
 import SceneRocket from '@/components/voice/scenes/SceneRocket';
 import SceneBoat from '@/components/voice/scenes/SceneBoat';
@@ -33,7 +34,9 @@ export default function GiftScene({ alert, tiers = [] }) {
   const bulk = people > 1;
   const meta = bulk
     ? `${people} kişiye${alert.totalK ? ` • ${formatK(alert.totalK)}` : ''}`
-    : `${alert.senderName ? `${alert.senderName} → ` : ''}${alert.recipientName || 'Oda'}${alert.kValue ? ` • +${formatK(alert.kValue)}` : ''}`;
+    : `${alert.senderName ? `${alert.senderName} → ` : ''}${alert.recipientName || 'Oda'}`;
+  // Hediye tutarı sahnede "az önce 10K atıldı" biçiminde yazar.
+  const justSent = formatK(Number(bulk ? (alert.totalK || alert.kValue) : alert.kValue) || 0);
 
   return (
     <div className="gift-scene-stage pointer-events-none absolute inset-0 z-[200] overflow-hidden" style={{ '--scene-tone': color }}>
@@ -49,8 +52,17 @@ export default function GiftScene({ alert, tiers = [] }) {
             <span className="rounded-full bg-white/20 px-1.5 py-0.5 text-[11px] font-black text-white">×{repeat}</span>
           )}
         </div>
-        <div className="flex items-center gap-1.5">
-          <p className="max-w-[80vw] truncate rounded-full bg-black/60 px-3 py-1 text-[11px] font-semibold text-white/85">{meta}</p>
+        <div className="flex items-center gap-1.5 rounded-full border border-white/10 bg-black/60 py-1 pl-1.5 pr-2.5">
+          {!bulk && (
+            <ProfileFrame
+              size="2xs"
+              avatar={alert.recipientAvatar}
+              frame={alert.recipientFrame}
+              frameScale={alert.recipientFrameScale}
+              name={alert.recipientName || 'Oda'}
+            />
+          )}
+          <p className="max-w-[70vw] truncate text-[11px] font-semibold text-white/85">{meta} · az önce {justSent} atıldı</p>
           {!bulk && alert.value ? <VoiceSeatScore value={alert.value} /> : null}
         </div>
       </div>
