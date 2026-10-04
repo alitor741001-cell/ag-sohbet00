@@ -67,6 +67,8 @@ export default function WatchParty() {
   const joinedRef = useRef(false);
   const ghostRef = useRef(false);
   const kickedRef = useRef(false);
+  // Sesli moda/film moduna geçişte oda üyeliği korunur — kişi odadan düşmez.
+  const modeSwitchRef = useRef(false);
   const lastUpdateRef = useRef(0);
   const lastSyncRef = useRef({ is_playing: false, current_time: 0 });
   const prevMovieIdRef = useRef(null);
@@ -105,6 +107,8 @@ export default function WatchParty() {
   // Sesli mod seçildiğinde oda, tüm özellikleriyle sesli oda arayüzüne dönüşür.
   useEffect(() => {
     if (!voiceMode) return;
+    // Arayüz değişiyor, odaya üyelik devam ediyor: çıkış yapılmaz.
+    modeSwitchRef.current = true;
     navigate(`/sesli-oda/${id}`, { replace: true });
   }, [voiceMode, id, navigate]);
 
@@ -354,6 +358,8 @@ export default function WatchParty() {
 
   const leaveRoom = async () => {
     if (!user || !joinedRef.current || kickedRef.current) return;
+    // Sesli moda geçiş sırasında odaya üyelik korunur.
+    if (modeSwitchRef.current) return;
     joinedRef.current = false;
     setVoiceReady(false);
     try { await base44.functions.invoke('room-presence', { action: 'leave', room_id: id }); } catch {}
