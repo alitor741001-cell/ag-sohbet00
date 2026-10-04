@@ -44,8 +44,8 @@ export default function AdminCoins() {
       </div>
 
       <div className="space-y-4">
-        <CoinLoadForm onGranted={refresh} />
         <CoinRequestList onReviewed={refresh} />
+        <CoinLoadForm onGranted={refresh} />
         <CoinRevertCard grant={lastActive} onReverted={refresh} />
         <CoinRecentTable grants={grants} loading={loading} onReverted={refresh} />
       </div>

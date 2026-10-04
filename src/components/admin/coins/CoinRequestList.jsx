@@ -26,19 +26,33 @@ export default function CoinRequestList({ onReviewed }) {
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState(null);
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const load = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const response = await base44.functions.invoke('coin-admin', { action: 'requests', limit: 40 });
       setRequests(response.data?.requests || []);
     } catch {
       // Liste alınamazsa son bilinen başvurular kalır.
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  // Yeni başvuru geldiği anda liste kendiliğinden güncellenir — sayfayı yenilemek gerekmez.
+  useEffect(() => {
+    load();
+    const unsubscribe = base44.entities.CoinRequest.subscribe(() => load(true));
+    const refresh = () => { if (document.visibilityState === 'visible') load(true); };
+    const timer = setInterval(refresh, 20000);
+    window.addEventListener('focus', refresh);
+    document.addEventListener('visibilitychange', refresh);
+    return () => {
+      unsubscribe?.();
+      clearInterval(timer);
+      window.removeEventListener('focus', refresh);
+      document.removeEventListener('visibilitychange', refresh);
+    };
+  }, [load]);
 
   const review = async (request, action) => {
     setBusyId(request.id);
