@@ -1,0 +1,102 @@
+{
+  "name": "VipItem",
+  "type": "object",
+  "properties": {
+    "owner_id": {
+      "type": "string"
+    },
+    "owner_name": {
+      "type": "string",
+      "default": ""
+    },
+    "level": {
+      "type": "integer",
+      "minimum": 5,
+      "maximum": 12
+    },
+    "days": {
+      "type": "integer",
+      "default": 7
+    },
+    "source": {
+      "type": "string",
+      "default": "coin"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "bag",
+        "used",
+        "sent"
+      ],
+      "default": "bag"
+    },
+    "sender_id": {
+      "type": "string",
+      "default": ""
+    },
+    "sender_name": {
+      "type": "string",
+      "default": ""
+    },
+    "recipient_id": {
+      "type": "string",
+      "default": ""
+    },
+    "recipient_name": {
+      "type": "string",
+      "default": ""
+    },
+    "used_at": {
+      "type": "string",
+      "default": ""
+    },
+    "sent_at": {
+      "type": "string",
+      "default": ""
+    }
+  },
+  "required": [
+    "owner_id",
+    "level"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.owner_id": "{{user.id}}"
+        },
+        {
+          "data.sender_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "$or": [
+        {
+          "data.owner_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

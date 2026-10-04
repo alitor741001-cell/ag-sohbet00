@@ -1,7 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import { rateLimit, safeErrorResponse } from '../../shared/security.ts';
 import { badgeLevels, VIP_MAX } from '../../shared/userLevels.ts';
-import { VIP_DAY_MS, VIP_DURATIONS, vipActive, vipDurationLabel, vipExpiryMs } from '../../shared/vip.ts';
+import { VIP_DURATIONS, applyVipToUser, vipDurationLabel } from '../../shared/vip.ts';
 
 const ACTIONS = ['list', 'search', 'set'];
 
@@ -63,13 +63,8 @@ export default async function (req: Request): Promise<Response> {
 
       const level = Math.max(0, Math.min(VIP_MAX, Math.floor(Number(body?.vip_level) || 0)));
       const days = level > 0 ? VIP_DURATIONS[String(body?.duration || 'month')] || VIP_DURATIONS.month : 0;
-      // Kişinin süresi henüz bitmediyse yeni süre onun üstüne eklenir.
-      const currentExpiry = vipExpiryMs(target);
-      const base = level > 0 && vipActive(target) && currentExpiry ? currentExpiry : Date.now();
-
-      await base44.asServiceRole.entities.User.update(target.id, {
-        vip_level: level,
-        vip_expires_at: level > 0 ? new Date(base + days * VIP_DAY_MS).toISOString() : '',
+      // Yeni süre, kişinin kalan VIP süresinin üstüne eklenir.
+      await applyVipToUser(base44, target, level, days, {
         vip_source: 'admin',
         vip_granted_by: adminName,
         vip_granted_at: new Date().toISOString(),

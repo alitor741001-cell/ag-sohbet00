@@ -61,9 +61,42 @@ export const autoVipForCoins = (coins: any) => {
   return null;
 };
 
+/** VIP'i kişinin profiline işler; kalan sürenin üstüne ekler (kendisi kullanınca da buradan geçer). */
+export async function applyVipToUser(base44: any, target: any, level: any, days: any, extra: Record<string, any> = {}) {
+  if (!target?.id) return null;
+  const value = Math.min(VIP_MAX, Math.max(VIP_MIN, Math.floor(Number(level) || 0)));
+  const duration = Math.max(0, Math.floor(Number(days) || 0));
+  const currentExpiry = vipExpiryMs(target);
+  const base = value > 0 && vipActive(target) && currentExpiry ? currentExpiry : Date.now();
+  const expiresAt = value > 0 && duration > 0 ? new Date(base + duration * VIP_DAY_MS).toISOString() : '';
+
+  await base44.asServiceRole.entities.User.update(target.id, {
+    vip_level: value,
+    vip_expires_at: expiresAt,
+    ...extra,
+  }).catch(() => {});
+
+  return { level: value, expires_at: expiresAt };
+}
+
+/** VIP'i mavi çantaya bırakır: kişi isterse kendisi kullanır, isterse kimlik numarasıyla gönderir. */
+export async function addVipToBag(base44: any, { owner, level, days, source = 'coin', sender = null }: any) {
+  if (!owner?.id) return null;
+  return base44.asServiceRole.entities.VipItem.create({
+    owner_id: owner.id,
+    owner_name: owner.username || owner.full_name || 'Kullanıcı',
+    level: Math.min(VIP_MAX, Math.max(VIP_MIN, Math.floor(Number(level) || 0))),
+    days: Math.max(1, Math.floor(Number(days) || 0)),
+    source,
+    status: 'bag',
+    sender_id: sender?.id || '',
+    sender_name: sender?.name || '',
+  }).catch(() => null);
+}
+
 /**
- * Otomatik VIP: seviye düşürülmez, kalan sürenin üstüne eklenir ve
- * kişinin çantasına eklendiği bildirimle haber verilir.
+ * Coin yüklemesinden gelen VIP profile doğrudan işlenmez, mavi çantaya bırakılır.
+ * Kişiye çantasına VIP geldiğini haber veren bildirim düşer.
  */
 export async function grantAutoVip(base44: any, user: { id?: string }, coins: any) {
   if (!user?.id) return null;
@@ -73,26 +106,17 @@ export async function grantAutoVip(base44: any, user: { id?: string }, coins: an
   const record = await base44.asServiceRole.entities.User.get(user.id).catch(() => null);
   if (!record?.id) return null;
 
-  const level = Math.max(effectiveVipLevel(record), auto.level);
-  const currentExpiry = vipExpiryMs(record);
-  const base = currentExpiry && currentExpiry > Date.now() ? currentExpiry : Date.now();
-  const expiresAt = new Date(base + auto.days * VIP_DAY_MS).toISOString();
-
-  await base44.asServiceRole.entities.User.update(record.id, {
-    vip_level: level,
-    vip_expires_at: expiresAt,
-    vip_source: 'coin',
-    vip_granted_at: new Date().toISOString(),
-  }).catch(() => {});
+  const item = await addVipToBag(base44, { owner: record, level: auto.level, days: auto.days, source: 'coin' });
+  if (!item) return null;
 
   await base44.asServiceRole.entities.Notification.create({
     user_id: record.id,
-    title: `VIP${level} çantana eklendi`,
+    title: `VIP${auto.level} mavi çantanda`,
     type: 'vip',
-    body: `Coin yüklemen karşılığı VIP${level} çantana eklendi. Süresi: ${vipDurationLabel(auto.days)}.`,
+    body: `Coin yüklemen karşılığı VIP${auto.level} (${vipDurationLabel(auto.days)}) mavi çantana geldi. İstersen kendin kullan, istersen kimlik numarasıyla bir arkadaşına gönder.`,
     link: '/profil',
     ref_id: 'coin-load',
   }).catch(() => {});
 
-  return { level, days: auto.days, expires_at: expiresAt };
+  return { level: auto.level, days: auto.days };
 }

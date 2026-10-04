@@ -7,6 +7,7 @@ import { Image } from '@/components/ui/image';
 import ProfileWalletCards from '@/components/profile/ProfileWalletCards';
 import GiftBoxPanel from '@/components/profile/GiftBoxPanel';
 import CoinActivityPanel from '@/components/profile/CoinActivityPanel';
+import VipBagPanel from '@/components/profile/VipBagPanel';
 
 export default function ProfileDropdown() {
   const { user } = useCurrentUser();
@@ -14,8 +15,17 @@ export default function ProfileDropdown() {
   const [open, setOpen] = useState(false);
   const [giftBoxOpen, setGiftBoxOpen] = useState(false);
   const [activityOpen, setActivityOpen] = useState(false);
+  const [vipBagOpen, setVipBagOpen] = useState(false);
+  const [vipCount, setVipCount] = useState(0);
   const [wallet, setWallet] = useState(null);
   const ref = useRef(null);
+
+  // Mavi çantada bekleyen VIP sayısı (elmasın altındaki kart).
+  const loadVipCount = () => {
+    base44.functions.invoke('vip-bag', { action: 'list' })
+      .then((response) => setVipCount((response.data?.items || []).length))
+      .catch(() => {});
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -30,6 +40,7 @@ export default function ProfileDropdown() {
     base44.functions.invoke('gift-box', { action: 'summary' })
       .then((response) => setWallet(response.data))
       .catch(() => {});
+    loadVipCount();
   }, [open]);
 
   const logout = () => { base44.auth.logout('/login'); };
@@ -92,8 +103,10 @@ export default function ProfileDropdown() {
             <ProfileWalletCards
               coins={wallet?.coins ?? null}
               giftScore={wallet?.month_score ?? null}
+              vipCount={vipCount}
               onOpenGiftBox={() => { setOpen(false); setGiftBoxOpen(true); }}
               onOpenCoins={() => { setOpen(false); setActivityOpen(true); }}
+              onOpenVipBag={() => { setOpen(false); setVipBagOpen(true); }}
             />
 
             {/* Menu items */}
@@ -159,6 +172,7 @@ export default function ProfileDropdown() {
 
       <GiftBoxPanel open={giftBoxOpen} onClose={() => setGiftBoxOpen(false)} />
       <CoinActivityPanel open={activityOpen} onClose={() => setActivityOpen(false)} />
+      <VipBagPanel open={vipBagOpen} onClose={() => setVipBagOpen(false)} onChanged={loadVipCount} />
     </div>
   );
 }
