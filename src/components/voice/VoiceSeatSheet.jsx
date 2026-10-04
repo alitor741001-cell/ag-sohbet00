@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Armchair, Lock, Mic, MicOff, Unlock, UserRound } from 'lucide-react';
-import VoiceCard from '@/components/voice/VoiceCard';
+import VoiceGoldSheet from '@/components/voice/VoiceGoldSheet';
 import VoiceMenuButton from '@/components/voice/VoiceMenuButton';
 import SeatInviteList from '@/components/voice/SeatInviteList';
 
@@ -18,30 +18,30 @@ export default function VoiceSeatSheet({ open, onClose, seat, index, canMod, myI
   // Kendi koltuğum: oda sahibi ve herkes tek dokunuşla koltuktan inebilir.
   if (isMine) {
     return (
-      <VoiceCard open={open} title={`${(index || 0) + 1}. Koltuk`} onClose={close}>
+      <VoiceGoldSheet open={open} title={`${(index || 0) + 1}. Koltuk`} onClose={close}>
         <div className="space-y-2">
           <VoiceMenuButton icon={Armchair} label="Koltuktan in" onClick={() => { close(); onStepDown(); }} />
         </div>
-      </VoiceCard>
+      </VoiceGoldSheet>
     );
   }
 
   // Mik'e davet: koltukta oturmayan izleyiciler listelenir, dokunulan kişiye davet gider.
   if (inviteOpen) {
     return (
-      <VoiceCard open={open} title={`${(index || 0) + 1}. Koltuk · Mik'e davet`} onClose={close}>
+      <VoiceGoldSheet open={open} title={`${(index || 0) + 1}. Koltuk · Mik'e davet`} onClose={close}>
         <SeatInviteList
           people={viewers}
           invitedIds={invitedIds}
           onPick={(targetId) => onInviteToSeat(targetId, index)}
           onBack={() => setInviteOpen(false)}
         />
-      </VoiceCard>
+      </VoiceGoldSheet>
     );
   }
 
   return (
-    <VoiceCard open={open} title={`${(index || 0) + 1}. Koltuk`} onClose={close}>
+    <VoiceGoldSheet open={open} title={`${(index || 0) + 1}. Koltuk`} onClose={close}>
       <div className="space-y-2">
         <VoiceMenuButton
           icon={UserRound}
@@ -66,6 +66,6 @@ export default function VoiceSeatSheet({ open, onClose, seat, index, canMod, myI
           <VoiceMenuButton icon={Mic} label="Mik'e davet et" onClick={() => setInviteOpen(true)} />
         )}
       </div>
-    </VoiceCard>
+    </VoiceGoldSheet>
   );
 }
