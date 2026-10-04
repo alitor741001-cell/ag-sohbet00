@@ -1,20 +1,43 @@
 import { useEffect, useState } from 'react';
 
+const pad = (value) => String(value).padStart(2, '0');
+
+/** Saniyeyi saat:dakika:saniye biçiminde yazar — sayı her saniye tek tek ilerler. */
+const formatClock = (totalSeconds) => {
+  const value = Math.max(0, Math.floor(totalSeconds) || 0);
+  return `${pad(Math.floor(value / 3600))}:${pad(Math.floor((value % 3600) / 60))}:${pad(value % 60)}`;
+};
+
+/**
+ * Sayı tahtası açıkken görünen süre kartı: altın sarısı-kırmızı çerçeve içinde
+ * "Devam Ediyor" yazar ve süre 00:00:01'den başlayıp her saniye artar.
+ */
 export default function VoiceBoardTimer({ active, startedAt }) {
   const startedMs = Date.parse(startedAt || '');
   const [seconds, setSeconds] = useState(1);
+
   useEffect(() => {
-    if (!active || !Number.isFinite(startedMs)) return;
+    if (!active || !Number.isFinite(startedMs)) return undefined;
     const tick = () => setSeconds(Math.max(1, Math.floor((Date.now() - startedMs) / 1000) + 1));
     tick();
     const timer = window.setInterval(tick, 1000);
     return () => window.clearInterval(timer);
   }, [active, startedMs]);
+
   if (!active || !Number.isFinite(startedMs)) return null;
+  const clock = formatClock(seconds);
+
   return (
-    <div className="flex shrink-0 items-center justify-center gap-2 border-t border-border bg-card px-3 py-2 text-card-foreground" aria-label={`Devam ediyor, ${seconds} saniye`}>
-      <span className="text-xs font-bold">Devam Ediyor</span>
-      <span className="min-w-8 text-center text-sm font-black tabular-nums">{seconds}</span>
+    <div className="shrink-0 px-3 pb-2">
+      <div
+        className="flex items-center justify-center gap-2 rounded-xl border border-slot-gold/60 bg-gradient-to-r from-slot-red/25 via-slot-panel to-slot-red/25 px-3 py-1.5 shadow-[0_0_12px_rgba(239,68,68,0.25)]"
+        aria-label={`Devam ediyor, ${clock}`}
+      >
+        <span className="text-[11px] font-bold tracking-wide text-slot-gold">Devam Ediyor</span>
+        <span className="slot-digits rounded-md border border-slot-gold/50 bg-slot-bg/70 px-2 py-0.5 text-sm font-black tabular-nums text-slot-gold">
+          {clock}
+        </span>
+      </div>
     </div>
   );
 }
