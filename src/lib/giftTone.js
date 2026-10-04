@@ -8,6 +8,9 @@ export const formatK = (kValue) => {
   return `${value.toLocaleString('tr-TR')}K`;
 };
 
+/** Coin miktarını slot ekranındaki gibi okunur biçime çevirir: 117559 → "117.559". */
+export const formatCoins = (coins) => Math.max(0, Math.round(Number(coins) || 0)).toLocaleString('tr-TR');
+
 /** Coin bakiyesini K değerine çevirir. */
 export const coinToK = (coins) => Math.floor((Number(coins) || 0) / K_UNIT);
 

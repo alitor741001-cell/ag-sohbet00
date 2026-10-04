@@ -103,17 +103,22 @@ export default function VoiceRoom() {
     return map;
   }, [room?.number_scores]);
 
-  // Hediye gönderilebilecek kişiler (kendisi hariç): koltukta oturanlar ve odadaki diğer kişiler.
+  // Hediye gönderilebilecek kişiler: odadaki herkes ve kendisi (kendine de hediye gönderebilir).
   const giftPeople = useMemo(() => {
     const map = new Map();
-    seats.forEach((seat) => {
-      if (seat.user_id && seat.user_id !== user?.id) map.set(seat.user_id, { user_id: seat.user_id, name: seat.name || 'Kullanıcı', avatar: seat.avatar || '' });
-    });
     participants.forEach((person) => {
-      if (person.user_id !== user?.id && !map.has(person.user_id)) map.set(person.user_id, { user_id: person.user_id, name: person.name || 'Kullanıcı', avatar: person.avatar || '' });
+      if (person.user_id) map.set(person.user_id, { user_id: person.user_id, name: person.name || 'Kullanıcı', avatar: person.avatar || '' });
     });
-    return [...map.values()];
-  }, [seats, participants, user?.id]);
+    seats.forEach((seat) => {
+      if (seat.user_id && !map.has(seat.user_id)) map.set(seat.user_id, { user_id: seat.user_id, name: seat.name || 'Kullanıcı', avatar: seat.avatar || '' });
+    });
+    // Kendisi hiç koltukta/katılımcı listesinde görünmüyorsa yine de seçilebilir ve listenin başında durur.
+    const self = user?.id
+      ? (map.get(user.id) || { user_id: user.id, name: user.full_name || 'Sen', avatar: '' })
+      : null;
+    const others = [...map.values()].filter((person) => person.user_id !== user?.id);
+    return self ? [{ ...self, me: true }, ...others] : others;
+  }, [seats, participants, user?.id, user?.full_name]);
 
   // Seçim rengi: seçilen hediyenin K seviyesi belirler.
   const selectedGift = useMemo(() => gifts.find((item) => item.id === giftId) || null, [gifts, giftId]);
@@ -438,11 +443,11 @@ export default function VoiceRoom() {
 
   useEffect(() => () => window.clearTimeout(giftFlashRef.current), []);
 
-  // Hediye tahtası açıkken profiller çoklu seçilir.
+  // Hediye tahtası açıkken profiller çoklu seçilir — kişi kendini de seçebilir.
   const toggleGiftPerson = useCallback((userId) => {
-    if (!userId || userId === user?.id) return;
+    if (!userId) return;
     setSelectedIds((prev) => (prev.includes(userId) ? prev.filter((value) => value !== userId) : [...prev, userId]));
-  }, [user?.id]);
+  }, []);
 
   // Tekli/toplu gönderim: K bakiyesi düşer, her alıcı ayrı kaydedilir.
   const sendGift = async (gift) => {
@@ -616,7 +621,6 @@ export default function VoiceRoom() {
           onSelectSeat={handleSeatPress}
           boardActive={boardActive}
           scores={scores}
-          selectedIds={selectedIds}
           accent={seatAccent}
           gifted={gifted}
         />

@@ -220,7 +220,8 @@ export default async function (req: Request): Promise<Response> {
       seats.forEach((seat) => { if (seat.user_id) people.set(seat.user_id, seat.name || 'Kullanıcı'); });
       (room.participants || []).forEach((person) => { if (person.user_id) people.set(person.user_id, person.name || 'Kullanıcı'); });
 
-      const ids = Array.isArray(target_ids) ? target_ids.filter((value) => typeof value === 'string' && value && value !== user.id) : [];
+      // Kişi kendine de hediye gönderebilir.
+      const ids = Array.isArray(target_ids) ? target_ids.filter((value) => typeof value === 'string' && value) : [];
       const recipients = [...new Set(ids)].slice(0, 30)
         .filter((value) => people.has(value))
         .map((value) => ({ user_id: value, name: people.get(value) || 'Kullanıcı' }));

@@ -3,7 +3,7 @@ import VoiceSeatScore from '@/components/voice/VoiceSeatScore';
 import { seatIndexRows } from '@/components/voice/seatLayout';
 
 /** Sahnedeki yuvarlak oturma düzeni — satırlar ortalanır. Sayı tahtası açıkken her kişinin altında sayı hücresi durur. */
-export default function VoiceSeatGrid({ seats = [], userId, ownerId, moderators = [], speakingIds = [], localSpeaking, onSelectSeat, boardActive, scores = {}, selectedIds = [], accent = '#ef4444', gifted = {} }) {
+export default function VoiceSeatGrid({ seats = [], userId, ownerId, moderators = [], speakingIds = [], localSpeaking, onSelectSeat, boardActive, scores = {}, accent = '#ef4444', gifted = {} }) {
   const size = seats.length > 15 ? 'sm' : 'md';
   return (
     <div className="flex flex-col items-center gap-4 sm:gap-5">
@@ -23,7 +23,6 @@ export default function VoiceSeatGrid({ seats = [], userId, ownerId, moderators 
                   isMod={occupied && moderators.includes(seat.user_id)}
                   speaking={occupied && (seat.user_id === userId ? localSpeaking : speakingIds.includes(seat.user_id))}
                   onClick={() => onSelectSeat(index)}
-                  selected={occupied && selectedIds.includes(seat.user_id)}
                   accent={accent}
                   gifted={occupied ? gifted[seat.user_id] : undefined}
                 />

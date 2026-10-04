@@ -3,7 +3,7 @@ import { Coins, Send } from 'lucide-react';
 import VoiceSheet from '@/components/voice/VoiceSheet';
 import GiftCard from '@/components/voice/GiftCard';
 import GiftRecipientRow from '@/components/voice/GiftRecipientRow';
-import { coinToK, formatK, tierForK, toneColor } from '@/lib/giftTone';
+import { coinToK, formatCoins, formatK, tierForK, toneColor } from '@/lib/giftTone';
 
 /** Hediye Tahtası: kategoriler, hediyeler (K değeriyle) ve çoklu alıcı seçimi. */
 export default function GiftBoard({ open, onClose, gifts = [], tiers = [], people = [], selectedIds = [], giftId, coins, sending, onSelectGift, onTogglePerson, onSelectAll, onClear, onSend }) {
@@ -30,7 +30,8 @@ export default function GiftBoard({ open, onClose, gifts = [], tiers = [], peopl
     <VoiceSheet open={open} onClose={onClose} title="Hediye Tahtası">
       <div className="mb-3 flex items-center gap-2">
         <span className="flex items-center gap-1.5 rounded-full bg-black/40 px-3 py-1.5 text-xs font-black tabular-nums text-amber-300">
-          <Coins className="h-4 w-4" /> {balanceK === null ? '—' : formatK(balanceK)}
+          <Coins className="h-4 w-4" /> {coins === null || coins === undefined ? '—' : formatCoins(coins)}
+          {balanceK !== null && <span className="text-[10px] font-bold text-amber-300/60">({formatK(balanceK)})</span>}
         </span>
         <span className="rounded-full bg-white/10 px-3 py-1.5 text-[11px] font-bold text-white/80">{count} alıcı</span>
         {gift && <span className="min-w-0 flex-1 truncate text-right text-[11px] font-bold" style={{ color }}>{tone?.name || 'Standart'} seviye</span>}
@@ -75,7 +76,7 @@ export default function GiftBoard({ open, onClose, gifts = [], tiers = [], peopl
       )}
 
       <p className="mt-3 text-center text-[11px] text-white/50">
-        Odadaki profillere dokunarak da alıcı seçebilirsin — hediye yalnızca seçilenlere gider.
+        Odadaki profillere dokunarak da alıcı seçebilirsin — seçilenler yalnızca bu listede işaretlenir, hediye seçilenlere gider.
       </p>
 
       {insufficient && (

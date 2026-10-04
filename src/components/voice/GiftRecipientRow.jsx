@@ -10,13 +10,13 @@ export default function GiftRecipientRow({ people = [], selectedIds = [], color,
         <p className="text-xs font-bold uppercase tracking-wide text-white/60">
           Alıcılar {selectedIds.length > 0 && <span style={{ color }}>• {selectedIds.length} kişi</span>}
         </p>
-        {people.length > 1 && (
+        {people.length > 0 && (
           <button
             type="button"
             onClick={() => (allSelected ? onClear() : onSelectAll())}
-            className="flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-bold text-white"
+            className="flex items-center gap-1 rounded-full bg-white/10 px-3 py-1.5 text-[11px] font-bold text-white active:scale-95 transition-transform"
           >
-            <Users className="h-3 w-3" /> {allSelected ? 'Seçimi temizle' : 'Hepsini seç'}
+            <Users className="h-3.5 w-3.5" /> {allSelected ? 'Seçimi temizle' : 'Tümünü seç'}
           </button>
         )}
       </div>
@@ -50,7 +50,7 @@ export default function GiftRecipientRow({ people = [], selectedIds = [], color,
                   )}
                 </span>
                 <span className="w-full truncate text-center text-[10px] leading-none" style={{ color: selected ? color : 'rgba(255,255,255,0.7)' }}>
-                  {person.name}
+                  {person.me ? 'Sen' : person.name}
                 </span>
               </button>
             );

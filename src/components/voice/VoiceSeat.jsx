@@ -1,4 +1,4 @@
-import { Check, Crown, Lock, MicOff, Plus, Shield } from 'lucide-react';
+import { Crown, Lock, MicOff, Plus, Shield } from 'lucide-react';
 import ProfileFrame from '@/components/ProfileFrame';
 
 // Her koltuk aynı boyutta sabit bir portre alanı kullanır: profil boyutu değişse de
@@ -12,7 +12,7 @@ const BADGE = { sm: 'translate-x-[5px] translate-y-[5px]', md: 'translate-x-[9px
 const FRAME_SCALE = 0.78;
 
 /** Tek koltuk: boş koltukta + ve numara, dolu koltukta profil görseli ve isim. */
-export default function VoiceSeat({ seat, index, size = 'md', speaking, isSelf, isOwner, isMod, selected, accent = '#ef4444', gifted, onClick }) {
+export default function VoiceSeat({ seat, index, size = 'md', speaking, isSelf, isOwner, isMod, accent = '#ef4444', gifted, onClick }) {
   const cell = CELL[size] || CELL.md;
   const face = FACE[size] || FACE.md;
   const ring = RING[size] || RING.md;
@@ -32,20 +32,15 @@ export default function VoiceSeat({ seat, index, size = 'md', speaking, isSelf, 
     );
   }
 
-  // Seçim ve hediye alma anı aynı renk tonunu kullanır (K seviyesine göre).
-  const halo = selected
-    ? `0 0 0 2px ${accent}, 0 0 18px ${accent}`
-    : gifted
-      ? `0 0 0 2px ${accent}, 0 0 26px ${accent}`
-      : undefined;
+  // Hediye alma anı, hediyenin K seviyesi rengiyle parlar. Alıcı seçimi koltukta işaretlenmez.
+  const halo = gifted ? `0 0 0 2px ${accent}, 0 0 26px ${accent}` : undefined;
 
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`flex flex-col items-center gap-1 active:scale-95 transition-transform ${selected ? 'scale-105' : ''}`}
-      aria-label={`${seat.name || 'Koltuk'}${selected ? ' (seçili)' : ''}`}
-      aria-pressed={!!selected}
+      className="flex flex-col items-center gap-1 active:scale-95 transition-transform"
+      aria-label={seat.name || 'Koltuk'}
     >
       <span className={`relative flex ${cell} shrink-0 items-center justify-center`}>
         {speaking && <span className={`pointer-events-none absolute ${ring} z-[5] rounded-full speaking-glow`} />}
@@ -66,16 +61,11 @@ export default function VoiceSeat({ seat, index, size = 'md', speaking, isSelf, 
             <MicOff className="h-3 w-3 text-white" />
           </span>
         )}
-        {selected && (
-          <span className="gift-pop absolute -right-1 -top-1 z-30 flex h-5 w-5 items-center justify-center rounded-full" style={{ background: accent }}>
-            <Check className="h-3 w-3 text-black" />
-          </span>
-        )}
         {gifted && (
           <span className="gift-pop pointer-events-none absolute -top-5 left-1/2 z-30 -translate-x-1/2 text-lg leading-none">{gifted}</span>
         )}
       </span>
-      <span className="flex max-w-[68px] items-center gap-0.5 truncate text-[10px] leading-none" style={{ color: selected || gifted ? accent : '#ffffff' }}>
+      <span className="flex max-w-[68px] items-center gap-0.5 truncate text-[10px] leading-none" style={{ color: gifted ? accent : '#ffffff' }}>
         {isOwner && <Crown className="h-3 w-3 shrink-0 text-amber-400" />}
         {!isOwner && isMod && <Shield className="h-3 w-3 shrink-0 text-sky-400" />}
         <span className="truncate">{isSelf ? 'Sen' : seat.name}</span>
