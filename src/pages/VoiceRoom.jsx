@@ -55,6 +55,8 @@ export default function VoiceRoom() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [seatIndex, setSeatIndex] = useState(null);
+  // Mikrofonu boş koltuk menüsünden kapattıysam koltuğun üstünde "mik kapalı" rozeti görünür.
+  const [seatMicOff, setSeatMicOff] = useState(false);
   const [profileUserId, setProfileUserId] = useState(null);
   const [dmUserId, setDmUserId] = useState(null);
   const [dmOpen, setDmOpen] = useState(false);
@@ -441,6 +443,8 @@ export default function VoiceRoom() {
   const handleTakeSeat = () => {
     const index = seatIndex;
     setSeatIndex(null);
+    // Koltuğa oturunca mikrofon otomatik açılır: boş koltuktaki rozet kalkar.
+    setSeatMicOff(false);
     if (index !== null) invokeVoice({ action: 'seat-take', seat_index: index });
   };
 
@@ -453,8 +457,10 @@ export default function VoiceRoom() {
   };
 
   // Boş koltuk kartından mikrofon aç/kapa — koltuk boş olsa da çalışır.
+  // Açıkken kapatırsam rozet çıkar, kapalıyken açarsam rozet kaybolur ve buton durumu değişir.
   const muteMicFromSeat = () => {
     setSeatIndex(null);
+    setSeatMicOff(voice.active);
     voice.toggleMute();
   };
 
@@ -817,6 +823,9 @@ export default function VoiceRoom() {
   const profileHidden = isHiddenName(profilePerson?.name);
   const profileMicMuted = profileSelf ? voice.muted : profileMuted;
 
+  // Profil kartında her işlem kartı kapatır: hangi seçeneğe basılırsa basılsın kart her seferinde kapanır.
+  const cardAction = (action) => () => { setProfileUserId(null); action(); };
+
   // Profil ızgarası: mikrofon, koltuk, davet, sohbet, yöneticilik ve koltuk kilidi.
   const profileTiles = profileTarget ? [
     {
@@ -824,23 +833,23 @@ export default function VoiceRoom() {
       icon: profileMicMuted ? MicOff : Mic,
       label: profileMicMuted ? 'Mik aç' : 'Mik kapat',
       disabled: !profileSelf && !canMod,
-      onClick: profileSelf ? handleMic : () => toggleMuteFor(profileTarget),
+      onClick: cardAction(profileSelf ? handleMic : () => toggleMuteFor(profileTarget)),
     },
-    ...(profileSelf && seated ? [{ key: 'stand', icon: Armchair, label: 'Ayağa kalk', onClick: handleProfileSeat }] : []),
-    ...(profileSelf ? [{ key: 'view-self', icon: UserRound, label: 'Profili gör', onClick: openSelfProfile }] : []),
-    ...(!profileSelf && (canKick || (canMod && profileHidden)) && profileSeat ? [{ key: 'seat-kick', icon: Armchair, label: 'Koltuktan indir', onClick: handleProfileSeat }] : []),
-    ...(!profileSelf ? [{ key: 'invite', icon: UserPlus, label: 'Davet et', disabled: !canMod && !seated, onClick: () => { const target = profileTarget; setProfileUserId(null); inviteToSeat(target); } }] : []),
-    ...(!profileSelf ? [{ key: 'chat', icon: MessageSquare, label: 'Mesaj', onClick: () => { setDmUserId(profileTarget); setProfileUserId(null); } }] : []),
-    ...(!profileSelf && canMod ? [{ key: 'mod', icon: Shield, label: profileIsMod ? 'Yetkiyi al' : 'Yönetici yap', onClick: () => { const target = profileTarget; const makeMod = !profileIsMod; setProfileUserId(null); handleToggleMod(target, makeMod); } }] : []),
-    ...(canMod && profileSeat ? [{ key: 'lock', icon: profileSeat.locked ? Unlock : Lock, label: profileSeat.locked ? 'Koltuğun kilidini aç' : 'Koltuğu kilitle', onClick: () => invokeVoice({ action: 'seat-lock', seat_index: profileSeatIndex, locked: !profileSeat.locked }) }] : []),
-    ...(!profileSelf && !profileHidden ? [{ key: 'view', icon: UserRound, label: 'Profili gör', onClick: () => { const target = profileTarget; setProfileUserId(null); openFullProfile(target); } }] : []),
+    ...(profileSelf && seated ? [{ key: 'stand', icon: Armchair, label: 'Ayağa kalk', onClick: cardAction(handleProfileSeat) }] : []),
+    ...(profileSelf ? [{ key: 'view-self', icon: UserRound, label: 'Profili gör', onClick: cardAction(openSelfProfile) }] : []),
+    ...(!profileSelf && (canKick || (canMod && profileHidden)) && profileSeat ? [{ key: 'seat-kick', icon: Armchair, label: 'Koltuktan indir', onClick: cardAction(handleProfileSeat) }] : []),
+    ...(!profileSelf ? [{ key: 'invite', icon: UserPlus, label: 'Davet et', disabled: !canMod && !seated, onClick: cardAction(() => inviteToSeat(profileTarget)) }] : []),
+    ...(!profileSelf ? [{ key: 'chat', icon: MessageSquare, label: 'Mesaj', onClick: cardAction(() => setDmUserId(profileTarget)) }] : []),
+    ...(!profileSelf && canMod ? [{ key: 'mod', icon: Shield, label: profileIsMod ? 'Yetkiyi al' : 'Yönetici yap', onClick: cardAction(() => handleToggleMod(profileTarget, !profileIsMod)) }] : []),
+    ...(canMod && profileSeat ? [{ key: 'lock', icon: profileSeat.locked ? Unlock : Lock, label: profileSeat.locked ? 'Koltuğun kilidini aç' : 'Koltuğu kilitle', onClick: cardAction(() => invokeVoice({ action: 'seat-lock', seat_index: profileSeatIndex, locked: !profileSeat.locked })) }] : []),
+    ...(!profileSelf && !profileHidden ? [{ key: 'view', icon: UserRound, label: 'Profili gör', onClick: cardAction(() => openFullProfile(profileTarget)) }] : []),
   ] : [];
 
   // Alt satır: hediye gönder ve odadan at (odadan atma yalnızca oda sahibinde).
   const profileFooter = profileTarget ? [
     // Kişi kendine de hediye gönderebilir.
-    { key: 'gift', icon: Gift, label: 'Hediye gönder', onClick: () => { setSelectedIds([profileTarget]); openGifts(); setProfileUserId(null); } },
-    ...(!profileSelf && canKick ? [{ key: 'kick', icon: UserMinus, label: 'Odadan at', danger: true, onClick: () => { const target = profileTarget; setProfileUserId(null); kickFromRoom(target); } }] : []),
+    { key: 'gift', icon: Gift, label: 'Hediye gönder', onClick: cardAction(() => { setSelectedIds([profileTarget]); openGifts(); }) },
+    ...(!profileSelf && canKick ? [{ key: 'kick', icon: UserMinus, label: 'Odadan at', danger: true, onClick: cardAction(() => kickFromRoom(profileTarget)) }] : []),
   ] : [];
 
   // Seçili kişinin koltuk puanı animasyonda gösterilir.
@@ -913,7 +922,7 @@ export default function VoiceRoom() {
           scores={scores}
           accent={seatAccent}
           gifted={gifted}
-          micMuted={voice.muted}
+          micMuted={seatMicOff && !seated}
         />
         <HiddenUserMarquee active={room?.ghost_entered_at} name={hiddenAnnounceName} />
         <p className="mt-5 text-center text-[11px] text-white/50">

@@ -29,10 +29,10 @@ export default function VoiceSeat({ seat, index, size = 'md', speaking, isSelf, 
         <span className={`flex ${cell} shrink-0 items-center justify-center`}>
           <span className={`relative flex ${emptyCircle} items-center justify-center rounded-full border ${seat?.locked ? 'border-amber-400/70 bg-amber-500/10' : 'border-white/25 bg-black/40'}`}>
             {seat?.locked ? <Lock className="h-4 w-4 text-amber-400" /> : <Plus className="h-5 w-5 text-white/80" />}
-            {/* Mikrofonum kapalıyken boş koltukta "mik kapalı" rozeti görünür; mikrofonu açınca kaybolur. */}
+            {/* Mikrofonu kendi elimle kapattığımda görünen sade rozet; mikrofonu açınca kaybolur. */}
             {micMuted && (
-              <span aria-label="Mikrofon kapalı" className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full border border-white/20 bg-red-600">
-                <MicOff className="h-2.5 w-2.5 text-white" />
+              <span aria-label="Mikrofon kapalı" className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full border border-white/25 bg-black/80">
+                <MicOff className="h-2.5 w-2.5 text-white/80" />
               </span>
             )}
           </span>
