@@ -9,7 +9,7 @@ import { giftBoard } from '../../shared/giftBoard.ts';
 import { addGiftTotals } from '../../shared/userLevels.ts';
 import { HIDDEN_AVATAR_URL, hiddenDisplayName, isHiddenDisplayName, isHiddenUser } from '../../shared/vip.ts';
 
-const SEAT_OPTIONS = [2, 5, 8, 9, 12, 15, 20, 24];
+const SEAT_OPTIONS = [1, 2, 5, 8, 9, 12, 15, 20, 24];
 // Bu değerin (coin) üzerindeki hediyeler bütün sesli odalara duyurulur.
 const BIG_GIFT_SCORE = 1000000;
 const ACTIONS = ['seat-take', 'seat-leave', 'seat-lock', 'seat-mute', 'seat-kick', 'set-seat-count', 'invite', 'seat-invite', 'seat-invite-clear', 'gift-state', 'gift-send', 'gift-board', 'number-board-open', 'number-board-close', 'number-step', 'number-reset', 'number-settings', 'chat-ban'];
@@ -155,16 +155,68 @@ export default async function (req: Request): Promise<Response> {
       if (!canMod) return Response.json({ error: 'yetkisiz' }, { status: 403 });
       const count = Number(seat_count);
       if (!SEAT_OPTIONS.includes(count)) return Response.json({ error: 'Geçersiz koltuk sayısı.' }, { status: 400 });
-      const busy = seats.filter((seat) => seat.index >= count && seat.user_id);
-      if (busy.length) return Response.json({ error: 'Önce yüksek numaralı koltukları boşaltın.' }, { status: 409 });
-
-      const next = Array.from({ length: count }, (_, index) => {
-        const existing = seats.find((seat) => seat.index === index);
-        return existing ? { ...existing, index } : emptySeat(index);
+      // Koltuk sayısı düşürülürken kimse beklemez: yeri kalan herkes kendi koltuğunda kalır,
+      // oda sahibi her koşulda bir koltuk alır, dışarıda kalanlar izleyiciye düşürülür.
+      const occupied = seats.filter((seat) => seat.user_id);
+      const slots = Array.from({ length: count }, (_, index) => {
+        const seat = occupied.find((item) => item.index === index);
+        return seat ? { ...seat, index } : null;
       });
-      await persist(next);
+      const dropped: any[] = [];
+      const overflow = occupied
+        .filter((seat) => seat.index >= count)
+        .sort((a, b) => (a.user_id === room.owner_id ? -1 : b.user_id === room.owner_id ? 1 : a.index - b.index));
+      for (const person of overflow) {
+        let spot = slots.findIndex((slot) => !slot);
+        if (spot < 0) {
+          // Yer kalmadıysa oda sahibi son koltuğu alır, diğerleri izleyiciye düşer.
+          if (person.user_id !== room.owner_id) { dropped.push(person); continue; }
+          spot = slots.length - 1;
+          if (slots[spot]) dropped.push(slots[spot]);
+        }
+        slots[spot] = { ...person, index: spot };
+      }
+
+      const next = slots.map((slot, index) => {
+        const locked = !!seats.find((seat) => seat.index === index)?.locked;
+        return slot ? { ...slot, index, locked } : emptySeat(index, locked);
+      });
+
+      const patch: Record<string, any> = { seats: next, seat_count: next.length };
+      if (dropped.length) {
+        // Koltuktan düşenlerin koltuk puanları temizlenir ve işlem kayıt defterine yazılır.
+        let board = room.number_scores;
+        for (const seat of dropped) {
+          const cleared = scoresAfterSeatLeave({ ...room, number_scores: board }, seat.user_id);
+          if (cleared) board = cleared;
+        }
+        if (board !== room.number_scores) patch.number_scores = board;
+        patch.room_logs = appendRoomLog(room, {
+          text: `${shownName} koltuk sayısını ${count} yaptı — ${dropped.map((seat) => seat.name || 'Kullanıcı').join(', ')} koltuktan indirildi.`,
+          kind: 'seat_kick',
+          actor_id: hiddenUser ? '' : user.id,
+          actor_name: shownName,
+        });
+      }
+      await base44.asServiceRole.entities.Room.update(room_id, patch);
+      // Koltuktan düşenler sessizce izleyiciye düşmez: sebebini bildirimde görürler.
+      for (const seat of dropped) {
+        upsertNotification(base44, {
+          user_id: seat.user_id,
+          title: 'Koltuktan indirildin',
+          body: `${shownName}, "${room.name}" odasında koltuk sayısını ${count} olarak ayarladı.`,
+          type: 'voice_room_seat_dropped',
+          link: `/sesli-oda/${room_id}`,
+          ref_id: room_id,
+        }).catch(() => {});
+      }
       say(`${shownName} koltuk sayısını ${count} olarak ayarladı.`);
-      return respond(next);
+      return Response.json({
+        ok: true,
+        seats: next,
+        seat_count: next.length,
+        dropped: dropped.map((seat) => ({ user_id: seat.user_id, name: seat.name || 'Kullanıcı' })),
+      });
     }
 
     // Arkadaş daveti — koltukta oturanlar ve yöneticiler davet edebilir

@@ -80,7 +80,7 @@ export default function VoiceRoomMenu({ open, onClose, room, userId, participant
       {!canMod && <p className="mt-4 rounded-xl bg-white/5 p-3 text-xs text-white/60">Oda ayarlarını yalnızca oda sahibi ve yöneticiler değiştirebilir.</p>}
 
       {canMod && panel === 'seats' && (
-        <Panel hint={`Şu an ${room?.seat_count || 0} koltuk açık. Dolu koltuklar korunur.`}>
+        <Panel hint={`Şu an ${room?.seat_count || 0} koltuk açık. Sığmayanlar izleyiciye düşer.`}>
           <SeatCountPicker compact value={room?.seat_count} onChange={onSeatCount} />
         </Panel>
       )}

@@ -392,18 +392,27 @@ export default function VoiceRoom() {
     setRoom((prev) => (prev ? { ...prev, ...patch } : prev));
   }, []);
 
-  // Koltuk sayısı: düzen hemen büyür/küçülür, sunucu onayı arkadan alınır.
+  // Koltuk sayısı: düzen anında değişir, sığmayanlar tek hamlede izleyiciye düşer.
   const changeSeatCount = useCallback(async (count) => {
     const current = Array.isArray(room?.seats) ? room.seats : [];
-    // Yüksek numaralı dolu koltuk varsa sunucu reddeder — önce onun cevabı beklenir.
-    const busy = current.some((seat) => seat.index >= count && seat.user_id);
-    if (!busy) {
-      const next = resizeSeats(current, count);
-      patchRoom({ seats: next, seat_count: next.length });
+    patchRoom({ seats: resizeSeats(current, count, room?.owner_id), seat_count: count });
+    try {
+      const response = await base44.functions.invoke('voice-room', { room_id: id, action: 'set-seat-count', seat_count: count });
+      const data = response?.data || {};
+      // Sunucu düzeni kesinleştirir; kim koltukta kaldıysa ekran ona uyar.
+      if (Array.isArray(data.seats)) patchRoom({ seats: data.seats, seat_count: data.seats.length });
+      const dropped = data.dropped || [];
+      if (dropped.length) {
+        toast({
+          title: `${dropped.length} kişi koltuktan indirildi`,
+          description: dropped.map((person) => person.name).join(', '),
+        });
+      }
+    } catch (error) {
+      syncRoom();
+      toast({ title: 'Koltuk sayısı değiştirilemedi', description: error?.response?.data?.error || error.message, variant: 'destructive' });
     }
-    const ok = await invokeVoice({ action: 'set-seat-count', seat_count: count });
-    if (!ok) syncRoom();
-  }, [room?.seats, invokeVoice, patchRoom, syncRoom]);
+  }, [id, room?.seats, room?.owner_id, patchRoom, syncRoom, toast]);
 
   const leaveRoom = useCallback(async () => {
     joinedRef.current = false;
