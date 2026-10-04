@@ -6,6 +6,7 @@ import { Image } from '@/components/ui/image';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import RoomMessagePanel from '@/components/admin/RoomMessagePanel';
 import { Search, ChevronLeft, ChevronRight, Users, MessageSquare } from 'lucide-react';
+import { HIDDEN_AVATAR_URL, hiddenDisplayName, isHiddenUser } from '@/lib/hiddenUser';
 
 const PAGE_SIZE = 8;
 
@@ -149,10 +150,12 @@ export default function AdminRoomMessages() {
     const text = input.trim();
     if (!text || !active) return;
     try {
+      // Gizli kullanıcı modundaysa mesaj takma adla ve maskeli profille yazılır — gerçek isim/fotoğraf görünmez.
+      const hidden = isHiddenUser(admin);
       const msg = await base44.entities.RoomMessage.create({
-        room_id: active.id, user_id: admin.id,
-        user_name: admin.username || admin.full_name || 'Admin',
-        user_avatar: admin.avatar || '', text, type: 'user',
+        room_id: active.id, user_id: hidden ? '' : admin.id,
+        user_name: hidden ? hiddenDisplayName(admin) : (admin.username || admin.full_name || 'Admin'),
+        user_avatar: hidden ? HIDDEN_AVATAR_URL : (admin.avatar || ''), text, type: 'user',
       });
       setMessages((p) => p.some((m) => m.id === msg.id) ? p : [...p, msg]);
       setInput('');

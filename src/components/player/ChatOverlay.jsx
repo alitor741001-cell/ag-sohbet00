@@ -9,6 +9,7 @@ import { Image } from '@/components/ui/image';
 
 import useMessageProfiles from '@/hooks/useMessageProfiles';
 import useRoomLevels from '@/hooks/useRoomLevels';
+import { isHiddenName } from '@/lib/hiddenUser';
 import { mergeMessages, upsertMessage } from '@/lib/realtimeMessages';
 import { parseRoleMetadata, parseFrameMetadata } from '@/lib/roles';
 import RoomChatMessage from '@/components/player/RoomChatMessage';
@@ -36,10 +37,13 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
   // İzleyici listesindeki kişilerin seviye rozetleri için seviyeler çekilir.
   const levelUserIds = [...participants.map((participant) => participant.user_id), ...recentParticipants.map((participant) => participant.user_id)];
   const { levels: roomLevels } = useRoomLevels(levelUserIds);
+  // Gizli kullanıcıların takma adı → kimliği: yalnızca N/VIP rozetleri için seviye verisi çekilir, kimlik gösterilmez.
+  const hiddenUsersByName = {};
+  participants.forEach((person) => { if (person?.user_id && isHiddenName(person.name)) hiddenUsersByName[person.name] = person.user_id; });
   const [blockedUsers, setBlockedUsers] = useState(user?.blocked_users || []);
   useEffect(() => { setBlockedUsers(user?.blocked_users || []); }, [user?.blocked_users]);
   const scrollRef = useRef(null);
-  const profiles = useMessageProfiles(messages.map((message) => message.user_id));
+  const profiles = useMessageProfiles([...messages.map((message) => message.user_id), ...Object.values(hiddenUsersByName)]);
   const [roomMods, setRoomMods] = useState([]);
   useEffect(() => {
     if (!ownerId) return;
@@ -292,7 +296,7 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
                   );
                 })()
               ) : (
-                <RoomChatMessage message={m} profile={profiles[m.user_id]} ownerId={ownerId} roomModerators={roomModerators} currentUserId={user?.id} canDelete={isOwner || user?.id === m.user_id} onDelete={del} onImage={setLightbox} onOpenProfile={onProfileCard} />
+                <RoomChatMessage message={m} profile={profiles[m.user_id] || profiles[hiddenUsersByName[m.user_name]]} ownerId={ownerId} roomModerators={roomModerators} currentUserId={user?.id} canDelete={isOwner || user?.id === m.user_id} onDelete={del} onImage={setLightbox} onOpenProfile={onProfileCard} />
               )}
             </div>
           ))}

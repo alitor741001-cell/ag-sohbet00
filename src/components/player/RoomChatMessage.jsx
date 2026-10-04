@@ -8,7 +8,7 @@ import RoleNameEffect from '@/components/role/RoleNameEffect';
 import RoleMessageEffect from '@/components/role/RoleMessageEffect';
 import UserBadgeRow from '@/components/status/UserBadgeRow';
 import { getRoleInfo, isModerator } from '@/lib/roles';
-import { isHiddenName } from '@/lib/hiddenUser';
+import { HIDDEN_AVATAR_URL, isHiddenName } from '@/lib/hiddenUser';
 
 /**
  * Film odası sohbet satırı: sesli odadaki gibi seviye rozetleri gösterilir (oda LVL'i yok).
@@ -16,8 +16,9 @@ import { isHiddenName } from '@/lib/hiddenUser';
  */
 function RoomChatMessage({ message, profile, ownerId, roomModerators, currentUserId, canDelete, onDelete, onImage, onOpenProfile }) {
   const role = getRoleInfo(profile || message);
-  const avatar = profile?.avatar || message.user_avatar;
   const hidden = isHiddenName(message.user_name);
+  // Gizli kullanıcı: gerçek fotoğraf ve çerçeve yerine maskeli profil görünür.
+  const avatar = hidden ? HIDDEN_AVATAR_URL : (profile?.avatar || message.user_avatar);
   const isOwner = message.user_id === ownerId;
   const isMod = !isOwner && (roomModerators.includes(message.user_id) || isModerator(profile));
   const trimmed = (message.text || '').trim();
@@ -41,7 +42,7 @@ function RoomChatMessage({ message, profile, ownerId, roomModerators, currentUse
         {!hidden && isOwner && <span className="text-[10px] font-bold text-amber-400">Oda Sahibi</span>}
         {!hidden && profile && (profile.display_role || profile.custom_role?.name) && <RoleBadge user={profile} size="sm" showLabel={false} />}
       </div>
-      {!hidden && <div className="flex flex-wrap items-center gap-1"><UserBadgeRow profile={profile} /></div>}
+      <div className="flex flex-wrap items-center gap-1"><UserBadgeRow profile={profile} /></div>
       <div className="isolate min-w-0 max-w-full overflow-hidden rounded-xl p-2">
         <RoleMessageEffect className="max-w-full min-w-0 align-top" roleKey={profile?.display_role || (profile?.custom_role?.name ? 'custom' : '')} msgEffect={role.msg_effect} msgColor={role.color}>
           {message.file_url && <Image src={message.file_url} alt="Sohbet görseli" className="mb-1 block h-44 w-44 max-w-full cursor-pointer rounded-lg" fittingType="fit" onClick={() => onImage(message.file_url)} />}
