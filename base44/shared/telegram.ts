@@ -9,6 +9,7 @@ const DEFAULT_TEMPLATES: Record<string, string> = {
   payment: `💳 Yeni ödeme gerçekleşti.\n\nKullanıcı: {{username}}\nPaket: {{package}}\nTutar: {{amount}}\nDurum: {{status}}\nTarih: {{date}}`,
   subscription_active: `✅ Abonelik aktif edildi.\n\nKullanıcı: {{username}}\nPaket: {{package}}\nTarih: {{date}}`,
   subscription_cancelled: `❌ Abonelik iptal edildi.\n\nKullanıcı: {{username}}\nTarih: {{date}}`,
+  coin_request: `🪙 Yeni coin satın alma başvurusu!\n\nKullanıcı: {{username}}\nPaket: {{package}}\nCoin: {{coins}}\nTutar: {{amount}}\nDurum: {{status}}\nTarih: {{date}}\n\nAdmin panelindeki Coins Başvuru Listesi'nden onayla.`,
   test: `✅ Filmkeyfi Telegram bildirim sistemi başarıyla çalışıyor.\n\nTest tarihi: {{date}}`,
 };
 
@@ -20,6 +21,7 @@ const DEFAULT_EVENTS: Record<string, boolean> = {
   payment: true,
   subscription_active: true,
   subscription_cancelled: true,
+  coin_request: true,
 };
 
 export interface TelegramSettings {

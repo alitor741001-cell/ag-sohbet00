@@ -55,9 +55,10 @@ export async function notifyAdmins(base44: any, opts: {
     }
   }
 
-  // Send Web Push and Telegram in background — don't block the response
+  // Telegram mesajı tamamlanana kadar beklenir (çağıran bekliyorsa bildirim kaybolmaz).
+  await sendTelegram(base44, event, telegram_data || {}, dedupRefId).catch(() => {});
+  // Web Push arka planda gönderilir
   sendPushToAdmins(base44, cleanTitle, cleanBody, cleanLink).catch(() => {});
-  sendTelegram(base44, event, telegram_data || {}, dedupRefId).catch(() => {});
 
   return { ok: true, admins: adminUsers.length };
 }
