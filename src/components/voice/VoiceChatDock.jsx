@@ -7,7 +7,6 @@ import SlotWinMessage from '@/components/games/SlotWinMessage';
 import BigGiftChatNotice from '@/components/voice/BigGiftChatNotice';
 import { plainText } from '@/components/voice/voiceText';
 import useMessageProfiles from '@/hooks/useMessageProfiles';
-import useRoomLevels from '@/hooks/useRoomLevels';
 
 /**
  * Oda alt bölümü: mesaj akışı klavye ikonuna basmadan da alt barın üstündeki boş alanda durur,
@@ -24,7 +23,6 @@ export default function VoiceChatDock({ messages = [], onSend, onCloseComposer, 
     [messages]
   );
   const profiles = useMessageProfiles(userIds);
-  const { levels } = useRoomLevels(userIds);
 
   useEffect(() => {
     if (composerOpen) inputRef.current?.focus();
@@ -66,7 +64,6 @@ export default function VoiceChatDock({ messages = [], onSend, onCloseComposer, 
                   key={message.id}
                   message={message}
                   profile={profiles[message.user_id]}
-                  level={levels[message.user_id]}
                   ownerId={ownerId}
                   moderators={moderators}
                   currentUserId={currentUserId}

@@ -1,13 +1,12 @@
 import { memo } from 'react';
 import RoleBadge from '@/components/RoleBadge';
 import RoleNameEffect from '@/components/role/RoleNameEffect';
-import RoomLevelBadge from '@/components/levels/RoomLevelBadge';
 import UserStatusBadges from '@/components/status/UserStatusBadges';
 import { getRoleInfo, isModerator } from '@/lib/roles';
 import { plainText } from '@/components/voice/voiceText';
 
-/** Sohbet satırı: üye no, rol ve seviye rozetleri + renkli isim + mesaj. */
-function VoiceChatMessage({ message, profile, level, ownerId, moderators = [], currentUserId, onOpenProfile }) {
+/** Sohbet satırı: üye no, rol ve durum rozetleri + renkli isim + mesaj. */
+function VoiceChatMessage({ message, profile, ownerId, moderators = [], currentUserId, onOpenProfile }) {
   const role = getRoleInfo(profile || message);
   const memberId = profile?.member_id && profile.member_id !== '-' ? profile.member_id : '';
   const isOwner = message.user_id === ownerId;
@@ -38,9 +37,6 @@ function VoiceChatMessage({ message, profile, level, ownerId, moderators = [], c
 
         <div className="mt-1 flex flex-wrap items-center gap-1">
           <RoleBadge user={profile} size="sm" />
-          <span className="inline-block h-[30px] w-[54px] shrink-0 overflow-hidden">
-            <span className="block origin-top-left scale-[0.36]"><RoomLevelBadge level={level} /></span>
-          </span>
           <UserStatusBadges
             showUserIcon
             n_level={profile?.n_level || 0}
