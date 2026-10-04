@@ -4,8 +4,10 @@ import { base44 } from '@/api/base44Client';
 import { Image } from '@/components/ui/image';
 import { formatCoins } from '@/lib/giftTone';
 import { formatScore } from '@/components/voice/scoreTier';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 const MIN_DOLLARS = 1;
+const COINS_PER_DOLLAR = 5000;
 
 const formatTl = (value) => `${(Number(value) || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺`;
 
@@ -21,6 +23,9 @@ export default function GiftBoxPanel({ open, onClose }) {
   const [person, setPerson] = useState(null);
   const [lookupError, setLookupError] = useState('');
   const [dollars, setDollars] = useState('1');
+  const [withdrawId, setWithdrawId] = useState('');
+  const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [confirmKind, setConfirmKind] = useState(null);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState('');
 
@@ -43,6 +48,9 @@ export default function GiftBoxPanel({ open, onClose }) {
     setLookupError('');
     setNotice('');
     setDollars('1');
+    setWithdrawId('');
+    setWithdrawAmount('');
+    setConfirmKind(null);
     load();
   }, [open, load]);
 
@@ -73,10 +81,18 @@ export default function GiftBoxPanel({ open, onClose }) {
 
   const amount = () => Math.round((Number(String(dollars).replace(',', '.')) || 0) * 100) / 100;
 
-  const send = async () => {
+  // Gönderimden önce her seferinde iptal/onayla uyarısı görünür.
+  const send = () => {
     if (!person) return;
     const value = amount();
     if (value < MIN_DOLLARS) { setNotice(`En az ${MIN_DOLLARS} dolar gönderilebilir.`); return; }
+    setNotice('');
+    setConfirmKind('send');
+  };
+
+  const performSend = async () => {
+    if (!person) return;
+    const value = amount();
     setBusy(true);
     setNotice('');
     try {
@@ -97,14 +113,32 @@ export default function GiftBoxPanel({ open, onClose }) {
     }
   };
 
-  const withdraw = async () => {
+  const withdrawDollars = () => Math.round((Number(String(withdrawAmount).replace(',', '.')) || 0) * 100) / 100;
+
+  // Çekim: kimlik numarası ve tutar girilmeden talep oluşmaz; onay uyarısı her seferinde çıkar.
+  const withdraw = () => {
+    const max = Number(summary?.available_dollars) || 0;
+    if (!withdrawId.trim()) { setNotice('Kimlik numaranı girmeden bakiye çekemezsin.'); return; }
+    const value = withdrawDollars();
+    if (value <= 0) { setNotice('Çekilecek tutarı gir.'); return; }
+    if (value > max) { setNotice(`En fazla ${max.toLocaleString('tr-TR')} $ çekebilirsin.`); return; }
+    setNotice('');
+    setConfirmKind('withdraw');
+  };
+
+  const performWithdraw = async () => {
     setBusy(true);
     setNotice('');
     try {
-      const response = await base44.functions.invoke('gift-box', { action: 'withdraw' });
+      const response = await base44.functions.invoke('gift-box', {
+        action: 'withdraw',
+        member_id: withdrawId.trim(),
+        dollars: withdrawDollars(),
+      });
       const data = response.data || {};
       if (data.balance) setSummary(data.balance);
-      setNotice(`Çekim talebin alındı — ${formatTl(data.tl || availableTl)} onaydan sonra ödenir.`);
+      setWithdrawAmount('');
+      setNotice(`Çekim talebin alındı — ${formatTl(data.tl || 0)} onaydan sonra ödenir.`);
     } catch (error) {
       setNotice(error?.response?.data?.error || 'Talep oluşturulamadı.');
     } finally {
@@ -215,16 +249,56 @@ export default function GiftBoxPanel({ open, onClose }) {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={withdraw}
-          disabled={busy || available <= 0}
-          className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 text-sm font-bold text-white transition-transform active:scale-95 disabled:opacity-40"
-        >
-          <Wallet className="h-4 w-4" /> Bakiyeyi çek{availableTl > 0 ? ` (${formatTl(availableTl)})` : ''}
-        </button>
+        <div className="mt-3 rounded-xl border border-white/15 bg-white/5 p-3">
+          <p className="text-[11px] font-bold text-white/60">Bakiyeyi çek</p>
+          <div className="mt-1 flex items-center gap-2">
+            <input
+              value={withdrawId}
+              onChange={(event) => setWithdrawId(event.target.value)}
+              inputMode="numeric"
+              aria-label="Kimlik numarası"
+              placeholder="Kimlik numaran"
+              className="h-11 min-w-0 flex-1 rounded-xl bg-white/10 px-3 text-sm font-semibold text-white outline-none placeholder:text-white/35"
+            />
+            <div className="relative w-28 shrink-0">
+              <input
+                value={withdrawAmount}
+                onChange={(event) => setWithdrawAmount(event.target.value)}
+                inputMode="decimal"
+                aria-label="Çekilecek tutar (dolar)"
+                placeholder="Tutar"
+                className="h-11 w-full rounded-xl bg-white/10 pl-3 pr-7 text-sm font-bold tabular-nums text-white outline-none placeholder:text-white/35"
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-bold text-white/50">$</span>
+            </div>
+          </div>
+          <p className="mt-1.5 text-[10px] text-white/45">
+            Çekilebilir: {available.toLocaleString('tr-TR')} $ ({formatTl(availableTl)}) • kimlik numarası ve tutar girilmeden talep oluşmaz.
+          </p>
+          <button
+            type="button"
+            onClick={withdraw}
+            disabled={busy || available <= 0}
+            className="mt-2 flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/10 text-sm font-bold text-white transition-transform active:scale-95 disabled:opacity-40"
+          >
+            <Wallet className="h-4 w-4" /> Çekim talebi oluştur
+          </button>
+        </div>
 
         {notice && <p className="mt-2 text-center text-[11px] font-semibold text-emerald-400">{notice}</p>}
+
+        <ConfirmDialog
+          open={!!confirmKind}
+          onOpenChange={(next) => { if (!next) setConfirmKind(null); }}
+          title={confirmKind === 'withdraw' ? 'Çekim talebi onayı' : 'Gönderim onayı'}
+          description={confirmKind === 'withdraw'
+            ? `${withdrawDollars().toFixed(2)} $ (${formatTl(withdrawDollars() * tlRate)}) için çekim talebi oluşturulacak. Kimlik numarası: ${withdrawId.trim()}.`
+            : person
+              ? `${amount().toFixed(2)} $ (${formatTl(amount() * tlRate)}) ${person.name} hesabına gönderilecek ve karşı tarafa ${formatCoins(amount() * COINS_PER_DOLLAR)} coin geçecek.`
+              : ''}
+          confirmText="Onayla"
+          onConfirm={confirmKind === 'withdraw' ? performWithdraw : performSend}
+        />
         </div>
       </div>
     </div>

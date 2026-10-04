@@ -182,14 +182,22 @@ export default async function (req: Request): Promise<Response> {
       });
     }
 
-    // Çekim talebi: talep kaydı oluşur ve yöneticilere bildirim düşer
+    // Çekim talebi: kimlik numarası hesabı doğrulamadan ve tutar girilmeden talep oluşmaz.
     if (action === 'withdraw') {
       const rl = await rateLimit(base44, 'gift-box-withdraw:' + user.id, user.id, 5, 60000);
       if (!rl.allowed) return Response.json({ error: 'Çok fazla talep, biraz bekleyin.' }, { status: 429 });
 
+      const memberId = String(body?.member_id || '').trim();
+      if (!memberId) return Response.json({ error: 'Kimlik numaranı girmeden bakiye çekemezsin.' }, { status: 400 });
+      const owner = await findByMemberId(base44, memberId);
+      if (!owner || owner.id !== user.id) {
+        return Response.json({ error: 'Kimlik numarası hesabınla eşleşmiyor.' }, { status: 400 });
+      }
+
+      const requested = Math.round((Number(body?.dollars) || 0) * 100) / 100;
+      if (requested <= 0) return Response.json({ error: 'Çekilecek tutarı gir.' }, { status: 400 });
+
       const summary = await giftBoxSummary(base44, account);
-      const requested = Math.round((Number(body?.dollars) || summary.available_dollars) * 100) / 100;
-      if (requested <= 0) return Response.json({ error: 'Çekilecek bakiye yok.' }, { status: 400 });
       if (requested > summary.available_dollars) {
         return Response.json({ error: 'Çekilebilir bakiyeden fazlasını çekemezsin.' }, { status: 400 });
       }
@@ -209,18 +217,7 @@ export default async function (req: Request): Promise<Response> {
         rate: summary.tl_rate,
       });
 
-      const admins = await base44.asServiceRole.entities.User
-        .filter({ role: 'admin' }, '-created_date', 20)
-        .catch(() => []);
-      await Promise.all(admins.map((admin) => upsertNotification(base44, {
-        user_id: admin.id,
-        title: 'Çekim talebi',
-        type: 'gift_box_withdraw:' + user.id,
-        body: `${displayName} ${requested.toFixed(2)} $ (${tlAmount.toFixed(2)} ₺) çekim talebi oluşturdu.`,
-        link: '/admin',
-        ref_id: user.id,
-      })));
-
+      // Talep, yönetici panelinde bekleyen kayıt olarak görünür; adminlere ayrıca uyarı gönderilmez.
       return Response.json({
         ok: true,
         dollars: requested,
