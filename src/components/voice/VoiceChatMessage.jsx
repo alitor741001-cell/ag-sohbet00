@@ -1,5 +1,4 @@
 import { memo } from 'react';
-import RoleBadge from '@/components/RoleBadge';
 import RoleNameEffect from '@/components/role/RoleNameEffect';
 import UserStatusBadges from '@/components/status/UserStatusBadges';
 import { getRoleInfo, isModerator } from '@/lib/roles';
@@ -8,7 +7,6 @@ import { plainText } from '@/components/voice/voiceText';
 /** Sohbet satırı: üye no, rol ve durum rozetleri + renkli isim + mesaj. */
 function VoiceChatMessage({ message, profile, ownerId, moderators = [], currentUserId, onOpenProfile }) {
   const role = getRoleInfo(profile || message);
-  const memberId = profile?.member_id && profile.member_id !== '-' ? profile.member_id : '';
   const isOwner = message.user_id === ownerId;
   const isMod = !isOwner && (moderators.includes(message.user_id) || isModerator(profile));
   const name = message.user_name || 'Kullanıcı';
@@ -28,15 +26,13 @@ function VoiceChatMessage({ message, profile, ownerId, moderators = [], currentU
         <div className="flex min-w-0 flex-wrap items-center gap-x-1 gap-y-0.5">
           <button type="button" onClick={() => onOpenProfile?.(message.user_id)} className="min-w-0 max-w-full break-words text-left text-xs font-bold hover:underline [overflow-wrap:anywhere]">
             <RoleNameEffect nameEffect={role.name_effect} color={role.color} className={role.name_effect ? undefined : 'text-white'}>
-              {name}{message.user_id === currentUserId && ' (Sen)'}
+              {name}
             </RoleNameEffect>
           </button>
-          {memberId && <span className="rounded border border-white/25 bg-white/10 px-1 text-[9px] font-black leading-4 text-white/85">#{memberId}</span>}
           {label && <span className={`text-[10px] font-bold ${isOwner ? 'text-amber-400' : 'text-sky-400'}`}>{label}</span>}
         </div>
 
         <div className="mt-1 flex flex-wrap items-center gap-1">
-          <RoleBadge user={profile} size="sm" />
           <UserStatusBadges
             showUserIcon
             n_level={profile?.n_level || 0}
