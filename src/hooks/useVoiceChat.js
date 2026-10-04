@@ -3,7 +3,7 @@ import { Room, RoomEvent, Track } from 'livekit-client';
 import { base44 } from '@/api/base44Client';
 import { createVoiceOutput, unlockVoicePlayback } from '@/lib/callAudio';
 import { hasDirectCallAudioFocus, subscribeCallAudioFocus } from '@/lib/callAudioFocus';
-import { hasSharedMic, releaseSharedMic, sharedMicTrack } from '@/lib/micSource';
+import { hasSharedMic, releaseSharedMic, setSharedMicActive, sharedMicTrack } from '@/lib/micSource';
 
 const initialDebug = { participantCount: 0, remoteParticipants: 0, remoteTracks: 0, playback: 'hazır' };
 const friendlyMicError = (error) => {
@@ -17,7 +17,8 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
   const [callAudioPaused, setCallAudioPaused] = useState(hasDirectCallAudioFocus);
   useEffect(() => subscribeCallAudioFocus((paused) => {
     setCallAudioPaused(paused);
-    if (paused) return roomRef.current?.disconnect(true);
+    // Doğrudan arama sesi alsın: kanal kapatılmaz, yalnızca susturulur (izin korunur).
+    if (paused) { setSharedMicActive(false); roomRef.current?.disconnect(false); }
   }), []);
   const audioElementsRef = useRef(new Set());
   const mutedByModeratorRef = useRef(false);
@@ -69,10 +70,12 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
     const publication = room.localParticipant.getTrackPublication(Track.Source.Microphone);
     if (publication) {
       if (publication.isMuted) await room.localParticipant.setMicrophoneEnabled(true);
+      setSharedMicActive(true);
       return;
     }
     const track = await sharedMicTrack();
     if (!track) return;
+    setSharedMicActive(true);
     await room.localParticipant.publishTrack(track, { source: Track.Source.Microphone });
   }, []);
 
@@ -216,7 +219,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
         });
         if (cancelled || hasDirectCallAudioFocus()) return;
         await room.connect(response.data.url, response.data.token, { autoSubscribe: true });
-        if (cancelled || hasDirectCallAudioFocus()) { await room.disconnect(true); return; }
+        if (cancelled || hasDirectCallAudioFocus()) { await room.disconnect(false); return; }
         setConnectionState('connected');
         setError('');
         // Hoparlörü mikrofon izninden bağımsız başlat, ardından mikrofonu hemen yayınla.
@@ -271,12 +274,15 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
       audioElementsRef.current.forEach((element) => element.remove());
       audioElementsRef.current.clear();
       // İzinli kanal durdurulmaz; yayından çıkarılır ve kısa süre sonra bırakılır.
+      // Kanaldan çıkılırken ses yakalanmasın; kanal durdurulmaz, izin korunur.
+      setSharedMicActive(false);
       room.localParticipant.setMicrophoneEnabled(false).catch(() => {});
       const micPublication = room.localParticipant.getTrackPublication(Track.Source.Microphone);
       if (micPublication?.track && hasSharedMic()) {
         room.localParticipant.unpublishTrack(micPublication.track, false).catch(() => {});
       }
-      room.disconnect();
+      // disconnect(false): yerel mikrofon kanalı durdurulmaz, izin korunur.
+      room.disconnect(false);
       releaseSharedMic();
       if (roomRef.current === room) roomRef.current = null;
       document.removeEventListener('pointerdown', startAudioOnInteraction);

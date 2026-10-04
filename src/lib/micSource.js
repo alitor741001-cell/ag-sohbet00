@@ -30,6 +30,11 @@ export async function sharedMicTrack() {
 
 export const hasSharedMic = () => !!sharedTrack && sharedTrack.readyState === 'live';
 
+/** Kanala dokunmadan sesi kes/aç — izin ve kanal korunur, ses yakalanmaz. */
+export function setSharedMicActive(active) {
+  if (sharedTrack && sharedTrack.readyState === 'live') sharedTrack.enabled = !!active;
+}
+
 /** Sohbetten çıkıldığında kanal kısa bir süre elde tutulur, sonra bırakılır. */
 export function releaseSharedMic() {
   window.clearTimeout(releaseTimer);

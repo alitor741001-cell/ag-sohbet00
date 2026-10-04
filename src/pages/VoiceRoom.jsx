@@ -412,6 +412,20 @@ export default function VoiceRoom() {
     }
   }, [id, toast]);
 
+  // Sayaç tahtası: açıkken her koltuğun altında sayaç görünür.
+  const toggleBoard = async () => {
+    const next = !boardActive;
+    // Anında tepki ver, ardından oda kaydıyla doğrula.
+    setRoom((prev) => (prev ? { ...prev, number_board: next } : prev));
+    const ok = await invokeVoice({ action: next ? 'number-board-open' : 'number-board-close' });
+    if (ok) {
+      await syncRoom();
+      toast({ title: next ? 'Sayaç tahtası açıldı' : 'Sayaç tahtası kapatıldı', description: next ? 'Her koltuğun altında sayaç görünür.' : undefined });
+    } else {
+      setRoom((prev) => (prev ? { ...prev, number_board: !next } : prev));
+    }
+  };
+
   const toggleChatBan = async () => {
     const ok = await invokeVoice({ action: 'chat-ban', banned: !chatBanned });
     if (ok) {
@@ -790,10 +804,7 @@ export default function VoiceRoom() {
         onToggleMod={handleToggleMod}
         onInvite={handleInvite}
         boardActive={boardActive}
-        onToggleBoard={async () => {
-          const ok = await invokeVoice({ action: boardActive ? 'number-board-close' : 'number-board-open' });
-          if (ok) setMenuOpen(false);
-        }}
+        onToggleBoard={async () => { setMenuOpen(false); await toggleBoard(); }}
         onClearChat={clearChat}
         onToggleChatBan={toggleChatBan}
         onOpenLog={() => setLogOpen(true)}
