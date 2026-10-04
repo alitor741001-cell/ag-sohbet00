@@ -1,16 +1,10 @@
-/* Lucky Olympus: makara akışı, sonuç oturması ve çarpan birleşme efekti. */
-/* Akış Slot Frenzy ile aynı hareket: karolar aşağı doğru kayar. */
-.lucky-reel-loop { animation: lucky-reel-loop linear infinite; will-change: transform; }
-
-@keyframes lucky-reel-loop {
-  from { transform: translateY(-50%); }
-  to { transform: translateY(0); }
+/* Lucky Olympus: semboller aşağı tek tek düşer, alttan başlayarak yerleşir. */
+.lucky-symbol-fall {
+  animation: lucky-symbol-fall 620ms cubic-bezier(.32, .05, .68, 1) both;
+  will-change: transform;
 }
-
-.lucky-reel-settle { animation: lucky-reel-settle cubic-bezier(.12, .62, .25, 1) both; will-change: transform; }
-
-@keyframes lucky-reel-settle {
-  from { transform: translateY(var(--reel-from)); }
+@keyframes lucky-symbol-fall {
+  from { transform: translateY(-500%); }
   to { transform: translateY(0); }
 }
 
@@ -35,7 +29,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .lucky-reel-loop { animation-duration: 1.2s !important; }
-  .lucky-reel-settle { animation-duration: 0.24s !important; }
+  .lucky-symbol-fall { animation-duration: 0.2s !important; animation-delay: 0s !important; }
   .lucky-winner { animation: none; }
 }
