@@ -1,20 +1,23 @@
 import { Gift } from 'lucide-react';
-import { scoreTier } from '@/components/voice/scoreTier';
+import { formatScore, scoreTier } from '@/components/voice/scoreTier';
 
-/** Koltuk altı ileri sayaç: 1'den başlar, hediye geldikçe artar. Eşiklere göre rengi belirginleşir. */
+/**
+ * Koltuk altı ileri sayaç: 1'den başlar, hediye geldikçe artar.
+ * Sayı kısaltılır (5.530K, 1.537M), kutu yok — yazı şeffaf zeminde parlar.
+ * Her hücre aynı genişlikte kaldığı için koltuk ızgarası kaymaz.
+ */
 export default function VoiceSeatScore({ value = 0 }) {
   const shown = Math.max(1, Math.round(Number(value) || 0));
-  const tier = scoreTier(shown);
 
   return (
     <span
-      className="voice-gift-score mt-1 flex items-center gap-1 rounded-full border px-2 py-0.5"
-      data-score-tier={tier}
+      className="voice-gift-score mt-1 flex w-[56px] items-center justify-center gap-1"
+      data-score-tier={scoreTier(shown)}
       aria-label={`${shown.toLocaleString('tr-TR')} sayaç`}
     >
       <Gift className="h-2.5 w-2.5 shrink-0" />
-      <span key={shown} className="number-pop text-[11px] font-bold tabular-nums">
-        {shown.toLocaleString('tr-TR')}
+      <span key={shown} className="number-pop whitespace-nowrap text-[10px] font-bold tabular-nums">
+        {formatScore(shown)}
       </span>
     </span>
   );
