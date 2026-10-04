@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-const VISIBLE_MS = 1600;
+const VISIBLE_MS = 2600;
 // Aynı anda çok hediye gelse bile animasyonlar sırayla gösterilir; kuyruk kısa tutulur.
 const MAX_QUEUE = 3;
 

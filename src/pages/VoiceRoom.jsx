@@ -27,7 +27,7 @@ import GamePanel from '@/components/games/GamePanel';
 import GiftBoard from '@/components/voice/GiftBoard';
 import GiftSendButton from '@/components/voice/GiftSendButton';
 import drainGiftQueue from '@/components/voice/drainGiftQueue';
-import VoiceGiftOverlay from '@/components/voice/VoiceGiftOverlay';
+import GiftScene from '@/components/voice/GiftScene';
 import useGiftAlerts from '@/hooks/useGiftAlerts';
 import useBigGiftAlerts from '@/hooks/useBigGiftAlerts';
 import useBigGiftNotice from '@/hooks/useBigGiftNotice';
@@ -1038,7 +1038,7 @@ export default function VoiceRoom() {
         count={giftSendCount}
       />
 
-      <VoiceGiftOverlay alert={bigGift ? null : overlayAlert} tiers={tiers} />
+      <GiftScene key={overlayAlert?.key} alert={bigGift ? null : overlayAlert} tiers={tiers} />
       <BigGiftStage alert={bigGift} />
 
       {notice && joined && (

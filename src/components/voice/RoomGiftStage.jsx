@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import VoiceGiftOverlay from '@/components/voice/VoiceGiftOverlay';
+import GiftScene from '@/components/voice/GiftScene';
 import useGiftAlerts from '@/hooks/useGiftAlerts';
 import { useGiftCatalog } from '@/hooks/useGiftCatalog';
 
@@ -30,5 +30,5 @@ export default function RoomGiftStage({ roomId }) {
   }, [roomId]);
 
   const { alert } = useGiftAlerts(messages, resolveGift);
-  return <VoiceGiftOverlay alert={alert} tiers={tiers} />;
+  return <GiftScene key={alert?.key} alert={alert} tiers={tiers} />;
 }
