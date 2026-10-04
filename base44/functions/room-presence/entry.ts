@@ -142,7 +142,10 @@ export default async function(req) {
             ghost_entered_at: new Date().toISOString(),
           });
         } else {
-          await base44.asServiceRole.entities.Room.update(room_id, { ghost_entered_at: new Date().toISOString() });
+          // Eski katılım kaydı gerçek isimle kalmış olabilir: takma ada ve maskeli profile çevrilir.
+          const maskedParticipants = (room.participants || []).map((person) =>
+            (person.user_id === user.id ? { ...person, name: hiddenDisplayName(me), avatar: HIDDEN_AVATAR_URL } : person));
+          await base44.asServiceRole.entities.Room.update(room_id, { participants: maskedParticipants, ghost_entered_at: new Date().toISOString() });
         }
         await updatePresenceRoom(base44, user.id, room_id);
         return Response.json({ ok: true, hidden: true });

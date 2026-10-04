@@ -109,7 +109,8 @@ export default function VoiceRoom() {
   const participants = useMemo(() => room?.participants || [], [room?.participants]);
   // Gizli kullanıcıların takma adı → kimliği: yalnızca N/VIP rozetleri için kullanılır, kimlik gösterilmez.
   const hiddenUsersByName = {};
-  participants.forEach((person) => { if (person?.user_id && isHiddenName(person.name)) hiddenUsersByName[person.name] = person.user_id; });
+  // Takma ad koltuğa veya katılım listesine yazılmış olabilir: ikisi birlikte eşlenir.
+  [...participants, ...seats].forEach((person) => { if (person?.user_id && isHiddenName(person.name)) hiddenUsersByName[person.name] = person.user_id; });
   const moderators = room?.room_moderators || [];
   const mySeatIndex = seats.findIndex((seat) => seat.user_id === user?.id);
   const seated = mySeatIndex >= 0;
