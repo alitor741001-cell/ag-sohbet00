@@ -40,12 +40,13 @@ export function monthStartIso(now = new Date()) {
 }
 
 /**
- * Elmas için elle sıfırlama anı (AppConfig: elmas_reset_at).
- * Ayın 1'inde otomatik sıfırlamaya ek olarak bu andan önceki hediyeler elmasa sayılmaz.
+ * Elle sıfırlama anı (AppConfig: gift_reset_at).
+ * Bu andan önceki hediyeler ne elmasa ne de kullanılabilir bakiyeye sayılır;
+ * ayrıca elmas ayın 1'inde kendiliğinden sıfırlanır.
  */
-export async function elmasResetAt(base44: any) {
+export async function giftResetAt(base44: any) {
   const config = await base44.asServiceRole.entities.AppConfig
-    .filter({ key: 'elmas_reset_at' }, '-created_date', 1)
+    .filter({ key: 'gift_reset_at' }, '-created_date', 1)
     .catch(() => []);
   return String(config[0]?.value || '').slice(0, 19);
 }
@@ -64,10 +65,19 @@ export async function receivedGiftTotals(base44: any, userId: string, resetAt = 
     if (!created || created.slice(0, 19) < start) return sum;
     return sum + Math.max(0, Number(record?.k_value) || 0);
   }, 0) * 100) / 100;
+  // Bakiye elle sıfırlandıysa kullanılabilir bakiyeye yalnızca sıfırlama sonrası hediyeler sayılır.
+  const resetK = resetAt
+    ? Math.round(records.reduce((sum, record) => {
+        const created = String(record?.created_date || '');
+        if (!created || created.slice(0, 19) < resetAt) return sum;
+        return sum + Math.max(0, Number(record?.k_value) || 0);
+      }, 0) * 100) / 100
+    : k;
   return {
     k,
     units: Math.floor(monthK / K_PER_UNIT),
     dollars: giftDollarsFromK(k),
+    reset_dollars: giftDollarsFromK(resetK),
     month_k: monthK,
     month_score: Math.round(monthK * 1000),
   };
@@ -75,7 +85,7 @@ export async function receivedGiftTotals(base44: any, userId: string, resetAt = 
 
 /** Hediye kutusu durumu: coins, alınan hediye, harcanan ve kullanılabilir bakiye (TL). */
 export async function giftBoxSummary(base44: any, user: any) {
-  const resetAt = await elmasResetAt(base44);
+  const resetAt = await giftResetAt(base44);
   const [received, transfers, coins, market] = await Promise.all([
     receivedGiftTotals(base44, user.id, resetAt),
     base44.asServiceRole.entities.GiftTransfer
@@ -85,13 +95,15 @@ export async function giftBoxSummary(base44: any, user: any) {
     getUsdTry(base44),
   ]);
 
+  // Sıfırlama anından önceki harcamalar yeni bakiyeden düşülmez.
   const spent = Math.round(
     transfers
       .filter((record) => record?.status !== 'rejected')
+      .filter((record) => !resetAt || String(record?.created_date || '').slice(0, 19) >= resetAt)
       .reduce((sum, record) => sum + Math.max(0, Number(record?.dollars) || 0), 0) * 100,
   ) / 100;
   // Bakiye tam dolar: küsurat gösterilmez.
-  const available = Math.max(0, Math.floor(received.dollars - spent));
+  const available = Math.max(0, Math.floor(received.reset_dollars - spent));
   const tl_rate = tlRateFrom(market.rate);
 
   return {
