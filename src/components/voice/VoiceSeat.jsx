@@ -1,5 +1,6 @@
 import { Crown, Lock, MicOff, Plus, Shield } from 'lucide-react';
 import VoiceSeatPortrait from '@/components/voice/VoiceSeatPortrait';
+import VoiceSeatBadges from '@/components/voice/VoiceSeatBadges';
 
 // Her koltuk aynı boyutta sabit bir portre alanı kullanır: profil boyutu değişse de
 // ızgara kaymaz, çerçeveler komşu koltuğa taşmaz.
@@ -12,7 +13,7 @@ const BADGE = { sm: 'translate-x-[5px] translate-y-[5px]', md: 'translate-x-[9px
 const FRAME_SCALE = 0.78;
 
 /** Tek koltuk: boş koltukta + ve numara, dolu koltukta profil görseli ve isim. */
-export default function VoiceSeat({ seat, index, size = 'md', speaking, isSelf, isOwner, isMod, accent = '#ef4444', gifted, onClick }) {
+export default function VoiceSeat({ seat, index, size = 'md', speaking, isSelf, isOwner, isMod, accent = '#ef4444', gifted, profile, level, onClick }) {
   const cell = CELL[size] || CELL.md;
   const face = FACE[size] || FACE.md;
   const ring = RING[size] || RING.md;
@@ -60,6 +61,7 @@ export default function VoiceSeat({ seat, index, size = 'md', speaking, isSelf, 
         {!isOwner && isMod && <Shield className="h-3 w-3 shrink-0 text-sky-400" />}
         <span className="truncate">{isSelf ? 'Sen' : seat.name}</span>
       </span>
+      <VoiceSeatBadges profile={profile} level={level} />
     </button>
   );
 }

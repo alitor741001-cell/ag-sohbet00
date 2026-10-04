@@ -7,6 +7,8 @@ import { useVoiceChat } from '@/hooks/useVoiceChat';
 import useKeyboardInset from '@/hooks/useKeyboardInset';
 import { useToast } from '@/components/ui/use-toast';
 import VoiceSeatGrid from '@/components/voice/VoiceSeatGrid';
+import useRoomLevels from '@/hooks/useRoomLevels';
+import useMessageProfiles from '@/hooks/useMessageProfiles';
 import VoiceControlBar from '@/components/voice/VoiceControlBar';
 import VoiceChatDock from '@/components/voice/VoiceChatDock';
 import VoiceViewerSheet from '@/components/voice/VoiceViewerSheet';
@@ -122,6 +124,11 @@ export default function VoiceRoom() {
     })),
     [seats, participants]
   );
+
+  // Koltuk rozetleri: film odasındaki LVL rozeti + N, VIP ve hediye seviyeleri.
+  const seatUserIds = useMemo(() => seatsView.map((seat) => seat.user_id).filter(Boolean), [seatsView]);
+  const { levels: seatLevels } = useRoomLevels(seatUserIds);
+  const seatProfiles = useMessageProfiles(seatUserIds);
 
   // Kayıt defteri ve odadan atılanlar — yönetici işlemleri sohbete değil buraya yazılır.
   const roomLogs = useMemo(() => (Array.isArray(room?.room_logs) ? room.room_logs : []), [room?.room_logs]);
@@ -843,6 +850,8 @@ export default function VoiceRoom() {
           onSelectSeat={handleSeatPress}
           boardActive={boardActive}
           scores={scores}
+          profiles={seatProfiles}
+          levels={seatLevels}
           accent={seatAccent}
           gifted={gifted}
         />
