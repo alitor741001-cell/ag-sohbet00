@@ -1,6 +1,7 @@
 /**
  * Oda hediye sıralaması: son 24 saat ve tüm zamanlar.
  * Sıralama değeri koltuk sayaçlarıyla aynı birimdir (1 K = 1.000 puan).
+ * Sıfırlama anından (AppConfig: room_gift_reset_at) önceki hediyeler sayılmaz.
  */
 
 const K_UNIT = 1000;
@@ -9,6 +10,16 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const MAX_RECORDS = 2000;
 // Listede gösterilecek kişi sayısı.
 const TOP_COUNT = 10;
+// Oda sıralamasının elle sıfırlama anı (AppConfig anahtarı).
+const RESET_KEY = 'room_gift_reset_at';
+
+/** Sıfırlama anı: bu andan önceki hediyeler ne toplama ne 24 saatlik kısma sayılır. */
+async function resetAtFor(base44: any) {
+  const config = await base44.asServiceRole.entities.AppConfig
+    .filter({ key: RESET_KEY }, '-created_date', 1)
+    .catch(() => []);
+  return String(config[0]?.value || '').slice(0, 19);
+}
 
 const scoreOfK = (kValue: any) => Math.max(0, Math.round((Number(kValue) || 0) * K_UNIT));
 
@@ -44,9 +55,20 @@ const sumScore = (entries: any[]) => entries.reduce((sum, entry) => sum + entry.
 
 /** Odanın hediye sıralaması: son 24 saat ve tüm zamanlar listeleri + toplam değerler. */
 export async function giftBoard(base44: any, roomId: string) {
-  const records = await base44.asServiceRole.entities.GiftSend
-    .filter({ room_id: roomId }, '-created_date', MAX_RECORDS)
-    .catch(() => []);
+  const [allRecords, resetAt] = await Promise.all([
+    base44.asServiceRole.entities.GiftSend
+      .filter({ room_id: roomId }, '-created_date', MAX_RECORDS)
+      .catch(() => []),
+    resetAtFor(base44),
+  ]);
+
+  // Sıfırlama anından önceki hediyeler tamamen dışarıda kalır: toplam ve 24 saatlik birlikte sıfırlanır.
+  const records = resetAt
+    ? allRecords.filter((record) => {
+        const created = String(record?.created_date || '').slice(0, 19);
+        return !!created && created >= resetAt;
+      })
+    : allRecords;
 
   const since = Date.now() - DAY_MS;
   const recent = records.filter((record) => {
