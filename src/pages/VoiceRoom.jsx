@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Armchair, Coins, Eye, Gift, Loader2, Lock, LogOut, MessageSquare, Mic, MicOff, Minimize2, MoreHorizontal, Shield, ShieldAlert, Unlock, UserMinus, UserPlus, UserRound } from 'lucide-react';
+import { Armchair, Eye, Gift, Loader2, Lock, LogOut, MessageSquare, Mic, MicOff, Minimize2, MoreHorizontal, Shield, ShieldAlert, Unlock, UserMinus, UserPlus, UserRound } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useVoiceChat } from '@/hooks/useVoiceChat';
@@ -90,6 +90,7 @@ export default function VoiceRoom() {
   const giftBusyRef = useRef(false);
   const giftSessionRef = useRef(0);
   const giftBoardRef = useRef(0);
+  const giftRefreshTimerRef = useRef(null);
 
   useEffect(() => {
     giftSessionRef.current += 1;
@@ -198,15 +199,25 @@ export default function VoiceRoom() {
   }, [joined, loadGiftBoard]);
 
   // Yeni hediye geldiğinde kutu toplamı tazelenir (en fazla 3 saniyede bir).
+  // Kısa aralıkla gelen hediyeler atlanmaz: kalan süre bitince bir kez daha tazelenir.
   useEffect(() => {
     if (!joined) return;
     const last = messages[messages.length - 1];
     if (!last || last.type !== 'gift') return;
-    const now = Date.now();
-    if (now - giftBoardRef.current < 3000) return;
-    giftBoardRef.current = now;
-    loadGiftBoard();
+    const elapsed = Date.now() - giftBoardRef.current;
+    if (elapsed >= 3000) {
+      giftBoardRef.current = Date.now();
+      loadGiftBoard();
+      return;
+    }
+    window.clearTimeout(giftRefreshTimerRef.current);
+    giftRefreshTimerRef.current = window.setTimeout(() => {
+      giftBoardRef.current = Date.now();
+      loadGiftBoard();
+    }, 3000 - elapsed);
   }, [messages, joined, loadGiftBoard]);
+
+  useEffect(() => () => window.clearTimeout(giftRefreshTimerRef.current), []);
 
   // Odayı yükle — sesli oda değilse normal oda sayfasına yönlendir.
   useEffect(() => {
@@ -638,6 +649,17 @@ export default function VoiceRoom() {
     setRoom((prev) => ({ ...prev, number_board: data.number_board, number_scores: data.number_scores }));
     markGiftSeen((data.messages || []).map((message) => message.id));
     const recipientIds = (data.recipients || []).map((item) => item.user_id);
+    // Gönderdiğim hediye kutu toplamına anında yansır, ardından sunucu toplamıyla doğrulanır.
+    const sentScore = Math.round((Number(data.total_k) || 0) * 1000);
+    if (sentScore > 0) {
+      setGiftBoard((prev) => (prev ? {
+        ...prev,
+        all: { ...prev.all, total: (Number(prev.all?.total) || 0) + sentScore },
+        day: { ...prev.day, total: (Number(prev.day?.total) || 0) + sentScore },
+      } : prev));
+    }
+    giftBoardRef.current = Date.now();
+    loadGiftBoard();
     flashGifted(recipientIds, data.gift?.emoji);
     pushGiftAlert({
       key: `send-${Date.now()}`,
