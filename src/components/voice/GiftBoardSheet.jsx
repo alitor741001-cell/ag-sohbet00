@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Loader2 } from 'lucide-react';
-import VoiceCard from '@/components/voice/VoiceCard';
+import VoiceBottomSheet from '@/components/voice/VoiceBottomSheet';
 import GiftRankFrame from '@/components/voice/GiftRankFrame';
 import RoomLevelBadge from '@/components/levels/RoomLevelBadge';
 import RoleBadge from '@/components/RoleBadge';
@@ -29,7 +29,7 @@ export default function GiftBoardSheet({ open, onClose, board, loading }) {
   const profiles = useMessageProfiles(userIds);
 
   return (
-    <VoiceCard open={open} title="Hediye Sıralaması" onClose={onClose}>
+    <VoiceBottomSheet open={open} title="Hediye Sıralaması" onClose={onClose}>
       <div className="mx-auto flex w-fit gap-1 rounded-full p-1" style={{ backgroundColor: '#efeff1' }}>
         {TABS.map((item) => (
           <button
@@ -43,7 +43,7 @@ export default function GiftBoardSheet({ open, onClose, board, loading }) {
         ))}
       </div>
 
-      <div className="mt-2 max-h-[52vh] overflow-y-auto">
+      <div className="mt-2 min-h-0 flex-1 overflow-y-auto">
         {loading && !entries.length ? (
           <div className="flex justify-center py-8"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
         ) : entries.length ? (
@@ -88,10 +88,10 @@ export default function GiftBoardSheet({ open, onClose, board, loading }) {
         )}
       </div>
 
-      <div className="mt-2 border-t border-black/10 pt-3 text-center">
+      <div className="mt-2 shrink-0 border-t border-black/10 pt-3 text-center">
         <span className="text-xs font-semibold text-[#6b7280]">Odadaki toplam: </span>
         <span className="text-base font-black tabular-nums" style={{ color: TOTAL_COLOR }}>{formatScore(active.total)} 💎</span>
       </div>
-    </VoiceCard>
+    </VoiceBottomSheet>
   );
 }
