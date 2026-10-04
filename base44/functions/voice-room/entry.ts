@@ -343,7 +343,9 @@ export default async function (req: Request): Promise<Response> {
       recipients.forEach((recipient) => {
         numberScores = withStep(numberScores, recipient.user_id, coinsForK(kValue) * quantity);
       });
-      await base44.asServiceRole.entities.Room.update(room_id, { number_board: true, number_scores: numberScores });
+      // Tahta açılırken süre sayacı da başlar: koltukların altında "Devam Ediyor" ilerler.
+      const boardStartedAt = room.board_started_at || new Date().toISOString();
+      await base44.asServiceRole.entities.Room.update(room_id, { number_board: true, number_scores: numberScores, board_started_at: boardStartedAt });
 
       const mode = recipients.length > 1 ? 'bulk' : 'single';
       const giftEmoji = giftRecord.emoji || '🎁';
@@ -471,7 +473,9 @@ export default async function (req: Request): Promise<Response> {
     // Tüm sayıları sıfırla
     if (action === 'number-reset') {
       if (!canMod) return Response.json({ error: 'yetkisiz' }, { status: 403 });
-      await base44.asServiceRole.entities.Room.update(room_id, { number_board: true, number_scores: [] });
+      // Sıfırlama tahtayı yeniden açar; süre sayacı kaldığı yerden devam eder.
+      const resetStartedAt = room.board_started_at || new Date().toISOString();
+      await base44.asServiceRole.entities.Room.update(room_id, { number_board: true, number_scores: [], board_started_at: resetStartedAt });
       say(`${displayName} sayı tahtasını sıfırladı.`);
       return Response.json({ ok: true, seats, seat_count: seats.length, number_board: true, number_scores: [] });
     }
