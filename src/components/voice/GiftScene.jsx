@@ -35,8 +35,6 @@ export default function GiftScene({ alert, tiers = [] }) {
   const meta = bulk
     ? `${people} kişiye${alert.totalK ? ` • ${formatK(alert.totalK)}` : ''}`
     : `${alert.senderName ? `${alert.senderName} → ` : ''}${alert.recipientName || 'Oda'}`;
-  // Hediye tutarı sahnede "az önce 10K atıldı" biçiminde yazar.
-  const justSent = formatK(Number(bulk ? (alert.totalK || alert.kValue) : alert.kValue) || 0);
 
   return (
     <div className="gift-scene-stage pointer-events-none absolute inset-0 z-[200] overflow-hidden" style={{ '--scene-tone': color }}>
@@ -62,7 +60,7 @@ export default function GiftScene({ alert, tiers = [] }) {
               name={alert.recipientName || 'Oda'}
             />
           )}
-          <p className="max-w-[70vw] truncate text-[11px] font-semibold text-white/85">{meta} · az önce {justSent} atıldı</p>
+          <p className="max-w-[70vw] truncate text-[11px] font-semibold text-white/85">{meta}</p>
           {!bulk && alert.value ? <VoiceSeatScore value={alert.value} /> : null}
         </div>
       </div>

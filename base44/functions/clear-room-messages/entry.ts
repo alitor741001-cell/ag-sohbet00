@@ -16,7 +16,9 @@ export default async function(req) {
 
     const me = await base44.asServiceRole.entities.User.get(user.id);
     const isMod = me.role === 'admin' || me.role === 'moderator';
-    if (room.owner_id !== user.id && !isMod) {
+    // Oda sahibinin verdiği yöneticilik de sohbet temizleme yetkisi verir.
+    const isRoomMod = (room.room_moderators || []).includes(user.id);
+    if (room.owner_id !== user.id && !isMod && !isRoomMod) {
       return Response.json({ error: 'yetkisiz' }, { status: 403 });
     }
 

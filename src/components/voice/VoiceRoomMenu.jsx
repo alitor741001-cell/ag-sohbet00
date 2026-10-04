@@ -34,6 +34,9 @@ export default function VoiceRoomMenu({ open, onClose, room, userId, participant
 
   const toggle = (name) => setPanel((current) => (current === name ? null : name));
 
+  // Yöneticiye verilen yetkiler: yalnızca koltuklar, sayaç, sohbet temizleme ve sohbet yasağı.
+  const MOD_TILES = ['seats', 'board', 'clear', 'ban'];
+
   // Sohbeti temizle ve sohbet yasağı tek dokunuşla çalışır — ayrı panel açmaz.
   const manageTiles = [
     {
@@ -58,20 +61,24 @@ export default function VoiceRoomMenu({ open, onClose, room, userId, participant
     { key: 'log', icon: ScrollText, label: 'Kayıt defteri', onClick: () => { onClose(); onOpenLog?.(); } },
   ];
 
+  // Oda sahibi tüm ayarları görür; yönetici yalnızca kendisine verilen dört yetkiyi görür.
+  const tiles = isOwner ? manageTiles : manageTiles.filter((item) => MOD_TILES.includes(item.key));
+
   return (
     <VoiceSheet open={open} onClose={onClose} title="Oda ayarları">
       <div className="grid grid-cols-4 gap-x-2 gap-y-4">
-        {onInvite && (
+        {/* Davet ve film odası geçişi oda sahibine aittir; koltuktaki izleyici de davet edebilir. */}
+        {onInvite && (isOwner || !canMod) && (
           <VoiceMenuTile
             icon={UserPlus}
             label="Davet et"
             onClick={() => { onClose(); onInvite(); }}
           />
         )}
-        {canMod && room?.room_type === 'watch' && (
+        {isOwner && room?.room_type === 'watch' && (
           <VoiceMenuTile icon={Film} label="Film Odasına Dön" onClick={() => { onClose(); onExitVoiceMode?.(); }} />
         )}
-        {canMod && manageTiles.map((item) => (
+        {canMod && tiles.map((item) => (
           <VoiceMenuTile
             key={item.key}
             icon={item.icon}
@@ -148,7 +155,7 @@ export default function VoiceRoomMenu({ open, onClose, room, userId, participant
         </p>
       )}
 
-      {canMod && (
+      {isOwner && (
         <section className="mt-4 rounded-2xl border border-white/10 bg-[#171720] p-3">
           <p className="mb-2 text-xs font-bold uppercase tracking-wide text-white/60">Yöneticiler</p>
           {others.length === 0 ? (
