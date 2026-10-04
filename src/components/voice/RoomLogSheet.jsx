@@ -10,6 +10,14 @@ const formatTime = (value) => {
   }
 };
 
+/** Giriş yasağı 24 saat sürer; kayıt defterinden kaldırılırsa hemen biter. */
+const banTimeLeft = (person) => {
+  if (!person?.banned_until) return 'süresiz yasak';
+  const remaining = new Date(person.banned_until).getTime() - Date.now();
+  if (remaining <= 0) return 'süre doldu';
+  return `${Math.max(1, Math.ceil(remaining / 3600000))} saat kaldı`;
+};
+
 /** Kayıt defteri: yönetici işlemleri (koltuktan indirme, odadan atma) ve odadan atılanlar listesi. */
 export default function RoomLogSheet({ open, onClose, logs = [], bannedUsers = [], onUnban }) {
   return (
@@ -22,7 +30,10 @@ export default function RoomLogSheet({ open, onClose, logs = [], bannedUsers = [
           <div className="space-y-2">
             {bannedUsers.map((person) => (
               <div key={person.user_id} className="flex items-center gap-2 rounded-xl bg-black/30 px-3 py-2">
-                <span className="min-w-0 flex-1 truncate text-sm text-white">{person.name || 'Kullanıcı'}</span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm text-white">{person.name || 'Kullanıcı'}</p>
+                  <p className="text-[10px] text-white/50">{banTimeLeft(person)}</p>
+                </div>
                 <button
                   type="button"
                   onClick={() => onUnban?.(person.user_id)}

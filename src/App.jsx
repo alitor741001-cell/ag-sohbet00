@@ -17,6 +17,7 @@ import RoomLevelProvider from '@/components/levels/RoomLevelProvider';
 import XpProvider from '@/components/xp/XpProvider';
 import DirectCallProvider from '@/lib/DirectCallContext';
 import DirectCallOverlay from '@/components/friends/DirectCallOverlay';
+import MinimizedRoomBubble from '@/components/voice/MinimizedRoomBubble';
 import { FrameCatalogProvider } from '@/lib/FrameCatalogContext';
 import { Navigate } from 'react-router-dom';
 
@@ -173,6 +174,7 @@ function App() {
               <ScrollToTop />
               <AuthenticatedApp />
               <DirectCallOverlay />
+              <MinimizedRoomBubble />
             </Router>
           </DirectCallProvider>
           <Toaster />

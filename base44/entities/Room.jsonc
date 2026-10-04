@@ -209,6 +209,10 @@
           "banned_at": {
             "type": "string",
             "format": "date-time"
+          },
+          "banned_until": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },

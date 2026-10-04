@@ -20,7 +20,7 @@ import VoiceCard from '@/components/voice/VoiceCard';
 import RoomLogSheet from '@/components/voice/RoomLogSheet';
 import VoiceProfileCard from '@/components/voice/VoiceProfileCard';
 import VoiceMenuButton from '@/components/voice/VoiceMenuButton';
-import VoiceRoomBubble from '@/components/voice/VoiceRoomBubble';
+import { isRoomMinimized, setMinimizedRoom } from '@/lib/minimizedRoom';
 import RoomDirectMessages from '@/components/player/RoomDirectMessages';
 import GamePanel from '@/components/games/GamePanel';
 import GiftBoard from '@/components/voice/GiftBoard';
@@ -45,6 +45,7 @@ export default function VoiceRoom() {
   const [needsPassword, setNeedsPassword] = useState(false);
   const [password, setPassword] = useState('');
   const [notice, setNotice] = useState('');
+  const [banNotice, setBanNotice] = useState('');
   const [messages, setMessages] = useState([]);
   const [chatOpen, setChatOpen] = useState(false);
   const [viewerOpen, setViewerOpen] = useState(false);
@@ -54,7 +55,6 @@ export default function VoiceRoom() {
   const [profileUserId, setProfileUserId] = useState(null);
   const [dmUserId, setDmUserId] = useState(null);
   const [dmOpen, setDmOpen] = useState(false);
-  const [minimized, setMinimized] = useState(false);
   const [exitOpen, setExitOpen] = useState(false);
   const [gamesOpen, setGamesOpen] = useState(false);
   const [giftOpen, setGiftOpen] = useState(false);
@@ -222,6 +222,8 @@ export default function VoiceRoom() {
     } catch (error) {
       const data = error?.response?.data || {};
       setNeedsPassword(!!data.needsPassword);
+      // Odadan atılan kişi 24 saat giremez: uyarı ekranda gösterilir.
+      if (data.banned) setBanNotice(data.error || '24 saat boyunca bu odaya giremezsiniz.');
       setNotice(data.error || 'Odaya katılamadınız.');
       return false;
     }
@@ -284,6 +286,8 @@ export default function VoiceRoom() {
     joinedRef.current = false;
     // Profil sayfasına gidilirken oda ve koltuk korunur.
     if (keepSeatRef.current) return;
+    // Oda küçültüldüğünde odadan düşülmez — balon açıkken odalar gezilebilir.
+    if (isRoomMinimized(id)) return;
     base44.functions.invoke('voice-room', { action: 'seat-leave', room_id: id }).catch(() => {});
     base44.functions.invoke('room-presence', { action: 'leave', room_id: id }).catch(() => {});
   }, [id]);
@@ -321,6 +325,12 @@ export default function VoiceRoom() {
     await base44.functions.invoke('room-presence', { action: 'leave', room_id: id }).catch(() => {});
     navigate('/acik-odalar');
   }, [id, seated, navigate]);
+
+  // Odayı küçült: oda ve koltuk korunur, sağ alttaki balondan odalar gezilebilir.
+  const minimizeRoom = useCallback(() => {
+    setMinimizedRoom({ id, name: room?.name || 'Sesli oda', owner_id: room?.owner_id, owner_name: room?.owner_name });
+    navigate('/acik-odalar');
+  }, [id, room?.name, room?.owner_id, room?.owner_name, navigate]);
 
   // Profil kartı açıcı — sohbet satırı ve izleyici listesinden kullanılır.
   const openProfile = (userId) => { if (userId) setProfileUserId(userId); };
@@ -631,6 +641,20 @@ export default function VoiceRoom() {
     );
   }
 
+  // Odadan atıldıysanız: 24 saatlik giriş yasağı ekranda açıkça gösterilir.
+  if (banNotice) {
+    return (
+      <div className="fixed inset-0 z-[150] flex flex-col items-center justify-center gap-3 bg-catalog px-6 text-center text-white">
+        <ShieldAlert className="h-12 w-12 text-red-500" />
+        <p className="text-base font-bold">Odaya giremezsiniz</p>
+        <p className="max-w-xs text-sm text-white/70">{banNotice}</p>
+        <button type="button" onClick={() => navigate('/acik-odalar')} className="mt-1 rounded-xl bg-white/10 px-5 py-2.5 text-sm font-bold">
+          Odalara dön
+        </button>
+      </div>
+    );
+  }
+
   if (notice && !joined && !needsPassword) {
     return (
       <div className="fixed inset-0 z-[150] flex flex-col items-center justify-center gap-4 bg-catalog px-6 text-center text-white">
@@ -693,10 +717,6 @@ export default function VoiceRoom() {
 
   // Seçili kişinin koltuk puanı animasyonda gösterilir.
   const overlayAlert = giftAlert ? { ...giftAlert, value: scores[giftAlert.toId] || 0 } : null;
-
-  if (minimized) {
-    return <VoiceRoomBubble name={room?.name} muted={voice.muted} onOpen={() => setMinimized(false)} />;
-  }
 
   return (
     <div
@@ -885,7 +905,7 @@ export default function VoiceRoom() {
 
       <VoiceCard open={exitOpen} title="Oda" onClose={() => setExitOpen(false)}>
         <div className="space-y-2">
-          <VoiceMenuButton icon={Minimize2} label="Odayı küçült" onClick={() => { setExitOpen(false); setMinimized(true); }} />
+          <VoiceMenuButton icon={Minimize2} label="Odayı küçült" onClick={() => { setExitOpen(false); minimizeRoom(); }} />
           <VoiceMenuButton icon={LogOut} label="Odadan çık" danger onClick={() => { setExitOpen(false); leaveRoom(); }} />
         </div>
       </VoiceCard>

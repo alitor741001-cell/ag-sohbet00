@@ -101,10 +101,28 @@ export default async function(req) {
           return Response.json({ error: 'Oda sahibinin onayı gerekli', needsApproval: true }, { status: 403 });
         }
       }
-      // Ban check: atılmış kullanıcılar tekrar giremez
-      const isBanned = (room.banned_users || []).some((b) => b.user_id === user.id);
-      if (isBanned && !isMod) {
-        return Response.json({ error: 'Bu odadan atılmışsınız. Tekrar katılamazsınız.' }, { status: 403 });
+      // Ban check: odadan atılan kişi 24 saat giremez; süre dolunca yasak kendiliğinden kalkar.
+      const banNow = Date.now();
+      const activeBan = (room.banned_users || []).find((b) => b.user_id === user.id
+        && (!b.banned_until || new Date(b.banned_until).getTime() > banNow));
+      if (activeBan && !isMod) {
+        const remainingHours = activeBan.banned_until
+          ? Math.max(1, Math.ceil((new Date(activeBan.banned_until).getTime() - banNow) / 3600000))
+          : 0;
+        return Response.json({
+          error: activeBan.banned_until
+            ? `24 saat boyunca bu odaya giremezsiniz. Yaklaşık ${remainingHours} saat sonra tekrar deneyebilirsiniz.`
+            : 'Bu odadan atılmışsınız. Tekrar katılamazsınız.',
+          banned: true,
+        }, { status: 403 });
+      }
+      // Süresi dolmuş yasak kaydı temizlenir ki kişi yeniden girebilsin.
+      const isBanExpired = (room.banned_users || []).some((b) => b.user_id === user.id
+        && b.banned_until && new Date(b.banned_until).getTime() <= banNow);
+      if (isBanExpired) {
+        await base44.asServiceRole.entities.Room.update(room_id, {
+          banned_users: (room.banned_users || []).filter((b) => !(b.user_id === user.id && b.banned_until && new Date(b.banned_until).getTime() <= banNow)),
+        }).catch(() => {});
       }
       // Admin ghost mode: görünmez katılım
       if (ghost) return Response.json({ ok: true, ghost: true });
@@ -223,8 +241,14 @@ export default async function(req) {
       const participants = (room.participants || []).filter((p) => p.user_id !== target_id);
       const targetName = targetParticipant?.name || 'Kullanıcı';
       // Odadan atılan kişi bir daha giremez: atma işlemi de yasak kaydı oluşturur.
+      // Odadan atılan kişiye 24 saatlik giriş yasağı uygulanır.
       const bannedUsers = [
-        { user_id: target_id, name: targetName, banned_at: new Date().toISOString() },
+        {
+          user_id: target_id,
+          name: targetName,
+          banned_at: new Date().toISOString(),
+          banned_until: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        },
         ...(room.banned_users || []).filter((b) => b.user_id !== target_id),
       ];
       let update: any = {
@@ -232,9 +256,7 @@ export default async function(req) {
         recent_participants: rememberParticipant(room, targetParticipant),
         banned_users: bannedUsers,
         room_logs: appendRoomLog(room, {
-          text: action === 'ban'
-            ? `${name}, ${targetName} kişisini odadan attı ve girişini yasakladı.`
-            : `${name}, ${targetName} kişisini odadan attı.`,
+          text: `${name}, ${targetName} kişisini odadan attı ve 24 saat girişini yasakladı.`,
           kind: 'room_kick',
           actor_id: user.id, actor_name: name, target_id, target_name: targetName,
         }),
@@ -242,6 +264,15 @@ export default async function(req) {
       // Sayı tahtası ayarı açıksa odadan atılan kişinin sayısı sıfırlanır
       const kickedScores = scoresAfterRoomLeave(room, target_id);
       if (kickedScores) update.number_scores = kickedScores;
+      // Atılan kişiye bildirim: 24 saatlik giriş yasağı bildirimlere de düşer.
+      await upsertNotification(base44, {
+        user_id: target_id,
+        title: 'Odadan atıldınız',
+        body: `${room.name || 'Oda'} odasından atıldınız. 24 saat boyunca bu odaya giremezsiniz.`,
+        type: 'room_ban',
+        link: room.room_type === 'voice' || room.voice_mode ? `/sesli-oda/${room_id}` : `/oda/${room_id}`,
+        ref_id: room_id,
+      }).catch(() => {});
       // Odada kimse kalmadıysa oda tamamen silinir (kişisel odalar korunur).
       if (participants.length === 0 && !room.is_personal) {
         await base44.asServiceRole.entities.RoomMessage.deleteMany({ room_id }).catch(() => {});
