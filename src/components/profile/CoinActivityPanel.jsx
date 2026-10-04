@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { ChevronLeft, Coins, Gift, Loader2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Image } from '@/components/ui/image';
+import GiftSendersPanel from '@/components/profile/GiftSendersPanel';
 
 const formatCoins = (value) => Math.max(0, Math.round(Number(value) || 0)).toLocaleString('tr-TR');
 const formatK = (value) => `${Math.max(0, Number(value) || 0).toLocaleString('tr-TR', { maximumFractionDigits: 2 })}K`;
@@ -20,9 +21,12 @@ const formatWhen = (iso) => {
  * Coin Hareketleri: hesaba yüklenen coinler (sistem/admin), karşı tarafın profili,
  * kimlik numarası, gönderilen/alınan hediye tutarı (K) ve tarih-saat tek listede.
  */
-export default function CoinActivityPanel({ open, onClose, onOpenSenders }) {
+export default function CoinActivityPanel({ open, onClose }) {
   const [loading, setLoading] = useState(false);
   const [items, setItems] = useState([]);
+  const [view, setView] = useState('feed');
+
+  useEffect(() => { if (open) setView('feed'); }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -34,6 +38,9 @@ export default function CoinActivityPanel({ open, onClose, onOpenSenders }) {
   }, [open]);
 
   if (!open) return null;
+
+  // Hediye gönderenler listesi kendi geri tuşuyla coin hareketlerine döner.
+  if (view === 'senders') return <GiftSendersPanel open onClose={() => setView('feed')} />;
 
   return (
     <div className="fixed inset-0 z-[300] flex flex-col bg-[#0F0F14] text-white">
@@ -49,15 +56,13 @@ export default function CoinActivityPanel({ open, onClose, onOpenSenders }) {
         <p className="flex min-w-0 flex-1 items-center gap-2 text-sm font-bold text-white">
           <Coins className="h-4 w-4 shrink-0 text-amber-400" /> <span className="truncate">Coin Hareketleri</span>
         </p>
-        {onOpenSenders && (
-          <button
-            type="button"
-            onClick={onOpenSenders}
-            className="flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-white/10 px-3 text-[11px] font-bold transition-transform active:scale-95"
-          >
-            <Gift className="h-3.5 w-3.5 text-sky-400" /> Hediye Gönderenler
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={() => setView('senders')}
+          className="flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-white/10 px-3 text-[11px] font-bold transition-transform active:scale-95"
+        >
+          <Gift className="h-3.5 w-3.5 text-sky-400" /> Hediye Gönderenler
+        </button>
       </header>
 
       <div className="min-h-0 flex-1 overflow-y-auto p-3 pb-[max(1rem,env(safe-area-inset-bottom))]">

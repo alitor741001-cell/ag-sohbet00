@@ -6,7 +6,6 @@ import { useCurrentUser, membershipActive } from '@/lib/useCurrentUser';
 import { Image } from '@/components/ui/image';
 import ProfileWalletCards from '@/components/profile/ProfileWalletCards';
 import GiftBoxPanel from '@/components/profile/GiftBoxPanel';
-import GiftSendersPanel from '@/components/profile/GiftSendersPanel';
 import CoinActivityPanel from '@/components/profile/CoinActivityPanel';
 
 export default function ProfileDropdown() {
@@ -14,7 +13,6 @@ export default function ProfileDropdown() {
   const isActive = membershipActive(user);
   const [open, setOpen] = useState(false);
   const [giftBoxOpen, setGiftBoxOpen] = useState(false);
-  const [sendersOpen, setSendersOpen] = useState(false);
   const [activityOpen, setActivityOpen] = useState(false);
   const [wallet, setWallet] = useState(null);
   const ref = useRef(null);
@@ -160,12 +158,7 @@ export default function ProfileDropdown() {
       )}
 
       <GiftBoxPanel open={giftBoxOpen} onClose={() => setGiftBoxOpen(false)} />
-      <GiftSendersPanel open={sendersOpen} onClose={() => setSendersOpen(false)} />
-      <CoinActivityPanel
-        open={activityOpen}
-        onClose={() => setActivityOpen(false)}
-        onOpenSenders={() => { setActivityOpen(false); setSendersOpen(true); }}
-      />
+      <CoinActivityPanel open={activityOpen} onClose={() => setActivityOpen(false)} />
     </div>
   );
 }
