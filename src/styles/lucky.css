@@ -1,27 +1,16 @@
 /* Lucky Olympus: makara akışı, sonuç oturması ve çarpan birleşme efekti. */
-.lucky-strip {
-  animation-name: lucky-roll;
-  animation-timing-function: linear;
-  animation-iteration-count: infinite;
-  will-change: transform;
-}
+/* Akış Slot Frenzy ile aynı hareket: karolar aşağı doğru kayar. */
+.lucky-reel-loop { animation: lucky-reel-loop linear infinite; will-change: transform; }
 
-/* Karolar yukarıdan aşağı akar: makara aşağı doğru döner. */
-@keyframes lucky-roll {
-  from { transform: translateY(-71.43%); }
+@keyframes lucky-reel-loop {
+  from { transform: translateY(-50%); }
   to { transform: translateY(0); }
 }
 
-/* Dönüş bitince şerit bir tur daha kayıp sonucu yerine oturtur. */
-.lucky-land {
-  animation-name: lucky-land;
-  animation-timing-function: cubic-bezier(0.18, 0.86, 0.28, 1.04);
-  animation-fill-mode: both;
-  will-change: transform;
-}
+.lucky-reel-settle { animation: lucky-reel-settle cubic-bezier(.12, .62, .25, 1) both; will-change: transform; }
 
-@keyframes lucky-land {
-  from { transform: translateY(-50%); }
+@keyframes lucky-reel-settle {
+  from { transform: translateY(var(--reel-from)); }
   to { transform: translateY(0); }
 }
 
@@ -46,7 +35,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .lucky-strip { animation-duration: 1.4s !important; }
-  .lucky-land { animation-duration: 0.24s !important; animation-delay: 0s !important; }
+  .lucky-reel-loop { animation-duration: 1.2s !important; }
+  .lucky-reel-settle { animation-duration: 0.24s !important; }
   .lucky-winner { animation: none; }
 }
