@@ -6,12 +6,14 @@ import { useCurrentUser, membershipActive } from '@/lib/useCurrentUser';
 import { Image } from '@/components/ui/image';
 import ProfileWalletCards from '@/components/profile/ProfileWalletCards';
 import GiftBoxPanel from '@/components/profile/GiftBoxPanel';
+import GiftSendersPanel from '@/components/profile/GiftSendersPanel';
 
 export default function ProfileDropdown() {
   const { user } = useCurrentUser();
   const isActive = membershipActive(user);
   const [open, setOpen] = useState(false);
   const [giftBoxOpen, setGiftBoxOpen] = useState(false);
+  const [sendersOpen, setSendersOpen] = useState(false);
   const [wallet, setWallet] = useState(null);
   const ref = useRef(null);
 
@@ -91,6 +93,7 @@ export default function ProfileDropdown() {
               coins={wallet?.coins ?? null}
               giftScore={wallet?.received_score ?? null}
               onOpenGiftBox={() => { setOpen(false); setGiftBoxOpen(true); }}
+              onOpenGiftSenders={() => { setOpen(false); setSendersOpen(true); }}
             />
 
             {/* Menu items */}
@@ -155,6 +158,7 @@ export default function ProfileDropdown() {
       )}
 
       <GiftBoxPanel open={giftBoxOpen} onClose={() => setGiftBoxOpen(false)} />
+      <GiftSendersPanel open={sendersOpen} onClose={() => setSendersOpen(false)} />
     </div>
   );
 }

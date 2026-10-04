@@ -1,11 +1,11 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import { rateLimit, safeErrorResponse } from '../../shared/security.ts';
 import { ensureGiftWallet, giftBalance } from '../../shared/giftWallet.ts';
-import { COINS_PER_DOLLAR, findByMemberId, giftBoxSummary } from '../../shared/giftBox.ts';
-import { tlFromDollars } from '../../shared/exchangeRate.ts';
+import { COINS_PER_DOLLAR, findByMemberId, giftBoxSummary, giftDollarsFromK } from '../../shared/giftBox.ts';
+import { getUsdTry, tlFromDollars, tlRateFrom } from '../../shared/exchangeRate.ts';
 import { upsertNotification } from '../../shared/upsertNotification.ts';
 
-const ACTIONS = ['summary', 'lookup', 'send', 'withdraw'];
+const ACTIONS = ['summary', 'lookup', 'send', 'withdraw', 'received'];
 const MIN_SEND_DOLLARS = 1;
 
 export default async function (req: Request): Promise<Response> {
@@ -26,6 +26,81 @@ export default async function (req: Request): Promise<Response> {
     if (action === 'summary') {
       const summary = await giftBoxSummary(base44, account);
       return Response.json({ ok: true, member_id: me?.member_id || '', ...summary });
+    }
+
+    // Hediye gönderenler: kişi başına tek satır, altında gönderim listesi (tarih + saat)
+    if (action === 'received') {
+      const records = await base44.asServiceRole.entities.GiftSend
+        .filter({ recipient_id: user.id }, '-created_date', 2000)
+        .catch(() => []);
+      const grouped = new Map();
+      records.forEach((record) => {
+        const key = record.sender_id || 'bilinmeyen';
+        if (!grouped.has(key)) {
+          grouped.set(key, {
+            sender_id: key,
+            name: record.sender_name || 'Kullanıcı',
+            member_id: '',
+            avatar: '',
+            count: 0,
+            total_k: 0,
+            dollars: 0,
+            tl: 0,
+            items: [],
+          });
+        }
+        const entry = grouped.get(key);
+        const kValue = Math.max(0, Number(record.k_value) || 0);
+        entry.count += 1;
+        entry.total_k = Math.round((entry.total_k + kValue) * 100) / 100;
+        entry.items.push({
+          id: record.id,
+          gift_name: record.gift_name || 'Hediye',
+          gift_emoji: record.gift_emoji || '🎁',
+          gift_image_url: record.gift_image_url || '',
+          k_value: kValue,
+          count: Math.max(1, Number(record.recipient_count) || 1),
+          mode: record.mode || 'single',
+          room_id: record.room_id || '',
+          created_date: record.created_date,
+        });
+      });
+
+      const senders = [...grouped.values()];
+      const ids = senders.map((item) => item.sender_id).filter(Boolean);
+      if (ids.length) {
+        const people = await base44.asServiceRole.entities.User
+          .filter({ id: { $in: ids } }, '-created_date', ids.length)
+          .catch(() => []);
+        const byId = new Map(people.map((person) => [person.id, person]));
+        senders.forEach((item) => {
+          const person = byId.get(item.sender_id);
+          if (!person) return;
+          item.name = person.username || person.full_name || item.name;
+          item.member_id = person.member_id || '';
+          item.avatar = person.avatar || '';
+        });
+      }
+
+      const market = await getUsdTry(base44);
+      const tlRate = tlRateFrom(market.rate);
+      let totalK = 0;
+      senders.forEach((item) => {
+        totalK += item.total_k;
+        item.dollars = giftDollarsFromK(item.total_k);
+        item.tl = tlFromDollars(item.dollars, tlRate);
+        item.items.sort((a, b) => (String(a.created_date) < String(b.created_date) ? 1 : -1));
+      });
+      senders.sort((a, b) => b.total_k - a.total_k);
+
+      return Response.json({
+        ok: true,
+        senders,
+        total_k: Math.round(totalK * 100) / 100,
+        total_dollars: giftDollarsFromK(totalK),
+        total_tl: tlFromDollars(giftDollarsFromK(totalK), tlRate),
+        tl_rate: tlRate,
+      });
     }
 
     // Kimlik numarasıyla kişi arama
