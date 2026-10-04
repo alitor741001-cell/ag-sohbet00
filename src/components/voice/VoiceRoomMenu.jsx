@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Armchair, Eraser, Eye, EyeOff, Film, Hash, Lock, MessageSquareOff, ScrollText, Shield, SlidersHorizontal, Unlock, UserPlus } from 'lucide-react';
+import { Armchair, Eraser, Eye, EyeOff, Film, Hash, Lock, MessageSquareOff, Play, ScrollText, Shield, Square, Unlock, UserPlus } from 'lucide-react';
 import BoardToggleRow from '@/components/voice/BoardToggleRow';
 import SeatCountPicker from '@/components/voice/SeatCountPicker';
 import VoiceMenuTile from '@/components/voice/VoiceMenuTile';
@@ -45,8 +45,8 @@ export default function VoiceRoomMenu({ open, onClose, room, userId, participant
     },
     { key: 'hidden', icon: room?.hidden ? EyeOff : Eye, label: 'Gizli', active: !!room?.hidden, onClick: onToggleHidden },
     { key: 'seats', icon: Armchair, label: 'Koltuk', active: panel === 'seats', onClick: () => toggle('seats') },
-    { key: 'board', icon: Hash, label: 'Sayaç', active: !!boardActive, onClick: onToggleBoard },
-    { key: 'boardSettings', icon: SlidersHorizontal, label: 'Sayaç ayarı', active: panel === 'boardSettings', onClick: () => toggle('boardSettings') },
+    // Sayaç düğmesi ayarları açar; tekrar basınca kapanır.
+    { key: 'board', icon: Hash, label: 'Sayaç', active: !!boardActive || panel === 'board', onClick: () => toggle('board') },
     { key: 'clear', icon: Eraser, label: 'Sohbeti temizle', onClick: () => { onClose(); onClearChat?.(); } },
     {
       key: 'ban',
@@ -112,8 +112,8 @@ export default function VoiceRoomMenu({ open, onClose, room, userId, participant
         </Panel>
       )}
 
-      {canMod && panel === 'boardSettings' && (
-        <Panel hint="Sayaçlar tahta kapanıp yeniden açıldığında kaldığı yerden devam eder; sıfırlama yalnızca aşağıdaki seçeneklerle olur.">
+      {canMod && panel === 'board' && (
+        <Panel hint="Başlat'a bastığında koltukların altında “Devam Ediyor” sayacı 1'den başlar ve her saniye ilerler.">
           <div className="space-y-2">
             <BoardToggleRow
               label="Koltuktan inince sıfırla"
@@ -126,6 +126,13 @@ export default function VoiceRoomMenu({ open, onClose, room, userId, participant
               onToggle={() => onBoardSettings?.(seatReset, !roomReset)}
             />
           </div>
+          <button
+            type="button"
+            onClick={onToggleBoard}
+            className={`mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-xl text-sm font-bold ${boardActive ? 'bg-primary text-primary-foreground' : 'bg-emerald-500 text-black'}`}
+          >
+            {boardActive ? <><Square className="h-4 w-4" /> Durdur</> : <><Play className="h-4 w-4" /> Başlat</>}
+          </button>
         </Panel>
       )}
 

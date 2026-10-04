@@ -156,6 +156,10 @@
       },
       "default": []
     },
+    "board_started_at": {
+      "type": "string",
+      "default": ""
+    },
     "chat_auto_delete_minutes": {
       "type": "integer",
       "default": 0

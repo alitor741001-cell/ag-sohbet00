@@ -435,17 +435,20 @@ export default async function (req: Request): Promise<Response> {
     if (action === 'number-board-open') {
       if (!canMod) return Response.json({ error: 'yetkisiz' }, { status: 403 });
       const openScores = Array.isArray(room.number_scores) ? room.number_scores : [];
-      await base44.asServiceRole.entities.Room.update(room_id, { number_board: true });
+      // Sayaç başlar: koltukların altındaki "Devam Ediyor" sayacı bu andan itibaren ilerler.
+      const startedAt = new Date().toISOString();
+      await base44.asServiceRole.entities.Room.update(room_id, { number_board: true, board_started_at: startedAt });
       // Sayı tahtası açma/kapama sohbete yazılmaz.
-      return Response.json({ ok: true, seats, seat_count: seats.length, number_board: true, number_scores: openScores });
+      return Response.json({ ok: true, seats, seat_count: seats.length, number_board: true, number_scores: openScores, board_started_at: startedAt });
     }
 
     // Sayı tahtasını kapat — sayılar korunur, tahta yeniden açılınca devam eder
     if (action === 'number-board-close') {
       if (!canMod) return Response.json({ error: 'yetkisiz' }, { status: 403 });
       const closedScores = Array.isArray(room.number_scores) ? room.number_scores : [];
-      await base44.asServiceRole.entities.Room.update(room_id, { number_board: false });
-      return Response.json({ ok: true, seats, seat_count: seats.length, number_board: false, number_scores: closedScores });
+      // Sayaç durur: süre sayacı sıfırlanır, yeniden başlatılınca 1'den başlar.
+      await base44.asServiceRole.entities.Room.update(room_id, { number_board: false, board_started_at: '' });
+      return Response.json({ ok: true, seats, seat_count: seats.length, number_board: false, number_scores: closedScores, board_started_at: '' });
     }
 
     // Sayıyı bir artır / azalt — koltukta oturan herkes kendi sayısını, yöneticiler herkesi değiştirir

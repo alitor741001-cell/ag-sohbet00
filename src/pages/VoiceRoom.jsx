@@ -149,6 +149,8 @@ export default function VoiceRoom() {
 
   // Sayı tahtası: açıkken her koltuğun altında kişinin sayısı gösterilir.
   const boardActive = room?.number_board === true;
+  // Süre sayacı, sayaç başlatıldığı andan itibaren sayılır.
+  const boardStartedAt = room?.board_started_at || '';
   const scores = useMemo(() => {
     const map = {};
     (Array.isArray(room?.number_scores) ? room.number_scores : []).forEach((item) => {
@@ -376,6 +378,7 @@ export default function VoiceRoom() {
         if (Array.isArray(data.number_scores)) next.number_scores = data.number_scores;
         if (typeof data.number_board_reset_seat === 'boolean') next.number_board_reset_seat = data.number_board_reset_seat;
         if (typeof data.number_board_reset_room === 'boolean') next.number_board_reset_room = data.number_board_reset_room;
+        if (typeof data.board_started_at === 'string') next.board_started_at = data.board_started_at;
         if (typeof data.chat_seated_only === 'boolean') next.chat_seated_only = data.chat_seated_only;
         return next;
       });
@@ -575,7 +578,7 @@ export default function VoiceRoom() {
     setRoom((prev) => (prev ? { ...prev, number_board: next } : prev));
     const ok = await invokeVoice({ action: next ? 'number-board-open' : 'number-board-close' });
     if (ok) {
-      toast({ title: next ? 'Sayaç tahtası açıldı' : 'Sayaç tahtası kapatıldı', description: next ? 'Her koltuğun altında sayaç görünür.' : undefined });
+      toast({ title: next ? 'Sayaçlar başladı' : 'Sayaçlar durdu', description: next ? 'Koltukların altında “Devam Ediyor” sayacı ilerliyor.' : undefined });
     } else {
       setRoom((prev) => (prev ? { ...prev, number_board: !next } : prev));
     }
@@ -963,6 +966,7 @@ export default function VoiceRoom() {
           localSpeaking={voice.localSpeaking}
           onSelectSeat={handleSeatPress}
           boardActive={boardActive}
+          startedAt={boardStartedAt}
           scores={scores}
           accent={seatAccent}
           gifted={gifted}
@@ -1034,7 +1038,7 @@ export default function VoiceRoom() {
         onToggleMod={handleToggleMod}
         onInvite={handleInvite}
         boardActive={boardActive}
-        onToggleBoard={async () => { setMenuOpen(false); await toggleBoard(); }}
+        onToggleBoard={toggleBoard}
         onBoardSettings={saveBoardSettings}
         onClearChat={clearChat}
         onToggleChatBan={toggleChatBan}
