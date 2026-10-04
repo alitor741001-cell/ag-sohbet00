@@ -1,31 +1,29 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { SYMBOL_IDS } from '@/components/games/lucky/luckyConfig';
-import LuckyFallingColumn from '@/components/games/lucky/LuckyFallingColumn';
+import LuckySymbol from '@/components/games/lucky/LuckySymbol';
+import SlotReelColumn from '@/components/games/slot/SlotReelColumn';
+import '@/components/games/slot/slotReels.css';
 
-/** Individual downward drops, not a continuous reel strip. Server results remain unchanged. */
+/** Shares Slot Frenzy's reel movement and stop-position calculation. */
 export default function LuckyReels({ grid, multiValues, spinning, spinId }) {
-  const [cycle, setCycle] = useState(0);
-  useEffect(() => {
-    if (!spinning) return;
-    setCycle(0);
-    const timer = window.setInterval(() => setCycle((value) => value + 1), 1600);
-    return () => window.clearInterval(timer);
-  }, [spinning, spinId]);
-  const randomGrid = useMemo(() => Array.from({ length: 5 }, () =>
-    Array.from({ length: 4 }, () => SYMBOL_IDS[Math.floor(Math.random() * SYMBOL_IDS.length)])
-  ), [spinId, cycle]);
+  const strips = useMemo(() => Array.from({ length: 5 }, () =>
+    Array.from({ length: 15 }, () => SYMBOL_IDS[Math.floor(Math.random() * SYMBOL_IDS.length)])
+  ), [spinId]);
   if (!grid && !spinning) return null;
-  const symbols = spinning ? randomGrid : grid;
-  if (!symbols) return null;
-  const wave = spinning ? `${spinId}:${cycle}` : `${spinId}:result`;
   return (
     <div className="relative h-full w-full overflow-hidden rounded-[0.7rem] border border-slot-gold/60 bg-slot-panel shadow-[inset_0_0_18px_rgba(0,0,0,0.75)]">
-      <div className="absolute inset-0 grid grid-cols-5 gap-[2px] p-[2px]">
-        {symbols.map((column, index) => (
-          <LuckyFallingColumn key={index} column={index} symbols={column}
-            multipliers={spinning ? null : multiValues?.[index]} wave={wave} spinning={spinning} />
-        ))}
-      </div>
+      {strips.map((random, column) => (
+        <SlotReelColumn key={`${spinId}:${column}`} index={column} random={random}
+          rows={4} stopping={!spinning} slow={false}
+          landing={grid?.[column] || random.slice(0, 4)}
+          renderTile={(symbol, row, top, height, settled) => (
+            <span className="absolute left-0 block w-full" style={{ top, height }}>
+              <LuckySymbol symbol={symbol}
+                multiplier={settled && row < 4 ? multiValues?.[column]?.[row] : null} />
+            </span>
+          )}
+        />
+      ))}
     </div>
   );
 }
