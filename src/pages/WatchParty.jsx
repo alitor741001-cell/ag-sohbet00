@@ -413,7 +413,8 @@ export default function WatchParty() {
   useEffect(() => { participantsRef.current = room?.participants || []; }, [room?.participants]);
 
   useEffect(() => {
-    if (!canMod || !room?.participants) return;
+    // Odadan atma yalnızca oda sahibinde: çevrimdışı temizliği oda sahibi yapar.
+    if (!isOwner || !room?.participants) return;
     const check = async () => {
       const offlineUsers = (participantsRef.current || []).filter((p) => {
         if (p.user_id === user.id || p.user_id === room.owner_id) return false;

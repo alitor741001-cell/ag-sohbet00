@@ -39,7 +39,7 @@ export default function ProfileRoomActions({ userId, me, roomId }) {
   };
   return <div className="mt-4 flex w-full flex-col gap-2 border-t border-border pt-4">
     <button disabled={busy} onClick={() => act('block')} className="rounded-lg bg-secondary px-4 py-2 text-sm font-semibold disabled:opacity-50">{blocked ? 'Engeli Kaldır' : 'Engelle'}</button>
-    {canMod && participant && <><p className="text-xs text-muted-foreground">{room.name} — Oda işlemleri</p>{room.voice_enabled && <button disabled={busy} onClick={() => act('toggle-mute')} className="rounded-lg bg-secondary px-4 py-2 text-sm disabled:opacity-50">{participant.muted ? 'Mikrofonu Aç' : 'Mikrofonu Kapat'}</button>}<button disabled={busy} onClick={() => act('kick')} className="rounded-lg bg-destructive/10 px-4 py-2 text-sm font-semibold text-destructive disabled:opacity-50">Odadan At</button></>}
+    {canMod && participant && <><p className="text-xs text-muted-foreground">{room.name} — Oda işlemleri</p>{room.voice_enabled && <button disabled={busy} onClick={() => act('toggle-mute')} className="rounded-lg bg-secondary px-4 py-2 text-sm disabled:opacity-50">{participant.muted ? 'Mikrofonu Aç' : 'Mikrofonu Kapat'}</button>}{room.owner_id === me.id && <button disabled={busy} onClick={() => act('kick')} className="rounded-lg bg-destructive/10 px-4 py-2 text-sm font-semibold text-destructive disabled:opacity-50">Odadan At</button>}</>}
     {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
   </div>;
 }

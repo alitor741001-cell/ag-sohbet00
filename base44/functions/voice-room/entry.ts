@@ -113,7 +113,8 @@ export default async function (req: Request): Promise<Response> {
 
     // Kişiyi koltuğundan indir (odadan atma room-presence ile yapılır)
     if (action === 'seat-kick') {
-      if (!canMod) return Response.json({ error: 'yetkisiz' }, { status: 403 });
+      // Koltuktan indirme yalnızca oda sahibinin yetkisidir; yöneticiler koltuktan indiremez.
+      if (!isOwner) return Response.json({ error: 'Koltuktan yalnızca oda sahibi indirebilir.' }, { status: 403 });
       if (!target_id) return Response.json({ error: 'kullanıcı gerekli' }, { status: 400 });
       const target = seats.find((seat) => seat.user_id === target_id);
       if (!target) return respond(seats);
