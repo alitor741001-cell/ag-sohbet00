@@ -1,11 +1,20 @@
 import { useEffect, useState } from 'react';
 import { Pencil } from 'lucide-react';
 
-/** Oda ismi kartı — yanındaki kalem ile isim yerinde düzenlenir ve odaya işlenir. */
+// Bu uzunluktan sonra isim soldan akmaya başlar.
+const MARQUEE_AFTER = 10;
+
+/**
+ * Oda ismi kartı: profilin altında ortalanır, kendi yazısı kadar büyür.
+ * İsim 10 harften uzunsa sürekli sola akar ve her turda baştan tekrarlar.
+ */
 export default function RoomNameCard({ name, canEdit, onRename }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(name || '');
   const [saving, setSaving] = useState(false);
+
+  const label = name || 'Oda';
+  const scrolls = label.length > MARQUEE_AFTER;
 
   // Oda ismi başka yerden değişirse kart kendini günceller.
   useEffect(() => { if (!editing) setDraft(name || ''); }, [name, editing]);
@@ -20,17 +29,17 @@ export default function RoomNameCard({ name, canEdit, onRename }) {
     if (ok) setEditing(false);
   };
 
-  return (
-    <div className="mt-2 flex items-center justify-center gap-1.5 rounded-2xl border border-white/10 bg-white/[0.06] px-3 py-2">
-      {editing ? (
-        <form onSubmit={submit} className="flex w-full items-center gap-2">
+  if (editing) {
+    return (
+      <div className="mx-auto mt-2 w-fit max-w-[86vw] rounded-2xl border border-white/10 bg-white/[0.06] px-3 py-2">
+        <form onSubmit={submit} className="flex items-center gap-2">
           <input
             autoFocus
             value={draft}
             maxLength={80}
             onChange={(event) => setDraft(event.target.value)}
             placeholder="Oda ismi"
-            className="h-8 min-w-0 flex-1 rounded-lg bg-black/40 px-2.5 text-sm font-bold text-white outline-none placeholder:text-white/40"
+            className="h-8 w-[44vw] max-w-[15rem] rounded-lg bg-black/40 px-2.5 text-sm font-bold text-white outline-none placeholder:text-white/40"
           />
           <button
             type="submit"
@@ -41,20 +50,34 @@ export default function RoomNameCard({ name, canEdit, onRename }) {
           </button>
           <button type="button" onClick={() => setEditing(false)} className="shrink-0 text-[11px] font-bold text-white/60">İptal</button>
         </form>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative mx-auto mt-2 flex w-fit max-w-[86vw] items-center justify-center rounded-2xl border border-white/10 bg-white/[0.06] px-7 py-2">
+      {scrolls ? (
+        <span className="overflow-hidden" style={{ maxWidth: '56vw' }}>
+          <span
+            className="room-name-marquee flex w-max whitespace-nowrap"
+            style={{ animationDuration: `${Math.max(8, label.length * 0.5)}s` }}
+          >
+            <span className="pr-8 text-sm font-bold">{label}</span>
+            <span className="pr-8 text-sm font-bold" aria-hidden="true">{label}</span>
+          </span>
+        </span>
       ) : (
-        <>
-          <p className="min-w-0 truncate text-sm font-bold">{name || 'Oda'}</p>
-          {canEdit && (
-            <button
-              type="button"
-              onClick={() => setEditing(true)}
-              aria-label="Oda ismini değiştir"
-              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/10 text-white/75 transition-transform active:scale-95"
-            >
-              <Pencil className="h-3.5 w-3.5" />
-            </button>
-          )}
-        </>
+        <span className="whitespace-nowrap text-sm font-bold">{label}</span>
+      )}
+      {canEdit && (
+        <button
+          type="button"
+          onClick={() => setEditing(true)}
+          aria-label="Oda ismini değiştir"
+          className="absolute right-1.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white/75 transition-transform active:scale-95"
+        >
+          <Pencil className="h-3.5 w-3.5" />
+        </button>
       )}
     </div>
   );
