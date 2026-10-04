@@ -2,7 +2,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import { rateLimit, safeErrorResponse } from '../../shared/security.ts';
 import { ensureGiftWallet } from '../../shared/giftWallet.ts';
 
-const ACTIONS = ['lookup', 'grant', 'revert', 'list'];
+const ACTIONS = ['lookup', 'grant', 'revert', 'list', 'requests', 'approve', 'reject'];
 // Tek seferde yüklenebilecek en yüksek coin — kazara devasa yükleme olmasın.
 const MAX_GRANT = 50000000;
 
@@ -155,6 +155,104 @@ export default async function (req: Request): Promise<Response> {
       }).catch(() => {});
 
       return Response.json({ ok: true, reverted: amount, coins: next });
+    }
+
+    // Kullanıcı başvuruları: bekleyenler listenin başında gösterilir.
+    if (action === 'requests') {
+      const requestLimit = Math.min(60, Math.max(5, Number(body?.limit) || 30));
+      const found = await base44.asServiceRole.entities.CoinRequest.list('-created_date', requestLimit).catch(() => []);
+      const requests = [...found].sort((a: any, b: any) => (a.status === 'pending' ? 0 : 1) - (b.status === 'pending' ? 0 : 1));
+      return Response.json({ ok: true, requests });
+    }
+
+    // Başvuru onayı: coinler kullanıcının bakiyesine yüklenir. Red: yükleme yapılmaz.
+    if (action === 'approve' || action === 'reject') {
+      const request = body?.request_id
+        ? await base44.asServiceRole.entities.CoinRequest.get(String(body.request_id)).catch(() => null)
+        : null;
+      if (!request) return Response.json({ error: 'Başvuru bulunamadı.' }, { status: 404 });
+      if (request.status !== 'pending') return Response.json({ error: 'Bu başvuru zaten sonuçlandı.' }, { status: 400 });
+
+      const coins = Math.max(0, Math.floor(Number(request.coins) || 0));
+      const name = request.user_name || 'Kullanıcı';
+      const memberId = request.member_id || request.user_id;
+      const packName = request.package_name || 'Paket';
+      const reviewedAt = new Date().toISOString();
+
+      if (action === 'reject') {
+        await base44.asServiceRole.entities.CoinRequest.update(request.id, {
+          status: 'rejected',
+          reviewed_by: adminName,
+          reviewed_at: reviewedAt,
+        });
+
+        await base44.asServiceRole.entities.AdminLog.create({
+          admin_id: user.id,
+          admin_name: adminName,
+          action: 'coin-request-reject',
+          target: `${name} (${memberId})`,
+          details: `${coins.toLocaleString('tr-TR')} coin başvurusu reddedildi`,
+        }).catch(() => {});
+
+        await base44.asServiceRole.entities.Notification.create({
+          user_id: request.user_id,
+          title: 'Coin başvurusu reddedildi',
+          type: 'coin_request',
+          body: `${packName} paketi için ${coins.toLocaleString('tr-TR')} coin başvurun onaylanmadı.`,
+          link: '/profil',
+          ref_id: user.id,
+        }).catch(() => {});
+
+        return Response.json({ ok: true, status: 'rejected' });
+      }
+
+      if (coins < 1) return Response.json({ error: 'Başvuruda geçerli coin miktarı yok.' }, { status: 400 });
+
+      const target = await base44.asServiceRole.entities.User.get(request.user_id).catch(() => null);
+      if (!target?.id) return Response.json({ error: 'Kullanıcı bulunamadı.' }, { status: 404 });
+
+      const wallet = await ensureGiftWallet(base44, target);
+      const balance = Math.max(0, Number(wallet?.coins) || 0);
+      const next = balance + coins;
+      if (wallet?.id) await base44.asServiceRole.entities.GameWallet.update(wallet.id, { coins: next, admin_granted: true });
+
+      await base44.asServiceRole.entities.CoinRequest.update(request.id, {
+        status: 'approved',
+        reviewed_by: adminName,
+        reviewed_at: reviewedAt,
+      });
+
+      await base44.asServiceRole.entities.CoinGrant.create({
+        admin_id: user.id,
+        admin_name: adminName,
+        user_id: target.id,
+        user_name: request.user_name || personView(target).name,
+        user_avatar: request.user_avatar || '',
+        member_id: request.member_id || '',
+        amount: coins,
+        coins_after: next,
+        note: `Başvuru onayı — ${packName} (${Number(request.price) || 0} ₺)`,
+        status: 'active',
+      });
+
+      await base44.asServiceRole.entities.AdminLog.create({
+        admin_id: user.id,
+        admin_name: adminName,
+        action: 'coin-request-approve',
+        target: `${name} (${memberId})`,
+        details: `+${coins.toLocaleString('tr-TR')} coin (${packName})`,
+      }).catch(() => {});
+
+      await base44.asServiceRole.entities.Notification.create({
+        user_id: target.id,
+        title: 'Coin yüklendi',
+        type: 'coin_grant',
+        body: `${packName} paketi onaylandı — hesabına ${coins.toLocaleString('tr-TR')} coin yüklendi. Yeni bakiyen: ${next.toLocaleString('tr-TR')} coin.`,
+        link: '/profil',
+        ref_id: user.id,
+      }).catch(() => {});
+
+      return Response.json({ ok: true, status: 'approved', coins: next });
     }
 
     // Son işlemler.

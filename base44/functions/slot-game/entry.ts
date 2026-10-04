@@ -6,8 +6,9 @@ const START_COINS = 100000;
 const ADMIN_COINS = 500000;
 // Bu tutar ve üzeri kazançlar büyük kazanç tablosuna girer.
 const BIG_WIN_TABLE_MIN = 20000;
-const BONUS_COINS = 25000;
-const BONUS_COOLDOWN_MS = 6 * 60 * 60 * 1000;
+// Oyun bonusu: 24 saatte bir 2.000 coin.
+const BONUS_COINS = 2000;
+const BONUS_COOLDOWN_MS = 24 * 60 * 60 * 1000;
 const DEFAULT_BET = 100;
 // Jackpot: ekranda 5 jackpot sembolü geldiğinde bahsin 120 katı ödenir.
 const JACKPOT_SYMBOLS = 5;
@@ -47,12 +48,6 @@ function bonusReady(wallet) {
   return Date.now() - new Date(wallet.last_bonus_at).getTime() >= BONUS_COOLDOWN_MS;
 }
 
-function canClaimBonus(wallet) {
-  if (bonusReady(wallet)) return true;
-  // Bakiye bir tura yetmiyorsa bonus beklemeden alınabilir.
-  return (wallet.coins ?? START_COINS) < (wallet.bet ?? DEFAULT_BET) * LINES;
-}
-
 function walletView(wallet, isAdmin = false) {
   const pools = poolValues(wallet);
   const jackpot = jackpotTotal(pools);
@@ -66,7 +61,7 @@ function walletView(wallet, isAdmin = false) {
     grand: jackpot,
     pools: { jackpot, ...pools },
     free_spins: wallet.free_spins ?? 0,
-    bonus_ready: canClaimBonus(wallet),
+    bonus_ready: bonusReady(wallet),
     bonus_amount: BONUS_COINS,
   };
 }
@@ -213,7 +208,7 @@ export default async function (req) {
     }
 
     if (action === 'bonus') {
-      if (!canClaimBonus(wallet)) return Response.json({ error: 'Bonus henüz hazır değil.' }, { status: 400 });
+      if (!bonusReady(wallet)) return Response.json({ error: 'Bonus henüz hazır değil — 24 saatte bir alınabilir.' }, { status: 400 });
       const updated = await base44.asServiceRole.entities.GameWallet.update(wallet.id, {
         coins: (wallet.coins ?? START_COINS) + BONUS_COINS,
         last_bonus_at: new Date().toISOString(),

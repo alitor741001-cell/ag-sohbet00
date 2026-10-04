@@ -4,6 +4,7 @@ import CoinStack from '@/components/admin/coins/CoinStack';
 import CoinLoadForm from '@/components/admin/coins/CoinLoadForm';
 import CoinRevertCard from '@/components/admin/coins/CoinRevertCard';
 import CoinRecentTable from '@/components/admin/coins/CoinRecentTable';
+import CoinRequestList from '@/components/admin/coins/CoinRequestList';
 
 /** Admin panel: kullanıcılara coin yükleme, geri çekme ve son işlemler. */
 export default function AdminCoins() {
@@ -44,6 +45,7 @@ export default function AdminCoins() {
 
       <div className="space-y-4">
         <CoinLoadForm onGranted={refresh} />
+        <CoinRequestList onReviewed={refresh} />
         <CoinRevertCard grant={lastActive} onReverted={refresh} />
         <CoinRecentTable grants={grants} loading={loading} onReverted={refresh} />
       </div>

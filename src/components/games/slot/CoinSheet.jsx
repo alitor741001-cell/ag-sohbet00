@@ -40,7 +40,7 @@ export default function CoinSheet({ open, onClose, coins, bonusReady, bonusAmoun
         </button>
 
         <p className="mt-2 text-center text-[10px] leading-relaxed text-white/60">
-          Bonus 6 saatte bir yenilenir ve coinler hesabına eklenir.
+          Bonus 24 saatte bir yenilenir ve hesabına 2.000 coin eklenir.
         </p>
 
         {message && <p className="mt-2 text-center text-[11px] font-bold text-slot-green">{message}</p>}
