@@ -55,12 +55,15 @@ export default function GiftSendersPanel({ open, onClose }) {
 
       <div className="min-h-0 flex-1 overflow-y-auto p-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
         <div className="mx-auto w-full max-w-[430px]">
+          <p className="mb-2.5 text-center text-[10px] font-semibold text-white/45">
+            Bu ayın listesi • her ayın 1'inde otomatik sıfırlanır
+          </p>
           {loading ? (
             <div className="flex items-center justify-center py-10">
               <Loader2 className="h-6 w-6 animate-spin text-primary" />
             </div>
           ) : senders.length === 0 ? (
-            <p className="py-10 text-center text-sm text-white/50">Henüz hediye almamışsın.</p>
+            <p className="py-10 text-center text-sm text-white/50">Bu ay henüz hediye almamışsın.</p>
           ) : (
             senders.map((sender) => {
               const isOpen = expanded === sender.sender_id;

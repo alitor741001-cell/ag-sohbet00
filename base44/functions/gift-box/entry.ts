@@ -1,7 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import { rateLimit, safeErrorResponse } from '../../shared/security.ts';
 import { ensureGiftWallet, giftBalance } from '../../shared/giftWallet.ts';
-import { COINS_PER_DOLLAR, findByMemberId, giftBoxSummary, giftDollarsFromK } from '../../shared/giftBox.ts';
+import { COINS_PER_DOLLAR, findByMemberId, giftBoxSummary, giftDollarsFromK, monthStartIso } from '../../shared/giftBox.ts';
 import { getUsdTry, tlFromDollars, tlRateFrom } from '../../shared/exchangeRate.ts';
 import { upsertNotification } from '../../shared/upsertNotification.ts';
 
@@ -28,11 +28,16 @@ export default async function (req: Request): Promise<Response> {
       return Response.json({ ok: true, member_id: me?.member_id || '', ...summary });
     }
 
-    // Hediye gönderenler: kişi başına tek satır, altında gönderim listesi (tarih + saat)
+    // Hediye gönderenler: her ayın 1'inde sıfırlanır — yalnızca bu ayın gönderimleri listelenir.
     if (action === 'received') {
-      const records = await base44.asServiceRole.entities.GiftSend
+      const monthStart = monthStartIso();
+      const allRecords = await base44.asServiceRole.entities.GiftSend
         .filter({ recipient_id: user.id }, '-created_date', 2000)
         .catch(() => []);
+      const records = allRecords.filter((record) => {
+        const created = String(record?.created_date || '');
+        return created ? created.slice(0, 19) >= monthStart : false;
+      });
       const grouped = new Map();
       records.forEach((record) => {
         const key = record.sender_id || 'bilinmeyen';
