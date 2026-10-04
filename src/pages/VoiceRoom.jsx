@@ -7,6 +7,7 @@ import { useVoiceChat } from '@/hooks/useVoiceChat';
 import useKeyboardInset from '@/hooks/useKeyboardInset';
 import { useToast } from '@/components/ui/use-toast';
 import VoiceSeatGrid from '@/components/voice/VoiceSeatGrid';
+import VoiceGiftScoreboard from '@/components/voice/VoiceGiftScoreboard';
 import VoiceControlBar from '@/components/voice/VoiceControlBar';
 import VoiceChatDock from '@/components/voice/VoiceChatDock';
 import VoiceViewerSheet from '@/components/voice/VoiceViewerSheet';
@@ -402,7 +403,7 @@ export default function VoiceRoom() {
     const created = latest.created_date ? new Date(latest.created_date).getTime() : 0;
     if (!created || Date.now() - created > 15000) return;
     lastGiftRef.current = latest.id;
-    setGiftAlert({ gift: latest.gift, name: latest.user_name });
+    setGiftAlert({ gift: latest.gift, name: latest.user_name, userId: latest.user_id });
     window.clearTimeout(giftTimerRef.current);
     giftTimerRef.current = window.setTimeout(() => setGiftAlert(null), 4000);
   }, [messages]);
@@ -542,9 +543,8 @@ export default function VoiceRoom() {
           onSelectSeat={handleSeatPress}
           boardActive={boardActive}
           scores={scores}
-          canScoreAll={canMod}
-          onScoreStep={(targetId, delta) => invokeVoice({ action: 'number-step', target_id: targetId, delta })}
         />
+        {boardActive && <VoiceGiftScoreboard participants={participants} seats={seatsView} scores={scores} />}
         <p className="mt-5 text-center text-[11px] text-white/50">
           {seated
             ? (voice.muted ? 'Mikrofonun kapalı — konuşmak için mikrofon tuşuna bas.' : 'Koltuktayken mikrofonun açık, konuşabilirsin.')
@@ -692,7 +692,7 @@ export default function VoiceRoom() {
 
       <VoiceGiftSheet open={giftOpen} onClose={() => setGiftOpen(false)} onSend={sendGift} />
 
-      <VoiceGiftOverlay alert={giftAlert} />
+      <VoiceGiftOverlay alert={giftAlert ? { ...giftAlert, value: scores[giftAlert.userId] || 0 } : null} />
 
       <ConfirmDialog
         open={boardResetOpen}

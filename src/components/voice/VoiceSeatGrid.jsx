@@ -3,7 +3,7 @@ import VoiceSeatScore from '@/components/voice/VoiceSeatScore';
 import { seatIndexRows } from '@/components/voice/seatLayout';
 
 /** Sahnedeki yuvarlak oturma düzeni — satırlar ortalanır. Sayı tahtası açıkken her kişinin altında sayı hücresi durur. */
-export default function VoiceSeatGrid({ seats = [], userId, ownerId, moderators = [], speakingIds = [], localSpeaking, onSelectSeat, boardActive, scores = {}, canScoreAll, onScoreStep }) {
+export default function VoiceSeatGrid({ seats = [], userId, ownerId, moderators = [], speakingIds = [], localSpeaking, onSelectSeat, boardActive, scores = {} }) {
   const size = seats.length > 15 ? 'sm' : 'md';
   return (
     <div className="flex flex-col items-center gap-4 sm:gap-5">
@@ -27,8 +27,6 @@ export default function VoiceSeatGrid({ seats = [], userId, ownerId, moderators 
                 {boardActive && occupied && (
                   <VoiceSeatScore
                     value={scores[seat.user_id] || 0}
-                    canChange={!!canScoreAll || seat.user_id === userId}
-                    onStep={(delta) => onScoreStep(seat.user_id, delta)}
                   />
                 )}
               </div>
