@@ -135,7 +135,7 @@ export default async function (req: Request): Promise<Response> {
       const summary = await giftBoxSummary(base44, account);
       if (dollars > summary.available_dollars) {
         return Response.json({
-          error: `Bakiyen yetersiz. Kullanılabilir: ${summary.available_dollars.toFixed(2)} $`,
+          error: `Bakiyen yetersiz. Kullanılabilir: ${summary.available_dollars} $`,
           available_dollars: summary.available_dollars,
         }, { status: 400 });
       }
