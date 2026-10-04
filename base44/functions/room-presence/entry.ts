@@ -3,12 +3,9 @@ import { rateLimit, safeErrorResponse, logSecurity } from '../../shared/security
 import { isModerator, isSiteOwner, immuneToModeration, getRoleInfo, getRoleLabelOverrides, getSpecialFrameInfo } from '../../shared/roles.ts';
 import { upsertNotification } from '../../shared/upsertNotification.ts';
 import { hasActiveMembership } from '../../shared/membership.ts';
-import { effectiveVipLevel } from '../../shared/vip.ts';
+import { HIDDEN_DISPLAY_NAME, isHiddenUser } from '../../shared/vip.ts';
 import { scoresAfterRoomLeave } from '../../shared/numberBoard.ts';
 import { appendRoomLog } from '../../shared/roomLog.ts';
-
-/** Gizli kullanıcı modunun gerektirdiği en düşük VIP seviyesi. */
-const HIDDEN_REQUIRED_VIP = 10;
 
 async function sha256Hex(salt, pw) {
   const data = new TextEncoder().encode(salt + pw);
@@ -72,7 +69,7 @@ export default async function(req) {
     const canModRoom = isOwner || isMod || isRoomMod;
     const hasVisibleRole = !!(me.display_role || me.custom_role?.name || me.special_frame_id || (me.profile_frame && (me.profile_frame.startsWith('lvl_') || me.profile_frame_entrance_enabled)));
     // Gizli kullanıcı modu (VIP10+): odaya görünmeden katılır — giriş/çıkış bildirimi düşmez.
-    const hiddenUser = !!me.hidden_user && effectiveVipLevel(me) >= HIDDEN_REQUIRED_VIP;
+    const hiddenUser = isHiddenUser(me);
     const ghost = !isOwner && (hiddenUser || (isAdmin && !hasVisibleRole));
     const labelOverrides = await getRoleLabelOverrides(base44);
 
@@ -129,6 +126,23 @@ export default async function(req) {
         await base44.asServiceRole.entities.Room.update(room_id, {
           banned_users: (room.banned_users || []).filter((b) => !(b.user_id === user.id && b.banned_until && new Date(b.banned_until).getTime() <= banNow)),
         }).catch(() => {});
+      }
+      // Gizli kullanıcı (VIP10+): odada kimliği görünmez — anons düşer, isim/avatar/profil gösterilmez.
+      if (hiddenUser) {
+        const inside = (room.participants || []).some((person) => person.user_id === user.id);
+        if (!inside) {
+          if ((room.participants || []).length >= (room.max_users || 10)) {
+            return Response.json({ error: 'oda dolu' }, { status: 403 });
+          }
+          await base44.asServiceRole.entities.Room.update(room_id, {
+            participants: [...(room.participants || []), { user_id: user.id, name: HIDDEN_DISPLAY_NAME, avatar: '', joined_at: new Date().toISOString(), muted: false, speaking: false }],
+            ghost_entered_at: new Date().toISOString(),
+          });
+        } else {
+          await base44.asServiceRole.entities.Room.update(room_id, { ghost_entered_at: new Date().toISOString() });
+        }
+        await updatePresenceRoom(base44, user.id, room_id);
+        return Response.json({ ok: true, hidden: true });
       }
       // Admin ghost mode: görünmez katılım
       if (ghost) return Response.json({ ok: true, ghost: true });
@@ -465,6 +479,8 @@ export default async function(req) {
     // leave (explicit kontrol — kırılgan varsayılan düşüş yerine)
     if (action !== 'leave') return Response.json({ error: 'geçersiz işlem' }, { status: 400 });
     if (ghost) return Response.json({ ok: true });
+    // Gizli kullanıcı çıkışı: anons kapanır, çıkışı ismiyle sohbete yazılmaz.
+    if (hiddenUser) await base44.asServiceRole.entities.Room.update(room_id, { ghost_entered_at: '' }).catch(() => {});
     await updatePresenceRoom(base44, user.id, '');
     // Kişisel oda: kullanıcı ayrıldığında onay kaydını sil, tekrar katılmak için yeniden onay istesin
     if (room.is_personal && !isOwner && !isMod) {
@@ -511,7 +527,7 @@ export default async function(req) {
         ? `${frameInfoLeave.title} `
         : (roleInfoLeave.label && roleInfoLeave.show_in_room ? `${roleInfoLeave.icon} ${roleInfoLeave.label} ` : '');
       const leaveName = frameInfoLeave ? `${name} ` : (roleInfoLeave.hide_username_entry ? '' : `${name} `);
-      if (leavingParticipant) {
+      if (!hiddenUser && leavingParticipant) {
         await base44.asServiceRole.entities.RoomMessage.create({
           room_id, user_id: user.id, user_name: name, user_avatar: user.avatar || '',
           text: `${profileMetaLeave}${frameMetaLeave}${roleMetaLeave}${titlePrefixLeave}${leaveName}odadan ayrıldı.`, type: 'system'
@@ -535,7 +551,7 @@ export default async function(req) {
       ? `${frameInfoLeave2.title} `
       : (roleInfoLeave2.label && roleInfoLeave2.show_in_room ? `${roleInfoLeave2.icon} ${roleInfoLeave2.label} ` : '');
     const leaveName2 = frameInfoLeave2 ? `${name} ` : (roleInfoLeave2.hide_username_entry ? '' : `${name} `);
-    if (leavingParticipant) {
+    if (!hiddenUser && leavingParticipant) {
         await base44.asServiceRole.entities.RoomMessage.create({
           room_id, user_id: user.id, user_name: name, user_avatar: user.avatar || '',
           text: `${profileMetaLeave2}${frameMetaLeave2}${roleMetaLeave2}${titlePrefixLeave2}${leaveName2}odadan ayrıldı.`, type: 'system'

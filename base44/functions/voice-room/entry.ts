@@ -7,6 +7,7 @@ import { appendRoomLog } from '../../shared/roomLog.ts';
 import { coinsForK, ensureGiftWallet, formatK, giftBalance } from '../../shared/giftWallet.ts';
 import { giftBoard } from '../../shared/giftBoard.ts';
 import { addGiftTotals } from '../../shared/userLevels.ts';
+import { HIDDEN_DISPLAY_NAME, isHiddenUser } from '../../shared/vip.ts';
 
 const SEAT_OPTIONS = [2, 5, 8, 9, 12, 15, 20, 24];
 // Bu değerin (coin) üzerindeki hediyeler bütün sesli odalara duyurulur.
@@ -36,6 +37,10 @@ export default async function (req: Request): Promise<Response> {
 
     const me = await base44.asServiceRole.entities.User.get(user.id).catch(() => null);
     const displayName = me?.username || me?.full_name || user.full_name || 'Kullanıcı';
+    // Gizli kullanıcı (VIP10+): odada ismi, avatarı ve çerçevesi görünmez — takma adla kullanılır.
+    const hiddenUser = isHiddenUser(me);
+    const shownName = hiddenUser ? HIDDEN_DISPLAY_NAME : displayName;
+    const shownAvatar = hiddenUser ? '' : (me?.avatar || user.avatar || '');
     const isOwner = room.owner_id === user.id;
     const isRoomMod = (room.room_moderators || []).includes(user.id);
     const canMod = isOwner || isRoomMod || ['admin', 'moderator'].includes(me?.role) || isModerator(me);
@@ -68,9 +73,9 @@ export default async function (req: Request): Promise<Response> {
       next[index] = {
         ...emptySeat(index),
         user_id: user.id,
-        name: displayName,
-        avatar: me?.avatar || user.avatar || '',
-        frame: me?.profile_frame || '',
+        name: shownName,
+        avatar: shownAvatar,
+        frame: hiddenUser ? '' : (me?.profile_frame || ''),
         frame_scale: Number(me?.profile_frame_scale) || 100,
       };
       await persist(next);
@@ -78,7 +83,7 @@ export default async function (req: Request): Promise<Response> {
       if (pendingInvites.length !== (Array.isArray(room.seat_invites) ? room.seat_invites : []).length) {
         await base44.asServiceRole.entities.Room.update(room_id, { seat_invites: pendingInvites });
       }
-      await say(`${displayName} ${index + 1}. koltuğa oturdu.`);
+      await say(`${shownName} ${index + 1}. koltuğa oturdu.`);
       return respond(next);
     }
 
@@ -89,7 +94,7 @@ export default async function (req: Request): Promise<Response> {
       await persist(next);
       const seatLeaveScores = scoresAfterSeatLeave(room, user.id);
       if (seatLeaveScores) await base44.asServiceRole.entities.Room.update(room_id, { number_scores: seatLeaveScores });
-      await say(`${displayName} koltuğundan kalktı.`);
+      await say(`${shownName} koltuğundan kalktı.`);
       return respond(next);
     }
 
@@ -233,7 +238,7 @@ export default async function (req: Request): Promise<Response> {
         return Response.json({ error: 'Hediye bulunamadı.' }, { status: 404 });
       }
 
-      const people = new Map([[user.id, displayName]]);
+      const people = new Map([[user.id, shownName]]);
       seats.forEach((seat) => { if (seat.user_id) people.set(seat.user_id, seat.name || 'Kullanıcı'); });
       (room.participants || []).forEach((person) => { if (person.user_id) people.set(person.user_id, person.name || 'Kullanıcı'); });
 
@@ -277,15 +282,15 @@ export default async function (req: Request): Promise<Response> {
       const records = [];
       for (const recipient of recipients) {
         messageRecords.push({
-          room_id, user_id: user.id, user_name: displayName, user_avatar: me?.avatar || user.avatar || '',
-          text: `${displayName}, ${recipient.name} kişisine ${giftRecord.name}${quantity > 1 ? ` X${quantity}` : ''} gönderdi!`,
+          room_id, user_id: hiddenUser ? '' : user.id, user_name: shownName, user_avatar: shownAvatar,
+          text: `${shownName}, ${recipient.name} kişisine ${giftRecord.name}${quantity > 1 ? ` X${quantity}` : ''} gönderdi!`,
           type: 'gift', gift: giftRecord.id, gift_to_id: recipient.user_id, gift_to_name: recipient.name,
           gift_emoji: giftEmoji, gift_k: kValue * quantity,
         });
         for (let repeat = 0; repeat < quantity; repeat += 1) {
           records.push({
             room_id,
-            sender_id: user.id, sender_name: displayName,
+            sender_id: user.id, sender_name: shownName,
             recipient_id: recipient.user_id, recipient_name: recipient.name,
             gift_id: giftRecord.id, gift_name: giftRecord.name, gift_emoji: giftEmoji,
             gift_image_url: giftRecord.image_url || '',
@@ -313,9 +318,9 @@ export default async function (req: Request): Promise<Response> {
           room_id,
           room_name: room.name || '',
           sender_id: user.id,
-          sender_name: displayName,
-          sender_avatar: me?.avatar || user.avatar || '',
-          sender_frame: me?.profile_frame || '',
+          sender_name: shownName,
+          sender_avatar: shownAvatar,
+          sender_frame: hiddenUser ? '' : (me?.profile_frame || ''),
           sender_frame_scale: Number(me?.profile_frame_scale) || 100,
           recipient_id: primary.user_id,
           recipient_name: primary.name,

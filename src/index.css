@@ -1631,6 +1631,26 @@ button:active, nav a:active, a[role="button"]:active {
 }
 @media (prefers-reduced-motion: reduce) { .room-name-marquee { animation-duration: 20s; } }
 
+/* Gizli kullanıcı anonsu: sağ kenardan girer, sola doğru akar;
+   tur tamamlanınca 3 saniye bekler ve yeniden kaymaya başlar. */
+.hidden-user-marquee {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  white-space: nowrap;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.75);
+  animation: hidden-user-marquee 7s linear infinite;
+}
+@keyframes hidden-user-marquee {
+  0% { left: 100%; }
+  60%, 100% { left: -100%; }
+}
+@media (prefers-reduced-motion: reduce) { .hidden-user-marquee { animation-duration: 14s; } }
+
 /* Crash Rocket uçuş stilleri: src/styles/rocket.css */
 
 /* === HEDİYE HAREKETLERİ ===

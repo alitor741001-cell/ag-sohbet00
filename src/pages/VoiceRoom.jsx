@@ -7,6 +7,7 @@ import { useVoiceChat } from '@/hooks/useVoiceChat';
 import useKeyboardInset from '@/hooks/useKeyboardInset';
 import { useToast } from '@/components/ui/use-toast';
 import VoiceSeatGrid from '@/components/voice/VoiceSeatGrid';
+import HiddenUserMarquee from '@/components/voice/HiddenUserMarquee';
 import VoiceControlBar from '@/components/voice/VoiceControlBar';
 import VoiceChatDock from '@/components/voice/VoiceChatDock';
 import VoiceViewerSheet from '@/components/voice/VoiceViewerSheet';
