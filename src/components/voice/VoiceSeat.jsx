@@ -15,7 +15,7 @@ const NAME = { xs: 'max-w-[42px]', sm: 'max-w-[52px]', md: 'max-w-[68px]', lg: '
 const FRAME_SCALE = 0.78;
 
 /** Tek koltuk: boş koltukta + ve numara, dolu koltukta profil görseli ve isim. */
-export default function VoiceSeat({ seat, index, size = 'md', speaking, isSelf, isOwner, isMod, accent = '#ef4444', gifted, onClick }) {
+export default function VoiceSeat({ seat, index, size = 'md', speaking, isSelf, isOwner, isMod, accent = '#ef4444', gifted, onClick, micMuted }) {
   const cell = CELL[size] || CELL.md;
   const face = FACE[size] || FACE.md;
   const ring = RING[size] || RING.md;
@@ -27,8 +27,14 @@ export default function VoiceSeat({ seat, index, size = 'md', speaking, isSelf, 
     return (
       <button type="button" onClick={onClick} className="flex flex-col items-center gap-1 active:scale-95 transition-transform" aria-label={`${index + 1}. koltuk`}>
         <span className={`flex ${cell} shrink-0 items-center justify-center`}>
-          <span className={`flex ${emptyCircle} items-center justify-center rounded-full border ${seat?.locked ? 'border-amber-400/70 bg-amber-500/10' : 'border-white/25 bg-black/40'}`}>
+          <span className={`relative flex ${emptyCircle} items-center justify-center rounded-full border ${seat?.locked ? 'border-amber-400/70 bg-amber-500/10' : 'border-white/25 bg-black/40'}`}>
             {seat?.locked ? <Lock className="h-4 w-4 text-amber-400" /> : <Plus className="h-5 w-5 text-white/80" />}
+            {/* Mikrofonum kapalıyken boş koltukta "mik kapalı" rozeti görünür; mikrofonu açınca kaybolur. */}
+            {micMuted && (
+              <span aria-label="Mikrofon kapalı" className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full border border-white/20 bg-red-600">
+                <MicOff className="h-2.5 w-2.5 text-white" />
+              </span>
+            )}
           </span>
         </span>
         <span className="text-[10px] leading-none text-white/60">{index + 1}</span>

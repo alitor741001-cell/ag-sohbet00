@@ -913,6 +913,7 @@ export default function VoiceRoom() {
           scores={scores}
           accent={seatAccent}
           gifted={gifted}
+          micMuted={voice.muted}
         />
         <HiddenUserMarquee active={room?.ghost_entered_at} name={hiddenAnnounceName} />
         <p className="mt-5 text-center text-[11px] text-white/50">
