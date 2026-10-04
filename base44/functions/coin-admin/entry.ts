@@ -101,6 +101,16 @@ export default async function (req: Request): Promise<Response> {
         details: `+${amount.toLocaleString('tr-TR')} coin`,
       }).catch(() => {});
 
+      // Yüklenen coin, üyenin bildirimlerine düşer.
+      await base44.asServiceRole.entities.Notification.create({
+        user_id: target.id,
+        title: 'Coin yüklendi',
+        type: 'coin_grant',
+        body: `${adminName} hesabına ${amount.toLocaleString('tr-TR')} coin yükledi. Yeni bakiyen: ${next.toLocaleString('tr-TR')} coin.`,
+        link: '/profil',
+        ref_id: user.id,
+      }).catch(() => {});
+
       return Response.json({ ok: true, grant, coins: next, person: { ...view, coins: next } });
     }
 

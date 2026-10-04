@@ -3,7 +3,6 @@ import { rateLimit, safeErrorResponse } from '../../shared/security.ts';
 import { ensureGiftWallet, giftBalance } from '../../shared/giftWallet.ts';
 import { COINS_PER_DOLLAR, findByMemberId, giftBoxSummary, giftDollarsFromK, monthStartIso } from '../../shared/giftBox.ts';
 import { getUsdTry, tlFromDollars, tlRateFrom } from '../../shared/exchangeRate.ts';
-import { upsertNotification } from '../../shared/upsertNotification.ts';
 
 const ACTIONS = ['summary', 'lookup', 'send', 'withdraw', 'received'];
 const MIN_SEND_DOLLARS = 1;
@@ -163,14 +162,15 @@ export default async function (req: Request): Promise<Response> {
         coins: Math.max(0, Number(wallet.coins) || 0) + coins,
       });
 
-      await upsertNotification(base44, {
+      // Her gönderimde, alıcının bildirimlerinin en üstüne yeni bir bildirim düşer.
+      await base44.asServiceRole.entities.Notification.create({
         user_id: target.id,
-        title: 'Hediye kutusu',
+        title: 'Coin gönderildi',
         type: 'gift_box_send',
         body: `${displayName} sana ${dollars.toFixed(2)} $ değerinde ${coins.toLocaleString('tr-TR')} coin gönderdi.`,
         link: '/profil',
         ref_id: user.id,
-      });
+      }).catch(() => {});
 
       return Response.json({
         ok: true,
