@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Armchair, Eye, Gift, Loader2, Lock, LogOut, MessageSquare, Mic, MicOff, Minimize2, MoreHorizontal, Shield, ShieldAlert, Unlock, UserMinus, UserPlus, UserRound } from 'lucide-react';
+import { Armchair, Eye, Gift, Loader2, Lock, LogOut, MessageSquare, Mic, MicOff, MoreHorizontal, Shield, ShieldAlert, Unlock, UserMinus, UserPlus, UserRound } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useVoiceChat } from '@/hooks/useVoiceChat';
@@ -23,6 +23,7 @@ import GiftScoreChip from '@/components/voice/GiftScoreChip';
 import GiftBoardSheet from '@/components/voice/GiftBoardSheet';
 import VoiceProfileCard from '@/components/voice/VoiceProfileCard';
 import VoiceMenuButton from '@/components/voice/VoiceMenuButton';
+import RoomExitOverlay from '@/components/voice/RoomExitOverlay';
 import { isRoomMinimized, setMinimizedRoom } from '@/lib/minimizedRoom';
 import RoomDirectMessages from '@/components/player/RoomDirectMessages';
 import GamePanel from '@/components/games/GamePanel';
@@ -413,6 +414,8 @@ export default function VoiceRoom() {
     if (seat?.user_id) {
       // Hediye tahtası açıkken dokunma, alıcı seçimini değiştirir.
       if (giftOpen) { toggleGiftPerson(seat.user_id); return; }
+      // Kendi koltuğum: gizli modda olsa bile koltuktan inme menüsü açılır.
+      if (seat.user_id === user?.id) { setSeatIndex(index); return; }
       // Gizli kullanıcının profili açılmaz, kimliği görünmez.
       if (hiddenIds.has(seat.user_id) || isHiddenName(seat.name)) {
         toast({ title: 'Bu kullanıcı gizli', description: 'Profil bilgileri görünmez.' });
@@ -961,8 +964,10 @@ export default function VoiceRoom() {
         seat={sheetSeat}
         index={seatIndex ?? 0}
         canMod={canMod}
+        myId={user?.id}
         onTakeSeat={handleTakeSeat}
         onToggleLock={() => invokeVoice({ action: 'seat-lock', seat_index: seatIndex, locked: !sheetSeat?.locked })}
+        onStepDown={() => invokeVoice({ action: 'seat-leave' })}
       />
 
       <VoiceCard open={!!profileTarget} title="Profil" onClose={() => setProfileUserId(null)}>
@@ -1003,12 +1008,12 @@ export default function VoiceRoom() {
         )}
       </VoiceCard>
 
-      <VoiceCard open={exitOpen} title="Oda" onClose={() => setExitOpen(false)}>
-        <div className="space-y-2">
-          <VoiceMenuButton icon={Minimize2} label="Odayı küçült" onClick={() => { setExitOpen(false); minimizeRoom(); }} />
-          <VoiceMenuButton icon={LogOut} label="Odadan çık" danger onClick={() => { setExitOpen(false); leaveRoom(); }} />
-        </div>
-      </VoiceCard>
+      <RoomExitOverlay
+        open={exitOpen}
+        onClose={() => setExitOpen(false)}
+        onMinimize={() => { setExitOpen(false); minimizeRoom(); }}
+        onLeave={() => { setExitOpen(false); leaveRoom(); }}
+      />
 
       <VoiceViewerSheet
         open={viewerOpen}

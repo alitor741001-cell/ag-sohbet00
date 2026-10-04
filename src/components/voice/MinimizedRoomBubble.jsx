@@ -36,19 +36,17 @@ export default function MinimizedRoomBubble() {
   };
 
   return (
-    <div
-      ref={bounds}
-      className="pointer-events-none fixed inset-x-0 z-[240]"
-      style={{ bottom: 'calc(4.75rem + env(safe-area-inset-bottom))' }}
-    >
+    // Sürükleme alanı tüm ekran: balon yukarı, aşağı, sola ve sağa taşınabilir.
+    <div ref={bounds} className="pointer-events-none fixed inset-0 z-[240]">
       <motion.div
-        drag="x"
-        dragConstraints={bounds}
+        drag
+        dragConstraints={{ top: 8, right: 12, bottom: 84, left: 12 }}
         dragMomentum={false}
         dragElastic={0}
         onPointerDown={() => { moved.current = false; }}
         onDragStart={() => { moved.current = true; }}
         className="pointer-events-auto absolute right-3 flex w-14 touch-none flex-col items-center"
+        style={{ bottom: 'calc(4.75rem + env(safe-area-inset-bottom))' }}
       >
         <button
           type="button"
