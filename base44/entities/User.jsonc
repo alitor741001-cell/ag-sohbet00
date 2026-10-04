@@ -72,6 +72,14 @@
       "type": "string",
       "format": "date-time"
     },
+    "vip_expires_at": {
+      "type": "string",
+      "default": ""
+    },
+    "vip_source": {
+      "type": "string",
+      "default": ""
+    },
     "loaded_coins": {
       "type": "number",
       "default": 0

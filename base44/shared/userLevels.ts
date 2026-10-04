@@ -1,33 +1,27 @@
 /**
  * N seviyesi, VIP ve hediye seviyeleri.
- * - N seviyesi (N1, N2 …): hesaba yüklenen toplam coin ile yükselir
+ * - N seviyesi (N1, N2 …): her 1.000.000 yüklenen coin +1 seviye
  *   (admin yüklemesi, başvuru onayı, dolar bozdurma).
  * - Hediye seviyesi: gönderilen / alınan hediyelerin K toplamı ile yükselir.
  *   Eşikler geometrik artar, böylece seviye sayıları okunur aralıkta kalır.
- * - VIP: yalnızca yönetici verir (VIP Merkezi); 5–12 arası özellik taşır.
+ * - VIP: VIP Merkezi'nden süreli verilir; coin yüklemesinde otomatik atanır (bkz. vip.ts).
  */
+import { effectiveVipLevel, grantAutoVip, vipDaysLeft } from './vip.ts';
 
-// Yüklenen coin eşikleri — N1 … N12
-const N_THRESHOLDS = [50000, 150000, 300000, 600000, 1000000, 2000000, 4000000, 7000000, 12000000, 20000000, 35000000, 60000000];
+export { VIP_MAX, VIP_MIN } from './vip.ts';
+
+// Her 1.000.000 yüklenen coin bir N seviyesi demektir (N1 … N12).
+const N_COINS_PER_LEVEL = 1000000;
+const N_MAX = 12;
 // Hediye seviyesi: 1 K'dan başlar, her seviyede eşik %30 artar.
 const GIFT_LADDER_RATIO = 1.3;
 const GIFT_MAX_LEVEL = 60;
 
-export const VIP_MIN = 0;
-export const VIP_MAX = 12;
-
-const stepsPassed = (value: any, list: number[]) => {
-  const amount = Math.max(0, Number(value) || 0);
-  let level = 0;
-  for (const threshold of list) {
-    if (amount < threshold) break;
-    level += 1;
-  }
-  return level;
+/** N seviyesi: her 1.000.000 yüklenen coin +1 seviye (0 ise rozet gösterilmez). */
+export const nLevel = (loadedCoins: any) => {
+  const coins = Math.max(0, Number(loadedCoins) || 0);
+  return Math.min(N_MAX, Math.floor(coins / N_COINS_PER_LEVEL));
 };
-
-/** N seviyesi: yüklenen coin karşılığı (0 ise rozet gösterilmez). */
-export const nLevel = (loadedCoins: any) => stepsPassed(loadedCoins, N_THRESHOLDS);
 
 /** Hediye seviyesi: hediye K toplamı karşılığı (1 K → 1. seviye). */
 export const giftLevel = (kTotal: any) => {
@@ -52,7 +46,8 @@ export function badgeLevels(user: any) {
   const received = giftLevel(user?.gift_received_k);
   return {
     n_level: n,
-    vip_level: Math.min(VIP_MAX, Math.max(VIP_MIN, Math.floor(Number(user?.vip_level) || 0))),
+    vip_level: effectiveVipLevel(user),
+    vip_days_left: vipDaysLeft(user) || 0,
     gift_sent_level: sent,
     gift_sent_tier: levelTier(sent),
     gift_received_level: received,
@@ -60,7 +55,7 @@ export function badgeLevels(user: any) {
   };
 }
 
-/** Yüklenen coin sayacını artırır (en fazla 200 kayıt okunur). */
+/** Yüklenen coin sayacını artırır; eşiği geçen yükleme VIP'i çantaya ekler. */
 export async function addLoadedCoins(base44: any, userId: string, amount: any) {
   const add = Math.max(0, Math.floor(Number(amount) || 0));
   if (!userId || !add) return;
@@ -69,6 +64,8 @@ export async function addLoadedCoins(base44: any, userId: string, amount: any) {
   await base44.asServiceRole.entities.User.update(record.id, {
     loaded_coins: Math.max(0, Number(record.loaded_coins) || 0) + add,
   }).catch(() => {});
+  // 1M+ yükleme VIP kazandırır (3M → VIP10, 5M → VIP11, 10M → VIP12).
+  await grantAutoVip(base44, record, add).catch(() => null);
 }
 
 /**

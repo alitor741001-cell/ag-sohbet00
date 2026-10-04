@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import { rateLimit, safeErrorResponse } from '../../shared/security.ts';
 import { badgeLevels, VIP_MAX } from '../../shared/userLevels.ts';
+import { VIP_DAY_MS, VIP_DURATIONS, vipActive, vipDurationLabel, vipExpiryMs } from '../../shared/vip.ts';
 
 const ACTIONS = ['list', 'search', 'set'];
 
@@ -52,7 +53,7 @@ export default async function (req: Request): Promise<Response> {
       return Response.json({ ok: true, people: [view(found)] });
     }
 
-    // VIP ver: 0 verilirse VIP kaldırılır.
+    // VIP ver: 0 verilirse VIP kaldırılır. Süre: 1 hafta / 15 gün / 1 ay.
     if (action === 'set') {
       const target = await base44.asServiceRole.entities.User.get(String(body?.user_id || '')).catch(() => null);
       if (!target?.id) return Response.json({ error: 'Kullanıcı bulunamadı.' }, { status: 404 });
@@ -61,8 +62,15 @@ export default async function (req: Request): Promise<Response> {
       if (!rl.allowed) return Response.json({ error: 'Çok fazla işlem yaptın, biraz bekleyin.' }, { status: 429 });
 
       const level = Math.max(0, Math.min(VIP_MAX, Math.floor(Number(body?.vip_level) || 0)));
+      const days = level > 0 ? VIP_DURATIONS[String(body?.duration || 'month')] || VIP_DURATIONS.month : 0;
+      // Kişinin süresi henüz bitmediyse yeni süre onun üstüne eklenir.
+      const currentExpiry = vipExpiryMs(target);
+      const base = level > 0 && vipActive(target) && currentExpiry ? currentExpiry : Date.now();
+
       await base44.asServiceRole.entities.User.update(target.id, {
         vip_level: level,
+        vip_expires_at: level > 0 ? new Date(base + days * VIP_DAY_MS).toISOString() : '',
+        vip_source: 'admin',
         vip_granted_by: adminName,
         vip_granted_at: new Date().toISOString(),
       });
@@ -73,15 +81,15 @@ export default async function (req: Request): Promise<Response> {
         admin_name: adminName,
         action: 'vip-set',
         target: `${label} (${target.member_id || target.id})`,
-        details: level > 0 ? `VIP${level} verildi` : 'VIP kaldırıldı',
+        details: level > 0 ? `VIP${level} verildi (${vipDurationLabel(days)})` : 'VIP kaldırıldı',
       }).catch(() => {});
 
       await base44.asServiceRole.entities.Notification.create({
         user_id: target.id,
-        title: level > 0 ? `VIP${level} verildi` : 'VIP kaldırıldı',
+        title: level > 0 ? `VIP${level} çantana eklendi` : 'VIP kaldırıldı',
         type: 'vip',
         body: level > 0
-          ? `${adminName} hesabına VIP${level} verdi. Rozetin profilin ve odalarda görünür.`
+          ? `${adminName} hesabına VIP${level} verdi (${vipDurationLabel(days)}). Rozetin profilin ve odalarda görünür.`
           : `${adminName} hesabındaki VIP rozetini kaldırdı.`,
         link: '/profil',
         ref_id: user.id,

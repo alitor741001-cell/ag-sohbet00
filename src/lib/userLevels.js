@@ -40,18 +40,32 @@ export const N_BADGE_STYLE = { background: '#4b664d', border: '#cfd8dc', color: 
 export const giftLevelLabel = (level) => String(Math.max(0, Math.floor(Number(level) || 0)));
 
 /** Merdivenler backend'deki base44/shared/userLevels.ts ile aynıdır. */
-const N_THRESHOLDS = [50000, 150000, 300000, 600000, 1000000, 2000000, 4000000, 7000000, 12000000, 20000000, 35000000, 60000000];
+const N_COINS_PER_LEVEL = 1000000;
+const N_MAX = 12;
 const GIFT_LADDER_RATIO = 1.3;
 const GIFT_MAX_LEVEL = 60;
+const DAY_MS = 24 * 60 * 60 * 1000;
 
-const stepsPassed = (value, list) => {
-  const amount = Math.max(0, Number(value) || 0);
-  let level = 0;
-  for (const threshold of list) {
-    if (amount < threshold) break;
-    level += 1;
-  }
-  return level;
+/** Süreli VIP: bitiş tarihi geçmişse rozet düşer (bitiş tarihi yazılmamışsa süresiz). */
+export const vipActive = (user) => {
+  const expiry = Date.parse(String(user?.vip_expires_at || ''));
+  return Number.isNaN(expiry) ? true : expiry > Date.now();
+};
+
+/** Kalan VIP günü: süresiz VIP'de null döner. */
+export const vipDaysLeft = (user) => {
+  const expiry = Date.parse(String(user?.vip_expires_at || ''));
+  if (Number.isNaN(expiry)) return null;
+  return Math.max(0, Math.ceil((expiry - Date.now()) / DAY_MS));
+};
+
+/** N seviyesi: her 1.000.000 yüklenen coin +1 seviye. */
+export const nLevelOf = (loadedCoins) => Math.min(N_MAX, Math.floor(Math.max(0, Number(loadedCoins) || 0) / N_COINS_PER_LEVEL));
+
+/** Geçerli VIP seviyesi: süresi dolan VIP rozet sayılmaz. */
+export const vipLevelOf = (user) => {
+  const level = Math.max(0, Math.floor(Number(user?.vip_level) || 0));
+  return vipActive(user) ? level : 0;
 };
 
 export const tierOf = (level) => (level >= 60 ? 'red' : level >= 50 ? 'gold' : level >= 40 ? 'blue' : level >= 30 ? 'purple' : level >= 20 ? 'dark' : 'green');
@@ -68,8 +82,9 @@ export function badgesFromUser(user) {
   const sent = giftLevelOf(user?.gift_sent_k);
   const received = giftLevelOf(user?.gift_received_k);
   return {
-    n_level: stepsPassed(user?.loaded_coins, N_THRESHOLDS),
-    vip_level: Math.max(0, Math.floor(Number(user?.vip_level) || 0)),
+    n_level: nLevelOf(user?.loaded_coins),
+    vip_level: vipLevelOf(user),
+    vip_days_left: vipDaysLeft(user) || 0,
     gift_sent_level: sent,
     gift_sent_tier: tierOf(sent),
     gift_received_level: received,

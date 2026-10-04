@@ -44,10 +44,10 @@ export default function AdminVip() {
     }
   };
 
-  const setVip = async (userId, level) => {
+  const setVip = async (userId, level, duration) => {
     setBusy(true);
     try {
-      const response = await base44.functions.invoke('vip-service', { action: 'set', user_id: userId, vip_level: level });
+      const response = await base44.functions.invoke('vip-service', { action: 'set', user_id: userId, vip_level: level, duration });
       const updated = response.data?.person;
       setPeople((prev) => prev.map((person) => (person.user_id === userId ? { ...person, ...updated } : person)));
       toast({ title: level > 0 ? `VIP${level} verildi` : 'VIP kaldırıldı' });
@@ -66,6 +66,7 @@ export default function AdminVip() {
           <h1 className="text-2xl font-extrabold text-white">VIP Merkezi</h1>
           <p className="mt-1 text-[11px] leading-relaxed text-white/55">
             VIP5–VIP9 rozet verir; VIP10–VIP12 özel rozet taşır. VIP8 ve üzeri isimler kırmızı görünür.
+            Süreyi 1 hafta, 15 gün ya da 1 ay seçebilirsin; 1M+ coin yükleyene VIP otomatik gelir.
           </p>
         </div>
       </div>

@@ -12,6 +12,7 @@ export default function UserStatusBadges({
   gift_sent_tier = 'green',
   gift_received_level = 0,
   gift_received_tier = 'green',
+  vip_days_left = 0,
   showUserIcon = false,
   className = '',
 }) {
@@ -46,6 +47,7 @@ export default function UserStatusBadges({
           style={{ background: vip.background, borderColor: vip.border, color: vip.color }}
         >
           VIP{vip_level}
+          {vip_days_left > 0 && <span className="ml-1 opacity-85">{vip_days_left}g</span>}
         </span>
       )}
 
