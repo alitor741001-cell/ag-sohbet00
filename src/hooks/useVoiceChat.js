@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Room, RoomEvent, Track } from 'livekit-client';
+import { DisconnectReason, Room, RoomEvent, Track } from 'livekit-client';
 import { base44 } from '@/api/base44Client';
 import { createVoiceOutput, unlockVoicePlayback } from '@/lib/callAudio';
 import { hasDirectCallAudioFocus, subscribeCallAudioFocus } from '@/lib/callAudioFocus';
@@ -37,6 +37,10 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
   const [audioBlocked, setAudioBlocked] = useState(false);
   const [debug, setDebug] = useState(initialDebug);
   const [everVoiceEnabled, setEverVoiceEnabled] = useState(voiceEnabled);
+  // Arka plandan dönüşte bağlantı yeniden kurulur: oda ve koltuk kaydı değişmez.
+  const [sessionKey, setSessionKey] = useState(0);
+  // Mikrofonu kullanıcı kendisi kapatmadıysa arka plandan dönüşte kendiliğinden geri açılır.
+  const micWantedRef = useRef(micEnabled !== false);
   const voiceEnabledRef = useRef(voiceEnabled);
   // Koltuk düzeni: mikrofon yayını yalnızca koltukta oturan kişide açık kalır.
   const micEnabledRef = useRef(micEnabled !== false);
@@ -68,6 +72,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
   // Böylece izin bir kez verilir ve arayüz geçişlerinde tekrar sorulmaz.
   const enableMic = useCallback(async (room) => {
     if (!room) return;
+    micWantedRef.current = true;
     const publication = room.localParticipant.getTrackPublication(Track.Source.Microphone);
     if (publication) {
       if (publication.isMuted) await room.localParticipant.setMicrophoneEnabled(true);
@@ -147,7 +152,13 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
       track.detach().forEach((element) => element.remove());
       refreshState();
     };
-    const onDisconnected = () => { setConnectionState('disconnected'); setError('🌐 Bağlantı yeniden kuruluyor.'); };
+    // Bağlantı düşerse sayfa öndeyken sessizce yeniden kurulur; oda ve koltuk korunur.
+    const onDisconnected = (reason) => {
+      setConnectionState('disconnected');
+      if (reason === DisconnectReason.DUPLICATE_IDENTITY) { setError('🌐 Bu hesap başka bir cihazda odaya bağlandı.'); return; }
+      if (document.visibilityState === 'visible') setSessionKey((value) => value + 1);
+      else setError('🌐 Bağlantı kesildi — uygulamaya dönünce yeniden bağlanılır.');
+    };
     // Hoparlör kapatıldığında uzak ses yayınını tamamen kes, açıldığında geri bağla.
     const setRemoteAudioActive = (active) => {
       room.remoteParticipants.forEach((participant) => {
@@ -255,13 +266,19 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
     document.addEventListener('pointerdown', startAudioOnInteraction, { passive: true });
     document.addEventListener('touchend', startAudioOnInteraction, { passive: true });
     document.addEventListener('keydown', startAudioOnInteraction);
+    // Arka plandan dönüş: bağlantı düşmüşse yeniden kurulur, mikrofon kapanmışsa geri açılır —
+    // kullanıcı odaya tekrar girmeden konuşmaya devam eder.
     const restoreOnVisible = () => {
-      if (document.visibilityState === 'visible') {
-        attachCurrentRemoteAudio();
-        retryAudio();
+      if (document.visibilityState === 'hidden') return;
+      attachCurrentRemoteAudio();
+      retryAudio();
+      if (room.state === 'disconnected') { setSessionKey((value) => value + 1); return; }
+      if (micWantedRef.current && micEnabledRef.current && !mutedByModeratorRef.current && voiceEnabledRef.current) {
+        enableMic(room).then(refreshState).catch(() => {});
       }
     };
     document.addEventListener('visibilitychange', restoreOnVisible);
+    window.addEventListener('focus', restoreOnVisible);
     window.addEventListener('orientationchange', startAudioOnInteraction);
     const recoveryTimer = window.setInterval(() => {
       attachCurrentRemoteAudio();
@@ -290,6 +307,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
       document.removeEventListener('touchend', startAudioOnInteraction);
       document.removeEventListener('keydown', startAudioOnInteraction);
       document.removeEventListener('visibilitychange', restoreOnVisible);
+      window.removeEventListener('focus', restoreOnVisible);
       window.removeEventListener('orientationchange', startAudioOnInteraction);
       window.clearInterval(recoveryTimer);
       setActive(false);
@@ -298,7 +316,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
       setConnectionState('disconnected');
       setDebug(initialDebug);
     };
-  }, [attachRemoteAudio, enableMic, refreshState, retryAudio, roomId, user?.id, everVoiceEnabled, callAudioPaused]);
+  }, [attachRemoteAudio, enableMic, refreshState, retryAudio, roomId, user?.id, everVoiceEnabled, callAudioPaused, sessionKey]);
 
   useEffect(() => {
     const moderatorMuted = !!participants?.find((participant) => participant.user_id === user?.id)?.muted;
@@ -333,6 +351,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
     const next = micEnabled !== false;
     if (micAppliedRef.current === next) return;
     micAppliedRef.current = next;
+    micWantedRef.current = next;
     const room = roomRef.current;
     if (!room || hasDirectCallAudioFocus() || connectionState !== 'connected' || mutedByModeratorRef.current) return;
     // Mikrofon reddedilse bile dinleme sürer: uzak ses bir kez daha bağlanıp oynatılır.
@@ -347,7 +366,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
     setRequesting(true);
     setError('');
     try {
-      if (active) await room.localParticipant.setMicrophoneEnabled(false);
+      if (active) { micWantedRef.current = false; await room.localParticipant.setMicrophoneEnabled(false); }
       else await enableMic(room);
       refreshState();
     } catch (micError) {

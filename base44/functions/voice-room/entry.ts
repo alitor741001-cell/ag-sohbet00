@@ -84,7 +84,7 @@ export default async function (req: Request): Promise<Response> {
       if (pendingInvites.length !== (Array.isArray(room.seat_invites) ? room.seat_invites : []).length) {
         await base44.asServiceRole.entities.Room.update(room_id, { seat_invites: pendingInvites });
       }
-      say(`${shownName} ${index + 1}. koltuğa oturdu.`);
+      // Koltuk değişimi sohbete yazılmaz: yer değiştirme sessizce yansır.
       return respond(next);
     }
 
@@ -95,7 +95,7 @@ export default async function (req: Request): Promise<Response> {
       await persist(next);
       const seatLeaveScores = scoresAfterSeatLeave(room, user.id);
       if (seatLeaveScores) await base44.asServiceRole.entities.Room.update(room_id, { number_scores: seatLeaveScores });
-      say(`${shownName} koltuğundan kalktı.`);
+      // Koltuktan kalkma da sohbete yazılmaz.
       return respond(next);
     }
 
