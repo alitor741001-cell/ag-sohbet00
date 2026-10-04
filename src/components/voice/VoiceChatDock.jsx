@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Send, Smile } from 'lucide-react';
 import EmojiPicker from '@/components/player/EmojiPicker';
 import VoiceChatMessage from '@/components/voice/VoiceChatMessage';
+import VoiceGiftMessage from '@/components/voice/VoiceGiftMessage';
 import SlotWinMessage from '@/components/games/SlotWinMessage';
 import { plainText } from '@/components/voice/voiceText';
 import useMessageProfiles from '@/hooks/useMessageProfiles';
@@ -52,6 +53,9 @@ export default function VoiceChatDock({ messages = [], onSend, onCloseComposer, 
             {messages.map((message) => {
               if (message.type === 'slot_win') {
                 return <SlotWinMessage key={message.id} message={message} />;
+              }
+              if (message.type === 'gift') {
+                return <VoiceGiftMessage key={message.id} message={message} />;
               }
               if (message.type === 'system') {
                 return <p key={message.id} className="break-words px-2 text-center text-[11px] font-semibold italic text-amber-300 [overflow-wrap:anywhere] [text-shadow:0_0_10px_rgba(251,191,36,0.45)]">{plainText(message.text)}</p>;

@@ -3,6 +3,7 @@ import { rateLimit, safeErrorResponse, logSecurity } from '../../shared/security
 import { isModerator, isSiteOwner, immuneToModeration, getRoleInfo, getRoleLabelOverrides, getSpecialFrameInfo } from '../../shared/roles.ts';
 import { upsertNotification } from '../../shared/upsertNotification.ts';
 import { hasActiveMembership } from '../../shared/membership.ts';
+import { scoresAfterRoomLeave } from '../../shared/numberBoard.ts';
 
 async function sha256Hex(salt, pw) {
   const data = new TextEncoder().encode(salt + pw);
@@ -213,6 +214,9 @@ export default async function(req) {
       const targetName = targetParticipant?.name || 'Kullanıcı';
       // ban aksiyonunda kullanıcıyı banned_users listesine ekle
       let update: any = { participants, recent_participants: rememberParticipant(room, targetParticipant) };
+      // Sayı tahtası ayarı açıksa odadan atılan kişinin sayısı sıfırlanır
+      const kickedScores = scoresAfterRoomLeave(room, target_id);
+      if (kickedScores) update.number_scores = kickedScores;
       if (action === 'ban') {
         const bannedUsers = (room.banned_users || []).filter((b) => b.user_id !== target_id);
         bannedUsers.push({ user_id: target_id, name: targetName, banned_at: new Date().toISOString() });
@@ -402,11 +406,13 @@ export default async function(req) {
       }
       if (!hasOnline) participants = [];
     }
+    // Sayı tahtası ayarı açıksa odadan çıkan kişinin sayısı sıfırlanır
+    const leaveScores = scoresAfterRoomLeave(room, user.id);
     if (participants.length === 0) {
       if (room.is_personal) {
-        await base44.asServiceRole.entities.Room.update(room_id, { participants, recent_participants: recentParticipants, is_playing: false });
+        await base44.asServiceRole.entities.Room.update(room_id, { participants, recent_participants: recentParticipants, is_playing: false, ...(leaveScores ? { number_scores: leaveScores } : {}) });
       } else {
-        await base44.asServiceRole.entities.Room.update(room_id, { participants, recent_participants: [], status: 'closed', is_playing: false });
+        await base44.asServiceRole.entities.Room.update(room_id, { participants, recent_participants: [], status: 'closed', is_playing: false, ...(leaveScores ? { number_scores: leaveScores } : {}) });
       }
       const roleInfoLeave = getRoleInfo(me, labelOverrides);
       const roleMetaLeave = roleInfoLeave.label ? `{{ROLE|${roleInfoLeave.key || ''}|${roleInfoLeave.color || ''}|${roleInfoLeave.animation || 'pulse'}}}` : '';
@@ -436,7 +442,8 @@ export default async function(req) {
       participants, recent_participants: recentParticipants, owner_id, owner_name,
       // Oynatma durumunu koru — yeni sahip kesintisiz devam etsin
       is_playing: ownershipTransferred ? room.is_playing : (participants.length === 0 ? false : room.is_playing),
-      last_sync: new Date().toISOString()
+      last_sync: new Date().toISOString(),
+      ...(leaveScores ? { number_scores: leaveScores } : {})
     });
     const roleInfoLeave2 = getRoleInfo(me, labelOverrides);
     const roleMetaLeave2 = roleInfoLeave2.label ? `{{ROLE|${roleInfoLeave2.key || ''}|${roleInfoLeave2.color || ''}|${roleInfoLeave2.animation || 'pulse'}}}` : '';

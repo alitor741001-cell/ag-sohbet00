@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Eye, EyeOff, Lock, Shield, Unlock, UserPlus } from 'lucide-react';
 import SeatCountPicker from '@/components/voice/SeatCountPicker';
 import VoiceSheet from '@/components/voice/VoiceSheet';
+import { Switch } from '@/components/ui/switch';
 
 const Section = ({ title, children, hint }) => (
   <section className="mb-4 rounded-2xl border border-white/10 bg-[#171720] p-3">
@@ -12,7 +13,7 @@ const Section = ({ title, children, hint }) => (
 );
 
 /** "…" menüsü: koltuk sayısı, oda kilidi (şifre), oda gizliliği ve yöneticilik. */
-export default function VoiceRoomMenu({ open, onClose, room, userId, participants = [], isOwner, canMod, onSeatCount, onSetPassword, onToggleHidden, onToggleMod, onInvite }) {
+export default function VoiceRoomMenu({ open, onClose, room, userId, participants = [], isOwner, canMod, onSeatCount, onSetPassword, onToggleHidden, onToggleMod, onInvite, boardActive, boardResetSeat, boardResetRoom, onToggleBoard, onResetBoard, onBoardSettings }) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const locked = !!room?.password;
@@ -36,6 +37,42 @@ export default function VoiceRoomMenu({ open, onClose, room, userId, participant
       {canMod && (
         <Section title="Koltuk sayısı" hint={`Şu an ${room?.seat_count || 0} koltuk açık. Dolu koltuklar korunur.`}>
           <SeatCountPicker compact value={room?.seat_count} onChange={onSeatCount} />
+        </Section>
+      )}
+
+      {canMod && (
+        <Section
+          title="Sayı tahtası"
+          hint={boardActive
+            ? 'Sayılar koltukların altında açık. Yeşil + artırır, kırmızı − azaltır.'
+            : 'Açtığında tüm sayılar sıfırdan başlar ve yukarı doğru sınırsız ilerler.'}
+        >
+          <button
+            type="button"
+            onClick={onToggleBoard}
+            className={`w-full rounded-xl py-2.5 text-sm font-bold active:scale-95 transition-transform ${boardActive ? 'bg-primary text-primary-foreground' : 'bg-white/10 text-white'}`}
+          >
+            {boardActive ? 'Sayı tahtasını kapat' : 'Sayı tahtasını aç'}
+          </button>
+          {boardActive && (
+            <div className="mt-3 space-y-2">
+              <label className="flex items-center justify-between gap-2 rounded-xl bg-black/30 px-3 py-2">
+                <span className="text-sm text-white">Koltuktan inince sıfırla</span>
+                <Switch checked={!!boardResetSeat} onCheckedChange={(value) => onBoardSettings({ reset_on_seat_leave: value })} />
+              </label>
+              <label className="flex items-center justify-between gap-2 rounded-xl bg-black/30 px-3 py-2">
+                <span className="text-sm text-white">Odadan çıkınca sıfırla</span>
+                <Switch checked={!!boardResetRoom} onCheckedChange={(value) => onBoardSettings({ reset_on_room_leave: value })} />
+              </label>
+              <button
+                type="button"
+                onClick={onResetBoard}
+                className="w-full rounded-xl bg-red-600/90 py-2.5 text-sm font-bold text-white active:scale-95 transition-transform"
+              >
+                Tüm sayıları sıfırla
+              </button>
+            </div>
+          )}
         </Section>
       )}
 

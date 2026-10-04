@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Armchair, Eye, Loader2, Lock, LogOut, MessageSquare, Mic, MicOff, Minimize2, MoreHorizontal, Radio, Shield, ShieldAlert, Unlock, UserMinus, UserPlus, UserRound } from 'lucide-react';
+import { Armchair, Eye, Loader2, Lock, LogOut, MessageSquare, Mic, MicOff, Minimize2, MoreHorizontal, Radio, RotateCcw, Shield, ShieldAlert, Unlock, UserMinus, UserPlus, UserRound } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useVoiceChat } from '@/hooks/useVoiceChat';
@@ -21,6 +21,9 @@ import VoiceMenuButton from '@/components/voice/VoiceMenuButton';
 import VoiceRoomBubble from '@/components/voice/VoiceRoomBubble';
 import RoomDirectMessages from '@/components/player/RoomDirectMessages';
 import GamePanel from '@/components/games/GamePanel';
+import VoiceGiftSheet from '@/components/voice/VoiceGiftSheet';
+import VoiceGiftOverlay from '@/components/voice/VoiceGiftOverlay';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 export default function VoiceRoom() {
   const { id } = useParams();
@@ -46,6 +49,9 @@ export default function VoiceRoom() {
   const [minimized, setMinimized] = useState(false);
   const [exitOpen, setExitOpen] = useState(false);
   const [gamesOpen, setGamesOpen] = useState(false);
+  const [giftOpen, setGiftOpen] = useState(false);
+  const [giftAlert, setGiftAlert] = useState(null);
+  const [boardResetOpen, setBoardResetOpen] = useState(false);
 
   const keyboardInset = useKeyboardInset();
 
@@ -53,6 +59,8 @@ export default function VoiceRoom() {
   const joinTriedRef = useRef(false);
   const sawSelfRef = useRef(false);
   const keepSeatRef = useRef(false);
+  const giftTimerRef = useRef(null);
+  const lastGiftRef = useRef(null);
 
   const seats = useMemo(() => (Array.isArray(room?.seats) ? room.seats : []), [room?.seats]);
   const myInvite = useMemo(
@@ -73,6 +81,16 @@ export default function VoiceRoom() {
     })),
     [seats, participants]
   );
+
+  // Sayı tahtası: açıkken her koltuğun altında kişinin sayısı gösterilir.
+  const boardActive = room?.number_board === true;
+  const scores = useMemo(() => {
+    const map = {};
+    (Array.isArray(room?.number_scores) ? room.number_scores : []).forEach((item) => {
+      if (item?.user_id) map[item.user_id] = Number(item.value) || 0;
+    });
+    return map;
+  }, [room?.number_scores]);
 
   const voice = useVoiceChat({
     roomId: id,
@@ -200,9 +218,19 @@ export default function VoiceRoom() {
     try {
       const response = await base44.functions.invoke('voice-room', { room_id: id, ...payload });
       const data = response?.data || {};
-      if (Array.isArray(data.seats)) {
-        setRoom((prev) => (prev ? { ...prev, seats: data.seats, seat_count: data.seat_count ?? data.seats.length } : prev));
-      }
+      setRoom((prev) => {
+        if (!prev) return prev;
+        const next = { ...prev };
+        if (Array.isArray(data.seats)) {
+          next.seats = data.seats;
+          next.seat_count = data.seat_count ?? data.seats.length;
+        }
+        if (typeof data.number_board === 'boolean') next.number_board = data.number_board;
+        if (Array.isArray(data.number_scores)) next.number_scores = data.number_scores;
+        if (typeof data.number_board_reset_seat === 'boolean') next.number_board_reset_seat = data.number_board_reset_seat;
+        if (typeof data.number_board_reset_room === 'boolean') next.number_board_reset_room = data.number_board_reset_room;
+        return next;
+      });
       return true;
     } catch (error) {
       toast({ title: 'İşlem başarısız', description: error?.response?.data?.error || error.message, variant: 'destructive' });
@@ -354,6 +382,30 @@ export default function VoiceRoom() {
     }
   }, [id, toast]);
 
+  // Hediye gönder — odaya canlı bildirim düşer, herkes aynı anda görür.
+  const sendGift = async (giftId) => {
+    setGiftOpen(false);
+    try {
+      await base44.functions.invoke('voice-room', { room_id: id, action: 'gift-send', gift: giftId });
+    } catch (error) {
+      toast({ title: 'Hediye gönderilemedi', description: error?.response?.data?.error || error.message, variant: 'destructive' });
+    }
+  };
+
+  // Yeni gelen hediyeyi ekranın ortasında kısa süre göster.
+  useEffect(() => {
+    const latest = [...messages].reverse().find((message) => message.type === 'gift');
+    if (!latest || latest.id === lastGiftRef.current) return;
+    const created = latest.created_date ? new Date(latest.created_date).getTime() : 0;
+    if (!created || Date.now() - created > 15000) return;
+    lastGiftRef.current = latest.id;
+    setGiftAlert({ gift: latest.gift, name: latest.user_name });
+    window.clearTimeout(giftTimerRef.current);
+    giftTimerRef.current = window.setTimeout(() => setGiftAlert(null), 4000);
+  }, [messages]);
+
+  useEffect(() => () => window.clearTimeout(giftTimerRef.current), []);
+
   if (loading) {
     return (
       <div className="fixed inset-0 z-[150] flex items-center justify-center bg-catalog">
@@ -466,6 +518,17 @@ export default function VoiceRoom() {
             <Lock className="h-3 w-3" /> Şifreli oda
           </p>
         )}
+        {boardActive && canMod && (
+          <div className="mb-2 flex justify-center">
+            <button
+              type="button"
+              onClick={() => setBoardResetOpen(true)}
+              className="flex items-center gap-1.5 rounded-full bg-red-600/90 px-3 py-1.5 text-[11px] font-bold text-white active:scale-95 transition-transform"
+            >
+              <RotateCcw className="h-3.5 w-3.5" /> Sayıları sıfırla
+            </button>
+          </div>
+        )}
         <VoiceSeatGrid
           seats={seatsView}
           userId={user?.id}
@@ -474,6 +537,10 @@ export default function VoiceRoom() {
           speakingIds={voice.speakingIds}
           localSpeaking={voice.localSpeaking}
           onSelectSeat={handleSeatPress}
+          boardActive={boardActive}
+          scores={scores}
+          canScoreAll={canMod}
+          onScoreStep={(targetId, delta) => invokeVoice({ action: 'number-step', target_id: targetId, delta })}
         />
         <p className="mt-5 text-center text-[11px] text-white/50">
           {seated
@@ -506,7 +573,9 @@ export default function VoiceRoom() {
         onToggleMic={handleMic}
         onToggleSpeaker={voice.toggleDeafen}
         gamesOpen={gamesOpen}
+        giftOpen={giftOpen}
         onOpenGames={() => setGamesOpen(true)}
+        onOpenGifts={() => setGiftOpen(true)}
         onOpenPrivateChat={() => setDmOpen(true)}
         onToggleChat={() => setChatOpen((value) => !value)}
       />
@@ -524,6 +593,12 @@ export default function VoiceRoom() {
         onToggleHidden={handleToggleHidden}
         onToggleMod={handleToggleMod}
         onInvite={handleInvite}
+        boardActive={boardActive}
+        boardResetSeat={room?.number_board_reset_seat !== false}
+        boardResetRoom={room?.number_board_reset_room !== false}
+        onToggleBoard={() => invokeVoice({ action: boardActive ? 'number-board-close' : 'number-board-open' })}
+        onResetBoard={() => { setMenuOpen(false); setBoardResetOpen(true); }}
+        onBoardSettings={(patch) => invokeVoice({ action: 'number-settings', ...patch })}
       />
 
       <VoiceSeatSheet
@@ -608,6 +683,19 @@ export default function VoiceRoom() {
       <InviteSheet open={inviteOpen} onClose={() => setInviteOpen(false)} onInvite={sendInvites} />
 
       <GamePanel open={gamesOpen} onClose={() => setGamesOpen(false)} roomId={id} />
+
+      <VoiceGiftSheet open={giftOpen} onClose={() => setGiftOpen(false)} onSend={sendGift} />
+
+      <VoiceGiftOverlay alert={giftAlert} />
+
+      <ConfirmDialog
+        open={boardResetOpen}
+        onOpenChange={setBoardResetOpen}
+        title="Sayılar sıfırlansın mı?"
+        description="Koltuklardaki tüm sayılar sıfıra döner."
+        confirmText="Sıfırla"
+        onConfirm={() => invokeVoice({ action: 'number-reset' })}
+      />
 
       {notice && joined && (
         <p className="pointer-events-none absolute left-1/2 top-20 z-[170] -translate-x-1/2 rounded-full bg-black/80 px-4 py-2 text-xs text-white">{notice}</p>

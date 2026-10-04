@@ -2,9 +2,10 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import { rateLimit, safeErrorResponse } from '../../shared/security.ts';
 import { isModerator } from '../../shared/roles.ts';
 import { upsertNotification } from '../../shared/upsertNotification.ts';
+import { GIFT_LABELS, scoresAfterSeatLeave, withStep } from '../../shared/numberBoard.ts';
 
 const SEAT_OPTIONS = [2, 5, 8, 9, 12, 15, 20, 30];
-const ACTIONS = ['seat-take', 'seat-leave', 'seat-lock', 'seat-kick', 'set-seat-count', 'invite', 'seat-invite', 'seat-invite-clear'];
+const ACTIONS = ['seat-take', 'seat-leave', 'seat-lock', 'seat-kick', 'set-seat-count', 'invite', 'seat-invite', 'seat-invite-clear', 'gift-send', 'number-board-open', 'number-board-close', 'number-step', 'number-reset', 'number-settings'];
 
 const emptySeat = (index, locked = false) => ({
   index, user_id: '', name: '', avatar: '', frame: '', frame_scale: 100, locked, muted: false,
@@ -17,7 +18,7 @@ export default async function (req: Request): Promise<Response> {
     if (!user) return Response.json({ error: 'Oturum gerekli.' }, { status: 401 });
 
     const body = await req.json();
-    const { action, room_id, seat_index, target_id, seat_count, locked, target_ids } = body || {};
+    const { action, room_id, seat_index, target_id, seat_count, locked, target_ids, gift, delta, reset_on_seat_leave, reset_on_room_leave } = body || {};
     if (!room_id || !ACTIONS.includes(action)) {
       return Response.json({ error: 'geçersiz istek' }, { status: 400 });
     }
@@ -74,11 +75,13 @@ export default async function (req: Request): Promise<Response> {
       return respond(next);
     }
 
-    // Koltuktan kalk
+    // Koltuktan kalk — sayı tahtası ayarına göre sayı sıfırlanır
     if (action === 'seat-leave') {
       if (!mySeat) return respond(seats);
       const next = seats.map((seat) => (seat.user_id === user.id ? { ...emptySeat(seat.index), locked: seat.locked } : seat));
       await persist(next);
+      const seatLeaveScores = scoresAfterSeatLeave(room, user.id);
+      if (seatLeaveScores) await base44.asServiceRole.entities.Room.update(room_id, { number_scores: seatLeaveScores });
       await say(`${displayName} koltuğundan kalktı.`);
       return respond(next);
     }
@@ -106,6 +109,8 @@ export default async function (req: Request): Promise<Response> {
       const targetName = targetUser?.username || targetUser?.full_name || target.name || 'Kullanıcı';
       const next = seats.map((seat) => (seat.user_id === target_id ? { ...emptySeat(seat.index), locked: seat.locked } : seat));
       await persist(next);
+      const kickScores = scoresAfterSeatLeave(room, target_id);
+      if (kickScores) await base44.asServiceRole.entities.Room.update(room_id, { number_scores: kickScores });
       await say(`${targetName} koltuğundan indirildi.`);
       return respond(next);
     }
@@ -190,6 +195,74 @@ export default async function (req: Request): Promise<Response> {
       const invites = (Array.isArray(room.seat_invites) ? room.seat_invites : []).filter((item) => item.user_id !== user.id);
       await base44.asServiceRole.entities.Room.update(room_id, { seat_invites: invites });
       return Response.json({ ok: true });
+    }
+
+    // Hediye gönder — odaya canlı bildirim düşer (herkes görür)
+    if (action === 'gift-send') {
+      if (!isParticipant && !canMod) return Response.json({ error: 'Önce odaya katılmalısın.' }, { status: 403 });
+      const giftId = typeof gift === 'string' ? gift : '';
+      const giftLabel = GIFT_LABELS[giftId];
+      if (!giftLabel) return Response.json({ error: 'Geçersiz hediye.' }, { status: 400 });
+      const rlGift = await rateLimit(base44, 'voice-gift:' + user.id, user.id, 30, 60000);
+      if (!rlGift.allowed) return Response.json({ error: 'Çok fazla hediye gönderdiniz, biraz bekleyin.' }, { status: 429 });
+
+      await base44.asServiceRole.entities.RoomMessage.create({
+        room_id, user_id: user.id, user_name: displayName, user_avatar: me?.avatar || user.avatar || '',
+        text: `${displayName} ${giftLabel} hediyesi gönderdi!`, type: 'gift', gift: giftId,
+      });
+      return Response.json({ ok: true, gift: giftId });
+    }
+
+    // Sayı tahtasını aç — tüm sayılar sıfırdan başlar
+    if (action === 'number-board-open') {
+      if (!canMod) return Response.json({ error: 'yetkisiz' }, { status: 403 });
+      await base44.asServiceRole.entities.Room.update(room_id, { number_board: true, number_scores: [] });
+      await say(`${displayName} sayı tahtasını açtı.`);
+      return Response.json({ ok: true, seats, seat_count: seats.length, number_board: true, number_scores: [] });
+    }
+
+    // Sayı tahtasını kapat — sayılar gizlenir
+    if (action === 'number-board-close') {
+      if (!canMod) return Response.json({ error: 'yetkisiz' }, { status: 403 });
+      await base44.asServiceRole.entities.Room.update(room_id, { number_board: false });
+      return Response.json({ ok: true, seats, seat_count: seats.length, number_board: false });
+    }
+
+    // Sayıyı bir artır / azalt — koltukta oturan herkes kendi sayısını, yöneticiler herkesi değiştirir
+    if (action === 'number-step') {
+      if (room.number_board !== true) return Response.json({ error: 'Sayı tahtası kapalı.' }, { status: 409 });
+      const step = Number(delta);
+      if (step !== 1 && step !== -1) return Response.json({ error: 'Geçersiz adım.' }, { status: 400 });
+      if (!target_id || !seats.some((seat) => seat.user_id === target_id)) {
+        return Response.json({ error: 'Kişi koltukta değil.' }, { status: 404 });
+      }
+      if (!canMod && target_id !== user.id) return Response.json({ error: 'yetkisiz' }, { status: 403 });
+      const rlStep = await rateLimit(base44, 'voice-board:' + user.id, user.id, 120, 60000);
+      if (!rlStep.allowed) return Response.json({ error: 'Çok hızlı, biraz bekleyin.' }, { status: 429 });
+
+      const numberScores = withStep(room.number_scores, target_id, step);
+      await base44.asServiceRole.entities.Room.update(room_id, { number_scores: numberScores });
+      return Response.json({ ok: true, seats, seat_count: seats.length, number_board: true, number_scores: numberScores });
+    }
+
+    // Tüm sayıları sıfırla
+    if (action === 'number-reset') {
+      if (!canMod) return Response.json({ error: 'yetkisiz' }, { status: 403 });
+      await base44.asServiceRole.entities.Room.update(room_id, { number_scores: [] });
+      await say(`${displayName} sayı tahtasını sıfırladı.`);
+      return Response.json({ ok: true, seats, seat_count: seats.length, number_board: true, number_scores: [] });
+    }
+
+    // Sayı tahtası ayarları: koltuktan inince / odadan çıkınca sıfırlansın mı?
+    if (action === 'number-settings') {
+      if (!canMod) return Response.json({ error: 'yetkisiz' }, { status: 403 });
+      const resetSeat = reset_on_seat_leave !== false;
+      const resetRoom = reset_on_room_leave !== false;
+      await base44.asServiceRole.entities.Room.update(room_id, {
+        number_board_reset_seat: resetSeat,
+        number_board_reset_room: resetRoom,
+      });
+      return Response.json({ ok: true, seats, seat_count: seats.length, number_board_reset_seat: resetSeat, number_board_reset_room: resetRoom });
     }
 
     return Response.json({ error: 'geçersiz işlem' }, { status: 400 });

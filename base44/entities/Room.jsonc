@@ -117,6 +117,33 @@
       },
       "default": []
     },
+    "number_board": {
+      "type": "boolean",
+      "default": false
+    },
+    "number_board_reset_seat": {
+      "type": "boolean",
+      "default": true
+    },
+    "number_board_reset_room": {
+      "type": "boolean",
+      "default": true
+    },
+    "number_scores": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string"
+          },
+          "value": {
+            "type": "number"
+          }
+        }
+      },
+      "default": []
+    },
     "chat_auto_delete_minutes": {
       "type": "integer",
       "default": 0

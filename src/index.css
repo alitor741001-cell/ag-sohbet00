@@ -1108,6 +1108,23 @@
   .friendship-frame-elite { clip-path: polygon(50% 0, 68% 22%, 100% 18%, 82% 52%, 100% 82%, 62% 78%, 50% 100%, 38% 78%, 0 82%, 18% 52%, 0 18%, 32% 22%); }
   .friendship-frame-legend { clip-path: polygon(50% 0, 65% 25%, 100% 8%, 82% 50%, 100% 92%, 62% 75%, 50% 100%, 38% 75%, 0 92%, 18% 50%, 0 8%, 35% 25%); box-shadow: 0 0 28px currentColor; }
   .friendship-frame-max { clip-path: polygon(50% 0, 62% 22%, 88% 5%, 82% 35%, 100% 50%, 82% 65%, 88% 95%, 62% 78%, 50% 100%, 38% 78%, 12% 95%, 18% 65%, 0 50%, 18% 35%, 12% 5%, 38% 22%); box-shadow: 0 0 34px currentColor; }
+
+  /* === SESLİ ODA: HEDİYE VE SAYI TAHTASI === */
+  @keyframes gift-pop {
+    0% { transform: scale(0.25) rotate(-14deg); opacity: 0; }
+    55% { transform: scale(1.14) rotate(5deg); opacity: 1; }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+  }
+  .gift-pop { animation: gift-pop 0.55s cubic-bezier(0.18, 0.9, 0.3, 1.25) both; }
+  @keyframes number-pop {
+    0% { transform: scale(0.7); }
+    60% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+  }
+  .number-pop { animation: number-pop 0.28s ease-out; }
+  @media (prefers-reduced-motion: reduce) {
+    .gift-pop, .number-pop { animation-duration: 0.01s; }
+  }
 }
 
 /* Tüm cihazlar için ortak responsive güvenlik katmanı */
