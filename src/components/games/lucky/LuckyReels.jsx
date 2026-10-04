@@ -1,6 +1,7 @@
 import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Image } from '@/components/ui/image';
 import { SYMBOL_IDS, SYMBOL_TILES } from './luckyConfig';
+import useCompleteLuckyTiles from '@/components/games/lucky/useCompleteLuckyTiles';
 
 const COLUMNS = 5;
 const ROWS = 4;
@@ -34,19 +35,21 @@ function Tile({ symbol, top, height, multiplier }) {
   const inset = (height * TILE_INSET) / 100;
   return (
     <span
-      className="absolute left-0 w-full overflow-hidden"
+      className="absolute left-0 w-full"
       style={{ top: `${top + inset}%`, height: `${height - inset * 2}%` }}
     >
+      <span className="block h-full w-full px-[5%]">
       {symbol === 'multi' ? (
         <MultiplierTile value={multiplier || 2} />
       ) : (
         <Image
           src={SYMBOL_TILES[symbol] || SYMBOL_TILES.crown}
           alt=""
-          fittingType="fill"
-          className="h-full w-full"
+          fittingType="fit"
+          className="block h-full w-full object-contain"
         />
       )}
+      </span>
     </span>
   );
 }
@@ -69,7 +72,7 @@ function ReelColumn({ index, random, landing, landingMulti, spinning }) {
     const position = Math.max(0, -transform.m42 / cellHeight);
     const start = Math.floor(position);
     // Görünen karolar ve kayma miktarı korunur: iniş akışın içinden başlar.
-    const visible = loop.slice(start, start + ROWS);
+    const visible = loop.slice(start, start + ROWS + 1);
     const tiles = [...landing, ...random.slice(0, STOP_TILES), ...visible];
     setFinish({
       tiles,
@@ -79,6 +82,7 @@ function ReelColumn({ index, random, landing, landingMulti, spinning }) {
 
   const tiles = finish?.tiles || loop;
   const settling = Boolean(finish);
+  useCompleteLuckyTiles(stripRef, spinning, finish, SETTLE_MS + index * SETTLE_STEP_MS);
 
   return (
     <div className="relative overflow-hidden">
