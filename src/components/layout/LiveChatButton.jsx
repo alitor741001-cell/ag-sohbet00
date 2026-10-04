@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
-import { Send, X, Search, Ban, Trash2, ShieldOff, ShieldCheck, ArrowLeft, AlertCircle } from 'lucide-react';
+import { Send, X, Search, Ban, Trash2, ShieldOff, ShieldCheck, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { upsertNotification } from '@/lib/upsertNotification';
 

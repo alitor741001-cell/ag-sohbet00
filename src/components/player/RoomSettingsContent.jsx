@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Eye, EyeOff, Instagram, Lock, MessageCircle, MessageSquare, MessageSquareOff, Mic, MicOff, Unlock, UserX, Ban, Film, Shield, Trash2 } from 'lucide-react';
+import { Eye, EyeOff, Instagram, Lock, MessageCircle, MessageSquare, MessageSquareOff, Mic, Unlock, UserX, Film, Shield, Trash2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { base44 } from '@/api/base44Client';
 

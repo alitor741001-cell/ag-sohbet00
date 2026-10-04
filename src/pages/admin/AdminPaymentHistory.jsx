@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Check, X, Clock, Ban, Trash2 } from 'lucide-react';
+import { Check, X, Clock, Ban } from 'lucide-react';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { useToast } from '@/components/ui/use-toast';
 

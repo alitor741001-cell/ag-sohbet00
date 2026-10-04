@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MoreVertical, MessageCircle, UserMinus, Ban, DoorOpen } from 'lucide-react';
-import { Image } from '@/components/ui/image';
 import ProfileFrame from '@/components/ProfileFrame';
 import XpAvatar from '@/components/xp/XpAvatar';
 import useMessageProfiles from '@/hooks/useMessageProfiles';

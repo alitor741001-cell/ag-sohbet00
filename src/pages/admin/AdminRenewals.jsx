@@ -3,7 +3,7 @@ import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
-import { Check, X, Trash2, Eye } from 'lucide-react';
+import { Check, X, Trash2 } from 'lucide-react';
 
 export default function AdminRenewals() {
   const { user: admin } = useCurrentUser();

@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Camera, Check, Crown, Loader2, LogOut, Pencil } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { Image } from '@/components/ui/image';
 import ProfileFrame from '@/components/ProfileFrame';
 import RoleBadge from '@/components/RoleBadge';
 import UserStatusBadges from '@/components/status/UserStatusBadges';

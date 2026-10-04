@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Play, Plus, Star, Info } from 'lucide-react';
+import { Play, Plus, Star } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';

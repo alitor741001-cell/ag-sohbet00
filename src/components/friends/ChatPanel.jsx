@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, Send, Settings, Phone, Trash2, X, Image as ImageIcon, Check, CheckCheck, Copy } from 'lucide-react';
+import { ArrowLeft, Send, Settings, Phone, Trash2, X, Image as ImageIcon, Check, CheckCheck } from 'lucide-react';
 import { useDirectCall } from '@/lib/DirectCallContext';
 import { Image } from '@/components/ui/image';
 import { base44 } from '@/api/base44Client';

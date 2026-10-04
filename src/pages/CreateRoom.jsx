@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
-import { Users, Lock, MessageSquare, Mic, DoorOpen, Check, Home, Settings, Eye, EyeOff, Minus, Plus, Video } from 'lucide-react';
+import { Users, Lock, MessageSquare, Mic, Check, Home, Settings, Eye, EyeOff, Minus, Plus, Video } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 
 export default function CreateRoom() {

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Sparkles, X } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 
 const STORAGE_KEY = 'filmkeyfi_last_seen_update';
 

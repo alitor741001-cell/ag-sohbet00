@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { base44 } from '@/api/base44Client';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid } from 'recharts';
 
 export default function AdminReports() {

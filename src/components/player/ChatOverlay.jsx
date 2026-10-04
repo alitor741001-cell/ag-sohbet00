@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
-import { Send, X, Smile, Trash2, MessageSquareOff, Image as ImageIcon, MessagesSquare, Shield, Crown, Sparkles } from 'lucide-react';
+import { Send, X, Smile, MessageSquareOff, Image as ImageIcon, MessagesSquare, Shield, Sparkles } from 'lucide-react';
 import VoiceControls from '@/components/player/VoiceControls';
 import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';

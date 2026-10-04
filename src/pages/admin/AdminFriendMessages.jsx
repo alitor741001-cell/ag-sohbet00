@@ -1,10 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import AdminFriendThread from '@/components/admin/AdminFriendThread';
 import { useToast } from '@/components/ui/use-toast';
 import useMessageProfiles from '@/hooks/useMessageProfiles';
-import UserBadge from '@/components/admin/UserBadge';
 
 export default function AdminFriendMessages() {
   const [messages, setMessages] = useState([]);

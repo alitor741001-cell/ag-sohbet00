@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useCurrentUser, membershipActive } from '@/lib/useCurrentUser';
-import { Check, Calendar, Copy, Landmark, CreditCard, Loader2, Clock, ArrowLeft, Shield, Hash } from 'lucide-react';
+import { Check, Copy, Landmark, CreditCard, Loader2, Clock, ArrowLeft, Shield, Hash } from 'lucide-react';
 
 export default function Subscription() {
   const { user, loading: ul, reload } = useCurrentUser();

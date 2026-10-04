@@ -4,7 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LogIn, Mail, Lock, Loader2, Eye, EyeOff, ArrowRight, Film, Sparkles, MessageSquare, Lock as LockIcon, Users, AlertCircle } from "lucide-react";
+import { Mail, Lock, Loader2, Eye, EyeOff, ArrowRight, Sparkles, MessageSquare, Lock as LockIcon, Users, AlertCircle } from "lucide-react";
 import AuthBackground from "@/components/auth/AuthBackground";
 import { Image } from "@/components/ui/image";
 import SupportWidget from "@/components/auth/SupportWidget";

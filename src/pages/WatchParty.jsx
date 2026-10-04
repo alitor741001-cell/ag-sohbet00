@@ -3,11 +3,10 @@ import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import VideoPlayer from '@/components/player/VideoPlayer';
 import ChatOverlay from '@/components/player/ChatOverlay';
-import VoiceControls from '@/components/player/VoiceControls';
 import { useVoiceChat } from '@/hooks/useVoiceChat';
 import { useCurrentUser, membershipActive } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
-import { Mic, MicOff, Crown, X, Eye, ArrowLeft, UserMinus, MessageSquare, Trash2, Settings, MessagesSquare } from 'lucide-react';
+import { Crown, X, Eye, ArrowLeft } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import RoomSettingsMenu from '@/components/player/RoomSettingsMenu';
@@ -16,12 +15,10 @@ import RoomGiftStage from '@/components/voice/RoomGiftStage';
 
 import LiveKitDebugPanel from '@/components/player/LiveKitDebugPanel';
 import RoomDirectMessages from '@/components/player/RoomDirectMessages';
-import RoomNotifications from '@/components/player/RoomNotifications';
 
 import MoviePickerSheet from '@/components/player/MoviePickerSheet';
 import RoomCatalogIntro from '@/components/player/RoomCatalogIntro';
 import SpecialRoleWelcome from '@/components/player/SpecialRoleWelcome';
-import RoleBadge from '@/components/RoleBadge';
 import ProfileFrame from '@/components/ProfileFrame';
 import useSocialBadges from '@/hooks/useSocialBadges';
 import { isModerator } from '@/lib/roles';

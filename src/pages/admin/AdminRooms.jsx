@@ -6,7 +6,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { Image } from '@/components/ui/image';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import UserBadge from '@/components/admin/UserBadge';
-import { Trash2, DoorClosed, MessageSquareOff, MicOff, Crown, Users, Lock, Unlock, Calendar, Search, Plus, Folder, MessageSquare, ChevronLeft, ChevronRight, MoreVertical } from 'lucide-react';
+import { Trash2, DoorClosed, MessageSquareOff, MicOff, Users, Lock, Unlock, Calendar, Search, Plus, Folder, MessageSquare, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const PAGE_SIZE = 8;
 

@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import { ChevronRight, Trash2 } from 'lucide-react';
-import { Image } from '@/components/ui/image';
 import ProfileFrame from '@/components/ProfileFrame';
 import XpAvatar from '@/components/xp/XpAvatar';
 import useMessageProfiles from '@/hooks/useMessageProfiles';

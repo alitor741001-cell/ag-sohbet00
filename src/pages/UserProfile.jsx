@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { useCurrentUser, membershipActive } from '@/lib/useCurrentUser';
+import { useCurrentUser } from '@/lib/useCurrentUser';
 import { Image } from '@/components/ui/image';
 import { ArrowLeft, Crown, Hash, MessageCircle, UserPlus, Copy, Flag } from 'lucide-react';
 import ReportDialog from '@/components/ReportDialog';

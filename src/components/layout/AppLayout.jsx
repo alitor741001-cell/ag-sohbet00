@@ -5,7 +5,6 @@ import { useCurrentUser, membershipActive } from '@/lib/useCurrentUser';
 import { useAuth } from '@/lib/AuthContext';
 import Navbar from '@/components/layout/Navbar';
 import BottomNav from '@/components/layout/BottomNav';
-import MaintenanceMode from '@/pages/MaintenanceMode';
 import useFriendPresence from '@/hooks/useFriendPresence';
 import useRoleCelebration from '@/hooks/useRoleCelebration';
 import useRoleLabels from '@/hooks/useRoleLabels';
