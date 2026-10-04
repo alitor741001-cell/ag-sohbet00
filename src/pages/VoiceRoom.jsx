@@ -725,29 +725,31 @@ export default function VoiceRoom() {
       <div className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-gradient-to-b from-primary/25 to-transparent" />
 
       <header className="relative shrink-0 px-3 pb-2 pt-[max(0.75rem,env(safe-area-inset-top))]">
-        <div className="flex items-center justify-end gap-2">
-          <button
-            type="button"
-            onClick={() => setViewerOpen(true)}
-            title={`Odada ${participants.length} kişi var`}
-            aria-label={`Odada ${participants.length} kişi var — kimler izliyor gör`}
-            className="flex h-11 min-w-11 items-center justify-center gap-1.5 rounded-full bg-white/10 px-3 transition-transform active:scale-95"
-          >
-            <Eye className="h-5 w-5 text-white/80" />
-            <span className="text-sm font-bold tabular-nums">{participants.length}</span>
-          </button>
-          <button type="button" onClick={() => setMenuOpen(true)} aria-label="Oda ayarları" className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 active:scale-95 transition-transform">
-            <MoreHorizontal className="h-5 w-5" />
-          </button>
-          <button type="button" onClick={() => setExitOpen(true)} aria-label="Odadan çık" className="flex h-11 w-11 items-center justify-center rounded-full bg-red-600 active:scale-95 transition-transform">
-            <LogOut className="h-5 w-5" />
-          </button>
+        <div className="flex items-start justify-between gap-2">
+          <RoomInfoCard
+            room={room}
+            canEdit={isOwner || moderators.includes(user?.id)}
+            onRename={renameRoom}
+          />
+          <div className="flex shrink-0 items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setViewerOpen(true)}
+              title={`Odada ${participants.length} kişi var`}
+              aria-label={`Odada ${participants.length} kişi var — kimler izliyor gör`}
+              className="flex h-11 min-w-11 items-center justify-center gap-1.5 rounded-full bg-white/10 px-3 transition-transform active:scale-95"
+            >
+              <Eye className="h-5 w-5 text-white/80" />
+              <span className="text-sm font-bold tabular-nums">{participants.length}</span>
+            </button>
+            <button type="button" onClick={() => setMenuOpen(true)} aria-label="Oda ayarları" className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 active:scale-95 transition-transform">
+              <MoreHorizontal className="h-5 w-5" />
+            </button>
+            <button type="button" onClick={() => setExitOpen(true)} aria-label="Odadan çık" className="flex h-11 w-11 items-center justify-center rounded-full bg-red-600 active:scale-95 transition-transform">
+              <LogOut className="h-5 w-5" />
+            </button>
+          </div>
         </div>
-        <RoomInfoCard
-          room={room}
-          canEdit={isOwner || moderators.includes(user?.id)}
-          onRename={renameRoom}
-        />
       </header>
 
       <div className="relative min-h-0 flex-1 overflow-y-auto px-3 pb-4 pt-1">

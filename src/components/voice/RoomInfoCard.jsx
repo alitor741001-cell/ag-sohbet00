@@ -10,7 +10,8 @@ const MARQUEE_AFTER = 10;
 
 /**
  * Oda kimlik kartı: solda oda sahibinin profili, sağda oda ismi ile oda sahibinin
- * adı ve oda kimlik numarası. İsim 10 harften uzunsa sağ kenarda sönümlenerek akar.
+ * adı ve oda kimlik numarası. Kart boyutu isimden bağımsız sabittir; isim uzunsa
+ * sağ kenarda sönümlenerek akar, kart büyümez.
  */
 export default function RoomInfoCard({ room, canEdit, onRename }) {
   const [editing, setEditing] = useState(false);
@@ -42,37 +43,39 @@ export default function RoomInfoCard({ room, canEdit, onRename }) {
   };
 
   return (
-    <div className={`relative mt-2 flex w-fit max-w-[92vw] items-center gap-2.5 rounded-2xl border border-white/10 bg-white/[0.07] py-2 pl-2.5 ${canEdit ? 'pr-10' : 'pr-3'}`}>
+    <div className={`relative flex min-h-[60px] w-[14rem] max-w-[60vw] items-center gap-2.5 rounded-2xl border border-white/10 bg-white/[0.07] py-2 pl-2.5 ${editing || !canEdit ? 'pr-3' : 'pr-10'}`}>
       <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/15 bg-white/10">
         {profile.avatar
           ? <Image src={profile.avatar} alt={ownerName} className="h-full w-full" fittingType="fill" draggable={false} />
           : <span className="text-sm font-bold text-white/80">{ownerName.trim().charAt(0)}</span>}
       </span>
 
-      <div className="min-w-0">
+      <div className="min-w-0 flex-1">
         {editing ? (
-          <form onSubmit={submit} className="flex items-center gap-2">
+          <form onSubmit={submit} className="flex flex-col gap-1">
             <input
               autoFocus
               value={draft}
               maxLength={80}
               onChange={(event) => setDraft(event.target.value)}
               placeholder="Oda ismi"
-              className="h-8 w-[40vw] max-w-[13rem] rounded-lg bg-black/40 px-2.5 text-sm font-bold text-white outline-none placeholder:text-white/40"
+              className="h-8 w-full min-w-0 rounded-lg bg-black/40 px-2 text-sm font-bold text-white outline-none placeholder:text-white/40"
             />
-            <button
-              type="submit"
-              disabled={saving || !draft.trim()}
-              className="shrink-0 rounded-lg bg-primary px-2.5 py-1.5 text-[11px] font-bold text-primary-foreground disabled:opacity-50"
-            >
-              Kaydet
-            </button>
-            <button type="button" onClick={() => setEditing(false)} className="shrink-0 text-[11px] font-bold text-white/60">İptal</button>
+            <span className="flex items-center gap-2">
+              <button
+                type="submit"
+                disabled={saving || !draft.trim()}
+                className="rounded-lg bg-primary px-2 py-0.5 text-[10px] font-bold text-primary-foreground disabled:opacity-50"
+              >
+                Kaydet
+              </button>
+              <button type="button" onClick={() => setEditing(false)} className="text-[10px] font-bold text-white/60">İptal</button>
+            </span>
           </form>
         ) : (
           <>
             {scrolls ? (
-              <span className="room-name-fade block overflow-hidden" style={{ maxWidth: '50vw' }}>
+              <span className="room-name-fade block w-full overflow-hidden">
                 <span
                   className="room-name-marquee flex w-max whitespace-nowrap"
                   style={{ animationDuration: `${Math.max(8, label.length * 0.5)}s` }}
@@ -82,7 +85,7 @@ export default function RoomInfoCard({ room, canEdit, onRename }) {
                 </span>
               </span>
             ) : (
-              <span className="block max-w-[50vw] truncate text-sm font-bold">{label}</span>
+              <span className="block w-full truncate text-sm font-bold">{label}</span>
             )}
             <span className="mt-0.5 flex items-center gap-1.5 text-[11px] leading-none">
               <RoleNameEffect
