@@ -54,6 +54,7 @@ export default function VoiceRoom() {
   const [gamesOpen, setGamesOpen] = useState(false);
   const [giftOpen, setGiftOpen] = useState(false);
   const [giftSendActive, setGiftSendActive] = useState(false);
+  const [giftSendCount, setGiftSendCount] = useState(0);
   const [giftId, setGiftId] = useState(null);
   const [selectedIds, setSelectedIds] = useState([]);
   const [gifted, setGifted] = useState({});
@@ -73,8 +74,14 @@ export default function VoiceRoom() {
   const keepSeatRef = useRef(false);
   const giftFlashRef = useRef(null);
   const giftIdleRef = useRef(null);
-  const giftQueueRef = useRef(0);
+  const giftQueueRef = useRef([]);
   const giftBusyRef = useRef(false);
+  const giftSessionRef = useRef(0);
+
+  useEffect(() => {
+    giftSessionRef.current += 1;
+    setGiftSendCount(0);
+  }, [giftId, selectedIds.join('|')]);
 
   const seats = useMemo(() => (Array.isArray(room?.seats) ? room.seats : []), [room?.seats]);
   const myInvite = useMemo(
@@ -446,9 +453,11 @@ export default function VoiceRoom() {
   const armGiftHide = useCallback(() => {
     window.clearTimeout(giftIdleRef.current);
     giftIdleRef.current = window.setTimeout(() => {
+      if (giftBusyRef.current || giftQueueRef.current.length) { armGiftHide(); return; }
       setGiftOpen(false);
       setGiftSendActive(false);
       setSelectedIds([]);
+      setGiftSendCount(0);
     }, 5000);
   }, []);
 
@@ -500,19 +509,22 @@ export default function VoiceRoom() {
     setGiftOpen(false);
     setGiftSendActive(true);
     armGiftHide();
-    giftQueueRef.current = Math.min(giftQueueRef.current + 1, 5);
+    giftQueueRef.current.push({ gift: selectedGift, ids: [...selectedIds], session: giftSessionRef.current });
     if (giftBusyRef.current) return;
     giftBusyRef.current = true;
-    while (giftQueueRef.current > 0) {
-      giftQueueRef.current -= 1;
-      try {
-        await sendGiftOnce(selectedGift, selectedIds);
-      } catch (error) {
-        giftQueueRef.current = 0;
-        toast({ title: 'Hediye gönderilemedi', description: error?.response?.data?.error || error.message, variant: 'destructive' });
+    try {
+      while (giftQueueRef.current.length) {
+        const job = giftQueueRef.current.shift();
+        try {
+          await sendGiftOnce(job.gift, job.ids);
+          if (job.session === giftSessionRef.current) setGiftSendCount((count) => count + 1);
+        } catch (error) {
+          toast({ title: 'Hediye gönderilemedi', description: error?.response?.data?.error || error.message, variant: 'destructive' });
+        }
       }
+    } finally {
+      giftBusyRef.current = false;
     }
-    giftBusyRef.current = false;
   };
 
   if (loading) {
@@ -815,6 +827,7 @@ export default function VoiceRoom() {
         visible={giftOpen || giftSendActive}
         disabled={!selectedGift || !selectedIds.length}
         onSend={pressGift}
+        count={giftSendCount}
       />
 
       <VoiceGiftOverlay alert={overlayAlert} tiers={tiers} />

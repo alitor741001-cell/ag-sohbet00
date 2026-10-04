@@ -208,15 +208,14 @@ export default async function (req: Request): Promise<Response> {
     if (action === 'gift-send') {
       if (!isParticipant && !canMod) return Response.json({ error: 'Önce odaya katılmalısın.' }, { status: 403 });
       const wantedGiftId = typeof gift_id === 'string' && gift_id ? gift_id : (typeof gift === 'string' ? gift : '');
-      const found = wantedGiftId
-        ? await base44.asServiceRole.entities.Gift.filter({ id: wantedGiftId }, '-created_date', 1).catch(() => [])
-        : [];
-      const giftRecord = found[0];
+      const giftRecord = wantedGiftId
+        ? await base44.asServiceRole.entities.Gift.get(wantedGiftId)
+        : null;
       if (!giftRecord || giftRecord.active === false) {
         return Response.json({ error: 'Hediye bulunamadı.' }, { status: 404 });
       }
 
-      const people = new Map();
+      const people = new Map([[user.id, displayName]]);
       seats.forEach((seat) => { if (seat.user_id) people.set(seat.user_id, seat.name || 'Kullanıcı'); });
       (room.participants || []).forEach((person) => { if (person.user_id) people.set(person.user_id, person.name || 'Kullanıcı'); });
 
@@ -229,12 +228,8 @@ export default async function (req: Request): Promise<Response> {
         return Response.json({ error: 'Hediye göndermek için en az bir kişi seç.' }, { status: 400 });
       }
 
-      const rlGift = await rateLimit(base44, 'voice-gift:' + user.id, user.id, 30, 60000);
+      const rlGift = await rateLimit(base44, 'voice-gift:' + user.id, user.id, 240, 60000);
       if (!rlGift.allowed) return Response.json({ error: 'Çok fazla hediye gönderdiniz, biraz bekleyin.' }, { status: 429 });
-      if (recipients.length > 1) {
-        const rlBulk = await rateLimit(base44, 'voice-gift-bulk:' + user.id, user.id, 8, 60000);
-        if (!rlBulk.allowed) return Response.json({ error: 'Toplu hediye çok sık gönderildi, biraz bekleyin.' }, { status: 429 });
-      }
 
       const kValue = Math.max(0, Number(giftRecord.k_value) || 0);
       const totalK = kValue * recipients.length;
@@ -260,15 +255,15 @@ export default async function (req: Request): Promise<Response> {
 
       const mode = recipients.length > 1 ? 'bulk' : 'single';
       const giftEmoji = giftRecord.emoji || '🎁';
-      const messages = [];
+      const messageRecords = [];
       const records = [];
       for (const recipient of recipients) {
-        messages.push(await base44.asServiceRole.entities.RoomMessage.create({
+        messageRecords.push({
           room_id, user_id: user.id, user_name: displayName, user_avatar: me?.avatar || user.avatar || '',
           text: `${displayName}, ${recipient.name} kişisine ${giftRecord.name} gönderdi!`,
           type: 'gift', gift: giftRecord.id, gift_to_id: recipient.user_id, gift_to_name: recipient.name,
           gift_emoji: giftEmoji, gift_k: kValue,
-        }));
+        });
         records.push({
           room_id,
           sender_id: user.id, sender_name: displayName,
@@ -278,7 +273,10 @@ export default async function (req: Request): Promise<Response> {
           k_value: kValue, total_k: totalK, recipient_count: recipients.length, mode, status: 'success',
         });
       }
-      await base44.asServiceRole.entities.GiftSend.bulkCreate(records).catch(() => {});
+      const [messages] = await Promise.all([
+        Promise.all(messageRecords.map((message) => base44.asServiceRole.entities.RoomMessage.create(message))),
+        base44.asServiceRole.entities.GiftSend.bulkCreate(records),
+      ]);
 
       return Response.json({
         ok: true,

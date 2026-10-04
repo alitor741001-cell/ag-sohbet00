@@ -1,8 +1,9 @@
 /** Sağ altta duran yuvarlak gönder düğmesi — slottaki yeşil SPIN düğmesi işçiliği, üzerinde yalnızca "Gönder" yazar. */
-export default function GiftSendButton({ visible, disabled, onSend }) {
+export default function GiftSendButton({ visible, disabled, onSend, count = 0 }) {
   if (!visible) return null;
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-[max(1.25rem,env(safe-area-inset-bottom))] z-[250] flex justify-end px-5">
+    <div className="pointer-events-none fixed right-5 bottom-[calc(6rem+env(safe-area-inset-bottom))] z-[250] flex flex-col items-center gap-2">
+      {count > 0 && <span aria-live="polite" className="rounded-full border border-slot-gold/60 bg-slot-panel px-3 py-1 text-lg font-black tabular-nums text-slot-gold">X{count}</span>}
       <button
         type="button"
         disabled={disabled}
