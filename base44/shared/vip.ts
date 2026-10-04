@@ -15,7 +15,7 @@ export const HIDDEN_REQUIRED_VIP = 10;
 /** Gizli kullanıcının odalarda görünen takma adı — kimlik bilgisi taşımaz. */
 export const HIDDEN_DISPLAY_NAME = 'Gizli Kullanıcı';
 /** Gizli kullanıcının siyah-altın maskeli profil görseli: gerçek fotoğraf yerine kullanılır. */
-export const HIDDEN_AVATAR_URL = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/cafb04a98_generated_image.png';
+export const HIDDEN_AVATAR_URL = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/df5f81e7b_IMG_1373.jpeg';
 
 /** Kişiye ait 8 haneli takma numara: gerçek kimliği belli etmez, her yerde aynı kalır. */
 export const hiddenUserCode = (user: any) => {
