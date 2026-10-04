@@ -23,6 +23,22 @@
     "gift": {
       "type": "string"
     },
+    "gift_to_id": {
+      "type": "string",
+      "default": ""
+    },
+    "gift_to_name": {
+      "type": "string",
+      "default": ""
+    },
+    "gift_emoji": {
+      "type": "string",
+      "default": ""
+    },
+    "gift_k": {
+      "type": "number",
+      "default": 0
+    },
     "type": {
       "type": "string",
       "enum": [

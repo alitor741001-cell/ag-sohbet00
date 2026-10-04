@@ -2,10 +2,11 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import { rateLimit, safeErrorResponse } from '../../shared/security.ts';
 import { isModerator } from '../../shared/roles.ts';
 import { upsertNotification } from '../../shared/upsertNotification.ts';
-import { GIFT_LABELS, GIFT_VALUES, scoresAfterSeatLeave, withStep } from '../../shared/numberBoard.ts';
+import { scoresAfterSeatLeave, withStep } from '../../shared/numberBoard.ts';
+import { coinsForK, ensureGiftWallet, formatK, giftBalance } from '../../shared/giftWallet.ts';
 
 const SEAT_OPTIONS = [2, 5, 8, 9, 12, 15, 20, 30];
-const ACTIONS = ['seat-take', 'seat-leave', 'seat-lock', 'seat-kick', 'set-seat-count', 'invite', 'seat-invite', 'seat-invite-clear', 'gift-send', 'number-board-open', 'number-board-close', 'number-step', 'number-reset', 'number-settings'];
+const ACTIONS = ['seat-take', 'seat-leave', 'seat-lock', 'seat-kick', 'set-seat-count', 'invite', 'seat-invite', 'seat-invite-clear', 'gift-state', 'gift-send', 'number-board-open', 'number-board-close', 'number-step', 'number-reset', 'number-settings'];
 
 const emptySeat = (index, locked = false) => ({
   index, user_id: '', name: '', avatar: '', frame: '', frame_scale: 100, locked, muted: false,
@@ -18,7 +19,7 @@ export default async function (req: Request): Promise<Response> {
     if (!user) return Response.json({ error: 'Oturum gerekli.' }, { status: 401 });
 
     const body = await req.json();
-    const { action, room_id, seat_index, target_id, seat_count, locked, target_ids, gift, delta, reset_on_seat_leave, reset_on_room_leave } = body || {};
+    const { action, room_id, seat_index, target_id, seat_count, locked, target_ids, gift, gift_id, delta, reset_on_seat_leave, reset_on_room_leave } = body || {};
     if (!room_id || !ACTIONS.includes(action)) {
       return Response.json({ error: 'geçersiz istek' }, { status: 400 });
     }
@@ -197,22 +198,93 @@ export default async function (req: Request): Promise<Response> {
       return Response.json({ ok: true });
     }
 
-    // Hediye gönder — odaya canlı bildirim düşer (herkes görür)
+    // Hediye tahtası için K bakiyesi
+    if (action === 'gift-state') {
+      const coins = await giftBalance(base44, { id: user.id, role: me?.role || user.role });
+      return Response.json({ ok: true, coins });
+    }
+
+    // Hediye gönder — tekli ya da toplu; bakiye düşer, her alıcı ayrı kaydedilir
     if (action === 'gift-send') {
       if (!isParticipant && !canMod) return Response.json({ error: 'Önce odaya katılmalısın.' }, { status: 403 });
-      const giftId = typeof gift === 'string' ? gift : '';
-      const giftLabel = GIFT_LABELS[giftId];
-      if (!giftLabel) return Response.json({ error: 'Geçersiz hediye.' }, { status: 400 });
+      const wantedGiftId = typeof gift_id === 'string' && gift_id ? gift_id : (typeof gift === 'string' ? gift : '');
+      const found = wantedGiftId
+        ? await base44.asServiceRole.entities.Gift.filter({ id: wantedGiftId }, '-created_date', 1).catch(() => [])
+        : [];
+      const giftRecord = found[0];
+      if (!giftRecord || giftRecord.active === false) {
+        return Response.json({ error: 'Hediye bulunamadı.' }, { status: 404 });
+      }
+
+      const people = new Map();
+      seats.forEach((seat) => { if (seat.user_id) people.set(seat.user_id, seat.name || 'Kullanıcı'); });
+      (room.participants || []).forEach((person) => { if (person.user_id) people.set(person.user_id, person.name || 'Kullanıcı'); });
+
+      const ids = Array.isArray(target_ids) ? target_ids.filter((value) => typeof value === 'string' && value && value !== user.id) : [];
+      const recipients = [...new Set(ids)].slice(0, 30)
+        .filter((value) => people.has(value))
+        .map((value) => ({ user_id: value, name: people.get(value) || 'Kullanıcı' }));
+      if (!recipients.length) {
+        return Response.json({ error: 'Hediye göndermek için en az bir kişi seç.' }, { status: 400 });
+      }
+
       const rlGift = await rateLimit(base44, 'voice-gift:' + user.id, user.id, 30, 60000);
       if (!rlGift.allowed) return Response.json({ error: 'Çok fazla hediye gönderdiniz, biraz bekleyin.' }, { status: 429 });
+      if (recipients.length > 1) {
+        const rlBulk = await rateLimit(base44, 'voice-gift-bulk:' + user.id, user.id, 8, 60000);
+        if (!rlBulk.allowed) return Response.json({ error: 'Toplu hediye çok sık gönderildi, biraz bekleyin.' }, { status: 429 });
+      }
 
-      const numberScores = withStep(room.number_scores, user.id, GIFT_VALUES[giftId]);
-      await base44.asServiceRole.entities.Room.update(room_id, { number_board: true, number_scores: numberScores });
-      const message = await base44.asServiceRole.entities.RoomMessage.create({
-        room_id, user_id: user.id, user_name: displayName, user_avatar: me?.avatar || user.avatar || '',
-        text: `${displayName} ${giftLabel} hediyesi gönderdi!`, type: 'gift', gift: giftId,
+      const kValue = Math.max(0, Number(giftRecord.k_value) || 0);
+      const totalK = kValue * recipients.length;
+      const cost = coinsForK(totalK);
+      const wallet = await ensureGiftWallet(base44, { id: user.id, role: me?.role || user.role, full_name: user.full_name });
+      const balance = Math.max(0, Number(wallet.coins) || 0);
+      if (cost > balance) {
+        return Response.json({
+          error: `Yetersiz K bakiyesi. Gereken ${formatK(totalK)}, bakiyen ${formatK(Math.floor(balance / 1000))}.`,
+          needed_k: totalK,
+          available_k: Math.floor(balance / 1000),
+        }, { status: 400 });
+      }
+      const spent = await base44.asServiceRole.entities.GameWallet.update(wallet.id, { coins: balance - cost });
+
+      // Sayı tahtası: hediyenin K karşılığı yalnızca alıcıya eklenir.
+      let numberScores = Array.isArray(room.number_scores) ? room.number_scores : [];
+      recipients.forEach((recipient) => {
+        numberScores = withStep(numberScores, recipient.user_id, kValue * 1000);
       });
-      return Response.json({ ok: true, gift: giftId, message, number_board: true, number_scores: numberScores });
+      await base44.asServiceRole.entities.Room.update(room_id, { number_board: true, number_scores: numberScores });
+
+      const mode = recipients.length > 1 ? 'bulk' : 'single';
+      const giftEmoji = giftRecord.emoji || '🎁';
+      const messages = [];
+      const records = [];
+      for (const recipient of recipients) {
+        messages.push(await base44.asServiceRole.entities.RoomMessage.create({
+          room_id, user_id: user.id, user_name: displayName, user_avatar: me?.avatar || user.avatar || '',
+          text: `${displayName}, ${recipient.name} kişisine ${giftRecord.name} gönderdi!`,
+          type: 'gift', gift: giftRecord.id, gift_to_id: recipient.user_id, gift_to_name: recipient.name,
+          gift_emoji: giftEmoji, gift_k: kValue,
+        }));
+        records.push({
+          room_id,
+          sender_id: user.id, sender_name: displayName,
+          recipient_id: recipient.user_id, recipient_name: recipient.name,
+          gift_id: giftRecord.id, gift_name: giftRecord.name, gift_emoji: giftEmoji,
+          gift_image_url: giftRecord.image_url || '',
+          k_value: kValue, total_k: totalK, recipient_count: recipients.length, mode, status: 'success',
+        });
+      }
+      await base44.asServiceRole.entities.GiftSend.bulkCreate(records).catch(() => {});
+
+      return Response.json({
+        ok: true,
+        gift: { id: giftRecord.id, name: giftRecord.name, emoji: giftEmoji, image_url: giftRecord.image_url || '', k_value: kValue },
+        recipients, count: recipients.length, total_k: totalK, mode,
+        coins: Math.max(0, Number(spent.coins) || 0),
+        messages, number_board: true, number_scores: numberScores,
+      });
     }
 
     // Sayı tahtasını aç — tüm sayılar sıfırdan başlar

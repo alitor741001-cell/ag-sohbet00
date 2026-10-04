@@ -1,0 +1,54 @@
+{
+  "name": "Gift",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "emoji": {
+      "type": "string",
+      "default": "\ud83c\udf81"
+    },
+    "image_url": {
+      "type": "string",
+      "default": ""
+    },
+    "k_value": {
+      "type": "number",
+      "default": 10
+    },
+    "category": {
+      "type": "string",
+      "default": "Klasik"
+    },
+    "sort_order": {
+      "type": "integer",
+      "default": 0
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "name"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

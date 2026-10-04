@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Armchair, Eye, Loader2, Lock, LogOut, MessageSquare, Mic, MicOff, Minimize2, MoreHorizontal, Radio, Shield, ShieldAlert, Unlock, UserMinus, UserPlus, UserRound } from 'lucide-react';
+import { Armchair, Coins, Eye, Gift, Loader2, Lock, LogOut, MessageSquare, Mic, MicOff, Minimize2, MoreHorizontal, Radio, Shield, ShieldAlert, Unlock, UserMinus, UserPlus, UserRound } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useVoiceChat } from '@/hooks/useVoiceChat';
@@ -22,8 +22,11 @@ import VoiceMenuButton from '@/components/voice/VoiceMenuButton';
 import VoiceRoomBubble from '@/components/voice/VoiceRoomBubble';
 import RoomDirectMessages from '@/components/player/RoomDirectMessages';
 import GamePanel from '@/components/games/GamePanel';
-import VoiceGiftSheet from '@/components/voice/VoiceGiftSheet';
+import GiftBoard from '@/components/voice/GiftBoard';
 import VoiceGiftOverlay from '@/components/voice/VoiceGiftOverlay';
+import useGiftAlerts from '@/hooks/useGiftAlerts';
+import { useGiftBalance, useGiftCatalog } from '@/hooks/useGiftCatalog';
+import { formatK, tierForK, toneColor } from '@/lib/giftTone';
 
 export default function VoiceRoom() {
   const { id } = useParams();
@@ -50,16 +53,25 @@ export default function VoiceRoom() {
   const [exitOpen, setExitOpen] = useState(false);
   const [gamesOpen, setGamesOpen] = useState(false);
   const [giftOpen, setGiftOpen] = useState(false);
-  const [giftAlert, setGiftAlert] = useState(null);
+  const [giftId, setGiftId] = useState(null);
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [gifted, setGifted] = useState({});
+  const [sending, setSending] = useState(false);
 
   const keyboardInset = useKeyboardInset();
+
+  // Hediye Tahtası: katalog, K seviyeleri, bakiye ve gelen hediye animasyonları.
+  const { gifts, tiers } = useGiftCatalog();
+  const { coins, setCoins } = useGiftBalance(id, giftOpen);
+  const giftMap = useMemo(() => new Map(gifts.map((item) => [item.id, item])), [gifts]);
+  const resolveGift = useCallback((giftKey) => giftMap.get(giftKey) || null, [giftMap]);
+  const { alert: giftAlert, push: pushGiftAlert, markSeen: markGiftSeen } = useGiftAlerts(messages, resolveGift);
 
   const joinedRef = useRef(false);
   const joinTriedRef = useRef(false);
   const sawSelfRef = useRef(false);
   const keepSeatRef = useRef(false);
-  const giftTimerRef = useRef(null);
-  const lastGiftRef = useRef(null);
+  const giftFlashRef = useRef(null);
 
   const seats = useMemo(() => (Array.isArray(room?.seats) ? room.seats : []), [room?.seats]);
   const myInvite = useMemo(
@@ -90,6 +102,32 @@ export default function VoiceRoom() {
     });
     return map;
   }, [room?.number_scores]);
+
+  // Hediye gönderilebilecek kişiler (kendisi hariç): koltukta oturanlar ve odadaki diğer kişiler.
+  const giftPeople = useMemo(() => {
+    const map = new Map();
+    seats.forEach((seat) => {
+      if (seat.user_id && seat.user_id !== user?.id) map.set(seat.user_id, { user_id: seat.user_id, name: seat.name || 'Kullanıcı', avatar: seat.avatar || '' });
+    });
+    participants.forEach((person) => {
+      if (person.user_id !== user?.id && !map.has(person.user_id)) map.set(person.user_id, { user_id: person.user_id, name: person.name || 'Kullanıcı', avatar: person.avatar || '' });
+    });
+    return [...map.values()];
+  }, [seats, participants, user?.id]);
+
+  // Seçim rengi: seçilen hediyenin K seviyesi belirler.
+  const selectedGift = useMemo(() => gifts.find((item) => item.id === giftId) || null, [gifts, giftId]);
+  const seatAccent = toneColor(tierForK(tiers, selectedGift?.k_value || 0));
+
+  // Odadan ayrılan kişi seçimden düşer.
+  useEffect(() => {
+    if (!selectedIds.length) return;
+    const valid = new Set(giftPeople.map((person) => person.user_id));
+    setSelectedIds((prev) => {
+      const next = prev.filter((value) => valid.has(value));
+      return next.length === prev.length ? prev : next;
+    });
+  }, [giftPeople, selectedIds.length]);
 
   const voice = useVoiceChat({
     roomId: id,
@@ -259,7 +297,12 @@ export default function VoiceRoom() {
   // Dolu koltuk profil kartını, boş koltuk beyaz koltuk menüsünü açar.
   const handleSeatPress = (index) => {
     const seat = seats[index];
-    if (seat?.user_id) { setProfileUserId(seat.user_id); return; }
+    if (seat?.user_id) {
+      // Hediye tahtası açıkken dokunma, alıcı seçimini değiştirir.
+      if (giftOpen) { toggleGiftPerson(seat.user_id); return; }
+      setProfileUserId(seat.user_id);
+      return;
+    }
     setSeatIndex(index);
   };
 
@@ -381,32 +424,64 @@ export default function VoiceRoom() {
     }
   }, [id, toast]);
 
-  // Hediye gönder — odaya canlı bildirim düşer, herkes aynı anda görür.
-  const sendGift = async (giftId) => {
-    setGiftOpen(false);
+  // Hediye alan kişinin profilinde kısa süreli efekt.
+  const flashGifted = useCallback((ids, emoji) => {
+    if (!Array.isArray(ids) || !ids.length) return;
+    setGifted((prev) => {
+      const next = { ...prev };
+      ids.forEach((value) => { next[value] = emoji || '🎁'; });
+      return next;
+    });
+    window.clearTimeout(giftFlashRef.current);
+    giftFlashRef.current = window.setTimeout(() => setGifted({}), 2000);
+  }, []);
+
+  useEffect(() => () => window.clearTimeout(giftFlashRef.current), []);
+
+  // Hediye tahtası açıkken profiller çoklu seçilir.
+  const toggleGiftPerson = useCallback((userId) => {
+    if (!userId || userId === user?.id) return;
+    setSelectedIds((prev) => (prev.includes(userId) ? prev.filter((value) => value !== userId) : [...prev, userId]));
+  }, [user?.id]);
+
+  // Tekli/toplu gönderim: K bakiyesi düşer, her alıcı ayrı kaydedilir.
+  const sendGift = async (gift) => {
+    if (!gift || !selectedIds.length || sending) return;
+    setSending(true);
     try {
-      const response = await base44.functions.invoke('voice-room', { room_id: id, action: 'gift-send', gift: giftId });
+      const response = await base44.functions.invoke('voice-room', {
+        room_id: id, action: 'gift-send', gift_id: gift.id, target_ids: selectedIds,
+      });
       const data = response.data;
+      if (typeof data.coins === 'number') setCoins(data.coins);
       setRoom((prev) => ({ ...prev, number_board: data.number_board, number_scores: data.number_scores }));
-      if (data.message) setMessages((prev) => prev.some((item) => item.id === data.message.id) ? prev : [...prev, data.message]);
+      markGiftSeen((data.messages || []).map((message) => message.id));
+      const recipientIds = (data.recipients || []).map((item) => item.user_id);
+      flashGifted(recipientIds, data.gift?.emoji);
+      pushGiftAlert({
+        key: `send-${Date.now()}`,
+        giftId: data.gift?.id,
+        giftName: data.gift?.name || gift.name,
+        emoji: data.gift?.emoji || gift.emoji,
+        imageUrl: data.gift?.image_url || '',
+        kValue: Number(data.gift?.k_value) || 0,
+        totalK: Number(data.total_k) || 0,
+        count: Number(data.count) || recipientIds.length,
+        senderName: '',
+        recipientName: (data.recipients || []).map((item) => item.name).join(', '),
+        toId: '',
+      });
+      setSelectedIds([]);
+      toast({
+        title: `🎁 ${data.gift?.name || gift.name} gönderildi – ${data.count} kişiye`,
+        description: `Toplam ${formatK(data.total_k)} harcandı.`,
+      });
     } catch (error) {
       toast({ title: 'Hediye gönderilemedi', description: error?.response?.data?.error || error.message, variant: 'destructive' });
+    } finally {
+      setSending(false);
     }
   };
-
-  // Yeni gelen hediyeyi ekranın ortasında kısa süre göster.
-  useEffect(() => {
-    const latest = [...messages].reverse().find((message) => message.type === 'gift');
-    if (!latest || latest.id === lastGiftRef.current) return;
-    const created = latest.created_date ? new Date(latest.created_date).getTime() : 0;
-    if (!created || Date.now() - created > 15000) return;
-    lastGiftRef.current = latest.id;
-    setGiftAlert({ gift: latest.gift, name: latest.user_name, userId: latest.user_id });
-    window.clearTimeout(giftTimerRef.current);
-    giftTimerRef.current = window.setTimeout(() => setGiftAlert(null), 4000);
-  }, [messages]);
-
-  useEffect(() => () => window.clearTimeout(giftTimerRef.current), []);
 
   if (loading) {
     return (
@@ -472,6 +547,9 @@ export default function VoiceRoom() {
     { key: 'invite', icon: UserPlus, label: 'Davet et', disabled: profileSelf || (!canMod && !seated), onClick: () => { const target = profileTarget; setProfileUserId(null); inviteToSeat(target); } },
   ] : [];
 
+  // Seçili kişinin koltuk puanı animasyonda gösterilir.
+  const overlayAlert = giftAlert ? { ...giftAlert, value: scores[giftAlert.toId] || 0 } : null;
+
   if (minimized) {
     return <VoiceRoomBubble name={room?.name} muted={voice.muted} onOpen={() => setMinimized(false)} />;
   }
@@ -520,6 +598,14 @@ export default function VoiceRoom() {
             <Lock className="h-3 w-3" /> Şifreli oda
           </p>
         )}
+        {selectedIds.length > 0 && (
+          <div className="mb-3 flex items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2">
+            <span className="flex min-w-0 items-center gap-1.5 text-[11px] font-bold" style={{ color: seatAccent }}>
+              <Gift className="h-3.5 w-3.5 shrink-0" /> {selectedIds.length} kişi seçildi
+            </span>
+            <button type="button" onClick={() => setSelectedIds([])} className="shrink-0 text-[11px] font-bold text-white/60">Temizle</button>
+          </div>
+        )}
         <VoiceSeatGrid
           seats={seatsView}
           userId={user?.id}
@@ -530,6 +616,9 @@ export default function VoiceRoom() {
           onSelectSeat={handleSeatPress}
           boardActive={boardActive}
           scores={scores}
+          selectedIds={selectedIds}
+          accent={seatAccent}
+          gifted={gifted}
         />
         {boardActive && <VoiceGiftScoreboard participants={participants} seats={seatsView} scores={scores} />}
         <p className="mt-5 text-center text-[11px] text-white/50">
@@ -673,9 +762,24 @@ export default function VoiceRoom() {
 
       <GamePanel open={gamesOpen} onClose={() => setGamesOpen(false)} roomId={id} />
 
-      <VoiceGiftSheet open={giftOpen} onClose={() => setGiftOpen(false)} onSend={sendGift} />
+      <GiftBoard
+        open={giftOpen}
+        onClose={() => setGiftOpen(false)}
+        gifts={gifts}
+        tiers={tiers}
+        people={giftPeople}
+        selectedIds={selectedIds}
+        giftId={giftId}
+        coins={coins}
+        sending={sending}
+        onSelectGift={setGiftId}
+        onTogglePerson={toggleGiftPerson}
+        onSelectAll={() => setSelectedIds(giftPeople.map((person) => person.user_id))}
+        onClear={() => setSelectedIds([])}
+        onSend={sendGift}
+      />
 
-      <VoiceGiftOverlay alert={giftAlert ? { ...giftAlert, value: scores[giftAlert.userId] || 0 } : null} />
+      <VoiceGiftOverlay alert={overlayAlert} tiers={tiers} />
 
       {notice && joined && (
         <p className="pointer-events-none absolute left-1/2 top-20 z-[170] -translate-x-1/2 rounded-full bg-black/80 px-4 py-2 text-xs text-white">{notice}</p>

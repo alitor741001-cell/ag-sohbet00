@@ -1,0 +1,92 @@
+{
+  "name": "GiftSend",
+  "type": "object",
+  "properties": {
+    "room_id": {
+      "type": "string",
+      "default": ""
+    },
+    "sender_id": {
+      "type": "string"
+    },
+    "sender_name": {
+      "type": "string"
+    },
+    "recipient_id": {
+      "type": "string"
+    },
+    "recipient_name": {
+      "type": "string"
+    },
+    "gift_id": {
+      "type": "string"
+    },
+    "gift_name": {
+      "type": "string"
+    },
+    "gift_emoji": {
+      "type": "string",
+      "default": "\ud83c\udf81"
+    },
+    "gift_image_url": {
+      "type": "string",
+      "default": ""
+    },
+    "k_value": {
+      "type": "number",
+      "default": 0
+    },
+    "total_k": {
+      "type": "number",
+      "default": 0
+    },
+    "recipient_count": {
+      "type": "integer",
+      "default": 1
+    },
+    "mode": {
+      "type": "string",
+      "enum": [
+        "single",
+        "bulk"
+      ],
+      "default": "single"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "success",
+        "blocked",
+        "failed"
+      ],
+      "default": "success"
+    }
+  },
+  "required": [
+    "sender_id",
+    "recipient_id",
+    "gift_id"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

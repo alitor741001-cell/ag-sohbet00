@@ -1,0 +1,51 @@
+{
+  "name": "GiftTier",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "min_k": {
+      "type": "number",
+      "default": 0
+    },
+    "color": {
+      "type": "string",
+      "default": "#94a3b8"
+    },
+    "glow": {
+      "type": "string",
+      "default": "#94a3b8"
+    },
+    "sort_order": {
+      "type": "integer",
+      "default": 0
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "name",
+    "min_k"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
