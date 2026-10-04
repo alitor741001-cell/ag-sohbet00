@@ -14,6 +14,12 @@ export const formatCoins = (coins) => Math.max(0, Math.round(Number(coins) || 0)
 /** Coin bakiyesini K değerine çevirir. */
 export const coinToK = (coins) => Math.floor((Number(coins) || 0) / K_UNIT);
 
+/** Hediye fiyatı: 1K'nın altındaki değerler coin olarak yazılır (0,05K → "50 coin"). */
+export const formatPrice = (kValue) => {
+  const value = Math.max(0, Number(kValue) || 0);
+  return value > 0 && value < 1 ? `${Math.round(value * K_UNIT).toLocaleString('tr-TR')} coin` : formatK(value);
+};
+
 /** K değerine uyan en yüksek seviye (renk/efekt) — eşikler admin panelden yönetilir. */
 export const tierForK = (tiers, kValue) => {
   const k = Number(kValue) || 0;

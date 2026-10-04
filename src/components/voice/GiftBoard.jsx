@@ -3,7 +3,7 @@ import { Coins, Send } from 'lucide-react';
 import VoiceSheet from '@/components/voice/VoiceSheet';
 import GiftCard from '@/components/voice/GiftCard';
 import GiftRecipientRow from '@/components/voice/GiftRecipientRow';
-import { coinToK, formatCoins, formatK, tierForK, toneColor } from '@/lib/giftTone';
+import { K_UNIT, coinToK, formatCoins, formatK, formatPrice, tierForK, toneColor } from '@/lib/giftTone';
 
 /** Hediye Tahtası: kategoriler, hediyeler (K değeriyle) ve çoklu alıcı seçimi. */
 export default function GiftBoard({ open, onClose, gifts = [], tiers = [], people = [], selectedIds = [], giftId, coins, sending, onSelectGift, onTogglePerson, onSelectAll, onClear, onSend }) {
@@ -23,7 +23,9 @@ export default function GiftBoard({ open, onClose, gifts = [], tiers = [], peopl
   const count = selectedIds.length;
   const totalK = (Number(gift?.k_value) || 0) * count;
   const balanceK = coins === null || coins === undefined ? null : coinToK(coins);
-  const insufficient = !!gift && count > 0 && balanceK !== null && totalK > balanceK;
+  // Fiyat karşılaştırması coin üzerinden yapılır: 1K altındaki hediyeler de doğru hesaplanır.
+  const totalCoins = (Number(gift?.k_value) || 0) * K_UNIT * count;
+  const insufficient = !!gift && count > 0 && coins !== null && coins !== undefined && totalCoins > coins;
   const canSend = !!gift && count > 0 && !insufficient && !sending;
 
   return (
@@ -81,7 +83,7 @@ export default function GiftBoard({ open, onClose, gifts = [], tiers = [], peopl
 
       {insufficient && (
         <p className="mt-2 rounded-xl bg-red-500/15 px-3 py-2 text-center text-[11px] font-bold text-red-300">
-          Yetersiz K bakiyesi — gereken {formatK(totalK)}, bakiyen {formatK(balanceK)}
+          Yetersiz bakiye — gereken {formatPrice(totalK)}, bakiyen {formatCoins(coins)} coin
         </p>
       )}
 
@@ -94,7 +96,7 @@ export default function GiftBoard({ open, onClose, gifts = [], tiers = [], peopl
       >
         <Send className="h-4 w-4" />
         {gift ? (count > 1 ? `${gift.name} – ${count} kişiye gönder` : `${gift.name} gönder`) : 'Bir hediye seç'}
-        {gift && count > 0 && <span className="tabular-nums opacity-80">{formatK(totalK)}</span>}
+        {gift && count > 0 && <span className="tabular-nums opacity-80">{formatPrice(totalK)}</span>}
       </button>
     </VoiceSheet>
   );

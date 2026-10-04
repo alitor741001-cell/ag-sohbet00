@@ -1,6 +1,6 @@
 import { Check } from 'lucide-react';
 import { Image } from '@/components/ui/image';
-import { formatK } from '@/lib/giftTone';
+import { formatPrice } from '@/lib/giftTone';
 
 /** Hediye tahtasındaki tek hediye: görsel/ikon, ad ve K değeri. */
 export default function GiftCard({ gift, color, selected, onSelect }) {
@@ -23,7 +23,7 @@ export default function GiftCard({ gift, color, selected, onSelect }) {
       )}
       <span className="w-full truncate text-center text-[10px] font-semibold text-white/85">{gift.name}</span>
       <span className="rounded-full bg-black/50 px-1.5 py-0.5 text-[10px] font-black tabular-nums" style={{ color }}>
-        {formatK(gift.k_value)}
+        {formatPrice(gift.k_value)}
       </span>
       {selected && (
         <span className="gift-pop absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full" style={{ background: color }}>

@@ -8,6 +8,7 @@ import useKeyboardInset from '@/hooks/useKeyboardInset';
 import { useToast } from '@/components/ui/use-toast';
 import VoiceSeatGrid from '@/components/voice/VoiceSeatGrid';
 import VoiceGiftScoreboard from '@/components/voice/VoiceGiftScoreboard';
+import VoiceGiftCounter from '@/components/voice/VoiceGiftCounter';
 import VoiceControlBar from '@/components/voice/VoiceControlBar';
 import VoiceChatDock from '@/components/voice/VoiceChatDock';
 import VoiceViewerSheet from '@/components/voice/VoiceViewerSheet';
@@ -102,6 +103,11 @@ export default function VoiceRoom() {
     });
     return map;
   }, [room?.number_scores]);
+  // Sayaç: odada toplanan toplam hediye — yalnızca ileri sayar.
+  const boardTotal = useMemo(
+    () => Object.values(scores).reduce((sum, value) => sum + (Number(value) || 0), 0),
+    [scores]
+  );
 
   // Hediye gönderilebilecek kişiler: odadaki herkes ve kendisi (kendine de hediye gönderebilir).
   const giftPeople = useMemo(() => {
@@ -405,16 +411,13 @@ export default function VoiceRoom() {
     }
   };
 
-  // Profil kartındaki koltuk eylemi: kendi koltuğumda kalk/otur, başkasında yönetici olarak indir.
+  // Profil kartındaki koltuk eylemi: kendi koltuğumda ayağa kalkar, yönetici karşı tarafı indirir.
   const handleProfileSeat = () => {
     const target = profileUserId;
     if (!target) return;
     setProfileUserId(null);
     if (target === user?.id) {
-      if (seated) { invokeVoice({ action: 'seat-leave' }); return; }
-      const free = seats.findIndex((item) => !item.user_id && !item.locked);
-      if (free < 0) { toast({ title: 'Boş koltuk yok' }); return; }
-      invokeVoice({ action: 'seat-take', seat_index: free });
+      if (seated) invokeVoice({ action: 'seat-leave' });
       return;
     }
     if (!canMod) return;
@@ -477,6 +480,7 @@ export default function VoiceRoom() {
         toId: '',
       });
       setSelectedIds([]);
+      setGiftOpen(false);
       toast({
         title: `🎁 ${data.gift?.name || gift.name} gönderildi – ${data.count} kişiye`,
         description: `Toplam ${formatK(data.total_k)} harcandı.`,
@@ -545,10 +549,14 @@ export default function VoiceRoom() {
   const profileSelf = !!profileTarget && profileTarget === user?.id;
   const profileMuted = !!profileTarget && !!participants.find((person) => person.user_id === profileTarget)?.muted;
   const profileIsMod = !!profileTarget && moderators.includes(profileTarget);
+  // Koltuk eylemi yalnızca kendi koltuğumda (ayağa kalk) ve oda sahibi/yöneticilerde (koltuktan indir) çıkar.
+  const seatAction = profileTarget && (profileSelf ? seated : canMod)
+    ? { key: 'seat', icon: Armchair, label: profileSelf ? 'Ayağa kalk' : 'Koltuktan indir', onClick: handleProfileSeat }
+    : null;
   const profileActions = profileTarget ? [
     { key: 'mic', icon: (profileSelf ? voice.muted : profileMuted) ? MicOff : Mic, label: 'Mikrofon', disabled: !profileSelf && !canMod, onClick: profileSelf ? handleMic : () => toggleMuteFor(profileTarget) },
     { key: 'chat', icon: MessageSquare, label: 'Sohbet', disabled: profileSelf, onClick: () => { setDmUserId(profileTarget); setProfileUserId(null); } },
-    { key: 'seat', icon: Armchair, label: profileSelf ? (seated ? 'Ayağa kalk' : 'Otur') : 'Koltuk', disabled: !profileSelf && !canMod, onClick: handleProfileSeat },
+    ...(seatAction ? [seatAction] : []),
     { key: 'invite', icon: UserPlus, label: 'Davet et', disabled: profileSelf || (!canMod && !seated), onClick: () => { const target = profileTarget; setProfileUserId(null); inviteToSeat(target); } },
   ] : [];
 
@@ -624,6 +632,7 @@ export default function VoiceRoom() {
           accent={seatAccent}
           gifted={gifted}
         />
+        {boardActive && <VoiceGiftCounter total={boardTotal} />}
         {boardActive && <VoiceGiftScoreboard participants={participants} seats={seatsView} scores={scores} />}
         <p className="mt-5 text-center text-[11px] text-white/50">
           {seated
