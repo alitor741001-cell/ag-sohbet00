@@ -206,23 +206,11 @@ export default async function (req: Request): Promise<Response> {
       const rlGift = await rateLimit(base44, 'voice-gift:' + user.id, user.id, 30, 60000);
       if (!rlGift.allowed) return Response.json({ error: 'Çok fazla hediye gönderdiniz, biraz bekleyin.' }, { status: 429 });
 
-      // Kişiye özel hediye: puan seçilen kişiye yazılır, hediye odada herkese görünür.
-      const wanted = target_id && target_id !== user.id
-        ? seats.find((seat) => seat.user_id === target_id) || (room.participants || []).find((person) => person.user_id === target_id)
-        : null;
-      if (target_id && target_id !== user.id && !wanted) {
-        return Response.json({ error: 'Kişi odada değil.' }, { status: 404 });
-      }
-      const recipientId = wanted ? target_id : user.id;
-      const recipientName = wanted ? (wanted.name || 'Kullanıcı') : displayName;
-
-      const numberScores = withStep(room.number_scores, recipientId, GIFT_VALUES[giftId]);
+      const numberScores = withStep(room.number_scores, user.id, GIFT_VALUES[giftId]);
       await base44.asServiceRole.entities.Room.update(room_id, { number_board: true, number_scores: numberScores });
       const message = await base44.asServiceRole.entities.RoomMessage.create({
         room_id, user_id: user.id, user_name: displayName, user_avatar: me?.avatar || user.avatar || '',
-        text: wanted ? `${displayName}, ${recipientName} kişisine ${giftLabel} gönderdi!` : `${displayName} ${giftLabel} hediyesi gönderdi!`,
-        type: 'gift', gift: giftId,
-        gift_to_id: wanted ? recipientId : '', gift_to_name: wanted ? recipientName : '',
+        text: `${displayName} ${giftLabel} hediyesi gönderdi!`, type: 'gift', gift: giftId,
       });
       return Response.json({ ok: true, gift: giftId, message, number_board: true, number_scores: numberScores });
     }

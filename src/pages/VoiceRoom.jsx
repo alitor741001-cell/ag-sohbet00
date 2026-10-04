@@ -1,11 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Armchair, Coins, Eye, Loader2, Lock, LogOut, MessageSquare, Mic, MicOff, Minimize2, MoreHorizontal, Radio, Shield, ShieldAlert, Unlock, UserMinus, UserPlus, UserRound } from 'lucide-react';
+import { Armchair, Eye, Loader2, Lock, LogOut, MessageSquare, Mic, MicOff, Minimize2, MoreHorizontal, Radio, Shield, ShieldAlert, Unlock, UserMinus, UserPlus, UserRound } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useVoiceChat } from '@/hooks/useVoiceChat';
 import useKeyboardInset from '@/hooks/useKeyboardInset';
-import useSlotCoins from '@/hooks/useSlotCoins';
 import { useToast } from '@/components/ui/use-toast';
 import VoiceSeatGrid from '@/components/voice/VoiceSeatGrid';
 import VoiceGiftScoreboard from '@/components/voice/VoiceGiftScoreboard';
@@ -54,7 +53,6 @@ export default function VoiceRoom() {
   const [giftAlert, setGiftAlert] = useState(null);
 
   const keyboardInset = useKeyboardInset();
-  const { coins, refresh: refreshCoins } = useSlotCoins();
 
   const joinedRef = useRef(false);
   const joinTriedRef = useRef(false);
@@ -92,18 +90,6 @@ export default function VoiceRoom() {
     });
     return map;
   }, [room?.number_scores]);
-
-  // Hediye gönderilebilecek kişiler: koltukta oturanlar ve odadaki diğer kişiler.
-  const giftPeople = useMemo(() => {
-    const map = new Map();
-    seats.forEach((seat) => {
-      if (seat.user_id && seat.user_id !== user?.id) map.set(seat.user_id, { user_id: seat.user_id, name: seat.name || 'Kullanıcı' });
-    });
-    participants.forEach((person) => {
-      if (person.user_id !== user?.id && !map.has(person.user_id)) map.set(person.user_id, { user_id: person.user_id, name: person.name || 'Kullanıcı' });
-    });
-    return [...map.values()];
-  }, [seats, participants, user?.id]);
 
   const voice = useVoiceChat({
     roomId: id,
@@ -395,11 +381,11 @@ export default function VoiceRoom() {
     }
   }, [id, toast]);
 
-  // Hediye gönder — seçilen kişiye veya odaya canlı bildirim düşer.
-  const sendGift = async (giftId, targetId = null) => {
+  // Hediye gönder — odaya canlı bildirim düşer, herkes aynı anda görür.
+  const sendGift = async (giftId) => {
     setGiftOpen(false);
     try {
-      const response = await base44.functions.invoke('voice-room', { room_id: id, action: 'gift-send', gift: giftId, target_id: targetId || undefined });
+      const response = await base44.functions.invoke('voice-room', { room_id: id, action: 'gift-send', gift: giftId });
       const data = response.data;
       setRoom((prev) => ({ ...prev, number_board: data.number_board, number_scores: data.number_scores }));
       if (data.message) setMessages((prev) => prev.some((item) => item.id === data.message.id) ? prev : [...prev, data.message]);
@@ -415,12 +401,7 @@ export default function VoiceRoom() {
     const created = latest.created_date ? new Date(latest.created_date).getTime() : 0;
     if (!created || Date.now() - created > 15000) return;
     lastGiftRef.current = latest.id;
-    setGiftAlert({
-      gift: latest.gift,
-      name: latest.user_name,
-      userId: latest.gift_to_id || latest.user_id,
-      toName: latest.gift_to_name || '',
-    });
+    setGiftAlert({ gift: latest.gift, name: latest.user_name, userId: latest.user_id });
     window.clearTimeout(giftTimerRef.current);
     giftTimerRef.current = window.setTimeout(() => setGiftAlert(null), 4000);
   }, [messages]);
@@ -514,10 +495,6 @@ export default function VoiceRoom() {
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <div className="flex h-11 items-center gap-1.5 rounded-full bg-white/10 px-2.5" title="Slot coin bakiyen">
-            <Coins className="h-4 w-4 shrink-0 text-amber-300" />
-            <span className="text-xs font-bold tabular-nums">{coins === null ? '—' : Number(coins).toLocaleString('tr-TR')}</span>
-          </div>
           <button
             type="button"
             onClick={() => setViewerOpen(true)}
@@ -588,7 +565,7 @@ export default function VoiceRoom() {
         gamesOpen={gamesOpen}
         giftOpen={giftOpen}
         onOpenGames={() => setGamesOpen(true)}
-        onOpenGifts={() => { setGiftOpen(true); refreshCoins(); }}
+        onOpenGifts={() => setGiftOpen(true)}
         onOpenPrivateChat={() => setDmOpen(true)}
         onToggleChat={() => setChatOpen((value) => !value)}
       />
@@ -696,7 +673,7 @@ export default function VoiceRoom() {
 
       <GamePanel open={gamesOpen} onClose={() => setGamesOpen(false)} roomId={id} />
 
-      <VoiceGiftSheet open={giftOpen} onClose={() => setGiftOpen(false)} onSend={sendGift} people={giftPeople} coins={coins} />
+      <VoiceGiftSheet open={giftOpen} onClose={() => setGiftOpen(false)} onSend={sendGift} />
 
       <VoiceGiftOverlay alert={giftAlert ? { ...giftAlert, value: scores[giftAlert.userId] || 0 } : null} />
 
