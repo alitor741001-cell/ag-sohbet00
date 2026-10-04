@@ -14,7 +14,6 @@ const TABS = [
 ];
 
 const PILL_BG = '#f3eaf5';
-const TOTAL_COLOR = '#e91e63';
 
 /** Hediye sıralaması: son 24 saatlik gönderimler ve odadaki toplam. */
 export default function GiftBoardSheet({ open, onClose, board, loading }) {
@@ -89,10 +88,6 @@ export default function GiftBoardSheet({ open, onClose, board, loading }) {
         )}
       </div>
 
-      <div className="mt-2 shrink-0 border-t border-black/10 pt-3 text-center">
-        <span className="text-xs font-semibold text-[#6b7280]">Odadaki toplam: </span>
-        <span className="text-base font-black tabular-nums" style={{ color: TOTAL_COLOR }}>{formatScore(active.total)} 💎</span>
-      </div>
     </VoiceBottomSheet>
   );
 }
