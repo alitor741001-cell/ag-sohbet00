@@ -3,6 +3,7 @@ import { Crown, Shield } from 'lucide-react';
 import RoleBadge from '@/components/RoleBadge';
 import RoleNameEffect from '@/components/role/RoleNameEffect';
 import RoomLevelBadge from '@/components/levels/RoomLevelBadge';
+import UserStatusBadges from '@/components/status/UserStatusBadges';
 import { getRoleInfo, isModerator } from '@/lib/roles';
 import { plainText } from '@/components/voice/voiceText';
 
@@ -24,6 +25,18 @@ function VoiceChatMessage({ message, profile, level, ownerId, moderators = [], c
       <RoleBadge user={profile} size="sm" className="mr-1 align-middle" />
       <span className="mr-1 inline-block h-[30px] w-[54px] shrink-0 overflow-hidden align-middle">
         <span className="block origin-top-left scale-[0.36]"><RoomLevelBadge level={level} /></span>
+      </span>
+      <span className="mr-1 inline-flex flex-wrap items-center align-middle">
+        <UserStatusBadges
+          showUserIcon
+          n_level={profile?.n_level || 0}
+          vip_level={profile?.vip_level || 0}
+          vip_days_left={profile?.vip_days_left || 0}
+          gift_sent_level={profile?.gift_sent_level || 0}
+          gift_sent_tier={profile?.gift_sent_tier || 'green'}
+          gift_received_level={profile?.gift_received_level || 0}
+          gift_received_tier={profile?.gift_received_tier || 'green'}
+        />
       </span>
       {isOwner && <Crown className="mr-0.5 inline h-3 w-3 align-middle text-amber-400" />}
       {isMod && <Shield className="mr-0.5 inline h-3 w-3 align-middle text-sky-400" />}
