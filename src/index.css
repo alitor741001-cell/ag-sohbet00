@@ -1632,3 +1632,84 @@ button:active, nav a:active, a[role="button"]:active {
 @media (prefers-reduced-motion: reduce) { .room-name-marquee { animation-duration: 20s; } }
 
 /* Crash Rocket uçuş stilleri: src/styles/rocket.css */
+
+/* === HEDİYE HAREKETLERİ ===
+   Her hediye kendine özel bir hareket sınıfı alır (bkz. src/lib/giftMotion.js),
+   ışıltı rengi --gift-tone değişkeniyle verilir. */
+.gift-shine { position: relative; }
+.gift-shine::before,
+.gift-shine::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+  border-radius: 9999px;
+}
+/* Hediye üstünde gezinen ışık şeridi */
+.gift-shine::before {
+  inset: -10%;
+  background: linear-gradient(115deg, transparent 36%, rgba(255, 255, 255, 0.85) 50%, transparent 64%);
+  background-size: 260% 260%;
+  mix-blend-mode: screen;
+  animation: gift-sheen 2.6s ease-in-out infinite;
+}
+/* Hediyenin arkasında nabız gibi atan ışıltı halesi */
+.gift-shine::after {
+  inset: -22%;
+  background: radial-gradient(circle, var(--gift-tone, #facc15) 0%, transparent 68%);
+  animation: gift-glow 1.8s ease-in-out infinite;
+}
+@keyframes gift-sheen {
+  0% { background-position: 140% 0; }
+  60%, 100% { background-position: -40% 0; }
+}
+@keyframes gift-glow {
+  0%, 100% { opacity: 0.18; transform: scale(0.88); }
+  50% { opacity: 0.55; transform: scale(1.15); }
+}
+.gift-bounce { animation: gift-bounce 1.8s cubic-bezier(0.3, 0.8, 0.4, 1) infinite; }
+@keyframes gift-bounce {
+  0%, 100% { transform: translateY(0) scale(1); }
+  35% { transform: translateY(-6px) scale(1.06); }
+  60% { transform: translateY(0) scale(0.98); }
+}
+.gift-float { animation: gift-float 3s ease-in-out infinite; }
+@keyframes gift-float {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50% { transform: translateY(-5px) rotate(3deg); }
+}
+.gift-wiggle { animation: gift-wiggle 1.6s ease-in-out infinite; }
+@keyframes gift-wiggle {
+  0%, 100% { transform: rotate(-7deg); }
+  50% { transform: rotate(7deg); }
+}
+.gift-swing { animation: gift-swing 2.2s ease-in-out infinite; transform-origin: top center; }
+@keyframes gift-swing {
+  0%, 100% { transform: rotate(-11deg); }
+  50% { transform: rotate(11deg); }
+}
+.gift-pulse { animation: gift-pulse 1.5s ease-in-out infinite; }
+@keyframes gift-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+.gift-spin { animation: gift-spin 3.2s ease-in-out infinite; }
+@keyframes gift-spin {
+  0%, 100% { transform: rotateY(0deg) scale(1); }
+  50% { transform: rotateY(180deg) scale(1.06); }
+}
+.gift-heartbeat { animation: gift-heartbeat 1.4s ease-in-out infinite; }
+@keyframes gift-heartbeat {
+  0%, 100% { transform: scale(1); }
+  15% { transform: scale(1.16); }
+  30% { transform: scale(1); }
+  45% { transform: scale(1.1); }
+}
+.gift-tilt { animation: gift-tilt 2.4s ease-in-out infinite; }
+@keyframes gift-tilt {
+  0%, 100% { transform: rotate(-9deg) scale(1); }
+  50% { transform: rotate(9deg) scale(1.05); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gift-bounce, .gift-float, .gift-wiggle, .gift-swing, .gift-pulse, .gift-spin, .gift-heartbeat, .gift-tilt,
+  .gift-shine::before, .gift-shine::after { animation: none; }
+}

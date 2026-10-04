@@ -1,9 +1,12 @@
 import { Check } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import { formatPrice } from '@/lib/giftTone';
+import { giftMotion } from '@/lib/giftMotion';
 
 /** Hediye tahtasındaki tek hediye: görsel/ikon, ad ve K değeri. */
 export default function GiftCard({ gift, color, selected, onSelect }) {
+  const { motion, tone } = giftMotion(gift);
+
   return (
     <button
       type="button"
@@ -16,11 +19,13 @@ export default function GiftCard({ gift, color, selected, onSelect }) {
         transform: selected ? 'translateY(-2px)' : undefined,
       }}
     >
-      {gift.image_url ? (
-        <Image src={gift.image_url} alt={gift.name} className="h-9 w-9" fittingType="fit" originWidth={96} originHeight={96} />
-      ) : (
-        <span className="text-[28px] leading-none">{gift.emoji || '🎁'}</span>
-      )}
+      <span className="gift-shine relative inline-flex items-center justify-center" style={{ '--gift-tone': tone }}>
+        {gift.image_url ? (
+          <Image src={gift.image_url} alt={gift.name} className={`${motion} h-9 w-9`} fittingType="fit" originWidth={96} originHeight={96} />
+        ) : (
+          <span className={`${motion} text-[28px] leading-none`}>{gift.emoji || '🎁'}</span>
+        )}
+      </span>
       <span className="w-full truncate text-center text-[10px] font-semibold text-white/85">{gift.name}</span>
       <span className="rounded-full bg-black/50 px-1.5 py-0.5 text-[10px] font-black tabular-nums" style={{ color }}>
         {formatPrice(gift.k_value)}
