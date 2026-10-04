@@ -28,13 +28,13 @@ export default function VoiceBoardTimer({ active, startedAt }) {
   const clock = formatClock(seconds);
 
   return (
-    <div className="shrink-0 px-3 pb-2">
+    <div className="flex shrink-0 justify-center px-3 pb-1.5">
       <div
-        className="flex items-center justify-center gap-2 rounded-xl border border-slot-gold/60 bg-gradient-to-r from-slot-red/25 via-slot-panel to-slot-red/25 px-3 py-1.5 shadow-[0_0_12px_rgba(239,68,68,0.25)]"
+        className="flex w-fit items-center gap-1.5 rounded-lg border border-slot-gold/60 bg-gradient-to-r from-slot-red/25 via-slot-panel to-slot-red/25 px-2 py-1 shadow-[0_0_10px_rgba(239,68,68,0.22)]"
         aria-label={`Devam ediyor, ${clock}`}
       >
-        <span className="text-[11px] font-bold tracking-wide text-slot-gold">Devam Ediyor</span>
-        <span className="slot-digits rounded-md border border-slot-gold/50 bg-slot-bg/70 px-2 py-0.5 text-sm font-black tabular-nums text-slot-gold">
+        <span className="text-[9px] font-bold tracking-wide text-slot-gold sm:text-[10px]">Devam Ediyor</span>
+        <span className="slot-digits rounded border border-slot-gold/50 bg-slot-bg/70 px-1.5 py-px text-[11px] font-black leading-tight tabular-nums text-slot-gold">
           {clock}
         </span>
       </div>
