@@ -24,6 +24,8 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
   const { toast } = useToast();
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState('');
+  const [sending, setSending] = useState(false);
+  const sendingRef = useRef(false);
   const [showEmoji, setShowEmoji] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -143,11 +145,7 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
       if (ev.data?.room_id !== roomId) return;
       if (ev.type === 'delete') setMessages((prev) => prev.filter((message) => message.id !== ev.id));
       else if (isHiddenMarker(ev.data)) return;
-      else setMessages((prev) => {
-        const tempMatch = prev.find((message) => message.id?.startsWith('temp-') && message.user_id === ev.data.user_id && message.text === ev.data.text);
-        const clean = tempMatch ? prev.filter((message) => message.id !== tempMatch.id) : prev;
-        return upsertMessage(clean, ev.data);
-      });
+      else setMessages((prev) => upsertMessage(prev, ev.data));
       setTimeout(scrollToBottom, 50);
     });
     const reconnect = () => load();
@@ -163,18 +161,27 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
     }
   }, [clearToken]);
 
-  const send = (e) => {
+  const send = async (e) => {
     e?.preventDefault();
-    // Sohbet yasağı açıkken koltukta oturmayan kişi sohbete yazamaz.
     if (chatLocked) { toast({ title: 'Sohbet yasağı var', description: 'Yazmak için bir koltuğa otur.', variant: 'destructive' }); return; }
-    if (!text.trim() || !user) return;
-    const tempId = 'temp-' + Date.now();
-    const optimistic = { id: tempId, room_id: roomId, user_id: user.id, user_name: user.username || user.full_name || 'Kullanıcı', user_avatar: user.avatar || '', text: text.trim(), type: 'user', created_date: new Date().toISOString() };
-    setMessages((prev) => [...prev, optimistic]);
+    const messageText = text.trim();
+    if (!messageText || !user || sendingRef.current) return;
+    sendingRef.current = true;
+    setSending(true);
     setText(''); setShowEmoji(false);
-    setTimeout(scrollToBottom, 50);
-    base44.functions.invoke('send-room-message', { room_id: roomId, text: text.trim() })
-      .catch((err) => { setMessages((prev) => prev.filter((m) => m.id !== tempId)); toast({ title: 'Mesaj gönderilemedi', description: err.response?.data?.error || err.message, variant: 'destructive' }); });
+    try {
+      // Yalnızca sunucunun kaydettiği kimlik ve mesaj gösterilir; gerçek profilli geçici kopya oluşturulmaz.
+      const response = await base44.functions.invoke('send-room-message', { room_id: roomId, text: messageText });
+      if (response.data?.message) setMessages((prev) => upsertMessage(prev, response.data.message));
+      else load();
+      setTimeout(scrollToBottom, 50);
+    } catch (err) {
+      setText((current) => current || messageText);
+      toast({ title: 'Mesaj gönderilemedi', description: err.response?.data?.error || err.message, variant: 'destructive' });
+    } finally {
+      sendingRef.current = false;
+      setSending(false);
+    }
   };
 
   const del = async (id) => {
@@ -365,8 +372,8 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
         </label>
         <button type="button" onClick={() => setShowEmoji(!showEmoji)} className="p-2 rounded-lg hover:bg-white/10 text-white"><Smile className="w-5 h-5" /></button>
         <input value={text} onChange={(e) => { setText(e.target.value); sendTyping(); }} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(e); } }} inputMode="text" enterKeyHint="send" autoComplete="off" autoCorrect="off" autoCapitalize="sentences" spellCheck={false} placeholder="Mesaj yazın..." className="flex-1 min-w-0 bg-[#1a1a1a] rounded-full px-4 py-2 text-sm outline-none text-white placeholder:text-[#666]" />
-        <button type="button" onClick={send} disabled={!text.trim() || uploading} className="p-2.5 rounded-full disabled:opacity-50" style={{ background: '#ffcc00' }}><Send className="w-4 h-4 text-black" /></button>
-        {uploading && <span className="text-xs text-[#888] animate-pulse shrink-0">...</span>}
+        <button type="button" onClick={send} disabled={!text.trim() || uploading || sending} className="p-2.5 rounded-full disabled:opacity-50" style={{ background: '#ffcc00' }}><Send className="w-4 h-4 text-black" /></button>
+        {(uploading || sending) && <span className="text-xs text-[#888] animate-pulse shrink-0">...</span>}
       </div>}
 
 

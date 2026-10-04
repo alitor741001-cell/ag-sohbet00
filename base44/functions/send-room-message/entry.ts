@@ -72,7 +72,7 @@ export default async function(req) {
     });
     // Arka planda XP kazanımı — kullanıcı arayüzünde mesaj sayısı gösterilmez.
     try { await awardMessageXp(base44, user.id, name, created.id); } catch {}
-    return Response.json({ ok: true });
+    return Response.json({ ok: true, message: created });
   } catch (e) {
     return safeErrorResponse(e);
   }
