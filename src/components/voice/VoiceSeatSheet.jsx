@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { Armchair, Lock, Mic, Unlock, UserRound } from 'lucide-react';
+import { Armchair, Lock, Mic, MicOff, Unlock, UserRound } from 'lucide-react';
 import VoiceCard from '@/components/voice/VoiceCard';
 import VoiceMenuButton from '@/components/voice/VoiceMenuButton';
 import SeatInviteList from '@/components/voice/SeatInviteList';
 
 /** Boş koltuk menüsü: oturma, koltuk kilidi ve mik'e davet. */
-export default function VoiceSeatSheet({ open, onClose, seat, index, canMod, myId, viewers = [], invitedIds = [], onTakeSeat, onToggleLock, onStepDown, onInviteToSeat }) {
+export default function VoiceSeatSheet({ open, onClose, seat, index, canMod, myId, micActive = false, viewers = [], invitedIds = [], onTakeSeat, onToggleLock, onStepDown, onInviteToSeat, onMuteMic }) {
   const [inviteOpen, setInviteOpen] = useState(false);
   if (!seat) return null;
   const isMine = !!seat.user_id && seat.user_id === myId;
@@ -48,6 +48,13 @@ export default function VoiceSeatSheet({ open, onClose, seat, index, canMod, myI
           label={locked && !canMod ? 'Kilitli koltuk' : 'Otur'}
           disabled={locked && !canMod}
           onClick={() => { close(); onTakeSeat(); }}
+        />
+        {/* Koltuk boş olsa da kişi kendi mikrofonunu kapatabilir. */}
+        <VoiceMenuButton
+          icon={MicOff}
+          label={micActive ? 'Mikrofonu kapat' : 'Mikrofon zaten kapalı'}
+          disabled={!micActive}
+          onClick={() => { close(); onMuteMic(); }}
         />
         {canMod && (
           <VoiceMenuButton

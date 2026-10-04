@@ -452,6 +452,13 @@ export default function VoiceRoom() {
     voice.toggleMute();
   };
 
+  // Boş koltuk kartından kendi mikrofonunu kapatma: mikrofon yayında değilse bir şey yapılmaz.
+  const muteMicFromSeat = () => {
+    setSeatIndex(null);
+    if (!voice.active) return;
+    voice.toggleMute();
+  };
+
   const handleInvite = () => {
     if (!seated && !canMod) {
       toast({ title: 'Davet etmek için bir koltuğa otur' });
@@ -1004,10 +1011,12 @@ export default function VoiceRoom() {
         index={seatIndex ?? 0}
         canMod={canMod}
         myId={user?.id}
+        micActive={voice.active}
         viewers={unseatedViewers}
         invitedIds={seatInviteIds}
         onTakeSeat={handleTakeSeat}
         onInviteToSeat={inviteToSeat}
+        onMuteMic={muteMicFromSeat}
         onToggleLock={() => invokeVoice({ action: 'seat-lock', seat_index: seatIndex, locked: !sheetSeat?.locked })}
         onStepDown={() => invokeVoice({ action: 'seat-leave' })}
       />
