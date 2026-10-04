@@ -25,18 +25,18 @@ const RANKS = {
 export default function GiftRankFrame({ rank, avatar, name = 'Kullanıcı' }) {
   const decor = RANKS[rank];
   const portrait = (
-    <span className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-white/10">
+    <span className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-black/5">
       {avatar
         ? <Image src={avatar} alt={name} className="h-full w-full" fittingType="fill" draggable={false} />
-        : <span className="text-xs font-bold text-white/80">{name.trim().charAt(0)}</span>}
+        : <span className="text-xs font-bold text-[#6b7280]">{name.trim().charAt(0)}</span>}
     </span>
   );
 
-  if (!decor) return <span className="shrink-0 rounded-full border border-white/15">{portrait}</span>;
+  if (!decor) return <span className="shrink-0 rounded-full border border-black/10">{portrait}</span>;
 
   return (
     <span className={`relative shrink-0 rounded-full p-[2px] ${decor.ring} ${decor.glow}`}>
-      <span className="block rounded-full bg-black/50 p-[2px]">{portrait}</span>
+      <span className="block rounded-full bg-white p-[2px]">{portrait}</span>
       <span className={`absolute -bottom-1.5 left-1/2 -translate-x-1/2 rounded-full px-1.5 py-px text-[8px] font-black leading-none ${decor.badge}`}>
         {decor.label}
       </span>

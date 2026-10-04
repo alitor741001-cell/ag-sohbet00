@@ -4,11 +4,15 @@ import { ChevronDown, ChevronRight, Headphones, User, Settings, Shield, LogOut }
 import { base44 } from '@/api/base44Client';
 import { useCurrentUser, membershipActive } from '@/lib/useCurrentUser';
 import { Image } from '@/components/ui/image';
+import ProfileWalletCards from '@/components/profile/ProfileWalletCards';
+import GiftBoxPanel from '@/components/profile/GiftBoxPanel';
 
 export default function ProfileDropdown() {
   const { user } = useCurrentUser();
   const isActive = membershipActive(user);
   const [open, setOpen] = useState(false);
+  const [giftBoxOpen, setGiftBoxOpen] = useState(false);
+  const [wallet, setWallet] = useState(null);
   const ref = useRef(null);
 
   useEffect(() => {
@@ -16,6 +20,14 @@ export default function ProfileDropdown() {
     const onClick = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
     document.addEventListener('mousedown', onClick);
     return () => document.removeEventListener('mousedown', onClick);
+  }, [open]);
+
+  // Menü açıldığında coin ve elmas (hediye kutusu) değerleri tazelenir.
+  useEffect(() => {
+    if (!open) return;
+    base44.functions.invoke('gift-box', { action: 'summary' })
+      .then((response) => setWallet(response.data))
+      .catch(() => {});
   }, [open]);
 
   const logout = () => { base44.auth.logout('/login'); };
@@ -73,6 +85,13 @@ export default function ProfileDropdown() {
                 )}
               </div>
             </div>
+
+            {/* Cüzdan: coins ve elmas (hediye kutusu) */}
+            <ProfileWalletCards
+              coins={wallet?.coins ?? null}
+              giftScore={wallet?.received_score ?? null}
+              onOpenGiftBox={() => { setOpen(false); setGiftBoxOpen(true); }}
+            />
 
             {/* Menu items */}
             <div className="py-1">
@@ -134,6 +153,8 @@ export default function ProfileDropdown() {
             </div>
           </div>
       )}
+
+      <GiftBoxPanel open={giftBoxOpen} onClose={() => setGiftBoxOpen(false)} />
     </div>
   );
 }
