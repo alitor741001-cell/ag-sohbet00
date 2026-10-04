@@ -11,6 +11,7 @@ import { Mic, MicOff, Crown, X, Eye, ArrowLeft, UserMinus, MessageSquare, Trash2
 import { Image } from '@/components/ui/image';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import RoomSettingsMenu from '@/components/player/RoomSettingsMenu';
+import RoomVoiceStage from '@/components/player/RoomVoiceStage';
 
 
 import LiveKitDebugPanel from '@/components/player/LiveKitDebugPanel';
@@ -99,6 +100,8 @@ export default function WatchParty() {
   const isOwner = user?.id === room?.owner_id;
   const isMod = user?.role === 'admin' || user?.role === 'moderator';
   const canMod = isOwner || isMod || (room?.room_moderators || []).includes(user?.id);
+  // Sesli sohbet alanı açıkken film yerine sesli sohbet bölümü gösterilir.
+  const voiceMode = room?.voice_mode === true;
 
   useEffect(() => {
     if (ul || !user) return;
@@ -509,7 +512,7 @@ export default function WatchParty() {
 
   const toggleVoice = async () => {
     if (!canMod) { toast({ title: 'Yetkiniz yok', variant: 'destructive' }); return; }
-    try { await base44.functions.invoke('room-presence', { action: 'toggle-voice', room_id: id }); toast({ title: room.voice_enabled ? 'Sesli sohbet kapatıldı' : 'Sesli sohbet açıldı' }); }
+    try { await base44.functions.invoke('room-presence', { action: 'toggle-voice', room_id: id }); toast({ title: room.voice_mode ? 'Film odasına dönüldü' : 'Sesli sohbet alanı açıldı' }); }
     catch (e) { toast({ title: 'İşlem başarısız', description: e.response?.data?.error || e.message, variant: 'destructive' }); }
   };
 
@@ -679,7 +682,9 @@ export default function WatchParty() {
           );
         })()}
         <div className={`room-video-stage flex min-w-0 flex-1 items-center justify-center bg-black ${chatOpen || directOpen ? 'room-video-panel-open' : ''}`}>
-          {src ? <VideoPlayer src={src} title={room.movie_title} syncState={syncState} isOwner={canMod} isTimeSource={isOwner} onPlayPause={onPlayPause} onTimeUpdate={onTimeUpdate} onSeek={onSeek} onEnded={() => { if (isOwner) setMoviePickerOpen(true); }} fullscreenRef={playerWrapRef} watermark={user} suppressControls={chatOpen || directOpen || !!profileTarget} /> :
+          {voiceMode
+            ? <RoomVoiceStage participants={room.participants || []} voice={voice} userId={user?.id} viewerProfiles={viewerProfiles} />
+            : src ? <VideoPlayer src={src} title={room.movie_title} syncState={syncState} isOwner={canMod} isTimeSource={isOwner} onPlayPause={onPlayPause} onTimeUpdate={onTimeUpdate} onSeek={onSeek} onEnded={() => { if (isOwner) setMoviePickerOpen(true); }} fullscreenRef={playerWrapRef} watermark={user} suppressControls={chatOpen || directOpen || !!profileTarget} /> :
             <div className="text-muted-foreground text-sm p-6 text-center">Video kaynağı yok</div>}
         </div>
 

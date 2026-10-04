@@ -48,6 +48,10 @@
       "type": "boolean",
       "default": false
     },
+    "voice_mode": {
+      "type": "boolean",
+      "default": false
+    },
     "room_type": {
       "type": "string",
       "enum": [

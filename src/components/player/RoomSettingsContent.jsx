@@ -17,6 +17,8 @@ export default function RoomSettingsContent({ room, canMod, participants, roomMo
     else { await navigator.clipboard?.writeText(window.location.href); window.open('https://www.instagram.com/', '_blank', 'noopener,noreferrer'); }
   };
   const bannedUsers = room.banned_users || [];
+  // Sesli sohbet alanı açıkken buton film odasına dönüş yapar.
+  const voiceMode = room?.voice_mode === true;
 
   const handleUnban = async (userId, name) => {
     try { await onUnban(userId); toast({ title: `${name} için yasak kaldırıldı` }); }
@@ -32,10 +34,10 @@ export default function RoomSettingsContent({ room, canMod, participants, roomMo
           <button onClick={onSaveName} disabled={!roomName?.trim()} className="rounded-lg bg-primary px-3 text-xs font-bold text-primary-foreground disabled:opacity-50 shrink-0">KAYDET</button>
         </div>
         <button onClick={onPickMovie} className={button}><Film className="w-4 h-4 text-primary" /> Film Değiştir</button>
-        <button onClick={onVoice} className={`w-full flex items-center gap-3 rounded-xl border px-3 py-3 text-sm font-semibold transition-colors ${room.voice_enabled ? 'border-green-500/40 bg-green-500/10 text-green-400' : 'border-red-500/40 bg-red-500/10 text-red-400'}`}>
-          {room.voice_enabled ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
-          <span className="flex-1 text-left">{room.voice_enabled ? 'Sesli Sohbet: Açık' : 'Sesli Sohbet: Kapalı'}</span>
-          <span className={`w-10 h-5 rounded-full relative overflow-hidden transition-colors shrink-0 ${room.voice_enabled ? 'bg-green-500' : 'bg-red-500'}`}><span className={`absolute top-0.5 left-0 w-4 h-4 rounded-full bg-white transition-transform ${room.voice_enabled ? 'translate-x-5' : 'translate-x-0.5'}`} /></span>
+        <button onClick={onVoice} className={`w-full flex items-center gap-3 rounded-xl border px-3 py-3 text-sm font-semibold transition-colors ${voiceMode ? 'border-green-500/40 bg-green-500/10 text-green-400' : 'border-red-500/40 bg-red-500/10 text-red-400'}`}>
+          {voiceMode ? <Film className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+          <span className="flex-1 text-left">{voiceMode ? 'Film Odasına Dön' : 'Sesli Sohbet Alanı'}</span>
+          <span className={`w-10 h-5 rounded-full relative overflow-hidden transition-colors shrink-0 ${voiceMode ? 'bg-green-500' : 'bg-red-500'}`}><span className={`absolute top-0.5 left-0 w-4 h-4 rounded-full bg-white transition-transform ${voiceMode ? 'translate-x-5' : 'translate-x-0.5'}`} /></span>
         </button>
         <button onClick={onChat} className={`w-full flex items-center gap-3 rounded-xl border px-3 py-3 text-sm font-semibold transition-colors ${room.chat_enabled ? 'border-green-500/40 bg-green-500/10 text-green-400' : 'border-red-500/40 bg-red-500/10 text-red-400'}`}>
           {room.chat_enabled ? <MessageSquare className="w-4 h-4" /> : <MessageSquareOff className="w-4 h-4" />}

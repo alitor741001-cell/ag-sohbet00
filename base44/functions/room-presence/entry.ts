@@ -240,10 +240,13 @@ export default async function(req) {
       // Sayı tahtası ayarı açıksa odadan atılan kişinin sayısı sıfırlanır
       const kickedScores = scoresAfterRoomLeave(room, target_id);
       if (kickedScores) update.number_scores = kickedScores;
-      if (participants.length === 0) {
-        update.is_playing = false;
-        if (!room.is_personal) { update.status = 'closed'; update.recent_participants = []; }
+      // Odada kimse kalmadıysa oda tamamen silinir (kişisel odalar korunur).
+      if (participants.length === 0 && !room.is_personal) {
+        await base44.asServiceRole.entities.RoomMessage.deleteMany({ room_id }).catch(() => {});
+        await base44.asServiceRole.entities.Room.delete(room_id).catch(() => {});
+        return Response.json({ ok: true });
       }
+      if (participants.length === 0) update.is_playing = false;
       await base44.asServiceRole.entities.Room.update(room_id, update);
       return Response.json({ ok: true });
     }
@@ -285,10 +288,16 @@ export default async function(req) {
       return Response.json({ ok: true, hidden: !room.hidden });
     }
 
+    // Sesli sohbet alanı: açıkken oda sesli sohbet moduna geçer, tekrar basıldığında film odasına dönülür.
     if (action === 'toggle-voice') {
       if (!canModRoom) return Response.json({ error: 'yetkisiz' }, { status: 403 });
-      await base44.asServiceRole.entities.Room.update(room_id, { voice_enabled: !room.voice_enabled });
-      return Response.json({ ok: true, voice_enabled: !room.voice_enabled });
+      const nextVoiceMode = room.voice_mode !== true;
+      await base44.asServiceRole.entities.Room.update(room_id, { voice_mode: nextVoiceMode, voice_enabled: nextVoiceMode });
+      await base44.asServiceRole.entities.RoomMessage.create({
+        room_id, user_id: user.id, user_name: name,
+        text: nextVoiceMode ? `${name} sesli sohbet alanını açtı.` : `${name} film odasına döndü.`, type: 'system'
+      }).catch(() => {});
+      return Response.json({ ok: true, voice_mode: nextVoiceMode, voice_enabled: nextVoiceMode });
     }
 
     if (action === 'toggle-chat') {
@@ -411,7 +420,7 @@ export default async function(req) {
     const leavingParticipant = (room.participants || []).find((p) => p.user_id === user.id);
     const recentParticipants = rememberParticipant(room, leavingParticipant);
     let participants = (room.participants || []).filter((p) => p.user_id !== user.id);
-    // Oda sahibi çıkıyor ve katılımcı varsa: online kontrolü atla, sahipliği devret
+    // Oda sahibi çıkıyor ve katılımcı varsa: online kontrolü atla, oda açık kalsın
     const isOwnerLeavingWithParticipants = isOwner && participants.length > 0 && !room.is_personal;
     // Çevrim içi katılımcı yoksa odayı kapat (sadece sahipsiz çıkışlarda)
     // N+1 önleme: tüm katılımcıların presence kayıtlarını tek sorguda çek
@@ -435,7 +444,10 @@ export default async function(req) {
       if (room.is_personal) {
         await base44.asServiceRole.entities.Room.update(room_id, { participants, recent_participants: recentParticipants, is_playing: false, ...(leaveScores ? { number_scores: leaveScores } : {}) });
       } else {
-        await base44.asServiceRole.entities.Room.update(room_id, { participants, recent_participants: [], status: 'closed', is_playing: false, ...(leaveScores ? { number_scores: leaveScores } : {}) });
+        // Odada kimse kalmadı: oda ve sohbeti tamamen silinir.
+        await base44.asServiceRole.entities.RoomMessage.deleteMany({ room_id }).catch(() => {});
+        await base44.asServiceRole.entities.Room.delete(room_id).catch(() => {});
+        return Response.json({ ok: true });
       }
       const roleInfoLeave = getRoleInfo(me, labelOverrides);
       const roleMetaLeave = roleInfoLeave.label ? `{{ROLE|${roleInfoLeave.key || ''}|${roleInfoLeave.color || ''}|${roleInfoLeave.animation || 'pulse'}}}` : '';
@@ -454,17 +466,10 @@ export default async function(req) {
       }
       return Response.json({ ok: true });
     }
-    let owner_id = room.owner_id;
-    let owner_name = room.owner_name;
-    const ownershipTransferred = isOwner && participants.length > 0 && !room.is_personal;
-    if (ownershipTransferred) {
-      owner_id = participants[0].user_id;
-      owner_name = participants[0].name;
-    }
+    // Oda sahibi odadan çıksa bile sahiplik odayı açan kişide kalır.
     await base44.asServiceRole.entities.Room.update(room_id, {
-      participants, recent_participants: recentParticipants, owner_id, owner_name,
-      // Oynatma durumunu koru — yeni sahip kesintisiz devam etsin
-      is_playing: ownershipTransferred ? room.is_playing : (participants.length === 0 ? false : room.is_playing),
+      participants, recent_participants: recentParticipants,
+      is_playing: participants.length === 0 ? false : room.is_playing,
       last_sync: new Date().toISOString(),
       ...(leaveScores ? { number_scores: leaveScores } : {})
     });
@@ -483,20 +488,6 @@ export default async function(req) {
           text: `${profileMetaLeave2}${frameMetaLeave2}${roleMetaLeave2}${titlePrefixLeave2}${leaveName2}odadan ayrıldı.`, type: 'system'
         });
       }
-    if (ownershipTransferred) {
-      await base44.asServiceRole.entities.RoomMessage.create({
-        room_id, user_id: owner_id, user_name: owner_name,
-        text: `${owner_name} yeni oda sahibi oldu.`, type: 'system'
-      });
-      await upsertNotification(base44, {
-        user_id: owner_id,
-        title: 'Oda sahipliği size devredildi',
-        body: `${room.name} odasının yeni sahibi sizsiniz.`,
-        type: 'room_ownership',
-        link: `/oda/${room_id}`,
-        ref_id: room_id
-      });
-    }
     return Response.json({ ok: true });
   } catch (e) {
     return safeErrorResponse(e);

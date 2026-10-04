@@ -16,15 +16,16 @@ export default async function(req) {
     }
 
     const rooms = await base44.asServiceRole.entities.Room.filter({ status: 'active' }, '-created_date', 500);
-    let closedCount = 0;
-    let transferredCount = 0;
+    let deletedCount = 0;
 
     for (const room of rooms) {
       if (room.is_personal) continue; // Kişisel odaları kapatma
       const participants = room.participants || [];
       if (participants.length === 0) {
-        await base44.asServiceRole.entities.Room.update(room.id, { status: 'closed', is_playing: false, recent_participants: [] });
-        closedCount++;
+        // Kimsenin olmadığı oda ve sohbeti tamamen silinir.
+        await base44.asServiceRole.entities.RoomMessage.deleteMany({ room_id: room.id }).catch(() => {});
+        await base44.asServiceRole.entities.Room.delete(room.id).catch(() => {});
+        deletedCount++;
         continue;
       }
 
@@ -39,38 +40,14 @@ export default async function(req) {
       }
 
       if (onlineParticipantIds.length === 0) {
-        // Çevrim içi kimse yok — odayı kapat
-        await base44.asServiceRole.entities.Room.update(room.id, { status: 'closed', is_playing: false, recent_participants: [] });
-        closedCount++;
-      } else {
-        // Oda sahibi çevrim dışı mı? Çevrim içi katılımcıya devret
-        const ownerOnline = onlineParticipantIds.includes(room.owner_id);
-        if (!ownerOnline) {
-          const newOwner = participants.find((p) => onlineParticipantIds.includes(p.user_id));
-          if (newOwner) {
-            await base44.asServiceRole.entities.Room.update(room.id, {
-              owner_id: newOwner.user_id,
-              owner_name: newOwner.name,
-              last_sync: new Date().toISOString()
-            });
-            transferredCount++;
-            await base44.asServiceRole.entities.RoomMessage.create({
-              room_id: room.id, user_id: newOwner.user_id, user_name: newOwner.name,
-              text: `${newOwner.name} yeni oda sahibi oldu.`, type: 'system'
-            }).catch(() => {});
-            await base44.asServiceRole.entities.Notification.create({
-              user_id: newOwner.user_id,
-              title: 'Oda sahipliği size devredildi',
-              body: `${room.name} odasının yeni sahibi sizsiniz.`,
-              type: 'room',
-              link: `/oda/${room.id}`
-            }).catch(() => {});
-          }
-        }
+        // Çevrim içi kimse yok — oda ve sohbeti tamamen silinir (sahiplik devredilmez).
+        await base44.asServiceRole.entities.RoomMessage.deleteMany({ room_id: room.id }).catch(() => {});
+        await base44.asServiceRole.entities.Room.delete(room.id).catch(() => {});
+        deletedCount++;
       }
     }
 
-    return Response.json({ ok: true, checked: rooms.length, closed: closedCount, transferred: transferredCount });
+    return Response.json({ ok: true, checked: rooms.length, deleted: deletedCount });
   } catch (e) {
     return Response.json({ error: e.message }, { status: 500 });
   }
