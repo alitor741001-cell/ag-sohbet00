@@ -6,6 +6,12 @@ const COLUMNS = 5;
 const ROWS = 4;
 // Kayarken şeritte duran karo sayısı; döngü için ilk 4 karo sonda tekrarlanır.
 const STRIP = 14;
+// Oturma şeridi: sonuç karolarının üstünde bir pencere dolusu karo durur,
+// böylece sonuç yukarıdan kayarak yerine iner.
+const LAND_TILES = ROWS * 2;
+// Sütunlar soldan sağa sırayla oturur: kayma dalgası.
+const LAND_MS = 560;
+const LAND_STAGGER = 120;
 
 const randomSymbol = () => SYMBOL_IDS[Math.floor(Math.random() * SYMBOL_IDS.length)];
 
@@ -43,7 +49,7 @@ function Tile({ symbol, top, height, multiplier }) {
   );
 }
 
-/** Canlı makara alanı: dönerken şerit akar, durunca sunucudan gelen sonuç oturur. */
+/** Canlı makara alanı: dönerken şerit akar, sonuç sütun sütun kayarak yerine oturur. */
 export default function LuckyReels({ grid, multiValues, spinning, spinId }) {
   const strips = useMemo(
     () => Array.from({ length: COLUMNS }, () => buildStrip()),
@@ -73,15 +79,26 @@ export default function LuckyReels({ grid, multiValues, spinning, spinId }) {
                 ))}
               </div>
             ) : (
-              column.map((symbol, row) => (
-                <Tile
-                  key={`${row}-${symbol}`}
-                  symbol={symbol}
-                  top={(row / ROWS) * 100}
-                  height={100 / ROWS}
-                  multiplier={multiValues?.[col]?.[row] || 0}
-                />
-              ))
+              <div
+                key={`land-${spinId}-${col}`}
+                className="lucky-land absolute left-0 top-0 w-full"
+                // Sırayla oturur: soldan sağa kayan yerleşme.
+                style={{
+                  height: `${(LAND_TILES / ROWS) * 100}%`,
+                  animationDuration: `${LAND_MS}ms`,
+                  animationDelay: `${col * LAND_STAGGER}ms`,
+                }}
+              >
+                {[...column, ...strips[col].slice(0, ROWS)].map((symbol, index) => (
+                  <Tile
+                    key={index}
+                    symbol={symbol}
+                    top={(index / LAND_TILES) * 100}
+                    height={100 / LAND_TILES}
+                    multiplier={index < ROWS ? multiValues?.[col]?.[index] || 0 : 0}
+                  />
+                ))}
+              </div>
             )}
           </div>
         ))}
