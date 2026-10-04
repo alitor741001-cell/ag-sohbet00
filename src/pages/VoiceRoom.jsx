@@ -452,10 +452,9 @@ export default function VoiceRoom() {
     voice.toggleMute();
   };
 
-  // Boş koltuk kartından kendi mikrofonunu kapatma: mikrofon yayında değilse bir şey yapılmaz.
+  // Boş koltuk kartından mikrofon aç/kapa — koltuk boş olsa da çalışır.
   const muteMicFromSeat = () => {
     setSeatIndex(null);
-    if (!voice.active) return;
     voice.toggleMute();
   };
 
@@ -873,22 +872,22 @@ export default function VoiceRoom() {
               onClick={() => setViewerOpen(true)}
               title={`Odada ${participants.length} kişi var`}
               aria-label={`Odada ${participants.length} kişi var — kimler izliyor gör`}
-              className="flex h-11 min-w-11 items-center justify-center gap-1.5 rounded-full bg-white/10 px-3 transition-transform active:scale-95"
+              className="flex h-[clamp(38px,11vw,44px)] min-w-[clamp(38px,11vw,44px)] items-center justify-center gap-1.5 rounded-full bg-white/10 px-2.5 transition-transform active:scale-95 sm:px-3"
             >
               <Eye className="h-5 w-5 text-white/80" />
               <span className="text-sm font-bold tabular-nums">{participants.length}</span>
             </button>
-            <button type="button" onClick={() => setMenuOpen(true)} aria-label="Oda ayarları" className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 active:scale-95 transition-transform">
+            <button type="button" onClick={() => setMenuOpen(true)} aria-label="Oda ayarları" className="flex h-[clamp(38px,11vw,44px)] w-[clamp(38px,11vw,44px)] items-center justify-center rounded-full bg-white/10 active:scale-95 transition-transform">
               <MoreHorizontal className="h-5 w-5" />
             </button>
-            <button type="button" onClick={() => setExitOpen(true)} aria-label="Odadan çık" className="flex h-11 w-11 items-center justify-center rounded-full bg-red-600 active:scale-95 transition-transform">
+            <button type="button" onClick={() => setExitOpen(true)} aria-label="Odadan çık" className="flex h-[clamp(38px,11vw,44px)] w-[clamp(38px,11vw,44px)] items-center justify-center rounded-full bg-red-600 active:scale-95 transition-transform">
               <LogOut className="h-5 w-5" />
             </button>
           </div>
         </div>
       </header>
 
-      <div className="relative min-h-0 flex-1 overflow-y-auto px-3 pb-4 pt-1">
+      <div className="relative min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-3 pb-4 pt-1">
         {room?.password && (
           <p className="mb-3 flex items-center justify-center gap-1.5 text-[11px] text-amber-400">
             <Lock className="h-3 w-3" /> Şifreli oda

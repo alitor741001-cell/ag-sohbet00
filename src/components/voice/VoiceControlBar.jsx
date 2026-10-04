@@ -7,9 +7,11 @@ const TONES = {
   gift: 'bg-gradient-to-br from-pink-500 to-amber-400 text-white',
 };
 
+// Düğme boyutu ekranla ölçeklenir: dar telefonlarda da çubuk ekrana sığar,
+// dokunma alanı 40px'in altına inmez, geniş ekranlarda gereksiz büyümez.
 const SIZES = {
-  md: 'h-12 w-12',
-  lg: 'h-14 w-14',
+  md: 'h-[clamp(40px,12vw,48px)] w-[clamp(40px,12vw,48px)]',
+  lg: 'h-[clamp(44px,14vw,56px)] w-[clamp(44px,14vw,56px)]',
 };
 
 function RoundButton({ onClick, label, tone = 'gray', active, size = 'lg', children }) {

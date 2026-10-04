@@ -49,11 +49,10 @@ export default function VoiceSeatSheet({ open, onClose, seat, index, canMod, myI
           disabled={locked && !canMod}
           onClick={() => { close(); onTakeSeat(); }}
         />
-        {/* Koltuk boş olsa da kişi kendi mikrofonunu kapatabilir. */}
+        {/* Koltuk boş olsa da mikrofon açılıp kapatılabilir. */}
         <VoiceMenuButton
-          icon={MicOff}
-          label={micActive ? 'Mikrofonu kapat' : 'Mikrofon zaten kapalı'}
-          disabled={!micActive}
+          icon={micActive ? MicOff : Mic}
+          label={micActive ? 'Mikrofonu kapat' : 'Mikrofonu aç'}
           onClick={() => { close(); onMuteMic(); }}
         />
         {canMod && (

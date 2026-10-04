@@ -1748,3 +1748,26 @@ button:active, nav a:active, a[role="button"]:active {
   .gift-bounce, .gift-float, .gift-wiggle, .gift-swing, .gift-pulse, .gift-spin, .gift-heartbeat, .gift-tilt,
   .gift-shine::before, .gift-shine::after { animation: none; }
 }
+
+/* === TÜM CİHAZLAR: OKUNURLUK, ÖLÇEK VE TAŞMA GÜVENLİĞİ === */
+/* Mobil tarayıcı yazıyı kendi başına büyütüp küçültmez: düzen her cihazda aynı kalır. */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Okunamayacak kadar küçük etiket kalmaz:
+   6-8px metin 10px'e, 9-10px metin 11px'e sabitlenir — telefonda da tablette de okunur. */
+[class*="text-[6px]"], [class*="text-[7px]"], [class*="text-[8px]"] { font-size: 0.625rem; }
+[class*="text-[9px]"], [class*="text-[10px]"] { font-size: 0.6875rem; }
+
+/* Form alanları sistem yazı tipini izler — iOS ve Android'de aynı görünür. */
+input, textarea, select, button { font-family: inherit; }
+
+/* Adres çubuğu açılıp kapanınca içerik kırpılmaz: tam ekran yükseklikleri dvh'e uyarlanır.
+   Eski tarayıcılarda dvh bulunmazsa kural devreye girmez, vh ile çalışmaya devam eder. */
+@supports (height: 100dvh) {
+  .min-h-screen { min-height: 100dvh; }
+  .h-screen { height: 100dvh; }
+  .max-h-screen { max-height: 100dvh; }
+}

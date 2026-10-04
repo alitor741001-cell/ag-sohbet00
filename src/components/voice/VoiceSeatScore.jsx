@@ -6,12 +6,15 @@ import { formatScore, scoreTier } from '@/components/voice/scoreTier';
  * yalnızca rozetin rengi hediye seviyesine göre değişir.
  * Her hücre aynı genişlikte kaldığı için koltuk ızgarası kaymaz.
  */
-export default function VoiceSeatScore({ value = 0 }) {
+// Şerit genişliği koltuk boyutuna göre: koltuk ne kadar küçükse şerit de o kadar dar kalır.
+const WIDTH = { xs: 'w-[42px]', sm: 'w-[52px]', md: 'w-[68px]', lg: 'w-[88px]' };
+
+export default function VoiceSeatScore({ value = 0, size = 'md' }) {
   const shown = Math.max(1, Math.round(Number(value) || 0));
 
   return (
     <span
-      className="voice-gift-score mt-1 flex w-[56px] items-center justify-center"
+      className={`voice-gift-score mt-1 flex ${WIDTH[size] || WIDTH.md} items-center justify-center`}
       data-score-tier={scoreTier(shown)}
       aria-label={`${shown.toLocaleString('tr-TR')} sayaç`}
     >

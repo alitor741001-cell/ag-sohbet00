@@ -4,12 +4,14 @@ import { isHiddenName } from '@/lib/hiddenUser';
 
 // Her koltuk aynı boyutta sabit bir portre alanı kullanır: profil boyutu değişse de
 // ızgara kaymaz, çerçeveler komşu koltuğa taşmaz.
-const CELL = { sm: 'h-[52px] w-[52px]', md: 'h-[68px] w-[68px]' };
-const FACE = { sm: 'h-12 w-12', md: 'h-14 w-14' };
-const RING = { sm: 'h-12 w-12', md: 'h-14 w-14' };
-const EMPTY = { sm: 'h-12 w-12', md: 'h-14 w-14' };
-const FRAME = { sm: 'xs', md: 'sm' };
-const BADGE = { sm: 'translate-x-[5px] translate-y-[5px]', md: 'translate-x-[9px] translate-y-[9px]' };
+const CELL = { xs: 'h-[42px] w-[42px]', sm: 'h-[52px] w-[52px]', md: 'h-[68px] w-[68px]', lg: 'h-[88px] w-[88px]' };
+const FACE = { xs: 'h-10 w-10', sm: 'h-12 w-12', md: 'h-14 w-14', lg: 'h-20 w-20' };
+const RING = { xs: 'h-10 w-10', sm: 'h-12 w-12', md: 'h-14 w-14', lg: 'h-20 w-20' };
+const EMPTY = { xs: 'h-10 w-10', sm: 'h-12 w-12', md: 'h-14 w-14', lg: 'h-20 w-20' };
+const FRAME = { xs: '2xs', sm: 'xs', md: 'sm', lg: 'md' };
+const BADGE = { xs: 'translate-x-[3px] translate-y-[3px]', sm: 'translate-x-[5px] translate-y-[5px]', md: 'translate-x-[9px] translate-y-[9px]', lg: 'translate-x-[12px] translate-y-[12px]' };
+// İsim alanı koltuk genişliğini aşmaz: uzun isimler satırı yana taşırmaz.
+const NAME = { xs: 'max-w-[42px]', sm: 'max-w-[52px]', md: 'max-w-[68px]', lg: 'max-w-[88px]' };
 const FRAME_SCALE = 0.78;
 
 /** Tek koltuk: boş koltukta + ve numara, dolu koltukta profil görseli ve isim. */
@@ -19,6 +21,7 @@ export default function VoiceSeat({ seat, index, size = 'md', speaking, isSelf, 
   const ring = RING[size] || RING.md;
   const emptyCircle = EMPTY[size] || EMPTY.md;
   const badge = BADGE[size] || BADGE.md;
+  const nameWidth = NAME[size] || NAME.md;
 
   if (!seat?.user_id) {
     return (
@@ -58,7 +61,7 @@ export default function VoiceSeat({ seat, index, size = 'md', speaking, isSelf, 
           <span className="gift-pop pointer-events-none absolute -top-5 left-1/2 z-30 -translate-x-1/2 text-lg leading-none">{gifted}</span>
         )}
       </span>
-      <span className="flex max-w-[68px] items-center gap-0.5 truncate text-[10px] leading-none" style={{ color: gifted ? accent : '#ffffff' }}>
+      <span className={`flex ${nameWidth} items-center gap-0.5 truncate text-[10px] leading-none`} style={{ color: gifted ? accent : '#ffffff' }}>
         {!hidden && isOwner && <Crown className="h-3 w-3 shrink-0 text-amber-400" />}
         {!hidden && !isOwner && isMod && <Shield className="h-3 w-3 shrink-0 text-sky-400" />}
         <span className={`truncate ${hidden ? 'hidden-user-name' : ''}`}>{isSelf ? 'Sen' : seat.name}</span>

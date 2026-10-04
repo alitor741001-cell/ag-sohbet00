@@ -40,7 +40,7 @@ export default function VoiceProfileSheet({ open, onClose, userId, name, avatar,
     <div className="fixed inset-0 z-[250] flex items-center justify-center bg-black/70 p-4 backdrop-blur-[2px]" onClick={onClose}>
       {/* Profil fotoğrafı kartın içinde tam görünür; bölümler ince çizgilerle ayrılır. */}
       <div
-        className="relative w-full max-w-[340px] overflow-hidden rounded-[26px] bg-gradient-to-b from-[#2E2622] to-[#1D1815] shadow-[0_20px_55px_-14px_rgba(0,0,0,0.9)] ring-1 ring-[#D9C496]/30"
+        className="relative max-h-[86vh] w-full max-w-[340px] overflow-y-auto rounded-[26px] bg-gradient-to-b from-[#2E2622] to-[#1D1815] shadow-[0_20px_55px_-14px_rgba(0,0,0,0.9)] ring-1 ring-[#D9C496]/30 sm:max-w-[390px] lg:max-w-[430px]"
         onClick={(event) => event.stopPropagation()}
       >
         <span className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-[#E5484D]/20 to-transparent" />
