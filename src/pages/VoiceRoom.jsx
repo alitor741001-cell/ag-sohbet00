@@ -22,6 +22,7 @@ import VoiceRoomBubble from '@/components/voice/VoiceRoomBubble';
 import RoomDirectMessages from '@/components/player/RoomDirectMessages';
 import GamePanel from '@/components/games/GamePanel';
 import GiftBoard from '@/components/voice/GiftBoard';
+import GiftSendButton from '@/components/voice/GiftSendButton';
 import VoiceGiftOverlay from '@/components/voice/VoiceGiftOverlay';
 import useGiftAlerts from '@/hooks/useGiftAlerts';
 import { useGiftBalance, useGiftCatalog } from '@/hooks/useGiftCatalog';
@@ -52,10 +53,10 @@ export default function VoiceRoom() {
   const [exitOpen, setExitOpen] = useState(false);
   const [gamesOpen, setGamesOpen] = useState(false);
   const [giftOpen, setGiftOpen] = useState(false);
+  const [giftSendActive, setGiftSendActive] = useState(false);
   const [giftId, setGiftId] = useState(null);
   const [selectedIds, setSelectedIds] = useState([]);
   const [gifted, setGifted] = useState({});
-  const [sending, setSending] = useState(false);
 
   const keyboardInset = useKeyboardInset();
 
@@ -72,6 +73,8 @@ export default function VoiceRoom() {
   const keepSeatRef = useRef(false);
   const giftFlashRef = useRef(null);
   const giftIdleRef = useRef(null);
+  const giftQueueRef = useRef(0);
+  const giftBusyRef = useRef(false);
 
   const seats = useMemo(() => (Array.isArray(room?.seats) ? room.seats : []), [room?.seats]);
   const myInvite = useMemo(
@@ -439,9 +442,23 @@ export default function VoiceRoom() {
 
   useEffect(() => () => window.clearTimeout(giftFlashRef.current), []);
 
-  // Hediye kutusu: art arda gönderim boyunca açık kalır, gönderim durunca kapanır.
+  // Gönder tuşu: son basıştan 5 saniye sonra ortadan kaybolur, seçim temizlenir.
+  const armGiftHide = useCallback(() => {
+    window.clearTimeout(giftIdleRef.current);
+    giftIdleRef.current = window.setTimeout(() => {
+      setGiftOpen(false);
+      setGiftSendActive(false);
+      setSelectedIds([]);
+    }, 5000);
+  }, []);
+
+  // Hediye kutusunu aç; elle kapatınca gönder tuşu da gizlenir.
   const openGifts = useCallback(() => { window.clearTimeout(giftIdleRef.current); setGiftOpen(true); }, []);
-  const closeGifts = useCallback(() => { window.clearTimeout(giftIdleRef.current); setGiftOpen(false); }, []);
+  const closeGifts = useCallback(() => {
+    window.clearTimeout(giftIdleRef.current);
+    setGiftOpen(false);
+    setGiftSendActive(false);
+  }, []);
 
   useEffect(() => () => window.clearTimeout(giftIdleRef.current), []);
 
@@ -451,44 +468,51 @@ export default function VoiceRoom() {
     setSelectedIds((prev) => (prev.includes(userId) ? prev.filter((value) => value !== userId) : [...prev, userId]));
   }, []);
 
-  // Tekli/toplu gönderim: K bakiyesi düşer, her alıcı ayrı kaydedilir.
-  const sendGift = async (gift) => {
-    if (!gift || !selectedIds.length || sending) return;
-    setSending(true);
-    try {
-      const response = await base44.functions.invoke('voice-room', {
-        room_id: id, action: 'gift-send', gift_id: gift.id, target_ids: selectedIds,
-      });
-      const data = response.data;
-      if (typeof data.coins === 'number') setCoins(data.coins);
-      setRoom((prev) => ({ ...prev, number_board: data.number_board, number_scores: data.number_scores }));
-      markGiftSeen((data.messages || []).map((message) => message.id));
-      const recipientIds = (data.recipients || []).map((item) => item.user_id);
-      flashGifted(recipientIds, data.gift?.emoji);
-      pushGiftAlert({
-        key: `send-${Date.now()}`,
-        giftId: data.gift?.id,
-        giftName: data.gift?.name || gift.name,
-        emoji: data.gift?.emoji || gift.emoji,
-        imageUrl: data.gift?.image_url || '',
-        kValue: Number(data.gift?.k_value) || 0,
-        totalK: Number(data.total_k) || 0,
-        count: Number(data.count) || recipientIds.length,
-        senderName: '',
-        recipientName: (data.recipients || []).map((item) => item.name).join(', '),
-        toId: '',
-      });
-      // Kutu açık kalır: 5 saniye içinde tekrar basılırsa yeniden gönderir, basılmazsa kendiliğinden kapanır.
-      window.clearTimeout(giftIdleRef.current);
-      giftIdleRef.current = window.setTimeout(() => {
-        setGiftOpen(false);
-        setSelectedIds([]);
-      }, 5000);
-    } catch (error) {
-      toast({ title: 'Hediye gönderilemedi', description: error?.response?.data?.error || error.message, variant: 'destructive' });
-    } finally {
-      setSending(false);
+  // Tek gönderim: bakiye düşer, alıcı başına kayıt ve sohbet satırı oluşur.
+  const sendGiftOnce = async (gift, ids) => {
+    const response = await base44.functions.invoke('voice-room', {
+      room_id: id, action: 'gift-send', gift_id: gift.id, target_ids: ids,
+    });
+    const data = response.data;
+    if (typeof data.coins === 'number') setCoins(data.coins);
+    setRoom((prev) => ({ ...prev, number_board: data.number_board, number_scores: data.number_scores }));
+    markGiftSeen((data.messages || []).map((message) => message.id));
+    const recipientIds = (data.recipients || []).map((item) => item.user_id);
+    flashGifted(recipientIds, data.gift?.emoji);
+    pushGiftAlert({
+      key: `send-${Date.now()}`,
+      giftId: data.gift?.id,
+      giftName: data.gift?.name || gift.name,
+      emoji: data.gift?.emoji || gift.emoji,
+      imageUrl: data.gift?.image_url || '',
+      kValue: Number(data.gift?.k_value) || 0,
+      totalK: Number(data.total_k) || 0,
+      count: Number(data.count) || recipientIds.length,
+      senderName: '',
+      recipientName: (data.recipients || []).map((item) => item.name).join(', '),
+      toId: '',
+    });
+  };
+
+  // Gönder tuşu: kutu kapanır ama tuş kalır; her basış sıraya girer ve takılmadan gönderilir.
+  const pressGift = async () => {
+    if (!selectedGift || !selectedIds.length) return;
+    setGiftOpen(false);
+    setGiftSendActive(true);
+    armGiftHide();
+    giftQueueRef.current = Math.min(giftQueueRef.current + 1, 5);
+    if (giftBusyRef.current) return;
+    giftBusyRef.current = true;
+    while (giftQueueRef.current > 0) {
+      giftQueueRef.current -= 1;
+      try {
+        await sendGiftOnce(selectedGift, selectedIds);
+      } catch (error) {
+        giftQueueRef.current = 0;
+        toast({ title: 'Hediye gönderilemedi', description: error?.response?.data?.error || error.message, variant: 'destructive' });
+      }
     }
+    giftBusyRef.current = false;
   };
 
   if (loading) {
@@ -781,12 +805,16 @@ export default function VoiceRoom() {
         selectedIds={selectedIds}
         giftId={giftId}
         coins={coins}
-        sending={sending}
         onSelectGift={setGiftId}
         onTogglePerson={toggleGiftPerson}
         onSelectAll={() => setSelectedIds(giftPeople.map((person) => person.user_id))}
         onClear={() => setSelectedIds([])}
-        onSend={sendGift}
+      />
+
+      <GiftSendButton
+        visible={giftOpen || giftSendActive}
+        disabled={!selectedGift || !selectedIds.length}
+        onSend={pressGift}
       />
 
       <VoiceGiftOverlay alert={overlayAlert} tiers={tiers} />

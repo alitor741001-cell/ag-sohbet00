@@ -6,7 +6,7 @@ import GiftRecipientRow from '@/components/voice/GiftRecipientRow';
 import { K_UNIT, coinToK, formatCoins, formatK, formatPrice, tierForK, toneColor } from '@/lib/giftTone';
 
 /** Hediye Tahtası: kategoriler, hediyeler (K değeriyle) ve çoklu alıcı seçimi. */
-export default function GiftBoard({ open, onClose, gifts = [], tiers = [], people = [], selectedIds = [], giftId, coins, sending, onSelectGift, onTogglePerson, onSelectAll, onClear, onSend }) {
+export default function GiftBoard({ open, onClose, gifts = [], tiers = [], people = [], selectedIds = [], giftId, coins, onSelectGift, onTogglePerson, onSelectAll, onClear }) {
   const [category, setCategory] = useState('Tümü');
 
   useEffect(() => { if (open) setCategory('Tümü'); }, [open]);
@@ -26,7 +26,6 @@ export default function GiftBoard({ open, onClose, gifts = [], tiers = [], peopl
   // Fiyat karşılaştırması coin üzerinden yapılır: 1K altındaki hediyeler de doğru hesaplanır.
   const totalCoins = (Number(gift?.k_value) || 0) * K_UNIT * count;
   const insufficient = !!gift && count > 0 && coins !== null && coins !== undefined && totalCoins > coins;
-  const canSend = !!gift && count > 0 && !insufficient && !sending;
 
   return (
     <VoiceSheet open={open} onClose={onClose} title="Hediye Tahtası">
@@ -87,25 +86,13 @@ export default function GiftBoard({ open, onClose, gifts = [], tiers = [], peopl
         </p>
       )}
 
-      {/* Sağ altta yuvarlak gönder düğmesi — slotun yeşil SPIN düğmesi işçiliği, üzerinde yalnızca "Gönder" yazar. */}
-      <div className="sticky bottom-1 z-20 mt-3 flex items-end justify-between gap-3">
-        <p className="min-w-0 flex-1 text-[10px] leading-tight text-white/45">
-          {gift
-            ? (count > 0
-              ? `${gift.name} · ${formatPrice(totalK)} — her basışta tekrar gider, 5 sn basmazsan kutu kapanır.`
-              : `${gift.name} seçildi — alıcı seç.`)
-            : 'Önce bir hediye seç.'}
-        </p>
-        <button
-          type="button"
-          disabled={!canSend}
-          onClick={() => onSend(gift)}
-          aria-label="Gönder"
-          className="slot-spin flex h-[4.5rem] w-[4.5rem] shrink-0 items-center justify-center rounded-full text-[11px] font-black leading-none text-black/80 transition-transform active:scale-90 disabled:opacity-40"
-        >
-          Gönder
-        </button>
-      </div>
+      <p className="mt-3 pb-20 text-center text-[10px] leading-tight text-white/45">
+        {gift
+          ? (count > 0
+            ? `${gift.name} · ${formatPrice(totalK)} — sağ alttaki yeşil Gönder’e bastıkça tekrar gönderir.`
+            : `${gift.name} seçildi — alıcı seç.`)
+          : 'Önce bir hediye seç, sonra sağ alttaki yeşil Gönder’e bas.'}
+      </p>
     </VoiceSheet>
   );
 }
