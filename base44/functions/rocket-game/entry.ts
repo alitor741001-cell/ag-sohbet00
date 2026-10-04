@@ -86,6 +86,30 @@ async function latestRound(base44) {
   return list[0] || null;
 }
 
+// Tur durumu canlı kayda yayınlanır: oyuncular yoklama beklemeden turu, çakılma
+// anını ve yeni turu aynı anda görür. Çakılma noktası yalnızca çakıldıktan sonra
+// yazılır — tur sürerken istemciye görünmez.
+async function publishLive(base44, round, history) {
+  try {
+    const found = await base44.asServiceRole.entities.RocketLive.filter({ key: 'live' }, '-created_date', 1);
+    const payload = {
+      key: 'live',
+      round_no: round.round_no,
+      status: round.status,
+      phase_ends_at: round.phase_ends_at,
+      started_at: round.started_at,
+      ended_at: round.ended_at || '',
+      crash_at: round.status === 'crashed' ? round.crash_at : 0,
+    };
+    if (Array.isArray(history)) payload.history = history;
+    if (found[0]) await base44.asServiceRole.entities.RocketLive.update(found[0].id, payload);
+    else await base44.asServiceRole.entities.RocketLive.create({ ...payload, history: history || [] });
+  } catch (error) {
+    // Canlı yayın yazılamazsa oyun seyrek yoklamayla akmaya devam eder.
+    console.error('Rocket live publish failed:', error.message);
+  }
+}
+
 // Tur durum makinesi: her istekte ilerletilir. Çakılma anı sunucuda belirlenir,
 // crash_at yalnız çakıldıktan sonra istemciye gösterilir (hile önlemi).
 async function ensureRound(base44) {
@@ -101,10 +125,13 @@ async function ensureRound(base44) {
       started_at: new Date(now + BETTING_MS).toISOString(),
       crash_at: randomCrash(),
     });
+    // Yeni tur anında yayınlanır: koltuktaki herkes turu aynı anda görür.
+    await publishLive(base44, round);
   }
 
   if (round.status === 'betting' && now >= new Date(round.phase_ends_at).getTime()) {
     round = await base44.asServiceRole.entities.RocketRound.update(round.id, { status: 'running' });
+    await publishLive(base44, round);
   }
 
   if (round.status === 'running') {
@@ -136,6 +163,9 @@ async function ensureRound(base44) {
         status: 'crashed',
         ended_at: new Date(now).toISOString(),
       });
+      // Çakılma anı ve geçmiş tek yazımla yayınlanır: roket her ekranda birlikte patlar.
+      const recent = await base44.asServiceRole.entities.RocketRound.filter({ status: 'crashed' }, '-round_no', 12);
+      await publishLive(base44, round, recent.map((row) => ({ round_no: row.round_no, crash_at: row.crash_at })));
     }
   }
 

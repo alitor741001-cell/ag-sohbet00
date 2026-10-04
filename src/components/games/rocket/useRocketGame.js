@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { base44 } from '@/api/base44Client';
 import rocketRequests from '@/components/games/rocket/rocketRequests';
 import {
   multiplierAt,
@@ -9,18 +10,21 @@ import {
   ROCKET_AUTO_LEVELS,
 } from './rocketConfig';
 
-// Uçuş boyunca sık tazelenir: çakılma anı gecikmeden görünür. Bahis aşamasında
-// geri sayım yerel saatle aktığı için seyrek yoklama yeterlidir.
-const POLL_FLIGHT = 1200;
-// Çakılma sonrası yeni tur kısa sürede yakalanır: başa sarma anında görünür.
-const POLL_CRASHED = 700;
-const POLL_BETTING = 7000;
-// Sunucu reddi sonrası yenilemeler bekler; butonlar beklemez.
-const POLL_COOLDOWN = 15000;
+// Tur durumu canlı yayından gelir; yoklama yalnızca çakılma anını yakalamak
+// için çalışır. Seyrek tutulur ki istek bütçesi oyuncunun basışlarına kalsın.
+const POLL_FLIGHT = 4000;
+// Çakılma sonrası yeni tur yoklanır (tur arası bekleme kadar sonra).
+const POLL_CRASHED = 2200;
+const POLL_BETTING = 9000;
+// Hata sonrası yenilemeler kısa süre bekler; butonlar beklemez.
+const POLL_COOLDOWN = 6000;
 // Uçuş sırasında bekleme kısa tutulur: çakılma anı ve gerçek çarpan yakalanır.
-const POLL_COOLDOWN_FLIGHT = 2500;
+const POLL_COOLDOWN_FLIGHT = 3000;
 // Görsel uçuş, son sunucu onayından en fazla bu kadar ileri gidebilir.
-const FLIGHT_LEAD_MS = 2500;
+const FLIGHT_LEAD_MS = 4500;
+// Onay gecikirse roket donmaz: kalan gecikmenin dörtte biri kadar süzülür.
+const FLIGHT_CREEP_MS = 4000;
+const FLIGHT_CREEP_RATE = 0.25;
 const CLOCK_TICK = 50;
 // Otomatik hedef ok tuşlarına hızlı basmak tek istek üretir.
 const AUTO_SAVE_MS = 600;
@@ -205,6 +209,40 @@ export default function useRocketGame() {
     return () => document.removeEventListener('visibilitychange', onVisible);
   }, []);
 
+  // Tur, çakılma anı ve yeni tur canlı yayından gelir: oyuncular yoklamayı
+  // beklemez, odadaki herkes aynı anda görür. Yayın gelince cüzdan ve bahisler
+  // tek istekle arkadan tazelenir.
+  useEffect(() => {
+    const unsubscribe = base44.entities.RocketLive.subscribe((event) => {
+      const live = event?.data;
+      if (!live || typeof live.round_no !== 'number') return;
+      setData((prev) => {
+        if (!prev) return prev;
+        // Gecikmiş yayın turu geriye almaz: eski tur ve eski aşama yok sayılır.
+        const rank = { betting: 0, running: 1, crashed: 2 };
+        if (live.round_no < (prev.round?.round_no ?? 0)) return prev;
+        if (live.round_no === prev.round?.round_no && rank[live.status] < rank[prev.round?.status]) return prev;
+        const next = { ...prev };
+        next.round = {
+          round_no: live.round_no,
+          status: live.status,
+          phase_ends_at: live.phase_ends_at,
+          started_at: live.started_at,
+          crash_at: live.status === 'crashed' ? live.crash_at : undefined,
+        };
+        if (Array.isArray(live.history) && live.history.length) next.history = live.history;
+        // Yeni tur: bahis listesi o turun kayıtlarıyla tazelenir.
+        if (prev.round?.round_no !== live.round_no) next.bets = [];
+        return next;
+      });
+      roundNoRef.current = live.round_no;
+      phaseRef.current = live.status;
+      launchAtRef.current = live.phase_ends_at ? new Date(live.phase_ends_at).getTime() : null;
+      pollNowRef.current();
+    });
+    return unsubscribe;
+  }, []);
+
   useEffect(() => {
     const id = setInterval(() => setClock(Date.now()), CLOCK_TICK);
     return () => clearInterval(id);
@@ -265,7 +303,9 @@ export default function useRocketGame() {
         // Reconcile interrupted credits even if the next refresh is a new round.
         needsRecoveryRef.current = true;
         cooldownRef.current = Date.now() + POLL_COOLDOWN;
-        setMessage(gameMessage(e));
+        // Kural reddi oyuncuya söylenir; yoğunlukta basışın karşılıksız kalmadığı
+        // bildirilir ki oyuncu tekrar denesin.
+        setMessage(gameMessage(e) || (options.slot ? 'Bağlantı yoğun — tekrar dene.' : ''));
         return null;
       } finally {
         busyRef.current.delete(key);
@@ -336,9 +376,13 @@ export default function useRocketGame() {
   const round = data?.round;
   const sinceSync = clock - fetchedAtRef.current;
   const serverNow = serverNowRef.current + sinceSync;
-  // Görsel uçuş sadece son onaydan bu yana ilerler: sekme arka planda kalır ya
-  // da yoklama gecikirse roket, gerçek çakılma noktasını aşan bir çarpan göstermez.
-  const displayNow = serverNowRef.current + Math.min(sinceSync, FLIGHT_LEAD_MS);
+  // Görsel uçuş sadece son onaydan bu yana ilerler: yoklama gecikirse roket,
+  // gerçek çakılma noktasını aşan bir çarpan göstermez. Gecikme uzarsa hız
+  // düşer ama durmaz — roket ekranda her koşulda hareket eder.
+  const lead = sinceSync <= FLIGHT_LEAD_MS
+    ? sinceSync
+    : FLIGHT_LEAD_MS + Math.min(sinceSync - FLIGHT_LEAD_MS, FLIGHT_CREEP_MS) * FLIGHT_CREEP_RATE;
+  const displayNow = serverNowRef.current + lead;
   const launchAt = round?.phase_ends_at ? new Date(round.phase_ends_at).getTime() : null;
   // Geri sayım 0'a indiği saniyede uçuş başlar; sunucu yanıtı beklenmez.
   const phase = phaseAt(round?.status, launchAt, serverNow);

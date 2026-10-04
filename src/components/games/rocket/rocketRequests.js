@@ -8,8 +8,9 @@ export default function rocketRequests(payload) {
   const key = JSON.stringify(payload);
   if (pending.has(key)) return pending.get(key);
   const run = async () => {
-    // Refreshes do not retry: the next scheduled refresh reconciles state.
-    const retries = ['cashout', 'setAutoValue', 'ledger'].includes(action) ? 2 : 0;
+    // Bahis ve çekilme yoğunlukta tekrar denenir: oyuncunun basışı karşılıksız kalmaz.
+    // Yoklamalar tekrar denenmez; sıradaki tazeleme durumu zaten eşitler.
+    const retries = ['cashout', 'bet', 'setAutoValue', 'ledger'].includes(action) ? 2 : 0;
     for (let attempt = 0; ; attempt += 1) {
       try {
         return await enqueueRocketRequest(action, async () => {
@@ -19,8 +20,9 @@ export default function rocketRequests(payload) {
           } catch (error) {
             if (error?.response?.status === 429) {
               const seconds = Number(error.response.headers?.['retry-after']);
+              // Bekleme kısa tutulur: uzun bir blok oyunu ekranda donmuş gösterir.
               deferRocketRequests(Number.isFinite(seconds) && seconds > 0
-                ? Math.min(120000, seconds * 1000) : 15000 + Math.random() * 3000);
+                ? Math.min(20000, seconds * 1000) : 8000 + Math.random() * 3000);
             }
             throw error;
           }
