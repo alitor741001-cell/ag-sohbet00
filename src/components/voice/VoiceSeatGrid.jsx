@@ -27,6 +27,7 @@ export default function VoiceSeatGrid({ seats = [], userId, ownerId, moderators 
                 {boardActive && occupied && (
                   <VoiceSeatScore
                     value={scores[seat.user_id] || 0}
+                    compact={size === 'sm'}
                   />
                 )}
               </div>

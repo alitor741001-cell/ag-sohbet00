@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Armchair, Eye, Loader2, Lock, LogOut, MessageSquare, Mic, MicOff, Minimize2, MoreHorizontal, Radio, RotateCcw, Shield, ShieldAlert, Unlock, UserMinus, UserPlus, UserRound } from 'lucide-react';
+import { Armchair, Coins, Eye, Loader2, Lock, LogOut, MessageSquare, Mic, MicOff, Minimize2, MoreHorizontal, Radio, Shield, ShieldAlert, Unlock, UserMinus, UserPlus, UserRound } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useVoiceChat } from '@/hooks/useVoiceChat';
 import useKeyboardInset from '@/hooks/useKeyboardInset';
+import useSlotCoins from '@/hooks/useSlotCoins';
 import { useToast } from '@/components/ui/use-toast';
 import VoiceSeatGrid from '@/components/voice/VoiceSeatGrid';
 import VoiceGiftScoreboard from '@/components/voice/VoiceGiftScoreboard';
@@ -24,7 +25,6 @@ import RoomDirectMessages from '@/components/player/RoomDirectMessages';
 import GamePanel from '@/components/games/GamePanel';
 import VoiceGiftSheet from '@/components/voice/VoiceGiftSheet';
 import VoiceGiftOverlay from '@/components/voice/VoiceGiftOverlay';
-import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 export default function VoiceRoom() {
   const { id } = useParams();
@@ -52,9 +52,9 @@ export default function VoiceRoom() {
   const [gamesOpen, setGamesOpen] = useState(false);
   const [giftOpen, setGiftOpen] = useState(false);
   const [giftAlert, setGiftAlert] = useState(null);
-  const [boardResetOpen, setBoardResetOpen] = useState(false);
 
   const keyboardInset = useKeyboardInset();
+  const { coins, refresh: refreshCoins } = useSlotCoins();
 
   const joinedRef = useRef(false);
   const joinTriedRef = useRef(false);
@@ -92,6 +92,18 @@ export default function VoiceRoom() {
     });
     return map;
   }, [room?.number_scores]);
+
+  // Hediye gönderilebilecek kişiler: koltukta oturanlar ve odadaki diğer kişiler.
+  const giftPeople = useMemo(() => {
+    const map = new Map();
+    seats.forEach((seat) => {
+      if (seat.user_id && seat.user_id !== user?.id) map.set(seat.user_id, { user_id: seat.user_id, name: seat.name || 'Kullanıcı' });
+    });
+    participants.forEach((person) => {
+      if (person.user_id !== user?.id && !map.has(person.user_id)) map.set(person.user_id, { user_id: person.user_id, name: person.name || 'Kullanıcı' });
+    });
+    return [...map.values()];
+  }, [seats, participants, user?.id]);
 
   const voice = useVoiceChat({
     roomId: id,
@@ -383,11 +395,11 @@ export default function VoiceRoom() {
     }
   }, [id, toast]);
 
-  // Hediye gönder — odaya canlı bildirim düşer, herkes aynı anda görür.
-  const sendGift = async (giftId) => {
+  // Hediye gönder — seçilen kişiye veya odaya canlı bildirim düşer.
+  const sendGift = async (giftId, targetId = null) => {
     setGiftOpen(false);
     try {
-      const response = await base44.functions.invoke('voice-room', { room_id: id, action: 'gift-send', gift: giftId });
+      const response = await base44.functions.invoke('voice-room', { room_id: id, action: 'gift-send', gift: giftId, target_id: targetId || undefined });
       const data = response.data;
       setRoom((prev) => ({ ...prev, number_board: data.number_board, number_scores: data.number_scores }));
       if (data.message) setMessages((prev) => prev.some((item) => item.id === data.message.id) ? prev : [...prev, data.message]);
@@ -403,7 +415,12 @@ export default function VoiceRoom() {
     const created = latest.created_date ? new Date(latest.created_date).getTime() : 0;
     if (!created || Date.now() - created > 15000) return;
     lastGiftRef.current = latest.id;
-    setGiftAlert({ gift: latest.gift, name: latest.user_name, userId: latest.user_id });
+    setGiftAlert({
+      gift: latest.gift,
+      name: latest.user_name,
+      userId: latest.gift_to_id || latest.user_id,
+      toName: latest.gift_to_name || '',
+    });
     window.clearTimeout(giftTimerRef.current);
     giftTimerRef.current = window.setTimeout(() => setGiftAlert(null), 4000);
   }, [messages]);
@@ -497,6 +514,10 @@ export default function VoiceRoom() {
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
+          <div className="flex h-11 items-center gap-1.5 rounded-full bg-white/10 px-2.5" title="Slot coin bakiyen">
+            <Coins className="h-4 w-4 shrink-0 text-amber-300" />
+            <span className="text-xs font-bold tabular-nums">{coins === null ? '—' : Number(coins).toLocaleString('tr-TR')}</span>
+          </div>
           <button
             type="button"
             onClick={() => setViewerOpen(true)}
@@ -521,17 +542,6 @@ export default function VoiceRoom() {
           <p className="mb-3 flex items-center justify-center gap-1.5 text-[11px] text-amber-400">
             <Lock className="h-3 w-3" /> Şifreli oda
           </p>
-        )}
-        {boardActive && canMod && (
-          <div className="mb-2 flex justify-center">
-            <button
-              type="button"
-              onClick={() => setBoardResetOpen(true)}
-              className="flex items-center gap-1.5 rounded-full bg-red-600/90 px-3 py-1.5 text-[11px] font-bold text-white active:scale-95 transition-transform"
-            >
-              <RotateCcw className="h-3.5 w-3.5" /> Sayıları sıfırla
-            </button>
-          </div>
         )}
         <VoiceSeatGrid
           seats={seatsView}
@@ -578,7 +588,7 @@ export default function VoiceRoom() {
         gamesOpen={gamesOpen}
         giftOpen={giftOpen}
         onOpenGames={() => setGamesOpen(true)}
-        onOpenGifts={() => setGiftOpen(true)}
+        onOpenGifts={() => { setGiftOpen(true); refreshCoins(); }}
         onOpenPrivateChat={() => setDmOpen(true)}
         onToggleChat={() => setChatOpen((value) => !value)}
       />
@@ -597,14 +607,10 @@ export default function VoiceRoom() {
         onToggleMod={handleToggleMod}
         onInvite={handleInvite}
         boardActive={boardActive}
-        boardResetSeat={room?.number_board_reset_seat !== false}
-        boardResetRoom={room?.number_board_reset_room !== false}
         onToggleBoard={async () => {
           const ok = await invokeVoice({ action: boardActive ? 'number-board-close' : 'number-board-open' });
           if (ok) setMenuOpen(false);
         }}
-        onResetBoard={() => { setMenuOpen(false); setBoardResetOpen(true); }}
-        onBoardSettings={(patch) => invokeVoice({ action: 'number-settings', ...patch })}
       />
 
       <VoiceSeatSheet
@@ -690,18 +696,9 @@ export default function VoiceRoom() {
 
       <GamePanel open={gamesOpen} onClose={() => setGamesOpen(false)} roomId={id} />
 
-      <VoiceGiftSheet open={giftOpen} onClose={() => setGiftOpen(false)} onSend={sendGift} />
+      <VoiceGiftSheet open={giftOpen} onClose={() => setGiftOpen(false)} onSend={sendGift} people={giftPeople} coins={coins} />
 
       <VoiceGiftOverlay alert={giftAlert ? { ...giftAlert, value: scores[giftAlert.userId] || 0 } : null} />
-
-      <ConfirmDialog
-        open={boardResetOpen}
-        onOpenChange={setBoardResetOpen}
-        title="Sayılar sıfırlansın mı?"
-        description="Koltuklardaki tüm sayılar sıfıra döner."
-        confirmText="Sıfırla"
-        onConfirm={() => invokeVoice({ action: 'number-reset' })}
-      />
 
       {notice && joined && (
         <p className="pointer-events-none absolute left-1/2 top-20 z-[170] -translate-x-1/2 rounded-full bg-black/80 px-4 py-2 text-xs text-white">{notice}</p>

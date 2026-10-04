@@ -23,6 +23,14 @@
     "gift": {
       "type": "string"
     },
+    "gift_to_id": {
+      "type": "string",
+      "default": ""
+    },
+    "gift_to_name": {
+      "type": "string",
+      "default": ""
+    },
     "type": {
       "type": "string",
       "enum": [
