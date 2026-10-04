@@ -8,6 +8,7 @@ import useKeyboardInset from '@/hooks/useKeyboardInset';
 import { useToast } from '@/components/ui/use-toast';
 import VoiceSeatGrid from '@/components/voice/VoiceSeatGrid';
 import HiddenUserMarquee from '@/components/voice/HiddenUserMarquee';
+import { isHiddenName } from '@/lib/hiddenUser';
 import VoiceControlBar from '@/components/voice/VoiceControlBar';
 import VoiceChatDock from '@/components/voice/VoiceChatDock';
 import VoiceViewerSheet from '@/components/voice/VoiceViewerSheet';
@@ -383,7 +384,15 @@ export default function VoiceRoom() {
   }, [id, room?.name, room?.owner_id, room?.owner_name, navigate]);
 
   // Profil kartı açıcı — sohbet satırı ve izleyici listesinden kullanılır.
-  const openProfile = (userId) => { if (userId) setProfileUserId(userId); };
+  // Gizli kullanıcıların ismi takma addır: kimliği hiçbir yerde açılmaz.
+  const hiddenIds = useMemo(() => new Set(
+    [...(seats || []), ...(participants || [])]
+      .filter((person) => isHiddenName(person?.name))
+      .map((person) => person.user_id)
+      .filter(Boolean)
+  ), [seats, participants]);
+
+  const openProfile = (userId) => { if (userId && !hiddenIds.has(userId)) setProfileUserId(userId); };
 
   // Profil sayfasına giderken odadan ve koltuktan düşmeyi engeller.
   const openFullProfile = (userId) => {
@@ -398,6 +407,11 @@ export default function VoiceRoom() {
     if (seat?.user_id) {
       // Hediye tahtası açıkken dokunma, alıcı seçimini değiştirir.
       if (giftOpen) { toggleGiftPerson(seat.user_id); return; }
+      // Gizli kullanıcının profili açılmaz, kimliği görünmez.
+      if (hiddenIds.has(seat.user_id) || isHiddenName(seat.name)) {
+        toast({ title: 'Bu kullanıcı gizli', description: 'Profil bilgileri görünmez.' });
+        return;
+      }
       setProfileUserId(seat.user_id);
       return;
     }
@@ -847,6 +861,7 @@ export default function VoiceRoom() {
           accent={seatAccent}
           gifted={gifted}
         />
+        <HiddenUserMarquee active={!!room?.ghost_entered_at} />
         <p className="mt-5 text-center text-[11px] text-white/50">
           {seated
             ? (voice.muted ? 'Mikrofonun kapalı — konuşmak için mikrofon tuşuna bas.' : 'Koltuktayken mikrofonun açık, konuşabilirsin.')
