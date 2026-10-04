@@ -5,7 +5,7 @@ import { upsertNotification } from '../../shared/upsertNotification.ts';
 import { scoresAfterSeatLeave, withStep } from '../../shared/numberBoard.ts';
 import { coinsForK, ensureGiftWallet, formatK, giftBalance } from '../../shared/giftWallet.ts';
 
-const SEAT_OPTIONS = [2, 5, 8, 9, 12, 15, 20, 30];
+const SEAT_OPTIONS = [2, 5, 8, 9, 12, 15, 20, 24];
 const ACTIONS = ['seat-take', 'seat-leave', 'seat-lock', 'seat-kick', 'set-seat-count', 'invite', 'seat-invite', 'seat-invite-clear', 'gift-state', 'gift-send', 'number-board-open', 'number-board-close', 'number-step', 'number-reset', 'number-settings'];
 
 const emptySeat = (index, locked = false) => ({

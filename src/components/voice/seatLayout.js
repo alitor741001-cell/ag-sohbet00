@@ -1,5 +1,5 @@
 // Sesli oda koltuk düzeni — görseldeki 8 sabit kapasite kullanılır.
-export const SEAT_OPTIONS = [2, 5, 8, 9, 12, 15, 20, 30];
+export const SEAT_OPTIONS = [2, 5, 8, 9, 12, 15, 20, 24];
 
 const LAYOUTS = {
   2: [2],
@@ -11,7 +11,7 @@ const LAYOUTS = {
   12: [4, 4, 4],
   15: [5, 5, 5],
   20: [5, 5, 5, 5],
-  30: [6, 6, 6, 6, 6],
+  24: [6, 6, 6, 6],
 };
 
 /** Koltuk sayısını satır başına koltuk adetlerine böler. */
