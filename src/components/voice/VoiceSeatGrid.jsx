@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import VoiceSeat from '@/components/voice/VoiceSeat';
 import VoiceSeatScore from '@/components/voice/VoiceSeatScore';
+import VoiceBoardTimer from '@/components/voice/VoiceBoardTimer';
 
 import { seatIndexRows } from '@/components/voice/seatLayout';
 import { useSize } from '@/hooks/use-size';
@@ -12,7 +13,7 @@ import { useSize } from '@/hooks/use-size';
  * Koltuk boyutu ölçülen genişliğe göre seçilir: dar telefonlarda da satır yana taşmaz,
  * geniş ekranlarda koltuklar gereksiz küçülmez.
  */
-export default function VoiceSeatGrid({ seats = [], userId, ownerId, moderators = [], speakingIds = [], localSpeaking, onSelectSeat, boardActive, scores = {}, accent = '#ef4444', gifted = {} }) {
+export default function VoiceSeatGrid({ seats = [], userId, ownerId, moderators = [], speakingIds = [], localSpeaking, onSelectSeat, boardActive, boardStartedAt, scores = {}, accent = '#ef4444', gifted = {} }) {
   const wrapRef = useRef(null);
   const measured = useSize(wrapRef);
   const rows = seatIndexRows(seats.length);
@@ -26,7 +27,8 @@ export default function VoiceSeatGrid({ seats = [], userId, ownerId, moderators 
   return (
     <div ref={wrapRef} className="flex w-full flex-col items-center gap-4 sm:gap-5">
       {rows.map((row, rowIndex) => (
-        <div key={rowIndex} className="flex items-start justify-center gap-3 sm:gap-5">
+        <div key={rowIndex} className="flex flex-col items-center gap-1">
+          <div className="flex items-start justify-center gap-3 sm:gap-5">
           {row.map((index) => {
             const seat = seats[index];
             const occupied = !!seat?.user_id;
@@ -52,6 +54,10 @@ export default function VoiceSeatGrid({ seats = [], userId, ownerId, moderators 
               </div>
             );
           })}
+          </div>
+          {(row.includes(20) || (seats.length < 21 && rowIndex === rows.length - 1)) && (
+            <VoiceBoardTimer active={boardActive} startedAt={boardStartedAt} />
+          )}
         </div>
       ))}
     </div>
