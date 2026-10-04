@@ -31,7 +31,7 @@ export default function RoomNameCard({ name, canEdit, onRename }) {
 
   if (editing) {
     return (
-      <div className="mx-auto mt-2 w-fit max-w-[86vw] rounded-2xl border border-white/10 bg-white/[0.06] px-3 py-2">
+      <div className="mt-2 w-fit max-w-[86vw] rounded-2xl border border-white/10 bg-white/[0.06] px-3 py-2">
         <form onSubmit={submit} className="flex items-center gap-2">
           <input
             autoFocus
@@ -55,7 +55,7 @@ export default function RoomNameCard({ name, canEdit, onRename }) {
   }
 
   return (
-    <div className="relative mx-auto mt-2 flex w-fit max-w-[86vw] items-center justify-center rounded-2xl border border-white/10 bg-white/[0.06] px-7 py-2">
+    <div className="relative mt-2 flex w-fit max-w-[86vw] items-center justify-center rounded-2xl border border-white/10 bg-white/[0.06] px-7 py-2">
       {scrolls ? (
         <span className="overflow-hidden" style={{ maxWidth: '56vw' }}>
           <span
