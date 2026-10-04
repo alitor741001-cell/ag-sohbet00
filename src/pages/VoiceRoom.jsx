@@ -112,7 +112,7 @@ export default function VoiceRoom() {
   const seated = mySeatIndex >= 0;
   const isOwner = !!user && room?.owner_id === user.id;
   const canMod = isOwner || moderators.includes(user?.id) || user?.role === 'admin';
-  // Odadan atma ve koltuktan indirme yalnızca oda sahibinin yetkisidir.
+  // Odadan atma yalnızca oda sahibinin yetkisidir.
   const canKick = isOwner;
   // Sohbet yasağı açıkken yalnızca koltuktakiler yazar.
   const chatBanned = room?.chat_seated_only === true;
@@ -582,7 +582,8 @@ export default function VoiceRoom() {
       if (seated) invokeVoice({ action: 'seat-leave' });
       return;
     }
-    if (!canKick) return;
+    // Koltuktan indirme: oda sahibi herkesi, yöneticiler gizli kullanıcıları indirebilir.
+    if (!canKick && !(canMod && isHiddenName(profilePerson?.name))) return;
     invokeVoice({ action: 'seat-kick', target_id: target }).then(() => syncRoom());
   };
 
@@ -794,9 +795,9 @@ export default function VoiceRoom() {
       onClick: profileSelf ? handleMic : () => toggleMuteFor(profileTarget),
     },
     ...(profileSelf && seated ? [{ key: 'stand', icon: Armchair, label: 'Ayağa kalk', onClick: handleProfileSeat }] : []),
-    ...(!profileSelf && canKick && profileSeat ? [{ key: 'seat-kick', icon: Armchair, label: 'Koltuktan indir', onClick: handleProfileSeat }] : []),
+    ...(!profileSelf && (canKick || (canMod && profileHidden)) && profileSeat ? [{ key: 'seat-kick', icon: Armchair, label: 'Koltuktan indir', onClick: handleProfileSeat }] : []),
     ...(!profileSelf ? [{ key: 'invite', icon: UserPlus, label: 'Davet et', disabled: !canMod && !seated, onClick: () => { const target = profileTarget; setProfileUserId(null); inviteToSeat(target); } }] : []),
-    ...(!profileSelf ? [{ key: 'chat', icon: MessageSquare, label: 'Sohbet', onClick: () => { setDmUserId(profileTarget); setProfileUserId(null); } }] : []),
+    ...(!profileSelf ? [{ key: 'chat', icon: MessageSquare, label: 'Mesaj', onClick: () => { setDmUserId(profileTarget); setProfileUserId(null); } }] : []),
     ...(!profileSelf && canMod ? [{ key: 'mod', icon: Shield, label: profileIsMod ? 'Yetkiyi al' : 'Yönetici yap', onClick: () => { const target = profileTarget; const makeMod = !profileIsMod; setProfileUserId(null); handleToggleMod(target, makeMod); } }] : []),
     ...(canMod && profileSeat ? [{ key: 'lock', icon: profileSeat.locked ? Unlock : Lock, label: profileSeat.locked ? 'Koltuğun kilidini aç' : 'Koltuğu kilitle', onClick: () => invokeVoice({ action: 'seat-lock', seat_index: profileSeatIndex, locked: !profileSeat.locked }) }] : []),
     ...(!profileSelf && !profileHidden ? [{ key: 'view', icon: UserRound, label: 'Profili gör', onClick: () => { const target = profileTarget; setProfileUserId(null); openFullProfile(target); } }] : []),
@@ -804,7 +805,7 @@ export default function VoiceRoom() {
 
   // Alt satır: hediye gönder ve odadan at (odadan atma yalnızca oda sahibinde).
   const profileFooter = profileTarget ? [
-    ...(!profileSelf ? [{ key: 'gift', icon: Gift, label: 'Hediye ver', onClick: () => { setSelectedIds([profileTarget]); openGifts(); setProfileUserId(null); } }] : []),
+    ...(!profileSelf ? [{ key: 'gift', icon: Gift, label: 'Hediye gönder', onClick: () => { setSelectedIds([profileTarget]); openGifts(); setProfileUserId(null); } }] : []),
     ...(!profileSelf && canKick ? [{ key: 'kick', icon: UserMinus, label: 'Odadan at', danger: true, onClick: () => { const target = profileTarget; setProfileUserId(null); kickFromRoom(target); } }] : []),
   ] : [];
 

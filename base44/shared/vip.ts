@@ -28,6 +28,9 @@ export const hiddenUserCode = (user: any) => {
 /** Odalarda görünen tam takma ad: "Gizli Kullanıcı" + 8 haneli numara. */
 export const hiddenDisplayName = (user: any) => `${HIDDEN_DISPLAY_NAME}${hiddenUserCode(user)}`;
 
+/** Odalarda maskelenmiş takma ad mı? Gizli kullanıcı adı bu şekilde başlar. */
+export const isHiddenDisplayName = (name: any) => typeof name === 'string' && name.startsWith(HIDDEN_DISPLAY_NAME);
+
 export const VIP_DAY_MS = 24 * 60 * 60 * 1000;
 
 // Otomatik kurada en düşük VIP seviyesi — VIP özellikleri 5'ten başlar.

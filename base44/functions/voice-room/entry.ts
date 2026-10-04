@@ -7,7 +7,7 @@ import { appendRoomLog } from '../../shared/roomLog.ts';
 import { coinsForK, ensureGiftWallet, formatK, giftBalance } from '../../shared/giftWallet.ts';
 import { giftBoard } from '../../shared/giftBoard.ts';
 import { addGiftTotals } from '../../shared/userLevels.ts';
-import { HIDDEN_AVATAR_URL, hiddenDisplayName, isHiddenUser } from '../../shared/vip.ts';
+import { HIDDEN_AVATAR_URL, hiddenDisplayName, isHiddenDisplayName, isHiddenUser } from '../../shared/vip.ts';
 
 const SEAT_OPTIONS = [2, 5, 8, 9, 12, 15, 20, 24];
 // Bu değerin (coin) üzerindeki hediyeler bütün sesli odalara duyurulur.
@@ -113,11 +113,13 @@ export default async function (req: Request): Promise<Response> {
 
     // Kişiyi koltuğundan indir (odadan atma room-presence ile yapılır)
     if (action === 'seat-kick') {
-      // Koltuktan indirme yalnızca oda sahibinin yetkisidir; yöneticiler koltuktan indiremez.
-      if (!isOwner) return Response.json({ error: 'Koltuktan yalnızca oda sahibi indirebilir.' }, { status: 403 });
       if (!target_id) return Response.json({ error: 'kullanıcı gerekli' }, { status: 400 });
       const target = seats.find((seat) => seat.user_id === target_id);
       if (!target) return respond(seats);
+      // Koltuktan indirme: oda sahibi herkesi, yöneticiler gizli kullanıcıları indirebilir.
+      if (!isOwner && !(canMod && isHiddenDisplayName(target.name))) {
+        return Response.json({ error: 'Koltuktan yalnızca oda sahibi indirebilir.' }, { status: 403 });
+      }
       const targetUser = await base44.asServiceRole.entities.User.get(target_id).catch(() => null);
       const targetName = targetUser?.username || targetUser?.full_name || target.name || 'Kullanıcı';
       const next = seats.map((seat) => (seat.user_id === target_id ? { ...emptySeat(seat.index), locked: seat.locked } : seat));
