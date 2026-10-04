@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Armchair, Coins, Eye, Gift, Loader2, Lock, LogOut, MessageSquare, Mic, MicOff, Minimize2, MoreHorizontal, Radio, Shield, ShieldAlert, Unlock, UserMinus, UserPlus, UserRound } from 'lucide-react';
+import { Armchair, Coins, Eye, Gift, Loader2, Lock, LogOut, MessageSquare, Mic, MicOff, Minimize2, MoreHorizontal, Shield, ShieldAlert, Unlock, UserMinus, UserPlus, UserRound } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useVoiceChat } from '@/hooks/useVoiceChat';
@@ -12,6 +12,7 @@ import VoiceChatDock from '@/components/voice/VoiceChatDock';
 import VoiceViewerSheet from '@/components/voice/VoiceViewerSheet';
 import VoiceSeatInvitePrompt from '@/components/voice/VoiceSeatInvitePrompt';
 import VoiceOwnerBadge from '@/components/voice/VoiceOwnerBadge';
+import RoomNameCard from '@/components/voice/RoomNameCard';
 import VoiceRoomMenu from '@/components/voice/VoiceRoomMenu';
 import VoiceSeatSheet from '@/components/voice/VoiceSeatSheet';
 import InviteSheet from '@/components/voice/InviteSheet';
@@ -394,6 +395,19 @@ export default function VoiceRoom() {
     }
   };
 
+  // Oda ismi: başlıktaki kalemle değiştirilir, odadaki herkese anında yansır.
+  const renameRoom = useCallback(async (nextName) => {
+    try {
+      await base44.functions.invoke('room-presence', { action: 'set-name', room_id: id, name: nextName });
+      await syncRoom();
+      toast({ title: 'Oda ismi güncellendi' });
+      return true;
+    } catch (error) {
+      toast({ title: 'İsim değiştirilemedi', description: error?.response?.data?.error || error.message, variant: 'destructive' });
+      return false;
+    }
+  }, [id, syncRoom, toast]);
+
   const handleToggleHidden = async () => {
     try {
       const response = await base44.functions.invoke('room-presence', { action: 'toggle-hidden', room_id: id });
@@ -691,17 +705,9 @@ export default function VoiceRoom() {
     >
       <div className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-gradient-to-b from-primary/25 to-transparent" />
 
-      <header className="relative flex shrink-0 items-center justify-between gap-2 px-3 pb-2 pt-[max(0.75rem,env(safe-area-inset-top))]">
-        <div className="min-w-0">
-          <div className="flex min-w-0 items-center gap-1.5">
-            <Radio className="h-4 w-4 shrink-0 text-primary" />
-            <p className="min-w-0 truncate text-sm font-bold">{room?.name}</p>
-            <VoiceOwnerBadge userId={room?.owner_id} fallbackName={room?.owner_name} />
-          </div>
-          <p className="truncate text-[11px] text-white/60">
-            {seats.length} koltuk • {participants.length} kişi
-          </p>
-        </div>
+      <header className="relative shrink-0 px-3 pb-2 pt-[max(0.75rem,env(safe-area-inset-top))]">
+        <div className="flex items-start justify-between gap-2">
+          <VoiceOwnerBadge userId={room?.owner_id} fallbackName={room?.owner_name} />
         <div className="flex shrink-0 items-center gap-2">
           <button
             type="button"
@@ -719,7 +725,13 @@ export default function VoiceRoom() {
           <button type="button" onClick={() => setExitOpen(true)} aria-label="Odadan çık" className="flex h-11 w-11 items-center justify-center rounded-full bg-red-600 active:scale-95 transition-transform">
             <LogOut className="h-5 w-5" />
           </button>
+          </div>
         </div>
+        <RoomNameCard
+          name={room?.name}
+          canEdit={isOwner || moderators.includes(user?.id)}
+          onRename={renameRoom}
+        />
       </header>
 
       <div className="relative min-h-0 flex-1 overflow-y-auto px-3 pb-4 pt-1">
