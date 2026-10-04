@@ -117,7 +117,6 @@ export default function GiftBoxPanel({ open, onClose }) {
   const available = Number(summary?.available_dollars) || 0;
   const availableTl = Number(summary?.available_tl) || 0;
   const tlRate = Number(summary?.tl_rate) || 0;
-  const marketRate = Number(summary?.market_rate) || 0;
 
   return (
     <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/70 p-4" onClick={onClose}>
@@ -135,16 +134,17 @@ export default function GiftBoxPanel({ open, onClose }) {
           </button>
         </div>
 
-        {/* Bakiye — TL olarak, piyasa kuru eksi 2 TL */}
+        {/* Bakiye — dolar tutarı ve TL karşılığı (piyasa kuru eksi 2 TL) */}
         <div className="rounded-2xl bg-white px-3.5 py-3">
           <div className="flex items-center gap-2.5">
             <Gem className="h-6 w-6 shrink-0 text-sky-400" />
             <div className="min-w-0 flex-1">
-              <p className="text-lg font-bold tabular-nums text-[#1F2024]">
-                {loading && !summary ? '…' : formatTl(availableTl)}
+              <p className="text-[10px] font-semibold text-[#6b7280]">Kullanılabilir bakiye</p>
+              <p className="text-xl font-bold tabular-nums text-[#1F2024]">
+                {loading && !summary ? '…' : `${available.toFixed(2).replace('.', ',')} $`}
               </p>
-              <p className="text-[10px] font-semibold text-[#6b7280]">
-                Kullanılabilir bakiye{summary ? ` (${available.toFixed(2).replace('.', ',')} $)` : ''}
+              <p className="text-base font-bold tabular-nums text-emerald-600">
+                {loading && !summary ? '' : formatTl(availableTl)}
               </p>
             </div>
             <div className="shrink-0 text-right">
@@ -152,12 +152,6 @@ export default function GiftBoxPanel({ open, onClose }) {
               <p className="text-[10px] font-semibold text-[#6b7280]">{summary?.units || 0} puan</p>
             </div>
           </div>
-          <p className="mt-2 border-t border-black/10 pt-2 text-[10px] leading-snug text-[#6b7280]">
-            1 $ = {formatTl(tlRate)} (piyasa {formatTl(marketRate)} − 2,00 ₺). Kur her 15 dakikada bir otomatik güncellenir.
-          </p>
-          <p className="mt-1 text-[10px] leading-snug text-[#6b7280]">
-            Alınan hediyeler: 200K'ya kadar 10K = 1 puan (20 puan = 1 $), sonrasında her 17K = 1 $.
-          </p>
         </div>
 
         {/* Kimlik numarası */}
