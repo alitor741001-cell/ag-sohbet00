@@ -5,6 +5,9 @@ import VoiceSeatTimer from '@/components/voice/VoiceSeatTimer';
 import { seatIndexRows } from '@/components/voice/seatLayout';
 import { useSize } from '@/hooks/use-size';
 
+// Süre sayacı yalnızca bu numaralı koltukların hemen altında görünür (21 ve 22).
+const TIMER_SEATS = [21, 22];
+
 /**
  * Sahnedeki yuvarlak oturma düzeni — satırlar ortalanır. Sayı tahtası açıkken her kişinin altında sayı hücresi durur.
  * Koltuk boyutu ölçülen genişliğe göre seçilir: dar telefonlarda da satır yana taşmaz,
@@ -55,7 +58,7 @@ export default function VoiceSeatGrid({ seats = [], userId, ownerId, moderators 
                 {boardActive && (
                   <VoiceSeatScore value={occupied ? scores[seat.user_id] || 0 : 0} size={size} />
                 )}
-                {boardActive && occupied && startedMs > 0 && (
+                {boardActive && TIMER_SEATS.includes(index + 1) && startedMs > 0 && (
                   <VoiceSeatTimer seconds={elapsed} size={size} />
                 )}
               </div>
