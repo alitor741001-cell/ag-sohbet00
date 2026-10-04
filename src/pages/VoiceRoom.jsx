@@ -7,8 +7,6 @@ import { useVoiceChat } from '@/hooks/useVoiceChat';
 import useKeyboardInset from '@/hooks/useKeyboardInset';
 import { useToast } from '@/components/ui/use-toast';
 import VoiceSeatGrid from '@/components/voice/VoiceSeatGrid';
-import VoiceGiftScoreboard from '@/components/voice/VoiceGiftScoreboard';
-import VoiceGiftCounter from '@/components/voice/VoiceGiftCounter';
 import VoiceControlBar from '@/components/voice/VoiceControlBar';
 import VoiceChatDock from '@/components/voice/VoiceChatDock';
 import VoiceViewerSheet from '@/components/voice/VoiceViewerSheet';
@@ -103,12 +101,6 @@ export default function VoiceRoom() {
     });
     return map;
   }, [room?.number_scores]);
-  // Sayaç: odada toplanan toplam hediye — yalnızca ileri sayar.
-  const boardTotal = useMemo(
-    () => Object.values(scores).reduce((sum, value) => sum + (Number(value) || 0), 0),
-    [scores]
-  );
-
   // Hediye gönderilebilecek kişiler: odadaki herkes ve kendisi (kendine de hediye gönderebilir).
   const giftPeople = useMemo(() => {
     const map = new Map();
@@ -632,8 +624,6 @@ export default function VoiceRoom() {
           accent={seatAccent}
           gifted={gifted}
         />
-        {boardActive && <VoiceGiftCounter total={boardTotal} />}
-        {boardActive && <VoiceGiftScoreboard participants={participants} seats={seatsView} scores={scores} />}
         <p className="mt-5 text-center text-[11px] text-white/50">
           {seated
             ? (voice.muted ? 'Mikrofonun kapalı — konuşmak için mikrofon tuşuna bas.' : 'Koltuktayken mikrofonun açık, konuşabilirsin.')

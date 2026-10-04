@@ -26,10 +26,8 @@ export default function VoiceSeatGrid({ seats = [], userId, ownerId, moderators 
                   accent={accent}
                   gifted={occupied ? gifted[seat.user_id] : undefined}
                 />
-                {boardActive && occupied && (
-                  <VoiceSeatScore
-                    value={scores[seat.user_id] || 0}
-                  />
+                {boardActive && (
+                  <VoiceSeatScore value={occupied ? scores[seat.user_id] || 0 : 0} />
                 )}
               </div>
             );

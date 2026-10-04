@@ -251,7 +251,8 @@ export default async function (req: Request): Promise<Response> {
       const spent = await base44.asServiceRole.entities.GameWallet.update(wallet.id, { coins: balance - cost });
 
       // Sayı tahtası: hediyenin K karşılığı yalnızca alıcıya eklenir.
-      let numberScores = Array.isArray(room.number_scores) ? room.number_scores : [];
+      // Tahta kapalıyken gelen hediye tahtayı açar; o an tüm sayaçlar 1'den başlar.
+      let numberScores = room.number_board === true && Array.isArray(room.number_scores) ? room.number_scores : [];
       recipients.forEach((recipient) => {
         numberScores = withStep(numberScores, recipient.user_id, kValue * 1000);
       });
@@ -288,20 +289,19 @@ export default async function (req: Request): Promise<Response> {
       });
     }
 
-    // Sayı tahtasını aç — tüm sayılar sıfırdan başlar
+    // Sayı tahtasını aç — sayaçlar 1'den başlar, eski sayılar temizlenir
     if (action === 'number-board-open') {
       if (!canMod) return Response.json({ error: 'yetkisiz' }, { status: 403 });
-      const numberScores = Array.isArray(room.number_scores) ? room.number_scores : [];
-      await base44.asServiceRole.entities.Room.update(room_id, { number_board: true });
+      await base44.asServiceRole.entities.Room.update(room_id, { number_board: true, number_scores: [] });
       await say(`${displayName} sayı tahtasını açtı.`);
-      return Response.json({ ok: true, seats, seat_count: seats.length, number_board: true, number_scores: numberScores });
+      return Response.json({ ok: true, seats, seat_count: seats.length, number_board: true, number_scores: [] });
     }
 
-    // Sayı tahtasını kapat — sayılar gizlenir
+    // Sayı tahtasını kapat — sayaçlar ve hediye puanları sıfırlanır
     if (action === 'number-board-close') {
       if (!canMod) return Response.json({ error: 'yetkisiz' }, { status: 403 });
-      await base44.asServiceRole.entities.Room.update(room_id, { number_board: false });
-      return Response.json({ ok: true, seats, seat_count: seats.length, number_board: false });
+      await base44.asServiceRole.entities.Room.update(room_id, { number_board: false, number_scores: [] });
+      return Response.json({ ok: true, seats, seat_count: seats.length, number_board: false, number_scores: [] });
     }
 
     // Sayıyı bir artır / azalt — koltukta oturan herkes kendi sayısını, yöneticiler herkesi değiştirir

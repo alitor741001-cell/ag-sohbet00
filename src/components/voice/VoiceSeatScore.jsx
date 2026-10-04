@@ -1,17 +1,20 @@
 import { Gift } from 'lucide-react';
 import { scoreTier } from '@/components/voice/scoreTier';
 
-/** Hediye toplamı: eşiklere göre renk değişir. */
+/** Koltuk altı ileri sayaç: 1'den başlar, hediye geldikçe artar. Eşiklere göre rengi belirginleşir. */
 export default function VoiceSeatScore({ value = 0 }) {
-  const tier = scoreTier(value);
+  const shown = Math.max(1, Math.round(Number(value) || 0));
+  const tier = scoreTier(shown);
+
   return (
     <span
-      className="voice-gift-score mt-1 flex items-center gap-1 rounded-full border px-1.5 py-0.5"
+      className="voice-gift-score mt-1 flex items-center gap-1 rounded-full border px-2 py-0.5"
       data-score-tier={tier}
+      aria-label={`${shown.toLocaleString('tr-TR')} sayaç`}
     >
       <Gift className="h-2.5 w-2.5 shrink-0" />
-      <span key={value} className="number-pop text-[10px] font-bold tabular-nums" aria-label={`${value} hediye puanı`}>
-        {Number(value).toLocaleString('tr-TR')}
+      <span key={shown} className="number-pop text-[11px] font-bold tabular-nums">
+        {shown.toLocaleString('tr-TR')}
       </span>
     </span>
   );
