@@ -1,12 +1,21 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronUp, Loader2, Search, Send, UserRound } from 'lucide-react';
+import { ChevronDown, ChevronUp, ClipboardList, Coins, Loader2, Search, Send, UserRound } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Image } from '@/components/ui/image';
 import { useToast } from '@/components/ui/use-toast';
 
 const STEP = 1000;
-const FIELD = 'w-full rounded-xl border border-white/10 bg-[#171432] text-sm text-white outline-none placeholder:text-white/35 focus:border-[#6C5CFF]';
-const GRADIENT = 'linear-gradient(135deg, #4E44FF, #8E43FF)';
+const CARET = 'linear-gradient(135deg, #6366F1, #A855F7)';
+const FIELD = 'w-full rounded-lg border border-white/10 bg-[#0B0B14] text-sm text-white outline-none placeholder:text-white/35 focus:border-[#6366F1]';
+
+/** Etiket satırı — ikon + başlık */
+function FieldLabel({ icon: Icon, children, tone = '#A855F7' }) {
+  return (
+    <p className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold text-white/60">
+      <Icon className="h-3.5 w-3.5" style={{ color: tone }} /> {children}
+    </p>
+  );
+}
 
 /** Admin: kimlik numarası, kullanıcı adı ya da ID ile seçilen kişiye coin yükler. */
 export default function CoinLoadForm({ onGranted }) {
@@ -60,34 +69,31 @@ export default function CoinLoadForm({ onGranted }) {
   };
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-[#1E1B39] p-4">
-      <p className="mb-1.5 text-[11px] font-bold text-white/60">Kullanıcı Seç</p>
-      <div className="flex items-center gap-2">
-        <div className="relative flex-1">
-          <UserRound className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
-          <input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            onKeyDown={(event) => { if (event.key === 'Enter') search(); }}
-            placeholder="Kullanıcı ID / Kimlik No / Kullanıcı Adı"
-            aria-label="Kullanıcı ara"
-            className={`${FIELD} h-11 pl-9 pr-3`}
-          />
-        </div>
+    <div className="rounded-2xl border border-white/10 bg-[#13131E] p-4">
+      <FieldLabel icon={UserRound}>Kullanıcı Seç</FieldLabel>
+      <div className="relative">
+        <input
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          onKeyDown={(event) => { if (event.key === 'Enter') search(); }}
+          placeholder="Kullanıcı ID / Kimlik No / Kullanıcı Adı"
+          aria-label="Kullanıcı ara"
+          className={`${FIELD} h-12 pl-3 pr-14`}
+        />
         <button
           type="button"
           onClick={search}
           disabled={searching}
           aria-label="Kullanıcıyı ara"
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white transition-transform active:scale-95 disabled:opacity-50"
-          style={{ background: GRADIENT }}
+          className="absolute right-1.5 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-md text-white transition-transform active:scale-95 disabled:opacity-50"
+          style={{ background: CARET }}
         >
           {searching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
         </button>
       </div>
 
       {person && (
-        <div className="mt-2.5 flex items-center gap-2.5 rounded-xl bg-white/5 p-2.5">
+        <div className="mt-2.5 flex items-center gap-2.5 rounded-lg border border-white/10 bg-[#0B0B14] p-2.5">
           <span className="h-10 w-10 shrink-0 overflow-hidden rounded-full border border-white/10 bg-white/10">
             {person.avatar ? (
               <Image src={person.avatar} alt={person.name} className="h-full w-full" fittingType="fill" draggable={false} />
@@ -102,46 +108,50 @@ export default function CoinLoadForm({ onGranted }) {
             <p className="truncate text-[10px] text-white/45">Kimlik: {person.member_id || '—'}</p>
           </div>
           <div className="shrink-0 text-right">
-            <p className="text-sm font-bold tabular-nums text-amber-300">{Number(person.coins || 0).toLocaleString('tr-TR')}</p>
+            <p className="text-sm font-bold tabular-nums text-[#F5B31A]">{Number(person.coins || 0).toLocaleString('tr-TR')}</p>
             <p className="text-[10px] font-semibold text-white/45">coin</p>
           </div>
         </div>
       )}
 
-      <p className="mb-1.5 mt-3.5 text-[11px] font-bold text-white/60">Yüklenecek Coin Miktarı</p>
-      <div className="flex items-center gap-2">
-        <input
-          value={amount}
-          onChange={(event) => setAmount(Math.max(0, Math.floor(Number(event.target.value.replace(/\D/g, '')) || 0)))}
-          inputMode="numeric"
-          aria-label="Yüklenecek coin miktarı"
-          className={`${FIELD} h-11 flex-1 px-3 font-bold tabular-nums`}
-        />
-        <div className="flex shrink-0 flex-col gap-1">
-          <button type="button" onClick={() => setAmount((value) => value + STEP)} aria-label="Miktarı artır" className="flex h-5 w-10 items-center justify-center rounded-md bg-white/10 text-white active:scale-95">
-            <ChevronUp className="h-3.5 w-3.5" />
-          </button>
-          <button type="button" onClick={() => setAmount((value) => Math.max(0, value - STEP))} aria-label="Miktarı azalt" className="flex h-5 w-10 items-center justify-center rounded-md bg-white/10 text-white active:scale-95">
-            <ChevronDown className="h-3.5 w-3.5" />
-          </button>
+      <div className="mt-3.5">
+        <FieldLabel icon={Coins} tone="#F5B31A">Yüklenecek Coin Miktarı</FieldLabel>
+        <div className="flex items-center gap-2">
+          <input
+            value={amount}
+            onChange={(event) => setAmount(Math.max(0, Math.floor(Number(event.target.value.replace(/\D/g, '')) || 0)))}
+            inputMode="numeric"
+            aria-label="Yüklenecek coin miktarı"
+            className={`${FIELD} h-12 flex-1 px-3 font-bold tabular-nums`}
+          />
+          <div className="flex shrink-0 flex-col gap-0.5">
+            <button type="button" onClick={() => setAmount((value) => value + STEP)} aria-label="Miktarı artır" className="flex h-5 w-10 items-center justify-center rounded-md border border-white/10 bg-white/5 text-white active:scale-95">
+              <ChevronUp className="h-3.5 w-3.5" />
+            </button>
+            <button type="button" onClick={() => setAmount((value) => Math.max(0, value - STEP))} aria-label="Miktarı azalt" className="flex h-5 w-10 items-center justify-center rounded-md border border-white/10 bg-white/5 text-white active:scale-95">
+              <ChevronDown className="h-3.5 w-3.5" />
+            </button>
+          </div>
         </div>
       </div>
 
-      <p className="mb-1.5 mt-3.5 text-[11px] font-bold text-white/60">Açıklama (İsteğe Bağlı)</p>
-      <textarea
-        value={note}
-        onChange={(event) => setNote(event.target.value)}
-        rows={3}
-        placeholder="Örn: Özel etkinlik, hediye vb."
-        className={`${FIELD} px-3 py-2.5`}
-      />
+      <div className="mt-3.5">
+        <FieldLabel icon={ClipboardList}>Açıklama (İsteğe Bağlı)</FieldLabel>
+        <textarea
+          value={note}
+          onChange={(event) => setNote(event.target.value)}
+          rows={3}
+          placeholder="Örn: Özel etkinlik, hediye vb."
+          className={`${FIELD} px-3 py-2.5`}
+        />
+      </div>
 
       <button
         type="button"
         onClick={send}
         disabled={busy || !person || amount < 1}
-        className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-xl text-sm font-bold text-white transition-transform active:scale-[0.99] disabled:opacity-50"
-        style={{ background: GRADIENT }}
+        className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-lg text-sm font-bold text-white transition-transform active:scale-[0.99] disabled:opacity-50"
+        style={{ background: CARET }}
       >
         {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} Gönder
       </button>

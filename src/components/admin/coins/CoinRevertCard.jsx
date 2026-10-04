@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Loader2, RotateCcw } from 'lucide-react';
+import { Loader2, RotateCcw, Undo2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -24,30 +24,29 @@ export default function CoinRevertCard({ grant, onReverted }) {
   };
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-[#1E1B39] p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-sm font-bold text-white">Yanlış Gönderilen Coins'i Geri Çek</p>
-          <p className="mt-1 text-[11px] leading-relaxed text-white/55">
-            Kullanıcıya yanlış gönderilen coin miktarını geri çekebilirsiniz. Geri çekme işlemi sadece son gönderimler için geçerlidir.
+    <div className="flex items-center gap-3 rounded-2xl border border-[#F59E0B]/70 bg-[#13131E] p-4">
+      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#F59E0B]/50 bg-[#F59E0B]/10">
+        <Undo2 className="h-5 w-5 text-[#F59E0B]" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-bold text-white">Yanlış Gönderilen Coins'i Geri Çek</p>
+        <p className="mt-1 text-[10px] leading-relaxed text-white/55">
+          Kullanıcıya yanlış gönderilen coin miktarını geri çekebilirsiniz. Geri çekme işlemi sadece son gönderimler için geçerlidir.
+        </p>
+        {grant && (
+          <p className="mt-1.5 text-[10px] font-semibold text-[#F59E0B]">
+            Son gönderim: {Number(grant.amount || 0).toLocaleString('tr-TR')} coin • {grant.user_name}
           </p>
-          {grant ? (
-            <p className="mt-2 text-[11px] font-semibold text-amber-300">
-              Son gönderim: {Number(grant.amount || 0).toLocaleString('tr-TR')} coin • {grant.user_name}
-            </p>
-          ) : (
-            <p className="mt-2 text-[11px] font-semibold text-white/40">Geri çekilecek aktif gönderim yok.</p>
-          )}
-        </div>
-        <button
-          type="button"
-          onClick={revert}
-          disabled={!grant || busy}
-          className="flex h-11 shrink-0 items-center gap-2 rounded-xl border border-[#6C5CFF]/60 bg-[#6C5CFF]/15 px-3.5 text-sm font-bold text-white transition-transform active:scale-95 disabled:opacity-40"
-        >
-          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />} Geri Çek
-        </button>
+        )}
       </div>
+      <button
+        type="button"
+        onClick={revert}
+        disabled={!grant || busy}
+        className="flex h-10 shrink-0 items-center gap-1.5 rounded-lg border border-[#F59E0B] px-3 text-xs font-bold text-[#F59E0B] transition-transform active:scale-95 disabled:opacity-40"
+      >
+        {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RotateCcw className="h-3.5 w-3.5" />} Geri Çek
+      </button>
     </div>
   );
 }

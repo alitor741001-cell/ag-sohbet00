@@ -4,17 +4,18 @@ import { base44 } from '@/api/base44Client';
 import { Image } from '@/components/ui/image';
 import { useToast } from '@/components/ui/use-toast';
 
-/** Gönderim tarihi ve saati: 04.10.2026 14:32 */
+/** Gönderim tarihi ve saati: 04.10.2026 / 14:32 */
 const formatWhen = (iso) => {
-  if (!iso) return '';
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return '';
-  return date.toLocaleString('tr-TR', {
-    day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
-  });
+  if (!iso) return { date: '', time: '' };
+  const value = new Date(iso);
+  if (Number.isNaN(value.getTime())) return { date: '', time: '' };
+  return {
+    date: value.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+    time: value.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
+  };
 };
 
-const amountText = (value) => `+ ${Number(value || 0).toLocaleString('tr-TR')}`;
+const HEAD = 'pb-2 text-[9px] font-bold uppercase tracking-wide text-white/40';
 
 /** Son işlemler: coin yükleme kayıtları, satır bazında geri çekme. */
 export default function CoinRecentTable({ grants = [], loading, onReverted }) {
@@ -38,11 +39,11 @@ export default function CoinRecentTable({ grants = [], loading, onReverted }) {
   };
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-[#1E1B39] p-4">
+    <div className="rounded-2xl border border-white/10 bg-[#13131E] p-4">
       <div className="mb-3 flex items-center justify-between gap-2">
         <p className="text-sm font-bold text-white">Son İşlemler</p>
         {grants.length > 5 && (
-          <button type="button" onClick={() => setShowAll((value) => !value)} className="text-[11px] font-bold text-[#9C8CFF]">
+          <button type="button" onClick={() => setShowAll((value) => !value)} className="text-[11px] font-bold text-[#A855F7]">
             {showAll ? 'Daha Az' : 'Tümünü Gör >'}
           </button>
         )}
@@ -50,52 +51,74 @@ export default function CoinRecentTable({ grants = [], loading, onReverted }) {
 
       {loading ? (
         <div className="flex items-center justify-center py-8">
-          <Loader2 className="h-6 w-6 animate-spin text-[#8E43FF]" />
+          <Loader2 className="h-6 w-6 animate-spin text-[#A855F7]" />
         </div>
       ) : visible.length === 0 ? (
         <p className="py-8 text-center text-xs text-white/50">Henüz coin yüklemesi yapılmadı.</p>
       ) : (
-        <div className="space-y-2">
-          {visible.map((grant) => (
-            <div key={grant.id} className="rounded-xl border border-white/10 bg-[#171432] p-3">
-              <div className="flex items-center gap-2.5">
-                <span className="h-9 w-9 shrink-0 overflow-hidden rounded-full border border-white/10 bg-white/10">
-                  {grant.user_avatar ? (
-                    <Image src={grant.user_avatar} alt={grant.user_name} className="h-full w-full" fittingType="fill" draggable={false} />
-                  ) : (
-                    <span className="flex h-full w-full items-center justify-center text-xs font-bold text-white/70">
-                      {String(grant.user_name || '?').trim().charAt(0).toUpperCase()}
-                    </span>
-                  )}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-bold text-white">{grant.user_name || 'Kullanıcı'}</p>
-                  <p className="flex items-center gap-1 truncate text-[10px] font-semibold text-emerald-400">
-                    <ArrowUpRight className="h-3 w-3 shrink-0" /> Coin Yükleme
-                    <span className="text-white/35">• {formatWhen(grant.created_date)}</span>
-                  </p>
-                </div>
-                <div className="shrink-0 text-right">
-                  <p className="flex items-center justify-end gap-1 text-sm font-bold tabular-nums text-amber-300">
-                    <Coins className="h-3.5 w-3.5" /> {amountText(grant.amount)}
-                  </p>
-                  {grant.status === 'active' ? (
-                    <button
-                      type="button"
-                      onClick={() => revert(grant)}
-                      disabled={busyId === grant.id}
-                      className="mt-1 text-[11px] font-bold text-[#9C8CFF] disabled:opacity-50"
-                    >
-                      {busyId === grant.id ? 'Geri çekiliyor...' : 'Geri Çek'}
-                    </button>
-                  ) : (
-                    <p className="mt-1 text-[11px] font-semibold text-white/40">Geri çekildi</p>
-                  )}
-                </div>
-              </div>
-              {grant.note && <p className="mt-2 truncate text-[11px] text-white/45">{grant.note}</p>}
-            </div>
-          ))}
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[400px] border-collapse text-left">
+            <thead>
+              <tr className="border-b border-white/10">
+                <th className={HEAD}>Kullanıcı</th>
+                <th className={HEAD}>İşlem Türü</th>
+                <th className={HEAD}>Miktar</th>
+                <th className={HEAD}>Tarih</th>
+                <th className={`${HEAD} text-right`}>İşlem</th>
+              </tr>
+            </thead>
+            <tbody>
+              {visible.map((grant) => {
+                const when = formatWhen(grant.created_date);
+                return (
+                  <tr key={grant.id} className="border-b border-white/5 last:border-0">
+                    <td className="py-2.5 pr-2">
+                      <div className="flex items-center gap-2">
+                        <span className="h-7 w-7 shrink-0 overflow-hidden rounded-full border border-white/10 bg-white/10">
+                          {grant.user_avatar ? (
+                            <Image src={grant.user_avatar} alt={grant.user_name} className="h-full w-full" fittingType="fill" draggable={false} />
+                          ) : (
+                            <span className="flex h-full w-full items-center justify-center text-[10px] font-bold text-white/70">
+                              {String(grant.user_name || '?').trim().charAt(0).toUpperCase()}
+                            </span>
+                          )}
+                        </span>
+                        <span className="max-w-[74px] truncate text-[11px] font-bold text-white">{grant.user_name || 'Kullanıcı'}</span>
+                      </div>
+                    </td>
+                    <td className="py-2.5 pr-2">
+                      <span className="flex items-center gap-1 whitespace-nowrap text-[10px] font-semibold text-emerald-400">
+                        <ArrowUpRight className="h-3 w-3 shrink-0" /> Coin Yükleme
+                      </span>
+                    </td>
+                    <td className="py-2.5 pr-2">
+                      <span className="flex items-center gap-1 whitespace-nowrap text-[11px] font-bold tabular-nums text-[#F5B31A]">
+                        <Coins className="h-3.5 w-3.5 shrink-0" /> + {Number(grant.amount || 0).toLocaleString('tr-TR')}
+                      </span>
+                    </td>
+                    <td className="py-2.5 pr-2">
+                      <p className="whitespace-nowrap text-[10px] text-white/60">{when.date}</p>
+                      <p className="text-[10px] font-semibold text-white/40">{when.time}</p>
+                    </td>
+                    <td className="py-2.5 text-right">
+                      {grant.status === 'active' ? (
+                        <button
+                          type="button"
+                          onClick={() => revert(grant)}
+                          disabled={busyId === grant.id}
+                          className="whitespace-nowrap rounded-md border border-red-500/60 px-2 py-1 text-[10px] font-bold text-red-400 transition-transform active:scale-95 disabled:opacity-50"
+                        >
+                          {busyId === grant.id ? 'İşleniyor' : 'Geri Çek'}
+                        </button>
+                      ) : (
+                        <span className="whitespace-nowrap text-[10px] font-semibold text-white/35">Geri çekildi</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       )}
     </div>
