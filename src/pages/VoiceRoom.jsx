@@ -817,7 +817,8 @@ export default function VoiceRoom() {
 
   // Alt satır: hediye gönder ve odadan at (odadan atma yalnızca oda sahibinde).
   const profileFooter = profileTarget ? [
-    ...(!profileSelf ? [{ key: 'gift', icon: Gift, label: 'Hediye gönder', onClick: () => { setSelectedIds([profileTarget]); openGifts(); setProfileUserId(null); } }] : []),
+    // Kişi kendine de hediye gönderebilir.
+    { key: 'gift', icon: Gift, label: 'Hediye gönder', onClick: () => { setSelectedIds([profileTarget]); openGifts(); setProfileUserId(null); } },
     ...(!profileSelf && canKick ? [{ key: 'kick', icon: UserMinus, label: 'Odadan at', danger: true, onClick: () => { const target = profileTarget; setProfileUserId(null); kickFromRoom(target); } }] : []),
   ] : [];
 

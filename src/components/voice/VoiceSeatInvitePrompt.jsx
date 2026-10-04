@@ -8,7 +8,7 @@ export default function VoiceSeatInvitePrompt({ invite, roomName, onAccept, onDe
 
   return (
     <VoiceCard open title="Koltuk daveti" onClose={onDecline}>
-      <p className="px-1 pb-2 text-center text-xs text-[#4A4A4A]">
+      <p className="px-1 pb-2 text-center text-xs text-[#C6A45F]">
         {invite.invited_by_name || 'Bir yetkili'} seni {roomName ? `"${roomName}"` : 'odada'} {(invite.seat_index ?? 0) + 1}. koltuğa davet etti.
       </p>
       <div className="space-y-2">
