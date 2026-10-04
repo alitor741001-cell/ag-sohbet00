@@ -1,8 +1,7 @@
 import ProfileFrame from '@/components/ProfileFrame';
 import XpAvatar from '@/components/xp/XpAvatar';
-import VoiceControls from '@/components/player/VoiceControls';
 
-/** Sesli sohbet alanı: odadaki herkes burada görünür, mikrofonu açan konuşur. Kimse odadan çıkarılmaz. */
+/** Sesli sohbet alanı: odadaki herkes burada görünür, mikrofonu açan konuşur. Kontroller alttaki sesli sohbet çubuğundadır. */
 export default function RoomVoiceStage({ participants = [], voice, userId, viewerProfiles = {} }) {
   const speakingIds = voice?.speakingIds || [];
 
@@ -32,12 +31,8 @@ export default function RoomVoiceStage({ participants = [], voice, userId, viewe
         })}
       </div>
 
-      <div className="w-64 max-w-full">
-        <VoiceControls voice={voice} />
-      </div>
-
       <p className="max-w-xs text-center text-[11px] text-white/55">
-        Odadaki herkes sesli sohbete katılabilir. Yönetici film odasına döndüğünde film kaldığı yerden devam eder.
+        Odadaki herkes sesli sohbete katılabilir. Alttaki çubuktan oyunları, sohbeti, mikrofonu ve oda ayarlarını yönetebilirsin.
       </p>
     </div>
   );

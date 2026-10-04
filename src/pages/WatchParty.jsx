@@ -12,6 +12,8 @@ import { Image } from '@/components/ui/image';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import RoomSettingsMenu from '@/components/player/RoomSettingsMenu';
 import RoomVoiceStage from '@/components/player/RoomVoiceStage';
+import RoomVoiceControlBar from '@/components/player/RoomVoiceControlBar';
+import GamePanel from '@/components/games/GamePanel';
 
 
 import LiveKitDebugPanel from '@/components/player/LiveKitDebugPanel';
@@ -48,6 +50,7 @@ export default function WatchParty() {
   const [showViewers, setShowViewers] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [moviePickerOpen, setMoviePickerOpen] = useState(false);
+  const [gamesOpen, setGamesOpen] = useState(false);
   const [needPassword, setNeedPassword] = useState(false);
   const [pwInput, setPwInput] = useState('');
   const [pwSetInput, setPwSetInput] = useState('');
@@ -736,6 +739,24 @@ export default function WatchParty() {
         )}
         <RoomSettingsMenu open={showSettings} onClose={() => setShowSettings(false)} room={room} canMod={canMod} participants={room.participants || []} roomModerators={room.room_moderators || []} onAssignMod={assignMod} onRemoveMod={removeMod} roomName={roomNameEdit} setRoomName={setRoomNameEdit} onSaveName={saveRoomName} password={pwSetInput} setPassword={setPwSetInput} passwordOpen={showPwSet} setPasswordOpen={setShowPwSet} onVoice={toggleVoice} onChat={toggleChat} onHidden={toggleHidden} onPassword={() => savePassword()} onRemovePassword={() => setShowPwRemoveConfirm(true)} onUnban={unbanUser} onPickMovie={() => { setMoviePickerOpen(true); setShowSettings(false); }} onDeleteRoom={deleteRoom} onToggleApproval={toggleApproval} />
       </div>
+
+      {voiceMode && !chatOpen && !directOpen && !showSettings && (
+        <RoomVoiceControlBar
+          micActive={!voice.muted}
+          micDisabled={voice.remoteMuted || voice.requesting || voice.connectionState !== 'connected' || !room.voice_enabled}
+          deafened={voice.deafened}
+          chatOpen={chatOpen}
+          gamesOpen={gamesOpen}
+          unread={unread}
+          onToggleMic={voice.toggleMute}
+          onToggleSpeaker={voice.toggleDeafen}
+          onOpenGames={() => setGamesOpen(true)}
+          onToggleChat={() => setChatOpen(true)}
+          onOpenSettings={() => { setShowSettings(true); setShowViewers(false); }}
+        />
+      )}
+
+      <GamePanel open={gamesOpen} onClose={() => setGamesOpen(false)} roomId={id} />
 
       <LiveKitDebugPanel voice={voice} />
 
