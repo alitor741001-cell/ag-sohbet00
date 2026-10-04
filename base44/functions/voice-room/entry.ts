@@ -52,6 +52,7 @@ export default async function (req: Request): Promise<Response> {
       await base44.asServiceRole.entities.Room.update(room_id, { seats: next, seat_count: next.length });
       return next;
     };
+    // Sohbet notu yanıtı geciktirmez: kayıt arkadan yazılır, ekran yanıtı beklemez.
     const say = (text) => base44.asServiceRole.entities.RoomMessage.create({
       room_id, user_id: hiddenUser ? '' : user.id, user_name: shownName, text, type: 'system',
     }).catch(() => {});
@@ -83,7 +84,7 @@ export default async function (req: Request): Promise<Response> {
       if (pendingInvites.length !== (Array.isArray(room.seat_invites) ? room.seat_invites : []).length) {
         await base44.asServiceRole.entities.Room.update(room_id, { seat_invites: pendingInvites });
       }
-      await say(`${shownName} ${index + 1}. koltuğa oturdu.`);
+      say(`${shownName} ${index + 1}. koltuğa oturdu.`);
       return respond(next);
     }
 
@@ -94,7 +95,7 @@ export default async function (req: Request): Promise<Response> {
       await persist(next);
       const seatLeaveScores = scoresAfterSeatLeave(room, user.id);
       if (seatLeaveScores) await base44.asServiceRole.entities.Room.update(room_id, { number_scores: seatLeaveScores });
-      await say(`${shownName} koltuğundan kalktı.`);
+      say(`${shownName} koltuğundan kalktı.`);
       return respond(next);
     }
 
@@ -107,7 +108,7 @@ export default async function (req: Request): Promise<Response> {
       }
       const next = seats.map((seat) => (seat.index === index ? { ...seat, locked: !!locked } : seat));
       await persist(next);
-      await say(`${shownName} ${index + 1}. koltuğu ${locked ? 'kilitledi' : 'kilidini açtı'}.`);
+      say(`${shownName} ${index + 1}. koltuğu ${locked ? 'kilitledi' : 'kilidini açtı'}.`);
       return respond(next);
     }
 
@@ -162,7 +163,7 @@ export default async function (req: Request): Promise<Response> {
         return existing ? { ...existing, index } : emptySeat(index);
       });
       await persist(next);
-      await say(`${shownName} koltuk sayısını ${count} olarak ayarladı.`);
+      say(`${shownName} koltuk sayısını ${count} olarak ayarladı.`);
       return respond(next);
     }
 
@@ -371,7 +372,7 @@ export default async function (req: Request): Promise<Response> {
       if (!canMod) return Response.json({ error: 'yetkisiz' }, { status: 403 });
       const bannedNow = banned !== false;
       await base44.asServiceRole.entities.Room.update(room_id, { chat_seated_only: bannedNow });
-      await say(bannedNow
+      say(bannedNow
         ? `${displayName} sohbet yasağını açtı — yalnızca koltuktakiler yazabilir.`
         : `${displayName} sohbet yasağını kaldırdı.`);
       return Response.json({ ok: true, chat_seated_only: bannedNow });
@@ -381,7 +382,7 @@ export default async function (req: Request): Promise<Response> {
     if (action === 'number-board-open') {
       if (!canMod) return Response.json({ error: 'yetkisiz' }, { status: 403 });
       await base44.asServiceRole.entities.Room.update(room_id, { number_board: true, number_scores: [] });
-      await say(`${displayName} sayı tahtasını açtı.`);
+      say(`${displayName} sayı tahtasını açtı.`);
       return Response.json({ ok: true, seats, seat_count: seats.length, number_board: true, number_scores: [] });
     }
 
@@ -413,7 +414,7 @@ export default async function (req: Request): Promise<Response> {
     if (action === 'number-reset') {
       if (!canMod) return Response.json({ error: 'yetkisiz' }, { status: 403 });
       await base44.asServiceRole.entities.Room.update(room_id, { number_board: true, number_scores: [] });
-      await say(`${displayName} sayı tahtasını sıfırladı.`);
+      say(`${displayName} sayı tahtasını sıfırladı.`);
       return Response.json({ ok: true, seats, seat_count: seats.length, number_board: true, number_scores: [] });
     }
 

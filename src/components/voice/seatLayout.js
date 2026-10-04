@@ -39,3 +39,13 @@ export function seatIndexRows(count) {
 }
 
 export const isSeatOption = (count) => SEAT_OPTIONS.includes(Number(count));
+
+/** Koltuk sayısını anında büyütür/küçültür: dolu koltuklar korunur, yeni koltuklar boş açılır. */
+export function resizeSeats(seats = [], count) {
+  const total = Math.max(0, Number(count) || 0);
+  const current = Array.isArray(seats) ? seats : [];
+  return Array.from({ length: total }, (_, index) => {
+    const existing = current.find((seat) => seat.index === index);
+    return existing ? { ...existing, index } : { index, user_id: '', name: '', avatar: '', frame: '', frame_scale: 100, locked: false, muted: false };
+  });
+}

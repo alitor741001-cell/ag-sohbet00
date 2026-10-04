@@ -74,7 +74,12 @@ export default async function(req) {
     const noteName = hiddenUser ? hiddenDisplayName(me) : name;
     const noteActor = hiddenUser ? { user_id: '', user_avatar: HIDDEN_AVATAR_URL } : { user_id: user.id, user_avatar: user.avatar || '' };
     const ghost = !isOwner && (hiddenUser || (isAdmin && !hasVisibleRole));
-    const labelOverrides = await getRoleLabelOverrides(base44);
+    // Rol etiketleri yalnızca gerekince okunur: oda ayarları ekstra kayıt beklemez.
+    let labelOverridesCache: Record<string, string> | null = null;
+    const labelOverrides = async () => {
+      if (!labelOverridesCache) labelOverridesCache = await getRoleLabelOverrides(base44);
+      return labelOverridesCache;
+    };
 
     if ((action === 'join' || action === 'request-join') && !hasActiveMembership(me)) {
       await logSecurity(base44, 'room_join_denied', user, 'membership inactive', 'warning');
@@ -173,7 +178,7 @@ export default async function(req) {
         participants.push({ user_id: user.id, name, avatar: user.avatar || '', joined_at: new Date().toISOString(), muted: false, speaking: false });
         await base44.asServiceRole.entities.Room.update(room_id, { participants });
       }
-      const roleInfo = getRoleInfo(me, labelOverrides);
+      const roleInfo = getRoleInfo(me, await labelOverrides());
       const frameInfo = await getSpecialFrameInfo(base44, me, true);
       const profileMeta = profileFrameMeta(me);
       if (!already) {
@@ -531,7 +536,7 @@ export default async function(req) {
         await base44.asServiceRole.entities.Room.delete(room_id).catch(() => {});
         return Response.json({ ok: true });
       }
-      const roleInfoLeave = getRoleInfo(me, labelOverrides);
+      const roleInfoLeave = getRoleInfo(me, await labelOverrides());
       const roleMetaLeave = roleInfoLeave.label ? `{{ROLE|${roleInfoLeave.key || ''}|${roleInfoLeave.color || ''}|${roleInfoLeave.animation || 'pulse'}}}` : '';
       const profileMetaLeave = profileFrameMeta(me);
       const frameInfoLeave = await getSpecialFrameInfo(base44, me, false);
@@ -555,7 +560,7 @@ export default async function(req) {
       last_sync: new Date().toISOString(),
       ...(leaveScores ? { number_scores: leaveScores } : {})
     });
-    const roleInfoLeave2 = getRoleInfo(me, labelOverrides);
+    const roleInfoLeave2 = getRoleInfo(me, await labelOverrides());
     const roleMetaLeave2 = roleInfoLeave2.label ? `{{ROLE|${roleInfoLeave2.key || ''}|${roleInfoLeave2.color || ''}|${roleInfoLeave2.animation || 'pulse'}}}` : '';
     const profileMetaLeave2 = profileFrameMeta(me);
     const frameInfoLeave2 = await getSpecialFrameInfo(base44, me, false);

@@ -7,6 +7,7 @@ import { useVoiceChat } from '@/hooks/useVoiceChat';
 import useKeyboardInset from '@/hooks/useKeyboardInset';
 import { useToast } from '@/components/ui/use-toast';
 import VoiceSeatGrid from '@/components/voice/VoiceSeatGrid';
+import { resizeSeats } from '@/components/voice/seatLayout';
 import HiddenUserMarquee from '@/components/voice/HiddenUserMarquee';
 import { isHiddenName } from '@/lib/hiddenUser';
 import VoiceControlBar from '@/components/voice/VoiceControlBar';
@@ -385,6 +386,25 @@ export default function VoiceRoom() {
     }
   };
 
+  // Oda ayarı ekranda anında değişir: sunucu cevabı beklenmeden yerel kayıt güncellenir,
+  // ardından diğer cihazlara canlı yayınla aynı değer düşer.
+  const patchRoom = useCallback((patch) => {
+    setRoom((prev) => (prev ? { ...prev, ...patch } : prev));
+  }, []);
+
+  // Koltuk sayısı: düzen hemen büyür/küçülür, sunucu onayı arkadan alınır.
+  const changeSeatCount = useCallback(async (count) => {
+    const current = Array.isArray(room?.seats) ? room.seats : [];
+    // Yüksek numaralı dolu koltuk varsa sunucu reddeder — önce onun cevabı beklenir.
+    const busy = current.some((seat) => seat.index >= count && seat.user_id);
+    if (!busy) {
+      const next = resizeSeats(current, count);
+      patchRoom({ seats: next, seat_count: next.length });
+    }
+    const ok = await invokeVoice({ action: 'set-seat-count', seat_count: count });
+    if (!ok) syncRoom();
+  }, [room?.seats, invokeVoice, patchRoom, syncRoom]);
+
   const leaveRoom = useCallback(async () => {
     joinedRef.current = false;
     sawSelfRef.current = false;
@@ -494,8 +514,9 @@ export default function VoiceRoom() {
 
   const handleSetPassword = async (pw) => {
     try {
+      // Kilit durumu anında değişir, sunucu kaydı arkadan yazılır.
+      patchRoom({ password: pw ? 'protected' : '' });
       await base44.functions.invoke('room-presence', { action: 'set-password', room_id: id, password: pw });
-      await syncRoom();
       toast({ title: pw ? 'Oda kilitlendi' : 'Oda kilidi kaldırıldı' });
     } catch (error) {
       toast({ title: 'İşlem başarısız', description: error?.response?.data?.error || error.message, variant: 'destructive' });
@@ -505,8 +526,8 @@ export default function VoiceRoom() {
   // Oda ismi: başlıktaki kalemle değiştirilir, odadaki herkese anında yansır.
   const renameRoom = useCallback(async (nextName) => {
     try {
+      patchRoom({ name: nextName });
       await base44.functions.invoke('room-presence', { action: 'set-name', room_id: id, name: nextName });
-      await syncRoom();
       toast({ title: 'Oda ismi güncellendi' });
       return true;
     } catch (error) {
@@ -517,8 +538,9 @@ export default function VoiceRoom() {
 
   const handleToggleHidden = async () => {
     try {
+      patchRoom({ hidden: !room?.hidden });
       const response = await base44.functions.invoke('room-presence', { action: 'toggle-hidden', room_id: id });
-      await syncRoom();
+      patchRoom({ hidden: !!response.data?.hidden });
       toast({ title: response.data?.hidden ? 'Oda gizlendi' : 'Oda herkese açık' });
     } catch (error) {
       toast({ title: 'İşlem başarısız', description: error?.response?.data?.error || error.message, variant: 'destructive' });
@@ -544,7 +566,6 @@ export default function VoiceRoom() {
     setRoom((prev) => (prev ? { ...prev, number_board: next } : prev));
     const ok = await invokeVoice({ action: next ? 'number-board-open' : 'number-board-close' });
     if (ok) {
-      await syncRoom();
       toast({ title: next ? 'Sayaç tahtası açıldı' : 'Sayaç tahtası kapatıldı', description: next ? 'Her koltuğun altında sayaç görünür.' : undefined });
     } else {
       setRoom((prev) => (prev ? { ...prev, number_board: !next } : prev));
@@ -554,8 +575,6 @@ export default function VoiceRoom() {
   const toggleChatBan = async () => {
     const ok = await invokeVoice({ action: 'chat-ban', banned: !chatBanned });
     if (ok) {
-      // Yasağın odaya işlendiğini doğrula — sohbet bölümü anında kilitlenir.
-      await syncRoom();
       // Menü açık kalır; buton etiketi "Sohbet yasağını kaldır" olarak değişir.
       toast({
         title: chatBanned ? 'Sohbet yasağı kaldırıldı' : 'Sohbet yasağı açıldı',
@@ -576,8 +595,9 @@ export default function VoiceRoom() {
 
   const handleToggleMod = async (targetId, makeMod) => {
     try {
+      const mods = room?.room_moderators || [];
+      patchRoom({ room_moderators: makeMod ? [...new Set([...mods, targetId])] : mods.filter((value) => value !== targetId) });
       await base44.functions.invoke('room-presence', { action: makeMod ? 'assign-mod' : 'remove-mod', room_id: id, target_id: targetId });
-      await syncRoom();
       toast({ title: makeMod ? 'Yönetici yapıldı' : 'Yöneticilik kaldırıldı' });
     } catch (error) {
       toast({ title: 'İşlem başarısız', description: error?.response?.data?.error || error.message, variant: 'destructive' });
@@ -588,8 +608,8 @@ export default function VoiceRoom() {
     if (!targetId) return;
     const muted = !!participants.find((person) => person.user_id === targetId)?.muted;
     try {
+      patchRoom({ participants: (room?.participants || []).map((person) => (person.user_id === targetId ? { ...person, muted: !muted } : person)) });
       await base44.functions.invoke('room-presence', { action: 'toggle-mute', room_id: id, target_id: targetId });
-      await syncRoom();
       toast({ title: muted ? 'Mikrofonu açıldı' : 'Mikrofonu kapatıldı' });
     } catch (error) {
       toast({ title: 'İşlem başarısız', description: error?.response?.data?.error || error.message, variant: 'destructive' });
@@ -981,7 +1001,7 @@ export default function VoiceRoom() {
         participants={participants}
         isOwner={isOwner}
         canMod={canMod}
-        onSeatCount={(count) => invokeVoice({ action: 'set-seat-count', seat_count: count })}
+        onSeatCount={changeSeatCount}
         onSetPassword={handleSetPassword}
         onToggleHidden={handleToggleHidden}
         onToggleMod={handleToggleMod}
