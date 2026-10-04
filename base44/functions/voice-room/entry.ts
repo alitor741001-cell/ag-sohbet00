@@ -7,6 +7,8 @@ import { appendRoomLog } from '../../shared/roomLog.ts';
 import { coinsForK, ensureGiftWallet, formatK, giftBalance } from '../../shared/giftWallet.ts';
 
 const SEAT_OPTIONS = [2, 5, 8, 9, 12, 15, 20, 24];
+// Bu değerin (coin) üzerindeki hediyeler bütün sesli odalara duyurulur.
+const BIG_GIFT_SCORE = 1000000;
 const ACTIONS = ['seat-take', 'seat-leave', 'seat-lock', 'seat-kick', 'set-seat-count', 'invite', 'seat-invite', 'seat-invite-clear', 'gift-state', 'gift-send', 'number-board-open', 'number-board-close', 'number-step', 'number-reset', 'number-settings', 'chat-ban'];
 
 const emptySeat = (index, locked = false) => ({
@@ -293,6 +295,31 @@ export default async function (req: Request): Promise<Response> {
         Promise.all(messageRecords.map((message) => base44.asServiceRole.entities.RoomMessage.create(message))),
         base44.asServiceRole.entities.GiftSend.bulkCreate(records),
       ]);
+
+      // Büyük hediye (1 milyon ve üzeri): tüm sesli odaların ekranına duyuru düşer.
+      if (coinsForK(kValue) * quantity >= BIG_GIFT_SCORE) {
+        const primary = recipients[0];
+        const recipientUser = await base44.asServiceRole.entities.User.get(primary.user_id).catch(() => null);
+        await base44.asServiceRole.entities.BigGiftAlert.create({
+          room_id,
+          room_name: room.name || '',
+          sender_id: user.id,
+          sender_name: displayName,
+          sender_avatar: me?.avatar || user.avatar || '',
+          sender_frame: me?.profile_frame || '',
+          sender_frame_scale: Number(me?.profile_frame_scale) || 100,
+          recipient_id: primary.user_id,
+          recipient_name: primary.name,
+          recipient_avatar: recipientUser?.avatar || '',
+          recipient_frame: recipientUser?.profile_frame || '',
+          recipient_frame_scale: Number(recipientUser?.profile_frame_scale) || 100,
+          gift_id: giftRecord.id,
+          gift_name: giftRecord.name,
+          gift_emoji: giftEmoji,
+          gift_image_url: giftRecord.image_url || '',
+          score: coinsForK(kValue) * quantity,
+        }).catch(() => {});
+      }
 
       return Response.json({
         ok: true,

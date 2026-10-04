@@ -1,0 +1,84 @@
+{
+  "name": "BigGiftAlert",
+  "type": "object",
+  "properties": {
+    "room_id": {
+      "type": "string"
+    },
+    "room_name": {
+      "type": "string"
+    },
+    "sender_id": {
+      "type": "string"
+    },
+    "sender_name": {
+      "type": "string"
+    },
+    "sender_avatar": {
+      "type": "string"
+    },
+    "sender_frame": {
+      "type": "string"
+    },
+    "sender_frame_scale": {
+      "type": "number",
+      "default": 100
+    },
+    "recipient_id": {
+      "type": "string"
+    },
+    "recipient_name": {
+      "type": "string"
+    },
+    "recipient_avatar": {
+      "type": "string"
+    },
+    "recipient_frame": {
+      "type": "string"
+    },
+    "recipient_frame_scale": {
+      "type": "number",
+      "default": 100
+    },
+    "gift_id": {
+      "type": "string"
+    },
+    "gift_name": {
+      "type": "string"
+    },
+    "gift_emoji": {
+      "type": "string",
+      "default": "\ud83c\udf81"
+    },
+    "gift_image_url": {
+      "type": "string",
+      "default": ""
+    },
+    "score": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "sender_id",
+    "gift_id"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

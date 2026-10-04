@@ -27,6 +27,8 @@ import GiftSendButton from '@/components/voice/GiftSendButton';
 import drainGiftQueue from '@/components/voice/drainGiftQueue';
 import VoiceGiftOverlay from '@/components/voice/VoiceGiftOverlay';
 import useGiftAlerts from '@/hooks/useGiftAlerts';
+import useBigGiftAlerts from '@/hooks/useBigGiftAlerts';
+import BigGiftStage from '@/components/voice/BigGiftStage';
 import { useGiftBalance, useGiftCatalog } from '@/hooks/useGiftCatalog';
 import { tierForK, toneColor } from '@/lib/giftTone';
 
@@ -70,6 +72,8 @@ export default function VoiceRoom() {
   const giftMap = useMemo(() => new Map(gifts.map((item) => [item.id, item])), [gifts]);
   const resolveGift = useCallback((giftKey) => giftMap.get(giftKey) || null, [giftMap]);
   const { alert: giftAlert, push: pushGiftAlert, markSeen: markGiftSeen } = useGiftAlerts(messages, resolveGift);
+  // Büyük hediye duyurusu tüm sesli odalarda görünür.
+  const bigGift = useBigGiftAlerts();
 
   const joinedRef = useRef(false);
   const joinTriedRef = useRef(false);
@@ -924,7 +928,8 @@ export default function VoiceRoom() {
         count={giftSendCount}
       />
 
-      <VoiceGiftOverlay alert={overlayAlert} tiers={tiers} />
+      <VoiceGiftOverlay alert={bigGift ? null : overlayAlert} tiers={tiers} />
+      <BigGiftStage alert={bigGift} />
 
       {notice && joined && (
         <p className="pointer-events-none absolute left-1/2 top-20 z-[170] -translate-x-1/2 rounded-full bg-black/80 px-4 py-2 text-xs text-white">{notice}</p>
