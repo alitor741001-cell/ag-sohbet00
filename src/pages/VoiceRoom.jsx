@@ -130,6 +130,17 @@ export default function VoiceRoom() {
     [seats, participants]
   );
 
+  // Mik'e davet listesi: koltukta oturmayan odadakiler (kendisi hariç).
+  const unseatedViewers = useMemo(() => {
+    const seatedIds = new Set(seats.filter((seat) => seat.user_id).map((seat) => seat.user_id));
+    return participants.filter((person) => person.user_id && person.user_id !== user?.id && !seatedIds.has(person.user_id));
+  }, [participants, seats, user?.id]);
+  // Koltuk daveti gönderilmiş kişiler listede "Davet edildi" olarak görünür.
+  const seatInviteIds = useMemo(
+    () => (Array.isArray(room?.seat_invites) ? room.seat_invites.map((invite) => invite.user_id) : []),
+    [room?.seat_invites]
+  );
+
   // Kayıt defteri ve odadan atılanlar — yönetici işlemleri sohbete değil buraya yazılır.
   const roomLogs = useMemo(() => (Array.isArray(room?.room_logs) ? room.room_logs : []), [room?.room_logs]);
   const bannedUsers = useMemo(() => (Array.isArray(room?.banned_users) ? room.banned_users : []), [room?.banned_users]);
@@ -449,10 +460,14 @@ export default function VoiceRoom() {
     setInviteOpen(true);
   };
 
-  const inviteToSeat = async (targetId) => {
+  // Koltuk daveti: hedef koltuk verilirse o koltuğa, verilmezse ilk boş koltuğa gider.
+  const inviteToSeat = async (targetId, index) => {
     if (!targetId) return;
-    const ok = await invokeVoice({ action: 'seat-invite', target_id: targetId });
-    if (ok) toast({ title: 'Koltuk daveti gönderildi', description: 'Karşı tarafın ekranında "Otur / Aya kalk" seçenekleri çıkacak.' });
+    const ok = await invokeVoice({ action: 'seat-invite', target_id: targetId, seat_index: index });
+    if (ok) {
+      await syncRoom();
+      toast({ title: 'Koltuk daveti gönderildi', description: 'Karşı tarafın ekranında "Otur / Aya kalk" seçenekleri çıkacak.' });
+    }
   };
 
   const acceptSeatInvite = async (index) => {
@@ -989,7 +1004,10 @@ export default function VoiceRoom() {
         index={seatIndex ?? 0}
         canMod={canMod}
         myId={user?.id}
+        viewers={unseatedViewers}
+        invitedIds={seatInviteIds}
         onTakeSeat={handleTakeSeat}
+        onInviteToSeat={inviteToSeat}
         onToggleLock={() => invokeVoice({ action: 'seat-lock', seat_index: seatIndex, locked: !sheetSeat?.locked })}
         onStepDown={() => invokeVoice({ action: 'seat-leave' })}
       />
