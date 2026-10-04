@@ -25,7 +25,7 @@ import GiftBoard from '@/components/voice/GiftBoard';
 import VoiceGiftOverlay from '@/components/voice/VoiceGiftOverlay';
 import useGiftAlerts from '@/hooks/useGiftAlerts';
 import { useGiftBalance, useGiftCatalog } from '@/hooks/useGiftCatalog';
-import { formatK, tierForK, toneColor } from '@/lib/giftTone';
+import { tierForK, toneColor } from '@/lib/giftTone';
 
 export default function VoiceRoom() {
   const { id } = useParams();
@@ -71,6 +71,7 @@ export default function VoiceRoom() {
   const sawSelfRef = useRef(false);
   const keepSeatRef = useRef(false);
   const giftFlashRef = useRef(null);
+  const giftIdleRef = useRef(null);
 
   const seats = useMemo(() => (Array.isArray(room?.seats) ? room.seats : []), [room?.seats]);
   const myInvite = useMemo(
@@ -438,6 +439,12 @@ export default function VoiceRoom() {
 
   useEffect(() => () => window.clearTimeout(giftFlashRef.current), []);
 
+  // Hediye kutusu: art arda gönderim boyunca açık kalır, gönderim durunca kapanır.
+  const openGifts = useCallback(() => { window.clearTimeout(giftIdleRef.current); setGiftOpen(true); }, []);
+  const closeGifts = useCallback(() => { window.clearTimeout(giftIdleRef.current); setGiftOpen(false); }, []);
+
+  useEffect(() => () => window.clearTimeout(giftIdleRef.current), []);
+
   // Hediye tahtası açıkken profiller çoklu seçilir — kişi kendini de seçebilir.
   const toggleGiftPerson = useCallback((userId) => {
     if (!userId) return;
@@ -471,12 +478,12 @@ export default function VoiceRoom() {
         recipientName: (data.recipients || []).map((item) => item.name).join(', '),
         toId: '',
       });
-      setSelectedIds([]);
-      setGiftOpen(false);
-      toast({
-        title: `🎁 ${data.gift?.name || gift.name} gönderildi – ${data.count} kişiye`,
-        description: `Toplam ${formatK(data.total_k)} harcandı.`,
-      });
+      // Kutu açık kalır: her basışta yeniden gönderir, göndermeyi bırakınca kendiliğinden kapanır.
+      window.clearTimeout(giftIdleRef.current);
+      giftIdleRef.current = window.setTimeout(() => {
+        setGiftOpen(false);
+        setSelectedIds([]);
+      }, 2500);
     } catch (error) {
       toast({ title: 'Hediye gönderilemedi', description: error?.response?.data?.error || error.message, variant: 'destructive' });
     } finally {
@@ -657,7 +664,7 @@ export default function VoiceRoom() {
         gamesOpen={gamesOpen}
         giftOpen={giftOpen}
         onOpenGames={() => setGamesOpen(true)}
-        onOpenGifts={() => setGiftOpen(true)}
+        onOpenGifts={openGifts}
         onOpenPrivateChat={() => setDmOpen(true)}
         onToggleChat={() => setChatOpen((value) => !value)}
       />
@@ -767,7 +774,7 @@ export default function VoiceRoom() {
 
       <GiftBoard
         open={giftOpen}
-        onClose={() => setGiftOpen(false)}
+        onClose={closeGifts}
         gifts={gifts}
         tiers={tiers}
         people={giftPeople}

@@ -87,17 +87,22 @@ export default function GiftBoard({ open, onClose, gifts = [], tiers = [], peopl
         </p>
       )}
 
-      <button
-        type="button"
-        disabled={!canSend}
-        onClick={() => onSend(gift)}
-        className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl py-3 text-sm font-black text-black transition-transform active:scale-95 disabled:opacity-40"
-        style={{ background: `linear-gradient(135deg, ${color}, ${tone?.glow || color})` }}
-      >
-        <Send className="h-4 w-4" />
-        {gift ? (count > 1 ? `${gift.name} – ${count} kişiye gönder` : `${gift.name} gönder`) : 'Bir hediye seç'}
-        {gift && count > 0 && <span className="tabular-nums opacity-80">{formatPrice(totalK)}</span>}
-      </button>
+      <div className="mt-3 flex items-center justify-between gap-3">
+        <p className="min-w-0 flex-1 text-[10px] leading-tight text-white/45">
+          {gift ? `Gönder’e her bastığında ${gift.name} tekrar gider; bırakınca kutu kapanır.` : 'Önce bir hediye seç.'}
+        </p>
+        <button
+          type="button"
+          disabled={!canSend}
+          onClick={() => onSend(gift)}
+          className="flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[11px] font-black text-black transition-transform active:scale-90 disabled:opacity-40"
+          style={{ background: `linear-gradient(135deg, ${color}, ${tone?.glow || color})` }}
+        >
+          <Send className="h-3.5 w-3.5" />
+          Gönder
+          {gift && count > 0 && <span className="tabular-nums opacity-80">· {formatPrice(totalK)}</span>}
+        </button>
+      </div>
     </VoiceSheet>
   );
 }
