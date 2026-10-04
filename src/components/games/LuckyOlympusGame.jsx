@@ -2,14 +2,18 @@ import React, { useMemo, useRef } from 'react';
 import { Image } from '@/components/ui/image';
 import { useSize } from '@/hooks/use-size';
 import { LUCKY_OLYMPUS_SCREEN } from './luckyOlympusAssets';
-import { BACK_BOX, SCREEN_HEIGHT, SCREEN_WIDTH, boxStyle } from './lucky/luckyLayout';
+import { BACK_BOX, REEL_BOX, SCREEN_HEIGHT, SCREEN_WIDTH, SPIN_BOX, boxStyle } from './lucky/luckyLayout';
+import useLuckyGame from './lucky/useLuckyGame';
+import LuckyReels from './lucky/LuckyReels';
+import '@/styles/lucky.css';
 
-/** Lucky Olympus: oyun ekranı görseli. */
+/** Lucky Olympus: oyun ekranı görseli, görseldeki SPIN düğmesi ve canlı makaralar. */
 export default function LuckyOlympusGame({ onBack }) {
   const boxRef = useRef(null);
   const size = useSize(boxRef);
+  const game = useLuckyGame();
 
-  // Görselin tamamı görünür kalır; dokunma alanı görselin oranına oturur.
+  // Görselin tamamı görünür kalır; canlı katmanlar görselin oranına oturur.
   const frame = useMemo(() => {
     const width = size?.width || 0;
     const height = size?.height || 0;
@@ -32,6 +36,16 @@ export default function LuckyOlympusGame({ onBack }) {
             className="absolute inset-0 h-full w-full"
           />
 
+          {/* Makara alanı: görseldeki ızgaranın tam üzerinde durur. */}
+          <div className="absolute" style={boxStyle(REEL_BOX)}>
+            <LuckyReels
+              grid={game.grid}
+              multiValues={game.multiValues}
+              spinning={game.spinning}
+              spinId={game.spinId}
+            />
+          </div>
+
           {/* Görseldeki profil simgesi: oyun merkezine dönüş alanı. */}
           <button
             type="button"
@@ -39,6 +53,16 @@ export default function LuckyOlympusGame({ onBack }) {
             aria-label="Oyun merkezine dön"
             className="absolute rounded-full"
             style={boxStyle(BACK_BOX)}
+          />
+
+          {/* Görseldeki SPIN düğmesi. */}
+          <button
+            type="button"
+            onClick={game.runSpin}
+            disabled={game.spinning || game.status !== 'ready'}
+            aria-label="Döndür"
+            className="absolute rounded-full"
+            style={boxStyle(SPIN_BOX)}
           />
         </div>
       )}

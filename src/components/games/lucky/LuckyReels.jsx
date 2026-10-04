@@ -65,7 +65,8 @@ export default function LuckyReels({ grid, multiValues, spinning, spinId }) {
               <div
                 key={`spin-${spinId}-${col}`}
                 className="lucky-strip absolute left-0 top-0 w-full"
-                style={{ height: `${(STRIP / ROWS) * 100}%`, animationDuration: `${SPIN_MS}ms` }}
+                // Her sütun biraz farklı hızda kayar: karışık, yavaş bir akış.
+                style={{ height: `${(STRIP / ROWS) * 100}%`, animationDuration: `${SPIN_MS + col * 240}ms` }}
               >
                 {strips[col].map((symbol, index) => (
                   <Tile key={index} symbol={symbol} top={(index / STRIP) * 100} height={100 / STRIP} />

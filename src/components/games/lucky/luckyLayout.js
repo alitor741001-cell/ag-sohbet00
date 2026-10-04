@@ -24,5 +24,5 @@ export const TOP_BUTTONS = { top: 0.9, size: 7.6, lefts: [70.2, 80.7, 89.7] };
 // Alt kontrol paneli: durum şeridi, satın al, SPIN ve bahis satırı.
 export const BANNER_BOX = { left: 6, top: 74.6, width: 88, height: 3.9 };
 export const BUY_BOX = { left: 7, top: 79.5, width: 24, height: 10 };
-export const SPIN_BOX = { left: 40.5, top: 78.5, width: 22, height: 11 };
+export const SPIN_BOX = { left: 39.5, top: 78, width: 24, height: 11.5 };
 export const BET_ROW = { left: 4, top: 90, width: 92, height: 5 };
