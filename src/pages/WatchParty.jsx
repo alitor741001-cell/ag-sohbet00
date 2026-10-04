@@ -26,8 +26,7 @@ import ProfileFrame from '@/components/ProfileFrame';
 import useSocialBadges from '@/hooks/useSocialBadges';
 import { isModerator } from '@/lib/roles';
 import { triggerBanNotice } from '@/lib/banNotice';
-import useRoomLevels from '@/hooks/useRoomLevels';
-import RoomLevelBadge from '@/components/levels/RoomLevelBadge';
+import { isHiddenName } from '@/lib/hiddenUser';
 import XpAvatar from '@/components/xp/XpAvatar';
 import UserProfile from '@/pages/UserProfile';
 import SubscriptionPrompt from '@/components/SubscriptionPrompt';
@@ -332,7 +331,6 @@ export default function WatchParty() {
 
   // İzleyici profillerini çek (gerçek avatarlar için)
   const participantIdsKey = [...(room?.participants || []), ...(room?.recent_participants || [])].map((p) => p.user_id).filter(Boolean).filter((value, index, all) => all.indexOf(value) === index).sort().join(',');
-  const { levels: roomLevels } = useRoomLevels(participantIdsKey ? participantIdsKey.split(',') : []);
   useEffect(() => {
     if (!participantIdsKey) return;
     const ids = participantIdsKey.split(',');
@@ -747,14 +745,15 @@ export default function WatchParty() {
                 const avatar = p.avatar || prof?.avatar;
                 const presence = presenceMap[p.user_id];
                 const isOnline = presence?.online && (Date.now() - new Date(presence.last_seen).getTime() < 60000);
+                // Gizli kullanıcı: yalnızca kırmızı takma ad görünür, profili açılmaz.
+                const hidden = isHiddenName(p.name);
                 return (
-                  <button key={p.user_id} onClick={() => openUserProfile(p.user_id)} className="flex items-center gap-1.5 text-xs py-0.5 w-full text-left hover:bg-secondary/50 rounded px-1">
+                  <button key={p.user_id} onClick={() => { if (!hidden) openUserProfile(p.user_id); }} className={`flex items-center gap-1.5 text-xs py-0.5 w-full text-left rounded px-1 ${hidden ? 'cursor-default' : 'hover:bg-secondary/50'}`}>
                     <div className="shrink-0 relative">
-                      {prof?.profile_frame ? <ProfileFrame frame={prof.profile_frame} avatar={avatar} name={p.name} size="xs" frameScale={prof.profile_frame_scale} /> : <XpAvatar avatar={avatar} name={p.name} userId={p.user_id} size="xs" />}
+                      {!hidden && prof?.profile_frame ? <ProfileFrame frame={prof.profile_frame} avatar={avatar} name={p.name} size="xs" frameScale={prof.profile_frame_scale} /> : <XpAvatar avatar={avatar} name={p.name} userId={hidden ? '' : p.user_id} size="xs" />}
                       <span className={`absolute bottom-0 right-0 w-2 h-2 rounded-full border border-card ${isOnline ? 'bg-green-400' : 'bg-red-400'}`} />
                     </div>
-                    <span className="flex-1 truncate min-w-0">{p.name}{p.user_id === room.owner_id && <Crown className="w-3 h-3 text-amber-400 inline ml-0.5 shrink-0" />}</span>
-                    <RoomLevelBadge level={roomLevels[p.user_id]} textOnly />
+                    <span className="flex-1 truncate min-w-0">{hidden ? <span className="hidden-user-name">{p.name}</span> : <>{p.name}{p.user_id === room.owner_id && <Crown className="w-3 h-3 text-amber-400 inline ml-0.5 shrink-0" />}</>}</span>
                     {!isOnline && <span className="text-[9px] text-red-400 shrink-0">çevrim dışı</span>}
                   </button>
                 );

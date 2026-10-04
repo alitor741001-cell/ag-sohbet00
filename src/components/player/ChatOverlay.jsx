@@ -15,7 +15,6 @@ import RoomCheatNotice from '@/components/player/RoomCheatNotice';
 import EmojiPicker from '@/components/player/EmojiPicker';
 import RoomSettingsContent from '@/components/player/RoomSettingsContent';
 import ParticipantHistoryPanel from '@/components/player/ParticipantHistoryPanel';
-import useRoomLevels from '@/hooks/useRoomLevels';
 
 
 const EMOJIS = ['😀', '😂', '😍', '🔥', '👍', '👏', '😱', '😢', '🎬', '🍿', '❤️', '🎉'];
@@ -35,8 +34,6 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
   const [msgFilter, setMsgFilter] = useState('all');
   const [blockedUsers, setBlockedUsers] = useState(user?.blocked_users || []);
   useEffect(() => { setBlockedUsers(user?.blocked_users || []); }, [user?.blocked_users]);
-  const levelUserIds = [...messages.map((message) => message.user_id), ...participants.map((participant) => participant.user_id), ...recentParticipants.map((participant) => participant.user_id)];
-  const { levels: roomLevels } = useRoomLevels(levelUserIds);
   const scrollRef = useRef(null);
   const profiles = useMessageProfiles(messages.map((message) => message.user_id));
   const [roomMods, setRoomMods] = useState([]);
@@ -291,13 +288,13 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
                   );
                 })()
               ) : (
-                <RoomChatMessage message={m} profile={profiles[m.user_id]} level={roomLevels[m.user_id]} ownerId={ownerId} roomModerators={roomModerators} currentUserId={user?.id} canDelete={isOwner || user?.id === m.user_id} onDelete={del} onImage={setLightbox} onOpenProfile={onProfileCard} />
+                <RoomChatMessage message={m} profile={profiles[m.user_id]} ownerId={ownerId} roomModerators={roomModerators} currentUserId={user?.id} canDelete={isOwner || user?.id === m.user_id} onDelete={del} onImage={setLightbox} onOpenProfile={onProfileCard} />
               )}
             </div>
           ))}
           </div>
           ) : msgFilter === 'izleyici' ? (
-          <ParticipantHistoryPanel participants={participants} recentParticipants={recentParticipants} profiles={viewerProfiles} presenceMap={presenceMap} roomLevels={roomLevels} ownerId={ownerId} onSelect={onProfileCard} />
+          <ParticipantHistoryPanel participants={participants} recentParticipants={recentParticipants} profiles={viewerProfiles} presenceMap={presenceMap} ownerId={ownerId} onSelect={onProfileCard} />
           ) : msgFilter === 'yetkililer' ? (
           <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-1 bg-black">
           {roomMods.length === 0 ? <p className="text-center text-sm text-[#888] py-8">Henüz yetkili yok.</p> :
