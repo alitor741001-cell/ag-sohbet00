@@ -1,15 +1,13 @@
 import { useState } from 'react';
 import GiftManager from '@/components/admin/gifts/GiftManager';
 import GiftTierManager from '@/components/admin/gifts/GiftTierManager';
-import GiftSendHistory from '@/components/admin/gifts/GiftSendHistory';
 
 const TABS = [
   { key: 'gifts', label: 'Hediyeler' },
   { key: 'tiers', label: 'K Seviyeleri' },
-  { key: 'history', label: 'Gönderim Geçmişi' },
 ];
 
-/** Admin panel: hediyeler, K seviyesi renkleri ve hediye gönderim geçmişi. */
+/** Admin panel: hediyeler ve K seviyesi renkleri. */
 export default function AdminGifts() {
   const [tab, setTab] = useState('gifts');
 
@@ -17,7 +15,7 @@ export default function AdminGifts() {
     <div>
       <h1 className="text-2xl font-extrabold mb-1">Hediyeler</h1>
       <p className="mb-4 text-sm text-muted-foreground">
-        Hediye tahtasındaki hediyeler, K fiyatları, K renk seviyeleri ve kim kime ne gönderdi kayıtları.
+        Hediye tahtasındaki hediyeler, K fiyatları ve K renk seviyeleri.
       </p>
 
       <div className="no-scrollbar mb-4 flex gap-2 overflow-x-auto">
@@ -35,7 +33,6 @@ export default function AdminGifts() {
 
       {tab === 'gifts' && <GiftManager />}
       {tab === 'tiers' && <GiftTierManager />}
-      {tab === 'history' && <GiftSendHistory />}
     </div>
   );
 }
