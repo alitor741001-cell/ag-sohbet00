@@ -9,7 +9,7 @@ export default function GiftSendButton({ visible, disabled, onSend, count = 0 })
         disabled={disabled}
         onClick={onSend}
         aria-label="Gönder"
-        className="slot-spin pointer-events-auto flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-full text-[11px] font-black leading-none text-black/80 transition-transform active:scale-90 disabled:opacity-40"
+        className="slot-spin pointer-events-auto flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-full text-[11px] font-black leading-none text-black/80 touch-manipulation transition-transform active:scale-90 disabled:opacity-40"
       >
         Gönder
       </button>

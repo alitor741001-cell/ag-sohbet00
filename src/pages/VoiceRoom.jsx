@@ -23,6 +23,7 @@ import RoomDirectMessages from '@/components/player/RoomDirectMessages';
 import GamePanel from '@/components/games/GamePanel';
 import GiftBoard from '@/components/voice/GiftBoard';
 import GiftSendButton from '@/components/voice/GiftSendButton';
+import drainGiftQueue from '@/components/voice/drainGiftQueue';
 import VoiceGiftOverlay from '@/components/voice/VoiceGiftOverlay';
 import useGiftAlerts from '@/hooks/useGiftAlerts';
 import { useGiftBalance, useGiftCatalog } from '@/hooks/useGiftCatalog';
@@ -503,9 +504,9 @@ export default function VoiceRoom() {
   }, []);
 
   // Tek gönderim: bakiye düşer, alıcı başına kayıt ve sohbet satırı oluşur.
-  const sendGiftOnce = async (gift, ids) => {
+  const sendGiftOnce = async (gift, ids, quantity = 1) => {
     const response = await base44.functions.invoke('voice-room', {
-      room_id: id, action: 'gift-send', gift_id: gift.id, target_ids: ids,
+      room_id: id, action: 'gift-send', gift_id: gift.id, target_ids: ids, quantity,
     });
     const data = response.data;
     if (typeof data.coins === 'number') setCoins(data.coins);
@@ -534,22 +535,12 @@ export default function VoiceRoom() {
     setGiftOpen(false);
     setGiftSendActive(true);
     armGiftHide();
+    setGiftSendCount((count) => count + 1);
     giftQueueRef.current.push({ gift: selectedGift, ids: [...selectedIds], session: giftSessionRef.current });
-    if (giftBusyRef.current) return;
-    giftBusyRef.current = true;
-    try {
-      while (giftQueueRef.current.length) {
-        const job = giftQueueRef.current.shift();
-        try {
-          await sendGiftOnce(job.gift, job.ids);
-          if (job.session === giftSessionRef.current) setGiftSendCount((count) => count + 1);
-        } catch (error) {
-          toast({ title: 'Hediye gönderilemedi', description: error?.response?.data?.error || error.message, variant: 'destructive' });
-        }
-      }
-    } finally {
-      giftBusyRef.current = false;
-    }
+    await drainGiftQueue(giftQueueRef, giftBusyRef, sendGiftOnce, (error, job, quantity) => {
+      if (job.session === giftSessionRef.current) setGiftSendCount((count) => Math.max(0, count - quantity));
+      toast({ title: 'Hediye gönderilemedi', description: error?.response?.data?.error || error.message, variant: 'destructive' });
+    });
   };
 
   if (loading) {

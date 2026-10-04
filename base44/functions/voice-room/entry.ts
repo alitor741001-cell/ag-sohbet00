@@ -207,6 +207,11 @@ export default async function (req: Request): Promise<Response> {
     // Hediye gönder — tekli ya da toplu; bakiye düşer, her alıcı ayrı kaydedilir
     if (action === 'gift-send') {
       if (!isParticipant && !canMod) return Response.json({ error: 'Önce odaya katılmalısın.' }, { status: 403 });
+      // Paket boyutu sınırlıdır, toplam seri gönderim sayısı sınırlı değildir.
+      const quantity = body.quantity === undefined ? 1 : Number(body.quantity);
+      if (!Number.isInteger(quantity) || quantity < 1 || quantity > 10) {
+        return Response.json({ error: 'Geçersiz hediye adedi.' }, { status: 400 });
+      }
       const wantedGiftId = typeof gift_id === 'string' && gift_id ? gift_id : (typeof gift === 'string' ? gift : '');
       const giftRecord = wantedGiftId
         ? await base44.asServiceRole.entities.Gift.get(wantedGiftId)
@@ -229,11 +234,11 @@ export default async function (req: Request): Promise<Response> {
       }
 
       const rlGift = await rateLimit(base44, 'voice-gift:' + user.id, user.id, 240, 60000);
-      if (!rlGift.allowed) return Response.json({ error: 'Çok fazla hediye gönderdiniz, biraz bekleyin.' }, { status: 429 });
+      if (!rlGift.allowed) return Response.json({ error: 'Gönderim sırada, kısa süre sonra devam edecek.', retry_after_ms: 60000 }, { status: 429 });
 
       const kValue = Math.max(0, Number(giftRecord.k_value) || 0);
-      const totalK = kValue * recipients.length;
-      const cost = coinsForK(totalK);
+      const totalK = kValue * recipients.length * quantity;
+      const cost = coinsForK(kValue) * recipients.length * quantity;
       const wallet = await ensureGiftWallet(base44, { id: user.id, role: me?.role || user.role, full_name: user.full_name });
       const balance = Math.max(0, Number(wallet.coins) || 0);
       if (cost > balance) {
@@ -249,7 +254,7 @@ export default async function (req: Request): Promise<Response> {
       // Tahta kapalıyken gelen hediye tahtayı açar; o an tüm sayaçlar 1'den başlar.
       let numberScores = room.number_board === true && Array.isArray(room.number_scores) ? room.number_scores : [];
       recipients.forEach((recipient) => {
-        numberScores = withStep(numberScores, recipient.user_id, kValue * 1000);
+        numberScores = withStep(numberScores, recipient.user_id, coinsForK(kValue) * quantity);
       });
       await base44.asServiceRole.entities.Room.update(room_id, { number_board: true, number_scores: numberScores });
 
@@ -260,18 +265,20 @@ export default async function (req: Request): Promise<Response> {
       for (const recipient of recipients) {
         messageRecords.push({
           room_id, user_id: user.id, user_name: displayName, user_avatar: me?.avatar || user.avatar || '',
-          text: `${displayName}, ${recipient.name} kişisine ${giftRecord.name} gönderdi!`,
+          text: `${displayName}, ${recipient.name} kişisine ${giftRecord.name}${quantity > 1 ? ` X${quantity}` : ''} gönderdi!`,
           type: 'gift', gift: giftRecord.id, gift_to_id: recipient.user_id, gift_to_name: recipient.name,
-          gift_emoji: giftEmoji, gift_k: kValue,
+          gift_emoji: giftEmoji, gift_k: kValue * quantity,
         });
-        records.push({
-          room_id,
-          sender_id: user.id, sender_name: displayName,
-          recipient_id: recipient.user_id, recipient_name: recipient.name,
-          gift_id: giftRecord.id, gift_name: giftRecord.name, gift_emoji: giftEmoji,
-          gift_image_url: giftRecord.image_url || '',
-          k_value: kValue, total_k: totalK, recipient_count: recipients.length, mode, status: 'success',
-        });
+        for (let repeat = 0; repeat < quantity; repeat += 1) {
+          records.push({
+            room_id,
+            sender_id: user.id, sender_name: displayName,
+            recipient_id: recipient.user_id, recipient_name: recipient.name,
+            gift_id: giftRecord.id, gift_name: giftRecord.name, gift_emoji: giftEmoji,
+            gift_image_url: giftRecord.image_url || '',
+            k_value: kValue, total_k: kValue * recipients.length, recipient_count: recipients.length, mode, status: 'success',
+          });
+        }
       }
       const [messages] = await Promise.all([
         Promise.all(messageRecords.map((message) => base44.asServiceRole.entities.RoomMessage.create(message))),
@@ -281,7 +288,7 @@ export default async function (req: Request): Promise<Response> {
       return Response.json({
         ok: true,
         gift: { id: giftRecord.id, name: giftRecord.name, emoji: giftEmoji, image_url: giftRecord.image_url || '', k_value: kValue },
-        recipients, count: recipients.length, total_k: totalK, mode,
+        recipients, count: recipients.length, quantity, total_k: totalK, mode,
         coins: Math.max(0, Number(spent.coins) || 0),
         messages, number_board: true, number_scores: numberScores,
       });
