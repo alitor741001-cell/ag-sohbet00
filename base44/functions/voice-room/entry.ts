@@ -108,7 +108,7 @@ export default async function (req: Request): Promise<Response> {
       }
       const next = seats.map((seat) => (seat.index === index ? { ...seat, locked: !!locked } : seat));
       await persist(next);
-      say(`${shownName} ${index + 1}. koltuğu ${locked ? 'kilitledi' : 'kilidini açtı'}.`);
+      // Koltuk kilidi sohbete yazılmaz: kilit ekranda görünür, sohbet temiz kalır.
       return respond(next);
     }
 
@@ -434,7 +434,7 @@ export default async function (req: Request): Promise<Response> {
     if (action === 'number-board-open') {
       if (!canMod) return Response.json({ error: 'yetkisiz' }, { status: 403 });
       await base44.asServiceRole.entities.Room.update(room_id, { number_board: true, number_scores: [] });
-      say(`${displayName} sayı tahtasını açtı.`);
+      // Sayı tahtası açma/kapama sohbete yazılmaz.
       return Response.json({ ok: true, seats, seat_count: seats.length, number_board: true, number_scores: [] });
     }
 
