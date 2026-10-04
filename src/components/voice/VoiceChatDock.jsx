@@ -4,6 +4,7 @@ import EmojiPicker from '@/components/player/EmojiPicker';
 import VoiceChatMessage from '@/components/voice/VoiceChatMessage';
 import VoiceGiftMessage from '@/components/voice/VoiceGiftMessage';
 import SlotWinMessage from '@/components/games/SlotWinMessage';
+import BigGiftChatNotice from '@/components/voice/BigGiftChatNotice';
 import { plainText } from '@/components/voice/voiceText';
 import useMessageProfiles from '@/hooks/useMessageProfiles';
 import useRoomLevels from '@/hooks/useRoomLevels';
@@ -12,7 +13,7 @@ import useRoomLevels from '@/hooks/useRoomLevels';
  * Oda alt bölümü: mesaj akışı klavye ikonuna basmadan da alt barın üstündeki boş alanda durur,
  * yazma alanı açıldığında ve klavye kalktığında akış onunla birlikte yukarı kayar.
  */
-export default function VoiceChatDock({ messages = [], onSend, onCloseComposer, composerOpen, chatLocked, currentUserId, ownerId, moderators = [], onOpenProfile }) {
+export default function VoiceChatDock({ messages = [], onSend, onCloseComposer, composerOpen, chatLocked, currentUserId, ownerId, moderators = [], onOpenProfile, bigGiftNotice, onOpenBigGiftRoom }) {
   const [text, setText] = useState('');
   const [emojiOpen, setEmojiOpen] = useState(false);
   const inputRef = useRef(null);
@@ -31,7 +32,7 @@ export default function VoiceChatDock({ messages = [], onSend, onCloseComposer, 
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: 'end' });
-  }, [messages.length]);
+  }, [messages.length, bigGiftNotice?.id]);
 
   const submit = (event) => {
     event.preventDefault();
@@ -47,7 +48,7 @@ export default function VoiceChatDock({ messages = [], onSend, onCloseComposer, 
 
   return (
     <div className="relative shrink-0">
-      {messages.length > 0 && (
+      {(messages.length > 0 || !!bigGiftNotice) && (
         <div className="absolute inset-x-0 bottom-full z-10 flex max-h-[34vh] flex-col justify-end overflow-y-auto overscroll-contain pb-1 [mask-image:linear-gradient(to_bottom,transparent,black_14%)] [-webkit-mask-image:linear-gradient(to_bottom,transparent,black_14%)]">
           <div className="flex flex-col gap-1.5 px-4">
             {messages.map((message) => {
@@ -73,6 +74,7 @@ export default function VoiceChatDock({ messages = [], onSend, onCloseComposer, 
                 />
               );
             })}
+            {bigGiftNotice && <BigGiftChatNotice notice={bigGiftNotice} onOpen={onOpenBigGiftRoom} />}
             <div ref={endRef} />
           </div>
         </div>

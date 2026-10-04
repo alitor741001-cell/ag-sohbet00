@@ -30,6 +30,7 @@ import drainGiftQueue from '@/components/voice/drainGiftQueue';
 import VoiceGiftOverlay from '@/components/voice/VoiceGiftOverlay';
 import useGiftAlerts from '@/hooks/useGiftAlerts';
 import useBigGiftAlerts from '@/hooks/useBigGiftAlerts';
+import useBigGiftNotice from '@/hooks/useBigGiftNotice';
 import BigGiftStage from '@/components/voice/BigGiftStage';
 import { useGiftBalance, useGiftCatalog } from '@/hooks/useGiftCatalog';
 import { tierForK, toneColor } from '@/lib/giftTone';
@@ -79,6 +80,8 @@ export default function VoiceRoom() {
   const { alert: giftAlert, push: pushGiftAlert, markSeen: markGiftSeen } = useGiftAlerts(messages, resolveGift);
   // Büyük hediye duyurusu tüm sesli odalarda görünür.
   const bigGift = useBigGiftAlerts();
+  // Sohbetin altındaki büyük hediye satırı — basılınca hediye atan kişinin odasına gidilir.
+  const { notice: bigGiftNotice, dismiss: dismissBigGiftNotice } = useBigGiftNotice(id);
 
   const joinedRef = useRef(false);
   const joinTriedRef = useRef(false);
@@ -860,6 +863,12 @@ export default function VoiceRoom() {
         ownerId={room?.owner_id}
         moderators={moderators}
         onOpenProfile={openProfile}
+        bigGiftNotice={bigGiftNotice}
+        onOpenBigGiftRoom={() => {
+          const target = bigGiftNotice?.room_id;
+          dismissBigGiftNotice();
+          if (target) navigate(`/sesli-oda/${target}`);
+        }}
       />
 
       {(voice.remoteMuted || voice.error) && (
