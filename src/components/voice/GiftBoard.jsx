@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Coins, Send } from 'lucide-react';
+import { Coins } from 'lucide-react';
 import VoiceSheet from '@/components/voice/VoiceSheet';
 import GiftCard from '@/components/voice/GiftCard';
 import GiftRecipientRow from '@/components/voice/GiftRecipientRow';
@@ -87,20 +87,23 @@ export default function GiftBoard({ open, onClose, gifts = [], tiers = [], peopl
         </p>
       )}
 
-      <div className="mt-3 flex items-center justify-between gap-3">
+      {/* Sağ altta yuvarlak gönder düğmesi — slotun yeşil SPIN düğmesi işçiliği, üzerinde yalnızca "Gönder" yazar. */}
+      <div className="sticky bottom-1 z-20 mt-3 flex items-end justify-between gap-3">
         <p className="min-w-0 flex-1 text-[10px] leading-tight text-white/45">
-          {gift ? `Gönder’e her bastığında ${gift.name} tekrar gider; bırakınca kutu kapanır.` : 'Önce bir hediye seç.'}
+          {gift
+            ? (count > 0
+              ? `${gift.name} · ${formatPrice(totalK)} — her basışta tekrar gider, 5 sn basmazsan kutu kapanır.`
+              : `${gift.name} seçildi — alıcı seç.`)
+            : 'Önce bir hediye seç.'}
         </p>
         <button
           type="button"
           disabled={!canSend}
           onClick={() => onSend(gift)}
-          className="flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[11px] font-black text-black transition-transform active:scale-90 disabled:opacity-40"
-          style={{ background: `linear-gradient(135deg, ${color}, ${tone?.glow || color})` }}
+          aria-label="Gönder"
+          className="slot-spin flex h-[4.5rem] w-[4.5rem] shrink-0 items-center justify-center rounded-full text-[11px] font-black leading-none text-black/80 transition-transform active:scale-90 disabled:opacity-40"
         >
-          <Send className="h-3.5 w-3.5" />
           Gönder
-          {gift && count > 0 && <span className="tabular-nums opacity-80">· {formatPrice(totalK)}</span>}
         </button>
       </div>
     </VoiceSheet>

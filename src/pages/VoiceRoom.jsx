@@ -478,12 +478,12 @@ export default function VoiceRoom() {
         recipientName: (data.recipients || []).map((item) => item.name).join(', '),
         toId: '',
       });
-      // Kutu açık kalır: her basışta yeniden gönderir, göndermeyi bırakınca kendiliğinden kapanır.
+      // Kutu açık kalır: 5 saniye içinde tekrar basılırsa yeniden gönderir, basılmazsa kendiliğinden kapanır.
       window.clearTimeout(giftIdleRef.current);
       giftIdleRef.current = window.setTimeout(() => {
         setGiftOpen(false);
         setSelectedIds([]);
-      }, 2500);
+      }, 5000);
     } catch (error) {
       toast({ title: 'Hediye gönderilemedi', description: error?.response?.data?.error || error.message, variant: 'destructive' });
     } finally {
