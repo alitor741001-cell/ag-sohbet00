@@ -244,8 +244,8 @@ export default function GiftBoxPanel({ open, onClose }) {
             </button>
           </div>
           <p className="mt-1.5 text-[10px] text-white/45">
-            1 $ gönderdiğinde karşı tarafa 5.000 coin geçer
-            {amount() > 0 && tlRate > 0 ? ` • bakiyenden ${formatTl(amount() * tlRate)} düşer` : ''}.
+            Yalnızca dolar tutarı girilir — 1 $ = 5.000 coin olarak alıcıya geçer
+            {amount() > 0 ? ` • alıcıya ${formatCoins(amount() * COINS_PER_DOLLAR)} coin` : ''}.
           </p>
         </div>
 
