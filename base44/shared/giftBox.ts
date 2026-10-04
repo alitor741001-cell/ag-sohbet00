@@ -3,25 +3,29 @@ import { getUsdTry, tlFromDollars, tlRateFrom } from './exchangeRate.ts';
 
 /**
  * Hediye kutusu: alınan hediyelerin değeri, gönderim ve çekim kayıtları.
- * Değer kuralı: 200K'ya kadar her 10K = 1 puan, 20 puan = 1 dolar;
- * 200K'dan sonra her 17K = 1 dolar. Bakiye TL olarak, piyasa kuru eksi 2 TL ile gösterilir.
+ * Değer kuralı: 200K'ya kadar her 5K = 1 dolar, 200K'dan sonra her 10K = 1 dolar.
+ * Tutar her zaman tam dolar olarak gösterilir (küsurat yazılmaz); TL, piyasa kuru eksi 2 TL ile hesaplanır.
  */
 
 export const COINS_PER_DOLLAR = 5000;
 const BASE_MAX_K = 200;
+// Puan: her 10K = 1 puan — 200K'dan sonra da artmaya devam eder.
 const K_PER_UNIT = 10;
-const UNITS_PER_DOLLAR = 20;
-const K_PER_DOLLAR_AFTER = 17;
-const UNIT_DOLLARS = 1 / UNITS_PER_DOLLAR;
+const K_PER_DOLLAR = 5;
+const K_PER_DOLLAR_AFTER = 10;
 // Kişi başına okunacak en fazla hediye / transfer kaydı.
 const MAX_RECORDS = 2000;
 
-/** Alınan hediye K toplamının dolar karşılığı. */
+/**
+ * Alınan hediye K toplamının dolar karşılığı — her zaman tam sayı (küsurat yazılmaz).
+ * 200K'ya kadar her 5K'da 1 artar; 200K'dan sonra her 10K'da 1 artar.
+ * Ara değerler bir üst basamağa yuvarlanmaz: 13K → 2, 14K → 2, tam 15K'da 3 olur.
+ */
 export function giftDollarsFromK(kValue: any) {
   const k = Math.max(0, Number(kValue) || 0);
-  const base = (Math.min(k, BASE_MAX_K) / K_PER_UNIT) * UNIT_DOLLARS;
-  const extra = Math.max(0, k - BASE_MAX_K) / K_PER_DOLLAR_AFTER;
-  return Math.round((base + extra) * 100) / 100;
+  const base = Math.floor(Math.min(k, BASE_MAX_K) / K_PER_DOLLAR);
+  const extra = Math.floor(Math.max(0, k - BASE_MAX_K) / K_PER_DOLLAR_AFTER);
+  return base + extra;
 }
 
 /** Kişinin aldığı hediyelerin K toplamı, puanı ve dolar değeri. */
@@ -32,7 +36,7 @@ export async function receivedGiftTotals(base44: any, userId: string) {
   const k = Math.round(records.reduce((sum, record) => sum + Math.max(0, Number(record?.k_value) || 0), 0) * 100) / 100;
   return {
     k,
-    units: Math.floor(Math.min(k, BASE_MAX_K) / K_PER_UNIT),
+    units: Math.floor(k / K_PER_UNIT),
     dollars: giftDollarsFromK(k),
   };
 }
@@ -53,7 +57,8 @@ export async function giftBoxSummary(base44: any, user: any) {
       .filter((record) => record?.status !== 'rejected')
       .reduce((sum, record) => sum + Math.max(0, Number(record?.dollars) || 0), 0) * 100,
   ) / 100;
-  const available = Math.max(0, Math.round((received.dollars - spent) * 100) / 100);
+  // Bakiye tam dolar: küsurat gösterilmez.
+  const available = Math.max(0, Math.floor(received.dollars - spent));
   const tl_rate = tlRateFrom(market.rate);
 
   return {

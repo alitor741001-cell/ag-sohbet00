@@ -88,7 +88,7 @@ export default function GiftSendersPanel({ open, onClose }) {
                     <div className="shrink-0 text-right">
                       <p className="text-sm font-bold tabular-nums text-amber-400">{formatK(sender.total_k)}</p>
                       <p className="text-[10px] font-semibold tabular-nums text-white/45">
-                        {sender.dollars.toFixed(2).replace('.', ',')} $ • {formatTl(sender.tl)}
+                        {sender.dollars.toLocaleString('tr-TR')} $ • {formatTl(sender.tl)}
                       </p>
                     </div>
                     <ChevronDown className={`h-4 w-4 shrink-0 text-white/40 transition-transform ${isOpen ? 'rotate-180' : ''}`} />

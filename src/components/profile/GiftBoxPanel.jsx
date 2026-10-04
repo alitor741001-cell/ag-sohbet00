@@ -141,7 +141,7 @@ export default function GiftBoxPanel({ open, onClose }) {
             <div className="min-w-0 flex-1">
               <p className="text-[10px] font-semibold text-[#6b7280]">Kullanılabilir bakiye</p>
               <p className="text-xl font-bold tabular-nums text-[#1F2024]">
-                {loading && !summary ? '…' : `${available.toFixed(2).replace('.', ',')} $`}
+                {loading && !summary ? '…' : `${available.toLocaleString('tr-TR')} $`}
               </p>
               <p className="text-base font-bold tabular-nums text-emerald-600">
                 {loading && !summary ? '' : formatTl(availableTl)}
