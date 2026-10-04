@@ -1,26 +1,41 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 
 // Duyuru ekranda bu kadar kalır (CSS big-gift-life süresiyle aynı).
 const VISIBLE_MS = 7000;
+// Gerçek zamanlı yayın gecikirse yoklama aynı duyuruyu yakalar.
+const POLL_MS = 6000;
+// Yalnızca taze duyurular gösterilir; odaya sonradan girenler eskileri görmez.
+const FRESH_MS = 20000;
+const MAX_QUEUE = 3;
 
 /**
- * Büyük hediye duyuruları tüm sesli odalara aynı anda düşer.
- * Aynı anda birden fazlası gelirse sırayla gösterilir.
+ * Büyük hediye duyuruları bütün sesli odalara aynı anda düşer.
+ * Gerçek zamanlı yayın ve kısa aralıklı yoklama birlikte çalışır; aynı duyuru
+ * bir kez gösterilir, birden fazlası gelirse sırayla oynar.
  */
 export default function useBigGiftAlerts() {
   const [queue, setQueue] = useState([]);
   const seenRef = useRef(new Set());
 
+  const accept = useCallback((record) => {
+    if (!record?.id || seenRef.current.has(record.id)) return;
+    if (record.created_date && Date.now() - new Date(record.created_date).getTime() > FRESH_MS) return;
+    seenRef.current.add(record.id);
+    setQueue((prev) => [...prev, record].slice(-MAX_QUEUE));
+  }, []);
+
   useEffect(() => {
     const unsubscribe = base44.entities.BigGiftAlert.subscribe((event) => {
-      const data = event?.data;
-      if (event?.type !== 'create' || !data || !event.id || seenRef.current.has(event.id)) return;
-      seenRef.current.add(event.id);
-      setQueue((prev) => [...prev, { ...data, id: event.id }].slice(-3));
+      if (event?.type === 'create' && event.data) accept({ ...event.data, id: event.id });
     });
-    return unsubscribe;
-  }, []);
+    const poll = () => base44.entities.BigGiftAlert.list('-created_date', MAX_QUEUE)
+      .then((rows) => rows.forEach(accept))
+      .catch(() => {});
+    poll();
+    const timer = window.setInterval(poll, POLL_MS);
+    return () => { unsubscribe(); window.clearInterval(timer); };
+  }, [accept]);
 
   useEffect(() => {
     if (!queue.length) return undefined;
