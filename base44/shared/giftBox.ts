@@ -28,16 +28,35 @@ export function giftDollarsFromK(kValue: any) {
   return base + extra;
 }
 
-/** Kişinin aldığı hediyelerin K toplamı, puanı ve dolar değeri. */
+/**
+ * Ayın 1'i (Türkiye saatiyle) — elmas yalnızca bu aydan itibaren sayılır.
+ * Ay başında elmas sıfırlanır, bakiye (dolar/TL) ise tüm zamanların toplamıyla devam eder.
+ */
+export function monthStartIso(now = new Date()) {
+  const [year, month] = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Istanbul', year: 'numeric', month: '2-digit' })
+    .format(now)
+    .split('-');
+  return new Date(`${year}-${month}-01T00:00:00+03:00`).toISOString().slice(0, 19);
+}
+
+/** Kişinin aldığı hediyelerin K toplamı, bu ayın elması ve dolar değeri. */
 export async function receivedGiftTotals(base44: any, userId: string) {
   const records = await base44.asServiceRole.entities.GiftSend
     .filter({ recipient_id: userId }, '-created_date', MAX_RECORDS)
     .catch(() => []);
   const k = Math.round(records.reduce((sum, record) => sum + Math.max(0, Number(record?.k_value) || 0), 0) * 100) / 100;
+  const start = monthStartIso();
+  const monthK = Math.round(records.reduce((sum, record) => {
+    const created = String(record?.created_date || '');
+    if (!created || created.slice(0, 19) < start) return sum;
+    return sum + Math.max(0, Number(record?.k_value) || 0);
+  }, 0) * 100) / 100;
   return {
     k,
-    units: Math.floor(k / K_PER_UNIT),
+    units: Math.floor(monthK / K_PER_UNIT),
     dollars: giftDollarsFromK(k),
+    month_k: monthK,
+    month_score: Math.round(monthK * 1000),
   };
 }
 
@@ -64,6 +83,9 @@ export async function giftBoxSummary(base44: any, user: any) {
   return {
     received_k: received.k,
     received_score: Math.round(received.k * 1000),
+    // Elmas her ayın 1'inde sıfırlanır: yalnızca bu ayın hediyeleri sayılır.
+    month_k: received.month_k,
+    month_score: received.month_score,
     units: received.units,
     dollars: received.dollars,
     spent_dollars: spent,

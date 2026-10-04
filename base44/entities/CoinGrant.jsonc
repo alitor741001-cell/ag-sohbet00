@@ -1,0 +1,82 @@
+{
+  "name": "CoinGrant",
+  "type": "object",
+  "properties": {
+    "admin_id": {
+      "type": "string"
+    },
+    "admin_name": {
+      "type": "string",
+      "default": ""
+    },
+    "user_id": {
+      "type": "string"
+    },
+    "user_name": {
+      "type": "string",
+      "default": ""
+    },
+    "user_avatar": {
+      "type": "string",
+      "default": ""
+    },
+    "member_id": {
+      "type": "string",
+      "default": ""
+    },
+    "amount": {
+      "type": "number",
+      "default": 0
+    },
+    "coins_after": {
+      "type": "number",
+      "default": 0
+    },
+    "note": {
+      "type": "string",
+      "default": ""
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "reverted"
+      ],
+      "default": "active"
+    },
+    "reverted_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "reverted_by": {
+      "type": "string",
+      "default": ""
+    }
+  },
+  "required": [
+    "user_id",
+    "amount"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

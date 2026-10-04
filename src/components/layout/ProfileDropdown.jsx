@@ -91,7 +91,7 @@ export default function ProfileDropdown() {
             {/* Cüzdan: coins ve elmas (hediye kutusu) */}
             <ProfileWalletCards
               coins={wallet?.coins ?? null}
-              giftScore={wallet?.received_score ?? null}
+              giftScore={wallet?.month_score ?? null}
               onOpenGiftBox={() => { setOpen(false); setGiftBoxOpen(true); }}
               onOpenGiftSenders={() => { setOpen(false); setSendersOpen(true); }}
             />

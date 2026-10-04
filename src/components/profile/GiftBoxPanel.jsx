@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Gem, Loader2, Send, Wallet, X } from 'lucide-react';
+import { ChevronLeft, Gem, Loader2, Send, Wallet } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Image } from '@/components/ui/image';
 import { formatCoins } from '@/lib/giftTone';
@@ -119,20 +119,23 @@ export default function GiftBoxPanel({ open, onClose }) {
   const tlRate = Number(summary?.tl_rate) || 0;
 
   return (
-    <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/70 p-4" onClick={onClose}>
-      <div
-        className="max-h-[88vh] w-full max-w-[370px] overflow-y-auto rounded-2xl border border-white/10 bg-[#121215] p-4"
-        style={{ boxShadow: '0 24px 70px -18px rgba(0,0,0,0.9)' }}
-        onClick={(event) => event.stopPropagation()}
-      >
-        <div className="mb-3 flex items-center justify-between gap-2">
-          <p className="flex items-center gap-2 text-sm font-bold text-white">
-            <Gem className="h-4 w-4 text-sky-400" /> Hediye Kutusu
-          </p>
-          <button type="button" onClick={onClose} aria-label="Kapat" className="rounded-full p-1.5 text-white/70 transition-colors hover:bg-white/10">
-            <X className="h-4 w-4" />
-          </button>
-        </div>
+    <div className="fixed inset-0 z-[300] flex flex-col bg-[#0F0F14] text-white">
+      <header className="flex shrink-0 items-center gap-2 border-b border-white/10 px-3 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Geri"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10 transition-transform active:scale-95"
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </button>
+        <p className="flex min-w-0 items-center gap-2 text-sm font-bold text-white">
+          <Gem className="h-4 w-4 shrink-0 text-sky-400" /> <span className="truncate">Hediye Kutusu</span>
+        </p>
+      </header>
+
+      <div className="min-h-0 flex-1 overflow-y-auto p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <div className="mx-auto w-full max-w-[430px]">
 
         {/* Bakiye — dolar tutarı ve TL karşılığı (piyasa kuru eksi 2 TL) */}
         <div className="rounded-2xl bg-white px-3.5 py-3">
@@ -148,8 +151,8 @@ export default function GiftBoxPanel({ open, onClose }) {
               </p>
             </div>
             <div className="shrink-0 text-right">
-              <p className="text-xs font-bold tabular-nums text-[#1F2024]">{formatScore(summary?.received_score || 0)} 💎</p>
-              <p className="text-[10px] font-semibold text-[#6b7280]">{summary?.units || 0} puan</p>
+              <p className="text-xs font-bold tabular-nums text-[#1F2024]">{formatScore(summary?.month_score || 0)} 💎</p>
+              <p className="text-[10px] font-semibold text-[#6b7280]">Bu ay • {summary?.units || 0} puan</p>
             </div>
           </div>
         </div>
@@ -222,6 +225,7 @@ export default function GiftBoxPanel({ open, onClose }) {
         </button>
 
         {notice && <p className="mt-2 text-center text-[11px] font-semibold text-emerald-400">{notice}</p>}
+        </div>
       </div>
     </div>
   );

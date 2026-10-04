@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { Outlet, NavLink, useNavigate, Link } from 'react-router-dom';
-import { LayoutDashboard, Users, Film, FolderTree, LifeBuoy, CreditCard, Bell, Settings, LogOut, Menu, X, ShieldAlert, KeyRound, ChevronDown, ChevronRight, Package as PackageIcon, Flag, MessageCircle, Video, Smartphone, Moon, Target, Sparkles, Home, Gift } from 'lucide-react';
+import { LayoutDashboard, Users, Film, FolderTree, LifeBuoy, CreditCard, Bell, Settings, LogOut, Menu, X, ShieldAlert, KeyRound, ChevronDown, ChevronRight, Package as PackageIcon, Flag, MessageCircle, Video, Smartphone, Moon, Target, Sparkles, Home, Gift, Coins } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { requestNotificationPermission } from '@/hooks/useAdminNotifications';
 import { useCurrentUser } from '@/lib/useCurrentUser';
@@ -29,6 +29,7 @@ const navGroups = [
       { to: '/admin/film-ekle', label: 'Film Yükle', icon: Film },
       { to: '/admin/kategoriler', label: 'Kategoriler', icon: FolderTree },
       { to: '/admin/hediyeler', label: 'Hediyeler', icon: Gift },
+      { to: '/admin/coins', label: 'Coins Yükle', icon: Coins },
       { to: '/admin/destek', label: 'Destek Mesajları', icon: Target },
       { to: '/admin/tanitim-videosu', label: 'Tanıtım Videosu', icon: Video },
     ],

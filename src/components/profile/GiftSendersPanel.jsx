@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ChevronDown, Gift, Loader2, X } from 'lucide-react';
+import { ChevronDown, ChevronLeft, Gift, Loader2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Image } from '@/components/ui/image';
 
@@ -38,22 +38,23 @@ export default function GiftSendersPanel({ open, onClose }) {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/70 p-4" onClick={onClose}>
-      <div
-        className="flex max-h-[88vh] w-full max-w-[370px] flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#121215]"
-        style={{ boxShadow: '0 24px 70px -18px rgba(0,0,0,0.9)' }}
-        onClick={(event) => event.stopPropagation()}
-      >
-        <div className="flex shrink-0 items-center justify-between gap-2 border-b border-white/10 px-4 py-3">
-          <p className="flex items-center gap-2 text-sm font-bold text-white">
-            <Gift className="h-4 w-4 text-sky-400" /> Hediye Gönderenler
-          </p>
-          <button type="button" onClick={onClose} aria-label="Kapat" className="rounded-full p-1.5 text-white/70 transition-colors hover:bg-white/10">
-            <X className="h-4 w-4" />
-          </button>
-        </div>
+    <div className="fixed inset-0 z-[300] flex flex-col bg-[#0F0F14] text-white">
+      <header className="flex shrink-0 items-center gap-2 border-b border-white/10 px-3 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Geri"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10 transition-transform active:scale-95"
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </button>
+        <p className="flex min-w-0 items-center gap-2 text-sm font-bold text-white">
+          <Gift className="h-4 w-4 shrink-0 text-sky-400" /> <span className="truncate">Hediye Gönderenler</span>
+        </p>
+      </header>
 
-        <div className="min-h-0 flex-1 overflow-y-auto p-3">
+      <div className="min-h-0 flex-1 overflow-y-auto p-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <div className="mx-auto w-full max-w-[430px]">
           {loading ? (
             <div className="flex items-center justify-center py-10">
               <Loader2 className="h-6 w-6 animate-spin text-primary" />
