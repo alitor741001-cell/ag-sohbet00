@@ -8,11 +8,13 @@ const ROWS = 4;
 const LOOP_TILES = ROWS * 2;
 // İniş şeridinde sonuç karolarının üstünde duran ara karo sayısı.
 const STOP_TILES = 6;
-// Her sütun biraz daha uzun kayar: soldan sağa sırayla oturma (Slot Frenzy ile aynı).
+// Sütunlar aynı hızda akar: ızgara hizada kalır, nesneler birbirine karışmaz.
 const LOOP_MS = 2200;
-const LOOP_STEP_MS = 70;
+// İniş soldan sağa sırayla olur (Slot Frenzy ile aynı).
 const SETTLE_MS = 600;
 const SETTLE_STEP_MS = 100;
+// Karo içi kırpma: komşu karoya taşan kenar görünmez.
+const TILE_INSET = 5;
 
 const randomSymbol = () => SYMBOL_IDS[Math.floor(Math.random() * SYMBOL_IDS.length)];
 const buildRandom = () => Array.from({ length: LOOP_TILES }, randomSymbol);
@@ -28,8 +30,13 @@ function MultiplierTile({ value }) {
 }
 
 function Tile({ symbol, top, height, multiplier }) {
+  // Her karo kendi hücresinin ortasına oturur: komşu karolara taşmaz.
+  const inset = (height * TILE_INSET) / 100;
   return (
-    <span className="absolute left-0 w-full overflow-hidden" style={{ top: `${top}%`, height: `${height}%` }}>
+    <span
+      className="absolute left-0 w-full overflow-hidden"
+      style={{ top: `${top + inset}%`, height: `${height - inset * 2}%` }}
+    >
       {symbol === 'multi' ? (
         <MultiplierTile value={multiplier || 2} />
       ) : (
@@ -82,9 +89,7 @@ function ReelColumn({ index, random, landing, landingMulti, spinning }) {
         style={{
           height: `${(tiles.length / ROWS) * 100}%`,
           '--reel-from': `${finish?.from ?? 0}%`,
-          animationDuration: settling
-            ? `${SETTLE_MS + index * SETTLE_STEP_MS}ms`
-            : `${LOOP_MS + index * LOOP_STEP_MS}ms`,
+          animationDuration: settling ? `${SETTLE_MS + index * SETTLE_STEP_MS}ms` : `${LOOP_MS}ms`,
         }}
       >
         {tiles.map((symbol, i) => (
