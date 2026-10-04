@@ -7,6 +7,7 @@ import { useVoiceChat } from '@/hooks/useVoiceChat';
 import useKeyboardInset from '@/hooks/useKeyboardInset';
 import { useToast } from '@/components/ui/use-toast';
 import VoiceSeatGrid from '@/components/voice/VoiceSeatGrid';
+import VoiceBoardTimer from '@/components/voice/VoiceBoardTimer';
 import { resizeSeats } from '@/components/voice/seatLayout';
 import HiddenUserMarquee from '@/components/voice/HiddenUserMarquee';
 import { isHiddenName } from '@/lib/hiddenUser';
@@ -966,7 +967,6 @@ export default function VoiceRoom() {
           localSpeaking={voice.localSpeaking}
           onSelectSeat={handleSeatPress}
           boardActive={boardActive}
-          startedAt={boardStartedAt}
           scores={scores}
           accent={seatAccent}
           gifted={gifted}
@@ -978,6 +978,8 @@ export default function VoiceRoom() {
             : 'Sese çıkmak için boş bir koltuğa dokun.'}
         </p>
       </div>
+
+      <VoiceBoardTimer active={boardActive} startedAt={boardStartedAt} />
 
       <VoiceChatDock
         messages={messages}
