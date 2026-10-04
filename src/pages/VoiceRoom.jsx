@@ -11,8 +11,7 @@ import VoiceControlBar from '@/components/voice/VoiceControlBar';
 import VoiceChatDock from '@/components/voice/VoiceChatDock';
 import VoiceViewerSheet from '@/components/voice/VoiceViewerSheet';
 import VoiceSeatInvitePrompt from '@/components/voice/VoiceSeatInvitePrompt';
-import VoiceOwnerBadge from '@/components/voice/VoiceOwnerBadge';
-import RoomNameCard from '@/components/voice/RoomNameCard';
+import RoomInfoCard from '@/components/voice/RoomInfoCard';
 import VoiceRoomMenu from '@/components/voice/VoiceRoomMenu';
 import VoiceSeatSheet from '@/components/voice/VoiceSeatSheet';
 import InviteSheet from '@/components/voice/InviteSheet';
@@ -726,9 +725,7 @@ export default function VoiceRoom() {
       <div className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-gradient-to-b from-primary/25 to-transparent" />
 
       <header className="relative shrink-0 px-3 pb-2 pt-[max(0.75rem,env(safe-area-inset-top))]">
-        <div className="flex items-start justify-between gap-2">
-          <VoiceOwnerBadge userId={room?.owner_id} fallbackName={room?.owner_name} />
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex items-center justify-end gap-2">
           <button
             type="button"
             onClick={() => setViewerOpen(true)}
@@ -745,10 +742,9 @@ export default function VoiceRoom() {
           <button type="button" onClick={() => setExitOpen(true)} aria-label="Odadan çık" className="flex h-11 w-11 items-center justify-center rounded-full bg-red-600 active:scale-95 transition-transform">
             <LogOut className="h-5 w-5" />
           </button>
-          </div>
         </div>
-        <RoomNameCard
-          name={room?.name}
+        <RoomInfoCard
+          room={room}
           canEdit={isOwner || moderators.includes(user?.id)}
           onRename={renameRoom}
         />
