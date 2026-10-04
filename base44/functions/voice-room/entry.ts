@@ -6,7 +6,7 @@ import { scoresAfterSeatLeave, withStep } from '../../shared/numberBoard.ts';
 import { coinsForK, ensureGiftWallet, formatK, giftBalance } from '../../shared/giftWallet.ts';
 
 const SEAT_OPTIONS = [2, 5, 8, 9, 12, 15, 20, 24];
-const ACTIONS = ['seat-take', 'seat-leave', 'seat-lock', 'seat-kick', 'set-seat-count', 'invite', 'seat-invite', 'seat-invite-clear', 'gift-state', 'gift-send', 'number-board-open', 'number-board-close', 'number-step', 'number-reset', 'number-settings'];
+const ACTIONS = ['seat-take', 'seat-leave', 'seat-lock', 'seat-kick', 'set-seat-count', 'invite', 'seat-invite', 'seat-invite-clear', 'gift-state', 'gift-send', 'number-board-open', 'number-board-close', 'number-step', 'number-reset', 'number-settings', 'chat-ban'];
 
 const emptySeat = (index, locked = false) => ({
   index, user_id: '', name: '', avatar: '', frame: '', frame_scale: 100, locked, muted: false,
@@ -19,7 +19,7 @@ export default async function (req: Request): Promise<Response> {
     if (!user) return Response.json({ error: 'Oturum gerekli.' }, { status: 401 });
 
     const body = await req.json();
-    const { action, room_id, seat_index, target_id, seat_count, locked, target_ids, gift, gift_id, delta, reset_on_seat_leave, reset_on_room_leave } = body || {};
+    const { action, room_id, seat_index, target_id, seat_count, locked, target_ids, gift, gift_id, delta, banned, reset_on_seat_leave, reset_on_room_leave } = body || {};
     if (!room_id || !ACTIONS.includes(action)) {
       return Response.json({ error: 'geçersiz istek' }, { status: 400 });
     }
@@ -285,6 +285,17 @@ export default async function (req: Request): Promise<Response> {
         coins: Math.max(0, Number(spent.coins) || 0),
         messages, number_board: true, number_scores: numberScores,
       });
+    }
+
+    // Sohbet yasağı — açıkken yalnızca koltuktakiler yazabilir
+    if (action === 'chat-ban') {
+      if (!canMod) return Response.json({ error: 'yetkisiz' }, { status: 403 });
+      const bannedNow = banned !== false;
+      await base44.asServiceRole.entities.Room.update(room_id, { chat_seated_only: bannedNow });
+      await say(bannedNow
+        ? `${displayName} sohbet yasağını açtı — yalnızca koltuktakiler yazabilir.`
+        : `${displayName} sohbet yasağını kaldırdı.`);
+      return Response.json({ ok: true, chat_seated_only: bannedNow });
     }
 
     // Sayı tahtasını aç — sayaçlar 1'den başlar, eski sayılar temizlenir

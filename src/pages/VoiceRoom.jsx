@@ -94,6 +94,9 @@ export default function VoiceRoom() {
   const seated = mySeatIndex >= 0;
   const isOwner = !!user && room?.owner_id === user.id;
   const canMod = isOwner || moderators.includes(user?.id) || user?.role === 'admin';
+  // Sohbet yasağı açıkken yalnızca koltuktakiler yazar; yöneticiler muaf.
+  const chatBanned = room?.chat_seated_only === true;
+  const chatLocked = chatBanned && !seated && !canMod;
 
   const seatsView = useMemo(
     () => seats.map((seat) => ({
@@ -280,6 +283,7 @@ export default function VoiceRoom() {
         if (Array.isArray(data.number_scores)) next.number_scores = data.number_scores;
         if (typeof data.number_board_reset_seat === 'boolean') next.number_board_reset_seat = data.number_board_reset_seat;
         if (typeof data.number_board_reset_room === 'boolean') next.number_board_reset_room = data.number_board_reset_room;
+        if (typeof data.chat_seated_only === 'boolean') next.chat_seated_only = data.chat_seated_only;
         return next;
       });
       return true;
@@ -378,6 +382,27 @@ export default function VoiceRoom() {
       toast({ title: response.data?.hidden ? 'Oda gizlendi' : 'Oda herkese açık' });
     } catch (error) {
       toast({ title: 'İşlem başarısız', description: error?.response?.data?.error || error.message, variant: 'destructive' });
+    }
+  };
+
+  const clearChat = useCallback(async () => {
+    try {
+      await base44.functions.invoke('clear-room-messages', { room_id: id });
+      setMessages([]);
+      toast({ title: 'Sohbet temizlendi' });
+    } catch (error) {
+      toast({ title: 'Sohbet temizlenemedi', description: error?.response?.data?.error || error.message, variant: 'destructive' });
+    }
+  }, [id, toast]);
+
+  const toggleChatBan = async () => {
+    const ok = await invokeVoice({ action: 'chat-ban', banned: !chatBanned });
+    if (ok) {
+      setMenuOpen(false);
+      toast({
+        title: chatBanned ? 'Sohbet yasağı kaldırıldı' : 'Sohbet yasağı açıldı',
+        description: chatBanned ? 'Herkes yeniden yazabilir.' : 'Yalnızca koltuktakiler yazabilir.',
+      });
     }
   };
 
@@ -676,6 +701,7 @@ export default function VoiceRoom() {
 
       <VoiceChatDock
         messages={messages}
+        chatLocked={chatLocked}
         onSend={sendMessage}
         onCloseComposer={() => setChatOpen(false)}
         composerOpen={chatOpen}
@@ -702,7 +728,13 @@ export default function VoiceRoom() {
         onOpenGames={() => setGamesOpen(true)}
         onOpenGifts={openGifts}
         onOpenPrivateChat={() => setDmOpen(true)}
-        onToggleChat={() => setChatOpen((value) => !value)}
+        onToggleChat={() => {
+          if (chatLocked) {
+            toast({ title: 'Sohbet yasağı açık', description: 'Yazmak için bir koltuğa otur.' });
+            return;
+          }
+          setChatOpen((value) => !value);
+        }}
       />
 
       <VoiceRoomMenu
@@ -723,6 +755,8 @@ export default function VoiceRoom() {
           const ok = await invokeVoice({ action: boardActive ? 'number-board-close' : 'number-board-open' });
           if (ok) setMenuOpen(false);
         }}
+        onClearChat={clearChat}
+        onToggleChatBan={toggleChatBan}
       />
 
       <VoiceSeatSheet

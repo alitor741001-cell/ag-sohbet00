@@ -33,6 +33,12 @@ export default async function(req) {
       return Response.json({ error: 'sohbet kapalı' }, { status: 403 });
     }
 
+    // Sohbet yasağı: yalnızca koltuğa oturanlar yazabilir (yöneticiler muaf).
+    const isSeated = (Array.isArray(room.seats) ? room.seats : []).some((seat) => seat.user_id === user.id);
+    if (room.chat_seated_only === true && !isSeated && !isMod) {
+      return Response.json({ error: 'Sohbet yasağı var — yazmak için bir koltuğa otur.' }, { status: 403 });
+    }
+
     // Rate limit: 15 mesaj / 30 saniye / kullanıcı (admin/mod muaf)
     if (!isMod) {
       const key = 'chat:' + user.id;

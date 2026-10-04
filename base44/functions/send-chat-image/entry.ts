@@ -46,6 +46,10 @@ export default async function(req) {
       const isParticipant = (room.participants || []).some((p) => p.user_id === user.id);
       if (!isParticipant && !isOwner && !isMod) return Response.json({ error: 'bu odada mesaj gönderemezsiniz' }, { status: 403 });
       if (!room.chat_enabled && !isMod) return Response.json({ error: 'sohbet kapalı' }, { status: 403 });
+      const isSeated = (Array.isArray(room.seats) ? room.seats : []).some((seat) => seat.user_id === user.id);
+      if (room.chat_seated_only === true && !isSeated && !isMod) {
+        return Response.json({ error: 'Sohbet yasağı var — yazmak için bir koltuğa otur.' }, { status: 403 });
+      }
       await base44.asServiceRole.entities.RoomMessage.create({
         room_id: context_id, user_id: user.id, user_name: senderName, user_avatar: user.avatar || '',
         text: caption, file_url, type: 'user'

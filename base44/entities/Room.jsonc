@@ -40,6 +40,10 @@
       "type": "boolean",
       "default": true
     },
+    "chat_seated_only": {
+      "type": "boolean",
+      "default": false
+    },
     "voice_enabled": {
       "type": "boolean",
       "default": false

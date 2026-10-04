@@ -12,7 +12,7 @@ import useRoomLevels from '@/hooks/useRoomLevels';
  * Oda alt bölümü: mesaj akışı klavye ikonuna basmadan da alt barın üstündeki boş alanda durur,
  * yazma alanı açıldığında ve klavye kalktığında akış onunla birlikte yukarı kayar.
  */
-export default function VoiceChatDock({ messages = [], onSend, onCloseComposer, composerOpen, currentUserId, ownerId, moderators = [], onOpenProfile }) {
+export default function VoiceChatDock({ messages = [], onSend, onCloseComposer, composerOpen, chatLocked, currentUserId, ownerId, moderators = [], onOpenProfile }) {
   const [text, setText] = useState('');
   const [emojiOpen, setEmojiOpen] = useState(false);
   const inputRef = useRef(null);
@@ -78,7 +78,13 @@ export default function VoiceChatDock({ messages = [], onSend, onCloseComposer, 
         </div>
       )}
 
-      {composerOpen && (
+      {composerOpen && chatLocked && (
+        <p className="mx-3 mb-2 mt-1.5 rounded-full border border-white/15 bg-black/50 px-4 py-3 text-center text-[11px] font-semibold text-primary backdrop-blur-md">
+          Sohbet yasağı açık — yazmak için bir koltuğa otur.
+        </p>
+      )}
+
+      {composerOpen && !chatLocked && (
         <>
           {emojiOpen && (
             <div className="mx-3 mb-1 overflow-hidden rounded-2xl border border-white/10">

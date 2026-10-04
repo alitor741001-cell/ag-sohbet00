@@ -1,99 +1,119 @@
-import { useState } from 'react';
-import { Eye, EyeOff, Lock, Shield, Unlock, UserPlus } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Armchair, Eraser, Eye, EyeOff, Hash, Lock, MessageSquareOff, Shield, Unlock, UserPlus } from 'lucide-react';
 import SeatCountPicker from '@/components/voice/SeatCountPicker';
+import VoiceMenuTile from '@/components/voice/VoiceMenuTile';
 import VoiceSheet from '@/components/voice/VoiceSheet';
 
-const Section = ({ title, children, hint }) => (
-  <section className="mb-4 rounded-2xl border border-white/10 bg-[#171720] p-3">
-    <p className="mb-2 text-xs font-bold uppercase tracking-wide text-white/60">{title}</p>
+const Panel = ({ children, hint }) => (
+  <div className="mt-4 rounded-2xl border border-white/10 bg-[#171720] p-3">
     {children}
     {hint && <p className="mt-2 text-[11px] text-white/45">{hint}</p>}
-  </section>
+  </div>
 );
 
-/** "…" menüsü: koltuk sayısı, oda kilidi (şifre), oda gizliliği ve yöneticilik. */
-export default function VoiceRoomMenu({ open, onClose, room, userId, participants = [], isOwner, canMod, onSeatCount, onSetPassword, onToggleHidden, onToggleMod, onInvite, boardActive, onToggleBoard }) {
+/** "…" menüsü: yuvarlak ikon ızgarası — kilit, gizlilik, koltuk, sayaç, sohbet temizleme ve sohbet yasağı. */
+export default function VoiceRoomMenu({ open, onClose, room, userId, participants = [], isOwner, canMod, onSeatCount, onSetPassword, onToggleHidden, onToggleMod, onInvite, boardActive, onToggleBoard, onClearChat, onToggleChatBan }) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [panel, setPanel] = useState(null);
   const locked = !!room?.password;
+  const chatBanned = room?.chat_seated_only === true;
   const moderators = room?.room_moderators || [];
   const others = participants.filter((item) => item.user_id !== room?.owner_id);
 
+  useEffect(() => {
+    if (open) return;
+    setPanel(null);
+    setPassword('');
+    setShowPassword(false);
+  }, [open]);
+
+  const toggle = (name) => setPanel((current) => (current === name ? null : name));
+
+  const manageTiles = [
+    {
+      key: 'lock',
+      icon: locked ? Unlock : Lock,
+      label: locked ? 'Kilidi aç' : 'Kilit',
+      active: locked,
+      onClick: () => { if (locked) { onSetPassword(''); setPanel(null); } else { toggle('lock'); } },
+    },
+    { key: 'hidden', icon: room?.hidden ? EyeOff : Eye, label: 'Gizli', active: !!room?.hidden, onClick: onToggleHidden },
+    { key: 'seats', icon: Armchair, label: 'Koltuk', active: panel === 'seats', onClick: () => toggle('seats') },
+    { key: 'board', icon: Hash, label: 'Sayaç', active: !!boardActive, onClick: onToggleBoard },
+    { key: 'clear', icon: Eraser, label: 'Temiz sohbet', active: panel === 'clear', onClick: () => toggle('clear') },
+    { key: 'ban', icon: MessageSquareOff, label: chatBanned ? 'Yasak açık' : 'Sohbet yasağı', active: chatBanned, onClick: onToggleChatBan },
+  ];
+
   return (
     <VoiceSheet open={open} onClose={onClose} title="Oda ayarları">
-      {onInvite && (
-        <button
-          type="button"
-          onClick={() => { onClose(); onInvite(); }}
-          className="mb-4 flex w-full items-center justify-center gap-2 rounded-xl bg-white/10 py-2.5 text-sm font-bold text-white active:scale-95 transition-transform"
-        >
-          <UserPlus className="h-4 w-4" /> Arkadaşlarını davet et
-        </button>
-      )}
+      <div className="grid grid-cols-4 gap-x-2 gap-y-4">
+        {onInvite && (
+          <VoiceMenuTile
+            icon={UserPlus}
+            label="Davet et"
+            onClick={() => { onClose(); onInvite(); }}
+          />
+        )}
+        {canMod && manageTiles.map((item) => (
+          <VoiceMenuTile
+            key={item.key}
+            icon={item.icon}
+            label={item.label}
+            active={!!item.active}
+            onClick={item.onClick}
+          />
+        ))}
+      </div>
 
-      {!canMod && <p className="mb-3 rounded-xl bg-white/5 p-3 text-xs text-white/60">Oda ayarlarını yalnızca oda sahibi ve yöneticiler değiştirebilir.</p>}
+      {!canMod && <p className="mt-4 rounded-xl bg-white/5 p-3 text-xs text-white/60">Oda ayarlarını yalnızca oda sahibi ve yöneticiler değiştirebilir.</p>}
 
-      {canMod && (
-        <Section title="Koltuk sayısı" hint={`Şu an ${room?.seat_count || 0} koltuk açık. Dolu koltuklar korunur.`}>
+      {canMod && panel === 'seats' && (
+        <Panel hint={`Şu an ${room?.seat_count || 0} koltuk açık. Dolu koltuklar korunur.`}>
           <SeatCountPicker compact value={room?.seat_count} onChange={onSeatCount} />
-        </Section>
+        </Panel>
       )}
 
-      {canMod && (
-        <Section
-          title="Sayı tahtası"
-          hint={boardActive
-            ? 'Her koltuğun altındaki sayaç 1’den başlar, hediye geldikçe artar. Kapatınca sayaçlar sıfırlanır.'
-            : 'Açtığında tüm sayaçlar 1’den başlar; hediye geldikçe ileri sayar.'}
-        >
-          <button
-            type="button"
-            onClick={onToggleBoard}
-            className={`w-full rounded-xl py-2.5 text-sm font-bold active:scale-95 transition-transform ${boardActive ? 'bg-primary text-primary-foreground' : 'bg-white/10 text-white'}`}
-          >
-            {boardActive ? 'Sayı tahtasını kapat' : 'Sayı tahtasını aç'}
-          </button>
-        </Section>
-      )}
-
-      {canMod && (
-        <Section title="Oda kilidi" hint={locked ? 'Odaya girmek için şifre gerekiyor.' : 'Şifre belirleyerek odayı kilitleyebilirsin.'}>
-          {locked ? (
-            <button type="button" onClick={() => { setPassword(''); onSetPassword(''); }} className="flex w-full items-center justify-center gap-2 rounded-xl bg-amber-500/20 py-2.5 text-sm font-bold text-amber-300 active:scale-95 transition-transform">
-              <Unlock className="h-4 w-4" /> Kilidi kaldır
-            </button>
-          ) : (
-            <div className="flex items-center gap-2">
-              <div className="relative flex-1">
-                <input
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="Oda şifresi"
-                  className="h-10 w-full rounded-xl bg-white/10 px-3 pr-9 text-sm text-white outline-none placeholder:text-white/40"
-                />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-2 top-1/2 -translate-y-1/2 text-white/50">
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
-              <button type="button" disabled={!password.trim()} onClick={() => { onSetPassword(password.trim()); setPassword(''); }} className="flex h-10 items-center gap-1.5 rounded-xl bg-primary px-4 text-sm font-bold text-primary-foreground disabled:opacity-40">
-                <Lock className="h-4 w-4" /> Şifrele
+      {canMod && panel === 'lock' && (
+        <Panel hint="Şifre belirleyerek odayı kilitleyebilirsin. Girmek için şifre istenir.">
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <input
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Oda şifresi"
+                className="h-10 w-full rounded-xl bg-white/10 px-3 pr-9 text-sm text-white outline-none placeholder:text-white/40"
+              />
+              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-2 top-1/2 -translate-y-1/2 text-white/50">
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
-          )}
-        </Section>
+            <button type="button" disabled={!password.trim()} onClick={() => { onSetPassword(password.trim()); setPassword(''); setPanel(null); }} className="flex h-10 items-center gap-1.5 rounded-xl bg-primary px-4 text-sm font-bold text-primary-foreground disabled:opacity-40">
+              <Lock className="h-4 w-4" /> Şifrele
+            </button>
+          </div>
+        </Panel>
+      )}
+
+      {canMod && panel === 'clear' && (
+        <Panel hint="Odadaki tüm sohbet mesajları silinir. Bu işlem geri alınamaz.">
+          <div className="flex items-center gap-2">
+            <button type="button" onClick={() => { setPanel(null); onClearChat?.(); }} className="flex-1 rounded-xl bg-red-600 py-2.5 text-sm font-bold text-white active:scale-95 transition-transform">Sohbeti temizle</button>
+            <button type="button" onClick={() => setPanel(null)} className="rounded-xl bg-white/10 px-4 py-2.5 text-sm font-bold text-white active:scale-95 transition-transform">Vazgeç</button>
+          </div>
+        </Panel>
+      )}
+
+      {chatBanned && (
+        <p className="mt-3 rounded-xl bg-primary/15 px-3 py-2 text-[11px] font-semibold text-primary">
+          Sohbet yasağı açık — yalnızca koltuktakiler yazabilir.
+        </p>
       )}
 
       {canMod && (
-        <Section title="Oda gizliliği" hint={room?.hidden ? 'Oda listede görünmüyor, yalnızca davetliler girebilir.' : 'Oda açık odalar listesinde görünür.'}>
-          <button type="button" onClick={onToggleHidden} className={`w-full rounded-xl py-2.5 text-sm font-bold active:scale-95 transition-transform ${room?.hidden ? 'bg-primary text-primary-foreground' : 'bg-white/10 text-white'}`}>
-            {room?.hidden ? 'Gizli odayı herkese aç' : 'Odayı gizle'}
-          </button>
-        </Section>
-      )}
-
-      {canMod && (
-        <Section title="Yöneticiler" hint="Yöneticiler koltukları kilitleyebilir, sesleri kapatabilir ve kişileri odadan atabilir.">
+        <section className="mt-4 rounded-2xl border border-white/10 bg-[#171720] p-3">
+          <p className="mb-2 text-xs font-bold uppercase tracking-wide text-white/60">Yöneticiler</p>
           {others.length === 0 ? (
             <p className="text-xs text-white/50">Odada başka kişi yok.</p>
           ) : (
@@ -116,7 +136,7 @@ export default function VoiceRoomMenu({ open, onClose, room, userId, participant
               })}
             </div>
           )}
-        </Section>
+        </section>
       )}
     </VoiceSheet>
   );
