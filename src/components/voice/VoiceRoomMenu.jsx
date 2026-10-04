@@ -64,7 +64,7 @@ export default function VoiceRoomMenu({ open, onClose, room, userId, participant
           />
         )}
         {canMod && room?.room_type === 'watch' && (
-          <VoiceMenuTile icon={Film} label="Film izlemeye dön" onClick={() => { onClose(); onExitVoiceMode?.(); }} />
+          <VoiceMenuTile icon={Film} label="Film Odasına Dön" onClick={() => { onClose(); onExitVoiceMode?.(); }} />
         )}
         {canMod && manageTiles.map((item) => (
           <VoiceMenuTile

@@ -26,7 +26,8 @@ export default async function (req: Request): Promise<Response> {
     }
 
     const room = await base44.asServiceRole.entities.Room.get(room_id).catch(() => null);
-    if (!room || room.room_type !== 'voice') return Response.json({ error: 'Sesli oda bulunamadı.' }, { status: 404 });
+    // Sesli odalar ve sesli moda alınmış film odaları aynı özellikleri kullanır.
+    if (!room || (room.room_type !== 'voice' && room.voice_mode !== true)) return Response.json({ error: 'Sesli oda bulunamadı.' }, { status: 404 });
     if (room.status === 'closed') return Response.json({ error: 'Oda kapatıldı.' }, { status: 403 });
 
     const me = await base44.asServiceRole.entities.User.get(user.id).catch(() => null);
