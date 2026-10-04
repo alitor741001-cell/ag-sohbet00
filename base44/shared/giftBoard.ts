@@ -12,11 +12,13 @@ const MAX_RECORDS = 2000;
 const TOP_COUNT = 10;
 // Oda sıralamasının elle sıfırlama anı (AppConfig anahtarı).
 const RESET_KEY = 'room_gift_reset_at';
+// Yalnızca 24 saatlik toplamı sıfırlayan anahtar — tüm zamanlar listesi korunur.
+const DAY_RESET_KEY = 'room_gift_day_reset_at';
 
-/** Sıfırlama anı: bu andan önceki hediyeler ne toplama ne 24 saatlik kısma sayılır. */
-async function resetAtFor(base44: any) {
+/** Verilen anahtarın sıfırlama anı; kayıt yoksa boş döner. */
+async function resetAtFor(base44: any, key: string) {
   const config = await base44.asServiceRole.entities.AppConfig
-    .filter({ key: RESET_KEY }, '-created_date', 1)
+    .filter({ key }, '-created_date', 1)
     .catch(() => []);
   return String(config[0]?.value || '').slice(0, 19);
 }
@@ -55,11 +57,12 @@ const sumScore = (entries: any[]) => entries.reduce((sum, entry) => sum + entry.
 
 /** Odanın hediye sıralaması: son 24 saat ve tüm zamanlar listeleri + toplam değerler. */
 export async function giftBoard(base44: any, roomId: string) {
-  const [allRecords, resetAt] = await Promise.all([
+  const [allRecords, resetAt, dayResetAt] = await Promise.all([
     base44.asServiceRole.entities.GiftSend
       .filter({ room_id: roomId }, '-created_date', MAX_RECORDS)
       .catch(() => []),
-    resetAtFor(base44),
+    resetAtFor(base44, RESET_KEY),
+    resetAtFor(base44, DAY_RESET_KEY),
   ]);
 
   // Sıfırlama anından önceki hediyeler tamamen dışarıda kalır: toplam ve 24 saatlik birlikte sıfırlanır.
@@ -71,9 +74,13 @@ export async function giftBoard(base44: any, roomId: string) {
     : allRecords;
 
   const since = Date.now() - DAY_MS;
+  // 24 saatlik kısım ayrıca kendi sıfırlama anına uyar: sıfırlandıysa tüm zamanlar etkilenmez.
   const recent = records.filter((record) => {
     const at = new Date(record?.created_date || 0).getTime();
-    return Number.isFinite(at) && at >= since;
+    if (!Number.isFinite(at) || at < since) return false;
+    if (!dayResetAt) return true;
+    const created = String(record?.created_date || '').slice(0, 19);
+    return !!created && created >= dayResetAt;
   });
 
   const dayAgg = aggregate(recent);
