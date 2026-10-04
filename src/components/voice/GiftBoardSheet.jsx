@@ -8,6 +8,7 @@ import { Image } from '@/components/ui/image';
 import useRoomLevels from '@/hooks/useRoomLevels';
 import useMessageProfiles from '@/hooks/useMessageProfiles';
 import { formatScore } from '@/components/voice/scoreTier';
+import { isHiddenName } from '@/lib/hiddenUser';
 
 const TABS = [
   { key: 'day', label: '24 saat' },
@@ -50,6 +51,8 @@ export default function GiftBoardSheet({ open, onClose, board, loading }) {
           entries.map((entry, index) => {
             const rank = index + 1;
             const profile = profiles[entry.user_id];
+            // Gizli kullanıcı: takma ad ve maskeli profil; kimlik/rol bilgisi gösterilmez.
+            const hidden = entry.hidden || isHiddenName(entry.name);
             return (
               <div key={entry.user_id} className="flex items-center gap-2.5 border-b border-black/5 py-2 last:border-b-0">
                 <span className="w-5 shrink-0 text-center text-[13px] font-bold text-[#6b7280]">{rank}</span>
@@ -65,14 +68,16 @@ export default function GiftBoardSheet({ open, onClose, board, loading }) {
                 )}
 
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-bold text-[#1F2024]">{entry.name}</p>
-                  <div className="mt-0.5 flex items-center gap-1 overflow-hidden">
-                    <RoomLevelBadge level={levels[entry.user_id]} />
-                    <RoleBadge user={profile} size="sm" />
-                    <span className="shrink-0 rounded bg-black/5 px-1 text-[9px] font-bold text-[#6b7280]">
-                      #{profile?.member_id || entry.user_id?.slice(-4) || '—'}
-                    </span>
-                  </div>
+                  <p className={`truncate text-sm font-bold ${hidden ? 'hidden-user-name' : 'text-[#1F2024]'}`}>{entry.name}</p>
+                  {!hidden && (
+                    <div className="mt-0.5 flex items-center gap-1 overflow-hidden">
+                      <RoomLevelBadge level={levels[entry.user_id]} />
+                      <RoleBadge user={profile} size="sm" />
+                      <span className="shrink-0 rounded bg-black/5 px-1 text-[9px] font-bold text-[#6b7280]">
+                        #{profile?.member_id || entry.user_id?.slice(-4) || '—'}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 <span className="shrink-0 rounded-full px-2.5 py-1 text-xs font-bold tabular-nums text-[#5b2a63]" style={{ backgroundColor: PILL_BG }}>

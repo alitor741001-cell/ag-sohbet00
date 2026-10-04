@@ -3,7 +3,7 @@ import { sanitizeText, rateLimit, safeErrorResponse, logSecurity } from '../../s
 import { findProfanity } from '../../shared/profanity.ts';
 import { advanceRoomLevel } from '../../shared/roomLevels.ts';
 import { awardMessageXp } from '../../shared/xp.ts';
-import { HIDDEN_DISPLAY_NAME, isHiddenUser } from '../../shared/vip.ts';
+import { HIDDEN_AVATAR_URL, hiddenDisplayName, isHiddenUser } from '../../shared/vip.ts';
 
 export default async function(req) {
   try {
@@ -54,7 +54,7 @@ export default async function(req) {
     if (!clean) return Response.json({ error: 'boş mesaj' }, { status: 400 });
     // Gizli kullanıcı (VIP10+): mesajı takma adla ve kimliksiz yazılır, profili açılmaz.
     const hiddenUser = isHiddenUser(me);
-    const name = hiddenUser ? HIDDEN_DISPLAY_NAME : (user.username || user.full_name || 'Kullanıcı');
+    const name = hiddenUser ? hiddenDisplayName(me) : (user.username || user.full_name || 'Kullanıcı');
     // Küfür/argo filtresi — mesajı engeller, yönetici paneline düşürür
     const badWords = isMod ? [] : findProfanity(clean);
     if (badWords.length) {
@@ -68,7 +68,7 @@ export default async function(req) {
       return Response.json({ error: 'Mesajınız uygunsuz içerik tespit edildiği için engellendi.', filtered: true }, { status: 400 });
     }
     const created = await base44.asServiceRole.entities.RoomMessage.create({
-      room_id, user_id: hiddenUser ? '' : user.id, user_name: name, user_avatar: hiddenUser ? '' : (user.avatar || ''),
+      room_id, user_id: hiddenUser ? '' : user.id, user_name: name, user_avatar: hiddenUser ? HIDDEN_AVATAR_URL : (user.avatar || ''),
       text: clean, type: 'user'
     });
     // Arka planda XP kazanımı — kullanıcı arayüzünde mesaj sayısı gösterilmez.

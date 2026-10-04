@@ -7,7 +7,7 @@ import { appendRoomLog } from '../../shared/roomLog.ts';
 import { coinsForK, ensureGiftWallet, formatK, giftBalance } from '../../shared/giftWallet.ts';
 import { giftBoard } from '../../shared/giftBoard.ts';
 import { addGiftTotals } from '../../shared/userLevels.ts';
-import { HIDDEN_DISPLAY_NAME, isHiddenUser } from '../../shared/vip.ts';
+import { HIDDEN_AVATAR_URL, hiddenDisplayName, isHiddenUser } from '../../shared/vip.ts';
 
 const SEAT_OPTIONS = [2, 5, 8, 9, 12, 15, 20, 24];
 // Bu değerin (coin) üzerindeki hediyeler bütün sesli odalara duyurulur.
@@ -39,8 +39,8 @@ export default async function (req: Request): Promise<Response> {
     const displayName = me?.username || me?.full_name || user.full_name || 'Kullanıcı';
     // Gizli kullanıcı (VIP10+): odada ismi, avatarı ve çerçevesi görünmez — takma adla kullanılır.
     const hiddenUser = isHiddenUser(me);
-    const shownName = hiddenUser ? HIDDEN_DISPLAY_NAME : displayName;
-    const shownAvatar = hiddenUser ? '' : (me?.avatar || user.avatar || '');
+    const shownName = hiddenUser ? hiddenDisplayName(me) : displayName;
+    const shownAvatar = hiddenUser ? HIDDEN_AVATAR_URL : (me?.avatar || user.avatar || '');
     const isOwner = room.owner_id === user.id;
     const isRoomMod = (room.room_moderators || []).includes(user.id);
     const canMod = isOwner || isRoomMod || ['admin', 'moderator'].includes(me?.role) || isModerator(me);
@@ -53,7 +53,7 @@ export default async function (req: Request): Promise<Response> {
       return next;
     };
     const say = (text) => base44.asServiceRole.entities.RoomMessage.create({
-      room_id, user_id: user.id, user_name: displayName, text, type: 'system',
+      room_id, user_id: hiddenUser ? '' : user.id, user_name: shownName, text, type: 'system',
     }).catch(() => {});
     const respond = (next) => Response.json({ ok: true, seats: next, seat_count: next.length });
 
@@ -107,7 +107,7 @@ export default async function (req: Request): Promise<Response> {
       }
       const next = seats.map((seat) => (seat.index === index ? { ...seat, locked: !!locked } : seat));
       await persist(next);
-      await say(`${displayName} ${index + 1}. koltuğu ${locked ? 'kilitledi' : 'kilidini açtı'}.`);
+      await say(`${shownName} ${index + 1}. koltuğu ${locked ? 'kilitledi' : 'kilidini açtı'}.`);
       return respond(next);
     }
 
@@ -126,9 +126,9 @@ export default async function (req: Request): Promise<Response> {
       // Koltuktan indirme sohbete değil kayıt defterine yazılır.
       await base44.asServiceRole.entities.Room.update(room_id, {
         room_logs: appendRoomLog(room, {
-          text: `${displayName}, ${targetName} kişisini koltuktan indirdi.`,
+          text: `${shownName}, ${targetName} kişisini koltuktan indirdi.`,
           kind: 'seat_kick',
-          actor_id: user.id, actor_name: displayName, target_id, target_name: targetName,
+          actor_id: hiddenUser ? '' : user.id, actor_name: shownName, target_id, target_name: targetName,
         }),
       });
       return respond(next);
@@ -147,7 +147,7 @@ export default async function (req: Request): Promise<Response> {
         return existing ? { ...existing, index } : emptySeat(index);
       });
       await persist(next);
-      await say(`${displayName} koltuk sayısını ${count} olarak ayarladı.`);
+      await say(`${shownName} koltuk sayısını ${count} olarak ayarladı.`);
       return respond(next);
     }
 
@@ -169,7 +169,7 @@ export default async function (req: Request): Promise<Response> {
         await upsertNotification(base44, {
           user_id: id,
           title: 'Sesli oda daveti',
-          body: `${displayName} seni "${room.name}" sesli odasına davet etti.`,
+          body: `${shownName} seni "${room.name}" sesli odasına davet etti.`,
           type: 'voice_room_invite',
           link: `/sesli-oda/${room_id}`,
           ref_id: room_id,
@@ -202,7 +202,7 @@ export default async function (req: Request): Promise<Response> {
           name: targetUser.username || targetUser.full_name || 'Kullanıcı',
           seat_index: index,
           invited_by: user.id,
-          invited_by_name: displayName,
+          invited_by_name: shownName,
           created_at: new Date().toISOString(),
         });
       await base44.asServiceRole.entities.Room.update(room_id, { seat_invites: invites });

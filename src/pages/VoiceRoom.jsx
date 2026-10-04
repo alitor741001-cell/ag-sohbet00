@@ -394,6 +394,12 @@ export default function VoiceRoom() {
 
   const openProfile = (userId) => { if (userId && !hiddenIds.has(userId)) setProfileUserId(userId); };
 
+  // Anonsta gösterilecek takma ad — gerçek isim hiçbir yerde kullanılmaz.
+  const hiddenAnnounceName = useMemo(() => {
+    const person = [...(seats || []), ...(participants || [])].find((item) => isHiddenName(item?.name));
+    return person?.name || '';
+  }, [seats, participants]);
+
   // Profil sayfasına giderken odadan ve koltuktan düşmeyi engeller.
   const openFullProfile = (userId) => {
     if (!userId) return;
@@ -861,7 +867,7 @@ export default function VoiceRoom() {
           accent={seatAccent}
           gifted={gifted}
         />
-        <HiddenUserMarquee active={!!room?.ghost_entered_at} />
+        <HiddenUserMarquee active={room?.ghost_entered_at} name={hiddenAnnounceName} />
         <p className="mt-5 text-center text-[11px] text-white/50">
           {seated
             ? (voice.muted ? 'Mikrofonun kapalı — konuşmak için mikrofon tuşuna bas.' : 'Koltuktayken mikrofonun açık, konuşabilirsin.')

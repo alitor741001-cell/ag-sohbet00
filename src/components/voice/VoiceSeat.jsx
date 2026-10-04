@@ -1,5 +1,6 @@
 import { Crown, Lock, MicOff, Plus, Shield } from 'lucide-react';
 import VoiceSeatPortrait from '@/components/voice/VoiceSeatPortrait';
+import { isHiddenName } from '@/lib/hiddenUser';
 
 // Her koltuk aynı boyutta sabit bir portre alanı kullanır: profil boyutu değişse de
 // ızgara kaymaz, çerçeveler komşu koltuğa taşmaz.
@@ -34,6 +35,8 @@ export default function VoiceSeat({ seat, index, size = 'md', speaking, isSelf, 
 
   // Hediye alma anı, hediyenin K seviyesi rengiyle parlar. Alıcı seçimi koltukta işaretlenmez.
   const halo = gifted ? `0 0 0 2px ${accent}, 0 0 26px ${accent}` : undefined;
+  // Gizli kullanıcı: koltukta maskeli profil ve kırmızı takma ad görünür, rozet taşımaz.
+  const hidden = isHiddenName(seat.name);
 
   return (
     <button
@@ -56,9 +59,9 @@ export default function VoiceSeat({ seat, index, size = 'md', speaking, isSelf, 
         )}
       </span>
       <span className="flex max-w-[68px] items-center gap-0.5 truncate text-[10px] leading-none" style={{ color: gifted ? accent : '#ffffff' }}>
-        {isOwner && <Crown className="h-3 w-3 shrink-0 text-amber-400" />}
-        {!isOwner && isMod && <Shield className="h-3 w-3 shrink-0 text-sky-400" />}
-        <span className="truncate">{isSelf ? 'Sen' : seat.name}</span>
+        {!hidden && isOwner && <Crown className="h-3 w-3 shrink-0 text-amber-400" />}
+        {!hidden && !isOwner && isMod && <Shield className="h-3 w-3 shrink-0 text-sky-400" />}
+        <span className={`truncate ${hidden ? 'hidden-user-name' : ''}`}>{isSelf ? 'Sen' : seat.name}</span>
       </span>
     </button>
   );

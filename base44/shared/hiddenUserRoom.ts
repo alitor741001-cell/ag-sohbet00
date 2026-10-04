@@ -1,4 +1,4 @@
-import { HIDDEN_DISPLAY_NAME } from './vip.ts';
+import { HIDDEN_AVATAR_URL, hiddenDisplayName } from './vip.ts';
 
 /**
  * Gizli kullanıcı modu bir odadayken açıldığında kişiyi anında görünmez yapar:
@@ -15,10 +15,13 @@ export async function maskUserInCurrentRoom(base44: any, userId: string) {
   const room = await base44.asServiceRole.entities.Room.get(roomId).catch(() => null);
   if (!room) return null;
 
+  // Takma ad + maskeli profil: gerçek isim, fotoğraf ve çerçeve hiçbir yerde görünmez.
+  const record = await base44.asServiceRole.entities.User.get(userId).catch(() => null);
+  const maskedName = hiddenDisplayName(record || { id: userId });
   const participants = (Array.isArray(room.participants) ? room.participants : []).map((person) =>
-    (person.user_id === userId ? { ...person, name: HIDDEN_DISPLAY_NAME, avatar: '' } : person));
+    (person.user_id === userId ? { ...person, name: maskedName, avatar: HIDDEN_AVATAR_URL } : person));
   const seats = (Array.isArray(room.seats) ? room.seats : []).map((seat) =>
-    (seat.user_id === userId ? { ...seat, name: HIDDEN_DISPLAY_NAME, avatar: '', frame: '' } : seat));
+    (seat.user_id === userId ? { ...seat, name: maskedName, avatar: HIDDEN_AVATAR_URL, frame: '' } : seat));
 
   await base44.asServiceRole.entities.Room.update(roomId, {
     participants,

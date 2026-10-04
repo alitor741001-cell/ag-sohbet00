@@ -3,7 +3,7 @@ import { rateLimit, safeErrorResponse, logSecurity } from '../../shared/security
 import { isModerator, isSiteOwner, immuneToModeration, getRoleInfo, getRoleLabelOverrides, getSpecialFrameInfo } from '../../shared/roles.ts';
 import { upsertNotification } from '../../shared/upsertNotification.ts';
 import { hasActiveMembership } from '../../shared/membership.ts';
-import { HIDDEN_DISPLAY_NAME, isHiddenUser } from '../../shared/vip.ts';
+import { HIDDEN_AVATAR_URL, hiddenDisplayName, isHiddenUser } from '../../shared/vip.ts';
 import { scoresAfterRoomLeave } from '../../shared/numberBoard.ts';
 import { appendRoomLog } from '../../shared/roomLog.ts';
 
@@ -135,7 +135,7 @@ export default async function(req) {
             return Response.json({ error: 'oda dolu' }, { status: 403 });
           }
           await base44.asServiceRole.entities.Room.update(room_id, {
-            participants: [...(room.participants || []), { user_id: user.id, name: HIDDEN_DISPLAY_NAME, avatar: '', joined_at: new Date().toISOString(), muted: false, speaking: false }],
+            participants: [...(room.participants || []), { user_id: user.id, name: hiddenDisplayName(me), avatar: HIDDEN_AVATAR_URL, joined_at: new Date().toISOString(), muted: false, speaking: false }],
             ghost_entered_at: new Date().toISOString(),
           });
         } else {

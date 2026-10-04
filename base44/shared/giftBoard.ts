@@ -4,6 +4,8 @@
  * Sıfırlama anından (AppConfig: room_gift_reset_at) önceki hediyeler sayılmaz.
  */
 
+import { HIDDEN_AVATAR_URL, hiddenDisplayName, isHiddenUser } from './vip.ts';
+
 const K_UNIT = 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
 // Oda başına okunacak en fazla hediye kaydı.
@@ -45,10 +47,13 @@ const aggregate = (records: any[]) => {
 const withProfiles = async (base44: any, entries: any[]) => {
   return Promise.all(entries.slice(0, TOP_COUNT).map(async (entry) => {
     const profile = await base44.asServiceRole.entities.User.get(entry.user_id).catch(() => null);
+    // Gizli kullanıcı listede de maskeli profil ve takma adla görünür.
+    const hidden = isHiddenUser(profile);
     return {
       ...entry,
-      name: profile?.username || profile?.full_name || entry.name || 'Kullanıcı',
-      avatar: profile?.avatar || '',
+      name: hidden ? hiddenDisplayName(profile) : (profile?.username || profile?.full_name || entry.name || 'Kullanıcı'),
+      avatar: hidden ? HIDDEN_AVATAR_URL : (profile?.avatar || ''),
+      hidden,
     };
   }));
 };

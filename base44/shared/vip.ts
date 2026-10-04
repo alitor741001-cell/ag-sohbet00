@@ -14,6 +14,19 @@ export const VIP_MAX = 12;
 export const HIDDEN_REQUIRED_VIP = 10;
 /** Gizli kullanıcının odalarda görünen takma adı — kimlik bilgisi taşımaz. */
 export const HIDDEN_DISPLAY_NAME = 'Gizli Kullanıcı';
+/** Gizli kullanıcının siyah-altın maskeli profil görseli: gerçek fotoğraf yerine kullanılır. */
+export const HIDDEN_AVATAR_URL = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/cafb04a98_generated_image.png';
+
+/** Kişiye ait 8 haneli takma numara: gerçek kimliği belli etmez, her yerde aynı kalır. */
+export const hiddenUserCode = (user: any) => {
+  const seed = String(user?.id || 'gizli');
+  let hash = 0;
+  for (let i = 0; i < seed.length; i += 1) hash = (hash * 37 + seed.charCodeAt(i)) % 90000000;
+  return String(10000000 + Math.abs(hash));
+};
+
+/** Odalarda görünen tam takma ad: "Gizli Kullanıcı" + 8 haneli numara. */
+export const hiddenDisplayName = (user: any) => `${HIDDEN_DISPLAY_NAME}${hiddenUserCode(user)}`;
 
 export const VIP_DAY_MS = 24 * 60 * 60 * 1000;
 
