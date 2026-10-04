@@ -4,7 +4,7 @@ import { ensureGiftWallet, giftBalance } from '../../shared/giftWallet.ts';
 import { COINS_PER_DOLLAR, findByMemberId, giftBoxSummary, giftDollarsFromK, monthStartIso } from '../../shared/giftBox.ts';
 import { getUsdTry, tlFromDollars, tlRateFrom } from '../../shared/exchangeRate.ts';
 
-const ACTIONS = ['summary', 'lookup', 'send', 'withdraw', 'convert', 'received'];
+const ACTIONS = ['summary', 'activity', 'lookup', 'send', 'withdraw', 'convert', 'received'];
 const MIN_CONVERT_DOLLARS = 1;
 const MIN_SEND_DOLLARS = 1;
 
@@ -35,6 +35,112 @@ export default async function (req: Request): Promise<Response> {
     if (action === 'summary') {
       const summary = await giftBoxSummary(base44, account);
       return Response.json({ ok: true, member_id: me?.member_id || '', ...summary });
+    }
+
+    // Coin hareketleri: yüklenen coinler (sistem/admin), dolar bozdurma,
+    // gönderilen/alınan hediyeler ve coin gönderimleri tek listede.
+    if (action === 'activity') {
+      const per = 60;
+      const [grants, sentGifts, receivedGifts, sentCoins, receivedCoins, conversions] = await Promise.all([
+        base44.asServiceRole.entities.CoinGrant.filter({ user_id: user.id }, '-created_date', per).catch(() => []),
+        base44.asServiceRole.entities.GiftSend.filter({ sender_id: user.id }, '-created_date', per).catch(() => []),
+        base44.asServiceRole.entities.GiftSend.filter({ recipient_id: user.id }, '-created_date', per).catch(() => []),
+        base44.asServiceRole.entities.GiftTransfer.filter({ kind: 'send', sender_id: user.id }, '-created_date', per).catch(() => []),
+        base44.asServiceRole.entities.GiftTransfer.filter({ kind: 'send', recipient_id: user.id }, '-created_date', per).catch(() => []),
+        base44.asServiceRole.entities.GiftTransfer.filter({ kind: 'convert', sender_id: user.id }, '-created_date', per).catch(() => []),
+      ]);
+
+      // Karşı tarafın profili (isim, fotoğraf, kimlik numarası) tek sorguda tamamlanır.
+      const ids = new Set<string>();
+      [...sentGifts, ...receivedGifts, ...sentCoins, ...receivedCoins].forEach((record: any) => {
+        [record?.sender_id, record?.recipient_id].forEach((id: any) => {
+          if (id) ids.add(String(id));
+        });
+      });
+      const idList = [...ids];
+      const people = idList.length
+        ? await base44.asServiceRole.entities.User.filter({ id: { $in: idList } }, '-created_date', idList.length).catch(() => [])
+        : [];
+      const byId = new Map(people.map((person: any) => [person.id, person]));
+      const personOf = (id: any, fallbackName: any) => {
+        const person = byId.get(id);
+        return {
+          user_id: id || '',
+          name: person?.username || person?.full_name || fallbackName || 'Kullanıcı',
+          avatar: person?.avatar || '',
+          member_id: person?.member_id || '',
+        };
+      };
+
+      const items: any[] = [];
+
+      // Hesaba yüklenen coinler: adminin manuel yüklemesi ya da sistem akışı (başvuru onayı).
+      grants.forEach((grant: any) => {
+        const note = String(grant?.note || '');
+        const fromRequest = note.startsWith('Başvuru onayı');
+        items.push({
+          id: 'load:' + grant.id,
+          kind: 'load',
+          source: fromRequest ? 'system' : 'admin',
+          title: fromRequest ? 'Sistem coin yükledi' : 'Admin coin yükledi',
+          detail: fromRequest ? note : `${grant.admin_name || 'Yönetici'} yükledi`,
+          coins: Math.max(0, Number(grant?.amount) || 0),
+          created_date: grant.created_date,
+        });
+      });
+
+      conversions.forEach((transfer: any) => {
+        const dollars = Math.max(0, Number(transfer?.dollars) || 0);
+        items.push({
+          id: 'convert:' + transfer.id,
+          kind: 'load',
+          source: 'system',
+          title: 'Sistem coin yükledi',
+          detail: `Dolar bozdurma • ${dollars.toLocaleString('tr-TR')} $`,
+          coins: Math.max(0, Number(transfer?.coins) || 0),
+          created_date: transfer.created_date,
+        });
+      });
+
+      const giftRows = (records: any[], direction: string) => records.forEach((record: any) => {
+        const sender = personOf(record?.sender_id, record?.sender_name);
+        const recipient = personOf(record?.recipient_id, record?.recipient_name);
+        items.push({
+          id: `${direction}:gift:${record.id}`,
+          kind: 'gift',
+          direction,
+          title: `${sender.name} → ${recipient.name}`,
+          detail: record?.gift_name || 'Hediye',
+          gift_emoji: record?.gift_emoji || '🎁',
+          k_value: Math.max(0, Number(record?.k_value) || 0),
+          counterpart: direction === 'sent' ? recipient : sender,
+          created_date: record.created_date,
+        });
+      });
+      giftRows(sentGifts, 'sent');
+      giftRows(receivedGifts, 'received');
+
+      const coinRows = (records: any[], direction: string) => records
+        .filter((record: any) => record?.status !== 'pending')
+        .forEach((record: any) => {
+          const sender = personOf(record?.sender_id, record?.sender_name);
+          const recipient = personOf(record?.recipient_id, record?.recipient_name);
+          items.push({
+            id: `${direction}:coin:${record.id}`,
+            kind: 'coin',
+            direction,
+            title: `${sender.name} → ${recipient.name}`,
+            detail: 'Coin gönderdi',
+            coins: Math.max(0, Number(record?.coins) || 0),
+            counterpart: direction === 'sent' ? recipient : sender,
+            created_date: record.created_date,
+          });
+        });
+      coinRows(sentCoins, 'sent');
+      coinRows(receivedCoins, 'received');
+
+      items.sort((a: any, b: any) => (String(a.created_date) < String(b.created_date) ? 1 : -1));
+      return Response.json({ ok: true, items: items.slice(0, per) });
     }
 
     // Hediye gönderenler: her ayın 1'inde sıfırlanır — yalnızca bu ayın gönderimleri listelenir.

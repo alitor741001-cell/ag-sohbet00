@@ -1,0 +1,118 @@
+import { useEffect, useState } from 'react';
+import { ChevronLeft, Coins, Gift, Loader2 } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
+import { Image } from '@/components/ui/image';
+
+const formatCoins = (value) => Math.max(0, Math.round(Number(value) || 0)).toLocaleString('tr-TR');
+const formatK = (value) => `${Math.max(0, Number(value) || 0).toLocaleString('tr-TR', { maximumFractionDigits: 2 })}K`;
+
+/** Hareket tarihi ve saati: 04.10.2026 20:53 */
+const formatWhen = (iso) => {
+  if (!iso) return '';
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleString('tr-TR', {
+    day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
+  });
+};
+
+/**
+ * Coin Hareketleri: hesaba yüklenen coinler (sistem/admin), karşı tarafın profili,
+ * kimlik numarası, gönderilen/alınan hediye tutarı (K) ve tarih-saat tek listede.
+ */
+export default function CoinActivityPanel({ open, onClose, onOpenSenders }) {
+  const [loading, setLoading] = useState(false);
+  const [items, setItems] = useState([]);
+
+  useEffect(() => {
+    if (!open) return;
+    setLoading(true);
+    base44.functions.invoke('gift-box', { action: 'activity' })
+      .then((response) => setItems(response.data?.items || []))
+      .catch(() => setItems([]))
+      .finally(() => setLoading(false));
+  }, [open]);
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-[300] flex flex-col bg-[#0F0F14] text-white">
+      <header className="flex shrink-0 items-center gap-2 border-b border-white/10 px-3 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Geri"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10 transition-transform active:scale-95"
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </button>
+        <p className="flex min-w-0 flex-1 items-center gap-2 text-sm font-bold text-white">
+          <Coins className="h-4 w-4 shrink-0 text-amber-400" /> <span className="truncate">Coin Hareketleri</span>
+        </p>
+        {onOpenSenders && (
+          <button
+            type="button"
+            onClick={onOpenSenders}
+            className="flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-white/10 px-3 text-[11px] font-bold transition-transform active:scale-95"
+          >
+            <Gift className="h-3.5 w-3.5 text-sky-400" /> Hediye Gönderenler
+          </button>
+        )}
+      </header>
+
+      <div className="min-h-0 flex-1 overflow-y-auto p-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <div className="mx-auto w-full max-w-[430px]">
+          {loading ? (
+            <div className="flex items-center justify-center py-10">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            </div>
+          ) : items.length === 0 ? (
+            <p className="py-10 text-center text-sm text-white/50">Henüz coin hareketi yok.</p>
+          ) : (
+            items.map((item) => {
+              const isLoad = item.kind === 'load';
+              const person = item.counterpart || null;
+              const amountText = isLoad
+                ? `+${formatCoins(item.coins)}`
+                : item.kind === 'gift'
+                  ? formatK(item.k_value)
+                  : formatCoins(item.coins);
+              const amountLabel = isLoad || item.kind === 'coin' ? 'coin' : 'hediye';
+              const detail = isLoad
+                ? item.detail
+                : `Kimlik: ${person?.member_id || '—'} • ${item.gift_emoji ? `${item.gift_emoji} ` : ''}${item.detail}`;
+
+              return (
+                <div key={item.id} className="mb-2 flex items-center gap-2.5 rounded-xl bg-white/5 px-2.5 py-2.5">
+                  <span className="h-10 w-10 shrink-0 overflow-hidden rounded-full border border-white/10 bg-white/10">
+                    {isLoad ? (
+                      <span className="flex h-full w-full items-center justify-center bg-amber-400/15">
+                        <Coins className="h-5 w-5 text-amber-400" />
+                      </span>
+                    ) : person?.avatar ? (
+                      <Image src={person.avatar} alt={person.name} className="h-full w-full" fittingType="fill" draggable={false} />
+                    ) : (
+                      <span className="flex h-full w-full items-center justify-center text-sm font-bold text-white/70">
+                        {String(person?.name || '?').trim().charAt(0).toUpperCase()}
+                      </span>
+                    )}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-bold text-white">{item.title}</p>
+                    <p className="truncate text-[10px] text-white/45">
+                      {detail}{detail ? ' • ' : ''}{formatWhen(item.created_date)}
+                    </p>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <p className="text-sm font-bold tabular-nums text-amber-400">{amountText}</p>
+                    <p className="text-[10px] font-semibold text-white/45">{amountLabel}</p>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -7,6 +7,7 @@ import { Image } from '@/components/ui/image';
 import ProfileWalletCards from '@/components/profile/ProfileWalletCards';
 import GiftBoxPanel from '@/components/profile/GiftBoxPanel';
 import GiftSendersPanel from '@/components/profile/GiftSendersPanel';
+import CoinActivityPanel from '@/components/profile/CoinActivityPanel';
 
 export default function ProfileDropdown() {
   const { user } = useCurrentUser();
@@ -14,6 +15,7 @@ export default function ProfileDropdown() {
   const [open, setOpen] = useState(false);
   const [giftBoxOpen, setGiftBoxOpen] = useState(false);
   const [sendersOpen, setSendersOpen] = useState(false);
+  const [activityOpen, setActivityOpen] = useState(false);
   const [wallet, setWallet] = useState(null);
   const ref = useRef(null);
 
@@ -93,7 +95,7 @@ export default function ProfileDropdown() {
               coins={wallet?.coins ?? null}
               giftScore={wallet?.month_score ?? null}
               onOpenGiftBox={() => { setOpen(false); setGiftBoxOpen(true); }}
-              onOpenGiftSenders={() => { setOpen(false); setSendersOpen(true); }}
+              onOpenCoins={() => { setOpen(false); setActivityOpen(true); }}
             />
 
             {/* Menu items */}
@@ -159,6 +161,11 @@ export default function ProfileDropdown() {
 
       <GiftBoxPanel open={giftBoxOpen} onClose={() => setGiftBoxOpen(false)} />
       <GiftSendersPanel open={sendersOpen} onClose={() => setSendersOpen(false)} />
+      <CoinActivityPanel
+        open={activityOpen}
+        onClose={() => setActivityOpen(false)}
+        onOpenSenders={() => { setActivityOpen(false); setSendersOpen(true); }}
+      />
     </div>
   );
 }

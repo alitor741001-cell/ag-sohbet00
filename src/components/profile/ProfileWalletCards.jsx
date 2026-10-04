@@ -6,7 +6,7 @@ import { formatScore } from '@/components/voice/scoreTier';
  * Profil menüsündeki cüzdan kartları: solda yüklenen coinler,
  * sağda hediyelerden biriken elmas (hediye kutusu) değeri.
  */
-export default function ProfileWalletCards({ coins, giftScore, onOpenGiftBox, onOpenGiftSenders }) {
+export default function ProfileWalletCards({ coins, giftScore, onOpenGiftBox, onOpenCoins }) {
   const coinText = coins === null || coins === undefined ? '—' : formatCoins(coins);
   const giftText = giftScore === null || giftScore === undefined ? '—' : formatScore(giftScore);
 
@@ -14,7 +14,7 @@ export default function ProfileWalletCards({ coins, giftScore, onOpenGiftBox, on
     <div className="grid grid-cols-2 gap-2 border-b border-white/10 px-3 py-3">
       <button
         type="button"
-        onClick={onOpenGiftSenders}
+        onClick={onOpenCoins}
         className="flex items-center gap-2 rounded-xl bg-white px-2.5 py-2 shadow-sm transition-transform active:scale-95"
       >
         <Coins className="h-6 w-6 shrink-0 text-amber-500" />
