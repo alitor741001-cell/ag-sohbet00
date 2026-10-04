@@ -15,6 +15,10 @@ export const GIFT_LABELS: Record<string, string> = {
   crown: 'Taç',
 };
 
+export const GIFT_VALUES: Record<string, number> = {
+  rose: 1, heart: 10, bear: 20, ring: 50, gem: 100, car: 500, castle: 1000, crown: 2000,
+};
+
 /** Sayı tahtası açık mı — kapalıyken koltuk altında tablo görünmez. */
 export const isNumberBoardOpen = (room: any) => room?.number_board === true;
 

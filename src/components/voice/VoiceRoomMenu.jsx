@@ -44,8 +44,8 @@ export default function VoiceRoomMenu({ open, onClose, room, userId, participant
         <Section
           title="Sayı tahtası"
           hint={boardActive
-            ? 'Sayılar koltukların altında açık. Yeşil + artırır, kırmızı − azaltır.'
-            : 'Açtığında tüm sayılar sıfırdan başlar ve yukarı doğru sınırsız ilerler.'}
+            ? 'Gönderilen her hediyenin değeri gönderen kişinin toplamına eklenir.'
+            : 'Hediye gönderildiğinde otomatik görünür. Açmak mevcut toplamları silmez.'}
         >
           <button
             type="button"

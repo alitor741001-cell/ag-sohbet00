@@ -386,7 +386,10 @@ export default function VoiceRoom() {
   const sendGift = async (giftId) => {
     setGiftOpen(false);
     try {
-      await base44.functions.invoke('voice-room', { room_id: id, action: 'gift-send', gift: giftId });
+      const response = await base44.functions.invoke('voice-room', { room_id: id, action: 'gift-send', gift: giftId });
+      const data = response.data;
+      setRoom((prev) => ({ ...prev, number_board: data.number_board, number_scores: data.number_scores }));
+      if (data.message) setMessages((prev) => prev.some((item) => item.id === data.message.id) ? prev : [...prev, data.message]);
     } catch (error) {
       toast({ title: 'Hediye gönderilemedi', description: error?.response?.data?.error || error.message, variant: 'destructive' });
     }
@@ -596,7 +599,10 @@ export default function VoiceRoom() {
         boardActive={boardActive}
         boardResetSeat={room?.number_board_reset_seat !== false}
         boardResetRoom={room?.number_board_reset_room !== false}
-        onToggleBoard={() => invokeVoice({ action: boardActive ? 'number-board-close' : 'number-board-open' })}
+        onToggleBoard={async () => {
+          const ok = await invokeVoice({ action: boardActive ? 'number-board-close' : 'number-board-open' });
+          if (ok) setMenuOpen(false);
+        }}
         onResetBoard={() => { setMenuOpen(false); setBoardResetOpen(true); }}
         onBoardSettings={(patch) => invokeVoice({ action: 'number-settings', ...patch })}
       />

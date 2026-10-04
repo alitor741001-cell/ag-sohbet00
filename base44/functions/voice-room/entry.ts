@@ -2,7 +2,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import { rateLimit, safeErrorResponse } from '../../shared/security.ts';
 import { isModerator } from '../../shared/roles.ts';
 import { upsertNotification } from '../../shared/upsertNotification.ts';
-import { GIFT_LABELS, scoresAfterSeatLeave, withStep } from '../../shared/numberBoard.ts';
+import { GIFT_LABELS, GIFT_VALUES, scoresAfterSeatLeave, withStep } from '../../shared/numberBoard.ts';
 
 const SEAT_OPTIONS = [2, 5, 8, 9, 12, 15, 20, 30];
 const ACTIONS = ['seat-take', 'seat-leave', 'seat-lock', 'seat-kick', 'set-seat-count', 'invite', 'seat-invite', 'seat-invite-clear', 'gift-send', 'number-board-open', 'number-board-close', 'number-step', 'number-reset', 'number-settings'];
@@ -206,19 +206,22 @@ export default async function (req: Request): Promise<Response> {
       const rlGift = await rateLimit(base44, 'voice-gift:' + user.id, user.id, 30, 60000);
       if (!rlGift.allowed) return Response.json({ error: 'Çok fazla hediye gönderdiniz, biraz bekleyin.' }, { status: 429 });
 
-      await base44.asServiceRole.entities.RoomMessage.create({
+      const numberScores = withStep(room.number_scores, user.id, GIFT_VALUES[giftId]);
+      await base44.asServiceRole.entities.Room.update(room_id, { number_board: true, number_scores: numberScores });
+      const message = await base44.asServiceRole.entities.RoomMessage.create({
         room_id, user_id: user.id, user_name: displayName, user_avatar: me?.avatar || user.avatar || '',
         text: `${displayName} ${giftLabel} hediyesi gönderdi!`, type: 'gift', gift: giftId,
       });
-      return Response.json({ ok: true, gift: giftId });
+      return Response.json({ ok: true, gift: giftId, message, number_board: true, number_scores: numberScores });
     }
 
     // Sayı tahtasını aç — tüm sayılar sıfırdan başlar
     if (action === 'number-board-open') {
       if (!canMod) return Response.json({ error: 'yetkisiz' }, { status: 403 });
-      await base44.asServiceRole.entities.Room.update(room_id, { number_board: true, number_scores: [] });
+      const numberScores = Array.isArray(room.number_scores) ? room.number_scores : [];
+      await base44.asServiceRole.entities.Room.update(room_id, { number_board: true });
       await say(`${displayName} sayı tahtasını açtı.`);
-      return Response.json({ ok: true, seats, seat_count: seats.length, number_board: true, number_scores: [] });
+      return Response.json({ ok: true, seats, seat_count: seats.length, number_board: true, number_scores: numberScores });
     }
 
     // Sayı tahtasını kapat — sayılar gizlenir
@@ -248,7 +251,7 @@ export default async function (req: Request): Promise<Response> {
     // Tüm sayıları sıfırla
     if (action === 'number-reset') {
       if (!canMod) return Response.json({ error: 'yetkisiz' }, { status: 403 });
-      await base44.asServiceRole.entities.Room.update(room_id, { number_scores: [] });
+      await base44.asServiceRole.entities.Room.update(room_id, { number_board: true, number_scores: [] });
       await say(`${displayName} sayı tahtasını sıfırladı.`);
       return Response.json({ ok: true, seats, seat_count: seats.length, number_board: true, number_scores: [] });
     }

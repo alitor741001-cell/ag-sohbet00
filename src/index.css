@@ -7,6 +7,12 @@
 @layer base {
   :root {
     /* AYDINLIK TEMA */
+    --score-blue: 212 94% 65%;
+    --score-purple: 270 92% 74%;
+    --score-pink: 325 95% 72%;
+    --score-yellow: 48 98% 63%;
+    --score-orange: 26 98% 61%;
+    --score-black: 0 0% 0%;
     --level-basic: 215 14% 42%;
     --level-blue: 214 85% 44%;
     --level-violet: 266 75% 49%;
@@ -72,6 +78,12 @@
 
   .dark {
     /* KARANLIK TEMA — sinema neon */
+    --score-blue: 212 94% 65%;
+    --score-purple: 270 92% 74%;
+    --score-pink: 325 95% 72%;
+    --score-yellow: 48 98% 63%;
+    --score-orange: 26 98% 61%;
+    --score-black: 0 0% 0%;
     --level-basic: 215 15% 78%;
     --level-blue: 212 94% 69%;
     --level-violet: 266 92% 77%;
@@ -1541,5 +1553,14 @@ button:active, nav a:active, a[role="button"]:active {
     animation-duration: 0.01s;
   }
 }
+
+/* Hediye sayı tahtası — eşikler gerçek toplam üzerinden hesaplanır. */
+.voice-gift-score { --score-tone: var(--slot-text); color: hsl(var(--score-tone)); background: hsl(var(--slot-bg) / .8); border-color: hsl(var(--score-tone) / .55); }
+.voice-gift-score[data-score-tier="blue"] { --score-tone: var(--score-blue); }
+.voice-gift-score[data-score-tier="purple"] { --score-tone: var(--score-purple); }
+.voice-gift-score[data-score-tier="pink"] { --score-tone: var(--score-pink); }
+.voice-gift-score[data-score-tier="yellow"] { --score-tone: var(--score-yellow); }
+.voice-gift-score[data-score-tier="orange"] { --score-tone: var(--score-orange); }
+.voice-gift-score[data-score-tier="black"] { --score-tone: var(--score-black); background: hsl(var(--slot-text)); border-color: hsl(var(--score-black)); }
 
 /* Crash Rocket uçuş stilleri: src/styles/rocket.css */
