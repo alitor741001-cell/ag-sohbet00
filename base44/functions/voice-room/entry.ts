@@ -5,11 +5,12 @@ import { upsertNotification } from '../../shared/upsertNotification.ts';
 import { scoresAfterSeatLeave, withStep } from '../../shared/numberBoard.ts';
 import { appendRoomLog } from '../../shared/roomLog.ts';
 import { coinsForK, ensureGiftWallet, formatK, giftBalance } from '../../shared/giftWallet.ts';
+import { giftBoard } from '../../shared/giftBoard.ts';
 
 const SEAT_OPTIONS = [2, 5, 8, 9, 12, 15, 20, 24];
 // Bu değerin (coin) üzerindeki hediyeler bütün sesli odalara duyurulur.
 const BIG_GIFT_SCORE = 1000000;
-const ACTIONS = ['seat-take', 'seat-leave', 'seat-lock', 'seat-kick', 'set-seat-count', 'invite', 'seat-invite', 'seat-invite-clear', 'gift-state', 'gift-send', 'number-board-open', 'number-board-close', 'number-step', 'number-reset', 'number-settings', 'chat-ban'];
+const ACTIONS = ['seat-take', 'seat-leave', 'seat-lock', 'seat-kick', 'set-seat-count', 'invite', 'seat-invite', 'seat-invite-clear', 'gift-state', 'gift-send', 'gift-board', 'number-board-open', 'number-board-close', 'number-step', 'number-reset', 'number-settings', 'chat-ban'];
 
 const emptySeat = (index, locked = false) => ({
   index, user_id: '', name: '', avatar: '', frame: '', frame_scale: 100, locked, muted: false,
@@ -328,6 +329,13 @@ export default async function (req: Request): Promise<Response> {
         coins: Math.max(0, Number(spent.coins) || 0),
         messages, number_board: true, number_scores: numberScores,
       });
+    }
+
+    // Hediye kutusu — odada biriken hediyeler: son 24 saat ve tüm zamanlar sıralaması
+    if (action === 'gift-board') {
+      if (!isParticipant && !canMod) return Response.json({ error: 'Önce odaya katılmalısın.' }, { status: 403 });
+      const board = await giftBoard(base44, room_id);
+      return Response.json({ ok: true, ...board });
     }
 
     // Sohbet yasağı — açıkken yalnızca koltuktakiler yazabilir

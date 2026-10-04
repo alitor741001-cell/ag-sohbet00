@@ -17,6 +17,8 @@ import VoiceSeatSheet from '@/components/voice/VoiceSeatSheet';
 import InviteSheet from '@/components/voice/InviteSheet';
 import VoiceCard from '@/components/voice/VoiceCard';
 import RoomLogSheet from '@/components/voice/RoomLogSheet';
+import GiftScoreChip from '@/components/voice/GiftScoreChip';
+import GiftBoardSheet from '@/components/voice/GiftBoardSheet';
 import VoiceProfileCard from '@/components/voice/VoiceProfileCard';
 import VoiceMenuButton from '@/components/voice/VoiceMenuButton';
 import { isRoomMinimized, setMinimizedRoom } from '@/lib/minimizedRoom';
@@ -58,6 +60,9 @@ export default function VoiceRoom() {
   const [gamesOpen, setGamesOpen] = useState(false);
   const [giftOpen, setGiftOpen] = useState(false);
   const [logOpen, setLogOpen] = useState(false);
+  const [giftBoardOpen, setGiftBoardOpen] = useState(false);
+  const [giftBoard, setGiftBoard] = useState(null);
+  const [giftBoardLoading, setGiftBoardLoading] = useState(false);
   const [giftSendActive, setGiftSendActive] = useState(false);
   const [giftSendCount, setGiftSendCount] = useState(0);
   const [giftId, setGiftId] = useState(null);
@@ -84,6 +89,7 @@ export default function VoiceRoom() {
   const giftQueueRef = useRef([]);
   const giftBusyRef = useRef(false);
   const giftSessionRef = useRef(0);
+  const giftBoardRef = useRef(0);
 
   useEffect(() => {
     giftSessionRef.current += 1;
@@ -171,6 +177,36 @@ export default function VoiceRoom() {
     if (record) setRoom(record);
     return record;
   }, [id]);
+
+  // Hediye kutusu: odada biriken hediyeler (son 24 saat + tüm zamanlar).
+  const loadGiftBoard = useCallback(async () => {
+    setGiftBoardLoading(true);
+    try {
+      const response = await base44.functions.invoke('voice-room', { room_id: id, action: 'gift-board' });
+      setGiftBoard(response.data);
+    } catch {
+      // Sıralama alınamazsa kutu son bilinen değerle kalır.
+    } finally {
+      setGiftBoardLoading(false);
+    }
+  }, [id]);
+
+  // Odaya girildiğinde kutu doldurulur.
+  useEffect(() => {
+    if (!joined) return;
+    loadGiftBoard();
+  }, [joined, loadGiftBoard]);
+
+  // Yeni hediye geldiğinde kutu toplamı tazelenir (en fazla 3 saniyede bir).
+  useEffect(() => {
+    if (!joined) return;
+    const last = messages[messages.length - 1];
+    if (!last || last.type !== 'gift') return;
+    const now = Date.now();
+    if (now - giftBoardRef.current < 3000) return;
+    giftBoardRef.current = now;
+    loadGiftBoard();
+  }, [messages, joined, loadGiftBoard]);
 
   // Odayı yükle — sesli oda değilse normal oda sayfasına yönlendir.
   useEffect(() => {
@@ -726,11 +762,17 @@ export default function VoiceRoom() {
 
       <header className="relative shrink-0 px-3 pb-2 pt-[max(0.75rem,env(safe-area-inset-top))]">
         <div className="flex items-start justify-between gap-2">
-          <RoomInfoCard
-            room={room}
-            canEdit={isOwner || moderators.includes(user?.id)}
-            onRename={renameRoom}
-          />
+          <div className="flex min-w-0 flex-col items-start">
+            <RoomInfoCard
+              room={room}
+              canEdit={isOwner || moderators.includes(user?.id)}
+              onRename={renameRoom}
+            />
+            <GiftScoreChip
+              score={giftBoard?.all?.total || 0}
+              onClick={() => { setGiftBoardOpen(true); loadGiftBoard(); }}
+            />
+          </div>
           <div className="flex shrink-0 items-center gap-2">
             <button
               type="button"
@@ -851,6 +893,13 @@ export default function VoiceRoom() {
         logs={roomLogs}
         bannedUsers={bannedUsers}
         onUnban={unbanUser}
+      />
+
+      <GiftBoardSheet
+        open={giftBoardOpen}
+        onClose={() => setGiftBoardOpen(false)}
+        board={giftBoard}
+        loading={giftBoardLoading}
       />
 
       <VoiceSeatSheet
