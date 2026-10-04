@@ -1,16 +1,30 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-const VISIBLE_MS = 2200;
+const VISIBLE_MS = 1600;
 // Aynı anda çok hediye gelse bile animasyonlar sırayla gösterilir; kuyruk kısa tutulur.
-const MAX_QUEUE = 4;
+const MAX_QUEUE = 3;
 
 /** Odaya gelen hediyeleri sıraya alır: tekli/toplu gönderimler üst üste binmez. */
 export default function useGiftAlerts(messages, resolveGift) {
   const [queue, setQueue] = useState([]);
   const seenRef = useRef(new Set());
 
+  // Aynı hediye seri gönderilirse yeni kart eklenmez; sayaç artar ve pop-up hızlıca akar.
+  const merge = (prev, alert) => {
+    const last = prev[prev.length - 1];
+    const sameGift = !!last && !!last.giftId && last.giftId === alert.giftId
+      && last.senderName === alert.senderName && last.recipientName === alert.recipientName;
+    if (!sameGift) return [...prev, alert].slice(-MAX_QUEUE);
+    return [...prev.slice(0, -1), {
+      ...last,
+      key: alert.key,
+      repeat: (last.repeat || 1) + 1,
+      totalK: (Number(last.totalK) || 0) + (Number(alert.totalK) || 0),
+    }];
+  };
+
   const push = useCallback((alert) => {
-    setQueue((prev) => [...prev, alert].slice(-MAX_QUEUE));
+    setQueue((prev) => merge(prev, alert));
   }, []);
 
   const markSeen = useCallback((ids) => {
@@ -45,7 +59,7 @@ export default function useGiftAlerts(messages, resolveGift) {
         count: 1,
       };
     });
-    setQueue((prev) => [...prev, ...alerts].slice(-MAX_QUEUE));
+    setQueue((prev) => alerts.reduce(merge, prev));
   }, [messages, resolveGift]);
 
   useEffect(() => {

@@ -3,6 +3,7 @@ import { Room, RoomEvent, Track } from 'livekit-client';
 import { base44 } from '@/api/base44Client';
 import { createVoiceOutput, unlockVoicePlayback } from '@/lib/callAudio';
 import { hasDirectCallAudioFocus, subscribeCallAudioFocus } from '@/lib/callAudioFocus';
+import { hasSharedMic, releaseSharedMic, sharedMicTrack } from '@/lib/micSource';
 
 const initialDebug = { participantCount: 0, remoteParticipants: 0, remoteTracks: 0, playback: 'hazır' };
 const friendlyMicError = (error) => {
@@ -61,6 +62,20 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
     });
   }, []);
 
+  // Mikrofonu aç: yayın varsa yalnızca geri açılır, yoksa izinli paylaşılan kanal yayınlanır.
+  // Böylece izin bir kez verilir ve arayüz geçişlerinde tekrar sorulmaz.
+  const enableMic = useCallback(async (room) => {
+    if (!room) return;
+    const publication = room.localParticipant.getTrackPublication(Track.Source.Microphone);
+    if (publication) {
+      if (publication.isMuted) await room.localParticipant.setMicrophoneEnabled(true);
+      return;
+    }
+    const track = await sharedMicTrack();
+    if (!track) return;
+    await room.localParticipant.publishTrack(track, { source: Track.Source.Microphone });
+  }, []);
+
   const attachRemoteAudio = useCallback((track) => {
     if (track.kind !== Track.Kind.Audio) return;
     // Hoparlör kapalıyken ses elementi oluşturma; açıldığında yeniden bağlanır.
@@ -111,7 +126,8 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
   useEffect(() => {
     if (!voiceEnabled || !roomId || !user?.id || callAudioPaused || hasDirectCallAudioFocus()) return;
     let cancelled = false;
-    const room = new Room({ adaptiveStream: true, dynacast: true, autoSubscribe: true });
+    // stopLocalTrackOnUnpublish: false — izinli mikrofon kanalı oda değişiminde korunur.
+    const room = new Room({ adaptiveStream: true, dynacast: true, autoSubscribe: true, stopLocalTrackOnUnpublish: false });
     roomRef.current = room;
 
     const updateSpeakers = (speakers) => {
@@ -184,7 +200,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
       attachCurrentRemoteAudio();
       await retryAudio();
       if (!hasDirectCallAudioFocus() && !mutedByModeratorRef.current && voiceEnabledRef.current && micEnabledRef.current && room.localParticipant.getTrackPublication(Track.Source.Microphone)?.isMuted) {
-        room.localParticipant.setMicrophoneEnabled(true, { echoCancellation: true, noiseSuppression: true, autoGainControl: true }).catch(() => {});
+        enableMic(room).catch(() => {});
       }
       refreshState();
     });
@@ -210,11 +226,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
         if (!hasDirectCallAudioFocus() && !mutedByModeratorRef.current && voiceEnabledRef.current && micEnabledRef.current) {
           setRequesting(true);
           try {
-            await room.localParticipant.setMicrophoneEnabled(true, {
-              echoCancellation: true,
-              noiseSuppression: true,
-              autoGainControl: true,
-            });
+            await enableMic(room);
           } catch (micError) {
             // Mikrofon reddedilse bile kullanıcı dinleyici olarak bağlı kalır.
             attachCurrentRemoteAudio();
@@ -258,8 +270,14 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
       room.removeAllListeners();
       audioElementsRef.current.forEach((element) => element.remove());
       audioElementsRef.current.clear();
+      // İzinli kanal durdurulmaz; yayından çıkarılır ve kısa süre sonra bırakılır.
       room.localParticipant.setMicrophoneEnabled(false).catch(() => {});
+      const micPublication = room.localParticipant.getTrackPublication(Track.Source.Microphone);
+      if (micPublication?.track && hasSharedMic()) {
+        room.localParticipant.unpublishTrack(micPublication.track, false).catch(() => {});
+      }
       room.disconnect();
+      releaseSharedMic();
       if (roomRef.current === room) roomRef.current = null;
       document.removeEventListener('pointerdown', startAudioOnInteraction);
       document.removeEventListener('touchend', startAudioOnInteraction);
@@ -273,7 +291,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
       setConnectionState('disconnected');
       setDebug(initialDebug);
     };
-  }, [attachRemoteAudio, refreshState, retryAudio, roomId, user?.id, everVoiceEnabled, callAudioPaused]);
+  }, [attachRemoteAudio, enableMic, refreshState, retryAudio, roomId, user?.id, everVoiceEnabled, callAudioPaused]);
 
   useEffect(() => {
     const moderatorMuted = !!participants?.find((participant) => participant.user_id === user?.id)?.muted;
@@ -295,7 +313,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
       setActive(false);
     } else {
       if (!mutedByModeratorRef.current && micEnabledRef.current) {
-        room.localParticipant.setMicrophoneEnabled(true, { echoCancellation: true, noiseSuppression: true, autoGainControl: true }).then(refreshState).catch(() => {});
+        enableMic(room).then(refreshState).catch(() => {});
       }
       audioElementsRef.current.forEach((element) => { element.muted = deafenedRef.current; });
       retryAudio();
@@ -310,9 +328,8 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
     micAppliedRef.current = next;
     const room = roomRef.current;
     if (!room || hasDirectCallAudioFocus() || connectionState !== 'connected' || mutedByModeratorRef.current) return;
-    room.localParticipant.setMicrophoneEnabled(next, { echoCancellation: true, noiseSuppression: true, autoGainControl: true })
-      .then(refreshState)
-      .catch(() => {});
+    if (next) enableMic(room).then(refreshState).catch(() => {});
+    else room.localParticipant.setMicrophoneEnabled(false).then(refreshState).catch(() => {});
   }, [micEnabled, connectionState, refreshState]);
 
   const toggleMute = useCallback(async () => {
@@ -323,7 +340,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
     setError('');
     try {
       if (active) await room.localParticipant.setMicrophoneEnabled(false);
-      else await room.localParticipant.setMicrophoneEnabled(true, { echoCancellation: true, noiseSuppression: true, autoGainControl: true });
+      else await enableMic(room);
       refreshState();
     } catch (micError) {
       console.error('[LiveKit] Microphone toggle failed', micError);
