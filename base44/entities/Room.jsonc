@@ -24,6 +24,10 @@
       "type": "boolean",
       "default": false
     },
+    "ghost_entered_at": {
+      "type": "string",
+      "default": ""
+    },
     "room_number": {
       "type": "integer",
       "default": 0

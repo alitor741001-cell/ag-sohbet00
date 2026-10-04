@@ -10,6 +10,11 @@
 export const VIP_MIN = 0;
 export const VIP_MAX = 12;
 
+/** Gizli kullanıcı modunun gerektirdiği en düşük VIP seviyesi. */
+export const HIDDEN_REQUIRED_VIP = 10;
+/** Gizli kullanıcının odalarda görünen takma adı — kimlik bilgisi taşımaz. */
+export const HIDDEN_DISPLAY_NAME = 'Gizli Kullanıcı';
+
 export const VIP_DAY_MS = 24 * 60 * 60 * 1000;
 
 // Otomatik kurada en düşük VIP seviyesi — VIP özellikleri 5'ten başlar.
@@ -40,6 +45,9 @@ export const effectiveVipLevel = (user: any) => {
   const level = Math.min(VIP_MAX, Math.max(VIP_MIN, Math.floor(Number(user?.vip_level) || 0)));
   return vipActive(user) ? level : 0;
 };
+
+/** Gizli kullanıcı modu açık ve VIP seviyesi yeterliyse kişi odalarda kimliğini göstermez. */
+export const isHiddenUser = (user: any) => !!user?.hidden_user && effectiveVipLevel(user) >= HIDDEN_REQUIRED_VIP;
 
 /** Kalan gün: süresiz VIP'de null döner. */
 export const vipDaysLeft = (user: any) => {
