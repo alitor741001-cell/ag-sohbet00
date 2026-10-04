@@ -9,7 +9,7 @@ import { useSize } from '@/hooks/use-size';
  * Koltuk boyutu ölçülen genişliğe göre seçilir: dar telefonlarda da satır yana taşmaz,
  * geniş ekranlarda koltuklar gereksiz küçülmez.
  */
-export default function VoiceSeatGrid({ seats = [], userId, ownerId, moderators = [], speakingIds = [], localSpeaking, onSelectSeat, boardActive, scores = {}, accent = '#ef4444', gifted = {}, micMuted }) {
+export default function VoiceSeatGrid({ seats = [], userId, ownerId, moderators = [], speakingIds = [], localSpeaking, onSelectSeat, boardActive, scores = {}, accent = '#ef4444', gifted = {} }) {
   const wrapRef = useRef(null);
   const measured = useSize(wrapRef);
   const rows = seatIndexRows(seats.length);
@@ -39,7 +39,7 @@ export default function VoiceSeatGrid({ seats = [], userId, ownerId, moderators 
                   onClick={() => onSelectSeat(index)}
                   accent={accent}
                   gifted={occupied ? gifted[seat.user_id] : undefined}
-                  micMuted={!occupied && !!micMuted}
+                  micMuted={!occupied && !!seat?.muted}
                 />
                 {boardActive && (
                   <VoiceSeatScore value={occupied ? scores[seat.user_id] || 0 : 0} size={size} />

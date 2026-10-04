@@ -12,7 +12,7 @@ import { HIDDEN_AVATAR_URL, hiddenDisplayName, isHiddenDisplayName, isHiddenUser
 const SEAT_OPTIONS = [2, 5, 8, 9, 12, 15, 20, 24];
 // Bu değerin (coin) üzerindeki hediyeler bütün sesli odalara duyurulur.
 const BIG_GIFT_SCORE = 1000000;
-const ACTIONS = ['seat-take', 'seat-leave', 'seat-lock', 'seat-kick', 'set-seat-count', 'invite', 'seat-invite', 'seat-invite-clear', 'gift-state', 'gift-send', 'gift-board', 'number-board-open', 'number-board-close', 'number-step', 'number-reset', 'number-settings', 'chat-ban'];
+const ACTIONS = ['seat-take', 'seat-leave', 'seat-lock', 'seat-mute', 'seat-kick', 'set-seat-count', 'invite', 'seat-invite', 'seat-invite-clear', 'gift-state', 'gift-send', 'gift-board', 'number-board-open', 'number-board-close', 'number-step', 'number-reset', 'number-settings', 'chat-ban'];
 
 const emptySeat = (index, locked = false) => ({
   index, user_id: '', name: '', avatar: '', frame: '', frame_scale: 100, locked, muted: false,
@@ -25,7 +25,7 @@ export default async function (req: Request): Promise<Response> {
     if (!user) return Response.json({ error: 'Oturum gerekli.' }, { status: 401 });
 
     const body = await req.json();
-    const { action, room_id, seat_index, target_id, seat_count, locked, target_ids, gift, gift_id, delta, banned, reset_on_seat_leave, reset_on_room_leave } = body || {};
+    const { action, room_id, seat_index, target_id, seat_count, locked, muted, target_ids, gift, gift_id, delta, banned, reset_on_seat_leave, reset_on_room_leave } = body || {};
     if (!room_id || !ACTIONS.includes(action)) {
       return Response.json({ error: 'geçersiz istek' }, { status: 400 });
     }
@@ -108,6 +108,18 @@ export default async function (req: Request): Promise<Response> {
       const next = seats.map((seat) => (seat.index === index ? { ...seat, locked: !!locked } : seat));
       await persist(next);
       await say(`${shownName} ${index + 1}. koltuğu ${locked ? 'kilitledi' : 'kilidini açtı'}.`);
+      return respond(next);
+    }
+
+    // Koltuğun kendi mikrofonu: boş koltuğun mikini aç/kapat — kişinin kendi mikrofonunu etkilemez.
+    if (action === 'seat-mute') {
+      if (!isParticipant && !canMod) return Response.json({ error: 'Önce odaya katılmalısın.' }, { status: 403 });
+      const index = Number(seat_index);
+      if (!Number.isInteger(index) || index < 0 || index >= seats.length) {
+        return Response.json({ error: 'Geçersiz koltuk.' }, { status: 400 });
+      }
+      const next = seats.map((seat) => (seat.index === index ? { ...seat, muted: !!muted } : seat));
+      await persist(next);
       return respond(next);
     }
 

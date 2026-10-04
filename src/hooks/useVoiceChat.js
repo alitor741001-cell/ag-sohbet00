@@ -6,10 +6,11 @@ import { hasDirectCallAudioFocus, subscribeCallAudioFocus } from '@/lib/callAudi
 import { hasSharedMic, releaseSharedMic, setSharedMicActive, sharedMicTrack } from '@/lib/micSource';
 
 const initialDebug = { participantCount: 0, remoteParticipants: 0, remoteTracks: 0, playback: 'hazır' };
+// Mikrofon izni verilmese bile kişi odayı dinlemeye devam eder; mesaj bunu açıkça söyler.
 const friendlyMicError = (error) => {
-  if (error?.name === 'NotAllowedError') return '🎤 Mikrofon izni verilmedi.';
-  if (error?.name === 'NotReadableError') return '🎤 Mikrofon kullanılamıyor.';
-  return '🎤 Mikrofon başlatılamadı.';
+  if (error?.name === 'NotAllowedError') return '🎤 Mikrofon izni verilmedi — diğerlerini duymaya devam edersin.';
+  if (error?.name === 'NotReadableError') return '🎤 Mikrofon kullanılamıyor — diğerlerini duymaya devam edersin.';
+  return '🎤 Mikrofon başlatılamadı — diğerlerini duymaya devam edersin.';
 };
 
 export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnabled }) {
@@ -334,7 +335,8 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
     micAppliedRef.current = next;
     const room = roomRef.current;
     if (!room || hasDirectCallAudioFocus() || connectionState !== 'connected' || mutedByModeratorRef.current) return;
-    if (next) enableMic(room).then(refreshState).catch(() => {});
+    // Mikrofon reddedilse bile dinleme sürer: uzak ses bir kez daha bağlanıp oynatılır.
+    if (next) enableMic(room).then(refreshState).catch(() => { retryAudio(); refreshState(); });
     else room.localParticipant.setMicrophoneEnabled(false).then(refreshState).catch(() => {});
   }, [micEnabled, connectionState, refreshState]);
 

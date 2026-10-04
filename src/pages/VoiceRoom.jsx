@@ -55,8 +55,6 @@ export default function VoiceRoom() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [seatIndex, setSeatIndex] = useState(null);
-  // Mikrofonu boş koltuk menüsünden kapattıysam koltuğun üstünde "mik kapalı" rozeti görünür.
-  const [seatMicOff, setSeatMicOff] = useState(false);
   const [profileUserId, setProfileUserId] = useState(null);
   const [dmUserId, setDmUserId] = useState(null);
   const [dmOpen, setDmOpen] = useState(false);
@@ -127,7 +125,8 @@ export default function VoiceRoom() {
   const seatsView = useMemo(
     () => seats.map((seat) => ({
       ...seat,
-      muted: seat.user_id ? !!participants.find((person) => person.user_id === seat.user_id)?.muted : false,
+      // Dolu koltukta kişinin mikrofonu, boş koltukta koltuğun kendi mik durumu gösterilir.
+      muted: seat.user_id ? !!participants.find((person) => person.user_id === seat.user_id)?.muted : !!seat.muted,
     })),
     [seats, participants]
   );
@@ -443,8 +442,6 @@ export default function VoiceRoom() {
   const handleTakeSeat = () => {
     const index = seatIndex;
     setSeatIndex(null);
-    // Koltuğa oturunca mikrofon otomatik açılır: boş koltuktaki rozet kalkar.
-    setSeatMicOff(false);
     if (index !== null) invokeVoice({ action: 'seat-take', seat_index: index });
   };
 
@@ -456,12 +453,12 @@ export default function VoiceRoom() {
     voice.toggleMute();
   };
 
-  // Boş koltuk kartından mikrofon aç/kapa — koltuk boş olsa da çalışır.
-  // Açıkken kapatırsam rozet çıkar, kapalıyken açarsam rozet kaybolur ve buton durumu değişir.
+  // Boş koltuk menüsündeki mikrofon tuşu kendi mikrofonumu değil, dokunulan koltuğun mikrofonunu açar/kapatır.
   const muteMicFromSeat = () => {
+    const index = seatIndex;
     setSeatIndex(null);
-    setSeatMicOff(voice.active);
-    voice.toggleMute();
+    if (index === null) return;
+    invokeVoice({ action: 'seat-mute', seat_index: index, muted: !seats[index]?.muted });
   };
 
   const handleInvite = () => {
@@ -922,7 +919,6 @@ export default function VoiceRoom() {
           scores={scores}
           accent={seatAccent}
           gifted={gifted}
-          micMuted={seatMicOff && !seated}
         />
         <HiddenUserMarquee active={room?.ghost_entered_at} name={hiddenAnnounceName} />
         <p className="mt-5 text-center text-[11px] text-white/50">
@@ -1020,7 +1016,6 @@ export default function VoiceRoom() {
         index={seatIndex ?? 0}
         canMod={canMod}
         myId={user?.id}
-        micActive={voice.active}
         viewers={unseatedViewers}
         invitedIds={seatInviteIds}
         onTakeSeat={handleTakeSeat}
