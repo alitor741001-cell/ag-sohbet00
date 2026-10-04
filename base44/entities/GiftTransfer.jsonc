@@ -6,7 +6,8 @@
       "type": "string",
       "enum": [
         "send",
-        "withdraw"
+        "withdraw",
+        "convert"
       ],
       "default": "send"
     },

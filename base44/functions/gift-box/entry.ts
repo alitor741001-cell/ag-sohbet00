@@ -4,7 +4,8 @@ import { ensureGiftWallet, giftBalance } from '../../shared/giftWallet.ts';
 import { COINS_PER_DOLLAR, findByMemberId, giftBoxSummary, giftDollarsFromK, monthStartIso } from '../../shared/giftBox.ts';
 import { getUsdTry, tlFromDollars, tlRateFrom } from '../../shared/exchangeRate.ts';
 
-const ACTIONS = ['summary', 'lookup', 'send', 'withdraw', 'received'];
+const ACTIONS = ['summary', 'lookup', 'send', 'withdraw', 'convert', 'received'];
+const MIN_CONVERT_DOLLARS = 1;
 const MIN_SEND_DOLLARS = 1;
 
 export default async function (req: Request): Promise<Response> {
@@ -178,6 +179,56 @@ export default async function (req: Request): Promise<Response> {
         coins,
         recipient_name: recipientName,
         recipient_coins: Math.max(0, Number(updated?.coins) || 0),
+        balance: await giftBoxSummary(base44, account),
+      });
+    }
+
+    // Doları bozdurma: kişi kendi kimlik numarasıyla bakiyesini coine çevirir (1 $ = 5.000 coin).
+    if (action === 'convert') {
+      const rl = await rateLimit(base44, 'gift-box-convert:' + user.id, user.id, 10, 60000);
+      if (!rl.allowed) return Response.json({ error: 'Çok fazla işlem yaptın, biraz bekleyin.' }, { status: 429 });
+
+      const memberId = String(body?.member_id || '').trim();
+      if (!memberId) return Response.json({ error: 'Kimlik numaranı girmeden bozduramazsın.' }, { status: 400 });
+      const owner = await findByMemberId(base44, memberId);
+      if (!owner || owner.id !== user.id) {
+        return Response.json({ error: 'Kimlik numarası hesabınla eşleşmiyor.' }, { status: 400 });
+      }
+
+      const dollars = Math.round((Number(body?.dollars) || 0) * 100) / 100;
+      if (dollars < MIN_CONVERT_DOLLARS) {
+        return Response.json({ error: `En az ${MIN_CONVERT_DOLLARS} dolar bozdurulabilir.` }, { status: 400 });
+      }
+
+      const summary = await giftBoxSummary(base44, account);
+      if (dollars > summary.available_dollars) {
+        return Response.json({
+          error: `Bozdurabileceğin bakiye yetersiz. Kullanılabilir: ${summary.available_dollars} $`,
+          available_dollars: summary.available_dollars,
+        }, { status: 400 });
+      }
+
+      const coins = Math.round(dollars * COINS_PER_DOLLAR);
+      await base44.asServiceRole.entities.GiftTransfer.create({
+        kind: 'convert',
+        status: 'completed',
+        sender_id: user.id,
+        sender_name: displayName,
+        dollars,
+        coins,
+        rate: summary.tl_rate,
+      });
+
+      const wallet = await ensureGiftWallet(base44, account);
+      const updated = await base44.asServiceRole.entities.GameWallet.update(wallet.id, {
+        coins: Math.max(0, Number(wallet.coins) || 0) + coins,
+      });
+
+      return Response.json({
+        ok: true,
+        dollars,
+        coins,
+        total_coins: Math.max(0, Number(updated?.coins) || 0),
         balance: await giftBoxSummary(base44, account),
       });
     }

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ChevronLeft, Gem, Loader2, Send, Wallet } from 'lucide-react';
+import { ChevronLeft, Coins, Gem, Loader2, Send, Wallet } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Image } from '@/components/ui/image';
 import { formatCoins } from '@/lib/giftTone';
@@ -146,6 +146,40 @@ export default function GiftBoxPanel({ open, onClose }) {
     }
   };
 
+  const convertDollars = () => Math.round((Number(String(withdrawAmount).replace(',', '.')) || 0) * 100) / 100;
+
+  // Bozdurma: kendi kimlik numaranla dolarlarını 1 $ = 5.000 coin olarak coine çevirir.
+  const convert = () => {
+    const max = Number(summary?.available_dollars) || 0;
+    if (!withdrawId.trim()) { setNotice('Kimlik numaranı girmeden bozduramazsın.'); return; }
+    const value = convertDollars();
+    if (value < MIN_DOLLARS) { setNotice(`En az ${MIN_DOLLARS} dolar bozdurabilirsin.`); return; }
+    if (value > max) { setNotice(`En fazla ${max.toLocaleString('tr-TR')} $ bozdurabilirsin.`); return; }
+    setNotice('');
+    setConfirmKind('convert');
+  };
+
+  const performConvert = async () => {
+    const value = convertDollars();
+    setBusy(true);
+    setNotice('');
+    try {
+      const response = await base44.functions.invoke('gift-box', {
+        action: 'convert',
+        member_id: withdrawId.trim(),
+        dollars: value,
+      });
+      const data = response.data || {};
+      if (data.balance) setSummary(data.balance);
+      setWithdrawAmount('');
+      setNotice(`${value.toFixed(2)} $ bozduruldu — hesabına ${formatCoins(data.coins || 0)} coin geçti.`);
+    } catch (error) {
+      setNotice(error?.response?.data?.error || 'Bozdurulamadı.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
   if (!open) return null;
 
   const available = Number(summary?.available_dollars) || 0;
@@ -250,7 +284,7 @@ export default function GiftBoxPanel({ open, onClose }) {
         </div>
 
         <div className="mt-3 rounded-xl border border-white/15 bg-white/5 p-3">
-          <p className="text-[11px] font-bold text-white/60">Bakiyeyi çek</p>
+          <p className="text-[11px] font-bold text-white/60">Bakiyeni kullan</p>
           <div className="mt-1 flex items-center gap-2">
             <input
               value={withdrawId}
@@ -273,16 +307,27 @@ export default function GiftBoxPanel({ open, onClose }) {
             </div>
           </div>
           <p className="mt-1.5 text-[10px] text-white/45">
-            Çekilebilir: {available.toLocaleString('tr-TR')} $ ({formatTl(availableTl)}) • kimlik numarası ve tutar girilmeden talep oluşmaz.
+            Bozdurulan tutar 1 $ = 5.000 coin olarak hesabına geçer
+            {convertDollars() >= MIN_DOLLARS ? ` (${formatCoins(convertDollars() * COINS_PER_DOLLAR)} coin)` : ''} • çekilebilir: {available.toLocaleString('tr-TR')} $ ({formatTl(availableTl)}) • kimlik numarası ve tutar girilmeden işlem oluşmaz.
           </p>
-          <button
-            type="button"
-            onClick={withdraw}
-            disabled={busy || available <= 0}
-            className="mt-2 flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/10 text-sm font-bold text-white transition-transform active:scale-95 disabled:opacity-40"
-          >
-            <Wallet className="h-4 w-4" /> Çekim talebi oluştur
-          </button>
+          <div className="mt-2 flex items-center gap-2">
+            <button
+              type="button"
+              onClick={convert}
+              disabled={busy || available <= 0}
+              className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-primary text-sm font-bold text-primary-foreground transition-transform active:scale-95 disabled:opacity-40"
+            >
+              <Coins className="h-4 w-4" /> Doları bozdur
+            </button>
+            <button
+              type="button"
+              onClick={withdraw}
+              disabled={busy || available <= 0}
+              className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/10 text-sm font-bold text-white transition-transform active:scale-95 disabled:opacity-40"
+            >
+              <Wallet className="h-4 w-4" /> Çekim talebi
+            </button>
+          </div>
         </div>
 
         {notice && <p className="mt-2 text-center text-[11px] font-semibold text-emerald-400">{notice}</p>}
@@ -290,14 +335,16 @@ export default function GiftBoxPanel({ open, onClose }) {
         <ConfirmDialog
           open={!!confirmKind}
           onOpenChange={(next) => { if (!next) setConfirmKind(null); }}
-          title={confirmKind === 'withdraw' ? 'Çekim talebi onayı' : 'Gönderim onayı'}
+          title={confirmKind === 'withdraw' ? 'Çekim talebi onayı' : confirmKind === 'convert' ? 'Bozdurma onayı' : 'Gönderim onayı'}
           description={confirmKind === 'withdraw'
             ? `${withdrawDollars().toFixed(2)} $ (${formatTl(withdrawDollars() * tlRate)}) için çekim talebi oluşturulacak. Kimlik numarası: ${withdrawId.trim()}.`
-            : person
-              ? `${amount().toFixed(2)} $ (${formatTl(amount() * tlRate)}) ${person.name} hesabına gönderilecek ve karşı tarafa ${formatCoins(amount() * COINS_PER_DOLLAR)} coin geçecek.`
-              : ''}
+            : confirmKind === 'convert'
+              ? `${convertDollars().toFixed(2)} $ bozdurulacak ve hesabına ${formatCoins(convertDollars() * COINS_PER_DOLLAR)} coin geçecek. Kimlik numarası: ${withdrawId.trim()}.`
+              : person
+                ? `${amount().toFixed(2)} $ (${formatTl(amount() * tlRate)}) ${person.name} hesabına gönderilecek ve karşı tarafa ${formatCoins(amount() * COINS_PER_DOLLAR)} coin geçecek.`
+                : ''}
           confirmText="Onayla"
-          onConfirm={confirmKind === 'withdraw' ? performWithdraw : performSend}
+          onConfirm={confirmKind === 'withdraw' ? performWithdraw : confirmKind === 'convert' ? performConvert : performSend}
         />
         </div>
       </div>
