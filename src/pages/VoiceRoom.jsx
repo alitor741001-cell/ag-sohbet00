@@ -415,6 +415,8 @@ export default function VoiceRoom() {
   const toggleChatBan = async () => {
     const ok = await invokeVoice({ action: 'chat-ban', banned: !chatBanned });
     if (ok) {
+      // Yasağın odaya işlendiğini doğrula — sohbet bölümü anında kilitlenir.
+      await syncRoom();
       // Menü açık kalır; buton etiketi "Sohbet yasağını kaldır" olarak değişir.
       toast({
         title: chatBanned ? 'Sohbet yasağı kaldırıldı' : 'Sohbet yasağı açıldı',
@@ -493,12 +495,19 @@ export default function VoiceRoom() {
   };
 
   const sendMessage = useCallback(async (text) => {
+    // Sohbet yasağı açıkken koltukta oturmayan kişi sohbete yazamaz.
+    if (chatLocked) {
+      toast({ title: 'Sohbet yasağı var', description: 'Yazmak için bir koltuğa otur.', variant: 'destructive' });
+      return;
+    }
     try {
       await base44.functions.invoke('send-room-message', { room_id: id, text });
     } catch (error) {
+      // Yasak yeni açıldıysa oda durumunu tazele — sohbet bölümü anında kilitlenir.
+      if (error?.response?.status === 403) syncRoom();
       toast({ title: 'Mesaj gönderilemedi', description: error?.response?.data?.error || error.message, variant: 'destructive' });
     }
-  }, [id, toast]);
+  }, [id, toast, chatLocked, syncRoom]);
 
   // Hediye alan kişinin profilinde kısa süreli efekt.
   const flashGifted = useCallback((ids, emoji) => {

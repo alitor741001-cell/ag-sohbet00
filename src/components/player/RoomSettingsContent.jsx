@@ -3,7 +3,7 @@ import { Eye, EyeOff, Instagram, Lock, MessageCircle, MessageSquare, MessageSqua
 import { useToast } from '@/components/ui/use-toast';
 import { base44 } from '@/api/base44Client';
 
-export default function RoomSettingsContent({ room, canMod, participants, roomModerators, onAssignMod, onRemoveMod, roomName, setRoomName, onSaveName, password, setPassword, passwordOpen, setPasswordOpen, onVoice, onChat, onHidden, onPassword, onRemovePassword, onUnban, onPickMovie, onDeleteRoom, onToggleApproval }) {
+export default function RoomSettingsContent({ room, canMod, participants, roomModerators, onAssignMod, onRemoveMod, roomName, setRoomName, onSaveName, password, setPassword, passwordOpen, setPasswordOpen, onVoice, onChat, onHidden, onPassword, onRemovePassword, onUnban, onPickMovie, onDeleteRoom, onToggleApproval, onChatBan }) {
   const { toast } = useToast();
   const [showBanned, setShowBanned] = useState(false);
   const [showMods, setShowMods] = useState(false);
@@ -44,6 +44,13 @@ export default function RoomSettingsContent({ room, canMod, participants, roomMo
           <span className="flex-1 text-left">{room.chat_enabled ? 'Sohbet: Açık' : 'Sohbet: Kapalı'}</span>
           <span className={`w-10 h-5 rounded-full relative overflow-hidden transition-colors shrink-0 ${room.chat_enabled ? 'bg-green-500' : 'bg-red-500'}`}><span className={`absolute top-0.5 left-0 w-4 h-4 rounded-full bg-white transition-transform ${room.chat_enabled ? 'translate-x-5' : 'translate-x-0.5'}`} /></span>
         </button>
+        {onChatBan && (
+          <button onClick={onChatBan} className={`w-full flex items-center gap-3 rounded-xl border px-3 py-3 text-sm font-semibold transition-colors ${room.chat_seated_only ? 'border-amber-500/40 bg-amber-500/10 text-amber-400' : 'border-green-500/40 bg-green-500/10 text-green-400'}`}>
+            <MessageSquareOff className="w-4 h-4" />
+            <span className="flex-1 text-left">{room.chat_seated_only ? 'Sohbet Yasağı: Açık' : 'Sohbet Yasağı: Kapalı'}</span>
+            <span className={`w-10 h-5 rounded-full relative overflow-hidden transition-colors shrink-0 ${room.chat_seated_only ? 'bg-amber-500' : 'bg-green-500'}`}><span className={`absolute top-0.5 left-0 w-4 h-4 rounded-full bg-white transition-transform ${room.chat_seated_only ? 'translate-x-5' : 'translate-x-0.5'}`} /></span>
+          </button>
+        )}
         {room.is_personal && (
           <>
             <button onClick={onHidden} className={button}>{room.hidden ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />} {room.hidden ? 'Odayı görünür yap' : 'Odayı gizle'}</button>

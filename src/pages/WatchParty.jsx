@@ -11,6 +11,7 @@ import { Mic, MicOff, Crown, X, Eye, ArrowLeft, UserMinus, MessageSquare, Trash2
 import { Image } from '@/components/ui/image';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import RoomSettingsMenu from '@/components/player/RoomSettingsMenu';
+import RoomGiftStage from '@/components/voice/RoomGiftStage';
 
 
 import LiveKitDebugPanel from '@/components/player/LiveKitDebugPanel';
@@ -533,6 +534,15 @@ export default function WatchParty() {
     catch (e) { toast({ title: 'İşlem başarısız', description: e.response?.data?.error || e.message, variant: 'destructive' }); }
   };
 
+  // Sohbet yasağı: açıkken yalnızca koltukta oturanlar sohbet bölümüne yazabilir.
+  const toggleChatBan = async () => {
+    if (!canMod) { toast({ title: 'Yetkiniz yok', variant: 'destructive' }); return; }
+    try {
+      await base44.functions.invoke('room-presence', { action: 'chat-ban', room_id: id, banned: room?.chat_seated_only !== true });
+      toast({ title: room?.chat_seated_only ? 'Sohbet yasağı kaldırıldı' : 'Sohbet yasağı açıldı — yalnızca koltuktakiler yazabilir.' });
+    } catch (e) { toast({ title: 'İşlem başarısız', description: e.response?.data?.error || e.message, variant: 'destructive' }); }
+  };
+
   const toggleMuteUser = async (uid) => {
     if (!canMod) return;
     try { await base44.functions.invoke('room-presence', { action: 'toggle-mute', room_id: id, target_id: uid }); }
@@ -650,6 +660,9 @@ export default function WatchParty() {
 
   const src = movie?.video_url || movie?.hls_url || movie?.external_url || '';
   const chatEnabled = room.chat_enabled;
+  // Koltukta oturmayan kişi için sohbet bölümü kilitlenir.
+  const seatedNow = (Array.isArray(room.seats) ? room.seats : []).some((seat) => seat.user_id === user?.id);
+  const chatLocked = room.chat_seated_only === true && !seatedNow;
   const founderCanSeeAdmins = user?.display_role === 'founder';
   const visibleParticipants = (room.participants || []).filter((participant) => participant.user_id === room.owner_id || viewerProfiles[participant.user_id]?.role !== 'admin' || founderCanSeeAdmins);
   const openDirectMessage = (userId) => { setDirectTarget(userId); setDirectOpen(true); setChatOpen(false); setShowViewers(false); };
@@ -705,7 +718,7 @@ export default function WatchParty() {
             onTouchEnd={(e) => { const dx = e.changedTouches[0].clientX - touchStart.current.x; const dy = e.changedTouches[0].clientY - touchStart.current.y; if (dx > 80 && dx > Math.abs(dy) * 1.5) setChatOpen(false); }}
           >
 
-            {chatOpen && <ChatOverlay roomId={id} chatEnabled={chatEnabled} isOwner={canMod} isAdmin={isMod} onClose={() => setChatOpen(false)} autoDeleteMinutes={autoDeleteMinutes} countdownText={countdownText} clearToken={chatClearToken} onSetAutoDelete={setAutoDelete} voice={voice} voiceEnabled={room.voice_enabled} onDirect={() => { setDirectTarget(null); setDirectOpen(!directOpen); setChatOpen(false); setShowViewers(false); setShowSettings(false); }} onDirectUser={openDirectMessage} directUnread={directUnread} ownerId={room?.owner_id} roomModerators={room?.room_moderators || []} participants={room?.participants || []} recentParticipants={room?.recent_participants || []} viewerProfiles={viewerProfiles} presenceMap={presenceMap} onProfileCard={openUserProfile} onToggleChat={toggleChat} settingsProps={{ room, canMod, participants: room?.participants || [], roomModerators: room?.room_moderators || [], onAssignMod: assignMod, onRemoveMod: removeMod, roomName: roomNameEdit, setRoomName: setRoomNameEdit, onSaveName: saveRoomName, password: pwSetInput, setPassword: setPwSetInput, passwordOpen: showPwSet, setPasswordOpen: setShowPwSet, onVoice: toggleVoice, onChat: toggleChat, onHidden: toggleHidden, onPassword: () => savePassword(), onRemovePassword: () => setShowPwRemoveConfirm(true), onUnban: unbanUser, onPickMovie: () => setMoviePickerOpen(true), onDeleteRoom: deleteRoom, onToggleApproval: toggleApproval }} />}
+            {chatOpen && <ChatOverlay roomId={id} chatEnabled={chatEnabled} chatLocked={chatLocked} isOwner={canMod} isAdmin={isMod} onClose={() => setChatOpen(false)} autoDeleteMinutes={autoDeleteMinutes} countdownText={countdownText} clearToken={chatClearToken} onSetAutoDelete={setAutoDelete} voice={voice} voiceEnabled={room.voice_enabled} onDirect={() => { setDirectTarget(null); setDirectOpen(!directOpen); setChatOpen(false); setShowViewers(false); setShowSettings(false); }} onDirectUser={openDirectMessage} directUnread={directUnread} ownerId={room?.owner_id} roomModerators={room?.room_moderators || []} participants={room?.participants || []} recentParticipants={room?.recent_participants || []} viewerProfiles={viewerProfiles} presenceMap={presenceMap} onProfileCard={openUserProfile} onToggleChat={toggleChat} settingsProps={{ room, canMod, participants: room?.participants || [], roomModerators: room?.room_moderators || [], onAssignMod: assignMod, onRemoveMod: removeMod, roomName: roomNameEdit, setRoomName: setRoomNameEdit, onSaveName: saveRoomName, password: pwSetInput, setPassword: setPwSetInput, passwordOpen: showPwSet, setPasswordOpen: setShowPwSet, onVoice: toggleVoice, onChat: toggleChat, onChatBan: toggleChatBan, onHidden: toggleHidden, onPassword: () => savePassword(), onRemovePassword: () => setShowPwRemoveConfirm(true), onUnban: unbanUser, onPickMovie: () => setMoviePickerOpen(true), onDeleteRoom: deleteRoom, onToggleApproval: toggleApproval }} />}
           </div>
         )}
 
@@ -717,6 +730,9 @@ export default function WatchParty() {
             <RoomDirectMessages onClose={() => { setDirectOpen(false); setDirectTarget(null); }} initialUserId={directTarget} />
           </div>
         )}
+
+        {/* Gönderilen hediye, sohbet kapalı olsa bile odadaki herkese animasyonla görünür. */}
+        <RoomGiftStage roomId={id} />
 
         {showViewers && (
           <div className="absolute top-[max(env(safe-area-inset-top),3.5rem)] right-3 bg-card/95 border border-border rounded-xl p-2 z-[60] w-40 max-h-[55vh] overflow-y-auto shadow-2xl backdrop-blur-xl">
@@ -745,7 +761,7 @@ export default function WatchParty() {
             </div>
           </div>
         )}
-        <RoomSettingsMenu open={showSettings} onClose={() => setShowSettings(false)} room={room} canMod={canMod} participants={room.participants || []} roomModerators={room.room_moderators || []} onAssignMod={assignMod} onRemoveMod={removeMod} roomName={roomNameEdit} setRoomName={setRoomNameEdit} onSaveName={saveRoomName} password={pwSetInput} setPassword={setPwSetInput} passwordOpen={showPwSet} setPasswordOpen={setShowPwSet} onVoice={toggleVoice} onChat={toggleChat} onHidden={toggleHidden} onPassword={() => savePassword()} onRemovePassword={() => setShowPwRemoveConfirm(true)} onUnban={unbanUser} onPickMovie={() => { setMoviePickerOpen(true); setShowSettings(false); }} onDeleteRoom={deleteRoom} onToggleApproval={toggleApproval} />
+        <RoomSettingsMenu open={showSettings} onClose={() => setShowSettings(false)} room={room} canMod={canMod} participants={room.participants || []} roomModerators={room.room_moderators || []} onAssignMod={assignMod} onRemoveMod={removeMod} roomName={roomNameEdit} setRoomName={setRoomNameEdit} onSaveName={saveRoomName} password={pwSetInput} setPassword={setPwSetInput} passwordOpen={showPwSet} setPasswordOpen={setShowPwSet} onVoice={toggleVoice} onChat={toggleChat} onChatBan={toggleChatBan} onHidden={toggleHidden} onPassword={() => savePassword()} onRemovePassword={() => setShowPwRemoveConfirm(true)} onUnban={unbanUser} onPickMovie={() => { setMoviePickerOpen(true); setShowSettings(false); }} onDeleteRoom={deleteRoom} onToggleApproval={toggleApproval} />
       </div>
 
       <LiveKitDebugPanel voice={voice} />

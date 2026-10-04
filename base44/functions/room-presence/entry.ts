@@ -40,7 +40,7 @@ export default async function(req) {
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
     const body = await req.json();
     const { action, room_id, password, target_id } = body || {};
-    if (!room_id || !['get', 'join', 'leave', 'kick', 'ban', 'unban', 'set-password', 'set-name', 'toggle-hidden', 'toggle-voice', 'toggle-mute', 'toggle-chat', 'toggle-approval', 'change-movie', 'assign-mod', 'remove-mod', 'delete-room', 'request-join', 'approve-join', 'reject-join'].includes(action)) {
+    if (!room_id || !['get', 'join', 'leave', 'kick', 'ban', 'unban', 'set-password', 'set-name', 'toggle-hidden', 'toggle-voice', 'toggle-mute', 'toggle-chat', 'chat-ban', 'toggle-approval', 'change-movie', 'assign-mod', 'remove-mod', 'delete-room', 'request-join', 'approve-join', 'reject-join'].includes(action)) {
       return Response.json({ error: 'invalid request' }, { status: 400 });
     }
     const name = user.username || user.full_name || 'Kullanıcı';
@@ -306,6 +306,20 @@ export default async function(req) {
       if (!canModRoom) return Response.json({ error: 'yetkisiz' }, { status: 403 });
       await base44.asServiceRole.entities.Room.update(room_id, { chat_enabled: !room.chat_enabled });
       return Response.json({ ok: true, chat_enabled: !room.chat_enabled });
+    }
+
+    // Sohbet yasağı — açıkken yalnızca koltukta oturanlar yazabilir.
+    if (action === 'chat-ban') {
+      if (!canModRoom) return Response.json({ error: 'yetkisiz' }, { status: 403 });
+      const bannedNow = body.banned !== false;
+      await base44.asServiceRole.entities.Room.update(room_id, { chat_seated_only: bannedNow });
+      await base44.asServiceRole.entities.RoomMessage.create({
+        room_id, user_id: user.id, user_name: name,
+        text: bannedNow
+          ? `${name} sohbet yasağını açtı — yalnızca koltuktakiler yazabilir.`
+          : `${name} sohbet yasağını kaldırdı.`, type: 'system'
+      }).catch(() => {});
+      return Response.json({ ok: true, chat_seated_only: bannedNow });
     }
 
     if (action === 'toggle-approval') {

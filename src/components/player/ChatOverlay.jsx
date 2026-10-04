@@ -20,7 +20,7 @@ import useRoomLevels from '@/hooks/useRoomLevels';
 
 const EMOJIS = ['😀', '😂', '😍', '🔥', '👍', '👏', '😱', '😢', '🎬', '🍿', '❤️', '🎉'];
 
-export default function ChatOverlay({ roomId, chatEnabled, isOwner, isAdmin, onClose, autoDeleteMinutes = 0, countdownText = '', clearToken = 0, onSetAutoDelete, voice, voiceEnabled, onSettings, onDirect, onDirectUser, directUnread = 0, ownerId, roomModerators = [], participants = [], recentParticipants = [], viewerProfiles = {}, presenceMap = {}, onProfileCard, settingsProps, onToggleChat }) {
+export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, isOwner, isAdmin, onClose, autoDeleteMinutes = 0, countdownText = '', clearToken = 0, onSetAutoDelete, voice, voiceEnabled, onSettings, onDirect, onDirectUser, directUnread = 0, ownerId, roomModerators = [], participants = [], recentParticipants = [], viewerProfiles = {}, presenceMap = {}, onProfileCard, settingsProps, onToggleChat }) {
   const { user } = useCurrentUser();
   const { toast } = useToast();
   const [messages, setMessages] = useState([]);
@@ -165,6 +165,8 @@ export default function ChatOverlay({ roomId, chatEnabled, isOwner, isAdmin, onC
 
   const send = (e) => {
     e?.preventDefault();
+    // Sohbet yasağı açıkken koltukta oturmayan kişi sohbete yazamaz.
+    if (chatLocked) { toast({ title: 'Sohbet yasağı var', description: 'Yazmak için bir koltuğa otur.', variant: 'destructive' }); return; }
     if (!text.trim() || !user) return;
     const tempId = 'temp-' + Date.now();
     const optimistic = { id: tempId, room_id: roomId, user_id: user.id, user_name: user.username || user.full_name || 'Kullanıcı', user_avatar: user.avatar || '', text: text.trim(), type: 'user', created_date: new Date().toISOString() };
@@ -349,7 +351,14 @@ export default function ChatOverlay({ roomId, chatEnabled, isOwner, isAdmin, onC
           </p>
         </div>
       )}
-      {chatEnabled && msgFilter === 'all' && <div className="p-2.5 border-t border-white/10 flex items-center gap-2 bg-black">
+      {chatEnabled && msgFilter === 'all' && chatLocked && (
+        <div className="p-2.5 border-t border-white/10 bg-black">
+          <p className="rounded-full border border-primary/50 bg-black/60 px-4 py-2.5 text-center text-[11px] font-semibold text-primary">
+            Sohbet yasağı var — yazmak için bir koltuğa otur.
+          </p>
+        </div>
+      )}
+      {chatEnabled && msgFilter === 'all' && !chatLocked && <div className="p-2.5 border-t border-white/10 flex items-center gap-2 bg-black">
         <label className="p-2 rounded-lg hover:bg-white/10 cursor-pointer text-white">
           <ImageIcon className="w-5 h-5" />
           <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" tabIndex={-1} aria-hidden="true" onChange={onPhoto} disabled={uploading} />
