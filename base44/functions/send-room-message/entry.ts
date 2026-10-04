@@ -33,9 +33,9 @@ export default async function(req) {
       return Response.json({ error: 'sohbet kapalı' }, { status: 403 });
     }
 
-    // Sohbet yasağı: yalnızca koltuğa oturanlar yazabilir (yöneticiler muaf).
+    // Sohbet yasağı: yalnızca koltuğa oturanlar yazabilir — koltukta olmayan herkes için geçerlidir.
     const isSeated = (Array.isArray(room.seats) ? room.seats : []).some((seat) => seat.user_id === user.id);
-    if (room.chat_seated_only === true && !isSeated && !isMod) {
+    if (room.chat_seated_only === true && !isSeated) {
       return Response.json({ error: 'Sohbet yasağı var — yazmak için bir koltuğa otur.' }, { status: 403 });
     }
 

@@ -97,9 +97,9 @@ export default function VoiceRoom() {
   const seated = mySeatIndex >= 0;
   const isOwner = !!user && room?.owner_id === user.id;
   const canMod = isOwner || moderators.includes(user?.id) || user?.role === 'admin';
-  // Sohbet yasağı açıkken yalnızca koltuktakiler yazar; yöneticiler muaf.
+  // Sohbet yasağı açıkken yalnızca koltuktakiler yazar.
   const chatBanned = room?.chat_seated_only === true;
-  const chatLocked = chatBanned && !seated && !canMod;
+  const chatLocked = chatBanned && !seated;
 
   const seatsView = useMemo(
     () => seats.map((seat) => ({

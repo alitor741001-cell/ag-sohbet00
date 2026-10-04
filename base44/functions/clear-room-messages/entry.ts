@@ -24,7 +24,7 @@ export default async function(req) {
     // Sohbet temizlendikten sonra kimin temizlediğini belirten tek bir not bırakılır.
     const message = await base44.asServiceRole.entities.RoomMessage.create({
       room_id, user_id: user.id, user_name: name, user_avatar: user.avatar || '',
-      text: `${name} sohbeti temizledi.`, type: 'system'
+      text: `${name} cheati temizledi.`, type: 'system'
     });
     return Response.json({ deleted: res?.deleted_count ?? 0, message });
   } catch (e) {

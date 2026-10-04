@@ -78,9 +78,9 @@ export default function VoiceChatDock({ messages = [], onSend, onCloseComposer, 
         </div>
       )}
 
-      {composerOpen && chatLocked && (
-        <p className="mx-3 mb-2 mt-1.5 rounded-full border border-white/15 bg-black/50 px-4 py-3 text-center text-[11px] font-semibold text-primary backdrop-blur-md">
-          Sohbet yasağı açık — yazmak için bir koltuğa otur.
+      {chatLocked && (
+        <p className="mx-3 mb-2 mt-1.5 rounded-full border border-primary/50 bg-black/60 px-4 py-3 text-center text-[11px] font-semibold text-primary backdrop-blur-md">
+          Sohbet yasağı var — yazmak için bir koltuğa otur.
         </p>
       )}
 
