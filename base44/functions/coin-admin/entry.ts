@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import { rateLimit, safeErrorResponse } from '../../shared/security.ts';
 import { ensureGiftWallet } from '../../shared/giftWallet.ts';
+import { addLoadedCoins } from '../../shared/userLevels.ts';
 
 const ACTIONS = ['lookup', 'grant', 'revert', 'list', 'requests', 'approve', 'reject'];
 // Tek seferde yüklenebilecek en yüksek coin — kazara devasa yükleme olmasın.
@@ -93,6 +94,9 @@ export default async function (req: Request): Promise<Response> {
         status: 'active',
       });
 
+      // N seviyesi yüklenen coin ile yükselir.
+      await addLoadedCoins(base44, target.id, amount);
+
       await base44.asServiceRole.entities.AdminLog.create({
         admin_id: user.id,
         admin_name: adminName,
@@ -140,6 +144,13 @@ export default async function (req: Request): Promise<Response> {
 
       const next = balance - amount;
       await base44.asServiceRole.entities.GameWallet.update(wallet.id, { coins: next });
+      // Geri çekilen yükleme N seviyesinden de düşülür.
+      const owner = await base44.asServiceRole.entities.User.get(grant.user_id).catch(() => null);
+      if (owner?.id) {
+        await base44.asServiceRole.entities.User.update(owner.id, {
+          loaded_coins: Math.max(0, (Number(owner.loaded_coins) || 0) - amount),
+        }).catch(() => {});
+      }
       await base44.asServiceRole.entities.CoinGrant.update(grant.id, {
         status: 'reverted',
         reverted_at: new Date().toISOString(),
@@ -234,6 +245,9 @@ export default async function (req: Request): Promise<Response> {
         note: `Başvuru onayı — ${packName} (${Number(request.price) || 0} ₺)`,
         status: 'active',
       });
+
+      // Onaylanan başvuru da N seviyesine sayılır.
+      await addLoadedCoins(base44, target.id, coins);
 
       await base44.asServiceRole.entities.AdminLog.create({
         admin_id: user.id,

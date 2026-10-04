@@ -5,6 +5,8 @@ import { base44 } from '@/api/base44Client';
 import { Image } from '@/components/ui/image';
 import ProfileFrame from '@/components/ProfileFrame';
 import RoleBadge from '@/components/RoleBadge';
+import UserStatusBadges from '@/components/status/UserStatusBadges';
+import { badgesFromUser, isRedNameVip } from '@/lib/userLevels';
 import useRoomLevels from '@/hooks/useRoomLevels';
 import RoomLevelBadge from '@/components/levels/RoomLevelBadge';
 import useXp from '@/hooks/useXp';
@@ -66,8 +68,11 @@ export default function ProfileHeader({ user, pkg, expired, avatar, onAvatar, on
       </div>
     )}
     <div className="flex items-center gap-2">
-      <h1 className="text-2xl font-extrabold">{name}</h1>
+      <h1 className="text-2xl font-extrabold" style={isRedNameVip(user.vip_level) ? { color: '#ef4444' } : undefined}>{name}</h1>
       {user.role === 'admin' && <Crown className="w-5 h-5 text-amber-400" />}
+    </div>
+    <div className="mt-2 w-full">
+      <UserStatusBadges {...badgesFromUser(user)} showUserIcon />
     </div>
     <p className="text-sm text-muted-foreground">{user.email}</p>
     <div className="mt-3 flex flex-wrap items-center justify-center gap-2">

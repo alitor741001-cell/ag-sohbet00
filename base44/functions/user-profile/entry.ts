@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import { rateLimit, safeErrorResponse } from '../../shared/security.ts';
+import { badgeLevels } from '../../shared/userLevels.ts';
 
 export default async function(req) {
   try {
@@ -35,6 +36,7 @@ export default async function(req) {
           special_frame_entry: u.special_frame_entry !== false, special_frame_exit: u.special_frame_exit !== false,
           title: u.title || '', created_date: u.created_date || null,
           account_status: accountStatus(u),
+          ...badgeLevels(u),
         };
       });
       return Response.json({ data: profiles });
@@ -60,7 +62,8 @@ export default async function(req) {
       special_frame_exit: u.special_frame_exit !== false,
       title: u.title || '',
       created_date: u.created_date || null,
-      account_status: accountStatus(u)
+      account_status: accountStatus(u),
+      ...badgeLevels(u)
     });
   } catch (e) {
     return safeErrorResponse(e);

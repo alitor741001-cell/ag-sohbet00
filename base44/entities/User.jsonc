@@ -58,6 +58,32 @@
         }
       }
     },
+    "vip_level": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 12,
+      "default": 0
+    },
+    "vip_granted_by": {
+      "type": "string",
+      "default": ""
+    },
+    "vip_granted_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "loaded_coins": {
+      "type": "number",
+      "default": 0
+    },
+    "gift_sent_k": {
+      "type": "number",
+      "default": 0
+    },
+    "gift_received_k": {
+      "type": "number",
+      "default": 0
+    },
     "profile_frame": {
       "type": "string",
       "default": ""

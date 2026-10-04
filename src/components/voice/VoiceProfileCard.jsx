@@ -3,6 +3,8 @@ import { Copy } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import ProfileFrame from '@/components/ProfileFrame';
 import ProfileActionRow from '@/components/voice/ProfileActionRow';
+import UserStatusBadges from '@/components/status/UserStatusBadges';
+import { isRedNameVip } from '@/lib/userLevels';
 import { useToast } from '@/components/ui/use-toast';
 
 /** Profil kartı: isim, kopyalanabilir kimlik, rol ve eylem satırı. */
@@ -41,8 +43,17 @@ export default function VoiceProfileCard({ userId, nameHint, avatarHint, frameHi
           : avatar
             ? <img src={avatar} alt={name} className="h-12 w-12 rounded-full object-cover object-center" referrerPolicy="no-referrer" draggable={false} />
             : <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#1F2024] text-lg font-bold text-white">{(name || '?')[0]}</span>}
-        <p className="text-sm font-bold text-[#1F2024]">{name}</p>
+        <p className="text-sm font-bold text-[#1F2024]" style={isRedNameVip(profile?.vip_level) ? { color: '#dc2626' } : undefined}>{name}</p>
         {roleLabel && <p className="text-[11px] font-semibold text-[#6b7280]">{roleLabel}</p>}
+        <UserStatusBadges
+          showUserIcon
+          n_level={profile?.n_level || 0}
+          vip_level={profile?.vip_level || 0}
+          gift_sent_level={profile?.gift_sent_level || 0}
+          gift_sent_tier={profile?.gift_sent_tier || 'green'}
+          gift_received_level={profile?.gift_received_level || 0}
+          gift_received_tier={profile?.gift_received_tier || 'green'}
+        />
         <button type="button" onClick={copyId} className="flex items-center gap-1.5 rounded-lg bg-black/5 px-2.5 py-1 text-[11px] font-semibold text-[#1F2024] active:scale-95 transition-transform">
           <span className="font-mono">#{memberId}</span>
           <Copy className="h-3 w-3" />

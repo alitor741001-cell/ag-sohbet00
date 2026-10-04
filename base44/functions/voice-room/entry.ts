@@ -6,6 +6,7 @@ import { scoresAfterSeatLeave, withStep } from '../../shared/numberBoard.ts';
 import { appendRoomLog } from '../../shared/roomLog.ts';
 import { coinsForK, ensureGiftWallet, formatK, giftBalance } from '../../shared/giftWallet.ts';
 import { giftBoard } from '../../shared/giftBoard.ts';
+import { addGiftTotals } from '../../shared/userLevels.ts';
 
 const SEAT_OPTIONS = [2, 5, 8, 9, 12, 15, 20, 24];
 // Bu değerin (coin) üzerindeki hediyeler bütün sesli odalara duyurulur.
@@ -296,6 +297,13 @@ export default async function (req: Request): Promise<Response> {
         Promise.all(messageRecords.map((message) => base44.asServiceRole.entities.RoomMessage.create(message))),
         base44.asServiceRole.entities.GiftSend.bulkCreate(records),
       ]);
+
+      // Hediye seviyeleri: gönderen ve alan kişilerin K toplamları işlenir.
+      await addGiftTotals(base44, {
+        senderId: user.id,
+        recipientIds: recipients.map((recipient) => recipient.user_id),
+        kPerRecipient: kValue * quantity,
+      });
 
       // Büyük hediye (1 milyon ve üzeri): tüm sesli odaların ekranına duyuru düşer.
       if (coinsForK(kValue) * quantity >= BIG_GIFT_SCORE) {

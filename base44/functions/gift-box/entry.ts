@@ -3,6 +3,7 @@ import { rateLimit, safeErrorResponse } from '../../shared/security.ts';
 import { ensureGiftWallet, giftBalance } from '../../shared/giftWallet.ts';
 import { COINS_PER_DOLLAR, findByMemberId, giftBoxSummary, giftDollarsFromK, monthStartIso } from '../../shared/giftBox.ts';
 import { getUsdTry, tlFromDollars, tlRateFrom } from '../../shared/exchangeRate.ts';
+import { addLoadedCoins } from '../../shared/userLevels.ts';
 
 const ACTIONS = ['summary', 'activity', 'lookup', 'send', 'withdraw', 'convert', 'received'];
 const MIN_CONVERT_DOLLARS = 1;
@@ -378,6 +379,9 @@ export default async function (req: Request): Promise<Response> {
       const updated = await base44.asServiceRole.entities.GameWallet.update(wallet.id, {
         coins: Math.max(0, Number(wallet.coins) || 0) + coins,
       });
+
+      // Bozdurulan dolar da yüklenen coin sayılır: N seviyesi yükselir.
+      await addLoadedCoins(base44, user.id, coins);
 
       return Response.json({
         ok: true,
