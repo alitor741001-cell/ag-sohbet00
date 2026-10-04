@@ -466,7 +466,10 @@ export default function DirectCallProvider({ children }) {
 
     const onVisible = () => { if (document.visibilityState === 'visible') syncActive(); };
     document.addEventListener('visibilitychange', onVisible);
-    const poll = setInterval(() => { if (phaseRef.current === 'idle') syncActive(); }, 8000);
+    // Yedek yoklama 15sn'de bir; sekme arkadayken çağrılmaz.
+    const poll = setInterval(() => {
+      if (phaseRef.current === 'idle' && document.visibilityState !== 'hidden') syncActive();
+    }, 15000);
 
     return () => {
       unsubscribe();

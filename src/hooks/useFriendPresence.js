@@ -49,7 +49,11 @@ export default function useFriendPresence(user, maintain = false) {
     };
     const syncVisibility = () => update(document.visibilityState === 'visible' && navigator.onLine).catch(() => {});
     const goOffline = () => update(false).catch(() => {});
-    const heartbeat = setInterval(syncVisibility, 10000);
+    // Nabız 20sn'de bir: sekme arkadayken boşuna yazılmaz, görünürlük olayı zaten yazar.
+    const heartbeat = setInterval(() => {
+      if (document.visibilityState === 'hidden') return;
+      syncVisibility();
+    }, 20000);
     document.addEventListener('visibilitychange', syncVisibility);
     window.addEventListener('online', syncVisibility);
     window.addEventListener('offline', syncVisibility);

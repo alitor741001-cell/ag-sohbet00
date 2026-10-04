@@ -34,8 +34,8 @@ export default function useFriends() {
     });
     const reconnect = () => reload();
     window.addEventListener('online', reconnect);
-    // Polling yedeği — realtime kaçırsa diye 10sn'de bir yenile
-    const interval = setInterval(reload, 10000);
+    // Yoklama yedeği — realtime kaçırsa diye 30sn'de bir; sekme arkadayken durur.
+    const interval = setInterval(() => { if (document.visibilityState !== 'hidden') reload(); }, 30000);
     return () => { offFriends(); window.removeEventListener('online', reconnect); clearInterval(interval); };
   }, [user?.id, reload]);
 

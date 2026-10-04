@@ -90,8 +90,8 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
     };
     refresh();
     const unsub = base44.entities.RoomTyping.subscribe((ev) => { if (ev.data?.room_id === roomId) refresh(); });
-    // Realtime zaten var; polling sadece fallback olarak 5sn'de bir (1sn çok sık)
-    const poll = setInterval(refresh, 5000);
+    // Realtime zaten var; yoklama yalnızca yedek: 15sn'de bir, sekme arkadayken durur.
+    const poll = setInterval(() => { if (document.visibilityState !== 'hidden') refresh(); }, 15000);
     return () => { unsub(); clearInterval(poll); if (myTypingIdRef.current) { base44.entities.RoomTyping.delete(myTypingIdRef.current).catch(() => {}); myTypingIdRef.current = null; } };
   }, [roomId, user?.id]);
 

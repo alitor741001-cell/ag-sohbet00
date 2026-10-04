@@ -21,10 +21,16 @@ export default function MessageRealtimeProvider({ userId, children }) {
   conversationsRef.current = conversations;
   const reload = useCallback(async () => {
     if (!userId) return;
-    const [items, pending, levels] = await Promise.all([base44.entities.Conversation.filter({ members: userId }, '-updated_date', 200), base44.entities.Friendship.filter({ recipient_id: userId, status: 'pending' }, '-created_date', 100), base44.entities.FriendshipProgression.filter({ members: userId }, '-updated_date', 500)]);
-    setConversations(sortConversations((items || []).filter((item) => !(item.deleted_for || []).includes(userId))));
-    setProgressions(levels || []);
-    setRequests(pending.length); setLoading(false);
+    try {
+      const [items, pending, levels] = await Promise.all([base44.entities.Conversation.filter({ members: userId }, '-updated_date', 200), base44.entities.Friendship.filter({ recipient_id: userId, status: 'pending' }, '-created_date', 100), base44.entities.FriendshipProgression.filter({ members: userId }, '-updated_date', 500)]);
+      setConversations(sortConversations((items || []).filter((item) => !(item.deleted_for || []).includes(userId))));
+      setProgressions(levels || []);
+      setRequests(pending.length);
+    } catch {
+      // Yoğunluk ya da ağ hatasında mevcut liste korunur: yedek yoklama hatası ekrana düşmez.
+    } finally {
+      setLoading(false);
+    }
   }, [userId]);
   useEffect(() => {
     if (!userId) { setConversations([]); setProgressions([]); setRequests(0); setLoading(false); return; }

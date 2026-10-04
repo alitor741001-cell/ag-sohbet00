@@ -4,7 +4,8 @@ import { base44 } from '@/api/base44Client';
 // Sohbet satırı bu kadar süre görünür kalır — geç fark edilse de tıklanabilir.
 const VISIBLE_MS = 120000;
 // Gerçek zamanlı yayın gecikirse yoklama aynı duyuruyu yakalar.
-const POLL_MS = 6000;
+// Yedek yoklama seyrek çalışır (sekme arkadayken hiç çalışmaz) — istek yükünü düşürür.
+const POLL_MS = 30000;
 
 /**
  * Sohbet bölümünün altındaki büyük hediye satırı.
@@ -32,8 +33,9 @@ export default function useBigGiftNotice(roomId) {
     const poll = () => base44.entities.BigGiftAlert.list('-created_date', 3)
       .then((rows) => rows.forEach(accept))
       .catch(() => {});
+    const tick = () => { if (document.visibilityState !== 'hidden') poll(); };
     poll();
-    const timer = window.setInterval(poll, POLL_MS);
+    const timer = window.setInterval(tick, POLL_MS);
     return () => { unsubscribe(); window.clearInterval(timer); };
   }, [accept]);
 

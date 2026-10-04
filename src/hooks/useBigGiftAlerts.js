@@ -4,7 +4,8 @@ import { base44 } from '@/api/base44Client';
 // Duyuru ekranda bu kadar kalır (CSS big-gift-life süresiyle aynı).
 const VISIBLE_MS = 7000;
 // Gerçek zamanlı yayın gecikirse yoklama aynı duyuruyu yakalar.
-const POLL_MS = 6000;
+// Yedek yoklama seyrek çalışır (sekme arkadayken hiç çalışmaz) — istek yükünü düşürür.
+const POLL_MS = 30000;
 // Yalnızca taze duyurular gösterilir; odaya sonradan girenler eskileri görmez.
 const FRESH_MS = 20000;
 const MAX_QUEUE = 3;
@@ -32,8 +33,9 @@ export default function useBigGiftAlerts() {
     const poll = () => base44.entities.BigGiftAlert.list('-created_date', MAX_QUEUE)
       .then((rows) => rows.forEach(accept))
       .catch(() => {});
+    const tick = () => { if (document.visibilityState !== 'hidden') poll(); };
     poll();
-    const timer = window.setInterval(poll, POLL_MS);
+    const timer = window.setInterval(tick, POLL_MS);
     return () => { unsubscribe(); window.clearInterval(timer); };
   }, [accept]);
 
