@@ -3,6 +3,7 @@ import { ChevronLeft, Coins, Gift, Loader2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Image } from '@/components/ui/image';
 import GiftSendersPanel from '@/components/profile/GiftSendersPanel';
+import ActivitySummaryCards from '@/components/profile/ActivitySummaryCards';
 
 const formatCoins = (value) => Math.max(0, Math.round(Number(value) || 0)).toLocaleString('tr-TR');
 const formatK = (value) => `${Math.max(0, Number(value) || 0).toLocaleString('tr-TR', { maximumFractionDigits: 2 })}K`;
@@ -24,6 +25,7 @@ const formatWhen = (iso) => {
 export default function CoinActivityPanel({ open, onClose }) {
   const [loading, setLoading] = useState(false);
   const [items, setItems] = useState([]);
+  const [totals, setTotals] = useState(null);
   const [view, setView] = useState('feed');
 
   useEffect(() => { if (open) setView('feed'); }, [open]);
@@ -32,8 +34,8 @@ export default function CoinActivityPanel({ open, onClose }) {
     if (!open) return;
     setLoading(true);
     base44.functions.invoke('gift-box', { action: 'activity' })
-      .then((response) => setItems(response.data?.items || []))
-      .catch(() => setItems([]))
+      .then((response) => { setItems(response.data?.items || []); setTotals(response.data?.totals || null); })
+      .catch(() => { setItems([]); setTotals(null); })
       .finally(() => setLoading(false));
   }, [open]);
 
@@ -67,6 +69,12 @@ export default function CoinActivityPanel({ open, onClose }) {
 
       <div className="min-h-0 flex-1 overflow-y-auto p-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
         <div className="mx-auto w-full max-w-[430px]">
+          {totals && (
+            <ActivitySummaryCards items={[
+              { label: 'Toplam yüklenen', value: formatCoins(totals.loaded_coins), hint: 'coin' },
+              { label: '24 saatlik', value: formatCoins(totals.loaded_coins_day), hint: 'coin' },
+            ]} />
+          )}
           {loading ? (
             <div className="flex items-center justify-center py-10">
               <Loader2 className="h-6 w-6 animate-spin text-primary" />

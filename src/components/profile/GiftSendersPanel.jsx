@@ -2,9 +2,11 @@ import { useEffect, useState } from 'react';
 import { ChevronDown, ChevronLeft, Gift, Loader2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Image } from '@/components/ui/image';
+import ActivitySummaryCards from '@/components/profile/ActivitySummaryCards';
 
 const formatTl = (value) => `${(Number(value) || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺`;
 const formatK = (value) => `${(Number(value) || 0).toLocaleString('tr-TR', { maximumFractionDigits: 2 })} K`;
+const formatUsd = (value) => (Number(value) || 0).toLocaleString('tr-TR');
 
 /** Gönderim tarih ve saati: 04.10.2026 19:15 */
 const formatWhen = (iso) => {
@@ -23,6 +25,7 @@ const formatWhen = (iso) => {
 export default function GiftSendersPanel({ open, onClose }) {
   const [loading, setLoading] = useState(false);
   const [senders, setSenders] = useState([]);
+  const [totals, setTotals] = useState(null);
   const [expanded, setExpanded] = useState(null);
 
   useEffect(() => {
@@ -30,8 +33,8 @@ export default function GiftSendersPanel({ open, onClose }) {
     setExpanded(null);
     setLoading(true);
     base44.functions.invoke('gift-box', { action: 'received' })
-      .then((response) => setSenders(response.data?.senders || []))
-      .catch(() => setSenders([]))
+      .then((response) => { setSenders(response.data?.senders || []); setTotals(response.data?.totals || null); })
+      .catch(() => { setSenders([]); setTotals(null); })
       .finally(() => setLoading(false));
   }, [open]);
 
@@ -55,6 +58,12 @@ export default function GiftSendersPanel({ open, onClose }) {
 
       <div className="min-h-0 flex-1 overflow-y-auto p-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
         <div className="mx-auto w-full max-w-[430px]">
+          {totals && (
+            <ActivitySummaryCards items={[
+              { label: 'Toplam', value: formatK(totals.all_k), hint: `${formatUsd(totals.all_dollars)} $` },
+              { label: '24 saatlik', value: formatK(totals.day_k), hint: `${formatUsd(totals.day_dollars)} $` },
+            ]} />
+          )}
           <p className="mb-2.5 text-center text-[10px] font-semibold text-white/45">
             Bu ayın listesi • her ayın 1'inde otomatik sıfırlanır
           </p>

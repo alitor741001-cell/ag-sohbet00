@@ -41,13 +41,15 @@ export default async function (req: Request): Promise<Response> {
     // gönderilen/alınan hediyeler ve coin gönderimleri tek listede.
     if (action === 'activity') {
       const per = 60;
+      // Yükleme kayıtları özet (toplam / 24 saatlik) için geniş çekilir, liste en yeni 60 kaydı gösterir.
+      const loadLimit = 2000;
       const [grants, sentGifts, receivedGifts, sentCoins, receivedCoins, conversions] = await Promise.all([
-        base44.asServiceRole.entities.CoinGrant.filter({ user_id: user.id }, '-created_date', per).catch(() => []),
+        base44.asServiceRole.entities.CoinGrant.filter({ user_id: user.id }, '-created_date', loadLimit).catch(() => []),
         base44.asServiceRole.entities.GiftSend.filter({ sender_id: user.id }, '-created_date', per).catch(() => []),
         base44.asServiceRole.entities.GiftSend.filter({ recipient_id: user.id }, '-created_date', per).catch(() => []),
         base44.asServiceRole.entities.GiftTransfer.filter({ kind: 'send', sender_id: user.id }, '-created_date', per).catch(() => []),
         base44.asServiceRole.entities.GiftTransfer.filter({ kind: 'send', recipient_id: user.id }, '-created_date', per).catch(() => []),
-        base44.asServiceRole.entities.GiftTransfer.filter({ kind: 'convert', sender_id: user.id }, '-created_date', per).catch(() => []),
+        base44.asServiceRole.entities.GiftTransfer.filter({ kind: 'convert', sender_id: user.id }, '-created_date', loadLimit).catch(() => []),
       ]);
 
       // Karşı tarafın profili (isim, fotoğraf, kimlik numarası) tek sorguda tamamlanır.
@@ -140,7 +142,23 @@ export default async function (req: Request): Promise<Response> {
       coinRows(receivedCoins, 'received');
 
       items.sort((a: any, b: any) => (String(a.created_date) < String(b.created_date) ? 1 : -1));
-      return Response.json({ ok: true, items: items.slice(0, per) });
+
+      // Özet: toplam yüklenen coin ve son 24 saatte yüklenen coin.
+      const dayStart = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 19);
+      let loadedCoins = 0;
+      let loadedCoinsDay = 0;
+      [...grants, ...conversions].forEach((record: any) => {
+        const amount = Math.max(0, Number(record?.amount ?? record?.coins) || 0);
+        loadedCoins += amount;
+        const created = String(record?.created_date || '').slice(0, 19);
+        if (created && created >= dayStart) loadedCoinsDay += amount;
+      });
+
+      return Response.json({
+        ok: true,
+        items: items.slice(0, per),
+        totals: { loaded_coins: loadedCoins, loaded_coins_day: loadedCoinsDay },
+      });
     }
 
     // Hediye gönderenler: her ayın 1'inde sıfırlanır — yalnızca bu ayın gönderimleri listelenir.
@@ -213,6 +231,17 @@ export default async function (req: Request): Promise<Response> {
       });
       senders.sort((a, b) => b.total_k - a.total_k);
 
+      // Özet: tüm zamanların toplamı ve son 24 saatte gelen hediyeler.
+      const dayStart = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 19);
+      let allK = 0;
+      let dayK = 0;
+      allRecords.forEach((record) => {
+        const kValue = Math.max(0, Number(record?.k_value) || 0);
+        allK += kValue;
+        const created = String(record?.created_date || '').slice(0, 19);
+        if (created && created >= dayStart) dayK += kValue;
+      });
+
       return Response.json({
         ok: true,
         senders,
@@ -220,6 +249,14 @@ export default async function (req: Request): Promise<Response> {
         total_dollars: giftDollarsFromK(totalK),
         total_tl: tlFromDollars(giftDollarsFromK(totalK), tlRate),
         tl_rate: tlRate,
+        totals: {
+          month_k: Math.round(totalK * 100) / 100,
+          month_dollars: giftDollarsFromK(totalK),
+          all_k: Math.round(allK * 100) / 100,
+          all_dollars: giftDollarsFromK(allK),
+          day_k: Math.round(dayK * 100) / 100,
+          day_dollars: giftDollarsFromK(dayK),
+        },
       });
     }
 

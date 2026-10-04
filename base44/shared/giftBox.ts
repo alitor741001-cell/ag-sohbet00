@@ -39,13 +39,26 @@ export function monthStartIso(now = new Date()) {
   return new Date(`${year}-${month}-01T00:00:00+03:00`).toISOString().slice(0, 19);
 }
 
+/**
+ * Elmas için elle sıfırlama anı (AppConfig: elmas_reset_at).
+ * Ayın 1'inde otomatik sıfırlamaya ek olarak bu andan önceki hediyeler elmasa sayılmaz.
+ */
+export async function elmasResetAt(base44: any) {
+  const config = await base44.asServiceRole.entities.AppConfig
+    .filter({ key: 'elmas_reset_at' }, '-created_date', 1)
+    .catch(() => []);
+  return String(config[0]?.value || '').slice(0, 19);
+}
+
 /** Kişinin aldığı hediyelerin K toplamı, bu ayın elması ve dolar değeri. */
-export async function receivedGiftTotals(base44: any, userId: string) {
+export async function receivedGiftTotals(base44: any, userId: string, resetAt = '') {
   const records = await base44.asServiceRole.entities.GiftSend
     .filter({ recipient_id: userId }, '-created_date', MAX_RECORDS)
     .catch(() => []);
   const k = Math.round(records.reduce((sum, record) => sum + Math.max(0, Number(record?.k_value) || 0), 0) * 100) / 100;
-  const start = monthStartIso();
+  const monthStart = monthStartIso();
+  // Elmas; ay başı ile elle sıfırlama anından hangisi yeniyse ondan sonrasını sayar.
+  const start = resetAt && resetAt > monthStart ? resetAt : monthStart;
   const monthK = Math.round(records.reduce((sum, record) => {
     const created = String(record?.created_date || '');
     if (!created || created.slice(0, 19) < start) return sum;
@@ -62,8 +75,9 @@ export async function receivedGiftTotals(base44: any, userId: string) {
 
 /** Hediye kutusu durumu: coins, alınan hediye, harcanan ve kullanılabilir bakiye (TL). */
 export async function giftBoxSummary(base44: any, user: any) {
+  const resetAt = await elmasResetAt(base44);
   const [received, transfers, coins, market] = await Promise.all([
-    receivedGiftTotals(base44, user.id),
+    receivedGiftTotals(base44, user.id, resetAt),
     base44.asServiceRole.entities.GiftTransfer
       .filter({ sender_id: user.id }, '-created_date', MAX_RECORDS)
       .catch(() => []),
