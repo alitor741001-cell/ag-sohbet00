@@ -15,9 +15,8 @@ export default async function(req) {
 
     const me = await base44.asServiceRole.entities.User.get(user.id);
     const isMod = me.role === 'admin' || me.role === 'moderator';
-    const isOwner = room.owner_id === user.id;
-    const isRoomMod = (room.room_moderators || []).includes(user.id);
-    if (!isOwner && !isRoomMod && !isMod) {
+    const isParticipant = (room.participants || []).some((p) => p.user_id === user.id);
+    if (room.owner_id !== user.id && !isMod && !isParticipant) {
       return Response.json({ error: 'yetkisiz' }, { status: 403 });
     }
 
