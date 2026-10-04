@@ -50,7 +50,7 @@ export default function AdminRooms() {
   }, []);
 
   const log = async (action, target) => { await base44.entities.AdminLog.create({ admin_id: admin?.id, admin_name: admin?.username, action, target }).catch(() => {}); };
-  const close = async (r) => { await base44.entities.Room.update(r.id, { status: 'closed' }); await log('Oda kapatıldı', r.name); toast({ title: 'Kapatıldı' }); load(); };
+  const close = async (r) => { await base44.entities.Room.update(r.id, { status: 'closed', participants: [], recent_participants: [] }); await log('Oda kapatıldı', r.name); toast({ title: 'Kapatıldı' }); load(); };
   const toggleChat = async (r) => { await base44.entities.Room.update(r.id, { chat_enabled: !r.chat_enabled }); await log('Sohbet durumu değişti', r.name); load(); };
   const toggleVoice = async (r) => { await base44.entities.Room.update(r.id, { voice_enabled: !r.voice_enabled }); await log('Sesli sohbet durumu değişti', r.name); load(); };
   const reopen = async (r) => { await base44.entities.Room.update(r.id, { status: 'active' }); toast({ title: 'Oda açıldı' }); load(); };

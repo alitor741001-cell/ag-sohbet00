@@ -304,7 +304,11 @@ export default async function(req) {
         await base44.asServiceRole.entities.Room.delete(room_id).catch(() => {});
         return Response.json({ ok: true });
       }
-      if (participants.length === 0) update.is_playing = false;
+      if (participants.length === 0) {
+        update.is_playing = false;
+        // Oda kapandı: izleyici listesi ve son katılanlar sıfırlanır.
+        update.recent_participants = [];
+      }
       await base44.asServiceRole.entities.Room.update(room_id, update);
       return Response.json({ ok: true });
     }
@@ -516,7 +520,8 @@ export default async function(req) {
     const leaveScores = scoresAfterRoomLeave(room, user.id);
     if (participants.length === 0) {
       if (room.is_personal) {
-        await base44.asServiceRole.entities.Room.update(room_id, { participants, recent_participants: recentParticipants, is_playing: false, ...(leaveScores ? { number_scores: leaveScores } : {}) });
+        // Oda kapandı: izleyici listesi ve son katılanlar sıfırlanır.
+        await base44.asServiceRole.entities.Room.update(room_id, { participants, recent_participants: [], is_playing: false, ...(leaveScores ? { number_scores: leaveScores } : {}) });
       } else {
         // Odada kimse kalmadı: oda ve sohbeti tamamen silinir.
         await base44.asServiceRole.entities.RoomMessage.deleteMany({ room_id }).catch(() => {});
