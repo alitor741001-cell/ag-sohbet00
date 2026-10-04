@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ChevronLeft, Gift, Loader2, Send, Sparkles, UserCheck } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
-import { Image } from '@/components/ui/image';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
+import ProfileFrame from '@/components/ProfileFrame';
+import UserStatusBadges from '@/components/status/UserStatusBadges';
 import { vipStyle } from '@/lib/userLevels';
 
 /**
@@ -20,6 +21,7 @@ export default function VipBagPanel({ open, onClose, onChanged }) {
   const [sendItemId, setSendItemId] = useState('');
   const [memberId, setMemberId] = useState('');
   const [person, setPerson] = useState(null);
+  const [profile, setProfile] = useState(null);
   const [lookupError, setLookupError] = useState('');
 
   const load = useCallback(async () => {
@@ -73,7 +75,21 @@ export default function VipBagPanel({ open, onClose, onChanged }) {
     return () => { cancelled = true; clearTimeout(timer); };
   }, [memberId, open]);
 
+  // Alıcının profili (çerçevesi, rozetleri ve ismi) numara yazıldığında altında görünür.
+  useEffect(() => {
+    if (!person?.user_id) {
+      setProfile(null);
+      return undefined;
+    }
+    let cancelled = false;
+    base44.functions.invoke('user-profile', { user_id: person.user_id })
+      .then((response) => { if (!cancelled) setProfile(response.data || null); })
+      .catch(() => { if (!cancelled) setProfile(null); });
+    return () => { cancelled = true; };
+  }, [person?.user_id]);
+
   const activeItem = items.find((item) => item.id === sendItemId) || null;
+  const recipientName = profile?.username || profile?.full_name || person?.name || '';
 
   const useItem = async () => {
     if (!confirm?.item) return;
@@ -198,15 +214,30 @@ export default function VipBagPanel({ open, onClose, onChanged }) {
                           className="h-11 w-full rounded-xl bg-white/10 px-3 text-sm font-semibold text-white outline-none placeholder:text-white/35"
                         />
                         {person && (
-                          <div className="mt-2 flex items-center gap-2.5 rounded-xl bg-white/5 px-2.5 py-2">
-                            <span className="h-9 w-9 shrink-0 overflow-hidden rounded-full border border-white/10 bg-white/10">
-                              {person.avatar
-                                ? <Image src={person.avatar} alt={person.name} className="h-full w-full" fittingType="fill" draggable={false} />
-                                : <span className="flex h-full w-full items-center justify-center text-xs font-bold text-white/70">{String(person.name || '?').trim().charAt(0)}</span>}
-                            </span>
-                            <div className="min-w-0 flex-1">
-                              <p className="truncate text-sm font-bold text-white">{person.name}</p>
-                              <p className="text-[10px] text-white/45">Üye No: {person.member_id || '—'}</p>
+                          <div className="mt-2 rounded-xl bg-white/5 p-2.5">
+                            <p className="text-[10px] font-semibold text-white/45">Alıcı</p>
+                            <div className="mt-1.5 flex items-center gap-2.5">
+                              <ProfileFrame
+                                frame={profile?.profile_frame || ''}
+                                avatar={profile?.avatar || person.avatar}
+                                name={recipientName}
+                                size="sm"
+                                frameScale={profile?.profile_frame_scale || 100}
+                              />
+                              <div className="min-w-0 flex-1">
+                                <p className="truncate text-sm font-bold text-white">{recipientName}</p>
+                                <p className="text-[10px] text-white/45">Üye No: {person.member_id || '—'}</p>
+                                <UserStatusBadges
+                                  className="justify-start"
+                                  n_level={profile?.n_level || 0}
+                                  vip_level={profile?.vip_level || 0}
+                                  vip_days_left={profile?.vip_days_left || 0}
+                                  gift_sent_level={profile?.gift_sent_level || 0}
+                                  gift_sent_tier={profile?.gift_sent_tier || 'green'}
+                                  gift_received_level={profile?.gift_received_level || 0}
+                                  gift_received_tier={profile?.gift_received_tier || 'green'}
+                                />
+                              </div>
                             </div>
                           </div>
                         )}
@@ -255,7 +286,7 @@ export default function VipBagPanel({ open, onClose, onChanged }) {
             onOpenChange={(next) => { if (!next) setConfirm(null); }}
             title={confirm?.kind === 'send' ? 'VIP gönderimi' : 'VIP kullanımı'}
             description={confirm?.kind === 'send'
-              ? `VIP${confirm?.item?.level} (${confirm?.item?.duration_label}) ${person?.name || 'alıcıya'} gönderilecek ve anında aktif olacak.`
+              ? `VIP${confirm?.item?.level} (${confirm?.item?.duration_label}) ${recipientName || 'alıcıya'} gönderilecek ve anında aktif olacak.`
               : `VIP${confirm?.item?.level} (${confirm?.item?.duration_label}) profiline işlenecek; süre kalan günlerinin üstüne eklenecek.`}
             confirmText="Onayla"
             onConfirm={confirm?.kind === 'send' ? sendItem : useItem}
