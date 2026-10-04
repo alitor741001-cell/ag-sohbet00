@@ -26,6 +26,7 @@ export default function GiftBoxPanel({ open, onClose }) {
   const [withdrawId, setWithdrawId] = useState('');
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [confirmKind, setConfirmKind] = useState(null);
+  const [convertReq, setConvertReq] = useState(null);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState('');
 
@@ -51,6 +52,7 @@ export default function GiftBoxPanel({ open, onClose }) {
     setWithdrawId('');
     setWithdrawAmount('');
     setConfirmKind(null);
+    setConvertReq(null);
     load();
   }, [open, load]);
 
@@ -68,7 +70,8 @@ export default function GiftBoxPanel({ open, onClose }) {
       try {
         const response = await base44.functions.invoke('gift-box', { action: 'lookup', member_id: query });
         if (cancelled) return;
-        setPerson(response.data?.person || null);
+        const data = response.data || {};
+        setPerson(data.person ? { ...data.person, self: !!data.self } : null);
         setLookupError('');
       } catch (error) {
         if (cancelled) return;
@@ -82,11 +85,19 @@ export default function GiftBoxPanel({ open, onClose }) {
   const amount = () => Math.round((Number(String(dollars).replace(',', '.')) || 0) * 100) / 100;
 
   // Gönderimden önce her seferinde iptal/onayla uyarısı görünür.
+  // Kendi kimlik numaran girildiyse gönderim yerine dolar coine çevrilir.
   const send = () => {
     if (!person) return;
     const value = amount();
     if (value < MIN_DOLLARS) { setNotice(`En az ${MIN_DOLLARS} dolar gönderilebilir.`); return; }
     setNotice('');
+    if (person.self) {
+      const max = Number(summary?.available_dollars) || 0;
+      if (value > max) { setNotice(`En fazla ${max.toLocaleString('tr-TR')} $ bozdurabilirsin.`); return; }
+      setConvertReq({ member_id: person.member_id || memberId.trim(), dollars: value });
+      setConfirmKind('convert');
+      return;
+    }
     setConfirmKind('send');
   };
 
@@ -156,22 +167,26 @@ export default function GiftBoxPanel({ open, onClose }) {
     if (value < MIN_DOLLARS) { setNotice(`En az ${MIN_DOLLARS} dolar bozdurabilirsin.`); return; }
     if (value > max) { setNotice(`En fazla ${max.toLocaleString('tr-TR')} $ bozdurabilirsin.`); return; }
     setNotice('');
+    setConvertReq({ member_id: withdrawId.trim(), dollars: value });
     setConfirmKind('convert');
   };
 
   const performConvert = async () => {
-    const value = convertDollars();
+    const request = convertReq || { member_id: withdrawId.trim(), dollars: convertDollars() };
+    const value = request.dollars;
     setBusy(true);
     setNotice('');
     try {
       const response = await base44.functions.invoke('gift-box', {
         action: 'convert',
-        member_id: withdrawId.trim(),
+        member_id: request.member_id,
         dollars: value,
       });
       const data = response.data || {};
       if (data.balance) setSummary(data.balance);
       setWithdrawAmount('');
+      setPerson(null);
+      setMemberId('');
       setNotice(`${value.toFixed(2)} $ bozduruldu — hesabına ${formatCoins(data.coins || 0)} coin geçti.`);
     } catch (error) {
       setNotice(error?.response?.data?.error || 'Bozdurulamadı.');
@@ -274,12 +289,13 @@ export default function GiftBoxPanel({ open, onClose }) {
               className="flex h-11 items-center gap-1.5 rounded-xl bg-primary px-4 text-sm font-bold text-primary-foreground transition-transform active:scale-95 disabled:opacity-40"
             >
               {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-              Gönder
+              {person?.self ? "Coin'e çevir" : 'Gönder'}
             </button>
           </div>
           <p className="mt-1.5 text-[10px] text-white/45">
-            Yalnızca dolar tutarı girilir — 1 $ = 5.000 coin olarak alıcıya geçer
-            {amount() > 0 ? ` • alıcıya ${formatCoins(amount() * COINS_PER_DOLLAR)} coin` : ''}.
+            {person?.self
+              ? `Kendi numaranı girdin — tutar 1 $ = 5.000 coin olarak senin hesabına coin geçer${amount() > 0 ? ` (${formatCoins(amount() * COINS_PER_DOLLAR)} coin)` : ''}.`
+              : `Yalnızca dolar tutarı girilir — 1 $ = 5.000 coin olarak alıcıya geçer${amount() > 0 ? ` • alıcıya ${formatCoins(amount() * COINS_PER_DOLLAR)} coin` : ''}.`}
           </p>
         </div>
 
@@ -339,7 +355,7 @@ export default function GiftBoxPanel({ open, onClose }) {
           description={confirmKind === 'withdraw'
             ? `${withdrawDollars().toFixed(2)} $ (${formatTl(withdrawDollars() * tlRate)}) için çekim talebi oluşturulacak. Kimlik numarası: ${withdrawId.trim()}.`
             : confirmKind === 'convert'
-              ? `${convertDollars().toFixed(2)} $ bozdurulacak ve hesabına ${formatCoins(convertDollars() * COINS_PER_DOLLAR)} coin geçecek. Kimlik numarası: ${withdrawId.trim()}.`
+              ? `${Number(convertReq?.dollars || 0).toFixed(2)} $ bozdurulacak ve hesabına ${formatCoins(Number(convertReq?.dollars || 0) * COINS_PER_DOLLAR)} coin geçecek. Kimlik numarası: ${convertReq?.member_id || '—'}.`
               : person
                 ? `${amount().toFixed(2)} $ (${formatTl(amount() * tlRate)}) ${person.name} hesabına gönderilecek ve karşı tarafa ${formatCoins(amount() * COINS_PER_DOLLAR)} coin geçecek.`
                 : ''}

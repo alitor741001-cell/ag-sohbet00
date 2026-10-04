@@ -22,6 +22,15 @@ export default async function (req: Request): Promise<Response> {
     const displayName = me?.username || me?.full_name || user.full_name || 'Kullanıcı';
     const account = { id: user.id, role: me?.role || user.role, full_name: user.full_name };
 
+    // Girilen numara kişinin kendi hesabıyla eşleşiyor mu? (boşluk/noktalama farkı göz ardı edilir)
+    const ownIds = [me?.member_id, me?.payment_reference, user?.member_id, user?.payment_reference]
+      .map((value) => String(value ?? '').replace(/\D/g, ''))
+      .filter(Boolean);
+    const isOwnId = (value: any) => {
+      const digits = String(value ?? '').replace(/\D/g, '');
+      return !!digits && ownIds.includes(digits);
+    };
+
     // Hediye kutusu durumu
     if (action === 'summary') {
       const summary = await giftBoxSummary(base44, account);
@@ -112,9 +121,10 @@ export default async function (req: Request): Promise<Response> {
     if (action === 'lookup') {
       const target = await findByMemberId(base44, body?.member_id);
       if (!target) return Response.json({ error: 'Bu numaraya ait üye bulunamadı.' }, { status: 404 });
-      if (target.id === user.id) return Response.json({ error: 'Kendi numaranı girdin.' }, { status: 400 });
+      // Kendi numarası girildiğinde arama hata vermez: bu numarayla gönderim yerine dolar coine çevrilir.
       return Response.json({
         ok: true,
+        self: target.id === user.id,
         person: {
           user_id: target.id,
           name: target.username || target.full_name || 'Kullanıcı',
@@ -190,9 +200,11 @@ export default async function (req: Request): Promise<Response> {
 
       const memberId = String(body?.member_id || '').trim();
       if (!memberId) return Response.json({ error: 'Kimlik numaranı girmeden bozduramazsın.' }, { status: 400 });
-      const owner = await findByMemberId(base44, memberId);
-      if (!owner || owner.id !== user.id) {
-        return Response.json({ error: 'Kimlik numarası hesabınla eşleşmiyor.' }, { status: 400 });
+      if (!isOwnId(memberId)) {
+        const owner = await findByMemberId(base44, memberId);
+        if (!owner || owner.id !== user.id) {
+          return Response.json({ error: 'Kimlik numarası hesabınla eşleşmiyor.' }, { status: 400 });
+        }
       }
 
       const dollars = Math.round((Number(body?.dollars) || 0) * 100) / 100;
@@ -240,9 +252,11 @@ export default async function (req: Request): Promise<Response> {
 
       const memberId = String(body?.member_id || '').trim();
       if (!memberId) return Response.json({ error: 'Kimlik numaranı girmeden bakiye çekemezsin.' }, { status: 400 });
-      const owner = await findByMemberId(base44, memberId);
-      if (!owner || owner.id !== user.id) {
-        return Response.json({ error: 'Kimlik numarası hesabınla eşleşmiyor.' }, { status: 400 });
+      if (!isOwnId(memberId)) {
+        const owner = await findByMemberId(base44, memberId);
+        if (!owner || owner.id !== user.id) {
+          return Response.json({ error: 'Kimlik numarası hesabınla eşleşmiyor.' }, { status: 400 });
+        }
       }
 
       const requested = Math.round((Number(body?.dollars) || 0) * 100) / 100;
