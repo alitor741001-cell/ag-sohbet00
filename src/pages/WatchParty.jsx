@@ -11,9 +11,6 @@ import { Mic, MicOff, Crown, X, Eye, ArrowLeft, UserMinus, MessageSquare, Trash2
 import { Image } from '@/components/ui/image';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import RoomSettingsMenu from '@/components/player/RoomSettingsMenu';
-import RoomVoiceStage from '@/components/player/RoomVoiceStage';
-import RoomVoiceControlBar from '@/components/player/RoomVoiceControlBar';
-import GamePanel from '@/components/games/GamePanel';
 
 
 import LiveKitDebugPanel from '@/components/player/LiveKitDebugPanel';
@@ -50,7 +47,6 @@ export default function WatchParty() {
   const [showViewers, setShowViewers] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [moviePickerOpen, setMoviePickerOpen] = useState(false);
-  const [gamesOpen, setGamesOpen] = useState(false);
   const [needPassword, setNeedPassword] = useState(false);
   const [pwInput, setPwInput] = useState('');
   const [pwSetInput, setPwSetInput] = useState('');
@@ -105,6 +101,12 @@ export default function WatchParty() {
   const canMod = isOwner || isMod || (room?.room_moderators || []).includes(user?.id);
   // Sesli sohbet alanı açıkken film yerine sesli sohbet bölümü gösterilir.
   const voiceMode = room?.voice_mode === true;
+
+  // Sesli mod seçildiğinde oda, tüm özellikleriyle sesli oda arayüzüne dönüşür.
+  useEffect(() => {
+    if (!voiceMode) return;
+    navigate(`/sesli-oda/${id}`, { replace: true });
+  }, [voiceMode, id, navigate]);
 
   useEffect(() => {
     if (ul || !user) return;
@@ -686,7 +688,7 @@ export default function WatchParty() {
         })()}
         <div className={`room-video-stage flex min-w-0 flex-1 items-center justify-center bg-black ${chatOpen || directOpen ? 'room-video-panel-open' : ''}`}>
           {voiceMode
-            ? <RoomVoiceStage participants={room.participants || []} voice={voice} userId={user?.id} viewerProfiles={viewerProfiles} />
+            ? <p className="p-6 text-center text-sm text-muted-foreground">Sesli sohbet alanı açılıyor…</p>
             : src ? <VideoPlayer src={src} title={room.movie_title} syncState={syncState} isOwner={canMod} isTimeSource={isOwner} onPlayPause={onPlayPause} onTimeUpdate={onTimeUpdate} onSeek={onSeek} onEnded={() => { if (isOwner) setMoviePickerOpen(true); }} fullscreenRef={playerWrapRef} watermark={user} suppressControls={chatOpen || directOpen || !!profileTarget} /> :
             <div className="text-muted-foreground text-sm p-6 text-center">Video kaynağı yok</div>}
         </div>
@@ -739,24 +741,6 @@ export default function WatchParty() {
         )}
         <RoomSettingsMenu open={showSettings} onClose={() => setShowSettings(false)} room={room} canMod={canMod} participants={room.participants || []} roomModerators={room.room_moderators || []} onAssignMod={assignMod} onRemoveMod={removeMod} roomName={roomNameEdit} setRoomName={setRoomNameEdit} onSaveName={saveRoomName} password={pwSetInput} setPassword={setPwSetInput} passwordOpen={showPwSet} setPasswordOpen={setShowPwSet} onVoice={toggleVoice} onChat={toggleChat} onHidden={toggleHidden} onPassword={() => savePassword()} onRemovePassword={() => setShowPwRemoveConfirm(true)} onUnban={unbanUser} onPickMovie={() => { setMoviePickerOpen(true); setShowSettings(false); }} onDeleteRoom={deleteRoom} onToggleApproval={toggleApproval} />
       </div>
-
-      {voiceMode && !chatOpen && !directOpen && !showSettings && (
-        <RoomVoiceControlBar
-          micActive={!voice.muted}
-          micDisabled={voice.remoteMuted || voice.requesting || voice.connectionState !== 'connected' || !room.voice_enabled}
-          deafened={voice.deafened}
-          chatOpen={chatOpen}
-          gamesOpen={gamesOpen}
-          unread={unread}
-          onToggleMic={voice.toggleMute}
-          onToggleSpeaker={voice.toggleDeafen}
-          onOpenGames={() => setGamesOpen(true)}
-          onToggleChat={() => setChatOpen(true)}
-          onOpenSettings={() => { setShowSettings(true); setShowViewers(false); }}
-        />
-      )}
-
-      <GamePanel open={gamesOpen} onClose={() => setGamesOpen(false)} roomId={id} />
 
       <LiveKitDebugPanel voice={voice} />
 

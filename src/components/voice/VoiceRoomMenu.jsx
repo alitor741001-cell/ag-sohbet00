@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Armchair, Eraser, Eye, EyeOff, Hash, Lock, MessageSquareOff, ScrollText, Shield, Unlock, UserPlus } from 'lucide-react';
+import { Armchair, Eraser, Eye, EyeOff, Film, Hash, Lock, MessageSquareOff, ScrollText, Shield, Unlock, UserPlus } from 'lucide-react';
 import SeatCountPicker from '@/components/voice/SeatCountPicker';
 import VoiceMenuTile from '@/components/voice/VoiceMenuTile';
 import VoiceSheet from '@/components/voice/VoiceSheet';
@@ -12,7 +12,7 @@ const Panel = ({ children, hint }) => (
 );
 
 /** "…" menüsü: yuvarlak ikon ızgarası — kilit, gizlilik, koltuk, sayaç, sohbet temizleme, sohbet yasağı ve kayıt defteri. */
-export default function VoiceRoomMenu({ open, onClose, room, userId, participants = [], isOwner, canMod, onSeatCount, onSetPassword, onToggleHidden, onToggleMod, onInvite, boardActive, onToggleBoard, onClearChat, onToggleChatBan, onOpenLog }) {
+export default function VoiceRoomMenu({ open, onClose, room, userId, participants = [], isOwner, canMod, onSeatCount, onSetPassword, onToggleHidden, onToggleMod, onInvite, boardActive, onToggleBoard, onClearChat, onToggleChatBan, onOpenLog, onExitVoiceMode }) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [panel, setPanel] = useState(null);
@@ -62,6 +62,9 @@ export default function VoiceRoomMenu({ open, onClose, room, userId, participant
             label="Davet et"
             onClick={() => { onClose(); onInvite(); }}
           />
+        )}
+        {canMod && room?.room_type === 'watch' && (
+          <VoiceMenuTile icon={Film} label="Film izlemeye dön" onClick={() => { onClose(); onExitVoiceMode?.(); }} />
         )}
         {canMod && manageTiles.map((item) => (
           <VoiceMenuTile

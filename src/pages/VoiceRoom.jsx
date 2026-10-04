@@ -177,7 +177,8 @@ export default function VoiceRoom() {
         if (cancelled) return;
         const record = response.data?.room;
         if (!record) { setNotice('Oda bulunamadı.'); return; }
-        if (record.room_type !== 'voice') { navigate(`/oda/${id}`, { replace: true }); return; }
+        // Sesli odalar ve sesli moda alınmış film odaları bu arayüzü kullanır.
+        if (record.room_type !== 'voice' && record.voice_mode !== true) { navigate(`/oda/${id}`, { replace: true }); return; }
         setRoom(record);
         const alreadyInside = (record.participants || []).some((person) => person.user_id === user?.id);
         if (alreadyInside) {
@@ -194,6 +195,13 @@ export default function VoiceRoom() {
     load();
     return () => { cancelled = true; };
   }, [id, user?.id, navigate]);
+
+  // Film odasında sesli mod kapatılınca koltuk korunarak film odasına dönülür.
+  useEffect(() => {
+    if (!room || room.room_type === 'voice' || room.voice_mode === true) return;
+    keepSeatRef.current = true;
+    navigate(`/oda/${id}`, { replace: true });
+  }, [room, id, navigate]);
 
   const attemptJoin = useCallback(async (pw = '') => {
     try {
@@ -414,6 +422,16 @@ export default function VoiceRoom() {
       });
     }
   };
+
+  // Film odasındayken sesli modu kapatıp film arayüzüne dönmeyi sağlar.
+  const exitVoiceMode = useCallback(async () => {
+    try {
+      await base44.functions.invoke('room-presence', { action: 'toggle-voice', room_id: id });
+      toast({ title: 'Film odasına dönülüyor' });
+    } catch (error) {
+      toast({ title: 'İşlem başarısız', description: error?.response?.data?.error || error.message, variant: 'destructive' });
+    }
+  }, [id, toast]);
 
   const handleToggleMod = async (targetId, makeMod) => {
     try {
@@ -770,6 +788,7 @@ export default function VoiceRoom() {
         onClearChat={clearChat}
         onToggleChatBan={toggleChatBan}
         onOpenLog={() => setLogOpen(true)}
+        onExitVoiceMode={room?.room_type === 'watch' ? exitVoiceMode : null}
       />
 
       <RoomLogSheet
