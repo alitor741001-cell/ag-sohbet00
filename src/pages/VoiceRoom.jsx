@@ -405,14 +405,21 @@ export default function VoiceRoom() {
     navigate(`/kullanici/${userId}`);
   };
 
+  // Kendi profil kartımdaki "Profili gör": kişisel profil sayfası açılır, oda ve koltuk korunur.
+  const openSelfProfile = () => {
+    setProfileUserId(null);
+    keepSeatRef.current = true;
+    navigate('/profil');
+  };
+
   // Dolu koltuk profil kartını, boş koltuk beyaz koltuk menüsünü açar.
   const handleSeatPress = (index) => {
     const seat = seats[index];
     if (seat?.user_id) {
       // Hediye tahtası açıkken dokunma, alıcı seçimini değiştirir.
       if (giftOpen) { toggleGiftPerson(seat.user_id); return; }
-      // Kendi koltuğum: gizli modda olsa bile koltuktan inme menüsü açılır.
-      if (seat.user_id === user?.id) { setSeatIndex(index); return; }
+      // Kendi koltuğum (gizli modda da): benim profil kartım açılır, koltuktan inme oradan yapılır.
+      if (seat.user_id === user?.id) { setProfileUserId(seat.user_id); return; }
       // Gizli kullanıcıda da profil açılır — kimliği yine gösterilmez.
       setProfileUserId(seat.user_id);
       return;
@@ -799,6 +806,7 @@ export default function VoiceRoom() {
       onClick: profileSelf ? handleMic : () => toggleMuteFor(profileTarget),
     },
     ...(profileSelf && seated ? [{ key: 'stand', icon: Armchair, label: 'Ayağa kalk', onClick: handleProfileSeat }] : []),
+    ...(profileSelf ? [{ key: 'view-self', icon: UserRound, label: 'Profili gör', onClick: openSelfProfile }] : []),
     ...(!profileSelf && (canKick || (canMod && profileHidden)) && profileSeat ? [{ key: 'seat-kick', icon: Armchair, label: 'Koltuktan indir', onClick: handleProfileSeat }] : []),
     ...(!profileSelf ? [{ key: 'invite', icon: UserPlus, label: 'Davet et', disabled: !canMod && !seated, onClick: () => { const target = profileTarget; setProfileUserId(null); inviteToSeat(target); } }] : []),
     ...(!profileSelf ? [{ key: 'chat', icon: MessageSquare, label: 'Mesaj', onClick: () => { setDmUserId(profileTarget); setProfileUserId(null); } }] : []),
