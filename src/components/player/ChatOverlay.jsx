@@ -8,6 +8,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { Image } from '@/components/ui/image';
 
 import useMessageProfiles from '@/hooks/useMessageProfiles';
+import useRoomLevels from '@/hooks/useRoomLevels';
 import { mergeMessages, upsertMessage } from '@/lib/realtimeMessages';
 import { parseRoleMetadata, parseFrameMetadata } from '@/lib/roles';
 import RoomChatMessage from '@/components/player/RoomChatMessage';
@@ -32,6 +33,9 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
   const [lightbox, setLightbox] = useState(null);
   const [showAutoDeleteMenu, setShowAutoDeleteMenu] = useState(false);
   const [msgFilter, setMsgFilter] = useState('all');
+  // İzleyici listesindeki kişilerin seviye rozetleri için seviyeler çekilir.
+  const levelUserIds = [...participants.map((participant) => participant.user_id), ...recentParticipants.map((participant) => participant.user_id)];
+  const { levels: roomLevels } = useRoomLevels(levelUserIds);
   const [blockedUsers, setBlockedUsers] = useState(user?.blocked_users || []);
   useEffect(() => { setBlockedUsers(user?.blocked_users || []); }, [user?.blocked_users]);
   const scrollRef = useRef(null);
@@ -294,7 +298,7 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
           ))}
           </div>
           ) : msgFilter === 'izleyici' ? (
-          <ParticipantHistoryPanel participants={participants} recentParticipants={recentParticipants} profiles={viewerProfiles} presenceMap={presenceMap} ownerId={ownerId} onSelect={onProfileCard} />
+          <ParticipantHistoryPanel participants={participants} recentParticipants={recentParticipants} profiles={viewerProfiles} presenceMap={presenceMap} roomLevels={roomLevels} ownerId={ownerId} onSelect={onProfileCard} />
           ) : msgFilter === 'yetkililer' ? (
           <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-1 bg-black">
           {roomMods.length === 0 ? <p className="text-center text-sm text-[#888] py-8">Henüz yetkili yok.</p> :

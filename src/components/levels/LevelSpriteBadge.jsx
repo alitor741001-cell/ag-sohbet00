@@ -1,9 +1,10 @@
 import { Image } from '@/components/ui/image';
 import { LEVEL_BADGE_SPRITE, getLevelBadgeFrame } from '@/lib/levelBadgeSprite';
 
-export default function LevelSpriteBadge({ level, profile = false }) {
+export default function LevelSpriteBadge({ level, profile = false, compact = false }) {
   const frame = getLevelBadgeFrame(level);
-  const scale = profile ? 0.92 : 0.56;
+  // compact: listelerdeki dar satırlarda kullanılan küçük rozet ölçüsü.
+  const scale = compact ? 0.42 : profile ? 0.92 : 0.56;
   const width = Math.round(frame.width * scale);
   const height = Math.round(frame.height * scale);
 
