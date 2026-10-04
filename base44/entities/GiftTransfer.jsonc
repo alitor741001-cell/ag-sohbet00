@@ -38,6 +38,14 @@
       "type": "number",
       "default": 0
     },
+    "tl_amount": {
+      "type": "number",
+      "default": 0
+    },
+    "rate": {
+      "type": "number",
+      "default": 0
+    },
     "coins": {
       "type": "number",
       "default": 0

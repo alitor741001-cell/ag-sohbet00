@@ -2,6 +2,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import { rateLimit, safeErrorResponse } from '../../shared/security.ts';
 import { ensureGiftWallet, giftBalance } from '../../shared/giftWallet.ts';
 import { COINS_PER_DOLLAR, findByMemberId, giftBoxSummary } from '../../shared/giftBox.ts';
+import { tlFromDollars } from '../../shared/exchangeRate.ts';
 import { upsertNotification } from '../../shared/upsertNotification.ts';
 
 const ACTIONS = ['summary', 'lookup', 'send', 'withdraw'];
@@ -113,6 +114,8 @@ export default async function (req: Request): Promise<Response> {
         return Response.json({ error: 'Çekilebilir bakiyeden fazlasını çekemezsin.' }, { status: 400 });
       }
 
+      const tlAmount = tlFromDollars(requested, summary.tl_rate);
+
       await base44.asServiceRole.entities.GiftTransfer.create({
         kind: 'withdraw',
         status: 'pending',
@@ -122,6 +125,8 @@ export default async function (req: Request): Promise<Response> {
         recipient_name: '',
         dollars: requested,
         coins: 0,
+        tl_amount: tlAmount,
+        rate: summary.tl_rate,
       });
 
       const admins = await base44.asServiceRole.entities.User
@@ -131,7 +136,7 @@ export default async function (req: Request): Promise<Response> {
         user_id: admin.id,
         title: 'Çekim talebi',
         type: 'gift_box_withdraw:' + user.id,
-        body: `${displayName} ${requested.toFixed(2)} $ çekim talebi oluşturdu.`,
+        body: `${displayName} ${requested.toFixed(2)} $ (${tlAmount.toFixed(2)} ₺) çekim talebi oluşturdu.`,
         link: '/admin',
         ref_id: user.id,
       })));
@@ -139,6 +144,7 @@ export default async function (req: Request): Promise<Response> {
       return Response.json({
         ok: true,
         dollars: requested,
+        tl: tlAmount,
         balance: await giftBoxSummary(base44, account),
       });
     }

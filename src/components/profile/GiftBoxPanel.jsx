@@ -7,9 +7,12 @@ import { formatScore } from '@/components/voice/scoreTier';
 
 const MIN_DOLLARS = 1;
 
+const formatTl = (value) => `${(Number(value) || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺`;
+
 /**
- * Hediye kutusu: hediyelerden biriken dolar bakiyesi, kimlik numarası,
+ * Hediye kutusu: hediyelerden biriken bakiye (TL), kimlik numarası,
  * kimlik numarasıyla başkasına gönderim ve bakiye çekme talebi.
+ * Bakiye, piyasa kuru eksi 2 TL üzerinden otomatik hesaplanır.
  */
 export default function GiftBoxPanel({ open, onClose }) {
   const [summary, setSummary] = useState(null);
@@ -84,7 +87,7 @@ export default function GiftBoxPanel({ open, onClose }) {
       });
       const data = response.data || {};
       if (data.balance) setSummary(data.balance);
-      setNotice(`${value.toFixed(2)} $ gönderildi — ${formatCoins(data.coins || 0)} coin ${person.name} hesabına geçti.`);
+      setNotice(`${value.toFixed(2)} $ (${formatTl(value * tlRate)}) gönderildi — ${formatCoins(data.coins || 0)} coin ${person.name} hesabına geçti.`);
       setPerson(null);
       setMemberId('');
     } catch (error) {
@@ -101,7 +104,7 @@ export default function GiftBoxPanel({ open, onClose }) {
       const response = await base44.functions.invoke('gift-box', { action: 'withdraw' });
       const data = response.data || {};
       if (data.balance) setSummary(data.balance);
-      setNotice('Çekim talebin alındı — onaydan sonra ödemen yapılır.');
+      setNotice(`Çekim talebin alındı — ${formatTl(data.tl || availableTl)} onaydan sonra ödenir.`);
     } catch (error) {
       setNotice(error?.response?.data?.error || 'Talep oluşturulamadı.');
     } finally {
@@ -112,6 +115,9 @@ export default function GiftBoxPanel({ open, onClose }) {
   if (!open) return null;
 
   const available = Number(summary?.available_dollars) || 0;
+  const availableTl = Number(summary?.available_tl) || 0;
+  const tlRate = Number(summary?.tl_rate) || 0;
+  const marketRate = Number(summary?.market_rate) || 0;
 
   return (
     <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/70 p-4" onClick={onClose}>
@@ -129,15 +135,17 @@ export default function GiftBoxPanel({ open, onClose }) {
           </button>
         </div>
 
-        {/* Bakiye */}
+        {/* Bakiye — TL olarak, piyasa kuru eksi 2 TL */}
         <div className="rounded-2xl bg-white px-3.5 py-3">
           <div className="flex items-center gap-2.5">
             <Gem className="h-6 w-6 shrink-0 text-sky-400" />
             <div className="min-w-0 flex-1">
               <p className="text-lg font-bold tabular-nums text-[#1F2024]">
-                {loading && !summary ? '…' : `${available.toFixed(2).replace('.', ',')} $`}
+                {loading && !summary ? '…' : formatTl(availableTl)}
               </p>
-              <p className="text-[10px] font-semibold text-[#6b7280]">Kullanılabilir bakiye</p>
+              <p className="text-[10px] font-semibold text-[#6b7280]">
+                Kullanılabilir bakiye{summary ? ` (${available.toFixed(2).replace('.', ',')} $)` : ''}
+              </p>
             </div>
             <div className="shrink-0 text-right">
               <p className="text-xs font-bold tabular-nums text-[#1F2024]">{formatScore(summary?.received_score || 0)} 💎</p>
@@ -145,6 +153,9 @@ export default function GiftBoxPanel({ open, onClose }) {
             </div>
           </div>
           <p className="mt-2 border-t border-black/10 pt-2 text-[10px] leading-snug text-[#6b7280]">
+            1 $ = {formatTl(tlRate)} (piyasa {formatTl(marketRate)} − 2,00 ₺). Kur her 15 dakikada bir otomatik güncellenir.
+          </p>
+          <p className="mt-1 text-[10px] leading-snug text-[#6b7280]">
             Alınan hediyeler: 200K'ya kadar 10K = 1 puan (20 puan = 1 $), sonrasında her 17K = 1 $.
           </p>
         </div>
@@ -201,7 +212,10 @@ export default function GiftBoxPanel({ open, onClose }) {
               Gönder
             </button>
           </div>
-          <p className="mt-1.5 text-[10px] text-white/45">1 $ gönderdiğinde karşı tarafa 5.000 coin geçer.</p>
+          <p className="mt-1.5 text-[10px] text-white/45">
+            1 $ gönderdiğinde karşı tarafa 5.000 coin geçer
+            {amount() > 0 && tlRate > 0 ? ` • bakiyenden ${formatTl(amount() * tlRate)} düşer` : ''}.
+          </p>
         </div>
 
         <button
@@ -210,7 +224,7 @@ export default function GiftBoxPanel({ open, onClose }) {
           disabled={busy || available <= 0}
           className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 text-sm font-bold text-white transition-transform active:scale-95 disabled:opacity-40"
         >
-          <Wallet className="h-4 w-4" /> Bakiyeyi çek
+          <Wallet className="h-4 w-4" /> Bakiyeyi çek{availableTl > 0 ? ` (${formatTl(availableTl)})` : ''}
         </button>
 
         {notice && <p className="mt-2 text-center text-[11px] font-semibold text-emerald-400">{notice}</p>}
