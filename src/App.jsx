@@ -13,7 +13,6 @@ import LoginRedirect from '@/components/LoginRedirect';
 import AppLayout from '@/components/layout/AppLayout';
 import StartupSplash from '@/components/layout/StartupSplash';
 import { ThemeProvider } from '@/lib/ThemeContext';
-import RoomLevelProvider from '@/components/levels/RoomLevelProvider';
 import XpProvider from '@/components/xp/XpProvider';
 import DirectCallProvider from '@/lib/DirectCallContext';
 import DirectCallOverlay from '@/components/friends/DirectCallOverlay';
@@ -169,7 +168,6 @@ function App() {
     <AuthProvider>
       <QueryClientProvider client={queryClientInstance}>
         <FrameCatalogProvider>
-        <RoomLevelProvider>
         <XpProvider>
         <ThemeProvider>
           <DirectCallProvider>
@@ -184,7 +182,6 @@ function App() {
           <Toaster />
         </ThemeProvider>
         </XpProvider>
-        </RoomLevelProvider>
         </FrameCatalogProvider>
       </QueryClientProvider>
     </AuthProvider>

@@ -5,8 +5,6 @@ import { useToast } from '@/components/ui/use-toast';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import UserBadge from '@/components/admin/UserBadge';
 import RoleLabelEditor from '@/components/admin/RoleLabelEditor';
-import RoomLevelManager from '@/components/admin/RoomLevelManager';
-import useRoomLevels from '@/hooks/useRoomLevels';
 
 
 const btn = 'px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap';
@@ -23,7 +21,6 @@ export default function AdminUsers({ pendingOnly = false }) {
   const [paidUserIds, setPaidUserIds] = useState(new Set());
   const [onlineUsers, setOnlineUsers] = useState(new Set());
 
-  const { levels: roomLevels } = useRoomLevels(users.map((user) => user.id));
 
 
   const filtered = users.filter((u) => {
@@ -164,7 +161,6 @@ export default function AdminUsers({ pendingOnly = false }) {
                 {paidUserIds.has(u.id) && <span className="text-xs px-2 py-1 rounded bg-green-500/20 text-green-400 font-semibold">ÖDENDİ</span>}
                 {onlineUsers.has(u.id) ? <span className="text-xs px-2 py-1 rounded bg-green-500/20 text-green-400">Online</span> : <span className="text-xs px-2 py-1 rounded bg-muted text-muted-foreground">Offline</span>}
                 {u.is_banned && <span className="text-xs px-2 py-1 rounded bg-red-500/20 text-red-400 font-semibold" title={u.ban_reason}>🚫 ENGELLİ</span>}
-                {!pendingOnly && <RoomLevelManager user={u} level={roomLevels[u.id]} onUpdated={load} />}
                 <div className="flex flex-wrap gap-1.5">
                 {!pendingOnly && <button onClick={() => setDetail(u)} className={`${btn} bg-secondary hover:bg-secondary/70`}>GÖRÜNTÜLE</button>}
                 {!isActive && paidUserIds.has(u.id) && <button onClick={() => approve(u)} className={`${btn} bg-green-500/20 text-green-400 hover:bg-green-500/30`}>AKTİF ET</button>}
@@ -187,7 +183,6 @@ export default function AdminUsers({ pendingOnly = false }) {
             <div className="mb-4"><UserBadge userId={detail.id} name={detail.username || detail.full_name || '?'} avatar={detail.avatar} memberId={detail.member_id} size="lg" displayRole={detail.display_role} customRole={detail.custom_role} profileFrame={detail.profile_frame} /></div>
             <div className="space-y-1.5 text-sm">
               <p><span className="text-muted-foreground">Kullanıcı adı:</span> {detail.username || detail.full_name || '-'}</p>
-              <p><span className="text-muted-foreground">Ortak oda seviyesi:</span> LVL {roomLevels[detail.id] || 1}</p>
               <p><span className="text-muted-foreground">Üye No:</span> {detail.member_id || '-'}</p>
               <p><span className="text-muted-foreground">Ödeme Referans No:</span> <span className="font-mono font-bold text-purple-400">{detail.payment_reference || '-'}</span></p>
               <p><span className="text-muted-foreground">E-posta:</span> {detail.email}</p>

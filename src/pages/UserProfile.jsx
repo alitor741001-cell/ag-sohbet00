@@ -10,8 +10,6 @@ import RoleBadge from '@/components/RoleBadge';
 import ProfileFrame from '@/components/ProfileFrame';
 import { getRoleInfo } from '@/lib/roles';
 import ProfileRoomActions from '@/components/profile/ProfileRoomActions';
-import useRoomLevels from '@/hooks/useRoomLevels';
-import RoomLevelBadge from '@/components/levels/RoomLevelBadge';
 import useXp from '@/hooks/useXp';
 import XpAvatar from '@/components/xp/XpAvatar';
 import XpStatsCard from '@/components/xp/XpStatsCard';
@@ -31,7 +29,6 @@ export default function UserProfile({ userId, roomIdOverride, onBack, onMessage,
   const [reportOpen, setReportOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState('');
-  const { levels: roomLevels } = useRoomLevels([id]);
   const xpStats = useXp([id])[id];
 
   useEffect(() => {
@@ -115,7 +112,6 @@ export default function UserProfile({ userId, roomIdOverride, onBack, onMessage,
           <h1 className="max-w-full text-2xl font-extrabold flex flex-wrap justify-center items-center gap-2 [overflow-wrap:anywhere]">{profile.title || profile.username || profile.full_name || 'Kullanıcı'} {(profile.role === 'admin' || profile.role === 'moderator') && <Crown className="w-5 h-5 text-amber-400" />}</h1>
           {getRoleInfo(profile).label && <div className="mt-1.5"><RoleBadge user={profile} size="md" /></div>}
           {['admin', 'moderator'].includes(profile.role) && <p className="mt-2 text-sm font-bold text-primary">{profile.role === 'admin' ? 'YÖNETİCİ' : 'MODERATÖR'}</p>}
-          <div className="mt-3"><RoomLevelBadge level={roomLevels[id]} profile /></div>
           <div className="mt-4 w-full"><XpStatsCard stats={xpStats} days={daysInApp(profile.created_date)} compact /></div>
           {profile.title && <p className="text-base font-semibold text-gradient mt-1">{profile.title}</p>}
           {profile.username && profile.username !== profile.title && <p className="text-sm text-muted-foreground">@{profile.username}</p>}

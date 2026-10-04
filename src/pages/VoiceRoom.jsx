@@ -107,6 +107,9 @@ export default function VoiceRoom() {
     [room?.seat_invites, user?.id]
   );
   const participants = useMemo(() => room?.participants || [], [room?.participants]);
+  // Gizli kullanıcıların takma adı → kimliği: yalnızca N/VIP rozetleri için kullanılır, kimlik gösterilmez.
+  const hiddenUsersByName = {};
+  participants.forEach((person) => { if (person?.user_id && isHiddenName(person.name)) hiddenUsersByName[person.name] = person.user_id; });
   const moderators = room?.room_moderators || [];
   const mySeatIndex = seats.findIndex((seat) => seat.user_id === user?.id);
   const seated = mySeatIndex >= 0;
@@ -898,6 +901,7 @@ export default function VoiceRoom() {
         ownerId={room?.owner_id}
         moderators={moderators}
         onOpenProfile={openProfile}
+        hiddenUsers={hiddenUsersByName}
         bigGiftNotice={bigGiftNotice}
         onOpenBigGiftRoom={() => {
           const target = bigGiftNotice?.room_id;

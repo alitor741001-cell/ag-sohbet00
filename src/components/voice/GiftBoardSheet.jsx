@@ -2,10 +2,8 @@ import { useMemo, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import VoiceBottomSheet from '@/components/voice/VoiceBottomSheet';
 import GiftRankFrame from '@/components/voice/GiftRankFrame';
-import RoomLevelBadge from '@/components/levels/RoomLevelBadge';
 import RoleBadge from '@/components/RoleBadge';
 import { Image } from '@/components/ui/image';
-import useRoomLevels from '@/hooks/useRoomLevels';
 import useMessageProfiles from '@/hooks/useMessageProfiles';
 import { formatScore } from '@/components/voice/scoreTier';
 import { isHiddenName } from '@/lib/hiddenUser';
@@ -24,9 +22,8 @@ export default function GiftBoardSheet({ open, onClose, board, loading }) {
   const active = (tab === 'day' ? board?.day : board?.all) || { total: 0, entries: [] };
   const entries = useMemo(() => (Array.isArray(active.entries) ? active.entries : []), [active.entries]);
 
-  // Satırlardaki seviye ve rol rozetleri için kişi bilgileri.
+  // Satırlardaki rol rozetleri için kişi bilgileri.
   const userIds = useMemo(() => entries.map((entry) => entry.user_id).filter(Boolean), [entries]);
-  const { levels } = useRoomLevels(userIds);
   const profiles = useMessageProfiles(userIds);
 
   return (
@@ -71,7 +68,6 @@ export default function GiftBoardSheet({ open, onClose, board, loading }) {
                   <p className={`truncate text-sm font-bold ${hidden ? 'hidden-user-name' : 'text-[#1F2024]'}`}>{entry.name}</p>
                   {!hidden && (
                     <div className="mt-0.5 flex items-center gap-1 overflow-hidden">
-                      <RoomLevelBadge level={levels[entry.user_id]} />
                       <RoleBadge user={profile} size="sm" />
                       <span className="shrink-0 rounded bg-black/5 px-1 text-[9px] font-bold text-[#6b7280]">
                         #{profile?.member_id || entry.user_id?.slice(-4) || '—'}

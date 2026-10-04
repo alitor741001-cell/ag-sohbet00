@@ -7,8 +7,6 @@ import ProfileFrame from '@/components/ProfileFrame';
 import RoleBadge from '@/components/RoleBadge';
 import UserStatusBadges from '@/components/status/UserStatusBadges';
 import { badgesFromUser, isRedNameVip } from '@/lib/userLevels';
-import useRoomLevels from '@/hooks/useRoomLevels';
-import RoomLevelBadge from '@/components/levels/RoomLevelBadge';
 import useXp from '@/hooks/useXp';
 import XpStatsCard from '@/components/xp/XpStatsCard';
 import XpAvatar from '@/components/xp/XpAvatar';
@@ -23,7 +21,6 @@ export default function ProfileHeader({ user, pkg, expired, avatar, onAvatar, on
   const name = user.username || user.full_name || 'Kullanıcı';
   const status = user.role === 'admin' ? 'Kurucu · Süresiz' : user.membership_status === 'pending' ? 'Onay Bekliyor' : expired ? 'Süresi Doldu' : pkg?.name || 'Aktif Üyelik';
   const hasRole = user.display_role || user.custom_role?.name;
-  const { levels: roomLevels } = useRoomLevels([user.id]);
   const xpStats = useXp([user.id])[user.id];
   const { zoom, panX, panY, commit, handlers } = usePhotoGestures({
     initialZoom: user.profile_frame_scale || 100,
@@ -78,7 +75,6 @@ export default function ProfileHeader({ user, pkg, expired, avatar, onAvatar, on
     <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
       <span className="rounded-md bg-amber-500/15 px-2.5 py-1 text-xs font-semibold text-amber-400">{status}</span>
       {hasRole && <RoleBadge user={user} size="md" />}
-      <RoomLevelBadge level={roomLevels[user.id]} profile />
     </div>
     <div className="mt-3 w-full max-w-md"><XpStatsCard stats={xpStats} days={daysInApp(user.created_date)} /></div>
     <div className="mt-4 flex gap-3">

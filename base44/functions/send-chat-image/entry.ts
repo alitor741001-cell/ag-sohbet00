@@ -1,6 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
 import { incrementFriendshipProgression } from '../../shared/friendshipProgression.ts';
-import { advanceRoomLevel } from '../../shared/roomLevels.ts';
+import { HIDDEN_AVATAR_URL, hiddenDisplayName, isHiddenUser } from '../../shared/vip.ts';
 
 export default async function(req) {
   try {
@@ -50,16 +50,14 @@ export default async function(req) {
       if (room.chat_seated_only === true && !isSeated && !isMod) {
         return Response.json({ error: 'Sohbet yasağı var — yazmak için bir koltuğa otur.' }, { status: 403 });
       }
+      // Gizli kullanıcı (VIP10+): görsel de takma adla ve maskeli profille paylaşılır.
+      const hiddenUser = isHiddenUser(user);
       await base44.asServiceRole.entities.RoomMessage.create({
-        room_id: context_id, user_id: user.id, user_name: senderName, user_avatar: user.avatar || '',
+        room_id: context_id, user_id: hiddenUser ? '' : user.id,
+        user_name: hiddenUser ? hiddenDisplayName(user) : senderName,
+        user_avatar: hiddenUser ? HIDDEN_AVATAR_URL : (user.avatar || ''),
         text: caption, file_url, type: 'user'
       });
-      if (room.is_personal) {
-        try {
-          const progress = await advanceRoomLevel(base44, user.id, senderName);
-          if (progress.leveledUp) await base44.asServiceRole.entities.RoomMessage.create({ room_id: context_id, user_id: user.id, user_name: senderName, text: `🎉 ${senderName} ${progress.level} lvl oldu! Tebrikler!`, type: 'system' });
-        } catch {}
-      }
       return Response.json({ ok: true });
     }
 

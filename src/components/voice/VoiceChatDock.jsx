@@ -12,15 +12,16 @@ import useMessageProfiles from '@/hooks/useMessageProfiles';
  * Oda alt bölümü: mesaj akışı klavye ikonuna basmadan da alt barın üstündeki boş alanda durur,
  * yazma alanı açıldığında ve klavye kalktığında akış onunla birlikte yukarı kayar.
  */
-export default function VoiceChatDock({ messages = [], onSend, onCloseComposer, composerOpen, chatLocked, currentUserId, ownerId, moderators = [], onOpenProfile, bigGiftNotice, onOpenBigGiftRoom }) {
+export default function VoiceChatDock({ messages = [], onSend, onCloseComposer, composerOpen, chatLocked, currentUserId, ownerId, moderators = [], onOpenProfile, bigGiftNotice, onOpenBigGiftRoom, hiddenUsers = {} }) {
   const [text, setText] = useState('');
   const [emojiOpen, setEmojiOpen] = useState(false);
   const inputRef = useRef(null);
   const endRef = useRef(null);
 
+  // Gizli kullanıcının mesajı kimliksiz yazılır: N/VIP rozetleri için takma ad → kimlik eşlemesi kullanılır.
   const userIds = useMemo(
-    () => messages.filter((message) => message.type !== 'system' && message.user_id).map((message) => message.user_id),
-    [messages]
+    () => [...messages.filter((message) => message.type !== 'system' && message.user_id).map((message) => message.user_id), ...Object.values(hiddenUsers)],
+    [messages, hiddenUsers]
   );
   const profiles = useMessageProfiles(userIds);
 
@@ -63,7 +64,7 @@ export default function VoiceChatDock({ messages = [], onSend, onCloseComposer, 
                 <VoiceChatMessage
                   key={message.id}
                   message={message}
-                  profile={profiles[message.user_id]}
+                  profile={profiles[message.user_id] || profiles[hiddenUsers[message.user_name]]}
                   ownerId={ownerId}
                   moderators={moderators}
                   currentUserId={currentUserId}

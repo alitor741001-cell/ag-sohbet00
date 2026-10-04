@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import { safeErrorResponse } from '../../shared/security.ts';
+import { HIDDEN_AVATAR_URL, hiddenDisplayName, isHiddenUser } from '../../shared/vip.ts';
 
 export default async function(req) {
   try {
@@ -19,11 +20,13 @@ export default async function(req) {
       return Response.json({ error: 'yetkisiz' }, { status: 403 });
     }
 
-    const name = me.username || me.full_name || user.full_name || 'Kullanıcı';
+    // Gizli kullanıcıysa not takma adla ve maskeli profille bırakılır — gerçek isim/fotoğraf görünmez.
+    const hiddenUser = isHiddenUser(me);
+    const name = hiddenUser ? hiddenDisplayName(me) : (me.username || me.full_name || user.full_name || 'Kullanıcı');
     const res = await base44.asServiceRole.entities.RoomMessage.deleteMany({ room_id });
     // Sohbet temizlendikten sonra kimin temizlediğini belirten tek bir not bırakılır.
     const message = await base44.asServiceRole.entities.RoomMessage.create({
-      room_id, user_id: user.id, user_name: name, user_avatar: user.avatar || '',
+      room_id, user_id: hiddenUser ? '' : user.id, user_name: name, user_avatar: hiddenUser ? HIDDEN_AVATAR_URL : (user.avatar || ''),
       text: `${name} cheati temizledi.`, type: 'system'
     });
     return Response.json({ deleted: res?.deleted_count ?? 0, message });

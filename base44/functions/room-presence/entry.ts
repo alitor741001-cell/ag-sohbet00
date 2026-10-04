@@ -70,6 +70,9 @@ export default async function(req) {
     const hasVisibleRole = !!(me.display_role || me.custom_role?.name || me.special_frame_id || (me.profile_frame && (me.profile_frame.startsWith('lvl_') || me.profile_frame_entrance_enabled)));
     // Gizli kullanıcı modu (VIP10+): odaya görünmeden katılır — giriş/çıkış bildirimi düşmez.
     const hiddenUser = isHiddenUser(me);
+    // Sistem notlarında da kimlik görünmez: gizli kullanıcının adı takma adla, profili maskeli yazılır.
+    const noteName = hiddenUser ? hiddenDisplayName(me) : name;
+    const noteActor = hiddenUser ? { user_id: '', user_avatar: HIDDEN_AVATAR_URL } : { user_id: user.id, user_avatar: user.avatar || '' };
     const ghost = !isOwner && (hiddenUser || (isAdmin && !hasVisibleRole));
     const labelOverrides = await getRoleLabelOverrides(base44);
 
@@ -349,8 +352,8 @@ export default async function(req) {
       const nextVoiceMode = room.voice_mode !== true;
       await base44.asServiceRole.entities.Room.update(room_id, { voice_mode: nextVoiceMode, voice_enabled: nextVoiceMode });
       await base44.asServiceRole.entities.RoomMessage.create({
-        room_id, user_id: user.id, user_name: name,
-        text: nextVoiceMode ? `${name} sesli sohbet alanını açtı.` : `${name} film odasına döndü.`, type: 'system'
+        room_id, ...noteActor, user_name: noteName,
+        text: nextVoiceMode ? `${noteName} sesli sohbet alanını açtı.` : `${noteName} film odasına döndü.`, type: 'system'
       }).catch(() => {});
       return Response.json({ ok: true, voice_mode: nextVoiceMode, voice_enabled: nextVoiceMode });
     }
@@ -367,10 +370,10 @@ export default async function(req) {
       const bannedNow = body.banned !== false;
       await base44.asServiceRole.entities.Room.update(room_id, { chat_seated_only: bannedNow });
       await base44.asServiceRole.entities.RoomMessage.create({
-        room_id, user_id: user.id, user_name: name,
+        room_id, ...noteActor, user_name: noteName,
         text: bannedNow
-          ? `${name} sohbet yasağını açtı — yalnızca koltuktakiler yazabilir.`
-          : `${name} sohbet yasağını kaldırdı.`, type: 'system'
+          ? `${noteName} sohbet yasağını açtı — yalnızca koltuktakiler yazabilir.`
+          : `${noteName} sohbet yasağını kaldırdı.`, type: 'system'
       }).catch(() => {});
       return Response.json({ ok: true, chat_seated_only: bannedNow });
     }
@@ -417,8 +420,8 @@ export default async function(req) {
         last_sync: new Date().toISOString()
       });
       await base44.asServiceRole.entities.RoomMessage.create({
-        room_id, user_id: user.id, user_name: name,
-        text: `${name} filmi değiştirdi: ${movie_title || 'Yeni Film'}`, type: 'system'
+        room_id, ...noteActor, user_name: noteName,
+        text: `${noteName} filmi değiştirdi: ${movie_title || 'Yeni Film'}`, type: 'system'
       });
       return Response.json({ ok: true });
     }
