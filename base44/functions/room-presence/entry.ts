@@ -4,6 +4,7 @@ import { isModerator, isSiteOwner, immuneToModeration, getRoleInfo, getRoleLabel
 import { upsertNotification } from '../../shared/upsertNotification.ts';
 import { hasActiveMembership } from '../../shared/membership.ts';
 import { scoresAfterRoomLeave } from '../../shared/numberBoard.ts';
+import { appendRoomLog } from '../../shared/roomLog.ts';
 
 async function sha256Hex(salt, pw) {
   const data = new TextEncoder().encode(salt + pw);
@@ -48,8 +49,15 @@ export default async function(req) {
     if (room.status === 'closed') return Response.json({ error: 'closed' }, { status: 403 });
 
     if (action === 'get') {
-      const canSeeModeration = room.owner_id === user.id || user.role === 'admin' || user.role === 'moderator';
-      return Response.json({ room: { ...room, password: room.password ? 'protected' : '', banned_users: canSeeModeration ? (room.banned_users || []) : [] } });
+      const canSeeModeration = room.owner_id === user.id || user.role === 'admin' || user.role === 'moderator' || (room.room_moderators || []).includes(user.id);
+      return Response.json({
+        room: {
+          ...room,
+          password: room.password ? 'protected' : '',
+          banned_users: canSeeModeration ? (room.banned_users || []) : [],
+          room_logs: canSeeModeration ? (room.room_logs || []) : [],
+        }
+      });
     }
 
     const me = await base44.entities.User.get(user.id);
@@ -212,32 +220,47 @@ export default async function(req) {
       const targetParticipant = (room.participants || []).find((p) => p.user_id === target_id);
       const participants = (room.participants || []).filter((p) => p.user_id !== target_id);
       const targetName = targetParticipant?.name || 'Kullanıcı';
-      // ban aksiyonunda kullanıcıyı banned_users listesine ekle
-      let update: any = { participants, recent_participants: rememberParticipant(room, targetParticipant) };
+      // Odadan atılan kişi bir daha giremez: atma işlemi de yasak kaydı oluşturur.
+      const bannedUsers = [
+        { user_id: target_id, name: targetName, banned_at: new Date().toISOString() },
+        ...(room.banned_users || []).filter((b) => b.user_id !== target_id),
+      ];
+      let update: any = {
+        participants,
+        recent_participants: rememberParticipant(room, targetParticipant),
+        banned_users: bannedUsers,
+        room_logs: appendRoomLog(room, {
+          text: action === 'ban'
+            ? `${name}, ${targetName} kişisini odadan attı ve girişini yasakladı.`
+            : `${name}, ${targetName} kişisini odadan attı.`,
+          kind: 'room_kick',
+          actor_id: user.id, actor_name: name, target_id, target_name: targetName,
+        }),
+      };
       // Sayı tahtası ayarı açıksa odadan atılan kişinin sayısı sıfırlanır
       const kickedScores = scoresAfterRoomLeave(room, target_id);
       if (kickedScores) update.number_scores = kickedScores;
-      if (action === 'ban') {
-        const bannedUsers = (room.banned_users || []).filter((b) => b.user_id !== target_id);
-        bannedUsers.push({ user_id: target_id, name: targetName, banned_at: new Date().toISOString() });
-        update.banned_users = bannedUsers;
-      }
       if (participants.length === 0) {
         update.is_playing = false;
         if (!room.is_personal) { update.status = 'closed'; update.recent_participants = []; }
       }
       await base44.asServiceRole.entities.Room.update(room_id, update);
-      await base44.asServiceRole.entities.RoomMessage.create({
-        room_id, user_id: target_id, user_name: targetName,
-        text: action === 'ban' ? `${targetName} odadan atıldı ve giriş yasaklandı.` : `${targetName} odadan atıldı.`, type: 'system'
-      });
       return Response.json({ ok: true });
     }
 
+    // Giriş yasağını kaldır — kayıt defterindeki "Odadan Atılanlar" bölümünden yönetilir
     if (action === 'unban') {
-      if (!isOwner && !isMod) return Response.json({ error: 'yetkisiz' }, { status: 403 });
+      if (!canModRoom) return Response.json({ error: 'yetkisiz' }, { status: 403 });
+      const removed = (room.banned_users || []).find((b) => b.user_id === target_id);
       const bannedUsers = (room.banned_users || []).filter((b) => b.user_id !== target_id);
-      await base44.asServiceRole.entities.Room.update(room_id, { banned_users: bannedUsers });
+      await base44.asServiceRole.entities.Room.update(room_id, {
+        banned_users: bannedUsers,
+        room_logs: appendRoomLog(room, {
+          text: `${name}, ${removed?.name || 'Kullanıcı'} kişisinin giriş yasağını kaldırdı.`,
+          kind: 'unban',
+          actor_id: user.id, actor_name: name, target_id, target_name: removed?.name || 'Kullanıcı',
+        }),
+      });
       return Response.json({ ok: true });
     }
 

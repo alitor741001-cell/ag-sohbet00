@@ -3,6 +3,7 @@ import { rateLimit, safeErrorResponse } from '../../shared/security.ts';
 import { isModerator } from '../../shared/roles.ts';
 import { upsertNotification } from '../../shared/upsertNotification.ts';
 import { scoresAfterSeatLeave, withStep } from '../../shared/numberBoard.ts';
+import { appendRoomLog } from '../../shared/roomLog.ts';
 import { coinsForK, ensureGiftWallet, formatK, giftBalance } from '../../shared/giftWallet.ts';
 
 const SEAT_OPTIONS = [2, 5, 8, 9, 12, 15, 20, 24];
@@ -112,7 +113,14 @@ export default async function (req: Request): Promise<Response> {
       await persist(next);
       const kickScores = scoresAfterSeatLeave(room, target_id);
       if (kickScores) await base44.asServiceRole.entities.Room.update(room_id, { number_scores: kickScores });
-      await say(`${targetName} koltuğundan indirildi.`);
+      // Koltuktan indirme sohbete değil kayıt defterine yazılır.
+      await base44.asServiceRole.entities.Room.update(room_id, {
+        room_logs: appendRoomLog(room, {
+          text: `${displayName}, ${targetName} kişisini koltuktan indirdi.`,
+          kind: 'seat_kick',
+          actor_id: user.id, actor_name: displayName, target_id, target_name: targetName,
+        }),
+      });
       return respond(next);
     }
 

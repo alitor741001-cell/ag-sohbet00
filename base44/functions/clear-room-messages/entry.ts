@@ -15,13 +15,20 @@ export default async function(req) {
 
     const me = await base44.asServiceRole.entities.User.get(user.id);
     const isMod = me.role === 'admin' || me.role === 'moderator';
-    const isParticipant = (room.participants || []).some((p) => p.user_id === user.id);
-    if (room.owner_id !== user.id && !isMod && !isParticipant) {
+    const isOwner = room.owner_id === user.id;
+    const isRoomMod = (room.room_moderators || []).includes(user.id);
+    if (!isOwner && !isRoomMod && !isMod) {
       return Response.json({ error: 'yetkisiz' }, { status: 403 });
     }
 
+    const name = me.username || me.full_name || user.full_name || 'Kullanıcı';
     const res = await base44.asServiceRole.entities.RoomMessage.deleteMany({ room_id });
-    return Response.json({ deleted: res?.deleted_count ?? 0 });
+    // Sohbet temizlendikten sonra kimin temizlediğini belirten tek bir not bırakılır.
+    const message = await base44.asServiceRole.entities.RoomMessage.create({
+      room_id, user_id: user.id, user_name: name, user_avatar: user.avatar || '',
+      text: `${name} sohbeti temizledi.`, type: 'system'
+    });
+    return Response.json({ deleted: res?.deleted_count ?? 0, message });
   } catch (e) {
     return safeErrorResponse(e);
   }

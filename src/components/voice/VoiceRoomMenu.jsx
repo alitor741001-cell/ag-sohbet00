@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Armchair, Eraser, Eye, EyeOff, Hash, Lock, MessageSquareOff, Shield, Unlock, UserPlus } from 'lucide-react';
+import { Armchair, Eraser, Eye, EyeOff, Hash, Lock, MessageSquareOff, ScrollText, Shield, Unlock, UserPlus } from 'lucide-react';
 import SeatCountPicker from '@/components/voice/SeatCountPicker';
 import VoiceMenuTile from '@/components/voice/VoiceMenuTile';
 import VoiceSheet from '@/components/voice/VoiceSheet';
@@ -11,8 +11,8 @@ const Panel = ({ children, hint }) => (
   </div>
 );
 
-/** "…" menüsü: yuvarlak ikon ızgarası — kilit, gizlilik, koltuk, sayaç, sohbet temizleme ve sohbet yasağı. */
-export default function VoiceRoomMenu({ open, onClose, room, userId, participants = [], isOwner, canMod, onSeatCount, onSetPassword, onToggleHidden, onToggleMod, onInvite, boardActive, onToggleBoard, onClearChat, onToggleChatBan }) {
+/** "…" menüsü: yuvarlak ikon ızgarası — kilit, gizlilik, koltuk, sayaç, sohbet temizleme, sohbet yasağı ve kayıt defteri. */
+export default function VoiceRoomMenu({ open, onClose, room, userId, participants = [], isOwner, canMod, onSeatCount, onSetPassword, onToggleHidden, onToggleMod, onInvite, boardActive, onToggleBoard, onClearChat, onToggleChatBan, onOpenLog }) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [panel, setPanel] = useState(null);
@@ -30,6 +30,7 @@ export default function VoiceRoomMenu({ open, onClose, room, userId, participant
 
   const toggle = (name) => setPanel((current) => (current === name ? null : name));
 
+  // Sohbeti temizle ve sohbet yasağı tek dokunuşla çalışır — ayrı panel açmaz.
   const manageTiles = [
     {
       key: 'lock',
@@ -41,8 +42,15 @@ export default function VoiceRoomMenu({ open, onClose, room, userId, participant
     { key: 'hidden', icon: room?.hidden ? EyeOff : Eye, label: 'Gizli', active: !!room?.hidden, onClick: onToggleHidden },
     { key: 'seats', icon: Armchair, label: 'Koltuk', active: panel === 'seats', onClick: () => toggle('seats') },
     { key: 'board', icon: Hash, label: 'Sayaç', active: !!boardActive, onClick: onToggleBoard },
-    { key: 'clear', icon: Eraser, label: 'Temiz sohbet', active: panel === 'clear', onClick: () => toggle('clear') },
-    { key: 'ban', icon: MessageSquareOff, label: chatBanned ? 'Yasak açık' : 'Sohbet yasağı', active: chatBanned, onClick: onToggleChatBan },
+    { key: 'clear', icon: Eraser, label: 'Sohbeti temizle', onClick: () => { onClose(); onClearChat?.(); } },
+    {
+      key: 'ban',
+      icon: MessageSquareOff,
+      label: chatBanned ? 'Sohbet yasağını kaldır' : 'Sohbet yasağı etkinleştir',
+      active: chatBanned,
+      onClick: onToggleChatBan,
+    },
+    { key: 'log', icon: ScrollText, label: 'Kayıt defteri', onClick: () => { onClose(); onOpenLog?.(); } },
   ];
 
   return (
@@ -96,13 +104,10 @@ export default function VoiceRoomMenu({ open, onClose, room, userId, participant
         </Panel>
       )}
 
-      {canMod && panel === 'clear' && (
-        <Panel hint="Odadaki tüm sohbet mesajları silinir. Bu işlem geri alınamaz.">
-          <div className="flex items-center gap-2">
-            <button type="button" onClick={() => { setPanel(null); onClearChat?.(); }} className="flex-1 rounded-xl bg-red-600 py-2.5 text-sm font-bold text-white active:scale-95 transition-transform">Sohbeti temizle</button>
-            <button type="button" onClick={() => setPanel(null)} className="rounded-xl bg-white/10 px-4 py-2.5 text-sm font-bold text-white active:scale-95 transition-transform">Vazgeç</button>
-          </div>
-        </Panel>
+      {canMod && (
+        <p className="mt-3 rounded-xl bg-white/5 px-3 py-2 text-[11px] font-semibold text-white/60">
+          Sohbeti temizle ve sohbet yasağı tek dokunuşla uygulanır.
+        </p>
       )}
 
       {chatBanned && (

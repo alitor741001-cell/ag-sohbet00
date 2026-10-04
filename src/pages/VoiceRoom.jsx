@@ -16,6 +16,7 @@ import VoiceRoomMenu from '@/components/voice/VoiceRoomMenu';
 import VoiceSeatSheet from '@/components/voice/VoiceSeatSheet';
 import InviteSheet from '@/components/voice/InviteSheet';
 import VoiceCard from '@/components/voice/VoiceCard';
+import RoomLogSheet from '@/components/voice/RoomLogSheet';
 import VoiceProfileCard from '@/components/voice/VoiceProfileCard';
 import VoiceMenuButton from '@/components/voice/VoiceMenuButton';
 import VoiceRoomBubble from '@/components/voice/VoiceRoomBubble';
@@ -54,6 +55,7 @@ export default function VoiceRoom() {
   const [exitOpen, setExitOpen] = useState(false);
   const [gamesOpen, setGamesOpen] = useState(false);
   const [giftOpen, setGiftOpen] = useState(false);
+  const [logOpen, setLogOpen] = useState(false);
   const [giftSendActive, setGiftSendActive] = useState(false);
   const [giftSendCount, setGiftSendCount] = useState(0);
   const [giftId, setGiftId] = useState(null);
@@ -106,6 +108,10 @@ export default function VoiceRoom() {
     })),
     [seats, participants]
   );
+
+  // Kayıt defteri ve odadan atılanlar — yönetici işlemleri sohbete değil buraya yazılır.
+  const roomLogs = useMemo(() => (Array.isArray(room?.room_logs) ? room.room_logs : []), [room?.room_logs]);
+  const bannedUsers = useMemo(() => (Array.isArray(room?.banned_users) ? room.banned_users : []), [room?.banned_users]);
 
   // Sayı tahtası: açıkken her koltuğun altında kişinin sayısı gösterilir.
   const boardActive = room?.number_board === true;
@@ -388,8 +394,10 @@ export default function VoiceRoom() {
 
   const clearChat = useCallback(async () => {
     try {
-      await base44.functions.invoke('clear-room-messages', { room_id: id });
-      setMessages([]);
+      const response = await base44.functions.invoke('clear-room-messages', { room_id: id });
+      // Temizleyen kişiyi belirten not sohbette kalır.
+      const noticeMessage = response?.data?.message;
+      setMessages(noticeMessage ? [noticeMessage] : []);
       toast({ title: 'Sohbet temizlendi' });
     } catch (error) {
       toast({ title: 'Sohbet temizlenemedi', description: error?.response?.data?.error || error.message, variant: 'destructive' });
@@ -399,7 +407,7 @@ export default function VoiceRoom() {
   const toggleChatBan = async () => {
     const ok = await invokeVoice({ action: 'chat-ban', banned: !chatBanned });
     if (ok) {
-      setMenuOpen(false);
+      // Menü açık kalır; buton etiketi "Sohbet yasağını kaldır" olarak değişir.
       toast({
         title: chatBanned ? 'Sohbet yasağı kaldırıldı' : 'Sohbet yasağı açıldı',
         description: chatBanned ? 'Herkes yeniden yazabilir.' : 'Yalnızca koltuktakiler yazabilir.',
@@ -434,7 +442,8 @@ export default function VoiceRoom() {
     await invokeVoice({ action: 'seat-kick', target_id: targetId });
     try {
       await base44.functions.invoke('room-presence', { action: 'kick', room_id: id, target_id: targetId });
-      toast({ title: 'Kişi odadan atıldı' });
+      await syncRoom();
+      toast({ title: 'Kişi odadan atıldı', description: 'Atılan kişi odaya tekrar giremez — kayıt defterinden yasağı kaldırabilirsin.' });
     } catch (error) {
       toast({ title: 'İşlem başarısız', description: error?.response?.data?.error || error.message, variant: 'destructive' });
     }
@@ -450,7 +459,19 @@ export default function VoiceRoom() {
       return;
     }
     if (!canMod) return;
-    invokeVoice({ action: 'seat-kick', target_id: target });
+    invokeVoice({ action: 'seat-kick', target_id: target }).then(() => syncRoom());
+  };
+
+  // Kayıt defterinden giriş yasağını kaldır
+  const unbanUser = async (targetId) => {
+    if (!targetId) return;
+    try {
+      await base44.functions.invoke('room-presence', { action: 'unban', room_id: id, target_id: targetId });
+      await syncRoom();
+      toast({ title: 'Giriş yasağı kaldırıldı' });
+    } catch (error) {
+      toast({ title: 'İşlem başarısız', description: error?.response?.data?.error || error.message, variant: 'destructive' });
+    }
   };
 
   const sendMessage = useCallback(async (text) => {
@@ -748,6 +769,15 @@ export default function VoiceRoom() {
         }}
         onClearChat={clearChat}
         onToggleChatBan={toggleChatBan}
+        onOpenLog={() => setLogOpen(true)}
+      />
+
+      <RoomLogSheet
+        open={logOpen}
+        onClose={() => setLogOpen(false)}
+        logs={roomLogs}
+        bannedUsers={bannedUsers}
+        onUnban={unbanUser}
       />
 
       <VoiceSeatSheet
