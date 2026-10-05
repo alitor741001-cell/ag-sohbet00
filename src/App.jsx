@@ -69,6 +69,12 @@ const AdminGifts = lazy(() => import('@/pages/admin/AdminGifts'));
 const AdminCoins = lazy(() => import('@/pages/admin/AdminCoins'));
 const AdminVip = lazy(() => import('@/pages/admin/AdminVip'));
 const AdminAgencies = lazy(() => import('@/pages/admin/AdminAgencies'));
+const AgencyEarnings = lazy(() => import('@/pages/agency/AgencyEarnings'));
+const AgencyQuota = lazy(() => import('@/pages/agency/AgencyQuota'));
+const AgencyBroadcasters = lazy(() => import('@/pages/agency/AgencyBroadcasters'));
+const AgencyInfo = lazy(() => import('@/pages/agency/AgencyInfo'));
+const AgencyInvites = lazy(() => import('@/pages/agency/AgencyInvites'));
+const AgencyTransfers = lazy(() => import('@/pages/agency/AgencyTransfers'));
 
 
 const AuthenticatedApp = () => {
@@ -125,6 +131,12 @@ const AuthenticatedApp = () => {
           <Route path="/bildirimler" element={<Notifications />} />
           <Route path="/profil" element={<Profile />} />
           <Route path="/ajans" element={<AgencyPage />} />
+          <Route path="/ajans/kazanc" element={<AgencyEarnings />} />
+          <Route path="/ajans/kota-tablosu" element={<AgencyQuota />} />
+          <Route path="/ajans/yayincilar" element={<AgencyBroadcasters />} />
+          <Route path="/ajans/ajansim" element={<AgencyInfo />} />
+          <Route path="/ajans/davetler" element={<AgencyInvites />} />
+          <Route path="/ajans/transferler" element={<AgencyTransfers />} />
           <Route path="/kullanici/:id" element={<UserProfile />} />
           <Route path="/güvenlik-protokolü" element={<SecurityProtocol />} />
           <Route path="/abonelik" element={<Subscription />} />

@@ -1,9 +1,8 @@
-import { CalendarDays, Gem, TrendingUp, Wallet } from 'lucide-react';
-import QuotaTierGrid from '@/components/agency/QuotaTierGrid';
+import { CalendarDays, Gem, Wallet } from 'lucide-react';
 import { formatMoney, formatShortDiamonds } from '@/lib/agency';
 
 /** Yayıncının bu ayki kota kazancı: tamamlanan kota, bu ayki elmas ve kazanç. */
-export default function QuotaEarningsCard({ month = 0, period = '', tiers = [], nextTier = null, rewards = [] }) {
+export default function QuotaEarningsCard({ month = 0, period = '', nextTier = null, rewards = [] }) {
   const monthly = rewards.filter((reward) => reward.period === period);
   const completed = monthly.reduce((max, reward) => Math.max(max, Number(reward.diamonds) || 0), 0);
   const earned = monthly.reduce((sum, reward) => sum + (Number(reward.amount) || 0), 0);
@@ -43,11 +42,6 @@ export default function QuotaEarningsCard({ month = 0, period = '', tiers = [], 
           <Wallet className="h-3 w-3" /> Bu ay {monthly.length} tamamlanan kota
         </p>
       </div>
-
-      <p className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider text-white/60">
-        <TrendingUp className="h-3.5 w-3.5" style={{ color: '#F5C542' }} /> Kota Kazançları
-      </p>
-      <QuotaTierGrid tiers={tiers} monthDiamonds={month} nextTier={nextTier} />
     </div>
   );
 }
