@@ -4,9 +4,12 @@ import useAgencyPageData from '@/components/agency/useAgencyPageData';
 import { agencySections } from '@/components/agency/agencySections';
 import { Handshake } from 'lucide-react';
 
-/** Asistanlar: her asistanın payı ve davet ettiği yayıncıların kota durumu. */
+/**
+ * Asistanlar: her asistanın ismi profili, payı ve davet ettiği yayıncıların
+ * kota durumu görünür; buradan asistanlık geri alınabilir.
+ */
 export default function AgencyAssistants() {
-  const { role, agency, panel, loading } = useAgencyPageData();
+  const { role, agency, panel, loading, reload } = useAgencyPageData();
   const assistants = panel?.assistants || [];
 
   return (
@@ -24,7 +27,7 @@ export default function AgencyAssistants() {
             <p className="text-[11px] text-white/40">Ajansım bölümünden üye kimliğiyle asistanlık verebilirsin.</p>
           </div>
         ) : assistants.map((assistant) => (
-          <AgencyAssistantCard key={assistant.user_id} assistant={assistant} />
+          <AgencyAssistantCard key={assistant.user_id} assistant={assistant} onChanged={reload} />
         ))}
       </div>
     </AgencyPageShell>

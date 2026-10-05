@@ -110,7 +110,7 @@ export default function AppLayout() {
         }
       }
     };
-    check();
+    // Açılışta oturum doğrulaması zaten yapıldı: ilk kontrol 30 saniye sonra, açılışı yavaşlatmaz.
     const id = setInterval(check, 30000);
     return () => clearInterval(id);
   }, [user?.id]);

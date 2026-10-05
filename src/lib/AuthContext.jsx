@@ -5,6 +5,7 @@ import { createAxiosClient } from '@base44/sdk/dist/utils/axios-client';
 import { detectConnectionType } from '@/lib/connectionType';
 import { triggerBanNotice } from '@/lib/banNotice';
 import { isMultiDeviceExempt } from '@/lib/sessionPolicy';
+import { seedCurrentUser } from '@/lib/useCurrentUser';
 
 const AuthContext = createContext();
 
@@ -67,20 +68,21 @@ export const AuthProvider = ({ children }) => {
         interceptResponses: true
       });
       
-      try {
-        const appSettings = await appClient.get(`/prod/public-settings/by-id/${appParams.appId}`);
-        setAppPublicSettings(appSettings);
+      // Oturum doğrulaması ile ayarlar aynı anda başlar: açılış süresi tek tura iner.
+      const authPromise = appParams.token ? checkUserAuth() : Promise.resolve().then(() => {
+        setIsLoadingAuth(false);
+        setIsAuthenticated(false);
+        setAuthChecked(true);
+      });
 
-        // Bağımsız kontrolleri paralel çalıştır; ikisi tamamlanmadan uygulamayı açma.
-        await Promise.all([
+      try {
+        const [appSettings] = await Promise.all([
+          appClient.get(`/prod/public-settings/by-id/${appParams.appId}`),
           base44.functions.invoke('public-settings', {})
             .then((ps) => setPublicSettings(ps.data || ps)).catch(() => {}),
-          appParams.token ? checkUserAuth() : Promise.resolve().then(() => {
-            setIsLoadingAuth(false);
-            setIsAuthenticated(false);
-            setAuthChecked(true);
-          }),
         ]);
+        setAppPublicSettings(appSettings);
+        await authPromise;
         setIsLoadingPublicSettings(false);
       } catch (appError) {
         console.error('App state check failed:', appError);
@@ -143,12 +145,7 @@ export const AuthProvider = ({ children }) => {
       // Tek cihaz girişi — cihaz oturum kimliği doğrula
       const sessionKey = 'filmkeyfi_session_' + currentUser.id;
       const storedSession = localStorage.getItem(sessionKey);
-      if (!storedSession) {
-        try {
-          const res = await base44.functions.invoke('register-session', { connection_type: detectConnectionType() });
-          if (res?.data?.session_id) localStorage.setItem(sessionKey, res.data.session_id);
-        } catch {}
-      } else if (!isMultiDeviceExempt(currentUser) && currentUser.active_session_id && storedSession !== currentUser.active_session_id) {
+      if (storedSession && !isMultiDeviceExempt(currentUser) && currentUser.active_session_id && storedSession !== currentUser.active_session_id) {
         // Hesap başka cihazdan açılmış — muaf hesaplar hariç bu cihazı kapat
         await base44.auth.logout();
         localStorage.removeItem(sessionKey);
@@ -159,6 +156,14 @@ export const AuthProvider = ({ children }) => {
       setIsAuthenticated(true);
       setIsLoadingAuth(false);
       setAuthChecked(true);
+      // Kullanıcı paylaşılan önbelleğe yazılır: sayfalar oturum sorgusunu beklemez.
+      seedCurrentUser(currentUser);
+      // Cihaz oturum kaydı arka planda yapılır; uygulamanın açılışını beklemez.
+      if (!storedSession) {
+        base44.functions.invoke('register-session', { connection_type: detectConnectionType() })
+          .then((res) => { if (res?.data?.session_id) localStorage.setItem(sessionKey, res.data.session_id); })
+          .catch(() => {});
+      }
     } catch (error) {
       console.error('User auth check failed:', error);
       setIsLoadingAuth(false);

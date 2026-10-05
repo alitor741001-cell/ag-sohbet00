@@ -15,5 +15,22 @@ export default defineConfig({
       visualEditAgent: true
     }),
     react(),
-  ]
+  ],
+  build: {
+    // Yalnızca açılışta gereken büyük ve sabit kütüphaneler ayrılır:
+    // paralel indirilir ve tekrar girişlerde tarayıcı önbelleğinden gelir.
+    // Kalan paketleme varsayılan bölme mantığında kalır (sayfalar ayrı indirilir).
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return undefined;
+          if (id.includes('livekit')) return 'vendor-livekit';
+          if (id.includes('@tanstack') || id.includes('react-router') || id.includes('react-dom') || id.includes('/react/') || id.includes('scheduler') || id.includes('@base44')) {
+            return 'vendor-react';
+          }
+          return undefined;
+        },
+      },
+    },
+  },
 });

@@ -163,8 +163,8 @@ export default function AgencyAssistantPanel({ assistants = [], onChanged }) {
                   </p>
                 </div>
                 {entry.status !== 'expired' && (
-                  <button onClick={() => remove(entry)} disabled={busyId === entry.user_id} className="shrink-0 rounded-xl border border-[#FF8080]/45 px-2.5 py-1.5 text-[11px] font-bold text-[#FF8080] disabled:opacity-50">
-                    {busyId === entry.user_id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                  <button onClick={() => remove(entry)} disabled={busyId === entry.user_id} className="flex shrink-0 items-center gap-1.5 rounded-xl border border-[#FF8080]/45 px-2.5 py-1.5 text-[11px] font-bold text-[#FF8080] disabled:opacity-50">
+                    {busyId === entry.user_id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />} Geri Al
                   </button>
                 )}
               </div>

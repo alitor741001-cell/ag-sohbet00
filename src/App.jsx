@@ -9,14 +9,14 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ScrollToTop from './components/ScrollToTop';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import LoginRedirect from '@/components/LoginRedirect';
+// Açılış paketini küçük tutar: arama katmanı ve küçültülmüş oda balonu ayrı indirilir.
+const DirectCallOverlay = lazy(() => import('@/components/friends/DirectCallOverlay'));
+const MinimizedRoomBubble = lazy(() => import('@/components/voice/MinimizedRoomBubble'));
 // Add page imports here
 import AppLayout from '@/components/layout/AppLayout';
-import StartupSplash from '@/components/layout/StartupSplash';
 import { ThemeProvider } from '@/lib/ThemeContext';
 import XpProvider from '@/components/xp/XpProvider';
 import DirectCallProvider from '@/lib/DirectCallContext';
-import DirectCallOverlay from '@/components/friends/DirectCallOverlay';
-import MinimizedRoomBubble from '@/components/voice/MinimizedRoomBubble';
 import { FrameCatalogProvider } from '@/lib/FrameCatalogContext';
 import { Navigate } from 'react-router-dom';
 
@@ -82,12 +82,9 @@ const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
 
   // Show loading spinner while checking app public settings or auth
+  // Açılışta marka ekranı gösterilmez: arka plan hazırlanırken ana sayfa doğrudan gelir.
   if (isLoadingPublicSettings || isLoadingAuth) {
-    return (
-      <div className="fixed inset-0 flex items-center justify-center bg-catalog">
-        <span className="font-display text-base font-black tracking-[0.35em] text-white/60">FILMKEYFİ</span>
-      </div>
-    );
+    return <div className="fixed inset-0 bg-catalog" />;
   }
 
   // Handle authentication errors
@@ -189,12 +186,14 @@ function App() {
         <XpProvider>
         <ThemeProvider>
           <DirectCallProvider>
-            <StartupSplash />
             <Router>
               <ScrollToTop />
               <AuthenticatedApp />
-              <DirectCallOverlay />
-              <MinimizedRoomBubble />
+              {/* Bu iki katman ana pakete dahil değil: açılış hızlı kalır, davranış aynı. */}
+              <Suspense fallback={null}>
+                <DirectCallOverlay />
+                <MinimizedRoomBubble />
+              </Suspense>
             </Router>
           </DirectCallProvider>
           <Toaster />
