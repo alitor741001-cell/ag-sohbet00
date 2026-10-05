@@ -47,13 +47,38 @@
       "type": "string",
       "default": ""
     },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "broadcaster",
+        "assistant"
+      ],
+      "default": "broadcaster"
+    },
+    "share": {
+      "type": "number",
+      "default": 100
+    },
+    "assistant_id": {
+      "type": "string",
+      "default": ""
+    },
+    "assistant_name": {
+      "type": "string",
+      "default": ""
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time"
+    },
     "status": {
       "type": "string",
       "enum": [
         "pending",
         "accepted",
         "rejected",
-        "cancelled"
+        "cancelled",
+        "expired"
       ],
       "default": "pending"
     },
@@ -77,6 +102,9 @@
           "data.owner_id": "{{user.id}}"
         },
         {
+          "data.assistant_id": "{{user.id}}"
+        },
+        {
           "user_condition": {
             "role": "admin"
           }
@@ -95,6 +123,9 @@
         },
         {
           "data.owner_id": "{{user.id}}"
+        },
+        {
+          "data.assistant_id": "{{user.id}}"
         },
         {
           "user_condition": {
