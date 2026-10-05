@@ -1,9 +1,10 @@
 import UserStatusBadges from '@/components/status/UserStatusBadges';
 
 /** Seviye/VIP/hediye rozet şeridi — sesli oda ve film odası sohbetinde ortak kullanılır. */
-export default function UserBadgeRow({ profile }) {
+export default function UserBadgeRow({ profile, compact = false }) {
   return (
     <UserStatusBadges
+      compact={compact}
       showUserIcon
       n_level={profile?.n_level || 0}
       vip_level={profile?.vip_level || 0}

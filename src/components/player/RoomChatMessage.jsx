@@ -44,9 +44,10 @@ function RoomChatMessage({ message, profile, ownerId, roomModerators, currentUse
         {!hidden && label && <span className={`text-[10px] font-bold ${isOwner ? 'text-amber-400' : 'text-sky-400'}`}>{label}</span>}
         {!hidden && profile && (profile.display_role || profile.custom_role?.name) && <RoleBadge user={profile} size="sm" showLabel={false} />}
       </div>
-      {/* İsim üstte; seviye rozetleri altta tek sırada: kişi, N, VIP, atış, alış ve LVL. */}
-      <div className="mt-1 flex flex-wrap items-center gap-1">
-        <UserBadgeRow profile={profile} />
+      {/* İsim üstte; seviye rozetleri altta tek sırada: kişi, N, VIP, atış, alış ve LVL.
+          Film odası paneli dar olduğu için rozetler kompakt ölçekte ve tek satırda tutulur. */}
+      <div className="mt-1 flex min-w-0 flex-wrap items-center gap-1">
+        <UserBadgeRow profile={profile} compact />
         {/* LVL 1000 (oda sahibi) ve üzeri mesajlarda yazılmaz. */}
         {!hidden && !isOwner && Number(level) < 1000 && <RoomLevelBadge level={level} />}
       </div>

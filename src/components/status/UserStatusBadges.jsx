@@ -13,6 +13,7 @@ export default function UserStatusBadges({
   gift_received_level = 0,
   gift_received_tier = 'green',
   showUserIcon = false,
+  compact = false,
   className = '',
 }) {
   const hasAny = showUserIcon || n_level > 0 || vip_level > 0 || gift_sent_level > 0 || gift_received_level > 0;
@@ -21,16 +22,16 @@ export default function UserStatusBadges({
   const vip = vipStyle(vip_level);
 
   return (
-    <div className={`flex flex-wrap items-center justify-center gap-1.5 ${className}`}>
+    <div className={compact ? `flex flex-wrap items-center justify-start gap-1 ${className}` : `flex flex-wrap items-center justify-center gap-1.5 ${className}`}>
       {showUserIcon && (
-        <span className="flex h-5 w-5 items-center justify-center rounded-full" style={{ background: '#66ff99' }}>
+        <span className={`flex ${compact ? 'h-4 w-4' : 'h-5 w-5'} items-center justify-center rounded-full`} style={{ background: '#66ff99' }}>
           <User className="h-3 w-3 text-white" strokeWidth={2.6} />
         </span>
       )}
 
       {n_level > 0 && (
         <span
-          className="flex items-center gap-1 rounded-full border pl-0.5 pr-2 py-0.5"
+          className={`flex items-center gap-1 rounded-full border py-0.5 ${compact ? 'pl-0.5 pr-1.5' : 'pl-0.5 pr-2'}`}
           style={{ background: N_BADGE_STYLE.background, borderColor: N_BADGE_STYLE.border }}
         >
           <span className="flex h-4 w-4 items-center justify-center rounded-full bg-black/30">
@@ -43,10 +44,10 @@ export default function UserStatusBadges({
       {/* VIP ve hediye seviyeleri tek grup: her zaman yan yana durur, alt alta bölünmez.
           Dar alanda grup bütün olarak alt satıra iner. */}
       {(vip_level > 0 || gift_sent_level > 0 || gift_received_level > 0) && (
-        <span className="flex shrink-0 items-center gap-1.5">
+        <span className={`flex shrink-0 items-center ${compact ? 'gap-1' : 'gap-1.5'}`}>
           {vip_level > 0 && (
             <span
-              className="rounded-full border px-2 py-0.5 text-[10px] font-extrabold tabular-nums"
+              className={`rounded-full border py-0.5 text-[10px] font-extrabold tabular-nums ${compact ? 'px-1.5' : 'px-2'}`}
               style={{ background: vip.background, borderColor: vip.border, color: vip.color }}
             >
               VIP{vip_level}
@@ -55,7 +56,7 @@ export default function UserStatusBadges({
 
           {gift_sent_level > 0 && (
             <span
-              className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-extrabold tabular-nums text-white"
+              className={`flex items-center gap-1 rounded-full py-0.5 text-[10px] font-extrabold tabular-nums text-white ${compact ? 'px-1.5' : 'px-2'}`}
               style={{ background: sentColor(gift_sent_tier), textShadow: '0 1px 2px rgba(0,0,0,0.45)' }}
             >
               <Star className="h-3 w-3" fill="currentColor" /> {gift_sent_level}
@@ -64,7 +65,7 @@ export default function UserStatusBadges({
 
           {gift_received_level > 0 && (
             <span
-              className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-extrabold tabular-nums text-white"
+              className={`flex items-center gap-1 rounded-full py-0.5 text-[10px] font-extrabold tabular-nums text-white ${compact ? 'px-1.5' : 'px-2'}`}
               style={{ background: receivedColor(gift_received_tier), textShadow: '0 1px 2px rgba(0,0,0,0.45)' }}
             >
               <Heart className="h-3 w-3" fill="currentColor" /> {gift_received_level}
