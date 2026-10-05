@@ -23,6 +23,23 @@ export const AGENCY_RULES = [
 /** Her 200.000 elmas için ajans komisyonu (dolar) — ajans bazında değiştirilebilir. */
 export const AGENCY_COMMISSION_PER_200K = 3;
 
+/**
+ * Sahip olunan ajans alanları: yayıncı üyeliğinden (agency_record_id) ayrı tutulur.
+ * Böylece kişi başka bir ajanda yayıncı kalsa da kendi ajansının sahibi olabilir;
+ * hediyeleri ve kotası üye olduğu ilk ajansa işlemeye devam eder.
+ */
+export const ownedAgencyPatch = (agency: any, status = '') => ({
+  owned_agency_id: agency?.id || '',
+  owned_agency_code: agency?.agency_id || '',
+  owned_agency_name: agency?.name || '',
+  owned_agency_status: status || agency?.status || '',
+});
+
+/** Sahiplik bağlantısını kaldırır; üyelik alanlarına dokunmaz. */
+export const clearOwnedAgencyPatch = () => ({
+  owned_agency_id: '', owned_agency_code: '', owned_agency_name: '', owned_agency_status: '',
+});
+
 /** Elmas miktarına karşılık gelen ajans komisyonu. */
 export const agencyCommissionFor = (diamonds: any, per200k: any = AGENCY_COMMISSION_PER_200K) =>
   Math.round((Math.max(0, Number(diamonds) || 0) / 200000) * (Math.max(0, Number(per200k) || 0)) * 100) / 100;

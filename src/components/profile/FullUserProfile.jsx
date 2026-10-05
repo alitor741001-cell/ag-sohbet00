@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Ban, ChevronRight, Flag, Loader2, MessageSquare, Mic2, MicOff, Settings, UserPlus } from 'lucide-react';
+import { ArrowLeft, Ban, Building2, ChevronRight, Flag, Loader2, MessageSquare, Mic2, MicOff, Settings, UserPlus } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useToast } from '@/components/ui/use-toast';
 import { useCurrentUser } from '@/lib/useCurrentUser';
@@ -64,6 +64,10 @@ export default function FullUserProfile({
   const memberId = !hidden && profile?.member_id && profile.member_id !== '-' ? String(profile.member_id) : '';
   const age = hidden ? null : ageFromBirthDate(profile?.birth_date);
   const genderLabel = profile?.gender === 'erkek' ? 'Erkek' : profile?.gender === 'kadın' ? 'Kadın' : 'Belirtilmedi';
+  // Ajans sahibi etiketi: kişinin kendi ajansı varsa kartta görünür (başka ajanda yayıncı olsa bile).
+  const ownerAgency = !hidden && (profile?.owned_agency_name
+    ? { name: profile.owned_agency_name, code: profile.owned_agency_code || '' }
+    : (profile?.agency_role === 'owner' && profile?.agency_name ? { name: profile.agency_name, code: profile.agency_code || '' } : null));
   const showSocial = !isSelf && !hidden;
   // Ajans sahibi, kendi ajansında olmayan bir kullanıcıyı yayıncı olarak davet edebilir.
   // Yayıncı daveti yalnızca arkadaş olduğun kullanıcılara gönderilebilir.
@@ -177,7 +181,7 @@ export default function FullUserProfile({
               />
             </div>
 
-            {!hidden && (profile?.broadcaster_status === 'active' || profile?.agency_name) && (
+            {!hidden && (profile?.broadcaster_status === 'active' || profile?.agency_name || ownerAgency) && (
               <div className="mt-2.5 flex flex-wrap items-center justify-center gap-2">
                 {profile?.broadcaster_status === 'active' && (
                   <span className="flex items-center gap-1 rounded-full border border-[#F5C542]/50 bg-[#F5C542]/10 px-3 py-1 text-[11px] font-black text-[#F5C542]">
@@ -189,9 +193,13 @@ export default function FullUserProfile({
                     🤝 ASİSTANLIK
                   </span>
                 )}
-                {profile?.agency_name && (
+                {ownerAgency ? (
+                  <span className="flex items-center gap-1 rounded-full border border-[#F5C542]/60 bg-[#F5C542]/10 px-3 py-1 text-[11px] font-black text-[#F5C542]">
+                    <Building2 className="h-3 w-3" /> 🏢 AJANS SAHİBİ{ownerAgency.name ? ` • ${ownerAgency.name}` : ''}{ownerAgency.code ? ` (${ownerAgency.code})` : ''}
+                  </span>
+                ) : profile?.agency_name ? (
                   <span className="rounded-full border border-white/15 bg-black/40 px-3 py-1 text-[11px] font-semibold text-white/70">Ajans: {profile.agency_name}</span>
-                )}
+                ) : null}
               </div>
             )}
 

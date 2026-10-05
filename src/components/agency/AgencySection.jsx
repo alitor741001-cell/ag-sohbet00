@@ -3,6 +3,7 @@ import { ArrowLeftRight, Building2, ChevronRight, Gem, Handshake, Hourglass, Mai
 import { Link, useNavigate } from 'react-router-dom';
 import AgencyCreateSheet from '@/components/agency/AgencyCreateSheet';
 import { agencySectionBadge, agencySections } from '@/components/agency/agencySections';
+import { agencyLabel, resolveAgencyRole } from '@/lib/agencyRole';
 import { AGENCY_GOLD, agencyApi } from '@/lib/agency';
 
 /**
@@ -24,19 +25,26 @@ export default function AgencySection({ user, onRefresh, showHeading = true }) {
   useEffect(() => { if (user) load(); }, [user?.id, load]);
 
   const profile = summary?.profile || {};
-  // Özet gecikirse ya da alınamazsa kullanıcı kaydı geçici kaynak olur: yayıncıya
-  // yanlışlıkla "ajans sistemine katıl" görünümü gösterilmez.
-  const agencyRecordId = profile.agency_record_id || user?.agency_record_id || '';
-  const role = profile.agency_role || user?.agency_role || '';
-  const agencyName = summary?.agency?.name || profile.agency_name || user?.agency_name || 'Ajans';
-  const agencyCode = profile.agency_code || user?.agency_code || '';
-  const agencyStatus = summary?.agency?.status || profile.agency_status || '';
-  // Ajans sahibi, ajans kaydının sahibine göre de doğrulanır (eski hesaplarda rol alanı eksik kalabiliyor).
-  const effectiveRole = role === 'owner' || (!!summary?.agency?.owner_id && summary.agency.owner_id === user?.id) ? 'owner' : role;
-  const isPending = effectiveRole === 'owner' && !!agencyRecordId && agencyStatus === 'pending';
-  const isOwner = effectiveRole === 'owner' && !!agencyRecordId && !isPending;
-  const isBroadcaster = effectiveRole === 'broadcaster' && !!agencyRecordId;
-  const isAssistant = effectiveRole === 'assistant' && !!agencyRecordId;
+  // Rol sahip olunan ajansa göre çözülür: kişi başka bir ajanda yayıncı olsa da kendi ajansını yönetir.
+  const role = resolveAgencyRole({
+    profile: summary?.profile || user || {}, owned: summary?.owned_agency, membership: summary?.agency, userId: user?.id,
+  });
+  const isOwner = role === 'owner';
+  const isPending = role === 'pending';
+  const isBroadcaster = role === 'broadcaster';
+  const isAssistant = role === 'assistant';
+  const { name: agencyName, code: agencyCode } = agencyLabel({ profile, owned: summary?.owned_agency, membership: summary?.agency, role });
+  // Yayıncı olarak bağlı olduğu ajans: kendi ajansı olsa bile kazanç ve kota akışı orada kalır.
+  const memberAgencyId = profile.agency_record_id || user?.agency_record_id || '';
+  const ownedAgencyId = profile.owned_agency_id || user?.owned_agency_id || '';
+  const memberAgency = memberAgencyId
+    ? {
+        name: summary?.agency?.name || profile.agency_name || user?.agency_name || '',
+        code: summary?.agency?.agency_id || profile.agency_code || user?.agency_code || '',
+      }
+    : null;
+  // Kendi ajansı dışında yayıncı/asistan olarak bağlı olduğu ajans.
+  const otherMemberAgency = memberAgency && memberAgencyId !== ownedAgencyId ? memberAgency : null;
   const inviteCount = (summary?.invites || []).filter((invite) => invite.status === 'pending').length;
   const sentCount = (summary?.invites_sent || []).filter((invite) => invite.status === 'pending').length;
   const transfer = summary?.transfer;
@@ -44,13 +52,12 @@ export default function AgencySection({ user, onRefresh, showHeading = true }) {
 
   const afterChange = () => { load(); onRefresh?.(); };
 
-  const sectionRole = isPending ? 'pending' : isOwner ? 'owner' : isAssistant ? 'assistant' : isBroadcaster ? 'broadcaster' : '';
-  const baseActions = sectionRole ? agencySections(sectionRole) : [
+  const baseActions = role ? agencySections(role) : [
     { key: 'davetler', label: 'Ajans Davetlerim', icon: MailOpen, path: '/ajans/davetler' },
     { key: 'create', label: 'Ajans Oluştur', icon: Building2 },
   ];
   // Yayıncı da kendi ajansını kurabilir: oluşturma düğmesi ajans değişikliğinin tam yanında durur.
-  const orderedActions = sectionRole === 'broadcaster'
+  const orderedActions = role === 'broadcaster'
     ? [
         ...baseActions.filter((item) => item.key !== 'davetler' && item.key !== 'transferler'),
         { key: 'create', label: 'Ajans Oluştur', icon: Building2 },
@@ -79,14 +86,19 @@ export default function AgencySection({ user, onRefresh, showHeading = true }) {
             {isPending ? <Hourglass className="h-5 w-5" style={{ color: AGENCY_GOLD }} /> : isOwner ? <Building2 className="h-5 w-5" style={{ color: AGENCY_GOLD }} /> : isAssistant ? <Handshake className="h-5 w-5" style={{ color: AGENCY_GOLD }} /> : <Mic2 className="h-5 w-5" style={{ color: AGENCY_GOLD }} />}
           </span>
           <div className="min-w-0 flex-1">
-            {isPending || isOwner || isBroadcaster || isAssistant ? (
+            {role ? (
               <>
                 <p className="truncate text-sm font-black text-white">{isPending ? '🏢 BAŞVURU ONAY BEKLİYOR' : isOwner ? '🏢 AJANS SAHİBİ' : isAssistant ? '🤝 AJANS ASİSTANI' : '🎤 YAYINCI'}</p>
                 <p className="truncate text-[11px]" style={{ color: AGENCY_GOLD }}>
-                  {agencyName} {agencyCode ? `• ${agencyCode}` : ''}
+                  {agencyName || 'Ajans'} {agencyCode ? `• ${agencyCode}` : ''}
                 </p>
                 {isPending && (
                   <p className="mt-0.5 text-[10px] text-white/45">Yönetici onayından sonra resmi ajans sahibi olur ve yayıncı davet edebilirsin.</p>
+                )}
+                {(isOwner || isPending) && !!otherMemberAgency && (
+                  <p className="mt-0.5 text-[10px] text-white/45">
+                    Yayıncı olduğun ajans: {otherMemberAgency.name || 'Ajans'}{otherMemberAgency.code ? ` • ${otherMemberAgency.code}` : ''} — gelen hediyeler ve kotan bu ajansa işler.
+                  </p>
                 )}
                 {isBroadcaster && profile.broadcaster_status !== 'active' && (
                   <p className="mt-0.5 text-[10px] text-white/45">Yayıncı durumun pasif</p>
@@ -137,6 +149,7 @@ export default function AgencySection({ user, onRefresh, showHeading = true }) {
       {/* Başvuru gönderildikten sonra ajans ayarları sayfası kendiliğinden açılır. */}
       <AgencyCreateSheet
         open={sheet === 'create'}
+        memberAgency={otherMemberAgency}
         onCreated={() => { setJustCreated(true); afterChange(); }}
         onClose={() => {
           setSheet('');

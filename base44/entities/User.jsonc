@@ -305,6 +305,22 @@
       "type": "string",
       "default": ""
     },
+    "owned_agency_id": {
+      "type": "string",
+      "default": ""
+    },
+    "owned_agency_code": {
+      "type": "string",
+      "default": ""
+    },
+    "owned_agency_name": {
+      "type": "string",
+      "default": ""
+    },
+    "owned_agency_status": {
+      "type": "string",
+      "default": ""
+    },
     "diamond_month": {
       "type": "number",
       "default": 0

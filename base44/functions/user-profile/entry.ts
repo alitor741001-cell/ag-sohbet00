@@ -39,6 +39,7 @@ export default async function(req) {
           account_status: accountStatus(u),
           agency_role: u.agency_role || '', agency_name: u.agency_name || '', agency_code: u.agency_code || '',
           agency_record_id: u.agency_record_id || '', broadcaster_status: u.broadcaster_status || '',
+          owned_agency_id: u.owned_agency_id || '', owned_agency_name: u.owned_agency_name || '', owned_agency_code: u.owned_agency_code || '',
           ...badgeLevels(u),
         };
       });
@@ -73,6 +74,9 @@ export default async function(req) {
       agency_code: u.agency_code || '',
       agency_record_id: u.agency_record_id || '',
       broadcaster_status: u.broadcaster_status || '',
+      owned_agency_id: u.owned_agency_id || '',
+      owned_agency_name: u.owned_agency_name || '',
+      owned_agency_code: u.owned_agency_code || '',
       ...badgeLevels(u)
     });
   } catch (e) {

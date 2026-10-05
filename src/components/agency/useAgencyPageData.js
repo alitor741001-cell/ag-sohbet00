@@ -1,23 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import { agencyApi } from '@/lib/agency';
+import { resolveAgencyRole } from '@/lib/agencyRole';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 
 // Ajans sayfaları arasında gezinirken bekleme olmasın: son veri anında gösterilir,
 // yenisi arka planda alınır. Oturum kapanınca/başka hesapla girişte sayfa yeniden yüklenir.
 let pageCache = null;
-
-/** Ajans verisinden rolü belirler: sahip, asistan, yayıncı ya da ajanssız. */
-function roleOf(profile, agency, user) {
-  // Özet gecikirse ya da alınamazsa kullanıcı kaydındaki ajans alanları geçici kaynak olur.
-  const recordId = profile?.agency_record_id || user?.agency_record_id || '';
-  const role = profile?.agency_role || user?.agency_role || '';
-  if (!recordId) return '';
-  if (role === 'owner' || agency?.owner_id === user?.id) {
-    return agency?.status === 'pending' ? 'pending' : 'owner';
-  }
-  if (role === 'assistant') return 'assistant';
-  return 'broadcaster';
-}
 
 /**
  * Ajans sayfalarının ortak verisi: kullanıcının ajans rolü, özet bilgileri ve
@@ -38,7 +26,7 @@ export default function useAgencyPageData() {
     try {
       const data = await agencyApi('summary');
       setSummary(data);
-      const role = roleOf(data?.profile, data?.agency, user);
+      const role = resolveAgencyRole({ profile: data?.profile || user, owned: data?.owned_agency, membership: data?.agency, userId: user?.id });
       let panelData = null;
       let broadcasterData = null;
       let assistantData = null;
@@ -62,14 +50,17 @@ export default function useAgencyPageData() {
   useEffect(() => { load(); }, [load]);
 
   const profile = summary?.profile || {};
-  const role = roleOf(profile, summary?.agency, user);
+  // Özet gelmeden önce rol kullanıcı kaydından okunur; sahiplik üyelikten önce gelir.
+  const role = resolveAgencyRole({
+    profile: summary?.profile || user || {}, owned: summary?.owned_agency, membership: summary?.agency, userId: user?.id,
+  });
 
   return {
     user,
     loading,
     role,
     profile,
-    agency: panel?.agency || assistant?.agency || broadcaster?.agency || summary?.agency || null,
+    agency: panel?.agency || assistant?.agency || broadcaster?.agency || summary?.owned_agency || summary?.agency || null,
     panel,
     broadcaster,
     assistant,

@@ -6,6 +6,7 @@ import {
   AGENCY_RULES, AGENCY_COMMISSION_PER_200K, agencyCommissionFor, generateAgencyCode, ensureQuotaTiers,
   syncQuotaRewards, refreshAgencyTotals, agencyStats, sendDirect, inviteMarker, inviteRefId, periodKey, todayKey,
   ASSISTANT_LIMIT, ASSISTANT_SHARES, assistantInviteExpiry, assistantInviteText, activeAssistant, expireAssistantInvites,
+  ownedAgencyPatch, clearOwnedAgencyPatch,
 } from '../../shared/agency.ts';
 
 /**
@@ -51,12 +52,27 @@ export default async function (req) {
     // Başvuru aşamasındaki (onaylanmamış) ajanslarla işlem yapılamaz.
     const isAgencyActive = (agency: any) => !!agency && agency.status !== 'pending' && agency.status !== 'rejected' && agency.active !== false;
 
-    // Ajans adı, üyelerin profil kayıtlarına yansıtılır.
+    // Ajans adı, üyelerin ve ajans sahibinin profil kayıtlarına yansıtılır.
     const syncAgencyName = async (agencyId: string, name: string) => {
       const members = await base44.asServiceRole.entities.User.filter({ agency_record_id: agencyId }, '-created_date', 500).catch(() => []);
       for (const member of members || []) {
         await base44.asServiceRole.entities.User.update(member.id, { agency_name: name }).catch(() => {});
       }
+      const owners = await base44.asServiceRole.entities.User.filter({ owned_agency_id: agencyId }, '-created_date', 20).catch(() => []);
+      for (const owner of owners || []) {
+        await base44.asServiceRole.entities.User.update(owner.id, { owned_agency_name: name }).catch(() => {});
+      }
+    };
+
+    /**
+     * Sahip olunan ajans: yayıncı üyeliğinden (agency_record_id) bağımsız çözülür.
+     * Eski kayıtlarda sahiplik yalnızca rol alanıyla işaretli olduğu için oradan da okunur.
+     */
+    const loadOwnedAgency = async () => {
+      const id = account.owned_agency_id || (account.agency_role === 'owner' ? account.agency_record_id : '');
+      if (!id) return null;
+      const agency = await base44.asServiceRole.entities.Agency.get(id).catch(() => null);
+      return agency && agency.owner_id === account.id ? agency : null;
     };
 
     // ——— ÖZET: profil bölümündeki dinamik menü için ———
@@ -64,12 +80,15 @@ export default async function (req) {
       if (account.broadcaster_status === 'active' && account.agency_record_id) {
         await syncQuotaRewards(base44, account.id).catch(() => {});
       }
-      const [agency, invites, sent, transfers] = await Promise.all([
+      const [agency, ownedRecord, invites, sent, transfers] = await Promise.all([
         account.agency_record_id ? base44.asServiceRole.entities.Agency.get(account.agency_record_id).catch(() => null) : null,
+        account.owned_agency_id ? base44.asServiceRole.entities.Agency.get(account.owned_agency_id).catch(() => null) : null,
         base44.asServiceRole.entities.AgencyInvite.filter({ invitee_id: account.id, status: 'pending' }, '-created_date', 50).catch(() => []),
         base44.asServiceRole.entities.AgencyInvite.filter({ owner_id: account.id, status: 'pending' }, '-created_date', 100).catch(() => []),
         base44.asServiceRole.entities.AgencyTransfer.filter({ user_id: account.id }, '-created_date', 20).catch(() => []),
       ]);
+      // Sahiplik üyelikten ayrıdır: kişi başka bir ajanda yayıncı olsa da kendi ajansının sahibidir.
+      const owned = ownedRecord && ownedRecord.owner_id === account.id ? ownedRecord : null;
       // Ajans sahibi, kaydın kendisinden doğrulanır: eski kayıtlarda rol alanı yanlış kalabiliyor.
       const ownerByRecord = !!agency && agency.owner_id === account.id;
       const role = !agency ? (account.agency_role || '') : (ownerByRecord ? 'owner' : (account.agency_role || 'broadcaster'));
@@ -82,8 +101,13 @@ export default async function (req) {
           agency_code: account.agency_code || '', agency_record_id: account.agency_record_id || '',
           agency_name: account.agency_name || '', agency_role: role, agency_owner_id: agency?.owner_id || account.agency_owner_id || '',
           broadcaster_status: broadcasterStatus, agency_status: agency?.status || (account.agency_record_id ? 'active' : ''),
+          owned_agency_id: owned?.id || account.owned_agency_id || '',
+          owned_agency_code: owned?.agency_id || account.owned_agency_code || '',
+          owned_agency_name: owned?.name || account.owned_agency_name || '',
+          owned_agency_status: owned?.status || account.owned_agency_status || '',
         },
         agency: agency ? { id: agency.id, name: agency.name, agency_id: agency.agency_id, logo: agency.logo || '', description: agency.description || '', member_count: agency.member_count || 0, total_earnings: agency.total_earnings || 0, owner_id: agency.owner_id || '', owner_name: agency.owner_name || '', status: agency.status || 'active' } : null,
+        owned_agency: owned ? { id: owned.id, name: owned.name, agency_id: owned.agency_id, logo: owned.logo || '', description: owned.description || '', rules: owned.rules || AGENCY_RULES.join('\n'), member_count: owned.member_count || 0, total_earnings: owned.total_earnings || 0, owner_id: owned.owner_id || '', owner_name: owned.owner_name || '', commission_per_200k: Number(owned.commission_per_200k) || AGENCY_COMMISSION_PER_200K, status: owned.status || 'active' } : null,
         invites: invites || [],
         invites_sent: sent || [],
         transfer: (transfers || []).find((row) => row.status === 'pending') || (transfers || [])[0] || null,
@@ -95,7 +119,11 @@ export default async function (req) {
     if (action === 'create') {
       const name = String(body.name || '').trim().slice(0, 60);
       if (name.length < 3) return Response.json({ error: 'Ajans adı en az 3 karakter olmalı.' }, { status: 400 });
-      if (account.agency_record_id) return Response.json({ error: 'Zaten bir ajansa bağlısın. Önce ajans değişikliği talebi gönder.' }, { status: 400 });
+      // Kişi başka bir ajanda yayıncı olsa da kendi ajansını kurabilir: hediye ve kota akışı
+      // üye olduğu ilk ajanda kalır, kendi ajansı ayrı yürür.
+      if (account.owned_agency_id && account.owned_agency_status !== 'rejected') {
+        return Response.json({ error: 'Zaten bir ajansın var.' }, { status: 400 });
+      }
       const rl = await rateLimit(base44, 'agency-create:' + account.id, account.id, 5, 60000);
       if (!rl.allowed) return Response.json({ error: 'Çok fazla deneme, biraz bekleyin.' }, { status: 429 });
       let agency: any = null;
@@ -106,24 +134,25 @@ export default async function (req) {
           agency_id: code, name, description: String(body.description || '').trim().slice(0, 400),
           logo: String(body.logo || ''), rules: AGENCY_RULES.join('\n'),
           owner_id: account.id, owner_name: displayName, owner_avatar: account.avatar || '',
-          commission_per_200k: AGENCY_COMMISSION_PER_200K, member_count: 0, active: true, status: 'active',
+          commission_per_200k: AGENCY_COMMISSION_PER_200K, member_count: 0, active: true, status: 'pending',
         }).catch(() => null);
       }
       if (!agency) return Response.json({ error: 'Ajans oluşturulamadı, tekrar deneyin.' }, { status: 500 });
-      // Ajansı açan kişi doğrudan ajans sahibi olur; ayrı bir onay beklenmez.
-      await base44.asServiceRole.entities.User.update(account.id, {
-        agency_code: agency.agency_id, agency_record_id: agency.id, agency_owner_id: agency.owner_id,
-        agency_role: 'owner', agency_name: name, broadcaster_status: '',
-      });
+      // Ajans başvurudan geçer: yönetici onayına kadar "başvuru onay bekliyor" durumunda kalır.
+      const ownPatch: any = ownedAgencyPatch(agency, 'pending');
+      // Ajanssız kullanıcıda üyelik de kendi ajansına bağlanır: davet, panel ve kota akışı aynen çalışır.
+      // Başka bir ajanda yayıncı olan kişide üyelik dokunulmadan kalır; hediye ve kotası oraya işler.
+      if (!account.agency_record_id) Object.assign(ownPatch, userPatch(agency));
+      await base44.asServiceRole.entities.User.update(account.id, ownPatch);
       await notifyAdmins(base44, {
         event: 'agency_application', ref_id: `agency-application:${agency.id}`,
-        title: '🏢 Yeni ajans kuruldu',
-        body: `${displayName} "${name}" ajansını kurdu.`,
+        title: '🏢 Yeni ajans başvurusu',
+        body: `${displayName} "${name}" ajansı için başvurdu.`,
         link: '/admin/ajanslar',
       }).catch(() => {});
       await notifyUser(base44, {
-        user_id: account.id, type: 'agency_applied', title: '🏢 Ajansın kuruldu',
-        body: `${name} (${agency.agency_id}) ajansının sahibi oldun. Artık arkadaşlarını yayıncı olarak davet edebilirsin.`,
+        user_id: account.id, type: 'agency_applied', title: '🏢 Ajans başvurun alındı',
+        body: `${name} (${agency.agency_id}) başvurun yönetici onayında. Onaylandığında ajans sahibi olur ve yayıncı davet edebilirsin.`,
         link: '/ajans',
       }).catch(() => {});
       return Response.json({ ok: true, agency });
@@ -131,31 +160,32 @@ export default async function (req) {
 
     // ——— AJANS AYARLARI ———
     if (action === 'update') {
-      if (account.agency_role !== 'owner' || !account.agency_record_id) return Response.json({ error: 'Ajans sahibi değilsin.' }, { status: 403 });
-      const ownAgency = await base44.asServiceRole.entities.Agency.get(account.agency_record_id).catch(() => null);
-      // Ayarlar başvuru aşamasında da düzenlenebilir.
-      if (!ownAgency || ownAgency.owner_id !== account.id) return Response.json({ error: 'Ajans sahibi değilsin.' }, { status: 403 });
+      // Sahiplik yayıncı üyeliğinden bağımsız çözülür; ayarlar başvuru aşamasında da düzenlenebilir.
+      const ownAgency = await loadOwnedAgency();
+      if (!ownAgency) return Response.json({ error: 'Ajans sahibi değilsin.' }, { status: 403 });
       const patch: any = {};
       if (typeof body.name === 'string' && body.name.trim().length >= 3) patch.name = body.name.trim().slice(0, 60);
       if (typeof body.description === 'string') patch.description = body.description.trim().slice(0, 400);
       if (typeof body.logo === 'string') patch.logo = body.logo;
       if (typeof body.rules === 'string') patch.rules = body.rules.trim().slice(0, 2000);
       if (!Object.keys(patch).length) return Response.json({ error: 'Değişiklik yok.' }, { status: 400 });
-      const updated = await base44.asServiceRole.entities.Agency.update(account.agency_record_id, patch);
+      const updated = await base44.asServiceRole.entities.Agency.update(ownAgency.id, patch);
       // Ajans adı üyelerin profiline yalnızca onaylanmış ajanslarda yansıtılır.
-      if (patch.name && isAgencyActive({ ...ownAgency, ...patch })) await syncAgencyName(account.agency_record_id, patch.name);
+      if (patch.name && isAgencyActive({ ...ownAgency, ...patch })) await syncAgencyName(ownAgency.id, patch.name);
       return Response.json({ ok: true, agency: updated });
     }
 
     // ——— YAYINCI DAVETİ ———
     if (action === 'invite') {
-      if (!account.agency_record_id || (account.agency_role !== 'owner' && account.agency_role !== 'assistant')) {
+      // Sahip kendi ajansına davet gönderir; asistan üye olduğu ajansa gönderir.
+      const ownedAgency = await loadOwnedAgency();
+      const inviteAgency = ownedAgency
+        || (account.agency_record_id ? await base44.asServiceRole.entities.Agency.get(account.agency_record_id).catch(() => null) : null);
+      // Asistan yalnızca aktif asistanlığı varsa davet gönderebilir; davet ettiği yayıncı kendi yayıncısı olur.
+      const senderAssistant = !ownedAgency && account.agency_role === 'assistant' && inviteAgency ? activeAssistant(inviteAgency, account.id) : null;
+      if (!inviteAgency || (!ownedAgency && !senderAssistant)) {
         return Response.json({ error: 'Yalnızca ajans sahibi ve asistanları davet gönderebilir.' }, { status: 403 });
       }
-      const inviteAgency = await base44.asServiceRole.entities.Agency.get(account.agency_record_id).catch(() => null);
-      // Asistan yalnızca aktif asistanlığı varsa davet gönderebilir; davet ettiği yayıncı kendi yayıncısı olur.
-      const senderAssistant = account.agency_role === 'assistant' ? activeAssistant(inviteAgency, account.id) : null;
-      if (account.agency_role === 'assistant' && !senderAssistant) return Response.json({ error: 'Asistanlığın aktif değil.' }, { status: 403 });
       const targetId = String(body.user_id || '');
       if (!targetId || targetId === account.id) return Response.json({ error: 'Geçersiz kullanıcı.' }, { status: 400 });
       const target = await base44.asServiceRole.entities.User.get(targetId).catch(() => null);
@@ -165,7 +195,7 @@ export default async function (req) {
       const rl = await rateLimit(base44, 'agency-invite:' + account.id, account.id, 40, 60000);
       if (!rl.allowed) return Response.json({ error: 'Çok fazla davet gönderdin, biraz bekleyin.' }, { status: 429 });
       const existing = await base44.asServiceRole.entities.AgencyInvite
-        .filter({ agency_record_id: account.agency_record_id, invitee_id: targetId, status: 'pending' }, '-created_date', 1).catch(() => []);
+        .filter({ agency_record_id: inviteAgency.id, invitee_id: targetId, status: 'pending' }, '-created_date', 1).catch(() => []);
       if (existing?.length) return Response.json({ error: 'Bu kullanıcıya zaten davet gönderildi.' }, { status: 400 });
       const agency = inviteAgency;
       if (!agency) return Response.json({ error: 'Ajans bulunamadı.' }, { status: 404 });
@@ -321,9 +351,9 @@ export default async function (req) {
 
     // ——— AJANS PANELİ (sahip) ———
     if (action === 'agency-panel') {
-      if (!account.agency_record_id) return Response.json({ error: 'Bir ajansa bağlı değilsin.' }, { status: 404 });
-      const agency = await base44.asServiceRole.entities.Agency.get(account.agency_record_id).catch(() => null);
-      if (!agency) return Response.json({ error: 'Ajans bulunamadı.' }, { status: 404 });
+      // Panel, sahip olunan ajansı gösterir; yayıncı üyeliği başka ajanda olabilir.
+      const agency = await loadOwnedAgency();
+      if (!agency) return Response.json({ error: 'Bir ajansa bağlı değilsin.' }, { status: 404 });
       const data = await agencyStats(base44, agency);
       return Response.json({ ...data, is_owner: agency.owner_id === account.id });
     }
@@ -429,7 +459,9 @@ export default async function (req) {
 
     // ——— ÜYE KİMLİĞİYLE KULLANICI ARAMA (davet için) ———
     if (action === 'invite-lookup') {
-      if (!account.agency_record_id || (account.agency_role !== 'owner' && account.agency_role !== 'assistant')) {
+      // Sahip kendi ajansı için, asistan üye olduğu ajans için arama yapar.
+      const lookupAgency = await loadOwnedAgency();
+      if (!lookupAgency && (account.agency_role !== 'assistant' || !account.agency_record_id)) {
         return Response.json({ error: 'Yalnızca ajans sahibi ve asistanları arama yapabilir.' }, { status: 403 });
       }
       const memberId = String(body.member_id || '').trim().replace('#', '');
@@ -437,7 +469,7 @@ export default async function (req) {
       const rows = await base44.asServiceRole.entities.User.filter({ member_id: memberId }, '-created_date', 5).catch(() => []);
       const found = (rows || []).find((row) => row.id !== account.id);
       if (!found) return Response.json({ user: null });
-      const inSameAgency = found.agency_record_id === account.agency_record_id;
+      const inSameAgency = found.agency_record_id === (lookupAgency?.id || account.agency_record_id);
       return Response.json({
         user: {
           id: found.id, name: found.username || found.full_name || 'Kullanıcı', avatar: found.avatar || '',
@@ -469,9 +501,8 @@ export default async function (req) {
 
     // ——— ASİSTANLIK ———
     if (action === 'assistant-appoint') {
-      if (account.agency_role !== 'owner' || !account.agency_record_id) return Response.json({ error: 'Yalnızca ajans sahibi asistanlık verebilir.' }, { status: 403 });
-      const agency = await base44.asServiceRole.entities.Agency.get(account.agency_record_id).catch(() => null);
-      if (!agency || agency.owner_id !== account.id) return Response.json({ error: 'Ajans sahibi değilsin.' }, { status: 403 });
+      const agency = await loadOwnedAgency();
+      if (!agency) return Response.json({ error: 'Yalnızca ajans sahibi asistanlık verebilir.' }, { status: 403 });
       if (!isAgencyActive(agency)) return Response.json({ error: 'Ajansın onaylandıktan sonra asistan verebilirsin.' }, { status: 403 });
       const targetId = String(body.user_id || '');
       if (!targetId || targetId === account.id) return Response.json({ error: 'Geçersiz kullanıcı.' }, { status: 400 });
@@ -514,9 +545,8 @@ export default async function (req) {
     }
 
     if (action === 'assistant-remove') {
-      if (account.agency_role !== 'owner' || !account.agency_record_id) return Response.json({ error: 'Yalnızca ajans sahibi işlem yapabilir.' }, { status: 403 });
-      const agency = await base44.asServiceRole.entities.Agency.get(account.agency_record_id).catch(() => null);
-      if (!agency || agency.owner_id !== account.id) return Response.json({ error: 'Ajans sahibi değilsin.' }, { status: 403 });
+      const agency = await loadOwnedAgency();
+      if (!agency) return Response.json({ error: 'Yalnızca ajans sahibi işlem yapabilir.' }, { status: 403 });
       const targetId = String(body.user_id || '');
       const entry = (agency.assistants || []).find((row: any) => row.user_id === targetId);
       if (!entry) return Response.json({ error: 'Asistan bulunamadı.' }, { status: 404 });
@@ -628,7 +658,10 @@ export default async function (req) {
           }).catch(() => null);
         }
         if (!agency) return Response.json({ error: 'Ajans oluşturulamadı.' }, { status: 500 });
-        await base44.asServiceRole.entities.User.update(owner.id, userPatch(agency));
+        // Admin kurduğu ajans aktif sayılır; kişinin başka ajandaki yayıncılığı korunur.
+        const ownPatch: any = ownedAgencyPatch({ ...agency, status: 'active' }, 'active');
+        if (!owner.agency_record_id) Object.assign(ownPatch, userPatch(agency));
+        await base44.asServiceRole.entities.User.update(owner.id, ownPatch);
         return Response.json({ ok: true, agency });
       }
       if (action === 'admin-agency-decide') {
@@ -638,7 +671,10 @@ export default async function (req) {
         if (body.approve) {
           await base44.asServiceRole.entities.Agency.update(agency.id, { status: 'active', active: true, reviewed_at: new Date().toISOString() });
           if (owner) {
-            await base44.asServiceRole.entities.User.update(owner.id, userPatch({ ...agency, status: 'active' }));
+            // Sahiplik ayrı yazılır: sahip başka bir ajanda yayıncıysa üyeliği bozulmaz.
+            const ownPatch: any = ownedAgencyPatch({ ...agency, status: 'active' }, 'active');
+            if (!owner.agency_record_id) Object.assign(ownPatch, userPatch({ ...agency, status: 'active' }));
+            await base44.asServiceRole.entities.User.update(owner.id, ownPatch);
             await notifyUser(base44, {
               user_id: owner.id, type: 'agency_approved', title: '✅ Ajansın onaylandı',
               body: `${agency.name} (${agency.agency_id}) ajansı onaylandı. Artık yayıncı davet edebilirsin.`, link: '/profil',
@@ -647,10 +683,13 @@ export default async function (req) {
           return Response.json({ ok: true, status: 'active' });
         }
         await base44.asServiceRole.entities.Agency.update(agency.id, { status: 'rejected', active: false, reviewed_at: new Date().toISOString() });
-        if (owner && owner.agency_record_id === agency.id) {
-          await base44.asServiceRole.entities.User.update(owner.id, {
-            agency_code: '', agency_record_id: '', agency_name: '', agency_owner_id: '', agency_role: '', broadcaster_status: '',
-          });
+        if (owner) {
+          // Yalnızca bu ajansa bağlı üyelik temizlenir; başka ajandaki yayıncılık sürer.
+          const rejectPatch: any = clearOwnedAgencyPatch();
+          if (owner.agency_record_id === agency.id) {
+            Object.assign(rejectPatch, { agency_code: '', agency_record_id: '', agency_name: '', agency_owner_id: '', agency_role: '', broadcaster_status: '' });
+          }
+          await base44.asServiceRole.entities.User.update(owner.id, rejectPatch);
           await notifyUser(base44, {
             user_id: owner.id, type: 'agency_rejected', title: '❌ Ajans başvurun reddedildi',
             body: `${agency.name} başvurun onaylanmadı. Dilersen yeniden başvurabilirsin.`, link: '/profil',
