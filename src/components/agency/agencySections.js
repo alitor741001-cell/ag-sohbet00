@@ -23,7 +23,6 @@ const AGENCY_SECTIONS = {
   ],
   broadcaster: [
     { key: 'kota', label: 'Kota Tablosu', path: '/ajans/kota-tablosu', icon: Gem },
-    { key: 'kazanc', label: 'Kazançlarım', path: '/ajans/kazanc', icon: Wallet },
     { key: 'ajansim', label: 'Ajansım', path: '/ajans/ajansim', icon: Building2 },
     { key: 'davetler', label: 'Davetler', path: '/ajans/davetler', icon: MailOpen },
     { key: 'transferler', label: 'Ajans Değişikliği', path: '/ajans/transferler', icon: ArrowLeftRight },

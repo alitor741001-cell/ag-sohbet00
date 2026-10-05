@@ -24,14 +24,19 @@ export default function AgencySection({ user, onRefresh, showHeading = true }) {
   useEffect(() => { if (user) load(); }, [user?.id, load]);
 
   const profile = summary?.profile || {};
+  // Özet gecikirse ya da alınamazsa kullanıcı kaydı geçici kaynak olur: yayıncıya
+  // yanlışlıkla "ajans sistemine katıl" görünümü gösterilmez.
+  const agencyRecordId = profile.agency_record_id || user?.agency_record_id || '';
   const role = profile.agency_role || user?.agency_role || '';
+  const agencyName = summary?.agency?.name || profile.agency_name || user?.agency_name || 'Ajans';
+  const agencyCode = profile.agency_code || user?.agency_code || '';
   const agencyStatus = summary?.agency?.status || profile.agency_status || '';
   // Ajans sahibi, ajans kaydının sahibine göre de doğrulanır (eski hesaplarda rol alanı eksik kalabiliyor).
   const effectiveRole = role === 'owner' || (!!summary?.agency?.owner_id && summary.agency.owner_id === user?.id) ? 'owner' : role;
-  const isPending = effectiveRole === 'owner' && !!profile.agency_record_id && agencyStatus === 'pending';
-  const isOwner = effectiveRole === 'owner' && !!profile.agency_record_id && !isPending;
-  const isBroadcaster = effectiveRole === 'broadcaster' && !!profile.agency_record_id;
-  const isAssistant = effectiveRole === 'assistant' && !!profile.agency_record_id;
+  const isPending = effectiveRole === 'owner' && !!agencyRecordId && agencyStatus === 'pending';
+  const isOwner = effectiveRole === 'owner' && !!agencyRecordId && !isPending;
+  const isBroadcaster = effectiveRole === 'broadcaster' && !!agencyRecordId;
+  const isAssistant = effectiveRole === 'assistant' && !!agencyRecordId;
   const inviteCount = (summary?.invites || []).filter((invite) => invite.status === 'pending').length;
   const sentCount = (summary?.invites_sent || []).filter((invite) => invite.status === 'pending').length;
   const transfer = summary?.transfer;
@@ -40,10 +45,20 @@ export default function AgencySection({ user, onRefresh, showHeading = true }) {
   const afterChange = () => { load(); onRefresh?.(); };
 
   const sectionRole = isPending ? 'pending' : isOwner ? 'owner' : isAssistant ? 'assistant' : isBroadcaster ? 'broadcaster' : '';
-  const actions = (sectionRole ? agencySections(sectionRole) : [
+  const baseActions = sectionRole ? agencySections(sectionRole) : [
     { key: 'davetler', label: 'Ajans Davetlerim', icon: MailOpen, path: '/ajans/davetler' },
     { key: 'create', label: 'Ajans Oluştur', icon: Building2 },
-  ]).map((item) => {
+  ];
+  // Yayıncı da kendi ajansını kurabilir: oluşturma düğmesi ajans değişikliğinin tam yanında durur.
+  const orderedActions = sectionRole === 'broadcaster'
+    ? [
+        ...baseActions.filter((item) => item.key !== 'davetler' && item.key !== 'transferler'),
+        { key: 'create', label: 'Ajans Oluştur', icon: Building2 },
+        ...baseActions.filter((item) => item.key === 'transferler'),
+        ...baseActions.filter((item) => item.key === 'davetler'),
+      ]
+    : baseActions;
+  const actions = orderedActions.map((item) => {
     const count = agencySectionBadge(item.key, { davetler: isOwner ? sentCount : inviteCount });
     return count ? { ...item, label: `${item.label} (${count})` } : item;
   });
@@ -68,7 +83,7 @@ export default function AgencySection({ user, onRefresh, showHeading = true }) {
               <>
                 <p className="truncate text-sm font-black text-white">{isPending ? '🏢 BAŞVURU ONAY BEKLİYOR' : isOwner ? '🏢 AJANS SAHİBİ' : isAssistant ? '🤝 AJANS ASİSTANI' : '🎤 YAYINCI'}</p>
                 <p className="truncate text-[11px]" style={{ color: AGENCY_GOLD }}>
-                  {summary?.agency?.name || profile.agency_name || 'Ajans'} {profile.agency_code ? `• ${profile.agency_code}` : ''}
+                  {agencyName} {agencyCode ? `• ${agencyCode}` : ''}
                 </p>
                 {isPending && (
                   <p className="mt-0.5 text-[10px] text-white/45">Yönetici onayından sonra resmi ajans sahibi olur ve yayıncı davet edebilirsin.</p>

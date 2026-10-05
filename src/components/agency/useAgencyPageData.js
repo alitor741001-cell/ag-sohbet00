@@ -7,12 +7,15 @@ import { useCurrentUser } from '@/lib/useCurrentUser';
 let pageCache = null;
 
 /** Ajans verisinden rolü belirler: sahip, asistan, yayıncı ya da ajanssız. */
-function roleOf(profile, agency, userId) {
-  if (!profile?.agency_record_id) return '';
-  if (profile.agency_role === 'owner' || agency?.owner_id === userId) {
+function roleOf(profile, agency, user) {
+  // Özet gecikirse ya da alınamazsa kullanıcı kaydındaki ajans alanları geçici kaynak olur.
+  const recordId = profile?.agency_record_id || user?.agency_record_id || '';
+  const role = profile?.agency_role || user?.agency_role || '';
+  if (!recordId) return '';
+  if (role === 'owner' || agency?.owner_id === user?.id) {
     return agency?.status === 'pending' ? 'pending' : 'owner';
   }
-  if (profile.agency_role === 'assistant') return 'assistant';
+  if (role === 'assistant') return 'assistant';
   return 'broadcaster';
 }
 
@@ -35,7 +38,7 @@ export default function useAgencyPageData() {
     try {
       const data = await agencyApi('summary');
       setSummary(data);
-      const role = roleOf(data?.profile, data?.agency, user.id);
+      const role = roleOf(data?.profile, data?.agency, user);
       let panelData = null;
       let broadcasterData = null;
       let assistantData = null;
@@ -59,7 +62,7 @@ export default function useAgencyPageData() {
   useEffect(() => { load(); }, [load]);
 
   const profile = summary?.profile || {};
-  const role = roleOf(profile, summary?.agency, user?.id);
+  const role = roleOf(profile, summary?.agency, user);
 
   return {
     user,
