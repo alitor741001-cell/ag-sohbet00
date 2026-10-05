@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Send, Smile } from 'lucide-react';
+import { Gift, Send, Smile, Trophy } from 'lucide-react';
 import EmojiPicker from '@/components/player/EmojiPicker';
 import VoiceChatMessage from '@/components/voice/VoiceChatMessage';
 import VoiceGiftMessage from '@/components/voice/VoiceGiftMessage';
 import SlotWinMessage from '@/components/games/SlotWinMessage';
 import BigGiftChatNotice from '@/components/voice/BigGiftChatNotice';
 import { plainText } from '@/components/voice/voiceText';
+import { LEVEL_UP_TONE, levelUpName, parseLevelUpNotice } from '@/lib/levelUpNotice';
 import useMessageProfiles from '@/hooks/useMessageProfiles';
 
 /**
@@ -60,6 +61,20 @@ export default function VoiceChatDock({ messages = [], onSend, open, onCloseComp
                 return <VoiceGiftMessage key={message.id} message={message} />;
               }
               if (message.type === 'system') {
+                // Seviye atlama: atış seviyesi hediye ikonu (kehribar), hediye alma seviyesi kupa (mavi).
+                const levelUp = parseLevelUpNotice(message.text);
+                if (levelUp) {
+                  return (
+                    <p key={message.id} className="flex flex-wrap items-center justify-center gap-1 break-words px-2 text-center text-[11px] font-semibold [overflow-wrap:anywhere]">
+                      <span className="text-white/90">{levelUpName(plainText(message.text))}</span>
+                      {levelUp.kind === 'received'
+                        ? <Trophy className={`h-3.5 w-3.5 ${LEVEL_UP_TONE.received}`} />
+                        : <Gift className={`h-3.5 w-3.5 ${LEVEL_UP_TONE.sent}`} />}
+                      <span className={`font-black tabular-nums ${LEVEL_UP_TONE[levelUp.kind]}`}>{levelUp.level}</span>
+                      <span className="text-white/70">lvl atladı</span>
+                    </p>
+                  );
+                }
                 return <p key={message.id} className="break-words px-2 text-center text-[11px] font-semibold italic text-amber-300 [overflow-wrap:anywhere] [text-shadow:0_0_10px_rgba(251,191,36,0.45)]">{plainText(message.text)}</p>;
               }
               return (

@@ -7,6 +7,7 @@ import { appendRoomLog } from '../../shared/roomLog.ts';
 import { coinsForK, ensureGiftWallet, formatK, giftBalance } from '../../shared/giftWallet.ts';
 import { giftBoard } from '../../shared/giftBoard.ts';
 import { addGiftTotals } from '../../shared/userLevels.ts';
+import { syncGiftRoomLevel } from '../../shared/roomLevels.ts';
 import { HIDDEN_AVATAR_URL, hiddenDisplayName, isHiddenDisplayName, isHiddenUser } from '../../shared/vip.ts';
 
 const SEAT_OPTIONS = [1, 2, 5, 8, 9, 12, 15, 20, 24];
@@ -375,11 +376,35 @@ export default async function (req: Request): Promise<Response> {
       ]);
 
       // Hediye seviyeleri: gönderen ve alan kişilerin K toplamları işlenir.
-      await addGiftTotals(base44, {
+      const progression = await addGiftTotals(base44, {
         senderId: user.id,
         recipientIds: recipients.map((recipient) => recipient.user_id),
         kPerRecipient: kValue * quantity,
       });
+
+      // Oda LVL'i hediye atışıyla yükselir: hediye kutusundaki atış LVL eşiği tamamlandığında
+      // oda seviyesi atlar ve odaya duyuru düşer. Hediyeyi alanların "hediye alma" seviyesi de duyurulur.
+      try {
+        const levelMessages = [];
+        if (progression?.sender) {
+          const synced = await syncGiftRoomLevel(base44, { userId: user.id, userName: shownName, level: progression.sender.after });
+          if (synced?.leveledUp) {
+            levelMessages.push({
+              room_id, user_id: hiddenUser ? '' : user.id, user_name: shownName,
+              user_avatar: hiddenUser ? HIDDEN_AVATAR_URL : shownAvatar,
+              text: `${shownName} ${synced.level} lvl atladı`, type: 'system',
+            });
+          }
+        }
+        for (const person of progression?.recipients || []) {
+          if (person.after <= person.before) continue;
+          levelMessages.push({
+            room_id, user_id: person.user_id, user_name: person.name, user_avatar: '',
+            text: `${person.name} ${person.after} hediye lvl atladı`, type: 'system',
+          });
+        }
+        if (levelMessages.length) await base44.asServiceRole.entities.RoomMessage.bulkCreate(levelMessages);
+      } catch {}
 
       // Büyük hediye (1 milyon ve üzeri): tüm sesli odaların ekranına duyuru düşer.
       if (coinsForK(kValue) * quantity >= BIG_GIFT_SCORE) {

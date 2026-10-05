@@ -22,8 +22,8 @@ export default function useRoomLevels(userIds = []) {
         if (!alive) return;
         const map = {};
         (rows || []).forEach((row) => {
-          if (!row?.user_id || row.owner_id !== row.user_id || map[row.user_id]) return;
-          map[row.user_id] = Number(row.level) || 1;
+          if (!row?.user_id || row.owner_id !== row.user_id || map[row.user_id] !== undefined) return;
+          map[row.user_id] = Math.max(0, Math.floor(Number(row.level) || 0));
         });
         setLevels(map);
       })
@@ -41,7 +41,7 @@ export default function useRoomLevels(userIds = []) {
         });
         return;
       }
-      setLevels((current) => ({ ...current, [row.user_id]: Number(row.level) || current[row.user_id] || 1 }));
+      setLevels((current) => ({ ...current, [row.user_id]: Math.max(0, Math.floor(Number(row.level) || 0)) }));
     });
 
     return () => {

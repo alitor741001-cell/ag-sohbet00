@@ -30,34 +30,22 @@ export async function setRoomLevel(base44, target, level) {
   return saved;
 }
 
-export async function advanceRoomLevel(base44, userId, userName) {
-  const target = await base44.asServiceRole.entities.User.get(userId);
-  let current = await getRoomLevel(base44, userId);
-  if (isFixedMaxLevel(target)) {
-    if (!current) current = await base44.asServiceRole.entities.RoomLevel.create({ owner_id: userId, user_id: userId, user_name: userName, level: 1000, message_count: 0 });
-    else if (current.level !== 1000) current = await base44.asServiceRole.entities.RoomLevel.update(current.id, { level: 1000, message_count: 0, user_name: userName });
-    await applyAutomaticLevelFrame(base44, target, 1000);
-    return { level: 1000, leveledUp: false };
-  }
-  if (!current) {
-    await base44.asServiceRole.entities.RoomLevel.create({ owner_id: userId, user_id: userId, user_name: userName, level: 1, message_count: 0 });
-    current = await getRoomLevel(base44, userId);
-  }
-  for (let attempt = 0; attempt < 5; attempt++) {
-    const previous = bounded(current.level);
-    if (previous >= 1000) return { level: 1000, leveledUp: false };
-    const count = Math.max(0, Math.floor(Number(current.message_count) || 0)) % 50 + 1;
-    const level = Math.min(1000, previous + (count === 50 ? 1 : 0));
-    const result = await base44.asServiceRole.entities.RoomLevel.updateMany(
-      { id: current.id, level: current.level, message_count: current.message_count },
-      { $set: { level, message_count: count % 50 } }
-    );
-    if (result.updated === 1) {
-      await base44.asServiceRole.entities.RoomLevel.update(current.id, { user_name: userName });
-      if (levelFrameFor(level) !== levelFrameFor(previous)) await applyAutomaticLevelFrame(base44, target, level);
-      return { level, leveledUp: level > previous };
-    }
-    current = await getRoomLevel(base44, userId);
-  }
-  throw new Error('Seviye güncellemesi eşzamanlı işlemler nedeniyle tamamlanamadı.');
+/**
+ * Oda LVL'i mesajla değil hediye atışıyla yükselir: seviye, hediye kutusundaki
+ * "atış LVL" basamaklarıyla aynı kaynaktan gelir (gönderilen hediye K toplamı).
+ * Gereken hediye eşiği tamamlandığında atlar (örn. 23 → 24).
+ * level: hediye gönderiminde hesaplanan yeni atış seviyesi.
+ */
+export async function syncGiftRoomLevel(base44, { userId, userName, level }) {
+  const target = await base44.asServiceRole.entities.User.get(userId).catch(() => null);
+  if (!target?.id) return null;
+  const fixed = isFixedMaxLevel(target);
+  const next = fixed ? 1000 : Math.min(1000, Math.max(1, Math.floor(Number(level) || 0)));
+  const current = await getRoomLevel(base44, userId);
+  const previous = current ? Math.max(0, Math.floor(Number(current.level) || 0)) : 0;
+  const data = { owner_id: userId, user_id: userId, user_name: userName || target.username || target.full_name || 'Kullanıcı', level: next };
+  if (current) await base44.asServiceRole.entities.RoomLevel.update(current.id, data);
+  else await base44.asServiceRole.entities.RoomLevel.create(data);
+  if (levelFrameFor(next) !== levelFrameFor(previous)) await applyAutomaticLevelFrame(base44, target, next);
+  return { level: next, previous, leveledUp: !fixed && next > previous };
 }

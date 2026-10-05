@@ -8,6 +8,7 @@ import { Image } from '@/components/ui/image';
 
 import useMessageProfiles from '@/hooks/useMessageProfiles';
 import { isHiddenName } from '@/lib/hiddenUser';
+import { parseLevelUpNotice } from '@/lib/levelUpNotice';
 import { mergeMessages, upsertMessage } from '@/lib/realtimeMessages';
 import { parseRoleMetadata, parseFrameMetadata } from '@/lib/roles';
 import RoomChatMessage from '@/components/player/RoomChatMessage';
@@ -277,11 +278,12 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
                 (() => {
                   const frame = parseFrameMetadata((m.text || '').replace(/\{\{PFRAME\|[^}]*\}\}/g, ''));
                   const { text: cleanText, color: roleColor, roleKey, hasRole } = parseRoleMetadata(frame.rest);
-                  // Oda LVL'i yükseldiğinde aynı kart gösterilir: "Admin 39 lvl atladı".
-                  const levelUp = /(\d+)\s*lvl atladı/i.exec(m.text || '');
+                  // Seviye atlama kartı: atış seviyesi "X 24 lvl atladı", hediye alma seviyesi
+                  // "X 24 hediye lvl atladı" — ikisi farklı ikon ve renkle gösterilir.
+                  const levelUp = parseLevelUpNotice(m.text || '');
                   if (levelUp || /odaya katıldı|odadan ayrıldı|kişisel odasını açtı/.test(m.text || '')) {
                     const profile = profiles[m.user_id] || viewerProfiles[m.user_id] || {};
-                    return <RoomCheatNotice isOwner={m.user_id === ownerId} profile={{ ...profile, display_role: profile.display_role || roleKey }} notice={{ participant: { name: m.user_name, avatar: m.user_avatar }, level: levelUp ? Number(levelUp[1]) : 0, type: levelUp ? 'levelup' : (m.text || '').includes('odadan ayrıldı') ? 'leave' : 'join' }} />;
+                    return <RoomCheatNotice isOwner={m.user_id === ownerId} profile={{ ...profile, display_role: profile.display_role || roleKey }} notice={{ participant: { name: m.user_name, avatar: m.user_avatar }, level: levelUp ? levelUp.level : 0, levelKind: levelUp?.kind || '', type: levelUp ? 'levelup' : (m.text || '').includes('odadan ayrıldı') ? 'leave' : 'join' }} />;
                   }
                   const color = roleColor || frame.textColor || '#8b5cf6';
                   const isRole = hasRole || !!frame.frameId;

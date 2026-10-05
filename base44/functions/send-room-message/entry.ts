@@ -2,7 +2,6 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import { sanitizeText, rateLimit, safeErrorResponse, logSecurity } from '../../shared/security.ts';
 import { findProfanity } from '../../shared/profanity.ts';
 import { awardMessageXp } from '../../shared/xp.ts';
-import { advanceRoomLevel } from '../../shared/roomLevels.ts';
 import { HIDDEN_AVATAR_URL, hiddenDisplayName, isHiddenUser } from '../../shared/vip.ts';
 
 export default async function(req) {
@@ -72,19 +71,8 @@ export default async function(req) {
       text: clean, type: 'user'
     });
     // Arka planda XP kazanımı — kullanıcı arayüzünde mesaj sayısı gösterilmez.
+    // Oda LVL'i mesajla yükselmez; hediye atışıyla yükselir (bkz. voice-room gift-send).
     try { await awardMessageXp(base44, user.id, name, created.id); } catch {}
-    // Oda LVL'i: her 50 mesajda +1 yükselir. Yükseldiği anda odaya duyuru düşer —
-    // odadaki herkes sayfayı yenilemeden seviye atlamayı görür.
-    try {
-      const progressed = await advanceRoomLevel(base44, user.id, name);
-      if (progressed?.leveledUp) {
-        await base44.asServiceRole.entities.RoomMessage.create({
-          room_id, user_id: user.id, user_name: name,
-          user_avatar: hiddenUser ? HIDDEN_AVATAR_URL : (user.avatar || ''),
-          text: `${name} ${progressed.level} lvl atladı`, type: 'system'
-        });
-      }
-    } catch {}
     return Response.json({ ok: true, message: created });
   } catch (e) {
     return safeErrorResponse(e);

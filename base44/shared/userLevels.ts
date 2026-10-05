@@ -76,24 +76,38 @@ export async function addLoadedCoins(base44: any, userId: string, amount: any) {
 /**
  * Hediye sayaçları: gönderen kişi her alıcı için, alıcı kendi payı kadar artar.
  * kPerRecipient: tek bir alıcıya giden K (adet dahil).
+ * Dönen değer, hediye seviyesinin önce → sonra değişimidir; seviye atlama duyurusu bununla kurulur.
  */
 export async function addGiftTotals(base44: any, { senderId, recipientIds, kPerRecipient }: any) {
   const k = Math.max(0, Number(kPerRecipient) || 0);
-  if (!k) return;
+  if (!k) return null;
   const ids = [...new Set((recipientIds || []).filter(Boolean))];
+  let sender = null;
   if (senderId) {
-    const sender = await base44.asServiceRole.entities.User.get(senderId).catch(() => null);
-    if (sender?.id) {
-      await base44.asServiceRole.entities.User.update(sender.id, {
-        gift_sent_k: Math.round(((Number(sender.gift_sent_k) || 0) + k * ids.length) * 100) / 100,
-      }).catch(() => {});
+    const record = await base44.asServiceRole.entities.User.get(senderId).catch(() => null);
+    if (record?.id) {
+      const sentK = Math.round(((Number(record.gift_sent_k) || 0) + k * ids.length) * 100) / 100;
+      sender = {
+        user_id: record.id,
+        name: record.username || record.full_name || 'Kullanıcı',
+        before: giftLevel(record.gift_sent_k),
+        after: giftLevel(sentK),
+      };
+      await base44.asServiceRole.entities.User.update(record.id, { gift_sent_k: sentK }).catch(() => {});
     }
   }
+  const recipients = [];
   for (const id of ids) {
     const person = await base44.asServiceRole.entities.User.get(id).catch(() => null);
     if (!person?.id) continue;
-    await base44.asServiceRole.entities.User.update(person.id, {
-      gift_received_k: Math.round(((Number(person.gift_received_k) || 0) + k) * 100) / 100,
-    }).catch(() => {});
+    const receivedK = Math.round(((Number(person.gift_received_k) || 0) + k) * 100) / 100;
+    recipients.push({
+      user_id: person.id,
+      name: person.username || person.full_name || 'Kullanıcı',
+      before: giftLevel(person.gift_received_k),
+      after: giftLevel(receivedK),
+    });
+    await base44.asServiceRole.entities.User.update(person.id, { gift_received_k: receivedK }).catch(() => {});
   }
+  return { sender, recipients };
 }
