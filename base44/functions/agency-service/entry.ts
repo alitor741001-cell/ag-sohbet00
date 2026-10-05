@@ -69,13 +69,20 @@ export default async function (req) {
         base44.asServiceRole.entities.AgencyInvite.filter({ owner_id: account.id, status: 'pending' }, '-created_date', 100).catch(() => []),
         base44.asServiceRole.entities.AgencyTransfer.filter({ user_id: account.id }, '-created_date', 20).catch(() => []),
       ]);
+      // Ajans sahibi, kaydın kendisinden doğrulanır: eski kayıtlarda rol alanı yanlış kalabiliyor.
+      const ownerByRecord = !!agency && agency.owner_id === account.id;
+      const role = !agency ? (account.agency_role || '') : (ownerByRecord ? 'owner' : (account.agency_role || 'broadcaster'));
+      const broadcasterStatus = ownerByRecord ? '' : (account.broadcaster_status || (agency ? 'active' : ''));
+      if (agency && (account.agency_role !== role || account.broadcaster_status !== broadcasterStatus)) {
+        await base44.asServiceRole.entities.User.update(account.id, { agency_role: role, broadcaster_status: broadcasterStatus }).catch(() => {});
+      }
       return Response.json({
         profile: {
           agency_code: account.agency_code || '', agency_record_id: account.agency_record_id || '',
-          agency_name: account.agency_name || '', agency_role: account.agency_role || '',
-          broadcaster_status: account.broadcaster_status || '', agency_status: agency?.status || (account.agency_record_id ? 'active' : ''),
+          agency_name: account.agency_name || '', agency_role: role, agency_owner_id: agency?.owner_id || account.agency_owner_id || '',
+          broadcaster_status: broadcasterStatus, agency_status: agency?.status || (account.agency_record_id ? 'active' : ''),
         },
-        agency: agency ? { id: agency.id, name: agency.name, agency_id: agency.agency_id, logo: agency.logo || '', description: agency.description || '', member_count: agency.member_count || 0, total_earnings: agency.total_earnings || 0, owner_name: agency.owner_name || '', status: agency.status || 'active' } : null,
+        agency: agency ? { id: agency.id, name: agency.name, agency_id: agency.agency_id, logo: agency.logo || '', description: agency.description || '', member_count: agency.member_count || 0, total_earnings: agency.total_earnings || 0, owner_id: agency.owner_id || '', owner_name: agency.owner_name || '', status: agency.status || 'active' } : null,
         invites: invites || [],
         invites_sent: sent || [],
         transfer: (transfers || []).find((row) => row.status === 'pending') || (transfers || [])[0] || null,

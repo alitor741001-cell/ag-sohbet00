@@ -1,9 +1,9 @@
-import { ChevronRight, Gem, Mic2, Wallet } from 'lucide-react';
+import { ChevronRight, Gem, Mic2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Image } from '@/components/ui/image';
-import { formatDiamonds, formatMoney, formatShortDiamonds } from '@/lib/agency';
+import { formatShortDiamonds } from '@/lib/agency';
 
-/** Ajans sahibinin yayıncı listesi: elmas, tamamlanan kota, kazanç ve durum. */
+/** Ajans sahibinin yayıncı listesi: profil, isim, kimlik ve tamamlanan kota. */
 export default function AgencyBroadcasterList({ members = [] }) {
   if (!members.length) {
     return (
@@ -35,32 +35,14 @@ export default function AgencyBroadcasterList({ members = [] }) {
               {member.status === 'active' ? 'Aktif' : 'Pasif'}
             </span>
           </div>
-          <div className="mt-2.5 grid grid-cols-3 gap-2 text-center">
-            <div className="rounded-xl bg-black/40 px-1 py-1.5">
-              <p className="text-[9px] uppercase tracking-wider text-white/40">Elmas</p>
-              <p className="flex items-center justify-center gap-1 text-xs font-black text-white"><Gem className="h-3 w-3 text-[#5AB8FF]" />{formatShortDiamonds(member.diamonds)}</p>
-            </div>
-            <div className="rounded-xl bg-black/40 px-1 py-1.5">
-              <p className="text-[9px] uppercase tracking-wider text-white/40">Kota</p>
-              <p className="text-xs font-black" style={{ color: '#F5C542' }}>{member.quota ? `${formatShortDiamonds(member.quota)} ✓` : '—'}</p>
-            </div>
-            <div className="rounded-xl bg-black/40 px-1 py-1.5">
-              <p className="text-[9px] uppercase tracking-wider text-white/40">Kazanç</p>
-              <p className="flex items-center justify-center gap-1 text-xs font-black text-white"><Wallet className="h-3 w-3 text-[#F5C542]" />{formatMoney(member.earnings)}</p>
-            </div>
+          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-white/50">
+            <span>Kota: <span className="font-black" style={{ color: '#F5C542' }}>{member.quota ? `${formatShortDiamonds(member.quota)} ✓` : 'Kota yok'}</span></span>
+            <span className="flex items-center gap-1">
+              Bu ayki elmas:
+              <Gem className="h-3 w-3 text-[#5AB8FF]" />
+              <span className="font-black text-white">{formatShortDiamonds(member.diamonds)}</span>
+            </span>
           </div>
-          {member.pending > 0 && (
-            <p className="mt-1.5 text-[10px] text-white/45">Bekleyen ödeme: <span className="font-bold" style={{ color: '#F5C542' }}>{formatMoney(member.pending)}</span></p>
-          )}
-          {member.month_commission > 0 && (
-            <p className="mt-1.5 text-[10px] text-white/45">Bu ayki ajans komisyonu: <span className="font-bold" style={{ color: '#F5C542' }}>{formatMoney(member.month_commission)}</span></p>
-          )}
-          <p className="mt-1 text-[10px] text-white/35">
-            {member.next_quota > 0
-              ? `Sonraki kota: ${formatShortDiamonds(member.next_quota)} • ${formatShortDiamonds(Math.max(0, member.next_quota - member.diamonds))} kaldı`
-              : 'Tüm kotalar tamamlandı ✓'}
-          </p>
-          <p className="mt-1 text-[10px] text-white/35">Aylık elmas: {formatDiamonds(member.diamonds)} • Toplam elmas: {formatDiamonds(member.total_diamonds)}</p>
         </div>
       ))}
     </div>

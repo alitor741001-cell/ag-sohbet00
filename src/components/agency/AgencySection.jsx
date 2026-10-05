@@ -39,9 +39,11 @@ export default function AgencySection({ user, onRefresh, showHeading = true }) {
   const profile = summary?.profile || {};
   const role = profile.agency_role || user?.agency_role || '';
   const agencyStatus = summary?.agency?.status || profile.agency_status || '';
-  const isPending = role === 'owner' && !!profile.agency_record_id && agencyStatus === 'pending';
-  const isOwner = role === 'owner' && !!profile.agency_record_id && !isPending;
-  const isBroadcaster = role === 'broadcaster' && !!profile.agency_record_id;
+  // Ajans sahibi, ajans kaydının sahibine göre de doğrulanır (eski hesaplarda rol alanı eksik kalabiliyor).
+  const effectiveRole = role === 'owner' || (!!summary?.agency?.owner_id && summary.agency.owner_id === user?.id) ? 'owner' : role;
+  const isPending = effectiveRole === 'owner' && !!profile.agency_record_id && agencyStatus === 'pending';
+  const isOwner = effectiveRole === 'owner' && !!profile.agency_record_id && !isPending;
+  const isBroadcaster = effectiveRole === 'broadcaster' && !!profile.agency_record_id;
   const inviteCount = (summary?.invites || []).filter((invite) => invite.status === 'pending').length;
   const sentCount = (summary?.invites_sent || []).filter((invite) => invite.status === 'pending').length;
   const transfer = summary?.transfer;
