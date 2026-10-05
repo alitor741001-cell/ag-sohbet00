@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Clock, Crown, Eraser, Eye, Image as ImageIcon, LayoutGrid, MessageSquare, MessageSquareOff, MessagesSquare, Send, Shield, Smile, Sparkles, UserPlus, Users, X } from 'lucide-react';
+import { Clock, Crown, Eye, Image as ImageIcon, LayoutGrid, MessageSquare, MessageSquareOff, MessagesSquare, Send, Shield, Smile, Sparkles, UserPlus, Users, X } from 'lucide-react';
 import { neonCardClass, neonCircleClass } from '@/lib/neonStyle';
 import VoiceControls from '@/components/player/VoiceControls';
 import { base44 } from '@/api/base44Client';
@@ -33,16 +33,8 @@ const FILTERS = [
 export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, isOwner, isAdmin, onClose, autoDeleteMinutes = 0, countdownText = '', clearToken = 0, onSetAutoDelete, voice, voiceEnabled, onSettings, onDirect, onDirectUser, directUnread = 0, ownerId, roomModerators = [], participants = [], recentParticipants = [], viewerProfiles = {}, presenceMap = {}, onProfileCard, settingsProps, levels = {}, onToggleChat, onMicPress }) {
   const { user } = useCurrentUser();
   const { toast } = useToast();
-  // Cheat temizleme: o an akışta duran katılma/ayrılma/seviye bildirimlerini sohbetten temizler;
-  // sonradan gelen bildirimler normal şekilde görünmeye devam eder.
+  // Cheat temizleme işaretçisi: oda için ortak zaman damgası; bu andan eski bildirimler gizlenir.
   const [cheatClearedAt, setCheatClearedAt] = useState(null);
-  // Temizleme odanın tamamında geçerli: yöneticide gizli bir işaretle herkese yayılır,
-  // böylece odadaki tüm ekranlar aynı anda temizlenir.
-  const clearCheatNotices = () => {
-    setCheatClearedAt(Date.now());
-    toast({ title: 'Cheat bildirimleri temizlendi' });
-    if (isOwner || isAdmin) base44.functions.invoke('clear-room-messages', { room_id: roomId, notices: true }).catch(() => {});
-  };
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
@@ -308,10 +300,6 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
               </button>
             );
           })}
-          <button onClick={clearCheatNotices} className="flex min-w-[4.5rem] shrink-0 flex-col items-center justify-center gap-0.5 border-l border-white/10 px-1.5 py-1 text-[8px] font-black leading-tight text-[#FFD700] active:scale-95">
-            <Eraser className="h-3.5 w-3.5" />
-            <span className="text-center">CHEAT TEMİZLEME</span>
-          </button>
         </div>
       )}
       {!chatEnabled && msgFilter === 'all' ? (

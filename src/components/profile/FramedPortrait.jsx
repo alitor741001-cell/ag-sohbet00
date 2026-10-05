@@ -3,6 +3,7 @@ import usePreparedPortrait from '@/components/xp/usePreparedPortrait';
 import PortraitPhoto from '@/components/profile/PortraitPhoto';
 
 const SIZES = {
+  '3xs': 'h-7 w-7 text-[9px]',
   '2xs': 'h-9 w-9 text-[10px]',
   xs: 'h-14 w-14 text-[10px]',
   sm: 'h-20 w-20 text-xs',

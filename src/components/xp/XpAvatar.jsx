@@ -1,7 +1,7 @@
 import XpFrameArtwork from '@/components/xp/XpFrameArtwork';
 import { frameStyle } from '@/lib/xp';
 
-const SIZES = { '2xs': 'h-9 w-9 text-[10px]', xs: 'h-10 w-10 text-[10px]', sm: 'h-12 w-12 text-xs', md: 'h-16 w-16 text-sm', lg: 'h-28 w-28 text-3xl' };
+const SIZES = { '3xs': 'h-7 w-7 text-[9px]', '2xs': 'h-9 w-9 text-[10px]', xs: 'h-10 w-10 text-[10px]', sm: 'h-12 w-12 text-xs', md: 'h-16 w-16 text-sm', lg: 'h-28 w-28 text-3xl' };
 
 export default function XpAvatar({ avatar, name, frame, size = 'sm', className = '' }) {
   const portrait = avatar ? <img src={avatar} alt={name || 'Profil fotoğrafı'} className="h-full w-full object-cover object-center" referrerPolicy="no-referrer" draggable={false} />

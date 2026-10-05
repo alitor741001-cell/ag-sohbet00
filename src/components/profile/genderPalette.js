@@ -32,6 +32,17 @@ const MASKED = {
   symbol: '?',
 };
 
+/** Film odası kartı: altın sarısı ve kırmızı tonlar. */
+export const ROOM_GOLD = {
+  bg: 'radial-gradient(circle at 50% 0%, rgba(242,206,107,0.26), transparent 58%), linear-gradient(165deg, #2A1B06 0%, #1B0A08 48%, #33090B 100%)',
+  accent: '#F2CE6B',
+  accent2: '#FFD700',
+  danger: '#E5484D',
+  soft: 'rgba(242,206,107,0.26)',
+  glow: 'rgba(229,72,77,0.5)',
+  symbol: '★',
+};
+
 export function genderPalette(gender, hidden = false) {
   if (hidden) return MASKED;
   return gender === 'erkek' ? MALE : FEMALE;

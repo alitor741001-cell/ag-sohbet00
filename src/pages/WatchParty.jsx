@@ -6,7 +6,7 @@ import ChatOverlay from '@/components/player/ChatOverlay';
 import { useVoiceChat } from '@/hooks/useVoiceChat';
 import { useCurrentUser, membershipActive } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
-import { Crown, X, Eye, ArrowLeft, UserRound } from 'lucide-react';
+import { Crown, X, Eye, ArrowLeft, UserMinus } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import RoomSettingsMenu from '@/components/player/RoomSettingsMenu';
@@ -776,7 +776,7 @@ export default function WatchParty() {
                 return (
                   <button key={p.user_id} onClick={() => { if (!hidden) openUserProfile(p.user_id); }} className={`flex items-center gap-1.5 text-xs py-0.5 w-full text-left rounded px-1 ${hidden ? 'cursor-default' : 'hover:bg-secondary/50'}`}>
                     <div className="shrink-0 relative">
-                      {!hidden && prof?.profile_frame ? <ProfileFrame frame={prof.profile_frame} avatar={avatar} name={p.name} size="xs" frameScale={prof.profile_frame_scale} /> : <XpAvatar avatar={avatar} name={p.name} userId={hidden ? '' : p.user_id} size="xs" />}
+                      {!hidden && prof?.profile_frame ? <ProfileFrame frame={prof.profile_frame} avatar={avatar} name={p.name} size="3xs" frameScale={prof.profile_frame_scale} /> : <XpAvatar avatar={avatar} name={p.name} userId={hidden ? '' : p.user_id} size="3xs" />}
                       <span className={`absolute bottom-0 right-0 w-2 h-2 rounded-full border border-card ${isOnline ? 'bg-green-400' : 'bg-red-400'}`} />
                     </div>
                     <span className="flex-1 truncate min-w-0">{hidden ? <span className="hidden-user-name">{p.name}</span> : <>{p.name}{p.user_id === room.owner_id && <Crown className="w-3 h-3 text-amber-400 inline ml-0.5 shrink-0" />}</>}</span>
@@ -809,11 +809,13 @@ export default function WatchParty() {
         <FullUserProfile
           userId={profileTarget}
           sheet
+          theme="gold"
+          hideSettings
           onClose={closeUserProfile}
           roomId={id}
           level={roomLevels[profileTarget] || 0}
           onMessage={(userId) => { closeUserProfile(); openDirectMessage(userId); }}
-          footer={[{ key: 'full-profile', icon: UserRound, label: 'Profili gör', onClick: () => { closeUserProfile(); navigate(`/kullanici/${profileTarget}`); } }]}
+          footer={canMod && profileTarget !== user?.id ? [{ key: 'kick', icon: UserMinus, label: 'Odadan at', onClick: () => { kickUser(profileTarget); closeUserProfile(); } }] : []}
         />
       )}
     </div>
