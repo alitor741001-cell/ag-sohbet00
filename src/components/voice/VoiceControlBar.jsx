@@ -38,11 +38,11 @@ export default function VoiceControlBar({ micActive, deafened, chatOpen, gamesOp
         <RoundButton size="md" tone={micActive ? 'active' : 'gray'} active={micActive} onClick={onToggleMic} label="Mikrofon">
           {micActive ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
         </RoundButton>
-        <RoundButton size="md" tone="gift" active={giftOpen} onClick={onOpenGifts} label="Hediye gönder">
-          <Gift className="h-5 w-5" />
-        </RoundButton>
         <RoundButton size="md" tone={deafened ? 'red' : 'gray'} onClick={onToggleSpeaker} label="Hoparlör">
           {deafened ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+        </RoundButton>
+        <RoundButton size="md" tone="gift" active={giftOpen} onClick={onOpenGifts} label="Hediye gönder">
+          <Gift className="h-5 w-5" />
         </RoundButton>
         <RoundButton size="md" tone={gamesOpen ? 'active' : 'gray'} active={gamesOpen} onClick={onOpenGames} label="Oyun merkezi">
           <Gamepad2 className="h-5 w-5" />
