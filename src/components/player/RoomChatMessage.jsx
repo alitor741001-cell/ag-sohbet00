@@ -42,7 +42,8 @@ function RoomChatMessage({ message, profile, ownerId, roomModerators, currentUse
         </button>
         {!hidden && isOwner && <span className="text-[10px] font-bold text-amber-400">Oda Sahibi</span>}
         {!hidden && profile && (profile.display_role || profile.custom_role?.name) && <RoleBadge user={profile} size="sm" showLabel={false} />}
-        {!hidden && <RoomLevelBadge level={level} />}
+        {/* LVL 1000 yönetici seviyesi mesajlarda yazılmaz. */}
+        {!hidden && Number(level) < 1000 && <RoomLevelBadge level={level} />}
       </div>
       <div className="flex flex-wrap items-center gap-1"><UserBadgeRow profile={profile} /></div>
       <div className="isolate min-w-0 max-w-full overflow-hidden rounded-xl p-2">

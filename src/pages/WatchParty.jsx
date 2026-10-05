@@ -527,6 +527,17 @@ export default function WatchParty() {
     catch (e) { toast({ title: 'İşlem başarısız', description: e.response?.data?.error || e.message, variant: 'destructive' }); }
   };
 
+  // Film odasındaki mikrofon: sesli sohbet kapalıysa odayı sesli moda geçirmeden sesli sohbeti açar.
+  const handleMicPress = async () => {
+    if (room?.voice_enabled) { await voice.toggleMute(); return; }
+    try {
+      await base44.functions.invoke('room-presence', { action: 'enable-voice', room_id: id });
+      toast({ title: 'Sesli sohbet açıldı', description: 'Mikrofonun açılıyor…' });
+    } catch (e) {
+      toast({ title: 'Mikrofon açılamadı', description: e.response?.data?.error || e.message, variant: 'destructive' });
+    }
+  };
+
   const toggleChat = async () => {
     if (!canMod) { toast({ title: 'Yetkiniz yok', variant: 'destructive' }); return; }
     try { await base44.functions.invoke('room-presence', { action: 'toggle-chat', room_id: id }); toast({ title: room.chat_enabled ? 'Sohbet kapatıldı' : 'Sohbet açıldı' }); }
@@ -717,7 +728,7 @@ export default function WatchParty() {
             onTouchEnd={(e) => { const dx = e.changedTouches[0].clientX - touchStart.current.x; const dy = e.changedTouches[0].clientY - touchStart.current.y; if (dx > 80 && dx > Math.abs(dy) * 1.5) setChatOpen(false); }}
           >
 
-            {chatOpen && <ChatOverlay roomId={id} chatEnabled={chatEnabled} chatLocked={chatLocked} isOwner={canMod} isAdmin={isMod} onClose={() => setChatOpen(false)} autoDeleteMinutes={autoDeleteMinutes} countdownText={countdownText} clearToken={chatClearToken} onSetAutoDelete={setAutoDelete} voice={voice} voiceEnabled={room.voice_enabled} onDirect={() => { setDirectTarget(null); setDirectOpen(!directOpen); setChatOpen(false); setShowViewers(false); setShowSettings(false); }} onDirectUser={openDirectMessage} directUnread={directUnread} ownerId={room?.owner_id} roomModerators={room?.room_moderators || []} participants={room?.participants || []} recentParticipants={room?.recent_participants || []} viewerProfiles={viewerProfiles} presenceMap={presenceMap} levels={roomLevels} onProfileCard={openUserProfile} onToggleChat={toggleChat} settingsProps={{ room, canMod, participants: room?.participants || [], roomModerators: room?.room_moderators || [], onAssignMod: assignMod, onRemoveMod: removeMod, roomName: roomNameEdit, setRoomName: setRoomNameEdit, onSaveName: saveRoomName, password: pwSetInput, setPassword: setPwSetInput, passwordOpen: showPwSet, setPasswordOpen: setShowPwSet, onVoice: toggleVoice, onChat: toggleChat, onChatBan: toggleChatBan, onHidden: toggleHidden, onPassword: () => savePassword(), onRemovePassword: () => setShowPwRemoveConfirm(true), onUnban: unbanUser, onPickMovie: () => setMoviePickerOpen(true), onDeleteRoom: deleteRoom, onToggleApproval: toggleApproval }} />}
+            {chatOpen && <ChatOverlay roomId={id} chatEnabled={chatEnabled} chatLocked={chatLocked} isOwner={canMod} isAdmin={isMod} onClose={() => setChatOpen(false)} autoDeleteMinutes={autoDeleteMinutes} countdownText={countdownText} clearToken={chatClearToken} onSetAutoDelete={setAutoDelete} voice={voice} voiceEnabled={room.voice_enabled} onDirect={() => { setDirectTarget(null); setDirectOpen(!directOpen); setChatOpen(false); setShowViewers(false); setShowSettings(false); }} onDirectUser={openDirectMessage} directUnread={directUnread} ownerId={room?.owner_id} roomModerators={room?.room_moderators || []} participants={room?.participants || []} recentParticipants={room?.recent_participants || []} viewerProfiles={viewerProfiles} presenceMap={presenceMap} levels={roomLevels} onProfileCard={openUserProfile} onToggleChat={toggleChat} onMicPress={handleMicPress} settingsProps={{ room, canMod, participants: room?.participants || [], roomModerators: room?.room_moderators || [], onAssignMod: assignMod, onRemoveMod: removeMod, roomName: roomNameEdit, setRoomName: setRoomNameEdit, onSaveName: saveRoomName, password: pwSetInput, setPassword: setPwSetInput, passwordOpen: showPwSet, setPasswordOpen: setShowPwSet, onVoice: toggleVoice, onChat: toggleChat, onChatBan: toggleChatBan, onHidden: toggleHidden, onPassword: () => savePassword(), onRemovePassword: () => setShowPwRemoveConfirm(true), onUnban: unbanUser, onPickMovie: () => setMoviePickerOpen(true), onDeleteRoom: deleteRoom, onToggleApproval: toggleApproval }} />}
           </div>
         )}
 
