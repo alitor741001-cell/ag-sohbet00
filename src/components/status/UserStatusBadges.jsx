@@ -40,18 +40,19 @@ export default function UserStatusBadges({
         </span>
       )}
 
-      {vip_level > 0 && (
-        <span
-          className="rounded-full border px-2 py-0.5 text-[10px] font-extrabold tabular-nums"
-          style={{ background: vip.background, borderColor: vip.border, color: vip.color }}
-        >
-          VIP{vip_level}
-        </span>
-      )}
-
-      {/* Atış ve alış seviyeleri her zaman yan yana durur; dar alanda ikisi birlikte alt satıra iner. */}
-      {(gift_sent_level > 0 || gift_received_level > 0) && (
+      {/* VIP ve hediye seviyeleri tek grup: her zaman yan yana durur, alt alta bölünmez.
+          Dar alanda grup bütün olarak alt satıra iner. */}
+      {(vip_level > 0 || gift_sent_level > 0 || gift_received_level > 0) && (
         <span className="flex shrink-0 items-center gap-1.5">
+          {vip_level > 0 && (
+            <span
+              className="rounded-full border px-2 py-0.5 text-[10px] font-extrabold tabular-nums"
+              style={{ background: vip.background, borderColor: vip.border, color: vip.color }}
+            >
+              VIP{vip_level}
+            </span>
+          )}
+
           {gift_sent_level > 0 && (
             <span
               className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-extrabold tabular-nums text-white"
