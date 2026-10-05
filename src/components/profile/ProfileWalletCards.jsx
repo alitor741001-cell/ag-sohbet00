@@ -59,7 +59,8 @@ export default function ProfileWalletCards({ coins, giftScore, vipCount = 0, onO
         <ChevronRight className="h-4 w-4 shrink-0 text-sky-100/70" />
       </button>
 
-      {/* Ajans işlemleri: kendi tam sayfasına gider. */}
+      {/* Ajans işlemleri: kendi tam sayfasına gider. (Yöneticilerde gizli.) */}
+      {onOpenAgency && (
       <button
         type="button"
         onClick={onOpenAgency}
@@ -76,6 +77,7 @@ export default function ProfileWalletCards({ coins, giftScore, vipCount = 0, onO
         </div>
         <ChevronRight className="h-4 w-4 shrink-0 text-[#F5C542]/70" />
       </button>
+      )}
     </div>
   );
 }

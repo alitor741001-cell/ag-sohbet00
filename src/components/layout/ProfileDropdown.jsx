@@ -108,7 +108,7 @@ export default function ProfileDropdown() {
               onOpenGiftBox={() => { setOpen(false); setGiftBoxOpen(true); }}
               onOpenCoins={() => { setOpen(false); setActivityOpen(true); }}
               onOpenVipBag={() => { setOpen(false); setVipBagOpen(true); }}
-              onOpenAgency={() => { setOpen(false); navigate('/ajans'); }}
+              onOpenAgency={user?.role === 'admin' ? undefined : () => { setOpen(false); navigate('/ajans'); }}
             />
 
             {/* Menu items */}

@@ -47,7 +47,7 @@ export default function AgencyCreateSheet({ open, onClose, onCreated }) {
       const data = await agencyApi('create', { name: name.trim(), description: description.trim(), logo });
       setCreated(data.agency);
       onCreated?.(data.agency);
-      toast({ title: 'Başvurun alındı ⏳', description: `Ajans kimliği: ${data.agency?.agency_id} • Yönetici onayı bekleniyor` });
+      toast({ title: '🏢 Ajansın kuruldu', description: `Ajans kimliği: ${data.agency?.agency_id} • Artık ajans sahibisin` });
     } catch (error) {
       toast({ title: 'Ajans oluşturulamadı', description: error.response?.data?.error || error.message, variant: 'destructive' });
     } finally {
@@ -56,16 +56,16 @@ export default function AgencyCreateSheet({ open, onClose, onCreated }) {
   };
 
   return (
-    <AgencySheet open={open} onClose={onClose} icon={Building2} title="🏢 Ajans Başvurusu" subtitle="Başvurunu gönder, onaydan sonra yayıncı davet et">
+    <AgencySheet open={open} onClose={onClose} icon={Building2} title="🏢 Ajans Kur" subtitle="Ajansını aç, sahibi ol ve yayıncı davet et">
       {created ? (
         <div className="space-y-3 pb-2">
           <div className="rounded-2xl border border-[#F5C542]/45 bg-gradient-to-br from-[#2a1f06] to-[#0b0910] p-5 text-center">
-            <p className="text-xs font-semibold text-white/60">Başvurun alındı ⏳</p>
+            <p className="text-xs font-semibold text-white/60">Ajansın kuruldu 🏢</p>
             <p className="mt-1 text-lg font-black text-white">{created.name}</p>
-            <p className="mt-1 text-[11px] text-white/55">Yönetici onayı bekleniyor</p>
+            <p className="mt-1 text-[11px] text-white/55">Artık ajans sahibisin</p>
             <p className="mt-3 text-[11px] uppercase tracking-widest text-white/45">Ajans Kimliği</p>
             <p className="text-2xl font-black" style={{ color: AGENCY_GOLD }}>{created.agency_id}</p>
-            <p className="mt-2 text-[11px] text-white/50">Onaylandığında resmi ajans sahibi olur ve bu kimlikle yayıncı davet edebilirsin.</p>
+            <p className="mt-2 text-[11px] text-white/50">Bu kimlikle arkadaşlarını yayıncı olarak davet edebilirsin.</p>
           </div>
           <button onClick={onClose} className="w-full rounded-2xl py-3.5 text-sm font-black text-black" style={{ background: AGENCY_GOLD }}>
             Tamam
@@ -97,7 +97,7 @@ export default function AgencyCreateSheet({ open, onClose, onCreated }) {
           <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
             <p className="text-[11px] font-bold uppercase tracking-wider text-white/50">Ajans Sahibi</p>
             <p className="mt-1 text-sm font-semibold">Sen (kurucu)</p>
-            <p className="mt-1 text-[11px] text-white/45">Yönetici onayından sonra resmi ajans sahibi olursun.</p>
+            <p className="mt-1 text-[11px] text-white/45">Ajansı açan kişi doğrudan ajans sahibi olur.</p>
           </div>
 
           <div className="rounded-2xl border border-[#F5C542]/25 bg-[#F5C542]/5 p-3">
@@ -108,7 +108,7 @@ export default function AgencyCreateSheet({ open, onClose, onCreated }) {
           </div>
 
           <button onClick={submit} disabled={saving || uploading} className="flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-black text-black disabled:opacity-60" style={{ background: AGENCY_GOLD }}>
-            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Building2 className="h-4 w-4" />} Başvuruyu Gönder
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Building2 className="h-4 w-4" />} Ajansı Kur
           </button>
         </div>
       )}

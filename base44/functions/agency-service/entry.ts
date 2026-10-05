@@ -98,26 +98,27 @@ export default async function (req) {
           agency_id: code, name, description: String(body.description || '').trim().slice(0, 400),
           logo: String(body.logo || ''), rules: AGENCY_RULES.join('\n'),
           owner_id: account.id, owner_name: displayName, owner_avatar: account.avatar || '',
-          commission_per_200k: AGENCY_COMMISSION_PER_200K, member_count: 0, active: false, status: 'pending',
+          commission_per_200k: AGENCY_COMMISSION_PER_200K, member_count: 0, active: true, status: 'active',
         }).catch(() => null);
       }
-      if (!agency) return Response.json({ error: 'Başvuru oluşturulamadı, tekrar deneyin.' }, { status: 500 });
-      // Başvuru sahibi, yönetici onayına kadar resmi ajans sahibi sayılmaz.
+      if (!agency) return Response.json({ error: 'Ajans oluşturulamadı, tekrar deneyin.' }, { status: 500 });
+      // Ajansı açan kişi doğrudan ajans sahibi olur; ayrı bir onay beklenmez.
       await base44.asServiceRole.entities.User.update(account.id, {
         agency_code: agency.agency_id, agency_record_id: agency.id, agency_owner_id: agency.owner_id,
-        agency_role: 'owner', agency_name: '', broadcaster_status: '',
+        agency_role: 'owner', agency_name: name, broadcaster_status: '',
       });
       await notifyAdmins(base44, {
         event: 'agency_application', ref_id: `agency-application:${agency.id}`,
-        title: '🏢 Yeni ajans başvurusu',
-        body: `${displayName} "${name}" ajansı için başvuru yaptı. Onay bekliyor.`,
+        title: '🏢 Yeni ajans kuruldu',
+        body: `${displayName} "${name}" ajansını kurdu.`,
         link: '/admin/ajanslar',
       }).catch(() => {});
       await notifyUser(base44, {
-        user_id: account.id, type: 'agency_applied', title: '⏳ Ajans başvurun alındı',
-        body: `${name} (${agency.agency_id}) başvurun yönetici onayı bekliyor.`, link: '/profil',
+        user_id: account.id, type: 'agency_applied', title: '🏢 Ajansın kuruldu',
+        body: `${name} (${agency.agency_id}) ajansının sahibi oldun. Artık arkadaşlarını yayıncı olarak davet edebilirsin.`,
+        link: '/ajans',
       }).catch(() => {});
-      return Response.json({ ok: true, pending: true, agency });
+      return Response.json({ ok: true, agency });
     }
 
     // ——— AJANS AYARLARI ———
