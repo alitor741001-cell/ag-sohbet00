@@ -27,6 +27,59 @@ export const AGENCY_COMMISSION_PER_200K = 3;
 export const agencyCommissionFor = (diamonds: any, per200k: any = AGENCY_COMMISSION_PER_200K) =>
   Math.round((Math.max(0, Number(diamonds) || 0) / 200000) * (Math.max(0, Number(per200k) || 0)) * 100) / 100;
 
+/** Ajansın verebileceği en fazla asistan sayısı. */
+export const ASSISTANT_LIMIT = 4;
+
+/** Asistan davetinin geçerlilik süresi (gün). */
+export const ASSISTANT_INVITE_DAYS = 7;
+
+/** Ajans sahibinin asistanlık için verebileceği yüzdeler. */
+export const ASSISTANT_SHARES = [100, 75, 50, 25];
+
+/** Asistanın payı: ajans komisyonunun verilen yüzde kadarı. */
+export const assistantCut = (agencyAmount: any, share: any) =>
+  Math.round(((Math.max(0, Number(agencyAmount) || 0) * Math.max(0, Number(share) || 0)) / 100) * 100) / 100;
+
+/** Asistan davetinin son geçerlilik anı. */
+export const assistantInviteExpiry = (from: Date = new Date()) =>
+  new Date(from.getTime() + ASSISTANT_INVITE_DAYS * 86400000).toISOString();
+
+/** Asistan davet metni: davet edilen kişinin mesajına gönderilir. */
+export function assistantInviteText({ ownerName, ownerMemberId, agencyName, agencyId, share }: any) {
+  return [
+    `👑🗿${ownerName}🪪🪽(${ownerMemberId}) sizi kendi ajansı ${agencyName}(${agencyId}) için ajans yardımcısı olmaya davet ediyor.`,
+    `Davet ettiğiniz yayıncılarda gerçekleşen ajans komisyonunun %${share} kadarını sizinle paylaşmaktan mutluluk duyacaklar. Bu daveti kabul ettiğinizde, onların ajansına katılacaksınız.`,
+    `Ajans davetiyelerini doğrudan yayıncılara gönderebilir ve uygulamada davet ettiğiniz tüm yayıncıları görüntüleyebilirsiniz; davet ettiğiniz yayıncılar tarafından oluşturulan ajans komisyonlarının %${share} kadarı otomatik olarak hesabınıza gönderilecektir.`,
+    `Bu daveti ${ASSISTANT_INVITE_DAYS} gün sonra artık kabul edemeyeceğiniz için lütfen kısa süre içinde değerlendirin.`,
+  ].join(' ');
+}
+
+/** Ajansın aktif asistanı (yüzdelik payıyla). */
+export const activeAssistant = (agency: any, userId: string) =>
+  (agency?.assistants || []).find((row: any) => row.user_id === userId && row.status === 'active') || null;
+
+/** Yayıncıyı ajansa kazandıran asistan: kabul edilmiş davetten bulunur. */
+export async function broadcasterAssistantLink(base44: any, userId: string, agencyId: string) {
+  const rows = await base44.asServiceRole.entities.AgencyInvite
+    .filter({ invitee_id: userId, status: 'accepted' }, '-created_date', 20).catch(() => []);
+  return (rows || []).find((row: any) => row.assistant_id && row.agency_record_id === agencyId && row.kind !== 'assistant') || null;
+}
+
+/** Süresi dolmuş asistan davetlerini kapatır (7 gün sonra kabul edilemez). */
+export async function expireAssistantInvites(base44: any, agency: any) {
+  const now = Date.now();
+  const assistants = agency?.assistants || [];
+  const stale = assistants.filter((row: any) => row.status === 'invited' && row.expires_at && new Date(row.expires_at).getTime() < now);
+  if (!stale.length) return;
+  const patched = assistants.map((row: any) => (stale.some((item: any) => item.user_id === row.user_id) ? { ...row, status: 'expired' } : row));
+  await base44.asServiceRole.entities.Agency.update(agency.id, { assistants: patched }).catch(() => {});
+  for (const row of stale) {
+    if (row.invite_id) {
+      await base44.asServiceRole.entities.AgencyInvite.update(row.invite_id, { status: 'expired' }).catch(() => {});
+    }
+  }
+}
+
 /** Benzersiz ajans kimliği: AG-482917 */
 export function generateAgencyCode() {
   return `AG-${Math.floor(100000 + Math.random() * 900000)}`;
@@ -95,6 +148,12 @@ export async function syncQuotaRewards(base44: any, userId: string) {
   const tiers = await ensureQuotaTiers(base44);
   const eligible = tiers.filter((tier) => tier.active !== false && Number(tier.diamonds || 0) <= month);
   if (!eligible.length) return { awarded: [] as any[] };
+  // Yayıncıyı ajansa kazandıran asistan varsa, komisyonun yüzdelik payı ona da yazılır.
+  const ownerAgency = account.agency_record_id
+    ? await base44.asServiceRole.entities.Agency.get(account.agency_record_id).catch(() => null)
+    : null;
+  const assistantLink = ownerAgency ? await broadcasterAssistantLink(base44, userId, ownerAgency.id) : null;
+  const assistant = assistantLink ? activeAssistant(ownerAgency, assistantLink.assistant_id) : null;
   // Aynı kota (kişi + kademe seviyesi + ay) ikinci kez ödenmez: kontrol kademe seviyesi üzerinden yapılır.
   const existing = await base44.asServiceRole.entities.QuotaReward.filter({ user_id: userId, period }, '-created_date', 500).catch(() => []);
   const done = new Set(existing.map((row) => Number(row.diamonds) || 0));
@@ -126,6 +185,26 @@ export async function syncQuotaRewards(base44: any, userId: string) {
         body: `${name}, ${Number(tier.diamonds).toLocaleString('tr-TR')} elmas kotasını tamamladı • ajansına +$${reward.agency_amount} yazıldı.`,
         link: '/profil',
       }).catch(() => {});
+    }
+    if (assistant) {
+      const cut = assistantCut(reward.agency_amount, assistant.share);
+      if (cut > 0) {
+        await base44.asServiceRole.entities.QuotaReward.create({
+          kind: 'assistant', user_id: assistant.user_id, user_name: assistant.name || 'Asistan',
+          assistant_id: assistant.user_id, assistant_name: assistant.name || 'Asistan', assistant_amount: cut,
+          agency_id: reward.agency_id, agency_code: reward.agency_code, agency_name: reward.agency_name,
+          agency_owner_id: reward.agency_owner_id, period, tier_id: tier.id,
+          diamonds: Number(tier.diamonds) || 0, amount: cut, agency_amount: 0, status: 'pending',
+          transaction_id: `A-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`,
+          completed_at: new Date().toISOString(),
+        }).catch(() => null);
+        await notifyUser(base44, {
+          user_id: assistant.user_id, type: 'assistant_commission',
+          title: '💰 Asistan kazancı',
+          body: `${name}, ${Number(tier.diamonds).toLocaleString('tr-TR')} elmas kotasını tamamladı • asistanlık payın +$${cut} hesabına yazıldı.`,
+          link: '/ajans/kazanc',
+        }).catch(() => {});
+      }
     }
   }
   if (awarded.length && account.agency_record_id) await refreshAgencyTotals(base44, account.agency_record_id);

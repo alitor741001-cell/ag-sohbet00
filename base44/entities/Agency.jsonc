@@ -51,6 +51,57 @@
       "type": "number",
       "default": 3
     },
+    "assistants": {
+      "type": "array",
+      "default": [],
+      "items": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "avatar": {
+            "type": "string"
+          },
+          "member_id": {
+            "type": "string"
+          },
+          "share": {
+            "type": "number",
+            "default": 100
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "invited",
+              "active",
+              "expired",
+              "removed"
+            ],
+            "default": "invited"
+          },
+          "invite_id": {
+            "type": "string",
+            "default": ""
+          },
+          "invited_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "accepted_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    },
     "active": {
       "type": "boolean",
       "default": true
