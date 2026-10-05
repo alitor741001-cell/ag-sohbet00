@@ -1,15 +1,17 @@
 import AgencyPageShell from '@/components/agency/AgencyPageShell';
 import AgencyAssistantCard from '@/components/agency/AgencyAssistantCard';
+import AgencyAssistantPanel from '@/components/agency/AgencyAssistantPanel';
 import useAgencyPageData from '@/components/agency/useAgencyPageData';
 import { agencySections } from '@/components/agency/agencySections';
 import { Handshake } from 'lucide-react';
 
 /**
- * Asistanlar: her asistanın ismi profili, payı ve davet ettiği yayıncıların
- * kota durumu görünür; buradan asistanlık geri alınabilir.
+ * Asistanlar: asistanlık buradan verilir; her asistanın ismi profili, payı ve
+ * davet ettiği yayıncıların kota durumu görünür, asistanlık geri alınabilir.
  */
 export default function AgencyAssistants() {
   const { role, agency, panel, loading, reload } = useAgencyPageData();
+  const isOwner = role === 'owner';
   const assistants = panel?.assistants || [];
 
   return (
@@ -20,11 +22,15 @@ export default function AgencyAssistants() {
       loading={loading}
     >
       <div className="space-y-3">
+        {isOwner && <AgencyAssistantPanel assistants={assistants} onChanged={reload} />}
+
         {assistants.length === 0 ? (
           <div className="rounded-2xl border border-white/10 bg-white/5 py-8 text-center">
             <Handshake className="mx-auto h-6 w-6 text-white/30" />
             <p className="mt-2 text-xs font-semibold text-white/60">Henüz asistanın yok</p>
-            <p className="text-[11px] text-white/40">Ajansım bölümünden üye kimliğiyle asistanlık verebilirsin.</p>
+            <p className="text-[11px] text-white/40">
+              {isOwner ? 'Yukarıdan üye kimliğiyle asistanlık verebilirsin.' : 'Ajans sahibi asistan davet ettiğinde burada görünür.'}
+            </p>
           </div>
         ) : assistants.map((assistant) => (
           <AgencyAssistantCard key={assistant.user_id} assistant={assistant} onChanged={reload} />
