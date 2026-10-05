@@ -42,7 +42,7 @@ export const giftLevelLabel = (level) => String(Math.max(0, Math.floor(Number(le
 /** Merdivenler backend'deki base44/shared/userLevels.ts ile aynıdır. */
 const N_LADDER = [50000, 200000, 500000, 1000000];
 const N_STEP = 500000;
-const N_MAX = 99;
+const N_MAX = 50;
 const GIFT_LADDER_RATIO = 1.3;
 const GIFT_MAX_LEVEL = 60;
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -78,11 +78,16 @@ export const vipLevelOf = (user) => {
 export const tierOf = (level) => (level >= 60 ? 'red' : level >= 50 ? 'gold' : level >= 40 ? 'blue' : level >= 30 ? 'purple' : level >= 20 ? 'dark' : 'green');
 
 /** Hediye seviyesi backend ile aynı merdivenden hesaplanır (1 K → 1. seviye, %30 artış). */
-const giftLevelOf = (kTotal) => {
+export const giftLevelOf = (kTotal) => {
   const k = Math.max(0, Number(kTotal) || 0);
   if (k < 1) return 0;
   return Math.min(GIFT_MAX_LEVEL, Math.floor(Math.log(k) / Math.log(GIFT_LADDER_RATIO)) + 1);
 };
+
+/** Bir üst hediye seviyesi için gereken K toplamı (mevcut seviyeden sonrakine). */
+export const giftNextThreshold = (level) => Math.pow(GIFT_LADDER_RATIO, Math.max(0, Math.floor(Number(level) || 0)));
+
+export { GIFT_MAX_LEVEL };
 
 /** Kullanıcı kaydından rozet değerleri (N, VIP, hediye gönderme/alış). */
 export function badgesFromUser(user) {

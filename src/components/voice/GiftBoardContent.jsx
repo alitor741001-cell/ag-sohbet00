@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Coins, Plus } from 'lucide-react';
 import GiftCard from '@/components/voice/GiftCard';
 import GiftRecipientRow from '@/components/voice/GiftRecipientRow';
+import GiftLevelTicker from '@/components/voice/GiftLevelTicker';
 import { K_UNIT, coinToK, formatCoins, formatK, formatPrice, tierForK, toneColor } from '@/lib/giftTone';
 
 /** Hediye Tahtası içeriği: kategoriler, hediyeler (K değeriyle) ve çoklu alıcı seçimi. */
@@ -51,6 +52,9 @@ export default function GiftBoardContent({ gifts = [], tiers = [], people = [], 
         onSelectAll={onSelectAll}
         onClear={onClear}
       />
+
+      {/* "Tümü" kategorisinin üstünde dönüşümlü seviye şeridi: atış LVL → hediye alma LVL. */}
+      <GiftLevelTicker />
 
       <div className="no-scrollbar my-3 flex gap-2 overflow-x-auto pb-1">
         {categories.map((item) => (

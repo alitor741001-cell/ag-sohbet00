@@ -11,10 +11,10 @@ import { effectiveVipLevel, grantAutoVip, vipDaysLeft } from './vip.ts';
 
 export { VIP_MAX, VIP_MIN } from './vip.ts';
 
-// N kademesi: 50k → N1, 200k → N2, 500k → N3, 1M → N4; sonrası her 500k'da bir seviye (1,5M → N5).
+// N kademesi: 50k → N1, 200k → N2, 500k → N3, 1M → N4; sonrası her 500k'da bir seviye (1,5M → N5, en fazla N50).
 const N_LADDER = [50000, 200000, 500000, 1000000];
 const N_STEP = 500000;
-const N_MAX = 99;
+const N_MAX = 50;
 // Hediye seviyesi: 1 K'dan başlar, her seviyede eşik %30 artar.
 const GIFT_LADDER_RATIO = 1.3;
 const GIFT_MAX_LEVEL = 60;
