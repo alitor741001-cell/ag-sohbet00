@@ -54,17 +54,40 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
   const [fullscreen, setFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [error, setError] = useState('');
-  // Film sesi: herkes kendi cihazında kısıp açabilir, odaya yazılmaz.
-  const [volume, setVolume] = useState(100);
-  const [muted, setMuted] = useState(false);
+  // Film sesi: herkes kendi cihazında kısıp açabilir, odaya yazılmaz. Ayar, doğrudan
+  // oynatıcıdaki (useMediaVolume) altyapının kullandığı anahtarlarla cihazda saklanır.
+  const [volume, setVolume] = useState(() => {
+    const stored = Number(localStorage.getItem('filmkeyfi_player_volume'));
+    return Number.isFinite(stored) ? Math.round(Math.min(1, Math.max(0, stored)) * 100) : 100;
+  });
+  const [muted, setMuted] = useState(() => localStorage.getItem('filmkeyfi_player_muted') === 'true');
 
-  useEffect(() => {
+  // Ses, kaydırma sırasında anında uygulanır: React güncellemesi beklenmez.
+  const applyVolume = (level, isMuted) => {
     const player = playerRef.current;
     if (!player?.setVolume) return;
-    player.setVolume(muted ? 0 : volume);
-    if (muted) player.mute?.();
-    else player.unMute?.();
-  }, [volume, muted, ready]);
+    if (isMuted) player.mute?.(); else player.unMute?.();
+    player.setVolume(isMuted ? 0 : level);
+  };
+
+  const changeVolume = (percent) => {
+    const level = Math.round(Math.min(100, Math.max(0, Number(percent) || 0)));
+    setVolume(level);
+    setMuted(level === 0);
+    localStorage.setItem('filmkeyfi_player_volume', String(level / 100));
+    localStorage.setItem('filmkeyfi_player_muted', String(level === 0));
+    applyVolume(level, level === 0);
+  };
+
+  const toggleMute = () => {
+    const next = !muted;
+    setMuted(next);
+    localStorage.setItem('filmkeyfi_player_muted', String(next));
+    applyVolume(volume, next);
+  };
+
+  // Oynatıcı kurulduğunda / yeniden kurulduğunda kayıtlı seviye uygulanır.
+  useEffect(() => { applyVolume(volume, muted); }, [volume, muted, ready]);
 
   // Video değişince oynatıcı yeniden kurulur ve odanın konumundan başlar.
   useEffect(() => {
@@ -255,7 +278,7 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
           {isOwner && <button onClick={togglePlay} className="rounded-lg p-2 hover:bg-white/10">{playing ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}</button>}
           {isOwner && <button onClick={() => skip(-10)} className="rounded-lg p-2 hover:bg-white/10" title="10 sn geri"><Rewind className="h-5 w-5" /></button>}
           {isOwner && <button onClick={() => skip(10)} className="rounded-lg p-2 hover:bg-white/10" title="10 sn ileri"><FastForward className="h-5 w-5" /></button>}
-          <VolumeSlider volume={volume / 100} muted={muted} onChange={setVolume} onToggleMute={() => setMuted((m) => !m)} />
+          <VolumeSlider volume={volume / 100} muted={muted} onChange={changeVolume} onToggleMute={toggleMute} nativeFallback />
           <button onClick={toggleFullscreen} className="ml-auto rounded-lg p-2 hover:bg-white/10" title="Tam ekran">
             {fullscreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
           </button>

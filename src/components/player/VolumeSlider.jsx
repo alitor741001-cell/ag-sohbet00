@@ -1,7 +1,26 @@
+import { useEffect, useRef } from 'react';
 import { Volume2, VolumeX } from 'lucide-react';
 
-export default function VolumeSlider({ volume, muted, disabled = false, onChange, onToggleMute }) {
+export default function VolumeSlider({ volume, muted, disabled = false, onChange, onToggleMute, nativeFallback = false }) {
   const percent = muted ? 0 : Math.round(volume * 100);
+  const inputRef = useRef(null);
+  const changeRef = useRef(onChange);
+  changeRef.current = onChange;
+
+  // Kaydırma sırasında bazı tarayıcılar olayı geciktirir: ses gerçek zamanlı kalsın diye
+  // yerel input/touchmove olayları da dinlenir (doğrudan oynatıcıda Web Audio zaten anında uygular).
+  useEffect(() => {
+    const input = inputRef.current;
+    if (!input || !nativeFallback) return;
+    const apply = () => changeRef.current(Number(input.value));
+    input.addEventListener('input', apply);
+    input.addEventListener('touchmove', apply);
+    return () => {
+      input.removeEventListener('input', apply);
+      input.removeEventListener('touchmove', apply);
+    };
+  }, [nativeFallback]);
+
   const stop = (event) => event.stopPropagation();
   const mute = (event) => {
     event.stopPropagation();
@@ -23,6 +42,7 @@ export default function VolumeSlider({ volume, muted, disabled = false, onChange
         {muted || percent === 0 ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
       </button>
       <input
+        ref={inputRef}
         type="range"
         min="0"
         max="100"
