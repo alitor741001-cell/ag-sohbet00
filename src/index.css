@@ -59,6 +59,14 @@
     --sidebar-border: 240 10% 88%;
     --sidebar-ring: 265 83% 58%;
     --catalog-surface: 0 5% 7%;
+    /* PREMIUM: altın sarısı + kırmızı + koyu antrasit */
+    --premium-gold: 45 63% 52%;
+    --premium-gold-light: 44 90% 61%;
+    --premium-gold-deep: 43 73% 35%;
+    --premium-red: 0 66% 47%;
+    --premium-red-deep: 0 72% 29%;
+    --anthracite: 30 8% 10%;
+    --anthracite-raised: 26 7% 14%;
     /* OYUN PANELİ — slot teması */
     --slot-bg: 234 41% 5%;
     --slot-surface: 236 38% 9%;
@@ -125,6 +133,14 @@
     --sidebar-border: 0 4% 18%;
     --sidebar-ring: 0 84% 60%;
     --catalog-surface: 0 5% 7%;
+    /* PREMIUM: altın sarısı + kırmızı + koyu antrasit */
+    --premium-gold: 45 63% 52%;
+    --premium-gold-light: 44 90% 61%;
+    --premium-gold-deep: 43 73% 35%;
+    --premium-red: 0 66% 47%;
+    --premium-red-deep: 0 72% 29%;
+    --anthracite: 30 8% 10%;
+    --anthracite-raised: 26 7% 14%;
     /* OYUN PANELİ — slot teması */
     --slot-bg: 234 41% 5%;
     --slot-surface: 236 38% 9%;
@@ -208,6 +224,14 @@
   }
   @keyframes room-level-shimmer { 0%, 100% { opacity: 0.15; } 50% { opacity: 0.8; } }
   @media (prefers-reduced-motion: reduce) { .room-level-profile::before, .room-level-badge, .room-level-badge::after { animation: none !important; } }
+  /* Premium cam panel: koyu füme zemin, ince altın kenar, hafif kırmızı ışıltı. */
+  .premium-panel {
+    background: linear-gradient(150deg, hsl(var(--anthracite-raised) / 0.94), hsl(var(--anthracite) / 0.96));
+    border: 1px solid hsl(var(--premium-gold) / 0.26);
+    box-shadow: 0 12px 30px -20px rgba(0, 0, 0, 0.95), inset 0 1px 0 hsl(var(--premium-gold) / 0.14), 0 0 22px -14px hsl(var(--premium-red) / 0.85);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
   .glass {
     background: rgba(15, 15, 20, 0.6);
     backdrop-filter: blur(16px);

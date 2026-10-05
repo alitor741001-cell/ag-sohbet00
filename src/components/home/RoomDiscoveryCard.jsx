@@ -3,7 +3,7 @@ import { BarChart3, Check, Film, Lock, Mic } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import { youtubeIdFromMovieId } from '@/lib/youtubeTitle';
 
-/** Ana sayfa keşfet ızgarasındaki kare oda kartı: kapağı, rozetleri, izleyici sayısı ve profilleri gösterir. */
+/** Ana sayfa keşfet ızgarasındaki kare oda kartı: altın çerçeveli premium kart. */
 export default function RoomDiscoveryCard({ room, owner, kind, filmTitle, friendInside }) {
   const viewers = room.participants?.length || 0;
   const isVoice = kind === 'voice';
@@ -16,56 +16,63 @@ export default function RoomDiscoveryCard({ room, owner, kind, filmTitle, friend
   return (
     <Link
       to={to}
-      className="relative flex aspect-square flex-col overflow-hidden rounded-[20px] border border-white/10 bg-[#141419] transition-transform active:scale-[0.98]"
+      className="relative flex aspect-square flex-col overflow-hidden rounded-2xl border border-premium-gold/30 bg-anthracite-raised shadow-[0_0_24px_-12px_rgba(198,40,40,0.95)] transition-transform active:scale-[0.98]"
     >
       {/* Kapak kartı tamamen kaplar: kart kare kalır, bilgiler kapak üstünde durur. */}
       {cover ? (
         <Image src={cover} className="absolute inset-0 h-full w-full" fittingType="fill" alt="" />
       ) : (
-        <span className="absolute inset-0 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #3f0d0d, #111114)' }}>
-          {isVoice ? <Mic className="h-8 w-8 text-white/30" /> : <Film className="h-8 w-8 text-white/30" />}
+        <span className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-premium-red-deep to-anthracite">
+          {isVoice ? <Mic className="h-8 w-8 text-premium-gold/50" /> : <Film className="h-8 w-8 text-premium-gold/50" />}
         </span>
       )}
-      <span className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.94), rgba(0,0,0,0.42) 52%, rgba(0,0,0,0.12))' }} />
+      <span
+        className="absolute inset-0"
+        style={{ background: 'linear-gradient(to top, rgba(11,9,7,0.96), rgba(11,9,7,0.5) 55%, rgba(11,9,7,0.08))' }}
+      />
 
-      <span className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-red-600 px-2 py-0.5 text-[10px] font-extrabold text-white">
-        <span className="h-1.5 w-1.5 rounded-full bg-white" /> CANLI
+      {/* CANLI: kırmızı gradient etiket, beyaz nokta ve hafif glow. */}
+      <span className="absolute left-2 top-2 flex items-center gap-1 rounded-full border border-white/25 bg-gradient-to-r from-premium-red-deep to-premium-red px-2 py-0.5 text-[9.5px] font-black tracking-wide text-white shadow-[0_0_14px_-3px_rgba(198,40,40,0.95)]">
+        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" /> CANLI
       </span>
 
       {friendInside && (
-        <span title="Arkadaşın" className="absolute right-2 top-2 flex items-center gap-1 rounded-full bg-[#22c55e] px-2 py-0.5 text-[10px] font-extrabold text-white shadow-[0_0_10px_rgba(34,197,94,0.7)]">
+        <span
+          title="Arkadaşın"
+          className="absolute right-2 top-2 flex items-center gap-1 rounded-full border border-premium-gold/60 bg-anthracite/90 px-2 py-0.5 text-[9.5px] font-black text-premium-gold shadow-[0_0_12px_-3px_rgba(212,175,55,0.9)]"
+        >
           <Check className="h-3 w-3" strokeWidth={3} /> Ekli
         </span>
       )}
 
       <div className="relative mt-auto flex min-w-0 flex-col gap-1 p-2.5">
         {!isVoice && filmTitle && (
-          <span className="line-clamp-2 text-[11px] font-bold leading-tight text-white/90">{filmTitle}</span>
+          <span className="line-clamp-2 text-[10.5px] font-bold leading-tight text-premium-gold/85">{filmTitle}</span>
         )}
-        <p className="truncate text-[13px] font-extrabold text-white">{room.name}</p>
+        <p className="truncate text-[12.5px] font-extrabold text-white">{room.name}</p>
 
         <span className="flex items-center gap-1.5">
           {owner?.avatar ? (
-            <Image src={owner.avatar} className="h-4 w-4 shrink-0 overflow-hidden rounded-full" fittingType="fill" alt="" />
+            <Image src={owner.avatar} className="h-4 w-4 shrink-0 overflow-hidden rounded-full border border-premium-gold/50" fittingType="fill" alt="" />
           ) : (
-            <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary text-[8px] font-bold text-primary-foreground">
+            <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-premium-gold to-premium-gold-deep text-[8px] font-black text-black">
               {(ownerName || '?')[0]}
             </span>
           )}
-          <span className="truncate text-[11px] text-white/60">{ownerName}</span>
-          {room.password && <Lock className="h-3 w-3 shrink-0 text-amber-400" />}
-          <span className="ml-auto flex shrink-0 items-center gap-1 rounded-full bg-black/60 px-1.5 py-0.5 text-[10px] font-extrabold text-white">
-            <BarChart3 className="h-3 w-3" style={{ color: '#00bcd4' }} /> {viewers}
+          <span className="truncate text-[11px] font-semibold text-premium-gold/90">{ownerName}</span>
+          {room.password && <Lock className="h-3 w-3 shrink-0 text-premium-gold" />}
+          <span className="ml-auto flex shrink-0 items-center gap-1 rounded-full border border-premium-gold/25 bg-black/70 px-1.5 py-0.5 text-[10px] font-extrabold text-white">
+            <BarChart3 className="h-3 w-3 text-premium-gold" /> {viewers}
           </span>
         </span>
 
         <span className="flex items-center gap-1">
-          <span className="rounded-full bg-[#4caf50] px-2 py-0.5 text-[10px] font-extrabold text-white">
+          <span className="rounded-full border border-premium-gold/55 bg-gradient-to-r from-premium-red-deep to-premium-red px-2 py-0.5 text-[9.5px] font-black text-white shadow-[0_0_10px_-3px_rgba(198,40,40,0.9)]">
             {isVoice ? 'Koltuklu' : 'Film'}
           </span>
           <span className="ml-auto flex items-center gap-1">
             {people.map((person) => (
-              <span key={person.user_id} className="h-5 w-5 overflow-hidden rounded-full border border-white/15 bg-black/50">
+              <span key={person.user_id} className="h-5 w-5 overflow-hidden rounded-full border border-premium-gold/30 bg-black/60">
                 {person.avatar ? (
                   <Image src={person.avatar} className="h-full w-full" fittingType="fill" alt="" />
                 ) : (

@@ -1,11 +1,24 @@
+import HomeHero from '@/components/home/HomeHero';
+import HomeQuickAccess from '@/components/home/HomeQuickAccess';
 import RoomDiscovery from '@/components/home/RoomDiscovery';
 
-// Ana sayfa: canlı oda keşfet ızgarası (koltuklu odalar ve film odaları).
+/**
+ * Ana sayfa: koyu antrasit zemin üzerinde altın + kırmızı premium tema.
+ * Sıra: profil şeridi → hızlı erişim → kategoriler, arama ve canlı odalar.
+ */
 export default function Home() {
   return (
-    <div className="min-h-screen bg-catalog px-4 py-5 text-white sm:px-6">
-      <div className="mx-auto max-w-2xl">
-        <RoomDiscovery />
+    <div className="relative min-h-screen overflow-x-clip bg-anthracite text-white">
+      {/* Arka plan ışıkları: saf siyah yerine antrasit zemin, üstünde çok hafif altın/kırmızı geçişler. */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+        <div className="absolute -left-24 -top-28 h-72 w-72 rounded-full bg-premium-red/10 blur-3xl" />
+        <div className="absolute -right-20 top-20 h-64 w-64 rounded-full bg-premium-gold/10 blur-3xl" />
+        <div className="absolute bottom-10 left-1/4 h-64 w-64 rounded-full bg-premium-gold-deep/10 blur-3xl" />
+      </div>
+
+      <div className="relative mx-auto w-full max-w-2xl px-4 pb-10 pt-3 sm:px-6">
+        <HomeHero />
+        <RoomDiscovery shortcuts={<HomeQuickAccess />} />
       </div>
     </div>
   );

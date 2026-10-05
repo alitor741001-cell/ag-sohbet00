@@ -12,6 +12,17 @@ module.exports = {
   		colors: {
 			purple: { 50: '#fef2f2', 100: '#fee2e2', 200: '#fecaca', 300: '#fca5a5', 400: '#f87171', 500: '#ef4444', 600: '#dc2626', 700: '#b91c1c', 800: '#991b1b', 900: '#7f1d1d', 950: '#450a0a' },
 			pink: { 50: '#f9fafb', 100: '#f3f4f6', 200: '#e5e7eb', 300: '#d1d5db', 400: '#9ca3af', 500: '#6b7280', 600: '#4b5563', 700: '#374151', 800: '#1f2937', 900: '#111827', 950: '#030712' },
+			anthracite: {
+				DEFAULT: 'hsl(var(--anthracite) / <alpha-value>)',
+				raised: 'hsl(var(--anthracite-raised) / <alpha-value>)'
+			},
+			premium: {
+				gold: 'hsl(var(--premium-gold) / <alpha-value>)',
+				'gold-light': 'hsl(var(--premium-gold-light) / <alpha-value>)',
+				'gold-deep': 'hsl(var(--premium-gold-deep) / <alpha-value>)',
+				red: 'hsl(var(--premium-red) / <alpha-value>)',
+				'red-deep': 'hsl(var(--premium-red-deep) / <alpha-value>)'
+			},
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {

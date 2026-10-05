@@ -25,7 +25,7 @@ const normalizeId = (value) =>
  * Ana sayfa keşfet bölümü: en üstte arkadaş şeridi, altında koltuklu odalar ve
  * film odaları sekmeleri, oda numarası / üye kimliği araması ve oda kartları.
  */
-export default function RoomDiscovery() {
+export default function RoomDiscovery({ shortcuts = null }) {
   const { user } = useCurrentUser();
   const { relations } = useFriends();
   const [rooms, setRooms] = useState([]);
@@ -182,12 +182,14 @@ export default function RoomDiscovery() {
 
   return (
     <section className="mt-5">
-      <div className="mb-3 flex items-center gap-2">
+      <div className="mb-3 flex items-center gap-1.5 rounded-2xl border border-premium-gold/20 bg-black/25 p-1 backdrop-blur">
         <button
           type="button"
           onClick={() => setTab('voice')}
-          className={`flex min-w-0 flex-1 items-center justify-center gap-1 rounded-full py-2.5 text-[11px] font-extrabold transition ${
-            tab === 'voice' ? 'border border-[#4caf50]/45 bg-[#4caf50]/15 text-[#4caf50]' : 'bg-white/5 text-white/50'
+          className={`flex min-w-0 flex-1 items-center justify-center gap-1 rounded-xl py-2 text-[10.5px] font-extrabold transition ${
+            tab === 'voice'
+              ? 'border border-premium-gold/55 bg-gradient-to-r from-premium-red-deep via-premium-red to-premium-gold text-white shadow-[0_0_18px_-6px_rgba(198,40,40,0.95)]'
+              : 'border border-transparent text-white/60'
           }`}
         >
           <Mic className="h-4 w-4 shrink-0" /> <span className="truncate">Koltuklu Odalar</span>
@@ -195,8 +197,10 @@ export default function RoomDiscovery() {
         <button
           type="button"
           onClick={() => setTab('film')}
-          className={`flex min-w-0 flex-1 items-center justify-center gap-1 rounded-full py-2.5 text-[11px] font-extrabold transition ${
-            tab === 'film' ? 'border border-[#4caf50]/45 bg-[#4caf50]/15 text-[#4caf50]' : 'bg-white/5 text-white/50'
+          className={`flex min-w-0 flex-1 items-center justify-center gap-1 rounded-xl py-2 text-[10.5px] font-extrabold transition ${
+            tab === 'film'
+              ? 'border border-premium-gold/55 bg-gradient-to-r from-premium-red-deep via-premium-red to-premium-gold text-white shadow-[0_0_18px_-6px_rgba(198,40,40,0.95)]'
+              : 'border border-transparent text-white/60'
           }`}
         >
           <Film className="h-4 w-4 shrink-0" /> <span className="truncate">Film Odaları</span>
@@ -204,8 +208,10 @@ export default function RoomDiscovery() {
         <button
           type="button"
           onClick={() => setTab('games')}
-          className={`flex min-w-0 flex-1 items-center justify-center gap-1 rounded-full py-2.5 text-[11px] font-extrabold transition ${
-            tab === 'games' ? 'border border-[#f2ce6b]/50 bg-[#f2ce6b]/15 text-[#f2ce6b]' : 'bg-white/5 text-white/50'
+          className={`flex min-w-0 flex-1 items-center justify-center gap-1 rounded-xl py-2 text-[10.5px] font-extrabold transition ${
+            tab === 'games'
+              ? 'border border-premium-gold/55 bg-gradient-to-r from-premium-red-deep via-premium-red to-premium-gold text-white shadow-[0_0_18px_-6px_rgba(198,40,40,0.95)]'
+              : 'border border-transparent text-white/60'
           }`}
         >
           <Gamepad2 className="h-4 w-4 shrink-0" /> <span className="truncate">Oyunlar</span>
@@ -214,45 +220,55 @@ export default function RoomDiscovery() {
 
       {tab !== 'games' && (
       <div className="relative mb-3">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-premium-gold/80" />
         <input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Oda numarası veya üye kimliği ara…"
           autoComplete="off"
           enterKeyHint="search"
-          className="w-full rounded-full border border-white/10 bg-[#141419] py-2.5 pl-9 pr-3 text-[13px] font-medium text-white outline-none placeholder:text-white/35 focus:border-[#4caf50]/50"
+          className="w-full rounded-2xl border border-premium-gold/30 bg-black/30 py-2.5 pl-9 pr-3 text-[13px] font-medium text-white outline-none backdrop-blur transition placeholder:text-white/40 focus:border-premium-gold/60 focus:shadow-[0_0_18px_-6px_rgba(198,40,40,0.8)]"
         />
       </div>
       )}
+
+      {shortcuts}
 
       {tab === 'games' ? (
         <GameDiscoveryRow onPick={setGameOpen} />
       ) : loading ? (
         <div className="flex justify-center py-10">
-          <Loader2 className="h-6 w-6 animate-spin text-white/40" />
+          <Loader2 className="h-6 w-6 animate-spin text-premium-gold/70" />
         </div>
       ) : items.length === 0 ? (
         searching ? (
-          <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-8 text-center">
-            <p className="text-sm font-bold">Eşleşen oda yok.</p>
+          <div className="premium-panel rounded-2xl px-4 py-8 text-center">
+            <p className="text-sm font-bold text-premium-gold">Eşleşen oda yok.</p>
             <p className="mt-1 text-xs text-white/45">Oda numarasını veya üye kimliğini kontrol et.</p>
           </div>
         ) : (
-          <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-8 text-center">
-            <p className="text-sm font-bold">
+          <div className="premium-panel rounded-2xl px-4 py-8 text-center">
+            <p className="text-sm font-bold text-white">
               {tab === 'voice' ? 'Şu an açık koltuklu oda yok.' : 'Şu an açık film odası yok.'}
             </p>
             <Link
               to={tab === 'voice' ? '/sesli-oda-kur' : '/oda-kur'}
-              className="mt-2 inline-block text-xs font-bold text-[#4caf50]"
+              className="mt-2 inline-block rounded-lg border border-premium-gold/50 px-3 py-1.5 text-xs font-black text-premium-gold"
             >
               {tab === 'voice' ? 'İlk koltuklu odayı sen aç →' : 'İlk film odasını sen aç →'}
             </Link>
           </div>
         )
       ) : (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <>
+          <div className="mb-2 flex items-center gap-2">
+            <span className="h-3 w-1 rounded-full bg-gradient-to-b from-premium-gold to-premium-red" />
+            <h2 className="text-[10.5px] font-black tracking-[0.18em] text-premium-gold">
+              {searching ? 'ARAMA SONUCU' : tab === 'voice' ? 'CANLI KOLTUKLU ODALAR' : 'CANLI FİLM ODALARI'}
+            </h2>
+            <span className="ml-auto text-[10px] font-bold text-white/40">{items.length} oda</span>
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {items.map((room) => {
             const kind = isVoiceRoom(room) ? 'voice' : 'film';
             return (
@@ -266,7 +282,8 @@ export default function RoomDiscovery() {
               />
             );
           })}
-        </div>
+          </div>
+        </>
       )}
 
       {/* Seçilen oyun tam ekran açılır: oda kurmaya gerek yok. */}
