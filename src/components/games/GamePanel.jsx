@@ -100,9 +100,9 @@ export default function GamePanel({ open, onClose, roomId }) {
                     originHeight={game.originHeight}
                     quality={92}
                   />
-                  <span className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-2 bg-black/70 px-3 py-2">
-                    <span className="text-xs font-black tracking-wide text-slot-gold">{game.title}</span>
-                    <span className="flex items-center gap-1 text-[10px] font-black text-white">
+                  <span className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-1.5 bg-black/70 px-2 py-1.5">
+                    <span className="min-w-0 flex-1 truncate text-[11px] font-black tracking-wide text-slot-gold">{game.title}</span>
+                    <span className="flex shrink-0 items-center gap-1 text-[10px] font-black text-white">
                       <Play className="h-3 w-3" /> OYNA
                     </span>
                   </span>
