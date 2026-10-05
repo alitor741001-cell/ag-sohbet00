@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { Shield, Trash2 } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import RoleBadge from '@/components/RoleBadge';
 import RoleNameEffect from '@/components/role/RoleNameEffect';
@@ -22,6 +22,7 @@ function RoomChatMessage({ message, profile, ownerId, roomModerators, currentUse
   const avatar = hidden ? HIDDEN_AVATAR_URL : (profile?.avatar || message.user_avatar);
   const isOwner = message.user_id === ownerId;
   const isMod = !isOwner && (roomModerators.includes(message.user_id) || isModerator(profile));
+  const label = isOwner ? 'Oda Sahibi' : isMod ? 'Yönetici' : '';
   const trimmed = (message.text || '').trim();
   const emoji = ['😂','❤️','🔥','👏','🎉','😍','😱','😢','👍','🍿','🎬','💀'].includes(trimmed);
   const emojiMotion = ['😂','👏','😢','👍'].includes(trimmed) ? 'anim-emoji-bounce' : ['❤️','🎉','😍','🍿'].includes(trimmed) ? 'anim-emoji-pulse' : 'anim-emoji-shake';
@@ -33,21 +34,23 @@ function RoomChatMessage({ message, profile, ownerId, roomModerators, currentUse
           : <span className="text-[11px] font-bold text-white/80">{name.trim().charAt(0) || '?'}</span>}
       </span>
     </button>
-    <div className="flex min-w-0 flex-1 flex-col items-start gap-1">
-      <div className="flex w-full min-w-0 flex-wrap items-center gap-x-1 gap-y-0.5">
-        {!hidden && isMod && <Shield className="h-3 w-3 shrink-0 text-blue-400" />}
+    <div className="min-w-0 flex-1">
+      <div className="flex min-w-0 flex-wrap items-center gap-x-1 gap-y-0.5">
         <button type="button" onClick={() => onOpenProfile?.(message.user_id)} className="min-w-0 max-w-full break-words text-left text-xs font-semibold hover:underline [overflow-wrap:anywhere]">
           {hidden
             ? <span className="hidden-user-name">{name}</span>
             : <RoleNameEffect nameEffect={role.name_effect} color={role.color}>{name}{currentUserId === message.user_id && ' (Sen)'}</RoleNameEffect>}
         </button>
-        {!hidden && isOwner && <span className="text-[10px] font-bold text-amber-400">Oda Sahibi</span>}
+        {!hidden && label && <span className={`text-[10px] font-bold ${isOwner ? 'text-amber-400' : 'text-sky-400'}`}>{label}</span>}
         {!hidden && profile && (profile.display_role || profile.custom_role?.name) && <RoleBadge user={profile} size="sm" showLabel={false} />}
         {/* LVL 1000 yönetici seviyesi mesajlarda yazılmaz. */}
         {!hidden && Number(level) < 1000 && <RoomLevelBadge level={level} />}
-        {!hidden && <UserBadgeRow profile={profile} />}
       </div>
-      <div className="isolate min-w-0 max-w-full overflow-hidden rounded-xl p-2">
+      {/* Seviye rozetleri sesli oda sohbetindeki gibi alt satırda, yan yana durur. */}
+      <div className="mt-1 flex flex-wrap items-center gap-1">
+        <UserBadgeRow profile={profile} />
+      </div>
+      <div className="isolate mt-1 min-w-0 max-w-full overflow-hidden rounded-xl p-2">
         <RoleMessageEffect className="max-w-full min-w-0 align-top" roleKey={profile?.display_role || (profile?.custom_role?.name ? 'custom' : '')} msgEffect={role.msg_effect} msgColor={role.color}>
           {message.file_url && <Image src={message.file_url} alt="Sohbet görseli" className="mb-1 block h-44 w-44 max-w-full cursor-pointer rounded-lg" fittingType="fit" onClick={() => onImage(message.file_url)} />}
           {message.text && <p className={`block h-auto max-w-full whitespace-pre-wrap break-words rounded-lg px-2.5 py-1.5 leading-relaxed [overflow-wrap:anywhere] ${emoji ? `text-3xl anim-emoji ${emojiMotion}` : 'text-sm'} bg-secondary text-secondary-foreground`} style={{ maxWidth: 'min(100%, calc(35ch + 1.25rem))' }}>{message.text}</p>}
