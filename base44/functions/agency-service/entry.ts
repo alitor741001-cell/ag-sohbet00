@@ -44,6 +44,14 @@ export default async function (req) {
     // Başvuru aşamasındaki (onaylanmamış) ajanslarla işlem yapılamaz.
     const isAgencyActive = (agency: any) => !!agency && agency.status !== 'pending' && agency.status !== 'rejected' && agency.active !== false;
 
+    // Ajans adı, üyelerin profil kayıtlarına yansıtılır.
+    const syncAgencyName = async (agencyId: string, name: string) => {
+      const members = await base44.asServiceRole.entities.User.filter({ agency_record_id: agencyId }, '-created_date', 500).catch(() => []);
+      for (const member of members || []) {
+        await base44.asServiceRole.entities.User.update(member.id, { agency_name: name }).catch(() => {});
+      }
+    };
+
     // ——— ÖZET: profil bölümündeki dinamik menü için ———
     if (action === 'summary') {
       if (account.broadcaster_status === 'active' && account.agency_record_id) {
@@ -118,7 +126,7 @@ export default async function (req) {
       if (typeof body.rules === 'string') patch.rules = body.rules.trim().slice(0, 2000);
       if (!Object.keys(patch).length) return Response.json({ error: 'Değişiklik yok.' }, { status: 400 });
       const updated = await base44.asServiceRole.entities.Agency.update(account.agency_record_id, patch);
-      if (patch.name) await base44.asServiceRole.entities.User.updateMany({ agency_record_id: account.agency_record_id }, { $set: { agency_name: patch.name } }).catch(() => {});
+      if (patch.name) await syncAgencyName(account.agency_record_id, patch.name);
       return Response.json({ ok: true, agency: updated });
     }
 
@@ -401,7 +409,7 @@ export default async function (req) {
         };
         if (body.agency_id) {
           const updated = await base44.asServiceRole.entities.Agency.update(body.agency_id, patch);
-          await base44.asServiceRole.entities.User.updateMany({ agency_record_id: body.agency_id }, { $set: { agency_name: name } }).catch(() => {});
+          await syncAgencyName(body.agency_id, name);
           return Response.json({ ok: true, agency: updated });
         }
         const owner = body.owner_user_id
@@ -452,8 +460,16 @@ export default async function (req) {
       if (action === 'admin-agency-delete') {
         const agency = await base44.asServiceRole.entities.Agency.get(String(body.agency_id || '')).catch(() => null);
         if (!agency) return Response.json({ error: 'Ajans bulunamadı.' }, { status: 404 });
-        await base44.asServiceRole.entities.User.updateMany({ agency_record_id: agency.id }, { $set: { agency_code: '', agency_record_id: '', agency_name: '', agency_owner_id: '', agency_role: '', broadcaster_status: '' } }).catch(() => {});
-        await base44.asServiceRole.entities.AgencyInvite.updateMany({ agency_record_id: agency.id, status: 'pending' }, { $set: { status: 'cancelled' } }).catch(() => {});
+        const members = await base44.asServiceRole.entities.User.filter({ agency_record_id: agency.id }, '-created_date', 500).catch(() => []);
+        for (const member of members || []) {
+          await base44.asServiceRole.entities.User.update(member.id, {
+            agency_code: '', agency_record_id: '', agency_name: '', agency_owner_id: '', agency_role: '', broadcaster_status: '',
+          }).catch(() => {});
+        }
+        const openInvites = await base44.asServiceRole.entities.AgencyInvite.filter({ agency_record_id: agency.id, status: 'pending' }, '-created_date', 500).catch(() => []);
+        for (const invite of openInvites || []) {
+          await base44.asServiceRole.entities.AgencyInvite.update(invite.id, { status: 'cancelled' }).catch(() => {});
+        }
         await base44.asServiceRole.entities.Agency.delete(agency.id);
         return Response.json({ ok: true });
       }
