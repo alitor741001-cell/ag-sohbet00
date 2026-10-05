@@ -14,6 +14,12 @@ export function parseInviteMarker(text) {
   return match ? match[1] : null;
 }
 
+/** Bildirim kaydındaki davet referansından davet kimliğini çıkarır. */
+export function parseInviteRef(refId) {
+  const match = /^agency-invite:(.+)$/.exec(String(refId || '').trim());
+  return match ? match[1] : '';
+}
+
 export const formatDiamonds = (value) => Number(value || 0).toLocaleString('tr-TR');
 
 export const formatMoney = (value) => `$${Number(value || 0).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
