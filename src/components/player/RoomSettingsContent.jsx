@@ -35,7 +35,7 @@ export default function RoomSettingsContent({ room, canMod, participants, roomMo
           <input value={roomName || ''} onChange={(e) => setRoomName(e.target.value)} placeholder="Oda adı" className="min-w-0 flex-1 rounded-full border border-white/15 bg-[#0d0d0d] px-4 py-2 text-sm text-white outline-none placeholder:text-white/40 focus:border-[#FFD700]/60" maxLength={80} />
           <button onClick={onSaveName} disabled={!roomName?.trim()} className="shrink-0 rounded-full border border-[#FFD700] bg-[#FFD700] px-4 text-xs font-bold text-black shadow-[0_0_14px_-3px_rgba(255,215,0,0.95)] disabled:opacity-50">KAYDET</button>
         </div>
-        <button onClick={onPickMovie} className={button}><Film className="w-4 h-4 text-primary" /> Film Değiştir</button>
+        <button onClick={onPickMovie} className={button}><Film className="w-4 h-4 text-primary" /> Yayını Seç</button>
         <button onClick={onVoice} className={`w-full flex items-center gap-3 rounded-xl border px-3 py-3 text-sm font-semibold transition-colors ${voiceMode ? 'border-green-500/40 bg-green-500/10 text-green-400' : 'border-red-500/40 bg-red-500/10 text-red-400'}`}>
           {voiceMode ? <Film className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
           <span className="flex-1 text-left">{voiceMode ? 'Film Odasına Dön' : 'Sesli Sohbet Alanı'}</span>

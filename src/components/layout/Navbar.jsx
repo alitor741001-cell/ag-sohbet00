@@ -1,9 +1,9 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Search } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Image } from '@/components/ui/image';
+import { openGoogle } from '@/lib/mediaSource';
 import ProfileDropdown from '@/components/layout/ProfileDropdown';
-import SearchSuggestions from '@/components/search/SearchSuggestions';
 import LiveChatButton from '@/components/layout/LiveChatButton';
 import SupportNotifBell from '@/components/layout/SupportNotifBell';
 import WelcomeOverlay from '@/components/WelcomeOverlay';
@@ -11,10 +11,8 @@ import { useCurrentUser } from '@/lib/useCurrentUser';
 
 const links = [
   { label: 'Ana Sayfa', path: '/' },
-  { label: 'Filmler', path: '/filmler' },
   { label: 'Açık Odalar', path: '/acik-odalar' },
-  { label: 'Kategoriler', path: '/kategoriler' },
-  { label: 'Listem', path: '/listem' },
+  { label: 'Oda Kur', path: '/oda-kur' },
   { label: 'Arkadaşlar', path: '/arkadaslar' },
 ];
 
@@ -24,13 +22,10 @@ export default function Navbar() {
   const { user } = useCurrentUser();
   const [q, setQ] = useState('');
 
-  useEffect(() => {
-    setQ(location.pathname === '/ara' ? new URLSearchParams(location.search).get('q') || '' : '');
-  }, [location.pathname, location.search]);
-
+  // Arama Google'a gider: film kataloğu kaldırıldı.
   const submit = (e) => {
     e.preventDefault();
-    if (q.trim()) navigate(`/ara?q=${encodeURIComponent(q.trim())}`);
+    if (q.trim()) openGoogle(q.trim());
   };
 
   return (
@@ -64,9 +59,8 @@ export default function Navbar() {
 
         <form onSubmit={submit} className="relative hidden md:flex items-center ml-auto bg-white/5 rounded-full px-3 py-1.5 w-44 lg:w-64 focus-within:ring-2 focus-within:ring-red-500/30">
             <Search className="w-4 h-4 text-white/40 shrink-0" />
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Film, dizi ara..." autoComplete="off"
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Google'da ara..." autoComplete="off"
               className="bg-transparent outline-none px-2 text-sm w-full placeholder:text-white/40 text-white" />
-            <SearchSuggestions query={q} onSelect={() => setQ('')} />
           </form>
 
         <div className="flex items-center gap-2 ml-auto md:ml-2">

@@ -1,21 +1,21 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Home, Film, Plus, MessageCircle, DoorOpen } from 'lucide-react';
+import { DoorOpen, Home, MessageCircle, Plus, User } from 'lucide-react';
 import { useCurrentUser, membershipActive } from '@/lib/useCurrentUser';
 import useSocialBadges from '@/hooks/useSocialBadges';
 
 const fullItems = [
   { label: 'Ana Sayfa', path: '/', icon: Home },
-  { label: 'Filmler', path: '/filmler', icon: Film },
-  { label: 'Oda Kur', path: '/oda-kur', icon: Plus },
   { label: 'Odalar', path: '/acik-odalar', icon: DoorOpen },
+  { label: 'Oda Kur', path: '/oda-kur', icon: Plus },
   { label: 'Sohbet', path: '/arkadaslar?view=chats', activePath: '/arkadaslar', icon: MessageCircle },
+  { label: 'Profil', path: '/profil', icon: User },
 ];
 
 const limitedItems = [
   { label: 'Ana Sayfa', path: '/', icon: Home },
-  { label: 'Filmler', path: '/filmler', icon: Film },
   { label: 'Odalar', path: '/acik-odalar', icon: DoorOpen },
   { label: 'Sohbet', path: '/arkadaslar?view=chats', activePath: '/arkadaslar', icon: MessageCircle },
+  { label: 'Profil', path: '/profil', icon: User },
 ];
 
 export default function BottomNav() {

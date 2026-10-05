@@ -1,19 +1,13 @@
 import { useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
-import { queryClientInstance } from '@/lib/query-client';
 
 // Her sayfanın paketi: dokunulan an hiç beklemeden açılsın diye arka planda önceden indirilir.
 const routeLoaders = {
   '/': () => import('@/pages/Home'),
-  '/filmler': () => import('@/pages/Browse'),
-  '/kategoriler': () => import('@/pages/Browse'),
   '/acik-odalar': () => import('@/pages/OpenRooms'),
   '/oda-kur': () => import('@/pages/CreateRoom'),
   '/sesli-oda-kur': () => import('@/pages/VoiceRoomCreate'),
   '/sesli-oda': () => import('@/pages/VoiceRoom'),
   '/arkadaslar': () => import('@/pages/Friends'),
-  '/listem': () => import('@/pages/MyList'),
-  '/ara': () => import('@/pages/Search'),
   '/profil': () => import('@/pages/Profile'),
   '/bildirimler': () => import('@/pages/Notifications'),
   '/ajans': () => import('@/pages/AgencyPage'),
@@ -25,14 +19,12 @@ const routeLoaders = {
   '/ajans/davetler': () => import('@/pages/agency/AgencyInvites'),
   '/ajans/transferler': () => import('@/pages/agency/AgencyTransfers'),
   '/destek': () => import('@/pages/Support'),
-  '/izle': () => import('@/pages/MovieDetail'),
-  '/video': () => import('@/pages/Watch'),
   '/oda': () => import('@/pages/WatchParty'),
   '/kullanici': () => import('@/pages/UserProfile'),
 };
 
 // Alt menüdeki ana sayfalar açılışta hemen indirilir: dokunulduğu an hazır olur.
-const PRIMARY_ROUTES = ['/', '/filmler', '/acik-odalar', '/oda-kur', '/arkadaslar', '/listem', '/ara', '/profil', '/bildirimler'];
+const PRIMARY_ROUTES = ['/', '/acik-odalar', '/oda-kur', '/arkadaslar', '/profil', '/bildirimler'];
 
 const preload = (path) => {
   const cleanPath = path.split('?')[0];
@@ -47,12 +39,6 @@ export default function RoutePreloader() {
     // Açık sayfa ve ana sekmeler önceliklidir; kalan paketler arkada indirilir.
     preload(window.location.pathname);
     PRIMARY_ROUTES.forEach((path) => routeLoaders[path]?.());
-
-    // Ana sayfa verisi de önden yüklenir: ilk açılışta iskelet yerine içerik görünür.
-    queryClientInstance.prefetchQuery({
-      queryKey: ['home-published-movies'],
-      queryFn: () => base44.entities.Movie.filter({ published: true }, '-views', 200),
-    });
 
     const onIntent = (event) => {
       const anchor = event.target.closest?.('a[href]');

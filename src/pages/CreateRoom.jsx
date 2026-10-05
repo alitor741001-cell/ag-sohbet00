@@ -3,38 +3,34 @@ import { useNavigate, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
-import { Users, Lock, MessageSquare, Mic, Check, Home, Settings, Eye, EyeOff, Minus, Plus, Video } from 'lucide-react';
-import { Image } from '@/components/ui/image';
+import { Users, Lock, MessageSquare, Mic, Check, Home, Settings, Eye, EyeOff, Link2, Minus, Plus, Video } from 'lucide-react';
+import { youtubeIdFromUrl } from '@/lib/mediaSource';
 
 export default function CreateRoom() {
   const navigate = useNavigate();
   const { user } = useCurrentUser();
   const { toast } = useToast();
-  const [movies, setMovies] = useState([]);
-  const [form, setForm] = useState({ name: '', movie_id: '', password: '', max_users: 10, chat_enabled: true, voice_enabled: false, hidden: false });
+  const [form, setForm] = useState({ name: '', youtube_link: '', password: '', max_users: 10, chat_enabled: true, voice_enabled: false, hidden: false });
   const [nameEdited, setNameEdited] = useState(false);
   const [showPass, setShowPass] = useState(false);
   const [saving, setSaving] = useState(false);
   const [opening, setOpening] = useState(false);
 
-  useEffect(() => {
-    base44.entities.Movie.filter({ published: true }, '-views', 100).then(setMovies).catch(() => {});
-  }, []);
-
   const submit = async (e) => {
     e.preventDefault();
     if (saving) return;
-    // Sesli sohbet açıkken film seçilmezse oda sesli sohbet odası olarak açılır.
-    const voiceOnly = !form.movie_id && form.voice_enabled;
     if (!form.name) { toast({ title: 'Oda adı gerekli', variant: 'destructive' }); return; }
-    if (!form.movie_id && !form.voice_enabled) { toast({ title: 'Film seçin veya sesli sohbeti açın', variant: 'destructive' }); return; }
-    const movie = movies.find((m) => m.id === form.movie_id);
+    // YouTube linki odanın ekranına yazılır; link yoksa video odaya girince seçilir.
+    const link = form.youtube_link.trim();
+    const videoId = link ? youtubeIdFromUrl(link) : '';
+    if (link && !videoId) { toast({ title: 'Geçerli bir YouTube linki gir', variant: 'destructive' }); return; }
+    const voiceOnly = !videoId && form.voice_enabled;
     setSaving(true);
     try {
       const res = await base44.functions.invoke('create-room', voiceOnly
         ? { name: form.name, room_type: 'voice', password: form.password, hidden: form.hidden }
         : {
-            name: form.name, movie_id: form.movie_id, movie_title: movie?.title || '',
+            name: form.name, movie_id: videoId ? `yt:${videoId}` : 'yt:', movie_title: videoId ? 'YouTube' : '',
             password: form.password, max_users: Number(form.max_users),
             chat_enabled: form.chat_enabled, voice_enabled: form.voice_enabled, hidden: form.hidden
           });
@@ -95,32 +91,14 @@ export default function CreateRoom() {
           </div>
         </div>
 
-        {/* Film Seç */}
+        {/* YouTube Linki */}
         <div>
-          <div className="flex items-center justify-between mb-1.5">
-            <label className="text-sm font-medium text-gray-300">Film / Dizi Seç</label>
-            <Link to="/filmler" className="text-xs text-primary hover:underline">Tümünü Gör →</Link>
+          <label className="text-sm font-medium block mb-1.5 text-gray-300">YouTube Linki (opsiyonel)</label>
+          <div className="relative">
+            <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+            <input className={inputCls + ' pl-9'} value={form.youtube_link} onChange={(e) => setForm({ ...form, youtube_link: e.target.value })} placeholder="https://youtube.com/watch?v=..." inputMode="url" />
           </div>
-          {movies.length === 0 ? (
-            <p className="text-sm text-gray-500 py-4 text-center bg-[hsl(var(--secondary))] rounded-xl">Yüklü içerik yok.</p>
-          ) : (
-            <div className="flex gap-2 overflow-x-auto no-scrollbar p-1 -m-1">
-              {movies.map((m) => (
-                <button key={m.id} type="button" onClick={() => setForm({ ...form, movie_id: m.id, name: nameEdited ? form.name : m.title })}
-                  className={`relative shrink-0 w-28 rounded-xl overflow-hidden border-2 transition-all ${form.movie_id === m.id ? 'border-primary ring-2 ring-primary/30' : 'border-transparent hover:border-white/10'}`}>
-                  <Image src={m.poster || m.backdrop} alt={m.title} className="aspect-[2/3] w-full" fittingType="fill" />
-                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 to-transparent p-1.5">
-                    <p className="text-xs font-medium text-white line-clamp-2">{m.title}</p>
-                  </div>
-                  {form.movie_id === m.id && (
-                    <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #dc2626, #991b1b)' }}>
-                      <Check className="w-3 h-3 text-white" />
-                    </div>
-                  )}
-                </button>
-              ))}
-            </div>
-          )}
+          <p className="mt-2 text-xs text-gray-500">Link bırakırsan video oda ekranında herkes için tam ekran oynar; boş bırakırsan odaya girince seçebilirsin.</p>
         </div>
 
         {/* Advanced Options */}
@@ -162,9 +140,9 @@ export default function CreateRoom() {
           })}
         </div>
 
-        {/* Film seçilmezse sesli oda olarak açılır */}
-        {form.voice_enabled && !form.movie_id && (
-          <p className="text-xs text-amber-400">Film seçmene gerek yok: bu oda sesli sohbet odası olarak açılır, burada film izlenmez.</p>
+        {/* Link yoksa oda sesli sohbet odası olarak açılır */}
+        {form.voice_enabled && !form.youtube_link.trim() && (
+          <p className="text-xs text-amber-400">Link yoksa bu oda sesli sohbet odası olarak açılır; burada video oynatılmaz.</p>
         )}
 
         {/* Submit */}

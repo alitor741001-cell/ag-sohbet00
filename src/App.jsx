@@ -21,17 +21,12 @@ import { FrameCatalogProvider } from '@/lib/FrameCatalogContext';
 import { Navigate } from 'react-router-dom';
 
 const Home = lazy(() => import('@/pages/Home'));
-const Browse = lazy(() => import('@/pages/Browse'));
-const MovieDetail = lazy(() => import('@/pages/MovieDetail'));
-const Watch = lazy(() => import('@/pages/Watch'));
 const WatchParty = lazy(() => import('@/pages/WatchParty'));
 const CreateRoom = lazy(() => import('@/pages/CreateRoom'));
 const VoiceRoomCreate = lazy(() => import('@/pages/VoiceRoomCreate'));
 const VoiceRoom = lazy(() => import('@/pages/VoiceRoom'));
 const Profile = lazy(() => import('@/pages/Profile'));
 const AgencyPage = lazy(() => import('@/pages/AgencyPage'));
-const MyList = lazy(() => import('@/pages/MyList'));
-const Search = lazy(() => import('@/pages/Search'));
 const Support = lazy(() => import('@/pages/Support'));
 const Notifications = lazy(() => import('@/pages/Notifications'));
 const OpenRooms = lazy(() => import('@/pages/OpenRooms'));
@@ -47,11 +42,9 @@ const Friends = lazy(() => import('@/pages/Friends'));
 const AdminLayout = lazy(() => import('@/pages/admin/AdminLayout'));
 const AdminDashboard = lazy(() => import('@/pages/admin/AdminDashboard'));
 const AdminUsers = lazy(() => import('@/pages/admin/AdminUsers'));
-const AdminMovies = lazy(() => import('@/pages/admin/AdminMovies'));
 const AdminSupport = lazy(() => import('@/pages/admin/AdminSupport'));
 const AdminNotifications = lazy(() => import('@/pages/admin/AdminNotifications'));
 const AdminTelegram = lazy(() => import('@/pages/admin/AdminTelegram'));
-const AdminCategories = lazy(() => import('@/pages/admin/AdminCategories'));
 const AdminReports = lazy(() => import('@/pages/admin/AdminReports'));
 const AdminUserReports = lazy(() => import('@/pages/admin/AdminUserReports'));
 const AdminSettings = lazy(() => import('@/pages/admin/AdminSettings'));
@@ -106,19 +99,20 @@ const AuthenticatedApp = () => {
       <Route element={<ProtectedRoute unauthenticatedElement={<LoginRedirect />} />}>
         <Route element={<AppLayout />}>
           <Route path="/" element={<Home />} />
-          <Route path="/filmler" element={<Browse type="movie" title="Filmler" />} />
+          {/* Film kataloğu kaldırıldı: eski film bağlantıları ana sayfaya düşer. */}
+          <Route path="/filmler" element={<Navigate to="/" replace />} />
+          <Route path="/kategoriler" element={<Navigate to="/" replace />} />
+          <Route path="/izle/:id" element={<Navigate to="/" replace />} />
+          <Route path="/video/:id" element={<Navigate to="/" replace />} />
           <Route path="/acik-odalar" element={<OpenRooms />} />
           <Route path="/openrooms" element={<Navigate to="/acik-odalar" replace />} />
           <Route path="/odalar" element={<Navigate to="/acik-odalar" replace />} />
-          <Route path="/kategoriler" element={<Browse type="movie" title="Kategoriler" />} />
-          <Route path="/izle/:id" element={<MovieDetail />} />
-          <Route path="/video/:id" element={<Watch />} />
           <Route path="/oda/:id" element={<WatchParty />} />
           <Route path="/oda-kur" element={<CreateRoom />} />
           <Route path="/sesli-oda-kur" element={<VoiceRoomCreate />} />
           <Route path="/sesli-oda/:id" element={<VoiceRoom />} />
-          <Route path="/listem" element={<MyList />} />
-          <Route path="/ara" element={<Search />} />
+          <Route path="/listem" element={<Navigate to="/" replace />} />
+          <Route path="/ara" element={<Navigate to="/" replace />} />
           <Route path="/destek" element={<Support />} />
           <Route path="/arkadaslar" element={<Friends />} />
           <Route path="/bildirimler" element={<Notifications />} />
@@ -148,9 +142,9 @@ const AuthenticatedApp = () => {
           <Route path="coins" element={<AdminCoins />} />
           <Route path="vip" element={<AdminVip />} />
           <Route path="ajanslar" element={<AdminAgencies />} />
-          <Route path="filmler" element={<AdminMovies />} />
-          <Route path="film-ekle" element={<AdminMovies />} />
-          <Route path="kategoriler" element={<AdminCategories />} />
+          <Route path="filmler" element={<Navigate to="/admin" replace />} />
+          <Route path="film-ekle" element={<Navigate to="/admin" replace />} />
+          <Route path="kategoriler" element={<Navigate to="/admin" replace />} />
 
           <Route path="destek" element={<AdminSupport />} />
           <Route path="bildirimler" element={<AdminNotifications />} />

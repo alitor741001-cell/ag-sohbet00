@@ -41,7 +41,6 @@ export default function AdminDashboard() {
     { label: 'Toplam Kullanıcı', value: stats.totalUsers, icon: Users, color: 'text-blue-400' },
     { label: 'Aktif Üyelik', value: stats.activeMembers, icon: TrendingUp, color: 'text-green-400' },
     { label: 'Süresi Biten', value: stats.expiredMembers, icon: Activity, color: 'text-amber-400' },
-    { label: 'Toplam Film', value: stats.movies, icon: Film, color: 'text-red-400' },
     { label: 'Aktif Odalar', value: stats.activeRooms, icon: DoorOpen, color: 'text-cyan-400' },
     { label: 'Açık Destek', value: stats.openTickets, icon: LifeBuoy, color: 'text-orange-400' },
   ];

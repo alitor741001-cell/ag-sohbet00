@@ -1,67 +1,60 @@
-import { useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { Link } from 'react-router-dom';
+import { DoorOpen, MessageCircle, Mic, Play, Plus, Search, Users } from 'lucide-react';
+import { openGoogle, openYouTube } from '@/lib/mediaSource';
 
-import Hero from '@/components/movie/Hero';
-import ContentRow from '@/components/movie/ContentRow';
-import CategoryRow from '@/components/movie/CategoryRow';
-import { SkeletonRow } from '@/components/movie/EmptyState';
-import PullToRefresh from '@/components/PullToRefresh';
-import useLiveCatalog from '@/hooks/useLiveCatalog';
-
-
+// Film kataloğu kaldırıldı: ana sayfa hızlı bir başlangıç ekranıdır, veri çekmez.
 export default function Home() {
-  // Film listesi canlı: yönetim film eklediğinde, düzenlediğinde veya sildiğinde
-  // sayfa yenilemeden kendini tazeler.
-  useLiveCatalog();
-  const { data: all, isPending: loading, refetch: fetchAll } = useQuery({
-    queryKey: ['home-published-movies'],
-    queryFn: () => base44.entities.Movie.filter({ published: true }, '-views', 200),
-    staleTime: 5 * 60 * 1000,
-    gcTime: 5 * 60 * 1000,
-  });
-  const { featured, rows } = useMemo(() => {
-    const movies = all || [];
-    const feat = movies.filter((m) => m.featured);
-    return {
-      featured: feat[0] || movies[0] || null,
-      rows: {
-        featured: feat.slice(0, 12),
-        popular: movies.filter((m) => m.popular).slice(0, 12),
-        new: [...movies].sort((a, b) => (b.year || 0) - (a.year || 0)).slice(0, 12),
-        most: [...movies].sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 12),
-        action: movies.filter((m) => m.genres?.includes('Aksiyon')).slice(0, 12),
-        scifi: movies.filter((m) => m.genres?.includes('Bilim Kurgu')).slice(0, 12),
-        comedy: movies.filter((m) => m.genres?.includes('Komedi')).slice(0, 12),
-        horror: movies.filter((m) => m.genres?.includes('Korku')).slice(0, 12),
-        drama: movies.filter((m) => m.genres?.includes('Dram')).slice(0, 12),
-        anim: movies.filter((m) => m.genres?.includes('Animasyon')).slice(0, 12),
-      },
-    };
-  }, [all]);
-
   return (
-    <PullToRefresh onRefresh={fetchAll}>
-    <div className="min-h-screen bg-catalog text-white">
-      <Hero movie={featured} />
-      <CategoryRow />
-      <div className="mt-4">
-        {loading ? <><SkeletonRow /><SkeletonRow /><SkeletonRow /></> : (
-          <>
-            <ContentRow title="Popüler Filmler" movies={rows.popular} to="/filmler" />
-            <ContentRow title="Öne Çıkanlar" movies={rows.featured} to="/filmler" />
-            <ContentRow title="Yeni Eklenenler" movies={rows.new} to="/filmler" />
-            <ContentRow title="En Çok İzlenenler" movies={rows.most} to="/filmler" />
-            <ContentRow title="Aksiyon" movies={rows.action} to="/filmler?genre=Aksiyon" />
-            <ContentRow title="Bilim Kurgu" movies={rows.scifi} to="/filmler?genre=Bilim Kurgu" />
-            <ContentRow title="Komedi" movies={rows.comedy} to="/filmler?genre=Komedi" />
-            <ContentRow title="Korku" movies={rows.horror} to="/filmler?genre=Korku" />
-            <ContentRow title="Dram" movies={rows.drama} to="/filmler?genre=Dram" />
-            <ContentRow title="Animasyon" movies={rows.anim} to="/filmler?genre=Animasyon" />
-          </>
-        )}
+    <div className="min-h-screen bg-catalog px-4 py-6 text-white sm:px-6">
+      <div className="mx-auto max-w-2xl">
+        <div className="relative overflow-hidden rounded-2xl p-5" style={{ background: 'linear-gradient(135deg, rgba(220,38,38,0.18), rgba(153,27,27,0.06))', border: '1px solid rgba(239,68,68,0.22)' }}>
+          <h1 className="text-2xl font-extrabold">FILMKEYFİ</h1>
+          <p className="mt-1 text-sm text-white/60">Oda kur, arkadaşlarınla aynı ekranda buluş.</p>
+
+          <Link
+            to="/oda-kur"
+            className="mt-5 flex items-center justify-center gap-2 rounded-xl py-3.5 font-semibold text-white transition active:scale-95"
+            style={{ background: 'linear-gradient(135deg, #dc2626, #991b1b)' }}
+          >
+            <Plus className="h-5 w-5" /> Oda Kur
+          </Link>
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            <Link to="/acik-odalar" className="flex items-center justify-center gap-2 rounded-xl border border-white/12 bg-white/5 py-3 text-sm font-semibold active:scale-95">
+              <DoorOpen className="h-4 w-4" /> Odalar
+            </Link>
+            <Link to="/sesli-oda-kur" className="flex items-center justify-center gap-2 rounded-xl border border-white/12 bg-white/5 py-3 text-sm font-semibold active:scale-95">
+              <Mic className="h-4 w-4" /> Sesli Oda
+            </Link>
+          </div>
+        </div>
+
+        <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-4">
+          <p className="text-sm font-bold">Ekranı seç</p>
+          <p className="mt-1 text-xs text-white/50">Google'da ara ya da YouTube videosunu odanda birlikte izle.</p>
+          <div className="mt-3 grid grid-cols-2 gap-3">
+            <button type="button" onClick={() => openGoogle()} className="flex flex-col items-center gap-2 rounded-2xl border border-white/12 bg-black/40 py-4 transition active:scale-95">
+              <Search className="h-6 w-6" />
+              <span className="text-xs font-bold">Google</span>
+            </button>
+            <button type="button" onClick={() => openYouTube()} className="flex flex-col items-center gap-2 rounded-2xl border border-red-500/35 bg-red-500/10 py-4 transition active:scale-95">
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-red-600"><Play className="h-3.5 w-3.5 fill-white text-white" /></span>
+              <span className="text-xs font-bold">YouTube</span>
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-4 grid grid-cols-3 gap-2">
+          <Link to="/arkadaslar" className="flex flex-col items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 py-3 text-[11px] font-semibold active:scale-95">
+            <MessageCircle className="h-4 w-4" /> Arkadaşlar
+          </Link>
+          <Link to="/bildirimler" className="flex flex-col items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 py-3 text-[11px] font-semibold active:scale-95">
+            <Users className="h-4 w-4" /> Bildirimler
+          </Link>
+          <Link to="/profil" className="flex flex-col items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 py-3 text-[11px] font-semibold active:scale-95">
+            <DoorOpen className="h-4 w-4" /> Profil
+          </Link>
+        </div>
       </div>
     </div>
-    </PullToRefresh>
   );
 }
