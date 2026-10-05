@@ -1,16 +1,30 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import RoomDirectMessages from '@/components/player/RoomDirectMessages';
 
 /**
  * Özel sohbet: ekranın dibinden yarıya kadar altın-kırmızı bir panel olarak açılır.
- * Panelden bir mesaj açıldığında tam ekrana geçer; mesajdan geri dönünce tekrar yarım panele iner.
+ * Panelden bir mesaj açıldığında tam ekrana geçer; geri tuşuna basıldığında
+ * yarım panele dönmeden özel sohbet alanı tümüyle kapanır.
  */
 export default function VoicePrivateChatSheet({ open, initialUserId, onClose }) {
   const [full, setFull] = useState(false);
+  const wasFullRef = useRef(false);
 
   useEffect(() => {
-    if (!open) setFull(false);
+    if (!open) { setFull(false); wasFullRef.current = false; }
   }, [open]);
+
+  // Tam ekrandan geri dönüş: yarım panele inmek yerine paneli kapatır.
+  const handleFullChange = (next) => {
+    if (wasFullRef.current && !next) {
+      wasFullRef.current = false;
+      setFull(false);
+      onClose();
+      return;
+    }
+    wasFullRef.current = next;
+    setFull(next);
+  };
 
   if (!open) return null;
 
@@ -28,7 +42,7 @@ export default function VoicePrivateChatSheet({ open, initialUserId, onClose }) 
       >
         {!full && <span className="mx-auto mt-2 h-1 w-10 shrink-0 self-center rounded-full bg-[#F2CE6B]/60" />}
         <div className="flex min-h-0 flex-1 flex-col">
-          <RoomDirectMessages initialUserId={initialUserId} onClose={onClose} onFullScreenChange={setFull} />
+          <RoomDirectMessages initialUserId={initialUserId} onClose={onClose} onFullScreenChange={handleFullChange} />
         </div>
       </div>
     </div>
