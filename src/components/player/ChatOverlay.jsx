@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { Clock, Crown, Eye, Image as ImageIcon, LayoutGrid, MessageSquare, MessageSquareOff, MessagesSquare, Moon, Send, Shield, Smile, Sparkles, Star, Sun, UserPlus, Users, X } from 'lucide-react';
+import { Clock, Crown, Eraser, Eye, Image as ImageIcon, LayoutGrid, MessageSquare, MessageSquareOff, MessagesSquare, Send, Shield, Smile, Sparkles, UserPlus, Users, X } from 'lucide-react';
 import { neonCardClass, neonCircleClass } from '@/lib/neonStyle';
-import { useTheme } from '@/lib/ThemeContext';
 import VoiceControls from '@/components/player/VoiceControls';
 import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
@@ -29,13 +28,15 @@ const FILTERS = [
   { key: 'izleyici', label: 'İzleyici', icon: Eye },
   { key: 'yonetici', label: 'Yönetici', icon: Users },
   { key: 'istekler', label: 'İstekler', icon: UserPlus },
-  { key: 'temalar', label: 'Temalar', icon: Star },
 ];
 
 export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, isOwner, isAdmin, onClose, autoDeleteMinutes = 0, countdownText = '', clearToken = 0, onSetAutoDelete, voice, voiceEnabled, onSettings, onDirect, onDirectUser, directUnread = 0, ownerId, roomModerators = [], participants = [], recentParticipants = [], viewerProfiles = {}, presenceMap = {}, onProfileCard, settingsProps, levels = {}, onToggleChat }) {
   const { user } = useCurrentUser();
   const { toast } = useToast();
-  const { theme, setTheme } = useTheme();
+  // Cheat temizleme: o an akışta duran katılma/ayrılma/seviye bildirimlerini sohbetten temizler;
+  // sonradan gelen bildirimler normal şekilde görünmeye devam eder.
+  const [cheatClearedAt, setCheatClearedAt] = useState(null);
+  const clearCheatNotices = () => { setCheatClearedAt(Date.now()); toast({ title: 'Cheat bildirimleri temizlendi' }); };
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
@@ -261,19 +262,15 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
         </div>
       </div>
       {(voiceEnabled || onSettings || onDirect) && (
-        <div className="room-voice-bar flex items-stretch gap-1.5 border-b border-[#FFD700]/20 px-3 py-2">
+        <div className="room-voice-bar flex items-center gap-1.5 border-b border-[#FFD700]/20 px-3 py-1.5">
           <VoiceControls voice={voice} />
           {onDirect && (
-            <button onClick={onDirect} className={`relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl border bg-black/70 px-1.5 py-1.5 text-center transition-transform active:scale-95 border-[#8A2BE2]/55 shadow-[0_0_18px_-8px_rgba(138,43,226,0.9)]`}>
-              <MessagesSquare className="h-4 w-4 text-[#B06BFF]" />
-              <span className="text-[9px] font-black leading-tight text-white">MESAJ YAZ</span>
+            <button onClick={onDirect} className="relative flex min-w-0 flex-1 items-center justify-center gap-1 rounded-full border border-[#8A2BE2]/55 bg-black/70 px-2 py-1 text-center shadow-[0_0_18px_-8px_rgba(138,43,226,0.9)] transition-transform active:scale-95">
+              <MessagesSquare className="h-3.5 w-3.5 shrink-0 text-[#B06BFF]" />
+              <span className="min-w-0 truncate text-[9px] font-black text-white">MESAJ YAZ</span>
               {directUnread > 0 && <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#FFD700] px-1 text-[9px] font-bold text-black">{directUnread > 99 ? '99+' : directUnread}</span>}
             </button>
           )}
-          <button onClick={() => setMsgFilter('temalar')} className="flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl border border-[#FFD700]/55 bg-black/70 px-1.5 py-1.5 text-center shadow-[0_0_18px_-8px_rgba(255,215,0,0.9)] transition-transform active:scale-95">
-            <Star className="h-4 w-4 text-[#FFD700]" />
-            <span className="text-[9px] font-black leading-tight text-white">TEMALAR</span>
-          </button>
         </div>
       )}
       {(chatEnabled || isOwner) && (
@@ -288,6 +285,10 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
               </button>
             );
           })}
+          <button onClick={clearCheatNotices} className="flex min-w-[4.5rem] shrink-0 flex-col items-center justify-center gap-0.5 border-l border-white/10 px-1.5 py-1 text-[8px] font-black leading-tight text-[#FFD700] active:scale-95">
+            <Eraser className="h-3.5 w-3.5" />
+            <span className="text-center">CHEAT TEMİZLEME</span>
+          </button>
         </div>
       )}
       {!chatEnabled && msgFilter === 'all' ? (
@@ -321,7 +322,7 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
             </div>
           </div>
         ) :
-         messages.filter((m) => m.type === 'system' || !blockedUsers.includes(m.user_id)).filter((m) => !isHiddenMarker(m) && !(m.type === 'system' && (m.text || '').toLowerCase().includes('moderatör'))).map((m) => (
+         messages.filter((m) => m.type === 'system' || !blockedUsers.includes(m.user_id)).filter((m) => !isHiddenMarker(m) && !(m.type === 'system' && (m.text || '').toLowerCase().includes('moderatör'))).filter((m) => !(cheatClearedAt && m.type === 'system' && new Date(m.created_date || 0).getTime() <= cheatClearedAt)).map((m) => (
             <div key={m.id} className={`flex w-full min-w-0 shrink-0 gap-2 group ${m.type === 'system' ? 'justify-center' : ''}`}>
               {m.type === 'system' ? (
                 (() => {
@@ -385,23 +386,6 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
               <button onClick={async () => { await base44.functions.invoke('room-presence', { action: 'reject-join', room_id: roomId, request_id: req.id }); toast({ title: 'İstek reddedildi' }); }} className="px-2.5 py-1.5 rounded-lg bg-red-500/80 text-white text-xs font-bold whitespace-nowrap">Reddet</button>
             </div>
           ))}
-          </div>
-          ) : msgFilter === 'temalar' ? (
-          <div className="flex-1 min-h-0 overflow-y-auto bg-black p-4">
-            <div className={`p-4 ${neonCardClass('gold')}`}>
-              <p className="text-sm font-black text-[#FFD700]">Temalar</p>
-              <p className="mt-1 text-[11px] text-[#A0A0A0]">Uygulama temasını seç.</p>
-              <div className="mt-3 space-y-2">
-                <button onClick={() => setTheme('dark')} className={`flex w-full items-center justify-between px-3 py-2.5 text-sm font-bold text-white active:scale-95 ${neonCardClass('blue')}`}>
-                  <span className="flex items-center gap-2"><Moon className="h-4 w-4 text-[#4DA3FF]" /> Karanlık</span>
-                  {theme === 'dark' && <span className="text-[10px] font-black text-[#FFD700]">AKTİF</span>}
-                </button>
-                <button onClick={() => setTheme('light')} className={`flex w-full items-center justify-between px-3 py-2.5 text-sm font-bold text-white active:scale-95 ${neonCardClass('gold')}`}>
-                  <span className="flex items-center gap-2"><Sun className="h-4 w-4 text-[#FFD700]" /> Aydınlık</span>
-                  {theme === 'light' && <span className="text-[10px] font-black text-[#FFD700]">AKTİF</span>}
-                </button>
-              </div>
-            </div>
           </div>
           ) : (
           <div className="dark flex-1 min-h-0 overflow-y-auto bg-black text-white" style={{ touchAction: 'pan-y', WebkitOverflowScrolling: 'touch' }}>
