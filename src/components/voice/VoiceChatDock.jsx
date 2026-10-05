@@ -112,7 +112,7 @@ export default function VoiceChatDock({ messages = [], onSend, open, onCloseComp
 
           <form
             onSubmit={submit}
-            className="mx-3 mb-2 mt-1.5 flex items-center gap-1 rounded-full border border-[#F2CE6B]/45 bg-black/70 px-3 py-1.5 shadow-[0_0_16px_-6px_rgba(242,206,107,0.85)] backdrop-blur-md"
+            className="mx-3 mb-2 mt-1.5 flex items-center gap-1 rounded-full border border-[#FFD700]/45 bg-black/70 px-3 py-1.5 shadow-[0_0_16px_-6px_rgba(255,215,0,0.85)] backdrop-blur-md"
           >
             <input
               ref={inputRef}
@@ -134,7 +134,7 @@ export default function VoiceChatDock({ messages = [], onSend, open, onCloseComp
             <button
               type="submit"
               aria-label="Gönder"
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#F2CE6B] bg-[#F2CE6B] text-black shadow-[0_0_14px_-3px_rgba(242,206,107,0.95)] transition-transform active:scale-95"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#FFD700] bg-[#FFD700] text-black shadow-[0_0_14px_-3px_rgba(255,215,0,0.95)] transition-transform active:scale-95"
             >
               <Send className="h-5 w-5" />
             </button>

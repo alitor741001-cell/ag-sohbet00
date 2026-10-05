@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { Clock, Crown, Eraser, Image as ImageIcon, MessageSquareOff, MessagesSquare, Send, Shield, Smile, X } from 'lucide-react';
+import { Clock, Crown, Eye, Image as ImageIcon, LayoutGrid, MessageSquare, MessageSquareOff, MessagesSquare, Moon, Send, Shield, Smile, Sparkles, Star, Sun, UserPlus, Users, X } from 'lucide-react';
 import { neonCardClass, neonCircleClass } from '@/lib/neonStyle';
+import { useTheme } from '@/lib/ThemeContext';
 import VoiceControls from '@/components/player/VoiceControls';
 import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
@@ -21,9 +22,20 @@ import ParticipantHistoryPanel from '@/components/player/ParticipantHistoryPanel
 
 const EMOJIS = ['😀', '😂', '😍', '🔥', '👍', '👏', '😱', '😢', '🎬', '🍿', '❤️', '🎉'];
 
+// Sohbet sekme şeridi: referanstaki gibi ikon + etiket.
+const FILTERS = [
+  { key: 'all', label: 'Tümü', icon: LayoutGrid },
+  { key: 'yetkililer', label: 'Yetkililer', icon: Shield },
+  { key: 'izleyici', label: 'İzleyici', icon: Eye },
+  { key: 'yonetici', label: 'Yönetici', icon: Users },
+  { key: 'istekler', label: 'İstekler', icon: UserPlus },
+  { key: 'temalar', label: 'Temalar', icon: Star },
+];
+
 export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, isOwner, isAdmin, onClose, autoDeleteMinutes = 0, countdownText = '', clearToken = 0, onSetAutoDelete, voice, voiceEnabled, onSettings, onDirect, onDirectUser, directUnread = 0, ownerId, roomModerators = [], participants = [], recentParticipants = [], viewerProfiles = {}, presenceMap = {}, onProfileCard, settingsProps, levels = {}, onToggleChat }) {
   const { user } = useCurrentUser();
   const { toast } = useToast();
+  const { theme, setTheme } = useTheme();
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
@@ -217,27 +229,28 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
 
   return (
     <div className="room-chat-shell flex h-full min-h-0 flex-col bg-black text-white">
-      <div className="flex items-center justify-between gap-1.5 border-b border-[#F2CE6B]/30 px-3 py-2.5">
+      <div className="flex items-center justify-between gap-1.5 border-b border-[#FFD700]/30 px-3 py-2.5">
         <div className="flex min-w-0 items-center gap-2">
-          <span className={`h-8 w-8 shrink-0 ${neonCircleClass('gold')} text-[#F2CE6B]`}>
-            <Crown className="h-4 w-4" />
+          <span className={`relative h-9 w-9 shrink-0 ${neonCircleClass('gold')} text-[#FFD700]`}>
+            <MessageSquare className="h-5 w-5" />
+            <Crown className="absolute h-3 w-3" />
           </span>
           <div className="min-w-0">
-            <h3 className="truncate font-bold leading-tight text-white">Sohbet {chatEnabled && <span className="text-xs text-[#888] font-normal">({messages.length})</span>}</h3>
+            <h3 className="truncate font-bold leading-tight text-white">Sohbet {chatEnabled && <span className="text-xs text-[#A0A0A0] font-normal">({messages.length})</span>}</h3>
             <p className="truncate text-[10px] leading-tight text-white/45">Herkesle konuş, yeni dostluklar kur!</p>
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
           {isOwner && chatEnabled && (
             <div className="relative">
-              <button onClick={() => setShowAutoDeleteMenu(!showAutoDeleteMenu)} className="flex items-center gap-1 whitespace-nowrap rounded-full border border-[#F2CE6B]/60 px-2.5 py-1 text-[11px] font-semibold text-[#F2CE6B] shadow-[0_0_12px_-5px_rgba(242,206,107,0.9)]"><Clock className="h-3 w-3" /> Oto-sil: {autoDeleteMinutes ? `${autoDeleteMinutes}dk` : 'Kapalı'}</button>
+              <button onClick={() => setShowAutoDeleteMenu(!showAutoDeleteMenu)} className="flex items-center gap-1 whitespace-nowrap rounded-full border border-[#FFD700]/60 px-2.5 py-1 text-[11px] font-semibold text-[#FFD700] shadow-[0_0_12px_-5px_rgba(255,215,0,0.9)]"><Clock className="h-3 w-3" /> Oto-sil: {autoDeleteMinutes ? `${autoDeleteMinutes}dk` : 'Kapalı'}</button>
               {showAutoDeleteMenu && (
-                <div className="absolute right-0 top-full mt-1 z-50 w-36 rounded-xl border border-[#F2CE6B]/45 bg-[#0b0b0b] p-2 shadow-[0_0_18px_-4px_rgba(242,206,107,0.7)]">
-                  <p className="text-xs text-[#888] mb-1.5 text-center">Otomatik Silme Süresi</p>
+                <div className="absolute right-0 top-full mt-1 z-50 w-36 rounded-xl border border-[#FFD700]/45 bg-[#0b0b0b] p-2 shadow-[0_0_18px_-4px_rgba(255,215,0,0.7)]">
+                  <p className="text-xs text-[#A0A0A0] mb-1.5 text-center">Otomatik Silme Süresi</p>
                   <div className="grid grid-cols-3 gap-1">
-                    <button onClick={() => { onSetAutoDelete?.(0); setShowAutoDeleteMenu(false); }} className={`px-1.5 py-1 rounded text-xs font-semibold ${!autoDeleteMinutes ? 'text-[#ffcc00]' : 'text-[#888] hover:bg-white/5'}`} style={!autoDeleteMinutes ? { background: 'rgba(255, 204, 0, 0.15)' } : {}}>Kapalı</button>
+                    <button onClick={() => { onSetAutoDelete?.(0); setShowAutoDeleteMenu(false); }} className={`px-1.5 py-1 rounded text-xs font-semibold ${!autoDeleteMinutes ? 'text-[#FFD700]' : 'text-[#A0A0A0] hover:bg-white/5'}`} style={!autoDeleteMinutes ? { background: 'rgba(255, 215, 0, 0.15)' } : {}}>Kapalı</button>
                     {[2,3,4,5,6,7,8,9,10].map((m) => (
-                      <button key={m} onClick={() => { onSetAutoDelete?.(m); setShowAutoDeleteMenu(false); }} className={`px-1.5 py-1 rounded text-xs font-semibold ${autoDeleteMinutes === m ? 'text-[#ffcc00]' : 'text-[#888] hover:bg-white/5'}`} style={autoDeleteMinutes === m ? { background: 'rgba(255, 204, 0, 0.15)' } : {}}>{m}dk</button>
+                      <button key={m} onClick={() => { onSetAutoDelete?.(m); setShowAutoDeleteMenu(false); }} className={`px-1.5 py-1 rounded text-xs font-semibold ${autoDeleteMinutes === m ? 'text-[#FFD700]' : 'text-[#A0A0A0] hover:bg-white/5'}`} style={autoDeleteMinutes === m ? { background: 'rgba(255, 215, 0, 0.15)' } : {}}>{m}dk</button>
                     ))}
                   </div>
                 </div>
@@ -248,36 +261,44 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
         </div>
       </div>
       {(voiceEnabled || onSettings || onDirect) && (
-        <div className="room-voice-bar flex items-center gap-2 border-b border-[#F2CE6B]/20 px-3 py-2">
-          <div className={`min-w-0 flex-1 px-2 py-1 ${neonCardClass('white')}`}>
-            <VoiceControls voice={voice} />
-          </div>
-          {onDirect && <button onClick={onDirect} className={`relative flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-2 text-xs font-bold text-[#C88BFF] active:scale-95 ${neonCardClass('purple')}`}><MessagesSquare className="w-4 h-4" /> Mesaj{directUnread > 0 && <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#F2CE6B] px-1 text-[9px] font-bold text-black">{directUnread > 99 ? '99+' : directUnread}</span>}</button>}
+        <div className="room-voice-bar flex items-stretch gap-1.5 border-b border-[#FFD700]/20 px-3 py-2">
+          <VoiceControls voice={voice} />
+          {onDirect && (
+            <button onClick={onDirect} className={`relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl border bg-black/70 px-1.5 py-1.5 text-center transition-transform active:scale-95 border-[#8A2BE2]/55 shadow-[0_0_18px_-8px_rgba(138,43,226,0.9)]`}>
+              <MessagesSquare className="h-4 w-4 text-[#B06BFF]" />
+              <span className="text-[9px] font-black leading-tight text-white">MESAJ YAZ</span>
+              {directUnread > 0 && <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#FFD700] px-1 text-[9px] font-bold text-black">{directUnread > 99 ? '99+' : directUnread}</span>}
+            </button>
+          )}
+          <button onClick={() => setMsgFilter('temalar')} className="flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl border border-[#FFD700]/55 bg-black/70 px-1.5 py-1.5 text-center shadow-[0_0_18px_-8px_rgba(255,215,0,0.9)] transition-transform active:scale-95">
+            <Star className="h-4 w-4 text-[#FFD700]" />
+            <span className="text-[9px] font-black leading-tight text-white">TEMALAR</span>
+          </button>
         </div>
       )}
       {(chatEnabled || isOwner) && (
-        <div className="room-chat-tabs mx-3 my-2 flex items-center gap-1 overflow-x-auto rounded-full border border-[#F2CE6B]/60 bg-black px-1.5 py-1.5 no-scrollbar shadow-[0_0_16px_-6px_rgba(242,206,107,0.85)]" onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
-          {['all', 'yetkililer', 'izleyici', 'yonetici', ...(isOwner ? ['istekler'] : [])].map((f) => (
-            <button key={f} onClick={() => setMsgFilter(f)} className={`whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-bold transition-all ${msgFilter === f ? 'bg-[#F2CE6B] text-black shadow-[0_0_14px_-3px_rgba(242,206,107,0.95)]' : 'border border-[#F2CE6B]/30 text-white/70'}`}>
-              {f === 'all' ? 'Tümü' : f === 'yetkililer' ? 'Yetkililer' : f === 'izleyici' ? 'İzleyici' : f === 'istekler' ? `İstekler${joinRequests.length > 0 ? ` (${joinRequests.length})` : ''}` : 'Yönetici'}
-            </button>
-          ))}
-          {isOwner && (
-            <button onClick={clearAll} className="ml-auto flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border border-[#F2CE6B]/70 bg-black px-2.5 py-1 text-xs font-bold text-[#F2CE6B] shadow-[0_0_14px_-4px_rgba(242,206,107,0.95)] active:scale-95">
-              <Eraser className="w-3 h-3" /> Temizle
-            </button>
-          )}
+        <div className="room-chat-tabs mx-3 my-2 flex items-stretch overflow-x-auto rounded-2xl border border-[#FFD700]/40 bg-black py-1 no-scrollbar shadow-[0_0_16px_-6px_rgba(255,215,0,0.85)]" onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
+          {FILTERS.filter((f) => f.key !== 'istekler' || isOwner).map((f, index) => {
+            const Icon = f.icon;
+            const active = msgFilter === f.key;
+            return (
+              <button key={f.key} onClick={() => setMsgFilter(f.key)} className={`flex min-w-[3.75rem] flex-1 flex-col items-center gap-0.5 px-1.5 py-1 text-[9px] font-bold ${index > 0 ? 'border-l border-white/10' : ''} ${active ? 'rounded-lg bg-[#FFD700] text-black shadow-[0_0_14px_-3px_rgba(255,215,0,0.95)]' : 'text-white/80'}`}>
+                <Icon className="h-3.5 w-3.5" />
+                <span className="whitespace-nowrap leading-none">{f.key === 'istekler' ? `İstekler${joinRequests.length > 0 ? ` (${joinRequests.length})` : ''}` : f.label}</span>
+              </button>
+            );
+          })}
         </div>
       )}
       {!chatEnabled && msgFilter === 'all' ? (
         isOwner ? (
           <div className="flex-1 min-h-0 flex flex-col items-center justify-center text-center p-6 bg-black">
-            <MessageSquareOff className="w-10 h-10 mb-3 text-[#888]" />
+            <MessageSquareOff className="w-10 h-10 mb-3 text-[#A0A0A0]" />
             <p className="font-semibold text-white mb-3">Sohbet kapalı</p>
-            <button onClick={onToggleChat} className="px-5 py-2.5 rounded-xl text-sm font-bold text-black" style={{ background: '#ffcc00' }}>Sohbeti Aç</button>
+            <button onClick={onToggleChat} className="px-5 py-2.5 rounded-xl text-sm font-bold text-black" style={{ background: '#FFD700' }}>Sohbeti Aç</button>
           </div>
         ) : (
-          <div className="flex-1 min-h-0 flex flex-col items-center justify-center text-center p-6 text-[#888] bg-black">
+          <div className="flex-1 min-h-0 flex flex-col items-center justify-center text-center p-6 text-[#A0A0A0] bg-black">
             <MessageSquareOff className="w-10 h-10 mb-3" />
             <p className="font-semibold text-white">Sohbet kapalı</p>
             <p className="text-sm">Oda sahibi sohbeti kapatmış.</p>
@@ -285,12 +306,18 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
         )
       ) : msgFilter === 'all' ? (
       <div ref={scrollRef} className="flex min-w-0 flex-1 min-h-0 flex-col gap-3 overflow-x-hidden overflow-y-auto overscroll-contain p-3 bg-black" style={{ touchAction: 'pan-y', WebkitOverflowScrolling: 'touch' }}>
-        {loading ? <p className="text-center text-sm text-[#888] py-8">Yükleniyor...</p> :
+        {loading ? <p className="text-center text-sm text-[#A0A0A0] py-8">Yükleniyor...</p> :
          messages.length === 0 ? (
           <div className="flex flex-1 items-center justify-center py-8">
-            <div className={`max-w-xs px-6 py-5 text-center ${neonCardClass('gold')}`}>
-              <Crown className="mx-auto mb-2 h-6 w-6 text-[#F2CE6B]" />
-              <p className="text-sm text-white/80">Henüz mesaj yok. İlk mesajı sen at! 🍿</p>
+            <div className="flex items-center gap-3">
+              <Sparkles className="h-4 w-4 text-[#FFD700]/80" />
+              <div className="relative max-w-xs rounded-2xl border-2 border-[#FFD700] bg-black/70 px-6 py-5 text-center shadow-[0_0_24px_-6px_rgba(255,215,0,0.9)]">
+                <span className="absolute -top-3 left-1/2 flex h-6 w-6 -translate-x-1/2 items-center justify-center rounded-full border border-[#FFD700] bg-black text-[#FFD700]">
+                  <Crown className="h-3.5 w-3.5" />
+                </span>
+                <p className="text-sm text-white/85">Henüz mesaj yok. İlk mesajı sen at! 🍿</p>
+              </div>
+              <Sparkles className="h-4 w-4 text-[#FFD700]/80" />
             </div>
           </div>
         ) :
@@ -311,7 +338,7 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
                   const isRole = hasRole || !!frame.frameId;
                   return (
                     <span
-                      className={`min-w-0 max-w-full whitespace-pre-wrap [overflow-wrap:anywhere] text-xs px-3 py-1.5 rounded-full ${isRole ? 'font-bold neon-entrance' : 'text-[#888] bg-[#1a1a1a]'}`}
+                      className={`min-w-0 max-w-full whitespace-pre-wrap [overflow-wrap:anywhere] text-xs px-3 py-1.5 rounded-full ${isRole ? 'font-bold neon-entrance' : 'text-[#A0A0A0] bg-[#1a1a1a]'}`}
                       style={isRole ? {
                         background: `linear-gradient(135deg, ${color}33, ${color}22)`,
                         color: color,
@@ -333,7 +360,7 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
           <ParticipantHistoryPanel participants={participants} recentParticipants={recentParticipants} profiles={viewerProfiles} presenceMap={presenceMap} ownerId={ownerId} onSelect={onProfileCard} />
           ) : msgFilter === 'yetkililer' ? (
           <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-1 bg-black">
-          {roomMods.length === 0 ? <p className="text-center text-sm text-[#888] py-8">Henüz yetkili yok.</p> :
+          {roomMods.length === 0 ? <p className="text-center text-sm text-[#A0A0A0] py-8">Henüz yetkili yok.</p> :
           roomMods.map((mod) => (
             <div key={mod.id || mod.user_id} className="flex items-center gap-2 py-1.5 px-1">
               <span className="w-8 h-8 rounded-full bg-[#8e44ad]/30 flex items-center justify-center shrink-0">
@@ -346,18 +373,35 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
           </div>
           ) : msgFilter === 'istekler' ? (
           <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-2 bg-black">
-          {joinRequests.length === 0 ? <p className="text-center text-sm text-[#888] py-8">Bekleyen katılım isteği yok.</p> :
+          {joinRequests.length === 0 ? <p className="text-center text-sm text-[#A0A0A0] py-8">Bekleyen katılım isteği yok.</p> :
           joinRequests.map((req) => (
             <div key={req.id} className="flex items-center gap-2 p-2 rounded-xl bg-[#1a1a1a] border border-amber-400/30">
               {req.user_avatar ? <Image src={req.user_avatar} className="w-9 h-9 rounded-full object-cover shrink-0" fittingType="fill" /> : <div className="w-9 h-9 rounded-full bg-amber-500 text-white flex items-center justify-center font-bold text-sm shrink-0">{(req.user_name || '?')[0]}</div>}
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-bold truncate text-white">{req.user_name}</p>
-                <p className="text-[10px] text-[#888]">odaya katılmak istiyor</p>
+                <p className="text-[10px] text-[#A0A0A0]">odaya katılmak istiyor</p>
               </div>
               <button onClick={async () => { await base44.functions.invoke('room-presence', { action: 'approve-join', room_id: roomId, request_id: req.id }); toast({ title: 'İstek onaylandı' }); }} className="px-3 py-1.5 rounded-lg bg-green-500 text-white text-xs font-bold whitespace-nowrap">Onayla</button>
               <button onClick={async () => { await base44.functions.invoke('room-presence', { action: 'reject-join', room_id: roomId, request_id: req.id }); toast({ title: 'İstek reddedildi' }); }} className="px-2.5 py-1.5 rounded-lg bg-red-500/80 text-white text-xs font-bold whitespace-nowrap">Reddet</button>
             </div>
           ))}
+          </div>
+          ) : msgFilter === 'temalar' ? (
+          <div className="flex-1 min-h-0 overflow-y-auto bg-black p-4">
+            <div className={`p-4 ${neonCardClass('gold')}`}>
+              <p className="text-sm font-black text-[#FFD700]">Temalar</p>
+              <p className="mt-1 text-[11px] text-[#A0A0A0]">Uygulama temasını seç.</p>
+              <div className="mt-3 space-y-2">
+                <button onClick={() => setTheme('dark')} className={`flex w-full items-center justify-between px-3 py-2.5 text-sm font-bold text-white active:scale-95 ${neonCardClass('blue')}`}>
+                  <span className="flex items-center gap-2"><Moon className="h-4 w-4 text-[#4DA3FF]" /> Karanlık</span>
+                  {theme === 'dark' && <span className="text-[10px] font-black text-[#FFD700]">AKTİF</span>}
+                </button>
+                <button onClick={() => setTheme('light')} className={`flex w-full items-center justify-between px-3 py-2.5 text-sm font-bold text-white active:scale-95 ${neonCardClass('gold')}`}>
+                  <span className="flex items-center gap-2"><Sun className="h-4 w-4 text-[#FFD700]" /> Aydınlık</span>
+                  {theme === 'light' && <span className="text-[10px] font-black text-[#FFD700]">AKTİF</span>}
+                </button>
+              </div>
+            </div>
           </div>
           ) : (
           <div className="dark flex-1 min-h-0 overflow-y-auto bg-black text-white" style={{ touchAction: 'pan-y', WebkitOverflowScrolling: 'touch' }}>
@@ -365,11 +409,9 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
           </div>
           )}
           {chatEnabled && msgFilter === 'all' && autoDeleteMinutes > 0 && countdownText && (
-        <div className="flex justify-center border-t border-[#F2CE6B]/20 px-3 py-2">
-          <p className="flex items-center gap-1.5 rounded-full border border-[#F2CE6B]/60 px-4 py-1.5 text-[11px] font-semibold text-[#F2CE6B] shadow-[0_0_14px_-5px_rgba(242,206,107,0.9)]">
-            <Clock className="h-3 w-3" /> Otomatik silme: {autoDeleteMinutes} dk (kalan: {countdownText})
-          </p>
-        </div>
+        <p className="flex items-center justify-center gap-1.5 border-t border-[#FFD700]/20 px-3 py-2 text-center text-[11px] font-semibold text-[#FFD700]">
+          <Clock className="h-3 w-3" /> Otomatik silme: {autoDeleteMinutes} dk (kalan: {countdownText})
+        </p>
       )}
       {chatEnabled && msgFilter === 'all' && showEmoji && (
         <EmojiPicker onSelect={(e) => { setText((t) => t + e); setShowEmoji(false); }} />
@@ -393,15 +435,18 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
           </p>
         </div>
       )}
-      {chatEnabled && msgFilter === 'all' && !chatLocked && <div className="flex items-center gap-2 border-t border-[#F2CE6B]/25 bg-black p-2.5">
-        <label className={`h-9 w-9 shrink-0 cursor-pointer text-[#C88BFF] active:scale-95 ${neonCircleClass('purple')}`}>
+      {chatEnabled && msgFilter === 'all' && !chatLocked && <div className="flex items-center gap-2 border-t border-[#FFD700]/25 bg-black p-2.5">
+        <label title="Fotoğraf" className={`h-10 w-10 shrink-0 cursor-pointer text-[#4DA3FF] active:scale-95 ${neonCircleClass('blue')}`}>
           <ImageIcon className="w-4 h-4" />
           <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" tabIndex={-1} aria-hidden="true" onChange={onPhoto} disabled={uploading} />
         </label>
-        <button type="button" onClick={() => setShowEmoji(!showEmoji)} className={`h-9 w-9 shrink-0 text-[#4ADE80] active:scale-95 ${neonCircleClass('green')}`}><Smile className="w-4 h-4" /></button>
-        <input value={text} onChange={(e) => { setText(e.target.value); sendTyping(); }} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(e); } }} inputMode="text" enterKeyHint="send" autoComplete="off" autoCorrect="off" autoCapitalize="sentences" spellCheck={false} placeholder="Mesaj yazın..." className="h-10 min-w-0 flex-1 rounded-full border border-white/15 bg-[#0d0d0d] px-4 text-sm text-white outline-none placeholder:text-[#666] focus:border-[#F2CE6B]/60" />
-        <button type="button" onClick={send} disabled={!text.trim() || uploading || sending} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#F2CE6B] bg-[#F2CE6B] text-black shadow-[0_0_16px_-3px_rgba(242,206,107,0.95)] active:scale-95 disabled:opacity-50"><Send className="w-4 h-4" /></button>
-        {(uploading || sending) && <span className="shrink-0 animate-pulse text-xs text-[#888]">...</span>}
+        <button type="button" onClick={() => setShowEmoji(!showEmoji)} title="Emoji" className={`h-10 w-10 shrink-0 text-[#00FF66] active:scale-95 ${neonCircleClass('green')}`}><Smile className="w-4 h-4" /></button>
+        <div className="flex h-11 min-w-0 flex-1 items-center gap-1.5 rounded-full border border-white/15 bg-[#0d0d0d] px-3 focus-within:border-[#FFD700]/60">
+          <MessageSquare className="h-4 w-4 shrink-0 text-[#A0A0A0]" />
+          <input value={text} onChange={(e) => { setText(e.target.value); sendTyping(); }} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(e); } }} inputMode="text" enterKeyHint="send" autoComplete="off" autoCorrect="off" autoCapitalize="sentences" spellCheck={false} placeholder="Mesaj yazın..." className="h-full min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-[#A0A0A0]" />
+        </div>
+        <button type="button" onClick={send} disabled={!text.trim() || uploading || sending} className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 border-[#FFD700] bg-[#FFD700] text-black shadow-[0_0_22px_-2px_rgba(255,215,0,0.95)] active:scale-95 disabled:opacity-50"><Send className="w-5 h-5" /></button>
+        {(uploading || sending) && <span className="shrink-0 animate-pulse text-xs text-[#A0A0A0]">...</span>}
       </div>}
 
 

@@ -1,35 +1,37 @@
-// Karanlık neon panel dili: siyah zemin, ince parlayan çerçeve.
+// Karanlık neon panel dili: siyah zemin (#000000), ince parlayan çerçeve.
+// Renkler doğrudan tasarım referansından alınır:
+// altın #FFD700 · kırmızı #FF0033 · mavi #007BFF · mor #8A2BE2 · yeşil #00FF66.
 // Sınıf adları düz metin olarak yazılır — Tailwind yalnızca kaynakta gördüğü sınıfları üretir.
 export const NEON_TONES = {
   gold: {
-    text: 'text-[#F2CE6B]',
-    label: 'text-[#F2CE6B]',
-    card: 'border-[#F2CE6B]/45 shadow-[0_0_18px_-8px_rgba(242,206,107,0.9)]',
-    circle: 'border-[#F2CE6B]/55 shadow-[0_0_14px_-4px_rgba(242,206,107,0.95)]',
+    text: 'text-[#FFD700]',
+    label: 'text-[#FFD700]',
+    card: 'border-[#FFD700]/45 shadow-[0_0_18px_-8px_rgba(255,215,0,0.9)]',
+    circle: 'border-[#FFD700]/55 shadow-[0_0_14px_-4px_rgba(255,215,0,0.95)]',
   },
   red: {
-    text: 'text-[#FF5A5A]',
-    label: 'text-[#FF8A8A]',
-    card: 'border-[#FF5A5A]/45 shadow-[0_0_18px_-8px_rgba(255,90,90,0.9)]',
-    circle: 'border-[#FF5A5A]/55 shadow-[0_0_14px_-4px_rgba(255,90,90,0.95)]',
+    text: 'text-[#FF5A7A]',
+    label: 'text-[#FF8AA0]',
+    card: 'border-[#FF0033]/55 shadow-[0_0_18px_-8px_rgba(255,0,51,0.9)]',
+    circle: 'border-[#FF0033]/60 shadow-[0_0_14px_-4px_rgba(255,0,51,0.95)]',
   },
   blue: {
-    text: 'text-[#4FC3F7]',
-    label: 'text-[#8FD9FF]',
-    card: 'border-[#4FC3F7]/45 shadow-[0_0_18px_-8px_rgba(79,195,247,0.9)]',
-    circle: 'border-[#4FC3F7]/55 shadow-[0_0_14px_-4px_rgba(79,195,247,0.95)]',
+    text: 'text-[#4DA3FF]',
+    label: 'text-[#7FBEFF]',
+    card: 'border-[#007BFF]/55 shadow-[0_0_18px_-8px_rgba(0,123,255,0.9)]',
+    circle: 'border-[#007BFF]/60 shadow-[0_0_14px_-4px_rgba(0,123,255,0.95)]',
   },
   purple: {
-    text: 'text-[#C88BFF]',
-    label: 'text-[#D5AAFF]',
-    card: 'border-[#A855F7]/45 shadow-[0_0_18px_-8px_rgba(168,85,247,0.9)]',
-    circle: 'border-[#A855F7]/55 shadow-[0_0_14px_-4px_rgba(168,85,247,0.95)]',
+    text: 'text-[#B06BFF]',
+    label: 'text-[#C99BFF]',
+    card: 'border-[#8A2BE2]/55 shadow-[0_0_18px_-8px_rgba(138,43,226,0.9)]',
+    circle: 'border-[#8A2BE2]/60 shadow-[0_0_14px_-4px_rgba(138,43,226,0.95)]',
   },
   green: {
-    text: 'text-[#4ADE80]',
-    label: 'text-[#87EFA8]',
-    card: 'border-[#4ADE80]/45 shadow-[0_0_18px_-8px_rgba(74,222,128,0.9)]',
-    circle: 'border-[#4ADE80]/55 shadow-[0_0_14px_-4px_rgba(74,222,128,0.95)]',
+    text: 'text-[#00FF66]',
+    label: 'text-[#7CFFAE]',
+    card: 'border-[#00FF66]/50 shadow-[0_0_18px_-8px_rgba(0,255,102,0.9)]',
+    circle: 'border-[#00FF66]/55 shadow-[0_0_14px_-4px_rgba(0,255,102,0.95)]',
   },
   white: {
     text: 'text-white',

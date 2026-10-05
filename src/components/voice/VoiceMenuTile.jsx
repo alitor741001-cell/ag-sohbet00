@@ -12,10 +12,10 @@ export default function VoiceMenuTile({ icon: Icon, label, onClick, active, disa
       aria-pressed={!!active}
       className="flex flex-col items-center gap-1.5 transition-transform active:scale-95 disabled:opacity-40"
     >
-      <span className={`h-14 w-14 ${neonCircleClass(tone)} ${active ? 'border-[#F2CE6B] bg-[#F2CE6B] text-black' : palette.text}`}>
+      <span className={`h-14 w-14 ${neonCircleClass(tone)} ${active ? 'border-[#FFD700] bg-[#FFD700] text-black' : palette.text}`}>
         <Icon className="h-6 w-6" />
       </span>
-      <span className={`max-w-[72px] text-center text-[11px] font-semibold leading-tight ${active ? 'text-[#F2CE6B]' : palette.label}`}>{label}</span>
+      <span className={`max-w-[72px] text-center text-[11px] font-semibold leading-tight ${active ? 'text-[#FFD700]' : palette.label}`}>{label}</span>
     </button>
   );
 }
