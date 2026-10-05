@@ -1,29 +1,28 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Gamepad2, Play, X } from 'lucide-react';
 import { Image } from '@/components/ui/image';
-import { GAME_COVER } from './slotAssets';
-import { ROCKET_COVER } from './rocketAssets';
+import { GAMES, ROCKET_ID } from './gameCatalog';
 import SlotGame from './SlotGame';
 import CrashRocketGame from './CrashRocketGame';
 
 // Sinematik geçişin toplam süresi.
 const TRANSITION_MS = 700;
-const SLOT_ID = 'slot-frenzy';
-const ROCKET_ID = 'crash-rocket';
 
-// Oyun merkezi kartları: kapak görseli durur, dokununca oyun açılır.
-const GAMES = [
-  { id: SLOT_ID, title: 'SLOT FRENZY', cover: GAME_COVER, originWidth: 1058, originHeight: 1008 },
-  { id: ROCKET_ID, title: 'CRASH ROCKET', cover: ROCKET_COVER, originWidth: 1135, originHeight: 928 },
-];
-
-/** Oyun merkezi: sohbet alanındaki kumanda butonuyla açılan ayrı panel. */
-export default function GamePanel({ open, onClose, roomId }) {
-  const [selected, setSelected] = useState(null);
-  const [phase, setPhase] = useState('idle'); // 'opening' | 'closing'
+/** Oyun merkezi: sohbet alanındaki kumanda butonuyla açılan ayrı panel.
+    initialGame verilirse panel listeyi atlayıp oyunu doğrudan tam ekran açar. */
+export default function GamePanel({ open, onClose, roomId, initialGame = null }) {
+  const [selected, setSelected] = useState(initialGame);
+  const [phase, setPhase] = useState(initialGame ? 'opening' : 'idle'); // 'opening' | 'closing'
   const timerRef = useRef(null);
 
   useEffect(() => () => window.clearTimeout(timerRef.current), []);
+
+  // Doğrudan oyunla açılışta giriş geçişi oynar, sonra panel sakinleşir.
+  useEffect(() => {
+    if (!initialGame) return undefined;
+    timerRef.current = window.setTimeout(() => setPhase('idle'), TRANSITION_MS);
+    return () => window.clearTimeout(timerRef.current);
+  }, [initialGame]);
 
   // Panel kapandığında seçim sıfırlanır: yeniden açıldığında yarım panel görünür.
   useEffect(() => {

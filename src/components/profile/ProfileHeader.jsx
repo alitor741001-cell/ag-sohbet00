@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Crown, Loader2, Shield } from 'lucide-react';
+import { Camera, Crown, Loader2, Shield } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import ProfileFrame from '@/components/ProfileFrame';
 import RoleBadge from '@/components/RoleBadge';
@@ -9,7 +9,7 @@ import useXp from '@/hooks/useXp';
 import { useToast } from '@/components/ui/use-toast';
 import usePhotoGestures from '@/hooks/usePhotoGestures';
 
-/** Profil başlığı: neon halkalı avatar, üzerinde "Profili Düzenle" yazısı; altında isim, e-posta ve rol etiketi. */
+/** Profil başlığı: neon halkalı avatar, yanında kamera simgesi; altında isim, e-posta ve rol etiketi. */
 export default function ProfileHeader({ user, avatar, onAvatar, onUpdated, uploading }) {
   const { toast } = useToast();
   const [editing, setEditing] = useState(false);
@@ -50,16 +50,17 @@ export default function ProfileHeader({ user, avatar, onAvatar, onUpdated, uploa
         {...(editing && user.profile_frame ? handlers : {})}
       >
         {avatarBox}
-        {/* Profil düzenleme tetikleyicisi: kameranın yerinde, yalnızca yazı olarak.
-            Dokunulunca profil düzenleme modu açılır (fotoğraf değiştirme + kaydetme). */}
+        {/* Profilin yanındaki kamera simgesi: dokunulunca düzenleme modu açılır
+            (fotoğraf seçme + kaydetme). */}
         {!editing && (
           <button
             type="button"
             onClick={() => setEditing(true)}
-            className="absolute bottom-1 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap text-[11px] font-extrabold text-white"
-            style={{ textShadow: '0 1px 5px rgba(0,0,0,0.95), 0 0 12px rgba(0,0,0,0.85)' }}
+            aria-label="Profili düzenle"
+            className="absolute -bottom-1 -right-1 z-20 flex h-9 w-9 items-center justify-center rounded-full border-2 border-[#f2ce6b] text-white active:scale-95"
+            style={{ background: 'linear-gradient(135deg, #dc2626, #f2ce6b)', boxShadow: '0 0 14px rgba(242,206,107,0.6)' }}
           >
-            Profili Düzenle
+            <Camera className="h-4 w-4" />
           </button>
         )}
       </div>

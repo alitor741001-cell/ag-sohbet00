@@ -1,12 +1,16 @@
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, lazy, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Film, Loader2, Mic, Search } from 'lucide-react';
+import { Film, Gamepad2, Loader2, Mic, Search } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import RoomDiscoveryCard from '@/components/home/RoomDiscoveryCard';
+import GameDiscoveryRow from '@/components/home/GameDiscoveryRow';
 import useFriends from '@/hooks/useFriends';
 import useMessageProfiles from '@/hooks/useMessageProfiles';
 import { fetchYouTubeTitle, isGenericTitle, youtubeIdFromMovieId } from '@/lib/youtubeTitle';
+
+// Oyunlar ayrı indirilir: ana sayfa paketi küçük kalır.
+const GamePanel = lazy(() => import('@/components/games/GamePanel'));
 
 const isVoiceRoom = (room) => room?.room_type === 'voice' || room?.voice_mode === true;
 
@@ -30,6 +34,8 @@ export default function RoomDiscovery() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState('voice');
   const [query, setQuery] = useState('');
+  // Açık oyun: ana sayfadan seçilen oyun tam ekran oynanır.
+  const [gameOpen, setGameOpen] = useState(null);
 
   const isAdmin = user?.role === 'admin';
   const isVisible = (room) =>
@@ -180,23 +186,33 @@ export default function RoomDiscovery() {
         <button
           type="button"
           onClick={() => setTab('voice')}
-          className={`flex flex-1 items-center justify-center gap-1.5 rounded-full py-2.5 text-[13px] font-extrabold transition ${
+          className={`flex min-w-0 flex-1 items-center justify-center gap-1 rounded-full py-2.5 text-[11px] font-extrabold transition ${
             tab === 'voice' ? 'border border-[#4caf50]/45 bg-[#4caf50]/15 text-[#4caf50]' : 'bg-white/5 text-white/50'
           }`}
         >
-          <Mic className="h-4 w-4" /> Koltuklu Odalar
+          <Mic className="h-4 w-4 shrink-0" /> <span className="truncate">Koltuklu Odalar</span>
         </button>
         <button
           type="button"
           onClick={() => setTab('film')}
-          className={`flex flex-1 items-center justify-center gap-1.5 rounded-full py-2.5 text-[13px] font-extrabold transition ${
+          className={`flex min-w-0 flex-1 items-center justify-center gap-1 rounded-full py-2.5 text-[11px] font-extrabold transition ${
             tab === 'film' ? 'border border-[#4caf50]/45 bg-[#4caf50]/15 text-[#4caf50]' : 'bg-white/5 text-white/50'
           }`}
         >
-          <Film className="h-4 w-4" /> Film Odaları
+          <Film className="h-4 w-4 shrink-0" /> <span className="truncate">Film Odaları</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab('games')}
+          className={`flex min-w-0 flex-1 items-center justify-center gap-1 rounded-full py-2.5 text-[11px] font-extrabold transition ${
+            tab === 'games' ? 'border border-[#f2ce6b]/50 bg-[#f2ce6b]/15 text-[#f2ce6b]' : 'bg-white/5 text-white/50'
+          }`}
+        >
+          <Gamepad2 className="h-4 w-4 shrink-0" /> <span className="truncate">Oyunlar</span>
         </button>
       </div>
 
+      {tab !== 'games' && (
       <div className="relative mb-3">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
         <input
@@ -208,8 +224,11 @@ export default function RoomDiscovery() {
           className="w-full rounded-full border border-white/10 bg-[#141419] py-2.5 pl-9 pr-3 text-[13px] font-medium text-white outline-none placeholder:text-white/35 focus:border-[#4caf50]/50"
         />
       </div>
+      )}
 
-      {loading ? (
+      {tab === 'games' ? (
+        <GameDiscoveryRow onPick={setGameOpen} />
+      ) : loading ? (
         <div className="flex justify-center py-10">
           <Loader2 className="h-6 w-6 animate-spin text-white/40" />
         </div>
@@ -248,6 +267,13 @@ export default function RoomDiscovery() {
             );
           })}
         </div>
+      )}
+
+      {/* Seçilen oyun tam ekran açılır: oda kurmaya gerek yok. */}
+      {gameOpen && (
+        <Suspense fallback={null}>
+          <GamePanel open initialGame={gameOpen} onClose={() => setGameOpen(null)} />
+        </Suspense>
       )}
     </section>
   );
