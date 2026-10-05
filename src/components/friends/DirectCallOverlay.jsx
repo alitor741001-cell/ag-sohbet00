@@ -1,6 +1,7 @@
-import { ArrowLeft, Mic, MicOff, Phone, PhoneOff, Video, VideoOff, Volume2, VolumeX } from 'lucide-react';
+import { ArrowLeft, Mic, MicOff, Phone, PhoneOff, SwitchCamera, Video, VideoOff, Volume2, VolumeX } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import CallBubble from '@/components/friends/CallBubble';
+import CallModerationNotice from '@/components/friends/CallModerationNotice';
 import CallVideoTile from '@/components/friends/CallVideoTile';
 import { useDirectCall } from '@/lib/DirectCallContext';
 import XpAvatar from '@/components/xp/XpAvatar';
@@ -15,7 +16,9 @@ const formatDuration = (total) => {
 
 export default function DirectCallOverlay() {
   const navigate = useNavigate();
-  const { call, role, phase, seconds, muted, speaker, error, minimized, remoteMuted, cameraOn, remoteCameraOn, localVideoTrack, remoteVideoTrack, minimizeCall, restoreCall, acceptCall, rejectCall, endCall, toggleMute, toggleSpeaker, toggleCamera } = useDirectCall();
+  const { call, role, phase, seconds, muted, speaker, error, minimized, remoteMuted, cameraOn, remoteCameraOn, localVideoTrack, remoteVideoTrack, facing, moderationNotice, clearModerationNotice, minimizeCall, restoreCall, acceptCall, rejectCall, endCall, toggleMute, toggleSpeaker, toggleCamera, switchCamera } = useDirectCall();
+  // Uygunsuz görüntü uyarısı arama kapandıktan sonra da ekranda kalır.
+  if (moderationNotice) return <CallModerationNotice notice={moderationNotice} onClose={clearModerationNotice} />;
   if (!call || phase === 'idle') return null;
 
   const other = role === 'callee'
@@ -46,7 +49,7 @@ export default function DirectCallOverlay() {
           <div className="relative h-full w-full self-stretch overflow-hidden rounded-3xl bg-catalog">
             {remoteVideoVisible
               ? <CallVideoTile track={remoteVideoTrack} className="h-full w-full object-cover" />
-              : <CallVideoTile track={localVideoTrack} mirror className="h-full w-full object-cover" />}
+              : <CallVideoTile track={localVideoTrack} mirror={facing === 'user'} className="h-full w-full object-cover" />}
             <div className="absolute left-3 top-3 flex items-center gap-2 rounded-full bg-black/60 px-3 py-1 text-xs text-white">
               <span className="font-semibold">{other.name || 'Kullanıcı'}</span>
               {statusText && phase === 'active' && <span className="font-mono text-white/70">{statusText}</span>}
@@ -54,8 +57,20 @@ export default function DirectCallOverlay() {
             </div>
             {remoteVideoVisible && cameraOn && localVideoTrack && (
               <div className="absolute right-3 top-3 h-32 w-24 overflow-hidden rounded-2xl border border-white/25 bg-black shadow-lg">
-                <CallVideoTile track={localVideoTrack} mirror className="h-full w-full object-cover" />
+                <CallVideoTile track={localVideoTrack} mirror={facing === 'user'} className="h-full w-full object-cover" />
               </div>
+            )}
+            {/* Ön/arka kamera geçişi */}
+            {cameraOn && (
+              <button
+                type="button"
+                onClick={switchCamera}
+                aria-label="Ön/arka kamerayı değiştir"
+                title="Kamerayı çevir"
+                className="absolute bottom-3 right-3 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-black/65 text-white backdrop-blur-md active:scale-95"
+              >
+                <SwitchCamera className="h-6 w-6" />
+              </button>
             )}
           </div>
         ) : (
