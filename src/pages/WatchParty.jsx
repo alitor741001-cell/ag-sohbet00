@@ -6,11 +6,14 @@ import ChatOverlay from '@/components/player/ChatOverlay';
 import { useVoiceChat } from '@/hooks/useVoiceChat';
 import { useCurrentUser, membershipActive } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
-import { Ban, Crown, X, Eye, ArrowLeft, UserMinus } from 'lucide-react';
+import { Ban, Crown, Eye, LogOut, UserMinus } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import RoomSettingsMenu from '@/components/player/RoomSettingsMenu';
 import RoomGiftStage from '@/components/voice/RoomGiftStage';
+import RoomExitOverlay from '@/components/voice/RoomExitOverlay';
+import { clearMinimizedRoom, getMinimizedRoom, isRoomMinimized, setMinimizedRoom } from '@/lib/minimizedRoom';
+import { clearMinimizedFilm, getMinimizedFilm, setMinimizedFilm } from '@/lib/minimizedFilm';
 
 
 import LiveKitDebugPanel from '@/components/player/LiveKitDebugPanel';
@@ -43,6 +46,7 @@ export default function WatchParty() {
   const [directOpen, setDirectOpen] = useState(false);
   const [directTarget, setDirectTarget] = useState(null);
   const [showViewers, setShowViewers] = useState(false);
+  const [exitOpen, setExitOpen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [moviePickerOpen, setMoviePickerOpen] = useState(false);
   const [needPassword, setNeedPassword] = useState(false);
@@ -370,6 +374,8 @@ export default function WatchParty() {
     if (!user || !joinedRef.current || kickedRef.current) return;
     // Sesli moda geçiş sırasında odaya üyelik korunur.
     if (modeSwitchRef.current) return;
+    // Oda küçültüldüyse odadan düşülmez: film ve ses arka planda devam eder.
+    if (isRoomMinimized(id)) return;
     joinedRef.current = false;
     setVoiceReady(false);
     try { await base44.functions.invoke('room-presence', { action: 'leave', room_id: id }); } catch {}
@@ -377,7 +383,38 @@ export default function WatchParty() {
   const leaveRoomRef = useRef(() => {});
   leaveRoomRef.current = leaveRoom;
 
-  const handleBack = async () => { await leaveRoom(); navigate(-1); };
+  // Odadan çık: oda üyeliği bırakılır ve odalar listesine dönülür.
+  const handleLeave = async () => { await leaveRoom(); navigate('/acik-odalar'); };
+
+  // Odayı küçült: film ve mikrofon arka planda devam eder, küçük oynatıcıdan odaya dönülür.
+  const minimizeRoom = () => {
+    const src = movie?.video_url || movie?.hls_url || movie?.external_url || '';
+    setMinimizedRoom({
+      id,
+      name: room?.name || 'Film odası',
+      owner_id: room?.owner_id,
+      owner_name: room?.owner_name,
+      path: `/oda/${id}`,
+    });
+    if (src) {
+      setMinimizedFilm({
+        roomId: id,
+        src,
+        title: room?.movie_title || movie?.title || '',
+        time: syncState.current_time || 0,
+        playing: syncState.is_playing !== false,
+        isOwner,
+        path: `/oda/${id}`,
+      });
+    }
+    navigate('/acik-odalar');
+  };
+
+  // Odaya dönüldüğünde küçültme kayıtları temizlenir: balon ve küçük oynatıcı kapanır.
+  useEffect(() => {
+    if (getMinimizedRoom()?.id === id) clearMinimizedRoom();
+    if (getMinimizedFilm()?.roomId === id) clearMinimizedFilm(id);
+  }, [id]);
 
   useEffect(() => {
     const handler = () => { leaveRoomRef.current(); };
@@ -713,7 +750,7 @@ export default function WatchParty() {
           </div>
         )}
         {!chatOpen && !directOpen && <div className="absolute top-[max(env(safe-area-inset-top),0.75rem)] left-3 z-[55] flex items-center gap-2">
-          <button onClick={handleBack} className="flex items-center justify-center w-9 h-9 rounded-full bg-black/60 backdrop-blur-md text-white border border-white/10 active:scale-95 transition"><ArrowLeft className="w-5 h-5" /></button>
+          <button onClick={() => setExitOpen(true)} aria-label="Odayı kapat" className="flex items-center justify-center w-9 h-9 rounded-full bg-red-600 text-white active:scale-95 transition"><LogOut className="w-5 h-5" /></button>
           {room?.is_personal && room?.personal_room_code ? <span className="bg-black/60 backdrop-blur-md text-white text-xs font-bold px-2.5 py-1.5 rounded-full border border-white/10 whitespace-nowrap">Kod: {room.personal_room_code}</span> : null}
           {room?.room_number ? <span className="bg-black/60 backdrop-blur-md text-white text-xs font-bold px-2.5 py-1.5 rounded-full border border-white/10 whitespace-nowrap">Oda No: {room.room_number}</span> : null}
         </div>}
@@ -760,11 +797,11 @@ export default function WatchParty() {
         <RoomGiftStage roomId={id} />
 
         {showViewers && (
-          <div className="absolute top-[max(env(safe-area-inset-top),3.5rem)] right-3 bg-card/95 border border-border rounded-xl p-2 z-[60] w-40 max-h-[55vh] overflow-y-auto shadow-2xl backdrop-blur-xl">
-            <div className="flex items-center justify-between mb-1.5 px-0.5">
-              <p className="font-semibold text-xs">İzleyiciler</p>
-              <button onClick={() => setShowViewers(false)} className="text-muted-foreground"><X className="w-3.5 h-3.5" /></button>
-            </div>
+          <>
+            {/* Boş alana dokununca izleyici listesi kapanır. */}
+            <button type="button" aria-label="Kapat" onClick={() => setShowViewers(false)} className="absolute inset-0 z-[59]" />
+            <div className="absolute top-[max(env(safe-area-inset-top),3.5rem)] right-3 z-[60] w-40 max-h-[55vh] overflow-y-auto rounded-xl border border-amber-400/70 bg-gradient-to-b from-[#123018]/95 to-[#33300a]/95 p-2 text-white shadow-2xl backdrop-blur-xl">
+              <p className="mb-1.5 px-0.5 text-xs font-semibold text-amber-300">İzleyiciler</p>
             <div className="space-y-1">
               {visibleParticipants.map((p) => {
                 const prof = viewerProfiles[p.user_id];
@@ -774,7 +811,7 @@ export default function WatchParty() {
                 // Gizli kullanıcı: yalnızca kırmızı takma ad görünür, profili açılmaz.
                 const hidden = isHiddenName(p.name);
                 return (
-                  <button key={p.user_id} onClick={() => { if (!hidden) openUserProfile(p.user_id); }} className={`flex items-center gap-1.5 text-xs py-0.5 w-full text-left rounded px-1 ${hidden ? 'cursor-default' : 'hover:bg-secondary/50'}`}>
+                  <button key={p.user_id} onClick={() => { if (!hidden) openUserProfile(p.user_id); }} className={`flex items-center gap-1.5 text-xs py-0.5 w-full text-left rounded px-1 ${hidden ? 'cursor-default' : 'hover:bg-white/10'}`}>
                     <div className="shrink-0 relative">
                       {!hidden && prof?.profile_frame ? <ProfileFrame frame={prof.profile_frame} avatar={avatar} name={p.name} size="3xs" frameScale={prof.profile_frame_scale} /> : <XpAvatar avatar={avatar} name={p.name} userId={hidden ? '' : p.user_id} size="3xs" />}
                       <span className={`absolute bottom-0 right-0 w-2 h-2 rounded-full border border-card ${isOnline ? 'bg-green-400' : 'bg-red-400'}`} />
@@ -784,8 +821,9 @@ export default function WatchParty() {
                   </button>
                 );
               })}
+              </div>
             </div>
-          </div>
+          </>
         )}
         <RoomSettingsMenu open={showSettings} onClose={() => setShowSettings(false)} room={room} canMod={canMod} participants={room.participants || []} roomModerators={room.room_moderators || []} onAssignMod={assignMod} onRemoveMod={removeMod} roomName={roomNameEdit} setRoomName={setRoomNameEdit} onSaveName={saveRoomName} password={pwSetInput} setPassword={setPwSetInput} passwordOpen={showPwSet} setPasswordOpen={setShowPwSet} onVoice={toggleVoice} onChat={toggleChat} onChatBan={toggleChatBan} onHidden={toggleHidden} onPassword={() => savePassword()} onRemovePassword={() => setShowPwRemoveConfirm(true)} onUnban={unbanUser} onPickMovie={() => { setMoviePickerOpen(true); setShowSettings(false); }} onDeleteRoom={deleteRoom} onToggleApproval={toggleApproval} />
       </div>
@@ -822,6 +860,13 @@ export default function WatchParty() {
           ] : []}
         />
       )}
+
+      <RoomExitOverlay
+        open={exitOpen}
+        onClose={() => setExitOpen(false)}
+        onMinimize={() => { setExitOpen(false); minimizeRoom(); }}
+        onLeave={() => { setExitOpen(false); handleLeave(); }}
+      />
     </div>
   );
 }

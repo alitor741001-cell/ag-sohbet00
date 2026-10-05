@@ -4,6 +4,8 @@ import { base44 } from '@/api/base44Client';
 import { createVoiceOutput, unlockVoicePlayback } from '@/lib/callAudio';
 import { hasDirectCallAudioFocus, subscribeCallAudioFocus } from '@/lib/callAudioFocus';
 import { hasSharedMic, releaseSharedMic, setSharedMicActive, sharedMicTrack } from '@/lib/micSource';
+import { isRoomMinimized } from '@/lib/minimizedRoom';
+import { disposeOtherVoiceSessions, registerVoiceSession, takeVoiceSession } from '@/lib/roomVoiceSession';
 
 const initialDebug = { participantCount: 0, remoteParticipants: 0, remoteTracks: 0, playback: 'hazır' };
 // Mikrofon izni verilmese bile kişi odayı dinlemeye devam eder; mesaj bunu açıkça söyler.
@@ -135,8 +137,16 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
   useEffect(() => {
     if (!voiceEnabled || !roomId || !user?.id || callAudioPaused || hasDirectCallAudioFocus()) return;
     let cancelled = false;
+    // Küçültülmüş odadan dönüş: bağlantı ve mikrofon yayını hâlâ ayakta, yalnızca arayüz bağlanır.
+    disposeOtherVoiceSessions(roomId);
+    const resumed = takeVoiceSession(roomId);
     // stopLocalTrackOnUnpublish: false — izinli mikrofon kanalı oda değişiminde korunur.
-    const room = new Room({ adaptiveStream: true, dynacast: true, autoSubscribe: true, stopLocalTrackOnUnpublish: false });
+    const room = resumed?.room || new Room({ adaptiveStream: true, dynacast: true, autoSubscribe: true, stopLocalTrackOnUnpublish: false });
+    if (resumed) {
+      // Önceki arayüzün dinleyicileri bırakılır, canlı bağlantı olduğu gibi devralınır.
+      room.removeAllListeners();
+      resumed.elements?.forEach((element) => audioElementsRef.current.add(element));
+    }
     roomRef.current = room;
 
     const updateSpeakers = (speakers) => {
@@ -224,6 +234,20 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
 
     (async () => {
       try {
+        // Küçültülmüş odadan dönüldü: yeniden bağlanılmaz, ses ve mikrofon aynen sürer.
+        if (resumed) {
+          setConnectionState('connected');
+          resumed.elements?.forEach((element) => { element.muted = deafenedRef.current; element.play().catch(() => {}); });
+          attachCurrentRemoteAudio();
+          await retryAudio();
+          setAudioBlocked(!room.canPlaybackAudio);
+          if (!hasDirectCallAudioFocus() && !mutedByModeratorRef.current && voiceEnabledRef.current && micEnabledRef.current
+            && room.localParticipant.getTrackPublication(Track.Source.Microphone)?.isMuted) {
+            await enableMic(room).catch(() => {});
+          }
+          refreshState();
+          return;
+        }
         setConnectionState('connecting');
         const response = await base44.functions.invoke('livekitToken', {
           roomName: roomId,
@@ -285,9 +309,26 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
       if (room.canPlaybackAudio && audioElementsRef.current.size > 0) retryAudio();
     }, 2000);
 
+    const stopTransient = () => {
+      document.removeEventListener('pointerdown', startAudioOnInteraction);
+      document.removeEventListener('touchend', startAudioOnInteraction);
+      document.removeEventListener('keydown', startAudioOnInteraction);
+      document.removeEventListener('visibilitychange', restoreOnVisible);
+      window.removeEventListener('focus', restoreOnVisible);
+      window.removeEventListener('orientationchange', startAudioOnInteraction);
+      window.clearInterval(recoveryTimer);
+    };
+
     return () => {
       cancelled = true;
       remoteAudioControlRef.current = null;
+      // Oda küçültüldüyse ses oturumu sayfadan bağımsız yaşar: mikrofon yayında kalır,
+      // oda sesi duyulmaya devam eder — odaya dönüldüğünde aynı bağlantı yeniden kullanılır.
+      if (isRoomMinimized(roomId)) {
+        stopTransient();
+        registerVoiceSession(roomId, { room, elements: audioElementsRef.current, stopTransient });
+        return;
+      }
       room.removeAllListeners();
       audioElementsRef.current.forEach((element) => element.remove());
       audioElementsRef.current.clear();
@@ -303,13 +344,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
       room.disconnect(false);
       releaseSharedMic();
       if (roomRef.current === room) roomRef.current = null;
-      document.removeEventListener('pointerdown', startAudioOnInteraction);
-      document.removeEventListener('touchend', startAudioOnInteraction);
-      document.removeEventListener('keydown', startAudioOnInteraction);
-      document.removeEventListener('visibilitychange', restoreOnVisible);
-      window.removeEventListener('focus', restoreOnVisible);
-      window.removeEventListener('orientationchange', startAudioOnInteraction);
-      window.clearInterval(recoveryTimer);
+      stopTransient();
       setActive(false);
       setSpeakingIds([]);
       setParticipantMicStates({});

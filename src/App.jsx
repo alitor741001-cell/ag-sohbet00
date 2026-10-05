@@ -17,6 +17,7 @@ import XpProvider from '@/components/xp/XpProvider';
 import DirectCallProvider from '@/lib/DirectCallContext';
 import DirectCallOverlay from '@/components/friends/DirectCallOverlay';
 import MinimizedRoomBubble from '@/components/voice/MinimizedRoomBubble';
+import MinimizedFilmPlayer from '@/components/player/MinimizedFilmPlayer';
 import { FrameCatalogProvider } from '@/lib/FrameCatalogContext';
 import { Navigate } from 'react-router-dom';
 
@@ -177,6 +178,7 @@ function App() {
               <AuthenticatedApp />
               <DirectCallOverlay />
               <MinimizedRoomBubble />
+              <MinimizedFilmPlayer />
             </Router>
           </DirectCallProvider>
           <Toaster />

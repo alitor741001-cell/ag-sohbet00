@@ -26,7 +26,7 @@ import RoomLogSheet from '@/components/voice/RoomLogSheet';
 import GiftScoreChip from '@/components/voice/GiftScoreChip';
 import GiftBoardSheet from '@/components/voice/GiftBoardSheet';
 import RoomExitOverlay from '@/components/voice/RoomExitOverlay';
-import { isRoomMinimized, setMinimizedRoom } from '@/lib/minimizedRoom';
+import { clearMinimizedRoom, getMinimizedRoom, isRoomMinimized, setMinimizedRoom } from '@/lib/minimizedRoom';
 import VoicePrivateChatSheet from '@/components/voice/VoicePrivateChatSheet';
 import GamePanel from '@/components/games/GamePanel';
 import GiftBoard from '@/components/voice/GiftBoard';
@@ -452,9 +452,15 @@ export default function VoiceRoom() {
 
   // Odayı küçült: oda ve koltuk korunur, sağ alttaki balondan odalar gezilebilir.
   const minimizeRoom = useCallback(() => {
-    setMinimizedRoom({ id, name: room?.name || 'Sesli oda', owner_id: room?.owner_id, owner_name: room?.owner_name });
+    setMinimizedRoom({ id, name: room?.name || 'Sesli oda', owner_id: room?.owner_id, owner_name: room?.owner_name, path: `/sesli-oda/${id}` });
     navigate('/acik-odalar');
   }, [id, room?.name, room?.owner_id, room?.owner_name, navigate]);
+
+  // Odaya dönüldüğünde küçültme kaydı temizlenir: balon kapanır, oda normal akışına döner.
+  useEffect(() => {
+    if (getMinimizedRoom()?.id !== id) return;
+    clearMinimizedRoom();
+  }, [id]);
 
   // Profil kartı açıcı — sohbet satırı ve izleyici listesinden kullanılır.
   // Gizli kullanıcıda da açılır; kimlik yerine maskeli profil gösterilir.

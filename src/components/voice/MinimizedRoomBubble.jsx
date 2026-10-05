@@ -6,6 +6,8 @@ import { base44 } from '@/api/base44Client';
 import { Image } from '@/components/ui/image';
 import useMessageProfiles from '@/hooks/useMessageProfiles';
 import { clearMinimizedRoom, getMinimizedRoom, subscribeMinimizedRoom } from '@/lib/minimizedRoom';
+import { clearMinimizedFilm } from '@/lib/minimizedFilm';
+import { disposeVoiceSession } from '@/lib/roomVoiceSession';
 
 /**
  * Küçültülmüş oda balonu: sağ altta sürüklenebilir profil çemberi,
@@ -24,12 +26,16 @@ export default function MinimizedRoomBubble() {
 
   const openRoom = () => {
     if (moved.current) return;
+    const path = room.path || `/sesli-oda/${room.id}`;
     clearMinimizedRoom();
-    navigate(`/sesli-oda/${room.id}`);
+    navigate(path);
   };
 
   const leaveRoom = async () => {
     if (moved.current) return;
+    // Odadan tamamen çıkılır: arka planda süren ses oturumu ve küçültülmüş film kapatılır.
+    disposeVoiceSession(room.id);
+    clearMinimizedFilm(room.id);
     await base44.functions.invoke('voice-room', { action: 'seat-leave', room_id: room.id }).catch(() => {});
     await base44.functions.invoke('room-presence', { action: 'leave', room_id: room.id }).catch(() => {});
     clearMinimizedRoom();
