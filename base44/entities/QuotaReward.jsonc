@@ -9,6 +9,26 @@
       "type": "string",
       "default": ""
     },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "broadcaster",
+        "assistant"
+      ],
+      "default": "broadcaster"
+    },
+    "assistant_id": {
+      "type": "string",
+      "default": ""
+    },
+    "assistant_name": {
+      "type": "string",
+      "default": ""
+    },
+    "assistant_amount": {
+      "type": "number",
+      "default": 0
+    },
     "agency_id": {
       "type": "string",
       "default": ""
@@ -78,6 +98,9 @@
         },
         {
           "data.agency_owner_id": "{{user.id}}"
+        },
+        {
+          "data.assistant_id": "{{user.id}}"
         },
         {
           "user_condition": {
