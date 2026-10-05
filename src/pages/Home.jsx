@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom';
 import { DoorOpen, MessageCircle, Mic, Play, Plus, Search, Users } from 'lucide-react';
 import { openGoogle, openYouTube } from '@/lib/mediaSource';
+import RoomDiscovery from '@/components/home/RoomDiscovery';
 
-// Film kataloğu kaldırıldı: ana sayfa hızlı bir başlangıç ekranıdır, veri çekmez.
+// Ana sayfa: hızlı başlangıç butonları + canlı oda keşfet ızgarası (koltuklu ve film odaları).
 export default function Home() {
   return (
     <div className="min-h-screen bg-catalog px-4 py-6 text-white sm:px-6">
@@ -27,6 +28,8 @@ export default function Home() {
             </Link>
           </div>
         </div>
+
+        <RoomDiscovery />
 
         <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-4">
           <p className="text-sm font-bold">Ekranı seç</p>
