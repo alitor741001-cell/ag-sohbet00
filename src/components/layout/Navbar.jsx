@@ -1,12 +1,10 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import { useState } from 'react';
-import { Image } from '@/components/ui/image';
 import { openGoogle } from '@/lib/mediaSource';
 import ProfileDropdown from '@/components/layout/ProfileDropdown';
 import LiveChatButton from '@/components/layout/LiveChatButton';
 import SupportNotifBell from '@/components/layout/SupportNotifBell';
-import WelcomeOverlay from '@/components/WelcomeOverlay';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 
 const links = [
@@ -42,12 +40,8 @@ export default function Navbar() {
       </div>
 
       <div className="relative max-w-[1600px] mx-auto px-4 sm:px-6 h-16 flex items-center gap-4">
-        <Link to="/" className="flex items-center gap-2 shrink-0">
-          <Image src="https://media.base44.com/images/public/6a77d66e4da6de214628ee62/3108d3b4e_351A5169-7769-4C41-8816-B20112620648.png" alt="FILMKEYFİ" className="h-10 w-10 rounded-lg" fittingType="fill" />
-        </Link>
-        <WelcomeOverlay />
 
-        <nav className="hidden lg:flex items-center gap-1 ml-4">
+        <nav className="hidden lg:flex items-center gap-1">
             {links.map((l) => (
               <Link key={l.path} to={l.path}
                 className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${

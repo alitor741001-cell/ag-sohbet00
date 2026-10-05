@@ -119,8 +119,19 @@ export default function RoomDiscovery() {
     return friendIds.some((id) => present.has(id));
   };
 
-  const voiceRooms = useMemo(() => rooms.filter((room) => isVoiceRoom(room)), [rooms]);
-  const filmRooms = useMemo(() => rooms.filter((room) => !isVoiceRoom(room)), [rooms]);
+  // Ana ekranda herkes tek odasıyla görünür: kişinin en yeni odası listelenir.
+  const uniqueRooms = useMemo(() => {
+    const newest = new Map();
+    rooms.forEach((room) => {
+      const key = room.owner_id || room.id;
+      const current = newest.get(key);
+      if (!current || new Date(room.created_date || 0) > new Date(current.created_date || 0)) newest.set(key, room);
+    });
+    return [...newest.values()].sort((a, b) => new Date(b.created_date || 0) - new Date(a.created_date || 0));
+  }, [rooms]);
+
+  const voiceRooms = useMemo(() => uniqueRooms.filter((room) => isVoiceRoom(room)), [uniqueRooms]);
+  const filmRooms = useMemo(() => uniqueRooms.filter((room) => !isVoiceRoom(room)), [uniqueRooms]);
 
   // Film odalarında açılan videonun adı: kayıtlı başlık anlamsızsa YouTube'dan bir kez okunur.
   useEffect(() => {
@@ -153,7 +164,7 @@ export default function RoomDiscovery() {
     const lowered = term.toLowerCase();
     const digits = term.replace(/[^0-9]/g, '');
     const memberTerm = normalizeId(term);
-    return rooms.filter((room) => {
+    return uniqueRooms.filter((room) => {
       const owner = owners[room.owner_id] || {};
       if (digits && String(room.room_number) === digits) return true;
       const ownerMember = normalizeId(owner.member_id);
@@ -161,14 +172,14 @@ export default function RoomDiscovery() {
       if (String(room.name || '').toLowerCase().includes(lowered)) return true;
       return `${owner.username || ''} ${owner.full_name || ''} ${room.owner_name || ''}`.toLowerCase().includes(lowered);
     });
-  }, [query, list, rooms, owners]);
+  }, [query, list, uniqueRooms, owners]);
 
   const items = searching ? searched : list;
 
   return (
     <section className="mt-5">
       {sortedFriends.length > 0 && (
-        <FriendStrip friends={sortedFriends} rooms={rooms} isOnline={isOnline} getRoomId={getRoomId} />
+        <FriendStrip friends={sortedFriends} isOnline={isOnline} getRoomId={getRoomId} />
       )}
 
       <div className="mb-3 flex items-center gap-2">
