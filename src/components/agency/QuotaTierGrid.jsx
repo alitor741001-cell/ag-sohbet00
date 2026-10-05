@@ -1,5 +1,5 @@
 import { Gem } from 'lucide-react';
-import { formatMoney, formatShortDiamonds, tierStyle } from '@/lib/agency';
+import { formatMoney, formatShortDiamonds, quotaPercent, tierStyle } from '@/lib/agency';
 
 /**
  * Kota tablosu kartları: her kademe için gereken elmas ve kazanç.
@@ -18,7 +18,7 @@ export default function QuotaTierGrid({
         const style = tierStyle(tier.diamonds);
         const done = trackProgress && monthDiamonds >= Number(tier.diamonds);
         const isNext = trackProgress && nextTier && nextTier.id === tier.id;
-        const percent = isNext ? Math.min(100, Math.round((monthDiamonds / Number(tier.diamonds)) * 100)) : null;
+        const percent = isNext ? quotaPercent(monthDiamonds, tier.diamonds) : null;
         return (
           <div key={tier.id} className={`rounded-2xl border ${style.border} ${style.bg} p-3 ${done ? 'ring-1 ring-[#4ade80]/40' : ''}`}>
             <div className="flex items-center justify-between gap-1">

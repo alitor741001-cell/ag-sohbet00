@@ -152,7 +152,7 @@ export default function AdminUsers({ pendingOnly = false }) {
                 <div className="flex items-center gap-3 flex-1 min-w-0">
                   <UserBadge userId={u.id} name={u.username || u.full_name || '?'} avatar={u.avatar} memberId={u.member_id} size="md" displayRole={u.display_role} customRole={u.custom_role} profileFrame={u.profile_frame} frameScale={u.profile_frame_scale} />
                   <div className="hidden sm:block min-w-0">
-                    <p className="text-xs text-muted-foreground truncate">{u.email}</p>
+                    {visibleEmail(u) && <p className="text-xs text-muted-foreground truncate">{visibleEmail(u)}</p>}
                     {u.payment_reference && <p className="text-xs text-purple-400 font-mono truncate">Ref: {u.payment_reference}</p>}
                   </div>
                 </div>
@@ -184,7 +184,7 @@ export default function AdminUsers({ pendingOnly = false }) {
               <p><span className="text-muted-foreground">Kullanıcı adı:</span> {detail.username || detail.full_name || '-'}</p>
               <p><span className="text-muted-foreground">Üye No:</span> {detail.member_id || '-'}</p>
               <p><span className="text-muted-foreground">Ödeme Referans No:</span> <span className="font-mono font-bold text-purple-400">{detail.payment_reference || '-'}</span></p>
-              <p><span className="text-muted-foreground">E-posta:</span> {detail.email}</p>
+              {visibleEmail(detail) && <p><span className="text-muted-foreground">E-posta:</span> {visibleEmail(detail)}</p>}
               <p><span className="text-muted-foreground">Kayıt tarihi:</span> {detail.created_date ? new Date(detail.created_date).toLocaleDateString('tr-TR') : '-'}</p>
               <p><span className="text-muted-foreground">Cinsiyet:</span> {detail.gender === 'kadın' ? 'Kadın' : detail.gender === 'erkek' ? 'Erkek' : 'Belirtilmedi'}</p>
               <button onClick={() => { setGenderTarget(detail); setDetail(null); }} className={`${btn} mt-1 bg-fuchsia-500/20 text-fuchsia-300 hover:bg-fuchsia-500/30`}>{genderButtonLabel(detail)} — DÜZELT</button>
@@ -214,7 +214,7 @@ export default function AdminUsers({ pendingOnly = false }) {
           load();
         }}
       />
-      <ConfirmDialog open={!!confirm} onOpenChange={(o) => !o && setConfirm(null)} title="Kullanıcıyı sil?" description={`${confirm?.email} kalıcı olarak silinecek.`} onConfirm={() => del(confirm)} />
+      <ConfirmDialog open={!!confirm} onOpenChange={(o) => !o && setConfirm(null)} title="Kullanıcıyı sil?" description={`${visibleEmail(confirm) || confirm?.username || confirm?.full_name || 'Kullanıcı'} kalıcı olarak silinecek.`} onConfirm={() => del(confirm)} />
     </div>
   );
 }

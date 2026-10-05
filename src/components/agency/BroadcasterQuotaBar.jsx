@@ -1,5 +1,5 @@
 import { Gem } from 'lucide-react';
-import { formatShortDiamonds } from '@/lib/agency';
+import { formatShortDiamonds, quotaPercent } from '@/lib/agency';
 
 /**
  * Yayıncının bu ayki elmasını bir sonraki kota hedefine göre gösteren ilerleme çubuğu.
@@ -9,7 +9,7 @@ export default function BroadcasterQuotaBar({ diamonds = 0, nextQuota = 0, compl
   const current = Math.max(0, Number(diamonds) || 0);
   const target = Math.max(0, Number(nextQuota) || 0);
   const finished = target === 0;
-  const percent = finished ? 100 : Math.min(100, Math.round((current / target) * 100));
+  const percent = quotaPercent(current, target);
   const remaining = finished ? 0 : Math.max(0, target - current);
   const completed = Number(completedQuota) || 0;
 

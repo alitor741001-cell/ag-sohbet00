@@ -33,6 +33,17 @@ export function formatShortDiamonds(value) {
   return `${n}`;
 }
 
+/**
+ * Kota ilerleme yüzdesi: hedefe gerçekten ulaşılmadan 100 gösterilmez.
+ * (Örn. 299.000 / 300.000 yuvarlamayla 100'e çıkmaz, %99'da durur.)
+ */
+export function quotaPercent(current, target) {
+  const value = Math.max(0, Number(current) || 0);
+  const goal = Math.max(0, Number(target) || 0);
+  if (goal <= 0 || value >= goal) return 100;
+  return Math.min(99, Math.floor((value / goal) * 100));
+}
+
 /** Kota kademesi görünümü: elmas arttıkça kademe rengi yükselir. */
 export function tierStyle(diamonds) {
   const n = Number(diamonds) || 0;

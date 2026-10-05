@@ -1,10 +1,10 @@
 import { Gem, PartyPopper, TrendingUp } from 'lucide-react';
-import { formatDiamonds, formatMoney, formatShortDiamonds } from '@/lib/agency';
+import { formatDiamonds, formatMoney, formatShortDiamonds, quotaPercent } from '@/lib/agency';
 
 /** Yayıncının bu ayki elması ve bir sonraki kota kademesine kalan mesafe. */
 export default function QuotaProgressCard({ month = 0, total = 0, nextTier = null }) {
   const target = Number(nextTier?.diamonds) || 0;
-  const percent = target > 0 ? Math.min(100, Math.round((month / target) * 100)) : 100;
+  const percent = quotaPercent(month, target);
   const remaining = Math.max(0, target - month);
   const done = !nextTier;
 
