@@ -50,8 +50,6 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
   // Gizli kullanıcıların takma adı → kimliği: yalnızca N/VIP rozetleri için seviye verisi çekilir, kimlik gösterilmez.
   const hiddenUsersByName = {};
   participants.forEach((person) => { if (person?.user_id && isHiddenName(person.name)) hiddenUsersByName[person.name] = person.user_id; });
-  const [blockedUsers, setBlockedUsers] = useState(user?.blocked_users || []);
-  useEffect(() => { setBlockedUsers(user?.blocked_users || []); }, [user?.blocked_users]);
   const scrollRef = useRef(null);
   const profiles = useMessageProfiles([...messages.map((message) => message.user_id), ...Object.values(hiddenUsersByName)]);
   const [roomMods, setRoomMods] = useState([]);
@@ -180,7 +178,9 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
     });
     const reconnect = () => load();
     window.addEventListener('online', reconnect);
-    return () => { unsub(); window.removeEventListener('online', reconnect); };
+    // Canlı akış aksarsa mesajlar yine de görünsün: sekme görünürken kısa aralıklarla tazelenir.
+    const poll = setInterval(() => { if (document.visibilityState !== 'hidden') load(); }, 12000);
+    return () => { unsub(); window.removeEventListener('online', reconnect); clearInterval(poll); };
   }, [roomId]);
 
   // Otomatik silme süresi doldğunda açık panelde anlık temizle
@@ -333,7 +333,7 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
             </div>
           </div>
         ) :
-         messages.filter((m) => m.type === 'system' || !blockedUsers.includes(m.user_id)).filter((m) => !isHiddenMarker(m) && !(m.type === 'system' && (m.text || '').toLowerCase().includes('moderatör'))).filter((m) => !(cheatClearedAt && m.type === 'system' && new Date(m.created_date || 0).getTime() <= cheatClearedAt)).map((m) => (
+         messages.filter((m) => !isHiddenMarker(m) && !(m.type === 'system' && (m.text || '').toLowerCase().includes('moderatör'))).filter((m) => !(cheatClearedAt && m.type === 'system' && new Date(m.created_date || 0).getTime() <= cheatClearedAt)).map((m) => (
             <div key={m.id} className={`flex w-full min-w-0 shrink-0 gap-2 group ${m.type === 'system' ? 'justify-center' : ''}`}>
               {m.type === 'system' ? (
                 (() => {
