@@ -9,9 +9,12 @@ import FriendRequests from '@/components/friends/FriendRequests';
 import FriendshipLevelBadge from '@/components/friends/FriendshipLevelBadge';
 import AccountStatusAvatar, { getAccountState } from '@/components/friends/AccountStatusAvatar';
 import { useMessageRealtime } from '@/components/messages/MessageRealtimeProvider';
+import FullUserProfile from '@/components/profile/FullUserProfile';
 
 export default function FriendsPanel({ relations, userId, invoke, onChat, isOnline, getRoomId, rooms }) {
   const [menuFor, setMenuFor] = useState(null);
+  // Profil kartı: arkadaşa dokununca özel sohbetteki kartın aynısı açılır.
+  const [cardUser, setCardUser] = useState(null);
   const navigate = useNavigate();
   const { getProgression } = useMessageRealtime();
   const friends = relations.filter((r) => r.status === 'accepted');
@@ -40,7 +43,7 @@ export default function FriendsPanel({ relations, userId, invoke, onChat, isOnli
       const accountState = getAccountState(profile, name);
       return <div key={r.id} className="border-b last:border-0 border-border p-3">
         <div className="flex items-center gap-3">
-          <button onClick={() => { if (!accountState) navigate(`/kullanici/${friendId}`); }} disabled={!!accountState} className="flex items-center gap-3 flex-1 min-w-0 text-left disabled:cursor-default">
+          <button onClick={() => { if (!accountState) setCardUser({ id: friendId, name, avatar: profile?.avatar || avatar, frame: profile?.profile_frame, frameScale: profile?.profile_frame_scale }); }} disabled={!!accountState} className="flex items-center gap-3 flex-1 min-w-0 text-left disabled:cursor-default">
             <div className="relative shrink-0">{accountState ? <AccountStatusAvatar status={accountState.status} className="h-10 w-10" /> : profile?.profile_frame ? <ProfileFrame frame={profile.profile_frame} avatar={profile.avatar || avatar} name={name} size="sm" /> : <XpAvatar avatar={profile?.avatar || avatar} name={name} userId={friendId} size="sm" />}{!accountState && <span className={`absolute right-0 bottom-0 w-3 h-3 rounded-full border-2 border-card ${online ? 'bg-green-500' : 'bg-muted-foreground'}`} />}</div>
             <div className="flex-1 min-w-0"><p className="font-semibold truncate">{accountState?.name || name}</p><p className={`text-xs truncate ${accountState ? 'text-destructive' : 'text-muted-foreground'}`}>{accountState ? accountState.message : friendRoom?.isPublic ? <span className="text-red-500 font-semibold">{friendRoom.room.owner_name}'in odasında</span> : online ? <span className="text-green-500">Çevrim içi</span> : 'Çevrim dışı'}{!accountState && member ? ` · ${member}` : ''}</p></div>
           </button>
@@ -52,5 +55,21 @@ export default function FriendsPanel({ relations, userId, invoke, onChat, isOnli
         {menuFor === r.id && <div className="mt-2 flex gap-2"><button onClick={() => action('unfriend', r)} className="flex-1 flex items-center justify-center gap-1 bg-secondary rounded-lg py-1.5 text-xs font-semibold"><UserMinus className="w-3.5 h-3.5" /> Sil</button><button onClick={() => action('block', r)} className="flex-1 flex items-center justify-center gap-1 bg-destructive/15 text-destructive rounded-lg py-1.5 text-xs font-semibold"><Ban className="w-3.5 h-3.5" /> Engelle</button></div>}
       </div>;
     })}
-  </section></div>;
+  </section>
+    {cardUser && (
+      <FullUserProfile
+        userId={cardUser.id}
+        name={cardUser.name}
+        avatar={cardUser.avatar}
+        frame={cardUser.frame}
+        frameScale={cardUser.frameScale}
+        onClose={() => setCardUser(null)}
+        onMessage={() => {
+          const relation = relations.find((r) => (r.requester_id === userId ? r.recipient_id : r.requester_id) === cardUser.id);
+          setCardUser(null);
+          if (relation) onChat(relation);
+        }}
+      />
+    )}
+  </div>;
 }

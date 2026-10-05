@@ -21,7 +21,6 @@ import VoiceRoomMenu from '@/components/voice/VoiceRoomMenu';
 import VoiceSeatSheet from '@/components/voice/VoiceSeatSheet';
 import InviteSheet from '@/components/voice/InviteSheet';
 import FullUserProfile from '@/components/profile/FullUserProfile';
-import VoiceProfileSheet from '@/components/voice/VoiceProfileSheet';
 import RoomLogSheet from '@/components/voice/RoomLogSheet';
 import GiftScoreChip from '@/components/voice/GiftScoreChip';
 import GiftBoardSheet from '@/components/voice/GiftBoardSheet';
@@ -65,7 +64,6 @@ export default function VoiceRoom() {
   const [inviteOpen, setInviteOpen] = useState(false);
   const [seatIndex, setSeatIndex] = useState(null);
   const [profileUserId, setProfileUserId] = useState(null);
-  const [fullProfileUserId, setFullProfileUserId] = useState(null);
   const [dmUserId, setDmUserId] = useState(null);
   const [dmOpen, setDmOpen] = useState(false);
   const [exitOpen, setExitOpen] = useState(false);
@@ -471,14 +469,6 @@ export default function VoiceRoom() {
     const person = [...(seats || []), ...(participants || [])].find((item) => isHiddenName(item?.name));
     return person?.name || '';
   }, [seats, participants]);
-
-  // Ayarlar menüsündeki "Profili gör": tam ekran profil kartı odanın içinde açılır,
-  // sayfa değişmediği için odadan ve koltuktan düşülmez.
-  const openFullProfile = (userId) => {
-    if (!userId) return;
-    setProfileUserId(null);
-    setFullProfileUserId(userId);
-  };
 
   // Kendi profil kartımdaki "Profili gör": kişisel profil sayfası açılır, oda ve koltuk korunur.
   const openSelfProfile = () => {
@@ -891,14 +881,6 @@ export default function VoiceRoom() {
   const profileHidden = isHiddenName(profilePerson?.name);
   const profileMicMuted = profileSelf ? voice.muted : profileMuted;
 
-  // Ayarlar menüsündeki "Profili gör" ile açılan tam ekran kart.
-  const fullProfilePerson = fullProfileUserId
-    ? [...seats, ...participants].find((person) => person?.user_id === fullProfileUserId) || null
-    : null;
-  const fullProfileHidden = isHiddenName(fullProfilePerson?.name);
-  const fullProfileSelf = !!fullProfileUserId && fullProfileUserId === user?.id;
-  const fullProfileMuted = fullProfileSelf ? voice.muted : !!participants.find((person) => person.user_id === fullProfileUserId)?.muted;
-
   // Profil kartında her işlem kartı kapatır: hangi seçeneğe basılırsa basılsın kart her seferinde kapanır.
   const cardAction = (action) => () => { setProfileUserId(null); action(); };
 
@@ -918,7 +900,6 @@ export default function VoiceRoom() {
     ...(!profileSelf ? [{ key: 'chat', icon: MessageSquare, label: 'Mesaj', onClick: cardAction(() => setDmUserId(profileTarget)) }] : []),
     ...(!profileSelf && canMod ? [{ key: 'mod', icon: Shield, label: profileIsMod ? 'Yetkiyi al' : 'Yönetici yap', onClick: cardAction(() => handleToggleMod(profileTarget, !profileIsMod)) }] : []),
     ...(canMod && profileSeat ? [{ key: 'lock', icon: profileSeat.locked ? Unlock : Lock, label: profileSeat.locked ? 'Koltuğun kilidini aç' : 'Koltuğu kilitle', onClick: cardAction(() => invokeVoice({ action: 'seat-lock', seat_index: profileSeatIndex, locked: !profileSeat.locked })) }] : []),
-    ...(!profileSelf && !profileHidden ? [{ key: 'view', icon: UserRound, label: 'Profili gör', onClick: cardAction(() => openFullProfile(profileTarget)) }] : []),
   ] : [];
 
   // Alt satır: hediye gönder ve odadan at (odadan atma yalnızca oda sahibinde).
@@ -1129,32 +1110,25 @@ export default function VoiceRoom() {
         onStepDown={() => invokeVoice({ action: 'seat-leave' })}
       />
 
-      <VoiceProfileSheet
+      {/* Koltuk, sohbet ve izleyici listesinden açılan kart: özel sohbetteki kartın aynısı. */}
+      <FullUserProfile
         open={!!profileTarget}
+        sheet
+        hideSettings
+        hideBlock={canMod}
         onClose={() => setProfileUserId(null)}
         userId={profileTarget}
         name={profilePerson?.name || ''}
         avatar={profilePerson?.avatar || ''}
+        frame={profilePerson?.frame || ''}
+        frameScale={profilePerson?.frame_scale}
         hidden={profileHidden}
         muted={profileMicMuted}
+        level={roomLevels[profileTarget] || 0}
+        roomId={id}
+        self={profileSelf}
         tiles={profileTiles}
         footer={profileFooter}
-      />
-
-      <FullUserProfile
-        open={!!fullProfileUserId}
-        sheet
-        onClose={() => setFullProfileUserId(null)}
-        userId={fullProfileUserId}
-        name={fullProfilePerson?.name || ''}
-        avatar={fullProfilePerson?.avatar || ''}
-        frame={fullProfilePerson?.frame || ''}
-        frameScale={fullProfilePerson?.frame_scale}
-        hidden={fullProfileHidden}
-        muted={fullProfileMuted}
-        level={roomLevels[fullProfileUserId] || 0}
-        roomId={id}
-        self={fullProfileSelf}
         onMessage={(target) => setDmUserId(target)}
       />
 
