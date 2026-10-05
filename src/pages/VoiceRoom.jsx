@@ -98,6 +98,8 @@ export default function VoiceRoom() {
   const joinedRef = useRef(false);
   const joinTriedRef = useRef(false);
   const sawSelfRef = useRef(false);
+  // Yönetici görünmez (ghost) katılabilir: katılımcı listesinde görünmez, atılmış sayılmaz.
+  const ghostRef = useRef(false);
   const keepSeatRef = useRef(false);
   const giftFlashRef = useRef(null);
   const giftIdleRef = useRef(null);
@@ -297,14 +299,17 @@ export default function VoiceRoom() {
 
   const attemptJoin = useCallback(async (pw = '') => {
     try {
-      await base44.functions.invoke('room-presence', { action: 'join', room_id: id, password: pw });
-      sawSelfRef.current = true;
+      const response = await base44.functions.invoke('room-presence', { action: 'join', room_id: id, password: pw });
+      if (response?.data?.ghost) ghostRef.current = true;
       joinedRef.current = true;
       setJoined(true);
       setNeedsPassword(false);
       setPassword('');
       setNotice('');
-      await syncRoom();
+      // Kendi kaydımız sunucudan gelen taze odada doğrulanır: eski listede görünmediğimiz
+      // ara an "odadan çıkarıldım" sanılmasın.
+      const record = await syncRoom();
+      if ((record?.participants || []).some((person) => person.user_id === user?.id)) sawSelfRef.current = true;
       return true;
     } catch (error) {
       const data = error?.response?.data || {};
@@ -314,7 +319,7 @@ export default function VoiceRoom() {
       setNotice(data.error || 'Odaya katılamadınız.');
       return false;
     }
-  }, [id, syncRoom]);
+  }, [id, syncRoom, user?.id]);
 
   // Şifresiz odalara otomatik katıl.
   useEffect(() => {

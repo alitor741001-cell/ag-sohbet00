@@ -100,7 +100,8 @@ export default async function(req) {
       // Rate limit: 10 katılım / dakika / kullanıcı
       const rlJoin = await rateLimit(base44, 'room-join:' + user.id, user.id, 10, 60000);
       if (!rlJoin.allowed) return Response.json({ error: 'çok hızlı katılım denemesi' }, { status: 429 });
-      if (!isOwner) {
+      // Yönetici hesabı her odaya girebilir: engel kaydı ve kapasite onu durdurmaz.
+      if (!isOwner && !isAdmin) {
         const blockedRelations = await base44.asServiceRole.entities.Friendship.filter({
           $or: [
             { requester_id: user.id, recipient_id: room.owner_id, status: 'blocked' },
@@ -149,7 +150,7 @@ export default async function(req) {
       if (hiddenUser) {
         const inside = (room.participants || []).some((person) => person.user_id === user.id);
         if (!inside) {
-          if ((room.participants || []).length >= (room.max_users || 10)) {
+          if ((room.participants || []).length >= (room.max_users || 10) && !isAdmin) {
             return Response.json({ error: 'oda dolu' }, { status: 403 });
           }
           await base44.asServiceRole.entities.Room.update(room_id, {
@@ -182,7 +183,7 @@ export default async function(req) {
         }
       }
       if (!already) {
-        if (participants.length >= (room.max_users || 10)) {
+        if (participants.length >= (room.max_users || 10) && !isAdmin) {
           return Response.json({ error: 'oda dolu' }, { status: 403 });
         }
         participants.push({ user_id: user.id, name, avatar: user.avatar || '', joined_at: new Date().toISOString(), muted: false, speaking: false });
@@ -271,6 +272,10 @@ export default async function(req) {
       // Odadan atma ve engelleme: oda sahibi, oda moderatörleri, yönetici rolü ve admin yetkilidir.
       if (!canModRoom) return Response.json({ error: 'yetkisiz' }, { status: 403 });
       const targetUser = await base44.asServiceRole.entities.User.get(target_id).catch(() => null);
+      // Yönetici hesabı hiçbir koşulda odadan atılamaz ve yasaklanamaz: deneyen kişi uyarılır.
+      if (targetUser?.role === 'admin') {
+        return Response.json({ error: 'Yönetici hesabı odadan atılamaz.', adminProtected: true }, { status: 403 });
+      }
       // Yetki hiyerarşisi: kurucu korunur; admin yardımcısı ve kraliçeyi yalnızca kurucu atabilir.
       const actorRoleKey = me?.display_role || '';
       const targetRoleKey = targetUser?.display_role || '';

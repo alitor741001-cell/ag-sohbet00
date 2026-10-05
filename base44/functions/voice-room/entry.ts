@@ -136,6 +136,10 @@ export default async function (req: Request): Promise<Response> {
         return Response.json({ error: 'Koltuktan yalnızca oda sahibi indirebilir.' }, { status: 403 });
       }
       const targetUser = await base44.asServiceRole.entities.User.get(target_id).catch(() => null);
+      // Yönetici hesabı koltuğundan indirilemez: deneyen kişi uyarılır.
+      if (targetUser?.role === 'admin') {
+        return Response.json({ error: 'Yönetici koltuğundan indirilemez.', adminProtected: true }, { status: 403 });
+      }
       const targetName = targetUser?.username || targetUser?.full_name || target.name || 'Kullanıcı';
       const next = seats.map((seat) => (seat.user_id === target_id ? { ...emptySeat(seat.index), locked: seat.locked } : seat));
       await persist(next);
