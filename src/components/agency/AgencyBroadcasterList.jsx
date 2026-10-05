@@ -1,9 +1,10 @@
 import { ChevronRight, Gem, Mic2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Image } from '@/components/ui/image';
-import { formatShortDiamonds } from '@/lib/agency';
+import BroadcasterQuotaBar from '@/components/agency/BroadcasterQuotaBar';
+import { formatMoney, formatShortDiamonds } from '@/lib/agency';
 
-/** Ajans sahibinin yayıncı listesi: profil, isim, kimlik ve tamamlanan kota. */
+/** Ajans sahibinin yayıncı listesi: profil, kimlik, canlı kota ilerlemesi ve aylık elmas. */
 export default function AgencyBroadcasterList({ members = [] }) {
   if (!members.length) {
     return (
@@ -35,12 +36,16 @@ export default function AgencyBroadcasterList({ members = [] }) {
               {member.status === 'active' ? 'Aktif' : 'Pasif'}
             </span>
           </div>
-          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-white/50">
-            <span>Kota: <span className="font-black" style={{ color: '#F5C542' }}>{member.quota ? `${formatShortDiamonds(member.quota)} ✓` : 'Kota yok'}</span></span>
+          <BroadcasterQuotaBar diamonds={member.diamonds} nextQuota={member.next_quota} completedQuota={member.quota} />
+          <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-white/50">
             <span className="flex items-center gap-1">
               Bu ayki elmas:
               <Gem className="h-3 w-3 text-[#5AB8FF]" />
               <span className="font-black text-white">{formatShortDiamonds(member.diamonds)}</span>
+            </span>
+            <span>
+              Ajans kazancı:
+              <span className="ml-1 font-black text-[#4ade80]">{formatMoney(member.month_commission)}</span>
             </span>
           </div>
         </div>

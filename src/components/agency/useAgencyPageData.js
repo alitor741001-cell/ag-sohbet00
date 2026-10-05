@@ -13,9 +13,10 @@ export default function useAgencyPageData() {
   const [broadcaster, setBroadcaster] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const load = useCallback(async () => {
+  // quiet: bekleme ekranı gösterilmeden sessizce yeniler (canlı kota takibi).
+  const load = useCallback(async (quiet = false) => {
     if (!user?.id) return;
-    setLoading(true);
+    if (!quiet) setLoading(true);
     try {
       const data = await agencyApi('summary');
       setSummary(data);
@@ -27,9 +28,12 @@ export default function useAgencyPageData() {
     } catch {
       setSummary(null);
     } finally {
-      setLoading(false);
+      if (!quiet) setLoading(false);
     }
   }, [user?.id]);
+
+  /** Sessiz yenileme: açık sayfadaki ilerleme çubuklarını günceller. */
+  const refresh = useCallback(() => load(true), [load]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -48,7 +52,8 @@ export default function useAgencyPageData() {
     agency: panel?.agency || broadcaster?.agency || summary?.agency || null,
     panel,
     broadcaster,
-    reload: load,
+    reload: () => load(),
+    refresh,
     reloadUser,
   };
 }
