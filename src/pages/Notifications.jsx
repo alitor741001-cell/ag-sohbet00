@@ -8,6 +8,16 @@ import EmptyState from '@/components/movie/EmptyState';
 import AgencyInviteActions from '@/components/notifications/AgencyInviteActions';
 import { parseInviteRef } from '@/lib/agency';
 
+/** Bildirimin geldiği tarih ve saat: 06.10.2026 02:20 */
+const formatWhen = (iso) => {
+  if (!iso) return '';
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleString('tr-TR', {
+    day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
+  });
+};
+
 /** Bildirimler: sohbet ekranı gibi tam ekran açılır; tüm sistem bildirimleri burada listelenir. */
 export default function Notifications() {
   const { user } = useCurrentUser();
@@ -80,7 +90,10 @@ export default function Notifications() {
                    <AgencyInviteActions inviteId={inviteId} onAnswered={() => { markRead(n); loadInvites(); }} />
                  ) : n.link && <Link to={n.link} className="text-xs text-primary">Görüntüle →</Link>}
                </div>
-               {!n.read && <button onClick={() => markRead(n)} className="shrink-0 text-xs text-gray-400 active:text-white">Okundu</button>}
+               <div className="flex shrink-0 flex-col items-end gap-1">
+                 <span className="whitespace-nowrap text-[10px] font-medium tabular-nums text-gray-500">{formatWhen(n.created_date)}</span>
+                 {!n.read && <button onClick={() => markRead(n)} className="text-xs text-gray-400 active:text-white">Okundu</button>}
+               </div>
              </div>
              );
            })}
