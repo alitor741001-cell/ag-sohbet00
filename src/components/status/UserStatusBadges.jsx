@@ -49,21 +49,26 @@ export default function UserStatusBadges({
         </span>
       )}
 
-      {gift_sent_level > 0 && (
-        <span
-          className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-extrabold tabular-nums text-white"
-          style={{ background: sentColor(gift_sent_tier), textShadow: '0 1px 2px rgba(0,0,0,0.45)' }}
-        >
-          <Star className="h-3 w-3" fill="currentColor" /> {gift_sent_level}
-        </span>
-      )}
+      {/* Atış ve alış seviyeleri her zaman yan yana durur; dar alanda ikisi birlikte alt satıra iner. */}
+      {(gift_sent_level > 0 || gift_received_level > 0) && (
+        <span className="flex shrink-0 items-center gap-1.5">
+          {gift_sent_level > 0 && (
+            <span
+              className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-extrabold tabular-nums text-white"
+              style={{ background: sentColor(gift_sent_tier), textShadow: '0 1px 2px rgba(0,0,0,0.45)' }}
+            >
+              <Star className="h-3 w-3" fill="currentColor" /> {gift_sent_level}
+            </span>
+          )}
 
-      {gift_received_level > 0 && (
-        <span
-          className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-extrabold tabular-nums text-white"
-          style={{ background: receivedColor(gift_received_tier), textShadow: '0 1px 2px rgba(0,0,0,0.45)' }}
-        >
-          <Heart className="h-3 w-3" fill="currentColor" /> {gift_received_level}
+          {gift_received_level > 0 && (
+            <span
+              className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-extrabold tabular-nums text-white"
+              style={{ background: receivedColor(gift_received_tier), textShadow: '0 1px 2px rgba(0,0,0,0.45)' }}
+            >
+              <Heart className="h-3 w-3" fill="currentColor" /> {gift_received_level}
+            </span>
+          )}
         </span>
       )}
     </div>
