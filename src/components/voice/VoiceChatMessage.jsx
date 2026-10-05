@@ -38,7 +38,8 @@ function VoiceChatMessage({ message, profile, ownerId, moderators = [], currentU
             )}
           </button>
           {label && <span className={`text-[10px] font-bold ${isOwner ? 'text-amber-400' : 'text-sky-400'}`}>{label}</span>}
-          {!hidden && <RoomLevelBadge level={level} />}
+          {/* Oda sahibinin seviyesi sabit 1000 olduğu için satırda gösterilmez. */}
+          {!hidden && !isOwner && <RoomLevelBadge level={level} />}
         </div>
 
         <div className="mt-1 flex flex-wrap items-center gap-1">

@@ -50,10 +50,10 @@ export default function GiftLevelTicker({ giftTick = 0 }) {
   return (
     <div
       key={step}
-      className={`neon-entrance mb-3 rounded-xl border px-3 py-2 ${sending ? 'border-emerald-400/40 bg-emerald-500/10' : 'border-orange-400/40 bg-orange-500/10'}`}
+      className={`neon-entrance mb-3 rounded-xl border px-3 py-2 ${sending ? 'border-amber-400/40 bg-amber-500/10' : 'border-orange-400/40 bg-orange-500/10'}`}
     >
       <div className="flex items-center gap-2">
-        {sending ? <Gift className="h-4 w-4 shrink-0 text-emerald-300" /> : <Heart className="h-4 w-4 shrink-0 text-orange-300" />}
+        {sending ? <Gift className="h-4 w-4 shrink-0 text-amber-300" /> : <Heart className="h-4 w-4 shrink-0 text-orange-300" />}
         <p className="min-w-0 flex-1 text-[11px] font-black leading-tight text-white">
           {sending ? 'Atış LVL' : 'Hediye Alma LVL'} <span className="tabular-nums text-amber-300">{level}</span>
           {next !== null && <> → <span className="tabular-nums text-amber-300">{next}</span></>}
@@ -63,7 +63,7 @@ export default function GiftLevelTicker({ giftTick = 0 }) {
       {/* Seviye çubuğu: gereken hediye tamamlandıkça canlı dolar. */}
       <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/15">
         <div
-          className={`h-full rounded-full transition-all duration-500 ${sending ? 'bg-emerald-400' : 'bg-orange-400'}`}
+          className={`h-full rounded-full transition-all duration-500 ${sending ? 'bg-amber-400' : 'bg-orange-400'}`}
           style={{ width: `${percent}%` }}
         />
       </div>
