@@ -181,7 +181,7 @@ export default function RoomDiscovery({ shortcuts = null }) {
   const items = searching ? searched : list;
 
   return (
-    <section className="mt-5">
+    <section>
       <div className="mb-3 flex items-center gap-1.5 rounded-2xl border border-premium-gold/20 bg-black/25 p-1 backdrop-blur">
         <button
           type="button"
