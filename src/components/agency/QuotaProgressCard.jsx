@@ -2,11 +2,16 @@ import { Gem, PartyPopper, TrendingUp } from 'lucide-react';
 import { formatDiamonds, formatMoney, formatShortDiamonds, quotaPercent } from '@/lib/agency';
 
 /** Yayıncının bu ayki elması ve bir sonraki kota kademesine kalan mesafe. */
-export default function QuotaProgressCard({ month = 0, total = 0, nextTier = null }) {
+export default function QuotaProgressCard({ month = 0, total = 0, nextTier = null, tiers = [] }) {
   const target = Number(nextTier?.diamonds) || 0;
   const percent = quotaPercent(month, target);
   const remaining = Math.max(0, target - month);
-  const done = !nextTier;
+  // Tamamlanma yalnızca en üst kademeye gerçekten ulaşıldığında gösterilir:
+  // kademe listesi gelmediğinde/boşken tebrik mesajı yanlış çıkmaz.
+  const topDiamonds = (tiers || [])
+    .filter((tier) => tier.active !== false)
+    .reduce((max, tier) => Math.max(max, Number(tier.diamonds) || 0), 0);
+  const done = topDiamonds > 0 && Number(month) >= topDiamonds;
 
   return (
     <div className="rounded-2xl border border-[#F5C542]/35 bg-gradient-to-br from-[#1d1505] via-[#0d0b16] to-[#140a1e] p-4 shadow-[0_0_30px_-14px_rgba(245,197,66,0.9)]">
@@ -30,6 +35,8 @@ export default function QuotaProgressCard({ month = 0, total = 0, nextTier = nul
           <PartyPopper className="h-4 w-4 text-[#4ade80]" />
           <p className="text-xs font-bold text-[#4ade80]">🎉 Tüm kotalar tamamlandı — tebrikler!</p>
         </div>
+      ) : target <= 0 ? (
+        <p className="mt-3 text-[11px] text-white/45">Kota kademesi tanımlı değil.</p>
       ) : (
         <div className="mt-3">
           <div className="flex items-center justify-between text-[11px] font-semibold text-white/60">

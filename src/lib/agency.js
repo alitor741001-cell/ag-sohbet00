@@ -20,6 +20,9 @@ export function parseInviteRef(refId) {
   return match ? match[1] : '';
 }
 
+/** İçinde bulunulan ay anahtarı (YYYY-MM, Türkiye saatiyle) — kota tamamlanmaları ay bazlıdır. */
+export const currentPeriod = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Istanbul' }).slice(0, 7);
+
 export const formatDiamonds = (value) => Number(value || 0).toLocaleString('tr-TR');
 
 export const formatMoney = (value) => `$${Number(value || 0).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
