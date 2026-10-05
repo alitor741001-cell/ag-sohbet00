@@ -24,14 +24,17 @@ export default function NotificationBell() {
   }, [user?.id]);
 
   return (
-    <button onClick={() => navigate('/bildirimler')} aria-label="Bildirimler"
-      className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/5 bg-white/5 active:scale-95">
-      <Bell className="h-5 w-5 text-white" />
-      {unread > 0 && (
-        <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
-          {unread > 9 ? '9+' : unread}
-        </span>
-      )}
+    <button onClick={() => navigate('/bildirimler')} aria-label="Sistem bildirimleri"
+      className="flex shrink-0 items-center justify-center gap-1.5 rounded-xl border border-white/5 bg-white/5 px-2 active:scale-95">
+      <span className="whitespace-nowrap text-[10px] font-semibold leading-none text-white">Sistem Bildirimi</span>
+      <span className="relative flex shrink-0 items-center justify-center">
+        <Bell className="h-4 w-4 text-white" />
+        {unread > 0 && (
+          <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+            {unread > 9 ? '9+' : unread}
+          </span>
+        )}
+      </span>
     </button>
   );
 }
