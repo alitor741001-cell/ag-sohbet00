@@ -1,11 +1,10 @@
 import { useEffect } from 'react';
 import AgencyPageShell from '@/components/agency/AgencyPageShell';
 import AgencyBroadcasterList from '@/components/agency/AgencyBroadcasterList';
-import AgencyPerformanceCharts from '@/components/agency/AgencyPerformanceCharts';
 import useAgencyPageData from '@/components/agency/useAgencyPageData';
 import { agencySections } from '@/components/agency/agencySections';
 
-/** Yayıncı Paneli: yayıncıların canlı kota ilerlemeleri, performans grafikleri ve bu ayki elmasları. */
+/** Yayıncı Paneli: yayıncıların canlı kota ilerlemeleri ve bu ayki elmasları. */
 export default function AgencyBroadcasters() {
   const { role, agency, panel, loading, refresh } = useAgencyPageData();
 
@@ -31,10 +30,7 @@ export default function AgencyBroadcasters() {
       sections={agencySections(role)}
       loading={loading}
     >
-      <div className="space-y-3">
-        <AgencyPerformanceCharts members={members} />
-        <AgencyBroadcasterList members={members} />
-      </div>
+      <AgencyBroadcasterList members={members} />
     </AgencyPageShell>
   );
 }

@@ -4,16 +4,17 @@ import QuotaProgressCard from '@/components/agency/QuotaProgressCard';
 import QuotaTierGrid from '@/components/agency/QuotaTierGrid';
 import useAgencyPageData from '@/components/agency/useAgencyPageData';
 import { agencySections } from '@/components/agency/agencySections';
+import { formatMoney } from '@/lib/agency';
 
-/** Kota Tablosu: kademe kutuları ve bir sonraki kademeye ilerleme. */
+/** Kota Tablosu: yayıncı kendi ilerlemesini, ajans sahibi komisyon kademelerini görür. */
 export default function AgencyQuota() {
   const { role, agency, panel, broadcaster, loading } = useAgencyPageData();
   const isOwner = role === 'owner';
   const tiers = (isOwner ? panel?.tiers : broadcaster?.tiers) || [];
-  const monthDiamonds = isOwner ? (panel?.agency?.month_diamonds || 0) : (broadcaster?.diamonds?.month || 0);
-  const nextTier = isOwner
-    ? (tiers.find((tier) => Number(tier.diamonds) > monthDiamonds) || null)
-    : (broadcaster?.next_tier || null);
+  // Kotalar herkes için ayrı ilerler: sahibin tablosu komisyon kademelerini referans olarak gösterir,
+  // yayıncının tablosu yalnızca kendi elmasına göre dolar.
+  const monthDiamonds = isOwner ? 0 : (broadcaster?.diamonds?.month || 0);
+  const nextTier = isOwner ? null : (broadcaster?.next_tier || null);
 
   return (
     <AgencyPageShell
@@ -40,13 +41,14 @@ export default function AgencyQuota() {
           tiers={tiers}
           monthDiamonds={monthDiamonds}
           nextTier={nextTier}
+          trackProgress={!isOwner}
           amountField={isOwner ? 'agency_dollars' : 'broadcaster_dollars'}
           amountLabel={isOwner ? 'ajans komisyonu' : 'yayıncı kazancı'}
         />
 
         <p className="text-[10px] leading-relaxed text-white/40">
           {isOwner
-            ? `Ajansın bu ay ${monthDiamonds.toLocaleString('tr-TR')} elmas kotaya ulaştı. Kademeler, yayıncıların tamamladığı kotalara göre belirlenir.`
+            ? `Her yayıncı kendi kotasını ayrı tamamlar; tamamlanan her kota için ajansına 200.000 elmas başına $${agency?.commission_per_200k || 3} komisyon işlenir. Bu ay işlenen komisyon: ${formatMoney(agency?.month_earnings || 0)}.`
             : 'Kademeler bu ayki elmas miktarına göre ilerler; tamamlanan her kademe kazancına eklenir.'}
         </p>
       </div>

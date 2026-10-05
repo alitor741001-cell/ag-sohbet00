@@ -43,14 +43,33 @@ export function generateAgencyCode() {
 
 const round = (value: any) => Math.round((Number(value) || 0) * 100) / 100;
 
-/** Kota tablosu boşsa varsayılan kademeleri yazar (admin panelinden düzenlenebilir). */
+/**
+ * Kota tablosu boşsa varsayılan kademeleri yazar (admin panelinden düzenlenebilir).
+ * Aynı elmas seviyesinde mükerrer kademe oluşmuşsa seviye başına tek kayıt tutulur ve
+ * fazlalıklar silinir; aksi halde aynı kota için birden fazla ödeme işlenirdi.
+ */
 export async function ensureQuotaTiers(base44: any) {
   const existing = await base44.asServiceRole.entities.QuotaTier.filter({}, 'sort_order', 500).catch(() => []);
-  if (existing.length) return existing;
-  await base44.asServiceRole.entities.QuotaTier.bulkCreate(DEFAULT_QUOTA_TIERS.map(([diamonds, dollars], index) => ({
-    diamonds, broadcaster_dollars: dollars, agency_dollars: agencyCommissionFor(diamonds), active: true, sort_order: index + 1,
-  }))).catch(() => {});
-  return base44.asServiceRole.entities.QuotaTier.filter({}, 'sort_order', 500).catch(() => []);
+  if (!existing.length) {
+    await base44.asServiceRole.entities.QuotaTier.bulkCreate(DEFAULT_QUOTA_TIERS.map(([diamonds, dollars], index) => ({
+      diamonds, broadcaster_dollars: dollars, agency_dollars: agencyCommissionFor(diamonds), active: true, sort_order: index + 1,
+    }))).catch(() => {});
+    return base44.asServiceRole.entities.QuotaTier.filter({}, 'sort_order', 500).catch(() => []);
+  }
+  const byLevel = new Map<number, any>();
+  const extra: any[] = [];
+  existing.forEach((tier: any) => {
+    const level = Number(tier.diamonds) || 0;
+    const current = byLevel.get(level);
+    if (!current) { byLevel.set(level, tier); return; }
+    // Aktif kademe tercih edilir, diğerleri mükerrerdir.
+    if (current.active === false && tier.active !== false) { extra.push(current); byLevel.set(level, tier); return; }
+    extra.push(tier);
+  });
+  if (extra.length) {
+    await Promise.all(extra.map((tier: any) => base44.asServiceRole.entities.QuotaTier.delete(tier.id).catch(() => {})));
+  }
+  return [...byLevel.values()];
 }
 
 /** Kişinin bu ayki ve tüm zamanların elması (ödeme kuralından bağımsız, ham elmas). */
@@ -85,12 +104,13 @@ export async function syncQuotaRewards(base44: any, userId: string) {
   const tiers = await ensureQuotaTiers(base44);
   const eligible = tiers.filter((tier) => tier.active !== false && Number(tier.diamonds || 0) <= month);
   if (!eligible.length) return { awarded: [] as any[] };
+  // Aynı kota (kişi + kademe seviyesi + ay) ikinci kez ödenmez: kontrol kademe seviyesi üzerinden yapılır.
   const existing = await base44.asServiceRole.entities.QuotaReward.filter({ user_id: userId, period }, '-created_date', 500).catch(() => []);
-  const done = new Set(existing.map((row) => row.tier_id));
+  const done = new Set(existing.map((row) => Number(row.diamonds) || 0));
   const name = account.username || account.full_name || 'Yayıncı';
   const awarded = [];
   for (const tier of eligible) {
-    if (done.has(tier.id)) continue;
+    if (done.has(Number(tier.diamonds) || 0)) continue;
     const reward = await base44.asServiceRole.entities.QuotaReward.create({
       user_id: userId, user_name: name,
       agency_id: account.agency_record_id || '', agency_code: account.agency_code || '', agency_name: account.agency_name || '',
