@@ -331,6 +331,11 @@ export default function VoiceRoom() {
     return unsubscribe;
   }, [id]);
 
+  // Yöneticilik alındığı an açık olan "…" menüsü kapanır; tuş da anında kaybolur.
+  useEffect(() => {
+    if (!canMod) setMenuOpen(false);
+  }, [canMod]);
+
   // Odadan atılma kontrolü.
   useEffect(() => {
     if (!joined || !user) return;
@@ -946,9 +951,13 @@ export default function VoiceRoom() {
               <Eye className="h-5 w-5 text-white/80" />
               <span className="text-sm font-bold tabular-nums">{participants.length}</span>
             </button>
-            <button type="button" onClick={() => setMenuOpen(true)} aria-label="Oda ayarları" className="flex h-[clamp(38px,11vw,44px)] w-[clamp(38px,11vw,44px)] items-center justify-center rounded-full bg-white/10 active:scale-95 transition-transform">
-              <MoreHorizontal className="h-5 w-5" />
-            </button>
+            {/* "…" menüsü yalnızca oda sahibi ve yöneticilerde görünür; yetki verildiği/alındığı
+                an (oda kaydı canlı takip edilir) tuş sayfa yenilenmeden gelir veya kaybolur. */}
+            {canMod && (
+              <button type="button" onClick={() => setMenuOpen(true)} aria-label="Oda ayarları" className="flex h-[clamp(38px,11vw,44px)] w-[clamp(38px,11vw,44px)] items-center justify-center rounded-full bg-white/10 active:scale-95 transition-transform">
+                <MoreHorizontal className="h-5 w-5" />
+              </button>
+            )}
             <button type="button" onClick={() => setExitOpen(true)} aria-label="Odadan çık" className="flex h-[clamp(38px,11vw,44px)] w-[clamp(38px,11vw,44px)] items-center justify-center rounded-full bg-red-600 active:scale-95 transition-transform">
               <LogOut className="h-5 w-5" />
             </button>

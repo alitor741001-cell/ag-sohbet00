@@ -70,8 +70,8 @@ export default function VoiceRoomMenu({ open, onClose, room, userId, participant
   return (
     <VoiceSheet open={open} onClose={onClose} title="Oda ayarları">
       <div className="grid grid-cols-4 gap-x-2 gap-y-4">
-        {/* Davet ve film odası geçişi oda sahibine aittir; koltuktaki izleyici de davet edebilir. */}
-        {onInvite && (isOwner || !canMod) && (
+        {/* Davet herkes için açık: oda sahibi, yöneticiler ve izleyiciler arkadaşını davet edebilir. */}
+        {onInvite && (
           <VoiceMenuTile
             icon={UserPlus}
             label="Davet et"
