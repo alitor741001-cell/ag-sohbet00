@@ -1,42 +1,56 @@
-import { Briefcase, ChevronRight, Coins, Gem } from 'lucide-react';
+import { Briefcase, ChevronRight, Coins, Crown, Gem } from 'lucide-react';
 import { formatCoins } from '@/lib/giftTone';
 import { formatScore } from '@/components/voice/scoreTier';
 
 /**
- * Profil menüsündeki cüzdan kartları: solda yüklenen coinler,
- * sağda hediyelerden biriken elmas (hediye kutusu) değeri.
- * Elmasın altında mavi çanta durur: coin yüklemesinden gelen VIP'ler orada birikir.
+ * Profil cüzdanı: solda yüklenen coinler (mavi neon), sağda hediyelerden biriken
+ * elmas (altın neon). Altında mavi çanta (VIP) ve ajans işlemleri satırları durur.
  */
+const COIN_TONE = {
+  background: 'linear-gradient(150deg, rgba(0,176,255,0.2), rgba(6,10,20,0.9))',
+  border: '1px solid rgba(0,176,255,0.55)',
+  boxShadow: '0 0 18px rgba(0,176,255,0.22)',
+};
+
+const GOLD_TONE = {
+  background: 'linear-gradient(150deg, rgba(255,171,0,0.2), rgba(24,14,2,0.9))',
+  border: '1px solid rgba(255,171,0,0.55)',
+  boxShadow: '0 0 18px rgba(255,171,0,0.22)',
+};
+
 export default function ProfileWalletCards({ coins, giftScore, vipCount = 0, onOpenGiftBox, onOpenCoins, onOpenVipBag, onOpenAgency }) {
   const coinText = coins === null || coins === undefined ? '—' : formatCoins(coins);
   const giftText = giftScore === null || giftScore === undefined ? '—' : formatScore(giftScore);
 
   return (
-    <div className="border-b border-white/10 px-3 py-3">
+    <div className="space-y-2">
       <div className="grid grid-cols-2 gap-2">
         <button
           type="button"
           onClick={onOpenCoins}
-          className="flex items-center gap-2 rounded-xl bg-white px-2.5 py-2 shadow-sm transition-transform active:scale-95"
+          className="flex items-center gap-2.5 rounded-2xl px-3 py-2.5 text-left transition-transform active:scale-95"
+          style={COIN_TONE}
         >
-          <Coins className="h-6 w-6 shrink-0 text-amber-500" />
-          <div className="min-w-0 flex-1 text-center">
-            <p className="truncate text-sm font-bold tabular-nums text-[#1F2024]">{coinText}</p>
-            <p className="text-[10px] font-semibold text-[#6b7280]">Coins</p>
-          </div>
+          <Coins className="h-7 w-7 shrink-0 text-sky-300" />
+          <span className="min-w-0 flex-1">
+            <span className="block text-[11px] font-semibold text-white/70">Coins</span>
+            <span className="block truncate text-base font-extrabold tabular-nums text-white">{coinText}</span>
+          </span>
+          <ChevronRight className="h-4 w-4 shrink-0 text-white/40" />
         </button>
 
         <button
           type="button"
           onClick={onOpenGiftBox}
-          className="flex items-center gap-2 rounded-xl bg-white px-2.5 py-2 shadow-sm transition-transform active:scale-95"
+          className="flex items-center gap-2.5 rounded-2xl px-3 py-2.5 text-left transition-transform active:scale-95"
+          style={GOLD_TONE}
         >
-          <Gem className="h-6 w-6 shrink-0 text-sky-400" />
-          <div className="min-w-0 flex-1 text-center">
-            <p className="truncate text-sm font-bold tabular-nums text-[#1F2024]">{giftText}</p>
-            <p className="text-[10px] font-semibold text-[#6b7280]">Elmaslar</p>
-          </div>
-          <ChevronRight className="h-4 w-4 shrink-0 text-[#c4c9d0]" />
+          <Gem className="h-7 w-7 shrink-0 text-[#7dd3fc]" />
+          <span className="min-w-0 flex-1">
+            <span className="block text-[11px] font-semibold text-white/70">Elmaslar</span>
+            <span className="block truncate text-base font-extrabold tabular-nums text-white">{giftText}</span>
+          </span>
+          <ChevronRight className="h-4 w-4 shrink-0 text-white/40" />
         </button>
       </div>
 
@@ -44,39 +58,36 @@ export default function ProfileWalletCards({ coins, giftScore, vipCount = 0, onO
       <button
         type="button"
         onClick={onOpenVipBag}
-        className="mt-2 flex w-full items-center gap-2 rounded-xl px-2.5 py-2 transition-transform active:scale-95"
-        style={{
-          background: 'linear-gradient(135deg, rgba(37,99,235,0.92), rgba(59,130,246,0.72))',
-          border: '1px solid rgba(147,197,253,0.45)',
-          boxShadow: '0 0 14px rgba(59,130,246,0.25)',
-        }}
+        className="flex w-full items-center gap-3 rounded-2xl px-3.5 py-2.5 text-left transition-transform active:scale-[0.98]"
+        style={COIN_TONE}
       >
-        <Briefcase className="h-6 w-6 shrink-0 text-sky-100" />
-        <div className="min-w-0 flex-1 text-center">
-          <p className="truncate text-sm font-bold tabular-nums text-white">{vipCount > 0 ? `${vipCount} VIP` : 'Boş'}</p>
-          <p className="text-[10px] font-semibold text-sky-100/85">Mavi Çanta</p>
-        </div>
-        <ChevronRight className="h-4 w-4 shrink-0 text-sky-100/70" />
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/[0.06]">
+          <Briefcase className="h-5 w-5 text-sky-300" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-bold text-white">Mavi Çanta</span>
+          <span className="block truncate text-[11px] text-white/55">{vipCount > 0 ? `${vipCount} VIP bekliyor` : 'Henüz VIP yok'}</span>
+        </span>
+        <ChevronRight className="h-4 w-4 shrink-0 text-white/40" />
       </button>
 
       {/* Ajans işlemleri: kendi tam sayfasına gider. (Yöneticilerde gizli.) */}
       {onOpenAgency && (
-      <button
-        type="button"
-        onClick={onOpenAgency}
-        className="mt-2 flex w-full items-center gap-2 rounded-xl px-2.5 py-2 transition-transform active:scale-95"
-        style={{
-          background: 'linear-gradient(135deg, rgba(245,197,66,0.22), rgba(245,197,66,0.08))',
-          border: '1px solid rgba(245,197,66,0.45)',
-        }}
-      >
-        <Gem className="h-6 w-6 shrink-0 text-[#F5C542]" />
-        <div className="min-w-0 flex-1 text-center">
-          <p className="truncate text-sm font-bold text-white">Ajans İşlemleri</p>
-          <p className="text-[10px] font-semibold text-[#F5C542]/85">Ajans ve yayıncı paneli</p>
-        </div>
-        <ChevronRight className="h-4 w-4 shrink-0 text-[#F5C542]/70" />
-      </button>
+        <button
+          type="button"
+          onClick={onOpenAgency}
+          className="flex w-full items-center gap-3 rounded-2xl px-3.5 py-2.5 text-left transition-transform active:scale-[0.98]"
+          style={GOLD_TONE}
+        >
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/[0.06]">
+            <Crown className="h-5 w-5 text-[#F5C542]" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-bold text-white">Ajans İşlemleri</span>
+            <span className="block truncate text-[11px] text-white/55">Ajans ve yayıncı paneli</span>
+          </span>
+          <ChevronRight className="h-4 w-4 shrink-0 text-white/40" />
+        </button>
       )}
     </div>
   );

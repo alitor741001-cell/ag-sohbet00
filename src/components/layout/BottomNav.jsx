@@ -1,7 +1,5 @@
-import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Home, MessageCircle, Plus, User } from 'lucide-react';
-import ProfileSheet from '@/components/profile/ProfileSheet';
 import { useCurrentUser, membershipActive } from '@/lib/useCurrentUser';
 import useSocialBadges from '@/hooks/useSocialBadges';
 import LiveChatButton from '@/components/layout/LiveChatButton';
@@ -24,7 +22,6 @@ export default function BottomNav() {
   const navigate = useNavigate();
   const { user } = useCurrentUser();
   const { messages, requests } = useSocialBadges(user?.id);
-  const [profileOpen, setProfileOpen] = useState(false);
   const baseItems = membershipActive(user) ? fullItems : limitedItems;
   // Canlı destek sohbeti: yöneticide profil sekmesinin hemen solunda durur.
   const items =
@@ -32,14 +29,10 @@ export default function BottomNav() {
       ? [...baseItems.slice(0, -1), { dock: 'support' }, ...baseItems.slice(-1)]
       : baseItems;
 
-  const handleNav = (item) => {
-    // Profil butonu: menünün tamamı (coins, elmaslar, mavi çanta, ajans, çıkış) burada açılır.
-    if (item.path === '/profil') { setProfileOpen(true); return; }
-    navigate(item.path);
-  };
+  // Profil butonu doğrudan profil sayfasına gider.
+  const handleNav = (item) => navigate(item.path);
 
   return (
-    <>
     <nav className="lg:hidden fixed bottom-0 inset-x-0 z-50 overflow-hidden pb-[env(safe-area-inset-bottom)]" style={{ background: 'linear-gradient(180deg, #14141a 0%, #0a0a0f 100%)', borderTop: '1px solid rgba(239,68,68,0.25)' }}>
       <div className="absolute inset-0 pointer-events-none opacity-25"
         style={{
@@ -87,7 +80,5 @@ export default function BottomNav() {
         })}
       </div>
     </nav>
-    <ProfileSheet open={profileOpen} onClose={() => setProfileOpen(false)} />
-    </>
   );
 }
