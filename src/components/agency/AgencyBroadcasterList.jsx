@@ -1,11 +1,14 @@
+import { useState } from 'react';
 import { ChevronRight, Gem, Mic2 } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import { Image } from '@/components/ui/image';
 import BroadcasterQuotaBar from '@/components/agency/BroadcasterQuotaBar';
+import AgencyBroadcasterProfile from '@/components/agency/AgencyBroadcasterProfile';
 import { formatMoney, formatShortDiamonds } from '@/lib/agency';
 
 /** Ajans sahibinin yayıncı listesi: profil, kimlik, canlı kota ilerlemesi ve aylık elmas. */
 export default function AgencyBroadcasterList({ members = [] }) {
+  const [selected, setSelected] = useState(null);
+
   if (!members.length) {
     return (
       <div className="rounded-2xl border border-white/10 bg-white/5 py-8 text-center">
@@ -20,7 +23,7 @@ export default function AgencyBroadcasterList({ members = [] }) {
       {members.map((member) => (
         <div key={member.user_id} className="rounded-2xl border border-white/10 bg-white/5 p-3">
           <div className="flex items-center gap-2">
-            <Link to={`/kullanici/${member.user_id}`} className="flex min-w-0 flex-1 items-center gap-3 active:scale-[0.99]">
+            <button type="button" onClick={() => setSelected(member)} className="flex min-w-0 flex-1 items-center gap-3 text-left active:scale-[0.99]">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/15 bg-black/50">
                 {member.avatar
                   ? <Image src={member.avatar} className="h-full w-full object-cover" fittingType="fill" />
@@ -31,7 +34,7 @@ export default function AgencyBroadcasterList({ members = [] }) {
                 <p className="truncate text-[10px] text-white/40">#{member.member_id}</p>
               </div>
               <ChevronRight className="h-4 w-4 shrink-0 text-white/30" />
-            </Link>
+            </button>
             <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold ${member.status === 'active' ? 'border-[#4ade80]/45 text-[#4ade80]' : 'border-white/20 text-white/50'}`}>
               {member.status === 'active' ? 'Aktif' : 'Pasif'}
             </span>
@@ -50,6 +53,7 @@ export default function AgencyBroadcasterList({ members = [] }) {
           </div>
         </div>
       ))}
+      {selected && <AgencyBroadcasterProfile member={selected} onClose={() => setSelected(null)} />}
     </div>
   );
 }

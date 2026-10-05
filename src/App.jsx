@@ -84,7 +84,7 @@ const AuthenticatedApp = () => {
   if (isLoadingPublicSettings || isLoadingAuth) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-catalog">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-muted border-t-primary"></div>
+        <span className="font-display text-base font-black tracking-[0.35em] text-white/60">FILMKEYFİ</span>
       </div>
     );
   }
@@ -102,7 +102,7 @@ const AuthenticatedApp = () => {
 
   // Render the main app
   return (
-    <Suspense fallback={<div className="fixed inset-0 flex items-center justify-center bg-catalog"><div className="h-8 w-8 animate-spin rounded-full border-4 border-muted border-t-primary" /></div>}>
+    <Suspense fallback={null}>
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />

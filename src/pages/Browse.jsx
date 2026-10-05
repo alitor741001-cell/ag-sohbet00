@@ -14,12 +14,12 @@ export default function Browse({ type, title }) {
   const movieQuery = useQuery({
     queryKey: ['browse-published-movies', type],
     queryFn: () => base44.entities.Movie.filter({ published: true, type }, '-views', 300),
-    staleTime: 0, gcTime: 5 * 60 * 1000,
+    staleTime: 5 * 60 * 1000, gcTime: 5 * 60 * 1000,
   });
   const categoryQuery = useQuery({
     queryKey: ['browse-categories'],
     queryFn: () => base44.entities.Category.list('name', 200),
-    staleTime: 0, gcTime: 5 * 60 * 1000,
+    staleTime: 5 * 60 * 1000, gcTime: 5 * 60 * 1000,
   });
   const movies = movieQuery.data || [];
   const cats = categoryQuery.data || [];

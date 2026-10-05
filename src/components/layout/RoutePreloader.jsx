@@ -1,14 +1,25 @@
 import { useEffect } from 'react';
 
+// Her sayfanın paketi: dokunulan an hiç beklemeden açılsın diye arka planda önceden indirilir.
 const routeLoaders = {
   '/': () => import('@/pages/Home'),
   '/filmler': () => import('@/pages/Browse'),
+  '/kategoriler': () => import('@/pages/Browse'),
   '/acik-odalar': () => import('@/pages/OpenRooms'),
   '/oda-kur': () => import('@/pages/CreateRoom'),
+  '/sesli-oda-kur': () => import('@/pages/VoiceRoomCreate'),
+  '/sesli-oda': () => import('@/pages/VoiceRoom'),
   '/arkadaslar': () => import('@/pages/Friends'),
   '/listem': () => import('@/pages/MyList'),
   '/ara': () => import('@/pages/Search'),
   '/profil': () => import('@/pages/Profile'),
+  '/ajans': () => import('@/pages/AgencyPage'),
+  '/ajans/kazanc': () => import('@/pages/agency/AgencyEarnings'),
+  '/ajans/kota-tablosu': () => import('@/pages/agency/AgencyQuota'),
+  '/ajans/yayincilar': () => import('@/pages/agency/AgencyBroadcasters'),
+  '/ajans/ajansim': () => import('@/pages/agency/AgencyInfo'),
+  '/ajans/davetler': () => import('@/pages/agency/AgencyInvites'),
+  '/ajans/transferler': () => import('@/pages/agency/AgencyTransfers'),
   '/abonelik': () => import('@/pages/Subscription'),
   '/bildirimler': () => import('@/pages/Notifications'),
   '/destek': () => import('@/pages/Support'),
@@ -36,30 +47,22 @@ export default function RoutePreloader() {
     document.addEventListener('pointerdown', onIntent, { passive: true });
     document.addEventListener('pointerover', onIntent, { passive: true });
 
-    // Toplu chunk indirme mobil cihazlarda açılışı ve ilk dokunuşları bloke eder.
-    // Masaüstünde ise yalnızca tarayıcı gerçekten boş kaldığında arka planda ısıt.
+    // Uygulama açıldıktan sonra kalan sayfa paketleri sırayla indirilir; böylece
+    // sayfalar arasında gezinirken bekleme ekranı çıkmaz. Yavaş bağlantıda indirilmez.
     const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-    const canWarmInBackground = window.matchMedia('(min-width: 1024px)').matches
-      && !connection?.saveData
-      && !['slow-2g', '2g'].includes(connection?.effectiveType);
-    const loaders = canWarmInBackground ? Object.values(routeLoaders) : [];
-    let idleId;
-    let timeoutId;
-    const warmNext = (deadline) => {
-      if (loaders.length && (deadline?.timeRemaining?.() > 8 || deadline?.didTimeout)) loaders.shift()();
-      if (loaders.length) scheduleWarm();
+    const canWarm = !connection?.saveData && !['slow-2g', '2g'].includes(connection?.effectiveType);
+    const queue = canWarm ? Object.values(routeLoaders) : [];
+    let timer;
+    const warmNext = () => {
+      queue.shift()?.();
+      if (queue.length) timer = window.setTimeout(warmNext, 400);
     };
-    const scheduleWarm = () => {
-      if (window.requestIdleCallback) idleId = window.requestIdleCallback(warmNext, { timeout: 4000 });
-      else timeoutId = window.setTimeout(() => { loaders.shift()?.(); if (loaders.length) scheduleWarm(); }, 1200);
-    };
-    if (loaders.length) scheduleWarm();
+    if (queue.length) timer = window.setTimeout(warmNext, 1500);
 
     return () => {
       document.removeEventListener('pointerdown', onIntent);
       document.removeEventListener('pointerover', onIntent);
-      if (idleId && window.cancelIdleCallback) window.cancelIdleCallback(idleId);
-      if (timeoutId) window.clearTimeout(timeoutId);
+      if (timer) window.clearTimeout(timer);
     };
   }, []);
 

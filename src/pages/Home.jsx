@@ -17,7 +17,7 @@ export default function Home() {
   const { data: all, isPending: loading, refetch: fetchAll } = useQuery({
     queryKey: ['home-published-movies'],
     queryFn: () => base44.entities.Movie.filter({ published: true }, '-views', 200),
-    staleTime: 0,
+    staleTime: 5 * 60 * 1000,
     gcTime: 5 * 60 * 1000,
   });
   const { featured, rows } = useMemo(() => {
