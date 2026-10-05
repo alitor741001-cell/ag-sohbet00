@@ -1,25 +1,38 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Film, Loader2, Mic } from 'lucide-react';
+import { Film, Loader2, Mic, Search } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import RoomDiscoveryCard from '@/components/home/RoomDiscoveryCard';
+import FriendStrip from '@/components/home/FriendStrip';
+import useFriends from '@/hooks/useFriends';
+import useFriendPresence from '@/hooks/useFriendPresence';
+import useMessageProfiles from '@/hooks/useMessageProfiles';
 import { fetchYouTubeTitle, isGenericTitle, youtubeIdFromMovieId } from '@/lib/youtubeTitle';
 
 const isVoiceRoom = (room) => room?.room_type === 'voice' || room?.voice_mode === true;
-const EMPTY = [];
+
+/** Arama karşılaştırması: "TR555596" ile "555596" aynı üye kimliği sayılır. */
+const normalizeId = (value) =>
+  String(value || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '')
+    .replace(/^tr(?=\d)/, '');
 
 /**
- * Ana sayfa keşfet bölümü: koltuklu (sesli) odalar ile film odaları iki sekmede listelenir.
- * Her kartta odanın kapağı, açan kişi, kaç kişi olduğu ve odadaki profiller görünür.
+ * Ana sayfa keşfet bölümü: en üstte arkadaş şeridi, altında koltuklu odalar ve
+ * film odaları sekmeleri, oda numarası / üye kimliği araması ve oda kartları.
  */
 export default function RoomDiscovery() {
   const { user } = useCurrentUser();
+  const { relations } = useFriends();
+  const { isOnline, getRoomId } = useFriendPresence(user);
   const [rooms, setRooms] = useState([]);
   const [owners, setOwners] = useState({});
   const [titles, setTitles] = useState({});
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState('voice');
+  const [query, setQuery] = useState('');
 
   const isAdmin = user?.role === 'admin';
   const isVisible = (room) =>
@@ -63,6 +76,49 @@ export default function RoomDiscovery() {
     };
   }, [user?.id, user?.role]);
 
+  const friends = useMemo(
+    () =>
+      relations
+        .filter((relation) => relation.status === 'accepted')
+        .map((relation) => {
+          const mine = relation.requester_id === user?.id;
+          return {
+            id: (mine ? relation.recipient_id : relation.requester_id) || '',
+            name: (mine ? relation.recipient_name : relation.requester_name) || 'Arkadaş',
+            avatar: (mine ? relation.recipient_avatar : relation.requester_avatar) || '',
+          };
+        })
+        .filter((friend) => friend.id),
+    [relations, user?.id]
+  );
+
+  const friendProfiles = useMessageProfiles(friends.map((friend) => friend.id));
+  const friendsWithProfiles = useMemo(
+    () =>
+      friends.map((friend) => {
+        const profile = friendProfiles[friend.id];
+        return {
+          ...friend,
+          name: profile?.username || profile?.full_name || friend.name,
+          avatar: profile?.avatar || friend.avatar,
+        };
+      }),
+    [friends, friendProfiles]
+  );
+
+  // Çevrim içi arkadaşlar şeritte başta görünür.
+  const sortedFriends = [...friendsWithProfiles].sort((a, b) => Number(isOnline(b.id)) - Number(isOnline(a.id)));
+
+  const friendIds = useMemo(() => friendsWithProfiles.map((friend) => friend.id), [friendsWithProfiles]);
+  const hasFriendInside = (room) => {
+    if (!friendIds.length) return false;
+    const present = new Set([
+      ...(room.participants || []).map((person) => person.user_id),
+      ...(room.seats || []).map((seat) => seat.user_id),
+    ]);
+    return friendIds.some((id) => present.has(id));
+  };
+
   const voiceRooms = useMemo(() => rooms.filter((room) => isVoiceRoom(room)), [rooms]);
   const filmRooms = useMemo(() => rooms.filter((room) => !isVoiceRoom(room)), [rooms]);
 
@@ -88,9 +144,33 @@ export default function RoomDiscovery() {
   };
 
   const list = tab === 'voice' ? voiceRooms : filmRooms;
+  const searching = query.trim().length > 0;
+
+  // Arama açıkken iki sekme birlikte taranır: oda numarası veya üye kimliğiyle oda bulunur.
+  const searched = useMemo(() => {
+    const term = query.trim();
+    if (!term) return list;
+    const lowered = term.toLowerCase();
+    const digits = term.replace(/[^0-9]/g, '');
+    const memberTerm = normalizeId(term);
+    return rooms.filter((room) => {
+      const owner = owners[room.owner_id] || {};
+      if (digits && String(room.room_number) === digits) return true;
+      const ownerMember = normalizeId(owner.member_id);
+      if (memberTerm && ownerMember && (ownerMember === memberTerm || ownerMember.includes(memberTerm))) return true;
+      if (String(room.name || '').toLowerCase().includes(lowered)) return true;
+      return `${owner.username || ''} ${owner.full_name || ''} ${room.owner_name || ''}`.toLowerCase().includes(lowered);
+    });
+  }, [query, list, rooms, owners]);
+
+  const items = searching ? searched : list;
 
   return (
     <section className="mt-5">
+      {sortedFriends.length > 0 && (
+        <FriendStrip friends={sortedFriends} rooms={rooms} isOnline={isOnline} getRoomId={getRoomId} />
+      )}
+
       <div className="mb-3 flex items-center gap-2">
         <button
           type="button"
@@ -112,33 +192,56 @@ export default function RoomDiscovery() {
         </button>
       </div>
 
+      <div className="relative mb-3">
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
+        <input
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Oda numarası veya üye kimliği ara…"
+          autoComplete="off"
+          enterKeyHint="search"
+          className="w-full rounded-full border border-white/10 bg-[#141419] py-2.5 pl-9 pr-3 text-[13px] font-medium text-white outline-none placeholder:text-white/35 focus:border-[#4caf50]/50"
+        />
+      </div>
+
       {loading ? (
         <div className="flex justify-center py-10">
           <Loader2 className="h-6 w-6 animate-spin text-white/40" />
         </div>
-      ) : list.length === 0 ? (
-        <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-8 text-center">
-          <p className="text-sm font-bold">
-            {tab === 'voice' ? 'Şu an açık koltuklu oda yok.' : 'Şu an açık film odası yok.'}
-          </p>
-          <Link
-            to={tab === 'voice' ? '/sesli-oda-kur' : '/oda-kur'}
-            className="mt-2 inline-block text-xs font-bold text-[#4caf50]"
-          >
-            {tab === 'voice' ? 'İlk koltuklu odayı sen aç →' : 'İlk film odasını sen aç →'}
-          </Link>
-        </div>
+      ) : items.length === 0 ? (
+        searching ? (
+          <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-8 text-center">
+            <p className="text-sm font-bold">Eşleşen oda yok.</p>
+            <p className="mt-1 text-xs text-white/45">Oda numarasını veya üye kimliğini kontrol et.</p>
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-8 text-center">
+            <p className="text-sm font-bold">
+              {tab === 'voice' ? 'Şu an açık koltuklu oda yok.' : 'Şu an açık film odası yok.'}
+            </p>
+            <Link
+              to={tab === 'voice' ? '/sesli-oda-kur' : '/oda-kur'}
+              className="mt-2 inline-block text-xs font-bold text-[#4caf50]"
+            >
+              {tab === 'voice' ? 'İlk koltuklu odayı sen aç →' : 'İlk film odasını sen aç →'}
+            </Link>
+          </div>
+        )
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {list.map((room) => (
-            <RoomDiscoveryCard
-              key={room.id}
-              room={room}
-              owner={owners[room.owner_id]}
-              kind={tab === 'voice' ? 'voice' : 'film'}
-              filmTitle={tab === 'film' ? filmTitleFor(room) : ''}
-            />
-          ))}
+          {items.map((room) => {
+            const kind = isVoiceRoom(room) ? 'voice' : 'film';
+            return (
+              <RoomDiscoveryCard
+                key={room.id}
+                room={room}
+                owner={owners[room.owner_id]}
+                kind={kind}
+                filmTitle={kind === 'film' ? filmTitleFor(room) : ''}
+                friendInside={hasFriendInside(room)}
+              />
+            );
+          })}
         </div>
       )}
     </section>

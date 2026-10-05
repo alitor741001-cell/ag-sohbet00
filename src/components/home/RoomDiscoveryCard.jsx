@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom';
-import { BarChart3, Film, Lock, Mic } from 'lucide-react';
+import { BarChart3, Film, Lock, Mic, Users } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import { youtubeIdFromMovieId } from '@/lib/youtubeTitle';
 
 /** Ana sayfa keşfet ızgarasındaki oda kartı: kapağı, rozeti, izleyici sayısı ve profilleri gösterir. */
-export default function RoomDiscoveryCard({ room, owner, kind, filmTitle }) {
+export default function RoomDiscoveryCard({ room, owner, kind, filmTitle, friendInside }) {
   const viewers = room.participants?.length || 0;
   const isVoice = kind === 'voice';
   const videoId = isVoice ? '' : youtubeIdFromMovieId(room.movie_id);
@@ -31,6 +31,12 @@ export default function RoomDiscoveryCard({ room, owner, kind, filmTitle }) {
         <span className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-red-600 px-2 py-0.5 text-[10px] font-extrabold text-white">
           <span className="h-1.5 w-1.5 rounded-full bg-white" /> CANLI
         </span>
+
+        {friendInside && (
+          <span className="absolute right-2 top-2 flex items-center gap-1 rounded-full bg-black/70 px-1.5 py-0.5 text-[9px] font-extrabold text-[#4caf50]">
+            <Users className="h-2.5 w-2.5" /> Arkadaşın içinde
+          </span>
+        )}
 
         {!isVoice && filmTitle && (
           <span className="absolute inset-x-2 bottom-11 line-clamp-2 text-[11px] font-bold leading-tight text-white/95">

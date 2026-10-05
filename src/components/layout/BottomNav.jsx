@@ -1,11 +1,10 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { DoorOpen, Home, MessageCircle, Plus, User } from 'lucide-react';
+import { Home, MessageCircle, Plus, User } from 'lucide-react';
 import { useCurrentUser, membershipActive } from '@/lib/useCurrentUser';
 import useSocialBadges from '@/hooks/useSocialBadges';
 
 const fullItems = [
   { label: 'Ana Sayfa', path: '/', icon: Home },
-  { label: 'Odalar', path: '/acik-odalar', icon: DoorOpen },
   { label: 'Oda Kur', path: '/oda-kur', icon: Plus },
   { label: 'Sohbet', path: '/arkadaslar?view=chats', activePath: '/arkadaslar', icon: MessageCircle },
   { label: 'Profil', path: '/profil', icon: User },
@@ -13,7 +12,6 @@ const fullItems = [
 
 const limitedItems = [
   { label: 'Ana Sayfa', path: '/', icon: Home },
-  { label: 'Odalar', path: '/acik-odalar', icon: DoorOpen },
   { label: 'Sohbet', path: '/arkadaslar?view=chats', activePath: '/arkadaslar', icon: MessageCircle },
   { label: 'Profil', path: '/profil', icon: User },
 ];
@@ -43,10 +41,10 @@ export default function BottomNav() {
       </div>
 
       <div className="relative flex h-16 items-center">
-        {items.map(({ label, path, activePath, icon: Icon }, idx) => {
+        {items.map(({ label, path, activePath, icon: Icon }) => {
           const matchPath = activePath || path;
           const active = location.pathname === matchPath || (matchPath !== '/' && location.pathname.startsWith(matchPath));
-          const isCenter = idx === 2 && items === fullItems;
+          const isCenter = path === '/oda-kur' && items === fullItems;
           if (isCenter) {
             return (
               <button key={path} onClick={() => handleNav({ path })} className="flex-1 flex flex-col items-center justify-center gap-0.5 relative">
