@@ -1,10 +1,9 @@
 import HomeHero from '@/components/home/HomeHero';
-import HomeQuickAccess from '@/components/home/HomeQuickAccess';
 import RoomDiscovery from '@/components/home/RoomDiscovery';
 
 /**
  * Ana sayfa: koyu antrasit zemin üzerinde altın + kırmızı premium tema.
- * Sıra: profil şeridi → hızlı erişim → kategoriler, arama ve canlı odalar.
+ * Sıra: profil şeridi → kategoriler, arama ve canlı odalar.
  */
 export default function Home() {
   return (
@@ -18,7 +17,7 @@ export default function Home() {
 
       <div className="relative mx-auto w-full max-w-2xl px-4 pb-10 pt-3 sm:px-6">
         <HomeHero />
-        <RoomDiscovery shortcuts={<HomeQuickAccess />} />
+        <RoomDiscovery />
       </div>
     </div>
   );
