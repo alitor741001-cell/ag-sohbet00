@@ -30,7 +30,7 @@ const FILTERS = [
   { key: 'istekler', label: 'İstekler', icon: UserPlus },
 ];
 
-export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, isOwner, isAdmin, onClose, autoDeleteMinutes = 0, countdownText = '', clearToken = 0, onSetAutoDelete, voice, voiceEnabled, onSettings, onDirect, onDirectUser, directUnread = 0, ownerId, roomModerators = [], participants = [], recentParticipants = [], viewerProfiles = {}, presenceMap = {}, onProfileCard, settingsProps, levels = {}, onToggleChat }) {
+export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, isOwner, isAdmin, onClose, autoDeleteMinutes = 0, countdownText = '', clearToken = 0, onSetAutoDelete, voice, voiceEnabled, onSettings, onDirect, onDirectUser, directUnread = 0, ownerId, roomModerators = [], participants = [], recentParticipants = [], viewerProfiles = {}, presenceMap = {}, onProfileCard, settingsProps, levels = {}, onToggleChat, onMicPress }) {
   const { user } = useCurrentUser();
   const { toast } = useToast();
   // Cheat temizleme: o an akışta duran katılma/ayrılma/seviye bildirimlerini sohbetten temizler;
@@ -263,7 +263,7 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
       </div>
       {(voiceEnabled || onSettings || onDirect) && (
         <div className="room-voice-bar flex items-center gap-1.5 border-b border-[#FFD700]/20 px-3 py-1.5">
-          <VoiceControls voice={voice} />
+          <VoiceControls voice={voice} onMic={onMicPress} />
           {onDirect && (
             <button onClick={onDirect} className="relative flex min-w-0 flex-1 items-center justify-center gap-1 rounded-full border border-[#8A2BE2]/55 bg-black/70 px-2 py-1 text-center shadow-[0_0_18px_-8px_rgba(138,43,226,0.9)] transition-transform active:scale-95">
               <MessagesSquare className="h-3.5 w-3.5 shrink-0 text-[#B06BFF]" />

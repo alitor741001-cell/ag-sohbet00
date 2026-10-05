@@ -42,7 +42,7 @@ export default async function(req) {
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
     const body = await req.json();
     const { action, room_id, password, target_id } = body || {};
-    if (!room_id || !['get', 'join', 'leave', 'kick', 'ban', 'unban', 'set-password', 'set-name', 'toggle-hidden', 'toggle-voice', 'toggle-mute', 'toggle-chat', 'chat-ban', 'toggle-approval', 'change-movie', 'assign-mod', 'remove-mod', 'delete-room', 'request-join', 'approve-join', 'reject-join'].includes(action)) {
+    if (!room_id || !['get', 'join', 'leave', 'kick', 'ban', 'unban', 'set-password', 'set-name', 'toggle-hidden', 'enable-voice', 'toggle-voice', 'toggle-mute', 'toggle-chat', 'chat-ban', 'toggle-approval', 'change-movie', 'assign-mod', 'remove-mod', 'delete-room', 'request-join', 'approve-join', 'reject-join'].includes(action)) {
       return Response.json({ error: 'invalid request' }, { status: 400 });
     }
     const name = user.username || user.full_name || 'Kullanıcı';
@@ -366,6 +366,15 @@ export default async function(req) {
       if (!canModRoom) return Response.json({ error: 'yetkisiz' }, { status: 403 });
       await base44.asServiceRole.entities.Room.update(room_id, { hidden: !room.hidden });
       return Response.json({ ok: true, hidden: !room.hidden });
+    }
+
+    // Film odasındaki mikrofon: odayı sesli sohbet moduna geçirmeden sesli sohbeti açar.
+    if (action === 'enable-voice') {
+      if (room.voice_enabled) return Response.json({ ok: true, voice_enabled: true });
+      const inRoom = (room.participants || []).some((item) => item.user_id === user.id);
+      if (!canModRoom && !inRoom) return Response.json({ error: 'yetkisiz' }, { status: 403 });
+      await base44.asServiceRole.entities.Room.update(room_id, { voice_enabled: true });
+      return Response.json({ ok: true, voice_enabled: true });
     }
 
     // Sesli sohbet alanı: açıkken oda sesli sohbet moduna geçer, tekrar basıldığında film odasına dönülür.
