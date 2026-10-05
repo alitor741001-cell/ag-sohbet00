@@ -4,8 +4,7 @@ import { useCurrentUser } from '@/lib/useCurrentUser';
 import { Send, X, Search, Ban, Trash2, ShieldOff, ShieldCheck, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { upsertNotification } from '@/lib/upsertNotification';
-
-const LOGIN_IMAGE = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/a38a234ce_generated_image.png';
+import SupportAvatarButton, { SUPPORT_AVATAR_URL } from '@/components/layout/SupportAvatarButton';
 
 export default function LiveChatButton({ placement = 'top' }) {
   const { user } = useCurrentUser();
@@ -241,25 +240,13 @@ export default function LiveChatButton({ placement = 'top' }) {
 
   return (
     <>
-      <button
-        onClick={toggle}
-        className={`relative w-10 h-10 rounded-full overflow-hidden border-2 shrink-0 transition-all ${pulse ? 'border-red-500 animate-pulse' : 'border-purple-500/40 hover:border-purple-400'}`}
-        style={{ boxShadow: pulse ? '0 0 14px rgba(239,68,68,0.6)' : '0 0 8px rgba(124,58,237,0.3)' }}
-        title="Canlı Sohbet"
-      >
-        <img src={LOGIN_IMAGE} alt="Canlı Sohbet" className="w-full h-full object-cover" />
-        {badge > 0 && (
-          <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center border border-white animate-[scale-in_.3s_ease-out]">
-            {badge > 9 ? '9+' : badge}
-          </span>
-        )}
-      </button>
+      <SupportAvatarButton onClick={toggle} badge={badge} pulse={pulse} />
 
       {open && (
         <div className={`fixed right-3 z-[70] w-[360px] max-w-[calc(100vw-1.5rem)] bg-[#141414] border border-[#2a2a2a] rounded-2xl shadow-2xl flex flex-col ${placement === 'dock' ? 'bottom-[calc(4.75rem+env(safe-area-inset-bottom))]' : 'top-[calc(4rem+max(env(safe-area-inset-top),1.5rem))] lg:top-20'}`} style={{ height: '560px', maxHeight: placement === 'dock' ? 'calc(100dvh - 7rem)' : undefined }}>
           <div className="px-3 py-2.5 border-b border-[#2a2a2a] flex items-center gap-2">
             <div className="w-8 h-8 rounded-full overflow-hidden border border-purple-500/40 shrink-0">
-              <img src={LOGIN_IMAGE} alt="" className="w-full h-full object-cover" />
+              <img src={SUPPORT_AVATAR_URL} alt="" className="w-full h-full object-cover" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold text-white">Canlı Sohbet</p>

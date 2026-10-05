@@ -3,6 +3,7 @@ import { Home, MessageCircle, Plus, User } from 'lucide-react';
 import { useCurrentUser, membershipActive } from '@/lib/useCurrentUser';
 import useSocialBadges from '@/hooks/useSocialBadges';
 import LiveChatButton from '@/components/layout/LiveChatButton';
+import UserSupportButton from '@/components/layout/UserSupportButton';
 
 const fullItems = [
   { label: 'Ana Sayfa', path: '/', icon: Home },
@@ -23,11 +24,8 @@ export default function BottomNav() {
   const { user } = useCurrentUser();
   const { messages, requests } = useSocialBadges(user?.id);
   const baseItems = membershipActive(user) ? fullItems : limitedItems;
-  // Canlı destek sohbeti: yöneticide profil sekmesinin hemen solunda durur.
-  const items =
-    user?.role === 'admin'
-      ? [...baseItems.slice(0, -1), { dock: 'support' }, ...baseItems.slice(-1)]
-      : baseItems;
+  // Canlı destek düğmesi herkeste profil sekmesinin hemen solunda durur.
+  const items = [...baseItems.slice(0, -1), { dock: 'support' }, ...baseItems.slice(-1)];
 
   // Profil butonu doğrudan profil sayfasına gider.
   const handleNav = (item) => navigate(item.path);
@@ -50,7 +48,7 @@ export default function BottomNav() {
           if (item.dock === 'support') {
             return (
               <div key={`dock-${index}`} className="flex-1 flex flex-col items-center justify-center gap-0.5">
-                <LiveChatButton placement="dock" />
+                {user?.role === 'admin' ? <LiveChatButton placement="dock" /> : <UserSupportButton />}
                 <span className="text-[10px] text-white/50">Canlı Destek</span>
               </div>
             );
