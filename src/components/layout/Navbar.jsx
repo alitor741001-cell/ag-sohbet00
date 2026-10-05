@@ -64,7 +64,10 @@ export default function Navbar() {
               <LiveChatButton />
             </span>
           )}
-          <ProfileDropdown />
+          {/* Mobilde profil menüsü alt menüdeki profil butonunda: üstteki kopya gizli. */}
+          <span className="hidden lg:flex">
+            <ProfileDropdown />
+          </span>
         </div>
       </div>
     </header>
