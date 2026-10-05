@@ -36,7 +36,13 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
   // Cheat temizleme: o an akışta duran katılma/ayrılma/seviye bildirimlerini sohbetten temizler;
   // sonradan gelen bildirimler normal şekilde görünmeye devam eder.
   const [cheatClearedAt, setCheatClearedAt] = useState(null);
-  const clearCheatNotices = () => { setCheatClearedAt(Date.now()); toast({ title: 'Cheat bildirimleri temizlendi' }); };
+  // Temizleme odanın tamamında geçerli: yöneticide gizli bir işaretle herkese yayılır,
+  // böylece odadaki tüm ekranlar aynı anda temizlenir.
+  const clearCheatNotices = () => {
+    setCheatClearedAt(Date.now());
+    toast({ title: 'Cheat bildirimleri temizlendi' });
+    if (isOwner || isAdmin) base44.functions.invoke('clear-room-messages', { room_id: roomId, notices: true }).catch(() => {});
+  };
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
@@ -146,11 +152,22 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
     const t = m?.text || '';
     if (m?.type !== 'system') return false;
     if (/odaya katıldı|odadan ayrıldı/.test(t)) return false;
-    return /\{\{(?:[A-Z_]+_WELCOME|PFRAME\||ROLE\||FRAME\|)/.test(t);
+    return /\{\{(?:[A-Z_]+_WELCOME|PFRAME\||ROLE\||FRAME\||CHEAT\|)/.test(t);
   };
+  // Cheat temizleme işaretçisi: temizlemenin yapıldığı an — oda için ortak zaman.
+  const cheatMarkerTime = (m) => {
+    const match = /\{\{CHEAT\|(\d+)\}\}/.exec(m?.text || '');
+    return match ? Number(match[1]) : 0;
+  };
+  const isCheatClearNotice = (m) => m?.type === 'system' && /cheati temizledi/i.test(m?.text || '');
   const load = () => {
     base44.entities.RoomMessage.filter({ room_id: roomId }, '-created_date', 200)
-      .then((r) => { setMessages((current) => mergeMessages(current, r.filter((m) => !isHiddenMarker(m)))); setLoading(false); setTimeout(scrollToBottom, 100); })
+      .then((r) => {
+        // Sonradan katılan da odanın güncel (temizlenmiş) görünümünü görür.
+        setCheatClearedAt((current) => r.reduce((max, m) => Math.max(max, cheatMarkerTime(m)), current || 0));
+        setMessages((current) => mergeMessages(current, r.filter((m) => !isHiddenMarker(m))));
+        setLoading(false); setTimeout(scrollToBottom, 100);
+      })
       .catch(() => setLoading(false));
   };
 
@@ -158,9 +175,15 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
     load();
     const unsub = base44.entities.RoomMessage.subscribe((ev) => {
       if (ev.data?.room_id !== roomId) return;
-      if (ev.type === 'delete') setMessages((prev) => prev.filter((message) => message.id !== ev.id));
-      else if (isHiddenMarker(ev.data)) return;
-      else setMessages((prev) => upsertMessage(prev, ev.data));
+      if (ev.type === 'delete') { setMessages((prev) => prev.filter((message) => message.id !== ev.id)); return; }
+      const markerAt = cheatMarkerTime(ev.data);
+      if (markerAt) { setCheatClearedAt((current) => Math.max(current || 0, markerAt)); return; }
+      if (isHiddenMarker(ev.data)) return;
+      if (isCheatClearNotice(ev.data)) {
+        // Sohbeti temizleyen kişi herkeste aynı anda temizler: bu andan eski mesajlar kalkar.
+        const at = new Date(ev.data.created_date || Date.now()).getTime();
+        setMessages((prev) => [...prev.filter((m) => new Date(m.created_date || 0).getTime() > at), ev.data]);
+      } else setMessages((prev) => upsertMessage(prev, ev.data));
       setTimeout(scrollToBottom, 50);
     });
     const reconnect = () => load();

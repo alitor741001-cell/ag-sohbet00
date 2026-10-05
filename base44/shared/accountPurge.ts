@@ -27,8 +27,24 @@ export async function purgeAccount(base44: any, opts: {
   await sr.UserXp.deleteMany({ user_id: userId }).catch(() => {});
   await sr.RoomLevels.deleteMany({ user_id: userId }).catch(() => {});
 
+  // Oda içi izler: sohbet satırları, "yazıyor" kaydı, yöneticilik ve katılma istekleri
+  await sr.RoomMessage.deleteMany({ user_id: userId }).catch(() => {});
+  await sr.RoomTyping.deleteMany({ user_id: userId }).catch(() => {});
+  await sr.RoomMod.deleteMany({ user_id: userId }).catch(() => {});
+  await sr.RoomJoinRequest.deleteMany({ user_id: userId }).catch(() => {});
+
   // Kullanıcının sahip olduğu odaları kapat
   await sr.Room.deleteMany({ owner_id: userId }).catch(() => {});
+
+  // Bulunduğu odalardan anında çıkarılır: açık odalarda hayalet koltuk/izleyici kaydı kalmaz.
+  const joinedRooms = await sr.Room.filter({ 'participants.user_id': userId }, '-created_date', 100).catch(() => []);
+  for (const room of joinedRooms) {
+    const participants = (room.participants || []).filter((person: any) => person.user_id !== userId);
+    const seats = (Array.isArray(room.seats) ? room.seats : []).map((seat: any) => (
+      seat.user_id === userId ? { ...seat, user_id: '', name: '', avatar: '', frame: '', frame_scale: 100, locked: false, muted: false } : seat
+    ));
+    await sr.Room.update(room.id, { participants, seats }).catch(() => {});
+  }
 
   // Hesap silindi e-postası, kullanıcı kaydı silinmeden önce gönderilir.
   if (email) {

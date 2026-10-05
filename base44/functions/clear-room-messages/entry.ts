@@ -8,7 +8,7 @@ export default async function(req) {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
     const body = await req.json();
-    const { room_id } = body || {};
+    const { room_id, notices } = body || {};
     if (!room_id) return Response.json({ error: 'room_id gerekli' }, { status: 400 });
 
     const room = await base44.asServiceRole.entities.Room.get(room_id);
@@ -25,6 +25,16 @@ export default async function(req) {
     // Gizli kullanıcıysa not takma adla ve maskeli profille bırakılır — gerçek isim/fotoğraf görünmez.
     const hiddenUser = isHiddenUser(me);
     const name = hiddenUser ? hiddenDisplayName(me) : (me.username || me.full_name || user.full_name || 'Kullanıcı');
+    // Cheat bildirimlerini temizleme: mesajlar silinmez, odadaki herkesin ekranında
+    // bildirimlerin temizlendiği anı taşıyan gizli bir işaret yayınlanır.
+    if (notices === true) {
+      const marker = await base44.asServiceRole.entities.RoomMessage.create({
+        room_id, user_id: hiddenUser ? '' : user.id, user_name: name, user_avatar: hiddenUser ? HIDDEN_AVATAR_URL : (user.avatar || ''),
+        text: `{{CHEAT|${Date.now()}}}`, type: 'system'
+      });
+      return Response.json({ cleared: true, message: marker });
+    }
+
     const res = await base44.asServiceRole.entities.RoomMessage.deleteMany({ room_id });
     // Sohbet temizlendikten sonra kimin temizlediğini belirten tek bir not bırakılır.
     const message = await base44.asServiceRole.entities.RoomMessage.create({

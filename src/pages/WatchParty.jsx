@@ -448,9 +448,13 @@ export default function WatchParty() {
       const target = new Date(room.chat_auto_delete_at).getTime();
       const remaining = Math.max(0, target - Date.now());
       if (remaining <= 0) {
-        base44.functions.invoke('clear-room-messages', { room_id: id }).catch(() => {});
-        const newTarget = new Date(Date.now() + minutes * 60000).toISOString();
-        base44.entities.Room.update(id, { chat_auto_delete_at: newTarget }).catch(() => {});
+        // Temizleme tek bir kişi (oda sahibi/yönetici) tarafından tetiklenir; odadaki diğer
+        // herkes temizliği canlı bildirimle alır — aynı anda çok kez temizleme olmaz.
+        if (canMod) {
+          base44.functions.invoke('clear-room-messages', { room_id: id }).catch(() => {});
+          const newTarget = new Date(Date.now() + minutes * 60000).toISOString();
+          base44.entities.Room.update(id, { chat_auto_delete_at: newTarget }).catch(() => {});
+        }
         setCountdownText('0:00');
         setChatClearToken((t) => t + 1);
       } else {
