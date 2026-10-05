@@ -11,7 +11,7 @@ import { HIDDEN_AVATAR_URL, isHiddenName } from '@/lib/hiddenUser';
 
 /**
  * Film odası sohbet satırı: sesli oda sohbetindeki gibi küçük yuvarlak profil,
- * isim ve tüm seviye rozetleri tek satırda yan yana durur.
+ * üstte isim, altında tek sırada seviye rozetleri (kişi, N, VIP, atış, alış, LVL).
  * Gizli kullanıcıda yalnızca kırmızı takma ad ve maskeli profil görünür, ek rozet çıkmaz.
  */
 function RoomChatMessage({ message, profile, ownerId, roomModerators, currentUserId, canDelete, onDelete, onImage, onOpenProfile, level = 0 }) {
@@ -43,12 +43,12 @@ function RoomChatMessage({ message, profile, ownerId, roomModerators, currentUse
         </button>
         {!hidden && label && <span className={`text-[10px] font-bold ${isOwner ? 'text-amber-400' : 'text-sky-400'}`}>{label}</span>}
         {!hidden && profile && (profile.display_role || profile.custom_role?.name) && <RoleBadge user={profile} size="sm" showLabel={false} />}
-        {/* LVL 1000 yönetici seviyesi mesajlarda yazılmaz. */}
-        {!hidden && Number(level) < 1000 && <RoomLevelBadge level={level} />}
       </div>
-      {/* Seviye rozetleri sesli oda sohbetindeki gibi alt satırda, yan yana durur. */}
+      {/* İsim üstte; seviye rozetleri altta tek sırada: kişi, N, VIP, atış, alış ve LVL. */}
       <div className="mt-1 flex flex-wrap items-center gap-1">
         <UserBadgeRow profile={profile} />
+        {/* LVL 1000 (oda sahibi) ve üzeri mesajlarda yazılmaz. */}
+        {!hidden && !isOwner && Number(level) < 1000 && <RoomLevelBadge level={level} />}
       </div>
       <div className="isolate mt-1 min-w-0 max-w-full overflow-hidden rounded-xl p-2">
         <RoleMessageEffect className="max-w-full min-w-0 align-top" roleKey={profile?.display_role || (profile?.custom_role?.name ? 'custom' : '')} msgEffect={role.msg_effect} msgColor={role.color}>
