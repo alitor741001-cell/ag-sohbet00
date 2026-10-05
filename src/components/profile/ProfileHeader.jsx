@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Camera, Check, Crown, Loader2, Pencil, Shield } from 'lucide-react';
+import { Crown, Loader2, Shield } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import ProfileFrame from '@/components/ProfileFrame';
 import RoleBadge from '@/components/RoleBadge';
@@ -9,7 +9,7 @@ import useXp from '@/hooks/useXp';
 import { useToast } from '@/components/ui/use-toast';
 import usePhotoGestures from '@/hooks/usePhotoGestures';
 
-/** Profil başlığı: neon halkalı avatar (kamera ile değiştirilir), isim, e-posta ve rol etiketi. */
+/** Profil başlığı: neon halkalı avatar, üzerinde "Profili Düzenle" yazısı; altında isim, e-posta ve rol etiketi. */
 export default function ProfileHeader({ user, avatar, onAvatar, onUpdated, uploading }) {
   const { toast } = useToast();
   const [editing, setEditing] = useState(false);
@@ -29,16 +29,16 @@ export default function ProfileHeader({ user, avatar, onAvatar, onUpdated, uploa
   });
   const handleSave = async () => {
     setSaving(true);
-    try { await commit(); }
+    try { if (user.profile_frame) await commit(); }
     catch (error) { toast({ title: 'Kaydedilemedi', description: error.response?.data?.error || error.message, variant: 'destructive' }); }
     finally { setSaving(false); setEditing(false); }
   };
 
   const avatarBox = user.profile_frame ? (
-    <ProfileFrame frame={user.profile_frame} size="lg" avatar={avatar || user.avatar} name={name} frameScale={zoom} panX={panX} panY={panY} />
+    <ProfileFrame frame={user.profile_frame} size="xl" avatar={avatar || user.avatar} name={name} frameScale={zoom} panX={panX} panY={panY} />
   ) : (
     <span className="block rounded-full p-[3px]" style={{ background: 'linear-gradient(135deg, #e040fb, #00e5ff 55%, #7c4dff)', boxShadow: '0 0 18px rgba(224,64,251,0.45), 0 0 34px rgba(0,229,255,0.28)' }}>
-      <XpAvatar avatar={avatar || user.avatar} name={name} frame={xpStats?.frame} size="lg" />
+      <XpAvatar avatar={avatar || user.avatar} name={name} frame={xpStats?.frame} size="xl" />
     </span>
   );
 
@@ -50,29 +50,35 @@ export default function ProfileHeader({ user, avatar, onAvatar, onUpdated, uploa
         {...(editing && user.profile_frame ? handlers : {})}
       >
         {avatarBox}
-        <label className="absolute -bottom-0.5 -right-0.5 z-20 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border-2 border-black bg-red-600 text-white shadow-lg">
-          {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
-          <input type="file" accept="image/png,image/jpeg,image/webp" className="hidden" disabled={uploading} onChange={onAvatar} />
-        </label>
+        {/* Profil düzenleme tetikleyicisi: kameranın yerinde, yalnızca yazı olarak.
+            Dokunulunca profil düzenleme modu açılır (fotoğraf değiştirme + kaydetme). */}
+        {!editing && (
+          <button
+            type="button"
+            onClick={() => setEditing(true)}
+            className="absolute bottom-1 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap text-[11px] font-extrabold text-white"
+            style={{ textShadow: '0 1px 5px rgba(0,0,0,0.95), 0 0 12px rgba(0,0,0,0.85)' }}
+          >
+            Profili Düzenle
+          </button>
+        )}
       </div>
 
-      {user.profile_frame && (
-        <div className="mb-2 mt-3">
-          {editing ? (
-            <button onClick={handleSave} disabled={saving} className="inline-flex items-center gap-2 rounded-full border border-white/20 px-4 py-1.5 text-xs font-semibold text-white disabled:opacity-60">
-              {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
-              Profili Kaydet
-            </button>
-          ) : (
-            <button onClick={() => setEditing(true)} className="inline-flex items-center gap-2 rounded-full border border-white/20 px-4 py-1.5 text-xs font-semibold text-white">
-              <Pencil className="h-3.5 w-3.5" />
-              Profili Düzenle
-            </button>
-          )}
+      {editing && (
+        <div className="mt-3 flex items-center justify-center gap-2">
+          <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-white/20 px-3.5 py-1.5 text-xs font-semibold text-white">
+            {uploading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+            Fotoğrafı Değiştir
+            <input type="file" accept="image/png,image/jpeg,image/webp" className="hidden" disabled={uploading} onChange={onAvatar} />
+          </label>
+          <button onClick={handleSave} disabled={saving} className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3.5 py-1.5 text-xs font-semibold text-white disabled:opacity-60">
+            {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+            Profili Kaydet
+          </button>
         </div>
       )}
 
-      <div className="mt-3 flex items-center gap-2">
+      <div className="mt-2 flex items-center gap-2">
         {isAdmin && <Crown className="h-5 w-5 text-amber-400" />}
         <h2 className="text-xl font-extrabold text-white" style={isRedNameVip(user.vip_level) ? { color: '#ef4444' } : undefined}>{name}</h2>
       </div>

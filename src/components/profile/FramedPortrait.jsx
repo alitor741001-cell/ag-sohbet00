@@ -9,6 +9,7 @@ const SIZES = {
   sm: 'h-20 w-20 text-xs',
   md: 'h-28 w-28 text-sm',
   lg: 'h-64 w-64 text-3xl',
+  xl: 'h-44 w-44 text-3xl',
 };
 
 // Photo and artwork share the exact, pixel-derived opening in every view.

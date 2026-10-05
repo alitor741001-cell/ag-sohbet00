@@ -10,6 +10,7 @@ const SIZES = {
   sm: { avatar: 'h-12 w-12 text-xs', sprite: 'h-24 w-24' },
   md: { avatar: 'h-16 w-16 text-sm', sprite: 'h-32 w-28' },
   lg: { avatar: 'h-40 w-40 text-3xl', sprite: 'h-72 w-64' },
+  xl: { avatar: 'h-24 w-24 text-2xl', sprite: 'h-48 w-48' },
 };
 
 export default function ProfileFrame({ frame, children, size = 'md', className = '', avatar, name, frameScale = 100, panX = 0, panY = 0 }) {
