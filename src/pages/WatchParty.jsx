@@ -808,6 +808,7 @@ export default function WatchParty() {
       {profileTarget && (
         <FullUserProfile
           userId={profileTarget}
+          sheet
           onClose={closeUserProfile}
           roomId={id}
           level={roomLevels[profileTarget] || 0}

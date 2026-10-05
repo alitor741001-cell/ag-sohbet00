@@ -1136,6 +1136,7 @@ export default function VoiceRoom() {
 
       <FullUserProfile
         open={!!fullProfileUserId}
+        sheet
         onClose={() => setFullProfileUserId(null)}
         userId={fullProfileUserId}
         name={fullProfilePerson?.name || ''}

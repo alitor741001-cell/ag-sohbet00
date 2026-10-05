@@ -19,7 +19,7 @@ const REPORT_REASONS = ['Spam', 'Taciz', 'Uygunsuz İçerik', 'Diğer'];
  */
 export default function FullUserProfile({
   open = true, userId, name, avatar, frame, frameScale,
-  hidden = false, muted = false, level = 0, roomId, self = false,
+  hidden = false, muted = false, level = 0, roomId, self = false, sheet = false,
   onClose, onMessage, tiles = [], footer = [],
 }) {
   const navigate = useNavigate();
@@ -113,10 +113,8 @@ export default function FullUserProfile({
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-[300] overflow-y-auto overscroll-contain" style={{ background: palette.bg }}>
-      <div className="relative mx-auto flex min-h-full w-full max-w-[520px] flex-col px-4 pb-8 pt-[max(0.75rem,env(safe-area-inset-top))]">
-        <header className="flex items-center justify-between">
+  const header = (
+    <header className="flex items-center justify-between">
           <button
             type="button"
             onClick={onClose}
@@ -139,9 +137,10 @@ export default function FullUserProfile({
               </button>
             )}
           </div>
-        </header>
+    </header>
+  );
 
-        {loading ? (
+  const content = loading ? (
           <div className="flex flex-1 items-center justify-center py-24">
             <Loader2 className="h-6 w-6 animate-spin" style={{ color: palette.accent }} />
           </div>
@@ -283,8 +282,37 @@ export default function FullUserProfile({
                 )}
               </div>
             )}
-          </>
-        )}
+    </>
+  );
+
+  // Yarı yükseklik modu: kart alttan yukarı kayarak açılır ve ekranın yarısını kaplar.
+  if (sheet) {
+    return (
+      <div className="fixed inset-0 z-[300]">
+        <button type="button" aria-label="Kapat" onClick={onClose} className="absolute inset-0 w-full bg-black/60" />
+        <div
+          className="animate-sheet-up absolute inset-x-0 bottom-0 flex h-[50vh] flex-col overflow-hidden rounded-t-[28px] border-t-2 shadow-[0_-8px_30px_rgba(0,0,0,0.55)]"
+          style={{ background: palette.bg, borderColor: palette.soft }}
+        >
+          <div className="flex shrink-0 justify-center pb-1 pt-2.5">
+            <span className="h-1.5 w-12 rounded-full" style={{ background: palette.soft }} />
+          </div>
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+            <div className="mx-auto w-full max-w-[520px]">
+              {header}
+              {content}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-[300] overflow-y-auto overscroll-contain" style={{ background: palette.bg }}>
+      <div className="relative mx-auto flex min-h-full w-full max-w-[520px] flex-col px-4 pb-8 pt-[max(0.75rem,env(safe-area-inset-top))]">
+        {header}
+        {content}
       </div>
     </div>
   );
