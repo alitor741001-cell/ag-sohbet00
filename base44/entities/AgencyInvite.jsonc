@@ -1,0 +1,112 @@
+{
+  "name": "AgencyInvite",
+  "type": "object",
+  "properties": {
+    "agency_record_id": {
+      "type": "string"
+    },
+    "agency_code": {
+      "type": "string",
+      "default": ""
+    },
+    "agency_name": {
+      "type": "string",
+      "default": ""
+    },
+    "agency_logo": {
+      "type": "string",
+      "default": ""
+    },
+    "agency_description": {
+      "type": "string",
+      "default": ""
+    },
+    "agency_rules": {
+      "type": "string",
+      "default": ""
+    },
+    "owner_id": {
+      "type": "string"
+    },
+    "owner_name": {
+      "type": "string",
+      "default": ""
+    },
+    "owner_avatar": {
+      "type": "string",
+      "default": ""
+    },
+    "invitee_id": {
+      "type": "string"
+    },
+    "invitee_name": {
+      "type": "string",
+      "default": ""
+    },
+    "invitee_avatar": {
+      "type": "string",
+      "default": ""
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "accepted",
+        "rejected",
+        "cancelled"
+      ],
+      "default": "pending"
+    },
+    "responded_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "agency_record_id",
+    "owner_id",
+    "invitee_id"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.invitee_id": "{{user.id}}"
+        },
+        {
+          "data.owner_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "$or": [
+        {
+          "data.invitee_id": "{{user.id}}"
+        },
+        {
+          "data.owner_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

@@ -280,6 +280,38 @@
     "last_payment_date": {
       "type": "string",
       "format": "date-time"
+    },
+    "agency_code": {
+      "type": "string",
+      "default": ""
+    },
+    "agency_record_id": {
+      "type": "string",
+      "default": ""
+    },
+    "agency_name": {
+      "type": "string",
+      "default": ""
+    },
+    "agency_owner_id": {
+      "type": "string",
+      "default": ""
+    },
+    "agency_role": {
+      "type": "string",
+      "default": ""
+    },
+    "broadcaster_status": {
+      "type": "string",
+      "default": ""
+    },
+    "diamond_month": {
+      "type": "number",
+      "default": 0
+    },
+    "diamond_month_period": {
+      "type": "string",
+      "default": ""
     }
   }
 }

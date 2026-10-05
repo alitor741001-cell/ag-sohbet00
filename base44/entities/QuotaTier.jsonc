@@ -1,0 +1,47 @@
+{
+  "name": "QuotaTier",
+  "type": "object",
+  "properties": {
+    "diamonds": {
+      "type": "number"
+    },
+    "broadcaster_dollars": {
+      "type": "number",
+      "default": 0
+    },
+    "agency_dollars": {
+      "type": "number",
+      "default": 0
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    },
+    "sort_order": {
+      "type": "integer",
+      "default": 0
+    }
+  },
+  "required": [
+    "diamonds",
+    "broadcaster_dollars"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

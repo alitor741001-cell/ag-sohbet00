@@ -1,0 +1,89 @@
+{
+  "name": "Agency",
+  "type": "object",
+  "properties": {
+    "agency_id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string",
+      "default": ""
+    },
+    "logo": {
+      "type": "string",
+      "default": ""
+    },
+    "rules": {
+      "type": "string",
+      "default": ""
+    },
+    "owner_id": {
+      "type": "string"
+    },
+    "owner_name": {
+      "type": "string",
+      "default": ""
+    },
+    "owner_avatar": {
+      "type": "string",
+      "default": ""
+    },
+    "member_count": {
+      "type": "integer",
+      "default": 0
+    },
+    "total_diamonds": {
+      "type": "number",
+      "default": 0
+    },
+    "month_diamonds": {
+      "type": "number",
+      "default": 0
+    },
+    "total_earnings": {
+      "type": "number",
+      "default": 0
+    },
+    "commission_per_200k": {
+      "type": "number",
+      "default": 3
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "name",
+    "agency_id",
+    "owner_id"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "$or": [
+        {
+          "data.owner_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

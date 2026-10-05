@@ -1,0 +1,131 @@
+{
+  "name": "AgencyTransfer",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "user_name": {
+      "type": "string",
+      "default": ""
+    },
+    "user_avatar": {
+      "type": "string",
+      "default": ""
+    },
+    "from_agency_id": {
+      "type": "string",
+      "default": ""
+    },
+    "from_agency_code": {
+      "type": "string",
+      "default": ""
+    },
+    "from_agency_name": {
+      "type": "string",
+      "default": ""
+    },
+    "from_owner_id": {
+      "type": "string",
+      "default": ""
+    },
+    "to_agency_id": {
+      "type": "string",
+      "default": ""
+    },
+    "to_agency_code": {
+      "type": "string",
+      "default": ""
+    },
+    "to_agency_name": {
+      "type": "string",
+      "default": ""
+    },
+    "to_owner_id": {
+      "type": "string",
+      "default": ""
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "completed",
+        "rejected",
+        "cancelled"
+      ],
+      "default": "pending"
+    },
+    "from_approved": {
+      "type": "boolean",
+      "default": false
+    },
+    "to_approved": {
+      "type": "boolean",
+      "default": false
+    },
+    "from_decided_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "to_decided_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "decided_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "user_id",
+    "to_agency_id"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.user_id": "{{user.id}}"
+        },
+        {
+          "data.from_owner_id": "{{user.id}}"
+        },
+        {
+          "data.to_owner_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "$or": [
+        {
+          "data.user_id": "{{user.id}}"
+        },
+        {
+          "data.from_owner_id": "{{user.id}}"
+        },
+        {
+          "data.to_owner_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

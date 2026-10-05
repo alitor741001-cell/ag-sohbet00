@@ -1,0 +1,105 @@
+{
+  "name": "QuotaReward",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "user_name": {
+      "type": "string",
+      "default": ""
+    },
+    "agency_id": {
+      "type": "string",
+      "default": ""
+    },
+    "agency_code": {
+      "type": "string",
+      "default": ""
+    },
+    "agency_name": {
+      "type": "string",
+      "default": ""
+    },
+    "agency_owner_id": {
+      "type": "string",
+      "default": ""
+    },
+    "period": {
+      "type": "string",
+      "default": ""
+    },
+    "tier_id": {
+      "type": "string"
+    },
+    "diamonds": {
+      "type": "number",
+      "default": 0
+    },
+    "amount": {
+      "type": "number",
+      "default": 0
+    },
+    "agency_amount": {
+      "type": "number",
+      "default": 0
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "paid"
+      ],
+      "default": "pending"
+    },
+    "transaction_id": {
+      "type": "string",
+      "default": ""
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "paid_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "user_id",
+    "tier_id",
+    "diamonds"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.user_id": "{{user.id}}"
+        },
+        {
+          "data.agency_owner_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

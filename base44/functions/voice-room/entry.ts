@@ -7,6 +7,7 @@ import { appendRoomLog } from '../../shared/roomLog.ts';
 import { coinsForK, ensureGiftWallet, formatK, giftBalance } from '../../shared/giftWallet.ts';
 import { giftBoard } from '../../shared/giftBoard.ts';
 import { addGiftTotals } from '../../shared/userLevels.ts';
+import { syncQuotaRewards } from '../../shared/agency.ts';
 import { syncGiftRoomLevel } from '../../shared/roomLevels.ts';
 import { HIDDEN_AVATAR_URL, hiddenDisplayName, isHiddenDisplayName, isHiddenUser } from '../../shared/vip.ts';
 
@@ -382,6 +383,10 @@ export default async function (req: Request): Promise<Response> {
         Promise.all(messageRecords.map((message) => base44.asServiceRole.entities.RoomMessage.create(message))),
         base44.asServiceRole.entities.GiftSend.bulkCreate(records),
       ]);
+
+      // Yayıncı kotası: hediye alan yayıncıların tamamlanan kotaları anında işlenir.
+      await Promise.all([...new Set(recipients.map((recipient) => recipient.user_id))].slice(0, 10)
+        .map((recipientId) => syncQuotaRewards(base44, recipientId).catch(() => {})));
 
       // Oda LVL'i hediye atışıyla yükselir: hediye kutusundaki atış LVL eşiği tamamlandığında
       // oda seviyesi atlar ve odaya duyuru düşer. Hediyeyi alanların "hediye alma" seviyesi de duyurulur.
