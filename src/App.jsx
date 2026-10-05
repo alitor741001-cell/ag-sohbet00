@@ -72,6 +72,7 @@ const AdminAgencies = lazy(() => import('@/pages/admin/AdminAgencies'));
 const AgencyEarnings = lazy(() => import('@/pages/agency/AgencyEarnings'));
 const AgencyQuota = lazy(() => import('@/pages/agency/AgencyQuota'));
 const AgencyBroadcasters = lazy(() => import('@/pages/agency/AgencyBroadcasters'));
+const AgencyAssistants = lazy(() => import('@/pages/agency/AgencyAssistants'));
 const AgencyInfo = lazy(() => import('@/pages/agency/AgencyInfo'));
 const AgencyInvites = lazy(() => import('@/pages/agency/AgencyInvites'));
 const AgencyTransfers = lazy(() => import('@/pages/agency/AgencyTransfers'));
@@ -134,6 +135,7 @@ const AuthenticatedApp = () => {
           <Route path="/ajans/kazanc" element={<AgencyEarnings />} />
           <Route path="/ajans/kota-tablosu" element={<AgencyQuota />} />
           <Route path="/ajans/yayincilar" element={<AgencyBroadcasters />} />
+          <Route path="/ajans/asistanlar" element={<AgencyAssistants />} />
           <Route path="/ajans/ajansim" element={<AgencyInfo />} />
           <Route path="/ajans/davetler" element={<AgencyInvites />} />
           <Route path="/ajans/transferler" element={<AgencyTransfers />} />

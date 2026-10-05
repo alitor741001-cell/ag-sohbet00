@@ -2,8 +2,11 @@ import { Building2, Gem, ShieldCheck, Users } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import { AGENCY_GOLD, formatMoney } from '@/lib/agency';
 
-/** Ajans bilgi kartı: logo, ajans kimliği, sahip, yayıncı sayısı, açıklama ve kurallar. */
-export default function AgencyInfoCard({ agency = {} }) {
+/**
+ * Ajans bilgi kartı: logo, ajans kimliği, sahip, yayıncı sayısı, açıklama ve kurallar.
+ * hideMemberCount: yayıncılar ve asistanlar yayıncı sayısını görmez.
+ */
+export default function AgencyInfoCard({ agency = {}, hideMemberCount = false }) {
   return (
     <div className="space-y-2">
       <div className="rounded-2xl border border-[#F5C542]/35 bg-gradient-to-br from-[#1a1305] via-[#0d0b16] to-[#140a1e] p-4">
@@ -21,17 +24,19 @@ export default function AgencyInfoCard({ agency = {} }) {
           </div>
         </div>
 
-        <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+        <div className={`mt-3 grid gap-2 text-center ${hideMemberCount ? 'grid-cols-2' : 'grid-cols-3'}`}>
           <div className="rounded-xl bg-black/40 px-1 py-2">
             <p className="text-[9px] uppercase tracking-wider text-white/40">Sahip</p>
             <p className="truncate text-[11px] font-black text-white">{agency.owner_name || '—'}</p>
           </div>
-          <div className="rounded-xl bg-black/40 px-1 py-2">
-            <p className="text-[9px] uppercase tracking-wider text-white/40">Yayıncı</p>
-            <p className="flex items-center justify-center gap-1 text-[11px] font-black text-white">
-              <Users className="h-3 w-3 text-[#5AB8FF]" />{agency.member_count || 0}
-            </p>
-          </div>
+          {!hideMemberCount && (
+            <div className="rounded-xl bg-black/40 px-1 py-2">
+              <p className="text-[9px] uppercase tracking-wider text-white/40">Yayıncı</p>
+              <p className="flex items-center justify-center gap-1 text-[11px] font-black text-white">
+                <Users className="h-3 w-3 text-[#5AB8FF]" />{agency.member_count || 0}
+              </p>
+            </div>
+          )}
           <div className="rounded-xl bg-black/40 px-1 py-2">
             <p className="text-[9px] uppercase tracking-wider text-white/40">Komisyon</p>
             <p className="flex items-center justify-center gap-1 text-[11px] font-black" style={{ color: AGENCY_GOLD }}>

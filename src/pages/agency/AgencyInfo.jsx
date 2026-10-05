@@ -1,13 +1,15 @@
 import AgencyPageShell from '@/components/agency/AgencyPageShell';
 import AgencyInfoCard from '@/components/agency/AgencyInfoCard';
 import AgencySettingsForm from '@/components/agency/AgencySettingsForm';
+import AgencyAssistantPanel from '@/components/agency/AgencyAssistantPanel';
 import useAgencyPageData from '@/components/agency/useAgencyPageData';
 import { agencySections } from '@/components/agency/agencySections';
 
-/** Ajansım: ajans bilgileri, kurallar ve (sahibiyse) ajans ayarları. */
+/** Ajansım: ajans bilgileri, kurallar, (sahibiyse) asistanlık ve ajans ayarları. */
 export default function AgencyInfo() {
-  const { role, agency, loading, reload } = useAgencyPageData();
+  const { role, agency, panel, loading, reload } = useAgencyPageData();
   const canEdit = role === 'owner' || role === 'pending';
+  const isOwner = role === 'owner';
 
   return (
     <AgencyPageShell
@@ -17,7 +19,9 @@ export default function AgencyInfo() {
       loading={loading}
     >
       <div className="space-y-3">
-        <AgencyInfoCard agency={agency || {}} />
+        {/* Yayıncı ve asistanlar ajansın yayıncı sayısını görmez. */}
+        <AgencyInfoCard agency={agency || {}} hideMemberCount={!isOwner} />
+        {isOwner && <AgencyAssistantPanel assistants={panel?.assistants || []} onChanged={reload} />}
         {canEdit ? (
           <AgencySettingsForm agency={agency || {}} onSaved={reload} />
         ) : (

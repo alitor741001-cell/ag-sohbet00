@@ -5,8 +5,11 @@ import BroadcasterQuotaBar from '@/components/agency/BroadcasterQuotaBar';
 import AgencyBroadcasterProfile from '@/components/agency/AgencyBroadcasterProfile';
 import { formatMoney, formatShortDiamonds } from '@/lib/agency';
 
-/** Ajans sahibinin yayıncı listesi: profil, kimlik, canlı kota ilerlemesi ve aylık elmas. */
-export default function AgencyBroadcasterList({ members = [] }) {
+/**
+ * Yayıncı listesi: profil, kimlik, canlı kota ilerlemesi ve aylık elmas.
+ * share > 0 iken (asistan görünümü) ajans kazancı yerine asistanın payı gösterilir.
+ */
+export default function AgencyBroadcasterList({ members = [], share = 0 }) {
   const [selected, setSelected] = useState(null);
 
   if (!members.length) {
@@ -47,8 +50,10 @@ export default function AgencyBroadcasterList({ members = [] }) {
               <span className="font-black text-white">{formatShortDiamonds(member.diamonds)}</span>
             </span>
             <span>
-              Ajans kazancı:
-              <span className="ml-1 font-black text-[#4ade80]">{formatMoney(member.month_commission)}</span>
+              {share > 0 ? 'Asistan payın:' : 'Ajans kazancı:'}
+              <span className="ml-1 font-black text-[#4ade80]">
+                {formatMoney(share > 0 ? (Number(member.month_commission) || 0) * share / 100 : member.month_commission)}
+              </span>
             </span>
           </div>
         </div>

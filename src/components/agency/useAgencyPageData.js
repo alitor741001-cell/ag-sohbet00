@@ -6,15 +6,26 @@ import { useCurrentUser } from '@/lib/useCurrentUser';
 // yenisi arka planda alınır. Oturum kapanınca/başka hesapla girişte sayfa yeniden yüklenir.
 let pageCache = null;
 
+/** Ajans verisinden rolü belirler: sahip, asistan, yayıncı ya da ajanssız. */
+function roleOf(profile, agency, userId) {
+  if (!profile?.agency_record_id) return '';
+  if (profile.agency_role === 'owner' || agency?.owner_id === userId) {
+    return agency?.status === 'pending' ? 'pending' : 'owner';
+  }
+  if (profile.agency_role === 'assistant') return 'assistant';
+  return 'broadcaster';
+}
+
 /**
  * Ajans sayfalarının ortak verisi: kullanıcının ajans rolü, özet bilgileri ve
- * role göre yayıncı ya da ajans panel verisi.
+ * role göre yayıncı, asistan ya da ajans panel verisi.
  */
 export default function useAgencyPageData() {
   const { user, reload: reloadUser } = useCurrentUser();
   const [summary, setSummary] = useState(pageCache?.summary || null);
   const [panel, setPanel] = useState(pageCache?.panel || null);
   const [broadcaster, setBroadcaster] = useState(pageCache?.broadcaster || null);
+  const [assistant, setAssistant] = useState(pageCache?.assistant || null);
   const [loading, setLoading] = useState(!pageCache);
 
   // quiet: bekleme ekranı gösterilmeden sessizce yeniler (canlı kota takibi).
@@ -24,16 +35,17 @@ export default function useAgencyPageData() {
     try {
       const data = await agencyApi('summary');
       setSummary(data);
-      const recordId = data?.profile?.agency_record_id || '';
-      const isOwner = data?.profile?.agency_role === 'owner' || data?.agency?.owner_id === user.id;
-      const role = !recordId ? '' : isOwner ? (data?.agency?.status === 'pending' ? 'pending' : 'owner') : 'broadcaster';
+      const role = roleOf(data?.profile, data?.agency, user.id);
       let panelData = null;
       let broadcasterData = null;
+      let assistantData = null;
       if (role === 'owner' || role === 'pending') panelData = await agencyApi('agency-panel').catch(() => null);
+      else if (role === 'assistant') assistantData = await agencyApi('assistant').catch(() => null);
       else if (role === 'broadcaster') broadcasterData = await agencyApi('broadcaster').catch(() => null);
       setPanel(panelData);
-      setBroadcaster(broadcasterData);
-      pageCache = { summary: data, panel: panelData, broadcaster: broadcasterData };
+      setBroadcaster(assistantData || broadcasterData);
+      setAssistant(assistantData);
+      pageCache = { summary: data, panel: panelData, broadcaster: assistantData || broadcasterData, assistant: assistantData };
     } catch {
       setSummary(null);
     } finally {
@@ -47,20 +59,17 @@ export default function useAgencyPageData() {
   useEffect(() => { load(); }, [load]);
 
   const profile = summary?.profile || {};
-  const role = !profile.agency_record_id
-    ? ''
-    : profile.agency_role === 'owner' || summary?.agency?.owner_id === user?.id
-      ? (summary?.agency?.status === 'pending' ? 'pending' : 'owner')
-      : 'broadcaster';
+  const role = roleOf(profile, summary?.agency, user?.id);
 
   return {
     user,
     loading,
     role,
     profile,
-    agency: panel?.agency || broadcaster?.agency || summary?.agency || null,
+    agency: panel?.agency || assistant?.agency || broadcaster?.agency || summary?.agency || null,
     panel,
     broadcaster,
+    assistant,
     reload: () => load(),
     refresh,
     reloadUser,

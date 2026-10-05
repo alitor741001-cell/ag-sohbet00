@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ArrowLeftRight, Building2, ChevronRight, Gem, Hourglass, MailOpen, Mic2 } from 'lucide-react';
+import { ArrowLeftRight, Building2, ChevronRight, Gem, Handshake, Hourglass, MailOpen, Mic2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import AgencyCreateSheet from '@/components/agency/AgencyCreateSheet';
 import { agencySectionBadge, agencySections } from '@/components/agency/agencySections';
@@ -31,6 +31,7 @@ export default function AgencySection({ user, onRefresh, showHeading = true }) {
   const isPending = effectiveRole === 'owner' && !!profile.agency_record_id && agencyStatus === 'pending';
   const isOwner = effectiveRole === 'owner' && !!profile.agency_record_id && !isPending;
   const isBroadcaster = effectiveRole === 'broadcaster' && !!profile.agency_record_id;
+  const isAssistant = effectiveRole === 'assistant' && !!profile.agency_record_id;
   const inviteCount = (summary?.invites || []).filter((invite) => invite.status === 'pending').length;
   const sentCount = (summary?.invites_sent || []).filter((invite) => invite.status === 'pending').length;
   const transfer = summary?.transfer;
@@ -38,7 +39,7 @@ export default function AgencySection({ user, onRefresh, showHeading = true }) {
 
   const afterChange = () => { load(); onRefresh?.(); };
 
-  const sectionRole = isPending ? 'pending' : isOwner ? 'owner' : isBroadcaster ? 'broadcaster' : '';
+  const sectionRole = isPending ? 'pending' : isOwner ? 'owner' : isAssistant ? 'assistant' : isBroadcaster ? 'broadcaster' : '';
   const actions = (sectionRole ? agencySections(sectionRole) : [
     { key: 'davetler', label: 'Ajans Davetlerim', icon: MailOpen, path: '/ajans/davetler' },
     { key: 'create', label: 'Ajans Oluştur', icon: Building2 },
@@ -60,12 +61,12 @@ export default function AgencySection({ user, onRefresh, showHeading = true }) {
       <div className="rounded-2xl border border-[#F5C542]/30 bg-gradient-to-br from-[#1a1305] via-[#0d0b16] to-[#140a1e] p-4">
         <div className="flex items-center gap-3">
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#F5C542]/45 bg-black/50">
-            {isPending ? <Hourglass className="h-5 w-5" style={{ color: AGENCY_GOLD }} /> : isOwner ? <Building2 className="h-5 w-5" style={{ color: AGENCY_GOLD }} /> : <Mic2 className="h-5 w-5" style={{ color: AGENCY_GOLD }} />}
+            {isPending ? <Hourglass className="h-5 w-5" style={{ color: AGENCY_GOLD }} /> : isOwner ? <Building2 className="h-5 w-5" style={{ color: AGENCY_GOLD }} /> : isAssistant ? <Handshake className="h-5 w-5" style={{ color: AGENCY_GOLD }} /> : <Mic2 className="h-5 w-5" style={{ color: AGENCY_GOLD }} />}
           </span>
           <div className="min-w-0 flex-1">
-            {isPending || isOwner || isBroadcaster ? (
+            {isPending || isOwner || isBroadcaster || isAssistant ? (
               <>
-                <p className="truncate text-sm font-black text-white">{isPending ? '🏢 BAŞVURU ONAY BEKLİYOR' : isOwner ? '🏢 AJANS SAHİBİ' : '🎤 YAYINCI'}</p>
+                <p className="truncate text-sm font-black text-white">{isPending ? '🏢 BAŞVURU ONAY BEKLİYOR' : isOwner ? '🏢 AJANS SAHİBİ' : isAssistant ? '🤝 AJANS ASİSTANI' : '🎤 YAYINCI'}</p>
                 <p className="truncate text-[11px]" style={{ color: AGENCY_GOLD }}>
                   {summary?.agency?.name || profile.agency_name || 'Ajans'} {profile.agency_code ? `• ${profile.agency_code}` : ''}
                 </p>

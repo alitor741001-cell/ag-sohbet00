@@ -233,14 +233,17 @@ export async function refreshAgencyTotals(base44: any, agencyId: string) {
 
 /** Ajans paneli verisi: üyeler, kazançları, bekleyen davetler ve transferler. */
 export async function agencyStats(base44: any, agency: any) {
+  // Süresi dolan asistan davetleri panel açılışında kapatılır.
+  await expireAssistantInvites(base44, agency).catch(() => {});
   const period = periodKey();
   const today = todayKey();
-  const [members, rewards, invites, transfers, tiers] = await Promise.all([
+  const [members, rewards, invites, transfers, tiers, acceptedInvites] = await Promise.all([
     base44.asServiceRole.entities.User.filter({ agency_record_id: agency.id }, '-created_date', 500).catch(() => []),
     base44.asServiceRole.entities.QuotaReward.filter({ agency_id: agency.id }, '-created_date', 1000).catch(() => []),
     base44.asServiceRole.entities.AgencyInvite.filter({ agency_record_id: agency.id, status: 'pending' }, '-created_date', 200).catch(() => []),
     base44.asServiceRole.entities.AgencyTransfer.filter({ $or: [{ from_agency_id: agency.id }, { to_agency_id: agency.id }] }, '-created_date', 200).catch(() => []),
     ensureQuotaTiers(base44),
+    base44.asServiceRole.entities.AgencyInvite.filter({ agency_record_id: agency.id, status: 'accepted' }, '-created_date', 500).catch(() => []),
   ]);
   const broadcasters = (members || []).filter((member: any) => member.agency_role === 'broadcaster');
   const activeTiers = (tiers || []).filter((tier: any) => tier.active !== false);
@@ -265,6 +268,23 @@ export async function agencyStats(base44: any, agency: any) {
       joined: member.created_date || null,
     };
   }).sort((a: any, b: any) => b.diamonds - a.diamonds);
+  // Asistanlar: yayıncıyı kim davet ettiyse o asistanın yayıncısıdır.
+  const linkByInvitee = new Map<string, any>((acceptedInvites || []).map((row: any) => [row.invitee_id, row]));
+  const rowsWithAssistant = rows.map((row: any) => {
+    const link = linkByInvitee.get(row.user_id);
+    const owned = link && link.kind !== 'assistant' && link.assistant_id;
+    return { ...row, assistant_id: owned ? link.assistant_id : '', assistant_name: owned ? (link.assistant_name || '') : '' };
+  });
+  const assistantRows = (agency.assistants || [])
+    .filter((entry: any) => entry.status !== 'removed')
+    .map((entry: any) => ({
+      user_id: entry.user_id, name: entry.name || 'Asistan', avatar: entry.avatar || '', member_id: entry.member_id || '-',
+      share: Number(entry.share) || 0, status: entry.status || 'invited',
+      invited_at: entry.invited_at || '', expires_at: entry.expires_at || '', accepted_at: entry.accepted_at || '',
+      members: rowsWithAssistant.filter((row: any) => row.assistant_id === entry.user_id),
+      broadcaster_count: rowsWithAssistant.filter((row: any) => row.assistant_id === entry.user_id).length,
+      earnings: round((rewards || []).filter((row: any) => row.kind === 'assistant' && row.user_id === entry.user_id).reduce((sum: number, row: any) => sum + (Number(row.amount) || 0), 0)),
+    }));
   const agencyEarnings = (rewards || []).reduce((sum: number, row: any) => sum + (Number(row.agency_amount) || 0), 0);
   return {
     agency: {
@@ -280,7 +300,8 @@ export async function agencyStats(base44: any, agency: any) {
       member_count: broadcasters.length,
       active_count: rows.filter((row: any) => row.status === 'active').length,
     },
-    members: rows,
+    members: rowsWithAssistant,
+    assistants: assistantRows,
     invites: invites || [],
     transfers: transfers || [],
     tiers: tiers || [],

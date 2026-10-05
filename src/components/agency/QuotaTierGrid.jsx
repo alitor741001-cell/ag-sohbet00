@@ -5,7 +5,11 @@ import { formatMoney, formatShortDiamonds, tierStyle } from '@/lib/agency';
  * Kota tablosu kartları: her kademe için gereken elmas ve kazanç.
  * trackProgress=false iken ilerleme/tamamlanma işaretleri gösterilmez (komisyon kademeleri referansı).
  */
-export default function QuotaTierGrid({ tiers = [], monthDiamonds = 0, nextTier = null, limit = 0, amountField = 'broadcaster_dollars', amountLabel = 'yayıncı kazancı', trackProgress = true }) {
+export default function QuotaTierGrid({
+  tiers = [], monthDiamonds = 0, nextTier = null, limit = 0,
+  amountField = 'broadcaster_dollars', amountLabel = 'yayıncı kazancı',
+  extraAmountField = '', extraAmountLabel = '', trackProgress = true,
+}) {
   const list = limit > 0 ? tiers.slice(0, limit) : tiers;
   if (!list.length) return <p className="py-8 text-center text-xs text-white/45">Kota tablosu henüz tanımlı değil.</p>;
   return (
@@ -26,6 +30,11 @@ export default function QuotaTierGrid({ tiers = [], monthDiamonds = 0, nextTier 
             </div>
             <p className="mt-1 text-base font-black text-white">{formatMoney(tier[amountField])}</p>
             <p className="text-[10px] text-white/45">{amountLabel}</p>
+            {extraAmountField && (
+              <p className="mt-0.5 text-[11px] font-black text-[#4ade80]">
+                {formatMoney(tier[extraAmountField])} <span className="text-[10px] font-semibold text-white/45">{extraAmountLabel}</span>
+              </p>
+            )}
             {done && <p className="mt-1 text-[10px] font-bold text-[#4ade80]">✓ Tamamlandı</p>}
             {!done && isNext && (
               <div className="mt-1.5">
