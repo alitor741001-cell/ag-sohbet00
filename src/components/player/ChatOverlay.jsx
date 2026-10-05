@@ -19,7 +19,7 @@ import ParticipantHistoryPanel from '@/components/player/ParticipantHistoryPanel
 
 const EMOJIS = ['😀', '😂', '😍', '🔥', '👍', '👏', '😱', '😢', '🎬', '🍿', '❤️', '🎉'];
 
-export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, isOwner, isAdmin, onClose, autoDeleteMinutes = 0, countdownText = '', clearToken = 0, onSetAutoDelete, voice, voiceEnabled, onSettings, onDirect, onDirectUser, directUnread = 0, ownerId, roomModerators = [], participants = [], recentParticipants = [], viewerProfiles = {}, presenceMap = {}, onProfileCard, settingsProps, onToggleChat }) {
+export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, isOwner, isAdmin, onClose, autoDeleteMinutes = 0, countdownText = '', clearToken = 0, onSetAutoDelete, voice, voiceEnabled, onSettings, onDirect, onDirectUser, directUnread = 0, ownerId, roomModerators = [], participants = [], recentParticipants = [], viewerProfiles = {}, presenceMap = {}, onProfileCard, settingsProps, levels = {}, onToggleChat }) {
   const { user } = useCurrentUser();
   const { toast } = useToast();
   const [messages, setMessages] = useState([]);
@@ -277,9 +277,11 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
                 (() => {
                   const frame = parseFrameMetadata((m.text || '').replace(/\{\{PFRAME\|[^}]*\}\}/g, ''));
                   const { text: cleanText, color: roleColor, roleKey, hasRole } = parseRoleMetadata(frame.rest);
-                  if (/odaya katıldı|odadan ayrıldı|kişisel odasını açtı/.test(m.text || '')) {
+                  // Oda LVL'i yükseldiğinde aynı kart gösterilir: "Admin 39 lvl atladı".
+                  const levelUp = /(\d+)\s*lvl atladı/i.exec(m.text || '');
+                  if (levelUp || /odaya katıldı|odadan ayrıldı|kişisel odasını açtı/.test(m.text || '')) {
                     const profile = profiles[m.user_id] || viewerProfiles[m.user_id] || {};
-                    return <RoomCheatNotice isOwner={m.user_id === ownerId} profile={{ ...profile, display_role: profile.display_role || roleKey }} notice={{ participant: { name: m.user_name, avatar: m.user_avatar }, type: (m.text || '').includes('odadan ayrıldı') ? 'leave' : 'join' }} />;
+                    return <RoomCheatNotice isOwner={m.user_id === ownerId} profile={{ ...profile, display_role: profile.display_role || roleKey }} notice={{ participant: { name: m.user_name, avatar: m.user_avatar }, level: levelUp ? Number(levelUp[1]) : 0, type: levelUp ? 'levelup' : (m.text || '').includes('odadan ayrıldı') ? 'leave' : 'join' }} />;
                   }
                   const color = roleColor || frame.textColor || '#8b5cf6';
                   const isRole = hasRole || !!frame.frameId;
@@ -298,7 +300,7 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
                   );
                 })()
               ) : (
-                <RoomChatMessage message={m} profile={profiles[m.user_id] || profiles[hiddenUsersByName[m.user_name]]} ownerId={ownerId} roomModerators={roomModerators} currentUserId={user?.id} canDelete={isOwner || user?.id === m.user_id} onDelete={del} onImage={setLightbox} onOpenProfile={onProfileCard} />
+                <RoomChatMessage message={m} level={levels[m.user_id] || levels[hiddenUsersByName[m.user_name]] || 0} profile={profiles[m.user_id] || profiles[hiddenUsersByName[m.user_name]]} ownerId={ownerId} roomModerators={roomModerators} currentUserId={user?.id} canDelete={isOwner || user?.id === m.user_id} onDelete={del} onImage={setLightbox} onOpenProfile={onProfileCard} />
               )}
             </div>
           ))}

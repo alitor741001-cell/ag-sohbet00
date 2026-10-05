@@ -1,6 +1,7 @@
 /**
  * N seviyesi, VIP ve hediye seviyeleri.
- * - N seviyesi (N1, N2 …): her 1.000.000 yüklenen coin +1 seviye
+ * - N seviyesi (N1, N2 …): yükleme kademesiyle yükselir — 50k → N1, 200k → N2, 500k → N3,
+ *   1M → N4, sonrası her 500k'da +1 (1,5M → N5)
  *   (admin yüklemesi, başvuru onayı, dolar bozdurma).
  * - Hediye seviyesi: gönderilen / alınan hediyelerin K toplamı ile yükselir.
  *   Eşikler geometrik artar, böylece seviye sayıları okunur aralıkta kalır.
@@ -10,17 +11,21 @@ import { effectiveVipLevel, grantAutoVip, vipDaysLeft } from './vip.ts';
 
 export { VIP_MAX, VIP_MIN } from './vip.ts';
 
-// Her 1.000.000 yüklenen coin bir N seviyesi demektir (N1 … N12).
-const N_COINS_PER_LEVEL = 1000000;
-const N_MAX = 12;
+// N kademesi: 50k → N1, 200k → N2, 500k → N3, 1M → N4; sonrası her 500k'da bir seviye (1,5M → N5).
+const N_LADDER = [50000, 200000, 500000, 1000000];
+const N_STEP = 500000;
+const N_MAX = 99;
 // Hediye seviyesi: 1 K'dan başlar, her seviyede eşik %30 artar.
 const GIFT_LADDER_RATIO = 1.3;
 const GIFT_MAX_LEVEL = 60;
 
-/** N seviyesi: her 1.000.000 yüklenen coin +1 seviye (0 ise rozet gösterilmez). */
+/** N seviyesi: 50k → N1, 200k → N2, 500k → N3, 1M → N4, sonrası her 500k'da +1 (0 ise rozet gösterilmez). */
 export const nLevel = (loadedCoins: any) => {
   const coins = Math.max(0, Number(loadedCoins) || 0);
-  return Math.min(N_MAX, Math.floor(coins / N_COINS_PER_LEVEL));
+  let level = 0;
+  while (level < N_LADDER.length && coins >= N_LADDER[level]) level += 1;
+  if (level < N_LADDER.length) return level;
+  return Math.min(N_MAX, N_LADDER.length + Math.floor((coins - N_LADDER[N_LADDER.length - 1]) / N_STEP));
 };
 
 /** Hediye seviyesi: hediye K toplamı karşılığı (1 K → 1. seviye). */

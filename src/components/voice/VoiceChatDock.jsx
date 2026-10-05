@@ -12,7 +12,7 @@ import useMessageProfiles from '@/hooks/useMessageProfiles';
  * Oda alt bölümü: sohbet (klavye) butonuna basınca mesaj akışı ve yazma alanı açılır.
  * Mesaj gönderilince yazma alanı kapanır ve klavye iner; mesaj akışı görünür kalır.
  */
-export default function VoiceChatDock({ messages = [], onSend, open, onCloseComposer, composerOpen, chatLocked, currentUserId, ownerId, moderators = [], onOpenProfile, bigGiftNotice, onOpenBigGiftRoom, hiddenUsers = {} }) {
+export default function VoiceChatDock({ messages = [], onSend, open, onCloseComposer, composerOpen, chatLocked, currentUserId, ownerId, moderators = [], onOpenProfile, bigGiftNotice, onOpenBigGiftRoom, levels = {}, hiddenUsers = {} }) {
   const [text, setText] = useState('');
   const [emojiOpen, setEmojiOpen] = useState(false);
   const inputRef = useRef(null);
@@ -66,6 +66,7 @@ export default function VoiceChatDock({ messages = [], onSend, open, onCloseComp
                 <VoiceChatMessage
                   key={message.id}
                   message={message}
+                  level={levels[message.user_id] || levels[hiddenUsers[message.user_name]] || 0}
                   profile={profiles[message.user_id] || profiles[hiddenUsers[message.user_name]]}
                   ownerId={ownerId}
                   moderators={moderators}

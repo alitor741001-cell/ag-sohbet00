@@ -5,6 +5,7 @@ import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useVoiceChat } from '@/hooks/useVoiceChat';
 import useKeyboardInset from '@/hooks/useKeyboardInset';
+import useRoomLevels from '@/hooks/useRoomLevels';
 import { useToast } from '@/components/ui/use-toast';
 import VoiceSeatGrid from '@/components/voice/VoiceSeatGrid';
 import { resizeSeats } from '@/components/voice/seatLayout';
@@ -120,6 +121,8 @@ export default function VoiceRoom() {
   // Takma ad koltuğa veya katılım listesine yazılmış olabilir: ikisi birlikte eşlenir.
   [...participants, ...seats].forEach((person) => { if (person?.user_id && isHiddenName(person.name)) hiddenUsersByName[person.name] = person.user_id; });
   const moderators = room?.room_moderators || [];
+  // Oda LVL'i: odadakilerin seviyesi canlı izlenir — seviye atlayınca rozet anında değişir.
+  const roomLevels = useRoomLevels([...participants.map((person) => person.user_id), ...seats.map((seat) => seat.user_id), room?.owner_id].filter(Boolean));
   const mySeatIndex = seats.findIndex((seat) => seat.user_id === user?.id);
   const seated = mySeatIndex >= 0;
   const isOwner = !!user && room?.owner_id === user.id;
@@ -997,6 +1000,7 @@ export default function VoiceRoom() {
         ownerId={room?.owner_id}
         moderators={moderators}
         onOpenProfile={openProfile}
+        levels={roomLevels}
         hiddenUsers={hiddenUsersByName}
         bigGiftNotice={bigGiftNotice}
         onOpenBigGiftRoom={() => {

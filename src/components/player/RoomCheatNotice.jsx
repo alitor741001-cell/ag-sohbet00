@@ -18,7 +18,7 @@ export default function RoomCheatNotice({ notice, profile = {}, isOwner = false 
       {avatar ? <Image src={avatar} className="h-8 w-8 shrink-0 rounded-full" fittingType="fill" /> : <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-secondary font-bold" style={{ color }}>{name[0]}</span>}
       <div className="min-w-0 text-xs">
         {(role.label || owner) && <p className="text-[10px] font-bold" style={{ color }}>{[role.label, owner ? 'Oda sahibi' : ''].filter(Boolean).join(' · ')}</p>}
-        <p>{hidden ? <span className="hidden-user-name font-bold">{name}</span> : <span className="font-bold" style={{ color }}>{name}</span>} {notice.type === 'join' ? 'odaya katıldı' : 'odadan ayrıldı'}</p>
+        <p>{hidden ? <span className="hidden-user-name font-bold">{name}</span> : <span className="font-bold" style={{ color }}>{name}</span>} {notice.type === 'levelup' ? <><span className="font-black tabular-nums text-amber-400">{notice.level}</span> lvl atladı</> : notice.type === 'join' ? 'odaya katıldı' : 'odadan ayrıldı'}</p>
       </div>
     </div>
   );

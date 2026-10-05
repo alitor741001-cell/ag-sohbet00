@@ -40,8 +40,9 @@ export const N_BADGE_STYLE = { background: '#4b664d', border: '#cfd8dc', color: 
 export const giftLevelLabel = (level) => String(Math.max(0, Math.floor(Number(level) || 0)));
 
 /** Merdivenler backend'deki base44/shared/userLevels.ts ile aynıdır. */
-const N_COINS_PER_LEVEL = 1000000;
-const N_MAX = 12;
+const N_LADDER = [50000, 200000, 500000, 1000000];
+const N_STEP = 500000;
+const N_MAX = 99;
 const GIFT_LADDER_RATIO = 1.3;
 const GIFT_MAX_LEVEL = 60;
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -59,8 +60,14 @@ export const vipDaysLeft = (user) => {
   return Math.max(0, Math.ceil((expiry - Date.now()) / DAY_MS));
 };
 
-/** N seviyesi: her 1.000.000 yüklenen coin +1 seviye. */
-export const nLevelOf = (loadedCoins) => Math.min(N_MAX, Math.floor(Math.max(0, Number(loadedCoins) || 0) / N_COINS_PER_LEVEL));
+/** N seviyesi: 50k → N1, 200k → N2, 500k → N3, 1M → N4, sonrası her 500k'da +1. */
+export const nLevelOf = (loadedCoins) => {
+  const coins = Math.max(0, Number(loadedCoins) || 0);
+  let level = 0;
+  while (level < N_LADDER.length && coins >= N_LADDER[level]) level += 1;
+  if (level < N_LADDER.length) return level;
+  return Math.min(N_MAX, N_LADDER.length + Math.floor((coins - N_LADDER[N_LADDER.length - 1]) / N_STEP));
+};
 
 /** Geçerli VIP seviyesi: süresi dolan VIP rozet sayılmaz. */
 export const vipLevelOf = (user) => {

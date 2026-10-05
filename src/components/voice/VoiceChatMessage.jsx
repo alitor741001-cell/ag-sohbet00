@@ -1,12 +1,13 @@
 import { memo } from 'react';
 import RoleNameEffect from '@/components/role/RoleNameEffect';
 import UserBadgeRow from '@/components/status/UserBadgeRow';
+import RoomLevelBadge from '@/components/status/RoomLevelBadge';
 import { getRoleInfo, isModerator } from '@/lib/roles';
 import { plainText } from '@/components/voice/voiceText';
 import { HIDDEN_AVATAR_URL, isHiddenName } from '@/lib/hiddenUser';
 
 /** Sohbet satırı: üye no, rol ve durum rozetleri + renkli isim + mesaj. */
-function VoiceChatMessage({ message, profile, ownerId, moderators = [], currentUserId, onOpenProfile }) {
+function VoiceChatMessage({ message, profile, ownerId, moderators = [], currentUserId, onOpenProfile, level = 0 }) {
   const role = getRoleInfo(profile || message);
   const isOwner = message.user_id === ownerId;
   const isMod = !isOwner && (moderators.includes(message.user_id) || isModerator(profile));
@@ -37,6 +38,7 @@ function VoiceChatMessage({ message, profile, ownerId, moderators = [], currentU
             )}
           </button>
           {label && <span className={`text-[10px] font-bold ${isOwner ? 'text-amber-400' : 'text-sky-400'}`}>{label}</span>}
+          {!hidden && <RoomLevelBadge level={level} />}
         </div>
 
         <div className="mt-1 flex flex-wrap items-center gap-1">

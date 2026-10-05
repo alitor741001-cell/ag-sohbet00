@@ -7,6 +7,7 @@ import RoleBadge from '@/components/RoleBadge';
 import RoleNameEffect from '@/components/role/RoleNameEffect';
 import RoleMessageEffect from '@/components/role/RoleMessageEffect';
 import UserBadgeRow from '@/components/status/UserBadgeRow';
+import RoomLevelBadge from '@/components/status/RoomLevelBadge';
 import { getRoleInfo, isModerator } from '@/lib/roles';
 import { HIDDEN_AVATAR_URL, isHiddenName } from '@/lib/hiddenUser';
 
@@ -14,7 +15,7 @@ import { HIDDEN_AVATAR_URL, isHiddenName } from '@/lib/hiddenUser';
  * Film odası sohbet satırı: sesli odadaki gibi seviye rozetleri gösterilir (oda LVL'i yok).
  * Gizli kullanıcıda yalnızca kırmızı takma ad ve maskeli profil görünür, ek rozet çıkmaz.
  */
-function RoomChatMessage({ message, profile, ownerId, roomModerators, currentUserId, canDelete, onDelete, onImage, onOpenProfile }) {
+function RoomChatMessage({ message, profile, ownerId, roomModerators, currentUserId, canDelete, onDelete, onImage, onOpenProfile, level = 0 }) {
   const role = getRoleInfo(profile || message);
   const hidden = isHiddenName(message.user_name);
   // Gizli kullanıcı: gerçek fotoğraf ve çerçeve yerine maskeli profil görünür.
@@ -41,6 +42,7 @@ function RoomChatMessage({ message, profile, ownerId, roomModerators, currentUse
         </button>
         {!hidden && isOwner && <span className="text-[10px] font-bold text-amber-400">Oda Sahibi</span>}
         {!hidden && profile && (profile.display_role || profile.custom_role?.name) && <RoleBadge user={profile} size="sm" showLabel={false} />}
+        {!hidden && <RoomLevelBadge level={level} />}
       </div>
       <div className="flex flex-wrap items-center gap-1"><UserBadgeRow profile={profile} /></div>
       <div className="isolate min-w-0 max-w-full overflow-hidden rounded-xl p-2">
