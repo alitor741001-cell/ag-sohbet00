@@ -3,7 +3,9 @@ import { getUsdTry, tlFromDollars, tlRateFrom } from './exchangeRate.ts';
 
 /**
  * Hediye kutusu: alınan hediyelerin değeri, gönderim ve çekim kayıtları.
- * Değer kuralı: 200K'ya kadar her 5K = 1 dolar, 200K'dan sonra her 10K = 1 dolar.
+ * Değer kuralı: 200K'ya kadar her 15K = 1 dolar, 200K'dan sonra her 30K = 1 dolar.
+ * Elmas her ayın 1'inde sıfırlandığı için kademe de her ay baştan başlar: her ayın
+ * elması kendi kademesiyle dolara çevrilir, aylık kazançlar toplanarak bakiyeye eklenir.
  * Tutar her zaman tam dolar olarak gösterilir (küsurat yazılmaz); TL, piyasa kuru eksi 2 TL ile hesaplanır.
  */
 
@@ -11,15 +13,15 @@ export const COINS_PER_DOLLAR = 5000;
 const BASE_MAX_K = 200;
 // Puan: her 10K = 1 puan — 200K'dan sonra da artmaya devam eder.
 const K_PER_UNIT = 10;
-const K_PER_DOLLAR = 5;
-const K_PER_DOLLAR_AFTER = 10;
+const K_PER_DOLLAR = 15;
+const K_PER_DOLLAR_AFTER = 30;
 // Kişi başına okunacak en fazla hediye / transfer kaydı.
 const MAX_RECORDS = 2000;
 
 /**
- * Alınan hediye K toplamının dolar karşılığı — her zaman tam sayı (küsurat yazılmaz).
- * 200K'ya kadar her 5K'da 1 artar; 200K'dan sonra her 10K'da 1 artar.
- * Ara değerler bir üst basamağa yuvarlanmaz: 13K → 2, 14K → 2, tam 15K'da 3 olur.
+ * Bir ayın elmas (K) toplamının dolar karşılığı — her zaman tam sayı (küsurat yazılmaz).
+ * 200K'ya kadar her 15K'da 1 artar; 200K'dan sonra her 30K'da 1 artar.
+ * Ara değerler bir üst basamağa yuvarlanmaz: 14K → 0, 15K → 1, 29K → 1, 30K → 2 olur.
  */
 export function giftDollarsFromK(kValue: any) {
   const k = Math.max(0, Number(kValue) || 0);
@@ -28,15 +30,29 @@ export function giftDollarsFromK(kValue: any) {
   return base + extra;
 }
 
+const TR_MONTH = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Istanbul', year: 'numeric', month: '2-digit' });
+
 /**
  * Ayın 1'i (Türkiye saatiyle) — elmas yalnızca bu aydan itibaren sayılır.
  * Ay başında elmas sıfırlanır, bakiye (dolar/TL) ise tüm zamanların toplamıyla devam eder.
  */
 export function monthStartIso(now = new Date()) {
-  const [year, month] = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Istanbul', year: 'numeric', month: '2-digit' })
-    .format(now)
-    .split('-');
+  const [year, month] = TR_MONTH.format(now).split('-');
   return new Date(`${year}-${month}-01T00:00:00+03:00`).toISOString().slice(0, 19);
+}
+
+/** Bir kaydın ait olduğu ayın başı — kademe aylık gruplandığı için anahtar olarak kullanılır. */
+function monthStartOf(created: any) {
+  const date = new Date(String(created || ''));
+  if (Number.isNaN(date.getTime())) return '';
+  return monthStartIso(date);
+}
+
+/** Aylık elmas toplamları: her ay kendi kademesiyle dolara çevrilir ve toplanır. */
+function dollarsFromMonthlyTotals(totals: Map<string, number>) {
+  let dollars = 0;
+  totals.forEach((kValue) => { dollars += giftDollarsFromK(kValue); });
+  return dollars;
 }
 
 /**
@@ -56,29 +72,32 @@ export async function receivedGiftTotals(base44: any, userId: string, resetAt = 
   const records = await base44.asServiceRole.entities.GiftSend
     .filter({ recipient_id: userId }, '-created_date', MAX_RECORDS)
     .catch(() => []);
-  const k = Math.round(records.reduce((sum, record) => sum + Math.max(0, Number(record?.k_value) || 0), 0) * 100) / 100;
   const monthStart = monthStartIso();
   // Elmas; ay başı ile elle sıfırlama anından hangisi yeniyse ondan sonrasını sayar.
   const start = resetAt && resetAt > monthStart ? resetAt : monthStart;
-  const monthK = Math.round(records.reduce((sum, record) => {
-    const created = String(record?.created_date || '');
-    if (!created || created.slice(0, 19) < start) return sum;
-    return sum + Math.max(0, Number(record?.k_value) || 0);
-  }, 0) * 100) / 100;
-  // Bakiye elle sıfırlandıysa kullanılabilir bakiyeye yalnızca sıfırlama sonrası hediyeler sayılır.
-  const resetK = resetAt
-    ? Math.round(records.reduce((sum, record) => {
-        const created = String(record?.created_date || '');
-        if (!created || created.slice(0, 19) < resetAt) return sum;
-        return sum + Math.max(0, Number(record?.k_value) || 0);
-      }, 0) * 100) / 100
-    : k;
+  const round = (value: number) => Math.round(value * 100) / 100;
+  let k = 0;
+  let monthK = 0;
+  // Kademe her ay baştan başlar: her ayın elması kendi kademesiyle dolara çevrilir.
+  const months = new Map();
+  const balanceMonths = new Map();
+  records.forEach((record) => {
+    const kValue = Math.max(0, Number(record?.k_value) || 0);
+    const created = String(record?.created_date || '').slice(0, 19);
+    if (!kValue || !created) return;
+    k += kValue;
+    const key = monthStartOf(created);
+    months.set(key, (months.get(key) || 0) + kValue);
+    if (created >= start) monthK += kValue;
+    // Bakiye elle sıfırlandıysa kullanılabilir bakiyeye yalnızca sıfırlama sonrası hediyeler sayılır.
+    if (!resetAt || created >= resetAt) balanceMonths.set(key, (balanceMonths.get(key) || 0) + kValue);
+  });
   return {
-    k,
+    k: round(k),
     units: Math.floor(monthK / K_PER_UNIT),
-    dollars: giftDollarsFromK(k),
-    reset_dollars: giftDollarsFromK(resetK),
-    month_k: monthK,
+    dollars: dollarsFromMonthlyTotals(months),
+    reset_dollars: dollarsFromMonthlyTotals(balanceMonths),
+    month_k: round(monthK),
     month_score: Math.round(monthK * 1000),
   };
 }
