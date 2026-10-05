@@ -799,7 +799,7 @@ export default function WatchParty() {
           )}
 
           {!voiceMode && !chatOpen && !directOpen && !profileTarget && (
-            <div className="absolute left-1/2 bottom-[calc(env(safe-area-inset-bottom)_+_2.75rem)] z-[56] -translate-x-1/2">
+            <div className="absolute left-1/2 bottom-[calc(env(safe-area-inset-bottom)_+_6.5rem)] z-[56] -translate-x-1/2">
               <RoomScreenSwitch
                 onFilms={openFilmSearch}
                 hasResults={filmResults.length > 0}
