@@ -5,9 +5,13 @@ import { useToast } from '@/components/ui/use-toast';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import UserBadge from '@/components/admin/UserBadge';
 import RoleLabelEditor from '@/components/admin/RoleLabelEditor';
+import UserGenderDialog from '@/components/admin/UserGenderDialog';
 
 
 const btn = 'px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap';
+
+/** Cinsiyet düğmesi: kayıtlı cinsiyeti gösterir, eksikse düzeltmeye çağırır. */
+const genderButtonLabel = (u) => (u?.gender === 'kadın' ? 'CİNSİYET: KADIN' : u?.gender === 'erkek' ? 'CİNSİYET: ERKEK' : 'CİNSİYET EKLE');
 
 export default function AdminUsers({ pendingOnly = false }) {
   const { user: admin } = useCurrentUser();
@@ -15,6 +19,7 @@ export default function AdminUsers({ pendingOnly = false }) {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [confirm, setConfirm] = useState(null);
+  const [genderTarget, setGenderTarget] = useState(null);
   const [detail, setDetail] = useState(null);
   const [idQuery, setIdQuery] = useState('');
   const [nameQuery, setNameQuery] = useState('');
@@ -170,6 +175,7 @@ export default function AdminUsers({ pendingOnly = false }) {
                   {!pendingOnly && <button onClick={() => testActivate(u)} className={`${btn} bg-purple-500/20 text-purple-400 hover:bg-purple-500/30`}>TEST ÖDEME</button>}
                   {!pendingOnly && <button onClick={() => extend(u)} className={`${btn} bg-blue-500/20 text-blue-400 hover:bg-blue-500/30`}>+30 GÜN</button>}
                   {!pendingOnly && <button onClick={() => resetPass(u)} className={`${btn} bg-purple-500/20 text-purple-400 hover:bg-purple-500/30`}>ŞİFRE SIFIRLA</button>}
+                  {!pendingOnly && <button onClick={() => setGenderTarget(u)} className={`${btn} bg-fuchsia-500/20 text-fuchsia-300 hover:bg-fuchsia-500/30`}>{genderButtonLabel(u)}</button>}
                   <button onClick={() => setConfirm(u)} className={`${btn} bg-red-500/20 text-red-400 hover:bg-red-500/30`}>SİL</button>
                 </div>
               </div>
@@ -187,6 +193,8 @@ export default function AdminUsers({ pendingOnly = false }) {
               <p><span className="text-muted-foreground">Ödeme Referans No:</span> <span className="font-mono font-bold text-purple-400">{detail.payment_reference || '-'}</span></p>
               <p><span className="text-muted-foreground">E-posta:</span> {detail.email}</p>
               <p><span className="text-muted-foreground">Kayıt tarihi:</span> {detail.created_date ? new Date(detail.created_date).toLocaleDateString('tr-TR') : '-'}</p>
+              <p><span className="text-muted-foreground">Cinsiyet:</span> {detail.gender === 'kadın' ? 'Kadın' : detail.gender === 'erkek' ? 'Erkek' : 'Belirtilmedi'}</p>
+              <button onClick={() => { setGenderTarget(detail); setDetail(null); }} className={`${btn} mt-1 bg-fuchsia-500/20 text-fuchsia-300 hover:bg-fuchsia-500/30`}>{genderButtonLabel(detail)} — DÜZELT</button>
               <p><span className="text-muted-foreground">Üyelik durumu:</span> {detail.membership_status || '-'}</p>
               <p><span className="text-muted-foreground">Aktif/Pasif:</span> {detail.membership_status === 'active' ? 'Aktif' : 'Pasif'}</p>
               <p><span className="text-muted-foreground">Üyelik başlangıcı:</span> {detail.membership_start ? new Date(detail.membership_start).toLocaleDateString('tr-TR') : '-'}</p>
@@ -202,6 +210,17 @@ export default function AdminUsers({ pendingOnly = false }) {
           </div>
         </div>
       )}
+      <UserGenderDialog
+        user={genderTarget}
+        onClose={() => setGenderTarget(null)}
+        onSaved={async (target, gender) => {
+          await notify(target.id, 'Cinsiyet bilgisi güncellendi', gender === 'erkek' ? 'Profil kartınız mavi-kırmızı temada görünecek.' : 'Profil kartınız pembe temada görünecek.');
+          await log(`Cinsiyet değiştirildi (${gender})`, target.email);
+          setGenderTarget(null);
+          toast({ title: 'Cinsiyet güncellendi' });
+          load();
+        }}
+      />
       <ConfirmDialog open={!!confirm} onOpenChange={(o) => !o && setConfirm(null)} title="Kullanıcıyı sil?" description={`${confirm?.email} kalıcı olarak silinecek.`} onConfirm={() => del(confirm)} />
     </div>
   );

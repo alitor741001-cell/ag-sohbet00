@@ -14,7 +14,7 @@ import { findProtectedName } from '@/lib/protectedNames';
 
 export default function Profile() {
   const { user, reload, setUser } = useCurrentUser(); const { toast } = useToast(); const location = useLocation(); const navigate = useNavigate();
-  const [tab, setTab] = useState(() => new URLSearchParams(window.location.search).get('tab') === 'settings' ? 'settings' : 'info'); const [pkg, setPkg] = useState(null); const [historyMovies, setHistoryMovies] = useState([]); const [list, setList] = useState([]); const [favs, setFavs] = useState([]); const [editing, setEditing] = useState(false); const [saving, setSaving] = useState(false); const [uploading, setUploading] = useState(false); const [form, setForm] = useState({ username: '', full_name: '', phone: '', avatar: '' });
+  const [tab, setTab] = useState(() => new URLSearchParams(window.location.search).get('tab') === 'settings' ? 'settings' : 'info'); const [pkg, setPkg] = useState(null); const [historyMovies, setHistoryMovies] = useState([]); const [list, setList] = useState([]); const [favs, setFavs] = useState([]); const [editing, setEditing] = useState(false); const [saving, setSaving] = useState(false); const [uploading, setUploading] = useState(false);   const [form, setForm] = useState({ username: '', full_name: '', phone: '', avatar: '', birth_date: '' });
   const contentRef = useRef(null);
   const scrollToContentRef = useRef(new URLSearchParams(window.location.search).get('tab') === 'settings');
   useEffect(() => {
@@ -28,7 +28,7 @@ export default function Profile() {
   }, [tab, location.search]);
   useEffect(() => {
     if (!user) return;
-    setForm({ username: user.username || '', full_name: user.full_name || '', phone: user.phone || '', avatar: user.avatar || '' });
+    setForm({ username: user.username || '', full_name: user.full_name || '', phone: user.phone || '', avatar: user.avatar || '', birth_date: user.birth_date || '' });
     if (!user.member_id) base44.functions.invoke('ensure-member-id').then(reload).catch(() => {});
     if (user.package_id) base44.entities.Package.get(user.package_id).then(setPkg).catch(() => {});
     loadMovies();
@@ -44,7 +44,7 @@ export default function Profile() {
     if (blocked) return toast({ title: 'Kullanıcı adı reddedildi', description: `'${blocked}' gibi yetki/rol kelimeleri kullanıcı adında kullanılamaz. Lütfen başka bir ad seçin.`, variant: 'destructive' });
     setSaving(true);
     try {
-      const { data } = await base44.functions.invoke('update-profile', { username: form.username, phone: form.phone, avatar: form.avatar });
+      const { data } = await base44.functions.invoke('update-profile', { username: form.username, phone: form.phone, avatar: form.avatar, birth_date: form.birth_date });
       if (!data?.ok || data.profile?.id !== user.id) throw new Error(data?.error || 'Kayıt doğrulanamadı. Lütfen tekrar deneyin.');
       setUser((current) => ({ ...current, ...data.profile }));
       setEditing(false);
@@ -78,7 +78,7 @@ export default function Profile() {
     <MembershipNotice user={user} expired={expired} onRenew={renew} />
     <ProfileTabs active={tab} isAdmin={user.role === 'admin'} onChange={(nextTab) => { scrollToContentRef.current = true; setTab(nextTab); navigate(nextTab === 'settings' ? '/profil?tab=settings' : '/profil', { replace: true, preventScrollReset: true }); }} />
     <div ref={contentRef} className="scroll-mt-4">
-    {tab === 'info' && <ProfileInfoCard user={user} pkg={pkg} editing={editing} form={form} setForm={setForm} onSave={save} onEdit={() => { setForm({ username: user.username || '', full_name: user.full_name || '', phone: user.phone || '', avatar: user.avatar || '' }); setEditing(true); }} onCancel={() => { setForm({ username: user.username || '', full_name: user.full_name || '', phone: user.phone || '', avatar: user.avatar || '' }); setEditing(false); }} onAvatar={onAvatar} uploading={uploading} saving={saving} />}
+    {tab === 'info' && <ProfileInfoCard user={user} pkg={pkg} editing={editing} form={form} setForm={setForm} onSave={save} onEdit={() => { setForm({ username: user.username || '', full_name: user.full_name || '', phone: user.phone || '', avatar: user.avatar || '', birth_date: user.birth_date || '' }); setEditing(true); }} onCancel={() => { setForm({ username: user.username || '', full_name: user.full_name || '', phone: user.phone || '', avatar: user.avatar || '', birth_date: user.birth_date || '' }); setEditing(false); }} onAvatar={onAvatar} uploading={uploading} saving={saving} />}
     {tab === 'history' && user.role !== 'admin' && <div>{historyMovies.length > 0 && <button onClick={clearHistory} className="mb-3 flex items-center gap-2 rounded-lg bg-destructive px-4 py-2.5 text-sm font-semibold text-destructive-foreground"><Trash2 className="w-4 h-4" />Tümünü Sil</button>}<ProfileMovieGrid movies={historyMovies} empty="Henüz bir şey izlemediniz." /></div>}
     {tab === 'list' && user.role !== 'admin' && <ProfileMovieGrid movies={list} empty="Henüz listenize film eklemediniz." />}
     {tab === 'favs' && user.role !== 'admin' && <ProfileMovieGrid movies={favs} empty="Henüz favori yok." />}

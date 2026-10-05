@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { CalendarDays, Mail, Package, Phone, Settings, User, Users, Hash, Copy, Check } from 'lucide-react';
 import AvatarUploadField from '@/components/profile/AvatarUploadField';
+import { ageFromBirthDate, formatDate } from '@/components/profile/genderPalette';
 
 export default function ProfileInfoCard({ user, pkg, editing, form, setForm, onSave, onEdit, onCancel, onAvatar, uploading, saving }) {
   const [copied, setCopied] = useState(false);
@@ -17,11 +18,13 @@ export default function ProfileInfoCard({ user, pkg, editing, form, setForm, onS
     <Field label="Ad Soyad (hesap bilgisi)" value={form.full_name} disabled />
     <p className="-mt-2 text-xs text-muted-foreground">Ad soyad hesap tarafından yönetilir; görünen adınızı Kullanıcı Adı alanından değiştirebilirsiniz.</p>
     <Field label="Telefon" value={form.phone} onChange={(phone) => setForm({ ...form, phone })} />
+    <Field label="Doğum Tarihi" type="date" value={form.birth_date || ''} onChange={(birth_date) => setForm({ ...form, birth_date })} />
     <div className="flex gap-2"><button onClick={onSave} disabled={saving || uploading} className="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50">{saving ? 'Kaydediliyor...' : uploading ? 'Fotoğraf Bekleniyor...' : 'Kaydet'}</button><button onClick={onCancel} disabled={saving || uploading} className="rounded-lg bg-secondary px-5 py-2.5 text-sm disabled:opacity-50">İptal</button></div>
   </section>;
   const rows = [
     [User, 'Kullanıcı Adı', user.username || '-'], [Users, 'Ad Soyad', user.full_name || '-'], [User, 'Üye No', user.member_id || '-'],
     [Mail, 'E-posta', user.email], [Phone, 'Telefon', user.phone || 'Eklenmedi'], [Package, 'Paket', pkg?.name || '-'],
+    [CalendarDays, 'Doğum Tarihi', user.birth_date ? `${formatDate(user.birth_date)}${ageFromBirthDate(user.birth_date) === null ? '' : ` (${ageFromBirthDate(user.birth_date)} yaş)`}` : 'Eklenmedi'],
     [CalendarDays, 'Başlangıç', user.membership_start ? new Date(user.membership_start).toLocaleDateString('tr-TR') : '-'],
     [CalendarDays, 'Bitiş', user.role === 'admin' ? 'Süresiz' : user.membership_end ? new Date(user.membership_end).toLocaleDateString('tr-TR') : '-'],
   ];
@@ -43,4 +46,4 @@ export default function ProfileInfoCard({ user, pkg, editing, form, setForm, onS
   </section>;
 }
 
-function Field({ label, value, onChange, disabled }) { return <label className="block text-sm text-muted-foreground">{label}<input value={value} onChange={(event) => onChange?.(event.target.value)} disabled={disabled} className="mt-1 w-full rounded-lg bg-secondary px-3 py-2.5 text-foreground outline-none focus:ring-2 focus:ring-ring disabled:opacity-60" /></label>; }
+function Field({ label, value, onChange, disabled, type = 'text' }) { return <label className="block text-sm text-muted-foreground">{label}<input value={value} type={type} max={type === 'date' ? new Date().toISOString().slice(0, 10) : undefined} onChange={(event) => onChange?.(event.target.value)} disabled={disabled} className="mt-1 w-full rounded-lg bg-secondary px-3 py-2.5 text-foreground outline-none focus:ring-2 focus:ring-ring disabled:opacity-60" /></label>; }

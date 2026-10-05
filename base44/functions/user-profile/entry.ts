@@ -35,6 +35,7 @@ export default async function(req) {
           special_frame_id: u.special_frame_id || '', special_frame_title: u.special_frame_title || '',
           special_frame_entry: u.special_frame_entry !== false, special_frame_exit: u.special_frame_exit !== false,
           title: u.title || '', created_date: u.created_date || null,
+          gender: u.gender || '', birth_date: u.birth_date || '',
           account_status: accountStatus(u),
           ...badgeLevels(u),
         };
@@ -62,6 +63,8 @@ export default async function(req) {
       special_frame_exit: u.special_frame_exit !== false,
       title: u.title || '',
       created_date: u.created_date || null,
+      gender: u.gender || '',
+      birth_date: u.birth_date || '',
       account_status: accountStatus(u),
       ...badgeLevels(u)
     });

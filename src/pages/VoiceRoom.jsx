@@ -20,7 +20,7 @@ import RoomInfoCard from '@/components/voice/RoomInfoCard';
 import VoiceRoomMenu from '@/components/voice/VoiceRoomMenu';
 import VoiceSeatSheet from '@/components/voice/VoiceSeatSheet';
 import InviteSheet from '@/components/voice/InviteSheet';
-import VoiceProfileSheet from '@/components/voice/VoiceProfileSheet';
+import FullUserProfile from '@/components/profile/FullUserProfile';
 import RoomLogSheet from '@/components/voice/RoomLogSheet';
 import GiftScoreChip from '@/components/voice/GiftScoreChip';
 import GiftBoardSheet from '@/components/voice/GiftBoardSheet';
@@ -1111,14 +1111,20 @@ export default function VoiceRoom() {
         onStepDown={() => invokeVoice({ action: 'seat-leave' })}
       />
 
-      <VoiceProfileSheet
+      <FullUserProfile
         open={!!profileTarget}
         onClose={() => setProfileUserId(null)}
-        userId={profileHidden ? null : profileTarget}
+        userId={profileTarget}
         name={profilePerson?.name || ''}
         avatar={profilePerson?.avatar || ''}
+        frame={profilePerson?.frame || ''}
+        frameScale={profilePerson?.frame_scale}
         hidden={profileHidden}
-        muted={profileMuted}
+        muted={profileMicMuted}
+        level={roomLevels[profileTarget] || 0}
+        roomId={id}
+        self={profileSelf}
+        onMessage={(target) => setDmUserId(target)}
         tiles={profileTiles}
         footer={profileFooter}
       />

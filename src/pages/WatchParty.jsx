@@ -6,7 +6,7 @@ import ChatOverlay from '@/components/player/ChatOverlay';
 import { useVoiceChat } from '@/hooks/useVoiceChat';
 import { useCurrentUser, membershipActive } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
-import { Crown, X, Eye, ArrowLeft } from 'lucide-react';
+import { Crown, X, Eye, ArrowLeft, UserRound } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import RoomSettingsMenu from '@/components/player/RoomSettingsMenu';
@@ -26,7 +26,7 @@ import { isModerator } from '@/lib/roles';
 import { triggerBanNotice } from '@/lib/banNotice';
 import { isHiddenName } from '@/lib/hiddenUser';
 import XpAvatar from '@/components/xp/XpAvatar';
-import UserProfile from '@/pages/UserProfile';
+import FullUserProfile from '@/components/profile/FullUserProfile';
 import SubscriptionPrompt from '@/components/SubscriptionPrompt';
 
 
@@ -805,7 +805,16 @@ export default function WatchParty() {
       {joinCount > 0 && room?.movie_id && isOwner && <RoomCatalogIntro key={id} />}
       <SpecialRoleWelcome roomId={id} />
 
-      {profileTarget && <UserProfile userId={profileTarget} roomIdOverride={id} onBack={closeUserProfile} onMessage={(userId) => { closeUserProfile(); openDirectMessage(userId); }} embedded />}
+      {profileTarget && (
+        <FullUserProfile
+          userId={profileTarget}
+          onClose={closeUserProfile}
+          roomId={id}
+          level={roomLevels[profileTarget] || 0}
+          onMessage={(userId) => { closeUserProfile(); openDirectMessage(userId); }}
+          footer={[{ key: 'full-profile', icon: UserRound, label: 'Profili gör', onClick: () => { closeUserProfile(); navigate(`/kullanici/${profileTarget}`); } }]}
+        />
+      )}
     </div>
   );
 }

@@ -9,7 +9,7 @@ export default async function(req) {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
     const body = await req.json();
-    let { username, phone, avatar, profile_frame, profile_frame_scale, profile_avatar_x, profile_avatar_y, profile_frame_entrance_enabled } = body || {};
+    let { username, phone, avatar, birth_date, profile_frame, profile_frame_scale, profile_avatar_x, profile_avatar_y, profile_frame_entrance_enabled } = body || {};
 
     // Rate limit: 10 güncelleme / dakika
     const rl = await rateLimit(base44, 'profile:' + user.id, user.id, 10, 60000);
@@ -39,6 +39,19 @@ export default async function(req) {
       } else {
         const a = validateUrl(avatar);
         if (a) updates.avatar = a;
+      }
+    }
+    if (birth_date !== undefined) {
+      if (birth_date === '') {
+        updates.birth_date = '';
+      } else {
+        const raw = String(birth_date).slice(0, 10);
+        const parsed = new Date(raw);
+        const min = new Date('1900-01-01');
+        if (Number.isNaN(parsed.getTime()) || parsed < min || parsed > new Date()) {
+          return Response.json({ error: 'Geçerli bir doğum tarihi seçin (gelecek bir tarih olamaz).' }, { status: 400 });
+        }
+        updates.birth_date = raw;
       }
     }
     if (profile_frame !== undefined) {
