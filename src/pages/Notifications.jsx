@@ -1,15 +1,17 @@
 import { useEffect, useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
-import { Bell, Check, Trash2 } from 'lucide-react';
+import { Bell, Check, Trash2, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { Link } from 'react-router-dom';
 import EmptyState from '@/components/movie/EmptyState';
 import AgencyInviteActions from '@/components/notifications/AgencyInviteActions';
 import { parseInviteRef } from '@/lib/agency';
 
+/** Bildirimler: sohbet ekranı gibi tam ekran açılır; tüm sistem bildirimleri burada listelenir. */
 export default function Notifications() {
   const { user } = useCurrentUser();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [items, setItems] = useState([]);
   const [inviteIds, setInviteIds] = useState([]);
@@ -47,35 +49,43 @@ export default function Notifications() {
   };
 
   return (
-    <div className="px-4 sm:px-6 py-6 max-w-2xl mx-auto">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-extrabold flex items-center gap-2"><Bell className="w-6 h-6 text-primary" /> Bildirimler</h1>
-        <div className="flex items-center gap-3">
-          {items.some((n) => !n.read) && <button onClick={markAll} className="text-sm text-primary flex items-center gap-1"><Check className="w-4 h-4" /> Tümünü okundu</button>}
-          {items.length > 0 && <button onClick={deleteAll} className="text-sm text-destructive flex items-center gap-1"><Trash2 className="w-4 h-4" /> Tümünü Sil</button>}
-        </div>
-      </div>
-      {loading ? <p className="text-muted-foreground">Yükleniyor...</p> :
-       items.length === 0 ? <EmptyState icon={Bell} title="Bildirim yok" description="Henüz bildiriminiz bulunmuyor." /> :
-       <div className="space-y-2">
-         {items.map((n) => {
-           const inviteId = parseInviteRef(n.ref_id);
-           const showInvite = n.type === 'agency_invite' && !!inviteId && inviteIds.includes(inviteId);
-           return (
-           <div key={n.id} className={`p-3 rounded-xl border flex gap-3 ${n.read ? 'bg-card border-border' : 'bg-primary/5 border-primary/30'}`}>
-             <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${n.read ? 'bg-transparent' : 'bg-primary'}`} />
-             <div className="flex-1">
-               <p className="font-semibold text-sm">{n.title}</p>
-               {n.body && <p className="text-sm text-muted-foreground">{n.body}</p>}
-               {showInvite ? (
-                 <AgencyInviteActions inviteId={inviteId} onAnswered={() => { markRead(n); loadInvites(); }} />
-               ) : n.link && <Link to={n.link} className="text-xs text-primary">Görüntüle →</Link>}
+    <div className="dark mx-auto min-h-[calc(100dvh-8rem)] w-full min-w-0 max-w-5xl bg-background text-white">
+      <header className="sticky top-0 z-10 flex items-center gap-2 border-b border-white/10 bg-background px-3 py-2.5">
+        <button onClick={() => navigate('/arkadaslar')} aria-label="Geri" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/5 active:scale-95">
+          <ArrowLeft className="h-4 w-4 text-white" />
+        </button>
+        <h1 className="flex-1 text-base font-extrabold">Bildirimler</h1>
+        {items.some((n) => !n.read) && (
+          <button onClick={markAll} className="flex items-center gap-1 rounded-lg bg-white/5 px-2.5 py-1.5 text-xs font-semibold text-white"><Check className="w-3.5 h-3.5" /> Okundu</button>
+        )}
+        {items.length > 0 && (
+          <button onClick={deleteAll} className="flex items-center gap-1 rounded-lg bg-red-500/15 px-2.5 py-1.5 text-xs font-semibold text-red-400"><Trash2 className="w-3.5 h-3.5" /> Sil</button>
+        )}
+      </header>
+
+      <div className="p-3">
+        {loading ? <p className="py-10 text-center text-sm text-gray-400">Yükleniyor...</p> :
+         items.length === 0 ? <EmptyState icon={Bell} title="Bildirim yok" description="Henüz bildiriminiz bulunmuyor." /> :
+         <div className="space-y-2">
+           {items.map((n) => {
+             const inviteId = parseInviteRef(n.ref_id);
+             const showInvite = n.type === 'agency_invite' && !!inviteId && inviteIds.includes(inviteId);
+             return (
+             <div key={n.id} className={`p-3 rounded-xl border flex gap-3 ${n.read ? 'bg-card border-border' : 'bg-primary/10 border-primary/30'}`}>
+               <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${n.read ? 'bg-transparent' : 'bg-primary'}`} />
+               <div className="flex-1 min-w-0">
+                 <p className="font-semibold text-sm">{n.title}</p>
+                 {n.body && <p className="text-sm text-gray-400">{n.body}</p>}
+                 {showInvite ? (
+                   <AgencyInviteActions inviteId={inviteId} onAnswered={() => { markRead(n); loadInvites(); }} />
+                 ) : n.link && <Link to={n.link} className="text-xs text-primary">Görüntüle →</Link>}
+               </div>
+               {!n.read && <button onClick={() => markRead(n)} className="shrink-0 text-xs text-gray-400 active:text-white">Okundu</button>}
              </div>
-             {!n.read && <button onClick={() => markRead(n)} className="text-xs text-muted-foreground hover:text-foreground">Okundu</button>}
-           </div>
-           );
-         })}
-       </div>}
+             );
+           })}
+         </div>}
+      </div>
     </div>
   );
 }

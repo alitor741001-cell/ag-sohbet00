@@ -5,6 +5,7 @@ import { base44 } from '@/api/base44Client';
 import ConversationList from '@/components/friends/ConversationList';
 import FriendsPanel from '@/components/friends/FriendsPanel';
 import ChatPanel from '@/components/friends/ChatPanel';
+import NotificationBell from '@/components/friends/NotificationBell';
 import useFriends from '@/hooks/useFriends';
 import useConversations from '@/hooks/useConversations';
 import useFriendPresence from '@/hooks/useFriendPresence';
@@ -102,6 +103,8 @@ export default function Friends() {
             <UsersRound className="w-4 h-4" /> Arkadaşlarım
             {incomingRequests > 0 && <span className="min-w-5 h-5 px-1 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center">{incomingRequests}</span>}
           </button>
+          {/* Sistem bildirim butonu: tüm bildirimler buraya düşer, dokununca tam ekran açılır. */}
+          <NotificationBell />
         </div>
       </header>
 

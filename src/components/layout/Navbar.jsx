@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { openGoogle } from '@/lib/mediaSource';
 import ProfileDropdown from '@/components/layout/ProfileDropdown';
 import LiveChatButton from '@/components/layout/LiveChatButton';
-import SupportNotifBell from '@/components/layout/SupportNotifBell';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 
 const links = [
@@ -27,7 +26,7 @@ export default function Navbar() {
   };
 
   return (
-    <header className="fixed top-0 inset-x-0 z-50 pt-[max(env(safe-area-inset-top),1.5rem)] lg:pt-0"
+    <header className="hidden lg:block fixed top-0 inset-x-0 z-50"
       style={{ background: 'linear-gradient(135deg, #151517 0%, #242428 50%, #151517 100%)', borderBottom: '1px solid rgba(239,68,68,0.25)' }}>
       <div className="absolute inset-0 pointer-events-none opacity-30"
         style={{
@@ -58,7 +57,6 @@ export default function Navbar() {
           </form>
 
         <div className="flex items-center gap-2 ml-auto md:ml-2">
-          <SupportNotifBell />
           {user?.role === 'admin' && (
             <span className="hidden lg:flex">
               <LiveChatButton />
