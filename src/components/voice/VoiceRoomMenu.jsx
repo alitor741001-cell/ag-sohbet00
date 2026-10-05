@@ -6,7 +6,7 @@ import VoiceMenuTile from '@/components/voice/VoiceMenuTile';
 import VoiceSheet from '@/components/voice/VoiceSheet';
 
 const Panel = ({ children, hint }) => (
-  <div className="mt-4 rounded-2xl border border-white/10 bg-[#171720] p-3">
+  <div className="mt-4 rounded-2xl border border-[#F2CE6B]/45 bg-black/70 p-3 shadow-[0_0_18px_-8px_rgba(242,206,107,0.9)]">
     {children}
     {hint && <p className="mt-2 text-[11px] text-white/45">{hint}</p>}
   </div>
@@ -44,21 +44,23 @@ export default function VoiceRoomMenu({ open, onClose, room, userId, participant
       icon: locked ? Unlock : Lock,
       label: locked ? 'Kilidi aç' : 'Kilit',
       active: locked,
+      tone: 'gold',
       onClick: () => { if (locked) { onSetPassword(''); setPanel(null); } else { toggle('lock'); } },
     },
-    { key: 'hidden', icon: room?.hidden ? EyeOff : Eye, label: 'Gizli', active: !!room?.hidden, onClick: onToggleHidden },
-    { key: 'seats', icon: Armchair, label: 'Koltuk', active: panel === 'seats', onClick: () => toggle('seats') },
+    { key: 'hidden', icon: room?.hidden ? EyeOff : Eye, label: 'Gizli', active: !!room?.hidden, tone: 'purple', onClick: onToggleHidden },
+    { key: 'seats', icon: Armchair, label: 'Koltuk', active: panel === 'seats', tone: 'blue', onClick: () => toggle('seats') },
     // Sayaç düğmesi ayarları açar; tekrar basınca kapanır.
-    { key: 'board', icon: Hash, label: 'Sayaç', active: !!boardActive || panel === 'board', onClick: () => toggle('board') },
-    { key: 'clear', icon: Eraser, label: 'Sohbeti temizle', onClick: () => { onClose(); onClearChat?.(); } },
+    { key: 'board', icon: Hash, label: 'Sayaç', active: !!boardActive || panel === 'board', tone: 'green', onClick: () => toggle('board') },
+    { key: 'clear', icon: Eraser, label: 'Sohbeti temizle', tone: 'red', onClick: () => { onClose(); onClearChat?.(); } },
     {
       key: 'ban',
       icon: MessageSquareOff,
       label: chatBanned ? 'Sohbet yasağını kaldır' : 'Sohbet yasağı etkinleştir',
       active: chatBanned,
+      tone: 'red',
       onClick: onToggleChatBan,
     },
-    { key: 'log', icon: ScrollText, label: 'Kayıt defteri', onClick: () => { onClose(); onOpenLog?.(); } },
+    { key: 'log', icon: ScrollText, label: 'Kayıt defteri', tone: 'white', onClick: () => { onClose(); onOpenLog?.(); } },
   ];
 
   // Oda sahibi tüm ayarları görür; yönetici yalnızca kendisine verilen dört yetkiyi görür.
@@ -72,11 +74,12 @@ export default function VoiceRoomMenu({ open, onClose, room, userId, participant
           <VoiceMenuTile
             icon={UserPlus}
             label="Davet et"
+            tone="green"
             onClick={() => { onClose(); onInvite(); }}
           />
         )}
         {isOwner && room?.room_type === 'watch' && (
-          <VoiceMenuTile icon={Film} label="Film Odasına Dön" onClick={() => { onClose(); onExitVoiceMode?.(); }} />
+          <VoiceMenuTile icon={Film} label="Film Odasına Dön" tone="gold" onClick={() => { onClose(); onExitVoiceMode?.(); }} />
         )}
         {canMod && tiles.map((item) => (
           <VoiceMenuTile
@@ -84,12 +87,13 @@ export default function VoiceRoomMenu({ open, onClose, room, userId, participant
             icon={item.icon}
             label={item.label}
             active={!!item.active}
+            tone={item.tone}
             onClick={item.onClick}
           />
         ))}
       </div>
 
-      {!canMod && <p className="mt-4 rounded-xl bg-white/5 p-3 text-xs text-white/60">Oda ayarlarını yalnızca oda sahibi ve yöneticiler değiştirebilir.</p>}
+      {!canMod && <p className="mt-4 rounded-xl border border-[#F2CE6B]/30 bg-black/70 p-3 text-xs text-white/60">Oda ayarlarını yalnızca oda sahibi ve yöneticiler değiştirebilir.</p>}
 
       {canMod && panel === 'seats' && (
         <Panel hint={`Şu an ${room?.seat_count || 0} koltuk açık. Sığmayanlar izleyiciye düşer.`}>
@@ -112,7 +116,7 @@ export default function VoiceRoomMenu({ open, onClose, room, userId, participant
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
-            <button type="button" disabled={!password.trim()} onClick={() => { onSetPassword(password.trim()); setPassword(''); setPanel(null); }} className="flex h-10 items-center gap-1.5 rounded-xl bg-primary px-4 text-sm font-bold text-primary-foreground disabled:opacity-40">
+            <button type="button" disabled={!password.trim()} onClick={() => { onSetPassword(password.trim()); setPassword(''); setPanel(null); }} className="flex h-10 items-center gap-1.5 rounded-full border border-[#F2CE6B] bg-[#F2CE6B] px-4 text-sm font-bold text-black shadow-[0_0_14px_-3px_rgba(242,206,107,0.95)] disabled:opacity-40">
               <Lock className="h-4 w-4" /> Şifrele
             </button>
           </div>
@@ -144,7 +148,7 @@ export default function VoiceRoomMenu({ open, onClose, room, userId, participant
       )}
 
       {canMod && (
-        <p className="mt-3 rounded-xl bg-white/5 px-3 py-2 text-[11px] font-semibold text-white/60">
+        <p className="mt-3 rounded-xl border border-[#F2CE6B]/30 bg-black/70 px-3 py-2 text-[11px] font-semibold text-white/60">
           Sohbeti temizle ve sohbet yasağı tek dokunuşla uygulanır.
         </p>
       )}
@@ -156,8 +160,8 @@ export default function VoiceRoomMenu({ open, onClose, room, userId, participant
       )}
 
       {isOwner && (
-        <section className="mt-4 rounded-2xl border border-white/10 bg-[#171720] p-3">
-          <p className="mb-2 text-xs font-bold uppercase tracking-wide text-white/60">Yöneticiler</p>
+        <section className="mt-4 rounded-2xl border border-[#F2CE6B]/45 bg-black/70 p-3 shadow-[0_0_18px_-8px_rgba(242,206,107,0.9)]">
+          <p className="mb-2 text-xs font-bold uppercase tracking-wide text-[#F2CE6B]">Yöneticiler</p>
           {others.length === 0 ? (
             <p className="text-xs text-white/50">Odada başka kişi yok.</p>
           ) : (

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Eye, EyeOff, Instagram, Lock, MessageCircle, MessageSquare, MessageSquareOff, Mic, Unlock, UserX, Film, Shield, Trash2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { base44 } from '@/api/base44Client';
+import { neonCardClass } from '@/lib/neonStyle';
 
 export default function RoomSettingsContent({ room, canMod, participants, roomModerators, onAssignMod, onRemoveMod, roomName, setRoomName, onSaveName, password, setPassword, passwordOpen, setPasswordOpen, onVoice, onChat, onHidden, onPassword, onRemovePassword, onUnban, onPickMovie, onDeleteRoom, onToggleApproval, onChatBan }) {
   const { toast } = useToast();
@@ -9,7 +10,8 @@ export default function RoomSettingsContent({ room, canMod, participants, roomMo
   const [showMods, setShowMods] = useState(false);
   const [savedMods, setSavedMods] = useState([]);
   useEffect(() => { if (!room?.owner_id) return; base44.entities.RoomMod.filter({ owner_id: room.owner_id }, 'created_date', 100).then(setSavedMods).catch(() => {}); }, [room?.owner_id]);
-  const button = 'w-full flex items-center gap-3 rounded-xl border border-border bg-secondary/60 px-3 py-3 text-sm font-semibold hover:bg-secondary transition-colors';
+  // Ayarlar kartları: siyah zemin + parlayan altın çerçeve.
+  const button = `w-full flex items-center gap-3 px-3 py-3 text-sm font-semibold text-white transition-colors hover:border-[#F2CE6B]/80 ${neonCardClass('gold')}`;
   const shareText = `FILMKEYFİ odasına katıl: ${window.location.href}`;
   const shareWhatsApp = () => window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank', 'noopener,noreferrer');
   const shareInstagram = async () => {
@@ -28,10 +30,10 @@ export default function RoomSettingsContent({ room, canMod, participants, roomMo
   return (
     <>
       <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-3 space-y-2" style={{ touchAction: 'pan-y', WebkitOverflowScrolling: 'touch' }}>
-      {!canMod ? <p className="text-sm text-muted-foreground">Bu ayarları yalnızca oda sahibi değiştirebilir.</p> : <div className="space-y-2">
+      {!canMod ? <p className="text-sm text-white/60">Bu ayarları yalnızca oda sahibi değiştirebilir.</p> : <div className="space-y-2">
         <div className="flex gap-2">
-          <input value={roomName || ''} onChange={(e) => setRoomName(e.target.value)} placeholder="Oda adı" className="min-w-0 flex-1 rounded-lg bg-secondary px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" maxLength={80} />
-          <button onClick={onSaveName} disabled={!roomName?.trim()} className="rounded-lg bg-primary px-3 text-xs font-bold text-primary-foreground disabled:opacity-50 shrink-0">KAYDET</button>
+          <input value={roomName || ''} onChange={(e) => setRoomName(e.target.value)} placeholder="Oda adı" className="min-w-0 flex-1 rounded-full border border-white/15 bg-[#0d0d0d] px-4 py-2 text-sm text-white outline-none placeholder:text-white/40 focus:border-[#F2CE6B]/60" maxLength={80} />
+          <button onClick={onSaveName} disabled={!roomName?.trim()} className="shrink-0 rounded-full border border-[#F2CE6B] bg-[#F2CE6B] px-4 text-xs font-bold text-black shadow-[0_0_14px_-3px_rgba(242,206,107,0.95)] disabled:opacity-50">KAYDET</button>
         </div>
         <button onClick={onPickMovie} className={button}><Film className="w-4 h-4 text-primary" /> Film Değiştir</button>
         <button onClick={onVoice} className={`w-full flex items-center gap-3 rounded-xl border px-3 py-3 text-sm font-semibold transition-colors ${voiceMode ? 'border-green-500/40 bg-green-500/10 text-green-400' : 'border-red-500/40 bg-red-500/10 text-red-400'}`}>
@@ -55,7 +57,7 @@ export default function RoomSettingsContent({ room, canMod, participants, roomMo
           <>
             <button onClick={onHidden} className={button}>{room.hidden ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />} {room.hidden ? 'Odayı görünür yap' : 'Odayı gizle'}</button>
             <button onClick={() => room.password ? onRemovePassword() : setPasswordOpen(!passwordOpen)} className={button}>{room.password ? <Unlock className="w-4 h-4" /> : <Lock className="w-4 h-4" />} {room.password ? 'Şifreyi kaldır' : 'Şifre koy'}</button>
-            {passwordOpen && !room.password && <div className="flex gap-2"><input value={password} onChange={(e) => setPassword(e.target.value)} type="password" placeholder="Oda şifresi" className="min-w-0 flex-1 rounded-lg bg-secondary px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" /><button onClick={onPassword} disabled={!password.trim()} className="rounded-lg bg-primary px-3 text-xs font-bold text-primary-foreground disabled:opacity-50">KAYDET</button></div>}
+            {passwordOpen && !room.password && <div className="flex gap-2"><input value={password} onChange={(e) => setPassword(e.target.value)} type="password" placeholder="Oda şifresi" className="min-w-0 flex-1 rounded-full border border-white/15 bg-[#0d0d0d] px-4 py-2 text-sm text-white outline-none placeholder:text-white/40 focus:border-[#F2CE6B]/60" /><button onClick={onPassword} disabled={!password.trim()} className="shrink-0 rounded-full border border-[#F2CE6B] bg-[#F2CE6B] px-4 text-xs font-bold text-black shadow-[0_0_14px_-3px_rgba(242,206,107,0.95)] disabled:opacity-50">KAYDET</button></div>}
             {onToggleApproval && (
               <button onClick={onToggleApproval} className={`w-full flex items-center gap-3 rounded-xl border px-3 py-3 text-sm font-semibold transition-colors ${room.requires_approval === false ? 'border-green-500/40 bg-green-500/10 text-green-400' : 'border-amber-500/40 bg-amber-500/10 text-amber-400'}`}>
                 {room.requires_approval === false ? <Unlock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
@@ -70,7 +72,7 @@ export default function RoomSettingsContent({ room, canMod, participants, roomMo
           <>
             <button onClick={() => setShowMods(!showMods)} className={button}><Shield className="w-4 h-4 text-blue-400" /> Moderatörler ({roomModerators.length})</button>
             {showMods && (
-              <div className="rounded-xl border border-border bg-secondary/40 p-2 space-y-1.5 max-h-40 overflow-y-auto">
+              <div className="max-h-40 space-y-1.5 overflow-y-auto rounded-xl border border-[#F2CE6B]/35 bg-black/60 p-2">
                 {savedMods.filter((m) => !participants.some((p) => p.user_id === m.user_id)).map((m) => (
                   <div key={m.user_id} className="flex items-center justify-between gap-2">
                     <span className="text-xs truncate flex-1">{m.user_name} <span className="text-muted-foreground">(çevrim dışı)</span></span>
@@ -91,8 +93,8 @@ export default function RoomSettingsContent({ room, canMod, participants, roomMo
           </>
         )}
         {showBanned && (
-          <div className="rounded-xl border border-border bg-secondary/40 p-2 space-y-1.5 max-h-40 overflow-y-auto">
-            {bannedUsers.length === 0 ? <p className="text-xs text-muted-foreground text-center py-2">Atılmış kullanıcı yok.</p> :
+          <div className="max-h-40 space-y-1.5 overflow-y-auto rounded-xl border border-[#F2CE6B]/35 bg-black/60 p-2">
+            {bannedUsers.length === 0 ? <p className="py-2 text-center text-xs text-white/50">Atılmış kullanıcı yok.</p> :
               bannedUsers.map((b) => (
                 <div key={b.user_id} className="flex items-center justify-between gap-2">
                   <span className="text-xs truncate flex-1">{b.name || 'Kullanıcı'}</span>
@@ -105,11 +107,11 @@ export default function RoomSettingsContent({ room, canMod, participants, roomMo
       </div>}
       </div>
       {room.is_personal && canMod && onDeleteRoom && (
-        <button onClick={onDeleteRoom} className="mx-3 mb-2 flex items-center justify-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2.5 text-sm font-semibold text-red-400 hover:bg-red-500/20 transition-colors">
+        <button onClick={onDeleteRoom} className="mx-3 mb-2 flex items-center justify-center gap-2 rounded-2xl border border-[#FF5A5A]/55 bg-black/70 px-3 py-2.5 text-sm font-semibold text-[#FF8A8A] shadow-[0_0_18px_-8px_rgba(255,90,90,0.9)] transition-colors hover:border-[#FF5A5A]">
           <Trash2 className="w-4 h-4" /> Odayı Sil
         </button>
       )}
-      <div className="grid grid-cols-2 gap-2 border-t border-border p-3"><button onClick={shareWhatsApp} className={button}><MessageCircle className="w-4 h-4 text-green-500" /> WhatsApp</button><button onClick={shareInstagram} className={button}><Instagram className="w-4 h-4 text-pink-500" /> Instagram</button></div>
+      <div className="grid grid-cols-2 gap-2 border-t border-[#F2CE6B]/25 p-3"><button onClick={shareWhatsApp} className={button}><MessageCircle className="w-4 h-4 text-green-500" /> WhatsApp</button><button onClick={shareInstagram} className={button}><Instagram className="w-4 h-4 text-pink-500" /> Instagram</button></div>
     </>
   );
 }
