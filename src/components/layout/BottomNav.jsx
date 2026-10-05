@@ -2,6 +2,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Home, MessageCircle, Plus, User } from 'lucide-react';
 import { useCurrentUser, membershipActive } from '@/lib/useCurrentUser';
 import useSocialBadges from '@/hooks/useSocialBadges';
+import LiveChatButton from '@/components/layout/LiveChatButton';
 
 const fullItems = [
   { label: 'Ana Sayfa', path: '/', icon: Home },
@@ -21,7 +22,12 @@ export default function BottomNav() {
   const navigate = useNavigate();
   const { user } = useCurrentUser();
   const { messages, requests } = useSocialBadges(user?.id);
-  const items = membershipActive(user) ? fullItems : limitedItems;
+  const baseItems = membershipActive(user) ? fullItems : limitedItems;
+  // Canlı destek sohbeti: yöneticide profil sekmesinin hemen solunda durur.
+  const items =
+    user?.role === 'admin'
+      ? [...baseItems.slice(0, -1), { dock: 'support' }, ...baseItems.slice(-1)]
+      : baseItems;
 
   const handleNav = (item) => {
     // If the active tab is clicked again, reset to its root path.
@@ -41,10 +47,19 @@ export default function BottomNav() {
       </div>
 
       <div className="relative flex h-16 items-center">
-        {items.map(({ label, path, activePath, icon: Icon }) => {
+        {items.map((item, index) => {
+          if (item.dock === 'support') {
+            return (
+              <div key={`dock-${index}`} className="flex-1 flex flex-col items-center justify-center gap-0.5">
+                <LiveChatButton placement="dock" />
+                <span className="text-[10px] text-white/50">Canlı Destek</span>
+              </div>
+            );
+          }
+          const { label, path, activePath, icon: Icon } = item;
           const matchPath = activePath || path;
           const active = location.pathname === matchPath || (matchPath !== '/' && location.pathname.startsWith(matchPath));
-          const isCenter = path === '/oda-kur' && items === fullItems;
+          const isCenter = path === '/oda-kur' && baseItems === fullItems;
           if (isCenter) {
             return (
               <button key={path} onClick={() => handleNav({ path })} className="flex-1 flex flex-col items-center justify-center gap-0.5 relative">

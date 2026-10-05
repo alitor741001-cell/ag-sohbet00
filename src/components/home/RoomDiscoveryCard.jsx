@@ -34,7 +34,7 @@ export default function RoomDiscoveryCard({ room, owner, kind, filmTitle, friend
 
         {friendInside && (
           <span className="absolute right-2 top-2 flex items-center gap-1 rounded-full bg-black/70 px-1.5 py-0.5 text-[9px] font-extrabold text-[#4caf50]">
-            <Users className="h-2.5 w-2.5" /> Arkadaşın içinde
+            <Users className="h-2.5 w-2.5" /> Arkadaşın
           </span>
         )}
 

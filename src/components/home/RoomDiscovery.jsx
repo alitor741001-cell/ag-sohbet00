@@ -4,9 +4,7 @@ import { Film, Loader2, Mic, Search } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import RoomDiscoveryCard from '@/components/home/RoomDiscoveryCard';
-import FriendStrip from '@/components/home/FriendStrip';
 import useFriends from '@/hooks/useFriends';
-import useFriendPresence from '@/hooks/useFriendPresence';
 import useMessageProfiles from '@/hooks/useMessageProfiles';
 import { fetchYouTubeTitle, isGenericTitle, youtubeIdFromMovieId } from '@/lib/youtubeTitle';
 
@@ -26,7 +24,6 @@ const normalizeId = (value) =>
 export default function RoomDiscovery() {
   const { user } = useCurrentUser();
   const { relations } = useFriends();
-  const { isOnline, getRoomId } = useFriendPresence(user);
   const [rooms, setRooms] = useState([]);
   const [owners, setOwners] = useState({});
   const [titles, setTitles] = useState({});
@@ -106,9 +103,6 @@ export default function RoomDiscovery() {
     [friends, friendProfiles]
   );
 
-  // Çevrim içi arkadaşlar şeritte başta görünür.
-  const sortedFriends = [...friendsWithProfiles].sort((a, b) => Number(isOnline(b.id)) - Number(isOnline(a.id)));
-
   const friendIds = useMemo(() => friendsWithProfiles.map((friend) => friend.id), [friendsWithProfiles]);
   const hasFriendInside = (room) => {
     if (!friendIds.length) return false;
@@ -154,7 +148,11 @@ export default function RoomDiscovery() {
     return 'Ekran paylaşımı';
   };
 
-  const list = tab === 'voice' ? voiceRooms : filmRooms;
+  // Arkadaşının bulunduğu odalar her zaman en üstte görünür.
+  const list = useMemo(() => {
+    const tabRooms = tab === 'voice' ? voiceRooms : filmRooms;
+    return [...tabRooms].sort((a, b) => Number(hasFriendInside(b)) - Number(hasFriendInside(a)));
+  }, [tab, voiceRooms, filmRooms, friendIds]);
   const searching = query.trim().length > 0;
 
   // Arama açıkken iki sekme birlikte taranır: oda numarası veya üye kimliğiyle oda bulunur.
@@ -178,10 +176,6 @@ export default function RoomDiscovery() {
 
   return (
     <section className="mt-5">
-      {sortedFriends.length > 0 && (
-        <FriendStrip friends={sortedFriends} isOnline={isOnline} getRoomId={getRoomId} />
-      )}
-
       <div className="mb-3 flex items-center gap-2">
         <button
           type="button"

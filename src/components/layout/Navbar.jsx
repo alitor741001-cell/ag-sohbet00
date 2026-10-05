@@ -59,7 +59,11 @@ export default function Navbar() {
 
         <div className="flex items-center gap-2 ml-auto md:ml-2">
           <SupportNotifBell />
-          {user?.role === 'admin' && <LiveChatButton />}
+          {user?.role === 'admin' && (
+            <span className="hidden lg:flex">
+              <LiveChatButton />
+            </span>
+          )}
           <ProfileDropdown />
         </div>
       </div>

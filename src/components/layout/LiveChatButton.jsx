@@ -7,7 +7,7 @@ import { upsertNotification } from '@/lib/upsertNotification';
 
 const LOGIN_IMAGE = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/a38a234ce_generated_image.png';
 
-export default function LiveChatButton() {
+export default function LiveChatButton({ placement = 'top' }) {
   const { user } = useCurrentUser();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
@@ -256,7 +256,7 @@ export default function LiveChatButton() {
       </button>
 
       {open && (
-        <div className="fixed top-[calc(4rem+max(env(safe-area-inset-top),1.5rem))] right-3 lg:top-20 z-[70] w-[360px] max-w-[calc(100vw-1.5rem)] bg-[#141414] border border-[#2a2a2a] rounded-2xl shadow-2xl flex flex-col" style={{ height: '560px' }}>
+        <div className={`fixed right-3 z-[70] w-[360px] max-w-[calc(100vw-1.5rem)] bg-[#141414] border border-[#2a2a2a] rounded-2xl shadow-2xl flex flex-col ${placement === 'dock' ? 'bottom-[calc(4.75rem+env(safe-area-inset-bottom))]' : 'top-[calc(4rem+max(env(safe-area-inset-top),1.5rem))] lg:top-20'}`} style={{ height: '560px', maxHeight: placement === 'dock' ? 'calc(100dvh - 7rem)' : undefined }}>
           <div className="px-3 py-2.5 border-b border-[#2a2a2a] flex items-center gap-2">
             <div className="w-8 h-8 rounded-full overflow-hidden border border-purple-500/40 shrink-0">
               <img src={LOGIN_IMAGE} alt="" className="w-full h-full object-cover" />
