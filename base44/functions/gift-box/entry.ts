@@ -143,9 +143,12 @@ export default async function (req: Request): Promise<Response> {
       coinRows(sentCoins, 'sent');
       coinRows(receivedCoins, 'received');
 
-      items.sort((a: any, b: any) => (String(a.created_date) < String(b.created_date) ? 1 : -1));
+      // Liste her ayın 1'inde sıfırlanır: yalnızca içinde bulunulan ayın hareketleri gösterilir.
+      const monthStart = monthStartIso();
+      const monthlyItems = items.filter((item: any) => String(item.created_date || '').slice(0, 19) >= monthStart);
+      monthlyItems.sort((a: any, b: any) => (String(a.created_date) < String(b.created_date) ? 1 : -1));
 
-      return Response.json({ ok: true, items: items.slice(0, per) });
+      return Response.json({ ok: true, items: monthlyItems.slice(0, per) });
     }
 
     // Hediye gönderenler: her ayın 1'inde sıfırlanır — yalnızca bu ayın gönderimleri listelenir.

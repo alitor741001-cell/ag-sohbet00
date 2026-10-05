@@ -1069,6 +1069,7 @@ export default function VoiceRoom() {
         userId={user?.id}
         participants={participants}
         isOwner={isOwner}
+        isAdmin={user?.role === 'admin'}
         canMod={canMod}
         onSeatCount={changeSeatCount}
         onSetPassword={handleSetPassword}

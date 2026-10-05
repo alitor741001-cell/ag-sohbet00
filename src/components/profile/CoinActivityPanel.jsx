@@ -68,6 +68,11 @@ export default function CoinActivityPanel({ open, onClose }) {
 
       <div className="min-h-0 flex-1 overflow-y-auto p-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
         <div className="mx-auto w-full max-w-[430px]">
+          <div className="mb-2.5 flex justify-center">
+            <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] font-semibold text-white/45">
+              Bu ayın listesi • her ayın 1'inde otomatik sıfırlanır
+            </span>
+          </div>
           {loading ? (
             <div className="flex items-center justify-center py-10">
               <Loader2 className="h-6 w-6 animate-spin text-primary" />

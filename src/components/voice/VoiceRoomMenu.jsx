@@ -14,7 +14,7 @@ const Panel = ({ children, hint }) => (
 );
 
 /** "…" menüsü: yuvarlak ikon ızgarası — kilit, gizlilik, koltuk, sayaç, sohbet temizleme, sohbet yasağı ve kayıt defteri. */
-export default function VoiceRoomMenu({ open, onClose, room, userId, participants = [], isOwner, canMod, onSeatCount, onSetPassword, onToggleHidden, onToggleMod, onInvite, boardActive, onToggleBoard, onBoardSettings, onClearChat, onToggleChatBan, onOpenLog, onExitVoiceMode }) {
+export default function VoiceRoomMenu({ open, onClose, room, userId, participants = [], isOwner, isAdmin, canMod, onSeatCount, onSetPassword, onToggleHidden, onToggleMod, onInvite, boardActive, onToggleBoard, onBoardSettings, onClearChat, onToggleChatBan, onOpenLog, onExitVoiceMode }) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [panel, setPanel] = useState(null);
@@ -64,8 +64,9 @@ export default function VoiceRoomMenu({ open, onClose, room, userId, participant
     { key: 'log', icon: ScrollText, label: 'Kayıt defteri', tone: 'white', onClick: () => { onClose(); onOpenLog?.(); } },
   ];
 
-  // Oda sahibi tüm ayarları görür; yönetici yalnızca kendisine verilen dört yetkiyi görür.
-  const tiles = isOwner ? manageTiles : manageTiles.filter((item) => MOD_TILES.includes(item.key));
+  // Oda sahibi ve admin hesaplar tüm ayarları görür; diğer yönetici rolü dört yetkiyle sınırlıdır.
+  const fullAccess = isOwner || isAdmin;
+  const tiles = fullAccess ? manageTiles : manageTiles.filter((item) => MOD_TILES.includes(item.key));
 
   return (
     <VoiceSheet open={open} onClose={onClose} title="Oda ayarları">
@@ -161,7 +162,7 @@ export default function VoiceRoomMenu({ open, onClose, room, userId, participant
         </p>
       )}
 
-      {isOwner && (
+      {fullAccess && (
         <section className="mt-4 rounded-2xl border border-[#FFD700]/45 bg-black/70 p-3 shadow-[0_0_18px_-8px_rgba(255,215,0,0.9)]">
           <p className="mb-2 text-xs font-bold uppercase tracking-wide text-[#FFD700]">Yöneticiler</p>
           {others.length === 0 ? (
@@ -184,7 +185,7 @@ export default function VoiceRoomMenu({ open, onClose, room, userId, participant
                     <button
                       type="button"
                       onClick={() => onToggleMod(person.user_id, !isMod)}
-                      disabled={!isOwner && !isMod}
+                      disabled={!fullAccess && !isMod}
                       className={`flex shrink-0 items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] font-bold disabled:opacity-40 ${isMod ? 'bg-sky-500/20 text-sky-300' : 'bg-white/10 text-white'}`}
                     >
                       <Shield className="h-3.5 w-3.5" /> {isMod ? 'Yetkiyi al' : 'Yönetici yap'}

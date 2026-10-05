@@ -131,9 +131,9 @@ export default async function (req: Request): Promise<Response> {
       if (!target_id) return Response.json({ error: 'kullanıcı gerekli' }, { status: 400 });
       const target = seats.find((seat) => seat.user_id === target_id);
       if (!target) return respond(seats);
-      // Koltuktan indirme: oda sahibi herkesi, yöneticiler gizli kullanıcıları indirebilir.
-      if (!isOwner && !(canMod && isHiddenDisplayName(target.name))) {
-        return Response.json({ error: 'Koltuktan yalnızca oda sahibi indirebilir.' }, { status: 403 });
+      // Koltuktan indirme: oda sahibi, oda moderatörleri ve admin/yönetici hesaplar herkesi indirebilir.
+      if (!canMod) {
+        return Response.json({ error: 'Koltuktan yalnızca oda sahibi ve yönetici hesaplar indirebilir.' }, { status: 403 });
       }
       const targetUser = await base44.asServiceRole.entities.User.get(target_id).catch(() => null);
       // Yönetici hesabı koltuğundan indirilemez: deneyen kişi uyarılır.
