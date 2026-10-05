@@ -268,8 +268,7 @@ export default async function(req) {
     }
 
     if (action === 'kick' || action === 'ban') {
-      // Odadan atma yalnızca oda sahibinin yetkisidir; yasaklama (ban) yöneticilerde kalır.
-      if (action === 'kick' && !isOwner) return Response.json({ error: 'Odadan yalnızca oda sahibi atabilir.' }, { status: 403 });
+      // Odadan atma ve engelleme: oda sahibi, oda moderatörleri, yönetici rolü ve admin yetkilidir.
       if (!canModRoom) return Response.json({ error: 'yetkisiz' }, { status: 403 });
       const targetUser = await base44.asServiceRole.entities.User.get(target_id).catch(() => null);
       // Yetki hiyerarşisi: kurucu korunur; admin yardımcısı ve kraliçeyi yalnızca kurucu atabilir.

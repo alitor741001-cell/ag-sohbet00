@@ -6,7 +6,7 @@ import ChatOverlay from '@/components/player/ChatOverlay';
 import { useVoiceChat } from '@/hooks/useVoiceChat';
 import { useCurrentUser, membershipActive } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
-import { Crown, X, Eye, ArrowLeft, UserMinus } from 'lucide-react';
+import { Ban, Crown, X, Eye, ArrowLeft, UserMinus } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import RoomSettingsMenu from '@/components/player/RoomSettingsMenu';
@@ -809,13 +809,17 @@ export default function WatchParty() {
         <FullUserProfile
           userId={profileTarget}
           sheet
-          theme="gold"
+          theme="blue"
           hideSettings
+          hideBlock={canMod}
           onClose={closeUserProfile}
           roomId={id}
           level={roomLevels[profileTarget] || 0}
           onMessage={(userId) => { closeUserProfile(); openDirectMessage(userId); }}
-          footer={canMod && profileTarget !== user?.id ? [{ key: 'kick', icon: UserMinus, label: 'Odadan at', onClick: () => { kickUser(profileTarget); closeUserProfile(); } }] : []}
+          footer={canMod && profileTarget !== user?.id ? [
+            { key: 'kick', icon: UserMinus, label: 'Odadan at', onClick: () => { kickUser(profileTarget); closeUserProfile(); } },
+            { key: 'ban', icon: Ban, label: 'Engelle', danger: true, onClick: () => { banUser(profileTarget); closeUserProfile(); } },
+          ] : []}
         />
       )}
     </div>

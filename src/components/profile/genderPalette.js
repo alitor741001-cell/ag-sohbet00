@@ -32,14 +32,14 @@ const MASKED = {
   symbol: '?',
 };
 
-/** Film odası kartı: altın sarısı ve kırmızı tonlar. */
-export const ROOM_GOLD = {
-  bg: 'radial-gradient(circle at 50% 0%, rgba(242,206,107,0.26), transparent 58%), linear-gradient(165deg, #2A1B06 0%, #1B0A08 48%, #33090B 100%)',
-  accent: '#F2CE6B',
-  accent2: '#FFD700',
-  danger: '#E5484D',
-  soft: 'rgba(242,206,107,0.26)',
-  glow: 'rgba(229,72,77,0.5)',
+/** Film odası kartı: mavi ve kırmızı tonlar. */
+export const ROOM_BLUE = {
+  bg: 'radial-gradient(circle at 50% 0%, rgba(46,125,255,0.32), transparent 58%), linear-gradient(165deg, #06142E 0%, #04070F 52%, #2A0608 100%)',
+  accent: '#2E7DFF',
+  accent2: '#4DA3FF',
+  danger: '#FF2D2D',
+  soft: 'rgba(46,125,255,0.28)',
+  glow: 'rgba(46,125,255,0.55)',
   symbol: '★',
 };
 

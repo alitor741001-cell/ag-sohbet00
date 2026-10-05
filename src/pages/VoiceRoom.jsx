@@ -132,7 +132,8 @@ export default function VoiceRoom() {
   const isOwner = !!user && room?.owner_id === user.id;
   const canMod = isOwner || moderators.includes(user?.id) || user?.role === 'admin';
   // Odadan atma yalnızca oda sahibinin yetkisidir.
-  const canKick = isOwner;
+  // Odadan atma: oda sahibi, oda moderatörleri, yönetici rolü ve admin yetkilidir.
+  const canKick = canMod;
   // Sohbet yasağı açıkken yalnızca koltuktakiler yazar.
   const chatBanned = room?.chat_seated_only === true;
   const chatLocked = chatBanned && !seated;

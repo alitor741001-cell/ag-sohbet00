@@ -5,7 +5,7 @@ import { base44 } from '@/api/base44Client';
 import { useToast } from '@/components/ui/use-toast';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { HIDDEN_AVATAR_URL } from '@/lib/hiddenUser';
-import { ROOM_GOLD, ageFromBirthDate, formatDate, genderPalette } from '@/components/profile/genderPalette';
+import { ROOM_BLUE, ageFromBirthDate, formatDate, genderPalette } from '@/components/profile/genderPalette';
 import ProfileHeroBlock from '@/components/profile/ProfileHeroBlock';
 import ProfileStatsRow from '@/components/profile/ProfileStatsRow';
 import ProfileIdentityBlock from '@/components/profile/ProfileIdentityBlock';
@@ -20,7 +20,7 @@ const REPORT_REASONS = ['Spam', 'Taciz', 'Uygunsuz İçerik', 'Diğer'];
 export default function FullUserProfile({
   open = true, userId, name, avatar, frame, frameScale,
   hidden = false, muted = false, level = 0, roomId, self = false, sheet = false,
-  theme = '', hideSettings = false,
+  theme = '', hideSettings = false, hideBlock = false,
   onClose, onMessage, tiles = [], footer = [],
 }) {
   const navigate = useNavigate();
@@ -54,8 +54,8 @@ export default function FullUserProfile({
 
   if (!open || !userId) return null;
 
-  // Film odası kartı altın sarısı + kırmızı; sesli odada cinsiyete göre renk kullanılır.
-  const palette = theme === 'gold' ? ROOM_GOLD : genderPalette(profile?.gender, hidden);
+  // Film odası kartı mavi + kırmızı; sesli odada cinsiyete göre renk kullanılır.
+  const palette = theme === 'blue' ? ROOM_BLUE : genderPalette(profile?.gender, hidden);
   const loading = !hidden && !profile;
   const shownName = hidden ? (name || 'Gizli Kullanıcı') : (profile?.username || profile?.full_name || name || 'Kullanıcı');
   const shownAvatar = hidden ? HIDDEN_AVATAR_URL : (profile?.avatar || avatar || '');
@@ -162,7 +162,8 @@ export default function FullUserProfile({
 
             <ProfileStatsRow
               palette={palette}
-              level={level}
+              // 1000, yöneticilere sabitlenen yapay en üst seviyedir: kartta gösterilmez.
+              level={level >= 1000 ? 0 : level}
               receivedLevel={profile?.gift_received_level || 0}
               receivedTier={profile?.gift_received_tier}
               nLevel={profile?.n_level || 0}
@@ -241,7 +242,7 @@ export default function FullUserProfile({
                     <ChevronRight className="h-4 w-4 text-white/40" />
                   </button>
                 ))}
-                {showSocial && (
+                {showSocial && !hideBlock && (
                   <button
                     type="button"
                     onClick={blockUser}
