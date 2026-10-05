@@ -6,6 +6,7 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import UserBadge from '@/components/admin/UserBadge';
 import RoleLabelEditor from '@/components/admin/RoleLabelEditor';
 import UserGenderDialog from '@/components/admin/UserGenderDialog';
+import { visibleEmail } from '@/lib/visibleEmail';
 
 
 const btn = 'px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap';

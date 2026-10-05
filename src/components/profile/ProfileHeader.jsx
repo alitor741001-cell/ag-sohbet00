@@ -3,6 +3,7 @@ import { Camera, Crown, Loader2, Shield } from 'lucide-react';
 import RoleBadge from '@/components/RoleBadge';
 import XpAvatar from '@/components/xp/XpAvatar';
 import { isRedNameVip } from '@/lib/userLevels';
+import { visibleEmail } from '@/lib/visibleEmail';
 import useXp from '@/hooks/useXp';
 
 /** Profil başlığı: çerçevesiz avatar, yanında kamera simgesi; altında isim, e-posta ve rol etiketi. */
@@ -55,7 +56,7 @@ export default function ProfileHeader({ user, avatar, onAvatar, uploading }) {
         {isAdmin && <Crown className="h-5 w-5 text-[#f2ce6b]" />}
         <h2 className="text-xl font-extrabold text-white" style={isRedNameVip(user.vip_level) ? { color: '#ef4444' } : undefined}>{name}</h2>
       </div>
-      <p className="mt-1 max-w-full truncate text-xs text-white/55">{user.email}</p>
+      {visibleEmail(user) && <p className="mt-1 max-w-full truncate text-xs text-white/55">{visibleEmail(user)}</p>}
       {(isAdmin || hasRole) && (
         <div className="mt-2 flex items-center justify-center gap-2">
           {isAdmin ? (

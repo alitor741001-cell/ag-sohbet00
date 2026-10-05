@@ -1,5 +1,6 @@
 import { CalendarDays, Mail, Phone, ShieldCheck, User, Users } from 'lucide-react';
 import { ageFromBirthDate, formatDate } from '@/components/profile/genderPalette';
+import { visibleEmail } from '@/lib/visibleEmail';
 
 const genderLabel = (gender) => {
   if (gender === 'erkek') return 'Erkek';
@@ -30,7 +31,7 @@ export default function ProfileDetailsSection({ user, editing, form, setForm, on
     [User, 'Kullanıcı Adı', user.username || '—'],
     [Users, 'Ad Soyad', user.full_name || '—'],
     [ShieldCheck, 'Kimlik No', user.member_id || '—'],
-    [Mail, 'E-posta', user.email],
+    ...(visibleEmail(user) ? [[Mail, 'E-posta', visibleEmail(user)]] : []),
     [Phone, 'Telefon', user.phone || 'Eklenmedi'],
     [Users, 'Cinsiyet', genderLabel(user.gender)],
     [CalendarDays, 'Yaş', age === null ? '—' : String(age)],
