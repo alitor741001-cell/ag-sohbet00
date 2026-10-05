@@ -1030,11 +1030,12 @@ export default function VoiceRoom() {
             toast({ title: 'Sohbet yasağı açık', description: 'Yazmak için bir koltuğa otur.' });
             return;
           }
-          // Kapalıysa aç (akış + yazma alanı); yazma alanı açıkken yalnızca onu kapat (mesajlar kalır);
-          // akış açık ve yazma alanı kapalıyken tümüyle kapat.
-          if (!chatOpen) { setChatOpen(true); setComposerOpen(true); return; }
+          // Tek basışta sohbet akışı ve yazma alanı açılır, klavye gelir.
+          // Yazma alanı açıkken basılırsa yalnızca yazma alanı kapanır; mesaj akışı ekranda kalır,
+          // tekrar basınca yazma alanı ve klavye yeniden açılır.
           if (composerOpen) { setComposerOpen(false); return; }
-          setChatOpen(false);
+          setChatOpen(true);
+          setComposerOpen(true);
         }}
       />
 
