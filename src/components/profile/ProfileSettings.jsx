@@ -3,16 +3,11 @@ import { KeyRound, ChevronDown, ShieldOff } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useToast } from '@/components/ui/use-toast';
 import BlockedUsers from '@/components/profile/BlockedUsers';
-import XpFrameSelector from '@/components/profile/XpFrameSelector';
-import ProfileFrames from '@/components/profile/ProfileFrames';
-
-import FrameEntranceToggle from '@/components/profile/FrameEntranceToggle';
 import HiddenUserCard from '@/components/profile/HiddenUserCard';
 import useFriends from '@/hooks/useFriends';
 
 export default function ProfileSettings({ user, onUpdated }) {
   const { toast } = useToast(); const [saving, setSaving] = useState(false); const [form, setForm] = useState({ current: '', next: '', confirm: '' });
-  const isAdmin = user?.role === 'admin';
   const submit = async (event) => {
     event.preventDefault();
     if (form.next.length < 8) return toast({ title: 'Yeni şifre en az 8 karakter olmalıdır', variant: 'destructive' });
@@ -26,9 +21,7 @@ export default function ProfileSettings({ user, onUpdated }) {
   };
   return <div className="space-y-5">
     <HiddenUserCard user={user} onUpdated={onUpdated} />
-    {!isAdmin && <XpFrameSelector user={user} />}
-    {!isAdmin && <ProfileFrames user={user} onUpdated={onUpdated} />}
-    {!isAdmin && user.profile_frame && <FrameEntranceToggle user={user} onSaved={onUpdated} />}
+    {/* Çerçeve ve çerçeve ayarı bölümleri kaldırıldı. */}
     <form onSubmit={submit} className="rounded-2xl border border-border bg-card p-5 space-y-3"><h2 className="flex items-center gap-2 font-bold"><KeyRound className="w-5 h-5" />Şifre Değiştir</h2><Password label="Mevcut Şifre" value={form.current} onChange={(current) => setForm({ ...form, current })} /><Password label="Yeni Şifre" value={form.next} onChange={(next) => setForm({ ...form, next })} /><Password label="Yeni Şifre Tekrar" value={form.confirm} onChange={(confirm) => setForm({ ...form, confirm })} /><button disabled={saving} className="rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50">{saving ? 'Değiştiriliyor...' : 'Şifreyi Değiştir'}</button></form>
     <BlockedUsersSection />
   </div>;
