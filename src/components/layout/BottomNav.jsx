@@ -6,8 +6,8 @@ import LiveChatButton from '@/components/layout/LiveChatButton';
 
 const fullItems = [
   { label: 'Ana Sayfa', path: '/', icon: Home },
-  { label: 'Oda Kur', path: '/oda-kur', icon: Plus },
   { label: 'Sohbet', path: '/arkadaslar?view=chats', activePath: '/arkadaslar', icon: MessageCircle },
+  { label: 'Oda Kur', path: '/oda-kur', icon: Plus },
   { label: 'Profil', path: '/profil', icon: User },
 ];
 
