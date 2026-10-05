@@ -32,6 +32,12 @@ const fmt = (seconds) => {
     : `${m}:${String(s).padStart(2, '0')}`;
 };
 
+// Gömülü YouTube oynatıcısının ses seviyesi iOS/iPadOS'ta programatik olarak değiştirilemez:
+// WebKit sesi telefonun kendi ayarına bırakır, yalnızca sessize alma çalışır.
+const IOS_VOLUME_LOCKED = /iPad|iPhone|iPod/.test(navigator.userAgent)
+  || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const IOS_MUTE_THRESHOLD = 50;
+
 /**
  * YouTube videosunu oda ekranında oynatır: ilerleme, geri/ileri sarma ve tam ekran
  * mevcut film oynatıcısıyla aynı şekilde odaya senkron bildirilir.
@@ -62,12 +68,17 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
   });
   const [muted, setMuted] = useState(() => localStorage.getItem('filmkeyfi_player_muted') === 'true');
 
+  // iPhone/iPad'de seviye uygulanamadığı için yüzde eşik olarak çalışır: %50'nin altı sessiz.
+  // Android ve masaüstünde yüzde gerçek ses seviyesidir.
+  const silent = muted || (IOS_VOLUME_LOCKED && volume < IOS_MUTE_THRESHOLD);
+
   // Ses, kaydırma sırasında anında uygulanır: React güncellemesi beklenmez.
   const applyVolume = (level, isMuted) => {
     const player = playerRef.current;
     if (!player?.setVolume) return;
-    if (isMuted) player.mute?.(); else player.unMute?.();
-    player.setVolume(isMuted ? 0 : level);
+    const quiet = isMuted || (IOS_VOLUME_LOCKED && level < IOS_MUTE_THRESHOLD);
+    if (quiet) player.mute?.(); else player.unMute?.();
+    player.setVolume(quiet ? 0 : level);
   };
 
   const changeVolume = (percent) => {
@@ -80,10 +91,14 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
   };
 
   const toggleMute = () => {
-    const next = !muted;
+    const next = !silent;
+    // iPhone'da kademe uygulanamadığı için açma işlemi tam ses verir.
+    const level = !next && IOS_VOLUME_LOCKED ? 100 : volume;
     setMuted(next);
+    if (level !== volume) setVolume(level);
     localStorage.setItem('filmkeyfi_player_muted', String(next));
-    applyVolume(volume, next);
+    localStorage.setItem('filmkeyfi_player_volume', String(level / 100));
+    applyVolume(level, next);
   };
 
   // Oynatıcı kurulduğunda / yeniden kurulduğunda kayıtlı seviye uygulanır.
@@ -274,11 +289,21 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
           )}
           {isOwner && <span>{fmt(duration)}</span>}
         </div>
+        {IOS_VOLUME_LOCKED && (
+          <p className="mb-1 text-[10px] font-semibold text-white/60">iPhone: YouTube sesi aç/kapa — kademe için telefon ses tuşları</p>
+        )}
         <div className="flex items-center gap-1 text-white sm:gap-2">
           {isOwner && <button onClick={togglePlay} className="rounded-lg p-2 hover:bg-white/10">{playing ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}</button>}
           {isOwner && <button onClick={() => skip(-10)} className="rounded-lg p-2 hover:bg-white/10" title="10 sn geri"><Rewind className="h-5 w-5" /></button>}
           {isOwner && <button onClick={() => skip(10)} className="rounded-lg p-2 hover:bg-white/10" title="10 sn ileri"><FastForward className="h-5 w-5" /></button>}
-          <VolumeSlider volume={volume / 100} muted={muted} onChange={changeVolume} onToggleMute={toggleMute} nativeFallback />
+          <VolumeSlider
+            // Etkin seviye gösterilir: iPhone'da 0% (sessiz) veya 100% (tam ses).
+            volume={IOS_VOLUME_LOCKED ? (silent ? 0 : 1) : volume / 100}
+            muted={silent}
+            onChange={changeVolume}
+            onToggleMute={toggleMute}
+            nativeFallback
+          />
           <button onClick={toggleFullscreen} className="ml-auto rounded-lg p-2 hover:bg-white/10" title="Tam ekran">
             {fullscreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
           </button>
