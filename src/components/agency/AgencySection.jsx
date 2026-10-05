@@ -26,6 +26,7 @@ export default function AgencySection({ user, onRefresh }) {
   const [panelTab, setPanelTab] = useState('quota');
   const [inviteId, setInviteId] = useState('');
   const [refreshKey, setRefreshKey] = useState(0);
+  const [justCreated, setJustCreated] = useState(false);
 
   const load = useCallback(() => {
     agencyApi('summary')
@@ -52,6 +53,7 @@ export default function AgencySection({ user, onRefresh }) {
 
   const actions = isPending ? [
     { key: 'application', label: 'Başvuru Bilgileri', icon: Building2, onClick: () => openPanel('agency', 'stats') },
+    { key: 'agency-settings', label: 'Ajans Ayarları', icon: Sparkles, onClick: () => openPanel('agency', 'settings') },
     { key: 'invites', label: `Ajans Davetlerim${inviteCount ? ` (${inviteCount})` : ''}`, icon: MailOpen, onClick: () => setSheet('invites') },
   ] : isOwner ? [
     { key: 'agency-stats', label: 'Ajans Yönetimi', icon: Building2, onClick: () => openPanel('agency', 'stats') },
@@ -137,7 +139,15 @@ export default function AgencySection({ user, onRefresh }) {
         </div>
       </div>
 
-      <AgencyCreateSheet open={sheet === 'create'} onClose={() => setSheet('')} onCreated={afterChange} />
+      {/* Başvuru gönderildikten sonra ajans ayarları kendiliğinden açılır. */}
+      <AgencyCreateSheet
+        open={sheet === 'create'}
+        onCreated={() => { setJustCreated(true); afterChange(); }}
+        onClose={() => {
+          setSheet('');
+          if (justCreated) { setJustCreated(false); openPanel('agency', 'settings'); }
+        }}
+      />
 
       <AgencySheet open={sheet === 'invites'} onClose={() => setSheet('')} icon={MailOpen} title={TITLES.invite} subtitle="Gelen ve gönderilen davetler">
         <AgencyInvitesPanel open={sheet === 'invites'} onOpenInvite={openInvite} refreshKey={refreshKey} />

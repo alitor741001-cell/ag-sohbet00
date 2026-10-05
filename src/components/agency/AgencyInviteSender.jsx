@@ -85,11 +85,16 @@ export default function AgencyInviteSender({ invites = [], onChanged }) {
               <p className="truncate text-sm font-bold">{found.name}</p>
               <p className="text-[10px] text-white/45">#{found.member_id}{found.agency_name ? ` • ${found.agency_name}` : ''}</p>
             </div>
-            <button onClick={send} disabled={sending || !!found.agency_name} className="flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-black text-black disabled:opacity-50" style={{ background: AGENCY_GOLD }}>
+            <button onClick={send} disabled={sending || !!found.agency_name || !found.friend} className="flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-black text-black disabled:opacity-50" style={{ background: AGENCY_GOLD }}>
               {sending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : found.agency_name ? <X className="h-3.5 w-3.5" /> : <Send className="h-3.5 w-3.5" />}
-              {found.agency_name ? 'Bağlı' : 'Davet Et'}
+              {found.agency_name ? 'Bağlı' : found.friend ? 'Davet Et' : 'Arkadaş Ekle'}
             </button>
           </div>
+        )}
+        {found && !found.friend && !found.agency_name && (
+          <p className="mt-2 text-[10px] leading-snug" style={{ color: AGENCY_GOLD }}>
+            Davet gönderebilmek için önce arkadaş olmanız gerekir. Kullanıcının profilinden arkadaşlık isteği gönder, kabul edilince davet edebilirsin.
+          </p>
         )}
       </div>
 

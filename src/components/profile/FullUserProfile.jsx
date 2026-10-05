@@ -66,7 +66,8 @@ export default function FullUserProfile({
   const genderLabel = profile?.gender === 'erkek' ? 'Erkek' : profile?.gender === 'kadın' ? 'Kadın' : 'Belirtilmedi';
   const showSocial = !isSelf && !hidden;
   // Ajans sahibi, kendi ajansında olmayan bir kullanıcıyı yayıncı olarak davet edebilir.
-  const canInvite = showSocial && user?.agency_role === 'owner' && !!user?.agency_record_id
+  // Yayıncı daveti yalnızca arkadaş olduğun kullanıcılara gönderilebilir.
+  const canInvite = showSocial && relation === 'friend' && user?.agency_role === 'owner' && !!user?.agency_record_id
     && !!profile && profile.agency_record_id !== user?.agency_record_id;
 
   const inviteBroadcaster = async () => {

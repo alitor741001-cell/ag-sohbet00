@@ -8,6 +8,7 @@ import ProfileFrames from '@/components/profile/ProfileFrames';
 
 import FrameEntranceToggle from '@/components/profile/FrameEntranceToggle';
 import HiddenUserCard from '@/components/profile/HiddenUserCard';
+import AgencySection from '@/components/agency/AgencySection';
 import useFriends from '@/hooks/useFriends';
 
 export default function ProfileSettings({ user, onUpdated }) {
@@ -25,6 +26,7 @@ export default function ProfileSettings({ user, onUpdated }) {
     finally { setSaving(false); }
   };
   return <div className="space-y-5">
+    <AgencySection user={user} onRefresh={onUpdated} />
     <HiddenUserCard user={user} onUpdated={onUpdated} />
     {!isAdmin && <XpFrameSelector user={user} />}
     {!isAdmin && <ProfileFrames user={user} onUpdated={onUpdated} />}

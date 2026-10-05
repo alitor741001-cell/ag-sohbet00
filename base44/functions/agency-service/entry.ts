@@ -41,6 +41,12 @@ export default async function (req) {
       return rows?.[0] || null;
     };
 
+    // Yayıncı daveti yalnızca kabul edilmiş arkadaşlığı olan kullanıcılara gönderilir.
+    const isFriendOf = async (userId: string, targetId: string) => {
+      const rows = await base44.asServiceRole.entities.Friendship.filter({ members: userId }, '-created_date', 200).catch(() => []);
+      return (rows || []).some((row) => row.status === 'accepted' && (row.members || []).includes(targetId));
+    };
+
     // Başvuru aşamasındaki (onaylanmamış) ajanslarla işlem yapılamaz.
     const isAgencyActive = (agency: any) => !!agency && agency.status !== 'pending' && agency.status !== 'rejected' && agency.active !== false;
 
@@ -118,7 +124,8 @@ export default async function (req) {
     if (action === 'update') {
       if (account.agency_role !== 'owner' || !account.agency_record_id) return Response.json({ error: 'Ajans sahibi değilsin.' }, { status: 403 });
       const ownAgency = await base44.asServiceRole.entities.Agency.get(account.agency_record_id).catch(() => null);
-      if (!isAgencyActive(ownAgency)) return Response.json({ error: 'Ajansın henüz onaylanmadı.' }, { status: 403 });
+      // Ayarlar başvuru aşamasında da düzenlenebilir.
+      if (!ownAgency || ownAgency.owner_id !== account.id) return Response.json({ error: 'Ajans sahibi değilsin.' }, { status: 403 });
       const patch: any = {};
       if (typeof body.name === 'string' && body.name.trim().length >= 3) patch.name = body.name.trim().slice(0, 60);
       if (typeof body.description === 'string') patch.description = body.description.trim().slice(0, 400);
@@ -126,7 +133,8 @@ export default async function (req) {
       if (typeof body.rules === 'string') patch.rules = body.rules.trim().slice(0, 2000);
       if (!Object.keys(patch).length) return Response.json({ error: 'Değişiklik yok.' }, { status: 400 });
       const updated = await base44.asServiceRole.entities.Agency.update(account.agency_record_id, patch);
-      if (patch.name) await syncAgencyName(account.agency_record_id, patch.name);
+      // Ajans adı üyelerin profiline yalnızca onaylanmış ajanslarda yansıtılır.
+      if (patch.name && isAgencyActive({ ...ownAgency, ...patch })) await syncAgencyName(account.agency_record_id, patch.name);
       return Response.json({ ok: true, agency: updated });
     }
 
@@ -138,6 +146,7 @@ export default async function (req) {
       const target = await base44.asServiceRole.entities.User.get(targetId).catch(() => null);
       if (!target) return Response.json({ error: 'Kullanıcı bulunamadı.' }, { status: 404 });
       if (target.agency_record_id) return Response.json({ error: 'Bu kullanıcı zaten bir ajansa bağlı.' }, { status: 400 });
+      if (!(await isFriendOf(account.id, target.id))) return Response.json({ error: 'Yalnızca arkadaşlarını yayıncı olarak davet edebilirsin. Önce arkadaş ekle.' }, { status: 403 });
       const rl = await rateLimit(base44, 'agency-invite:' + account.id, account.id, 40, 60000);
       if (!rl.allowed) return Response.json({ error: 'Çok fazla davet gönderdin, biraz bekleyin.' }, { status: 429 });
       const existing = await base44.asServiceRole.entities.AgencyInvite
@@ -374,6 +383,7 @@ export default async function (req) {
         user: {
           id: found.id, name: found.username || found.full_name || 'Kullanıcı', avatar: found.avatar || '',
           member_id: found.member_id || '-', agency_name: inSameAgency ? (found.agency_name || 'Ajansın') : (found.agency_name || ''),
+          friend: await isFriendOf(account.id, found.id),
         },
       });
     }
