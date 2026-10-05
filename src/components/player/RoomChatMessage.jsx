@@ -48,8 +48,9 @@ function RoomChatMessage({ message, profile, ownerId, roomModerators, currentUse
           Film odası paneli dar olduğu için rozetler kompakt ölçekte ve tek satırda tutulur. */}
       <div className="mt-1 flex min-w-0 flex-wrap items-center gap-1">
         <UserBadgeRow profile={profile} compact />
-        {/* LVL 1000 (oda sahibi) ve üzeri mesajlarda yazılmaz. */}
-        {!hidden && !isOwner && Number(level) < 1000 && <RoomLevelBadge level={level} />}
+        {/* LVL rozeti yalnızca VIP üyelerde görünür; normal üyelerin isminde seviye yazmaz.
+            LVL 1000 (oda sahibi) ve üzeri mesajlarda da yazılmaz. */}
+        {!hidden && !isOwner && Number(level) < 1000 && Number(profile?.vip_level || 0) > 0 && <RoomLevelBadge level={level} />}
       </div>
       <div className="isolate mt-1 min-w-0 max-w-full overflow-hidden rounded-xl p-2">
         <RoleMessageEffect className="max-w-full min-w-0 align-top" roleKey={profile?.display_role || (profile?.custom_role?.name ? 'custom' : '')} msgEffect={role.msg_effect} msgColor={role.color}>

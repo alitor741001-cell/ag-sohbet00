@@ -11,6 +11,7 @@ import VoiceSeatGrid from '@/components/voice/VoiceSeatGrid';
 import { resizeSeats } from '@/components/voice/seatLayout';
 import HiddenUserMarquee from '@/components/voice/HiddenUserMarquee';
 import { isHiddenName } from '@/lib/hiddenUser';
+import { mergeMessages } from '@/lib/realtimeMessages';
 import VoiceControlBar from '@/components/voice/VoiceControlBar';
 import VoiceChatDock from '@/components/voice/VoiceChatDock';
 import VoiceViewerSheet from '@/components/voice/VoiceViewerSheet';
@@ -56,6 +57,8 @@ export default function VoiceRoom() {
   const [messages, setMessages] = useState([]);
   // Sohbet akışı ve yazma alanı ayrı yönetilir: mesaj gidince yazma alanı kapanır, akış kalır.
   const [chatOpen, setChatOpen] = useState(false);
+  // Odaya girildiğinde yalnızca yeni mesajlar görünür; eski geçmiş klavye (sohbet) butonuna basınca açılır.
+  const [chatCutoff, setChatCutoff] = useState(() => Date.now() - 10000);
   const [composerOpen, setComposerOpen] = useState(false);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -358,8 +361,11 @@ export default function VoiceRoom() {
   // Sohbet akışı
   useEffect(() => {
     if (!id) return;
+    // Giriş anı: akışta bu andan sonraki mesajlar görünür (kendi "odaya katıldı" bildirimi dahil),
+    // eski geçmiş yalnızca sohbet (klavye) butonuna basınca listelenir.
+    setChatCutoff(Date.now() - 10000);
     base44.entities.RoomMessage.filter({ room_id: id }, '-created_date', 80)
-      .then((list) => setMessages([...list].reverse()))
+      .then((list) => setMessages((prev) => mergeMessages(prev, [...list].reverse())))
       .catch(() => {});
     const unsubscribe = base44.entities.RoomMessage.subscribe((event) => {
       const data = event?.data;
@@ -1006,6 +1012,7 @@ export default function VoiceRoom() {
         chatLocked={chatLocked}
         onSend={sendMessage}
         open={chatOpen}
+        cutoff={chatCutoff}
         onCloseComposer={() => setComposerOpen(false)}
         composerOpen={composerOpen}
         currentUserId={user?.id}

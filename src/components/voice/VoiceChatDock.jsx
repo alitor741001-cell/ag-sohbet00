@@ -10,10 +10,11 @@ import { LEVEL_UP_TONE, levelUpName, parseLevelUpNotice } from '@/lib/levelUpNot
 import useMessageProfiles from '@/hooks/useMessageProfiles';
 
 /**
- * Oda alt bölümü: sohbet (klavye) butonuna basınca mesaj akışı ve yazma alanı açılır.
- * Mesaj gönderilince yazma alanı kapanır ve klavye iner; mesaj akışı görünür kalır.
+ * Oda alt bölümü: odaya girildiği anda yeni mesajlar kendiliğinden görünür; eski geçmiş ve
+ * yazma alanı sohbet (klavye) butonuna basınca açılır. Mesaj gönderilince yazma alanı kapanır
+ * ve klavye iner; mesaj akışı görünür kalır.
  */
-export default function VoiceChatDock({ messages = [], onSend, open, onCloseComposer, composerOpen, chatLocked, currentUserId, ownerId, moderators = [], onOpenProfile, bigGiftNotice, onOpenBigGiftRoom, levels = {}, hiddenUsers = {} }) {
+export default function VoiceChatDock({ messages = [], onSend, open, onCloseComposer, composerOpen, chatLocked, currentUserId, ownerId, moderators = [], onOpenProfile, bigGiftNotice, onOpenBigGiftRoom, levels = {}, hiddenUsers = {}, cutoff = 0 }) {
   const [text, setText] = useState('');
   const [emojiOpen, setEmojiOpen] = useState(false);
   const inputRef = useRef(null);
@@ -25,6 +26,11 @@ export default function VoiceChatDock({ messages = [], onSend, open, onCloseComp
     [messages, hiddenUsers]
   );
   const profiles = useMessageProfiles(userIds);
+
+  // Butona basılmadan akışta yalnızca giriş anından sonraki yeni mesajlar görünür;
+  // eski mesajlar (geçmiş) sohbet butonu açıkken listelenir. Metinsiz sistem işaretleri atlanır.
+  const visible = (open ? messages : messages.filter((message) => new Date(message.created_date || 0).getTime() >= cutoff))
+    .filter((message) => message.type !== 'system' || plainText(message.text));
 
   useEffect(() => {
     if (composerOpen) inputRef.current?.focus();
@@ -50,10 +56,13 @@ export default function VoiceChatDock({ messages = [], onSend, open, onCloseComp
 
   return (
     <div className="relative shrink-0">
-      {open && (messages.length > 0 || !!bigGiftNotice) && (
-        <div className="max-h-[34vh] shrink-0 overflow-y-auto overscroll-contain pb-1 [mask-image:linear-gradient(to_bottom,transparent,black_14%)] [-webkit-mask-image:linear-gradient(to_bottom,transparent,black_14%)]">
+      {(visible.length > 0 || !!bigGiftNotice) && (
+        <div
+          style={{ touchAction: 'pan-y' }}
+          className={`${open ? 'max-h-[34vh]' : 'max-h-[22vh]'} shrink-0 overflow-y-auto overscroll-contain pb-1 [mask-image:linear-gradient(to_bottom,transparent,black_14%)] [-webkit-mask-image:linear-gradient(to_bottom,transparent,black_14%)]`}
+        >
           <div className="flex flex-col gap-1.5 px-4">
-            {messages.map((message) => {
+            {visible.map((message) => {
               if (message.type === 'slot_win') {
                 return <SlotWinMessage key={message.id} message={message} />;
               }
