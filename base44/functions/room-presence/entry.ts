@@ -5,6 +5,7 @@ import { upsertNotification } from '../../shared/upsertNotification.ts';
 import { hasActiveMembership } from '../../shared/membership.ts';
 import { HIDDEN_AVATAR_URL, hiddenDisplayName, isHiddenUser } from '../../shared/vip.ts';
 import { scoresAfterRoomLeave } from '../../shared/numberBoard.ts';
+import { maskRoomIdentities } from '../../shared/hiddenUserRoom.ts';
 import { appendRoomLog } from '../../shared/roomLog.ts';
 
 async function sha256Hex(salt, pw) {
@@ -51,12 +52,21 @@ export default async function(req) {
 
     if (action === 'get') {
       const canSeeModeration = room.owner_id === user.id || user.role === 'admin' || user.role === 'moderator' || (room.room_moderators || []).includes(user.id);
+      // Gizli kullanıcının eski kayıtlarda kalmış gerçek ismi/fotoğrafı odayla birlikte gönderilmez.
+      const masked = maskRoomIdentities(room);
+      if (masked.changed) {
+        await base44.asServiceRole.entities.Room.update(room_id, {
+          participants: masked.room.participants,
+          seats: masked.room.seats,
+        }).catch(() => {});
+      }
+      const shown = masked.room;
       return Response.json({
         room: {
-          ...room,
-          password: room.password ? 'protected' : '',
-          banned_users: canSeeModeration ? (room.banned_users || []) : [],
-          room_logs: canSeeModeration ? (room.room_logs || []) : [],
+          ...shown,
+          password: shown.password ? 'protected' : '',
+          banned_users: canSeeModeration ? (shown.banned_users || []) : [],
+          room_logs: canSeeModeration ? (shown.room_logs || []) : [],
         }
       });
     }

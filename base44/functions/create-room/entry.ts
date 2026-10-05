@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import { sanitizeText, rateLimit, safeErrorResponse, logSecurity } from '../../shared/security.ts';
 import { hasActiveMembership } from '../../shared/membership.ts';
+import { HIDDEN_AVATAR_URL, hiddenDisplayName, isHiddenUser } from '../../shared/vip.ts';
 
 async function sha256Hex(salt, pw) {
   const data = new TextEncoder().encode(salt + pw);
@@ -42,7 +43,11 @@ export default async function(req) {
     const requestedSeats = Number(seat_count) || 0;
     const voiceSeats = SEAT_OPTIONS.includes(requestedSeats) ? requestedSeats : 8;
 
-    const owner_name = user.username || user.full_name || 'Kullanıcı';
+    // Gizli kullanıcı (VIP10+): kurduğu odada da kimliği görünmez — takma ad ve maskeli profil yazılır.
+    const ownerRecord = await base44.asServiceRole.entities.User.get(user.id).catch(() => null);
+    const ownerHidden = isHiddenUser(ownerRecord || user);
+    const owner_name = ownerHidden ? hiddenDisplayName(ownerRecord || user) : (user.username || user.full_name || 'Kullanıcı');
+    const owner_avatar = ownerHidden ? HIDDEN_AVATAR_URL : (user.avatar || '');
     // Oluşturan kişi ilk koltuğa oturur.
     const seats = isVoiceRoom
       ? Array.from({ length: voiceSeats }, (_, index) => ({
@@ -53,8 +58,8 @@ export default async function(req) {
             ? {
                 user_id: user.id,
                 name: owner_name,
-                avatar: user.avatar || '',
-                frame: user.profile_frame || '',
+                avatar: owner_avatar,
+                frame: ownerHidden ? '' : (user.profile_frame || ''),
                 frame_scale: Number(user.profile_frame_scale) || 100,
               }
             : {}),
@@ -84,7 +89,7 @@ export default async function(req) {
       chat_auto_delete_minutes: 3,
       chat_auto_delete_at: new Date(Date.now() + 3 * 60000).toISOString(),
       recent_participants: [],
-      participants: [{ user_id: user.id, name: owner_name, avatar: user.avatar || '', joined_at: new Date().toISOString(), muted: false, speaking: false }]
+      participants: [{ user_id: user.id, name: owner_name, avatar: owner_avatar, joined_at: new Date().toISOString(), muted: false, speaking: false }]
     });
     if (hashed) {
       await base44.asServiceRole.entities.RoomSecret.create({ room_id: room.id, password_hash: hashed });

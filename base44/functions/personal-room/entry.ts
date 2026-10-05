@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
+import { HIDDEN_AVATAR_URL, hiddenDisplayName, isHiddenUser } from '../../shared/vip.ts';
 
 export default async function(req) {
   try {
@@ -6,7 +7,11 @@ export default async function(req) {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const owner_name = user.username || user.full_name || 'Kullanıcı';
+    // Gizli kullanıcı (VIP10+): kişisel odasında da kimliği görünmez.
+    const ownerRecord = await base44.asServiceRole.entities.User.get(user.id).catch(() => null);
+    const ownerHidden = isHiddenUser(ownerRecord || user);
+    const owner_name = ownerHidden ? hiddenDisplayName(ownerRecord || user) : (user.username || user.full_name || 'Kullanıcı');
+    const owner_avatar = ownerHidden ? HIDDEN_AVATAR_URL : (user.avatar || '');
 
     // Kullanıcının kişisel odası var mı kontrol et
     const existing = await base44.asServiceRole.entities.Room.filter({
@@ -65,7 +70,7 @@ export default async function(req) {
       chat_auto_delete_minutes: 3,
       chat_auto_delete_at: new Date(Date.now() + 3 * 60000).toISOString(),
       recent_participants: [],
-      participants: [{ user_id: user.id, name: owner_name, avatar: user.avatar || '', joined_at: new Date().toISOString(), muted: false, speaking: false }]
+      participants: [{ user_id: user.id, name: owner_name, avatar: owner_avatar, joined_at: new Date().toISOString(), muted: false, speaking: false }]
     });
 
     await base44.asServiceRole.entities.RoomMessage.create({
