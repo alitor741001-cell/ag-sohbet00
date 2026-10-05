@@ -1,6 +1,7 @@
 import { giftBalance } from './giftWallet.ts';
 import { getUsdTry, tlFromDollars, tlRateFrom } from './exchangeRate.ts';
 import { loadQuotaTiers, quotaDollarsFromK } from './quotaLadder.ts';
+import { agencyCommissionTotals } from './agencyBalance.ts';
 
 /**
  * Hediye kutusu: alınan hediyelerin değeri, gönderim ve çekim kayıtları.
@@ -119,13 +120,14 @@ export async function receivedGiftTotals(base44: any, userId: string, resetAt = 
 /** Hediye kutusu durumu: coins, alınan hediye, harcanan ve kullanılabilir bakiye (TL). */
 export async function giftBoxSummary(base44: any, user: any) {
   const resetAt = await giftResetAt(base44);
-  const [received, transfers, coins, market] = await Promise.all([
+  const [received, transfers, coins, market, commission] = await Promise.all([
     receivedGiftTotals(base44, user.id, resetAt),
     base44.asServiceRole.entities.GiftTransfer
       .filter({ sender_id: user.id }, '-created_date', MAX_RECORDS)
       .catch(() => []),
     giftBalance(base44, user),
     getUsdTry(base44),
+    agencyCommissionTotals(base44, user.id),
   ]);
 
   // Sıfırlama anından önceki harcamalar yeni bakiyeden düşülmez.
@@ -135,8 +137,9 @@ export async function giftBoxSummary(base44: any, user: any) {
       .filter((record) => !resetAt || String(record?.created_date || '').slice(0, 19) >= resetAt)
       .reduce((sum, record) => sum + Math.max(0, Number(record?.dollars) || 0), 0) * 100,
   ) / 100;
-  // Bakiye tam dolar: küsurat gösterilmez.
-  const available = Math.max(0, Math.floor(received.reset_dollars - spent));
+  // Bakiye tam dolar: küsurat gösterilmez. Ajans komisyonu ve asistanlık payı da
+  // aynı bakiyeye yazılır — yayıncı kotayı tamamladığı an tutar kullanılabilir olur.
+  const available = Math.max(0, Math.floor(received.reset_dollars + commission.total - spent));
   const tl_rate = tlRateFrom(market.rate);
 
   return {
@@ -147,6 +150,7 @@ export async function giftBoxSummary(base44: any, user: any) {
     month_score: received.month_score,
     units: received.units,
     dollars: received.dollars,
+    commission_dollars: commission.total,
     spent_dollars: spent,
     available_dollars: available,
     coins,
