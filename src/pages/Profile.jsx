@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Clock, Headphones, Heart, List, LogOut, Puzzle, Shield, Trash2, User } from 'lucide-react';
+import { LogOut, Puzzle, Shield, User } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
@@ -11,7 +11,6 @@ import ProfileWalletCards from '@/components/profile/ProfileWalletCards';
 import ProfileNeonRow from '@/components/profile/ProfileNeonRow';
 import ProfileDetailsSection from '@/components/profile/ProfileDetailsSection';
 import ProfileSettings from '@/components/profile/ProfileSettings';
-import ProfileMovieGrid from '@/components/profile/ProfileMovieGrid';
 import DeleteAccountSection from '@/components/profile/DeleteAccountSection';
 import GiftBoxPanel from '@/components/profile/GiftBoxPanel';
 import CoinActivityPanel from '@/components/profile/CoinActivityPanel';
@@ -19,7 +18,7 @@ import VipBagPanel from '@/components/profile/VipBagPanel';
 
 const EMPTY_FORM = { username: '', full_name: '', phone: '', avatar: '', birth_date: '' };
 
-/** Profil sayfası: cüzdan, kişisel bilgiler, eklentiler (ayarlar), listeler ve hesap işlemleri. */
+/** Profil sayfası: cüzdan, kişisel bilgiler, eklentiler (ayarlar) ve hesap işlemleri. */
 export default function Profile() {
   const { user, reload, setUser } = useCurrentUser();
   const { toast } = useToast();
@@ -32,9 +31,6 @@ export default function Profile() {
   const [giftBoxOpen, setGiftBoxOpen] = useState(false);
   const [activityOpen, setActivityOpen] = useState(false);
   const [vipBagOpen, setVipBagOpen] = useState(false);
-  const [historyMovies, setHistoryMovies] = useState([]);
-  const [list, setList] = useState([]);
-  const [favs, setFavs] = useState([]);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -65,19 +61,7 @@ export default function Profile() {
     if (!user) return;
     setForm({ username: user.username || '', full_name: user.full_name || '', phone: user.phone || '', avatar: user.avatar || '', birth_date: user.birth_date || '' });
     if (!user.member_id) base44.functions.invoke('ensure-member-id').then(reload).catch(() => {});
-    loadMovies();
   }, [user?.id]);
-
-  const loadMovies = async () => {
-    const [history, watchlist, favorites] = await Promise.all([
-      base44.entities.WatchHistory.filter({ user_id: user.id }, '-created_date', 20).catch(() => []),
-      base44.entities.Watchlist.filter({ user_id: user.id }, '-created_date', 50).catch(() => []),
-      base44.entities.Favorite.filter({ user_id: user.id }, '-created_date', 50).catch(() => []),
-    ]);
-    const resolve = (items) => Promise.all(items.map((item) => base44.entities.Movie.get(item.movie_id).catch(() => null))).then((movies) => movies.filter(Boolean));
-    const [historyItems, listItems, favoriteItems] = await Promise.all([resolve(history), resolve(watchlist), resolve(favorites)]);
-    setHistoryMovies(historyItems); setList(listItems); setFavs(favoriteItems);
-  };
 
   const save = async () => {
     if (saving || uploading) return;
@@ -111,8 +95,6 @@ export default function Profile() {
       toast({ title: 'Yükleme hatası', description: error.response?.data?.error || error.message, variant: 'destructive' });
     } finally { setUploading(false); event.target.value = ''; }
   };
-
-  const clearHistory = async () => { await base44.entities.WatchHistory.deleteMany({ user_id: user.id }); setHistoryMovies([]); toast({ title: 'İzleme geçmişi temizlendi' }); };
 
   if (!user) return <div className="dark min-h-screen p-6 text-white">Yükleniyor...</div>;
   const isAdmin = user.role === 'admin';
@@ -155,45 +137,11 @@ export default function Profile() {
             />
           )}
 
-          {!isAdmin && (
-            <>
-              <ProfileNeonRow icon={Clock} title="İzleme Geçmişi" subtitle="Son izledikleriniz" open={openKey === 'history'} onClick={() => toggle('history')} />
-              {openKey === 'history' && (
-                <div className="rounded-2xl border border-white/15 bg-white/[0.04] p-3">
-                  {historyMovies.length > 0 && (
-                    <button onClick={clearHistory} className="mb-3 flex items-center gap-2 rounded-lg border border-red-500/40 px-3.5 py-2 text-sm font-semibold text-red-400 active:scale-95">
-                      <Trash2 className="h-4 w-4" />Tümünü Sil
-                    </button>
-                  )}
-                  <div className="text-white"><ProfileMovieGrid movies={historyMovies} empty="Henüz bir şey izlemediniz." /></div>
-                </div>
-              )}
-
-              <ProfileNeonRow icon={List} title="Listem" subtitle="Sonra izleyecekleriniz" open={openKey === 'list'} onClick={() => toggle('list')} />
-              {openKey === 'list' && (
-                <div className="rounded-2xl border border-white/15 bg-white/[0.04] p-3 text-white">
-                  <ProfileMovieGrid movies={list} empty="Henüz listenize film eklemediniz." />
-                </div>
-              )}
-
-              <ProfileNeonRow icon={Heart} title="Favorilerim" subtitle="Beğendiğiniz filmler" open={openKey === 'favs'} onClick={() => toggle('favs')} />
-              {openKey === 'favs' && (
-                <div className="rounded-2xl border border-white/15 bg-white/[0.04] p-3 text-white">
-                  <ProfileMovieGrid movies={favs} empty="Henüz favori yok." />
-                </div>
-              )}
-            </>
-          )}
-
           <ProfileNeonRow icon={Puzzle} tone="gold" title="Eklentiler" subtitle="Ek özellikleri buradan yönetebilirsiniz." open={openKey === 'settings'} onClick={() => toggle('settings')} />
           {openKey === 'settings' && (
             <div id="eklentiler" className="scroll-mt-24 pt-1">
               <ProfileSettings user={user} onUpdated={reload} />
             </div>
-          )}
-
-          {!isAdmin && (
-            <ProfileNeonRow icon={Headphones} title="Destek Talebi" subtitle="Sorunlarınız için destek alın" onClick={() => navigate('/destek')} />
           )}
 
           <ProfileNeonRow icon={LogOut} tone="red" title="Çıkış Yap" subtitle="Hesabınızdan güvenli çıkış yapın" onClick={() => base44.auth.logout('/login')} />
