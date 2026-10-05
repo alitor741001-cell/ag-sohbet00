@@ -56,15 +56,14 @@ export default function AgencySection({ user, onRefresh, showHeading = true }) {
     { key: 'agency-settings', label: 'Ajans Ayarları', icon: Sparkles, onClick: () => openPanel('agency', 'settings') },
     { key: 'invites', label: `Ajans Davetlerim${inviteCount ? ` (${inviteCount})` : ''}`, icon: MailOpen, onClick: () => setSheet('invites') },
   ] : isOwner ? [
-    { key: 'agency-stats', label: 'Ajans Yönetimi', icon: Building2, onClick: () => openPanel('agency', 'stats') },
-    { key: 'agency-members', label: 'Yayıncılarım', icon: Mic2, onClick: () => openPanel('agency', 'broadcasters') },
-    { key: 'agency-earnings', label: 'Ajans Kazancım', icon: Wallet, onClick: () => openPanel('agency', 'stats') },
+    { key: 'agency-earnings', label: 'Kazançlarım', icon: Wallet, onClick: () => openPanel('agency', 'stats') },
+    { key: 'agency-broadcasters', label: 'Yayıncı Paneli', icon: Mic2, onClick: () => openPanel('agency', 'broadcasters') },
+    { key: 'agency-info', label: 'Ajansım', icon: Building2, onClick: () => openPanel('agency', 'settings') },
     { key: 'agency-invites', label: `Davet Gönder${sentCount ? ` (${sentCount})` : ''}`, icon: MailOpen, onClick: () => openPanel('agency', 'invites') },
     { key: 'agency-transfers', label: 'Transfer Talepleri', icon: ArrowLeftRight, onClick: () => openPanel('agency', 'transfers') },
-    { key: 'agency-settings', label: 'Ajans Ayarları', icon: Sparkles, onClick: () => openPanel('agency', 'settings') },
   ] : isBroadcaster ? [
     { key: 'bc-panel', label: 'Yayıncı Panelim', icon: Mic2, onClick: () => openPanel('broadcaster', 'quota') },
-    { key: 'bc-agency', label: 'Ajansım', icon: Building2, onClick: () => openPanel('broadcaster', 'quota') },
+    { key: 'bc-agency', label: 'Ajansım', icon: Building2, onClick: () => openPanel('broadcaster', 'agency') },
     { key: 'bc-earnings', label: 'Kazançlarım', icon: Wallet, onClick: () => openPanel('broadcaster', 'earnings') },
     { key: 'bc-change', label: 'Ajans Değişikliği', icon: ArrowLeftRight, onClick: () => setSheet('change') },
   ] : [

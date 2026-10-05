@@ -244,7 +244,12 @@ export default async function (req) {
       const rows = rewards || [];
       return Response.json({
         profile: { name: displayName, username: account.username || '', avatar: account.avatar || '', member_id: account.member_id || '-', agency_role: fresh?.agency_role || '', broadcaster_status: fresh?.broadcaster_status || '' },
-        agency: agency ? { name: agency.name, agency_id: agency.agency_id, logo: agency.logo || '', owner_name: agency.owner_name || '', member_count: agency.member_count || 0 } : null,
+        agency: agency ? {
+          name: agency.name, agency_id: agency.agency_id, logo: agency.logo || '',
+          description: agency.description || '', rules: agency.rules || AGENCY_RULES.join('\n'),
+          owner_name: agency.owner_name || '', member_count: agency.member_count || 0,
+          commission_per_200k: Number(agency.commission_per_200k) || AGENCY_COMMISSION_PER_200K,
+        } : null,
         diamonds: { month, total: Math.round((Number(fresh?.gift_received_k) || 0) * 1000) },
         tiers: active,
         next_tier: nextTier,

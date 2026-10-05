@@ -153,17 +153,22 @@ export async function agencyStats(base44: any, agency: any) {
     ensureQuotaTiers(base44),
   ]);
   const broadcasters = (members || []).filter((member: any) => member.agency_role === 'broadcaster');
+  const activeTiers = (tiers || []).filter((tier: any) => tier.active !== false);
   const rows = broadcasters.map((member: any) => {
     const own = (rewards || []).filter((row: any) => row.user_id === member.id);
     const mine = own.filter((row: any) => row.period === period);
+    const monthElmas = Number(member.diamond_month) || 0;
+    const nextTier = activeTiers.find((tier: any) => Number(tier.diamonds) > monthElmas) || null;
     return {
       user_id: member.id,
       name: member.username || member.full_name || 'Yayıncı',
       avatar: member.avatar || '',
       member_id: member.member_id || '-',
-      diamonds: Number(member.diamond_month) || 0,
+      diamonds: monthElmas,
       total_diamonds: Math.round((Number(member.gift_received_k) || 0) * 1000),
       quota: mine.reduce((max: number, row: any) => Math.max(max, Number(row.diamonds) || 0), 0),
+      next_quota: Number(nextTier?.diamonds) || 0,
+      month_commission: round(mine.reduce((sum: number, row: any) => sum + (Number(row.agency_amount) || 0), 0)),
       earnings: round(own.reduce((sum: number, row: any) => sum + (Number(row.amount) || 0), 0)),
       pending: round(own.filter((row: any) => row.status !== 'paid').reduce((sum: number, row: any) => sum + (Number(row.amount) || 0), 0)),
       status: member.broadcaster_status === 'active' ? 'active' : 'inactive',

@@ -6,6 +6,8 @@ import AgencySheet from '@/components/agency/AgencySheet';
 import QuotaProgressCard from '@/components/agency/QuotaProgressCard';
 import QuotaTierGrid from '@/components/agency/QuotaTierGrid';
 import EarningsHistory from '@/components/agency/EarningsHistory';
+import QuotaEarningsCard from '@/components/agency/QuotaEarningsCard';
+import AgencyInfoCard from '@/components/agency/AgencyInfoCard';
 import { AGENCY_GOLD, agencyApi, formatDiamonds } from '@/lib/agency';
 
 /** Yayıncı paneli: kota ilerlemesi, kota tablosu ve kazanç geçmişi. */
@@ -29,6 +31,7 @@ export default function BroadcasterPanel({ open, onClose, tab = 'quota' }) {
   const tabs = [
     { key: 'quota', label: 'Kota Tablosu' },
     { key: 'earnings', label: 'Kazançlarım' },
+    { key: 'agency', label: 'Ajansım' },
   ];
 
   return (
@@ -88,10 +91,27 @@ export default function BroadcasterPanel({ open, onClose, tab = 'quota' }) {
             ))}
           </div>
 
-          {active === 'quota' ? (
+          {active === 'quota' && (
             <QuotaTierGrid tiers={data.tiers || []} monthDiamonds={data.diamonds?.month || 0} nextTier={data.next_tier} />
-          ) : (
-            <EarningsHistory rewards={data.rewards || []} totals={data.totals || {}} />
+          )}
+
+          {active === 'earnings' && (
+            <div className="space-y-4">
+              <QuotaEarningsCard
+                month={data.diamonds?.month || 0}
+                period={data.period}
+                tiers={data.tiers || []}
+                nextTier={data.next_tier}
+                rewards={data.rewards || []}
+              />
+              <EarningsHistory rewards={data.rewards || []} totals={data.totals || {}} />
+            </div>
+          )}
+
+          {active === 'agency' && (
+            data.agency
+              ? <AgencyInfoCard agency={data.agency} />
+              : <p className="rounded-2xl border border-white/10 bg-white/5 px-4 py-8 text-center text-xs text-white/50">Şu anda bir ajansa bağlı değilsin.</p>
           )}
         </div>
       )}

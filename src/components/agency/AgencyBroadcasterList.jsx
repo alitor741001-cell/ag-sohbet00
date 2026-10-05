@@ -1,4 +1,5 @@
-import { Gem, Mic2, Wallet } from 'lucide-react';
+import { ChevronRight, Gem, Mic2, Wallet } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Image } from '@/components/ui/image';
 import { formatDiamonds, formatMoney, formatShortDiamonds } from '@/lib/agency';
 
@@ -17,16 +18,19 @@ export default function AgencyBroadcasterList({ members = [] }) {
     <div className="space-y-2">
       {members.map((member) => (
         <div key={member.user_id} className="rounded-2xl border border-white/10 bg-white/5 p-3">
-          <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/15 bg-black/50">
-              {member.avatar
-                ? <Image src={member.avatar} className="h-full w-full object-cover" fittingType="fill" />
-                : <span className="text-xs font-bold">{(member.name || 'Y')[0]}</span>}
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-bold text-white">{member.name}</p>
-              <p className="truncate text-[10px] text-white/40">#{member.member_id}</p>
-            </div>
+          <div className="flex items-center gap-2">
+            <Link to={`/kullanici/${member.user_id}`} className="flex min-w-0 flex-1 items-center gap-3 active:scale-[0.99]">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/15 bg-black/50">
+                {member.avatar
+                  ? <Image src={member.avatar} className="h-full w-full object-cover" fittingType="fill" />
+                  : <span className="text-xs font-bold">{(member.name || 'Y')[0]}</span>}
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-bold text-white">{member.name}</p>
+                <p className="truncate text-[10px] text-white/40">#{member.member_id}</p>
+              </div>
+              <ChevronRight className="h-4 w-4 shrink-0 text-white/30" />
+            </Link>
             <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold ${member.status === 'active' ? 'border-[#4ade80]/45 text-[#4ade80]' : 'border-white/20 text-white/50'}`}>
               {member.status === 'active' ? 'Aktif' : 'Pasif'}
             </span>
@@ -48,6 +52,14 @@ export default function AgencyBroadcasterList({ members = [] }) {
           {member.pending > 0 && (
             <p className="mt-1.5 text-[10px] text-white/45">Bekleyen ödeme: <span className="font-bold" style={{ color: '#F5C542' }}>{formatMoney(member.pending)}</span></p>
           )}
+          {member.month_commission > 0 && (
+            <p className="mt-1.5 text-[10px] text-white/45">Bu ayki ajans komisyonu: <span className="font-bold" style={{ color: '#F5C542' }}>{formatMoney(member.month_commission)}</span></p>
+          )}
+          <p className="mt-1 text-[10px] text-white/35">
+            {member.next_quota > 0
+              ? `Sonraki kota: ${formatShortDiamonds(member.next_quota)} • ${formatShortDiamonds(Math.max(0, member.next_quota - member.diamonds))} kaldı`
+              : 'Tüm kotalar tamamlandı ✓'}
+          </p>
           <p className="mt-1 text-[10px] text-white/35">Aylık elmas: {formatDiamonds(member.diamonds)} • Toplam elmas: {formatDiamonds(member.total_diamonds)}</p>
         </div>
       ))}

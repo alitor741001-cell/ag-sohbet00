@@ -2,7 +2,7 @@ import { Gem } from 'lucide-react';
 import { formatMoney, formatShortDiamonds, tierStyle } from '@/lib/agency';
 
 /** Kota tablosu kartları: her kademe için gereken elmas ve yayıncı kazancı. */
-export default function QuotaTierGrid({ tiers = [], monthDiamonds = 0, nextTier = null, limit = 0 }) {
+export default function QuotaTierGrid({ tiers = [], monthDiamonds = 0, nextTier = null, limit = 0, amountField = 'broadcaster_dollars', amountLabel = 'yayıncı kazancı' }) {
   const list = limit > 0 ? tiers.slice(0, limit) : tiers;
   if (!list.length) return <p className="py-8 text-center text-xs text-white/45">Kota tablosu henüz tanımlı değil.</p>;
   return (
@@ -21,8 +21,8 @@ export default function QuotaTierGrid({ tiers = [], monthDiamonds = 0, nextTier 
               </span>
               <span className={`text-[9px] font-bold ${style.text}`}>{style.label}</span>
             </div>
-            <p className="mt-1 text-base font-black text-white">{formatMoney(tier.broadcaster_dollars)}</p>
-            <p className="text-[10px] text-white/45">yayıncı kazancı</p>
+            <p className="mt-1 text-base font-black text-white">{formatMoney(tier[amountField])}</p>
+            <p className="text-[10px] text-white/45">{amountLabel}</p>
             {done && <p className="mt-1 text-[10px] font-bold text-[#4ade80]">✓ Tamamlandı</p>}
             {!done && isNext && (
               <div className="mt-1.5">

@@ -7,6 +7,8 @@ import AgencyBroadcasterList from '@/components/agency/AgencyBroadcasterList';
 import AgencyInviteSender from '@/components/agency/AgencyInviteSender';
 import AgencyTransfers from '@/components/agency/AgencyTransfers';
 import AgencySettingsForm from '@/components/agency/AgencySettingsForm';
+import AgencyQuotaBoard from '@/components/agency/AgencyQuotaBoard';
+import AgencyInfoCard from '@/components/agency/AgencyInfoCard';
 import { AGENCY_GOLD, agencyApi, formatMoney } from '@/lib/agency';
 
 /** Ajans yönetim paneli: kazançlar, yayıncılar, davetler, transferler ve ayarlar. */
@@ -45,11 +47,11 @@ export default function AgencyPanel({ open, onClose, tab = 'stats', userId }) {
   };
 
   const tabs = [
-    { key: 'stats', label: 'Kazanç' },
-    { key: 'broadcasters', label: 'Yayıncılar' },
+    { key: 'stats', label: 'Kazançlarım' },
+    { key: 'broadcasters', label: 'Yayıncı Paneli' },
     { key: 'invites', label: 'Davetler' },
     { key: 'transfers', label: 'Transferler' },
-    { key: 'settings', label: 'Ayarlar' },
+    { key: 'settings', label: 'Ajansım' },
   ];
 
   const agency = data?.agency || {};
@@ -79,6 +81,12 @@ export default function AgencyPanel({ open, onClose, tab = 'stats', userId }) {
           {active === 'stats' && (
             <div className="space-y-3">
               <AgencyStatsGrid agency={agency} />
+              <AgencyQuotaBoard
+                members={data.members || []}
+                tiers={data.tiers || []}
+                monthDiamonds={agency.month_diamonds || 0}
+                monthEarnings={agency.month_earnings || 0}
+              />
               <div className="rounded-2xl border border-[#F5C542]/25 bg-[#F5C542]/5 p-3">
                 <p className="text-[11px] font-black uppercase tracking-wider" style={{ color: AGENCY_GOLD }}>Komisyon Sistemi</p>
                 <p className="mt-1 text-[11px] leading-relaxed text-white/60">
@@ -87,13 +95,8 @@ export default function AgencyPanel({ open, onClose, tab = 'stats', userId }) {
                   Bu ayki toplam komisyonun: <span className="font-bold" style={{ color: AGENCY_GOLD }}>{formatMoney(agency.month_earnings || 0)}</span>
                 </p>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
-                <p className="text-[10px] uppercase tracking-wider text-white/45">Ajans Sahibi</p>
-                <p className="text-sm font-bold text-white">{agency.owner_name}</p>
-              </div>
             </div>
           )}
-
           {active === 'broadcasters' && <AgencyBroadcasterList members={data.members || []} />}
 
           {active === 'invites' && <AgencyInviteSender invites={data.invites || []} onChanged={load} />}
@@ -109,9 +112,12 @@ export default function AgencyPanel({ open, onClose, tab = 'stats', userId }) {
           )}
 
           {active === 'settings' && (
-            isOwner
-              ? <AgencySettingsForm agency={agency} onSaved={load} />
-              : <p className="rounded-2xl border border-white/10 bg-white/5 px-4 py-6 text-center text-xs text-white/50">Yalnızca ajans sahibi ayarları değiştirebilir.</p>
+            <div className="space-y-3">
+              <AgencyInfoCard agency={agency} />
+              {isOwner
+                ? <AgencySettingsForm agency={agency} onSaved={load} />
+                : <p className="rounded-2xl border border-white/10 bg-white/5 px-4 py-6 text-center text-xs text-white/50">Yalnızca ajans sahibi ayarları değiştirebilir.</p>}
+            </div>
           )}
         </div>
       )}
