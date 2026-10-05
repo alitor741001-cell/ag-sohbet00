@@ -24,11 +24,10 @@ export default function AdminDashboard() {
         ]);
         const active = users.filter((u) => u.membership_status === 'active');
         const expired = users.filter((u) => u.membership_status === 'expired' || (u.membership_end && new Date(u.membership_end) < new Date()));
-        const renewals = await base44.entities.MembershipRenewal.filter({ status: 'pending' }, '-created_date', 100).catch(() => []);
         const revenue = payments.filter((p) => p.status === 'completed').reduce((s, p) => s + (p.amount || 0), 0);
         setStats({
           totalUsers: users.length, activeMembers: active.length, expiredMembers: expired.length,
-          renewals: renewals.length, movies: movies.length, series: series.length,
+          movies: movies.length, series: series.length,
           activeRooms: rooms.filter((r) => r.status === 'active').length, openTickets: tickets.filter((t) => t.status !== 'closed').length,
           revenue,
         });
@@ -42,11 +41,9 @@ export default function AdminDashboard() {
     { label: 'Toplam Kullanıcı', value: stats.totalUsers, icon: Users, color: 'text-blue-400' },
     { label: 'Aktif Üyelik', value: stats.activeMembers, icon: TrendingUp, color: 'text-green-400' },
     { label: 'Süresi Biten', value: stats.expiredMembers, icon: Activity, color: 'text-amber-400' },
-    { label: 'Yenileme Bekleyen', value: stats.renewals, icon: Activity, color: 'text-purple-400' },
     { label: 'Toplam Film', value: stats.movies, icon: Film, color: 'text-red-400' },
     { label: 'Aktif Odalar', value: stats.activeRooms, icon: DoorOpen, color: 'text-cyan-400' },
     { label: 'Açık Destek', value: stats.openTickets, icon: LifeBuoy, color: 'text-orange-400' },
-    { label: 'Gelir (₺)', value: stats.revenue, icon: CreditCard, color: 'text-emerald-400' },
   ];
 
   const activeRate = stats.totalUsers ? Math.round((stats.activeMembers / stats.totalUsers) * 100) : 0;

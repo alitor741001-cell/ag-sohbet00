@@ -74,10 +74,10 @@ export function useCurrentUser() {
   return { ...state, setUser, reload: () => loadUser(true) };
 }
 
+/**
+ * Abonelik/paket sistemi kaldırıldı: hesabı olan herkes içeriğe erişir.
+ * Yalnızca giriş yapmamış (hesabı olmayan) kullanıcı içerik göremez.
+ */
 export function membershipActive(user) {
-  if (!user) return false;
-  if (user.role === 'admin' || user.role === 'moderator') return true;
-  if (user.membership_status !== 'active') return false;
-  if (user.membership_end && new Date(user.membership_end) < new Date()) return false;
-  return true;
+  return !!user;
 }

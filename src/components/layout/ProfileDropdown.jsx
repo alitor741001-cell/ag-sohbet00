@@ -147,17 +147,6 @@ export default function ProfileDropdown() {
                   <ChevronRight className="w-4 h-4 text-white/30 shrink-0" />
                 </Link>
 
-              {!isActive && (
-                <Link to="/abonelik" onClick={() => setOpen(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-primary/10 transition-colors">
-                  <Settings className="w-5 h-5 text-primary shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-primary">Abonelik</p>
-                    <p className="text-xs text-white/50">Üyeliğinizi aktif edin</p>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-white/30 shrink-0" />
-                </Link>
-              )}
-
               <div className="my-0.5 border-t border-white/10" />
 
               <button onClick={() => { setOpen(false); logout(); }} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-500/10 transition-colors">

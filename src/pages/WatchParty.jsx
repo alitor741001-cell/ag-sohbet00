@@ -30,7 +30,6 @@ import { triggerBanNotice } from '@/lib/banNotice';
 import { isHiddenName } from '@/lib/hiddenUser';
 import XpAvatar from '@/components/xp/XpAvatar';
 import FullUserProfile from '@/components/profile/FullUserProfile';
-import SubscriptionPrompt from '@/components/SubscriptionPrompt';
 
 
 export default function WatchParty() {
@@ -677,7 +676,6 @@ export default function WatchParty() {
   };
 
   if (ul || loading) return <div className="h-screen flex items-center justify-center bg-background"><div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
-  if (!hasMembership) return <SubscriptionPrompt />;
   if (roomLoadError) return <div className="p-6 space-y-4"><p role="alert">{roomLoadError}</p><button onClick={() => setRoomRetry((value) => value + 1)} className="rounded-lg bg-primary px-4 py-2 text-primary-foreground">Yeniden Dene</button><Link to="/acik-odalar" className="ml-4 text-primary">Odalara Dön</Link></div>;
   if (!room) return <div className="p-6">Oda bulunamadı.</div>;
   if (room.status === 'closed') return <div className="p-10 text-center"><p className="text-xl font-bold mb-2">Oda kapatıldı</p><Link to="/" className="text-primary">Ana sayfaya dön</Link></div>;

@@ -12,9 +12,6 @@ const BASIC_PATHS = [
   '/kullanici',
   '/destek',
   '/bildirimler',
-  '/abonelik',
-  '/odeme',
-  '/odeme-gecmisim',
   '/güvenlik-protokolü',
   '/bakim',
 ];

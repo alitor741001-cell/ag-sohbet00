@@ -79,7 +79,8 @@ export default function Login() {
       const privileged = me.role === 'admin' || me.role === 'moderator';
       const membershipActive = me.membership_status === 'active' && (!me.membership_end || new Date(me.membership_end) > new Date());
       try { const res = await base44.functions.invoke('register-session', { device_session: localStorage.getItem('filmkeyfi_session_' + me.id) || '', connection_type: detectConnectionType() }); if (res?.data?.session_id) localStorage.setItem('filmkeyfi_session_' + me.id, res.data.session_id); } catch {}
-      window.location.href = privileged || membershipActive || isBasicPath(returnTo.split('?')[0]) ? returnTo : '/abonelik';
+      // Abonelik/paket kapısı kaldırıldı: giriş yapan kullanıcı doğrudan hedefine gider.
+      window.location.href = returnTo;
     } catch (err) {
       setError(err.message || "Geçersiz e-posta veya şifre");
     } finally {

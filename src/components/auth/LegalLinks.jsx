@@ -4,7 +4,7 @@ import { X } from 'lucide-react';
 const documents = {
   terms: { title: 'Kullanım Koşulları', sections: [
     ['Hizmetin Kullanımı','Film Keyfi hizmetleri yalnızca kişisel ve yasal kullanım içindir. Hesabınızın güvenliğinden, doğru bilgi vermekten ve erişim bilgilerinizi paylaşmamaktan siz sorumlusunuz.'],
-    ['Abonelik ve Erişim','Premium içerik erişimi, başarılı ödeme sonrasında başlar ve seçilen paketin süresi boyunca devam eder. Aboneliği aktif olmayan hesaplar yalnızca abonelik ve destek alanlarına erişebilir.'],
+    ['Erişim','Film, dizi ve odalara erişim ücretsizdir: hesabı olan her kullanıcı tüm içeriklere erişebilir. Paket, abonelik veya ödeme adımı yoktur.'],
     ['Ödeme ve Kart Güvenliği','Ödemeler yetkili ödeme sağlayıcılarının güvenli sayfalarında gerçekleştirilir. Kart numarası, son kullanma tarihi ve güvenlik kodu Film Keyfi sunucularında tutulmaz veya saklanmaz. İşlem sonucu ve abonelik için gerekli sınırlı ödeme kaydı saklanabilir.'],
     ['Hesap Güvenliği','Güçlü ve benzersiz bir şifre kullanmanız, doğrulama kodlarını kimseyle paylaşmamanız ve ortak cihazlarda oturumu kapatmanız gerekir. Şüpheli erişim fark ederseniz şifrenizi değiştirerek bizimle iletişime geçin.'],
     ['Topluluk Kuralları','İzleme odalarında taciz, hakaret, yasa dışı içerik paylaşımı ve diğer kullanıcıların deneyimini bozan davranışlar yasaktır. İhlaller hesabın sınırlandırılmasına yol açabilir.'],

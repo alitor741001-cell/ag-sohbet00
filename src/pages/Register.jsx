@@ -32,25 +32,6 @@ export default function Register() {
   const [otpCode, setOtpCode] = useState("");
   const [resending, setResending] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
-  const [paymentRequired, setPaymentRequired] = useState(true);
-  const [paymentAvailable, setPaymentAvailable] = useState(true);
-
-  const fetchSettings = () => {
-    base44.functions.invoke('public-settings', {}).then((ps) => {
-      const settings = ps.data || ps;
-      setPaymentRequired(settings.payment_required !== false);
-      setPaymentAvailable(settings.payment_available !== false);
-    }).catch(() => {});
-  };
-
-  useEffect(() => {
-    fetchSettings();
-    // Admin ödeme yöntemi veya paket değişikliğini gerçek zamanlı yansıt
-    const unsubMethods = base44.entities.PaymentMethod.subscribe(fetchSettings);
-    const unsubPlans = base44.entities.SubscriptionPlan.subscribe(fetchSettings);
-    return () => { unsubMethods?.(); unsubPlans?.(); };
-  }, []);
-
   useEffect(() => {
     if (resendCooldown <= 0) return;
     const timer = setTimeout(() => setResendCooldown((value) => value - 1), 1000);
@@ -104,7 +85,8 @@ export default function Register() {
         await base44.auth.updateMe({
           full_name: fullName, username, avatar,
           birth_date: birthDate, gender,
-          membership_status: "pending",
+          // Paket/ödeme adımı yok: kayıt tamamlanınca hesap doğrudan aktif olur.
+          membership_status: "active",
         });
       } catch {}
       await base44.functions.invoke('ensure-member-id').catch(() => {});
@@ -117,13 +99,8 @@ export default function Register() {
         link: '/admin/kullanicilar',
         telegram_data: { username: fullName || username || email, email, date: new Date().toLocaleString('tr-TR') }
       }).catch(() => {});
-      if (!paymentAvailable) {
-        toast({ title: "Kayıt tamamlandı", description: "Hesabınız admin onayı bekliyor." });
-        window.location.href = "/onay-bekleniyor";
-      } else {
-        toast({ title: "Kayıt tamamlandı", description: "Aboneliğinizi aktif etmek için ödeme yapın." });
-        window.location.href = "/abonelik";
-      }
+      toast({ title: "Kayıt tamamlandı", description: "Tüm içeriklere erişebilirsin, ana sayfaya yönlendiriliyorsun." });
+      window.location.href = "/";
     } catch (err) {
       setError(err.message || "Geçersiz doğrulama kodu");
     } finally {
@@ -150,7 +127,7 @@ export default function Register() {
   const handleProvider = async (provider) => {
     if (!acceptTerms) { setError('Kullanım koşullarını kabul etmelisiniz'); return; }
     setError(''); setSocialLoading(provider);
-    try { const dest = !paymentAvailable ? '/onay-bekleniyor' : '/abonelik'; await base44.auth.loginWithProvider(provider, dest); }
+    try { await base44.auth.loginWithProvider(provider, '/'); }
     catch (err) { setError(err.message || 'Sosyal kayıt başlatılamadı'); setSocialLoading(''); }
   };
 
@@ -159,15 +136,6 @@ export default function Register() {
   const genderOptions = [
     { key: 'kadın', label: 'Kadın' },
     { key: 'erkek', label: 'Erkek' },
-  ];
-
-  const pricingFeatures = [
-    "Film ve dizilere erişim",
-    "Oda oluşturma",
-    "Şifreli / şifresiz oda oluşturma",
-    "Arkadaşlarla birlikte film izleme",
-    "Canlı oda sohbeti",
-    "Profil sistemi",
   ];
 
   if (showOtp) {
@@ -214,9 +182,7 @@ export default function Register() {
         <div className="max-w-md mx-auto">
           <div className="bg-[#141414]/95 backdrop-blur-sm rounded-2xl border border-[#2a2a2a] p-6 shadow-2xl">
             <h2 className="text-xl font-bold text-white mb-1">Hesap Oluştur</h2>
-            {!paymentAvailable && <div className="mb-4 p-3 rounded-lg bg-purple-500/10 border border-purple-500/30 text-purple-400 text-xs">⚠️ Hesabınız admin onayı ile aktif edilecektir. Onay sonrası ana sayfaya yönlendirileceksiniz.</div>}
-            {paymentAvailable && <div className="mb-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs">ℹ️ Kayıt sonrası abonelik seçerek ödeme yapmanız gerekir.</div>}
-            <p className="text-sm text-[#a0a0a0] mb-6">Lütfen bilgilerinizi eksiksiz doldurun.</p>
+            <p className="text-sm text-[#a0a0a0] mb-6">Lütfen bilgilerinizi eksiksiz doldurun. Kayıt sonrası tüm içeriklere erişebilirsin.</p>
 
             {error && <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">{error}</div>}
 

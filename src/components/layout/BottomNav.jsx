@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Home, Film, Plus, MessageCircle, DoorOpen, CreditCard } from 'lucide-react';
+import { Home, Film, Plus, MessageCircle, DoorOpen } from 'lucide-react';
 import { useCurrentUser, membershipActive } from '@/lib/useCurrentUser';
 import useSocialBadges from '@/hooks/useSocialBadges';
 
@@ -16,7 +16,6 @@ const limitedItems = [
   { label: 'Filmler', path: '/filmler', icon: Film },
   { label: 'Odalar', path: '/acik-odalar', icon: DoorOpen },
   { label: 'Sohbet', path: '/arkadaslar?view=chats', activePath: '/arkadaslar', icon: MessageCircle },
-  { label: 'Abonelik', path: '/abonelik', icon: CreditCard },
 ];
 
 export default function BottomNav() {

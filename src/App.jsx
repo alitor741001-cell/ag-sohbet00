@@ -35,16 +35,12 @@ const Search = lazy(() => import('@/pages/Search'));
 const Support = lazy(() => import('@/pages/Support'));
 const Notifications = lazy(() => import('@/pages/Notifications'));
 const OpenRooms = lazy(() => import('@/pages/OpenRooms'));
-const Subscription = lazy(() => import('@/pages/Subscription'));
-const PaymentResult = lazy(() => import('@/pages/PaymentResult'));
-const PaymentHistory = lazy(() => import('@/pages/PaymentHistory'));
 const MaintenanceMode = lazy(() => import('@/pages/MaintenanceMode'));
 const UserProfile = lazy(() => import('@/pages/UserProfile'));
 const Login = lazy(() => import('@/pages/Login'));
 const Register = lazy(() => import('@/pages/Register'));
 const ForgotPassword = lazy(() => import('@/pages/ForgotPassword'));
 const ResetPassword = lazy(() => import('@/pages/ResetPassword'));
-const PendingApproval = lazy(() => import('@/pages/PendingApproval'));
 const BannedScreen = lazy(() => import('@/pages/BannedScreen'));
 const SecurityProtocol = lazy(() => import('@/pages/SecurityProtocol'));
 const Friends = lazy(() => import('@/pages/Friends'));
@@ -53,7 +49,6 @@ const AdminDashboard = lazy(() => import('@/pages/admin/AdminDashboard'));
 const AdminUsers = lazy(() => import('@/pages/admin/AdminUsers'));
 const AdminMovies = lazy(() => import('@/pages/admin/AdminMovies'));
 const AdminSupport = lazy(() => import('@/pages/admin/AdminSupport'));
-const AdminPayments = lazy(() => import('@/pages/admin/AdminPayments'));
 const AdminNotifications = lazy(() => import('@/pages/admin/AdminNotifications'));
 const AdminTelegram = lazy(() => import('@/pages/admin/AdminTelegram'));
 const AdminCategories = lazy(() => import('@/pages/admin/AdminCategories'));
@@ -106,7 +101,7 @@ const AuthenticatedApp = () => {
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
-      <Route path="/onay-bekleniyor" element={<PendingApproval />} />
+      <Route path="/onay-bekleniyor" element={<Navigate to="/" replace />} />
       <Route path="/engellendiniz" element={<BannedScreen />} />
       <Route element={<ProtectedRoute unauthenticatedElement={<LoginRedirect />} />}>
         <Route element={<AppLayout />}>
@@ -138,10 +133,11 @@ const AuthenticatedApp = () => {
           <Route path="/ajans/transferler" element={<AgencyTransfers />} />
           <Route path="/kullanici/:id" element={<UserProfile />} />
           <Route path="/güvenlik-protokolü" element={<SecurityProtocol />} />
-          <Route path="/abonelik" element={<Subscription />} />
-          <Route path="/odeme-gecmisim" element={<PaymentHistory />} />
-          <Route path="/odeme/basarili" element={<PaymentResult />} />
-          <Route path="/odeme/basarisiz" element={<PaymentResult />} />
+          {/* Paket/ödeme sayfaları kaldırıldı: giriş yapan herkes içeriğe erişir, eski bağlantılar ana sayfaya düşer. */}
+          <Route path="/abonelik" element={<Navigate to="/" replace />} />
+          <Route path="/odeme-gecmisim" element={<Navigate to="/" replace />} />
+          <Route path="/odeme/basarili" element={<Navigate to="/" replace />} />
+          <Route path="/odeme/basarisiz" element={<Navigate to="/" replace />} />
           <Route path="/bakim" element={<MaintenanceMode />} />
         </Route>
         <Route path="/admin" element={<AdminLayout />}>
@@ -157,7 +153,6 @@ const AuthenticatedApp = () => {
           <Route path="kategoriler" element={<AdminCategories />} />
 
           <Route path="destek" element={<AdminSupport />} />
-          <Route path="odeme" element={<AdminPayments />} />
           <Route path="bildirimler" element={<AdminNotifications />} />
           <Route path="telegram" element={<AdminTelegram />} />
           <Route path="guvenlik" element={<AdminSecurity />} />

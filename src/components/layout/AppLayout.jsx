@@ -38,18 +38,6 @@ export default function AppLayout() {
     if (isMaintenance) window.location.href = '/bakim';
   }, [isMaintenance]);
 
-  // Abonelik kontrolü: ödemesi olmayan kullanıcılar içerik sayfalarına gidemez
-  useEffect(() => {
-    if (loading || !user || isRoom) return;
-    if (membershipActive(user)) return;
-    const paymentAvailable = publicSettings?.payment_available !== false;
-    const target = paymentAvailable ? '/abonelik' : '/onay-bekleniyor';
-    const isExempt = isBasicPath(pathname) || pathname.startsWith('/admin') || (!paymentAvailable && pathname.startsWith('/onay-bekleniyor'));
-    if (!isExempt && pathname !== target) {
-      navigate(target, { replace: true });
-    }
-  }, [loading, user, pathname, isRoom, publicSettings?.payment_available, publicSettings?.payment_required]);
-
   // Tek noktadan yedek durum kontrolü — anlık işlemler realtime, güvenlik doğrulaması 30 saniyede bir:
   // ban/askıya alma/silme + abonelik onayı + cihaz/session + bakım modu
   const wasInactiveRef = useRef(false);

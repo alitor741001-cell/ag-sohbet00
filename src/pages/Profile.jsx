@@ -4,7 +4,6 @@ import { Trash2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
-import MembershipNotice from '@/components/profile/MembershipNotice';
 import ProfileHeader from '@/components/profile/ProfileHeader';
 import ProfileInfoCard from '@/components/profile/ProfileInfoCard';
 import ProfileMovieGrid from '@/components/profile/ProfileMovieGrid';
@@ -30,7 +29,6 @@ export default function Profile() {
     if (!user) return;
     setForm({ username: user.username || '', full_name: user.full_name || '', phone: user.phone || '', avatar: user.avatar || '', birth_date: user.birth_date || '' });
     if (!user.member_id) base44.functions.invoke('ensure-member-id').then(reload).catch(() => {});
-    if (user.package_id) base44.entities.Package.get(user.package_id).then(setPkg).catch(() => {});
     loadMovies();
   }, [user?.id]);
   const loadMovies = async () => {
@@ -70,12 +68,11 @@ export default function Profile() {
     finally { setUploading(false); event.target.value = ''; }
   };
   const clearHistory = async () => { await base44.entities.WatchHistory.deleteMany({ user_id: user.id }); setHistoryMovies([]); toast({ title: 'İzleme geçmişi temizlendi' }); };
-  const renew = async () => { try { await base44.entities.MembershipRenewal.create({ user_id: user.id, user_name: user.username || user.full_name, current_package: pkg?.name || 'Yok', requested_package: pkg?.name || 'STANDARD', status: 'pending' }); await base44.entities.Notification.create({ user_id: user.id, title: 'Yenileme talebiniz alındı', body: 'Talebiniz admin onayı bekliyor.', type: 'info' }); toast({ title: 'Yenileme talebi gönderildi' }); } catch { toast({ title: 'Hata', variant: 'destructive' }); } };
   if (!user) return <div className="dark min-h-screen bg-black p-6 text-white">Yükleniyor...</div>;
-  const expired = user.membership_end && new Date(user.membership_end) < new Date();
+  // Paket/abonelik sistemi kaldırıldı: üyelik süresi artık erişimi etkilemez.
+  const expired = false;
   return <div className="dark mx-auto min-h-screen max-w-3xl bg-black px-4 py-7 text-white sm:px-6">
     <ProfileHeader user={user} pkg={pkg} expired={expired} avatar={form.avatar} onAvatar={onAvatar} onUpdated={reload} uploading={uploading} />
-    <MembershipNotice user={user} expired={expired} onRenew={renew} />
     <ProfileTabs active={tab} isAdmin={user.role === 'admin'} onChange={(nextTab) => { scrollToContentRef.current = true; setTab(nextTab); navigate(nextTab === 'settings' ? '/profil?tab=settings' : '/profil', { replace: true, preventScrollReset: true }); }} />
     <div ref={contentRef} className="scroll-mt-4">
     {tab === 'info' && <ProfileInfoCard user={user} pkg={pkg} editing={editing} form={form} setForm={setForm} onSave={save} onEdit={() => { setForm({ username: user.username || '', full_name: user.full_name || '', phone: user.phone || '', avatar: user.avatar || '', birth_date: user.birth_date || '' }); setEditing(true); }} onCancel={() => { setForm({ username: user.username || '', full_name: user.full_name || '', phone: user.phone || '', avatar: user.avatar || '', birth_date: user.birth_date || '' }); setEditing(false); }} onAvatar={onAvatar} uploading={uploading} saving={saving} />}

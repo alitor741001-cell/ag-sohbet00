@@ -15,24 +15,7 @@ export default async function(req) {
     if (!rl.allowed) return Response.json({ error: 'çok fazla istek' }, { status: 429 });
 
     const me = user;
-    // Admin/moderator her zaman erişebilir
-    if (me.role === 'admin' || me.role === 'moderator') {
-      // yetki kontrolünü atla, videoyu döndür
-    } else {
-      // Otomatik süre dolması
-      if (me.membership_end && new Date(me.membership_end) < new Date() && me.membership_status === 'active') {
-        await base44.asServiceRole.entities.User.update(user.id, {
-          membership_status: 'expired',
-          subscription_status: 'EXPIRED',
-        }).catch(() => {});
-        await logSecurity(base44, 'video_access_denied', user, 'membership expired: ' + movie_id, 'warning');
-        return Response.json({ error: 'aboneliğiniz sona erdi', expired: true }, { status: 403 });
-      }
-      if (me.membership_status !== 'active') {
-        await logSecurity(base44, 'video_access_denied', user, 'membership inactive: ' + movie_id, 'warning');
-        return Response.json({ error: 'üyelik aktif değil', expired: me.membership_status === 'expired' }, { status: 403 });
-      }
-    }
+    // Abonelik/paket sistemi kaldırıldı: hesabı olan herkes videoyu izleyebilir.
 
     const movie = await base44.asServiceRole.entities.Movie.get(movie_id);
     if (!movie) return Response.json({ error: 'içerik bulunamadı' }, { status: 404 });

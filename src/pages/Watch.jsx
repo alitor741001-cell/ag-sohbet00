@@ -4,7 +4,6 @@ import { base44 } from '@/api/base44Client';
 import VideoPlayer from '@/components/player/VideoPlayer';
 import { useCurrentUser, membershipActive } from '@/lib/useCurrentUser';
 import { Lock, ArrowLeft } from 'lucide-react';
-import SubscriptionPrompt from '@/components/SubscriptionPrompt';
 
 export default function Watch() {
   const { id } = useParams();
@@ -59,10 +58,6 @@ export default function Watch() {
   }, [user?.id, movie?.id]);
 
   if (ul || loading) return <div className="h-[60vh] flex items-center justify-center"><div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
-
-  if (expired || !membershipActive(user)) {
-    return <SubscriptionPrompt />;
-  }
 
   if (!movie) return <div className="p-6 space-y-3"><p>{videoError || 'İçerik bulunamadı.'}</p>{videoError && <button onClick={() => setRetry((value) => value + 1)} className="rounded-lg bg-primary px-4 py-2 text-primary-foreground">Yeniden Dene</button>}</div>;
 
