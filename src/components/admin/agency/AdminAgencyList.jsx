@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Building2, Loader2, Plus, Save, Trash2, UserCog } from 'lucide-react';
+import { Building2, Hourglass, Loader2, Plus, Save, Trash2, UserCog } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { Image } from '@/components/ui/image';
-import { AGENCY_GOLD, agencyApi, formatMoney } from '@/lib/agency';
+import { AGENCY_GOLD, agencyApi, dateText, formatMoney } from '@/lib/agency';
 
 /** Yönetim paneli — ajans listesi: oluştur, düzenle, sahip değiştir, sil. */
 export default function AdminAgencyList({ data = {}, reload }) {
@@ -46,6 +46,10 @@ export default function AdminAgencyList({ data = {}, reload }) {
     }, 'Ajans güncellendi');
   };
 
+  const decide = (agency, approve) => run(agency.id, 'admin-agency-decide', { agency_id: agency.id, approve }, approve ? `${agency.name} ajansı onaylandı` : `${agency.name} başvurusu reddedildi`);
+
+  const pending = (data.agencies || []).filter((agency) => agency.status === 'pending');
+
   const changeOwner = (agency) => {
     const memberId = window.prompt('Yeni sahibin üye kimliği:');
     if (!memberId) return;
@@ -67,6 +71,35 @@ export default function AdminAgencyList({ data = {}, reload }) {
           </div>
         </div>
       </div>
+
+      {pending.length > 0 && (
+        <div className="rounded-2xl border border-[#F5C542]/45 bg-[#F5C542]/5 p-4">
+          <p className="flex items-center gap-2 text-sm font-black" style={{ color: AGENCY_GOLD }}>
+            <Hourglass className="h-4 w-4" /> Onay Bekleyen Başvurular ({pending.length})
+          </p>
+          <div className="mt-3 space-y-2">
+            {pending.map((agency) => (
+              <div key={agency.id} className="flex items-center gap-3 rounded-xl border border-white/12 bg-black/40 p-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[#F5C542]/40 bg-black/50">
+                  {agency.logo ? <Image src={agency.logo} className="h-full w-full object-cover" fittingType="fill" /> : <Building2 className="h-4 w-4" style={{ color: AGENCY_GOLD }} />}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-bold text-white">{agency.name}</p>
+                  <p className="truncate text-[11px] text-white/50">{agency.owner_name} • {agency.agency_id} • {dateText(agency.created_date)}</p>
+                </div>
+                <div className="flex shrink-0 gap-1.5">
+                  <button onClick={() => decide(agency, true)} disabled={busy === agency.id} className="rounded-lg px-3 py-1.5 text-[11px] font-black text-black disabled:opacity-60" style={{ background: AGENCY_GOLD }}>
+                    {busy === agency.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Onayla'}
+                  </button>
+                  <button onClick={() => decide(agency, false)} disabled={busy === agency.id} className="rounded-lg border border-[#FF8080]/45 px-3 py-1.5 text-[11px] font-bold text-[#FF8080] disabled:opacity-60">
+                    Reddet
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {(data.agencies || []).length === 0 ? (
         <p className="rounded-2xl border border-white/10 bg-white/5 py-10 text-center text-sm text-white/50">Henüz ajans yok.</p>

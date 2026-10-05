@@ -54,6 +54,19 @@
     "active": {
       "type": "boolean",
       "default": true
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "active",
+        "rejected"
+      ],
+      "default": "active"
+    },
+    "reviewed_at": {
+      "type": "string",
+      "format": "date-time"
     }
   },
   "required": [

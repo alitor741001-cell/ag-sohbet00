@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ArrowLeftRight, Building2, ChevronRight, Gem, MailOpen, Mic2, Sparkles, Wallet } from 'lucide-react';
+import { ArrowLeftRight, Building2, ChevronRight, Gem, Hourglass, MailOpen, Mic2, Sparkles, Wallet } from 'lucide-react';
 import AgencySheet from '@/components/agency/AgencySheet';
 import AgencyCreateSheet from '@/components/agency/AgencyCreateSheet';
 import InviteDetailSheet from '@/components/agency/InviteDetailSheet';
@@ -37,7 +37,9 @@ export default function AgencySection({ user, onRefresh }) {
 
   const profile = summary?.profile || {};
   const role = profile.agency_role || user?.agency_role || '';
-  const isOwner = role === 'owner' && !!profile.agency_record_id;
+  const agencyStatus = summary?.agency?.status || profile.agency_status || '';
+  const isPending = role === 'owner' && !!profile.agency_record_id && agencyStatus === 'pending';
+  const isOwner = role === 'owner' && !!profile.agency_record_id && !isPending;
   const isBroadcaster = role === 'broadcaster' && !!profile.agency_record_id;
   const inviteCount = (summary?.invites || []).filter((invite) => invite.status === 'pending').length;
   const sentCount = (summary?.invites_sent || []).filter((invite) => invite.status === 'pending').length;
@@ -48,7 +50,10 @@ export default function AgencySection({ user, onRefresh }) {
   const openPanel = (target, tab) => { setPanelTab(tab); setSheet(target); };
   const afterChange = () => { setRefreshKey((value) => value + 1); onRefresh?.(); };
 
-  const actions = isOwner ? [
+  const actions = isPending ? [
+    { key: 'application', label: 'Başvuru Bilgileri', icon: Building2, onClick: () => openPanel('agency', 'stats') },
+    { key: 'invites', label: `Ajans Davetlerim${inviteCount ? ` (${inviteCount})` : ''}`, icon: MailOpen, onClick: () => setSheet('invites') },
+  ] : isOwner ? [
     { key: 'agency-stats', label: 'Ajans Yönetimi', icon: Building2, onClick: () => openPanel('agency', 'stats') },
     { key: 'agency-members', label: 'Yayıncılarım', icon: Mic2, onClick: () => openPanel('agency', 'broadcasters') },
     { key: 'agency-earnings', label: 'Ajans Kazancım', icon: Wallet, onClick: () => openPanel('agency', 'stats') },
@@ -66,7 +71,7 @@ export default function AgencySection({ user, onRefresh }) {
   ];
 
   return (
-    <section className="mt-6">
+    <section className="mb-6">
       <div className="mb-3 flex items-center gap-2">
         <Gem className="h-4 w-4" style={{ color: AGENCY_GOLD }} />
         <h2 className="text-sm font-black uppercase tracking-wider" style={{ color: AGENCY_GOLD }}>Ajans İşlemleri</h2>
@@ -76,15 +81,18 @@ export default function AgencySection({ user, onRefresh }) {
       <div className="rounded-2xl border border-[#F5C542]/30 bg-gradient-to-br from-[#1a1305] via-[#0d0b16] to-[#140a1e] p-4">
         <div className="flex items-center gap-3">
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#F5C542]/45 bg-black/50">
-            {isOwner ? <Building2 className="h-5 w-5" style={{ color: AGENCY_GOLD }} /> : <Mic2 className="h-5 w-5" style={{ color: AGENCY_GOLD }} />}
+            {isPending ? <Hourglass className="h-5 w-5" style={{ color: AGENCY_GOLD }} /> : isOwner ? <Building2 className="h-5 w-5" style={{ color: AGENCY_GOLD }} /> : <Mic2 className="h-5 w-5" style={{ color: AGENCY_GOLD }} />}
           </span>
           <div className="min-w-0 flex-1">
-            {isOwner || isBroadcaster ? (
+            {isPending || isOwner || isBroadcaster ? (
               <>
-                <p className="truncate text-sm font-black text-white">{isOwner ? '🏢 AJANS SAHİBİ' : '🎤 YAYINCI'}</p>
+                <p className="truncate text-sm font-black text-white">{isPending ? '🏢 BAŞVURU ONAY BEKLİYOR' : isOwner ? '🏢 AJANS SAHİBİ' : '🎤 YAYINCI'}</p>
                 <p className="truncate text-[11px]" style={{ color: AGENCY_GOLD }}>
-                  {profile.agency_name || 'Ajans'} {profile.agency_code ? `• ${profile.agency_code}` : ''}
+                  {summary?.agency?.name || profile.agency_name || 'Ajans'} {profile.agency_code ? `• ${profile.agency_code}` : ''}
                 </p>
+                {isPending && (
+                  <p className="mt-0.5 text-[10px] text-white/45">Yönetici onayından sonra resmi ajans sahibi olur ve yayıncı davet edebilirsin.</p>
+                )}
                 {isBroadcaster && profile.broadcaster_status !== 'active' && (
                   <p className="mt-0.5 text-[10px] text-white/45">Yayıncı durumun pasif</p>
                 )}
