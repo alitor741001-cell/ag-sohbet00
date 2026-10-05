@@ -7,7 +7,7 @@ import { formatScore } from '@/components/voice/scoreTier';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 const MIN_DOLLARS = 1;
-const COINS_PER_DOLLAR = 5000;
+const COINS_PER_DOLLAR = 9000;
 
 const formatTl = (value) => `${(Number(value) || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺`;
 
@@ -242,8 +242,8 @@ export default function GiftBoxPanel({ open, onClose }) {
           </div>
           <p className="mt-1.5 text-[10px] text-white/45">
             {person?.self
-              ? `Kendi numaranı girdin — tutar 1 $ = 5.000 coin olarak senin hesabına coin geçer${amount() > 0 ? ` (${formatCoins(amount() * COINS_PER_DOLLAR)} coin)` : ''}.`
-              : `Yalnızca dolar tutarı girilir — 1 $ = 5.000 coin olarak alıcıya geçer${amount() > 0 ? ` • alıcıya ${formatCoins(amount() * COINS_PER_DOLLAR)} coin` : ''}.`}
+              ? `Kendi numaranı girdin — tutar 1 $ = 9.000 coin olarak senin hesabına coin geçer${amount() > 0 ? ` (${formatCoins(amount() * COINS_PER_DOLLAR)} coin)` : ''}.`
+              : `Yalnızca dolar tutarı girilir — 1 $ = 9.000 coin olarak alıcıya geçer${amount() > 0 ? ` • alıcıya ${formatCoins(amount() * COINS_PER_DOLLAR)} coin` : ''}.`}
           </p>
         </div>
 

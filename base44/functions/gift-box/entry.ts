@@ -278,7 +278,7 @@ export default async function (req: Request): Promise<Response> {
       });
     }
 
-    // Bakiye gönderimi: 1 dolar = 5.000 coin
+    // Bakiye gönderimi: 1 dolar = 9.000 coin
     if (action === 'send') {
       const dollars = Math.round((Number(body?.dollars) || 0) * 100) / 100;
       if (dollars < MIN_SEND_DOLLARS) {
@@ -337,7 +337,7 @@ export default async function (req: Request): Promise<Response> {
       });
     }
 
-    // Doları bozdurma: kişi kendi kimlik numarasıyla bakiyesini coine çevirir (1 $ = 5.000 coin).
+    // Doları bozdurma: kişi kendi kimlik numarasıyla bakiyesini coine çevirir (1 $ = 9.000 coin).
     if (action === 'convert') {
       const rl = await rateLimit(base44, 'gift-box-convert:' + user.id, user.id, 10, 60000);
       if (!rl.allowed) return Response.json({ error: 'Çok fazla işlem yaptın, biraz bekleyin.' }, { status: 429 });

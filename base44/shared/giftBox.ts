@@ -9,7 +9,7 @@ import { getUsdTry, tlFromDollars, tlRateFrom } from './exchangeRate.ts';
  * Tutar her zaman tam dolar olarak gösterilir (küsurat yazılmaz); TL, piyasa kuru eksi 2 TL ile hesaplanır.
  */
 
-export const COINS_PER_DOLLAR = 5000;
+export const COINS_PER_DOLLAR = 9000;
 const BASE_MAX_K = 200;
 // Puan: her 10K = 1 puan — 200K'dan sonra da artmaya devam eder.
 const K_PER_UNIT = 10;
