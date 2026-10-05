@@ -14,7 +14,7 @@ export default function ProfileHeader({ user, avatar, onAvatar, uploading }) {
   const xpStats = useXp([user.id])[user.id];
 
   const avatarBox = (
-    <span className="block rounded-full p-[3px]" style={{ background: 'linear-gradient(135deg, #e040fb, #00e5ff 55%, #7c4dff)', boxShadow: '0 0 18px rgba(224,64,251,0.45), 0 0 34px rgba(0,229,255,0.28)' }}>
+    <span className="block rounded-full p-[3px]" style={{ background: 'linear-gradient(135deg, #c62828, #f2ce6b)', boxShadow: '0 0 18px rgba(242,206,107,0.45), 0 0 34px rgba(198,40,40,0.35)' }}>
       <XpAvatar avatar={avatar || user.avatar} name={name} frame={xpStats?.frame} size="xl" />
     </span>
   );
@@ -52,14 +52,14 @@ export default function ProfileHeader({ user, avatar, onAvatar, uploading }) {
       )}
 
       <div className="mt-2 flex items-center gap-2">
-        {isAdmin && <Crown className="h-5 w-5 text-amber-400" />}
+        {isAdmin && <Crown className="h-5 w-5 text-[#f2ce6b]" />}
         <h2 className="text-xl font-extrabold text-white" style={isRedNameVip(user.vip_level) ? { color: '#ef4444' } : undefined}>{name}</h2>
       </div>
       <p className="mt-1 max-w-full truncate text-xs text-white/55">{user.email}</p>
       {(isAdmin || hasRole) && (
         <div className="mt-2 flex items-center justify-center gap-2">
           {isAdmin ? (
-            <span className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold" style={{ background: 'rgba(124,77,255,0.35)', color: '#d8b4fe', boxShadow: '0 0 12px rgba(124,77,255,0.35)' }}>
+            <span className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold" style={{ background: 'linear-gradient(135deg, rgba(198,40,40,0.45), rgba(242,206,107,0.25))', color: '#f2ce6b', border: '1px solid rgba(242,206,107,0.45)', boxShadow: '0 0 12px rgba(242,206,107,0.3)' }}>
               <Shield className="h-3.5 w-3.5" /> Yönetici
             </span>
           ) : (

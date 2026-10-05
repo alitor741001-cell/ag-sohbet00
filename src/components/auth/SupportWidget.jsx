@@ -99,16 +99,16 @@ export default function SupportWidget() {
     <>
       <button
         onClick={() => setOpen((o) => !o)}
-        className="fixed bottom-5 right-5 z-50 w-14 h-14 rounded-full bg-[#e50914] hover:bg-[#f6121d] text-white shadow-lg shadow-red-900/50 flex items-center justify-center transition-transform hover:scale-110"
+        className="fixed bottom-5 right-5 z-50 w-14 h-14 rounded-full bg-gradient-to-br from-[#c62828] to-[#f2ce6b] text-white shadow-lg shadow-red-900/50 flex items-center justify-center transition-transform hover:scale-110"
         title="Canlı Destek"
       >
         {open ? <X className="w-6 h-6" /> : <Headset className="w-6 h-6" />}
       </button>
 
       {open && (
-        <div className="fixed bottom-24 right-5 z-50 w-[340px] max-w-[calc(100vw-2.5rem)] bg-[#141414] border border-[#2a2a2a] rounded-2xl shadow-2xl flex flex-col" style={{ height: "440px" }}>
-          <div className="px-4 py-3 border-b border-[#2a2a2a] flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-[#e50914] flex items-center justify-center">
+        <div className="fixed bottom-24 right-5 z-50 w-[340px] max-w-[calc(100vw-2.5rem)] bg-[#141216] border border-[#f2ce6b]/25 rounded-2xl shadow-2xl flex flex-col" style={{ height: "440px" }}>
+          <div className="px-4 py-3 border-b border-[#f2ce6b]/20 flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#c62828] to-[#8f1d1d] border border-[#f2ce6b]/40 flex items-center justify-center">
               <Headset className="w-4 h-4 text-white" />
             </div>
             <div>
@@ -125,7 +125,7 @@ export default function SupportWidget() {
             )}
             {messages.map((m) => (
               <div key={m.id} className={`flex ${m.sender === "user" ? "justify-end" : "justify-start"}`}>
-                <div className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${m.sender === "user" ? "bg-[#e50914] text-white" : "bg-[#2a2a2a] text-white"}`}>
+                <div className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${m.sender === "user" ? "bg-gradient-to-br from-[#c62828] to-[#7f1d1d] border border-[#f2ce6b]/25 text-white" : "bg-[#2a2a2a] text-white"}`}>
                   {m.file_url ? (
                     <img src={m.file_url} alt="foto" className="rounded-lg max-w-full max-h-48 object-cover" />
                   ) : m.text}
@@ -135,18 +135,18 @@ export default function SupportWidget() {
             <div ref={endRef} />
           </div>
 
-          <div className="border-t border-[#2a2a2a] p-3">
+          <div className="border-t border-[#f2ce6b]/20 p-3">
             {error && <p className="text-xs text-red-400 mb-2">{error}</p>}
             <form onSubmit={handleSend} className="flex items-center gap-2">
-              <label className="p-2 rounded-full hover:bg-[#2a2a2a] cursor-pointer shrink-0">
+              <label className="p-2 rounded-full hover:bg-[#f2ce6b]/10 cursor-pointer shrink-0">
                 {uploading ? <Loader2 className="w-5 h-5 text-white animate-spin" /> : <ImageIcon className="w-5 h-5 text-white" />}
                 <input type="file" accept="image/*" className="hidden" onChange={onPhoto} />
               </label>
               <input
                 value={text} onChange={(e) => setText(e.target.value)}
-                placeholder="Mesaj yazın..." className="flex-1 bg-[#0a0a0a] border border-[#2a2a2a] rounded-full px-4 py-2 text-sm text-white placeholder:text-[#555] outline-none focus:border-[#e50914] min-w-0"
+                placeholder="Mesaj yazın..." className="flex-1 bg-[#0a0a0a] border border-[#f2ce6b]/20 rounded-full px-4 py-2 text-sm text-white placeholder:text-[#555] outline-none focus:border-[#f2ce6b]/60 min-w-0"
               />
-              <button type="submit" disabled={loading || uploading} className="p-2.5 rounded-full bg-[#e50914] text-white shrink-0 disabled:opacity-50">
+              <button type="submit" disabled={loading || uploading} className="p-2.5 rounded-full bg-gradient-to-br from-[#c62828] to-[#f2ce6b] text-white shrink-0 disabled:opacity-50">
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
               </button>
             </form>

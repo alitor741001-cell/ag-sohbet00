@@ -38,8 +38,8 @@ export default function OpenRooms() {
     const load = async () => {
       try {
         const [r, m] = await Promise.all([
-          base44.entities.Room.filter({ status: 'active' }, '-created_date', 200).catch(() => []),
-          base44.entities.Movie.list('-created_date', 500).catch(() => []),
+          base44.entities.Room.filter({ status: 'active' }, '-created_date', 100).catch(() => []),
+          base44.entities.Movie.list('-created_date', 200).catch(() => []),
         ]);
         const normal = r.filter((x) => !x.is_personal && !isVoiceRoom(x) && (isAdmin || !x.hidden) && (x.participants?.length || 0) > 0);
         const personal = r.filter((x) => x.is_personal && (isAdmin || !x.hidden) && x.status === 'active');

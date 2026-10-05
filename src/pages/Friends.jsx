@@ -20,10 +20,13 @@ export default function Friends() {
   const [adminLoading, setAdminLoading] = useState(false);
   const [rooms, setRooms] = useState([]);
   useEffect(() => {
-    const load = async () => { const items = await base44.entities.Room.filter({ status: 'active' }, '-updated_date', 200).catch(() => []); setRooms(items); };
+    let timer = null;
+    const load = async () => { const items = await base44.entities.Room.filter({ status: 'active' }, '-updated_date', 100).catch(() => []); setRooms(items); };
     load();
-    const unsub = base44.entities.Room.subscribe(() => load());
-    return () => unsub();
+    // Odalardan çok sık güncelleme gelir: liste yeniden çekilirken kısa bir bekleme
+    // ile tek çağrıda toplanır, arkadaşların oda durumu yine canlı görünür.
+    const unsub = base44.entities.Room.subscribe(() => { clearTimeout(timer); timer = setTimeout(load, 2500); });
+    return () => { clearTimeout(timer); unsub(); };
   }, []);
   const [params, setParams] = useSearchParams();
   const [view, setView] = useState(() => {
@@ -94,14 +97,14 @@ export default function Friends() {
       <header className="px-4 py-5">
         <h1 className="text-2xl font-extrabold">Arkadaşlar</h1>
         <p className="text-sm text-gray-400 mt-1">Sohbet ve arkadaşlarını yönet.</p>
-        <div className="mt-4 flex gap-2 p-1 rounded-xl bg-[hsl(var(--secondary))]">
-          <button onClick={() => switchView('chats')} className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold transition-all ${view === 'chats' ? 'text-white' : 'text-gray-400'}`} style={view === 'chats' ? { background: 'linear-gradient(135deg, #dc2626, #991b1b)' } : {}}>
+        <div className="mt-4 flex gap-2 p-1 rounded-xl border border-[#f2ce6b]/25 bg-[hsl(var(--secondary))]">
+          <button onClick={() => switchView('chats')} className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold transition-all ${view === 'chats' ? 'text-white' : 'text-gray-400'}`} style={view === 'chats' ? { background: 'linear-gradient(135deg, #b91c1c, #dc2626 52%, #f2ce6b)' } : {}}>
             <MessageCircle className="w-4 h-4" /> Mesajlar
-            {totalUnread > 0 && <span className="min-w-5 h-5 px-1 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center">{totalUnread}</span>}
+            {totalUnread > 0 && <span className="min-w-5 h-5 px-1 rounded-full bg-[#f2ce6b] text-black text-[10px] flex items-center justify-center">{totalUnread}</span>}
           </button>
-          <button onClick={() => switchView('friends')} className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold transition-all ${view === 'friends' ? 'text-white' : 'text-gray-400'}`} style={view === 'friends' ? { background: 'linear-gradient(135deg, #dc2626, #991b1b)' } : {}}>
+          <button onClick={() => switchView('friends')} className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold transition-all ${view === 'friends' ? 'text-white' : 'text-gray-400'}`} style={view === 'friends' ? { background: 'linear-gradient(135deg, #b91c1c, #dc2626 52%, #f2ce6b)' } : {}}>
             <UsersRound className="w-4 h-4" /> Arkadaşlarım
-            {incomingRequests > 0 && <span className="min-w-5 h-5 px-1 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center">{incomingRequests}</span>}
+            {incomingRequests > 0 && <span className="min-w-5 h-5 px-1 rounded-full bg-[#f2ce6b] text-black text-[10px] flex items-center justify-center">{incomingRequests}</span>}
           </button>
           {/* Sistem bildirim butonu: tüm bildirimler buraya düşer, dokununca tam ekran açılır. */}
           <NotificationBell />
@@ -114,7 +117,7 @@ export default function Friends() {
         <>
           {!isModerator(user) && (
             <button onClick={startAdminChat} disabled={adminLoading} className="w-full flex items-center gap-3 px-4 py-3 bg-[hsl(var(--secondary))] border-b border-white/5 text-left active:bg-[#1c1c24]">
-              <span className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg, #dc2626, #991b1b)' }}><Shield className="w-4 h-4 text-white" /></span>
+              <span className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg, #b91c1c, #dc2626 52%, #f2ce6b)' }}><Shield className="w-4 h-4 text-white" /></span>
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-bold text-white">Admin'e Mesaj Gönder</p>
                 <p className="text-xs text-gray-400">Arkadaş eklemeden yöneticiye yazın</p>
@@ -123,7 +126,7 @@ export default function Friends() {
           )}
           <div className="px-4 py-3 relative">
             <Search className="absolute left-7 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Kişi ara..." className="w-full pl-9 pr-10 py-2.5 rounded-xl bg-[hsl(var(--secondary))] border border-white/5 text-sm text-white placeholder:text-gray-500 outline-none focus:border-primary/50" />
+            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Kişi ara..." className="w-full pl-9 pr-10 py-2.5 rounded-xl bg-[hsl(var(--secondary))] border border-[#f2ce6b]/20 text-sm text-white placeholder:text-gray-500 outline-none focus:border-[#f2ce6b]/60" />
             <SlidersHorizontal className="absolute right-7 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
           </div>
           {conversations.length > 0 ? (
@@ -131,12 +134,12 @@ export default function Friends() {
           ) : (
             <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
               <div className="relative w-20 h-20 rounded-full bg-[hsl(var(--secondary))] flex items-center justify-center mb-5">
-                <MessageCircle className="w-10 h-10 text-primary/40" />
-                <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-primary flex items-center justify-center text-[10px] font-bold text-white">!</span>
+                <MessageCircle className="w-10 h-10 text-[#f2ce6b]/50" />
+                <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-[#f2ce6b] flex items-center justify-center text-[10px] font-bold text-black">!</span>
               </div>
               <h2 className="text-lg font-bold text-white mb-2">Henüz sohbetin yok</h2>
               <p className="text-sm text-gray-400 mb-6 max-w-xs">Mesajlaşmak için arkadaşlarınla sohbet başlatabilirsin.</p>
-              <button onClick={() => switchView('friends')} className="flex items-center gap-2 px-6 py-3 rounded-full text-sm font-bold text-white" style={{ background: 'linear-gradient(135deg, #dc2626, #991b1b)' }}>
+              <button onClick={() => switchView('friends')} className="flex items-center gap-2 px-6 py-3 rounded-full text-sm font-bold text-white" style={{ background: 'linear-gradient(135deg, #b91c1c, #dc2626 52%, #f2ce6b)' }}>
                 <UserPlus className="w-4 h-4" /> Arkadaşlarını Davet Et
               </button>
             </div>

@@ -17,7 +17,7 @@ export default function ProfileTopBar({ title = 'Profil' }) {
       >
         <ChevronLeft className="h-6 w-6" />
       </button>
-      <h1 className="flex-1 text-center text-base font-bold text-white">{title}</h1>
+      <h1 className="flex-1 text-center text-base font-bold text-[#f2ce6b]">{title}</h1>
       <span className="h-9 w-9" aria-hidden="true" />
     </div>
   );

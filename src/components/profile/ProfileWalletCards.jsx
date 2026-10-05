@@ -3,19 +3,20 @@ import { formatCoins } from '@/lib/giftTone';
 import { formatScore } from '@/components/voice/scoreTier';
 
 /**
- * Profil cüzdanı: solda yüklenen coinler (mavi neon), sağda hediyelerden biriken
- * elmas (altın neon). Altında mavi çanta (VIP) ve ajans işlemleri satırları durur.
+ * Profil cüzdanı: solda yüklenen coinler, sağda hediyelerden biriken elmas.
+ * Ana sayfayla aynı palet: kırmızı gövde + altın çerçeve. Altında çanta (VIP) ve
+ * ajans işlemleri satırları durur.
  */
 const COIN_TONE = {
-  background: 'linear-gradient(150deg, rgba(0,176,255,0.2), rgba(6,10,20,0.9))',
-  border: '1px solid rgba(0,176,255,0.55)',
-  boxShadow: '0 0 18px rgba(0,176,255,0.22)',
+  background: 'linear-gradient(150deg, rgba(198,40,40,0.22), rgba(20,8,8,0.9))',
+  border: '1px solid rgba(242,206,107,0.32)',
+  boxShadow: '0 0 18px rgba(198,40,40,0.24)',
 };
 
 const GOLD_TONE = {
-  background: 'linear-gradient(150deg, rgba(255,171,0,0.2), rgba(24,14,2,0.9))',
-  border: '1px solid rgba(255,171,0,0.55)',
-  boxShadow: '0 0 18px rgba(255,171,0,0.22)',
+  background: 'linear-gradient(150deg, rgba(242,206,107,0.2), rgba(24,14,2,0.9))',
+  border: '1px solid rgba(242,206,107,0.55)',
+  boxShadow: '0 0 18px rgba(242,206,107,0.22)',
 };
 
 export default function ProfileWalletCards({ coins, giftScore, vipCount = 0, onOpenGiftBox, onOpenCoins, onOpenVipBag, onOpenAgency }) {
@@ -31,7 +32,7 @@ export default function ProfileWalletCards({ coins, giftScore, vipCount = 0, onO
           className="flex items-center gap-2.5 rounded-2xl px-3 py-2.5 text-left transition-transform active:scale-95"
           style={COIN_TONE}
         >
-          <Coins className="h-7 w-7 shrink-0 text-sky-300" />
+          <Coins className="h-7 w-7 shrink-0 text-[#f2ce6b]" />
           <span className="min-w-0 flex-1">
             <span className="block text-[11px] font-semibold text-white/70">Coins</span>
             <span className="block truncate text-base font-extrabold tabular-nums text-white">{coinText}</span>
@@ -45,7 +46,7 @@ export default function ProfileWalletCards({ coins, giftScore, vipCount = 0, onO
           className="flex items-center gap-2.5 rounded-2xl px-3 py-2.5 text-left transition-transform active:scale-95"
           style={GOLD_TONE}
         >
-          <Gem className="h-7 w-7 shrink-0 text-[#7dd3fc]" />
+          <Gem className="h-7 w-7 shrink-0 text-[#f2ce6b]" />
           <span className="min-w-0 flex-1">
             <span className="block text-[11px] font-semibold text-white/70">Elmaslar</span>
             <span className="block truncate text-base font-extrabold tabular-nums text-white">{giftText}</span>
@@ -64,7 +65,7 @@ export default function ProfileWalletCards({ coins, giftScore, vipCount = 0, onO
           className="flex items-center gap-2.5 rounded-2xl px-3 py-2.5 text-left transition-transform active:scale-95"
           style={COIN_TONE}
         >
-          <Briefcase className="h-6 w-6 shrink-0 text-sky-300" />
+          <Briefcase className="h-6 w-6 shrink-0 text-[#f2ce6b]" />
           <span className="min-w-0 flex-1">
             <span className="block text-[11px] font-semibold text-white/70">Mavi Çanta</span>
             <span className="block truncate text-base font-extrabold text-white">{vipCount > 0 ? `${vipCount} VIP` : 'Boş'}</span>
@@ -79,7 +80,7 @@ export default function ProfileWalletCards({ coins, giftScore, vipCount = 0, onO
             className="flex items-center gap-2.5 rounded-2xl px-3 py-2.5 text-left transition-transform active:scale-95"
             style={GOLD_TONE}
           >
-            <Crown className="h-6 w-6 shrink-0 text-[#F5C542]" />
+            <Crown className="h-6 w-6 shrink-0 text-[#f2ce6b]" />
             <span className="min-w-0 flex-1">
               <span className="block text-[11px] font-semibold text-white/70">Ajans İşlemleri</span>
               <span className="block truncate text-base font-extrabold text-white">Panel</span>
