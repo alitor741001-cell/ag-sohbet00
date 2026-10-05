@@ -54,41 +54,40 @@ export default function ProfileWalletCards({ coins, giftScore, vipCount = 0, onO
         </button>
       </div>
 
-      {/* Mavi çanta: coin yüklemesinden gelen VIP'ler burada birikir. */}
-      <button
-        type="button"
-        onClick={onOpenVipBag}
-        className="flex w-full items-center gap-3 rounded-2xl px-3.5 py-2.5 text-left transition-transform active:scale-[0.98]"
-        style={COIN_TONE}
-      >
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/[0.06]">
-          <Briefcase className="h-5 w-5 text-sky-300" />
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block text-sm font-bold text-white">Mavi Çanta</span>
-          <span className="block truncate text-[11px] text-white/55">{vipCount > 0 ? `${vipCount} VIP bekliyor` : 'Henüz VIP yok'}</span>
-        </span>
-        <ChevronRight className="h-4 w-4 shrink-0 text-white/40" />
-      </button>
-
-      {/* Ajans işlemleri: kendi tam sayfasına gider. (Yöneticilerde gizli.) */}
-      {onOpenAgency && (
+      {/* İkinci sıra: elmasların altında mavi çanta, yanında eşit genişlikte ajans işlemleri.
+          Mavi çanta: coin yüklemesinden gelen VIP'ler burada birikir.
+          Ajans işlemleri: kendi tam sayfasına gider. (Yöneticilerde gizli.) */}
+      <div className={`grid gap-2 ${onOpenAgency ? 'grid-cols-2' : 'grid-cols-1'}`}>
         <button
           type="button"
-          onClick={onOpenAgency}
-          className="flex w-full items-center gap-3 rounded-2xl px-3.5 py-2.5 text-left transition-transform active:scale-[0.98]"
-          style={GOLD_TONE}
+          onClick={onOpenVipBag}
+          className="flex items-center gap-2.5 rounded-2xl px-3 py-2.5 text-left transition-transform active:scale-95"
+          style={COIN_TONE}
         >
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/[0.06]">
-            <Crown className="h-5 w-5 text-[#F5C542]" />
-          </span>
+          <Briefcase className="h-6 w-6 shrink-0 text-sky-300" />
           <span className="min-w-0 flex-1">
-            <span className="block text-sm font-bold text-white">Ajans İşlemleri</span>
-            <span className="block truncate text-[11px] text-white/55">Ajans ve yayıncı paneli</span>
+            <span className="block text-[11px] font-semibold text-white/70">Mavi Çanta</span>
+            <span className="block truncate text-base font-extrabold text-white">{vipCount > 0 ? `${vipCount} VIP` : 'Boş'}</span>
           </span>
           <ChevronRight className="h-4 w-4 shrink-0 text-white/40" />
         </button>
-      )}
+
+        {onOpenAgency && (
+          <button
+            type="button"
+            onClick={onOpenAgency}
+            className="flex items-center gap-2.5 rounded-2xl px-3 py-2.5 text-left transition-transform active:scale-95"
+            style={GOLD_TONE}
+          >
+            <Crown className="h-6 w-6 shrink-0 text-[#F5C542]" />
+            <span className="min-w-0 flex-1">
+              <span className="block text-[11px] font-semibold text-white/70">Ajans İşlemleri</span>
+              <span className="block truncate text-base font-extrabold text-white">Panel</span>
+            </span>
+            <ChevronRight className="h-4 w-4 shrink-0 text-white/40" />
+          </button>
+        )}
+      </div>
     </div>
   );
 }
