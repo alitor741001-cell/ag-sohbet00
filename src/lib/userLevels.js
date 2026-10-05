@@ -17,7 +17,10 @@ export const TIER_COLORS = {
 export const RECEIVED_BASE_COLOR = '#e58e46';
 
 export const receivedColor = (tier) => (tier === 'green' ? RECEIVED_BASE_COLOR : TIER_COLORS[tier] || RECEIVED_BASE_COLOR);
-export const sentColor = (tier) => TIER_COLORS[tier] || TIER_COLORS.green;
+/** Atış (hediye gönderme) rozeti her zaman altın-kehribar kalır; hediye alış rozeti katman
+ *  rengini korur — böylece iki rozet aynı renkte görünmez. */
+export const SENT_BADGE_BACKGROUND = 'linear-gradient(135deg, #fbbf24, #f59e0b)';
+export const sentColor = () => SENT_BADGE_BACKGROUND;
 
 /** VIP rozeti: 5–7 altın, 8–9 kırmızı, 10–12 özel (mor-altın). */
 export function vipStyle(level) {
