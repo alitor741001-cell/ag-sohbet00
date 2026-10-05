@@ -6,7 +6,7 @@ import GiftLevelTicker from '@/components/voice/GiftLevelTicker';
 import { K_UNIT, coinToK, formatCoins, formatK, formatPrice, tierForK, toneColor } from '@/lib/giftTone';
 
 /** Hediye Tahtası içeriği: kategoriler, hediyeler (K değeriyle) ve çoklu alıcı seçimi. */
-export default function GiftBoardContent({ gifts = [], tiers = [], people = [], selectedIds = [], giftId, coins, onSelectGift, onTogglePerson, onSelectAll, onClear, onOpenCoins }) {
+export default function GiftBoardContent({ gifts = [], tiers = [], people = [], selectedIds = [], giftId, coins, giftTick = 0, onSelectGift, onTogglePerson, onSelectAll, onClear, onOpenCoins }) {
   const [category, setCategory] = useState('Tümü');
 
   const categories = useMemo(() => ['Tümü', ...new Set(gifts.map((gift) => gift.category || 'Diğer'))], [gifts]);
@@ -53,8 +53,9 @@ export default function GiftBoardContent({ gifts = [], tiers = [], people = [], 
         onClear={onClear}
       />
 
-      {/* "Tümü" kategorisinin üstünde dönüşümlü seviye şeridi: atış LVL → hediye alma LVL. */}
-      <GiftLevelTicker />
+      {/* "Tümü" kategorisinin üstünde dönüşümlü seviye şeridi: atış LVL → hediye alma LVL.
+          Bar, odada hediye atıldıkça canlı ilerler. */}
+      <GiftLevelTicker giftTick={giftTick} />
 
       <div className="no-scrollbar my-3 flex gap-2 overflow-x-auto pb-1">
         {categories.map((item) => (

@@ -44,18 +44,12 @@ export function maskRoomIdentities(room: any) {
   };
 }
 
-/**
- * Gizli kullanıcı modu bir odadayken açıldığında kişiyi anında görünmez yapar:
- * katılım kaydı takma ada çevrilir, koltuğundaki isim/avatar/çerçeve silinir ve
- * odaya "gizli kullanıcı girdi" anonsu işaretlenir. Kimlik numarası hiçbir yerde görünmez.
- */
-export async function maskUserInCurrentRoom(base44: any, userId: string) {
-  if (!userId) return null;
+/** Kişinin şu an bulunduğu etkin odalar: presence kaydı ve katılım listeleri birlikte taranır. */
+async function userActiveRooms(base44: any, userId: string) {
   const presence = await base44.asServiceRole.entities.UserPresence
     .filter({ user_id: userId }, '-created_date', 5).catch(() => []);
-  const presenceRoomId = (presence || []).map((item) => item.current_room_id).find((value) => value) || '';
+  const presenceRoomId = (presence || []).map((item: any) => item.current_room_id).find((value: any) => value) || '';
 
-  // Presences kaydı odasız ya da eski kalabilir: kişinin katılımcı olduğu etkin odalar da taranır.
   const activeRooms = await base44.asServiceRole.entities.Room
     .filter({ status: 'active' }, '-updated_date', 100).catch(() => []);
   const rooms = [...activeRooms];
@@ -63,6 +57,17 @@ export async function maskUserInCurrentRoom(base44: any, userId: string) {
     const current = await base44.asServiceRole.entities.Room.get(presenceRoomId).catch(() => null);
     if (current) rooms.unshift(current);
   }
+  return rooms;
+}
+
+/**
+ * Gizli kullanıcı modu bir odadayken açıldığında kişiyi anında görünmez yapar:
+ * katılım kaydı takma ada çevrilir, koltuğundaki isim/avatar/çerçeve silinir ve
+ * odaya "gizli kullanıcı girdi" anonsu işaretlenir. Kimlik numarası hiçbir yerde görünmez.
+ */
+export async function maskUserInCurrentRoom(base44: any, userId: string) {
+  if (!userId) return null;
+  const rooms = await userActiveRooms(base44, userId);
 
   // Takma ad + maskeli profil: gerçek isim, fotoğraf ve çerçeve hiçbir yerde görünmez.
   const record = await base44.asServiceRole.entities.User.get(userId).catch(() => null);
@@ -75,14 +80,53 @@ export async function maskUserInCurrentRoom(base44: any, userId: string) {
       (person.user_id === userId ? { ...person, name: maskedName, avatar: HIDDEN_AVATAR_URL } : person));
     const seats = (Array.isArray(room.seats) ? room.seats : []).map((seat: any) =>
       (seat.user_id === userId ? { ...seat, name: maskedName, avatar: HIDDEN_AVATAR_URL, frame: '' } : seat));
+    const recent = (room.recent_participants || []).map((person: any) =>
+      (person.user_id === userId ? { ...person, name: maskedName, avatar: HIDDEN_AVATAR_URL } : person));
 
     await base44.asServiceRole.entities.Room.update(room.id, {
       participants,
       seats,
+      ...(Array.isArray(room.recent_participants) ? { recent_participants: recent } : {}),
       ghost_entered_at: new Date().toISOString(),
     }).catch(() => {});
     maskedRoomId = room.id;
   }
 
   return maskedRoomId || null;
+}
+
+/**
+ * Gizli kullanıcı modu kapatıldığında kişinin gerçek kimliği odalarda canlı geri gelir:
+ * katılım, koltuk ve izleyici kayıtlarındaki takma ad gerçek isim, fotoğraf ve çerçeveyle değişir.
+ */
+export async function restoreUserInRooms(base44: any, userId: string) {
+  if (!userId) return null;
+  const record = await base44.asServiceRole.entities.User.get(userId).catch(() => null);
+  if (!record?.id) return null;
+  const name = record.username || record.full_name || 'Kullanıcı';
+  const avatar = record.avatar || '';
+  const frame = record.profile_frame || '';
+  const frameScale = Math.max(50, Math.min(150, Math.round(Number(record.profile_frame_scale) || 100)));
+  const rooms = await userActiveRooms(base44, userId);
+
+  let restoredRoomId = '';
+  for (const room of rooms) {
+    if (!(room.participants || []).some((person: any) => person.user_id === userId)) continue;
+    const participants = (room.participants || []).map((person: any) =>
+      (person.user_id === userId ? { ...person, name, avatar } : person));
+    const seats = (Array.isArray(room.seats) ? room.seats : []).map((seat: any) =>
+      (seat.user_id === userId ? { ...seat, name, avatar, frame, frame_scale: frameScale } : seat));
+    const recent = (room.recent_participants || []).map((person: any) =>
+      (person.user_id === userId ? { ...person, name, avatar } : person));
+
+    await base44.asServiceRole.entities.Room.update(room.id, {
+      participants,
+      seats,
+      ...(Array.isArray(room.recent_participants) ? { recent_participants: recent } : {}),
+      ...(room.owner_id === userId ? { owner_name: name } : {}),
+    }).catch(() => {});
+    restoredRoomId = room.id;
+  }
+
+  return restoredRoomId || null;
 }

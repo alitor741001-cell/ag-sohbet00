@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { EyeOff, Lock } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useToast } from '@/components/ui/use-toast';
+import { useCurrentUser } from '@/lib/useCurrentUser';
 import { vipLevelOf } from '@/lib/userLevels';
 
 const REQUIRED_VIP = 10;
@@ -12,6 +13,7 @@ const REQUIRED_VIP = 10;
  */
 export default function HiddenUserCard({ user, onUpdated }) {
   const { toast } = useToast();
+  const { setUser } = useCurrentUser();
   const [saving, setSaving] = useState(false);
   const level = vipLevelOf(user);
   const unlocked = level >= REQUIRED_VIP;
@@ -23,9 +25,12 @@ export default function HiddenUserCard({ user, onUpdated }) {
     try {
       const response = await base44.functions.invoke('vip-bag', { action: 'hidden', enabled: !enabled });
       if (!response.data?.ok) throw new Error(response.data?.error || 'Kaydedilemedi.');
+      // Ayar her yerde anında geçerli olsun: oturumdaki kullanıcı kaydı da canlı güncellenir.
+      const hidden = !!response.data.hidden_user;
+      setUser((prev) => (prev ? { ...prev, hidden_user: hidden } : prev));
       toast({
-        title: response.data.hidden_user ? 'Gizli kullanıcı açıldı' : 'Gizli kullanıcı kapatıldı',
-        description: response.data.hidden_user ? 'Odalara görünmeden girersin.' : 'Odalarda yeniden görünürsün.',
+        title: hidden ? 'Gizli kullanıcı açıldı' : 'Gizli kullanıcı kapatıldı',
+        description: hidden ? 'Odalarda anında görünmez olursun.' : 'Odalarda anında yeniden görünürsün.',
       });
       onUpdated?.();
     } catch (error) {

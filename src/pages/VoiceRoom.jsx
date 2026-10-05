@@ -189,6 +189,9 @@ export default function VoiceRoom() {
   const selectedGift = useMemo(() => gifts.find((item) => item.id === giftId) || null, [gifts, giftId]);
   const seatAccent = toneColor(tierForK(tiers, selectedGift?.k_value || 0));
 
+  // Odada atılan/alan her hediye seviye çubuğunu tazeler: bar hediye atıldığı anda canlı ilerler.
+  const giftCount = useMemo(() => messages.filter((message) => message.type === 'gift').length, [messages]);
+
   // Odadan ayrılan kişi seçimden düşer.
   useEffect(() => {
     if (!selectedIds.length) return;
@@ -1152,6 +1155,7 @@ export default function VoiceRoom() {
         selectedIds={selectedIds}
         giftId={giftId}
         coins={coins}
+        giftTick={giftCount}
         onSelectGift={setGiftId}
         onTogglePerson={toggleGiftPerson}
         onSelectAll={() => setSelectedIds(giftPeople.map((person) => person.user_id))}

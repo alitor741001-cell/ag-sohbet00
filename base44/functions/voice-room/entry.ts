@@ -370,17 +370,18 @@ export default async function (req: Request): Promise<Response> {
           });
         }
       }
-      const [messages] = await Promise.all([
-        Promise.all(messageRecords.map((message) => base44.asServiceRole.entities.RoomMessage.create(message))),
-        base44.asServiceRole.entities.GiftSend.bulkCreate(records),
-      ]);
-
-      // Hediye seviyeleri: gönderen ve alan kişilerin K toplamları işlenir.
+      // Hediye seviyeleri: gönderen ve alan kişilerin K toplamları, hediye satırından önce işlenir —
+      // satır geldiğinde hediye kutusundaki seviye çubuğu güncel toplamı okuyup canlı ilerler.
       const progression = await addGiftTotals(base44, {
         senderId: user.id,
         recipientIds: recipients.map((recipient) => recipient.user_id),
         kPerRecipient: kValue * quantity,
       });
+
+      const [messages] = await Promise.all([
+        Promise.all(messageRecords.map((message) => base44.asServiceRole.entities.RoomMessage.create(message))),
+        base44.asServiceRole.entities.GiftSend.bulkCreate(records),
+      ]);
 
       // Oda LVL'i hediye atışıyla yükselir: hediye kutusundaki atış LVL eşiği tamamlandığında
       // oda seviyesi atlar ve odaya duyuru düşer. Hediyeyi alanların "hediye alma" seviyesi de duyurulur.

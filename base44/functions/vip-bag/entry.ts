@@ -2,7 +2,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import { rateLimit, safeErrorResponse } from '../../shared/security.ts';
 import { applyVipToUser, vipDurationLabel, effectiveVipLevel } from '../../shared/vip.ts';
 import { findByMemberId } from '../../shared/giftBox.ts';
-import { maskUserInCurrentRoom } from '../../shared/hiddenUserRoom.ts';
+import { maskUserInCurrentRoom, restoreUserInRooms } from '../../shared/hiddenUserRoom.ts';
 
 const ACTIONS = ['list', 'use', 'send', 'hidden'];
 
@@ -57,7 +57,9 @@ export default async function (req: Request): Promise<Response> {
       const enabled = !!body?.enabled;
       await base44.asServiceRole.entities.User.update(user.id, { hidden_user: enabled });
       // Açıldığı anda bulunduğu odada da görünmez olur: ismi ve koltuğu gizlenir, anons düşer.
+      // Kapatıldığında ise odalardaki takma ad gerçek kimliğe döner — sayfa yenilemeye gerek yok.
       if (enabled) await maskUserInCurrentRoom(base44, user.id).catch(() => {});
+      else await restoreUserInRooms(base44, user.id).catch(() => {});
       return Response.json({ ok: true, hidden_user: enabled, vip_level: level });
     }
 
