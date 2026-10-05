@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { FastForward, Maximize, Minimize, Pause, Play, Rewind } from 'lucide-react';
+import { FastForward, Maximize, Minimize, Pause, Play, Rewind, Volume2, VolumeX } from 'lucide-react';
 import VolumeSlider from './VolumeSlider';
 
 // YouTube IFrame API'si tek seferde yüklenir ve tüm oda aynı oynatıcıyı kullanır.
@@ -36,7 +36,7 @@ const fmt = (seconds) => {
 // WebKit sesi telefonun kendi ayarına bırakır, yalnızca sessize alma çalışır.
 const IOS_VOLUME_LOCKED = /iPad|iPhone|iPod/.test(navigator.userAgent)
   || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-const IOS_MUTE_THRESHOLD = 50;
+
 
 /**
  * YouTube videosunu oda ekranında oynatır: ilerleme, geri/ileri sarma ve tam ekran
@@ -63,22 +63,20 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
   // Film sesi: herkes kendi cihazında kısıp açabilir, odaya yazılmaz. Ayar, doğrudan
   // oynatıcıdaki (useMediaVolume) altyapının kullandığı anahtarlarla cihazda saklanır.
   const [volume, setVolume] = useState(() => {
-    const stored = Number(localStorage.getItem('filmkeyfi_player_volume'));
+    const stored = Number(localStorage.getItem('filmkeyfi_player_volume') ?? 1);
     return Number.isFinite(stored) ? Math.round(Math.min(1, Math.max(0, stored)) * 100) : 100;
   });
   const [muted, setMuted] = useState(() => localStorage.getItem('filmkeyfi_player_muted') === 'true');
 
-  // iPhone/iPad'de seviye uygulanamadığı için yüzde eşik olarak çalışır: %50'nin altı sessiz.
-  // Android ve masaüstünde yüzde gerçek ses seviyesidir.
-  const silent = muted || (IOS_VOLUME_LOCKED && volume < IOS_MUTE_THRESHOLD);
+  // Sessize alma yalnızca açık kullanıcı tercihiyle uygulanır, yüzde eşiği yoktur.
+  const silent = muted;
 
   // Ses, kaydırma sırasında anında uygulanır: React güncellemesi beklenmez.
   const applyVolume = (level, isMuted) => {
     const player = playerRef.current;
     if (!player?.setVolume) return;
-    const quiet = isMuted || (IOS_VOLUME_LOCKED && level < IOS_MUTE_THRESHOLD);
-    if (quiet) player.mute?.(); else player.unMute?.();
-    player.setVolume(quiet ? 0 : level);
+    if (isMuted) player.mute?.(); else player.unMute?.();
+    if (!IOS_VOLUME_LOCKED) player.setVolume(isMuted ? 0 : level);
   };
 
   const changeVolume = (percent) => {
@@ -92,8 +90,7 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
 
   const toggleMute = () => {
     const next = !silent;
-    // iPhone'da kademe uygulanamadığı için açma işlemi tam ses verir.
-    const level = !next && IOS_VOLUME_LOCKED ? 100 : volume;
+    const level = !next && volume === 0 ? 100 : volume;
     setMuted(next);
     if (level !== volume) setVolume(level);
     localStorage.setItem('filmkeyfi_player_muted', String(next));
@@ -290,20 +287,28 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
           {isOwner && <span>{fmt(duration)}</span>}
         </div>
         {IOS_VOLUME_LOCKED && (
-          <p className="mb-1 text-[10px] font-semibold text-white/60">iPhone: YouTube sesi aç/kapa — kademe için telefon ses tuşları</p>
+          <p className="mb-1 text-xs font-semibold text-white/60">YouTube sesi iPhone’da telefonun ses tuşlarıyla azaltılır.</p>
         )}
         <div className="flex items-center gap-1 text-white sm:gap-2">
           {isOwner && <button onClick={togglePlay} className="rounded-lg p-2 hover:bg-white/10">{playing ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}</button>}
           {isOwner && <button onClick={() => skip(-10)} className="rounded-lg p-2 hover:bg-white/10" title="10 sn geri"><Rewind className="h-5 w-5" /></button>}
           {isOwner && <button onClick={() => skip(10)} className="rounded-lg p-2 hover:bg-white/10" title="10 sn ileri"><FastForward className="h-5 w-5" /></button>}
-          <VolumeSlider
-            // Etkin seviye gösterilir: iPhone'da 0% (sessiz) veya 100% (tam ses).
-            volume={IOS_VOLUME_LOCKED ? (silent ? 0 : 1) : volume / 100}
-            muted={silent}
-            onChange={changeVolume}
-            onToggleMute={toggleMute}
-            nativeFallback
-          />
+          {IOS_VOLUME_LOCKED ? (
+            <button
+              type="button"
+              disabled={!ready}
+              aria-label={silent ? 'Sesi aç' : 'Sesi kapat'}
+              aria-pressed={silent}
+              onPointerDown={(event) => event.stopPropagation()}
+              onTouchStart={(event) => event.stopPropagation()}
+              onClick={(event) => { event.stopPropagation(); toggleMute(); }}
+              className="relative z-[70] rounded-lg p-2 hover:bg-foreground/10 disabled:opacity-50"
+            >
+              {silent ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+            </button>
+          ) : (
+            <VolumeSlider volume={volume / 100} muted={silent} onChange={changeVolume} onToggleMute={toggleMute} nativeFallback />
+          )}
           <button onClick={toggleFullscreen} className="ml-auto rounded-lg p-2 hover:bg-white/10" title="Tam ekran">
             {fullscreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
           </button>
