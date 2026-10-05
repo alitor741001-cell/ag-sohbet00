@@ -20,7 +20,7 @@ const TITLES = {
  * Profil sayfasındaki "AJANS İŞLEMLERİ" bölümü: rol ve duruma göre
  * değişen butonlar (ajans oluştur, davetler, yayıncı/ajans paneli, transfer).
  */
-export default function AgencySection({ user, onRefresh }) {
+export default function AgencySection({ user, onRefresh, showHeading = true }) {
   const [summary, setSummary] = useState(null);
   const [sheet, setSheet] = useState('');
   const [panelTab, setPanelTab] = useState('quota');
@@ -74,11 +74,13 @@ export default function AgencySection({ user, onRefresh }) {
 
   return (
     <section className="mb-6">
-      <div className="mb-3 flex items-center gap-2">
-        <Gem className="h-4 w-4" style={{ color: AGENCY_GOLD }} />
-        <h2 className="text-sm font-black uppercase tracking-wider" style={{ color: AGENCY_GOLD }}>Ajans İşlemleri</h2>
-        <span className="h-px flex-1 bg-gradient-to-r from-[#F5C542]/60 to-transparent" />
-      </div>
+      {showHeading && (
+        <div className="mb-3 flex items-center gap-2">
+          <Gem className="h-4 w-4" style={{ color: AGENCY_GOLD }} />
+          <h2 className="text-sm font-black uppercase tracking-wider" style={{ color: AGENCY_GOLD }}>Ajans İşlemleri</h2>
+          <span className="h-px flex-1 bg-gradient-to-r from-[#F5C542]/60 to-transparent" />
+        </div>
+      )}
 
       <div className="rounded-2xl border border-[#F5C542]/30 bg-gradient-to-br from-[#1a1305] via-[#0d0b16] to-[#140a1e] p-4">
         <div className="flex items-center gap-3">

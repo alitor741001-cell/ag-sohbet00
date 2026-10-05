@@ -7,7 +7,7 @@ import { formatScore } from '@/components/voice/scoreTier';
  * sağda hediyelerden biriken elmas (hediye kutusu) değeri.
  * Elmasın altında mavi çanta durur: coin yüklemesinden gelen VIP'ler orada birikir.
  */
-export default function ProfileWalletCards({ coins, giftScore, vipCount = 0, onOpenGiftBox, onOpenCoins, onOpenVipBag }) {
+export default function ProfileWalletCards({ coins, giftScore, vipCount = 0, onOpenGiftBox, onOpenCoins, onOpenVipBag, onOpenAgency }) {
   const coinText = coins === null || coins === undefined ? '—' : formatCoins(coins);
   const giftText = giftScore === null || giftScore === undefined ? '—' : formatScore(giftScore);
 
@@ -57,6 +57,24 @@ export default function ProfileWalletCards({ coins, giftScore, vipCount = 0, onO
           <p className="text-[10px] font-semibold text-sky-100/85">Mavi Çanta</p>
         </div>
         <ChevronRight className="h-4 w-4 shrink-0 text-sky-100/70" />
+      </button>
+
+      {/* Ajans işlemleri: kendi tam sayfasına gider. */}
+      <button
+        type="button"
+        onClick={onOpenAgency}
+        className="mt-2 flex w-full items-center gap-2 rounded-xl px-2.5 py-2 transition-transform active:scale-95"
+        style={{
+          background: 'linear-gradient(135deg, rgba(245,197,66,0.22), rgba(245,197,66,0.08))',
+          border: '1px solid rgba(245,197,66,0.45)',
+        }}
+      >
+        <Gem className="h-6 w-6 shrink-0 text-[#F5C542]" />
+        <div className="min-w-0 flex-1 text-center">
+          <p className="truncate text-sm font-bold text-white">Ajans İşlemleri</p>
+          <p className="text-[10px] font-semibold text-[#F5C542]/85">Ajans ve yayıncı paneli</p>
+        </div>
+        <ChevronRight className="h-4 w-4 shrink-0 text-[#F5C542]/70" />
       </button>
     </div>
   );

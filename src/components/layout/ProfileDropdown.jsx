@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ChevronDown, ChevronRight, Headphones, User, Settings, Shield, LogOut } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useCurrentUser, membershipActive } from '@/lib/useCurrentUser';
@@ -11,6 +11,7 @@ import VipBagPanel from '@/components/profile/VipBagPanel';
 
 export default function ProfileDropdown() {
   const { user } = useCurrentUser();
+  const navigate = useNavigate();
   const isActive = membershipActive(user);
   const [open, setOpen] = useState(false);
   const [giftBoxOpen, setGiftBoxOpen] = useState(false);
@@ -107,6 +108,7 @@ export default function ProfileDropdown() {
               onOpenGiftBox={() => { setOpen(false); setGiftBoxOpen(true); }}
               onOpenCoins={() => { setOpen(false); setActivityOpen(true); }}
               onOpenVipBag={() => { setOpen(false); setVipBagOpen(true); }}
+              onOpenAgency={() => { setOpen(false); navigate('/ajans'); }}
             />
 
             {/* Menu items */}

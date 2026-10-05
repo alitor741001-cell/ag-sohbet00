@@ -29,6 +29,7 @@ const CreateRoom = lazy(() => import('@/pages/CreateRoom'));
 const VoiceRoomCreate = lazy(() => import('@/pages/VoiceRoomCreate'));
 const VoiceRoom = lazy(() => import('@/pages/VoiceRoom'));
 const Profile = lazy(() => import('@/pages/Profile'));
+const AgencyPage = lazy(() => import('@/pages/AgencyPage'));
 const MyList = lazy(() => import('@/pages/MyList'));
 const Search = lazy(() => import('@/pages/Search'));
 const Support = lazy(() => import('@/pages/Support'));
@@ -123,6 +124,7 @@ const AuthenticatedApp = () => {
           <Route path="/arkadaslar" element={<Friends />} />
           <Route path="/bildirimler" element={<Notifications />} />
           <Route path="/profil" element={<Profile />} />
+          <Route path="/ajans" element={<AgencyPage />} />
           <Route path="/kullanici/:id" element={<UserProfile />} />
           <Route path="/güvenlik-protokolü" element={<SecurityProtocol />} />
           <Route path="/abonelik" element={<Subscription />} />
