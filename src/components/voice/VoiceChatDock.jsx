@@ -9,10 +9,10 @@ import { plainText } from '@/components/voice/voiceText';
 import useMessageProfiles from '@/hooks/useMessageProfiles';
 
 /**
- * Oda alt bölümü: sohbet (klavye) butonuna basınca mesaj akışı ve yazma alanı açılır,
- * mesaj gönderilince ikisi birlikte kapanır ve oda eski görünümüne döner.
+ * Oda alt bölümü: sohbet (klavye) butonuna basınca mesaj akışı ve yazma alanı açılır.
+ * Mesaj gönderilince yazma alanı kapanır ve klavye iner; mesaj akışı görünür kalır.
  */
-export default function VoiceChatDock({ messages = [], onSend, onCloseComposer, composerOpen, chatLocked, currentUserId, ownerId, moderators = [], onOpenProfile, bigGiftNotice, onOpenBigGiftRoom, hiddenUsers = {} }) {
+export default function VoiceChatDock({ messages = [], onSend, open, onCloseComposer, composerOpen, chatLocked, currentUserId, ownerId, moderators = [], onOpenProfile, bigGiftNotice, onOpenBigGiftRoom, hiddenUsers = {} }) {
   const [text, setText] = useState('');
   const [emojiOpen, setEmojiOpen] = useState(false);
   const inputRef = useRef(null);
@@ -41,7 +41,7 @@ export default function VoiceChatDock({ messages = [], onSend, onCloseComposer, 
     if (!value) return;
     setText('');
     setEmojiOpen(false);
-    // Gönderince yazma alanı ve klavye kapansın (tüm telefonlarda aynı davranış).
+    // Gönderince yazma alanı ve klavye kapansın; mesaj akışı açık kalır.
     inputRef.current?.blur();
     onSend(value);
     onCloseComposer?.();
@@ -49,7 +49,7 @@ export default function VoiceChatDock({ messages = [], onSend, onCloseComposer, 
 
   return (
     <div className="relative shrink-0">
-      {composerOpen && (messages.length > 0 || !!bigGiftNotice) && (
+      {open && (messages.length > 0 || !!bigGiftNotice) && (
         <div className="absolute inset-x-0 bottom-full z-10 flex max-h-[34vh] flex-col justify-end overflow-y-auto overscroll-contain pb-1 [mask-image:linear-gradient(to_bottom,transparent,black_14%)] [-webkit-mask-image:linear-gradient(to_bottom,transparent,black_14%)]">
           <div className="flex flex-col gap-1.5 px-4">
             {messages.map((message) => {
@@ -80,7 +80,7 @@ export default function VoiceChatDock({ messages = [], onSend, onCloseComposer, 
         </div>
       )}
 
-      {chatLocked && (
+      {open && chatLocked && (
         <p className="mx-3 mb-2 mt-1.5 rounded-full border border-primary/50 bg-black/60 px-4 py-3 text-center text-[11px] font-semibold text-primary backdrop-blur-md">
           Sohbet yasağı var — yazmak için bir koltuğa otur.
         </p>

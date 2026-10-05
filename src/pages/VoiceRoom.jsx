@@ -53,7 +53,9 @@ export default function VoiceRoom() {
   const [notice, setNotice] = useState('');
   const [banNotice, setBanNotice] = useState('');
   const [messages, setMessages] = useState([]);
+  // Sohbet akışı ve yazma alanı ayrı yönetilir: mesaj gidince yazma alanı kapanır, akış kalır.
   const [chatOpen, setChatOpen] = useState(false);
+  const [composerOpen, setComposerOpen] = useState(false);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -910,7 +912,7 @@ export default function VoiceRoom() {
   return (
     <div
       className="fixed inset-0 z-[150] flex flex-col bg-catalog text-white"
-      style={{ paddingBottom: chatOpen ? keyboardInset : 0 }}
+      style={{ paddingBottom: composerOpen ? keyboardInset : 0 }}
     >
       <div className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-gradient-to-b from-primary/25 to-transparent" />
 
@@ -988,8 +990,9 @@ export default function VoiceRoom() {
         messages={messages}
         chatLocked={chatLocked}
         onSend={sendMessage}
-        onCloseComposer={() => setChatOpen(false)}
-        composerOpen={chatOpen}
+        open={chatOpen}
+        onCloseComposer={() => setComposerOpen(false)}
+        composerOpen={composerOpen}
         currentUserId={user?.id}
         ownerId={room?.owner_id}
         moderators={moderators}
@@ -1027,7 +1030,11 @@ export default function VoiceRoom() {
             toast({ title: 'Sohbet yasağı açık', description: 'Yazmak için bir koltuğa otur.' });
             return;
           }
-          setChatOpen((value) => !value);
+          // Kapalıysa sohbeti aç, yazma alanı kapalıysa geri getir, her ikisi de açıksa kapat.
+          if (!chatOpen) { setChatOpen(true); setComposerOpen(true); return; }
+          if (!composerOpen) { setComposerOpen(true); return; }
+          setChatOpen(false);
+          setComposerOpen(false);
         }}
       />
 
