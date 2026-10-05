@@ -5,7 +5,6 @@ import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
 import MembershipNotice from '@/components/profile/MembershipNotice';
-import AgencySection from '@/components/agency/AgencySection';
 import ProfileHeader from '@/components/profile/ProfileHeader';
 import ProfileInfoCard from '@/components/profile/ProfileInfoCard';
 import ProfileMovieGrid from '@/components/profile/ProfileMovieGrid';
@@ -75,7 +74,6 @@ export default function Profile() {
   if (!user) return <div className="dark min-h-screen bg-black p-6 text-white">Yükleniyor...</div>;
   const expired = user.membership_end && new Date(user.membership_end) < new Date();
   return <div className="dark mx-auto min-h-screen max-w-3xl bg-black px-4 py-7 text-white sm:px-6">
-    {tab !== 'settings' && <AgencySection user={user} onRefresh={reload} />}
     <ProfileHeader user={user} pkg={pkg} expired={expired} avatar={form.avatar} onAvatar={onAvatar} onUpdated={reload} uploading={uploading} />
     <MembershipNotice user={user} expired={expired} onRenew={renew} />
     <ProfileTabs active={tab} isAdmin={user.role === 'admin'} onChange={(nextTab) => { scrollToContentRef.current = true; setTab(nextTab); navigate(nextTab === 'settings' ? '/profil?tab=settings' : '/profil', { replace: true, preventScrollReset: true }); }} />
