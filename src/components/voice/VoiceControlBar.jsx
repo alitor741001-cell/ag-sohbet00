@@ -44,11 +44,11 @@ export default function VoiceControlBar({ micActive, deafened, chatOpen, gamesOp
         <RoundButton size="md" tone="gift" active={giftOpen} onClick={onOpenGifts} label="Hediye gönder">
           <Gift className="h-5 w-5" />
         </RoundButton>
-        <RoundButton size="md" tone={gamesOpen ? 'active' : 'gray'} active={gamesOpen} onClick={onOpenGames} label="Oyun merkezi">
-          <Gamepad2 className="h-5 w-5" />
-        </RoundButton>
         <RoundButton size="md" onClick={onOpenPrivateChat} label="Özel sohbet">
           <MessageCircle className="h-5 w-5" />
+        </RoundButton>
+        <RoundButton size="md" tone={gamesOpen ? 'active' : 'gray'} active={gamesOpen} onClick={onOpenGames} label="Oyun merkezi">
+          <Gamepad2 className="h-5 w-5" />
         </RoundButton>
       </div>
       <RoundButton size="md" tone={settingsOpen ? 'active' : 'gray'} active={settingsOpen} onClick={onOpenSettings} label="Oda ayarları">

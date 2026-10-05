@@ -24,7 +24,7 @@ import GiftScoreChip from '@/components/voice/GiftScoreChip';
 import GiftBoardSheet from '@/components/voice/GiftBoardSheet';
 import RoomExitOverlay from '@/components/voice/RoomExitOverlay';
 import { isRoomMinimized, setMinimizedRoom } from '@/lib/minimizedRoom';
-import RoomDirectMessages from '@/components/player/RoomDirectMessages';
+import VoicePrivateChatSheet from '@/components/voice/VoicePrivateChatSheet';
 import GamePanel from '@/components/games/GamePanel';
 import GiftBoard from '@/components/voice/GiftBoard';
 import GiftSendButton from '@/components/voice/GiftSendButton';
@@ -1121,11 +1121,11 @@ export default function VoiceRoom() {
         onDecline={declineSeatInvite}
       />
 
-      {(dmOpen || dmUserId) && (
-        <div className="absolute inset-0 z-[190] flex min-h-0 flex-col bg-[#101016]">
-          <RoomDirectMessages initialUserId={dmUserId} onClose={() => { setDmOpen(false); setDmUserId(null); }} />
-        </div>
-      )}
+      <VoicePrivateChatSheet
+        open={dmOpen || !!dmUserId}
+        initialUserId={dmUserId}
+        onClose={() => { setDmOpen(false); setDmUserId(null); }}
+      />
 
       <InviteSheet open={inviteOpen} onClose={() => setInviteOpen(false)} onInvite={sendInvites} />
 
