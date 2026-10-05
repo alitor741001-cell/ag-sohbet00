@@ -4,6 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { Users, Lock, Loader2, Shield, Star, DoorOpen, Search, SlidersHorizontal, Plus, Mic } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import VoiceRoomCard from '@/components/voice/VoiceRoomCard';
+import AdminRoomControlMenu from '@/components/admin/AdminRoomControlMenu';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 
 /** Koltuklu oda: sesli moda geçirilmiş film odaları da koltuklu listesinde görünür. */
@@ -126,7 +127,9 @@ export default function OpenRooms() {
             {r.password && <span className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400"><Lock className="w-2.5 h-2.5" /> Kilitli</span>}
           </div>
         </div>
-        <div className="shrink-0">
+        <div className="flex shrink-0 flex-col items-center gap-1.5">
+          {/* Yönetici: odanın türünü değiştirir ve yönetimini devralır. */}
+          <AdminRoomControlMenu room={r} />
           {isPersonal ? (
             <Link to={`/oda/${r.id}`} className={`px-4 py-2 rounded-xl text-xs font-bold ${ownerInRoom || user?.id === r.owner_id || isAdmin ? 'text-white' : 'text-gray-500 bg-[#2a2a2a] pointer-events-none'}`} style={ownerInRoom || user?.id === r.owner_id || isAdmin ? { background: 'linear-gradient(135deg, #7c3aed, #6b21a8)' } : {}}>
               {ownerInRoom || user?.id === r.owner_id || isAdmin ? 'Açık' : 'Kapalı'}
@@ -224,7 +227,7 @@ export default function OpenRooms() {
             ) : (
               voiceRooms
                 .filter((r) => !searchQuery.trim() || (r.name || '').toLowerCase().includes(searchQuery.trim().toLowerCase()))
-                .map((r) => <VoiceRoomCard key={r.id} room={r} />)
+                .map((r) => <VoiceRoomCard key={r.id} room={r} action={<AdminRoomControlMenu room={r} />} />)
             )}
           </div>
         ) : (

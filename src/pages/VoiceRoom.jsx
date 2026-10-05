@@ -1095,7 +1095,7 @@ export default function VoiceRoom() {
         onClearChat={clearChat}
         onToggleChatBan={toggleChatBan}
         onOpenLog={() => setLogOpen(true)}
-        onExitVoiceMode={room?.room_type === 'watch' ? exitVoiceMode : null}
+        onExitVoiceMode={canMod ? exitVoiceMode : null}
       />
 
       <RoomLogSheet

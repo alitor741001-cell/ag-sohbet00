@@ -79,8 +79,9 @@ export default function VoiceRoomMenu({ open, onClose, room, userId, participant
             onClick={() => { onClose(); onInvite(); }}
           />
         )}
-        {isOwner && room?.room_type === 'watch' && (
-          <VoiceMenuTile icon={Film} label="Film Odasına Dön" tone="gold" onClick={() => { onClose(); onExitVoiceMode?.(); }} />
+        {/* Oda sahibi ve yöneticiler sesli odayı istedikleri an film odasına çevirebilir. */}
+        {canMod && onExitVoiceMode && (
+          <VoiceMenuTile icon={Film} label="Film Odasına Geçir" tone="gold" onClick={() => { onClose(); onExitVoiceMode(); }} />
         )}
         {canMod && tiles.map((item) => (
           <VoiceMenuTile

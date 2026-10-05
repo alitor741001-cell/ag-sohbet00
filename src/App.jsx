@@ -40,7 +40,6 @@ const BannedScreen = lazy(() => import('@/pages/BannedScreen'));
 const SecurityProtocol = lazy(() => import('@/pages/SecurityProtocol'));
 const Friends = lazy(() => import('@/pages/Friends'));
 const AdminLayout = lazy(() => import('@/pages/admin/AdminLayout'));
-const AdminDashboard = lazy(() => import('@/pages/admin/AdminDashboard'));
 const AdminUsers = lazy(() => import('@/pages/admin/AdminUsers'));
 const AdminSupport = lazy(() => import('@/pages/admin/AdminSupport'));
 const AdminNotifications = lazy(() => import('@/pages/admin/AdminNotifications'));
@@ -52,7 +51,6 @@ const AdminSecurity = lazy(() => import('@/pages/admin/AdminSecurity'));
 const AdminPromoVideo = lazy(() => import('@/pages/admin/AdminPromoVideo'));
 const AdminSessions = lazy(() => import('@/pages/admin/AdminSessions'));
 const AdminUpdates = lazy(() => import('@/pages/admin/AdminUpdates'));
-const AdminRoles = lazy(() => import('@/pages/admin/AdminRoles'));
 const AdminGifts = lazy(() => import('@/pages/admin/AdminGifts'));
 const AdminCoins = lazy(() => import('@/pages/admin/AdminCoins'));
 const AdminVip = lazy(() => import('@/pages/admin/AdminVip'));
@@ -136,9 +134,11 @@ const AuthenticatedApp = () => {
           <Route path="/bakim" element={<MaintenanceMode />} />
         </Route>
         <Route path="/admin" element={<AdminLayout />}>
-          <Route index element={<AdminDashboard />} />
+          {/* Dashboard kaldırıldı: panel doğrudan kullanıcı yönetimiyle açılır.
+              Roller ve Çerçeveler sayfası da kaldırıldı: eski bağlantılar buraya düşer. */}
+          <Route index element={<Navigate to="/admin/kullanicilar" replace />} />
           <Route path="kullanicilar" element={<AdminUsers />} />
-          <Route path="roller" element={<AdminRoles />} />
+          <Route path="roller" element={<Navigate to="/admin/kullanicilar" replace />} />
           <Route path="hediyeler" element={<AdminGifts />} />
           <Route path="coins" element={<AdminCoins />} />
           <Route path="vip" element={<AdminVip />} />

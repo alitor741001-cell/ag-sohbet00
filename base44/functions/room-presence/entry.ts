@@ -42,7 +42,7 @@ export default async function(req) {
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
     const body = await req.json();
     const { action, room_id, password, target_id } = body || {};
-    if (!room_id || !['get', 'join', 'leave', 'kick', 'ban', 'unban', 'set-password', 'set-name', 'toggle-hidden', 'enable-voice', 'toggle-voice', 'toggle-mute', 'toggle-chat', 'chat-ban', 'toggle-approval', 'change-movie', 'assign-mod', 'remove-mod', 'delete-room', 'request-join', 'approve-join', 'reject-join'].includes(action)) {
+    if (!room_id || !['get', 'join', 'leave', 'kick', 'ban', 'unban', 'set-password', 'set-name', 'toggle-hidden', 'enable-voice', 'toggle-voice', 'toggle-mute', 'toggle-chat', 'chat-ban', 'toggle-approval', 'change-movie', 'assign-mod', 'remove-mod', 'delete-room', 'request-join', 'approve-join', 'reject-join', 'admin-room'].includes(action)) {
       return Response.json({ error: 'invalid request' }, { status: 400 });
     }
     const name = user.username || user.full_name || 'Kullanıcı';
@@ -380,7 +380,8 @@ export default async function(req) {
     if (action === 'toggle-voice') {
       if (!canModRoom) return Response.json({ error: 'yetkisiz' }, { status: 403 });
       const nextVoiceMode = room.voice_mode !== true;
-      await base44.asServiceRole.entities.Room.update(room_id, { voice_mode: nextVoiceMode, voice_enabled: nextVoiceMode });
+      // Mod değişimi oda türüne de yansır: film odası sesli odaya, sesli oda film odasına çevrilebilir.
+      await base44.asServiceRole.entities.Room.update(room_id, { voice_mode: nextVoiceMode, voice_enabled: nextVoiceMode, room_type: nextVoiceMode ? 'voice' : 'watch' });
       await base44.asServiceRole.entities.RoomMessage.create({
         room_id, ...noteActor, user_name: noteName,
         text: nextVoiceMode ? `${noteName} sesli sohbet alanını açtı.` : `${noteName} film odasına döndü.`, type: 'system'
@@ -511,12 +512,53 @@ export default async function(req) {
       return Response.json({ ok: true });
     }
 
+    // Açık odalar listesinden yönetici müdahalesi: oda türünü çevirme ve yönetimi devralma.
+    if (action === 'admin-room') {
+      if (!isAdmin) return Response.json({ error: 'yetkisiz' }, { status: 403 });
+      const { task } = body || {};
+      if (task === 'film' || task === 'voice') {
+        const toVoice = task === 'voice';
+        await base44.asServiceRole.entities.Room.update(room_id, {
+          room_type: toVoice ? 'voice' : 'watch',
+          voice_mode: toVoice,
+          voice_enabled: toVoice,
+        });
+        await base44.asServiceRole.entities.RoomMessage.create({
+          room_id, ...noteActor, user_name: noteName,
+          text: toVoice ? `${noteName} odayı sesli odaya çevirdi.` : `${noteName} odayı film odasına çevirdi.`, type: 'system'
+        });
+        return Response.json({ ok: true });
+      }
+      if (task === 'manage') {
+        if (isOwner) return Response.json({ ok: true });
+        // Yönetim devralınır: önceki sahip moderatör olarak kalır, oda yöneticiye geçer.
+        const previousOwnerId = room.owner_id;
+        const keptModerators = Array.from(new Set([...(room.room_moderators || []), previousOwnerId].filter(Boolean))).filter((value) => value !== user.id);
+        await base44.asServiceRole.entities.Room.update(room_id, { owner_id: user.id, owner_name: name, room_moderators: keptModerators });
+        await base44.asServiceRole.entities.RoomMessage.create({
+          room_id, ...noteActor, user_name: noteName,
+          text: `${noteName} odanın yönetimini devraldı.`, type: 'system'
+        });
+        return Response.json({ ok: true });
+      }
+      return Response.json({ error: 'geçersiz işlem' }, { status: 400 });
+    }
+
     // leave (explicit kontrol — kırılgan varsayılan düşüş yerine)
     if (action !== 'leave') return Response.json({ error: 'geçersiz işlem' }, { status: 400 });
-    if (ghost) return Response.json({ ok: true });
+    // Koltuk bırakma: odadan hangi ekrandan çıkılırsa çıkılsın kişi koltukta kalmaz.
+    if ((Array.isArray(room.seats) ? room.seats : []).some((seat) => seat.user_id === user.id)) {
+      await base44.asServiceRole.entities.Room.update(room_id, {
+        seats: room.seats.map((seat) => (seat.user_id === user.id
+          ? { index: seat.index, user_id: '', name: '', avatar: '', frame: '', frame_scale: 100, locked: !!seat.locked, muted: false }
+          : seat)),
+      }).catch(() => {});
+    }
     // Gizli kullanıcı çıkışı: anons kapanır, çıkışı ismiyle sohbete yazılmaz.
     if (hiddenUser) await base44.asServiceRole.entities.Room.update(room_id, { ghost_entered_at: '' }).catch(() => {});
     await updatePresenceRoom(base44, user.id, '');
+    // Hayalet yönetici katılım listesine hiç girmez: oda/sohbet kaydı temizlenmez, yalnızca izleri bırakılır.
+    if (ghost) return Response.json({ ok: true });
     // Kişisel oda: kullanıcı ayrıldığında onay kaydını sil, tekrar katılmak için yeniden onay istesin
     if (room.is_personal && !isOwner && !isMod) {
       await base44.asServiceRole.entities.RoomJoinRequest.deleteMany({ room_id, user_id: user.id }).catch(() => {});
