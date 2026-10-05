@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import VideoPlayer from '@/components/player/VideoPlayer';
 import ChatOverlay from '@/components/player/ChatOverlay';
+import StageSwipeLayer from '@/components/player/StageSwipeLayer';
 import { useVoiceChat } from '@/hooks/useVoiceChat';
 import { useCurrentUser, membershipActive } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
@@ -385,8 +386,8 @@ export default function WatchParty() {
   const leaveRoomRef = useRef(() => {});
   leaveRoomRef.current = leaveRoom;
 
-  // Odadan çık: oda üyeliği bırakılır ve odalar listesine dönülür.
-  const handleLeave = async () => { await leaveRoom(); navigate('/acik-odalar'); };
+  // Odadan çık: oda üyeliği bırakılır ve ana sayfaya dönülür.
+  const handleLeave = async () => { await leaveRoom(); navigate('/'); };
 
   // Odayı küçült: film ve mikrofon arka planda devam eder, küçük oynatıcıdan odaya dönülür.
   const minimizeRoom = () => {
@@ -409,7 +410,7 @@ export default function WatchParty() {
         path: `/oda/${id}`,
       });
     }
-    navigate('/acik-odalar');
+    navigate('/');
   };
 
   // Odaya dönüldüğünde küçültme kayıtları temizlenir: balon ve küçük oynatıcı kapanır.
@@ -688,7 +689,7 @@ export default function WatchParty() {
   };
 
   if (ul || loading) return <div className="h-screen flex items-center justify-center bg-background"><div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
-  if (roomLoadError) return <div className="p-6 space-y-4"><p role="alert">{roomLoadError}</p><button onClick={() => setRoomRetry((value) => value + 1)} className="rounded-lg bg-primary px-4 py-2 text-primary-foreground">Yeniden Dene</button><Link to="/acik-odalar" className="ml-4 text-primary">Odalara Dön</Link></div>;
+  if (roomLoadError) return <div className="p-6 space-y-4"><p role="alert">{roomLoadError}</p><button onClick={() => setRoomRetry((value) => value + 1)} className="rounded-lg bg-primary px-4 py-2 text-primary-foreground">Yeniden Dene</button><Link to="/" className="ml-4 text-primary">Ana sayfaya dön</Link></div>;
   if (!room) return <div className="p-6">Oda bulunamadı.</div>;
   if (room.status === 'closed') return <div className="p-10 text-center"><p className="text-xl font-bold mb-2">Oda kapatıldı</p><Link to="/" className="text-primary">Ana sayfaya dön</Link></div>;
   if (joinError) return <div className="fixed inset-0 bg-black flex items-center justify-center p-6"><div className="bg-card border border-border rounded-xl p-5 w-full max-w-xs text-center"><h2 className="font-bold mb-2">Odaya katılamadınız</h2><p className="text-sm text-muted-foreground mb-4">{joinError}</p><button onClick={() => navigate(-1)} className="w-full bg-primary text-primary-foreground py-2.5 rounded-lg text-sm font-semibold">Geri Dön</button></div></div>;
@@ -698,7 +699,7 @@ export default function WatchParty() {
       <div className="bg-card border border-border rounded-xl p-5 w-full max-w-xs text-center">
         <h2 className="font-bold mb-2 text-destructive">İsteğiniz reddedildi</h2>
         <p className="text-sm text-muted-foreground mb-4">Oda sahibi katılım isteğinizi reddetti.</p>
-        <button onClick={() => navigate('/acik-odalar')} className="w-full bg-primary text-primary-foreground py-2.5 rounded-lg text-sm font-semibold">Odalar</button>
+        <button onClick={() => navigate('/')} className="w-full bg-primary text-primary-foreground py-2.5 rounded-lg text-sm font-semibold">Ana Sayfa</button>
       </div>
     </div>
   );
@@ -709,7 +710,7 @@ export default function WatchParty() {
         <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
         <h2 className="font-bold mb-2">Onay bekleniyor</h2>
         <p className="text-sm text-muted-foreground mb-4">Katılım isteğiniz oda sahibine iletildi. Onaylamasını bekleyin.</p>
-        <button onClick={() => navigate('/acik-odalar')} className="w-full bg-secondary text-secondary-foreground py-2.5 rounded-lg text-sm font-semibold">İptal</button>
+        <button onClick={() => navigate('/')} className="w-full bg-secondary text-secondary-foreground py-2.5 rounded-lg text-sm font-semibold">İptal</button>
       </div>
     </div>
   );
@@ -787,6 +788,14 @@ export default function WatchParty() {
               : src
                 ? <VideoPlayer src={src} title={room.movie_title} syncState={syncState} isOwner={canMod} isTimeSource={isOwner} onPlayPause={onPlayPause} onTimeUpdate={onTimeUpdate} onSeek={onSeek} onEnded={() => { if (isOwner) setYtOpen(true); }} fullscreenRef={playerWrapRef} watermark={user} suppressControls={chatOpen || directOpen || !!profileTarget} />
                 : <RoomScreenLauncher onYouTube={() => setYtOpen(true)} />}
+
+          {/* YouTube çerçevesi dokunmayı yuttuğu için kaydırmayı bu katman yakalar. */}
+          {!voiceMode && (
+            <StageSwipeLayer
+              className={chatOpen || directOpen || profileTarget || showSettings || showViewers ? 'pointer-events-none' : ''}
+              onSwipeLeft={() => { setChatOpen(true); setShowViewers(false); }}
+            />
+          )}
 
           {!voiceMode && !chatOpen && !directOpen && !profileTarget && (
             <div className="absolute left-1/2 bottom-[calc(env(safe-area-inset-bottom)+4.75rem)] z-[56] -translate-x-1/2">

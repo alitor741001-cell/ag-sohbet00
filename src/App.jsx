@@ -106,7 +106,8 @@ const AuthenticatedApp = () => {
           <Route path="/video/:id" element={<Navigate to="/" replace />} />
           <Route path="/acik-odalar" element={<OpenRooms />} />
           <Route path="/openrooms" element={<Navigate to="/acik-odalar" replace />} />
-          <Route path="/odalar" element={<Navigate to="/acik-odalar" replace />} />
+          {/* Kaldırılan 'Odalar' sekmesi: eski bağlantılar ana sayfaya düşer. */}
+          <Route path="/odalar" element={<Navigate to="/" replace />} />
           <Route path="/oda/:id" element={<WatchParty />} />
           <Route path="/oda-kur" element={<CreateRoom />} />
           <Route path="/sesli-oda-kur" element={<VoiceRoomCreate />} />

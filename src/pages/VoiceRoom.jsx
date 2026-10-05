@@ -447,13 +447,13 @@ export default function VoiceRoom() {
     setJoined(false);
     if (seated) await base44.functions.invoke('voice-room', { action: 'seat-leave', room_id: id }).catch(() => {});
     await base44.functions.invoke('room-presence', { action: 'leave', room_id: id }).catch(() => {});
-    navigate('/acik-odalar');
+    navigate('/');
   }, [id, seated, navigate]);
 
   // Odayı küçült: oda ve koltuk korunur, sağ alttaki balondan odalar gezilebilir.
   const minimizeRoom = useCallback(() => {
     setMinimizedRoom({ id, name: room?.name || 'Sesli oda', owner_id: room?.owner_id, owner_name: room?.owner_name, path: `/sesli-oda/${id}` });
-    navigate('/acik-odalar');
+    navigate('/');
   }, [id, room?.name, room?.owner_id, room?.owner_name, navigate]);
 
   // Odaya dönüldüğünde küçültme kaydı temizlenir: balon kapanır, oda normal akışına döner.
@@ -828,8 +828,8 @@ export default function VoiceRoom() {
         <ShieldAlert className="h-12 w-12 text-red-500" />
         <p className="text-base font-bold">Odaya giremezsiniz</p>
         <p className="max-w-xs text-sm text-white/70">{banNotice}</p>
-        <button type="button" onClick={() => navigate('/acik-odalar')} className="mt-1 rounded-xl bg-white/10 px-5 py-2.5 text-sm font-bold">
-          Odalara dön
+        <button type="button" onClick={() => navigate('/')} className="mt-1 rounded-xl bg-white/10 px-5 py-2.5 text-sm font-bold">
+          Ana sayfaya dön
         </button>
       </div>
     );
@@ -840,8 +840,8 @@ export default function VoiceRoom() {
       <div className="fixed inset-0 z-[150] flex flex-col items-center justify-center gap-4 bg-catalog px-6 text-center text-white">
         <ShieldAlert className="h-10 w-10 text-red-500" />
         <p className="max-w-xs text-sm text-white/70">{notice}</p>
-        <button type="button" onClick={() => navigate('/acik-odalar')} className="rounded-xl bg-white/10 px-5 py-2.5 text-sm font-bold">
-          Odalara dön
+        <button type="button" onClick={() => navigate('/')} className="rounded-xl bg-white/10 px-5 py-2.5 text-sm font-bold">
+          Ana sayfaya dön
         </button>
       </div>
     );
@@ -863,7 +863,7 @@ export default function VoiceRoom() {
           {notice && <p className="text-center text-xs text-red-400">{notice}</p>}
           <button type="submit" className="w-full rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground">Odaya gir</button>
         </form>
-        <button type="button" onClick={() => navigate('/acik-odalar')} className="text-xs text-white/50">Vazgeç</button>
+        <button type="button" onClick={() => navigate('/')} className="text-xs text-white/50">Vazgeç</button>
       </div>
     );
   }
