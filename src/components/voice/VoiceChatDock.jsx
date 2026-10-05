@@ -9,8 +9,8 @@ import { plainText } from '@/components/voice/voiceText';
 import useMessageProfiles from '@/hooks/useMessageProfiles';
 
 /**
- * Oda alt bölümü: mesaj akışı klavye ikonuna basmadan da alt barın üstündeki boş alanda durur,
- * yazma alanı açıldığında ve klavye kalktığında akış onunla birlikte yukarı kayar.
+ * Oda alt bölümü: sohbet (klavye) butonuna basınca mesaj akışı ve yazma alanı açılır,
+ * mesaj gönderilince ikisi birlikte kapanır ve oda eski görünümüne döner.
  */
 export default function VoiceChatDock({ messages = [], onSend, onCloseComposer, composerOpen, chatLocked, currentUserId, ownerId, moderators = [], onOpenProfile, bigGiftNotice, onOpenBigGiftRoom, hiddenUsers = {} }) {
   const [text, setText] = useState('');
@@ -27,6 +27,8 @@ export default function VoiceChatDock({ messages = [], onSend, onCloseComposer, 
 
   useEffect(() => {
     if (composerOpen) inputRef.current?.focus();
+    // Sohbet kapanınca emoji paneli de kapanır: alan her açılışta temiz görünür.
+    else setEmojiOpen(false);
   }, [composerOpen]);
 
   useEffect(() => {
@@ -47,7 +49,7 @@ export default function VoiceChatDock({ messages = [], onSend, onCloseComposer, 
 
   return (
     <div className="relative shrink-0">
-      {(messages.length > 0 || !!bigGiftNotice) && (
+      {composerOpen && (messages.length > 0 || !!bigGiftNotice) && (
         <div className="absolute inset-x-0 bottom-full z-10 flex max-h-[34vh] flex-col justify-end overflow-y-auto overscroll-contain pb-1 [mask-image:linear-gradient(to_bottom,transparent,black_14%)] [-webkit-mask-image:linear-gradient(to_bottom,transparent,black_14%)]">
           <div className="flex flex-col gap-1.5 px-4">
             {messages.map((message) => {
