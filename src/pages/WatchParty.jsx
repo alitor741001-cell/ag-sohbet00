@@ -334,10 +334,21 @@ export default function WatchParty() {
   useEffect(() => {
     if (!participantIdsKey) return;
     const ids = participantIdsKey.split(',');
+    let active = true;
     // N+1 önleme: tüm profilleri tek batch çağrısıyla getir
-    base44.functions.invoke('user-profile', { user_ids: ids })
-      .then((response) => { const map = response.data?.data || response.data || {}; setViewerProfiles(map); })
-      .catch(() => { setViewerProfiles({}); });
+    const load = () => base44.functions.invoke('user-profile', { user_ids: ids })
+      .then((response) => { if (!active) return; const map = response.data?.data || response.data || {}; setViewerProfiles(map); })
+      .catch(() => { if (active) setViewerProfiles({}); });
+    load();
+    // Profil (fotoğraf, çerçeve, rol, seviye) değiştiği an odadaki görünüm de güncellenir;
+    // art arda gelen değişiklikler tek çağrıda birleşir, böylece oda kasmaz.
+    let timer = null;
+    const unsubscribe = base44.entities.User.subscribe((event) => {
+      if (!ids.includes(event.data?.id || event.id)) return;
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(load, 700);
+    });
+    return () => { active = false; if (timer) clearTimeout(timer); unsubscribe(); };
   }, [participantIdsKey]);
 
   useEffect(() => {

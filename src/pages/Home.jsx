@@ -7,9 +7,13 @@ import ContentRow from '@/components/movie/ContentRow';
 import CategoryRow from '@/components/movie/CategoryRow';
 import { SkeletonRow } from '@/components/movie/EmptyState';
 import PullToRefresh from '@/components/PullToRefresh';
+import useLiveCatalog from '@/hooks/useLiveCatalog';
 
 
 export default function Home() {
+  // Film listesi canlı: yönetim film eklediğinde, düzenlediğinde veya sildiğinde
+  // sayfa yenilemeden kendini tazeler.
+  useLiveCatalog();
   const { data: all, isPending: loading, refetch: fetchAll } = useQuery({
     queryKey: ['home-published-movies'],
     queryFn: () => base44.entities.Movie.filter({ published: true }, '-views', 200),

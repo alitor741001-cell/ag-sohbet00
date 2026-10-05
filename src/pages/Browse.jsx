@@ -6,8 +6,11 @@ import EmptyState, { SkeletonRow } from '@/components/movie/EmptyState';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Film, Search, SlidersHorizontal } from 'lucide-react';
 import PullToRefresh from '@/components/PullToRefresh';
+import useLiveCatalog from '@/hooks/useLiveCatalog';
 
 export default function Browse({ type, title }) {
+  // Film ve kategori listesi canlı: değişiklik olduğu an sayfa kendini tazeler.
+  useLiveCatalog();
   const movieQuery = useQuery({
     queryKey: ['browse-published-movies', type],
     queryFn: () => base44.entities.Movie.filter({ published: true, type }, '-views', 300),

@@ -36,6 +36,19 @@ export default function MovieDetail() {
     return () => { active = false; };
   }, [id]);
 
+  // Film bilgisi canlı: yönetim filmi düzenlediği, yayından kaldırdığı veya sildiği an
+  // bu sayfa da sayfa yenilemeden güncellenir.
+  useEffect(() => {
+    if (!id) return;
+    const unsubscribe = base44.entities.Movie.subscribe((event) => {
+      const changedId = event.data?.id || event.id;
+      if (changedId !== id) return;
+      if (event.type === 'delete') { setMovie(null); return; }
+      setMovie((prev) => (prev ? { ...prev, ...event.data } : event.data));
+    });
+    return unsubscribe;
+  }, [id]);
+
   useEffect(() => {
     if (!user || !movie) return;
     base44.entities.Watchlist.filter({ user_id: user.id, movie_id: id }).then((r) => setInList(r.length > 0)).catch(() => {});
@@ -136,7 +149,17 @@ export default function MovieDetail() {
 
 function Seasons({ seriesId }) {
   const [eps, setEps] = useState([]);
-  useEffect(() => { base44.entities.Episode.filter({ series_id: seriesId }, 'season', 100).then(setEps).catch(() => {}); }, [seriesId]);
+  useEffect(() => {
+    if (!seriesId) return;
+    const load = () => base44.entities.Episode.filter({ series_id: seriesId }, 'season', 100).then(setEps).catch(() => {});
+    load();
+    // Yeni bölüm eklendiği, düzenlendiği veya silindiği an liste de güncellenir.
+    const unsubscribe = base44.entities.Episode.subscribe((event) => {
+      if ((event.data?.series_id || '') !== seriesId) return;
+      load();
+    });
+    return unsubscribe;
+  }, [seriesId]);
   const seasons = [...new Set(eps.map((e) => e.season))];
   if (eps.length === 0) return null;
   return (
