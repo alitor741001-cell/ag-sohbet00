@@ -23,7 +23,8 @@ import RoomDirectMessages from '@/components/player/RoomDirectMessages';
 import YouTubeStage from '@/components/player/YouTubeStage';
 import YouTubeLinkSheet from '@/components/player/YouTubeLinkSheet';
 import RoomScreenLauncher, { RoomScreenSwitch } from '@/components/player/RoomScreenLauncher';
-import { YT_PREFIX, openGoogle, youtubeIdFromUrl, youtubeVideoId } from '@/lib/mediaSource';
+import FilmSearchSheet from '@/components/player/FilmSearchSheet';
+import { YT_PREFIX, youtubeVideoId } from '@/lib/mediaSource';
 import SpecialRoleWelcome from '@/components/player/SpecialRoleWelcome';
 import ProfileFrame from '@/components/ProfileFrame';
 import useSocialBadges from '@/hooks/useSocialBadges';
@@ -51,6 +52,9 @@ export default function WatchParty() {
   const [exitOpen, setExitOpen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [ytOpen, setYtOpen] = useState(false);
+  const [filmOpen, setFilmOpen] = useState(false);
+  const [filmQuery, setFilmQuery] = useState('');
+  const [filmResults, setFilmResults] = useState([]);
   const [linkTarget, setLinkTarget] = useState('');
   const [needPassword, setNeedPassword] = useState(false);
   const [pwInput, setPwInput] = useState('');
@@ -578,6 +582,10 @@ export default function WatchParty() {
     }
   };
 
+  // Film arama paneli: ad yazılır, seçilen film odanın ekranında açılır.
+  const openFilmSearch = () => { setFilmOpen(true); setShowViewers(false); };
+  const pickFilm = (videoId) => { setFilmOpen(false); changeVideo(videoId); };
+
   // Odada oynayan videoya göre "YouTube'da aç" hedefi.
   const openCurrentOnYouTube = () => {
     const current = youtubeVideoId(room?.movie_id);
@@ -787,7 +795,7 @@ export default function WatchParty() {
               ? <YouTubeStage videoId={ytId} syncState={syncState} isOwner={canMod} isTimeSource={isOwner} onPlayPause={onPlayPause} onTimeUpdate={onTimeUpdate} onSeek={onSeek} onEnded={() => { if (isOwner) setYtOpen(true); }} fullscreenRef={playerWrapRef} suppressControls={chatOpen || directOpen || !!profileTarget} />
               : src
                 ? <VideoPlayer src={src} title={room.movie_title} syncState={syncState} isOwner={canMod} isTimeSource={isOwner} onPlayPause={onPlayPause} onTimeUpdate={onTimeUpdate} onSeek={onSeek} onEnded={() => { if (isOwner) setYtOpen(true); }} fullscreenRef={playerWrapRef} watermark={user} suppressControls={chatOpen || directOpen || !!profileTarget} />
-                : <RoomScreenLauncher onYouTube={() => setYtOpen(true)} />}
+                : <RoomScreenLauncher onYouTube={() => setYtOpen(true)} onSearch={openFilmSearch} />}
 
           {/* YouTube çerçevesi dokunmayı yuttuğu için kaydırmayı bu katman yakalar. */}
           {!voiceMode && (
@@ -801,7 +809,8 @@ export default function WatchParty() {
             <div className="absolute left-1/2 bottom-[calc(env(safe-area-inset-bottom)+4.75rem)] z-[56] -translate-x-1/2">
               <RoomScreenSwitch
                 active={!!ytId}
-                onGoogle={() => openGoogle()}
+                onFilms={openFilmSearch}
+                hasResults={filmResults.length > 0}
                 onYouTube={() => { setLinkTarget(ytId); setYtOpen(true); }}
               />
             </div>
@@ -814,7 +823,7 @@ export default function WatchParty() {
             onTouchEnd={(e) => { const dx = e.changedTouches[0].clientX - touchStart.current.x; const dy = e.changedTouches[0].clientY - touchStart.current.y; if (dx > 80 && dx > Math.abs(dy) * 1.5) setChatOpen(false); }}
           >
 
-            {chatOpen && <ChatOverlay roomId={id} chatEnabled={chatEnabled} chatLocked={chatLocked} isOwner={canMod} isAdmin={isMod} onClose={() => setChatOpen(false)} autoDeleteMinutes={autoDeleteMinutes} countdownText={countdownText} clearToken={chatClearToken} onSetAutoDelete={setAutoDelete} voice={voice} voiceEnabled={room.voice_enabled} onDirect={() => { setDirectTarget(null); setDirectOpen(!directOpen); setChatOpen(false); setShowViewers(false); setShowSettings(false); }} onDirectUser={openDirectMessage} directUnread={directUnread} ownerId={room?.owner_id} roomModerators={room?.room_moderators || []} participants={room?.participants || []} recentParticipants={room?.recent_participants || []} viewerProfiles={viewerProfiles} presenceMap={presenceMap} levels={roomLevels} onProfileCard={openUserProfile} onToggleChat={toggleChat} onMicPress={handleMicPress} settingsProps={{ room, canMod, participants: room?.participants || [], roomModerators: room?.room_moderators || [], onAssignMod: assignMod, onRemoveMod: removeMod, roomName: roomNameEdit, setRoomName: setRoomNameEdit, onSaveName: saveRoomName, password: pwSetInput, setPassword: setPwSetInput, passwordOpen: showPwSet, setPasswordOpen: setShowPwSet, onVoice: toggleVoice, onChat: toggleChat, onChatBan: toggleChatBan, onHidden: toggleHidden, onPassword: () => savePassword(), onRemovePassword: () => setShowPwRemoveConfirm(true), onUnban: unbanUser, onPickMovie: () => setYtOpen(true), onDeleteRoom: deleteRoom, onToggleApproval: toggleApproval }} />}
+            {chatOpen && <ChatOverlay roomId={id} chatEnabled={chatEnabled} chatLocked={chatLocked} isOwner={canMod} isAdmin={isMod} onClose={() => setChatOpen(false)} autoDeleteMinutes={autoDeleteMinutes} countdownText={countdownText} clearToken={chatClearToken} onSetAutoDelete={setAutoDelete} voice={voice} voiceEnabled={room.voice_enabled} onDirect={() => { setDirectTarget(null); setDirectOpen(!directOpen); setChatOpen(false); setShowViewers(false); setShowSettings(false); }} onDirectUser={openDirectMessage} directUnread={directUnread} ownerId={room?.owner_id} roomModerators={room?.room_moderators || []} participants={room?.participants || []} recentParticipants={room?.recent_participants || []} viewerProfiles={viewerProfiles} presenceMap={presenceMap} levels={roomLevels} onProfileCard={openUserProfile} onToggleChat={toggleChat} onMicPress={handleMicPress} settingsProps={{ room, canMod, participants: room?.participants || [], roomModerators: room?.room_moderators || [], onAssignMod: assignMod, onRemoveMod: removeMod, roomName: roomNameEdit, setRoomName: setRoomNameEdit, onSaveName: saveRoomName, password: pwSetInput, setPassword: setPwSetInput, passwordOpen: showPwSet, setPasswordOpen: setShowPwSet, onVoice: toggleVoice, onChat: toggleChat, onChatBan: toggleChatBan, onHidden: toggleHidden, onPassword: () => savePassword(), onRemovePassword: () => setShowPwRemoveConfirm(true), onUnban: unbanUser, onPickMovie: () => setFilmOpen(true), onDeleteRoom: deleteRoom, onToggleApproval: toggleApproval }} />}
           </div>
         )}
 
@@ -874,6 +883,16 @@ export default function WatchParty() {
       />
 
       <YouTubeLinkSheet open={ytOpen} onClose={() => setYtOpen(false)} canMod={canMod} currentVideoId={linkTarget} onPlay={changeVideo} />
+      <FilmSearchSheet
+        open={filmOpen}
+        onClose={() => setFilmOpen(false)}
+        canMod={canMod}
+        initialQuery={filmQuery}
+        initialResults={filmResults}
+        onResults={(query, results) => { setFilmQuery(query); setFilmResults(results); }}
+        onPlay={pickFilm}
+        onPasteLink={() => setYtOpen(true)}
+      />
       <SpecialRoleWelcome roomId={id} />
 
       {profileTarget && (
