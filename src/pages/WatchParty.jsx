@@ -55,7 +55,6 @@ export default function WatchParty() {
   const [filmOpen, setFilmOpen] = useState(false);
   const [filmQuery, setFilmQuery] = useState('');
   const [filmResults, setFilmResults] = useState([]);
-  const [linkTarget, setLinkTarget] = useState('');
   const [needPassword, setNeedPassword] = useState(false);
   const [pwInput, setPwInput] = useState('');
   const [pwSetInput, setPwSetInput] = useState('');
@@ -586,13 +585,6 @@ export default function WatchParty() {
   const openFilmSearch = () => { setFilmOpen(true); setShowViewers(false); };
   const pickFilm = (videoId) => { setFilmOpen(false); changeVideo(videoId); };
 
-  // Odada oynayan videoya göre "YouTube'da aç" hedefi.
-  const openCurrentOnYouTube = () => {
-    const current = youtubeVideoId(room?.movie_id);
-    if (current) return void window.open(`https://www.youtube.com/watch?v=${current}`, '_blank', 'noopener,noreferrer');
-    setYtOpen(true);
-  };
-
   const toggleVoice = async () => {
     if (!canMod) { toast({ title: 'Yetkiniz yok', variant: 'destructive' }); return; }
     try { await base44.functions.invoke('room-presence', { action: 'toggle-voice', room_id: id }); toast({ title: room.voice_mode ? 'Film odasına dönüldü' : 'Sesli sohbet alanı açıldı' }); }
@@ -795,7 +787,7 @@ export default function WatchParty() {
               ? <YouTubeStage videoId={ytId} syncState={syncState} isOwner={canMod} isTimeSource={isOwner} onPlayPause={onPlayPause} onTimeUpdate={onTimeUpdate} onSeek={onSeek} onEnded={() => { if (isOwner) setYtOpen(true); }} fullscreenRef={playerWrapRef} suppressControls={chatOpen || directOpen || !!profileTarget} />
               : src
                 ? <VideoPlayer src={src} title={room.movie_title} syncState={syncState} isOwner={canMod} isTimeSource={isOwner} onPlayPause={onPlayPause} onTimeUpdate={onTimeUpdate} onSeek={onSeek} onEnded={() => { if (isOwner) setYtOpen(true); }} fullscreenRef={playerWrapRef} watermark={user} suppressControls={chatOpen || directOpen || !!profileTarget} />
-                : <RoomScreenLauncher onYouTube={() => setYtOpen(true)} onSearch={openFilmSearch} />}
+                : <RoomScreenLauncher onSearch={openFilmSearch} />}
 
           {/* YouTube çerçevesi dokunmayı yuttuğu için kaydırmayı bu katman yakalar. */}
           {!voiceMode && (
@@ -808,10 +800,8 @@ export default function WatchParty() {
           {!voiceMode && !chatOpen && !directOpen && !profileTarget && (
             <div className="absolute left-1/2 bottom-[calc(env(safe-area-inset-bottom)+4.75rem)] z-[56] -translate-x-1/2">
               <RoomScreenSwitch
-                active={!!ytId}
                 onFilms={openFilmSearch}
                 hasResults={filmResults.length > 0}
-                onYouTube={() => { setLinkTarget(ytId); setYtOpen(true); }}
               />
             </div>
           )}
@@ -868,7 +858,7 @@ export default function WatchParty() {
             </div>
           </>
         )}
-        <RoomSettingsMenu open={showSettings} onClose={() => setShowSettings(false)} room={room} canMod={canMod} participants={room.participants || []} roomModerators={room.room_moderators || []} onAssignMod={assignMod} onRemoveMod={removeMod} roomName={roomNameEdit} setRoomName={setRoomNameEdit} onSaveName={saveRoomName} password={pwSetInput} setPassword={setPwSetInput} passwordOpen={showPwSet} setPasswordOpen={setShowPwSet} onVoice={toggleVoice} onChat={toggleChat} onChatBan={toggleChatBan} onHidden={toggleHidden} onPassword={() => savePassword()} onRemovePassword={() => setShowPwRemoveConfirm(true)} onUnban={unbanUser} onPickMovie={() => { setLinkTarget(ytId); setYtOpen(true); setShowSettings(false); }} onDeleteRoom={deleteRoom} onToggleApproval={toggleApproval} />
+        <RoomSettingsMenu open={showSettings} onClose={() => setShowSettings(false)} room={room} canMod={canMod} participants={room.participants || []} roomModerators={room.room_moderators || []} onAssignMod={assignMod} onRemoveMod={removeMod} roomName={roomNameEdit} setRoomName={setRoomNameEdit} onSaveName={saveRoomName} password={pwSetInput} setPassword={setPwSetInput} passwordOpen={showPwSet} setPasswordOpen={setShowPwSet} onVoice={toggleVoice} onChat={toggleChat} onChatBan={toggleChatBan} onHidden={toggleHidden} onPassword={() => savePassword()} onRemovePassword={() => setShowPwRemoveConfirm(true)} onUnban={unbanUser} onPickMovie={() => { setFilmOpen(true); setShowSettings(false); }} onDeleteRoom={deleteRoom} onToggleApproval={toggleApproval} />
       </div>
 
       <LiveKitDebugPanel voice={voice} />
@@ -882,7 +872,7 @@ export default function WatchParty() {
         onConfirm={() => savePassword('')}
       />
 
-      <YouTubeLinkSheet open={ytOpen} onClose={() => setYtOpen(false)} canMod={canMod} currentVideoId={linkTarget} onPlay={changeVideo} />
+      <YouTubeLinkSheet open={ytOpen} onClose={() => setYtOpen(false)} canMod={canMod} onPlay={changeVideo} />
       <FilmSearchSheet
         open={filmOpen}
         onClose={() => setFilmOpen(false)}
