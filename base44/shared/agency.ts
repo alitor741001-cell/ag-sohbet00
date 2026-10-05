@@ -233,3 +233,6 @@ export async function sendDirect(base44: any, sender: any, receiver: any, conten
 
 /** Sohbette özel davet kartı olarak görünen işaret. */
 export const inviteMarker = (inviteId: string) => `{{AGENCY_INVITE|${inviteId}}}`;
+
+/** Bildirim kaydındaki davet referansı — bildirimden kabul/red için kullanılır. */
+export const inviteRefId = (inviteId: string) => `agency-invite:${inviteId}`;

@@ -4,7 +4,7 @@ import { notifyUser } from '../../shared/notifyUser.ts';
 import { notifyAdmins } from '../../shared/adminNotify.ts';
 import {
   AGENCY_RULES, AGENCY_COMMISSION_PER_200K, agencyCommissionFor, generateAgencyCode, ensureQuotaTiers,
-  syncQuotaRewards, refreshAgencyTotals, agencyStats, sendDirect, inviteMarker, periodKey, todayKey,
+  syncQuotaRewards, refreshAgencyTotals, agencyStats, sendDirect, inviteMarker, inviteRefId, periodKey, todayKey,
 } from '../../shared/agency.ts';
 
 /**
@@ -175,6 +175,7 @@ export default async function (req) {
       await notifyUser(base44, {
         user_id: target.id, type: 'agency_invite',
         title: '🎤 Yayıncı daveti', body: `${displayName} sizi ${agency.name} ajansına yayıncı olarak davet etti.`, link: '/arkadaslar',
+        ref_id: inviteRefId(invite.id),
       }).catch(() => {});
       return Response.json({ ok: true, invite });
     }
