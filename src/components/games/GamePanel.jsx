@@ -45,14 +45,27 @@ export default function GamePanel({ open, onClose, roomId }) {
 
   const transitioning = phase !== 'idle';
 
+  // Oyun merkezi yarım panel olarak açılır; oyun seçilince tüm ekrana yayılır.
+  const full = !!selected;
+
   return (
-    <div className="absolute inset-y-0 right-0 z-[185] flex w-full flex-col overflow-hidden bg-slot text-slot-text shadow-2xl sm:w-[30rem] sm:border-l sm:border-slot-border">
-      <div className="relative min-h-0 flex-1">
+    <div className="fixed inset-0 z-[185] flex flex-col justify-end">
+      {!full && (
+        <button type="button" aria-label="Oyun panelini kapat" onClick={onClose} className="absolute inset-0 bg-black/70 backdrop-blur-[2px]" />
+      )}
+      <div
+        className={
+          full
+            ? 'relative flex h-full w-full flex-col overflow-hidden bg-slot text-slot-text'
+            : 'animate-sheet-up relative flex h-[60dvh] w-full flex-col overflow-hidden rounded-t-[26px] bg-gradient-to-b from-[#2C1512] to-[#150A0A] text-slot-text ring-1 ring-[#F2CE6B]/40'
+        }
+      >
         {(!selected || transitioning) && (
           <div className={`game-layer ${phase === 'opening' ? 'game-dip' : phase === 'closing' ? 'game-rise' : ''}`}>
-            <header className="flex shrink-0 items-center gap-2 border-b border-slot-border bg-slot-surface px-3 pb-2.5 pt-[max(0.625rem,env(safe-area-inset-top))]">
-              <Gamepad2 className="h-5 w-5 text-slot-gold" />
-              <p className="min-w-0 flex-1 truncate text-sm font-black tracking-wide">Oyun Merkezi</p>
+            {!full && <span className="mx-auto mt-2 h-1 w-10 shrink-0 rounded-full bg-[#F2CE6B]/60" />}
+            <header className="flex shrink-0 items-center gap-2 border-b border-[#F2CE6B]/25 px-3 pb-2.5 pt-2">
+              <Gamepad2 className="h-5 w-5 text-[#F2CE6B]" />
+              <p className="min-w-0 flex-1 truncate text-sm font-black tracking-wide text-[#F2CE6B]">Oyun Merkezi</p>
               <button
                 type="button"
                 onClick={onClose}
