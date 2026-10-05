@@ -25,6 +25,14 @@ export default function GamePanel({ open, onClose, roomId }) {
 
   useEffect(() => () => window.clearTimeout(timerRef.current), []);
 
+  // Panel kapandığında seçim sıfırlanır: yeniden açıldığında yarım panel görünür.
+  useEffect(() => {
+    if (open) return;
+    window.clearTimeout(timerRef.current);
+    setSelected(null);
+    setPhase('idle');
+  }, [open]);
+
   const openGame = useCallback((gameId) => {
     window.clearTimeout(timerRef.current);
     setSelected(gameId);
@@ -32,14 +40,11 @@ export default function GamePanel({ open, onClose, roomId }) {
     timerRef.current = window.setTimeout(() => setPhase('idle'), TRANSITION_MS);
   }, []);
 
+  // Oyundan geri: yarım panele dönmeden oyun merkezi tümüyle kapanır.
   const closeGame = useCallback(() => {
     window.clearTimeout(timerRef.current);
-    setPhase('closing');
-    timerRef.current = window.setTimeout(() => {
-      setSelected(null);
-      setPhase('idle');
-    }, TRANSITION_MS);
-  }, []);
+    onClose();
+  }, [onClose]);
 
   if (!open) return null;
 
