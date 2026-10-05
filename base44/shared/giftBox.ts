@@ -1,33 +1,43 @@
 import { giftBalance } from './giftWallet.ts';
 import { getUsdTry, tlFromDollars, tlRateFrom } from './exchangeRate.ts';
+import { loadQuotaTiers, quotaDollarsFromK } from './quotaLadder.ts';
 
 /**
  * Hediye kutusu: alınan hediyelerin değeri, gönderim ve çekim kayıtları.
- * Değer kuralı: 200K'ya kadar her 15K = 1 dolar, 200K'dan sonra her 30K = 1 dolar.
- * Elmas her ayın 1'inde sıfırlandığı için kademe de her ay baştan başlar: her ayın
- * elması kendi kademesiyle dolara çevrilir, aylık kazançlar toplanarak bakiyeye eklenir.
- * Tutar her zaman tam dolar olarak gösterilir (küsurat yazılmaz); TL, piyasa kuru eksi 2 TL ile hesaplanır.
+ * Değer kuralı kota tablosudur: ay içinde ulaşılan kademenin yayıncı kazancı yazılır
+ * (ör. 800.000 elmas → 60 $, 1.200.000 elmas → 86 $). Elmas her ayın 1'inde sıfırlandığı
+ * için kademe de her ay baştan başlar: her ayın elması kendi kademesiyle hesaplanır, aylık
+ * kazançlar toplanarak bakiyeye eklenir. İlk kademeye ulaşılmadan eski oran geçerlidir,
+ * böylece küçük kazançlar sıfırlanmaz. Tutar her zaman tam dolar olarak gösterilir
+ * (küsurat yazılmaz); TL, piyasa kuru eksi 2 TL ile hesaplanır.
  */
 
 export const COINS_PER_DOLLAR = 9000;
-const BASE_MAX_K = 200;
-// Puan: her 10K = 1 puan — 200K'dan sonra da artmaya devam eder.
+// Puan: her 10K = 1 puan.
 const K_PER_UNIT = 10;
-const K_PER_DOLLAR = 15;
-const K_PER_DOLLAR_AFTER = 30;
+// İlk kota kademesine ulaşılmadan geçerli eski oran: 200K'ya kadar her 15K = 1 $, sonrası her 30K = 1 $.
+const LEGACY_MAX_K = 200;
+const LEGACY_K_PER_DOLLAR = 15;
+const LEGACY_K_PER_DOLLAR_AFTER = 30;
 // Kişi başına okunacak en fazla hediye / transfer kaydı.
 const MAX_RECORDS = 2000;
 
+/** Kademe altı elmasların eski oranla dolar karşılığı. */
+function legacyDollarsFromK(kValue: any) {
+  const k = Math.max(0, Number(kValue) || 0);
+  const base = Math.floor(Math.min(k, LEGACY_MAX_K) / LEGACY_K_PER_DOLLAR);
+  const extra = Math.floor(Math.max(0, k - LEGACY_MAX_K) / LEGACY_K_PER_DOLLAR_AFTER);
+  return base + extra;
+}
+
 /**
  * Bir ayın elmas (K) toplamının dolar karşılığı — her zaman tam sayı (küsurat yazılmaz).
- * 200K'ya kadar her 15K'da 1 artar; 200K'dan sonra her 30K'da 1 artar.
- * Ara değerler bir üst basamağa yuvarlanmaz: 14K → 0, 15K → 1, 29K → 1, 30K → 2 olur.
+ * Kota tablosu esastır: ulaşılan en yüksek kademenin tutarı yazılır (800K → 60 $, 1M → 60 $).
+ * Hiçbir kademeye ulaşılmadıysa eski oran kullanılır.
  */
-export function giftDollarsFromK(kValue: any) {
-  const k = Math.max(0, Number(kValue) || 0);
-  const base = Math.floor(Math.min(k, BASE_MAX_K) / K_PER_DOLLAR);
-  const extra = Math.floor(Math.max(0, k - BASE_MAX_K) / K_PER_DOLLAR_AFTER);
-  return base + extra;
+export function giftDollarsFromK(kValue: any, tiers: any[] = []) {
+  const ladder = quotaDollarsFromK(kValue, tiers);
+  return ladder === null ? legacyDollarsFromK(kValue) : ladder;
 }
 
 const TR_MONTH = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Istanbul', year: 'numeric', month: '2-digit' });
@@ -48,10 +58,10 @@ function monthStartOf(created: any) {
   return monthStartIso(date);
 }
 
-/** Aylık elmas toplamları: her ay kendi kademesiyle dolara çevrilir ve toplanır. */
-function dollarsFromMonthlyTotals(totals: Map<string, number>) {
+/** Aylık elmas toplamları: her ay kendi kademesiyle hesaplanır ve toplanır. */
+function dollarsFromMonthlyTotals(totals: Map<string, number>, tiers: any[] = []) {
   let dollars = 0;
-  totals.forEach((kValue) => { dollars += giftDollarsFromK(kValue); });
+  totals.forEach((kValue) => { dollars += giftDollarsFromK(kValue, tiers); });
   return dollars;
 }
 
@@ -69,9 +79,13 @@ export async function giftResetAt(base44: any) {
 
 /** Kişinin aldığı hediyelerin K toplamı, bu ayın elması ve dolar değeri. */
 export async function receivedGiftTotals(base44: any, userId: string, resetAt = '') {
-  const records = await base44.asServiceRole.entities.GiftSend
-    .filter({ recipient_id: userId }, '-created_date', MAX_RECORDS)
-    .catch(() => []);
+  const [records, tiers] = await Promise.all([
+    base44.asServiceRole.entities.GiftSend
+      .filter({ recipient_id: userId }, '-created_date', MAX_RECORDS)
+      .catch(() => []),
+    // Kazanç, kota tablosundaki kademe tutarlarından hesaplanır.
+    loadQuotaTiers(base44),
+  ]);
   const monthStart = monthStartIso();
   // Elmas; ay başı ile elle sıfırlama anından hangisi yeniyse ondan sonrasını sayar.
   const start = resetAt && resetAt > monthStart ? resetAt : monthStart;
@@ -95,8 +109,8 @@ export async function receivedGiftTotals(base44: any, userId: string, resetAt = 
   return {
     k: round(k),
     units: Math.floor(monthK / K_PER_UNIT),
-    dollars: dollarsFromMonthlyTotals(months),
-    reset_dollars: dollarsFromMonthlyTotals(balanceMonths),
+    dollars: dollarsFromMonthlyTotals(months, tiers),
+    reset_dollars: dollarsFromMonthlyTotals(balanceMonths, tiers),
     month_k: round(monthK),
     month_score: Math.round(monthK * 1000),
   };

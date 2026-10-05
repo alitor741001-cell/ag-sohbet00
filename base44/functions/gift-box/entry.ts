@@ -2,6 +2,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import { rateLimit, safeErrorResponse } from '../../shared/security.ts';
 import { ensureGiftWallet, giftBalance } from '../../shared/giftWallet.ts';
 import { COINS_PER_DOLLAR, findByMemberId, giftBoxSummary, giftDollarsFromK, monthStartIso } from '../../shared/giftBox.ts';
+import { loadQuotaTiers } from '../../shared/quotaLadder.ts';
 import { getUsdTry, tlFromDollars, tlRateFrom } from '../../shared/exchangeRate.ts';
 import { addLoadedCoins } from '../../shared/userLevels.ts';
 
@@ -221,12 +222,14 @@ export default async function (req: Request): Promise<Response> {
         });
       }
 
-      const market = await getUsdTry(base44);
+      const [market, tiers] = await Promise.all([getUsdTry(base44), loadQuotaTiers(base44)]);
       const tlRate = tlRateFrom(market.rate);
       let totalK = 0;
+      senders.forEach((item) => { totalK += item.total_k; });
+      // Bu ayın kazancı kota tablosundan gelir; her gönderenin payı elmas oranına göre dağıtılır.
+      const monthDollars = giftDollarsFromK(totalK, tiers);
       senders.forEach((item) => {
-        totalK += item.total_k;
-        item.dollars = giftDollarsFromK(item.total_k);
+        item.dollars = totalK > 0 ? Math.round((monthDollars * item.total_k) / totalK) : 0;
         item.tl = tlFromDollars(item.dollars, tlRate);
         item.items.sort((a, b) => (String(a.created_date) < String(b.created_date) ? 1 : -1));
       });
@@ -247,16 +250,16 @@ export default async function (req: Request): Promise<Response> {
         ok: true,
         senders,
         total_k: Math.round(totalK * 100) / 100,
-        total_dollars: giftDollarsFromK(totalK),
-        total_tl: tlFromDollars(giftDollarsFromK(totalK), tlRate),
+        total_dollars: monthDollars,
+        total_tl: tlFromDollars(monthDollars, tlRate),
         tl_rate: tlRate,
         totals: {
           month_k: Math.round(totalK * 100) / 100,
-          month_dollars: giftDollarsFromK(totalK),
+          month_dollars: monthDollars,
           all_k: Math.round(allK * 100) / 100,
-          all_dollars: giftDollarsFromK(allK),
+          all_dollars: giftDollarsFromK(allK, tiers),
           day_k: Math.round(dayK * 100) / 100,
-          day_dollars: giftDollarsFromK(dayK),
+          day_dollars: giftDollarsFromK(dayK, tiers),
         },
       });
     }

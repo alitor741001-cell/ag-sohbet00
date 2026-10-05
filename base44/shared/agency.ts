@@ -1,5 +1,6 @@
 import { receivedGiftTotals, giftResetAt, monthStartIso } from './giftBox.ts';
 import { notifyUser } from './notifyUser.ts';
+import { DEFAULT_QUOTA_TIERS } from './quotaLadder.ts';
 
 /**
  * Yayıncı / ajans sistemi: ajans üyeliği, kota kazançları ve transfer kayıtları.
@@ -21,16 +22,6 @@ export const AGENCY_RULES = [
 
 /** Her 200.000 elmas için ajans komisyonu (dolar) — ajans bazında değiştirilebilir. */
 export const AGENCY_COMMISSION_PER_200K = 3;
-
-/** Kota tablosunun başlangıç değerleri: [elmas, yayıncı kazancı]. */
-export const DEFAULT_QUOTA_TIERS: [number, number][] = [
-  [200000, 15], [300000, 23], [500000, 39], [800000, 60], [1200000, 86], [1600000, 104],
-  [2200000, 132], [2800000, 168], [3600000, 216], [5000000, 300], [6250000, 375], [7500000, 470],
-  [10000000, 630], [12500000, 790], [15000000, 950], [20000000, 1350], [25000000, 1688],
-  [30000000, 2025], [35000000, 2362], [40000000, 2700], [45000000, 3038], [50000000, 3375],
-  [75000000, 5062], [100000000, 6750], [125000000, 8438], [150000000, 10125], [200000000, 13500],
-  [250000000, 16875],
-];
 
 /** Elmas miktarına karşılık gelen ajans komisyonu. */
 export const agencyCommissionFor = (diamonds: any, per200k: any = AGENCY_COMMISSION_PER_200K) =>
