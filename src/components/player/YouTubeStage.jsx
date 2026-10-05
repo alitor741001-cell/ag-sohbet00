@@ -59,6 +59,10 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
     let cancelled = false;
     setReady(false);
     setError('');
+    // Yeni film sıfırdan başlar: eski filmin oynatma durumu taşınmaz.
+    setPlaying(false);
+    setCurrent(0);
+    setDuration(0);
     loadYouTubeApi().then((YT) => {
       if (cancelled || !hostRef.current) return;
       playerRef.current?.destroy?.();
@@ -77,7 +81,14 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
             setDuration(event.target.getDuration?.() || 0);
             const target = syncRef.current?.current_time || 0;
             if (target > 1) event.target.seekTo(target, true);
-            if (syncRef.current?.is_playing) event.target.playVideo();
+            const startIfNeeded = () => {
+              if (cancelled || !syncRef.current?.is_playing) return;
+              const playerState = window.YT?.PlayerState;
+              if (event.target.getPlayerState?.() !== playerState?.PLAYING) event.target.playVideo();
+            };
+            startIfNeeded();
+            // Tarayıcı ilk otomatik başlatmayı engellerse kısa süre sonra tekrar denenir.
+            setTimeout(startIfNeeded, 1200);
           },
           onError: () => setError('Bu video oynatılamıyor. Başka bir YouTube linki dene.'),
           onStateChange: (event) => {
@@ -141,8 +152,9 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
   const togglePlay = () => {
     if (!isOwner) return;
     const player = playerRef.current;
-    if (!player) return;
-    if (playing) player.pauseVideo?.();
+    if (!player?.getPlayerState) return;
+    // Düğme oynatıcının gerçek durumuna göre çalışır: eski filmden kalan durum yanlış komut vermez.
+    if (player.getPlayerState() === window.YT?.PlayerState?.PLAYING) player.pauseVideo?.();
     else player.playVideo?.();
   };
 
@@ -192,7 +204,8 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
       onMouseMove={showCtrl}
       onClick={() => {
         showCtrl();
-        if (!playing && syncState?.is_playing) playerRef.current?.playVideo?.();
+        const player = playerRef.current;
+        if (player?.getPlayerState?.() !== window.YT?.PlayerState?.PLAYING && syncState?.is_playing) player?.playVideo?.();
       }}
       style={{ touchAction: isOwner ? 'manipulation' : 'none' }}
     >

@@ -6,6 +6,9 @@ import { Image } from '@/components/ui/image';
 import VoiceRoomCard from '@/components/voice/VoiceRoomCard';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 
+/** Koltuklu oda: sesli moda geçirilmiş film odaları da koltuklu listesinde görünür. */
+const isVoiceRoom = (room) => room?.room_type === 'voice' || room?.voice_mode === true;
+
 export default function OpenRooms() {
   const { user } = useCurrentUser();
   const [rooms, setRooms] = useState([]);
@@ -26,7 +29,7 @@ export default function OpenRooms() {
   };
 
   // Sesli sohbet odaları ayrı listede gösterilir.
-  const voiceVisible = (room) => !!room && room.room_type === 'voice' && room.status === 'active' && (user?.role === 'admin' || !room.hidden)
+  const voiceVisible = (room) => !!room && isVoiceRoom(room) && room.status === 'active' && (user?.role === 'admin' || !room.hidden)
     && ((room.participants?.length || 0) > 0 || room.owner_id === user?.id);
 
   useEffect(() => {
@@ -37,7 +40,7 @@ export default function OpenRooms() {
           base44.entities.Room.filter({ status: 'active' }, '-created_date', 200).catch(() => []),
           base44.entities.Movie.list('-created_date', 500).catch(() => []),
         ]);
-        const normal = r.filter((x) => !x.is_personal && x.room_type !== 'voice' && (isAdmin || !x.hidden) && (x.participants?.length || 0) > 0);
+        const normal = r.filter((x) => !x.is_personal && !isVoiceRoom(x) && (isAdmin || !x.hidden) && (x.participants?.length || 0) > 0);
         const personal = r.filter((x) => x.is_personal && (isAdmin || !x.hidden) && x.status === 'active');
         setRooms(normal);
         setPersonalRooms(personal);
@@ -52,7 +55,7 @@ export default function OpenRooms() {
       const isAdmin2 = user?.role === 'admin';
       const isVisible = (x) => x.status === 'active' && (isAdmin2 || !x.hidden);
       if (ev.type === 'create') {
-        if (ev.data?.room_type === 'voice') {
+        if (isVoiceRoom(ev.data)) {
           if (voiceVisible(ev.data)) setVoiceRooms((p) => [ev.data, ...p.filter((x) => x.id !== ev.data.id)]);
           return;
         }
@@ -66,7 +69,7 @@ export default function OpenRooms() {
         }
       }
       if (ev.type === 'update') {
-        if (ev.data.room_type === 'voice') {
+        if (isVoiceRoom(ev.data)) {
           setVoiceRooms((p) => (voiceVisible(ev.data) ? [ev.data, ...p.filter((x) => x.id !== ev.data.id)] : p.filter((x) => x.id !== ev.data.id)));
           return;
         }

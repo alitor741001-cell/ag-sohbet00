@@ -78,7 +78,7 @@ export default function WatchParty() {
   // Sesli moda/film moduna geçişte oda üyeliği korunur — kişi odadan düşmez.
   const modeSwitchRef = useRef(false);
   const lastUpdateRef = useRef(0);
-  const lastSyncRef = useRef({ is_playing: false, current_time: 0 });
+  const lastSyncRef = useRef({ is_playing: false, current_time: 0, movie_id: '' });
   const prevMovieIdRef = useRef(null);
   const playerWrapRef = useRef(null);
   const touchStart = useRef({ x: 0, y: 0 });
@@ -116,10 +116,9 @@ export default function WatchParty() {
 
   // Sesli mod seçildiğinde oda, tüm özellikleriyle sesli oda arayüzüne dönüşür.
   useEffect(() => {
-    if (!voiceMode) return;
-    // Arayüz değişiyor, odaya üyelik devam ediyor: çıkış yapılmaz.
-    modeSwitchRef.current = true;
-    navigate(`/sesli-oda/${id}`, { replace: true });
+    // Sesli moda geçişte çıkış ertelenir; film moduna dönüldüğünde normal çıkış yeniden açılır.
+    modeSwitchRef.current = voiceMode;
+    if (voiceMode) navigate(`/sesli-oda/${id}`, { replace: true });
   }, [voiceMode, id, navigate]);
 
   useEffect(() => {
@@ -258,8 +257,10 @@ export default function WatchParty() {
         setRoom((current) => ({ ...current, ...ev.data }));
         const playingChanged = ev.data.is_playing !== lastSyncRef.current.is_playing;
         const timeChanged = Math.abs((ev.data.current_time || 0) - lastSyncRef.current.current_time) > 3;
-        if (playingChanged || timeChanged) {
-          lastSyncRef.current = { is_playing: ev.data.is_playing, current_time: ev.data.current_time };
+        // Film değiştiğinde oynatma durumu sıfırdan kurulur: yeni film baştan başlar.
+        const movieChanged = ev.data.movie_id !== lastSyncRef.current.movie_id;
+        if (playingChanged || timeChanged || movieChanged) {
+          lastSyncRef.current = { is_playing: ev.data.is_playing, current_time: ev.data.current_time, movie_id: ev.data.movie_id };
           setSyncState({ is_playing: ev.data.is_playing, current_time: ev.data.current_time, last_sync: ev.data.last_sync });
         }
       }
