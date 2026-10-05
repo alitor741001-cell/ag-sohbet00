@@ -50,7 +50,7 @@ export default function VoiceChatDock({ messages = [], onSend, open, onCloseComp
   return (
     <div className="relative shrink-0">
       {open && (messages.length > 0 || !!bigGiftNotice) && (
-        <div className="absolute inset-x-0 bottom-full z-10 flex max-h-[34vh] flex-col justify-end overflow-y-auto overscroll-contain pb-1 [mask-image:linear-gradient(to_bottom,transparent,black_14%)] [-webkit-mask-image:linear-gradient(to_bottom,transparent,black_14%)]">
+        <div className="max-h-[34vh] shrink-0 overflow-y-auto overscroll-contain pb-1 [mask-image:linear-gradient(to_bottom,transparent,black_14%)] [-webkit-mask-image:linear-gradient(to_bottom,transparent,black_14%)]">
           <div className="flex flex-col gap-1.5 px-4">
             {messages.map((message) => {
               if (message.type === 'slot_win') {
