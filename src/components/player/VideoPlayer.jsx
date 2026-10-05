@@ -4,7 +4,7 @@ import VolumeSlider from './VolumeSlider';
 import useMediaVolume from './useMediaVolume';
 const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
-export default function VideoPlayer({ src, title, onTimeUpdate, onPlayPause, onSeek, onEnded, onControlsChange, syncState, isOwner, isTimeSource, subtitles, fullscreenRef, watermark, controlsRaised = false, suppressControls = false }) {
+export default function VideoPlayer({ src, title, onTimeUpdate, onPlayPause, onSeek, onEnded, onControlsChange, revealSignal, syncState, isOwner, isTimeSource, subtitles, fullscreenRef, watermark, controlsRaised = false, suppressControls = false }) {
   const videoRef = useRef(null);
   const containerRef = useRef(null);
   const [playing, setPlaying] = useState(false);
@@ -135,7 +135,7 @@ export default function VideoPlayer({ src, title, onTimeUpdate, onPlayPause, onS
   }, []);
 
   useEffect(() => {
-    if (suppressControls) setShowControls(false);
+    if (suppressControls) { setShowControls(false); onControlsChange?.(false); }
   }, [suppressControls]);
 
   const moveBar = (e) => {
@@ -152,8 +152,14 @@ export default function VideoPlayer({ src, title, onTimeUpdate, onPlayPause, onS
     setShowControls(true);
     onControlsChange?.(true);
     clearTimeout(hideTimer.current);
-    hideTimer.current = setTimeout(() => { setShowControls(false); }, 4000);
+    hideTimer.current = setTimeout(() => { setShowControls(false); onControlsChange?.(false); }, 4000);
   };
+
+  // Kaydırma katmanından gelen dokunma sinyali: kontroller yeniden görünür.
+  useEffect(() => {
+    if (revealSignal) showCtrl();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [revealSignal]);
 
   return (
     <div ref={containerRef} className="relative w-full h-full bg-black overflow-hidden group select-none"

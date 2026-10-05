@@ -287,6 +287,9 @@ export default async function(req) {
       const targetParticipant = (room.participants || []).find((p) => p.user_id === target_id);
       const participants = (room.participants || []).filter((p) => p.user_id !== target_id);
       const targetName = targetParticipant?.name || 'Kullanıcı';
+      // Yumuşak atma (çevrimdışı temizliği): kişi odadan/listedan çıkarılır ama atılmış sayılmaz —
+      // yasak kaydı oluşmaz ve kayıt defterindeki "Odadan Atılanlar" listesine yazılmaz.
+      const soft = action === 'kick' && body?.soft === true;
       // Odadan atılan kişi bir daha giremez: atma işlemi de yasak kaydı oluşturur.
       // Odadan atılan kişiye 24 saatlik giriş yasağı uygulanır.
       const bannedUsers = [
@@ -301,25 +304,30 @@ export default async function(req) {
       let update: any = {
         participants,
         recent_participants: rememberParticipant(room, targetParticipant),
-        banned_users: bannedUsers,
-        room_logs: appendRoomLog(room, {
-          text: `${name}, ${targetName} kişisini odadan attı ve 24 saat girişini yasakladı.`,
-          kind: 'room_kick',
-          actor_id: user.id, actor_name: name, target_id, target_name: targetName,
+        ...(soft ? {} : {
+          banned_users: bannedUsers,
+          room_logs: appendRoomLog(room, {
+            text: `${name}, ${targetName} kişisini odadan attı ve 24 saat girişini yasakladı.`,
+            kind: 'room_kick',
+            actor_id: user.id, actor_name: name, target_id, target_name: targetName,
+          }),
         }),
       };
       // Sayı tahtası ayarı açıksa odadan atılan kişinin sayısı sıfırlanır
       const kickedScores = scoresAfterRoomLeave(room, target_id);
       if (kickedScores) update.number_scores = kickedScores;
       // Atılan kişiye bildirim: 24 saatlik giriş yasağı bildirimlere de düşer.
-      await upsertNotification(base44, {
-        user_id: target_id,
-        title: 'Odadan atıldınız',
-        body: `${room.name || 'Oda'} odasından atıldınız. 24 saat boyunca bu odaya giremezsiniz.`,
-        type: 'room_ban',
-        link: room.room_type === 'voice' || room.voice_mode ? `/sesli-oda/${room_id}` : `/oda/${room_id}`,
-        ref_id: room_id,
-      }).catch(() => {});
+      // Yumuşak atmada bildirim gönderilmez, kişi zaten odadan kendi çıkmıştır.
+      if (!soft) {
+        await upsertNotification(base44, {
+          user_id: target_id,
+          title: 'Odadan atıldınız',
+          body: `${room.name || 'Oda'} odasından atıldınız. 24 saat boyunca bu odaya giremezsiniz.`,
+          type: 'room_ban',
+          link: room.room_type === 'voice' || room.voice_mode ? `/sesli-oda/${room_id}` : `/oda/${room_id}`,
+          ref_id: room_id,
+        }).catch(() => {});
+      }
       // Odada kimse kalmadıysa oda tamamen silinir (kişisel odalar korunur).
       if (participants.length === 0 && !room.is_personal) {
         await base44.asServiceRole.entities.RoomMessage.deleteMany({ room_id }).catch(() => {});

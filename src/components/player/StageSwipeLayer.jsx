@@ -5,7 +5,7 @@ import { useRef } from 'react';
  * YouTube oynatıcısı kendi çerçevesi (iframe) içinde çalıştığı için dokunma
  * olayları sayfaya ulaşmıyor; bu katman yatay kaydırmayı yakalar ve paneli açar.
  */
-export default function StageSwipeLayer({ onSwipeLeft, onSwipeRight, className = '' }) {
+export default function StageSwipeLayer({ onSwipeLeft, onSwipeRight, onTap, className = '' }) {
   const start = useRef(null);
 
   const handleStart = (event) => {
@@ -19,6 +19,8 @@ export default function StageSwipeLayer({ onSwipeLeft, onSwipeRight, className =
     const dx = touch.clientX - start.current.x;
     const dy = touch.clientY - start.current.y;
     start.current = null;
+    // Sürükleme değil, dokunma: oynatıcı kontrolleri (ilerleme çubuğu) geri gelir.
+    if (Math.abs(dx) < 12 && Math.abs(dy) < 12) { onTap?.(); return; }
     if (Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
     if (dx < 0) onSwipeLeft?.();
     else onSwipeRight?.();
@@ -30,6 +32,7 @@ export default function StageSwipeLayer({ onSwipeLeft, onSwipeRight, className =
       className={`absolute inset-x-0 top-0 bottom-[5.5rem] z-[54] ${className}`}
       onTouchStart={handleStart}
       onTouchEnd={handleEnd}
+      onClick={onTap}
     />
   );
 }

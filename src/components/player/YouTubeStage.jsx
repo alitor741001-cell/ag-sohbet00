@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { FastForward, Maximize, Minimize, Pause, Play, Rewind } from 'lucide-react';
+import VolumeSlider from './VolumeSlider';
 
 // YouTube IFrame API'si tek seferde yüklenir ve tüm oda aynı oynatıcıyı kullanır.
 let apiPromise = null;
@@ -35,7 +36,7 @@ const fmt = (seconds) => {
  * YouTube videosunu oda ekranında oynatır: ilerleme, geri/ileri sarma ve tam ekran
  * mevcut film oynatıcısıyla aynı şekilde odaya senkron bildirilir.
  */
-export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource, onPlayPause, onTimeUpdate, onSeek, onEnded, fullscreenRef, suppressControls = false }) {
+export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource, onPlayPause, onTimeUpdate, onSeek, onEnded, fullscreenRef, suppressControls = false, onControlsChange, revealSignal }) {
   const hostRef = useRef(null);
   const playerRef = useRef(null);
   const containerRef = useRef(null);
@@ -53,6 +54,17 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
   const [fullscreen, setFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [error, setError] = useState('');
+  // Film sesi: herkes kendi cihazında kısıp açabilir, odaya yazılmaz.
+  const [volume, setVolume] = useState(100);
+  const [muted, setMuted] = useState(false);
+
+  useEffect(() => {
+    const player = playerRef.current;
+    if (!player?.setVolume) return;
+    player.setVolume(muted ? 0 : volume);
+    if (muted) player.mute?.();
+    else player.unMute?.();
+  }, [volume, muted, ready]);
 
   // Video değişince oynatıcı yeniden kurulur ve odanın konumundan başlar.
   useEffect(() => {
@@ -193,9 +205,16 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
   const showCtrl = () => {
     if (suppressControls) return;
     setShowControls(true);
+    onControlsChange?.(true);
     clearTimeout(hideTimer.current);
-    hideTimer.current = setTimeout(() => setShowControls(false), 4000);
+    hideTimer.current = setTimeout(() => { setShowControls(false); onControlsChange?.(false); }, 4000);
   };
+
+  // Kaydırma katmanından gelen dokunma sinyali: kontroller yeniden görünür.
+  useEffect(() => {
+    if (revealSignal) showCtrl();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [revealSignal]);
 
   return (
     <div
@@ -236,6 +255,7 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
           {isOwner && <button onClick={togglePlay} className="rounded-lg p-2 hover:bg-white/10">{playing ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}</button>}
           {isOwner && <button onClick={() => skip(-10)} className="rounded-lg p-2 hover:bg-white/10" title="10 sn geri"><Rewind className="h-5 w-5" /></button>}
           {isOwner && <button onClick={() => skip(10)} className="rounded-lg p-2 hover:bg-white/10" title="10 sn ileri"><FastForward className="h-5 w-5" /></button>}
+          <VolumeSlider volume={volume / 100} muted={muted} onChange={setVolume} onToggleMute={() => setMuted((m) => !m)} />
           <button onClick={toggleFullscreen} className="ml-auto rounded-lg p-2 hover:bg-white/10" title="Tam ekran">
             {fullscreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
           </button>

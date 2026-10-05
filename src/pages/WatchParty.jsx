@@ -476,7 +476,8 @@ export default function WatchParty() {
         return !presence.online || (Date.now() - new Date(presence.last_seen).getTime() > 60000);
       });
       for (const u of offlineUsers) {
-        await base44.functions.invoke('room-presence', { action: 'kick', room_id: id, target_id: u.user_id }).catch(() => {});
+        // Yumuşak temizlik: kişi listeden düşer ama odadan atılmış sayılmaz, yasaklanmaz.
+        await base44.functions.invoke('room-presence', { action: 'kick', room_id: id, target_id: u.user_id, soft: true }).catch(() => {});
       }
     };
     const interval = setInterval(check, 10000);
@@ -584,6 +585,11 @@ export default function WatchParty() {
 
   // Film arama paneli: ad yazılır, seçilen film odanın ekranında açılır.
   const openFilmSearch = () => { setFilmOpen(true); setShowViewers(false); };
+
+  // Film ekranı kontrolleri: ilerleme çubuğu ve Filmler düğmesi birlikte görünür, birlikte kaybolur.
+  const [stageControls, setStageControls] = useState(true);
+  const [stageReveal, setStageReveal] = useState(0);
+  const showStageControls = () => { setStageControls(true); setStageReveal((n) => n + 1); };
   const pickFilm = (videoId) => { setFilmOpen(false); changeVideo(videoId); };
 
   const toggleVoice = async () => {
@@ -785,9 +791,9 @@ export default function WatchParty() {
           {voiceMode
             ? <p className="p-6 text-center text-sm text-muted-foreground">Sesli sohbet alanı açılıyor…</p>
             : ytId
-              ? <YouTubeStage videoId={ytId} syncState={syncState} isOwner={canMod} isTimeSource={isOwner} onPlayPause={onPlayPause} onTimeUpdate={onTimeUpdate} onSeek={onSeek} onEnded={() => { if (isOwner) setYtOpen(true); }} fullscreenRef={playerWrapRef} suppressControls={chatOpen || directOpen || !!profileTarget} />
+              ? <YouTubeStage videoId={ytId} syncState={syncState} isOwner={canMod} isTimeSource={isOwner} onPlayPause={onPlayPause} onTimeUpdate={onTimeUpdate} onSeek={onSeek} onEnded={() => { if (isOwner) setYtOpen(true); }} fullscreenRef={playerWrapRef} suppressControls={chatOpen || directOpen || !!profileTarget} onControlsChange={setStageControls} revealSignal={stageReveal} />
               : src
-                ? <VideoPlayer src={src} title={room.movie_title} syncState={syncState} isOwner={canMod} isTimeSource={isOwner} onPlayPause={onPlayPause} onTimeUpdate={onTimeUpdate} onSeek={onSeek} onEnded={() => { if (isOwner) setYtOpen(true); }} fullscreenRef={playerWrapRef} watermark={user} suppressControls={chatOpen || directOpen || !!profileTarget} />
+                ? <VideoPlayer src={src} title={room.movie_title} syncState={syncState} isOwner={canMod} isTimeSource={isOwner} onPlayPause={onPlayPause} onTimeUpdate={onTimeUpdate} onSeek={onSeek} onEnded={() => { if (isOwner) setYtOpen(true); }} fullscreenRef={playerWrapRef} watermark={user} suppressControls={chatOpen || directOpen || !!profileTarget} onControlsChange={setStageControls} revealSignal={stageReveal} />
                 : <RoomScreenLauncher onSearch={openFilmSearch} />}
 
           {/* YouTube çerçevesi dokunmayı yuttuğu için kaydırmayı bu katman yakalar. */}
@@ -795,11 +801,12 @@ export default function WatchParty() {
             <StageSwipeLayer
               className={chatOpen || directOpen || profileTarget || showSettings || showViewers ? 'pointer-events-none' : ''}
               onSwipeLeft={() => { setChatOpen(true); setShowViewers(false); }}
+              onTap={showStageControls}
             />
           )}
 
           {!voiceMode && !chatOpen && !directOpen && !profileTarget && (
-            <div className="absolute left-1/2 bottom-[calc(env(safe-area-inset-bottom)_+_6.5rem)] z-[56] -translate-x-1/2">
+            <div className={`absolute left-1/2 bottom-[calc(env(safe-area-inset-bottom)_+_6.5rem)] z-[56] -translate-x-1/2 transition-opacity duration-300 ${stageControls ? 'opacity-100' : 'pointer-events-none opacity-0'}`}>
               <RoomScreenSwitch
                 onFilms={openFilmSearch}
                 hasResults={filmResults.length > 0}
