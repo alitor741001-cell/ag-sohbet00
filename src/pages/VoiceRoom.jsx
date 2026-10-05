@@ -21,6 +21,7 @@ import VoiceRoomMenu from '@/components/voice/VoiceRoomMenu';
 import VoiceSeatSheet from '@/components/voice/VoiceSeatSheet';
 import InviteSheet from '@/components/voice/InviteSheet';
 import FullUserProfile from '@/components/profile/FullUserProfile';
+import VoiceProfileSheet from '@/components/voice/VoiceProfileSheet';
 import RoomLogSheet from '@/components/voice/RoomLogSheet';
 import GiftScoreChip from '@/components/voice/GiftScoreChip';
 import GiftBoardSheet from '@/components/voice/GiftBoardSheet';
@@ -64,6 +65,7 @@ export default function VoiceRoom() {
   const [inviteOpen, setInviteOpen] = useState(false);
   const [seatIndex, setSeatIndex] = useState(null);
   const [profileUserId, setProfileUserId] = useState(null);
+  const [fullProfileUserId, setFullProfileUserId] = useState(null);
   const [dmUserId, setDmUserId] = useState(null);
   const [dmOpen, setDmOpen] = useState(false);
   const [exitOpen, setExitOpen] = useState(false);
@@ -463,11 +465,12 @@ export default function VoiceRoom() {
     return person?.name || '';
   }, [seats, participants]);
 
-  // Profil sayfasına giderken odadan ve koltuktan düşmeyi engeller.
+  // Ayarlar menüsündeki "Profili gör": tam ekran profil kartı odanın içinde açılır,
+  // sayfa değişmediği için odadan ve koltuktan düşülmez.
   const openFullProfile = (userId) => {
     if (!userId) return;
-    keepSeatRef.current = true;
-    navigate(`/kullanici/${userId}`);
+    setProfileUserId(null);
+    setFullProfileUserId(userId);
   };
 
   // Kendi profil kartımdaki "Profili gör": kişisel profil sayfası açılır, oda ve koltuk korunur.
@@ -881,6 +884,14 @@ export default function VoiceRoom() {
   const profileHidden = isHiddenName(profilePerson?.name);
   const profileMicMuted = profileSelf ? voice.muted : profileMuted;
 
+  // Ayarlar menüsündeki "Profili gör" ile açılan tam ekran kart.
+  const fullProfilePerson = fullProfileUserId
+    ? [...seats, ...participants].find((person) => person?.user_id === fullProfileUserId) || null
+    : null;
+  const fullProfileHidden = isHiddenName(fullProfilePerson?.name);
+  const fullProfileSelf = !!fullProfileUserId && fullProfileUserId === user?.id;
+  const fullProfileMuted = fullProfileSelf ? voice.muted : !!participants.find((person) => person.user_id === fullProfileUserId)?.muted;
+
   // Profil kartında her işlem kartı kapatır: hangi seçeneğe basılırsa basılsın kart her seferinde kapanır.
   const cardAction = (action) => () => { setProfileUserId(null); action(); };
 
@@ -1111,22 +1122,32 @@ export default function VoiceRoom() {
         onStepDown={() => invokeVoice({ action: 'seat-leave' })}
       />
 
-      <FullUserProfile
+      <VoiceProfileSheet
         open={!!profileTarget}
         onClose={() => setProfileUserId(null)}
         userId={profileTarget}
         name={profilePerson?.name || ''}
         avatar={profilePerson?.avatar || ''}
-        frame={profilePerson?.frame || ''}
-        frameScale={profilePerson?.frame_scale}
         hidden={profileHidden}
         muted={profileMicMuted}
-        level={roomLevels[profileTarget] || 0}
-        roomId={id}
-        self={profileSelf}
-        onMessage={(target) => setDmUserId(target)}
         tiles={profileTiles}
         footer={profileFooter}
+      />
+
+      <FullUserProfile
+        open={!!fullProfileUserId}
+        onClose={() => setFullProfileUserId(null)}
+        userId={fullProfileUserId}
+        name={fullProfilePerson?.name || ''}
+        avatar={fullProfilePerson?.avatar || ''}
+        frame={fullProfilePerson?.frame || ''}
+        frameScale={fullProfilePerson?.frame_scale}
+        hidden={fullProfileHidden}
+        muted={fullProfileMuted}
+        level={roomLevels[fullProfileUserId] || 0}
+        roomId={id}
+        self={fullProfileSelf}
+        onMessage={(target) => setDmUserId(target)}
       />
 
       <RoomExitOverlay
