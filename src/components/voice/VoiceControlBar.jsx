@@ -30,21 +30,16 @@ function RoundButton({ onClick, label, tone = 'gray', active, size = 'lg', child
 /** Alt kontrol çubuğu: sohbet, mikrofon, hoparlör, oyun merkezi ve özel sohbet. */
 export default function VoiceControlBar({ micActive, deafened, chatOpen, gamesOpen, giftOpen, settingsOpen, onToggleMic, onToggleSpeaker, onOpenGames, onOpenGifts, onOpenSettings, onOpenPrivateChat, onToggleChat }) {
   return (
-    <div className="flex shrink-0 items-center justify-between gap-2 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2">
-      <div className="flex items-center gap-2">
-        <RoundButton tone={chatOpen ? 'active' : 'gray'} active={chatOpen} onClick={onToggleChat} label={chatOpen ? 'Sohbeti kapat' : 'Sohbeti aç'}>
-          {chatOpen ? <Keyboard className="h-6 w-6" /> : <MessageSquare className="h-6 w-6" />}
-        </RoundButton>
-        <RoundButton size="md" tone={settingsOpen ? 'active' : 'gray'} active={settingsOpen} onClick={onOpenSettings} label="Oda ayarları">
-          <Settings className="h-5 w-5" />
-        </RoundButton>
-      </div>
-      <div className="flex items-center gap-2">
-        <RoundButton size="md" tone="gift" active={giftOpen} onClick={onOpenGifts} label="Hediye gönder">
-          <Gift className="h-5 w-5" />
-        </RoundButton>
+    <div className="flex shrink-0 items-center justify-between gap-1 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2">
+      <RoundButton tone={chatOpen ? 'active' : 'gray'} active={chatOpen} onClick={onToggleChat} label={chatOpen ? 'Sohbeti kapat' : 'Sohbeti aç'}>
+        {chatOpen ? <Keyboard className="h-6 w-6" /> : <MessageSquare className="h-6 w-6" />}
+      </RoundButton>
+      <div className="flex min-w-0 items-center gap-1.5">
         <RoundButton size="md" tone={micActive ? 'active' : 'gray'} active={micActive} onClick={onToggleMic} label="Mikrofon">
           {micActive ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
+        </RoundButton>
+        <RoundButton size="md" tone="gift" active={giftOpen} onClick={onOpenGifts} label="Hediye gönder">
+          <Gift className="h-5 w-5" />
         </RoundButton>
         <RoundButton size="md" tone={deafened ? 'red' : 'gray'} onClick={onToggleSpeaker} label="Hoparlör">
           {deafened ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
@@ -56,6 +51,9 @@ export default function VoiceControlBar({ micActive, deafened, chatOpen, gamesOp
           <MessageCircle className="h-5 w-5" />
         </RoundButton>
       </div>
+      <RoundButton size="md" tone={settingsOpen ? 'active' : 'gray'} active={settingsOpen} onClick={onOpenSettings} label="Oda ayarları">
+        <Settings className="h-5 w-5" />
+      </RoundButton>
     </div>
   );
 }
