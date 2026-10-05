@@ -10,11 +10,12 @@ import { LEVEL_UP_TONE, levelUpName, parseLevelUpNotice } from '@/lib/levelUpNot
 import useMessageProfiles from '@/hooks/useMessageProfiles';
 
 /**
- * Oda alt bölümü: odaya girildiği anda yeni mesajlar kendiliğinden görünür; eski geçmiş ve
- * yazma alanı sohbet (klavye) butonuna basınca açılır. Mesaj gönderilince yazma alanı kapanır
- * ve klavye iner; mesaj akışı görünür kalır.
+ * Oda alt bölümü: sohbet akışı (geçmiş dahil) odaya girildiği anda kendiliğinden görünür.
+ * Klavye (sohbet) butonu yalnızca yazma alanını açar; mesaj gönderilince yazma alanı kapanır ve
+ * klavye iner, akış görünür kalır. Klavye açıkken yazma alanı klavyenin üstüne kayar — odanın
+ * geri kalanı ve alttaki kontrol çubuğu yerinden oynamaz.
  */
-export default function VoiceChatDock({ messages = [], onSend, open, onCloseComposer, composerOpen, chatLocked, currentUserId, ownerId, moderators = [], onOpenProfile, bigGiftNotice, onOpenBigGiftRoom, levels = {}, hiddenUsers = {}, cutoff = 0 }) {
+export default function VoiceChatDock({ messages = [], onSend, open, onCloseComposer, composerOpen, chatLocked, currentUserId, ownerId, moderators = [], onOpenProfile, bigGiftNotice, onOpenBigGiftRoom, levels = {}, hiddenUsers = {}, bottomInset = 0 }) {
   const [text, setText] = useState('');
   const [emojiOpen, setEmojiOpen] = useState(false);
   const inputRef = useRef(null);
@@ -27,10 +28,8 @@ export default function VoiceChatDock({ messages = [], onSend, open, onCloseComp
   );
   const profiles = useMessageProfiles(userIds);
 
-  // Butona basılmadan akışta yalnızca giriş anından sonraki yeni mesajlar görünür;
-  // eski mesajlar (geçmiş) sohbet butonu açıkken listelenir. Metinsiz sistem işaretleri atlanır.
-  const visible = (open ? messages : messages.filter((message) => new Date(message.created_date || 0).getTime() >= cutoff))
-    .filter((message) => message.type !== 'system' || plainText(message.text));
+  // Geçmiş dahil tüm akış butona basmadan görünür; metinsiz sistem işaretleri atlanır.
+  const visible = messages.filter((message) => message.type !== 'system' || plainText(message.text));
 
   useEffect(() => {
     if (composerOpen) inputRef.current?.focus();
@@ -55,11 +54,11 @@ export default function VoiceChatDock({ messages = [], onSend, open, onCloseComp
   };
 
   return (
-    <div className="relative shrink-0">
+    <div className="relative shrink-0" style={{ paddingBottom: composerOpen ? bottomInset : 0 }}>
       {(visible.length > 0 || !!bigGiftNotice) && (
         <div
           style={{ touchAction: 'pan-y' }}
-          className={`${open ? 'max-h-[34vh]' : 'max-h-[22vh]'} shrink-0 overflow-y-auto overscroll-contain pb-1 [mask-image:linear-gradient(to_bottom,transparent,black_14%)] [-webkit-mask-image:linear-gradient(to_bottom,transparent,black_14%)]`}
+          className={`${composerOpen ? 'max-h-[16vh]' : open ? 'max-h-[30vh]' : 'max-h-[22vh]'} shrink-0 overflow-y-auto overscroll-contain pb-1 [mask-image:linear-gradient(to_bottom,transparent,black_14%)] [-webkit-mask-image:linear-gradient(to_bottom,transparent,black_14%)]`}
         >
           <div className="flex flex-col gap-1.5 px-4">
             {visible.map((message) => {

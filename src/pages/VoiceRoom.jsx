@@ -57,8 +57,7 @@ export default function VoiceRoom() {
   const [messages, setMessages] = useState([]);
   // Sohbet akışı ve yazma alanı ayrı yönetilir: mesaj gidince yazma alanı kapanır, akış kalır.
   const [chatOpen, setChatOpen] = useState(false);
-  // Odaya girildiğinde yalnızca yeni mesajlar görünür; eski geçmiş klavye (sohbet) butonuna basınca açılır.
-  const [chatCutoff, setChatCutoff] = useState(() => Date.now() - 10000);
+  // Sohbet akışı (geçmiş dahil) odaya girildiği anda görünür; buton yalnızca yazma alanını açar.
   const [composerOpen, setComposerOpen] = useState(false);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -361,9 +360,7 @@ export default function VoiceRoom() {
   // Sohbet akışı
   useEffect(() => {
     if (!id) return;
-    // Giriş anı: akışta bu andan sonraki mesajlar görünür (kendi "odaya katıldı" bildirimi dahil),
-    // eski geçmiş yalnızca sohbet (klavye) butonuna basınca listelenir.
-    setChatCutoff(Date.now() - 10000);
+    // Geçmiş dahil son mesajlar yüklenir; akış butona basmadan görünür.
     base44.entities.RoomMessage.filter({ room_id: id }, '-created_date', 80)
       .then((list) => setMessages((prev) => mergeMessages(prev, [...list].reverse())))
       .catch(() => {});
@@ -926,11 +923,10 @@ export default function VoiceRoom() {
     };
   })() : null;
 
+  // Klavye açılınca oda düzeni yerinden oynamaz: yalnızca sohbet bölümü klavyenin üstüne kayar,
+  // alttaki kontrol çubuğu (mik/hoparlör) hep aynı yerde durur.
   return (
-    <div
-      className="fixed inset-0 z-[150] flex flex-col bg-catalog text-white"
-      style={{ paddingBottom: composerOpen ? keyboardInset : 0 }}
-    >
+    <div className="fixed inset-0 z-[150] flex flex-col bg-catalog text-white">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-gradient-to-b from-primary/25 to-transparent" />
 
       <header className="relative shrink-0 px-3 pb-2 pt-[max(0.75rem,env(safe-area-inset-top))]">
@@ -1012,7 +1008,7 @@ export default function VoiceRoom() {
         chatLocked={chatLocked}
         onSend={sendMessage}
         open={chatOpen}
-        cutoff={chatCutoff}
+        bottomInset={keyboardInset}
         onCloseComposer={() => setComposerOpen(false)}
         composerOpen={composerOpen}
         currentUserId={user?.id}

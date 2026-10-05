@@ -8,6 +8,14 @@
     "phone": {
       "type": "string"
     },
+    "birth_date": {
+      "type": "string",
+      "default": ""
+    },
+    "gender": {
+      "type": "string",
+      "default": ""
+    },
     "avatar": {
       "type": "string"
     },

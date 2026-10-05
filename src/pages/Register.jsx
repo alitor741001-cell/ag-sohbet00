@@ -19,6 +19,8 @@ export default function Register() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
+  const [birthDate, setBirthDate] = useState("");
+  const [gender, setGender] = useState("");
   const [avatar, setAvatar] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -67,6 +69,8 @@ export default function Register() {
     if (!acceptTerms) { setError("Kullanım koşullarını kabul etmelisiniz"); return; }
     if (password !== confirmPassword) { setError("Şifreler eşleşmiyor"); return; }
     if (password.length < 6) { setError("Şifre en az 6 karakter olmalı"); return; }
+    if (!birthDate) { setError("Doğum tarihinizi seçin"); return; }
+    if (!gender) { setError("Cinsiyet seçimi yapın"); return; }
     // Yeni kayıt izni kontrolü
     try {
       const ps = await base44.functions.invoke('public-settings', {});
@@ -99,6 +103,7 @@ export default function Register() {
       try {
         await base44.auth.updateMe({
           full_name: fullName, username, avatar,
+          birth_date: birthDate, gender,
           membership_status: "pending",
         });
       } catch {}
@@ -148,6 +153,13 @@ export default function Register() {
     try { const dest = !paymentAvailable ? '/onay-bekleniyor' : '/abonelik'; await base44.auth.loginWithProvider(provider, dest); }
     catch (err) { setError(err.message || 'Sosyal kayıt başlatılamadı'); setSocialLoading(''); }
   };
+
+  // Doğum tarihi seçicisi bugünden ileriye izin vermez.
+  const today = new Date().toISOString().slice(0, 10);
+  const genderOptions = [
+    { key: 'kadın', label: 'Kadın' },
+    { key: 'erkek', label: 'Erkek' },
+  ];
 
   const pricingFeatures = [
     "Film ve dizilere erişim",
@@ -231,6 +243,25 @@ export default function Register() {
               <div className="space-y-2">
                 <Label htmlFor="username" className="text-[#a0a0a0]">Kullanıcı adı</Label>
                 <Input id="username" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="kullanici" className="h-11 bg-[#0a0a0a] border-[#2a2a2a] text-white placeholder:text-[#555] focus:border-[#e50914]" required />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="birthdate" className="text-[#a0a0a0]">Doğum tarihi</Label>
+                <Input id="birthdate" type="date" value={birthDate} max={today} onChange={(e) => { setBirthDate(e.target.value); if (error) setError(""); }} className="h-11 bg-[#0a0a0a] border-[#2a2a2a] text-white [color-scheme:dark] focus:border-[#e50914]" required />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[#a0a0a0]">Cinsiyet</Label>
+                <div className="grid grid-cols-2 gap-3">
+                  {genderOptions.map((option) => (
+                    <button
+                      key={option.key}
+                      type="button"
+                      onClick={() => { setGender(option.key); if (error) setError(""); }}
+                      className={`h-11 rounded-xl border text-sm font-semibold transition-colors ${gender === option.key ? 'border-[#e50914] bg-[#e50914] text-white' : 'border-[#2a2a2a] bg-[#0a0a0a] text-[#a0a0a0] hover:border-[#e50914] hover:text-white'}`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-[#a0a0a0]">E-posta adresiniz</Label>
