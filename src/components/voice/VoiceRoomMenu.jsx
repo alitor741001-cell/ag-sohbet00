@@ -4,6 +4,7 @@ import BoardToggleRow from '@/components/voice/BoardToggleRow';
 import SeatCountPicker from '@/components/voice/SeatCountPicker';
 import VoiceMenuTile from '@/components/voice/VoiceMenuTile';
 import VoiceSheet from '@/components/voice/VoiceSheet';
+import { Image } from '@/components/ui/image';
 
 const Panel = ({ children, hint }) => (
   <div className="mt-4 rounded-2xl border border-[#FFD700]/45 bg-black/70 p-3 shadow-[0_0_18px_-8px_rgba(255,215,0,0.9)]">
@@ -170,6 +171,14 @@ export default function VoiceRoomMenu({ open, onClose, room, userId, participant
                 const isMod = moderators.includes(person.user_id);
                 return (
                   <div key={person.user_id} className="flex items-center gap-2 rounded-xl bg-black/30 px-3 py-2">
+                    {/* Kişinin profil fotoğrafı ve ismi birlikte görünür. */}
+                    {person.avatar ? (
+                      <Image src={person.avatar} alt={person.name || 'Profil'} className="h-9 w-9 shrink-0 overflow-hidden rounded-full" fittingType="fill" />
+                    ) : (
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#FFD700]/20 text-sm font-black text-[#FFD700]">
+                        {String(person.name || 'K').trim().charAt(0).toLocaleUpperCase('tr-TR')}
+                      </span>
+                    )}
                     <span className="min-w-0 flex-1 truncate text-sm text-white">{person.name || 'Kullanıcı'}{person.user_id === userId && ' (Sen)'}</span>
                     <button
                       type="button"
