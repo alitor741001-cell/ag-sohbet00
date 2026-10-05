@@ -1,4 +1,4 @@
-import { Gamepad2, Gift, Keyboard, MessageCircle, MessageSquare, Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
+import { Gamepad2, Gift, Keyboard, MessageCircle, MessageSquare, Mic, MicOff, Settings, Volume2, VolumeX } from 'lucide-react';
 
 const TONES = {
   gray: 'bg-white/10 text-white',
@@ -28,12 +28,17 @@ function RoundButton({ onClick, label, tone = 'gray', active, size = 'lg', child
 }
 
 /** Alt kontrol çubuğu: sohbet, mikrofon, hoparlör, oyun merkezi ve özel sohbet. */
-export default function VoiceControlBar({ micActive, deafened, chatOpen, gamesOpen, giftOpen, onToggleMic, onToggleSpeaker, onOpenGames, onOpenGifts, onOpenPrivateChat, onToggleChat }) {
+export default function VoiceControlBar({ micActive, deafened, chatOpen, gamesOpen, giftOpen, settingsOpen, onToggleMic, onToggleSpeaker, onOpenGames, onOpenGifts, onOpenSettings, onOpenPrivateChat, onToggleChat }) {
   return (
     <div className="flex shrink-0 items-center justify-between gap-2 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2">
-      <RoundButton tone={chatOpen ? 'active' : 'gray'} active={chatOpen} onClick={onToggleChat} label={chatOpen ? 'Sohbeti kapat' : 'Sohbeti aç'}>
-        {chatOpen ? <Keyboard className="h-6 w-6" /> : <MessageSquare className="h-6 w-6" />}
-      </RoundButton>
+      <div className="flex items-center gap-2">
+        <RoundButton tone={chatOpen ? 'active' : 'gray'} active={chatOpen} onClick={onToggleChat} label={chatOpen ? 'Sohbeti kapat' : 'Sohbeti aç'}>
+          {chatOpen ? <Keyboard className="h-6 w-6" /> : <MessageSquare className="h-6 w-6" />}
+        </RoundButton>
+        <RoundButton size="md" tone={settingsOpen ? 'active' : 'gray'} active={settingsOpen} onClick={onOpenSettings} label="Oda ayarları">
+          <Settings className="h-5 w-5" />
+        </RoundButton>
+      </div>
       <div className="flex items-center gap-2">
         <RoundButton size="md" tone="gift" active={giftOpen} onClick={onOpenGifts} label="Hediye gönder">
           <Gift className="h-5 w-5" />

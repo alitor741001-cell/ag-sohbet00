@@ -30,6 +30,8 @@ import GiftBoard from '@/components/voice/GiftBoard';
 import GiftSendButton from '@/components/voice/GiftSendButton';
 import drainGiftQueue from '@/components/voice/drainGiftQueue';
 import GiftScene from '@/components/voice/GiftScene';
+import GiftEffectsSheet from '@/components/voice/GiftEffectsSheet';
+import useGiftEffects from '@/hooks/useGiftEffects';
 import useGiftAlerts from '@/hooks/useGiftAlerts';
 import useBigGiftAlerts from '@/hooks/useBigGiftAlerts';
 import useBigGiftNotice from '@/hooks/useBigGiftNotice';
@@ -62,6 +64,7 @@ export default function VoiceRoom() {
   const [exitOpen, setExitOpen] = useState(false);
   const [gamesOpen, setGamesOpen] = useState(false);
   const [giftOpen, setGiftOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [logOpen, setLogOpen] = useState(false);
   const [giftBoardOpen, setGiftBoardOpen] = useState(false);
   const [giftBoard, setGiftBoard] = useState(null);
@@ -73,6 +76,8 @@ export default function VoiceRoom() {
   const [gifted, setGifted] = useState({});
 
   const keyboardInset = useKeyboardInset();
+  // Hediye efektleri tercihi: kapalıyken atılan hediyelerin görselleri gösterilmez.
+  const { giftEffects, setGiftEffects } = useGiftEffects();
 
   // Hediye Tahtası: katalog, K seviyeleri, bakiye ve gelen hediye animasyonları.
   const { gifts, tiers } = useGiftCatalog();
@@ -1012,8 +1017,10 @@ export default function VoiceRoom() {
         onToggleSpeaker={voice.toggleDeafen}
         gamesOpen={gamesOpen}
         giftOpen={giftOpen}
+        settingsOpen={settingsOpen}
         onOpenGames={() => setGamesOpen(true)}
         onOpenGifts={openGifts}
+        onOpenSettings={() => setSettingsOpen((value) => !value)}
         onOpenPrivateChat={() => setDmOpen(true)}
         onToggleChat={() => {
           if (chatLocked) {
@@ -1146,8 +1153,15 @@ export default function VoiceRoom() {
         count={giftSendCount}
       />
 
-      <GiftScene key={overlayAlert?.key} alert={bigGift ? null : overlayAlert} tiers={tiers} />
-      <BigGiftStage alert={bigGift} />
+      <GiftScene key={overlayAlert?.key} alert={giftEffects && !bigGift ? overlayAlert : null} tiers={tiers} />
+      {giftEffects && <BigGiftStage alert={bigGift} />}
+
+      <GiftEffectsSheet
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        enabled={giftEffects}
+        onToggle={setGiftEffects}
+      />
 
       {notice && joined && (
         <p className="pointer-events-none absolute left-1/2 top-20 z-[170] -translate-x-1/2 rounded-full bg-black/80 px-4 py-2 text-xs text-white">{notice}</p>
