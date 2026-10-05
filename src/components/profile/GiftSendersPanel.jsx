@@ -2,11 +2,16 @@ import { useEffect, useState } from 'react';
 import { ChevronDown, ChevronLeft, Gift, Loader2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Image } from '@/components/ui/image';
-import ActivitySummaryCards from '@/components/profile/ActivitySummaryCards';
 
 const formatTl = (value) => `${(Number(value) || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺`;
 const formatK = (value) => `${(Number(value) || 0).toLocaleString('tr-TR', { maximumFractionDigits: 2 })} K`;
-const formatUsd = (value) => (Number(value) || 0).toLocaleString('tr-TR');
+// Sıra rozeti: en çok hediye gönderen üç kişi altın, gümüş ve bronz tonunda görünür.
+const RANK_TONES = [
+  { color: '#f5c542', borderColor: 'rgba(245,197,66,0.45)', background: 'rgba(245,197,66,0.12)' },
+  { color: '#d9d9e3', borderColor: 'rgba(217,217,227,0.35)', background: 'rgba(217,217,227,0.10)' },
+  { color: '#d08b5b', borderColor: 'rgba(208,139,91,0.40)', background: 'rgba(208,139,91,0.12)' },
+];
+const rankTone = (index) => RANK_TONES[index] || { color: 'rgba(255,255,255,0.55)', borderColor: 'rgba(255,255,255,0.14)', background: 'rgba(255,255,255,0.05)' };
 
 /** Gönderim tarih ve saati: 04.10.2026 19:15 */
 const formatWhen = (iso) => {
@@ -25,7 +30,6 @@ const formatWhen = (iso) => {
 export default function GiftSendersPanel({ open, onClose }) {
   const [loading, setLoading] = useState(false);
   const [senders, setSenders] = useState([]);
-  const [totals, setTotals] = useState(null);
   const [expanded, setExpanded] = useState(null);
 
   useEffect(() => {
@@ -33,8 +37,8 @@ export default function GiftSendersPanel({ open, onClose }) {
     setExpanded(null);
     setLoading(true);
     base44.functions.invoke('gift-box', { action: 'received' })
-      .then((response) => { setSenders(response.data?.senders || []); setTotals(response.data?.totals || null); })
-      .catch(() => { setSenders([]); setTotals(null); })
+      .then((response) => setSenders(response.data?.senders || []))
+      .catch(() => setSenders([]))
       .finally(() => setLoading(false));
   }, [open]);
 
@@ -58,15 +62,11 @@ export default function GiftSendersPanel({ open, onClose }) {
 
       <div className="min-h-0 flex-1 overflow-y-auto p-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
         <div className="mx-auto w-full max-w-[430px]">
-          {totals && (
-            <ActivitySummaryCards items={[
-              { label: 'Toplam', value: formatK(totals.all_k), hint: `${formatUsd(totals.all_dollars)} $` },
-              { label: '24 saatlik', value: formatK(totals.day_k), hint: `${formatUsd(totals.day_dollars)} $` },
-            ]} />
-          )}
-          <p className="mb-2.5 text-center text-[10px] font-semibold text-white/45">
-            Bu ayın listesi • her ayın 1'inde otomatik sıfırlanır
-          </p>
+          <div className="mb-2.5 flex justify-center">
+            <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] font-semibold text-white/45">
+              Bu ayın listesi • her ayın 1'inde otomatik sıfırlanır
+            </span>
+          </div>
           {loading ? (
             <div className="flex items-center justify-center py-10">
               <Loader2 className="h-6 w-6 animate-spin text-primary" />
@@ -74,15 +74,21 @@ export default function GiftSendersPanel({ open, onClose }) {
           ) : senders.length === 0 ? (
             <p className="py-10 text-center text-sm text-white/50">Bu ay henüz hediye almamışsın.</p>
           ) : (
-            senders.map((sender) => {
+            senders.map((sender, index) => {
               const isOpen = expanded === sender.sender_id;
               return (
-                <div key={sender.sender_id} className="mb-2 overflow-hidden rounded-xl bg-white/5">
+                <div key={sender.sender_id} className="mb-2 overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-r from-white/[0.07] to-white/[0.03]">
                   <button
                     type="button"
                     onClick={() => setExpanded(isOpen ? null : sender.sender_id)}
-                    className="flex w-full items-center gap-2.5 px-2.5 py-2.5 text-left"
+                    className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left"
                   >
+                    <span
+                      className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[10px] font-black tabular-nums"
+                      style={rankTone(index)}
+                    >
+                      {index + 1}
+                    </span>
                     <span className="h-10 w-10 shrink-0 overflow-hidden rounded-full border border-white/10 bg-white/10">
                       {sender.avatar ? (
                         <Image src={sender.avatar} alt={sender.name} className="h-full w-full" fittingType="fill" draggable={false} />
@@ -108,7 +114,7 @@ export default function GiftSendersPanel({ open, onClose }) {
                   </button>
 
                   {isOpen && (
-                    <div className="border-t border-white/10 px-2.5 py-1.5">
+                    <div className="border-t border-white/10 px-3 py-1.5">
                       {sender.items.map((item) => (
                         <div key={item.id} className="flex items-center gap-2 py-1.5">
                           <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white/10 text-base">
