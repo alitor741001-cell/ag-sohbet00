@@ -5,6 +5,7 @@ import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
 import MembershipNotice from '@/components/profile/MembershipNotice';
+import AgencySection from '@/components/agency/AgencySection';
 import ProfileHeader from '@/components/profile/ProfileHeader';
 import ProfileInfoCard from '@/components/profile/ProfileInfoCard';
 import ProfileMovieGrid from '@/components/profile/ProfileMovieGrid';
@@ -84,5 +85,6 @@ export default function Profile() {
     {tab === 'favs' && user.role !== 'admin' && <ProfileMovieGrid movies={favs} empty="Henüz favori yok." />}
     {tab === 'settings' && <ProfileSettings user={user} onUpdated={reload} />}
     </div>
+    <AgencySection user={user} onRefresh={reload} />
   </div>;
 }

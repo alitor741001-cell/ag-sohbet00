@@ -38,7 +38,7 @@ export default async function(req) {
           gender: u.gender || '', birth_date: u.birth_date || '',
           account_status: accountStatus(u),
           agency_role: u.agency_role || '', agency_name: u.agency_name || '', agency_code: u.agency_code || '',
-          broadcaster_status: u.broadcaster_status || '',
+          agency_record_id: u.agency_record_id || '', broadcaster_status: u.broadcaster_status || '',
           ...badgeLevels(u),
         };
       });
@@ -71,6 +71,7 @@ export default async function(req) {
       agency_role: u.agency_role || '',
       agency_name: u.agency_name || '',
       agency_code: u.agency_code || '',
+      agency_record_id: u.agency_record_id || '',
       broadcaster_status: u.broadcaster_status || '',
       ...badgeLevels(u)
     });

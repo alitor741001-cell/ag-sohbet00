@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Ban, ChevronRight, Flag, Loader2, MessageSquare, MicOff, Settings, UserPlus } from 'lucide-react';
+import { ArrowLeft, Ban, ChevronRight, Flag, Loader2, MessageSquare, Mic2, MicOff, Settings, UserPlus } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useToast } from '@/components/ui/use-toast';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { HIDDEN_AVATAR_URL } from '@/lib/hiddenUser';
 import { ROOM_BLUE, ageFromBirthDate, formatDate, genderPalette } from '@/components/profile/genderPalette';
+import { agencyApi } from '@/lib/agency';
 import ProfileHeroBlock from '@/components/profile/ProfileHeroBlock';
 import ProfileStatsRow from '@/components/profile/ProfileStatsRow';
 import ProfileIdentityBlock from '@/components/profile/ProfileIdentityBlock';
@@ -30,6 +31,7 @@ export default function FullUserProfile({
   const [relation, setRelation] = useState('');
   const [reportOpen, setReportOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [inviteSent, setInviteSent] = useState(false);
 
   const isSelf = self || userId === user?.id;
 
@@ -63,6 +65,19 @@ export default function FullUserProfile({
   const age = hidden ? null : ageFromBirthDate(profile?.birth_date);
   const genderLabel = profile?.gender === 'erkek' ? 'Erkek' : profile?.gender === 'kadın' ? 'Kadın' : 'Belirtilmedi';
   const showSocial = !isSelf && !hidden;
+  // Ajans sahibi, kendi ajansında olmayan bir kullanıcıyı yayıncı olarak davet edebilir.
+  const canInvite = showSocial && user?.agency_role === 'owner' && !!user?.agency_record_id
+    && !!profile && profile.agency_record_id !== user?.agency_record_id;
+
+  const inviteBroadcaster = async () => {
+    try {
+      await agencyApi('invite', { user_id: userId });
+      setInviteSent(true);
+      toast({ title: '🎤 Davet gönderildi', description: `${shownName} kişisine yayıncı daveti iletildi.` });
+    } catch (error) {
+      toast({ title: 'Davet gönderilemedi', description: error.response?.data?.error || error.message, variant: 'destructive' });
+    }
+  };
 
   const copyId = async () => {
     try {
@@ -160,6 +175,19 @@ export default function FullUserProfile({
               />
             </div>
 
+            {!hidden && (profile?.broadcaster_status === 'active' || profile?.agency_name) && (
+              <div className="mt-2.5 flex flex-wrap items-center justify-center gap-2">
+                {profile?.broadcaster_status === 'active' && (
+                  <span className="flex items-center gap-1 rounded-full border border-[#F5C542]/50 bg-[#F5C542]/10 px-3 py-1 text-[11px] font-black text-[#F5C542]">
+                    <Mic2 className="h-3 w-3" /> 🎤 YAYINCI
+                  </span>
+                )}
+                {profile?.agency_name && (
+                  <span className="rounded-full border border-white/15 bg-black/40 px-3 py-1 text-[11px] font-semibold text-white/70">Ajans: {profile.agency_name}</span>
+                )}
+              </div>
+            )}
+
             <ProfileStatsRow
               palette={palette}
               // 1000, yöneticilere sabitlenen yapay en üst seviyedir: kartta gösterilmez.
@@ -207,6 +235,17 @@ export default function FullUserProfile({
                 >
                   <MessageSquare className="h-5 w-5" /> Mesaj Yaz
                 </button>
+                {canInvite && (
+                  <button
+                    type="button"
+                    onClick={inviteBroadcaster}
+                    disabled={inviteSent}
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 px-4 py-3.5 text-base font-black text-white disabled:opacity-60"
+                    style={{ borderColor: '#F5C542', background: 'rgba(245,197,66,0.14)', boxShadow: '0 0 22px -8px rgba(245,197,66,0.95)' }}
+                  >
+                    <Mic2 className="h-5 w-5" /> {inviteSent ? 'Davet Gönderildi' : 'Yayıncı Olarak Davet Et'}
+                  </button>
+                )}
               </div>
             )}
 

@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react';
-import { MessageCircle, UsersRound, Shield, UserPlus, Search, SlidersHorizontal } from 'lucide-react';
+import { MessageCircle, UsersRound, Shield, UserPlus, Search, SlidersHorizontal, Mic2 } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import ConversationList from '@/components/friends/ConversationList';
+import AgencyInvitesPanel from '@/components/agency/AgencyInvitesPanel';
+import InviteDetailSheet from '@/components/agency/InviteDetailSheet';
+import { agencyApi } from '@/lib/agency';
 import FriendsPanel from '@/components/friends/FriendsPanel';
 import ChatPanel from '@/components/friends/ChatPanel';
 import useFriends from '@/hooks/useFriends';
@@ -25,9 +28,16 @@ export default function Friends() {
     return () => unsub();
   }, []);
   const [params, setParams] = useSearchParams();
-  const [view, setView] = useState(params.get('view') === 'chats' ? 'chats' : 'friends');
+  const [view, setView] = useState(() => {
+    const target = params.get('view');
+    return target === 'chats' || target === 'invites' ? target : 'friends';
+  });
   const [selected, setSelected] = useState(null);
   const [search, setSearch] = useState('');
+  const [inviteCount, setInviteCount] = useState(0);
+  const [inviteId, setInviteId] = useState('');
+  const loadInvites = () => agencyApi('invites').then((data) => setInviteCount((data.received || []).filter((invite) => invite.status === 'pending').length)).catch(() => {});
+  useEffect(() => { loadInvites(); }, []);
 
   useEffect(() => {
     const chatId = params.get('chat');
@@ -74,7 +84,7 @@ export default function Friends() {
     base44.functions.invoke('dm-service', { action: 'delete_conversation', conversation_id: conversation.id }).catch(() => {});
   };
 
-  const switchView = (next) => { setView(next); setSelected(null); setParams(next === 'chats' ? { view: 'chats' } : {}); };
+  const switchView = (next) => { setView(next); setSelected(null); setParams(next === 'chats' ? { view: 'chats' } : next === 'invites' ? { view: 'invites' } : {}); if (next === 'invites') loadInvites(); };
 
   if (friendsLoading || convosLoading || !user) return <div className="p-6 text-gray-400">Yükleniyor...</div>;
   const incomingRequests = relations.filter((r) => r.status === 'pending' && r.recipient_id === user.id).length;
@@ -99,11 +109,17 @@ export default function Friends() {
             <UsersRound className="w-4 h-4" /> Arkadaşlarım
             {incomingRequests > 0 && <span className="min-w-5 h-5 px-1 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center">{incomingRequests}</span>}
           </button>
+          <button onClick={() => switchView('invites')} className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold transition-all ${view === 'invites' ? 'text-white' : 'text-gray-400'}`} style={view === 'invites' ? { background: 'linear-gradient(135deg, #dc2626, #991b1b)' } : {}}>
+            <Mic2 className="w-4 h-4" /> Davet
+            {inviteCount > 0 && <span className="min-w-5 h-5 px-1 rounded-full bg-[#F5C542] text-black text-[10px] flex items-center justify-center">{inviteCount}</span>}
+          </button>
         </div>
       </header>
 
       {view === 'friends' ? (
         <div className="p-4"><FriendsPanel relations={relations} userId={user.id} invoke={invoke} onChat={openChat} isOnline={isOnline} getRoomId={getRoomId} rooms={rooms} /></div>
+      ) : view === 'invites' ? (
+        <div className="p-4"><AgencyInvitesPanel onOpenInvite={(id) => setInviteId(id)} /></div>
       ) : (
         <>
           {!isModerator(user) && (
@@ -137,6 +153,7 @@ export default function Friends() {
           )}
         </>
       )}
+      <InviteDetailSheet open={!!inviteId} inviteId={inviteId} onClose={() => setInviteId('')} onAnswered={() => { setInviteId(''); loadInvites(); }} />
     </div>
   );
 }

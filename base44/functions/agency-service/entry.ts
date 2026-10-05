@@ -33,6 +33,13 @@ export default async function (req) {
       return rows?.[0] || null;
     };
 
+    const findUserByMemberId = async (memberId: any) => {
+      const value = String(memberId || '').trim().replace('#', '');
+      if (!value) return null;
+      const rows = await base44.asServiceRole.entities.User.filter({ member_id: value }, '-created_date', 2).catch(() => []);
+      return rows?.[0] || null;
+    };
+
     // ——— ÖZET: profil bölümündeki dinamik menü için ———
     if (action === 'summary') {
       if (account.broadcaster_status === 'active' && account.agency_record_id) {
@@ -325,6 +332,23 @@ export default async function (req) {
       return Response.json({ mine, approvals, history: rows || [] });
     }
 
+    // ——— ÜYE KİMLİĞİYLE KULLANICI ARAMA (davet için) ———
+    if (action === 'invite-lookup') {
+      if (account.agency_role !== 'owner' || !account.agency_record_id) return Response.json({ error: 'Yalnızca ajans sahibi arama yapabilir.' }, { status: 403 });
+      const memberId = String(body.member_id || '').trim().replace('#', '');
+      if (!memberId) return Response.json({ error: 'Üye kimliği gerekli.' }, { status: 400 });
+      const rows = await base44.asServiceRole.entities.User.filter({ member_id: memberId }, '-created_date', 5).catch(() => []);
+      const found = (rows || []).find((row) => row.id !== account.id);
+      if (!found) return Response.json({ user: null });
+      const inSameAgency = found.agency_record_id === account.agency_record_id;
+      return Response.json({
+        user: {
+          id: found.id, name: found.username || found.full_name || 'Kullanıcı', avatar: found.avatar || '',
+          member_id: found.member_id || '-', agency_name: inSameAgency ? (found.agency_name || 'Ajansın') : (found.agency_name || ''),
+        },
+      });
+    }
+
     // ——— ADMİN ———
     if (action.startsWith('admin-')) {
       if (!isAdmin) return Response.json({ error: 'Yetkisiz.' }, { status: 403 });
@@ -359,8 +383,10 @@ export default async function (req) {
           await base44.asServiceRole.entities.User.updateMany({ agency_record_id: body.agency_id }, { $set: { agency_name: name } }).catch(() => {});
           return Response.json({ ok: true, agency: updated });
         }
-        const owner = await base44.asServiceRole.entities.User.get(String(body.owner_user_id || '')).catch(() => null);
-        if (!owner) return Response.json({ error: 'Sahip seçilmedi.' }, { status: 400 });
+        const owner = body.owner_user_id
+          ? await base44.asServiceRole.entities.User.get(String(body.owner_user_id)).catch(() => null)
+          : await findUserByMemberId(body.owner_member_id);
+        if (!owner) return Response.json({ error: 'Sahip bulunamadı, üye kimliğini kontrol et.' }, { status: 400 });
         let agency: any = null;
         for (let attempt = 0; attempt < 5 && !agency; attempt += 1) {
           const code = generateAgencyCode();
@@ -384,7 +410,9 @@ export default async function (req) {
       }
       if (action === 'admin-set-owner') {
         const agency = await base44.asServiceRole.entities.Agency.get(String(body.agency_id || '')).catch(() => null);
-        const owner = await base44.asServiceRole.entities.User.get(String(body.user_id || '')).catch(() => null);
+        const owner = body.user_id
+          ? await base44.asServiceRole.entities.User.get(String(body.user_id)).catch(() => null)
+          : await findUserByMemberId(body.member_id);
         if (!agency || !owner) return Response.json({ error: 'Ajans veya kullanıcı bulunamadı.' }, { status: 404 });
         const previous = agency.owner_id;
         await base44.asServiceRole.entities.Agency.update(agency.id, {
@@ -397,7 +425,9 @@ export default async function (req) {
         return Response.json({ ok: true });
       }
       if (action === 'admin-broadcaster-add') {
-        const member = await base44.asServiceRole.entities.User.get(String(body.user_id || '')).catch(() => null);
+        const member = body.user_id
+          ? await base44.asServiceRole.entities.User.get(String(body.user_id)).catch(() => null)
+          : await findUserByMemberId(body.member_id);
         const agency = await base44.asServiceRole.entities.Agency.get(String(body.agency_id || '')).catch(() => null);
         if (!member || !agency) return Response.json({ error: 'Kullanıcı veya ajans bulunamadı.' }, { status: 404 });
         await base44.asServiceRole.entities.User.update(member.id, userPatch({ ...agency, owner_id: agency.owner_id }));

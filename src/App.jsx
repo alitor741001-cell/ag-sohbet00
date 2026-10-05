@@ -67,6 +67,7 @@ const AdminRoles = lazy(() => import('@/pages/admin/AdminRoles'));
 const AdminGifts = lazy(() => import('@/pages/admin/AdminGifts'));
 const AdminCoins = lazy(() => import('@/pages/admin/AdminCoins'));
 const AdminVip = lazy(() => import('@/pages/admin/AdminVip'));
+const AdminAgencies = lazy(() => import('@/pages/admin/AdminAgencies'));
 
 
 const AuthenticatedApp = () => {
@@ -137,6 +138,7 @@ const AuthenticatedApp = () => {
           <Route path="hediyeler" element={<AdminGifts />} />
           <Route path="coins" element={<AdminCoins />} />
           <Route path="vip" element={<AdminVip />} />
+          <Route path="ajanslar" element={<AdminAgencies />} />
           <Route path="filmler" element={<AdminMovies />} />
           <Route path="film-ekle" element={<AdminMovies />} />
           <Route path="kategoriler" element={<AdminCategories />} />
