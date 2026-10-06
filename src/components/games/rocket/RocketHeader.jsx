@@ -1,7 +1,7 @@
 import React from 'react';
-import { ArrowLeft, Crown, Film, Wallet, X } from 'lucide-react';
+import { ArrowLeft, Wallet, X } from 'lucide-react';
 
-/** Üst şerit: geri tuşu, FiLMKEYFi logosu, oyun defteri ve kapatma tuşu. */
+/** Üst şerit: geri tuşu, oyun adı, oyun defteri ve kapatma tuşu. */
 export default function RocketHeader({ onBack, onExit, onLedger }) {
   return (
     <header className="flex items-center gap-2 px-2 pb-1 pt-[max(0.5rem,env(safe-area-inset-top))]">
@@ -15,16 +15,7 @@ export default function RocketHeader({ onBack, onExit, onLedger }) {
       </button>
 
       <div className="flex min-w-0 flex-1 flex-col items-center leading-none">
-        <div className="flex items-center gap-1">
-          <Film className="h-3.5 w-3.5 text-[#00d4ff]" />
-          <span className="text-[15px] font-black tracking-tight text-white">
-            FiLMKEY<span className="text-red-500">Fi</span>
-          </span>
-          <Crown className="h-2.5 w-2.5 text-[#ffb800]" />
-        </div>
-        <span className="mt-0.5 text-[6px] font-bold tracking-[0.3em] text-white/50">
-          FİLMİN EN KEYİFLİ HALİ
-        </span>
+        <span className="text-[15px] font-black tracking-tight text-white">CRASH ROCKET</span>
       </div>
 
       <button

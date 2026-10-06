@@ -11,14 +11,11 @@ function PhoneScreen({ platform, step }) {
         <div className={`flex items-center gap-1.5 px-2 py-1.5 ${isAndroid ? 'bg-gray-100' : 'bg-gray-50'} border-b border-gray-200`}>
           <div className="flex-1 flex items-center gap-1 bg-white rounded-full px-2 py-1">
             <span className="text-[7px] text-gray-400">🔒</span>
-            <span className="text-[7px] text-gray-600 font-mono truncate">filmkeyfi.com</span>
+            <span className="text-[7px] text-gray-600 font-mono truncate">uygulama.app</span>
           </div>
         </div>
         <div className="flex-1 flex flex-col items-center justify-center bg-gradient-to-b from-gray-900 to-black p-2">
           <div className="text-center">
-            <p className="text-[10px] font-extrabold text-white tracking-tight">
-              <span className="text-red-500">FILM</span>KEYFİ
-            </p>
             <div className="mt-1.5 w-12 h-12 rounded-lg bg-gradient-to-br from-red-600 to-purple-700 flex items-center justify-center mx-auto">
               <Smartphone className="w-5 h-5 text-white" />
             </div>
@@ -34,7 +31,7 @@ function PhoneScreen({ platform, step }) {
       <div className="flex flex-col h-full bg-white relative">
         <div className={`flex items-center gap-1.5 px-2 py-1.5 ${isAndroid ? 'bg-gray-100' : 'bg-gray-50'} border-b border-gray-200 relative`}>
           <div className="flex-1 flex items-center gap-1 bg-white rounded-full px-2 py-1">
-            <span className="text-[7px] text-gray-600 font-mono truncate">filmkeyfi.com</span>
+            <span className="text-[7px] text-gray-600 font-mono truncate">uygulama.app</span>
           </div>
           {isAndroid ? (
             <div className="absolute top-1 right-1 flex flex-col gap-0.5 animate-pulse">
@@ -75,7 +72,7 @@ function PhoneScreen({ platform, step }) {
               <div className="w-4 h-4 rounded bg-gradient-to-br from-red-600 to-purple-700 flex items-center justify-center">
                 <Smartphone className="w-2 h-2 text-white" />
               </div>
-              <span className="text-[7px] font-bold text-gray-800">FILMKEYFİ</span>
+              <span className="text-[7px] font-bold text-gray-800">Uygulama</span>
             </div>
             <p className="text-[6px] text-gray-500 mt-1">Ana ekranınıza eklenecek</p>
             <div className="flex gap-1 mt-1.5">
@@ -103,7 +100,7 @@ function PhoneScreen({ platform, step }) {
         <div className="w-6 h-6 rounded-xl bg-gradient-to-br from-red-600 to-purple-700 flex items-center justify-center shadow-lg shadow-red-500/50 ring-2 ring-red-400/50">
           <Smartphone className="w-3 h-3 text-white" />
         </div>
-        <span className="text-[6px] font-bold text-white">FILMKEYFİ</span>
+        <span className="text-[6px] font-bold text-white">Uygulama</span>
       </div>
       <div className="grid grid-cols-3 gap-1.5 mt-1.5">
         {[1,2,3].map((i) => (
@@ -123,15 +120,15 @@ export default function DownloadGuide({ platform, onClose, variant = 'dark' }) {
   const isAndroid = platform === 'android';
 
   const steps = isAndroid ? [
-    { icon: Chrome, title: 'Chrome ile Açın', desc: 'fılmkeyfı uygulamasını Chrome tarayıcısında açın.' },
+    { icon: Chrome, title: 'Chrome ile Açın', desc: 'Web uygulamasını Chrome tarayıcısında açın.' },
     { icon: Share, title: 'Menüye Dokunun', desc: 'Sağ üstteki ⋮ (üç nokta) simgesine dokunun.' },
     { icon: Plus, title: 'Ana Ekrana Ekle', desc: 'Açılan menüden "Ana ekrana ekle" seçeneğine dokunun.' },
-    { icon: Check, title: 'Kurulum Tamam', desc: 'Ana ekranınızda FILMKEYFİ ikonu belirecek, tıklayarak açın.' },
+    { icon: Check, title: 'Kurulum Tamam', desc: 'Ana ekranınızda uygulama simgesi belirecek, tıklayarak açın.' },
   ] : [
-    { icon: Chrome, title: 'Safari ile Açın', desc: 'fılmkeyfı uygulamasını Safari tarayıcısında açın.' },
+    { icon: Chrome, title: 'Safari ile Açın', desc: 'Web uygulamasını Safari tarayıcısında açın.' },
     { icon: Share, title: 'Paylaş Tuşuna Basın', desc: 'Alt çubuktaki Paylaş (□↑) simgesine dokunun.' },
     { icon: Plus, title: 'Ana Ekrana Ekle', desc: 'Açılan menüden "Ana Ekrana Ekle" seçeneğini seçin.' },
-    { icon: Check, title: 'Kurulum Tamam', desc: 'Ana ekranınızda FILMKEYFİ ikonu belirecek, tıklayarak açın.' },
+    { icon: Check, title: 'Kurulum Tamam', desc: 'Ana ekranınızda uygulama simgesi belirecek, tıklayarak açın.' },
   ];
 
   const subText = isLight ? 'text-white/70' : 'text-muted-foreground';
@@ -201,7 +198,7 @@ export default function DownloadGuide({ platform, onClose, variant = 'dark' }) {
           </div>
 
           <p className={`text-xs text-center px-5 pb-3 ${subText}`}>
-            FILMKEYFİ bir PWA uygulamasıdır — App Store veya Play Store'a gerek yoktur.
+            Bu bir web uygulamasıdır — App Store veya Play Store'a gerek yoktur.
           </p>
         </div>
 

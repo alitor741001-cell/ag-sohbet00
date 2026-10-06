@@ -22,7 +22,7 @@ export default function CoinShopFooter() {
         ))}
       </div>
       <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-xs font-bold italic text-[#E8B95A]">
-        FilmKeyfi ile her an daha keyifli! <Crown className="h-3.5 w-3.5" />
+        Her an daha keyifli! <Crown className="h-3.5 w-3.5" />
       </p>
     </div>
   );

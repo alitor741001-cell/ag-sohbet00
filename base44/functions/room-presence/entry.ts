@@ -163,7 +163,9 @@ export default async function(req) {
             (person.user_id === user.id ? { ...person, name: hiddenDisplayName(me), avatar: HIDDEN_AVATAR_URL } : person));
           await base44.asServiceRole.entities.Room.update(room_id, { participants: maskedParticipants, ghost_entered_at: new Date().toISOString() });
         }
-        await updatePresenceRoom(base44, user.id, room_id);
+        // Gizli kullanıcı yayında görünmez: canlı oda işaretçisi boş bırakılır,
+        // arkadaş listesinde "odasında" ve "Katıl" çıkmaz.
+        await updatePresenceRoom(base44, user.id, '');
         return Response.json({ ok: true, hidden: true });
       }
       // Admin ghost mode: görünmez katılım
@@ -204,7 +206,8 @@ export default async function(req) {
           text: `${profileMeta}${frameMeta}${roleMeta}${titlePrefix}${entryName}odaya katıldı.`, type: 'system'
         });
       }
-      await updatePresenceRoom(base44, user.id, room_id);
+      // Gizli odada canlı oda işaretçisi yazılmaz: oda kimseye açık görünmez.
+      await updatePresenceRoom(base44, user.id, room.hidden === true ? '' : room_id);
       return Response.json({ ok: true });
     }
 
@@ -376,8 +379,23 @@ export default async function(req) {
 
     if (action === 'toggle-hidden') {
       if (!canModRoom) return Response.json({ error: 'yetkisiz' }, { status: 403 });
-      await base44.asServiceRole.entities.Room.update(room_id, { hidden: !room.hidden });
-      return Response.json({ ok: true, hidden: !room.hidden });
+      const willHide = !room.hidden;
+      await base44.asServiceRole.entities.Room.update(room_id, { hidden: willHide });
+      // Gizlenen oda kimseye "canlı" görünmez: içeridekilerin canlı oda işaretçisi silinir,
+      // arkadaşlarında "odasında / Katıl" ve yayında bilgisi kalmaz.
+      if (willHide) {
+        const insideIds = [...new Set([
+          ...(room.participants || []).map((person) => person.user_id),
+          ...(room.seats || []).map((seat) => seat.user_id),
+        ].filter(Boolean))];
+        if (insideIds.length) {
+          const records = await base44.asServiceRole.entities.UserPresence
+            .filter({ user_id: { $in: insideIds } }, '-created_date', insideIds.length).catch(() => []);
+          await Promise.all(records.map((record) => base44.asServiceRole.entities.UserPresence
+            .update(record.id, { current_room_id: '' }).catch(() => {})));
+        }
+      }
+      return Response.json({ ok: true, hidden: willHide });
     }
 
     // Film odasındaki mikrofon: odayı sesli sohbet moduna geçirmeden sesli sohbeti açar.

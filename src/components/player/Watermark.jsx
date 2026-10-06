@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 
 export default function Watermark({ user }) {
   const [pos, setPos] = useState({ top: '15%', left: '10%' });
-  const label = `FilmKeyfi · ${user?.username || user?.full_name || 'Anonim'} · ID:${(user?.id || '??????').slice(-6)}`;
+  const label = `${user?.username || user?.full_name || 'Anonim'} · ID:${(user?.id || '??????').slice(-6)}`;
 
   useEffect(() => {
     const move = () => {

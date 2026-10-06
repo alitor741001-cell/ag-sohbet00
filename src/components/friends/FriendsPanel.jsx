@@ -22,10 +22,13 @@ export default function FriendsPanel({ relations, userId, invoke, onChat, isOnli
   const getFriendRoom = (friendId) => {
     const roomId = getRoomId ? getRoomId(friendId) : '';
     if (!roomId) return null;
-    const room = rooms?.find((r) => r.id === roomId && r.status === 'active');
+    // Gizli oda arkadaşlara görünmez: "odasında" bilgisi ve "Katıl" düğmesi çıkmaz.
+    const room = rooms?.find((r) => r.id === roomId && r.status === 'active' && !r.hidden);
     if (!room) return null;
-    const isPublic = !room.hidden && !room.password;
-    return { room, isPublic };
+    // Kişi odadan çıkmışsa eski canlı kayıt kalmaz: yalnızca gerçekten içerideyse gösterilir.
+    const inside = [...(room.participants || []), ...(room.seats || [])].some((person) => person.user_id === friendId);
+    if (!inside) return null;
+    return { room, isPublic: !room.password };
   };
 
   return <div className="space-y-4"><FriendSearch invoke={invoke} /><FriendRequests relations={relations} userId={userId} invoke={invoke} /><section className="bg-card border border-border rounded-xl overflow-hidden"><h2 className="font-bold p-4 border-b border-border">Arkadaşlarım</h2>

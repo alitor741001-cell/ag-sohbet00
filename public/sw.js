@@ -2,7 +2,7 @@ self.addEventListener('install', (event) => { self.skipWaiting(); });
 self.addEventListener('activate', (event) => { event.waitUntil(self.clients.claim()); });
 
 self.addEventListener('push', (event) => {
-  let data = { title: 'FILMKEYFİ', body: '', url: '/' };
+  let data = { title: 'Canlı Odalar', body: '', url: '/' };
   try { data = JSON.parse(event.data.text()); } catch {}
   event.waitUntil(
     self.registration.showNotification(data.title, {

@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Mail, Lock, Loader2, Eye, EyeOff, ArrowRight, Sparkles, MessageSquare, Lock as LockIcon, Users, AlertCircle } from "lucide-react";
 import AuthBackground from "@/components/auth/AuthBackground";
-import { Image } from "@/components/ui/image";
 import SupportWidget from "@/components/auth/SupportWidget";
 import DownloadButtons from "@/components/DownloadButtons";
 import { safeReturnTo } from "@/lib/authReturnTo";
@@ -103,12 +102,8 @@ export default function Login() {
 
   return (
     <AuthBackground>
-      {/* Logo */}
+      {/* Açılışta marka logosu gösterilmez: uygulama doğrudan içeriğe geçer. */}
       <div className="text-center mb-8">
-        <div className="inline-flex items-center gap-2 mb-2">
-          <Image src="https://media.base44.com/images/public/6a77d66e4da6de214628ee62/25f1dd86b_351A5169-7769-4C41-8816-B20112620648.png" alt="FILMKEYFİ" className="w-12 h-12 rounded-xl" fittingType="fill" />
-          <h1 className="text-2xl font-bold tracking-tight text-white">FİLM KEYFİ</h1>
-        </div>
         <p className="text-sm text-[#a0a0a0]">Filmini seç, keyfini çıkar.</p>
       </div>
 
@@ -274,7 +269,7 @@ export default function Login() {
         <DownloadButtons variant="light" />
       </div>
 
-      <p className="text-center text-xs text-[#555] mt-6">© 2024 Film Keyfi. Tüm hakları saklıdır.</p>
+      <p className="text-center text-xs text-[#555] mt-6">© 2024. Tüm hakları saklıdır.</p>
 
       {/* Canlı destek butonu */}
       <SupportWidget />

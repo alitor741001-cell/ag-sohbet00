@@ -4,7 +4,7 @@
 export const ART_WIDTH = 1018;
 export const ART_HEIGHT = 1545;
 
-// Görselin üstünde "filmkeyfi" yazısının başladığı yer: kazanan şeridi bu
+// Görselin üstünde oyun başlığının başladığı yer: kazanan şeridi bu
 // altın çizginin üzerine kadar iner, yazıyı kapatmaz.
 export const LOGO_TOP = 0.06;
 

@@ -73,7 +73,7 @@ export default function SlotGame({ onExit, onBack, roomId }) {
   const height = ART_HEIGHT * scale;
   // Görselin üst kenarı: görselin içindeki yazılar buradan ölçülür.
   const artTop = Math.max(0, (panelHeight || 0) - height);
-  // Şerit, "filmkeyfi" yazısının hemen üstündeki altın çizgiye kadar iner.
+  // Şerit, başlığın hemen üstündeki altın çizgiye kadar iner.
   const goldLine = artTop + LOGO_TOP * height;
   const tickerHeight = Math.max(MIN_TICKER_SPACE, Math.round(goldLine - safeTop));
   // Şeridin bittiği yer: altındaki rozet bu altın çizginin altına hizalanır.
@@ -98,7 +98,7 @@ export default function SlotGame({ onExit, onBack, roomId }) {
           <div className="relative" style={{ width, height }}>
             <Image
               src={SLOT_ART.shell}
-              alt="filmkeyfi slot"
+              alt="slot"
               className="absolute inset-0 h-full w-full"
               fittingType="fill"
               quality={92}

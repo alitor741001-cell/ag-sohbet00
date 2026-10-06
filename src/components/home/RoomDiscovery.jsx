@@ -41,13 +41,14 @@ export default function RoomDiscovery({ shortcuts = null }) {
   // de ana sayfaya geri dönmez (olay yalnızca değişen alanları taşıyabilir).
   const hiddenIdsRef = useRef(new Set());
 
-  // Gizli oda hiçbir listede görünmez: sahibi ve yönetici hesabında da kartı çıkmaz.
+  // Gizli oda hiçbir listede görünmez: sahibinin ve yöneticinin listesinde de kartı çıkmaz.
+  // Yalnızca içinde izleyici/konuşmacı bulunan oda "açık" sayılır; boş odanın kartı çıkmaz.
   const isVisible = (room) =>
     !!room &&
     room.status === 'active' &&
     room.hidden !== true &&
     !hiddenIdsRef.current.has(room.id) &&
-    ((room.participants?.length || 0) > 0 || room.owner_id === user?.id);
+    (room.participants?.length || 0) > 0;
 
   useEffect(() => {
     let alive = true;
