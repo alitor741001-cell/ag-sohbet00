@@ -41,12 +41,14 @@ export default function RoomDiscovery({ shortcuts = null }) {
   // de ana sayfaya geri dönmez (olay yalnızca değişen alanları taşıyabilir).
   const hiddenIdsRef = useRef(new Set());
 
-  // Gizli oda hiçbir listede görünmez: sahibinin ve yöneticinin listesinde de kartı çıkmaz.
-  const isCandidate = (room) =>
-    !!room &&
-    room.status === 'active' &&
-    room.hidden !== true &&
-    !hiddenIdsRef.current.has(room.id);
+  // Gizli odalar yalnızca yönetici hesabında görünür; diğer herkesin listesinde çıkmaz.
+  const canSeeHidden = user?.role === 'admin';
+  const isCandidate = (room) => {
+    if (!room || room.status !== 'active') return false;
+    if (canSeeHidden) return true;
+    // Gizli oda görünmez; canlı olayla geri gelmesin diye işaretli olanlar da elenir.
+    return room.hidden !== true && !hiddenIdsRef.current.has(room.id);
+  };
 
   // Oda açıldığı anda listelenir; çevrim içi işaretçisi beklenmez.
   // Görünürlük yalnızca odanın aktif ve gizlenmemiş olmasına bağlıdır.

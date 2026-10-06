@@ -97,8 +97,9 @@ export default async function(req) {
     }
 
     if (action === 'join') {
-      // Rate limit: 10 katılım / dakika / kullanıcı
-      const rlJoin = await rateLimit(base44, 'room-join:' + user.id, user.id, 10, 60000);
+      // Rate limit: 30 katılım / dakika / kullanıcı — yayınlar arasında gezinirken
+      // hızlı oda değiştirmek hata vermesin diye sınır gevşetildi, üst sınır korunuyor.
+      const rlJoin = await rateLimit(base44, 'room-join:' + user.id, user.id, 30, 60000);
       if (!rlJoin.allowed) return Response.json({ error: 'çok hızlı katılım denemesi' }, { status: 429 });
       // Yönetici hesabı her odaya girebilir: engel kaydı ve kapasite onu durdurmaz.
       if (!isOwner && !isAdmin) {

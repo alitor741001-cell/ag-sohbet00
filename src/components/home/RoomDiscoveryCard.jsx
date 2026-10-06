@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { BarChart3, Check, Film, Lock, Mic } from 'lucide-react';
+import { BarChart3, Check, EyeOff, Film, Lock, Mic } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import { youtubeIdFromMovieId } from '@/lib/youtubeTitle';
 import { prefetchRoomCancel, prefetchRoomSoon } from '@/lib/roomPrefetch';
@@ -8,9 +8,12 @@ import { prefetchRoomCancel, prefetchRoomSoon } from '@/lib/roomPrefetch';
 export default function RoomDiscoveryCard({ room, owner, kind, filmTitle, friendInside }) {
   const viewers = room.participants?.length || 0;
   const isVoice = kind === 'voice';
+  // Gizli oda yalnızca yönetici listesine düşer: kartın sağ altında işaretlenir.
+  const isHidden = room.hidden === true;
   const videoId = isVoice ? '' : youtubeIdFromMovieId(room.movie_id);
   const cover = isVoice ? owner?.avatar : videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : '';
-  const people = (room.participants || []).slice(0, 3);
+  // Gizli etiketi sığsın diye o kartta iki kişi gösterilir.
+  const people = (room.participants || []).slice(0, isHidden ? 2 : 3);
   const ownerName = owner?.username || owner?.full_name || room.owner_name || 'Kullanıcı';
   const to = isVoice ? `/sesli-oda/${room.id}` : `/oda/${room.id}`;
 
@@ -91,6 +94,11 @@ export default function RoomDiscoveryCard({ room, owner, kind, filmTitle, friend
               <span className="text-[10px] font-bold text-white/60">+{viewers - people.length}</span>
             )}
           </span>
+          {isHidden && (
+            <span className="flex shrink-0 items-center gap-1 rounded-full border border-premium-gold/60 bg-anthracite/95 px-2 py-0.5 text-[9.5px] font-black text-premium-gold shadow-[0_0_12px_-3px_rgba(212,175,55,0.9)]">
+              <EyeOff className="h-3 w-3" /> Gizli oda
+            </span>
+          )}
         </span>
       </div>
     </Link>

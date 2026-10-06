@@ -16,7 +16,7 @@ function readEnabled() {
  * Sesli odalar arasında yukarı/aşağı kaydırma: parmak yukarı → daha eski yayın,
  * parmak aşağı → daha yeni yayın. Sıra ana sayfadaki canlı oda listesiyle aynıdır.
  */
-export default function useRoomSwipeNav({ roomId, active, navigate }) {
+export default function useRoomSwipeNav({ roomId, userId, active, navigate }) {
   const [swipeEnabled, setSwipeEnabled] = useState(readEnabled);
   const roomsRef = useRef([]);
 
@@ -37,18 +37,27 @@ export default function useRoomSwipeNav({ roomId, active, navigate }) {
       .then((list) => {
         if (!alive) return;
         roomsRef.current = list.filter(
-          (room) => room.hidden !== true && (room.room_type === 'voice' || room.voice_mode === true)
+          (room) =>
+            room.hidden !== true &&
+            (room.room_type === 'voice' || room.voice_mode === true) &&
+            // Kendi yayını listede yer almaz: gezerken kişinin kendi odası karşısına çıkmaz.
+            (!userId || room.owner_id !== userId)
         );
       })
       .catch(() => {});
     return () => { alive = false; };
-  }, [swipeEnabled, active, roomId]);
+  }, [swipeEnabled, active, roomId, userId]);
 
   // Yön: +1 daha eski yayın, -1 daha yeni yayın.
   const step = useCallback((direction) => {
     const list = roomsRef.current;
     const index = list.findIndex((room) => room.id === roomId);
-    if (index < 0) return;
+    // Kişi kendi odasındayken (kendi yayını listede yok) gezinti listenin ucundan başlar.
+    if (index < 0) {
+      const edge = direction > 0 ? list[0] : list[list.length - 1];
+      if (edge) navigate(`/sesli-oda/${edge.id}`);
+      return;
+    }
     const target = list[index + direction];
     if (!target) return;
     navigate(`/sesli-oda/${target.id}`);

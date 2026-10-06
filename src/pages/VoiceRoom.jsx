@@ -152,7 +152,7 @@ export default function VoiceRoom() {
 
   // Koltukta değilken yukarı/aşağı kaydırma: diğer canlı sesli odalara geçilir.
   // Ayarlar bölümündeki anahtarla açılıp kapanır; koltukta otururken hiç çalışmaz.
-  const swipe = useRoomSwipeNav({ roomId: id, active: joined && !seated, navigate });
+  const swipe = useRoomSwipeNav({ roomId: id, userId: user?.id, active: joined && !seated, navigate });
   const swipeGesture = useVerticalSwipe({
     enabled: joined && !seated && swipe.swipeEnabled,
     onSwipeUp: swipe.goNext,
@@ -376,7 +376,8 @@ export default function VoiceRoom() {
       } catch (error) {
         const data = error?.response?.data || {};
         // Şifre, onay ve yasak gibi kesin cevaplar bekletilmez; yalnızca geçici hatalar tekrarlanır.
-        const transient = !data.error || error?.response?.status >= 500;
+        // Yoğunluk (429) da geçici sayılır: yayınlar arasında gezinirken anlık sınır hata ekranı çıkarmaz.
+        const transient = !data.error || error?.response?.status >= 500 || error?.response?.status === 429;
         if (transient && attempt < 2) {
           await new Promise((resolve) => window.setTimeout(resolve, 700 * (attempt + 1)));
           continue;
