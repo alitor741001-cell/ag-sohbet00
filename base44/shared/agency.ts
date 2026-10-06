@@ -65,8 +65,8 @@ export const assistantInviteExpiry = (from: Date = new Date()) =>
 export function assistantInviteText({ ownerName, ownerMemberId, agencyName, agencyId, share }: any) {
   return [
     `👑🗿${ownerName}🪪🪽(${ownerMemberId}) sizi kendi ajansı ${agencyName}(${agencyId}) için ajans yardımcısı olmaya davet ediyor.`,
-    `Davet ettiğiniz yayıncılarda gerçekleşen ajans komisyonunun %${share} kadarını sizinle paylaşmaktan mutluluk duyacaklar. Bu daveti kabul ettiğinizde, onların ajansına katılacaksınız.`,
-    `Ajans davetiyelerini doğrudan yayıncılara gönderebilir ve uygulamada davet ettiğiniz tüm yayıncıları görüntüleyebilirsiniz; davet ettiğiniz yayıncılar tarafından oluşturulan ajans komisyonlarının %${share} kadarı otomatik olarak hesabınıza gönderilecektir.`,
+    `Davet ettiğiniz yayıncılarda gerçekleşen ajans komisyonun ${share}% kadarını sizinle paylaşmaktan mutluluk duyacaklar. Bu daveti kabul ettiğinizde, onların ajansına katılacaksınız.`,
+    `Ajans davetiyelerini doğrudan yayıncılara gönderebilir ve uygulamada davet ettiğiniz tüm yayıncıları görüntüleyebilirsiniz; davet ettiğiniz yayıncılar tarafından oluşturulan ajans komisyonlarının ${share}% kadarı otomatik olarak hesabınıza gönderilecektir.`,
     `Bu daveti ${ASSISTANT_INVITE_DAYS} gün sonra artık kabul edemeyeceğiniz için lütfen kısa süre içinde değerlendirin.`,
   ].join(' ');
 }
