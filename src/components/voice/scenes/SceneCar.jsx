@@ -1,10 +1,14 @@
 import { Image } from '@/components/ui/image';
 import GiftVisual from '@/components/voice/scenes/GiftVisual';
 
+// Spor araba görselinin siyah zemini alfaya çevrildi: araba kutunun içinde değil,
+// gerçekten yolda gidiyor gibi görünür (bkz. public/gifts/spor-araba.png).
+const CAR_CUTOUT = '/gifts/spor-araba.png';
+
 /** Yol sahnesi: hediye arabanın üstünde, farları yanarak gece yolunda hızla geçer. */
 export default function SceneCar({ gift }) {
-  // Araba görseli olan hediyede resim doğrudan araç olur: farları yanar, gövdesi yolda titrer,
-  // hız çizgileri ardında akar — hediye durağan resim gibi değil, geçen bir araba gibi görünür.
+  // Görselli hediyede arabanın kendisi yola çıkar; zemin şeffaf olduğu için kare iz kalmaz,
+  // asfalt üstündeki far ışığı ve silueti izleyen ışıltı aracı yola oturtur.
   if (gift?.imageUrl) {
     return (
       <div className="gift-scene gift-scene-car">
@@ -13,16 +17,16 @@ export default function SceneCar({ gift }) {
           <div className="gift-scene-road-line" />
         </div>
         <div className="gift-scene-vehicle gift-scene-car-photo">
-          <span className="gift-scene-car-photo-img">
-            <Image
-              src={gift.imageUrl}
-              alt={gift.name || 'Spor araba'}
-              className="h-full w-full"
-              fittingType="fit"
-              originWidth={1774}
-              originHeight={887}
-            />
-          </span>
+          <span className="gift-scene-car-glow" />
+          <span className="gift-scene-car-roadlight" />
+          <Image
+            src={CAR_CUTOUT}
+            alt={gift.name || 'Spor araba'}
+            className="gift-scene-car-photo-img"
+            fittingType="fit"
+            originWidth={640}
+            originHeight={320}
+          />
           <span className="gift-scene-car-streaks" />
           <div className="gift-scene-car-beam" />
         </div>
