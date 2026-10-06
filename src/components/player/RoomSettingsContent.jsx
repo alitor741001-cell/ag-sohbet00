@@ -55,8 +55,7 @@ export default function RoomSettingsContent({ room, canMod, participants, roomMo
         )}
         {room.is_personal && (
           <>
-            {/* Düğme durumu yazar: görünürken "Gizle", gizlendikten sonra "Gizlide". */}
-            <button onClick={onHidden} className={button}>{room.hidden ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />} {room.hidden ? 'Gizlide' : 'Gizle'}</button>
+            <button onClick={onHidden} className={button}>{room.hidden ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />} {room.hidden ? 'Odayı görünür yap' : 'Odayı gizle'}</button>
             <button onClick={() => room.password ? onRemovePassword() : setPasswordOpen(!passwordOpen)} className={button}>{room.password ? <Unlock className="w-4 h-4" /> : <Lock className="w-4 h-4" />} {room.password ? 'Şifreyi kaldır' : 'Şifre koy'}</button>
             {passwordOpen && !room.password && <div className="flex gap-2"><input value={password} onChange={(e) => setPassword(e.target.value)} type="password" placeholder="Oda şifresi" className="min-w-0 flex-1 rounded-full border border-white/15 bg-[#0d0d0d] px-4 py-2 text-sm text-white outline-none placeholder:text-white/40 focus:border-[#FFD700]/60" /><button onClick={onPassword} disabled={!password.trim()} className="shrink-0 rounded-full border border-[#FFD700] bg-[#FFD700] px-4 text-xs font-bold text-black shadow-[0_0_14px_-3px_rgba(255,215,0,0.95)] disabled:opacity-50">KAYDET</button></div>}
             {onToggleApproval && (

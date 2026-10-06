@@ -28,17 +28,13 @@ export default function useRoomMusic(roomId, enabled) {
   const wantPlayRef = useRef(false);
 
   // Odanın şarkı listesi: yüklenen şarkılar burada birikir, listeden tek dokunuşla açılır.
-  // Liste bir kez başarısız olduğunda boşaltılmaz (telefonda odaya katılım gecikebilir):
-  // eldeki şarkılar ekranda kalır ve istek kısa bir beklemeyle tekrar denenir.
   const fetchLibrary = useCallback(async () => {
     if (!roomId || !enabled) return;
-    for (let attempt = 0; attempt < 2; attempt += 1) {
-      try {
-        const response = await base44.functions.invoke('voice-room', { room_id: roomId, action: 'music-library' });
-        const tracks = response?.data?.tracks;
-        if (Array.isArray(tracks)) { setLibrary(tracks); return; }
-      } catch { /* ağ hatası: aşağıda tekrar denenir */ }
-      if (attempt === 0) await new Promise((resolve) => { window.setTimeout(resolve, 900); });
+    try {
+      const response = await base44.functions.invoke('voice-room', { room_id: roomId, action: 'music-library' });
+      setLibrary(response?.data?.tracks || []);
+    } catch {
+      setLibrary([]);
     }
   }, [roomId, enabled]);
 
@@ -128,10 +124,7 @@ export default function useRoomMusic(roomId, enabled) {
       if (response?.timeout) return 'timeout';
       if (response?.error) return 'error';
       setMusic(response.data?.music || null);
-      // Liste sunucudan yanıtla birlikte gelir: telefonda ayrı liste isteği gecikse de
-      // yüklediğin şarkı listende anında görünür.
-      if (Array.isArray(response.data?.tracks)) setLibrary(response.data.tracks);
-      else await withTimeout(fetchLibrary());
+      await withTimeout(fetchLibrary());
       return 'ok';
     } catch (error) {
       return error?.response?.status === 429 ? 'busy' : 'error';
@@ -154,7 +147,6 @@ export default function useRoomMusic(roomId, enabled) {
         url: signed.signed_url,
       });
       setMusic(response.data?.music || null);
-      if (Array.isArray(response.data?.tracks)) setLibrary(response.data.tracks);
       return 'ok';
     } catch (error) {
       return error?.response?.status === 429 ? 'busy' : 'error';
