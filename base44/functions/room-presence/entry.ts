@@ -380,12 +380,12 @@ export default async function(req) {
     if (action === 'toggle-hidden') {
       if (!canModRoom) return Response.json({ error: 'yetkisiz' }, { status: 403 });
       const willHide = !room.hidden;
-      // Ana sayfada kişi başına tek oda görünür: gizleme/gösterme sahibin tüm aktif
-      // odalarına uygulanır, aksi halde eski kopya oda yüzünden liste değişmez.
-      const ownedRooms = await base44.asServiceRole.entities.Room
-        .filter({ owner_id: room.owner_id, status: 'active' }, '-created_date', 20);
-      await Promise.all((ownedRooms.length ? ownedRooms : [room])
-        .map((item) => base44.asServiceRole.entities.Room.update(item.id, { hidden: willHide })));
+      // Ana sayfada kişi tek odayla görünür: gizleme sahibin tüm aktif odalarını kapsar,
+      // "göster" ise yalnızca bu odayı listeye döndürür — geriye tek görünür oda kalır.
+      const targets = willHide
+        ? await base44.asServiceRole.entities.Room.filter({ owner_id: room.owner_id, status: 'active' }, '-created_date', 20)
+        : [room];
+      await Promise.all(targets.map((item) => base44.asServiceRole.entities.Room.update(item.id, { hidden: willHide })));
       // Gizlenen oda kimseye "canlı" görünmez, görünür yapılınca yeniden canlı sayılır:
       // içeridekilerin canlı oda işaretçisi buna göre yazılır. İşaretçi tüm uygulamalara
       // anlık yayınlandığı için gizleme/gösterme ana sayfaya anında yansır.

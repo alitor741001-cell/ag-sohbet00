@@ -63,6 +63,16 @@ export default async function(req) {
       ));
     }
 
+    // Tek oda kuralı: kişisel oda açılırken sahibin diğer aktif odaları (sesli oda vb.)
+    // kapatılır; ana sayfada kişi tek odayla ve o anki moduyla görünür.
+    const ownerRooms = await base44.asServiceRole.entities.Room
+      .filter({ owner_id: user.id, status: 'active' }, '-created_date', 30).catch(() => []);
+    await Promise.all(ownerRooms
+      .filter((r) => !r.is_personal)
+      .map((r) => base44.asServiceRole.entities.Room.update(r.id, {
+        status: 'closed', is_playing: false, participants: [], recent_participants: []
+      }).catch(() => {})));
+
     if (existing[0]) {
       // Eski odada kod yoksa ekle
       if (!existing[0].personal_room_code) {

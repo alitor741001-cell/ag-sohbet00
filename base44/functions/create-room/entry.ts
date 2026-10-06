@@ -74,11 +74,13 @@ export default async function(req) {
     let room_number = 1;
     while (usedNumbers.has(room_number)) room_number++;
 
-    // Ana sayfada herkes tek odasıyla görünür: yeni oda açılırken sahibin önceki
-    // aktif odaları gizlenir, aksi halde gizlenen odanın yerine eski oda listede kalır.
+    // Tek oda kuralı: kişinin aynı anda tek aktif odası olur. Yeni oda açılırken önceki
+    // odaları kapatılır; böylece ana sayfada kişi tek odayla ve o anki moduyla görünür.
     await Promise.all(activeRooms
       .filter((r) => r.owner_id === user.id)
-      .map((r) => base44.asServiceRole.entities.Room.update(r.id, { hidden: true })));
+      .map((r) => base44.asServiceRole.entities.Room.update(r.id, {
+        status: 'closed', is_playing: false, participants: [], recent_participants: []
+      })));
 
     const room = await base44.asServiceRole.entities.Room.create({
       name, movie_id: isVoiceRoom ? 'voice' : movie_id, movie_title: isVoiceRoom ? '' : (movie_title || ''),

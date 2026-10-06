@@ -166,15 +166,17 @@ export default function RoomDiscovery({ shortcuts = null }) {
   }, [rooms, friendIds]);
   const hasFriendInside = (room) => friendRoomIds.has(room.id);
 
-  // Ana ekranda herkes tek odasıyla görünür: kişinin en yeni odası listelenir.
+  // Ana ekranda herkes tek odasıyla görünür: kişinin en son kullandığı oda listelenir,
+  // böylece kart kişinin o an içinde olduğu odayı ve modunu (film/koltuklu) yansıtır.
   const uniqueRooms = useMemo(() => {
-    const newest = new Map();
+    const latest = new Map();
     rooms.forEach((room) => {
       const key = room.owner_id || room.id;
-      const current = newest.get(key);
-      if (!current || new Date(room.created_date || 0) > new Date(current.created_date || 0)) newest.set(key, room);
+      const current = latest.get(key);
+      const stamp = (item) => new Date(item.updated_date || item.created_date || 0);
+      if (!current || stamp(room) > stamp(current)) latest.set(key, room);
     });
-    return [...newest.values()].sort((a, b) => new Date(b.created_date || 0) - new Date(a.created_date || 0));
+    return [...latest.values()].sort((a, b) => new Date(b.created_date || 0) - new Date(a.created_date || 0));
   }, [rooms]);
 
   const voiceRooms = useMemo(() => uniqueRooms.filter((room) => isVoiceRoom(room)), [uniqueRooms]);
