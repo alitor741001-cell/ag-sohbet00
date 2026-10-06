@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { ArrowUpRight, Coins, Loader2 } from 'lucide-react';
+import { ArrowUpRight, Coins, Loader2, Trash2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Image } from '@/components/ui/image';
 import { useToast } from '@/components/ui/use-toast';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 /** Gönderim tarihi ve saati: 04.10.2026 / 14:32 */
 const formatWhen = (iso) => {
@@ -22,6 +23,9 @@ export default function CoinRecentTable({ grants = [], loading, onReverted }) {
   const { toast } = useToast();
   const [showAll, setShowAll] = useState(false);
   const [busyId, setBusyId] = useState(null);
+  const [confirmSingle, setConfirmSingle] = useState(null);
+  const [confirmClear, setConfirmClear] = useState(false);
+  const [clearing, setClearing] = useState(false);
   const visible = showAll ? grants : grants.slice(0, 5);
 
   const revert = async (grant) => {
@@ -38,15 +42,60 @@ export default function CoinRecentTable({ grants = [], loading, onReverted }) {
     }
   };
 
+  // Tek kaydı listeden siler (bakiye değişmez).
+  const removeOne = async () => {
+    const grant = confirmSingle;
+    if (!grant) return;
+    setBusyId(grant.id);
+    try {
+      await base44.functions.invoke('coin-admin', { action: 'deleteGrant', grant_id: grant.id });
+      toast({ title: 'Kayıt silindi', description: `${grant.user_name || 'Kullanıcı'} işlemi listeden kaldırıldı.` });
+      onReverted?.();
+    } catch (error) {
+      toast({ title: 'Silinemedi', description: error?.response?.data?.error || error.message, variant: 'destructive' });
+    } finally {
+      setBusyId(null);
+      setConfirmSingle(null);
+    }
+  };
+
+  // Tüm işlem kayıtlarını siler: yalnız liste temizlenir, coinler geri alınmaz.
+  const clearAll = async () => {
+    setClearing(true);
+    try {
+      const response = await base44.functions.invoke('coin-admin', { action: 'clearGrants' });
+      const deleted = Number(response.data?.deleted) || grants.length;
+      toast({ title: 'Son işlemler silindi', description: `${deleted} kayıt kaldırıldı.` });
+      onReverted?.();
+    } catch (error) {
+      toast({ title: 'Silinemedi', description: error?.response?.data?.error || error.message, variant: 'destructive' });
+    } finally {
+      setClearing(false);
+      setConfirmClear(false);
+    }
+  };
+
   return (
     <div className="rounded-2xl border border-white/10 bg-[#13131E] p-4">
       <div className="mb-3 flex items-center justify-between gap-2">
         <p className="text-sm font-bold text-white">Son İşlemler</p>
-        {grants.length > 5 && (
-          <button type="button" onClick={() => setShowAll((value) => !value)} className="text-[11px] font-bold text-[#A855F7]">
-            {showAll ? 'Daha Az' : 'Tümünü Gör >'}
-          </button>
-        )}
+        <div className="flex shrink-0 items-center gap-2">
+          {grants.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setConfirmClear(true)}
+              disabled={clearing}
+              className="flex h-7 items-center gap-1 rounded-lg border border-red-500/50 px-2 text-[10px] font-bold text-red-300 transition-transform active:scale-95 disabled:opacity-50"
+            >
+              {clearing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />} Tümünü Sil
+            </button>
+          )}
+          {grants.length > 5 && (
+            <button type="button" onClick={() => setShowAll((value) => !value)} className="text-[11px] font-bold text-[#A855F7]">
+              {showAll ? 'Daha Az' : 'Tümünü Gör >'}
+            </button>
+          )}
+        </div>
       </div>
 
       {loading ? (
@@ -101,18 +150,29 @@ export default function CoinRecentTable({ grants = [], loading, onReverted }) {
                       <p className="text-[10px] font-semibold text-white/40">{when.time}</p>
                     </td>
                     <td className="py-2.5 text-right">
-                      {grant.status === 'active' ? (
+                      <div className="flex items-center justify-end gap-1.5">
+                        {grant.status === 'active' ? (
+                          <button
+                            type="button"
+                            onClick={() => revert(grant)}
+                            disabled={busyId === grant.id}
+                            className="whitespace-nowrap rounded-md border border-red-500/60 px-2 py-1 text-[10px] font-bold text-red-400 transition-transform active:scale-95 disabled:opacity-50"
+                          >
+                            {busyId === grant.id ? 'İşleniyor' : 'Geri Çek'}
+                          </button>
+                        ) : (
+                          <span className="whitespace-nowrap text-[10px] font-semibold text-white/35">Geri çekildi</span>
+                        )}
                         <button
                           type="button"
-                          onClick={() => revert(grant)}
+                          onClick={() => setConfirmSingle(grant)}
                           disabled={busyId === grant.id}
-                          className="whitespace-nowrap rounded-md border border-red-500/60 px-2 py-1 text-[10px] font-bold text-red-400 transition-transform active:scale-95 disabled:opacity-50"
+                          aria-label="Kaydı sil"
+                          className="rounded-md border border-white/15 bg-white/5 p-1.5 text-white/55 transition-transform active:scale-95 disabled:opacity-50"
                         >
-                          {busyId === grant.id ? 'İşleniyor' : 'Geri Çek'}
+                          <Trash2 className="h-3.5 w-3.5" />
                         </button>
-                      ) : (
-                        <span className="whitespace-nowrap text-[10px] font-semibold text-white/35">Geri çekildi</span>
-                      )}
+                      </div>
                     </td>
                   </tr>
                 );
@@ -121,6 +181,24 @@ export default function CoinRecentTable({ grants = [], loading, onReverted }) {
           </table>
         </div>
       )}
+
+      <ConfirmDialog
+        open={!!confirmSingle}
+        onOpenChange={(next) => { if (!next) setConfirmSingle(null); }}
+        title="Kaydı sil"
+        description={`${confirmSingle?.user_name || 'Kullanıcı'} için ${Number(confirmSingle?.amount || 0).toLocaleString('tr-TR')} coin yükleme kaydı listeden silinecek. Kullanıcının bakiyesi etkilenmez.`}
+        confirmText="Sil"
+        onConfirm={removeOne}
+      />
+
+      <ConfirmDialog
+        open={confirmClear}
+        onOpenChange={setConfirmClear}
+        title="Son işlemleri sil"
+        description={`${grants.length} kayıt tamamen silinecek. Kullanıcıların coin bakiyeleri etkilenmez.`}
+        confirmText="Tümünü Sil"
+        onConfirm={clearAll}
+      />
     </div>
   );
 }

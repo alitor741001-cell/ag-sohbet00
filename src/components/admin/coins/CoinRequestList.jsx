@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Check, Coins, Loader2, X } from 'lucide-react';
+import { Check, Coins, Loader2, Trash2, X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Image } from '@/components/ui/image';
 import { useToast } from '@/components/ui/use-toast';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 const formatCoins = (value) => Math.max(0, Math.round(Number(value) || 0)).toLocaleString('tr-TR');
 const formatTl = (value) => `${Math.max(0, Number(value) || 0).toLocaleString('tr-TR')} ₺`;
@@ -25,6 +26,8 @@ export default function CoinRequestList({ onReviewed }) {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState(null);
+  const [confirmClear, setConfirmClear] = useState(false);
+  const [clearing, setClearing] = useState(false);
 
   const load = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
@@ -72,6 +75,23 @@ export default function CoinRequestList({ onReviewed }) {
     }
   };
 
+  // Tüm başvuruları siler: yalnız liste temizlenir, onaylanan coinler geri alınmaz.
+  const clearAll = async () => {
+    setClearing(true);
+    try {
+      const response = await base44.functions.invoke('coin-admin', { action: 'clearRequests' });
+      const deleted = Number(response.data?.deleted) || requests.length;
+      toast({ title: 'Başvurular silindi', description: `${deleted} başvuru listeden kaldırıldı.` });
+      await load();
+      onReviewed?.();
+    } catch (error) {
+      toast({ title: 'Silinemedi', description: error?.response?.data?.error || error.message, variant: 'destructive' });
+    } finally {
+      setClearing(false);
+      setConfirmClear(false);
+    }
+  };
+
   const pendingCount = requests.filter((request) => request.status === 'pending').length;
 
   return (
@@ -82,6 +102,16 @@ export default function CoinRequestList({ onReviewed }) {
         <span className="ml-auto rounded-full bg-amber-300/15 px-2.5 py-0.5 text-[10px] font-black text-amber-300">
           {pendingCount} bekleyen
         </span>
+        {requests.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setConfirmClear(true)}
+            disabled={clearing}
+            className="flex h-7 shrink-0 items-center gap-1 rounded-lg border border-red-500/50 px-2 text-[10px] font-bold text-red-300 transition-transform active:scale-95 disabled:opacity-50"
+          >
+            {clearing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />} Tümünü Sil
+          </button>
+        )}
       </div>
 
       {loading ? (
@@ -147,6 +177,15 @@ export default function CoinRequestList({ onReviewed }) {
           })}
         </div>
       )}
+
+      <ConfirmDialog
+        open={confirmClear}
+        onOpenChange={setConfirmClear}
+        title="Başvuru listesini sil"
+        description={`${requests.length} başvuru listeden tamamen silinecek. Onaylanmış coinler kullanıcıların hesabından düşülmez.`}
+        confirmText="Tümünü Sil"
+        onConfirm={clearAll}
+      />
     </div>
   );
 }

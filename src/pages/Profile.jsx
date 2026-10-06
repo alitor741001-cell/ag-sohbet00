@@ -13,6 +13,7 @@ import ProfileDetailsSection from '@/components/profile/ProfileDetailsSection';
 import ProfileSettings from '@/components/profile/ProfileSettings';
 import DeleteAccountSection from '@/components/profile/DeleteAccountSection';
 import GiftBoxPanel from '@/components/profile/GiftBoxPanel';
+import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
 import CoinActivityPanel from '@/components/profile/CoinActivityPanel';
 import VipBagPanel from '@/components/profile/VipBagPanel';
 
@@ -31,6 +32,7 @@ export default function Profile() {
   const [giftBoxOpen, setGiftBoxOpen] = useState(false);
   const [activityOpen, setActivityOpen] = useState(false);
   const [vipBagOpen, setVipBagOpen] = useState(false);
+  const [coinShopOpen, setCoinShopOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -50,10 +52,14 @@ export default function Profile() {
       .catch(() => {});
   };
 
-  useEffect(() => {
+  const loadWallet = () => {
     base44.functions.invoke('gift-box', { action: 'summary' })
       .then((response) => setWallet(response.data))
       .catch(() => {});
+  };
+
+  useEffect(() => {
+    loadWallet();
     loadVipCount();
   }, []);
 
@@ -116,6 +122,7 @@ export default function Profile() {
             onOpenCoins={() => setActivityOpen(true)}
             onOpenGiftBox={() => setGiftBoxOpen(true)}
             onOpenVipBag={() => setVipBagOpen(true)}
+            onOpenCoinShop={() => setCoinShopOpen(true)}
             onOpenAgency={isAdmin ? undefined : () => navigate('/ajans')}
           />
 
@@ -152,6 +159,11 @@ export default function Profile() {
       <GiftBoxPanel open={giftBoxOpen} onClose={() => setGiftBoxOpen(false)} />
       <CoinActivityPanel open={activityOpen} onClose={() => setActivityOpen(false)} />
       <VipBagPanel open={vipBagOpen} onClose={() => setVipBagOpen(false)} onChanged={loadVipCount} />
+      <CoinPurchasePanel
+        open={coinShopOpen}
+        coins={wallet?.coins ?? null}
+        onBack={() => { setCoinShopOpen(false); loadWallet(); }}
+      />
     </div>
   );
 }

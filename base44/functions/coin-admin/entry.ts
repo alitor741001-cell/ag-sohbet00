@@ -3,7 +3,7 @@ import { rateLimit, safeErrorResponse } from '../../shared/security.ts';
 import { ensureGiftWallet } from '../../shared/giftWallet.ts';
 import { addLoadedCoins } from '../../shared/userLevels.ts';
 
-const ACTIONS = ['lookup', 'grant', 'revert', 'list', 'requests', 'approve', 'reject'];
+const ACTIONS = ['lookup', 'grant', 'revert', 'list', 'requests', 'approve', 'reject', 'deleteGrant', 'clearGrants', 'clearRequests'];
 // Tek seferde yüklenebilecek en yüksek coin — kazara devasa yükleme olmasın.
 const MAX_GRANT = 50000000;
 
@@ -174,6 +174,49 @@ export default async function (req: Request): Promise<Response> {
       const found = await base44.asServiceRole.entities.CoinRequest.list('-created_date', requestLimit).catch(() => []);
       const requests = [...found].sort((a: any, b: any) => (a.status === 'pending' ? 0 : 1) - (b.status === 'pending' ? 0 : 1));
       return Response.json({ ok: true, requests });
+    }
+
+    // Son işlemlerden tek kayıt silme: yalnız liste kaydı kaldırılır, bakiye değişmez.
+    if (action === 'deleteGrant') {
+      const grantId = String(body?.grant_id || '');
+      if (!grantId) return Response.json({ error: 'Silinecek kayıt seçilmedi.' }, { status: 400 });
+      await base44.asServiceRole.entities.CoinGrant.delete(grantId);
+      await base44.asServiceRole.entities.AdminLog.create({
+        admin_id: user.id,
+        admin_name: adminName,
+        action: 'coin-grant-delete',
+        target: grantId,
+        details: 'Son işlemlerden tek kayıt silindi',
+      }).catch(() => {});
+      return Response.json({ ok: true });
+    }
+
+    // Son işlemlerin tamamını silme: liste temizlenir, kullanıcı bakiyeleri etkilenmez.
+    if (action === 'clearGrants') {
+      const all = await base44.asServiceRole.entities.CoinGrant.list('-created_date', 500).catch(() => []);
+      if (all.length) await base44.asServiceRole.entities.CoinGrant.deleteMany({});
+      await base44.asServiceRole.entities.AdminLog.create({
+        admin_id: user.id,
+        admin_name: adminName,
+        action: 'coin-grant-clear',
+        target: `${all.length} kayıt`,
+        details: 'Son işlemler tamamen silindi',
+      }).catch(() => {});
+      return Response.json({ ok: true, deleted: all.length });
+    }
+
+    // Coin başvuru listesinin tamamını silme: onaylanmış coinler hesaplardan düşülmez.
+    if (action === 'clearRequests') {
+      const all = await base44.asServiceRole.entities.CoinRequest.list('-created_date', 500).catch(() => []);
+      if (all.length) await base44.asServiceRole.entities.CoinRequest.deleteMany({});
+      await base44.asServiceRole.entities.AdminLog.create({
+        admin_id: user.id,
+        admin_name: adminName,
+        action: 'coin-request-clear',
+        target: `${all.length} başvuru`,
+        details: 'Coin başvuru listesi tamamen silindi',
+      }).catch(() => {});
+      return Response.json({ ok: true, deleted: all.length });
     }
 
     // Başvuru onayı: coinler kullanıcının bakiyesine yüklenir. Red: yükleme yapılmaz.

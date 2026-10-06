@@ -19,7 +19,7 @@ const GOLD_TONE = {
   boxShadow: '0 0 18px rgba(242,206,107,0.22)',
 };
 
-export default function ProfileWalletCards({ coins, giftScore, vipCount = 0, onOpenGiftBox, onOpenCoins, onOpenVipBag, onOpenAgency }) {
+export default function ProfileWalletCards({ coins, giftScore, vipCount = 0, onOpenGiftBox, onOpenCoins, onOpenVipBag, onOpenAgency, onOpenCoinShop }) {
   const coinText = coins === null || coins === undefined ? '—' : formatCoins(coins);
   const giftText = giftScore === null || giftScore === undefined ? '—' : formatScore(giftScore);
 
@@ -89,6 +89,22 @@ export default function ProfileWalletCards({ coins, giftScore, vipCount = 0, onO
           </button>
         )}
       </div>
+
+      {/* Coins Yükle: odadaki hediye kutusuyla aynı coin satın alma ekranını açar. */}
+      {onOpenCoinShop && (
+        <button
+          type="button"
+          onClick={onOpenCoinShop}
+          className="mx-auto flex items-center justify-center gap-2 rounded-2xl px-7 py-3 text-sm font-black text-white transition-transform active:scale-95"
+          style={{
+            background: 'linear-gradient(135deg, #c62828, #7f1d1d 55%, #d4af37)',
+            border: '1px solid rgba(242,206,107,0.55)',
+            boxShadow: '0 0 20px rgba(198,40,40,0.35)',
+          }}
+        >
+          <Coins className="h-4 w-4 shrink-0 text-[#f2ce6b]" /> Coins Yükle
+        </button>
+      )}
     </div>
   );
 }

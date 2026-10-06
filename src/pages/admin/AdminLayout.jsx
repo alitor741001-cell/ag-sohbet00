@@ -1,11 +1,9 @@
 import { useEffect, useState, useRef } from 'react';
 import { Outlet, NavLink, useNavigate, Link } from 'react-router-dom';
-import { Users, Film, FolderTree, Bell, Settings, LogOut, Menu, X, ShieldAlert, KeyRound, ChevronDown, ChevronRight, Flag, MessageCircle, Video, Smartphone, Moon, Target, Sparkles, Home, Gift, Coins, Building2 } from 'lucide-react';
+import { Users, Film, FolderTree, Bell, Settings, LogOut, Menu, X, ShieldAlert, KeyRound, ChevronDown, ChevronRight, Flag, MessageCircle, Video, Smartphone, Target, Sparkles, Home, Gift, Coins, Building2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { requestNotificationPermission } from '@/hooks/useAdminNotifications';
 import { useCurrentUser } from '@/lib/useCurrentUser';
-import ThemeToggle from '@/components/ThemeToggle';
-import { useTheme } from '@/lib/ThemeContext';
 import { Image } from '@/components/ui/image';
 import AdminNotifBell from '@/components/admin/AdminNotifBell';
 import LiveChatButton from '@/components/layout/LiveChatButton';
@@ -56,7 +54,6 @@ export default function AdminLayout() {
   const [twofaErr, setTwofaErr] = useState('');
   const [verifying, setVerifying] = useState(false);
   const [notifGranted, setNotifGranted] = useState(() => typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted');
-  const { cycleTheme } = useTheme();
   const handleNotif = async () => { const r = await requestNotificationPermission(); setNotifGranted(r === 'granted'); };
 
   useEffect(() => {
@@ -165,9 +162,6 @@ export default function AdminLayout() {
               <p className="text-sm font-semibold truncate flex items-center gap-1" style={{ color: SIDEBAR_TEXT }}>👑 {user?.username || user?.full_name || 'Admin'}</p>
               <p className="text-[10px] truncate" style={{ color: '#6b7280' }}>{user?.email}</p>
             </div>
-            <button onClick={cycleTheme} className="p-1.5 rounded-lg shrink-0" style={{ color: SIDEBAR_HEADING }} title="Tema değiştir">
-              <Moon className="w-4 h-4" />
-            </button>
           </div>
           <button onClick={logout} className="w-full flex items-center justify-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium border" style={{ color: LOGOUT_COLOR, borderColor: `${LOGOUT_COLOR}40`, background: `${LOGOUT_COLOR}10` }}>
             <LogOut className="w-4 h-4" /> Çıkış Yap
@@ -184,7 +178,6 @@ export default function AdminLayout() {
           <span className="ml-1 hidden min-[390px]:block font-bold text-white whitespace-nowrap">Admin Panel</span>
           <div className="ml-auto flex min-w-0 items-center gap-1">
             <LiveChatButton />
-            <ThemeToggle />
             <AdminNotifBell notifGranted={notifGranted} />
             <div className="flex shrink-0 items-center gap-1 rounded-lg bg-[#241A1A] p-1">
               {user?.avatar ? <Image src={user.avatar} className="w-7 h-7 rounded-full shrink-0" fittingType="fill" /> : <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ background: 'linear-gradient(135deg, #dc2626, #991b1b)' }}>{(user.username || user.full_name || user.email || 'A')[0].toUpperCase()}</div>}
@@ -199,7 +192,6 @@ export default function AdminLayout() {
           <span className="font-bold text-white">Admin Panel</span>
           <div className="ml-auto flex items-center gap-3">
             <LiveChatButton />
-            <ThemeToggle />
             <AdminNotifBell notifGranted={notifGranted} />
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#241A1A]">
               {user?.avatar ? <Image src={user.avatar} className="w-8 h-8 rounded-full shrink-0" fittingType="fill" /> : <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white" style={{ background: 'linear-gradient(135deg, #dc2626, #991b1b)' }}>{(user.username || user.full_name || user.email || 'A')[0].toUpperCase()}</div>}
