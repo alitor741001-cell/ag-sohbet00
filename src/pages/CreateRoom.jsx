@@ -1,20 +1,42 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
+import { readRoomPreset, saveRoomPreset } from '@/lib/roomPreset';
 import { useToast } from '@/components/ui/use-toast';
 import { Users, Lock, MessageSquare, Mic, Check, Home, Settings, Eye, EyeOff, Link2, Minus, Plus, Video } from 'lucide-react';
 import { youtubeIdFromUrl } from '@/lib/mediaSource';
 
 export default function CreateRoom() {
   const navigate = useNavigate();
-  const { user } = useCurrentUser();
+  const { user, setUser } = useCurrentUser();
   const { toast } = useToast();
   const [form, setForm] = useState({ name: '', youtube_link: '', password: '', max_users: 10, chat_enabled: true, voice_enabled: false, hidden: false });
   const [nameEdited, setNameEdited] = useState(false);
   const [showPass, setShowPass] = useState(false);
   const [saving, setSaving] = useState(false);
   const [opening, setOpening] = useState(false);
+  const prefilled = useRef(false);
+  // Kayıtlı sesli oda bilgisi varsa form hiç gösterilmez: oda doğrudan açılır.
+  const voicePreset = readRoomPreset(user, 'voice');
+
+  // Oda bilgileri hatırlanır: ad, şifre, kapasite ve seçenekler kayıtlıysa dolu gelir;
+  // yalnızca YouTube linki her seferinde yeniden seçilir.
+  useEffect(() => {
+    if (prefilled.current || !user) return;
+    const preset = readRoomPreset(user, 'film');
+    if (!preset) return;
+    prefilled.current = true;
+    setForm((current) => ({
+      ...current,
+      name: preset.name || current.name,
+      password: preset.password || '',
+      max_users: Number(preset.max_users) || current.max_users,
+      chat_enabled: preset.chat_enabled !== false,
+      voice_enabled: !!preset.voice_enabled,
+      hidden: !!preset.hidden,
+    }));
+  }, [user]);
 
   const submit = async (e) => {
     e.preventDefault();
@@ -34,10 +56,37 @@ export default function CreateRoom() {
             password: form.password, max_users: Number(form.max_users),
             chat_enabled: form.chat_enabled, voice_enabled: form.voice_enabled, hidden: form.hidden
           });
+      // Girilen bilgiler otomatik kaydedilir: sonraki kurulumda hazır gelir.
+      await saveRoomPreset('film', {
+        name: form.name.trim(), password: form.password, max_users: Number(form.max_users),
+        chat_enabled: form.chat_enabled, voice_enabled: form.voice_enabled, hidden: form.hidden,
+      }, setUser);
+      // Link olmadan sesli oda açıldıysa o bilgiler de hatırlanır.
+      if (voiceOnly) {
+        await saveRoomPreset('voice', {
+          name: form.name.trim(), seat_count: Number(res.data?.seat_count) || 8,
+          password: form.password, hidden: form.hidden,
+        }, setUser);
+      }
       toast({ title: voiceOnly ? 'Sesli oda oluşturuldu' : 'Oda oluşturuldu' });
       navigate(voiceOnly ? `/sesli-oda/${res.data.id}` : `/oda/${res.data.id}`);
     } catch (err) { toast({ title: 'Hata', description: err.response?.data?.error || err.message, variant: 'destructive' }); }
     finally { setSaving(false); }
+  };
+
+  // Kayıtlı bilgilerle sesli oda: forma girmeden anında açılır.
+  const openVoiceRoom = async () => {
+    if (opening) return;
+    setOpening(true);
+    try {
+      const res = await base44.functions.invoke('create-room', {
+        name: voicePreset.name, room_type: 'voice', seat_count: Number(voicePreset.seat_count) || 8,
+        password: voicePreset.password || '', hidden: !!voicePreset.hidden,
+      });
+      navigate(`/sesli-oda/${res.data.id}`);
+    } catch (e) {
+      toast({ title: 'Oda açılamadı', description: e.response?.data?.error || e.message, variant: 'destructive' });
+    } finally { setOpening(false); }
   };
 
   const openMyRoom = async () => {
@@ -76,9 +125,20 @@ export default function CreateRoom() {
         <button onClick={openMyRoom} disabled={opening} className="relative mt-4 w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-white active:scale-95 transition-transform disabled:opacity-60" style={{ background: 'linear-gradient(135deg, #b91c1c, #dc2626 52%, #f2ce6b)' }}>
           <Home className="w-5 h-5" /> {opening ? 'Açılıyor...' : 'Kendi Odamı Aç'}
         </button>
-        <Link to="/sesli-oda-kur" className="relative mt-2 w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-[#f2ce6b] border border-[#f2ce6b]/45 bg-[#f2ce6b]/10 active:scale-95 transition-transform">
-          <Mic className="w-5 h-5" /> Sesli Sohbet Odası Aç
-        </Link>
+        {voicePreset ? (
+          <button type="button" onClick={openVoiceRoom} disabled={opening} className="relative mt-2 w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-[#f2ce6b] border border-[#f2ce6b]/45 bg-[#f2ce6b]/10 active:scale-95 transition-transform disabled:opacity-60">
+            <Mic className="w-5 h-5" /> {opening ? 'Açılıyor...' : 'Sesli Sohbet Odası Aç'}
+          </button>
+        ) : (
+          <Link to="/sesli-oda-kur" className="relative mt-2 w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-[#f2ce6b] border border-[#f2ce6b]/45 bg-[#f2ce6b]/10 active:scale-95 transition-transform">
+            <Mic className="w-5 h-5" /> Sesli Sohbet Odası Aç
+          </Link>
+        )}
+        {voicePreset && (
+          <Link to="/sesli-oda-kur?duzenle=1" className="relative mt-2 block text-center text-xs font-semibold text-[#f2ce6b]/75 underline">
+            Sesli oda bilgilerini değiştir
+          </Link>
+        )}
       </div>
 
       <form onSubmit={submit} className="space-y-5">
