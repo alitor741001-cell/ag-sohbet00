@@ -474,7 +474,7 @@ export default async function (req) {
         user: {
           id: found.id, name: found.username || found.full_name || 'Kullanıcı', avatar: found.avatar || '',
           member_id: found.member_id || '-', agency_name: inSameAgency ? (found.agency_name || 'Ajansın') : (found.agency_name || ''),
-          agency_role: found.agency_role || '', in_agency: !!found.agency_record_id,
+          agency_role: found.agency_role || '', in_agency: !!found.agency_record_id, in_same_agency: inSameAgency && !!lookupAgency,
           friend: await isFriendOf(account.id, found.id),
         },
       });
@@ -508,7 +508,9 @@ export default async function (req) {
       if (!targetId || targetId === account.id) return Response.json({ error: 'Geçersiz kullanıcı.' }, { status: 400 });
       const target = await base44.asServiceRole.entities.User.get(targetId).catch(() => null);
       if (!target) return Response.json({ error: 'Kullanıcı bulunamadı.' }, { status: 404 });
-      if (target.agency_record_id) return Response.json({ error: 'Bu kullanıcı zaten bir ajansa bağlı.' }, { status: 400 });
+      // Kendi ajansının üyesine asistanlık verilebilir; başka bir ajansa bağlı kişi önce ayrılmalıdır.
+      const selfMember = target.agency_record_id === agency.id;
+      if (target.agency_record_id && !selfMember) return Response.json({ error: 'Bu kullanıcı zaten bir ajansa bağlı.' }, { status: 400 });
       const share = ASSISTANT_SHARES.includes(Number(body.share)) ? Number(body.share) : ASSISTANT_SHARES[0];
       await expireAssistantInvites(base44, agency).catch(() => {});
       const current = (agency.assistants || []).filter((row: any) => row.status === 'invited' || row.status === 'active');
@@ -516,6 +518,25 @@ export default async function (req) {
       if (current.some((row: any) => row.user_id === target.id)) return Response.json({ error: 'Bu kullanıcıya zaten asistanlık verildi.' }, { status: 400 });
       const rl = await rateLimit(base44, 'agency-assistant:' + account.id, account.id, 20, 60000);
       if (!rl.allowed) return Response.json({ error: 'Çok fazla deneme, biraz bekleyin.' }, { status: 429 });
+      // Kendi ajansındaki üye davet beklemez: asistanlık doğrudan verilir, üyelik ve kazanç akışı korunur.
+      if (selfMember) {
+        const now = new Date().toISOString();
+        const direct = {
+          user_id: target.id, name: target.username || target.full_name || 'Kullanıcı', avatar: target.avatar || '',
+          member_id: target.member_id || '-', share, status: 'active', invite_id: '', direct: true,
+          invited_at: now, accepted_at: now,
+        };
+        const assistants = [...(agency.assistants || []).filter((row: any) => row.user_id !== target.id), direct];
+        await base44.asServiceRole.entities.Agency.update(agency.id, { assistants });
+        // Yalnızca asistanlık rolü işaretlenir; yayıncı kaydı olduğu gibi kalır.
+        await base44.asServiceRole.entities.User.update(target.id, { agency_role: 'assistant' }).catch(() => {});
+        await sendDirect(base44, account, target, `🤝 ${displayName} seni ${agency.name} ajansında asistan yaptı • komisyon payın %${share}.`).catch(() => {});
+        await notifyUser(base44, {
+          user_id: target.id, type: 'assistant_joined', title: '🤝 Asistan oldun',
+          body: `${agency.name} ajansında asistanlık verildi • komisyon payın %${share}.`, link: '/ajans/asistanlar',
+        }).catch(() => {});
+        return Response.json({ ok: true, direct: true, assistants });
+      }
       const expiresAt = assistantInviteExpiry();
       const invite = await base44.asServiceRole.entities.AgencyInvite.create({
         kind: 'assistant', share, expires_at: expiresAt,
@@ -558,9 +579,11 @@ export default async function (req) {
       }
       const target = await base44.asServiceRole.entities.User.get(targetId).catch(() => null);
       if (target && target.agency_record_id === agency.id && target.agency_role === 'assistant') {
-        await base44.asServiceRole.entities.User.update(target.id, {
-          agency_code: '', agency_record_id: '', agency_name: '', agency_owner_id: '', agency_role: '', broadcaster_status: '',
-        }).catch(() => {});
+        // Doğrudan verilen asistanlıkta kişi ajansın üyesi olarak kalır: rolü yayıncıya döner.
+        const patch = entry.direct
+          ? { agency_role: 'broadcaster' }
+          : { agency_code: '', agency_record_id: '', agency_name: '', agency_owner_id: '', agency_role: '', broadcaster_status: '' };
+        await base44.asServiceRole.entities.User.update(target.id, patch).catch(() => {});
       }
       if (target) {
         await notifyUser(base44, {
