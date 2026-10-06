@@ -20,11 +20,6 @@ const POLL_BETTING = 9000;
 const POLL_COOLDOWN = 6000;
 // Uçuş sırasında bekleme kısa tutulur: çakılma anı ve gerçek çarpan yakalanır.
 const POLL_COOLDOWN_FLIGHT = 3000;
-// Görsel uçuş, son sunucu onayından en fazla bu kadar ileri gidebilir.
-const FLIGHT_LEAD_MS = 4500;
-// Onay gecikirse roket donmaz: kalan gecikmenin dörtte biri kadar süzülür.
-const FLIGHT_CREEP_MS = 4000;
-const FLIGHT_CREEP_RATE = 0.25;
 const CLOCK_TICK = 50;
 // Otomatik hedef ok tuşlarına hızlı basmak tek istek üretir.
 const AUTO_SAVE_MS = 600;
@@ -80,6 +75,8 @@ export default function useRocketGame() {
   const busyRef = useRef(new Set());
   const cooldownRef = useRef(0);
   const multRef = useRef(1);
+  // Çakılma sonrası cüzdan tazelemesi dağıtılmış gecikmeyle istenir.
+  const crashRefreshRef = useRef(null);
   const seededRef = useRef(false);
   const autoSaveRef = useRef({});
   const betAmtRef = useRef({ 1: DEFAULT_ROCKET_BET, 2: DEFAULT_ROCKET_BET });
@@ -238,9 +235,18 @@ export default function useRocketGame() {
       roundNoRef.current = live.round_no;
       phaseRef.current = live.status;
       launchAtRef.current = live.phase_ends_at ? new Date(live.phase_ends_at).getTime() : null;
-      pollNowRef.current();
+      // Yayın tur bilgisini zaten getirir: her olayda anında yoklama yapılırsa
+      // odadaki herkes aynı saniyede istek atıp yoğunluk hatası alır. Yalnızca
+      // çakılma sonrası cüzdan tazelemesi dağıtılmış gecikmeyle istenir.
+      if (live.status === 'crashed') {
+        clearTimeout(crashRefreshRef.current);
+        crashRefreshRef.current = setTimeout(() => pollNowRef.current(), 400 + Math.random() * 1600);
+      }
     });
-    return unsubscribe;
+    return () => {
+      clearTimeout(crashRefreshRef.current);
+      unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
@@ -300,9 +306,13 @@ export default function useRocketGame() {
         applyResult(result);
         return result;
       } catch (e) {
-        // Reconcile interrupted credits even if the next refresh is a new round.
-        needsRecoveryRef.current = true;
-        cooldownRef.current = Date.now() + POLL_COOLDOWN;
+        // Kural reddi (4xx) yoklamayı durdurmaz; sadece bağlantı ve yoğunluk
+        // hatasında kısa bir mola verilir, aksi halde oyun ekranda donar.
+        const status = e?.response?.status;
+        if (!e?.response || status === 429 || status >= 500) {
+          needsRecoveryRef.current = true;
+          cooldownRef.current = Date.now() + POLL_COOLDOWN;
+        }
         // Kural reddi oyuncuya söylenir; yoğunlukta basışın karşılıksız kalmadığı
         // bildirilir ki oyuncu tekrar denesin.
         setMessage(gameMessage(e) || (options.slot ? 'Bağlantı yoğun — tekrar dene.' : ''));
@@ -376,13 +386,10 @@ export default function useRocketGame() {
   const round = data?.round;
   const sinceSync = clock - fetchedAtRef.current;
   const serverNow = serverNowRef.current + sinceSync;
-  // Görsel uçuş sadece son onaydan bu yana ilerler: yoklama gecikirse roket,
-  // gerçek çakılma noktasını aşan bir çarpan göstermez. Gecikme uzarsa hız
-  // düşer ama durmaz — roket ekranda her koşulda hareket eder.
-  const lead = sinceSync <= FLIGHT_LEAD_MS
-    ? sinceSync
-    : FLIGHT_LEAD_MS + Math.min(sinceSync - FLIGHT_LEAD_MS, FLIGHT_CREEP_MS) * FLIGHT_CREEP_RATE;
-  const displayNow = serverNowRef.current + lead;
+  // Görsel uçuş yerel saatle akar: yoklama gecikse ya da yoğunluk molası girse de
+  // mekik durmaz. Çakılma haberi gelince çarpan gerçek çakılma noktasına oturur;
+  // ödeme kararı her durumda sunucuda verilir.
+  const displayNow = serverNow;
   const launchAt = round?.phase_ends_at ? new Date(round.phase_ends_at).getTime() : null;
   // Geri sayım 0'a indiği saniyede uçuş başlar; sunucu yanıtı beklenmez.
   const phase = phaseAt(round?.status, launchAt, serverNow);
@@ -420,7 +427,8 @@ export default function useRocketGame() {
   // çakılma anı sunucudan zamanında öğrenilir.
   useEffect(() => {
     if (phase !== 'betting' || !launchAt) return undefined;
-    const wait = Math.max(0, launchAt - (serverNowRef.current + (Date.now() - fetchedAtRef.current))) + 300;
+    // Kalkışta tüm oyuncular aynı saniyede istek atmasın diye bekleme dağıtılır.
+    const wait = Math.max(0, launchAt - (serverNowRef.current + (Date.now() - fetchedAtRef.current))) + 300 + Math.random() * 1500;
     const id = setTimeout(() => pollNowRef.current(), wait);
     return () => clearTimeout(id);
   }, [phase, launchAt]);

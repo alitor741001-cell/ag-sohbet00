@@ -141,8 +141,10 @@ async function ensureRound(base44) {
     // Otomatik hedefi olan bahisler yalnızca gerektiği an sorgulanır: her istekte
     // yüzlerce bahis satırı çekilmez, sunucu yoğunluğu oluşmaz.
     if (m >= 1.1) {
+      // Yalnızca hedefine ulaşan bahisler çekilir: tur boyunca yüzlerce satır
+      // taranmaz, her yoklamada gereksiz yük oluşmaz.
       const autos = await base44.asServiceRole.entities.RocketBet.filter(
-        { round_id: round.id, status: 'active', auto_at: { $gt: 0 } },
+        { round_id: round.id, status: 'active', auto_at: { $gt: 0, $lte: m } },
         '-created_date',
         200
       );

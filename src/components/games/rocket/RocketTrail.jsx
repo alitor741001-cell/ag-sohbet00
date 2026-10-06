@@ -32,7 +32,12 @@ export default function RocketTrail({ progress, phase }) {
           }}
         >
           {flying && <div className="rk-engine-glow rk-engine pointer-events-none absolute left-1/2 top-[75%] h-full w-1/2 -translate-x-1/2" />}
-          <Image src={ROCKET_SHIP} alt="Uçan roket" fittingType="fit" className="rk-ship relative block aspect-square w-full" />
+          <Image
+            src={ROCKET_SHIP}
+            alt="Uçan roket"
+            fittingType="fit"
+            className={`rk-ship relative block aspect-square w-full ${phase === 'betting' ? 'rk-idle' : ''}`}
+          />
         </div>
       )}
     </div>

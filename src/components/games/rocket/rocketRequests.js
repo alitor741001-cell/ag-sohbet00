@@ -22,7 +22,7 @@ export default function rocketRequests(payload) {
               const seconds = Number(error.response.headers?.['retry-after']);
               // Bekleme kısa tutulur: uzun bir blok oyunu ekranda donmuş gösterir.
               deferRocketRequests(Number.isFinite(seconds) && seconds > 0
-                ? Math.min(20000, seconds * 1000) : 8000 + Math.random() * 3000);
+                ? Math.min(10000, seconds * 1000) : 5000 + Math.random() * 3000);
             }
             throw error;
           }
