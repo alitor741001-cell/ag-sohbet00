@@ -11,6 +11,7 @@ import VoiceSeatGrid from '@/components/voice/VoiceSeatGrid';
 import { resizeSeats } from '@/components/voice/seatLayout';
 import HiddenUserMarquee from '@/components/voice/HiddenUserMarquee';
 import { isHiddenName } from '@/lib/hiddenUser';
+import { broadcastRoomVisibility } from '@/lib/roomVisibility';
 import { mergeMessages } from '@/lib/realtimeMessages';
 import VoiceControlBar from '@/components/voice/VoiceControlBar';
 import VoiceChatDock from '@/components/voice/VoiceChatDock';
@@ -609,12 +610,18 @@ export default function VoiceRoom() {
   }, [id, syncRoom, toast]);
 
   const handleToggleHidden = async () => {
+    const next = !room?.hidden;
+    // Anında işler: düğme yazısı ve ana sayfa listesi sunucu yanıtını beklemez.
+    patchRoom({ hidden: next });
+    broadcastRoomVisibility(id, next);
     try {
-      patchRoom({ hidden: !room?.hidden });
       const response = await base44.functions.invoke('room-presence', { action: 'toggle-hidden', room_id: id });
       patchRoom({ hidden: !!response.data?.hidden });
+      broadcastRoomVisibility(id, !!response.data?.hidden);
       toast({ title: response.data?.hidden ? 'Oda gizlendi' : 'Oda herkese açık' });
     } catch (error) {
+      patchRoom({ hidden: !next });
+      broadcastRoomVisibility(id, !next);
       toast({ title: 'İşlem başarısız', description: error?.response?.data?.error || error.message, variant: 'destructive' });
     }
   };

@@ -11,7 +11,10 @@ export default function VoiceRoomCreate() {
   const { user } = useCurrentUser();
   const { toast } = useToast();
   const [seatCount, setSeatCount] = useState(8);
-  const [name, setName] = useState('');
+  // Oda adı yalnızca ilk kurulumda sorulur: sonraki kurulumlarda hatırlanan ad yazılı gelir,
+  // adı odanın içindeki ayarlardan değiştirebilirsin.
+  const [name, setName] = useState(() =>
+    (typeof localStorage === 'undefined' ? '' : (localStorage.getItem('filmkeyfi_roomname_voice') || '')));
   const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
   const [hidden, setHidden] = useState(false);
@@ -31,6 +34,7 @@ export default function VoiceRoomCreate() {
       });
       const roomId = response.data?.id;
       if (!roomId) throw new Error('oda oluşturulamadı');
+      localStorage.setItem('filmkeyfi_roomname_voice', name.trim());
       toast({ title: 'Sesli oda açıldı' });
       navigate(`/sesli-oda/${roomId}`);
     } catch (error) {

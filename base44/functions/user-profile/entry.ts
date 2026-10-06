@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import { rateLimit, safeErrorResponse } from '../../shared/security.ts';
 import { badgeLevels } from '../../shared/userLevels.ts';
+import { HIDDEN_AVATAR_URL, hiddenDisplayName, isHiddenUser } from '../../shared/vip.ts';
 
 export default async function(req) {
   try {
@@ -18,6 +19,21 @@ export default async function(req) {
         ? 'suspended'
         : 'active';
 
+    // Gizli kullanıcı modundaki kişinin kimliği başkalarına gösterilmez: adı, fotoğrafı,
+    // kimlik numarası ve rozetleri maskelenir; hangi yayında olduğu anlaşılmaz.
+    // Kişi kendi profilini ve yöneticiler gerçek profili görür.
+    const maskHidden = (u, profile) => (isHiddenUser(u) && u.id !== user.id && user.role !== 'admin'
+      ? {
+          ...profile,
+          username: hiddenDisplayName(u), full_name: hiddenDisplayName(u), avatar: HIDDEN_AVATAR_URL,
+          hidden: true, member_id: '-', title: '', display_role: '', custom_role: null,
+          profile_frame: '', special_frame_id: '', special_frame_title: '',
+          gender: '', birth_date: '', broadcaster_status: '',
+          agency_role: '', agency_name: '', agency_code: '', agency_record_id: '',
+          owned_agency_id: '', owned_agency_name: '', owned_agency_code: '',
+        }
+      : profile);
+
     // Batch modu: birden fazla kullanıcı profilini tek sorguda getir (N+1 önleme)
     const { user_id, user_ids } = body || {};
     if (Array.isArray(user_ids) && user_ids.length > 0) {
@@ -26,7 +42,7 @@ export default async function(req) {
       const profiles = {};
       users.forEach((u, i) => {
         if (!u) return;
-        profiles[ids[i]] = {
+        profiles[ids[i]] = maskHidden(u, {
           username: u.username || '', full_name: u.full_name || '', avatar: u.avatar || '',
           member_id: u.member_id || '-', role: u.role || '', display_role: u.display_role || '',
           custom_role: u.custom_role || null, profile_frame: u.profile_frame || '',
@@ -41,7 +57,7 @@ export default async function(req) {
           agency_record_id: u.agency_record_id || '', broadcaster_status: u.broadcaster_status || '',
           owned_agency_id: u.owned_agency_id || '', owned_agency_name: u.owned_agency_name || '', owned_agency_code: u.owned_agency_code || '',
           ...badgeLevels(u),
-        };
+        });
       });
       return Response.json({ data: profiles });
     }
@@ -49,7 +65,7 @@ export default async function(req) {
     if (!user_id) return Response.json({ error: 'user_id gerekli' }, { status: 400 });
     const u = await base44.asServiceRole.entities.User.get(user_id).catch(() => null);
     if (!u) return Response.json({ error: 'kullanıcı bulunamadı' }, { status: 404 });
-    return Response.json({
+    return Response.json(maskHidden(u, {
       username: u.username || '',
       full_name: u.full_name || '',
       avatar: u.avatar || '',
@@ -77,8 +93,8 @@ export default async function(req) {
       owned_agency_id: u.owned_agency_id || '',
       owned_agency_name: u.owned_agency_name || '',
       owned_agency_code: u.owned_agency_code || '',
-      ...badgeLevels(u)
-    });
+      ...badgeLevels(u),
+    }));
   } catch (e) {
     return safeErrorResponse(e);
   }

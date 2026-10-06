@@ -26,6 +26,22 @@ const loadRoomMusic = async (base44: any, roomId: string) => {
   return Array.isArray(rows) && rows.length ? rows[0] : null;
 };
 
+/**
+ * Kişinin kendi şarkı listesi: aynı dosya iki kez görünmez, en yeni şarkılar üstte.
+ * Liste hem istek üzerine hem de şarkı açıldığında yanıtla birlikte gönderilir; telefonda
+ * ayrı liste isteği gecikse bile yüklenen şarkı listede anında görünür.
+ */
+const loadMyTracks = async (base44: any, userId: string) => {
+  const rows = await base44.asServiceRole.entities.RoomTrack.filter({ added_by: userId }, '-created_date', 60).catch(() => []);
+  const seen = new Set<string>();
+  return (Array.isArray(rows) ? rows : []).filter((row: any) => {
+    const uri = String(row?.file_uri || '');
+    if (!uri || seen.has(uri)) return false;
+    seen.add(uri);
+    return true;
+  }).slice(0, 30);
+};
+
 export default async function (req: Request): Promise<Response> {
   try {
     const base44 = createClientFromRequest(req);
@@ -504,15 +520,7 @@ export default async function (req: Request): Promise<Response> {
     // hangi odaya gidersen git kendi şarkıların listelenir.
     if (action === 'music-library') {
       if (!isParticipant && !canMod) return Response.json({ error: 'Önce odaya katılmalısın.' }, { status: 403 });
-      const rows = await base44.asServiceRole.entities.RoomTrack.filter({ added_by: user.id }, '-created_date', 60).catch(() => []);
-      const seen = new Set<string>();
-      const tracks = (Array.isArray(rows) ? rows : []).filter((row: any) => {
-        const uri = String(row?.file_uri || '');
-        if (!uri || seen.has(uri)) return false;
-        seen.add(uri);
-        return true;
-      }).slice(0, 30);
-      return Response.json({ ok: true, tracks });
+      return Response.json({ ok: true, tracks: await loadMyTracks(base44, user.id) });
     }
 
     // Kendi listenden şarkı silme: yalnızca senin yüklediğin kayıt kaldırılır.
@@ -552,7 +560,8 @@ export default async function (req: Request): Promise<Response> {
           room_id, title, file_uri: fileUri, added_by: user.id, added_by_name: shownName,
         }).catch(() => {});
       }
-      return Response.json({ ok: true, music: record });
+      // Liste yanıtla birlikte döner: telefonda listenin görünmemesi sorunu kapanır.
+      return Response.json({ ok: true, music: record, tracks: await loadMyTracks(base44, user.id) });
     }
 
     if (action === 'music-control') {

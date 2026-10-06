@@ -10,7 +10,12 @@ export default function CreateRoom() {
   const navigate = useNavigate();
   const { user } = useCurrentUser();
   const { toast } = useToast();
-  const [form, setForm] = useState({ name: '', youtube_link: '', password: '', max_users: 10, chat_enabled: true, voice_enabled: false, hidden: false });
+  // Oda adı yalnızca ilk kurulumda sorulur: sonraki kurulumlarda hatırlanan ad yazılı gelir,
+  // adı odanın içindeki ayarlardan değiştirebilirsin.
+  const [form, setForm] = useState(() => ({
+    name: typeof localStorage === 'undefined' ? '' : (localStorage.getItem('filmkeyfi_roomname_film') || ''),
+    youtube_link: '', password: '', max_users: 10, chat_enabled: true, voice_enabled: false, hidden: false,
+  }));
   const [nameEdited, setNameEdited] = useState(false);
   const [showPass, setShowPass] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -34,6 +39,7 @@ export default function CreateRoom() {
             password: form.password, max_users: Number(form.max_users),
             chat_enabled: form.chat_enabled, voice_enabled: form.voice_enabled, hidden: form.hidden
           });
+      localStorage.setItem('filmkeyfi_roomname_film', form.name.trim());
       toast({ title: voiceOnly ? 'Sesli oda oluşturuldu' : 'Oda oluşturuldu' });
       navigate(voiceOnly ? `/sesli-oda/${res.data.id}` : `/oda/${res.data.id}`);
     } catch (err) { toast({ title: 'Hata', description: err.response?.data?.error || err.message, variant: 'destructive' }); }

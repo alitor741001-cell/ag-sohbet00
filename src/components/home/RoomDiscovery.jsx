@@ -8,6 +8,7 @@ import GameDiscoveryRow from '@/components/home/GameDiscoveryRow';
 import useFriends from '@/hooks/useFriends';
 import useMessageProfiles from '@/hooks/useMessageProfiles';
 import { fetchYouTubeTitle, isGenericTitle, youtubeIdFromMovieId } from '@/lib/youtubeTitle';
+import { onRoomVisibility } from '@/lib/roomVisibility';
 
 // Oyunlar ayrı indirilir: ana sayfa paketi küçük kalır.
 const GamePanel = lazy(() => import('@/components/games/GamePanel'));
@@ -109,9 +110,23 @@ export default function RoomDiscovery({ shortcuts = null }) {
       if (!flushTimer) flushTimer = window.setTimeout(flush, 700);
     });
 
+    // Odada Gizle/Göster denince ana sayfa beklemeden güncellenir: gizlenen oda listeden
+    // anında düşer, görünür yapılan oda yeniden okunur.
+    const offVisibility = onRoomVisibility(({ id, hidden }) => {
+      if (!id) return;
+      if (hidden) {
+        hiddenIdsRef.current.add(id);
+        setRooms((current) => current.filter((room) => room.id !== id));
+      } else {
+        hiddenIdsRef.current.delete(id);
+        load();
+      }
+    });
+
     return () => {
       alive = false;
       if (flushTimer) window.clearTimeout(flushTimer);
+      offVisibility();
       unsubscribe();
     };
   }, [user?.id, user?.role]);

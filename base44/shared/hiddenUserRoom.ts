@@ -87,10 +87,18 @@ export async function maskUserInCurrentRoom(base44: any, userId: string) {
       participants,
       seats,
       ...(Array.isArray(room.recent_participants) ? { recent_participants: recent } : {}),
+      // Odanın sahibi gizli kullanıcıysa oda kartındaki gerçek isim de silinir.
+      ...(room.owner_id === userId ? { owner_name: maskedName } : {}),
       ghost_entered_at: new Date().toISOString(),
     }).catch(() => {});
     maskedRoomId = room.id;
   }
+
+  // Gizli moddayken kimse hangi yayında olduğunu göremez: canlı oda işaretçisi silinir.
+  const presence = await base44.asServiceRole.entities.UserPresence
+    .filter({ user_id: userId }, '-created_date', 5).catch(() => []);
+  await Promise.all((presence || []).map((row: any) =>
+    base44.asServiceRole.entities.UserPresence.update(row.id, { current_room_id: '' }).catch(() => {})));
 
   return maskedRoomId || null;
 }

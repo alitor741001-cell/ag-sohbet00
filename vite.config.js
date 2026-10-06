@@ -25,6 +25,12 @@ export default defineConfig({
         manualChunks(id) {
           if (!id.includes('node_modules')) return undefined;
           if (id.includes('livekit')) return 'vendor-livekit';
+          // Ağır ve seyrek kullanılan kütüphaneler ayrı dosyaya alınır: ana sayfa bunları indirmez.
+          if (id.includes('node_modules/three')) return 'vendor-three';
+          if (id.includes('recharts') || id.includes('node_modules/d3-')) return 'vendor-charts';
+          if (id.includes('framer-motion')) return 'vendor-motion';
+          if (id.includes('quill')) return 'vendor-editor';
+          if (id.includes('jspdf') || id.includes('html2canvas')) return 'vendor-export';
           if (id.includes('@tanstack') || id.includes('react-router') || id.includes('react-dom') || id.includes('/react/') || id.includes('scheduler') || id.includes('@base44')) {
             return 'vendor-react';
           }
