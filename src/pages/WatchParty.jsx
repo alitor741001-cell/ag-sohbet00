@@ -93,6 +93,9 @@ export default function WatchParty() {
   const [roomNameEdit, setRoomNameEdit] = useState('');
 
   const profileTarget = new URLSearchParams(location.search).get('profile');
+  // Gizli kullanıcı odada takma adla görünür: kartında da isim, cinsiyet ve kimlik gizlenir.
+  const profilePerson = [...(room?.participants || []), ...(room?.recent_participants || [])].find((person) => person.user_id === profileTarget);
+  const profileHidden = !!profileTarget && profileTarget !== user?.id && isHiddenName(profilePerson?.name);
   const openUserProfile = (userId) => {
     if (!userId) return;
     const params = new URLSearchParams(location.search);
@@ -898,6 +901,9 @@ export default function WatchParty() {
       {profileTarget && (
         <FullUserProfile
           userId={profileTarget}
+          hidden={profileHidden}
+          name={profilePerson?.name || ''}
+          avatar={profilePerson?.avatar || ''}
           sheet
           theme="blue"
           hideSettings

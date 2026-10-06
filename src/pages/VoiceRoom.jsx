@@ -1196,6 +1196,7 @@ export default function VoiceRoom() {
         avatar={profilePerson?.avatar || ''}
         frame={profilePerson?.frame || ''}
         frameScale={profilePerson?.frame_scale}
+        hidden={profileHidden}
         muted={profileMicMuted}
         level={roomLevels[profileTarget] || 0}
         roomId={id}
