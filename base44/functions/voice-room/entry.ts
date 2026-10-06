@@ -331,7 +331,8 @@ export default async function (req: Request): Promise<Response> {
         return Response.json({ error: 'Hediye göndermek için en az bir kişi seç.' }, { status: 400 });
       }
 
-      const rlGift = await rateLimit(base44, 'voice-gift:' + user.id, user.id, 240, 60000);
+      // Hediye sınırsız atılabilir: sınır yalnızca makine hızında gönderimi keser.
+      const rlGift = await rateLimit(base44, 'voice-gift:' + user.id, user.id, 3000, 60000);
       if (!rlGift.allowed) return Response.json({ error: 'Gönderim sırada, kısa süre sonra devam edecek.', retry_after_ms: 60000 }, { status: 429 });
 
       const kValue = Math.max(0, Number(giftRecord.k_value) || 0);
@@ -399,7 +400,7 @@ export default async function (req: Request): Promise<Response> {
         && (row.user_id === user.id || (hiddenUser && row.user_id === '')));
       if (!own.length) return Response.json({ error: 'Hediye kaydı doğrulanamadı.' }, { status: 403 });
 
-      const rlFinal = await rateLimit(base44, 'voice-gift-fin:' + user.id, user.id, 240, 60000);
+      const rlFinal = await rateLimit(base44, 'voice-gift-fin:' + user.id, user.id, 3000, 60000);
       if (!rlFinal.allowed) return Response.json({ ok: true, skipped: true });
 
       const giftRecord = await base44.asServiceRole.entities.Gift.get(wantedGiftId).catch(() => null);

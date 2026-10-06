@@ -1156,7 +1156,6 @@ export default function VoiceRoom() {
         uploading={music.uploading}
         onUpload={music.uploadTrack}
         onPlayTrack={music.playTrack}
-        onControl={music.control}
       />
 
       {/* Müzik denetleyicisi: pencere kapanınca köşedeki çember olarak kalır, dokununca panel açılır. */}
