@@ -1,6 +1,8 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import { creditRocketBet, settleRocketBet } from '../../shared/rocketSettlement.ts';
 import { withLimitRetry } from '../../shared/retryLimit.ts';
+import { mirrorRecord } from '../../shared/supabaseMirror.ts';
+import { waitUntil } from 'base44:runtime';
 import {
   multiplierAt,
   randomCrash,
@@ -91,6 +93,60 @@ async function latestRound(base44) {
   return list[0] || null;
 }
 
+// Tur bilgisi kısa süre önbellekte tutulur: uçuş tik'i çoğu çağrıda veritabanına
+// dokunmaz, yalnızca çakılma anını bekler.
+const ROUND_CACHE_MS = 2000;
+let roundCache = { round: null, at: 0 };
+
+async function cachedRound(base44) {
+  if (roundCache.round && Date.now() - roundCache.at < ROUND_CACHE_MS) return roundCache.round;
+  const round = await latestRound(base44);
+  roundCache = { round, at: Date.now() };
+  return round;
+}
+
+function rememberRound(round) {
+  roundCache = { round, at: Date.now() };
+}
+
+// Çakılma: hedefine ulaşan otomatik bahisler önce nakde çevrilir, kalan aktifler
+// kaybeder ve sonuç anında yayınlanır. Hem durum yoklaması hem uçuş tik'i kullanır.
+async function crashRound(base44, round, now) {
+  const m = multiplierAt(now - new Date(round.started_at).getTime());
+  const autos = await base44.asServiceRole.entities.RocketBet.filter(
+    { round_id: round.id, status: 'active', auto_at: { $gt: 0, $lte: m } },
+    '-created_date',
+    200
+  );
+  for (const bet of autos) {
+    if (bet.auto_at <= round.crash_at) await settleRocketBet(base44, bet, bet.auto_at);
+  }
+  // Tur koşullu kapatılır: aynı anda gelen ikinci istek turu yeniden çakmaz.
+  const closed = await base44.asServiceRole.entities.RocketRound.updateMany(
+    { id: round.id, status: 'running' },
+    { $set: { status: 'crashed', ended_at: new Date(now).toISOString() } }
+  );
+  if (!closed.updated) {
+    const current = await base44.asServiceRole.entities.RocketRound.get(round.id);
+    rememberRound(current);
+    return current;
+  }
+  await base44.asServiceRole.entities.RocketBet.updateMany(
+    { round_id: round.id, status: 'active' },
+    { $set: { status: 'lost' } }
+  );
+  const crashed = { ...round, status: 'crashed', ended_at: new Date(now).toISOString() };
+  // Çakılma anı ve geçmiş tek yazımla yayınlanır: roket her ekranda birlikte patlar.
+  const recent = await base44.asServiceRole.entities.RocketRound.filter({ status: 'crashed' }, '-round_no', 12);
+  await publishLive(base44, crashed, recent.map((row) => ({ round_no: row.round_no, crash_at: row.crash_at })));
+  // Supabase aynası: turun bahisleri son halleriyle arka planda yazılır.
+  waitUntil(base44.asServiceRole.entities.RocketBet.filter({ round_id: round.id }, '-created_date', 200)
+    .then((rows) => mirrorRecord(base44, 'RocketBet', rows))
+    .catch(() => null));
+  rememberRound(crashed);
+  return crashed;
+}
+
 // Tur durumu canlı kayda yayınlanır: oyuncular yoklama beklemeden turu, çakılma
 // anını ve yeni turu aynı anda görür. Çakılma noktası yalnızca çakıldıktan sonra
 // yazılır — tur sürerken istemciye görünmez.
@@ -107,8 +163,12 @@ async function publishLive(base44, round, history) {
       crash_at: round.status === 'crashed' ? round.crash_at : 0,
     };
     if (Array.isArray(history)) payload.history = history;
-    if (found[0]) await base44.asServiceRole.entities.RocketLive.update(found[0].id, payload);
-    else await base44.asServiceRole.entities.RocketLive.create({ ...payload, history: history || [] });
+    const written = found[0]
+      ? await base44.asServiceRole.entities.RocketLive.update(found[0].id, payload)
+      : await base44.asServiceRole.entities.RocketLive.create({ ...payload, history: history || [] });
+    // Supabase aynası yanıt sonrası yazılır: oyun akışı bekletilmez.
+    waitUntil(mirrorRecord(base44, 'RocketRound', round));
+    waitUntil(mirrorRecord(base44, 'RocketLive', written));
   } catch (error) {
     // Canlı yayın yazılamazsa oyun seyrek yoklamayla akmaya devam eder.
     console.error('Rocket live publish failed:', error.message);
@@ -161,18 +221,7 @@ async function ensureRound(base44) {
     }
 
     if (m >= round.crash_at) {
-      // Hedefine ulaşanlar yukarıda nakde çevrildi; kalan aktifler tek sorguda kaybeder.
-      await base44.asServiceRole.entities.RocketBet.updateMany(
-        { round_id: round.id, status: 'active' },
-        { $set: { status: 'lost' } }
-      );
-      round = await base44.asServiceRole.entities.RocketRound.update(round.id, {
-        status: 'crashed',
-        ended_at: new Date(now).toISOString(),
-      });
-      // Çakılma anı ve geçmiş tek yazımla yayınlanır: roket her ekranda birlikte patlar.
-      const recent = await base44.asServiceRole.entities.RocketRound.filter({ status: 'crashed' }, '-round_no', 12);
-      await publishLive(base44, round, recent.map((row) => ({ round_no: row.round_no, crash_at: row.crash_at })));
+      round = await crashRound(base44, round, now);
     }
   }
 
@@ -290,6 +339,7 @@ export default async function (req) {
       const wallet = await loadWallet(base44, user);
       const next = shiftRocketBet(walletBet(wallet, slot), body.direction || 1);
       await base44.asServiceRole.entities.GameWallet.update(wallet.id, { [betField(slot)]: next });
+      waitUntil(mirrorRecord(base44, 'GameWallet', { ...wallet, [betField(slot)]: next }));
       return Response.json({ settings: true, values: { [slot === 2 ? 'bet2' : 'bet1']: next } });
     }
 
@@ -300,6 +350,7 @@ export default async function (req) {
       const value = action === 'setAuto' ? shiftAuto(walletAuto(wallet, slot), body.direction || 1) : clampAuto(body.value);
       if (walletAuto(wallet, slot) !== value) {
         await base44.asServiceRole.entities.GameWallet.update(wallet.id, { [autoField(slot)]: value });
+        waitUntil(mirrorRecord(base44, 'GameWallet', { ...wallet, [autoField(slot)]: value }));
       }
       const number = Number(body.round_no);
       const rows = Number.isInteger(number) && number > 0
@@ -348,6 +399,9 @@ export default async function (req) {
         status: 'active',
       });
       const updatedWallet = await loadWallet(base44, user);
+      // Supabase aynası: bahis ve cüzdan yanıt sonrası yazılır.
+      waitUntil(mirrorRecord(base44, 'RocketBet', placed));
+      waitUntil(mirrorRecord(base44, 'GameWallet', updatedWallet));
       return Response.json({ patch: true, now: Date.now(), round_no: round.round_no, slot, bet: placed, coins: updatedWallet.coins });
     }
 
@@ -392,6 +446,33 @@ export default async function (req) {
       );
       for (const bet of pending) await creditRocketBet(base44, bet);
     }
+    // Uçuş tik'i: tur çakılma anında çakılır ve sonuç aynı saniyede yayınlanır.
+    // Tur önbellekte tutulduğu için çağrıların çoğu veritabanına dokunmaz.
+    if (action === 'tick') {
+      const now = Date.now();
+      let current = await cachedRound(base44);
+      if (!current) {
+        current = await ensureRound(base44);
+      } else if (current.status === 'betting' && now >= new Date(current.phase_ends_at).getTime()) {
+        current = await base44.asServiceRole.entities.RocketRound.update(current.id, { status: 'running' });
+        await publishLive(base44, current);
+        rememberRound(current);
+      }
+      if (current.status === 'running' && multiplierAt(now - new Date(current.started_at).getTime()) >= current.crash_at) {
+        current = await crashRound(base44, current, now);
+      }
+      return Response.json({
+        now,
+        round: {
+          round_no: current.round_no,
+          status: current.status,
+          phase_ends_at: current.phase_ends_at,
+          started_at: current.started_at,
+          crash_at: current.status === 'crashed' ? current.crash_at : undefined,
+        },
+      });
+    }
+
     // state
     const round = await ensureRound(base44);
     return Response.json(await buildView(base44, user, round));

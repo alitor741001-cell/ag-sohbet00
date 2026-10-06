@@ -11,9 +11,11 @@ import {
   ROCKET_AUTO_LEVELS,
 } from './rocketConfig';
 
-// Tur durumu canlı yayından gelir; yoklama yalnızca çakılma anını yakalamak
-// için çalışır. Seyrek tutulur ki istek bütçesi oyuncunun basışlarına kalsın.
-const POLL_FLIGHT = 2000;
+// Tur durumu canlı yayından gelir. Uçuş sırasında hafif bir tik çalışır: çakılma
+// anı tam zamanında yakalanır, ekrandaki çarpan gerçek patlama noktasını geçmez.
+const TICK_MS = 250;
+// Uçuşta ağır durum tazelemesi seyrek yapılır (bahis listesi ve cüzdan için).
+const STATE_EVERY_MS = 4000;
 // Çakılma sonrası yeni tur yoklanır (tur arası bekleme kadar sonra).
 const POLL_CRASHED = 2200;
 const POLL_BETTING = 9000;
@@ -66,6 +68,8 @@ export default function useRocketGame() {
 
   const serverNowRef = useRef(Date.now());
   const fetchedAtRef = useRef(Date.now());
+  // Son tam durum tazeliği: uçuşta hafif tik sık, ağır istek seyrek çalışır.
+  const lastStateRef = useRef(0);
   const phaseRef = useRef(null);
   const launchAtRef = useRef(null);
   const hasDataRef = useRef(false);
@@ -141,6 +145,61 @@ export default function useRocketGame() {
     }
   }, [applyResult]);
 
+  // Tur bilgisi tek yerden uygulanır: canlı yayın ve uçuş tik'i aynı yolu kullanır.
+  const applyRound = useCallback((live, now) => {
+    if (!live || typeof live.round_no !== 'number') return;
+    if (typeof now === 'number') {
+      serverNowRef.current = Math.max(
+        hasDataRef.current ? serverNowRef.current + (Date.now() - fetchedAtRef.current) : 0,
+        now
+      );
+      fetchedAtRef.current = Date.now();
+    }
+    setData((prev) => {
+      if (!prev) return prev;
+      // Gecikmiş yayın turu geriye almaz: eski tur ve eski aşama yok sayılır.
+      const rank = { betting: 0, running: 1, crashed: 2 };
+      if (live.round_no < (prev.round?.round_no ?? 0)) return prev;
+      if (live.round_no === prev.round?.round_no && rank[live.status] < rank[prev.round?.status]) return prev;
+      const next = {
+        ...prev,
+        round: {
+          round_no: live.round_no,
+          status: live.status,
+          phase_ends_at: live.phase_ends_at,
+          started_at: live.started_at,
+          crash_at: live.status === 'crashed' ? live.crash_at : undefined,
+        },
+      };
+      if (Array.isArray(live.history) && live.history.length) next.history = live.history;
+      // Yeni tur: bahis listesi o turun kayıtlarıyla tazelenir.
+      if (prev.round?.round_no !== live.round_no) next.bets = [];
+      return next;
+    });
+    roundNoRef.current = live.round_no;
+    phaseRef.current = live.status;
+    launchAtRef.current = live.phase_ends_at ? new Date(live.phase_ends_at).getTime() : null;
+    // Yayın tur bilgisini zaten getirir: her olayda anında yoklama yapılırsa
+    // odadaki herkes aynı saniyede istek atıp yoğunluk hatası alır. Yalnızca
+    // çakılma sonrası cüzdan tazelemesi dağıtılmış gecikmeyle istenir.
+    if (live.status === 'crashed') {
+      clearTimeout(crashRefreshRef.current);
+      crashRefreshRef.current = setTimeout(() => pollNowRef.current(), 400 + Math.random() * 1600);
+    }
+  }, []);
+
+  // Uçuş tik'i: yalnızca tur bilgisini tazeler, hafiftir. Çakılma anı sunucuda
+  // yakalandığı an ekrana düşer.
+  const fetchTick = useCallback(async () => {
+    try {
+      const result = await rocketRequests({ action: 'tick' });
+      applyRound(result?.round, result?.now);
+    } catch {
+      // Yoğunlukta tik bekler; ekranda uçuş yerel olarak akmaya devam eder.
+      cooldownRef.current = Date.now() + POLL_COOLDOWN;
+    }
+  }, [applyRound]);
+
   useEffect(() => {
     let timer;
     let running = false;
@@ -165,7 +224,8 @@ export default function useRocketGame() {
         phaseRef.current === 'running' ||
         (phaseRef.current === 'betting' && launchAtRef.current !== null && localNow >= launchAtRef.current);
       // Oyuncunun isteği sürerken yoklama yapılmaz: buton anında karşılık bulur.
-      if (busyRef.current.size) {
+      // Uçuşta ise hafif tik sürer, çakılma anı kaçmaz.
+      if (busyRef.current.size && !flying) {
         timer = setTimeout(loop, 1200);
         running = false;
         return;
@@ -176,14 +236,21 @@ export default function useRocketGame() {
         running = false;
         return;
       }
-      await fetchState();
+      // Uçuşta hafif tik kısa aralıklarla çalışır: sunucu turu çakılma anında
+      // çakar. Ağır durum tazelemesi arada bir yapılır (bahis listesi, cüzdan).
+      if (flying && Date.now() - lastStateRef.current < STATE_EVERY_MS) {
+        await fetchTick();
+      } else {
+        await fetchState();
+        lastStateRef.current = Date.now();
+      }
       if (cancelled) return;
-      // Uçuşta sık, çakılma sonrası daha sık, bahis aşamasında seyrek tazelenir.
+      // Uçuşta kısa aralıklarla, çakılma sonrası ve bahis aşamasında seyrek tazelenir.
       const next = phaseRef.current === 'crashed'
         ? POLL_CRASHED
-        : (flying ? POLL_FLIGHT : POLL_BETTING);
+        : (flying ? TICK_MS : POLL_BETTING);
       // Stagger players' refreshes instead of a synchronized request burst.
-      timer = setTimeout(loop, next + Math.random() * 250);
+      timer = setTimeout(loop, next + Math.random() * (flying ? 40 : 250));
       running = false;
     };
     // Sıradaki yoklamayı öne çeker: ek istek yapmadan anında tazeleme.
@@ -198,7 +265,7 @@ export default function useRocketGame() {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [fetchState]);
+  }, [fetchState, fetchTick]);
 
   // Sekmeye dönüldüğünde durum hemen tazelenir.
   useEffect(() => {
@@ -211,44 +278,12 @@ export default function useRocketGame() {
   // beklemez, odadaki herkes aynı anda görür. Yayın gelince cüzdan ve bahisler
   // tek istekle arkadan tazelenir.
   useEffect(() => {
-    const unsubscribe = subscribeEntity('RocketLive', (event) => {
-      const live = event?.data;
-      if (!live || typeof live.round_no !== 'number') return;
-      setData((prev) => {
-        if (!prev) return prev;
-        // Gecikmiş yayın turu geriye almaz: eski tur ve eski aşama yok sayılır.
-        const rank = { betting: 0, running: 1, crashed: 2 };
-        if (live.round_no < (prev.round?.round_no ?? 0)) return prev;
-        if (live.round_no === prev.round?.round_no && rank[live.status] < rank[prev.round?.status]) return prev;
-        const next = { ...prev };
-        next.round = {
-          round_no: live.round_no,
-          status: live.status,
-          phase_ends_at: live.phase_ends_at,
-          started_at: live.started_at,
-          crash_at: live.status === 'crashed' ? live.crash_at : undefined,
-        };
-        if (Array.isArray(live.history) && live.history.length) next.history = live.history;
-        // Yeni tur: bahis listesi o turun kayıtlarıyla tazelenir.
-        if (prev.round?.round_no !== live.round_no) next.bets = [];
-        return next;
-      });
-      roundNoRef.current = live.round_no;
-      phaseRef.current = live.status;
-      launchAtRef.current = live.phase_ends_at ? new Date(live.phase_ends_at).getTime() : null;
-      // Yayın tur bilgisini zaten getirir: her olayda anında yoklama yapılırsa
-      // odadaki herkes aynı saniyede istek atıp yoğunluk hatası alır. Yalnızca
-      // çakılma sonrası cüzdan tazelemesi dağıtılmış gecikmeyle istenir.
-      if (live.status === 'crashed') {
-        clearTimeout(crashRefreshRef.current);
-        crashRefreshRef.current = setTimeout(() => pollNowRef.current(), 400 + Math.random() * 1600);
-      }
-    });
+    const unsubscribe = subscribeEntity('RocketLive', (event) => applyRound(event?.data));
     return () => {
       clearTimeout(crashRefreshRef.current);
       unsubscribe();
     };
-  }, []);
+  }, [applyRound]);
 
   useEffect(() => {
     const id = setInterval(() => setClock(Date.now()), CLOCK_TICK);

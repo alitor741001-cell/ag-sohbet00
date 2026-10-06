@@ -1,4 +1,6 @@
 import { withLimitRetry } from './retryLimit.ts';
+import { mirrorRecord } from './supabaseMirror.ts';
+import { waitUntil } from 'base44:runtime';
 
 // Conditional updates make retries safe across concurrent function instances.
 export async function creditRocketBet(base44, bet) {
@@ -14,6 +16,8 @@ export async function creditRocketBet(base44, bet) {
     { $inc: { coins: bet.payout, total_won: bet.cancelled ? 0 : bet.payout }, $addToSet: { rocket_paid_bets: bet.id } }
   ));
   await withLimitRetry(() => base44.asServiceRole.entities.RocketBet.update(bet.id, { payout_credited: true }));
+  // Supabase aynası: nakde çevrilen bahis son haliyle arka planda yazılır.
+  waitUntil(mirrorRecord(base44, 'RocketBet', { ...bet, payout_credited: true }));
   return { ...bet, payout_credited: true };
 }
 
