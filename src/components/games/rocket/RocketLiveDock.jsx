@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
-import { Rocket } from 'lucide-react';
+import React from 'react';
 import { format, formatMult } from './rocketConfig';
-import RocketBetPanel from './RocketBetPanel';
-import RocketAutoDialog from './RocketAutoDialog';
+import RocketLiveModule from './RocketLiveModule';
 
-/** Alt panel: iki bağımsız bahis alanı ve aralarında roket göbeği. */
-export default function RocketBetDock({ game }) {
+// İki modülün tasarımdaki merkezleri.
+const CENTER = { 1: 211, 2: 617 };
+
+/** Alt panel: iki bağımsız bahis alanı canlı değerlerle tasarımın üzerine oturur. */
+export default function RocketLiveDock({ game, onAutoEdit }) {
   const phase = game.phase;
-  const [autoEdit, setAutoEdit] = useState(null);
 
   const build = (slot) => {
     const rows = (game.bets || []).filter(
@@ -76,28 +76,15 @@ export default function RocketBetDock({ game }) {
       disabled,
       onAmount: (direction) => game.changeBet(slot, direction),
       onAuto: (direction) => game.changeAuto(slot, direction),
-      onAutoEdit: () => setAutoEdit(slot),
+      onAutoEdit: () => onAutoEdit(slot),
       onAction: () => (active ? game.cashout(slot) : game.placeBet(slot)),
     };
   };
 
   return (
     <>
-      <div className="relative flex items-stretch gap-2 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1">
-        <RocketBetPanel {...build(1)} />
-        <RocketBetPanel {...build(2)} />
-        <span aria-hidden="true" className="rk-spine" />
-        <div className="rk-hub" aria-hidden="true">
-          <Rocket className="h-3.5 w-3.5 text-[#facd15]" />
-        </div>
-      </div>
-
-      <RocketAutoDialog
-        open={autoEdit !== null}
-        value={autoEdit === 2 ? game.auto2 : game.auto1}
-        onSave={(value) => game.setAutoTarget(autoEdit, value)}
-        onClose={() => setAutoEdit(null)}
-      />
+      <RocketLiveModule center={CENTER[1]} {...build(1)} />
+      <RocketLiveModule center={CENTER[2]} {...build(2)} />
     </>
   );
 }
