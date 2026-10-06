@@ -5,21 +5,20 @@ import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
 import { Users, Lock, MessageSquare, Mic, Check, Home, Settings, Eye, EyeOff, Link2, Minus, Plus, Video } from 'lucide-react';
 import { youtubeIdFromUrl } from '@/lib/mediaSource';
+import { FILM_ROOM_DEFAULTS, VOICE_ROOM_DEFAULTS, hasSavedRoom, loadRoomDefaults, saveRoomDefaults } from '@/lib/roomDefaults';
 
 export default function CreateRoom() {
   const navigate = useNavigate();
   const { user } = useCurrentUser();
   const { toast } = useToast();
-  // Oda adı yalnızca ilk kurulumda sorulur: sonraki kurulumlarda hatırlanan ad yazılı gelir,
-  // adı odanın içindeki ayarlardan değiştirebilirsin.
-  const [form, setForm] = useState(() => ({
-    name: typeof localStorage === 'undefined' ? '' : (localStorage.getItem('filmkeyfi_roomname_film') || ''),
-    youtube_link: '', password: '', max_users: 10, chat_enabled: true, voice_enabled: false, hidden: false,
-  }));
+  // Bilgiler bir kez girilir ve otomatik kaydedilir: sonraki kurulumlarda hepsi yazılı gelir,
+  // odayı tek dokunuşla açarsın.
+  const [form, setForm] = useState(() => loadRoomDefaults('film', FILM_ROOM_DEFAULTS));
   const [nameEdited, setNameEdited] = useState(false);
   const [showPass, setShowPass] = useState(false);
   const [saving, setSaving] = useState(false);
   const [opening, setOpening] = useState(false);
+  const [openingVoice, setOpeningVoice] = useState(false);
 
   const submit = async (e) => {
     e.preventDefault();
@@ -39,7 +38,8 @@ export default function CreateRoom() {
             password: form.password, max_users: Number(form.max_users),
             chat_enabled: form.chat_enabled, voice_enabled: form.voice_enabled, hidden: form.hidden
           });
-      localStorage.setItem('filmkeyfi_roomname_film', form.name.trim());
+      // Girilen bütün bilgiler kaydedilir: bir daha sorulmaz.
+      saveRoomDefaults('film', { ...form, name: form.name.trim() });
       toast({ title: voiceOnly ? 'Sesli oda oluşturuldu' : 'Oda oluşturuldu' });
       navigate(voiceOnly ? `/sesli-oda/${res.data.id}` : `/oda/${res.data.id}`);
     } catch (err) { toast({ title: 'Hata', description: err.response?.data?.error || err.message, variant: 'destructive' }); }
@@ -55,6 +55,24 @@ export default function CreateRoom() {
     } catch (e) {
       toast({ title: 'Oda açılamadı', description: e.response?.data?.error || e.message, variant: 'destructive' });
     } finally { setOpening(false); }
+  };
+
+  // Sesli oda tek dokunuşla açılır: bilgiler daha önce girildiyse hiçbir şey sorulmaz.
+  // İlk kez sesli oda açılıyorsa bilgi ekranına gidilir.
+  const openVoiceRoom = async () => {
+    if (openingVoice) return;
+    if (!hasSavedRoom('voice')) { navigate('/sesli-oda-kur'); return; }
+    const saved = loadRoomDefaults('voice', VOICE_ROOM_DEFAULTS);
+    setOpeningVoice(true);
+    try {
+      const res = await base44.functions.invoke('create-room', {
+        name: saved.name, room_type: 'voice', seat_count: Number(saved.seat_count) || 8,
+        password: saved.password, hidden: !!saved.hidden,
+      });
+      navigate(`/sesli-oda/${res.data.id}`);
+    } catch (err) {
+      toast({ title: 'Oda açılamadı', description: err.response?.data?.error || err.message, variant: 'destructive' });
+    } finally { setOpeningVoice(false); }
   };
 
   const inputCls = "w-full bg-[hsl(var(--secondary))] rounded-xl px-3 py-2.5 text-sm text-white outline-none focus:ring-2 focus:ring-[#f2ce6b]/40 border border-[#f2ce6b]/20 placeholder:text-gray-500";
@@ -82,8 +100,12 @@ export default function CreateRoom() {
         <button onClick={openMyRoom} disabled={opening} className="relative mt-4 w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-white active:scale-95 transition-transform disabled:opacity-60" style={{ background: 'linear-gradient(135deg, #b91c1c, #dc2626 52%, #f2ce6b)' }}>
           <Home className="w-5 h-5" /> {opening ? 'Açılıyor...' : 'Kendi Odamı Aç'}
         </button>
-        <Link to="/sesli-oda-kur" className="relative mt-2 w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-[#f2ce6b] border border-[#f2ce6b]/45 bg-[#f2ce6b]/10 active:scale-95 transition-transform">
-          <Mic className="w-5 h-5" /> Sesli Sohbet Odası Aç
+        {/* Kayıtlı bilgilerle anında açılır; ilk kez açılıyorsa bilgi ekranına gider. */}
+        <button type="button" onClick={openVoiceRoom} disabled={openingVoice} className="relative mt-2 w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-[#f2ce6b] border border-[#f2ce6b]/45 bg-[#f2ce6b]/10 active:scale-95 transition-transform disabled:opacity-60">
+          <Mic className="w-5 h-5" /> {openingVoice ? 'Açılıyor...' : 'Sesli Sohbet Odası Aç'}
+        </button>
+        <Link to="/sesli-oda-kur" className="relative mt-2 block text-center text-xs text-[#f2ce6b]/70 underline">
+          Bilgileri değiştirerek aç
         </Link>
       </div>
 

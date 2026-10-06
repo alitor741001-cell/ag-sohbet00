@@ -5,19 +5,19 @@ import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
 import SeatCountPicker from '@/components/voice/SeatCountPicker';
+import { VOICE_ROOM_DEFAULTS, loadRoomDefaults, saveRoomDefaults } from '@/lib/roomDefaults';
 
 export default function VoiceRoomCreate() {
   const navigate = useNavigate();
   const { user } = useCurrentUser();
   const { toast } = useToast();
-  const [seatCount, setSeatCount] = useState(8);
-  // Oda adı yalnızca ilk kurulumda sorulur: sonraki kurulumlarda hatırlanan ad yazılı gelir,
-  // adı odanın içindeki ayarlardan değiştirebilirsin.
-  const [name, setName] = useState(() =>
-    (typeof localStorage === 'undefined' ? '' : (localStorage.getItem('filmkeyfi_roomname_voice') || '')));
-  const [password, setPassword] = useState('');
+  // Bütün bilgiler bir kez girilir ve otomatik kaydedilir: bir daha yazman gerekmez.
+  const [saved] = useState(() => loadRoomDefaults('voice', VOICE_ROOM_DEFAULTS));
+  const [seatCount, setSeatCount] = useState(Number(saved.seat_count) || 8);
+  const [name, setName] = useState(saved.name || '');
+  const [password, setPassword] = useState(saved.password || '');
   const [showPass, setShowPass] = useState(false);
-  const [hidden, setHidden] = useState(false);
+  const [hidden, setHidden] = useState(!!saved.hidden);
   const [saving, setSaving] = useState(false);
 
   const submit = async (event) => {
@@ -34,7 +34,8 @@ export default function VoiceRoomCreate() {
       });
       const roomId = response.data?.id;
       if (!roomId) throw new Error('oda oluşturulamadı');
-      localStorage.setItem('filmkeyfi_roomname_voice', name.trim());
+      // Girilen bütün bilgiler kaydedilir: sonraki sesli oda tek dokunuşla, sorulmadan açılır.
+      saveRoomDefaults('voice', { name: name.trim(), password, seat_count: seatCount, hidden });
       toast({ title: 'Sesli oda açıldı' });
       navigate(`/sesli-oda/${roomId}`);
     } catch (error) {
