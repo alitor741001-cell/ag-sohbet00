@@ -3,15 +3,16 @@ import { Pencil } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import RoleNameEffect from '@/components/role/RoleNameEffect';
 import { getRoleInfo } from '@/lib/roles';
+import { isHiddenName } from '@/lib/hiddenUser';
 import useMessageProfiles from '@/hooks/useMessageProfiles';
 
 // Bu uzunluktan sonra oda ismi soldan akmaya başlar.
 const MARQUEE_AFTER = 10;
 
 /**
- * Oda kimlik kartı: solda oda sahibinin profili, sağda oda ismi ile oda sahibinin
- * adı ve oda kimlik numarası. Kart boyutu isimden bağımsız sabittir; isim uzunsa
- * sağ kenarda sönümlenerek akar, kart büyümez.
+ * Oda kimlik kartı: solda oda sahibinin profili; sağda üstten alta oda ismi,
+ * kullanıcının adı, kullanıcının kimlik numarası ve oda numarası yazar.
+ * Kart boyutu isimden bağımsız sabittir; isim uzunsa sağ kenarda sönümlenerek akar.
  */
 export default function RoomInfoCard({ room, canEdit, onRename }) {
   const [editing, setEditing] = useState(false);
@@ -23,10 +24,16 @@ export default function RoomInfoCard({ room, canEdit, onRename }) {
   const profile = useMessageProfiles(ids)[ownerId] || {};
 
   const role = getRoleInfo(profile);
-  const ownerName = profile.username || room?.owner_name || profile.full_name || 'Kullanıcı';
+  // Gizli kullanıcının odasında takma ad kalır; kimlik numarası yazılmaz.
+  const ownerHidden = isHiddenName(room?.owner_name);
+  const ownerName = ownerHidden
+    ? room.owner_name
+    : profile.username || room?.owner_name || profile.full_name || 'Kullanıcı';
+  // Kullanıcının kimlik numarası: profil kartlarındaki üye numarasının aynısıdır.
+  const memberId = !ownerHidden && profile.member_id && profile.member_id !== '-' ? String(profile.member_id) : '';
   const label = room?.name || 'Oda';
   const scrolls = label.length > MARQUEE_AFTER;
-  // Kimlik numarası: özel oda kodu varsa o, yoksa oda numarası yazılır.
+  // Oda numarası: özel oda kodu varsa o, yoksa oda numarası yazılır.
   const code = room?.personal_room_code || (room?.room_number ? String(room.room_number) : '');
 
   // Oda ismi başka yerden değişirse kart kendini günceller.
@@ -87,21 +94,24 @@ export default function RoomInfoCard({ room, canEdit, onRename }) {
             ) : (
               <span className="block w-full truncate text-sm font-bold">{label}</span>
             )}
-            <span className="mt-0.5 flex items-center gap-1.5 text-[11px] leading-none">
-              <RoleNameEffect
-                nameEffect={role.name_effect}
-                color={role.color}
-                className={`min-w-0 truncate ${role.name_effect ? '' : 'text-white/80'}`}
-              >
-                {ownerName}
-              </RoleNameEffect>
-              {code && (
-                <>
-                  <span className="shrink-0 text-white/35">·</span>
-                  <span className="shrink-0 tabular-nums text-white/60">ID:{code}</span>
-                </>
-              )}
-            </span>
+            {/* Sıra: kullanıcı adı, altında kullanıcının kimlik numarası, en altta oda numarası. */}
+            <RoleNameEffect
+              nameEffect={role.name_effect}
+              color={role.color}
+              className={`mt-0.5 block w-full truncate text-[11px] leading-tight ${role.name_effect ? '' : 'text-white/80'}`}
+            >
+              {ownerName}
+            </RoleNameEffect>
+            {memberId && (
+              <span className="mt-0.5 block w-full truncate text-[11px] leading-tight tabular-nums text-white/60">
+                ID:{memberId}
+              </span>
+            )}
+            {code && (
+              <span className="mt-0.5 block w-full truncate text-[10px] leading-tight tabular-nums text-white/45">
+                Oda No: {code}
+              </span>
+            )}
           </>
         )}
       </div>
