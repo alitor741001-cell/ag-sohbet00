@@ -40,11 +40,14 @@ export default function RoomMusicSheet({ open, onClose, music, tracks = [], curr
   };
 
   const pick = async (event) => {
-    const file = event.target.files?.[0];
-    event.target.value = '';
+    const input = event.currentTarget;
+    const file = input.files?.[0];
     if (!file) return;
     setBusyLabel(`${file.name || 'Şarkı'} yükleniyor…`);
-    report(await onUpload(file));
+    const result = await onUpload(file);
+    // Seçim alanı yükleme bitince sıfırlanır: iOS dosya referansı yükleme sırasında silinmez.
+    input.value = '';
+    report(result);
     setBusyLabel('');
   };
 
