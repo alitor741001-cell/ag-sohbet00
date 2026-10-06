@@ -158,12 +158,8 @@ export default function WatchParty() {
 
 
 
-  // Kişisel oda: ekranda video yoksa oda sahibine YouTube linki paneli açılır
-  useEffect(() => {
-    if (room?.is_personal && !room?.movie_id && joinCount > 0 && user?.id === room?.owner_id) {
-      setYtOpen(true);
-    }
-  }, [room?.is_personal, room?.movie_id, joinCount, user?.id]);
+  // Kişisel odada YouTube linki paneli kendiliğinden açılmaz: oda doğrudan açılır,
+  // link yalnızca kullanıcı istediğinde (ekrandaki Filmler/Link düğmesiyle) girilir.
 
   // Katılım: anlık yoğunluk kaynaklı geçici hatalarda kısa aralıklarla tekrar denenir.
   // Böylece odadan çıkıp tekrar girerken tek seferlik bir aksaklık hata ekranı çıkarmaz.
