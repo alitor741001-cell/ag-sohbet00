@@ -9,9 +9,9 @@ export default function useKeyboardInset() {
     if (!viewport) return undefined;
 
     const update = () => {
-      // Yalnızca klavye yüksekliği ölçülür: sayfa kaydırmasından doğan kayma (offsetTop)
-      // hesaba katılmaz, böylece mesajları kaydırırken alttaki çubuklar yerinden oynamaz.
-      const covered = window.innerHeight - viewport.height;
+      // Klavye yüksekliği: görünür alanın altında kalan boşluk. Sayfa kaydırmasından doğan
+      // kayma (offsetTop) çıkarılır; aksi hâlde çubuklar klavyenin üstünde boşlukta kalır.
+      const covered = window.innerHeight - viewport.height - viewport.offsetTop;
       const limit = Math.round(window.innerHeight * 0.7);
       setInset(covered > 24 ? Math.min(Math.round(covered), limit) : 0);
     };

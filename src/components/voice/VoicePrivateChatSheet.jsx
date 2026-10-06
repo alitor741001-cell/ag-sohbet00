@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import RoomDirectMessages from '@/components/player/RoomDirectMessages';
+import useKeyboardInset from '@/hooks/useKeyboardInset';
 
 /**
  * Özel sohbet: ekranın dibinden yarıya kadar altın-kırmızı bir panel olarak açılır.
@@ -9,6 +10,8 @@ import RoomDirectMessages from '@/components/player/RoomDirectMessages';
 export default function VoicePrivateChatSheet({ open, initialUserId, onClose }) {
   const [full, setFull] = useState(false);
   const wasFullRef = useRef(false);
+  // Klavye açılınca panel klavyenin üstüne kayar: mesaj yazma alanı ve tuşları hep en altta kalır.
+  const keyboardInset = useKeyboardInset();
 
   useEffect(() => {
     if (!open) { setFull(false); wasFullRef.current = false; }
@@ -29,7 +32,7 @@ export default function VoicePrivateChatSheet({ open, initialUserId, onClose }) 
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[250] flex flex-col justify-end">
+    <div className="fixed inset-0 z-[250] flex flex-col justify-end" style={{ paddingBottom: keyboardInset }}>
       {!full && (
         <button type="button" aria-label="Kapat" onClick={onClose} className="absolute inset-0 bg-black/70 backdrop-blur-[2px]" />
       )}

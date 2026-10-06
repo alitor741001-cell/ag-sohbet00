@@ -13,10 +13,10 @@ import useMessageProfiles from '@/hooks/useMessageProfiles';
 /**
  * Oda alt bölümü: sohbet akışı (geçmiş dahil) odaya girildiği anda kendiliğinden görünür.
  * Klavye (sohbet) butonu yalnızca yazma alanını açar; mesaj gönderilince yazma alanı kapanır ve
- * klavye iner, akış görünür kalır. Klavye açıkken yazma alanı klavyenin üstüne kayar — odanın
- * geri kalanı ve alttaki kontrol çubuğu yerinden oynamaz.
+ * klavye iner, akış görünür kalır. Klavye açıkken oda alt bloğu (bu akış + kontrol çubuğu) tek
+ * parça hâlinde klavyenin üstüne kayar; oda yerleşimi yeniden akışa girmez.
  */
-export default function VoiceChatDock({ messages = [], onSend, open, onCloseComposer, composerOpen, chatLocked, currentUserId, ownerId, moderators = [], onOpenProfile, bigGiftNotice, onOpenBigGiftRoom, levels = {}, hiddenUsers = {}, bottomInset = 0 }) {
+export default function VoiceChatDock({ messages = [], onSend, open, onCloseComposer, composerOpen, chatLocked, currentUserId, ownerId, moderators = [], onOpenProfile, bigGiftNotice, onOpenBigGiftRoom, levels = {}, hiddenUsers = {} }) {
   const [text, setText] = useState('');
   const [emojiOpen, setEmojiOpen] = useState(false);
   const inputRef = useRef(null);
@@ -56,7 +56,7 @@ export default function VoiceChatDock({ messages = [], onSend, open, onCloseComp
   };
 
   return (
-    <div className="relative shrink-0" style={{ paddingBottom: composerOpen ? bottomInset : 0 }}>
+    <div className="relative shrink-0">
       {(visible.length > 0 || !!bigGiftNotice) && (
         <div
           style={{ touchAction: 'pan-y' }}

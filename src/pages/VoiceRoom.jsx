@@ -1088,12 +1088,17 @@ export default function VoiceRoom() {
         </p>
       </div>
 
+      {/* Alt blok (sohbet + kontrol çubuğu) tek parça hâlinde durur: klavye açılınca klavyenin
+          hemen üstüne kayar. Oda yerleşimi yeniden akışa girmez, çubuklar hep en altta kalır. */}
+      <div
+        className="shrink-0"
+        style={{ transform: keyboardInset ? `translateY(-${keyboardInset}px)` : 'translateY(0)', transition: 'transform 180ms ease-out' }}
+      >
       <VoiceChatDock
         messages={messages}
         chatLocked={chatLocked}
         onSend={sendMessage}
         open={chatOpen}
-        bottomInset={keyboardInset}
         onCloseComposer={() => setComposerOpen(false)}
         composerOpen={composerOpen}
         currentUserId={user?.id}
@@ -1142,6 +1147,7 @@ export default function VoiceRoom() {
           setComposerOpen(true);
         }}
       />
+      </div>
 
       <VoiceRoomMenu
         open={menuOpen}
@@ -1176,12 +1182,13 @@ export default function VoiceRoom() {
         onUnban={unbanUser}
       />
 
-      {/* Odadaki şarkı bu cihazda çalar; liste ve denetleyici kendi bileşeninde durur. */}
+      {/* Odadaki şarkı bu cihazda çalar; liste ve denetleyici kendi bileşeninde durur.
+          Köşedeki çember denetleyici yalnızca şarkıyı açan oda sahibi/yöneticide görünür. */}
       <RoomMusicLayer
         music={music}
         sheetOpen={musicOpen}
         onCloseSheet={() => setMusicOpen(false)}
-        controllerVisible={!!music.music && !musicOpen && !menuOpen}
+        controllerVisible={canMod && !!music.music && !musicOpen && !menuOpen}
         onOpenList={() => setMusicOpen(true)}
         isMod={canMod}
         onControl={music.control}
