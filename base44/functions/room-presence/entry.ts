@@ -96,6 +96,14 @@ export default async function(req) {
       return Response.json({ error: 'aktif üyelik gerekli' }, { status: 403 });
     }
 
+    // Oda kilidi: içeride kimse yoksa (sıfır kişi) oda kilitlidir — oda sahibi odaya
+    // girene kadar kimse katılamaz, katılım isteği de gönderilemez.
+    if ((action === 'join' || action === 'request-join')
+      && (room.participants || []).length === 0
+      && !isOwner && !isAdmin && !isMod) {
+      return Response.json({ error: 'Oda kilitli: oda sahibi odada değil.', locked: true }, { status: 403 });
+    }
+
     if (action === 'join') {
       // Rate limit: 30 katılım / dakika / kullanıcı — yayınlar arasında gezinirken
       // hızlı oda değiştirmek hata vermesin diye sınır gevşetildi, üst sınır korunuyor.
@@ -307,8 +315,8 @@ export default async function(req) {
       ];
       let update: any = {
         participants,
-        recent_participants: rememberParticipant(room, targetParticipant),
         ...(soft ? {} : {
+          recent_participants: rememberParticipant(room, targetParticipant),
           banned_users: bannedUsers,
           room_logs: appendRoomLog(room, {
             text: `${name}, ${targetName} kişisini odadan attı ve 24 saat girişini yasakladı.`,
@@ -582,6 +590,8 @@ export default async function(req) {
 
     // leave (explicit kontrol — kırılgan varsayılan düşüş yerine)
     if (action !== 'leave') return Response.json({ error: 'geçersiz işlem' }, { status: 400 });
+    // Sessiz çıkış (çevrim dışı kalma): sohbete ayrılma anonsu düşmez, kişi listelere yazılmaz.
+    const silent = body?.silent === true;
     // Koltuk bırakma: odadan hangi ekrandan çıkılırsa çıkılsın kişi koltukta kalmaz.
     // Koltuk listesi yazmadan hemen önce tazelenir: istek başlarken alınan eski kayıt
     // arada koltuğa oturan başka birinin yerini silmez.
@@ -604,7 +614,7 @@ export default async function(req) {
       await base44.asServiceRole.entities.RoomJoinRequest.deleteMany({ room_id, user_id: user.id }).catch(() => {});
     }
     const leavingParticipant = (room.participants || []).find((p) => p.user_id === user.id);
-    const recentParticipants = rememberParticipant(room, leavingParticipant);
+    const recentParticipants = silent ? (room.recent_participants || []) : rememberParticipant(room, leavingParticipant);
     let participants = (room.participants || []).filter((p) => p.user_id !== user.id);
     // Oda sahibi çıkıyor ve katılımcı varsa: online kontrolü atla, oda açık kalsın
     const isOwnerLeavingWithParticipants = isOwner && participants.length > 0 && !room.is_personal;
@@ -645,7 +655,7 @@ export default async function(req) {
         ? `${frameInfoLeave.title} `
         : (roleInfoLeave.label && roleInfoLeave.show_in_room ? `${roleInfoLeave.icon} ${roleInfoLeave.label} ` : '');
       const leaveName = frameInfoLeave ? `${name} ` : (roleInfoLeave.hide_username_entry ? '' : `${name} `);
-      if (!hiddenUser && leavingParticipant) {
+      if (!hiddenUser && leavingParticipant && !silent) {
         await base44.asServiceRole.entities.RoomMessage.create({
           room_id, user_id: user.id, user_name: name, user_avatar: user.avatar || '',
           text: `${profileMetaLeave}${frameMetaLeave}${roleMetaLeave}${titlePrefixLeave}${leaveName}odadan ayrıldı.`, type: 'system'
@@ -669,7 +679,7 @@ export default async function(req) {
       ? `${frameInfoLeave2.title} `
       : (roleInfoLeave2.label && roleInfoLeave2.show_in_room ? `${roleInfoLeave2.icon} ${roleInfoLeave2.label} ` : '');
     const leaveName2 = frameInfoLeave2 ? `${name} ` : (roleInfoLeave2.hide_username_entry ? '' : `${name} `);
-    if (!hiddenUser && leavingParticipant) {
+    if (!hiddenUser && leavingParticipant && !silent) {
         await base44.asServiceRole.entities.RoomMessage.create({
           room_id, user_id: user.id, user_name: name, user_avatar: user.avatar || '',
           text: `${profileMetaLeave2}${frameMetaLeave2}${roleMetaLeave2}${titlePrefixLeave2}${leaveName2}odadan ayrıldı.`, type: 'system'

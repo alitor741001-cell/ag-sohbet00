@@ -29,6 +29,9 @@ import SpecialRoleWelcome from '@/components/player/SpecialRoleWelcome';
 import ProfileFrame from '@/components/ProfileFrame';
 import useSocialBadges from '@/hooks/useSocialBadges';
 import useRoomLevels from '@/hooks/useRoomLevels';
+import useRoomSwipeNav from '@/hooks/useRoomSwipeNav';
+import useOfflineExit from '@/hooks/useOfflineExit';
+import useOfflineParticipantCleanup from '@/hooks/useOfflineParticipantCleanup';
 import { isModerator } from '@/lib/roles';
 import { triggerBanNotice } from '@/lib/banNotice';
 import { isHiddenName } from '@/lib/hiddenUser';
@@ -448,59 +451,27 @@ export default function WatchParty() {
     return () => { leaveRoomRef.current(); window.removeEventListener('pagehide', handler); window.removeEventListener('beforeunload', handler); };
   }, []);
 
-  useEffect(() => {
-    if (!user?.id) return;
-    let kickTimer = null;
-    const startKick = () => {
-      if (!joinedRef.current || kickTimer) return;
-      kickTimer = setTimeout(async () => {
-        if (!joinedRef.current) return;
-        joinedRef.current = false;
-        try { await base44.functions.invoke('room-presence', { action: 'leave', room_id: id }); } catch {}
-        toast({ title: '1 dakika çevrim dışı olduğunuz için odadan ayrıldınız', variant: 'destructive' });
-        navigate('/');
-      }, 60000);
-    };
-    const cancelKick = () => { if (kickTimer) { clearTimeout(kickTimer); kickTimer = null; } };
-    const onVisibilityChange = () => {
-      if (document.visibilityState === 'hidden' || !navigator.onLine) startKick();
-      else cancelKick();
-    };
-    document.addEventListener('visibilitychange', onVisibilityChange);
-    window.addEventListener('online', cancelKick);
-    window.addEventListener('offline', startKick);
-    if (document.visibilityState === 'hidden' || !navigator.onLine) startKick();
-    return () => {
-      cancelKick();
-      document.removeEventListener('visibilitychange', onVisibilityChange);
-      window.removeEventListener('online', cancelKick);
-      window.removeEventListener('offline', startKick);
-    };
-  }, [user?.id, id, navigate]);
+  // 3 dakika çevrim dışı kalan kişi sessizce odadan çıkar ve ana sayfaya döner:
+  // "atıldı" bildirimi, yasak kaydı ve listeye ekleme olmaz; kural oda sahibini de kapsar.
+  const silentOfflineExit = useCallback(async () => {
+    if (!joinedRef.current) return;
+    joinedRef.current = false;
+    setVoiceReady(false);
+    try { await base44.functions.invoke('room-presence', { action: 'leave', room_id: id, silent: true }); } catch {}
+    navigate('/', { replace: true });
+  }, [id, navigate]);
+  useOfflineExit({ enabled: voiceReady, onExit: silentOfflineExit });
 
-  const presenceMapRef = useRef({});
-  const participantsRef = useRef([]);
-  useEffect(() => { presenceMapRef.current = presenceMap; }, [presenceMap]);
-  useEffect(() => { participantsRef.current = room?.participants || []; }, [room?.participants]);
+  // Oda sahibi: 3 dakikadır görünmeyen kişiyi sessizce odadan çıkarır (yasak ve bildirim yok).
+  useOfflineParticipantCleanup({
+    enabled: isOwner,
+    roomId: id,
+    participants: room?.participants || [],
+    exemptIds: [user?.id, room?.owner_id].filter(Boolean),
+  });
 
-  useEffect(() => {
-    // Odadan atma yalnızca oda sahibinde: çevrimdışı temizliği oda sahibi yapar.
-    if (!isOwner || !room?.participants) return;
-    const check = async () => {
-      const offlineUsers = (participantsRef.current || []).filter((p) => {
-        if (p.user_id === user.id || p.user_id === room.owner_id) return false;
-        const presence = presenceMapRef.current[p.user_id];
-        if (!presence) return false;
-        return !presence.online || (Date.now() - new Date(presence.last_seen).getTime() > 60000);
-      });
-      for (const u of offlineUsers) {
-        // Yumuşak temizlik: kişi listeden düşer ama odadan atılmış sayılmaz, yasaklanmaz.
-        await base44.functions.invoke('room-presence', { action: 'kick', room_id: id, target_id: u.user_id, soft: true }).catch(() => {});
-      }
-    };
-    const interval = setInterval(check, 10000);
-    return () => clearInterval(interval);
-  }, [canMod, id, user?.id, room?.owner_id]);
+  // Yukarı/aşağı kaydırma: sesli odalardaki gibi sıradaki canlı yayına geçilir.
+  const swipe = useRoomSwipeNav({ roomId: id, userId: user?.id, active: voiceReady, navigate });
 
   // Otomatik sohbet silme sayacı
   useEffect(() => {
@@ -711,13 +682,16 @@ export default function WatchParty() {
     const t = e.changedTouches[0];
     const dx = t.clientX - touchStart.current.x;
     const dy = t.clientY - touchStart.current.y;
-    if (canMod && dy > 80 && Math.abs(dy) > Math.abs(dx) * 1.5 && !chatOpen && !showSettings && !directOpen && !showViewers) {
-      setYtOpen(true);
-      return;
-    }
     if (Math.abs(dx) > 100 && Math.abs(dx) > Math.abs(dy) * 1.5) {
       if (dx < 0) setChatOpen(true);
       else setChatOpen(false);
+      return;
+    }
+    // Yukarı/aşağı kaydırma: sesli odalardaki gibi sıradaki canlı yayına geçilir.
+    const panelsOpen = chatOpen || showSettings || directOpen || showViewers;
+    if (swipe.swipeEnabled && !panelsOpen && Math.abs(dy) > 90 && Math.abs(dy) > Math.abs(dx) * 1.6) {
+      if (dy < 0) swipe.goNext();
+      else swipe.goPrevious();
     }
   };
 

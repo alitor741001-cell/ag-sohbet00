@@ -3,10 +3,14 @@ import { BarChart3, Check, EyeOff, Film, Lock, Mic } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import { youtubeIdFromMovieId } from '@/lib/youtubeTitle';
 import { prefetchRoomCancel, prefetchRoomSoon } from '@/lib/roomPrefetch';
+import { useCurrentUser } from '@/lib/useCurrentUser';
 
 /** Ana sayfa keşfet ızgarasındaki kare oda kartı: altın çerçeveli premium kart. */
 export default function RoomDiscoveryCard({ room, owner, kind, filmTitle, friendInside }) {
+  const { user } = useCurrentUser();
   const viewers = room.participants?.length || 0;
+  // İçeride kimse yoksa oda kilitlidir: sahibi odaya girene kadar kimse içeri alınmaz.
+  const locked = viewers === 0 && user?.id !== room.owner_id;
   const isVoice = kind === 'voice';
   // Gizli oda yalnızca yönetici listesine düşer: kartın sağ altında işaretlenir.
   const isHidden = room.hidden === true;
@@ -20,10 +24,12 @@ export default function RoomDiscoveryCard({ room, owner, kind, filmTitle, friend
   return (
     <Link
       to={to}
-      onPointerDown={() => prefetchRoomSoon(room.id)}
-      onPointerMove={() => prefetchRoomCancel(room.id)}
-      onPointerUp={() => prefetchRoomCancel(room.id)}
-      onPointerLeave={() => prefetchRoomCancel(room.id)}
+      onPointerDown={locked ? undefined : () => prefetchRoomSoon(room.id)}
+      onPointerMove={locked ? undefined : () => prefetchRoomCancel(room.id)}
+      onPointerUp={locked ? undefined : () => prefetchRoomCancel(room.id)}
+      onPointerLeave={locked ? undefined : () => prefetchRoomCancel(room.id)}
+      onClick={(event) => { if (locked) event.preventDefault(); }}
+      aria-disabled={locked || undefined}
       className="relative flex aspect-square flex-col overflow-hidden rounded-2xl border border-premium-gold/30 bg-anthracite-raised shadow-[0_0_24px_-12px_rgba(198,40,40,0.95)] transition-transform active:scale-[0.98]"
     >
       {/* Kapak kartı tamamen kaplar: kart kare kalır, bilgiler kapak üstünde durur. */}
@@ -50,6 +56,15 @@ export default function RoomDiscoveryCard({ room, owner, kind, filmTitle, friend
           className="absolute right-2 top-2 flex items-center gap-1 rounded-full border border-premium-gold/60 bg-anthracite/90 px-2 py-0.5 text-[9.5px] font-black text-premium-gold shadow-[0_0_12px_-3px_rgba(212,175,55,0.9)]"
         >
           <Check className="h-3 w-3" strokeWidth={3} /> Ekli
+        </span>
+      )}
+
+      {/* Kilit ekranı: oda boşken kartın üzerinde kilit görünür, tıklama odaya sokmaz. */}
+      {locked && (
+        <span className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-black/70">
+          <Lock className="h-6 w-6 text-premium-gold" />
+          <span className="text-[9.5px] font-black tracking-wide text-premium-gold">ODA KİLİTLİ</span>
+          <span className="text-[9px] font-semibold text-white/60">Sahibi odada değil</span>
         </span>
       )}
 

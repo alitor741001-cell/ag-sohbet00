@@ -1,7 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
 
 const ONLINE_THRESHOLD_MS = 30000; // 30 saniye içinde aktif olan çevrim içi sayılır
-const OWNER_OFFLINE_MS = 60000; // oda sahibi 1 dakika çevrim dışı kalırsa oda kapanır
+const OWNER_OFFLINE_MS = 180000; // oda sahibi 3 dakika çevrim dışı kalırsa oda kapanır
 
 export default async function(req) {
   try {

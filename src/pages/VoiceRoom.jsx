@@ -35,6 +35,8 @@ import { withBoardStep } from '@/lib/numberBoard';
 import { takeRoomPrefetch } from '@/lib/roomPrefetch';
 import useRoomSwipeNav from '@/hooks/useRoomSwipeNav';
 import useVerticalSwipe from '@/hooks/useVerticalSwipe';
+import useOfflineExit from '@/hooks/useOfflineExit';
+import useOfflineParticipantCleanup from '@/hooks/useOfflineParticipantCleanup';
 // Oyun paneli ağır: oda açılışında indirilmez, yalnızca açıldığında yüklenir.
 const GamePanel = lazy(() => import('@/components/games/GamePanel'));
 import GiftBoard from '@/components/voice/GiftBoard';
@@ -157,6 +159,25 @@ export default function VoiceRoom() {
     enabled: joined && !seated && swipe.swipeEnabled,
     onSwipeUp: swipe.goNext,
     onSwipeDown: swipe.goPrevious,
+  });
+
+  // 3 dakika çevrim dışı kalan kişi sessizce odadan çıkar ve ana sayfaya döner:
+  // "atıldı" bildirimi, yasak kaydı ve listeye ekleme olmaz; kural oda sahibini de kapsar.
+  const silentOfflineExit = useCallback(async () => {
+    joinedRef.current = false;
+    sawSelfRef.current = false;
+    setJoined(false);
+    try { await base44.functions.invoke('room-presence', { action: 'leave', room_id: id, silent: true }); } catch {}
+    navigate('/', { replace: true });
+  }, [id, navigate]);
+  useOfflineExit({ enabled: joined, onExit: silentOfflineExit });
+
+  // Oda sahibi: 3 dakikadır görünmeyen kişiyi sessizce odadan çıkarır (yasak ve bildirim yok).
+  useOfflineParticipantCleanup({
+    enabled: isOwner,
+    roomId: id,
+    participants: room?.participants || [],
+    exemptIds: [user?.id, room?.owner_id].filter(Boolean),
   });
 
   const seatsView = useMemo(
