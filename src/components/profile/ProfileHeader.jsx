@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Camera, Crown, Loader2, Shield } from 'lucide-react';
+import { Camera, Crown, Loader2, Shield, Users } from 'lucide-react';
 import RoleBadge from '@/components/RoleBadge';
 import XpAvatar from '@/components/xp/XpAvatar';
 import { isRedNameVip } from '@/lib/userLevels';
@@ -66,6 +66,14 @@ export default function ProfileHeader({ user, avatar, onAvatar, uploading }) {
           ) : (
             <RoleBadge user={user} size="lg" />
           )}
+        </div>
+      )}
+      {/* Asistanlık etiketi: ajans asistanı olan kullanıcının profilinde görünür. */}
+      {user.agency_role === 'assistant' && (
+        <div className="mt-2 flex items-center justify-center">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-[#F5C542]/55 bg-[#F5C542]/10 px-3 py-1 text-xs font-black text-[#F5C542]">
+            <Users className="h-3.5 w-3.5" /> ASİSTAN{user.agency_name ? ` • ${user.agency_name}` : ''}{user.agency_code ? ` (${user.agency_code})` : ''}
+          </span>
         </div>
       )}
     </header>

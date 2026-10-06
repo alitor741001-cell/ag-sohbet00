@@ -272,6 +272,12 @@ export default async function (req) {
         await base44.asServiceRole.entities.Agency.update(invitedAgency.id, {
           assistants: (invitedAgency.assistants || []).map((row: any) => (row.user_id === account.id ? { ...row, status: 'active', accepted_at: new Date().toISOString() } : row)),
         }).catch(() => {});
+        // Asistanın kendisine bilgi: profilindeki asistanlık etiketiyle birlikte görünür.
+        await notifyUser(base44, {
+          user_id: account.id, type: 'assistant_accepted', title: '🤝 Asistanlık onaylandı',
+          body: `Artık ${invitedAgency.name} (${invitedAgency.agency_id}) ajansının asistanısınız • komisyon payı %${Number(invite.share) || 100}.`,
+          link: '/profil',
+        }).catch(() => {});
         const ownerAcc = await base44.asServiceRole.entities.User.get(invitedAgency.owner_id).catch(() => null);
         if (ownerAcc) {
           await sendDirect(base44, ownerAcc, account, `🤝 ${displayName} asistanlık davetini kabul etti ve ${invitedAgency.name} ajansının asistanı oldu.`).catch(() => {});
