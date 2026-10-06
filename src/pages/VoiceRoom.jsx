@@ -30,6 +30,7 @@ import { clearMinimizedRoom, getMinimizedRoom, isRoomMinimized, setMinimizedRoom
 import VoicePrivateChatSheet from '@/components/voice/VoicePrivateChatSheet';
 import useRoomMusic from '@/hooks/useRoomMusic';
 import RoomMusicSheet from '@/components/voice/RoomMusicSheet';
+import MusicController from '@/components/voice/MusicController';
 import { withBoardStep } from '@/lib/numberBoard';
 // Oyun paneli ağır: oda açılışında indirilmez, yalnızca açıldığında yüklenir.
 const GamePanel = lazy(() => import('@/components/games/GamePanel'));
@@ -1158,6 +1159,21 @@ export default function VoiceRoom() {
         onPlayTrack={music.playTrack}
         onControl={music.control}
       />
+
+      {/* Müzik denetleyicisi: pencere kapanınca köşedeki çember olarak kalır, dokununca panel açılır. */}
+      {music.music && !musicOpen && !menuOpen && (
+        <MusicController
+          title={music.music.title}
+          playing={!!music.music.is_playing}
+          volume={music.volume}
+          onVolume={music.setVolume}
+          isMod={canMod}
+          onToggle={() => music.control(music.music?.is_playing ? 'pause' : 'play')}
+          onNext={music.playNext}
+          onOpenList={() => setMusicOpen(true)}
+          onStop={() => music.control('stop')}
+        />
+      )}
 
       <GiftBoardSheet
         open={giftBoardOpen}

@@ -162,5 +162,14 @@ export default function useRoomMusic(roomId, enabled) {
     }
   }, [roomId]);
 
-  return { music, library, volume, setVolume, audioRef, uploading, uploadTrack, playTrack, control };
+  // Sıradaki şarkı: listede bir sonraki; son şarkıdaysa başa döner.
+  const playNext = useCallback(async () => {
+    if (!library.length) return 'empty';
+    const index = library.findIndex((track) => track.file_uri === music?.file_uri);
+    const next = library[(index + 1 + library.length) % library.length];
+    if (!next || next.file_uri === music?.file_uri) return 'empty';
+    return playTrack(next);
+  }, [library, music?.file_uri, playTrack]);
+
+  return { music, library, volume, setVolume, audioRef, uploading, uploadTrack, playTrack, playNext, control };
 }
