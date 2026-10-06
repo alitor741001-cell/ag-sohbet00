@@ -8,9 +8,10 @@ export default function rocketRequests(payload) {
   const key = JSON.stringify(payload);
   if (pending.has(key)) return pending.get(key);
   const run = async () => {
-    // Bahis ve çekilme yoğunlukta tekrar denenir: oyuncunun basışı karşılıksız kalmaz.
+    // Bahis çekme/iptal en kritik istektir: yoğunlukta ısrarla tekrar denenir.
     // Yoklamalar tekrar denenmez; sıradaki tazeleme durumu zaten eşitler.
-    const retries = ['cashout', 'bet', 'setAutoValue', 'ledger'].includes(action) ? 2 : 0;
+    const RETRIES = { cashout: 6, bet: 3, setAutoValue: 2, ledger: 1 };
+    const retries = RETRIES[action] ?? 0;
     for (let attempt = 0; ; attempt += 1) {
       try {
         return await enqueueRocketRequest(action, async () => {
@@ -30,8 +31,9 @@ export default function rocketRequests(payload) {
       } catch (error) {
         const status = error?.response?.status;
         if ((error.response && status !== 429 && status < 500) || attempt >= retries) throw error;
-        // Release the queue while waiting so polling cannot hold up a cashout.
-        if (status !== 429) await pause((attempt + 1) * 800 + Math.random() * 400);
+        // Kural reddi tekrar denenmez; yoğunlukta ise kısa ve dağıtılmış bir
+        // molayla hemen tekrar denenir (bekleme sırayı tutmaz, yoklama akmaz).
+        await pause(250 + attempt * 400 + Math.random() * 300);
       }
     }
   };

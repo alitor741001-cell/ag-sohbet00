@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import { creditRocketBet, settleRocketBet } from '../../shared/rocketSettlement.ts';
+import { withLimitRetry } from '../../shared/retryLimit.ts';
 import {
   multiplierAt,
   randomCrash,
@@ -219,6 +220,51 @@ async function buildView(base44, user, round) {
   };
 }
 
+// Bahis çekme (cashout) ve bahis aşamasında iptal: tek yerde toplanır ki yoğunluk
+// anında bütün istek güvenle tekrar denenebilsin (çekilme kararı sunucuda verilir).
+async function handleCashout(base44, user, body, receivedAt) {
+  const slot = body.slot === 2 ? 2 : 1;
+  // Cashout does not advance/pay every player's round or reload history.
+  const roundNo = Number(body.round_no);
+  const rounds = Number.isInteger(roundNo) && roundNo > 0
+    ? await base44.asServiceRole.entities.RocketRound.filter({ round_no: roundNo }, '-created_date', 1)
+    : [await latestRound(base44)];
+  const round = rounds[0];
+  if (!round) return Response.json({ error: 'Oyun turu bulunamadı.' }, { status: 400 });
+  const mine = await base44.asServiceRole.entities.RocketBet.filter(
+    { round_id: round.id, user_id: user.id, slot }, '-created_date', 1
+  );
+  let bet = mine[0];
+  let notice = '';
+  if (bet?.status === 'active') {
+    const elapsed = receivedAt - new Date(round.started_at).getTime();
+    const m = multiplierAt(elapsed);
+    const target = bet.auto_at ?? 0;
+    if (body.automatic === true) {
+      if (target > 1 && target <= round.crash_at && m >= target) {
+        bet = await settleRocketBet(base44, bet, target);
+      } else if (m >= round.crash_at) {
+        await base44.asServiceRole.entities.RocketBet.updateMany({ id: bet.id, status: 'active' }, { $set: { status: 'lost' } });
+        bet = await base44.asServiceRole.entities.RocketBet.get(bet.id);
+      }
+    } else if (elapsed < 0 && round.status === 'betting') {
+      bet = await settleRocketBet(base44, bet, 1, true);
+    } else if (target > 1 && target <= round.crash_at && m >= target) {
+      bet = await settleRocketBet(base44, bet, target);
+    } else if (m < round.crash_at) {
+      bet = await settleRocketBet(base44, bet, m);
+    } else {
+      await base44.asServiceRole.entities.RocketBet.updateMany({ id: bet.id, status: 'active' }, { $set: { status: 'lost' } });
+      bet = await base44.asServiceRole.entities.RocketBet.get(bet.id);
+    }
+  } else if (bet?.status === 'cashed') {
+    bet = await creditRocketBet(base44, bet);
+  }
+  if (bet?.status === 'lost') notice = 'Çakıldı — bahis kaybedildi.';
+  const wallet = await loadWallet(base44, user);
+  return Response.json({ patch: true, now: Date.now(), round_no: round.round_no, slot, bet: bet || null, coins: wallet.coins, notice });
+}
+
 export default async function (req) {
   const receivedAt = Date.now();
   try {
@@ -301,47 +347,10 @@ export default async function (req) {
       return Response.json({ patch: true, now: Date.now(), round_no: round.round_no, slot, bet: placed, coins: updatedWallet.coins });
     }
 
+    // Bahis çekme ve bahis aşamasında iptal: yoğunluk hatasında kısa molalarla
+    // tekrar denenir, oyuncunun basışı limit yüzünden karşılıksız kalmaz.
     if (action === 'cashout') {
-      const slot = body.slot === 2 ? 2 : 1;
-      // Cashout does not advance/pay every player's round or reload history.
-      const roundNo = Number(body.round_no);
-      const rounds = Number.isInteger(roundNo) && roundNo > 0
-        ? await base44.asServiceRole.entities.RocketRound.filter({ round_no: roundNo }, '-created_date', 1)
-        : [await latestRound(base44)];
-      const round = rounds[0];
-      if (!round) return Response.json({ error: 'Oyun turu bulunamadı.' }, { status: 400 });
-      const mine = await base44.asServiceRole.entities.RocketBet.filter(
-        { round_id: round.id, user_id: user.id, slot }, '-created_date', 1
-      );
-      let bet = mine[0];
-      let notice = '';
-      if (bet?.status === 'active') {
-        const elapsed = receivedAt - new Date(round.started_at).getTime();
-        const m = multiplierAt(elapsed);
-        const target = bet.auto_at ?? 0;
-        if (body.automatic === true) {
-          if (target > 1 && target <= round.crash_at && m >= target) {
-            bet = await settleRocketBet(base44, bet, target);
-          } else if (m >= round.crash_at) {
-            await base44.asServiceRole.entities.RocketBet.updateMany({ id: bet.id, status: 'active' }, { $set: { status: 'lost' } });
-            bet = await base44.asServiceRole.entities.RocketBet.get(bet.id);
-          }
-        } else if (elapsed < 0 && round.status === 'betting') {
-          bet = await settleRocketBet(base44, bet, 1, true);
-        } else if (target > 1 && target <= round.crash_at && m >= target) {
-          bet = await settleRocketBet(base44, bet, target);
-        } else if (m < round.crash_at) {
-          bet = await settleRocketBet(base44, bet, m);
-        } else {
-          await base44.asServiceRole.entities.RocketBet.updateMany({ id: bet.id, status: 'active' }, { $set: { status: 'lost' } });
-          bet = await base44.asServiceRole.entities.RocketBet.get(bet.id);
-        }
-      } else if (bet?.status === 'cashed') {
-        bet = await creditRocketBet(base44, bet);
-      }
-      if (bet?.status === 'lost') notice = 'Çakıldı — bahis kaybedildi.';
-      const wallet = await loadWallet(base44, user);
-      return Response.json({ patch: true, now: Date.now(), round_no: round.round_no, slot, bet: bet || null, coins: wallet.coins, notice });
+      return await withLimitRetry(() => handleCashout(base44, user, body, receivedAt), 4);
     }
 
     // Oyun defteri: oyuncunun kendi bahis dökümü, yatırılan ve kazanılan toplam.

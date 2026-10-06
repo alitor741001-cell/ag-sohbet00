@@ -313,9 +313,11 @@ export default function useRocketGame() {
           needsRecoveryRef.current = true;
           cooldownRef.current = Date.now() + POLL_COOLDOWN;
         }
-        // Kural reddi oyuncuya söylenir; yoğunlukta basışın karşılıksız kalmadığı
-        // bildirilir ki oyuncu tekrar denesin.
-        setMessage(gameMessage(e) || (options.slot ? 'Bağlantı yoğun — tekrar dene.' : ''));
+        // Kural reddi oyuncuya söylenir. Bahis çekme/iptal ise yoğunlukta arka
+        // planda tekrar dener: oyuncuya yoğunluk uyarısı gösterilmez, sonuç
+        // (ödeme ya da kayıp) sunucudan geldiği an ekrana düşer.
+        const fallback = payload.action === 'cashout' ? '' : (options.slot ? 'Bağlantı yoğun — tekrar dene.' : '');
+        setMessage(gameMessage(e) || fallback);
         return null;
       } finally {
         busyRef.current.delete(key);

@@ -1,16 +1,19 @@
+import { withLimitRetry } from './retryLimit.ts';
+
 // Conditional updates make retries safe across concurrent function instances.
 export async function creditRocketBet(base44, bet) {
   if (bet.status !== 'cashed' || bet.settlement_version !== 1 || bet.payout_credited) return bet;
-  const wallets = await base44.asServiceRole.entities.GameWallet.filter({ user_id: bet.user_id }, '-created_date', 1);
+  const wallets = await withLimitRetry(() =>
+    base44.asServiceRole.entities.GameWallet.filter({ user_id: bet.user_id }, '-created_date', 1));
   const wallet = wallets[0];
   if (!wallet) throw new Error('Oyun cüzdanı bulunamadı.');
   // The receipt and increment are committed together: an interrupted response
   // can be retried without paying twice or overwriting the other slot's payout.
-  await base44.asServiceRole.entities.GameWallet.updateMany(
+  await withLimitRetry(() => base44.asServiceRole.entities.GameWallet.updateMany(
     { id: wallet.id, rocket_paid_bets: { $ne: bet.id } },
     { $inc: { coins: bet.payout, total_won: bet.cancelled ? 0 : bet.payout }, $addToSet: { rocket_paid_bets: bet.id } }
-  );
-  await base44.asServiceRole.entities.RocketBet.update(bet.id, { payout_credited: true });
+  ));
+  await withLimitRetry(() => base44.asServiceRole.entities.RocketBet.update(bet.id, { payout_credited: true }));
   return { ...bet, payout_credited: true };
 }
 
@@ -20,9 +23,9 @@ export async function settleRocketBet(base44, bet, multiplier, cancelled = false
     status: 'cashed', cashout_at: multiplier, payout: Math.round(bet.bet * multiplier),
     cancelled, settlement_version: 1, payout_credited: false,
   };
-  const result = await base44.asServiceRole.entities.RocketBet.updateMany(
+  const result = await withLimitRetry(() => base44.asServiceRole.entities.RocketBet.updateMany(
     { id: bet.id, status: 'active' }, { $set: changes }
-  );
+  ));
   const settled = result.updated ? { ...bet, ...changes } : await base44.asServiceRole.entities.RocketBet.get(bet.id);
   return creditRocketBet(base44, settled);
 }
