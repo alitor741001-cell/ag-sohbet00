@@ -50,11 +50,11 @@ export default function RoomInfoCard({ room, canEdit, onRename }) {
   };
 
   return (
-    <div className={`relative flex min-h-[60px] w-[14rem] min-w-0 max-w-full items-center gap-2.5 rounded-2xl border border-white/10 bg-white/[0.07] py-2 pl-2.5 ${editing || !canEdit ? 'pr-3' : 'pr-10'}`}>
-      <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/15 bg-white/10">
+    <div className={`relative flex min-h-[60px] w-[12.5rem] min-w-0 max-w-full items-center gap-2.5 rounded-2xl border border-white/10 bg-white/[0.07] py-2 pl-2.5 ${editing || !canEdit ? 'pr-3' : 'pr-10'}`}>
+      <span className="inline-flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/15 bg-white/10">
         {profile.avatar
           ? <Image src={profile.avatar} alt={ownerName} className="h-full w-full" fittingType="fill" draggable={false} />
-          : <span className="text-sm font-bold text-white/80">{ownerName.trim().charAt(0)}</span>}
+          : <span className="text-base font-bold text-white/80">{ownerName.trim().charAt(0)}</span>}
       </span>
 
       <div className="min-w-0 flex-1">
