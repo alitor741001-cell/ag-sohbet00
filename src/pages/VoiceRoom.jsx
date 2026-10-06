@@ -1,6 +1,6 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Armchair, Eye, Gift, Loader2, Lock, LogOut, MessageSquare, Mic, MicOff, MoreHorizontal, Shield, ShieldAlert, Unlock, UserMinus, UserPlus, UserRound } from 'lucide-react';
+import { Armchair, Eye, Gift, Lock, LogOut, MessageSquare, Mic, MicOff, MoreHorizontal, Shield, Unlock, UserMinus, UserPlus, UserRound } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useVoiceChat } from '@/hooks/useVoiceChat';
@@ -26,12 +26,15 @@ import RoomLogSheet from '@/components/voice/RoomLogSheet';
 import GiftScoreChip from '@/components/voice/GiftScoreChip';
 import GiftBoardSheet from '@/components/voice/GiftBoardSheet';
 import RoomExitOverlay from '@/components/voice/RoomExitOverlay';
+import VoiceRoomGate from '@/components/voice/VoiceRoomGate';
 import { clearMinimizedRoom, getMinimizedRoom, isRoomMinimized, setMinimizedRoom } from '@/lib/minimizedRoom';
 import VoicePrivateChatSheet from '@/components/voice/VoicePrivateChatSheet';
 import useRoomMusic from '@/hooks/useRoomMusic';
 import RoomMusicLayer from '@/components/voice/RoomMusicLayer';
 import { withBoardStep } from '@/lib/numberBoard';
 import { takeRoomPrefetch } from '@/lib/roomPrefetch';
+import useRoomSwipeNav from '@/hooks/useRoomSwipeNav';
+import useVerticalSwipe from '@/hooks/useVerticalSwipe';
 // Oyun paneli ağır: oda açılışında indirilmez, yalnızca açıldığında yüklenir.
 const GamePanel = lazy(() => import('@/components/games/GamePanel'));
 import GiftBoard from '@/components/voice/GiftBoard';
@@ -146,6 +149,15 @@ export default function VoiceRoom() {
   // Sohbet yasağı açıkken yalnızca koltuktakiler yazar.
   const chatBanned = room?.chat_seated_only === true;
   const chatLocked = chatBanned && !seated;
+
+  // Koltukta değilken yukarı/aşağı kaydırma: diğer canlı sesli odalara geçilir.
+  // Ayarlar bölümündeki anahtarla açılıp kapanır; koltukta otururken hiç çalışmaz.
+  const swipe = useRoomSwipeNav({ roomId: id, active: joined && !seated, navigate });
+  const swipeGesture = useVerticalSwipe({
+    enabled: joined && !seated && swipe.swipeEnabled,
+    onSwipeUp: swipe.goNext,
+    onSwipeDown: swipe.goPrevious,
+  });
 
   const seatsView = useMemo(
     () => seats.map((seat) => ({
@@ -278,6 +290,30 @@ export default function VoiceRoom() {
   }, [messages, joined, loadGiftBoard]);
 
   useEffect(() => () => window.clearTimeout(giftRefreshTimerRef.current), []);
+
+  // Kaydırarak oda değiştirildiğinde eski odadan çıkılır ve giriş durumu sıfırlanır:
+  // yeni odaya temiz bir oturumla katılınır.
+  const previousRoomIdRef = useRef(id);
+  useEffect(() => {
+    const previous = previousRoomIdRef.current;
+    if (previous && previous !== id) {
+      base44.functions.invoke('voice-room', { action: 'seat-leave', room_id: previous }).catch(() => {});
+      base44.functions.invoke('room-presence', { action: 'leave', room_id: previous }).catch(() => {});
+    }
+    previousRoomIdRef.current = id;
+    joinedRef.current = false;
+    sawSelfRef.current = false;
+    joinTriedRef.current = false;
+    ghostRef.current = false;
+    setJoined(false);
+    setRoom(null);
+    setNotice('');
+    setBanNotice('');
+    setNeedsPassword(false);
+    setPassword('');
+    setMessages([]);
+    setLoading(true);
+  }, [id]);
 
   // Odayı yükle — sesli oda değilse normal oda sayfasına yönlendir.
   useEffect(() => {
@@ -867,68 +903,20 @@ export default function VoiceRoom() {
     });
   };
 
-  if (loading) {
+  // Odaya giriş ekranları (yükleme, giriş yasağı, şifre ve bağlanma beklemesi) tek bileşende toplanır.
+  if (loading || banNotice || !joined) {
     return (
-      <div className="fixed inset-0 z-[150] flex items-center justify-center bg-catalog">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  // Odadan atıldıysanız: 24 saatlik giriş yasağı ekranda açıkça gösterilir.
-  if (banNotice) {
-    return (
-      <div className="fixed inset-0 z-[150] flex flex-col items-center justify-center gap-3 bg-catalog px-6 text-center text-white">
-        <ShieldAlert className="h-12 w-12 text-red-500" />
-        <p className="text-base font-bold">Odaya giremezsiniz</p>
-        <p className="max-w-xs text-sm text-white/70">{banNotice}</p>
-        <button type="button" onClick={() => navigate('/')} className="mt-1 rounded-xl bg-white/10 px-5 py-2.5 text-sm font-bold">
-          Ana sayfaya dön
-        </button>
-      </div>
-    );
-  }
-
-  if (notice && !joined && !needsPassword) {
-    return (
-      <div className="fixed inset-0 z-[150] flex flex-col items-center justify-center gap-4 bg-catalog px-6 text-center text-white">
-        <ShieldAlert className="h-10 w-10 text-red-500" />
-        <p className="max-w-xs text-sm text-white/70">{notice}</p>
-        <button type="button" onClick={() => navigate('/')} className="rounded-xl bg-white/10 px-5 py-2.5 text-sm font-bold">
-          Ana sayfaya dön
-        </button>
-      </div>
-    );
-  }
-
-  if (!joined && needsPassword) {
-    return (
-      <div className="fixed inset-0 z-[150] flex flex-col items-center justify-center gap-4 bg-catalog px-6 text-white">
-        <Lock className="h-10 w-10 text-amber-400" />
-        <RoomOwnerBadge ownerId={room?.owner_id} fallbackName={room?.owner_name} />
-        <p className="text-sm text-white/70">{room?.name || 'Oda'} kilitli. Şifreyi gir.</p>
-        <form onSubmit={(event) => { event.preventDefault(); attemptJoin(password); }} className="w-full max-w-xs space-y-3">
-          <input
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            placeholder="Oda şifresi"
-            className="h-11 w-full rounded-xl bg-white/10 px-4 text-sm text-white outline-none placeholder:text-white/40"
-          />
-          {notice && <p className="text-center text-xs text-red-400">{notice}</p>}
-          <button type="submit" className="w-full rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground">Odaya gir</button>
-        </form>
-        <button type="button" onClick={() => navigate('/')} className="text-xs text-white/50">Vazgeç</button>
-      </div>
-    );
-  }
-
-  if (!joined) {
-    return (
-      <div className="fixed inset-0 z-[150] flex flex-col items-center justify-center gap-3 bg-catalog text-white">
-        <Loader2 className="h-7 w-7 animate-spin text-primary" />
-        <p className="text-xs text-white/60">Odaya bağlanılıyor...</p>
-      </div>
+      <VoiceRoomGate
+        loading={loading}
+        banNotice={banNotice}
+        notice={notice}
+        needsPassword={needsPassword}
+        room={room}
+        password={password}
+        onPasswordChange={setPassword}
+        onSubmitPassword={attemptJoin}
+        onGoHome={() => navigate('/')}
+      />
     );
   }
 
@@ -1037,7 +1025,11 @@ export default function VoiceRoom() {
         </div>
       </header>
 
-      <div className="relative min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-3 pb-4 pt-1">
+      <div
+        ref={swipeGesture.scrollRef}
+        {...swipeGesture.handlers}
+        className="relative min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-3 pb-4 pt-1"
+      >
         {room?.password && (
           <p className="mb-3 flex items-center justify-center gap-1.5 text-[11px] text-amber-400">
             <Lock className="h-3 w-3" /> Şifreli oda
@@ -1289,6 +1281,8 @@ export default function VoiceRoom() {
         onClose={() => setSettingsOpen(false)}
         enabled={giftEffects}
         onToggle={setGiftEffects}
+        swipeEnabled={swipe.swipeEnabled}
+        onToggleSwipe={swipe.toggleSwipe}
       />
 
       {notice && joined && (
