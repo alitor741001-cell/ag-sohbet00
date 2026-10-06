@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Loader2, Music, Pause, Play, Square, Upload, Volume2 } from 'lucide-react';
 import VoiceSheet from '@/components/voice/VoiceSheet';
+import RoomTrackList from '@/components/voice/RoomTrackList';
 import { useToast } from '@/components/ui/use-toast';
 
 const clock = (seconds) => {
@@ -12,9 +13,11 @@ const clock = (seconds) => {
  * Oda müziği penceresi: oda sahibi ve yöneticiler telefondan şarkı seçer,
  * odadaki herkes aynı şarkıyı duyar ve kendi telefonunda sesini ayarlar.
  */
-export default function RoomMusicSheet({ open, onClose, music, volume, onVolume, isMod, uploading, onUpload, onControl }) {
+export default function RoomMusicSheet({ open, onClose, music, tracks = [], currentUri, volume, onVolume, isMod, uploading, onUpload, onPlayTrack, onControl }) {
   const { toast } = useToast();
   const [now, setNow] = useState(() => Date.now());
+  // İşlem sürerken dosyanın/şarkının adı görünür: ekran sessizce beklemez.
+  const [busyLabel, setBusyLabel] = useState('');
 
   // Süre yalnızca şarkı çalarken ve pencere açıkken ilerler.
   useEffect(() => {
@@ -27,15 +30,29 @@ export default function RoomMusicSheet({ open, onClose, music, volume, onVolume,
     ? Math.max(0, (now - new Date(music.started_at).getTime()) / 1000)
     : 0);
 
+  // Sonuç bildirimleri tek yerde: yükleme ve listeden çalma aynı mesajları kullanır.
+  const report = (result) => {
+    if (result === 'too-large') toast({ title: 'Şarkı çok büyük', description: 'En fazla 25 MB boyutunda bir şarkı seç.', variant: 'destructive' });
+    else if (result === 'busy') toast({ title: 'Çok sık şarkı değiştiriliyor', description: 'Biraz bekleyip tekrar dene.', variant: 'destructive' });
+    else if (result === 'timeout') toast({ title: 'Yükleme tamamlanmadı', description: 'Bağlantı yavaş olabilir. Dosyayı tekrar seçmeyi dene.', variant: 'destructive' });
+    else if (result === 'error') toast({ title: 'Şarkı açılamadı', description: 'Bağlantını kontrol edip tekrar dene. Korumalı (Apple Music) şarkılar yüklenemez.', variant: 'destructive' });
+    else if (result === 'ok') toast({ title: '🎵 Müzik açıldı', description: 'Odadaki herkes şarkıyı duyuyor.' });
+  };
+
   const pick = async (event) => {
     const file = event.target.files?.[0];
     event.target.value = '';
     if (!file) return;
-    const result = await onUpload(file);
-    if (result === 'too-large') toast({ title: 'Şarkı çok büyük', description: 'En fazla 25 MB boyutunda bir şarkı seç.', variant: 'destructive' });
-    else if (result === 'busy') toast({ title: 'Çok sık şarkı değiştiriliyor', description: 'Biraz bekleyip tekrar dene.', variant: 'destructive' });
-    else if (result === 'error') toast({ title: 'Şarkı açılamadı', description: 'Dosyayı tekrar seç.', variant: 'destructive' });
-    else if (result === 'ok') toast({ title: '🎵 Müzik açıldı', description: 'Odadaki herkes şarkıyı duyuyor.' });
+    setBusyLabel(`${file.name || 'Şarkı'} yükleniyor…`);
+    report(await onUpload(file));
+    setBusyLabel('');
+  };
+
+  // Listeden seçilen şarkı odaya açılır; pencere açık kalır.
+  const play = async (track) => {
+    setBusyLabel(`“${track.title || 'Şarkı'}” odaya açılıyor…`);
+    report(await onPlayTrack(track));
+    setBusyLabel('');
   };
 
   return (
@@ -91,10 +108,14 @@ export default function RoomMusicSheet({ open, onClose, music, volume, onVolume,
         )}
         {uploading && (
           <p className="mt-3 flex items-center justify-center gap-2 text-[11px] text-white/60">
-            <Loader2 className="h-3.5 w-3.5 animate-spin" /> Şarkı odaya yükleniyor…
+            <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" />
+            <span className="min-w-0 truncate">{busyLabel || 'Şarkı odaya yükleniyor…'}</span>
           </p>
         )}
       </div>
+
+      {/* Yüklenen şarkılar: müzik tuşuna basıldığında liste hâlinde görünür. */}
+      <RoomTrackList tracks={tracks} currentUri={currentUri} canPlay={isMod} busy={uploading} onPlay={play} />
 
       {/* iPhone'da müzik dosyası Dosyalar'dan seçilir; Apple Music şarkıları korumalıdır. */}
       <p className="mt-2 px-1 text-[11px] leading-snug text-white/45">

@@ -14,7 +14,7 @@ import { HIDDEN_AVATAR_URL, hiddenDisplayName, isHiddenDisplayName, isHiddenUser
 const SEAT_OPTIONS = [1, 2, 5, 8, 9, 12, 15, 20, 24];
 // Bu değerin (coin) üzerindeki hediyeler bütün sesli odalara duyurulur.
 const BIG_GIFT_SCORE = 1000000;
-const ACTIONS = ['seat-take', 'seat-leave', 'seat-lock', 'seat-mute', 'seat-kick', 'set-seat-count', 'invite', 'seat-invite', 'seat-invite-clear', 'gift-state', 'gift-send', 'gift-finalize', 'gift-board', 'number-board-open', 'number-board-close', 'number-step', 'number-reset', 'number-settings', 'chat-ban', 'music-state', 'music-set', 'music-control'];
+const ACTIONS = ['seat-take', 'seat-leave', 'seat-lock', 'seat-mute', 'seat-kick', 'set-seat-count', 'invite', 'seat-invite', 'seat-invite-clear', 'gift-state', 'gift-send', 'gift-finalize', 'gift-board', 'number-board-open', 'number-board-close', 'number-step', 'number-reset', 'number-settings', 'chat-ban', 'music-state', 'music-set', 'music-control', 'music-library'];
 
 const emptySeat = (index, locked = false) => ({
   index, user_id: '', name: '', avatar: '', frame: '', frame_scale: 100, locked, muted: false,
@@ -499,6 +499,13 @@ export default async function (req: Request): Promise<Response> {
       return Response.json({ ok: true, music: await loadRoomMusic(base44, room_id) });
     }
 
+    // Odanın şarkı listesi: yüklenen şarkılar burada birikir, yönetici listeden şarkı açar.
+    if (action === 'music-library') {
+      if (!isParticipant && !canMod) return Response.json({ error: 'Önce odaya katılmalısın.' }, { status: 403 });
+      const tracks = await base44.asServiceRole.entities.RoomTrack.filter({ room_id }, '-created_date', 30).catch(() => []);
+      return Response.json({ ok: true, tracks: Array.isArray(tracks) ? tracks : [] });
+    }
+
     if (action === 'music-set') {
       if (!canMod) return Response.json({ error: 'Müziği oda sahibi ve yöneticiler açabilir.' }, { status: 403 });
       const fileUri = typeof body.file_uri === 'string' ? body.file_uri.trim().slice(0, 400) : '';
@@ -517,6 +524,13 @@ export default async function (req: Request): Promise<Response> {
         ? await base44.asServiceRole.entities.RoomMusic.update(existing.id, patch)
         : await base44.asServiceRole.entities.RoomMusic.create(patch);
       await say(`${shownName}, odaya müzik açtı: ${title}`);
+      // Şarkı listesi: aynı dosya ikinci kez eklenmez, her yeni şarkı listeye düşer.
+      const known = await base44.asServiceRole.entities.RoomTrack.filter({ room_id, file_uri: fileUri }, '-created_date', 1).catch(() => []);
+      if (!Array.isArray(known) || known.length === 0) {
+        await base44.asServiceRole.entities.RoomTrack.create({
+          room_id, title, file_uri: fileUri, added_by: user.id, added_by_name: shownName,
+        }).catch(() => {});
+      }
       return Response.json({ ok: true, music: record });
     }
 

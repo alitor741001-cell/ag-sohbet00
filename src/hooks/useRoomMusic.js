@@ -6,6 +6,14 @@ const VOLUME_KEY = 'filmykeyfi:roomMusicVolume';
 const MAX_TRACK_MB = 25;
 // İmzalı bağlantı şarkı boyunca geçerli kalır (6 saat).
 const URL_TTL = 21600;
+// Telefondan yükleme askıda kalmasın: süre aşılırsa hata bildirilir, düğme kilitli kalmaz.
+const UPLOAD_TIMEOUT_MS = 90000;
+
+/** Yükleme/imzalama çağrısını bekler; süre aşılırsa { timeout: true } döner. */
+const withTimeout = (promise) => Promise.race([
+  promise.catch((error) => ({ error })),
+  new Promise((resolve) => { window.setTimeout(() => resolve({ timeout: true }), UPLOAD_TIMEOUT_MS); }),
+]);
 
 /**
  * Oda müziği: odanın açık şarkısını canlı izler ve herkesin kendi telefonunda çalar.
@@ -13,18 +21,37 @@ const URL_TTL = 21600;
  */
 export default function useRoomMusic(roomId, enabled) {
   const [music, setMusic] = useState(null);
+  const [library, setLibrary] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [volume, setVolume] = useState(() => {
     const stored = Number(window.localStorage.getItem(VOLUME_KEY));
     return Number.isFinite(stored) && stored > 0 ? Math.min(1, stored) : 0.8;
   });
   const audioRef = useRef(null);
+  // Müziğin çalması gerekiyor mu: iOS ses kilidini açarken bu bilgi kullanılır.
+  const wantPlayRef = useRef(false);
 
   // Ses seviyesi bu cihazda kalır: müziği herkes kendi telefonunda kısıp açar.
   useEffect(() => {
     if (audioRef.current) audioRef.current.volume = volume;
     window.localStorage.setItem(VOLUME_KEY, String(volume));
   }, [volume]);
+
+  // Odanın şarkı listesi: yüklenen şarkılar burada birikir, listeden tek dokunuşla açılır.
+  const fetchLibrary = useCallback(async () => {
+    if (!roomId || !enabled) return;
+    try {
+      const response = await base44.functions.invoke('voice-room', { room_id: roomId, action: 'music-library' });
+      setLibrary(response?.data?.tracks || []);
+    } catch {
+      setLibrary([]);
+    }
+  }, [roomId, enabled]);
+
+  useEffect(() => { fetchLibrary(); }, [fetchLibrary]);
+
+  // Başka bir yönetici şarkı açtığında liste de tazelenir.
+  useEffect(() => { if (music?.file_uri) fetchLibrary(); }, [music?.file_uri, fetchLibrary]);
 
   // Şarkı kaydı canlı izlenir: odaya sonradan giren de çalan şarkıyı alır.
   useEffect(() => {
@@ -46,6 +73,7 @@ export default function useRoomMusic(roomId, enabled) {
 
   // Oynatma: çalıyor/duraklatıldı bilgisi ve pozisyon sunucudan gelir, cihaz kendini hizalar.
   useEffect(() => {
+    wantPlayRef.current = !!music?.is_playing;
     const audio = audioRef.current;
     if (!audio) return;
     if (!music?.url) {
@@ -68,6 +96,20 @@ export default function useRoomMusic(roomId, enabled) {
     else audio.pause();
   }, [music]);
 
+  // iOS sesi ancak bir dokunuştan sonra serbest bırakır: ilk dokunuşta çalma yeniden denenir.
+  useEffect(() => {
+    const unlock = () => {
+      const audio = audioRef.current;
+      if (audio && wantPlayRef.current && audio.paused) audio.play().catch(() => {});
+    };
+    window.addEventListener('touchstart', unlock, { once: true });
+    window.addEventListener('pointerdown', unlock, { once: true });
+    return () => {
+      window.removeEventListener('touchstart', unlock);
+      window.removeEventListener('pointerdown', unlock);
+    };
+  }, []);
+
   const control = useCallback(async (op) => {
     await base44.functions.invoke('voice-room', { room_id: roomId, action: 'music-control', op }).catch(() => {});
   }, [roomId]);
@@ -78,14 +120,17 @@ export default function useRoomMusic(roomId, enabled) {
     if (file.size > MAX_TRACK_MB * 1024 * 1024) return 'too-large';
     setUploading(true);
     try {
-      const { file_uri } = await base44.integrations.Core.UploadPrivateFile({ file });
-      const { signed_url } = await base44.integrations.Core.CreateFileSignedUrl({ file_uri, expires_in: URL_TTL });
+      const uploaded = await withTimeout(base44.integrations.Core.UploadPrivateFile({ file }));
+      if (uploaded?.timeout) return 'timeout';
+      if (uploaded?.error || !uploaded?.file_uri) return uploaded?.error?.response?.status === 429 ? 'busy' : 'error';
+      const signed = await withTimeout(base44.integrations.Core.CreateFileSignedUrl({ file_uri: uploaded.file_uri, expires_in: URL_TTL }));
+      if (signed?.timeout || !signed?.signed_url) return signed?.error?.response?.status === 429 ? 'busy' : 'error';
       await base44.functions.invoke('voice-room', {
         room_id: roomId,
         action: 'music-set',
         title: String(file.name || '').replace(/\.[^.]+$/, '').slice(0, 80) || 'Şarkı',
-        file_uri,
-        url: signed_url,
+        file_uri: uploaded.file_uri,
+        url: signed.signed_url,
       });
       return 'ok';
     } catch (error) {
@@ -95,5 +140,27 @@ export default function useRoomMusic(roomId, enabled) {
     }
   }, [roomId]);
 
-  return { music, volume, setVolume, audioRef, uploading, uploadTrack, control };
+  // Listeden şarkı açma: bağlantının süresi dolduğu için dosya her seferinde yeniden imzalanır.
+  const playTrack = useCallback(async (track) => {
+    if (!track?.file_uri || !roomId) return 'empty';
+    setUploading(true);
+    try {
+      const signed = await withTimeout(base44.integrations.Core.CreateFileSignedUrl({ file_uri: track.file_uri, expires_in: URL_TTL }));
+      if (signed?.timeout || !signed?.signed_url) return signed?.error?.response?.status === 429 ? 'busy' : 'error';
+      await base44.functions.invoke('voice-room', {
+        room_id: roomId,
+        action: 'music-set',
+        title: String(track.title || 'Şarkı').slice(0, 80),
+        file_uri: track.file_uri,
+        url: signed.signed_url,
+      });
+      return 'ok';
+    } catch (error) {
+      return error?.response?.status === 429 ? 'busy' : 'error';
+    } finally {
+      setUploading(false);
+    }
+  }, [roomId]);
+
+  return { music, library, volume, setVolume, audioRef, uploading, uploadTrack, playTrack, control };
 }

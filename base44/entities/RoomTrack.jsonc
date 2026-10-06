@@ -1,0 +1,47 @@
+{
+  "name": "RoomTrack",
+  "type": "object",
+  "properties": {
+    "room_id": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string",
+      "default": "\u015eark\u0131"
+    },
+    "file_uri": {
+      "type": "string"
+    },
+    "added_by": {
+      "type": "string",
+      "default": ""
+    },
+    "added_by_name": {
+      "type": "string",
+      "default": ""
+    }
+  },
+  "required": [
+    "room_id",
+    "title",
+    "file_uri"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

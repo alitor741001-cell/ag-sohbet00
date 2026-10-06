@@ -1150,9 +1150,12 @@ export default function VoiceRoom() {
         music={music.music}
         volume={music.volume}
         onVolume={music.setVolume}
+        tracks={music.library}
+        currentUri={music.music?.file_uri}
         isMod={canMod}
         uploading={music.uploading}
         onUpload={music.uploadTrack}
+        onPlayTrack={music.playTrack}
         onControl={music.control}
       />
 
