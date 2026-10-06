@@ -7,6 +7,7 @@ import RoomDiscoveryCard from '@/components/home/RoomDiscoveryCard';
 import GameDiscoveryRow from '@/components/home/GameDiscoveryRow';
 import useFriends from '@/hooks/useFriends';
 import useMessageProfiles from '@/hooks/useMessageProfiles';
+import useRoomPresence from '@/hooks/useRoomPresence';
 import { fetchYouTubeTitle, isGenericTitle, youtubeIdFromMovieId } from '@/lib/youtubeTitle';
 
 // Oyunlar ayrı indirilir: ana sayfa paketi küçük kalır.
@@ -28,7 +29,7 @@ const normalizeId = (value) =>
 export default function RoomDiscovery({ shortcuts = null }) {
   const { user } = useCurrentUser();
   const { relations } = useFriends();
-  const [rooms, setRooms] = useState([]);
+  const [allRooms, setAllRooms] = useState([]);
   const [owners, setOwners] = useState({});
   const [titles, setTitles] = useState({});
   const [loading, setLoading] = useState(true);
@@ -42,13 +43,16 @@ export default function RoomDiscovery({ shortcuts = null }) {
   const hiddenIdsRef = useRef(new Set());
 
   // Gizli oda hiçbir listede görünmez: sahibinin ve yöneticinin listesinde de kartı çıkmaz.
-  // Yalnızca içinde izleyici/konuşmacı bulunan oda "açık" sayılır; boş odanın kartı çıkmaz.
-  const isVisible = (room) =>
+  const isCandidate = (room) =>
     !!room &&
     room.status === 'active' &&
     room.hidden !== true &&
-    !hiddenIdsRef.current.has(room.id) &&
-    (room.participants?.length || 0) > 0;
+    !hiddenIdsRef.current.has(room.id);
+
+  // Açık oda ölçütü: odada sahibi dışında çevrim içi en az bir kişi olmalı. Sahibi tek
+  // başınayken oda ana sayfada görünmez; kimse kalmazsa en geç bir dakika sonra düşer.
+  const { hasLiveOthers } = useRoomPresence(allRooms);
+  const rooms = useMemo(() => allRooms.filter((room) => hasLiveOthers(room)), [allRooms, hasLiveOthers]);
 
   useEffect(() => {
     let alive = true;
@@ -58,9 +62,9 @@ export default function RoomDiscovery({ shortcuts = null }) {
       const live = list.filter((room) => {
         if (room.hidden === true) hiddenIdsRef.current.add(room.id);
         else hiddenIdsRef.current.delete(room.id);
-        return isVisible(room);
+        return isCandidate(room);
       });
-      setRooms(live);
+      setAllRooms(live);
       setLoading(false);
       const ownerIds = [...new Set(live.map((room) => room.owner_id).filter(Boolean))];
       if (!ownerIds.length) return;
@@ -78,7 +82,7 @@ export default function RoomDiscovery({ shortcuts = null }) {
       const events = [...pending.values()];
       pending.clear();
       if (!events.length) return;
-      setRooms((prev) => {
+      setAllRooms((prev) => {
         let next = prev;
         events.forEach((event) => {
           const data = event.data;
@@ -93,8 +97,8 @@ export default function RoomDiscovery({ shortcuts = null }) {
           // aksi halde gizli oda kısmi güncellemeyle ana sayfaya geri gelir.
           const room = known ? { ...known, ...data, id } : { ...data, id };
           const rest = next.filter((item) => item.id !== id);
-          // Yeni gelen oda listede yoksa yalnızca açıkça görünür olduğunda eklenir.
-          next = isVisible(room) && (known || room.hidden === false) ? [room, ...rest] : rest;
+          // Liste ham tutulur: odanın açık sayılıp sayılmadığı çevrim içi kişilere göre ayrıca hesaplanır.
+          next = isCandidate(room) ? [room, ...rest] : rest;
         });
         return next;
       });
