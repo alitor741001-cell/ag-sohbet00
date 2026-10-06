@@ -20,7 +20,7 @@ export default function MusicControllerCard({ title, playing, volume, onVolume, 
           <span className="h-8 w-8 shrink-0" />
         )}
         <p className="min-w-0 flex-1 truncate text-center text-[13px] font-semibold text-white">{title || 'Şarkı'}</p>
-        <button type="button" onClick={onCollapse} aria-label="Müzik denetleyicisini kapat" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white/85 active:scale-95">
+        <button type="button" onClick={onCollapse} aria-label="Pencereyi küçült" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white/85 active:scale-95">
           <ChevronDown className="h-4 w-4" />
         </button>
       </div>

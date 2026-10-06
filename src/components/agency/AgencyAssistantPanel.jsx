@@ -45,9 +45,8 @@ export default function AgencyAssistantPanel({ assistants = [], onChanged }) {
     if (!found || busy) return;
     setBusy('add');
     try {
-      const data = await agencyApi('assistant-appoint', { user_id: found.id, share });
-      if (data.direct) toast({ title: '🤝 Asistan yapıldı', description: `${found.name} artık %${share} payla ajansının asistanı.` });
-      else toast({ title: '🤝 Asistanlık daveti gönderildi', description: `${found.name} kişisine %${share} payla asistanlık daveti iletildi.` });
+      await agencyApi('assistant-appoint', { user_id: found.id, share });
+      toast({ title: '🤝 Asistanlık daveti gönderildi', description: `${found.name} kişisine %${share} payla asistanlık daveti ve özel mesaj iletildi.` });
       setFound(null);
       setMemberId('');
       onChanged?.();
@@ -114,7 +113,7 @@ export default function AgencyAssistantPanel({ assistants = [], onChanged }) {
               <>
                 {found.in_same_agency && (
                   <p className="mt-2 text-[10px] leading-snug" style={{ color: AGENCY_GOLD }}>
-                    Kendi ajansının üyesi: davet beklemeden doğrudan asistan olur, yayıncı kaydı korunur.
+                    Kendi ajansının üyesi: asistanlık daveti özel mesaj olarak gider, onayladığında asistan olur.
                   </p>
                 )}
                 <p className="mt-2 text-[10px] font-bold uppercase tracking-wider text-white/50">Komisyon payı</p>
@@ -136,7 +135,7 @@ export default function AgencyAssistantPanel({ assistants = [], onChanged }) {
                   className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl py-3 text-xs font-black text-black disabled:opacity-50"
                   style={{ background: AGENCY_GOLD }}
                 >
-                  {busy === 'add' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <UserPlus className="h-3.5 w-3.5" />} {found.in_same_agency ? 'Asistan Yap' : 'Asistanlık Daveti Gönder'}
+                  {busy === 'add' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <UserPlus className="h-3.5 w-3.5" />} Asistanlık Daveti Gönder
                 </button>
               </>
             )}

@@ -37,11 +37,11 @@ export default function AgencyInviteCard({ inviteId }) {
             : <Mic2 className="h-5 w-5" style={{ color: AGENCY_GOLD }} />}
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block text-[10px] font-black uppercase tracking-wider" style={{ color: AGENCY_GOLD }}>🎤 Yayıncı Daveti</span>
+          <span className="block text-[10px] font-black uppercase tracking-wider" style={{ color: AGENCY_GOLD }}>{invite?.kind === 'assistant' ? '🤝 Asistanlık Daveti' : '🎤 Yayıncı Daveti'}</span>
           <span className="mt-0.5 block truncate text-sm font-bold text-white">{invite?.agency_name || 'Ajans daveti'}</span>
           <span className="block truncate text-[11px] text-white/50">
             {invite
-              ? `${invite.agency_code} • ${invite.owner_name} seni yayıncı olarak davet etti`
+              ? `${invite.agency_code} • ${invite.owner_name} seni ${invite.kind === 'assistant' ? 'asistan' : 'yayıncı'} olarak davet etti`
               : 'Davet detayları yükleniyor...'}
           </span>
           {!pending && <span className="mt-0.5 block text-[10px] text-white/40">{STATUS_TEXT[invite?.status]}</span>}

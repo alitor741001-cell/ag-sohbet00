@@ -41,7 +41,7 @@ export default function InviteDetailSheet({ open, inviteId, onClose, onAnswered 
     try {
       const result = await agencyApi('invite-respond', { invite_id: inviteId, accept });
       toast(accept
-        ? { title: '🎉 Tebrikler!', description: `${data?.invite?.agency_name} ajansına katıldın.` }
+        ? { title: '🎉 Tebrikler!', description: data?.invite?.kind === 'assistant' ? `${data?.invite?.agency_name} ajansının asistanı oldun.` : `${data?.invite?.agency_name} ajansına katıldın.` }
         : { title: 'Davet reddedildi', description: `${data?.invite?.agency_name} ajansı davetini reddettin.` });
       onAnswered?.(result);
       onClose?.();
@@ -53,10 +53,11 @@ export default function InviteDetailSheet({ open, inviteId, onClose, onAnswered 
   };
 
   const invite = data?.invite;
+  const isAssistantInvite = invite?.kind === 'assistant';
   const rules = String(data?.rules || '').split('\n').filter(Boolean);
 
   return (
-    <AgencySheet open={open} tall onClose={onClose} title="🎤 Yayıncı Daveti" subtitle={invite ? `${invite.agency_name} • ${invite.agency_code}` : 'Davet yükleniyor'}>
+    <AgencySheet open={open} tall onClose={onClose} title={isAssistantInvite ? '🤝 Asistanlık Daveti' : '🎤 Yayıncı Daveti'} subtitle={invite ? `${invite.agency_name} • ${invite.agency_code}` : 'Davet yükleniyor'}>
       {loading ? (
         <div className="flex items-center justify-center py-20"><Loader2 className="h-6 w-6 animate-spin" style={{ color: AGENCY_GOLD }} /></div>
       ) : !invite ? (

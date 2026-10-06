@@ -5,8 +5,8 @@ import MusicControllerCard from '@/components/voice/MusicControllerCard';
 
 /**
  * Oda müziği denetleyicisi: pencere kapandığında köşede çember olarak kalır, dokununca panel
- * açılır; panel de üst şeridinden tutulup ekranda gezdirilir. Yuvarlak kapatma tuşu hem paneli
- * hem müziği kapatır.
+ * açılır; panel de üst şeridinden tutulup ekranda gezdirilir. Aşağı ok paneli çembere indirir,
+ * müziği yalnızca yuvarlak güç tuşu durdurur.
  */
 export default function MusicController({ title, playing, volume, onVolume, isMod, onToggle, onNext, onOpenList, onStop }) {
   const [open, setOpen] = useState(false);
@@ -38,8 +38,8 @@ export default function MusicController({ title, playing, volume, onVolume, isMo
         onNext={onNext}
         onOpenList={onOpenList}
         onStop={stopMusic}
-        // Yuvarlak kapatma: panel kapanır, yöneticilerde müzik de durur.
-        onCollapse={() => { if (isMod) stopMusic(); else setOpen(false); }}
+        // Aşağı ok yalnızca pencereyi kapatır: şarkı çalmaya devam eder, köşedeki çemberden açılır.
+        onCollapse={() => setOpen(false)}
         pos={panel.pos}
         bind={panel.bind}
         cardRef={panel.boxRef}
