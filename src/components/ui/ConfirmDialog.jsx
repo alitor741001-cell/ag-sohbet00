@@ -3,7 +3,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 export default function ConfirmDialog({ open, onOpenChange, title = 'Emin misiniz?', description = 'Bu işlem geri alınamaz.', confirmText = 'Sil', onConfirm }) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
+      {/* Onay penceresi tam ekran panellerin (mavi çanta, hediye kutusu) üstünde görünür. */}
+      <AlertDialogContent className="z-[500]">
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
           <AlertDialogDescription>{description}</AlertDialogDescription>

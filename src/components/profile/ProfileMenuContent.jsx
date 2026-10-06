@@ -5,21 +5,15 @@ import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { Image } from '@/components/ui/image';
 import ProfileWalletCards from '@/components/profile/ProfileWalletCards';
-import GiftBoxPanel from '@/components/profile/GiftBoxPanel';
-import CoinActivityPanel from '@/components/profile/CoinActivityPanel';
-import VipBagPanel from '@/components/profile/VipBagPanel';
 
 /**
  * Profil menüsünün içeriği: coins, elmaslar (hediye kutusu), mavi çanta ve
  * ajans işlemleri kartları ile destek, yönetim, profil ve çıkış satırları.
  * Hem üstteki profil menüsünde hem alt menüdeki profil butonunda kullanılır.
  */
-export default function ProfileMenuContent({ onClose }) {
+export default function ProfileMenuContent({ onClose, onOpenPanel }) {
   const { user } = useCurrentUser();
   const navigate = useNavigate();
-  const [giftBoxOpen, setGiftBoxOpen] = useState(false);
-  const [activityOpen, setActivityOpen] = useState(false);
-  const [vipBagOpen, setVipBagOpen] = useState(false);
   const [vipCount, setVipCount] = useState(0);
   const [wallet, setWallet] = useState(null);
 
@@ -71,9 +65,9 @@ export default function ProfileMenuContent({ onClose }) {
         coins={wallet?.coins ?? null}
         giftScore={wallet?.month_score ?? null}
         vipCount={vipCount}
-        onOpenGiftBox={() => setGiftBoxOpen(true)}
-        onOpenCoins={() => setActivityOpen(true)}
-        onOpenVipBag={() => setVipBagOpen(true)}
+        onOpenGiftBox={() => onOpenPanel?.('gift')}
+        onOpenCoins={() => onOpenPanel?.('coins')}
+        onOpenVipBag={() => onOpenPanel?.('vip')}
         onOpenAgency={user?.role === 'admin' ? undefined : () => { onClose(); navigate('/ajans'); }}
       />
 
@@ -125,9 +119,6 @@ export default function ProfileMenuContent({ onClose }) {
         </button>
       </div>
 
-      <GiftBoxPanel open={giftBoxOpen} onClose={() => setGiftBoxOpen(false)} />
-      <CoinActivityPanel open={activityOpen} onClose={() => setActivityOpen(false)} />
-      <VipBagPanel open={vipBagOpen} onClose={() => setVipBagOpen(false)} onChanged={loadVipCount} />
     </>
   );
 }

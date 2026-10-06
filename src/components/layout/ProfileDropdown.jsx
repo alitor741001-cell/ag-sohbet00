@@ -3,11 +3,19 @@ import { ChevronDown } from 'lucide-react';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { Image } from '@/components/ui/image';
 import ProfileMenuContent from '@/components/profile/ProfileMenuContent';
+import GiftBoxPanel from '@/components/profile/GiftBoxPanel';
+import CoinActivityPanel from '@/components/profile/CoinActivityPanel';
+import VipBagPanel from '@/components/profile/VipBagPanel';
 
 export default function ProfileDropdown() {
   const { user } = useCurrentUser();
   const [open, setOpen] = useState(false);
+  // Cüzdan panelleri menünün içinde değil, menünün kardeşi olarak tam ekran açılır:
+  // böylece menü kapanınca kırpılmaz ve onay penceresi çalışır.
+  const [panel, setPanel] = useState(null);
   const ref = useRef(null);
+
+  const openPanel = (key) => { setOpen(false); setPanel(key); };
 
   useEffect(() => {
     if (!open) return;
@@ -47,9 +55,13 @@ export default function ProfileDropdown() {
           style={{ background: 'rgba(18,18,21,0.98)', border: '1px solid rgba(174,184,196,0.15)', backdropFilter: 'blur(16px)', boxShadow: '0 20px 60px -15px rgba(0,0,0,0.8)' }}>
           {/* Purple gradient accent */}
           <div className="absolute top-0 right-0 w-32 h-32 rounded-full opacity-20 pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.6), transparent 70%)' }} />
-          <ProfileMenuContent onClose={() => setOpen(false)} />
+          <ProfileMenuContent onClose={() => setOpen(false)} onOpenPanel={openPanel} />
         </div>
       )}
+
+      <GiftBoxPanel open={panel === 'gift'} onClose={() => setPanel(null)} />
+      <CoinActivityPanel open={panel === 'coins'} onClose={() => setPanel(null)} />
+      <VipBagPanel open={panel === 'vip'} onClose={() => setPanel(null)} />
     </div>
   );
 }
