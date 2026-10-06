@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useMemo, useState } from 'react';
+import { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Film, Gamepad2, Loader2, Mic, Search } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
@@ -37,11 +37,16 @@ export default function RoomDiscovery({ shortcuts = null }) {
   // Açık oyun: ana sayfadan seçilen oyun tam ekran oynanır.
   const [gameOpen, setGameOpen] = useState(null);
 
-  // Gizli oda hiçbir listede görünmez: yönetici hesabında da ana sayfada çıkmaz.
+  // Gizlendiğini bildiğimiz odalar kimliğiyle işaretlenir: canlı güncelleme gelse
+  // de ana sayfaya geri dönmez (olay yalnızca değişen alanları taşıyabilir).
+  const hiddenIdsRef = useRef(new Set());
+
+  // Gizli oda hiçbir listede görünmez: sahibi ve yönetici hesabında da kartı çıkmaz.
   const isVisible = (room) =>
     !!room &&
     room.status === 'active' &&
-    !room.hidden &&
+    room.hidden !== true &&
+    !hiddenIdsRef.current.has(room.id) &&
     ((room.participants?.length || 0) > 0 || room.owner_id === user?.id);
 
   useEffect(() => {
@@ -49,7 +54,11 @@ export default function RoomDiscovery({ shortcuts = null }) {
     const load = async () => {
       const list = await base44.entities.Room.filter({ status: 'active' }, '-created_date', 100).catch(() => []);
       if (!alive) return;
-      const live = list.filter((room) => isVisible(room));
+      const live = list.filter((room) => {
+        if (room.hidden === true) hiddenIdsRef.current.add(room.id);
+        else hiddenIdsRef.current.delete(room.id);
+        return isVisible(room);
+      });
       setRooms(live);
       setLoading(false);
       const ownerIds = [...new Set(live.map((room) => room.owner_id).filter(Boolean))];
@@ -66,10 +75,18 @@ export default function RoomDiscovery({ shortcuts = null }) {
         return;
       }
       if (!data) return;
-      const room = { ...data, id: data.id || event.id };
+      const id = data.id || event.id;
+      // Sunucu "gizli" derse işaretlenir, "görünür" derse işaret kalkar.
+      if (data.hidden === true) hiddenIdsRef.current.add(id);
+      else if (data.hidden === false) hiddenIdsRef.current.delete(id);
       setRooms((prev) => {
-        const rest = prev.filter((item) => item.id !== room.id);
-        return isVisible(room) ? [room, ...rest] : rest;
+        const known = prev.find((item) => item.id === id);
+        // Canlı olay yalnızca değişen alanları taşıyabilir: kayıt eskisiyle birleştirilir,
+        // aksi halde gizli oda kısmi güncellemeyle ana sayfaya geri gelir.
+        const room = known ? { ...known, ...data, id } : { ...data, id };
+        const rest = prev.filter((item) => item.id !== id);
+        // Yeni gelen oda listede yoksa yalnızca açıkça görünür olduğunda eklenir.
+        return isVisible(room) && (known || room.hidden === false) ? [room, ...rest] : rest;
       });
     });
 

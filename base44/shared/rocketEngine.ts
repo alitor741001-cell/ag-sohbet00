@@ -5,7 +5,8 @@ export const BETTING_MS = 20000;
 // Çakılma anı ekranda kısa süre kalır, ardından yeni tur hemen başlar.
 export const GAP_MS = 2000;
 export const MAX_R = 500;
-export const HOUSE_EDGE = 0.99;
+// Ev avantajı: çakılma noktaları bu oranla kısaltılır (ödeme oranı ~%91).
+export const HOUSE_EDGE = 0.91;
 export const ROCKET_BASE = 1.09;
 export const DEFAULT_ROCKET_BET = 500;
 export const ROCKET_BET_LEVELS = [500, 1000, 2500, 5000, 10000, 25000, 50000, 100000];

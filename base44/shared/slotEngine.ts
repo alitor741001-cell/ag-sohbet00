@@ -6,6 +6,10 @@ export const BET_LEVELS = [10, 20, 50, 100, 500, 1000, 5000, 8000, 10000];
 // Toplam bahsin bu katı ve üzeri kazançlar "büyük ödül" sayılır.
 export const BIG_WIN_MULTIPLE = 10;
 
+// Ödeme oranı: tablodaki kazançların bu kadarı ödenir. Oyun kasası bu farkla
+// ayakta kalır; değer 1'e çekilirse makine uzun vadede kaybettirir.
+export const PAYOUT_RATE = 0.75;
+
 export const SYMBOLS = [
   { id: 'ten', weight: 14, pays: [10, 30, 100] },
   { id: 'jack', weight: 13, pays: [12, 40, 150] },
