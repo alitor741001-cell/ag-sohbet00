@@ -851,10 +851,10 @@ export default function WatchParty() {
                 const avatar = p.avatar || prof?.avatar;
                 const presence = presenceMap[p.user_id];
                 const isOnline = presence?.online && (Date.now() - new Date(presence.last_seen).getTime() < 60000);
-                // Gizli kullanıcı: yalnızca kırmızı takma ad görünür, profili açılmaz.
+                // Gizli kullanıcı listede takma adla görünür; profili açılınca tam bilgiler görünür.
                 const hidden = isHiddenName(p.name);
                 return (
-                  <button key={p.user_id} onClick={() => { if (!hidden) openUserProfile(p.user_id); }} className={`flex items-center gap-1.5 text-xs py-0.5 w-full text-left rounded px-1 ${hidden ? 'cursor-default' : 'hover:bg-white/10'}`}>
+                  <button key={p.user_id} onClick={() => openUserProfile(p.user_id)} className="flex items-center gap-1.5 text-xs py-0.5 w-full text-left rounded px-1 hover:bg-white/10">
                     <div className="shrink-0 relative">
                       {!hidden && prof?.profile_frame ? <ProfileFrame frame={prof.profile_frame} avatar={avatar} name={p.name} size="3xs" frameScale={prof.profile_frame_scale} /> : <XpAvatar avatar={avatar} name={p.name} userId={hidden ? '' : p.user_id} size="3xs" />}
                       <span className={`absolute bottom-0 right-0 w-2 h-2 rounded-full border border-card ${isOnline ? 'bg-green-400' : 'bg-red-400'}`} />

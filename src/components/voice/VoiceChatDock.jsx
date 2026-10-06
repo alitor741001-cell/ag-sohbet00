@@ -85,7 +85,8 @@ export default function VoiceChatDock({ messages = [], onSend, open, onCloseComp
                     </p>
                   );
                 }
-                return <p key={message.id} className="break-words px-2 text-center text-[11px] font-semibold italic text-amber-300 [overflow-wrap:anywhere] [text-shadow:0_0_10px_rgba(251,191,36,0.45)]">{plainText(message.text)}</p>;
+                // Katılma/ayrılma satırına dokununca kişinin tam profil kartı açılır.
+                return <button key={message.id} type="button" onClick={() => onOpenProfile?.(message.user_id)} className="break-words px-2 text-center text-[11px] font-semibold italic text-amber-300 [overflow-wrap:anywhere] [text-shadow:0_0_10px_rgba(251,191,36,0.45)]">{plainText(message.text)}</button>;
               }
               return (
                 <VoiceChatMessage

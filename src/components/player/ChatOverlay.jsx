@@ -344,7 +344,7 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
                   const levelUp = parseLevelUpNotice(m.text || '');
                   if (levelUp || /odaya katıldı|odadan ayrıldı|kişisel odasını açtı/.test(m.text || '')) {
                     const profile = profiles[m.user_id] || viewerProfiles[m.user_id] || {};
-                    return <RoomCheatNotice isOwner={m.user_id === ownerId} profile={{ ...profile, display_role: profile.display_role || roleKey }} notice={{ participant: { name: m.user_name, avatar: m.user_avatar }, level: levelUp ? levelUp.level : 0, levelKind: levelUp?.kind || '', type: levelUp ? 'levelup' : (m.text || '').includes('odadan ayrıldı') ? 'leave' : 'join' }} />;
+                    return <RoomCheatNotice isOwner={m.user_id === ownerId} userId={m.user_id} onOpenProfile={onProfileCard} profile={{ ...profile, display_role: profile.display_role || roleKey }} notice={{ participant: { name: m.user_name, avatar: m.user_avatar }, level: levelUp ? levelUp.level : 0, levelKind: levelUp?.kind || '', type: levelUp ? 'levelup' : (m.text || '').includes('odadan ayrıldı') ? 'leave' : 'join' }} />;
                   }
                   const color = roleColor || frame.textColor || '#8b5cf6';
                   const isRole = hasRole || !!frame.frameId;
