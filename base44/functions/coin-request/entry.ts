@@ -5,6 +5,8 @@ import { notifyAdmins } from '../../shared/adminNotify.ts';
 
 const ACTIONS = ['packages', 'create', 'mine'];
 const PENDING_LIMIT = 10;
+// Tek başvuruda alınabilecek en fazla paket adedi.
+const MAX_QUANTITY = 20;
 
 /**
  * Kullanıcı tarafı coin başvurusu: paketleri listeler, kişinin bekleyen başvurusunu
@@ -38,6 +40,12 @@ export default async function (req: Request): Promise<Response> {
     const pack = findCoinPackage(body?.package_id);
     if (!pack) return Response.json({ error: 'Paket bulunamadı.' }, { status: 404 });
 
+    // Adet seçimi: 50.000'lik paketten 6 adet gibi çoklu alımda coin ve tutar toplanır.
+    const quantity = Math.min(MAX_QUANTITY, Math.max(1, Math.floor(Number(body?.quantity) || 1)));
+    const totalCoins = pack.coins * quantity;
+    const totalPrice = pack.price * quantity;
+    const packName = quantity > 1 ? `${quantity} × ${pack.name}` : pack.name;
+
     const rl = await rateLimit(base44, 'coin-request:' + user.id, user.id, 5, 600000);
     if (!rl.allowed) return Response.json({ error: 'Çok fazla başvuru yaptın, biraz bekleyin.' }, { status: 429 });
 
@@ -55,24 +63,24 @@ export default async function (req: Request): Promise<Response> {
       user_avatar: me?.avatar || '',
       member_id: me?.member_id || '',
       package_id: pack.id,
-      package_name: pack.name,
-      coins: pack.coins,
-      price: pack.price,
+      package_name: packName,
+      coins: totalCoins,
+      price: totalPrice,
       status: 'pending',
     });
 
     const username = request.user_name || 'Kullanıcı';
-    const amount = `${pack.price.toLocaleString('tr-TR')} ₺`;
+    const amount = `${totalPrice.toLocaleString('tr-TR')} ₺`;
     await notifyAdmins(base44, {
       event: 'coin_request',
       ref_id: `coin_request:${request.id}`,
       title: 'Yeni coin başvurusu',
-      body: `${username} — ${pack.name} (${amount})`,
+      body: `${username} — ${packName} (${amount})`,
       link: '/admin/coins',
       telegram_data: {
         username,
-        package: pack.name,
-        coins: pack.coins.toLocaleString('tr-TR'),
+        package: packName,
+        coins: totalCoins.toLocaleString('tr-TR'),
         amount,
         status: 'Bekliyor',
         date: new Date().toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' }),

@@ -9,12 +9,22 @@ import CoinShopFooter from '@/components/voice/coinShop/CoinShopFooter';
 import CoinPendingNotice from '@/components/voice/coinShop/CoinPendingNotice';
 import CoinPaymentPage from '@/components/voice/coinShop/CoinPaymentPage';
 
+// Kart başına seçilebilecek en fazla adet.
+const MAX_QUANTITY = 20;
+
+/** Adet seçimini toplam coin ve tutara çevirir: ödeme sayfası tek paket gibi gösterir. */
+const withQuantity = (pack, quantity) => quantity > 1
+  ? { ...pack, qty: quantity, coins: pack.coins * quantity, price: pack.price * quantity }
+  : { ...pack, qty: 1 };
+
 /** Coins Yükle: tam ekran coin mağazası — kart seçilince ödeme sayfası açılır, başvuru admin onayına düşer. */
 export default function CoinPurchasePanel({ open, coins, onBack }) {
   const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pending, setPending] = useState(null);
   const [payFor, setPayFor] = useState(null);
+  // Paket kimliğine göre adet: sepet gibi çoklu alım.
+  const [qty, setQty] = useState({});
   const [error, setError] = useState('');
 
   const loadPending = useCallback(async () => {
@@ -28,6 +38,7 @@ export default function CoinPurchasePanel({ open, coins, onBack }) {
     setLoading(true);
     setError('');
     setPayFor(null);
+    setQty({});
     base44.functions.invoke('coin-request', { action: 'packages' })
       .then((response) => { if (!cancelled) setPackages(response.data?.packages || []); })
       .catch(() => { if (!cancelled) setError('Paketler yüklenemedi.'); })
@@ -76,7 +87,13 @@ export default function CoinPurchasePanel({ open, coins, onBack }) {
           ) : (
             <div className="mt-3 grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4">
               {packages.map((pack) => (
-                <CoinPackageCard key={pack.id} pack={pack} onBuy={setPayFor} />
+                <CoinPackageCard
+                  key={pack.id}
+                  pack={pack}
+                  qty={qty[pack.id] || 1}
+                  onQty={(value) => setQty((prev) => ({ ...prev, [pack.id]: Math.min(MAX_QUANTITY, Math.max(1, value)) }))}
+                  onBuy={() => setPayFor(withQuantity(pack, qty[pack.id] || 1))}
+                />
               ))}
             </div>
           )}

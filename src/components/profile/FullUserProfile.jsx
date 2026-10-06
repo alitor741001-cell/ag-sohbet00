@@ -56,8 +56,10 @@ export default function FullUserProfile({
 
   if (!open || !userId) return null;
 
-  // Film odası kartı mavi + kırmızı; sesli odada cinsiyete göre renk kullanılır.
-  const palette = theme === 'blue' ? ROOM_BLUE : genderPalette(profile?.gender, hidden);
+  // Film odası kartı mavi + kırmızı; kadın profilinde ve gizli kullanıcıda cinsiyet paleti korunur.
+  const palette = theme === 'blue' && !hidden && profile?.gender !== 'kadın'
+    ? ROOM_BLUE
+    : genderPalette(profile?.gender, hidden);
   const loading = !hidden && !profile;
   const shownName = hidden ? (name || 'Gizli Kullanıcı') : (profile?.username || profile?.full_name || name || 'Kullanıcı');
   const shownAvatar = hidden ? HIDDEN_AVATAR_URL : (profile?.avatar || avatar || '');

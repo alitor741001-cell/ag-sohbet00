@@ -32,7 +32,7 @@ export default function CoinPaymentPage({ pack, onClose, onSubmitted }) {
     setBusy(true);
     setError('');
     try {
-      await base44.functions.invoke('coin-request', { action: 'create', package_id: pack.id });
+      await base44.functions.invoke('coin-request', { action: 'create', package_id: pack.id, quantity: pack.qty || 1 });
       onSubmitted();
     } catch (err) {
       setError(err?.response?.data?.error || 'Başvuru gönderilemedi.');
@@ -61,7 +61,7 @@ export default function CoinPaymentPage({ pack, onClose, onSubmitted }) {
             <Coins className="h-7 w-7 shrink-0 text-[#E8B95A]" />
             <div className="min-w-0 flex-1">
               <p className="text-sm font-black text-white">{formatCoins(pack.coins)} Coins</p>
-              <p className="text-[11px] text-white/60">Seçtiğin paket</p>
+              <p className="text-[11px] text-white/60">{pack.qty > 1 ? `${pack.qty} adet paket` : 'Seçtiğin paket'}</p>
             </div>
             <p className="text-lg font-black tabular-nums text-[#E8B95A]">{formatTl(pack.price)}</p>
           </div>

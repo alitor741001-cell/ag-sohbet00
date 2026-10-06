@@ -16,6 +16,11 @@ const LOGOUT_COLOR = '#ef4444';
 
 const navGroups = [
   {
+    items: [
+      { to: '/', label: 'Ana Sayfa', icon: Home },
+    ],
+  },
+  {
     title: 'İçerik Yönetimi',
     items: [
       { to: '/admin/hediyeler', label: 'Hediyeler', icon: Gift },
@@ -38,7 +43,6 @@ const navGroups = [
       { to: '/admin/sikayetler', label: 'Şikayetler', icon: Flag },
       { to: '/admin/guncellemeler', label: 'Güncelleme Duyuruları', icon: Sparkles },
       { to: '/admin/ayarlar', label: 'Ayarlar', icon: Settings },
-      { to: '/', label: 'Ana Sayfa', icon: Home },
     ],
   },
 ];
