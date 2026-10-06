@@ -12,9 +12,29 @@ function readEnabled() {
   }
 }
 
+const isVoiceRoom = (room) => room?.room_type === 'voice' || room?.voice_mode === true;
+
+/** Oda türüne göre doğru ekran: sesli oda koltuklu sahne, film odası izleme ekranı. */
+const routeFor = (room) => (isVoiceRoom(room) ? `/sesli-oda/${room.id}` : `/oda/${room.id}`);
+
+/** Kabul edilmiş arkadaşların kimlikleri: gezinirken arkadaş yayınları da listeye girer. */
+async function loadFriendIds(userId) {
+  const ids = new Set();
+  if (!userId) return ids;
+  const relations = await base44.entities.Friendship
+    .filter({ members: userId, status: 'accepted' }, '-updated_date', 200)
+    .catch(() => []);
+  relations.forEach((relation) => {
+    const friendId = relation.requester_id === userId ? relation.recipient_id : relation.requester_id;
+    if (friendId && friendId !== userId) ids.add(friendId);
+  });
+  return ids;
+}
+
 /**
- * Sesli odalar arasında yukarı/aşağı kaydırma: parmak yukarı → daha eski yayın,
- * parmak aşağı → daha yeni yayın. Sıra ana sayfadaki canlı oda listesiyle aynıdır.
+ * Canlı yayınlar arasında yukarı/aşağı kaydırma: parmak yukarı → daha eski yayın,
+ * parmak aşağı → daha yeni yayın. Sıra ana sayfadaki canlı oda listesiyle aynıdır;
+ * sesli odaların yanında arkadaşların film odaları da gezinir.
  */
 export default function useRoomSwipeNav({ roomId, userId, active, navigate }) {
   const [swipeEnabled, setSwipeEnabled] = useState(readEnabled);
@@ -29,22 +49,26 @@ export default function useRoomSwipeNav({ roomId, userId, active, navigate }) {
     }
   }, []);
 
-  // Kaydırma açıkken canlı sesli odalar çekilir; kaydırma kapalıyken liste tutulmaz.
+  // Kaydırma açıkken canlı yayınlar çekilir; kaydırma kapalıyken liste tutulmaz.
   useEffect(() => {
     if (!swipeEnabled || !active) return undefined;
     let alive = true;
-    base44.entities.Room.filter({ status: 'active' }, '-created_date', 100)
-      .then((list) => {
-        if (!alive) return;
-        roomsRef.current = list.filter(
-          (room) =>
-            room.hidden !== true &&
-            (room.room_type === 'voice' || room.voice_mode === true) &&
-            // Kendi yayını listede yer almaz: gezerken kişinin kendi odası karşısına çıkmaz.
-            (!userId || room.owner_id !== userId)
-        );
-      })
-      .catch(() => {});
+    const load = async () => {
+      const [list, friendIds] = await Promise.all([
+        base44.entities.Room.filter({ status: 'active' }, '-created_date', 100).catch(() => []),
+        loadFriendIds(userId),
+      ]);
+      if (!alive) return;
+      roomsRef.current = list.filter(
+        (room) =>
+          room.hidden !== true &&
+          // Kendi yayını listede yer almaz: gezerken kişinin kendi odası karşısına çıkmaz.
+          (!userId || room.owner_id !== userId) &&
+          // Sesli odalar herkes için gezinir; arkadaşların yayınları türüne bakılmadan eklenir.
+          (isVoiceRoom(room) || friendIds.has(room.owner_id))
+      );
+    };
+    load().catch(() => {});
     return () => { alive = false; };
   }, [swipeEnabled, active, roomId, userId]);
 
@@ -55,12 +79,12 @@ export default function useRoomSwipeNav({ roomId, userId, active, navigate }) {
     // Kişi kendi odasındayken (kendi yayını listede yok) gezinti listenin ucundan başlar.
     if (index < 0) {
       const edge = direction > 0 ? list[0] : list[list.length - 1];
-      if (edge) navigate(`/sesli-oda/${edge.id}`);
+      if (edge) navigate(routeFor(edge));
       return;
     }
     const target = list[index + direction];
     if (!target) return;
-    navigate(`/sesli-oda/${target.id}`);
+    navigate(routeFor(target));
   }, [roomId, navigate]);
 
   return {
