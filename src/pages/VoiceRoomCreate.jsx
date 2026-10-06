@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Lock, Mic, Radio } from 'lucide-react';
+import { ArrowLeft, Mic, Radio } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
@@ -8,6 +8,10 @@ import { readRoomPreset, saveRoomPreset } from '@/lib/roomPreset';
 import SeatCountPicker from '@/components/voice/SeatCountPicker';
 import VoiceRoomAutoOpen from '@/components/voice/VoiceRoomAutoOpen';
 
+/**
+ * Sesli oda kurulumu: koltuk düzeni ve oda adı sorulur. Şifre ve gizleme gibi ayarlar
+ * oda içindeki menüden yapılır, kurulumda istenmez.
+ */
 export default function VoiceRoomCreate() {
   const navigate = useNavigate();
   const { user, setUser } = useCurrentUser();
@@ -18,9 +22,6 @@ export default function VoiceRoomCreate() {
   const [formRequested, setFormRequested] = useState(false);
   const [seatCount, setSeatCount] = useState(8);
   const [name, setName] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPass, setShowPass] = useState(false);
-  const [hidden, setHidden] = useState(false);
   const [saving, setSaving] = useState(false);
   const prefilled = useRef(false);
 
@@ -30,8 +31,6 @@ export default function VoiceRoomCreate() {
     prefilled.current = true;
     setSeatCount(Number(preset.seat_count) || 8);
     setName(preset.name || '');
-    setPassword(preset.password || '');
-    setHidden(!!preset.hidden);
   }, [preset]);
 
   const submit = async (event) => {
@@ -42,10 +41,10 @@ export default function VoiceRoomCreate() {
       return;
     }
     setSaving(true);
-    const settings = { name: name.trim(), seat_count: seatCount, password, hidden };
+    const settings = { name: name.trim(), seat_count: seatCount };
     try {
       const response = await base44.functions.invoke('create-room', {
-        name: settings.name, room_type: 'voice', seat_count: settings.seat_count, password: settings.password || '', hidden: !!settings.hidden,
+        name: settings.name, room_type: 'voice', seat_count: settings.seat_count,
       });
       const roomId = response.data?.id;
       if (!roomId) throw new Error('oda oluşturulamadı');
@@ -68,6 +67,15 @@ export default function VoiceRoomCreate() {
 
   return (
     <div className="dark mx-auto min-h-screen w-full max-w-2xl px-3 py-5 text-white sm:px-6 sm:py-7">
+      <button
+        type="button"
+        onClick={() => navigate('/oda-kur')}
+        aria-label="Geri"
+        className="mb-4 flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/5 text-white transition-transform active:scale-95"
+      >
+        <ArrowLeft className="h-4 w-4" />
+      </button>
+
       <div className="mb-5 overflow-hidden rounded-2xl border border-red-500/20 p-5" style={{ background: 'linear-gradient(135deg, rgba(220,38,38,0.18), rgba(153,27,27,0.06))' }}>
         <div className="flex items-center gap-3">
           <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-red-500/20">
@@ -94,43 +102,12 @@ export default function VoiceRoomCreate() {
           <input className={inputCls} value={name} onChange={(event) => setName(event.target.value)} placeholder="Örn: Gece Sohbeti" maxLength={60} />
         </div>
 
-        <div>
-          <label className="mb-1.5 block text-sm font-medium text-gray-300">Oda şifresi (opsiyonel)</label>
-          <div className="relative">
-            <input
-              className={`${inputCls} pr-10`}
-              type={showPass ? 'text' : 'password'}
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              placeholder="Boş = şifresiz"
-            />
-            <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
-              {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            </button>
-          </div>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => setHidden(!hidden)}
-          className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left active:scale-[0.99] transition-transform ${hidden ? 'border-primary bg-primary/10' : 'border-white/10 bg-[hsl(var(--secondary))]'}`}
-        >
-          <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${hidden ? 'bg-primary/20' : 'bg-white/5'}`}>
-            <Lock className={`h-4 w-4 ${hidden ? 'text-primary' : 'text-gray-500'}`} />
-          </span>
-          <span className="flex-1">
-            <span className="block text-sm font-semibold text-white">Gizli oda</span>
-            <span className="block text-xs text-gray-400">Yalnızca davet ettiğin kişiler görebilir.</span>
-          </span>
-          <span className={`h-5 w-5 shrink-0 rounded-full ${hidden ? 'bg-primary' : 'border border-white/20'}`} />
-        </button>
-
         <button type="submit" disabled={saving || !user} className="w-full rounded-xl py-3.5 font-semibold text-white active:scale-95 transition-transform disabled:opacity-50" style={{ background: 'linear-gradient(135deg, #dc2626, #991b1b)' }}>
           {saving ? 'Oda açılıyor...' : `${seatCount} Mikrofonlu Odayı Aç`}
         </button>
 
         <p className="text-center text-xs text-gray-500">
-          Bilgiler bir kez girilir ve kaydedilir; bir sonraki açılışta oda bu bilgilerle doğrudan açılır.
+          Bilgiler bir kez girilir ve kaydedilir; bir sonraki açılışta oda bu bilgilerle doğrudan açılır. Şifre ve gizleme oda içindeki menüden ayarlanır.
         </p>
       </form>
     </div>

@@ -21,8 +21,6 @@ export default function VoiceRoomAutoOpen({ preset, onFailed }) {
           name: preset.name,
           room_type: 'voice',
           seat_count: Number(preset.seat_count) || 8,
-          password: preset.password || '',
-          hidden: !!preset.hidden,
         });
         const roomId = response.data?.id;
         if (!roomId) throw new Error('oda oluşturulamadı');

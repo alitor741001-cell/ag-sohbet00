@@ -20,14 +20,15 @@ export default async function(req) {
 
     const body = await req.json().catch(() => ({}));
     const raw = body?.settings && typeof body.settings === 'object' ? body.settings : null;
-    // Kaydedilmiş oda bilgileri. Şifre anahtarı hiç verilmediyse odanın şifresine dokunulmaz.
+    // Kaydedilmiş oda bilgileri: yalnızca gönderilen alanlara dokunulur, gönderilmeyen ayar korunur.
     const settings = raw ? {
-      name: sanitizeText(raw.name, 80) || '',
-      max_users: Math.min(Math.max(Number(raw.max_users) || 10, 2), 50),
-      chat_enabled: raw.chat_enabled !== false,
-      hidden: !!raw.hidden,
+      name: typeof raw.name === 'string' ? sanitizeText(raw.name, 80) : '',
+      chat_enabled: 'chat_enabled' in raw ? raw.chat_enabled !== false : null,
+      hidden: 'hidden' in raw ? !!raw.hidden : null,
       password: 'password' in raw ? String(raw.password || '').slice(0, 100) : null,
     } : null;
+    // Kişisel odada kapasite sorulmaz: herkes girebilir, pratikte sınırsız.
+    const PERSONAL_MAX_USERS = 250;
 
     // Gizli kullanıcı (VIP10+): kişisel odasında da kimliği görünmez.
     const ownerRecord = await base44.asServiceRole.entities.User.get(user.id).catch(() => null);
@@ -75,8 +76,10 @@ export default async function(req) {
       }
       // Kaydedilmiş bilgiler odaya uygulanır: düzenlenen ayarlar bir sonraki açılışta geçerli olur.
       if (settings) {
-        const patch = { max_users: settings.max_users, chat_enabled: settings.chat_enabled, hidden: settings.hidden };
+        const patch = { max_users: PERSONAL_MAX_USERS };
         if (settings.name) patch.name = settings.name;
+        if (settings.chat_enabled !== null) patch.chat_enabled = settings.chat_enabled;
+        if (settings.hidden !== null) patch.hidden = settings.hidden;
         if (settings.password !== null) await applyPassword(existing[0].id, patch);
         await base44.asServiceRole.entities.Room.update(existing[0].id, patch).catch(() => {});
       }
@@ -103,7 +106,7 @@ export default async function(req) {
       is_personal: true,
       room_number: 0,
       personal_room_code: personalRoomCode,
-      max_users: settings?.max_users ?? 10,
+      max_users: PERSONAL_MAX_USERS,
       chat_enabled: settings?.chat_enabled ?? true,
       password: '',
       voice_enabled: true,
