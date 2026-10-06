@@ -1,9 +1,9 @@
 import { useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 
-// Canlı ayna üç dakikada bir, tam eşitleme yarım saatte bir tazelenir.
+// Canlı ayna üç dakikada bir tazelenir; tam eşitleme on dakikada bir sıradaki dilimi işler.
 const LIVE_MS = 3 * 60 * 1000;
-const FULL_MS = 30 * 60 * 1000;
+const FULL_MS = 10 * 60 * 1000;
 
 /**
  * Supabase aynasını uygulama açıkken taze tutar: oda, katılımcı, mesaj,

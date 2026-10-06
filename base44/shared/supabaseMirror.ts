@@ -10,7 +10,11 @@ const KEY_TTL_MS = 30 * 60 * 1000;
 const PAGE_SIZE = 500;
 const MAX_PAGES = 20;
 const SINCE_LIMIT = 300;
-const BATCH = 3;
+const BATCH = 2;
+// Tam eşitleme dilimlere bölünür: her tur canlı veriyi ve sıradaki dilimi işler.
+// Böylece platformun istek sınırı aşılmaz, tüm veri birkaç turda tazelenir.
+const SLICE_SIZE = 12;
+const SLICE_KEY = 'all:slice';
 
 let authCache = { base: '', key: '', at: 0 };
 
@@ -211,6 +215,33 @@ async function writeCursor(base44, entity, runStart, count) {
   }).catch(() => null);
 }
 
+/** Tam eşitlemede hangi dilimin işlendiğini saklar: sonraki tur bir sonraki dilime geçer. */
+async function readSliceIndex(base44) {
+  const auth = await supabaseAuth(base44);
+  const response = await fetch(`${auth.base}/sync_state?collection=eq.${encodeURIComponent(SLICE_KEY)}&select=last_count`, {
+    headers: { apikey: auth.key, Authorization: `Bearer ${auth.key}` },
+    signal: AbortSignal.timeout(10000),
+  }).catch(() => null);
+  if (!response || !response.ok) return 0;
+  const rows = await response.json().catch(() => []);
+  return Number(rows?.[0]?.last_count) || 0;
+}
+
+async function writeSliceIndex(base44, index) {
+  const auth = await supabaseAuth(base44);
+  await fetch(`${auth.base}/sync_state`, {
+    method: 'POST',
+    headers: {
+      apikey: auth.key,
+      Authorization: `Bearer ${auth.key}`,
+      'Content-Type': 'application/json',
+      Prefer: 'resolution=merge-duplicates,return=minimal',
+    },
+    body: JSON.stringify([{ collection: SLICE_KEY, last_sync: new Date().toISOString(), last_count: index, updated_at: new Date().toISOString() }]),
+    signal: AbortSignal.timeout(10000),
+  }).catch(() => null);
+}
+
 async function fetchAll(base44, entity) {
   const records = [];
   for (let page = 0; page < MAX_PAGES; page += 1) {
@@ -230,46 +261,51 @@ function participantRows(records, columns, idSuffix) {
 }
 
 async function syncCollection(base44, collection, context) {
-  try {
-    // Canlı aynada tam okunan koleksiyonlar her turda tazelenir; diğerleri son turdan beri değişenleri alır.
-    let records;
-    let incremental = false;
-    if (!context.full && collection.live === 'since') {
-      const cursor = await readCursor(base44, collection.entity);
-      if (cursor) {
-        records = await fetchSince(base44, collection.entity, cursor);
-        incremental = true;
+  // Geçici istek sınırı turu eksik bırakmasın: koleksiyon bir kez daha denenir.
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      // Tam okunan koleksiyonlar her turda tazelenir; değişken veriler son turdan beri değişenleri alır.
+      let records;
+      if (collection.live === 'since') {
+        const cursor = await readCursor(base44, collection.entity);
+        records = cursor ? await fetchSince(base44, collection.entity, cursor) : await fetchAll(base44, collection.entity);
       } else {
         records = await fetchAll(base44, collection.entity);
       }
-    } else {
-      records = await fetchAll(base44, collection.entity);
+
+      const rows = records.map((record) => toRow(record, collection.columns));
+      const written = await upsertRows(base44, collection.table, rows);
+      if (!written.ok) throw new Error(written.error || 'yazma hatası');
+
+      context.summary.collections[collection.entity] = rows.length;
+      context.summary.rows += rows.length;
+
+      // Katılımcı ve koltuk satırları odadan türetilir: ayrı sorgu gerekmez.
+      if (collection.deriveRooms) {
+        const people = records.flatMap((room) => (room.participants || []).map((person) => ({ ...person, room_id: room.id, created_by_id: room.created_by_id })));
+        const seats = records
+          .flatMap((room) => (room.seats || []).map((seat) => ({ ...seat, room_id: room.id, seat_index: seat.index, created_by_id: room.created_by_id })))
+          .filter((seat) => seat.seat_index !== undefined);
+        await upsertRows(base44, 'room_participants', participantRows(people.filter((person) => person.user_id), PARTICIPANT_COLUMNS, 'user_id'));
+        await upsertRows(base44, 'room_seats', seats.map((seat) => toRow({ ...seat, id: `${seat.room_id}:${seat.seat_index}` }, SEAT_COLUMNS)));
+        context.prunable.add('room_participants');
+        context.prunable.add('room_seats');
+      }
+
+      // Yalnızca tamamen okunan tablolar budanabilir: artımlı okunan veri eksiktir, silinemez.
+      if (collection.live !== 'since') context.prunable.add(collection.table);
+      await writeCursor(base44, collection.entity, context.runStart, records.length);
+      return true;
+    } catch (error) {
+      if (attempt === 0) {
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+        continue;
+      }
+      context.summary.errors.push(`${collection.entity}: ${String(error?.message || error).slice(0, 120)}`);
+      return false;
     }
-
-    const rows = records.map((record) => toRow(record, collection.columns));
-    const written = await upsertRows(base44, collection.table, rows);
-    if (!written.ok) throw new Error(written.error || 'yazma hatası');
-
-    context.synced.add(collection.table);
-    context.summary.collections[collection.entity] = rows.length;
-    context.summary.rows += rows.length;
-
-    // Katılımcı ve koltuk satırları odadan türetilir: ayrı sorgu gerekmez.
-    if (collection.deriveRooms) {
-      const participants = participantRows(records.flatMap((room) => (room.participants || []).map((person) => ({ ...person, room_id: room.id, created_by_id: room.created_by_id }))), PARTICIPANT_COLUMNS, 'user_id');
-      const seats = records.flatMap((room) => (room.seats || []).map((seat) => ({ ...seat, room_id: room.id, seat_index: seat.index })));
-      await upsertRows(base44, 'room_participants', participants);
-      await upsertRows(base44, 'room_seats', seats.map((seat) => toRow({ ...seat, id: `${seat.room_id}:${seat.seat_index}` }, SEAT_COLUMNS)));
-      context.synced.add('room_participants');
-      context.synced.add('room_seats');
-    }
-
-    if (!context.full) await writeCursor(base44, collection.entity, context.runStart, records.length);
-    return true;
-  } catch (error) {
-    context.summary.errors.push(`${collection.entity}: ${String(error?.message || error).slice(0, 120)}`);
-    return false;
   }
+  return false;
 }
 
 /**
@@ -316,26 +352,36 @@ export async function mirrorRoomDetail(base44, room) {
 export async function runSync(base44, mode = 'live') {
   const full = mode === 'all';
   const runStart = new Date().toISOString();
-  const collections = full ? ALL_COLLECTIONS : LIVE_COLLECTIONS;
+  // Canlı veri her turda işlenir; tam eşitlemede sıradaki dilim eklenir.
+  let collections = LIVE_COLLECTIONS;
+  let sliceIndex = null;
+  let sliceTotal = 0;
+  if (full) {
+    const slices = chunk(ALL_COLLECTIONS.filter((entry) => !LIVE_COLLECTIONS.includes(entry)), SLICE_SIZE);
+    sliceTotal = slices.length;
+    sliceIndex = (await readSliceIndex(base44)) % sliceTotal;
+    collections = [...LIVE_COLLECTIONS, ...slices[sliceIndex]];
+    await writeSliceIndex(base44, (sliceIndex + 1) % sliceTotal);
+  }
   const context = {
     full,
     runStart,
-    synced: new Set(),
-    summary: { mode: full ? 'all' : 'live', runStart, collections: {}, rows: 0, pruned: 0, errors: [] },
+    prunable: new Set(),
+    summary: { mode: full ? 'all' : 'live', runStart, slice: sliceIndex, sliceTotal, collections: {}, rows: 0, pruned: 0, errors: [] },
   };
 
   for (const batch of chunk(collections, BATCH)) {
     await Promise.allSettled(batch.map((collection) => syncCollection(base44, collection, context)));
   }
 
-  // Silinen kayıtlar aynadan da düşer: yalnızca bu turda başarıyla tazelenen tablolarda.
-  for (const batch of chunk([...context.synced], 4)) {
+  // Silinen kayıtlar aynadan da düşer: yalnızca bu turda tamamen okunan tablolarda.
+  for (const batch of chunk([...context.prunable], 4)) {
     await Promise.allSettled(batch.map(async (table) => {
       const ok = await deleteStale(base44, table, runStart);
       if (ok) context.summary.pruned += 1;
     }));
   }
 
-  context.summary.tables = context.synced.size;
+  context.summary.tables = context.prunable.size;
   return context.summary;
 }
