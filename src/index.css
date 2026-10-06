@@ -1257,6 +1257,14 @@ h1, h2, h3, p, a, button, label {
 
 .room-side-panel[hidden] { display: none !important; }
 
+@keyframes room-music-light {
+  0%, 100% { box-shadow: 0 0 0 2px hsl(var(--score-blue)), 0 0 12px 3px hsl(var(--score-blue) / .6); }
+  35% { box-shadow: 0 0 0 3px hsl(var(--score-blue)), 0 0 24px 7px hsl(var(--score-blue) / .9); }
+  65% { box-shadow: 0 0 0 2px hsl(var(--score-blue)), 0 0 16px 4px hsl(var(--score-blue) / .7); }
+}
+.room-music-glow { box-shadow: 0 0 0 2px hsl(var(--score-blue)), 0 0 var(--music-glow-radius, 14px) var(--music-glow-spread, 3px) hsl(var(--score-blue) / .85); transition: box-shadow 100ms linear; }
+@media (prefers-reduced-motion: reduce) { .room-music-glow { animation: none; box-shadow: 0 0 0 2px hsl(var(--score-blue)), 0 0 14px hsl(var(--score-blue)); } }
+
 /* Bağımsız mobil özel sohbet: tam ekran sabit — alt navigasyonu tamamen kaplar. */
 @media (max-width: 639px) {
   .standalone-private-chat {

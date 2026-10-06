@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Loader2, Music, Pause, Play, Square, Upload, Volume2 } from 'lucide-react';
+import { Loader2, Music, Pause, Play, Square, Upload } from 'lucide-react';
 import VoiceSheet from '@/components/voice/VoiceSheet';
 import RoomTrackList from '@/components/voice/RoomTrackList';
 import { useToast } from '@/components/ui/use-toast';
@@ -13,11 +13,10 @@ const clock = (seconds) => {
  * Oda müziği penceresi: oda sahibi ve yöneticiler telefondan şarkı seçer,
  * odadaki herkes aynı şarkıyı duyar ve kendi telefonunda sesini ayarlar.
  */
-export default function RoomMusicSheet({ open, onClose, music, tracks = [], currentUri, volume, onVolume, isMod, uploading, onUpload, onPlayTrack, onControl }) {
+export default function RoomMusicSheet({ open, onClose, music, tracks = [], currentUri, isMod, uploading, onUpload, onPlayTrack, onControl }) {
   const { toast } = useToast();
   const [now, setNow] = useState(() => Date.now());
-  // İşlem sürerken dosyanın/şarkının adı görünür: ekran sessizce beklemez.
-  const [busyLabel, setBusyLabel] = useState('');
+
 
   // Süre yalnızca şarkı çalarken ve pencere açıkken ilerler.
   useEffect(() => {
@@ -43,19 +42,19 @@ export default function RoomMusicSheet({ open, onClose, music, tracks = [], curr
     const input = event.currentTarget;
     const file = input.files?.[0];
     if (!file) return;
-    setBusyLabel(`${file.name || 'Şarkı'} yükleniyor…`);
+    if (uploading) return;
     const result = await onUpload(file);
     // Seçim alanı yükleme bitince sıfırlanır: iOS dosya referansı yükleme sırasında silinmez.
     input.value = '';
     report(result);
-    setBusyLabel('');
+
   };
 
   // Listeden seçilen şarkı odaya açılır; pencere açık kalır.
   const play = async (track) => {
-    setBusyLabel(`“${track.title || 'Şarkı'}” odaya açılıyor…`);
+
     report(await onPlayTrack(track));
-    setBusyLabel('');
+
   };
 
   return (
@@ -85,7 +84,7 @@ export default function RoomMusicSheet({ open, onClose, music, tracks = [], curr
                   {music.is_playing ? <><Pause className="h-4 w-4" /> Duraklat</> : <><Play className="h-4 w-4" /> Çal</>}
                 </button>
                 <label htmlFor="room-music-file" className="flex h-11 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-white/10 text-sm font-bold">
-                  <Upload className="h-4 w-4" /> Şarkı değiştir
+                  {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />} Telefondan yükle
                 </label>
                 <button type="button" onClick={() => onControl('stop')} className="flex h-11 items-center justify-center gap-1.5 rounded-xl bg-red-600 text-sm font-bold">
                   <Square className="h-4 w-4" /> Durdur
@@ -104,16 +103,10 @@ export default function RoomMusicSheet({ open, onClose, music, tracks = [], curr
                 htmlFor="room-music-file"
                 className="mt-3 flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#FFD700] text-sm font-bold text-black"
               >
-                <Upload className="h-4 w-4" /> Telefondan şarkı seç
+                {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />} Telefondan yükle
               </label>
             )}
           </div>
-        )}
-        {uploading && (
-          <p className="mt-3 flex items-center justify-center gap-2 text-[11px] text-white/60">
-            <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" />
-            <span className="min-w-0 truncate">{busyLabel || 'Şarkı odaya yükleniyor…'}</span>
-          </p>
         )}
       </div>
 
@@ -125,27 +118,10 @@ export default function RoomMusicSheet({ open, onClose, music, tracks = [], curr
         iPhone'da şarkıyı Dosyalar (Files) uygulamasında bulup oradan seç. Apple Music'te indirilen korumalı şarkılar yüklenemez.
       </p>
 
-      {/* Ses seviyesi yalnızca bu cihazda çalışır: herkes müziği kendi telefonunda kısar. */}
-      <div className="mt-3 rounded-2xl border border-white/10 bg-black/60 p-3">
-        <div className="flex items-center gap-3">
-          <Volume2 className="h-4 w-4 shrink-0 text-white/70" />
-          <input
-            type="range"
-            min="0"
-            max="100"
-            value={Math.round((Number(volume) || 0) * 100)}
-            onChange={(event) => onVolume(Number(event.target.value) / 100)}
-            className="h-1.5 min-w-0 flex-1 accent-[#FFD700]"
-            aria-label="Müzik ses seviyesi"
-          />
-          <span className="w-10 shrink-0 text-right text-[11px] font-bold tabular-nums text-white/70">{Math.round((Number(volume) || 0) * 100)}%</span>
-        </div>
-        <p className="mt-2 text-[11px] text-white/45">Ses seviyesi yalnızca senin telefonunda değişir.</p>
-      </div>
-
       {/* Seçici iPhone'da en güvenilir şekilde etiketle açılır: input görünmez ama sayfada durur. */}
       <input
         id="room-music-file"
+        disabled={uploading}
         type="file"
         accept="audio/*,.mp3,.m4a,.aac,.m4b,.wav,.ogg,.oga,.opus,.flac,.mp4,.webm"
         className="absolute h-px w-px overflow-hidden opacity-0"

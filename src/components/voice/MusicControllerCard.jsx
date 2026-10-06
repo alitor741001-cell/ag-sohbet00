@@ -49,7 +49,8 @@ export default function MusicControllerCard({ title, playing, volume, onVolume, 
           min="0"
           max="100"
           value={Math.round((Number(volume) || 0) * 100)}
-          onChange={(event) => onVolume(Number(event.target.value) / 100)}
+          onInput={(event) => onVolume(Number(event.currentTarget.value) / 100)}
+          onChange={(event) => onVolume(Number(event.currentTarget.value) / 100)}
           className="h-1.5 min-w-0 flex-1 accent-[#FFD700]"
           aria-label="Müzik ses seviyesi"
         />

@@ -1034,6 +1034,7 @@ export default function VoiceRoom() {
         )}
         <VoiceSeatGrid
           seats={seatsView}
+          musicOwnerId={music.music?.is_playing ? music.music.owner_id : null}
           userId={user?.id}
           ownerId={room?.owner_id}
           moderators={moderators}
@@ -1143,14 +1144,12 @@ export default function VoiceRoom() {
       />
 
       {/* Odadaki şarkı bu cihazda çalar; ses seviyesi herkesin kendi telefonunda. */}
-      <audio ref={music.audioRef} className="hidden" playsInline preload="auto" />
+      <audio ref={music.audioRef} crossOrigin="anonymous" className="hidden" playsInline preload="auto" />
 
       <RoomMusicSheet
         open={musicOpen}
         onClose={() => setMusicOpen(false)}
         music={music.music}
-        volume={music.volume}
-        onVolume={music.setVolume}
         tracks={music.library}
         currentUri={music.music?.file_uri}
         isMod={canMod}
