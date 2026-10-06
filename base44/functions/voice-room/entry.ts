@@ -14,11 +14,17 @@ import { HIDDEN_AVATAR_URL, hiddenDisplayName, isHiddenDisplayName, isHiddenUser
 const SEAT_OPTIONS = [1, 2, 5, 8, 9, 12, 15, 20, 24];
 // Bu değerin (coin) üzerindeki hediyeler bütün sesli odalara duyurulur.
 const BIG_GIFT_SCORE = 1000000;
-const ACTIONS = ['seat-take', 'seat-leave', 'seat-lock', 'seat-mute', 'seat-kick', 'set-seat-count', 'invite', 'seat-invite', 'seat-invite-clear', 'gift-state', 'gift-send', 'gift-board', 'number-board-open', 'number-board-close', 'number-step', 'number-reset', 'number-settings', 'chat-ban'];
+const ACTIONS = ['seat-take', 'seat-leave', 'seat-lock', 'seat-mute', 'seat-kick', 'set-seat-count', 'invite', 'seat-invite', 'seat-invite-clear', 'gift-state', 'gift-send', 'gift-finalize', 'gift-board', 'number-board-open', 'number-board-close', 'number-step', 'number-reset', 'number-settings', 'chat-ban', 'music-state', 'music-set', 'music-control'];
 
 const emptySeat = (index, locked = false) => ({
   index, user_id: '', name: '', avatar: '', frame: '', frame_scale: 100, locked, muted: false,
 });
+
+/** Odanın açık şarkısı — oda başına tek kayıt tutulur. */
+const loadRoomMusic = async (base44: any, roomId: string) => {
+  const rows = await base44.asServiceRole.entities.RoomMusic.filter({ room_id: roomId }, '-updated_date', 1).catch(() => []);
+  return Array.isArray(rows) && rows.length ? rows[0] : null;
+};
 
 export default async function (req: Request): Promise<Response> {
   try {
@@ -353,17 +359,65 @@ export default async function (req: Request): Promise<Response> {
       const boardStartedAt = room.board_started_at || new Date().toISOString();
       await base44.asServiceRole.entities.Room.update(room_id, { number_board: true, number_scores: numberScores, board_started_at: boardStartedAt });
 
+      const giftEmoji = giftRecord.emoji || '🎁';
+      // Hızlı yol: yalnızca hediye satırları yazılır. Ekran cevabı, hediyeyi herkesin
+      // görmesi için gereken en kısa işi bekler; ağır işler "gift-finalize" adımına bırakılır.
+      const messages = await Promise.all(recipients.map((recipient) => base44.asServiceRole.entities.RoomMessage.create({
+        room_id, user_id: hiddenUser ? '' : user.id, user_name: shownName, user_avatar: shownAvatar,
+        text: `${shownName}, ${recipient.name} kişisine ${giftRecord.name}${quantity > 1 ? ` X${quantity}` : ''} gönderdi!`,
+        type: 'gift', gift: giftRecord.id, gift_to_id: recipient.user_id, gift_to_name: recipient.name,
+        gift_emoji: giftEmoji, gift_k: kValue * quantity,
+      })));
+
+      // Gönderim cevabı burada biter: hediye kayıtları, seviye/kota senkronu ve büyük hediye
+      // duyurusu istemcinin hemen ardından çağırdığı "gift-finalize" adımında yapılır.
+      return Response.json({
+        ok: true,
+        gift: { id: giftRecord.id, name: giftRecord.name, emoji: giftEmoji, image_url: giftRecord.image_url || '', k_value: kValue },
+        recipients, count: recipients.length, quantity, total_k: totalK,
+        coins: Math.max(0, Number(spent.coins) || 0),
+        messages, number_board: true, number_scores: numberScores,
+      });
+    }
+
+    // Hediye sonrası ağır işler: hediye kayıtları, seviye/kota senkronu ve büyük hediye duyurusu.
+    // Gönderim ekranını bekletmemek için gönderen tarafı bu adımı ayrı çağırır.
+    if (action === 'gift-finalize') {
+      if (!isParticipant && !canMod) return Response.json({ error: 'Önce odaya katılmalısın.' }, { status: 403 });
+      const claimed = Array.isArray(body.message_ids)
+        ? body.message_ids.filter((value: any) => typeof value === 'string' && value).slice(0, 30)
+        : [];
+      const wantedGiftId = typeof gift_id === 'string' && gift_id ? gift_id : (typeof gift === 'string' ? gift : '');
+      if (!claimed.length || !wantedGiftId) return Response.json({ error: 'Hediye kaydı bulunamadı.' }, { status: 400 });
+
+      // Doğrulama: satırlar gerçekten bu kişinin bu odada gönderdiği hediye satırları olmalı.
+      const rows = await Promise.all(claimed.slice(0, 10).map((mid: string) => base44.asServiceRole.entities.RoomMessage.get(mid).catch(() => null)));
+      const own = rows.filter((row: any) => row
+        && row.room_id === room_id
+        && row.type === 'gift'
+        && row.gift === wantedGiftId
+        && (row.user_id === user.id || (hiddenUser && row.user_id === '')));
+      if (!own.length) return Response.json({ error: 'Hediye kaydı doğrulanamadı.' }, { status: 403 });
+
+      const rlFinal = await rateLimit(base44, 'voice-gift-fin:' + user.id, user.id, 240, 60000);
+      if (!rlFinal.allowed) return Response.json({ ok: true, skipped: true });
+
+      const giftRecord = await base44.asServiceRole.entities.Gift.get(wantedGiftId).catch(() => null);
+      if (!giftRecord) return Response.json({ error: 'Hediye bulunamadı.' }, { status: 404 });
+
+      // Adet ve alıcılar doğrulanan satırlardan okunur — istemciden gelen sayıya güvenilmez.
+      const kValue = Math.max(0, Number(giftRecord.k_value) || 0);
+      const perRecipientK = Math.max(0, Number(own[0].gift_k) || 0);
+      const quantity = kValue > 0 ? Math.max(1, Math.min(10, Math.round(perRecipientK / kValue))) : 1;
+      const recipients = [...new Map(own.map((row: any) => [row.gift_to_id, row.gift_to_name || 'Kullanıcı'])).entries()]
+        .filter(([recipientId]) => !!recipientId)
+        .map(([recipientId, name]) => ({ user_id: recipientId as string, name: name as string }));
+      if (!recipients.length) return Response.json({ error: 'Alıcı bulunamadı.' }, { status: 400 });
+
       const mode = recipients.length > 1 ? 'bulk' : 'single';
       const giftEmoji = giftRecord.emoji || '🎁';
-      const messageRecords = [];
-      const records = [];
-      for (const recipient of recipients) {
-        messageRecords.push({
-          room_id, user_id: hiddenUser ? '' : user.id, user_name: shownName, user_avatar: shownAvatar,
-          text: `${shownName}, ${recipient.name} kişisine ${giftRecord.name}${quantity > 1 ? ` X${quantity}` : ''} gönderdi!`,
-          type: 'gift', gift: giftRecord.id, gift_to_id: recipient.user_id, gift_to_name: recipient.name,
-          gift_emoji: giftEmoji, gift_k: kValue * quantity,
-        });
+      const records: any[] = [];
+      recipients.forEach((recipient) => {
         for (let repeat = 0; repeat < quantity; repeat += 1) {
           records.push({
             room_id,
@@ -374,28 +428,23 @@ export default async function (req: Request): Promise<Response> {
             k_value: kValue, total_k: kValue * recipients.length, recipient_count: recipients.length, mode, status: 'success',
           });
         }
-      }
-      // Hediye seviyeleri: gönderen ve alan kişilerin K toplamları, hediye satırından önce işlenir —
-      // satır geldiğinde hediye kutusundaki seviye çubuğu güncel toplamı okuyup canlı ilerler.
+      });
+      await base44.asServiceRole.entities.GiftSend.bulkCreate(records).catch(() => {});
+
+      // Hediye seviyeleri: gönderen ve alanların K toplamları işlenir.
       const progression = await addGiftTotals(base44, {
         senderId: user.id,
         recipientIds: recipients.map((recipient) => recipient.user_id),
         kPerRecipient: kValue * quantity,
-      });
+      }).catch(() => null);
 
-      const [messages] = await Promise.all([
-        Promise.all(messageRecords.map((message) => base44.asServiceRole.entities.RoomMessage.create(message))),
-        base44.asServiceRole.entities.GiftSend.bulkCreate(records),
-      ]);
-
-      // Yayıncı kotası: hediye alan yayıncıların tamamlanan kotaları anında işlenir.
+      // Yayıncı kotası: hediye alan yayıncıların tamamlanan kotaları işlenir.
       await Promise.all([...new Set(recipients.map((recipient) => recipient.user_id))].slice(0, 10)
         .map((recipientId) => syncQuotaRewards(base44, recipientId).catch(() => {})));
 
-      // Oda LVL'i hediye atışıyla yükselir: hediye kutusundaki atış LVL eşiği tamamlandığında
-      // oda seviyesi atlar ve odaya duyuru düşer. Hediyeyi alanların "hediye alma" seviyesi de duyurulur.
+      // Oda LVL'i hediye atışıyla yükselir; hediye alanların seviyesi de duyurulur.
       try {
-        const levelMessages = [];
+        const levelMessages: any[] = [];
         if (progression?.sender) {
           const synced = await syncGiftRoomLevel(base44, { userId: user.id, userName: shownName, level: progression.sender.after });
           if (synced?.leveledUp) {
@@ -441,13 +490,52 @@ export default async function (req: Request): Promise<Response> {
         }).catch(() => {});
       }
 
-      return Response.json({
-        ok: true,
-        gift: { id: giftRecord.id, name: giftRecord.name, emoji: giftEmoji, image_url: giftRecord.image_url || '', k_value: kValue },
-        recipients, count: recipients.length, quantity, total_k: totalK, mode,
-        coins: Math.max(0, Number(spent.coins) || 0),
-        messages, number_board: true, number_scores: numberScores,
-      });
+      return Response.json({ ok: true, finalized: true, count: recipients.length, quantity });
+    }
+
+    // Oda müziği: şarkı seçimi oda sahibi/yöneticilerde, çalma herkesin kendi cihazında.
+    if (action === 'music-state') {
+      if (!isParticipant && !canMod) return Response.json({ error: 'Önce odaya katılmalısın.' }, { status: 403 });
+      return Response.json({ ok: true, music: await loadRoomMusic(base44, room_id) });
+    }
+
+    if (action === 'music-set') {
+      if (!canMod) return Response.json({ error: 'Müziği oda sahibi ve yöneticiler açabilir.' }, { status: 403 });
+      const fileUri = typeof body.file_uri === 'string' ? body.file_uri.trim().slice(0, 400) : '';
+      const fileUrl = typeof body.url === 'string' ? body.url.trim().slice(0, 1200) : '';
+      if (!fileUri || !/^https?:\/\//.test(fileUrl)) return Response.json({ error: 'Şarkı dosyası geçersiz.' }, { status: 400 });
+      const rlMusic = await rateLimit(base44, 'voice-music:' + user.id, user.id, 60, 60000);
+      if (!rlMusic.allowed) return Response.json({ error: 'Çok sık şarkı değiştiriliyor.', retry_after_ms: 60000 }, { status: 429 });
+      const title = String(body.title || '').trim().slice(0, 80) || 'Şarkı';
+      const patch = {
+        room_id, owner_id: user.id, owner_name: shownName, title,
+        file_uri: fileUri, url: fileUrl,
+        is_playing: true, position: 0, started_at: new Date().toISOString(),
+      };
+      const existing = await loadRoomMusic(base44, room_id);
+      const record = existing
+        ? await base44.asServiceRole.entities.RoomMusic.update(existing.id, patch)
+        : await base44.asServiceRole.entities.RoomMusic.create(patch);
+      await say(`${shownName}, odaya müzik açtı: ${title}`);
+      return Response.json({ ok: true, music: record });
+    }
+
+    if (action === 'music-control') {
+      if (!canMod) return Response.json({ error: 'Müziği oda sahibi ve yöneticiler yönetir.' }, { status: 403 });
+      const record = await loadRoomMusic(base44, room_id);
+      if (!record) return Response.json({ error: 'Açık şarkı yok.' }, { status: 404 });
+      const op = String(body.op || '');
+      const elapsed = record.is_playing && record.started_at
+        ? Math.max(0, (Date.now() - new Date(record.started_at).getTime()) / 1000)
+        : 0;
+      const current = Math.max(0, (Number(record.position) || 0) + elapsed);
+      let patch: any = null;
+      if (op === 'pause') patch = { is_playing: false, position: current, started_at: '' };
+      else if (op === 'play') patch = { is_playing: true, started_at: new Date().toISOString() };
+      else if (op === 'stop') patch = { is_playing: false, position: 0, started_at: '' };
+      if (!patch) return Response.json({ error: 'geçersiz istek' }, { status: 400 });
+      const next = await base44.asServiceRole.entities.RoomMusic.update(record.id, patch);
+      return Response.json({ ok: true, music: next });
     }
 
     // Hediye kutusu — odada biriken hediyeler: son 24 saat ve tüm zamanlar sıralaması

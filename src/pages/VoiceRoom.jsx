@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Armchair, Eye, Gift, Loader2, Lock, LogOut, MessageSquare, Mic, MicOff, MoreHorizontal, Shield, ShieldAlert, Unlock, UserMinus, UserPlus, UserRound } from 'lucide-react';
+import { Armchair, Eye, Gift, Loader2, Lock, LogOut, MessageSquare, Mic, MicOff, Music, Shield, ShieldAlert, Unlock, UserMinus, UserPlus, UserRound } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useVoiceChat } from '@/hooks/useVoiceChat';
@@ -28,7 +28,11 @@ import GiftBoardSheet from '@/components/voice/GiftBoardSheet';
 import RoomExitOverlay from '@/components/voice/RoomExitOverlay';
 import { clearMinimizedRoom, getMinimizedRoom, isRoomMinimized, setMinimizedRoom } from '@/lib/minimizedRoom';
 import VoicePrivateChatSheet from '@/components/voice/VoicePrivateChatSheet';
-import GamePanel from '@/components/games/GamePanel';
+import useRoomMusic from '@/hooks/useRoomMusic';
+import RoomMusicSheet from '@/components/voice/RoomMusicSheet';
+import { withBoardStep } from '@/lib/numberBoard';
+// Oyun paneli ağır: oda açılışında indirilmez, yalnızca açıldığında yüklenir.
+const GamePanel = lazy(() => import('@/components/games/GamePanel'));
 import GiftBoard from '@/components/voice/GiftBoard';
 import GiftSendButton from '@/components/voice/GiftSendButton';
 import drainGiftQueue from '@/components/voice/drainGiftQueue';
@@ -62,6 +66,7 @@ export default function VoiceRoom() {
   const [composerOpen, setComposerOpen] = useState(false);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [musicOpen, setMusicOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [seatIndex, setSeatIndex] = useState(null);
   const [profileUserId, setProfileUserId] = useState(null);
@@ -109,6 +114,8 @@ export default function VoiceRoom() {
   const giftSessionRef = useRef(0);
   const giftBoardRef = useRef(0);
   const giftRefreshTimerRef = useRef(null);
+  // Sayı tahtasının son hali: iyimser güncelleme başarısız olursa geri alınır.
+  const numberScoresRef = useRef([]);
 
   useEffect(() => {
     giftSessionRef.current += 1;
@@ -174,6 +181,11 @@ export default function VoiceRoom() {
     });
     return map;
   }, [room?.number_scores]);
+
+  // Tahtanın son hali saklanır: hediye gönderimi başarısız olursa iyimser değer geri alınır.
+  useEffect(() => {
+    numberScoresRef.current = Array.isArray(room?.number_scores) ? room.number_scores : [];
+  }, [room?.number_scores]);
   // Hediye gönderilebilecek kişiler: odadaki herkes ve kendisi (kendine de hediye gönderebilir).
   const giftPeople = useMemo(() => {
     const map = new Map();
@@ -215,6 +227,9 @@ export default function VoiceRoom() {
     voiceEnabled: joined && !!room?.voice_enabled,
     micEnabled: seated,
   });
+
+  // Oda müziği: odanın açık şarkısı canlı izlenir, herkes kendi telefonunda duyar.
+  const music = useRoomMusic(id, joined);
 
   const syncRoom = useCallback(async () => {
     const response = await base44.functions.invoke('room-presence', { action: 'get', room_id: id }).catch(() => null);
@@ -762,12 +777,33 @@ export default function VoiceRoom() {
   const sendGiftOnce = async (gift, ids, quantity = 1) => {
     // Sahne tek kez oynasın: hediye satırının canlı yayın kopyası bu gönderim için yok sayılır.
     markOwnSend();
-    const response = await base44.functions.invoke('voice-room', {
-      room_id: id, action: 'gift-send', gift_id: gift.id, target_ids: ids, quantity,
-    });
-    const data = response.data;
+    // Sayı tahtası gönderim anında ilerler: sunucu cevabı beklenmez, hata olursa geri alınır.
+    const snapshot = numberScoresRef.current;
+    const step = Math.max(0, Number(gift.k_value) || 0) * 1000 * quantity;
+    if (step > 0 && ids.length) {
+      setRoom((prev) => {
+        if (!prev) return prev;
+        const next = ids.reduce((list, value) => withBoardStep(list, value, step), Array.isArray(prev.number_scores) ? prev.number_scores : []);
+        return { ...prev, number_board: true, number_scores: next };
+      });
+    }
+    let data;
+    try {
+      const response = await base44.functions.invoke('voice-room', {
+        room_id: id, action: 'gift-send', gift_id: gift.id, target_ids: ids, quantity,
+      });
+      data = response.data;
+    } catch (error) {
+      if (Array.isArray(snapshot)) setRoom((prev) => (prev ? { ...prev, number_scores: snapshot } : prev));
+      throw error;
+    }
     if (typeof data.coins === 'number') setCoins(data.coins);
     setRoom((prev) => ({ ...prev, number_board: data.number_board, number_scores: data.number_scores }));
+    // Ağır işler cevabı beklemez: hediye kayıtları, seviye/kota senkronu ve büyük hediye
+    // duyurusu hemen ardından arka planda tamamlanır.
+    base44.functions.invoke('voice-room', {
+      room_id: id, action: 'gift-finalize', gift_id: gift.id, message_ids: (data.messages || []).map((message) => message.id),
+    }).catch(() => {});
     markGiftSeen((data.messages || []).map((message) => message.id));
     const recipientIds = (data.recipients || []).map((item) => item.user_id);
     // Gönderdiğim hediye kutu toplamına anında yansır, ardından sunucu toplamıyla doğrulanır.
@@ -779,8 +815,8 @@ export default function VoiceRoom() {
         day: { ...prev.day, total: (Number(prev.day?.total) || 0) + sentScore },
       } : prev));
     }
+    // Kutu toplamı yerelde anında artar; sunucu toplamı en fazla 3 saniye sonra doğrular.
     giftBoardRef.current = Date.now();
-    loadGiftBoard();
     flashGifted(recipientIds, data.gift?.emoji);
     pushGiftAlert({
       key: `send-${Date.now()}`,
@@ -961,11 +997,16 @@ export default function VoiceRoom() {
               <Eye className="h-5 w-5 text-white/80" />
               <span className="text-sm font-bold tabular-nums">{participants.length}</span>
             </button>
-            {/* "…" menüsü yalnızca oda sahibi ve yöneticilerde görünür; yetki verildiği/alındığı
-                an (oda kaydı canlı takip edilir) tuş sayfa yenilenmeden gelir veya kaybolur. */}
+            {/* "…" yerine müzik: oda sahibi ve yöneticiler telefondan şarkı açıp yönetir.
+                Oda ayarları müzik penceresinin içinden açılır; şarkı çalarken tuş altın renkte parlar. */}
             {canMod && (
-              <button type="button" onClick={() => setMenuOpen(true)} aria-label="Oda ayarları" className="flex h-[clamp(38px,11vw,44px)] w-[clamp(38px,11vw,44px)] items-center justify-center rounded-full bg-white/10 active:scale-95 transition-transform">
-                <MoreHorizontal className="h-5 w-5" />
+              <button
+                type="button"
+                onClick={() => setMusicOpen(true)}
+                aria-label="Oda müziği"
+                className={`flex h-[clamp(38px,11vw,44px)] w-[clamp(38px,11vw,44px)] items-center justify-center rounded-full active:scale-95 transition-transform ${music.music?.is_playing ? 'bg-[#FFD700] text-black shadow-[0_0_16px_-4px_rgba(255,215,0,0.95)]' : 'bg-white/10'}`}
+              >
+                <Music className="h-5 w-5" />
               </button>
             )}
             <button type="button" onClick={() => setExitOpen(true)} aria-label="Odadan çık" className="flex h-[clamp(38px,11vw,44px)] w-[clamp(38px,11vw,44px)] items-center justify-center rounded-full bg-red-600 active:scale-95 transition-transform">
@@ -1097,6 +1138,22 @@ export default function VoiceRoom() {
         onUnban={unbanUser}
       />
 
+      {/* Odadaki şarkı bu cihazda çalar; ses seviyesi herkesin kendi telefonunda. */}
+      <audio ref={music.audioRef} className="hidden" playsInline preload="auto" />
+
+      <RoomMusicSheet
+        open={musicOpen}
+        onClose={() => setMusicOpen(false)}
+        music={music.music}
+        volume={music.volume}
+        onVolume={music.setVolume}
+        isMod={canMod}
+        uploading={music.uploading}
+        onUpload={music.uploadTrack}
+        onControl={music.control}
+        onOpenSettings={() => { setMusicOpen(false); setMenuOpen(true); }}
+      />
+
       <GiftBoardSheet
         open={giftBoardOpen}
         onClose={() => setGiftBoardOpen(false)}
@@ -1175,7 +1232,11 @@ export default function VoiceRoom() {
 
       <InviteSheet open={inviteOpen} onClose={() => setInviteOpen(false)} onInvite={sendInvites} />
 
-      <GamePanel open={gamesOpen} onClose={() => setGamesOpen(false)} roomId={id} />
+      {gamesOpen && (
+        <Suspense fallback={null}>
+          <GamePanel open={gamesOpen} onClose={() => setGamesOpen(false)} roomId={id} />
+        </Suspense>
+      )}
 
       <GiftBoard
         open={giftOpen}

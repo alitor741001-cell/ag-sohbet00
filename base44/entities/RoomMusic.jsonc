@@ -1,0 +1,67 @@
+{
+  "name": "RoomMusic",
+  "type": "object",
+  "properties": {
+    "room_id": {
+      "type": "string"
+    },
+    "owner_id": {
+      "type": "string",
+      "default": ""
+    },
+    "owner_name": {
+      "type": "string",
+      "default": ""
+    },
+    "title": {
+      "type": "string",
+      "default": ""
+    },
+    "file_uri": {
+      "type": "string",
+      "default": ""
+    },
+    "url": {
+      "type": "string",
+      "default": ""
+    },
+    "is_playing": {
+      "type": "boolean",
+      "default": false
+    },
+    "position": {
+      "type": "number",
+      "default": 0
+    },
+    "started_at": {
+      "type": "string",
+      "default": ""
+    },
+    "volume": {
+      "type": "number",
+      "default": 0.8
+    }
+  },
+  "required": [
+    "room_id",
+    "title"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
