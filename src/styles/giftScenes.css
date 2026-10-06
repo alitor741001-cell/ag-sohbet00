@@ -415,6 +415,42 @@
   clip-path: polygon(0 30%, 100% 0, 100% 100%, 0 70%);
 }
 
+/* --- Spor araba hediyesi: resim aracın kendisi olur, yolda hızla geçer.
+       Araba görselinin siyah/saydam zemini blend ile kaybolur; gövde yolda titrer,
+       hız çizgileri ardında akar. --- */
+.gift-scene-car .gift-scene-car-photo {
+  width: 190px;
+  height: 92px;
+}
+.gift-scene-car-photo-img {
+  display: block;
+  height: 100%;
+  width: 100%;
+  mix-blend-mode: screen;
+  filter: drop-shadow(0 10px 16px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 12px rgba(248, 113, 113, 0.45));
+  animation: gift-scene-car-hop 0.55s ease-in-out infinite;
+}
+@keyframes gift-scene-car-hop {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-2px) scale(1.015); }
+}
+.gift-scene-car-streaks {
+  position: absolute;
+  left: -14%;
+  top: 60%;
+  width: 54px;
+  height: 2px;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, rgba(226, 232, 240, 0.9), transparent);
+  box-shadow: 0 -7px 0 -0.5px rgba(226, 232, 240, 0.5), 0 7px 0 -0.5px rgba(226, 232, 240, 0.4);
+  animation: gift-scene-streak 0.5s linear infinite;
+}
+@keyframes gift-scene-streak {
+  0% { transform: translateX(14px); opacity: 0; }
+  35% { opacity: 1; }
+  100% { transform: translateX(-56px); opacity: 0; }
+}
+
 /* --- Havai fişek: hediye ortada, ışık patlamaları yayılır --- */
 .gift-scene-fireworks { background: radial-gradient(circle at 50% 42%, #1e1b4b 0%, #0a0618 55%, #04060f 100%); }
 .gift-scene-rays {
@@ -477,5 +513,6 @@
   .gift-scene-stars, .gift-scene-flame, .gift-scene-wave, .gift-scene-sail, .gift-scene-cloud,
   .gift-scene-pulse, .gift-scene-road, .gift-scene-drive, .gift-scene-rise, .gift-scene-launch,
   .gift-scene-fly, .gift-scene-spin, .gift-scene-rays, .gift-scene-burst, .gift-scene-boom,
-  .gift-scene-wake, .gift-scene-car-wheel, .gift-scene-twinkle { animation: none; }
+  .gift-scene-wake, .gift-scene-car-wheel, .gift-scene-twinkle,
+  .gift-scene-car-photo-img, .gift-scene-car-streaks { animation: none; }
 }

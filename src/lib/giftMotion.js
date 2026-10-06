@@ -26,8 +26,10 @@ const hash = (value) => {
 /** Hediyenin kendine özel hareket sınıfı ve ışıltı rengi. */
 export function giftMotion(gift) {
   const seed = hash(gift?.id || gift?.name || gift?.emoji || 'gift');
+  // Spor araba hediyesi kartta da durmaz: sağa sola süzülüp arkasında hız çizgisi bırakır.
+  const carGift = /araba|car/i.test(String(gift?.name || ''));
   return {
-    motion: MOTIONS[seed % MOTIONS.length],
+    motion: carGift ? 'gift-drive' : MOTIONS[seed % MOTIONS.length],
     tone: TONES[Math.floor(seed / 7) % TONES.length],
   };
 }

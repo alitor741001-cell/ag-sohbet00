@@ -1768,6 +1768,28 @@ button:active, nav a:active, a[role="button"]:active {
   30% { transform: scale(1); }
   45% { transform: scale(1.1); }
 }
+/* Spor araba hediyesi: kartta da süzülür, arkasında hız çizgisi bırakır. */
+.gift-drive { animation: gift-drive 2.6s ease-in-out infinite; }
+.gift-drive::after {
+  content: '';
+  position: absolute;
+  left: -18%;
+  top: 58%;
+  width: 46%;
+  height: 2px;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, rgba(248, 113, 113, 0.9), transparent);
+  animation: gift-drive-streak 0.9s linear infinite;
+}
+@keyframes gift-drive {
+  0%, 100% { transform: translateX(-12%) translateY(0) scale(1); }
+  50% { transform: translateX(12%) translateY(-2px) scale(1.05); }
+}
+@keyframes gift-drive-streak {
+  0% { transform: translateX(12px); opacity: 0; }
+  35% { opacity: 1; }
+  100% { transform: translateX(-26px); opacity: 0; }
+}
 .gift-tilt { animation: gift-tilt 2.4s ease-in-out infinite; }
 @keyframes gift-tilt {
   0%, 100% { transform: rotate(-9deg) scale(1); }
@@ -1775,6 +1797,7 @@ button:active, nav a:active, a[role="button"]:active {
 }
 @media (prefers-reduced-motion: reduce) {
   .gift-bounce, .gift-float, .gift-wiggle, .gift-swing, .gift-pulse, .gift-spin, .gift-heartbeat, .gift-tilt,
+  .gift-drive, .gift-drive::after,
   .gift-shine::before, .gift-shine::after { animation: none; }
 }
 

@@ -90,7 +90,7 @@ export default function VoiceRoom() {
   const { coins, setCoins } = useGiftBalance(id, giftOpen);
   const giftMap = useMemo(() => new Map(gifts.map((item) => [item.id, item])), [gifts]);
   const resolveGift = useCallback((giftKey) => giftMap.get(giftKey) || null, [giftMap]);
-  const { alert: giftAlert, push: pushGiftAlert, markSeen: markGiftSeen } = useGiftAlerts(messages, resolveGift);
+  const { alert: giftAlert, push: pushGiftAlert, markSeen: markGiftSeen, markOwnSend } = useGiftAlerts(messages, resolveGift, user?.id);
   // Büyük hediye duyurusu tüm sesli odalarda görünür.
   const bigGift = useBigGiftAlerts();
   // Sohbetin altındaki büyük hediye satırı — basılınca hediye atan kişinin odasına gidilir.
@@ -760,6 +760,8 @@ export default function VoiceRoom() {
 
   // Tek gönderim: bakiye düşer, alıcı başına kayıt ve sohbet satırı oluşur.
   const sendGiftOnce = async (gift, ids, quantity = 1) => {
+    // Sahne tek kez oynasın: hediye satırının canlı yayın kopyası bu gönderim için yok sayılır.
+    markOwnSend();
     const response = await base44.functions.invoke('voice-room', {
       room_id: id, action: 'gift-send', gift_id: gift.id, target_ids: ids, quantity,
     });

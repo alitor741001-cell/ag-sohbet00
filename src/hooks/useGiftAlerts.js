@@ -3,11 +3,15 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 const VISIBLE_MS = 2600;
 // Aynı anda çok hediye gelse bile animasyonlar sırayla gösterilir; kuyruk kısa tutulur.
 const MAX_QUEUE = 3;
+// Gönderdiğim hediyenin canlı yayın kopyası bu süre boyunca yok sayılır: sahne iki kez oynamaz.
+const ECHO_MS = 4000;
 
 /** Odaya gelen hediyeleri sıraya alır: tekli/toplu gönderimler üst üste binmez. */
-export default function useGiftAlerts(messages, resolveGift) {
+export default function useGiftAlerts(messages, resolveGift, selfId) {
   const [queue, setQueue] = useState([]);
   const seenRef = useRef(new Set());
+  // Gönderim anında açılan sessizlik penceresi: kendi hediye mesajlarım yayından geri döner.
+  const echoRef = useRef(0);
 
   // Aynı hediye seri gönderilirse yeni kart eklenmez; sayaç artar ve pop-up hızlıca akar.
   const merge = (prev, alert) => {
@@ -23,7 +27,11 @@ export default function useGiftAlerts(messages, resolveGift) {
     }];
   };
 
+  // Gönderim başlarken ve yanıt geldiğinde pencere tazelenir; gecikmeli kopya da yok sayılır.
+  const markOwnSend = useCallback(() => { echoRef.current = Date.now() + ECHO_MS; }, []);
+
   const push = useCallback((alert) => {
+    echoRef.current = Date.now() + ECHO_MS;
     setQueue((prev) => merge(prev, alert));
   }, []);
 
@@ -34,13 +42,16 @@ export default function useGiftAlerts(messages, resolveGift) {
   const reset = useCallback(() => setQueue([]), []);
 
   useEffect(() => {
-    const fresh = (Array.isArray(messages) ? messages : []).filter((message) => (
-      message?.type === 'gift'
-      && message.id
-      && !seenRef.current.has(message.id)
-      && message.created_date
-      && Date.now() - new Date(message.created_date).getTime() < 15000
-    ));
+    const fresh = (Array.isArray(messages) ? messages : []).filter((message) => {
+      if (message?.type !== 'gift' || !message.id || seenRef.current.has(message.id)) return false;
+      if (!message.created_date || Date.now() - new Date(message.created_date).getTime() >= 15000) return false;
+      // Kendi gönderdiğim hediye: yerel sahne zaten oynuyor, yayın kopyası ikinci kez başlamaz.
+      if (selfId && message.user_id === selfId && echoRef.current > Date.now()) {
+        seenRef.current.add(message.id);
+        return false;
+      }
+      return true;
+    });
     if (!fresh.length) return;
 
     const alerts = fresh.slice(-MAX_QUEUE).map((message) => {
@@ -60,7 +71,7 @@ export default function useGiftAlerts(messages, resolveGift) {
       };
     });
     setQueue((prev) => alerts.reduce(merge, prev));
-  }, [messages, resolveGift]);
+  }, [messages, resolveGift, selfId]);
 
   useEffect(() => {
     if (!queue.length) return undefined;
@@ -68,5 +79,5 @@ export default function useGiftAlerts(messages, resolveGift) {
     return () => window.clearTimeout(timer);
   }, [queue]);
 
-  return { alert: queue[0] || null, push, markSeen, reset };
+  return { alert: queue[0] || null, push, markSeen, markOwnSend, reset };
 }
