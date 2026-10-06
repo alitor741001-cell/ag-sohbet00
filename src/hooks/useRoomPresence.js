@@ -1,20 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 
-// Odadaki kişi bu süre içinde görülmediyse odada sayılmaz: böylece oda, içinde
-// kimse kalmadıktan en geç bir dakika sonra ana sayfadaki açık odalar listesinden düşer.
-const ONLINE_WINDOW_MS = 60000;
-
 /**
- * Odaların canlılığını çevrim içi kayıtlarından izler. Bir oda, içinde çevrim içi en az
- * bir kişi (sahibi dahil) varken açık sayılır: odaya girenin kaydı anında yayınlandığı
- * için oda herkeste aynı saniyede belirir, son kişi çıktıktan sonra en geç bir dakika
- * içinde listeden düşer. Gizlenen odada içeridekilerin canlı işaretçisi silindiğinden
- * gizleme ve yeniden gösterme de anında yansır.
+ * Odaların canlılığını çevrim içi oda işaretçisinden izler. İşaretçisi bu odayı gösteren
+ * biri varsa oda açık sayılır — odayı açan kişi için ana sayfada hemen belirir. Çıkışta
+ * işaretçi silindiği için oda anında listeden düşer; gizleme ve yeniden gösterme de
+ * içeridekilerin işaretçisi yazılıp silindiğinden anında yansır.
  */
 export default function useRoomPresence(rooms) {
   const [records, setRecords] = useState({});
-  const [now, setNow] = useState(() => Date.now());
 
   const ids = useMemo(() => {
     const unique = new Set();
@@ -52,26 +46,18 @@ export default function useRoomPresence(rooms) {
         else next[record.user_id] = merged;
         return next;
       });
-      setNow(Date.now());
     });
     return () => { alive = false; unsubscribe(); };
   }, [idsKey]);
 
-  // Tazelik yoklanır: kimse kalmayan oda en geç bir dakika sonra listeden düşer.
-  useEffect(() => {
-    const timer = window.setInterval(() => setNow(Date.now()), 15000);
-    return () => window.clearInterval(timer);
-  }, []);
-
-  /** Çevrim içi kaydı bu odayı işaret eden herkesin odası canlı sayılır. */
+  /** Çevrim içi kaydı bu odayı gösteren odalar canlı sayılır. */
   const liveRoomIds = useMemo(() => {
     const live = new Set();
     Object.values(records).forEach((record) => {
-      const fresh = record.last_seen && now - new Date(record.last_seen).getTime() < ONLINE_WINDOW_MS;
-      if (record.current_room_id && fresh) live.add(record.current_room_id);
+      if (record.current_room_id) live.add(record.current_room_id);
     });
     return live;
-  }, [records, now]);
+  }, [records]);
 
   const isLive = useCallback((room) => Boolean(room?.id && liveRoomIds.has(room.id)), [liveRoomIds]);
 
