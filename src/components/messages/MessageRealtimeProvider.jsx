@@ -13,7 +13,6 @@ export function useMessageRealtime() {
 export default function MessageRealtimeProvider({ userId, children }) {
   const [conversations, setConversations] = useState([]);
   const [requests, setRequests] = useState(0);
-  const [progressions, setProgressions] = useState([]);
   const [loading, setLoading] = useState(true);
   const openThread = useRef(null);
   const [typingMap, setTypingMap] = useState({});
@@ -22,9 +21,8 @@ export default function MessageRealtimeProvider({ userId, children }) {
   const reload = useCallback(async () => {
     if (!userId) return;
     try {
-      const [items, pending, levels] = await Promise.all([base44.entities.Conversation.filter({ members: userId }, '-updated_date', 200), base44.entities.Friendship.filter({ recipient_id: userId, status: 'pending' }, '-created_date', 100), base44.entities.FriendshipProgression.filter({ members: userId }, '-updated_date', 500)]);
+      const [items, pending] = await Promise.all([base44.entities.Conversation.filter({ members: userId }, '-updated_date', 200), base44.entities.Friendship.filter({ recipient_id: userId, status: 'pending' }, '-created_date', 100)]);
       setConversations(sortConversations((items || []).filter((item) => !(item.deleted_for || []).includes(userId))));
-      setProgressions(levels || []);
       setRequests(pending.length);
     } catch {
       // Yoğunluk ya da ağ hatasında mevcut liste korunur: yedek yoklama hatası ekrana düşmez.
@@ -33,7 +31,7 @@ export default function MessageRealtimeProvider({ userId, children }) {
     }
   }, [userId]);
   useEffect(() => {
-    if (!userId) { setConversations([]); setProgressions([]); setRequests(0); setLoading(false); return; }
+    if (!userId) { setConversations([]); setRequests(0); setLoading(false); return; }
     setLoading(true); reload();
     const offConversations = base44.entities.Conversation.subscribe((event) => {
       const id = event.data?.id || event.id;
@@ -62,10 +60,6 @@ export default function MessageRealtimeProvider({ userId, children }) {
       if (message.receiver_id === userId && openThread.current === message.conversation_id) setTimeout(() => base44.functions.invoke('dm-service', { action: 'mark_read', conversation_id: message.conversation_id }).catch(() => {}), 150);
     });
     const offFriends = base44.entities.Friendship.subscribe(() => base44.entities.Friendship.filter({ recipient_id: userId, status: 'pending' }, '-created_date', 100).then((items) => setRequests(items.length)).catch(() => {}));
-    const offProgressions = base44.entities.FriendshipProgression.subscribe((event) => {
-      const id = event.data?.id || event.id;
-      setProgressions((current) => event.type === 'delete' ? current.filter((item) => item.id !== id) : [{ ...(current.find((item) => item.id === id) || {}), ...(event.data || {}), id }, ...current.filter((item) => item.id !== id)]);
-    });
     base44.entities.DmTyping.list('-updated_date', 200).then((records) => {
       const now = Date.now();
       const map = {};
@@ -96,12 +90,11 @@ export default function MessageRealtimeProvider({ userId, children }) {
     const closed = () => { openThread.current = null; };
     const reconnect = () => reload(); const visible = () => { if (document.visibilityState === 'visible') reload(); };
     window.addEventListener('social-thread-open', opened); window.addEventListener('social-thread-close', closed); window.addEventListener('online', reconnect); document.addEventListener('visibilitychange', visible);
-    return () => { offConversations(); offMessages(); offFriends(); offProgressions(); offDmTyping(); clearInterval(typingPoll); window.removeEventListener('social-thread-open', opened); window.removeEventListener('social-thread-close', closed); window.removeEventListener('online', reconnect); document.removeEventListener('visibilitychange', visible); };
+    return () => { offConversations(); offMessages(); offFriends(); offDmTyping(); clearInterval(typingPoll); window.removeEventListener('social-thread-open', opened); window.removeEventListener('social-thread-close', closed); window.removeEventListener('online', reconnect); document.removeEventListener('visibilitychange', visible); };
   }, [userId, reload]);
   const badges = useMemo(() => ({ requests, messages: conversations.reduce((sum, item) => sum + (item.user1_id === userId ? item.unread_user1 || 0 : item.unread_user2 || 0), 0) }), [requests, conversations, userId]);
   const optimisticHide = useCallback((id) => setConversations((items) => items.filter((item) => item.id !== id)), []);
   const optimisticPatch = useCallback((id, patch) => setConversations((items) => items.map((item) => item.id === id ? { ...item, ...patch } : item)), []);
-  const getProgression = useCallback((otherId) => progressions.find((item) => (item.members || []).includes(otherId)) || null, [progressions]);
   const isTyping = useCallback((conversationId, otherId) => { const info = typingMap[conversationId]; return !!info && info.user_id === otherId; }, [typingMap]);
-  return <MessageRealtimeContext.Provider value={{ conversations, loading, reload, optimisticHide, optimisticPatch, badges, progressions, getProgression, typingMap, isTyping }}>{children}</MessageRealtimeContext.Provider>;
+  return <MessageRealtimeContext.Provider value={{ conversations, loading, reload, optimisticHide, optimisticPatch, badges, typingMap, isTyping }}>{children}</MessageRealtimeContext.Provider>;
 }

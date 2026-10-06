@@ -53,17 +53,21 @@ export default function RoutePreloader() {
     const queue = canWarm
       ? Object.keys(routeLoaders).filter((path) => !PRIMARY_ROUTES.includes(path)).map((path) => routeLoaders[path])
       : [];
-    let timer;
+    // Kalan paketler tarayıcı boşa çıktığında indirilir: ilk açılışın bant genişliğini
+    // ve veri isteklerini yavaşlatmaz, sekmeye dokunulduğunda paket yine hazırdır.
+    const idle = window.requestIdleCallback ? window.requestIdleCallback.bind(window) : (callback) => window.setTimeout(callback, 800);
+    const cancelIdle = window.cancelIdleCallback ? window.cancelIdleCallback.bind(window) : window.clearTimeout;
+    let handle = 0;
     const warmNext = () => {
       queue.shift()?.();
-      if (queue.length) timer = window.setTimeout(warmNext, 250);
+      if (queue.length) handle = idle(warmNext, { timeout: 4000 });
     };
-    if (queue.length) timer = window.setTimeout(warmNext, 900);
+    if (queue.length) handle = idle(warmNext, { timeout: 4000 });
 
     return () => {
       document.removeEventListener('pointerdown', onIntent);
       document.removeEventListener('pointerover', onIntent);
-      if (timer) window.clearTimeout(timer);
+      if (handle) cancelIdle(handle);
     };
   }, []);
 

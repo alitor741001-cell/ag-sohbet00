@@ -110,14 +110,21 @@ export default function RoomDiscovery({ shortcuts = null }) {
   );
 
   const friendIds = useMemo(() => friendsWithProfiles.map((friend) => friend.id), [friendsWithProfiles]);
-  const hasFriendInside = (room) => {
-    if (!friendIds.length) return false;
-    const present = new Set([
-      ...(room.participants || []).map((person) => person.user_id),
-      ...(room.seats || []).map((seat) => seat.user_id),
-    ]);
-    return friendIds.some((id) => present.has(id));
-  };
+  // Arkadaşın bulunduğu odalar bir kez hesaplanır: kart çiziminde tekrar tekrar
+  // katılımcı listesi taranmaz, arama sabit maliyetli olur.
+  const friendRoomIds = useMemo(() => {
+    const ids = new Set();
+    if (!friendIds.length) return ids;
+    rooms.forEach((room) => {
+      const present = new Set([
+        ...(room.participants || []).map((person) => person.user_id),
+        ...(room.seats || []).map((seat) => seat.user_id),
+      ]);
+      if (friendIds.some((id) => present.has(id))) ids.add(room.id);
+    });
+    return ids;
+  }, [rooms, friendIds]);
+  const hasFriendInside = (room) => friendRoomIds.has(room.id);
 
   // Ana ekranda herkes tek odasıyla görünür: kişinin en yeni odası listelenir.
   const uniqueRooms = useMemo(() => {
@@ -142,8 +149,12 @@ export default function RoomDiscovery({ shortcuts = null }) {
       const pairs = await Promise.all(ids.map(async (id) => [id, await fetchYouTubeTitle(id)]));
       if (alive) setTitles((prev) => ({ ...prev, ...Object.fromEntries(pairs.filter(([, title]) => title)) }));
     };
-    load();
-    return () => { alive = false; };
+    // Film adları yalnızca etiket: ilk boyamayı ve oda listesini bekletmez,
+    // tarayıcı boşa çıktığında çekilir.
+    const idle = window.requestIdleCallback ? window.requestIdleCallback.bind(window) : (callback) => window.setTimeout(callback, 1200);
+    const cancelIdle = window.cancelIdleCallback ? window.cancelIdleCallback.bind(window) : window.clearTimeout;
+    const handle = idle(load, { timeout: 3000 });
+    return () => { alive = false; cancelIdle(handle); };
   }, [filmRooms]);
 
   const filmTitleFor = (room) => {
@@ -158,7 +169,7 @@ export default function RoomDiscovery({ shortcuts = null }) {
   const list = useMemo(() => {
     const tabRooms = tab === 'voice' ? voiceRooms : filmRooms;
     return [...tabRooms].sort((a, b) => Number(hasFriendInside(b)) - Number(hasFriendInside(a)));
-  }, [tab, voiceRooms, filmRooms, friendIds]);
+  }, [tab, voiceRooms, filmRooms, friendRoomIds]);
   const searching = query.trim().length > 0;
 
   // Arama açıkken iki sekme birlikte taranır: oda numarası veya üye kimliğiyle oda bulunur.

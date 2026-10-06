@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 
 export default function useFriendPresence(user, maintain = false) {
@@ -71,11 +71,18 @@ export default function useFriendPresence(user, maintain = false) {
     };
   }, [user?.id, load, maintain]);
 
+  // Satır başına doğrusal arama yapılmaz: kayıtlar kimliğe göre tek dizinde tutulur,
+  // listeler yeniden çizilirken arama maliyeti sabit kalır.
+  const byUser = useMemo(() => {
+    const map = new Map();
+    presence.forEach((record) => { if (record?.user_id) map.set(record.user_id, record); });
+    return map;
+  }, [presence]);
   const isOnline = (userId) => {
-    const record = presence.find((item) => item.user_id === userId);
+    const record = byUser.get(userId);
     return Boolean(record?.online && now - new Date(record.last_seen).getTime() < 30000);
   };
-  const getRoomId = (userId) => presence.find((item) => item.user_id === userId)?.current_room_id || '';
-  const getLastSeen = (userId) => presence.find((item) => item.user_id === userId)?.last_seen || null;
+  const getRoomId = (userId) => byUser.get(userId)?.current_room_id || '';
+  const getLastSeen = (userId) => byUser.get(userId)?.last_seen || null;
   return { isOnline, getRoomId, getLastSeen };
 }
