@@ -417,8 +417,6 @@ export default function useRocketGame() {
   if (phase === 'betting' && launchAt) {
     countdown = Math.max(0, Math.ceil((launchAt - serverNow) / 1000));
   }
-  // Merkezdeki halkanın geri sayımla dolması için kalan süre (ms).
-  const countdownMs = phase === 'betting' && launchAt ? Math.max(0, launchAt - serverNow) : null;
 
   // İki bahis alanı için aktif bahisler.
   const myBets = { 1: null, 2: null };
@@ -474,7 +472,6 @@ export default function useRocketGame() {
     displayMult,
     liveColor: MULT_COLOR_CLASS[colorForMult(liveMult)],
     countdown,
-    countdownMs,
     ledger,
     loadLedger,
     busy,

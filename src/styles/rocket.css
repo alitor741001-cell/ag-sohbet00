@@ -1,332 +1,36 @@
-/* Crash Rocket — gönderilen tasarım: derin uzay zemini (#0a0b1e), metalik
-   kraliyet mavisi paneller (#1a2d59 → #2e4a8b), altın logo, mavi aksiyon
-   butonları ve devre kartı dokulu çerçeveler. */
-:root {
-  --rk-bg: #0a0b1e;
-  --rk-panel-hi: #2e4a8b;
-  --rk-panel: #1a2d59;
-  --rk-panel-lo: #101b38;
-  --rk-cyan: #5fc9ff;
-  --rk-blue: #3b82f6;
-  --rk-green: #4ade80;
-  --rk-gold: #facd15;
-  --rk-line: rgba(150, 190, 255, 0.28);
-}
-
-/* Metalik panel: üstten alta mavi geçiş, ışık kenarı ve devre dokusu. */
-.rk-frame {
-  position: relative;
-  background: linear-gradient(180deg, var(--rk-panel-hi), var(--rk-panel) 52%, var(--rk-panel-lo));
-  border: 1px solid var(--rk-line);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.22),
-    inset 0 -2px 8px rgba(0, 0, 0, 0.55),
-    0 4px 14px rgba(0, 0, 0, 0.45);
-}
-.rk-frame::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  opacity: 0.3;
-  background-image:
-    linear-gradient(90deg, rgba(150, 190, 255, 0.18) 1px, transparent 1px),
-    linear-gradient(180deg, rgba(150, 190, 255, 0.14) 1px, transparent 1px);
-  background-size: 12px 12px, 12px 12px;
-  -webkit-mask-image: linear-gradient(180deg, #000 0%, transparent 58%);
-  mask-image: linear-gradient(180deg, #000 0%, transparent 58%);
-}
-
-/* Gömme gösterge alanı: bahis tutarı ve otomatik çekilme hedefi. */
-.rk-plate {
-  background: linear-gradient(180deg, rgba(8, 12, 28, 0.95), rgba(16, 27, 56, 0.9));
-  border: 1px solid rgba(95, 201, 255, 0.22);
-  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.7);
-}
-
-/* Yuvarlak metal simge butonları. */
-.rk-icon-btn,
-.rk-mini-btn {
-  display: inline-flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  border-radius: 9999px;
-  background: linear-gradient(180deg, var(--rk-panel-hi), var(--rk-panel-lo));
-  border: 1px solid var(--rk-line);
-  color: #eaf2ff;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 2px 6px rgba(0, 0, 0, 0.45);
-}
-.rk-icon-btn { height: 1.95rem; width: 1.95rem; }
-.rk-mini-btn { height: 1.55rem; width: 1.55rem; font-size: 0.7rem; font-weight: 900; }
-.rk-icon-btn:active,
-.rk-mini-btn:active { filter: brightness(1.3); }
-
-/* Logo: metalik altın-beyaz geçiş. */
-.rk-logo {
-  background-image: linear-gradient(180deg, #ffffff 0%, #fff6c2 34%, var(--rk-gold) 68%, #c99700 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  font-weight: 900;
-  letter-spacing: 0.06em;
-  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.75)) drop-shadow(0 0 10px rgba(250, 205, 21, 0.35));
-}
-
-/* Son tur kapsülleri: düşük çarpan mavi, yüksek çarpan yeşil. */
-.rk-pill-blue { background: rgba(59, 130, 246, 0.22); border-color: rgba(95, 201, 255, 0.45); color: #9fd8ff; }
-.rk-pill-green { background: rgba(74, 222, 128, 0.2); border-color: rgba(74, 222, 128, 0.5); color: #86efac; }
-.rk-pill-yellow { background: rgba(250, 205, 21, 0.2); border-color: rgba(250, 205, 21, 0.5); color: #fde68a; }
-.rk-pill-red { background: rgba(239, 68, 68, 0.22); border-color: rgba(248, 113, 113, 0.5); color: #fca5a5; }
-
-/* Dairesel gösterge: çevresinde tur ilerleme halkası, ortada canlı çarpan. */
-.rk-hud {
-  position: relative;
-  height: clamp(7rem, min(40vw, 34vh), 12.5rem);
-  width: clamp(7rem, min(40vw, 34vh), 12.5rem);
-  border-radius: 9999px;
-  padding: 0.45rem;
-  background: conic-gradient(
-    from 180deg,
-    var(--rk-cyan) 0 var(--rk-fill, 0%),
-    rgba(120, 160, 220, 0.16) var(--rk-fill, 0%) 100%
-  );
-  box-shadow: 0 0 26px rgba(60, 140, 255, 0.4), inset 0 0 20px rgba(0, 0, 0, 0.6);
-}
-.rk-hud-core {
-  display: flex;
-  height: 100%;
-  width: 100%;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.15rem;
-  border-radius: 9999px;
-  background: radial-gradient(circle at 50% 36%, rgba(46, 74, 139, 0.9), rgba(10, 11, 30, 0.96) 72%);
-  border: 1px solid var(--rk-line);
-  box-shadow: inset 0 0 28px rgba(0, 0, 0, 0.8);
-}
-
-.rk-mult {
-  font-weight: 900;
-  letter-spacing: -0.02em;
-  color: #ffffff;
-  text-shadow: 0 0 12px rgba(95, 201, 255, 0.9), 0 0 34px rgba(95, 201, 255, 0.5), 0 2px 0 rgba(0, 0, 0, 0.55);
-  animation: rk-pop 0.35s ease-out;
-}
-.rk-mult-crash {
-  color: #ffd0d0;
-  text-shadow: 0 0 14px rgba(239, 68, 68, 0.95), 0 0 40px rgba(239, 68, 68, 0.6), 0 2px 0 rgba(0, 0, 0, 0.5);
-}
-
-/* Bahis paneli kontrolleri. */
-.rk-ctrl {
-  display: flex;
-  height: 1.7rem;
-  width: 1.7rem;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  border-radius: 0.5rem;
-  background: linear-gradient(180deg, rgba(46, 74, 139, 0.9), rgba(10, 11, 30, 0.95));
-  border: 1px solid var(--rk-line);
-  color: #eaf2ff;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
-}
-.rk-ctrl:disabled { opacity: 0.35; }
-.rk-ctrl:active { filter: brightness(1.25); }
-
-/* Büyük mavi aksiyon butonu: BAHİS YAP / ÇEK. */
-.rk-action {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.1rem;
-  border-radius: 0.7rem;
-  padding: 0.5rem 0.25rem;
-  font-size: 0.78rem;
-  font-weight: 900;
-  letter-spacing: 0.04em;
-  background: linear-gradient(180deg, #5ea6ff, var(--rk-blue) 55%, #1d4ed8);
-  border: 1px solid rgba(190, 220, 255, 0.65);
-  color: #ffffff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 0 16px rgba(59, 130, 246, 0.5);
-}
-.rk-action:disabled { opacity: 0.5; box-shadow: none; }
-.rk-action-sub { font-size: 0.55rem; font-weight: 700; letter-spacing: 0; opacity: 0.9; }
-
-/* İki bahis panelinin arasındaki dikey sırt ve roket göbeği. */
-.rk-spine {
-  position: absolute;
-  left: 50%;
-  top: 0.1rem;
-  bottom: 0.1rem;
-  width: 1px;
-  transform: translateX(-50%);
-  background: linear-gradient(180deg, rgba(95, 201, 255, 0.55), rgba(250, 205, 21, 0.4), rgba(95, 201, 255, 0.55));
-}
-.rk-hub {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  display: flex;
-  height: 1.9rem;
-  width: 1.9rem;
-  align-items: center;
-  justify-content: center;
-  border-radius: 9999px;
-  background: linear-gradient(180deg, var(--rk-panel-hi), var(--rk-panel-lo));
-  border: 1px solid rgba(250, 205, 21, 0.6);
-  box-shadow: 0 0 14px rgba(250, 205, 21, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-}
-
-/* Sağ kenardaki beyaz üçgen şerit ve döndürülmüş oyun adı. */
-.rk-tri {
-  width: 0.42rem;
-  height: 0.6rem;
-  background: #ffffff;
-  opacity: 0.75;
-  clip-path: polygon(0 0, 100% 50%, 0 100%);
-}
-.rk-vtext {
-  writing-mode: vertical-rl;
-  transform: rotate(180deg);
-  font-size: 0.55rem;
-  font-weight: 900;
-  letter-spacing: 0.28em;
-  color: rgba(234, 242, 255, 0.5);
-  text-shadow: 0 0 8px rgba(95, 201, 255, 0.35);
-}
-
-/* Mekik görseli kendi şeffaf zeminini taşır: karışım ve maske gerekmez. */
-.rk-engine-glow {
-  background: radial-gradient(ellipse at 50% 15%, #ffffff 0%, rgba(95, 201, 255, 0.9) 20%, rgba(255, 140, 0, 0.6) 42%, transparent 72%);
-  transform-origin: center top;
-  mix-blend-mode: screen;
-}
-.rk-engine { animation: rk-engine 0.7s ease-in-out infinite; }
-.rk-streak {
-  background: linear-gradient(180deg, transparent 35%, rgba(95, 201, 255, 0.14) 100%);
-  animation: rk-streak 0.9s ease-in-out infinite;
-}
-/* Bahis aşamasında mekik yerinde süzülür: havalanmaya hazır görünür. */
-.rk-idle { animation: rk-idle 2.4s ease-in-out infinite; }
-.rk-shake { animation: rk-shake 0.5s ease-out; }
-.rk-burst {
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.9), rgba(255, 140, 0, 0.45) 22%, transparent 62%);
-  mix-blend-mode: screen;
-  animation: rk-burst 0.8s ease-out forwards;
-}
-
-@keyframes rk-pop { from { transform: scale(0.86); opacity: 0.4; } to { transform: scale(1); opacity: 1; } }
-@keyframes rk-engine { 0%, 100% { opacity: 0.8; transform: translateX(-50%) scaleY(1); } 50% { opacity: 1; transform: translateX(-50%) scaleY(1.2); } }
-@keyframes rk-streak { 0%, 100% { opacity: 0.25; } 50% { opacity: 0.6; } }
-@keyframes rk-idle { 0%, 100% { transform: translateY(-3px); } 50% { transform: translateY(4px); } }
-@keyframes rk-shake {
-  0%, 100% { transform: translate(0); }
-  20% { transform: translate(-5px, 3px); }
-  40% { transform: translate(4px, -3px); }
-  60% { transform: translate(-3px, -2px); }
-  80% { transform: translate(2px, 2px); }
-}
-@keyframes rk-burst { 0% { opacity: 0; } 12% { opacity: 1; } 100% { opacity: 0; } }
-
-@media (prefers-reduced-motion: reduce) {
-  .rk-engine, .rk-streak, .rk-shake, .rk-burst, .rk-idle { animation: none; }
-}
-
-/* Uçuş animasyonu: motor alevi (turuncu dış, mavi orta, beyaz çekirdek),
-   hızla uzayan izler ve roketin arkasındaki hız ışığı. */
-.rk-flame {
-  position: absolute;
-  left: 50%;
-  top: 62%;
-  width: 44%;
-  height: 78%;
-  margin-left: -22%;
-  transform-origin: top center;
-  pointer-events: none;
-}
-.rk-flame > span {
-  position: absolute;
-  inset: 0;
-  border-radius: 50% 50% 45% 45% / 70% 70% 30% 30%;
-}
-.rk-flame > .rk-flame-outer {
-  background: radial-gradient(ellipse at 50% 14%, rgba(255, 255, 255, 0.95) 0 6%, #ffb44d 20%, #ff7a1a 48%, rgba(255, 90, 10, 0) 80%);
-  filter: blur(3px);
-}
-.rk-flame > .rk-flame-blue {
-  inset: 6% 17% 12% 17%;
-  background: radial-gradient(ellipse at 50% 10%, #ffffff 0 10%, #8fe4ff 28%, #35a9ff 60%, rgba(40, 120, 255, 0) 90%);
-  filter: blur(1.5px);
-  animation: rk-flicker 0.13s ease-in-out infinite alternate;
-}
-.rk-flame > .rk-flame-core {
-  inset: 15% 32% 26% 32%;
-  background: radial-gradient(ellipse at 50% 8%, #ffffff 0 26%, #dff4ff 54%, rgba(255, 255, 255, 0) 92%);
-}
-@keyframes rk-flicker {
-  from { transform: scaleY(0.94) scaleX(0.97); opacity: 0.9; }
-  to { transform: scaleY(1.06) scaleX(1.03); opacity: 1; }
-}
-
-.rk-trail {
-  position: absolute;
-  left: 50%;
-  top: 96%;
-  width: 3px;
-  height: 0;
-  margin-left: -1.5px;
-  border-radius: 9999px;
-  opacity: 0;
-  pointer-events: none;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(90, 190, 255, 0.45) 45%, rgba(90, 190, 255, 0));
-}
-.rk-trail-mid {
-  margin-left: 4px;
-  background: linear-gradient(180deg, rgba(200, 240, 255, 0.7), rgba(70, 160, 255, 0));
-}
-.rk-trail-near {
-  margin-left: -6px;
-  width: 2px;
-  background: linear-gradient(180deg, rgba(255, 210, 140, 0.8), rgba(255, 120, 20, 0));
-}
-
-.rk-speed-glow {
-  position: absolute;
-  inset: -38%;
-  border-radius: 9999px;
-  opacity: 0.22;
-  pointer-events: none;
-  mix-blend-mode: screen;
-  background: radial-gradient(circle, rgba(130, 210, 255, 0.4), transparent 62%);
-}
-
-/* Merkez gösterge: geri sayım saniyede bir nabız atar, çakılmada kırmızı ışık. */
-.rk-count-pop { animation: rk-count-pop 0.4s ease-out; }
-@keyframes rk-count-pop {
-  from { transform: scale(1.3); opacity: 0.35; }
-  to { transform: scale(1); opacity: 1; }
-}
-.rk-ring-pulse {
-  transform-box: view-box;
-  animation: rk-ring-pulse 0.75s ease-out forwards;
-}
-@keyframes rk-ring-pulse {
-  0% { opacity: 1; stroke-width: 6; }
-  100% { opacity: 0; stroke-width: 2; }
-}
-.rk-crash-flash { animation: rk-crash-flash 0.8s ease-out forwards; }
-@keyframes rk-crash-flash {
-  0% { opacity: 0.95; stroke-width: 10; }
-  100% { opacity: 0; stroke-width: 2; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .rk-flame-blue, .rk-count-pop, .rk-ring-pulse, .rk-crash-flash { animation: none; }
-}
+/* Crash Rocket — lacivert uzay, neon mavi ve altın. */
+:root { --rk-bg: #0a0f1d; --rk-cyan: #00d4ff; --rk-gold: #ffb800; }
+.rk-icon-btn { display:flex; height:2rem; width:2rem; flex-shrink:0; align-items:center; justify-content:center; border-radius:.6rem; background:rgba(10,15,29,.7); border:1px solid rgba(255,255,255,.12); color:#fff; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); }
+.rk-icon-btn:active { box-shadow:0 0 12px rgba(0,212,255,.6); }
+.rk-chip { display:inline-flex; align-items:center; border-radius:.5rem; padding:.25rem .5rem; background:rgba(10,15,29,.72); border:1px solid rgba(255,255,255,.12); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); }
+.rk-glass { background:rgba(10,15,29,.62); border:1px solid rgba(0,212,255,.22); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); }
+.rk-panel { display:flex; flex-direction:column; gap:.375rem; border-radius:.875rem; padding:.5rem; background:rgba(10,15,29,.74); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); }
+.rk-panel-blue { border:1px solid rgba(0,212,255,.45); box-shadow:0 0 16px rgba(0,212,255,.22),inset 0 0 18px rgba(0,212,255,.07); }
+.rk-panel-gold { border:1px solid rgba(255,184,0,.5); box-shadow:0 0 16px rgba(255,184,0,.22),inset 0 0 18px rgba(255,184,0,.07); }
+.rk-label { font-size:.5rem; font-weight:800; letter-spacing:.08em; color:rgba(255,255,255,.5); }
+.rk-value { font-size:.8rem; font-weight:900; }
+.rk-ctrl { display:flex; height:1.75rem; width:1.75rem; flex-shrink:0; align-items:center; justify-content:center; border-radius:.5rem; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14); color:#fff; }
+.rk-ctrl:disabled { opacity:.35; }
+.rk-ctrl:active { box-shadow:0 0 12px rgba(0,212,255,.5); }
+.rk-action { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.125rem; border-radius:.75rem; padding:.45rem .25rem; font-size:.75rem; font-weight:900; }
+.rk-action:disabled { opacity:.5; }
+.rk-action-sub { font-size:.55rem; font-weight:700; opacity:.85; }
+.rk-action-blue { background:linear-gradient(180deg,rgba(0,212,255,.3),rgba(10,15,29,.92)); border:1px solid rgba(0,212,255,.75); color:#eaf9ff; box-shadow:0 0 18px rgba(0,212,255,.35); }
+.rk-action-gold { background:linear-gradient(180deg,#ffd35c,#ff9f00); border:1px solid #ffe59a; color:#201500; box-shadow:0 0 18px rgba(255,184,0,.4); }
+.rk-hub { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); display:flex; height:1.75rem; width:1.75rem; align-items:center; justify-content:center; border-radius:9999px; background:rgba(10,15,29,.95); border:1px solid rgba(255,184,0,.6); box-shadow:0 0 14px rgba(255,184,0,.35); }
+.rk-mult { font-weight:900; letter-spacing:-.02em; color:#cdeeff; text-shadow:0 0 12px rgba(0,212,255,.85),0 0 36px rgba(0,212,255,.5),0 2px 0 rgba(0,0,0,.5); animation:rk-pop .35s ease-out; }
+.rk-mult-crash { color:#ffd0d0; text-shadow:0 0 14px rgba(239,68,68,.9),0 0 40px rgba(239,68,68,.6),0 2px 0 rgba(0,0,0,.5); }
+.rocket-script { font-family:'Great Vibes','Segoe Script',cursive; }
+.rk-engine-glow { background:radial-gradient(ellipse at 50% 15%,hsl(var(--slot-text)) 0%,hsl(var(--slot-blue) / .9) 18%,hsl(var(--slot-orange) / .6) 40%,transparent 72%); transform-origin:center top; mix-blend-mode:screen; }
+.rk-engine { animation:rk-engine .7s ease-in-out infinite; }
+.rk-streak { background:linear-gradient(180deg,transparent 35%,rgba(0,212,255,.14) 100%); animation:rk-streak .9s ease-in-out infinite; }
+.rk-idle { animation:rk-idle 2.4s ease-in-out infinite; }
+.rk-shake { animation:rk-shake .5s ease-out; }
+.rk-burst { background:radial-gradient(circle,rgba(255,255,255,.9),rgba(255,140,0,.45) 22%,transparent 62%); mix-blend-mode:screen; animation:rk-burst .8s ease-out forwards; }
+@keyframes rk-pop { from { transform:scale(.86); opacity:.4; } to { transform:scale(1); opacity:1; } }
+@keyframes rk-engine { 0%,100% { opacity:.8; transform:translateX(-50%) scaleY(1); } 50% { opacity:1; transform:translateX(-50%) scaleY(1.2); } }
+@keyframes rk-streak { 0%,100% { opacity:.25; } 50% { opacity:.6; } }
+@keyframes rk-idle { 0%,100% { transform:translateY(-3px); } 50% { transform:translateY(4px); } }
+@keyframes rk-shake { 0%,100% { transform:translate(0); } 20% { transform:translate(-5px,3px); } 40% { transform:translate(4px,-3px); } 60% { transform:translate(-3px,-2px); } 80% { transform:translate(2px,2px); } }
+@keyframes rk-burst { 0% { opacity:0; } 12% { opacity:1; } 100% { opacity:0; } }
+@media (prefers-reduced-motion:reduce) { .rk-engine,.rk-streak,.rk-shake,.rk-burst,.rk-idle { animation:none; } }
