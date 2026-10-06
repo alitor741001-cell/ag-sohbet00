@@ -2,6 +2,7 @@ import { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Film, Gamepad2, Loader2, Search, Users } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import subscribeEntity from '@/components/data/entitySubscriptions';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import RoomDiscoveryCard from '@/components/home/RoomDiscoveryCard';
 import GameDiscoveryRow from '@/components/home/GameDiscoveryRow';
@@ -117,7 +118,7 @@ export default function RoomDiscovery({ shortcuts = null }) {
         return next;
       });
     };
-    const unsubscribe = base44.entities.Room.subscribe((event) => {
+    const unsubscribe = subscribeEntity('Room', (event) => {
       const data = event.data;
       const id = data?.id || event.id;
       // Sunucu "gizli" derse işaretlenir, "görünür" derse işaret kalkar.

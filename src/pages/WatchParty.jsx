@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
+import subscribeEntity from '@/components/data/entitySubscriptions';
 import VideoPlayer from '@/components/player/VideoPlayer';
 import ChatOverlay from '@/components/player/ChatOverlay';
 import StageSwipeLayer from '@/components/player/StageSwipeLayer';
@@ -218,7 +219,7 @@ export default function WatchParty() {
   // Bekleyen isteğin durumunu izle (onay/red)
   useEffect(() => {
     if (!user || !room || !waitingForApproval) return;
-    const unsub = base44.entities.RoomJoinRequest.subscribe((ev) => {
+    const unsub = subscribeEntity('RoomJoinRequest', (ev) => {
       if (ev.data?.room_id !== id || ev.data?.user_id !== user.id) return;
       if (ev.type === 'update') {
         if (ev.data.status === 'approved') {
@@ -242,7 +243,7 @@ export default function WatchParty() {
         .catch(() => {});
     };
     load();
-    const unsub = base44.entities.RoomJoinRequest.subscribe((ev) => {
+    const unsub = subscribeEntity('RoomJoinRequest', (ev) => {
       if (ev.data?.room_id !== id) return;
       load();
     });
@@ -259,7 +260,7 @@ export default function WatchParty() {
   };
 
   useEffect(() => {
-    const unsub = base44.entities.Room.subscribe((ev) => {
+    const unsub = subscribeEntity('Room', (ev) => {
       if (ev.type === 'update' && ev.data?.id === id) {
         setRoom((current) => ({ ...current, ...ev.data }));
         const playingChanged = ev.data.is_playing !== lastSyncRef.current.is_playing;
@@ -293,7 +294,7 @@ export default function WatchParty() {
       if (missed) setUnread((current) => current + missed);
     };
     syncMessages(false);
-    const unsub = base44.entities.RoomMessage.subscribe((event) => {
+    const unsub = subscribeEntity('RoomMessage', (event) => {
       const message = event.data;
       if (event.type !== 'create' || message?.room_id !== id || message.type === 'system' || message.user_id === user?.id || seenRoomMessagesRef.current.has(message.id)) return;
       seenRoomMessagesRef.current.add(message.id);
@@ -361,7 +362,7 @@ export default function WatchParty() {
     // Profil (fotoğraf, çerçeve, rol, seviye) değiştiği an odadaki görünüm de güncellenir;
     // art arda gelen değişiklikler tek çağrıda birleşir, böylece oda kasmaz.
     let timer = null;
-    const unsubscribe = base44.entities.User.subscribe((event) => {
+    const unsubscribe = subscribeEntity('User', (event) => {
       if (!ids.includes(event.data?.id || event.id)) return;
       if (timer) clearTimeout(timer);
       timer = setTimeout(load, 700);
@@ -385,7 +386,7 @@ export default function WatchParty() {
         setPresenceMap(map);
       })
       .catch(() => {});
-    const unsub = base44.entities.UserPresence.subscribe((ev) => {
+    const unsub = subscribeEntity('UserPresence', (ev) => {
       if (ev.type !== 'create' && ev.type !== 'update') return;
       if (!ids.includes(ev.data.user_id)) return;
       setPresenceMap((prev) => {

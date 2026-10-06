@@ -21,6 +21,8 @@ export default function VoiceChatDock({ messages = [], onSend, open, onCloseComp
   const [emojiOpen, setEmojiOpen] = useState(false);
   const inputRef = useRef(null);
   const endRef = useRef(null);
+  const sendingRef = useRef(false);
+  const [sending, setSending] = useState(false);
 
   // Gizli kullanıcının mesajı kimliksiz yazılır: N/VIP rozetleri için takma ad → kimlik eşlemesi kullanılır.
   const userIds = useMemo(
@@ -43,16 +45,18 @@ export default function VoiceChatDock({ messages = [], onSend, open, onCloseComp
     endRef.current?.scrollIntoView({ block: 'end' });
   }, [messages.length, bigGiftNotice?.id]);
 
-  const submit = (event) => {
+  const submit = async (event) => {
     event.preventDefault();
     const value = text.trim();
-    if (!value) return;
+    if (!value || sendingRef.current) return;
+    sendingRef.current = true; setSending(true);
     setText('');
     setEmojiOpen(false);
     // Gönderince yazma alanı ve klavye kapansın; mesaj akışı açık kalır.
     inputRef.current?.blur();
-    onSend(value);
     onCloseComposer?.();
+    try { await onSend(value); }
+    finally { sendingRef.current = false; setSending(false); }
   };
 
   return (
@@ -144,6 +148,7 @@ export default function VoiceChatDock({ messages = [], onSend, open, onCloseComp
             </button>
             <button
               type="submit"
+              disabled={sending || !text.trim()}
               aria-label="Gönder"
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#FFD700] bg-[#FFD700] text-black shadow-[0_0_14px_-3px_rgba(255,215,0,0.95)] transition-transform active:scale-95"
             >

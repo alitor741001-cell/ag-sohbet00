@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import useRoomTyping from '@/components/data/useRoomTyping';
 import subscribeEntity from '@/components/data/entitySubscriptions';
 import { Clock, Crown, Eye, Image as ImageIcon, LayoutGrid, MessageSquare, MessageSquareOff, MessagesSquare, Send, Shield, Smile, Sparkles, UserPlus, Users, X } from 'lucide-react';
-import { neonCardClass, neonCircleClass } from '@/lib/neonStyle';
+import { neonCircleClass } from '@/lib/neonStyle';
 import VoiceControls from '@/components/player/VoiceControls';
 import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';

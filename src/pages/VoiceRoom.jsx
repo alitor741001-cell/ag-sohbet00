@@ -2,6 +2,7 @@ import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } fro
 import { useNavigate, useParams } from 'react-router-dom';
 import { Armchair, Eye, Gift, Lock, LogOut, MessageSquare, Mic, MicOff, MoreHorizontal, Shield, Unlock, UserMinus, UserPlus, UserRound } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import subscribeEntity from '@/components/data/entitySubscriptions';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useVoiceChat } from '@/hooks/useVoiceChat';
 import useKeyboardInset from '@/hooks/useKeyboardInset';
@@ -423,7 +424,7 @@ export default function VoiceRoom() {
   // Oda kaydını canlı takip et (koltuklar, katılımcılar, ayarlar).
   useEffect(() => {
     if (!id) return;
-    const unsubscribe = base44.entities.Room.subscribe((event) => {
+    const unsubscribe = subscribeEntity('Room', (event) => {
       if (event.id !== id) return;
       if (event.type === 'delete') { setNotice('Oda kapatıldı.'); return; }
       if (event.type === 'update' || event.type === 'create') setRoom((prev) => (prev ? { ...prev, ...event.data } : event.data));
@@ -458,16 +459,18 @@ export default function VoiceRoom() {
   // Sohbet akışı
   useEffect(() => {
     if (!id) return;
+    let alive = true;
+    setMessages([]);
     // Geçmiş dahil son mesajlar yüklenir; akış butona basmadan görünür.
     base44.entities.RoomMessage.filter({ room_id: id }, '-created_date', 80)
-      .then((list) => setMessages((prev) => mergeMessages(prev, [...list].reverse())))
+      .then((list) => { if (alive) setMessages((prev) => mergeMessages(prev, [...list].reverse())); })
       .catch(() => {});
-    const unsubscribe = base44.entities.RoomMessage.subscribe((event) => {
+    const unsubscribe = subscribeEntity('RoomMessage', (event) => {
       const data = event?.data;
       if (!data || data.room_id !== id || event.type !== 'create') return;
       setMessages((prev) => (prev.some((item) => item.id === event.id) ? prev : [...prev, { ...data, id: event.id }]));
     });
-    return unsubscribe;
+    return () => { alive = false; unsubscribe(); };
   }, [id]);
 
   // Sekme kapanırken / sayfadan çıkılırken odadan ayrıl.

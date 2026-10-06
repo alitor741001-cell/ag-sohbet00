@@ -24,7 +24,7 @@ const routeLoaders = {
 };
 
 // Alt menüdeki ana sayfalar açılışta hemen indirilir: dokunulduğu an hazır olur.
-const PRIMARY_ROUTES = ['/', '/acik-odalar', '/oda-kur', '/arkadaslar', '/profil', '/bildirimler'];
+const PRIMARY_ROUTES = ['/', '/arkadaslar', '/profil', '/bildirimler'];
 
 const preload = (path) => {
   const cleanPath = path.split('?')[0];
@@ -49,9 +49,8 @@ export default function RoutePreloader() {
     // Yavaş bağlantıda arka plan indirmesi yapılmaz.
     const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
     const canWarm = !connection?.saveData && !['slow-2g', '2g'].includes(connection?.effectiveType);
-    const queue = canWarm
-      ? Object.keys(routeLoaders).filter((path) => !PRIMARY_ROUTES.includes(path)).map((path) => routeLoaders[path])
-      : [];
+    // Room, media and agency modules load on navigation intent, not at startup.
+    const queue = [];
     const idle = window.requestIdleCallback ? window.requestIdleCallback.bind(window) : (callback) => window.setTimeout(callback, 800);
     const cancelIdle = window.cancelIdleCallback ? window.cancelIdleCallback.bind(window) : window.clearTimeout;
 
@@ -60,14 +59,14 @@ export default function RoutePreloader() {
     let idleHandle = 0;
 
     // Ana sekmeler sırayla, kısa aralıklarla ısıtılır: ilk boyama bant genişliğini paylaşmaz.
-    const primaryQueue = PRIMARY_ROUTES
+    const primaryQueue = canWarm ? PRIMARY_ROUTES
       .filter((path) => path !== window.location.pathname)
-      .map((path) => routeLoaders[path]);
+      .map((path) => routeLoaders[path]) : [];
     const warmPrimary = () => {
       primaryQueue.shift()?.();
       if (primaryQueue.length) primaryTimer = window.setTimeout(warmPrimary, 400);
     };
-    primaryTimer = window.setTimeout(warmPrimary, 1200);
+    if (primaryQueue.length) primaryTimer = window.setTimeout(warmPrimary, 1200);
 
     // Kalan paketler açılıştan sonra, tarayıcı boşa çıktığında teker teker indirilir.
     const warmNext = () => {
