@@ -74,15 +74,14 @@ export default async function(req) {
         }
         await base44.asServiceRole.entities.Room.update(existing[0].id, { personal_room_code: codeExisting }).catch(() => {});
       }
-      // Kaydedilmiş bilgiler odaya uygulanır: düzenlenen ayarlar bir sonraki açılışta geçerli olur.
+      // Her açılış görünür başlar; önceki oturumun gizli durumu taşınmaz.
+      const patch = { max_users: PERSONAL_MAX_USERS, hidden: settings?.hidden ?? false };
       if (settings) {
-        const patch = { max_users: PERSONAL_MAX_USERS };
         if (settings.name) patch.name = settings.name;
         if (settings.chat_enabled !== null) patch.chat_enabled = settings.chat_enabled;
-        if (settings.hidden !== null) patch.hidden = settings.hidden;
         if (settings.password !== null) await applyPassword(existing[0].id, patch);
-        await base44.asServiceRole.entities.Room.update(existing[0].id, patch).catch(() => {});
       }
+      await base44.asServiceRole.entities.Room.update(existing[0].id, patch);
       return Response.json({ id: existing[0].id });
     }
 

@@ -636,8 +636,16 @@ export default function WatchParty() {
 
   const toggleHidden = async () => {
     if (!canMod) return;
-    try { await base44.functions.invoke('room-presence', { action: 'toggle-hidden', room_id: id }); toast({ title: room.hidden ? 'Oda artık görünür' : 'Oda gizlendi' }); }
-    catch (e) { toast({ title: 'İşlem başarısız', description: e.response?.data?.error || e.message, variant: 'destructive' }); }
+    const previousHidden = !!room.hidden;
+    setRoom((current) => ({ ...current, hidden: !previousHidden }));
+    try {
+      const response = await base44.functions.invoke('room-presence', { action: 'toggle-hidden', room_id: id });
+      setRoom((current) => ({ ...current, hidden: !!response.data.hidden }));
+      toast({ title: response.data.hidden ? 'Oda gizlendi' : 'Oda artık görünür' });
+    } catch (e) {
+      setRoom((current) => ({ ...current, hidden: previousHidden }));
+      toast({ title: 'İşlem başarısız', description: e.response?.data?.error || e.message, variant: 'destructive' });
+    }
   };
 
   const toggleApproval = async () => {

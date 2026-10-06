@@ -48,7 +48,7 @@ export default function VoiceRoomMenu({ open, onClose, room, userId, participant
       tone: 'gold',
       onClick: () => { if (locked) { onSetPassword(''); setPanel(null); } else { toggle('lock'); } },
     },
-    { key: 'hidden', icon: room?.hidden ? EyeOff : Eye, label: 'Gizli', active: !!room?.hidden, tone: 'purple', onClick: onToggleHidden },
+    { key: 'hidden', icon: room?.hidden ? EyeOff : Eye, label: room?.hidden ? 'Gizli' : 'Gizle', active: !!room?.hidden, tone: 'purple', onClick: onToggleHidden },
     { key: 'seats', icon: Armchair, label: 'Koltuk', active: panel === 'seats', tone: 'blue', onClick: () => toggle('seats') },
     // Sayaç düğmesi ayarları açar; tekrar basınca kapanır.
     { key: 'board', icon: Hash, label: 'Sayaç', active: !!boardActive || panel === 'board', tone: 'green', onClick: () => toggle('board') },

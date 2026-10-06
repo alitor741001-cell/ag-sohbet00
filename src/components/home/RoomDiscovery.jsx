@@ -7,7 +7,6 @@ import RoomDiscoveryCard from '@/components/home/RoomDiscoveryCard';
 import GameDiscoveryRow from '@/components/home/GameDiscoveryRow';
 import useFriends from '@/hooks/useFriends';
 import useMessageProfiles from '@/hooks/useMessageProfiles';
-import useRoomPresence from '@/hooks/useRoomPresence';
 import { fetchYouTubeTitle, isGenericTitle, youtubeIdFromMovieId } from '@/lib/youtubeTitle';
 
 // Oyunlar ayrı indirilir: ana sayfa paketi küçük kalır.
@@ -49,34 +48,9 @@ export default function RoomDiscovery({ shortcuts = null }) {
     room.hidden !== true &&
     !hiddenIdsRef.current.has(room.id);
 
-  // Açık oda ölçütü: içinde çevrim içi en az bir kişi (sahibi dahil) olmalı. Odaya girenin
-  // kaydı anında yayınlandığı için oda herkeste aynı anda belirir; son kişi çıktıktan
-  // sonra en geç bir dakika içinde listeden düşer.
-  const { isLive, liveRoomIds } = useRoomPresence(allRooms);
-  const rooms = useMemo(() => allRooms.filter((room) => isLive(room)), [allRooms, isLive]);
-
-  // Canlı işaretçisi olup listede bulunmayan oda (yeni açıldı ya da gizliden çıktı)
-  // anında çekilip eklenir: kart herkeste aynı saniyede belirir.
-  const knownIds = useMemo(() => new Set(allRooms.map((room) => room.id)), [allRooms]);
-  const requestedRef = useRef(new Set());
-  useEffect(() => {
-    const missing = [];
-    liveRoomIds.forEach((id) => {
-      if (!id) return;
-      if (knownIds.has(id)) { requestedRef.current.delete(id); return; }
-      if (!requestedRef.current.has(id)) missing.push(id);
-    });
-    if (!missing.length) return;
-    missing.forEach((id) => requestedRef.current.add(id));
-    Promise.all(missing.map((id) => base44.entities.Room.get(id).catch(() => null))).then((found) => {
-      const fetched = found.filter((room) => room?.id && room.hidden !== true && room.status === 'active');
-      if (!fetched.length) return;
-      setAllRooms((prev) => {
-        const seen = new Set(prev.map((room) => room.id));
-        return [...prev, ...fetched.filter((room) => !seen.has(room.id))];
-      });
-    });
-  }, [liveRoomIds, knownIds]);
+  // Oda açıldığı anda listelenir; çevrim içi işaretçisi beklenmez.
+  // Görünürlük yalnızca odanın aktif ve gizlenmemiş olmasına bağlıdır.
+  const rooms = allRooms;
 
   useEffect(() => {
     let alive = true;

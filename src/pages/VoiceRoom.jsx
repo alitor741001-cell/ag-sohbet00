@@ -609,12 +609,14 @@ export default function VoiceRoom() {
   }, [id, syncRoom, toast]);
 
   const handleToggleHidden = async () => {
+    const previousHidden = !!room?.hidden;
     try {
-      patchRoom({ hidden: !room?.hidden });
+      patchRoom({ hidden: !previousHidden });
       const response = await base44.functions.invoke('room-presence', { action: 'toggle-hidden', room_id: id });
       patchRoom({ hidden: !!response.data?.hidden });
       toast({ title: response.data?.hidden ? 'Oda gizlendi' : 'Oda herkese açık' });
     } catch (error) {
+      patchRoom({ hidden: previousHidden });
       toast({ title: 'İşlem başarısız', description: error?.response?.data?.error || error.message, variant: 'destructive' });
     }
   };
