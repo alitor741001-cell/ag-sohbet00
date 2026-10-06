@@ -241,17 +241,6 @@ export default function RoomDiscovery({ shortcuts = null }) {
       <div className="mb-3 flex items-center gap-1.5 rounded-2xl border border-premium-gold/20 bg-black/25 p-1 backdrop-blur">
         <button
           type="button"
-          onClick={() => setTab('friends')}
-          className={`flex min-w-0 flex-1 items-center justify-center gap-1 rounded-xl py-2 text-[10.5px] font-extrabold transition ${
-            tab === 'friends'
-              ? 'border border-premium-gold/55 bg-gradient-to-r from-premium-red-deep via-premium-red to-premium-gold text-white shadow-[0_0_18px_-6px_rgba(198,40,40,0.95)]'
-              : 'border border-transparent text-white/60'
-          }`}
-        >
-          <Users className="h-4 w-4 shrink-0" /> <span className="truncate">Arkadaşlar</span>
-        </button>
-        <button
-          type="button"
           onClick={() => setTab('all')}
           className={`flex min-w-0 flex-1 items-center justify-center gap-1 rounded-xl py-2 text-[10.5px] font-extrabold transition ${
             tab === 'all'
@@ -260,6 +249,17 @@ export default function RoomDiscovery({ shortcuts = null }) {
           }`}
         >
           <Film className="h-4 w-4 shrink-0" /> <span className="truncate">Sesli+Film</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab('friends')}
+          className={`flex min-w-0 flex-1 items-center justify-center gap-1 rounded-xl py-2 text-[10.5px] font-extrabold transition ${
+            tab === 'friends'
+              ? 'border border-premium-gold/55 bg-gradient-to-r from-premium-red-deep via-premium-red to-premium-gold text-white shadow-[0_0_18px_-6px_rgba(198,40,40,0.95)]'
+              : 'border border-transparent text-white/60'
+          }`}
+        >
+          <Users className="h-4 w-4 shrink-0" /> <span className="truncate">Arkadaşlar</span>
         </button>
         <button
           type="button"

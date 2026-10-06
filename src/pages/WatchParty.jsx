@@ -369,14 +369,28 @@ export default function WatchParty() {
   useEffect(() => {
     if (!participantIdsKey) return;
     const ids = participantIdsKey.split(',');
-    // N+1 önleme: tek filter çağrısıyla tüm presence kayıtları
-    base44.entities.UserPresence.filter({ user_id: { $in: ids } }, '-created_date', ids.length)
-      .then((records) => { const map = {}; records.forEach((rec) => { if (rec) map[rec.user_id] = rec; }); setPresenceMap(map); })
+    // N+1 önleme: tek filter çağrısıyla tüm presence kayıtları.
+    // Kişi başına birden fazla kayıt olabilir: limit geniş tutulur, en taze kayıt geçerli sayılır.
+    base44.entities.UserPresence.filter({ user_id: { $in: ids } }, '-created_date', ids.length * 5)
+      .then((records) => {
+        const map = {};
+        records.forEach((rec) => {
+          if (!rec?.user_id) return;
+          const current = map[rec.user_id];
+          if (!current || new Date(rec.last_seen || 0) > new Date(current.last_seen || 0)) map[rec.user_id] = rec;
+        });
+        setPresenceMap(map);
+      })
       .catch(() => {});
     const unsub = base44.entities.UserPresence.subscribe((ev) => {
       if (ev.type !== 'create' && ev.type !== 'update') return;
       if (!ids.includes(ev.data.user_id)) return;
-      setPresenceMap((prev) => ({ ...prev, [ev.data.user_id]: ev.data }));
+      setPresenceMap((prev) => {
+        const current = prev[ev.data.user_id];
+        // Eski bir kayıt güncel durumu ezmesin: yalnızca daha taze kayıt yazılır.
+        if (current && new Date(current.last_seen || 0) > new Date(ev.data.last_seen || 0)) return prev;
+        return { ...prev, [ev.data.user_id]: ev.data };
+      });
     });
     return unsub;
   }, [participantIdsKey]);
