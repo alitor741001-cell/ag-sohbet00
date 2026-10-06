@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import subscribeEntity from '@/components/data/entitySubscriptions';
 import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
@@ -26,6 +27,8 @@ export default function AdminUsers({ pendingOnly = false }) {
   const [nameQuery, setNameQuery] = useState('');
   const [paidUserIds, setPaidUserIds] = useState(new Set());
   const [onlineUsers, setOnlineUsers] = useState(new Set());
+  const paymentsRef = useRef(new Map());
+  const presenceRef = useRef(new Map());
 
 
 
@@ -45,18 +48,37 @@ export default function AdminUsers({ pendingOnly = false }) {
     }).catch((e) => { setLoading(false); toast({ title: 'Liste yüklenemedi', description: e.message, variant: 'destructive' }); });
     // Tamamlanmış ödemeleri yükle — "Onayla" butonunu gizlemek için
     base44.entities.Payment.filter({ status: 'completed' }, '-created_date', 500).then((pays) => {
+      paymentsRef.current = new Map(pays.map((p) => [p.id, p]));
       setPaidUserIds(new Set(pays.map((p) => p.user_id)));
     }).catch(() => {});
     base44.entities.UserPresence.filter({ online: true }, '-created_date', 500).then((presences) => {
+      presenceRef.current = new Map(presences.map((p) => [p.id, p]));
       setOnlineUsers(new Set(presences.map((p) => p.user_id)));
     }).catch(() => {});
   };
   useEffect(() => {
     setLoading(true); load();
-    const offUsers = base44.entities.User.subscribe(load);
-    const offPayments = base44.entities.Payment.subscribe(load);
-    const offPresence = base44.entities.UserPresence.subscribe(load);
-    return () => { offUsers?.(); offPayments?.(); offPresence?.(); };
+    const offUsers = subscribeEntity('User', (event) => {
+      const id = event.data?.id || event.id;
+      setUsers((current) => {
+        const known = current.find((item) => item.id === id);
+        if (event.type === 'delete') return known ? current.filter((item) => item.id !== id) : current;
+        if (!known && event.type !== 'create') return current;
+        const merged = { ...known, ...event.data, id };
+        if (pendingOnly && merged.membership_status !== 'pending') return current.filter((item) => item.id !== id);
+        return known ? current.map((item) => item.id === id ? merged : item) : [merged, ...current];
+      });
+    });
+    const patchMarker = (records, event, publish, predicate) => {
+      const id = event.data?.id || event.id;
+      if (event.type === 'delete') records.delete(id);
+      else records.set(id, { ...records.get(id), ...event.data, id });
+      const next = new Set([...records.values()].filter(predicate).map((item) => item.user_id));
+      publish((current) => current.size === next.size && [...next].every((id) => current.has(id)) ? current : next);
+    };
+    const offPayments = subscribeEntity('Payment', (event) => patchMarker(paymentsRef.current, event, setPaidUserIds, (item) => item.status === 'completed'));
+    const offPresence = subscribeEntity('UserPresence', (event) => patchMarker(presenceRef.current, event, setOnlineUsers, (item) => item.online === true));
+    return () => { offUsers(); offPayments(); offPresence(); };
   }, [pendingOnly]);
 
   const log = async (action, target) => { await base44.entities.AdminLog.create({ admin_id: admin?.id, admin_name: admin?.username || admin?.full_name, action, target }).catch(() => {}); };

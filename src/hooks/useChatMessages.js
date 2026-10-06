@@ -25,6 +25,8 @@ export default function useChatMessages(conversationId) {
   const seenRef = useRef(new Set());
   const activeIdRef = useRef(conversationId);
   const lastMessageAtRef = useRef(null);
+  const sendingRef = useRef(false);
+  const readPendingRef = useRef(new Set());
 
   useEffect(() => {
     activeIdRef.current = conversationId;
@@ -84,8 +86,9 @@ export default function useChatMessages(conversationId) {
   }, [conversationId, userId]);
 
   const send = useCallback(async (content) => {
-    if (!conversationId || !userId || !content.trim()) return;
-    const tempId = 'temp-' + Date.now();
+    if (!conversationId || !userId || !content.trim() || sendingRef.current) return;
+    sendingRef.current = true;
+    const tempId = 'temp-' + crypto.randomUUID();
     const optimistic = {
       id: tempId, conversation_id: conversationId,
       sender_id: userId, sender_name: user?.username || user?.full_name || 'Kullanıcı',
@@ -98,6 +101,7 @@ export default function useChatMessages(conversationId) {
       setSending(true);
       const res = await base44.functions.invoke('dm-service', { action: 'send', conversation_id: conversationId, content: content.trim() });
       // Optimistic mesajı gerçek mesajla hemen değiştir — subscription beklemeye gerek yok
+      if (activeIdRef.current !== conversationId) return;
       if (res?.data?.message) {
         const realMsg = res.data.message;
         seenRef.current.add(realMsg.id);
@@ -111,19 +115,21 @@ export default function useChatMessages(conversationId) {
         toast({ description: res.data.warning, duration: 6000 });
       }
     } catch (err) {
-      setMessages((prev) => prev.filter((m) => m.id !== tempId));
+      if (activeIdRef.current === conversationId) setMessages((prev) => prev.filter((m) => m.id !== tempId));
       throw err;
     } finally {
+      sendingRef.current = false;
       setSending(false);
     }
   }, [conversationId, userId, user, toast]);
 
   const markRead = useCallback(async () => {
-    if (!conversationId || !userId) return;
+    if (!conversationId || !userId || readPendingRef.current.has(conversationId)) return;
+    readPendingRef.current.add(conversationId);
     try {
       await base44.functions.invoke('dm-service', { action: 'mark_read', conversation_id: conversationId });
       window.dispatchEvent(new Event('social-badges-refresh'));
-    } catch {}
+    } catch {} finally { readPendingRef.current.delete(conversationId); }
   }, [conversationId, userId]);
 
   const deleteMessage = useCallback(async (messageId) => {

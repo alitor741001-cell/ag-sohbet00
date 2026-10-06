@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import subscribeEntity from '@/components/data/entitySubscriptions';
 import { base44 } from '@/api/base44Client';
 
 // Çevrim içi penceresi: nabız 20 sn'de bir yazılır, kayıt 60 sn tazelenmezse kişi çevrim dışı sayılır.
@@ -52,7 +53,7 @@ export default function useFriendPresence(user, maintain = false) {
   useEffect(() => {
     if (!user) return;
     load();
-    const off = base44.entities.UserPresence.subscribe((event) => {
+    const off = subscribeEntity('UserPresence', (event) => {
       const id = event.data?.id || event.id;
       setPresence((current) => {
         if (event.type === 'delete') {

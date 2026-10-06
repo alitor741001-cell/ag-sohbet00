@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import subscribeEntity from '@/components/data/entitySubscriptions';
 import { base44 } from '@/api/base44Client';
 
 let cachedUser = null;
@@ -13,8 +14,8 @@ const listeners = new Set();
 const publish = () => listeners.forEach((listener) => listener({ user: cachedUser, loading: loadingUser }));
 
 const connectRealtime = () => {
-  if (userSubscription || !cachedUser?.id) return;
-  userSubscription = base44.entities.User.subscribe((event) => {
+  if (userSubscription || !cachedUser?.id || !listeners.size) return;
+  userSubscription = subscribeEntity('User', (event) => {
     if (event.type === 'update' && event.data?.id === cachedUser?.id) {
       cachedUser = { ...cachedUser, ...event.data };
       publish();
@@ -25,6 +26,7 @@ const connectRealtime = () => {
 /** Oturum doğrulamasından gelen kullanıcıyı paylaşılan önbelleğe yazar (null: oturum kapandı). */
 export function seedCurrentUser(user) {
   if (!user) {
+    userSubscription?.(); userSubscription = null;
     cachedUser = null;
     loadingUser = false;
     seededAt = 0;
@@ -45,7 +47,7 @@ const loadUser = (force = false) => {
     publish();
     return Promise.resolve(cachedUser);
   }
-  if (loadPromise && !force) return loadPromise;
+  if (loadPromise) return loadPromise;
   loadingUser = true;
   publish();
   loadPromise = base44.auth.me()
@@ -60,9 +62,13 @@ export function useCurrentUser() {
 
   useEffect(() => {
     listeners.add(setState);
+    connectRealtime();
     if (loadingUser && !loadPromise) loadUser();
     else setState({ user: cachedUser, loading: loadingUser });
-    return () => listeners.delete(setState);
+    return () => {
+      listeners.delete(setState);
+      if (!listeners.size) { userSubscription?.(); userSubscription = null; }
+    };
   }, []);
 
   const setUser = (next) => {

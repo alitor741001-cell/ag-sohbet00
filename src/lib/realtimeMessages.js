@@ -6,6 +6,7 @@ export const sortMessages = (messages) => [...messages].sort((a, b) => {
 export const upsertMessage = (messages, incoming) => {
   const index = messages.findIndex((message) => message.id === incoming.id);
   if (index >= 0) {
+    if (Object.keys(incoming).every((key) => messages[index][key] === incoming[key])) return messages;
     const next = [...messages];
     next[index] = { ...next[index], ...incoming };
     return next;
@@ -30,6 +31,12 @@ export const upsertMessage = (messages, incoming) => {
 export const mergeMessages = (current, incoming) => {
   const map = new Map();
   for (const m of current) map.set(m.id, m);
-  for (const m of incoming) map.set(m.id, { ...(map.get(m.id) || {}), ...m });
-  return sortMessages([...map.values()]);
+  let changed = false;
+  for (const m of incoming) {
+    const existing = map.get(m.id);
+    if (existing && Object.keys(m).every((key) => existing[key] === m[key])) continue;
+    changed = true;
+    map.set(m.id, { ...(existing || {}), ...m });
+  }
+  return changed ? sortMessages([...map.values()]) : current;
 };

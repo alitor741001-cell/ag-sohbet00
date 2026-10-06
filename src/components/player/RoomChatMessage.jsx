@@ -30,7 +30,7 @@ function RoomChatMessage({ message, profile, ownerId, roomModerators, currentUse
     <button type="button" onClick={() => onOpenProfile?.(message.user_id)} className="mt-0.5 shrink-0" aria-label={`${name} profilini aç`}>
       <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border border-white/25 bg-white/10">
         {avatar
-          ? <img src={avatar} alt="" referrerPolicy="no-referrer" draggable={false} className="h-full w-full object-cover object-center" />
+          ? <Image src={avatar} alt="" referrerPolicy="no-referrer" draggable={false} fittingType="fill" className="h-full w-full" />
           : <span className="text-[11px] font-bold text-white/80">{name.trim().charAt(0) || '?'}</span>}
       </span>
     </button>

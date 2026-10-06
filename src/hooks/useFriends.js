@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import subscribeEntity from '@/components/data/entitySubscriptions';
 import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
@@ -16,6 +17,8 @@ const store = {
   unsubscribe: null,
   interval: null,
   onOnline: null,
+  loadedAt: 0,
+  pendingLoad: null,
 };
 
 const publish = (patch) => {
@@ -29,13 +32,22 @@ const applyEvent = (current, event) => {
   return current.filter((relation) => relation.id !== event.id);
 };
 
-const load = async () => {
-  if (!store.userId) return;
-  try {
-    const friendships = await base44.entities.Friendship.filter({ members: store.userId }, '-updated_date', 200);
-    publish({ relations: friendships });
-  } catch {}
-  publish({ loading: false });
+const load = () => {
+  const userId = store.userId;
+  if (!userId) return Promise.resolve();
+  if (store.pendingLoad?.userId === userId) return store.pendingLoad.promise;
+  const promise = (async () => {
+    try {
+      const friendships = await base44.entities.Friendship.filter({ members: userId }, '-updated_date', 200);
+      if (store.userId !== userId) return;
+      store.loadedAt = Date.now();
+      publish({ relations: friendships });
+    } catch {}
+    if (store.userId === userId) publish({ loading: false });
+  })();
+  store.pendingLoad = { userId, promise };
+  promise.finally(() => { if (store.pendingLoad?.promise === promise) store.pendingLoad = null; });
+  return promise;
 };
 
 const stop = () => {
@@ -47,11 +59,18 @@ const stop = () => {
 const start = (userId) => {
   if (store.userId === userId && store.unsubscribe) return;
   stop();
+  if (store.userId !== userId) {
+    store.relations = []; store.loadedAt = 0;
+  }
   store.userId = userId;
-  store.loading = true;
-  load();
-  store.unsubscribe = base44.entities.Friendship.subscribe((event) => {
-    publish({ relations: applyEvent(store.relations, event) });
+  store.loading = !store.loadedAt;
+  if (Date.now() - store.loadedAt >= 60000) load();
+  store.unsubscribe = subscribeEntity('Friendship', (event) => {
+    const id = event.data?.id || event.id;
+    const known = store.relations.some((relation) => relation.id === id);
+    const data = event.data;
+    if (!known && !(data?.members || []).includes(userId) && data?.requester_id !== userId && data?.recipient_id !== userId) return;
+    publish({ relations: applyEvent(store.relations, { ...event, id }) });
   });
   store.onOnline = () => load();
   window.addEventListener('online', store.onOnline);
@@ -73,7 +92,7 @@ export default function useFriends() {
     return () => {
       store.listeners.delete(setState);
       // Son bileşen kapandığında bağlantılar kapanır: arka planda boşa çalışan dinleyici kalmaz.
-      if (!store.listeners.size) { stop(); store.userId = null; }
+      if (!store.listeners.size) stop();
     };
   }, [user?.id]);
 

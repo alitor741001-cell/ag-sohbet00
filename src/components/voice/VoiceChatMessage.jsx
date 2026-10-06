@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import { Image } from '@/components/ui/image';
 import RoleNameEffect from '@/components/role/RoleNameEffect';
 import UserBadgeRow from '@/components/status/UserBadgeRow';
 import RoomLevelBadge from '@/components/status/RoomLevelBadge';
@@ -21,7 +22,7 @@ function VoiceChatMessage({ message, profile, ownerId, moderators = [], currentU
       <button type="button" onClick={() => onOpenProfile?.(message.user_id)} className="mt-0.5 shrink-0" aria-label={`${name} profilini aç`}>
         <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border border-white/25 bg-white/10">
           {hidden || profile?.avatar
-            ? <img src={hidden ? HIDDEN_AVATAR_URL : profile.avatar} alt="" referrerPolicy="no-referrer" draggable={false} className="h-full w-full object-cover object-center" />
+            ? <Image src={hidden ? HIDDEN_AVATAR_URL : profile.avatar} alt="" referrerPolicy="no-referrer" draggable={false} fittingType="fill" className="h-full w-full" />
             : <span className="text-[11px] font-bold text-white/80">{name.trim().charAt(0) || '?'}</span>}
         </span>
       </button>

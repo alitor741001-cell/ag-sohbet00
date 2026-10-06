@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
+import useRoomTyping from '@/components/data/useRoomTyping';
+import subscribeEntity from '@/components/data/entitySubscriptions';
 import { Clock, Crown, Eye, Image as ImageIcon, LayoutGrid, MessageSquare, MessageSquareOff, MessagesSquare, Send, Shield, Smile, Sparkles, UserPlus, Users, X } from 'lucide-react';
 import { neonCardClass, neonCircleClass } from '@/lib/neonStyle';
 import VoiceControls from '@/components/player/VoiceControls';
@@ -19,7 +21,7 @@ import RoomSettingsContent from '@/components/player/RoomSettingsContent';
 import ParticipantHistoryPanel from '@/components/player/ParticipantHistoryPanel';
 
 
-const EMOJIS = ['😀', '😂', '😍', '🔥', '👍', '👏', '😱', '😢', '🎬', '🍿', '❤️', '🎉'];
+
 
 // Sohbet sekme şeridi: referanstaki gibi ikon + etiket.
 const FILTERS = [
@@ -75,63 +77,14 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
         .catch(() => {});
     };
     load();
-    const unsub = base44.entities.RoomJoinRequest.subscribe((ev) => {
+    const unsub = subscribeEntity('RoomJoinRequest', (ev) => {
       if (ev.data?.room_id !== roomId) return;
       load();
     });
     return unsub;
   }, [roomId, isOwner]);
 
-  const [typingUsers, setTypingUsers] = useState([]);
-  const myTypingIdRef = useRef(null);
-  const typingTimerRef = useRef(null);
-
-  useEffect(() => {
-    if (!roomId) return;
-    const refresh = () => {
-      base44.entities.RoomTyping.filter({ room_id: roomId }, '-updated_date', 50)
-        .then((records) => {
-          const now = Date.now();
-          const active = records
-            .filter((r) => r.user_id !== user?.id && now - new Date(r.updated_at || r.created_date).getTime() < 3000)
-            .map((r) => r.user_name);
-          setTypingUsers([...new Set(active)]);
-        })
-        .catch(() => {});
-    };
-    refresh();
-    const unsub = base44.entities.RoomTyping.subscribe((ev) => { if (ev.data?.room_id === roomId) refresh(); });
-    // Realtime zaten var; yoklama yalnızca yedek: 15sn'de bir, sekme arkadayken durur.
-    const poll = setInterval(() => { if (document.visibilityState !== 'hidden') refresh(); }, 15000);
-    return () => { unsub(); clearInterval(poll); if (myTypingIdRef.current) { base44.entities.RoomTyping.delete(myTypingIdRef.current).catch(() => {}); myTypingIdRef.current = null; } };
-  }, [roomId, user?.id]);
-
-  const sendTyping = () => {
-    if (!user || !roomId) return;
-    const updateOrCreate = async () => {
-      try {
-        if (myTypingIdRef.current) {
-          await base44.entities.RoomTyping.update(myTypingIdRef.current, { updated_at: new Date().toISOString() });
-        } else {
-          const rec = await base44.entities.RoomTyping.create({ room_id: roomId, user_id: user.id, user_name: user.username || user.full_name || 'Kullanıcı', updated_at: new Date().toISOString() });
-          myTypingIdRef.current = rec.id;
-        }
-      } catch {
-        try {
-          const rec = await base44.entities.RoomTyping.create({ room_id: roomId, user_id: user.id, user_name: user.username || user.full_name || 'Kullanıcı', updated_at: new Date().toISOString() });
-          myTypingIdRef.current = rec.id;
-        } catch {}
-      }
-    };
-    updateOrCreate();
-    clearTimeout(typingTimerRef.current);
-    typingTimerRef.current = setTimeout(() => {
-      if (myTypingIdRef.current) {
-        base44.entities.RoomTyping.delete(myTypingIdRef.current).catch(() => {});
-        myTypingIdRef.current = null;
-      }
-    }, 3000);
-  };
+  const { typingUsers, sendTyping } = useRoomTyping(roomId, user);
 
   const scrollToBottom = () => {
     const el = scrollRef.current;
@@ -163,7 +116,7 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
 
   useEffect(() => {
     load();
-    const unsub = base44.entities.RoomMessage.subscribe((ev) => {
+    const unsub = subscribeEntity('RoomMessage', (ev) => {
       if (ev.data?.room_id !== roomId) return;
       if (ev.type === 'delete') { setMessages((prev) => prev.filter((message) => message.id !== ev.id)); return; }
       const markerAt = cheatMarkerTime(ev.data);
@@ -179,7 +132,7 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
     const reconnect = () => load();
     window.addEventListener('online', reconnect);
     // Canlı akış aksarsa mesajlar yine de görünsün: sekme görünürken kısa aralıklarla tazelenir.
-    const poll = setInterval(() => { if (document.visibilityState !== 'hidden') load(); }, 12000);
+    const poll = setInterval(() => { if (document.visibilityState !== 'hidden') load(); }, 60000);
     return () => { unsub(); window.removeEventListener('online', reconnect); clearInterval(poll); };
   }, [roomId]);
 
