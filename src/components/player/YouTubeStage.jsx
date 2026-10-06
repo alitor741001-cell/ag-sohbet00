@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { FastForward, Maximize, Minimize, Pause, Play, Rewind, Volume2, VolumeX } from 'lucide-react';
+import { Captions, CaptionsOff, FastForward, Maximize, Minimize, Pause, Play, Rewind, Volume2, VolumeX } from 'lucide-react';
 import VolumeSlider from './VolumeSlider';
 
 // YouTube IFrame API'si tek seferde yüklenir ve tüm oda aynı oynatıcıyı kullanır.
@@ -67,6 +67,11 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
     return Number.isFinite(stored) ? Math.round(Math.min(1, Math.max(0, stored)) * 100) : 100;
   });
   const [muted, setMuted] = useState(() => localStorage.getItem('filmkeyfi_player_muted') === 'true');
+  // Film altyazısı: YouTube'un kendi CC düğmesi gizli (controls: 0) olduğu için
+  // kapatma/açma kontrolü oynatıcının içinde durur ve cihazda hatırlanır.
+  const [captions, setCaptions] = useState(() => localStorage.getItem('filmkeyfi_captions') === 'true');
+  const captionsRef = useRef(captions);
+  captionsRef.current = captions;
 
   // Sessize alma yalnızca açık kullanıcı tercihiyle uygulanır, yüzde eşiği yoktur.
   const silent = muted;
@@ -98,6 +103,30 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
     applyVolume(level, next);
   };
 
+  // Altyazı, boş parça verilerek kapatılır (YouTube'un "parça yok" durumu).
+  // Açılırken filmin parça listesinden Türkçe ya da varsayılan parça seçilir.
+  const applyCaptions = (on) => {
+    const player = playerRef.current;
+    if (!player?.setOption) return;
+    player.loadModule?.('captions');
+    if (!on) {
+      player.setOption('captions', 'track', {});
+      return;
+    }
+    const tracks = player.getOption?.('captions', 'tracklist') || [];
+    const track = tracks.find((item) => item?.is_default)
+      || tracks.find((item) => /^tr/i.test(item?.languageCode || ''))
+      || tracks[0];
+    player.setOption('captions', 'track', { languageCode: track?.languageCode || 'tr' });
+  };
+
+  const toggleCaptions = () => {
+    const next = !captions;
+    setCaptions(next);
+    localStorage.setItem('filmkeyfi_captions', String(next));
+    applyCaptions(next);
+  };
+
   // Oynatıcı kurulduğunda / yeniden kurulduğunda kayıtlı seviye uygulanır.
   useEffect(() => { applyVolume(volume, muted); }, [volume, muted, ready]);
 
@@ -120,7 +149,7 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
         videoId,
         width: '100%',
         height: '100%',
-        playerVars: { controls: 0, modestbranding: 1, rel: 0, playsinline: 1, iv_load_policy: 3, disablekb: 1, fs: 0 },
+        playerVars: { controls: 0, modestbranding: 1, rel: 0, playsinline: 1, iv_load_policy: 3, disablekb: 1, fs: 0, cc_load_policy: 0 },
         events: {
           onReady: (event) => {
             if (cancelled) return;
@@ -128,6 +157,10 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
             setDuration(event.target.getDuration?.() || 0);
             const target = syncRef.current?.current_time || 0;
             if (target > 1) event.target.seekTo(target, true);
+            // Altyazı modülü hazır olur olmaz kayıtlı tercih uygulanır; modül
+            // gecikmeli yüklendiğinde kısa süre sonra tekrar denenir.
+            applyCaptions(captionsRef.current);
+            setTimeout(() => { if (!cancelled) applyCaptions(captionsRef.current); }, 1200);
             const startIfNeeded = () => {
               if (cancelled || !syncRef.current?.is_playing) return;
               const playerState = window.YT?.PlayerState;
@@ -309,6 +342,19 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
           ) : (
             <VolumeSlider volume={volume / 100} muted={silent} onChange={changeVolume} onToggleMute={toggleMute} nativeFallback />
           )}
+          <button
+            type="button"
+            disabled={!ready}
+            aria-label={captions ? 'Altyazıyı kapat' : 'Altyazıyı aç'}
+            aria-pressed={captions}
+            title={captions ? 'Altyazıyı kapat' : 'Altyazıyı aç'}
+            onPointerDown={(event) => event.stopPropagation()}
+            onTouchStart={(event) => event.stopPropagation()}
+            onClick={(event) => { event.stopPropagation(); toggleCaptions(); }}
+            className={`relative z-[70] rounded-lg p-2 hover:bg-white/10 disabled:opacity-50 ${captions ? 'text-primary' : 'text-white/70'}`}
+          >
+            {captions ? <Captions className="h-5 w-5" /> : <CaptionsOff className="h-5 w-5" />}
+          </button>
           <button onClick={toggleFullscreen} className="ml-auto rounded-lg p-2 hover:bg-white/10" title="Tam ekran">
             {fullscreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
           </button>
