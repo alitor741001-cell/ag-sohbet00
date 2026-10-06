@@ -7,6 +7,7 @@ import RoomDiscoveryCard from '@/components/home/RoomDiscoveryCard';
 import GameDiscoveryRow from '@/components/home/GameDiscoveryRow';
 import useFriends from '@/hooks/useFriends';
 import useMessageProfiles from '@/hooks/useMessageProfiles';
+import { readRoomList, writeRoomList } from '@/lib/roomListCache';
 import { fetchYouTubeTitle, isGenericTitle, youtubeIdFromMovieId } from '@/lib/youtubeTitle';
 
 // Oyunlar ayrı indirilir: ana sayfa paketi küçük kalır.
@@ -60,6 +61,14 @@ export default function RoomDiscovery({ shortcuts = null }) {
   useEffect(() => {
     let alive = true;
     const load = async () => {
+      // Son görülen liste hafızadan gelir: ana sayfaya dönüşte ağ beklenmeden çizilir,
+      // tazeleme arkada sürer — aynı oda ve kullanıcı verisi tekrar tekrar çekilmez.
+      const cached = readRoomList(user?.id);
+      if (cached) {
+        setAllRooms(cached.rooms);
+        setOwners(cached.owners);
+        setLoading(false);
+      }
       const list = await base44.entities.Room.filter({ status: 'active' }, '-created_date', 100).catch(() => []);
       if (!alive) return;
       const live = list.filter((room) => {
@@ -72,7 +81,9 @@ export default function RoomDiscovery({ shortcuts = null }) {
       const ownerIds = [...new Set(live.map((room) => room.owner_id).filter(Boolean))];
       if (!ownerIds.length) return;
       const response = await base44.functions.invoke('user-profile', { user_ids: ownerIds }).catch(() => null);
-      if (alive) setOwners(response?.data?.data || response?.data || {});
+      // Bilinen profiller korunur: yalnızca yeni gelenler eklenir, liste baştan yazılmaz.
+      const profiles = response?.data?.data || response?.data || {};
+      if (alive) setOwners((prev) => ({ ...prev, ...profiles }));
     };
     load();
 
@@ -123,6 +134,11 @@ export default function RoomDiscovery({ shortcuts = null }) {
       unsubscribe();
     };
   }, [user?.id, user?.role]);
+
+  // Liste ve sahip profilleri hafızada tutulur: sayfa değişip geri gelindiğinde veri hazır olur.
+  useEffect(() => {
+    writeRoomList(user?.id, { rooms: allRooms, owners });
+  }, [allRooms, owners, user?.id]);
 
   const friends = useMemo(
     () =>
