@@ -14,6 +14,9 @@ const GamePanel = lazy(() => import('@/components/games/GamePanel'));
 
 const isVoiceRoom = (room) => room?.room_type === 'voice' || room?.voice_mode === true;
 
+/** Odada kimse yoksa kart hiç listelenmez; içeri giren olunca kart kendiliğinden gelir. */
+const hasPeopleInside = (room) => (room?.participants || []).some((person) => person?.user_id);
+
 /** Arama karşılaştırması: "TR555596" ile "555596" aynı üye kimliği sayılır. */
 const normalizeId = (value) =>
   String(value || '')
@@ -185,7 +188,12 @@ export default function RoomDiscovery({ shortcuts = null }) {
   // Sekmeler ilişkiye göre ayrılır: "Arkadaşlar" ekli arkadaşların odalarını, "Sesli+Film" ise
   // arkadaş olmayanların odalarını gösterir; her iki sekmede sesli ve film odaları birlikte listelenir.
   const friendRooms = useMemo(() => uniqueRooms.filter((room) => friendIds.includes(room.owner_id)), [uniqueRooms, friendIds]);
-  const otherRooms = useMemo(() => uniqueRooms.filter((room) => !friendIds.includes(room.owner_id)), [uniqueRooms, friendIds]);
+  // Sesli+Film sekmesinde boş odanın kartı görünmez: odada kişi yoksa kart tamamen kaybolur.
+  // Arkadaşlar sekmesi olduğu gibi kalır.
+  const otherRooms = useMemo(
+    () => uniqueRooms.filter((room) => !friendIds.includes(room.owner_id) && hasPeopleInside(room)),
+    [uniqueRooms, friendIds]
+  );
 
   // Film odalarında açılan videonun adı: kayıtlı başlık anlamsızsa YouTube'dan bir kez okunur.
   useEffect(() => {
@@ -226,7 +234,9 @@ export default function RoomDiscovery({ shortcuts = null }) {
     const lowered = term.toLowerCase();
     const digits = term.replace(/[^0-9]/g, '');
     const memberTerm = normalizeId(term);
-    return uniqueRooms.filter((room) => {
+    // Sesli+Film sekmesinde aranan boş oda da listelenmez; Arkadaşlar sekmesinde arama aynı kalır.
+    const pool = tab === 'friends' ? uniqueRooms : uniqueRooms.filter(hasPeopleInside);
+    return pool.filter((room) => {
       const owner = owners[room.owner_id] || {};
       if (digits && String(room.room_number) === digits) return true;
       const ownerMember = normalizeId(owner.member_id);
@@ -234,7 +244,7 @@ export default function RoomDiscovery({ shortcuts = null }) {
       if (String(room.name || '').toLowerCase().includes(lowered)) return true;
       return `${owner.username || ''} ${owner.full_name || ''} ${room.owner_name || ''}`.toLowerCase().includes(lowered);
     });
-  }, [query, list, uniqueRooms, owners]);
+  }, [query, list, uniqueRooms, owners, tab]);
 
   const items = searching ? searched : list;
 
