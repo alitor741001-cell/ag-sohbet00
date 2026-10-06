@@ -13,7 +13,7 @@ import {
 
 // Tur durumu canlı yayından gelir; yoklama yalnızca çakılma anını yakalamak
 // için çalışır. Seyrek tutulur ki istek bütçesi oyuncunun basışlarına kalsın.
-const POLL_FLIGHT = 4000;
+const POLL_FLIGHT = 2000;
 // Çakılma sonrası yeni tur yoklanır (tur arası bekleme kadar sonra).
 const POLL_CRASHED = 2200;
 const POLL_BETTING = 9000;

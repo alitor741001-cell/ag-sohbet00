@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
-const PRESETS = [1.5, 2, 3, 5, 7, 10];
+const PRESETS = [1.5, 2, 3, 5, 7, 10, 25, 50, 100, 250, 500];
 
 /** Otomatik çekilme hedefi: hazır kademeler veya elle yazılan çarpan (örn. 7x). */
 export default function RocketAutoDialog({ open, value, onSave, onClose }) {

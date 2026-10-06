@@ -1,12 +1,33 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { RoomEvent, Track, createLocalVideoTrack } from 'livekit-client';
-import NativeCallAudio, { NativeCallTrack } from '@/lib/NativeCallAudio';
 import { claimCallAudioFocus, releaseCallAudioFocus } from '@/lib/callAudioFocus';
 import { base44 } from '@/api/base44Client';
 import subscribeEntity from '@/components/data/entitySubscriptions';
 import { createVoiceOutput, ensureMicTrack, releaseMic, resetAudioRouting, startRingtone, unlockVoicePlayback } from '@/lib/callAudio';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import useCallModeration from '@/hooks/useCallModeration';
+
+// Görüşme motoru (LiveKit) yalnızca arama başlarken indirilir: açılış paketi
+// yarım megabayt hafifler, çağrı akışı birebir aynı kalır.
+let callEnginePromise = null;
+let callEngine = null;
+const loadCallEngine = () => {
+  if (!callEnginePromise) {
+    callEnginePromise = Promise.all([
+      import('livekit-client'),
+      import('@/lib/NativeCallAudio'),
+    ]).then(([livekit, engine]) => {
+      callEngine = {
+        RoomEvent: livekit.RoomEvent,
+        Track: livekit.Track,
+        createLocalVideoTrack: livekit.createLocalVideoTrack,
+        NativeCallAudio: engine.default,
+        NativeCallTrack: engine.NativeCallTrack,
+      };
+      return callEngine;
+    });
+  }
+  return callEnginePromise;
+};
 
 const DirectCallContext = createContext(null);
 export const useDirectCall = () => useContext(DirectCallContext);
@@ -21,7 +42,7 @@ const ROOM_OPTIONS = {
   webAudioMix: false,
   audioCaptureDefaults: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
 };
-const MIC_PUBLICATION = { name: 'microphone', source: Track.Source.Microphone, dtx: false, red: false, forceStereo: false, audioPreset: { maxBitrate: 32000 }, stopMicTrackOnMute: false };
+const micPublication = (Track) => ({ name: 'microphone', source: Track.Source.Microphone, dtx: false, red: false, forceStereo: false, audioPreset: { maxBitrate: 32000 }, stopMicTrackOnMute: false });
 
 export default function DirectCallProvider({ children }) {
   const { user } = useCurrentUser();
@@ -124,7 +145,8 @@ export default function DirectCallProvider({ children }) {
   // --- Ses çıkışları ---
 
   const attachRemoteAudio = useCallback((track) => {
-    if (track.kind !== Track.Kind.Audio) return;
+    const kinds = callEngine?.Track?.Kind;
+    if (!kinds || track.kind !== kinds.Audio) return;
     const existing = [...audioRef.current].find((output) => output.dataset.livekitTrack === track.sid);
     if (existing?.dataset.livekitMediaTrack === track.mediaStreamTrack?.id) return;
     if (existing) { existing.remove(); audioRef.current.delete(existing); }
@@ -135,7 +157,8 @@ export default function DirectCallProvider({ children }) {
 
   // Karşı taraf kamerasını açtığında görüntü sahneye alınır.
   const attachRemoteVideo = useCallback((track) => {
-    if (track.kind !== Track.Kind.Video) return;
+    const kinds = callEngine?.Track?.Kind;
+    if (!kinds || track.kind !== kinds.Video) return;
     setRemoteVideoTrack(track);
     setRemoteCameraOn(true);
   }, []);
@@ -174,7 +197,7 @@ export default function DirectCallProvider({ children }) {
       if (recovering || publishedRef.current !== room || micTrackRef.current !== track) return;
       recovering = true;
       try {
-        const publication = room.localParticipant.getTrackPublication(Track.Source.Microphone);
+        const publication = room.localParticipant.getTrackPublication(callEngine?.Track?.Source?.Microphone);
         const next = await ensureMicTrack({ fresh: true });
         if (roomRef.current !== room || micTrackRef.current !== track) return;
         if (!next || next.readyState !== 'live' || !publication?.track) throw new Error('mikrofon yok');
@@ -205,9 +228,11 @@ export default function DirectCallProvider({ children }) {
         if (!micTrack || micTrack.readyState !== 'live') throw new Error('mikrofon yok');
         micTrackRef.current = micTrack;
         micTrack.enabled = !mutedRef.current;
-        const localTrack = new NativeCallTrack(micTrack, micTrack.getConstraints(), true);
+        const engine = await loadCallEngine();
+        if (roomRef.current !== room) return;
+        const localTrack = new engine.NativeCallTrack(micTrack, micTrack.getConstraints(), true);
         publishedTrackRef.current = localTrack;
-        await room.localParticipant.publishTrack(localTrack, MIC_PUBLICATION);
+        await room.localParticipant.publishTrack(localTrack, micPublication(engine.Track));
         // Karşı taraf katılmadan önce susturulduysa ses durumu sunucuya bildirilir.
         if (mutedRef.current) localTrack.mute().catch(() => {});
         if (roomRef.current !== room) return;
@@ -234,29 +259,31 @@ export default function DirectCallProvider({ children }) {
           if (connectingRef.current !== task) return null;
           const data = response?.data;
           if (!data?.url || !data?.token) throw new Error('token yok');
-          const room = new NativeCallAudio(ROOM_OPTIONS);
+          // Motor odaya girmeden önce indirilir: bağlantı akışı aynı kalır.
+          const engine = await loadCallEngine();
+          const room = new engine.NativeCallAudio(ROOM_OPTIONS);
           roomRef.current = room;
-          room.on(RoomEvent.TrackSubscribed, (track) => { attachRemoteAudio(track); attachRemoteVideo(track); });
-          room.on(RoomEvent.ParticipantConnected, attachAllRemoteAudio);
-          room.on(RoomEvent.TrackPublished, (publication) => {
+          room.on(engine.RoomEvent.TrackSubscribed, (track) => { attachRemoteAudio(track); attachRemoteVideo(track); });
+          room.on(engine.RoomEvent.ParticipantConnected, attachAllRemoteAudio);
+          room.on(engine.RoomEvent.TrackPublished, (publication) => {
             publication.setSubscribed(true);
-            if (publication.kind === Track.Kind.Audio && publication.track) attachRemoteAudio(publication.track);
-            if (publication.kind === Track.Kind.Video && publication.track) attachRemoteVideo(publication.track);
+            if (publication.kind === engine.Track.Kind.Audio && publication.track) attachRemoteAudio(publication.track);
+            if (publication.kind === engine.Track.Kind.Video && publication.track) attachRemoteVideo(publication.track);
           });
-          room.on(RoomEvent.Reconnected, attachAllRemoteAudio);
+          room.on(engine.RoomEvent.Reconnected, attachAllRemoteAudio);
           // Karşı tarafın mikrofon/kamera durumu yayın bilgisi üzerinden yakalanır.
-          room.on(RoomEvent.TrackMuted, (publication, participant) => {
+          room.on(engine.RoomEvent.TrackMuted, (publication, participant) => {
             if (participant?.identity === room.localParticipant.identity) return;
-            if (publication.kind === Track.Kind.Video) { setRemoteCameraOn(false); return; }
-            if (publication.kind === Track.Kind.Audio) setRemoteMuted(true);
+            if (publication.kind === engine.Track.Kind.Video) { setRemoteCameraOn(false); return; }
+            if (publication.kind === engine.Track.Kind.Audio) setRemoteMuted(true);
           });
-          room.on(RoomEvent.TrackUnmuted, (publication, participant) => {
+          room.on(engine.RoomEvent.TrackUnmuted, (publication, participant) => {
             if (participant?.identity === room.localParticipant.identity) return;
-            if (publication.kind === Track.Kind.Video) { setRemoteCameraOn(true); return; }
-            if (publication.kind === Track.Kind.Audio) setRemoteMuted(false);
+            if (publication.kind === engine.Track.Kind.Video) { setRemoteCameraOn(true); return; }
+            if (publication.kind === engine.Track.Kind.Audio) setRemoteMuted(false);
           });
-          room.on(RoomEvent.TrackUnsubscribed, (track) => {
-            if (track.kind === Track.Kind.Video) { setRemoteVideoTrack(null); setRemoteCameraOn(false); return; }
+          room.on(engine.RoomEvent.TrackUnsubscribed, (track) => {
+            if (track.kind === engine.Track.Kind.Video) { setRemoteVideoTrack(null); setRemoteCameraOn(false); return; }
             audioRef.current.forEach((output) => {
               if (output.dataset.livekitTrack !== track.sid) return;
               audioRef.current.delete(output);
@@ -406,12 +433,13 @@ export default function DirectCallProvider({ children }) {
       return;
     }
     try {
-      const track = await createLocalVideoTrack({ facingMode: facingRef.current, resolution: { width: 640, height: 360 } });
+      const engine = callEngine || (await loadCallEngine());
+      const track = await engine.createLocalVideoTrack({ facingMode: facingRef.current, resolution: { width: 640, height: 360 } });
       if (roomRef.current !== room) { track.stop(); return; }
       cameraTrackRef.current = track;
       setLocalVideoTrack(track);
       setCameraOn(true);
-      await room.localParticipant.publishTrack(track, { name: 'camera', source: Track.Source.Camera });
+      await room.localParticipant.publishTrack(track, { name: 'camera', source: engine.Track.Source.Camera });
       setError('');
     } catch (cameraError) {
       cameraTrackRef.current = null;
@@ -428,14 +456,15 @@ export default function DirectCallProvider({ children }) {
     if (!room || !current) return;
     const next = facingRef.current === 'user' ? 'environment' : 'user';
     try {
-      const track = await createLocalVideoTrack({ facingMode: next, resolution: { width: 640, height: 360 } });
+      const engine = callEngine || (await loadCallEngine());
+      const track = await engine.createLocalVideoTrack({ facingMode: next, resolution: { width: 640, height: 360 } });
       if (roomRef.current !== room) { track.stop(); return; }
       cameraTrackRef.current = track;
       facingRef.current = next;
       setFacing(next);
       setLocalVideoTrack(track);
       await room.localParticipant.unpublishTrack(current, true).catch(() => {});
-      await room.localParticipant.publishTrack(track, { name: 'camera', source: Track.Source.Camera });
+      await room.localParticipant.publishTrack(track, { name: 'camera', source: engine.Track.Source.Camera });
       setError('');
     } catch (cameraError) {
       setError(cameraError?.name === 'NotAllowedError' ? 'Kamera izni verilmedi.' : 'Kamera değiştirilemedi.');
