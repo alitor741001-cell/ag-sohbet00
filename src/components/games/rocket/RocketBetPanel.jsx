@@ -1,13 +1,12 @@
 import React from 'react';
-import { ChevronLeft, ChevronRight, Minus, Plus, Ticket } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Minus, Plus } from 'lucide-react';
 import { format, formatAuto } from './rocketConfig';
 
 /**
- * Görseldeki bahis paneli: otomatik çekilme satırı, bahis satırı ve tek aksiyon
- * butonu. Sol alan mavi, sağ alan altın temalıdır.
+ * Bahis modülü: üstte otomatik çekilme hedefi (chevron'larla değişir, dokununca
+ * elle yazılır), ortada bahis tutarı, altta büyük mavi aksiyon butonu.
  */
 export default function RocketBetPanel({
-  tone,
   amount,
   auto,
   locked,
@@ -20,10 +19,8 @@ export default function RocketBetPanel({
   onAutoEdit,
   onAction,
 }) {
-  const gold = tone === 'gold';
-
   return (
-    <div className={`rk-panel flex-1 ${gold ? 'rk-panel-gold' : 'rk-panel-blue'}`}>
+    <div className="rk-frame flex min-w-0 flex-1 flex-col gap-1 rounded-xl p-1.5">
       <div className="flex items-center gap-1">
         <button type="button" className="rk-ctrl" onClick={() => onAuto(-1)} aria-label="Otomatik çekilme azalt">
           <ChevronLeft className="h-3.5 w-3.5" />
@@ -31,14 +28,11 @@ export default function RocketBetPanel({
         {/* Hedef elle de yazılabilir: bahis oynandıktan sonra da değiştirilebilir. */}
         <button
           type="button"
-          className="min-w-0 flex-1 rounded-lg py-0.5 text-center active:brightness-125"
+          className={`rk-plate min-w-0 flex-1 rounded-lg py-1 text-center active:brightness-125 ${auto > 0 ? 'text-[#5fc9ff]' : 'text-white/40'}`}
           onClick={onAutoEdit}
           aria-label="Otomatik çekilme hedefini yaz"
         >
-          <p className="rk-label">OTOMATİK ÇEKİLME</p>
-          <p className={`rk-value underline decoration-dotted underline-offset-2 ${auto > 0 ? (gold ? 'text-[#ffd35c]' : 'text-[#7fe4ff]') : 'text-white/40'}`}>
-            {formatAuto(auto)}
-          </p>
+          <span className="text-[13px] font-black">{formatAuto(auto)}</span>
         </button>
         <button type="button" className="rk-ctrl" onClick={() => onAuto(1)} aria-label="Otomatik çekilme artır">
           <ChevronRight className="h-3.5 w-3.5" />
@@ -49,27 +43,20 @@ export default function RocketBetPanel({
         <button type="button" className="rk-ctrl" disabled={locked} onClick={() => onAmount(-1)} aria-label="Bahsi azalt">
           <Minus className="h-3.5 w-3.5" />
         </button>
-        <div className="flex min-w-0 flex-1 items-center justify-center gap-1">
-          <Ticket className="h-3.5 w-3.5 shrink-0 text-[#ffb800]" />
-          <span className="rk-value truncate text-white">{format(amount)}</span>
+        <div className="rk-plate flex min-w-0 flex-1 items-baseline justify-center gap-1 rounded-lg py-1.5">
+          <span className="truncate text-[12px] font-black text-white">{format(amount)}</span>
+          <span className="shrink-0 text-[9px] font-bold text-white/55">Coinler</span>
         </div>
         <button type="button" className="rk-ctrl" disabled={locked} onClick={() => onAmount(1)} aria-label="Bahsi artır">
           <Plus className="h-3.5 w-3.5" />
         </button>
       </div>
 
-      <button
-        type="button"
-        className={`rk-action ${gold ? 'rk-action-gold' : 'rk-action-blue'}`}
-        disabled={disabled}
-        onClick={onAction}
-      >
+      <button type="button" className="rk-action" disabled={disabled} onClick={onAction}>
         <span>{label}</span>
         {/* Kazanç çarpanı, yatırılan coinin yanında rozet olarak görünür. */}
         {badge && (
-          <span className="rounded bg-black/25 px-1 text-[10px] font-black leading-tight">
-            {badge}
-          </span>
+          <span className="rounded bg-black/25 px-1 text-[10px] font-black leading-tight">{badge}</span>
         )}
         {sub && <span className="rk-action-sub">{sub}</span>}
       </button>

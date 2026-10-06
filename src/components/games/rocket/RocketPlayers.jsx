@@ -16,7 +16,11 @@ function betRows(bets) {
   }));
 }
 
-/** Sol panel: bahisler ayrı satırlarda, üstte tur boyunca yatırılan toplam coin. */
+/**
+ * Sol kolon: üstte oyuncu sayısı ve tur boyunca yatırılan toplam coin,
+ * altında bahis satırları (avatar + tutar). Sağ kenarında dikey çizgi ve
+ * yukarı doğru döndürülmüş oyun adı durur.
+ */
 export default function RocketPlayers({ bets, me }) {
   const rows = betRows(bets || []);
   const active = rows.filter((r) => r.active);
@@ -27,32 +31,29 @@ export default function RocketPlayers({ bets, me }) {
   const playerCount = new Set(rows.map((r) => r.user_id)).size;
 
   return (
-    <aside className="rk-glass absolute bottom-2 left-2 top-2 flex w-[32%] max-w-[9.5rem] flex-col overflow-hidden rounded-xl">
-      <div className="flex shrink-0 items-center gap-1 border-b border-white/10 px-2 py-1.5">
-        <Users className="h-3 w-3 shrink-0 text-[#00d4ff]" />
-        <span className="truncate text-[10px] font-black text-white">Oyuncular {playerCount}</span>
+    <aside className="rk-frame relative flex w-[36%] max-w-[9.5rem] shrink-0 flex-col overflow-hidden rounded-xl">
+      <div className="flex shrink-0 items-center gap-1 border-b border-white/12 px-1.5 py-1">
+        <Users className="h-3 w-3 shrink-0 text-[#5fc9ff]" />
+        <span className="text-[10px] font-black text-white">{playerCount}</span>
+        <Ticket className="ml-auto h-3 w-3 shrink-0 text-[#facd15]" />
+        <span className="text-[10px] font-black text-[#facd15]">{format(totalStake)}</span>
       </div>
 
-      <div className="flex shrink-0 items-center justify-between gap-1 border-b border-white/10 px-2 py-1">
-        <span className="truncate text-[9px] font-bold text-white/50">Yatırılan</span>
-        <span className="shrink-0 text-[9px] font-black text-[#ffb800]">{format(totalStake)}</span>
-      </div>
-
-      <div className="min-h-0 flex-1 overflow-y-auto px-1 py-1 no-scrollbar">
+      <div className="no-scrollbar min-h-0 flex-1 space-y-1 overflow-y-auto py-1 pl-1 pr-3">
         {ordered.length === 0 && (
-          <p className="px-1 py-2 text-[9px] leading-tight text-white/40">Henüz oyuncu yok</p>
+          <p className="px-1 py-2 text-[9px] leading-tight text-white/45">Henüz oyuncu yok</p>
         )}
         {ordered.map((row) => (
           <div
             key={row.key}
-            className={`mb-1 flex items-center gap-1 rounded-lg px-1 py-1 ${
-              row.user_id === me ? 'bg-[#ffb800]/20 ring-1 ring-[#ffb800]/50' : 'bg-black/35'
+            className={`flex items-center gap-1 rounded-md px-1 py-0.5 ${
+              row.user_id === me ? 'bg-[#facd15]/15 ring-1 ring-[#facd15]/70' : 'bg-black/35'
             }`}
           >
             {row.avatar ? (
               <Image
                 src={row.avatar}
-                alt=""
+                alt={row.name || ''}
                 className="h-5 w-5 shrink-0 rounded-full"
                 fittingType="fill"
                 quality={60}
@@ -62,19 +63,22 @@ export default function RocketPlayers({ bets, me }) {
                 {(row.name || '?').trim().charAt(0).toUpperCase()}
               </span>
             )}
-            <span className="min-w-0 flex-1 truncate text-[9px] font-bold text-white/85">
-              {row.name || 'Oyuncu'}
-            </span>
             {row.active ? (
               <>
-                <Ticket className="h-2.5 w-2.5 shrink-0 text-[#ffb800]" />
-                <span className="shrink-0 text-[9px] font-black text-white">{format(row.amount)}</span>
+                <Ticket className="h-2.5 w-2.5 shrink-0 text-[#facd15]" />
+                <span className="min-w-0 truncate text-[9px] font-black text-white">{format(row.amount)}</span>
               </>
             ) : (
-              <span className="shrink-0 text-[9px] font-black text-emerald-400">{formatMult(row.cashout_at)}</span>
+              <span className="ml-auto shrink-0 text-[9px] font-black text-[#4ade80]">{formatMult(row.cashout_at)}</span>
             )}
           </div>
         ))}
+      </div>
+
+      {/* Dikey çizgi ve yukarı doğru döndürülmüş oyun adı. */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-0 w-3.5">
+        <span className="absolute inset-y-0 right-1.5 w-px bg-gradient-to-b from-transparent via-[#5fc9ff]/55 to-transparent" />
+        <span className="rk-vtext absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">CRASH ROCKET</span>
       </div>
     </aside>
   );

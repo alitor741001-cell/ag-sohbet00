@@ -1,9 +1,9 @@
 // Mekiğin uçuş yolu: sol alttan sağ yukarıya doğru yumuşak bir kavis.
 // Noktalar sahne oranlarıdır (0-1), böylece her ekranda aynı iz çizilir.
 export const FLIGHT_CURVE = {
-  start: { x: 0.44, y: 0.86 },
-  control: { x: 0.48, y: 0.38 },
-  end: { x: 0.87, y: 0.14 },
+  start: { x: 0.16, y: 0.88 },
+  control: { x: 0.3, y: 0.5 },
+  end: { x: 0.82, y: 0.16 },
 };
 
 // t = 0..1 arası ilerleme için Bezier noktası.

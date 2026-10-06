@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
-import { Film } from 'lucide-react';
+import { Rocket } from 'lucide-react';
 import { format, formatMult } from './rocketConfig';
 import RocketBetPanel from './RocketBetPanel';
 import RocketAutoDialog from './RocketAutoDialog';
 
-/** Alt panel: iki bağımsız bahis alanı ve aralarında film makarası göbeği. */
+/** Alt panel: iki bağımsız bahis alanı ve aralarında roket göbeği. */
 export default function RocketBetDock({ game }) {
   const phase = game.phase;
   const [autoEdit, setAutoEdit] = useState(null);
 
-  const build = (slot, tone) => {
+  const build = (slot) => {
     const rows = (game.bets || []).filter(
       (b) => b.user_id === game.me && (b.slot === 2 ? 2 : 1) === slot
     );
@@ -67,7 +67,6 @@ export default function RocketBetDock({ game }) {
     if (pending) disabled = true;
 
     return {
-      tone,
       amount,
       auto,
       locked: active,
@@ -85,10 +84,11 @@ export default function RocketBetDock({ game }) {
   return (
     <>
       <div className="relative flex items-stretch gap-2 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1">
-        <RocketBetPanel {...build(1, 'blue')} />
-        <RocketBetPanel {...build(2, 'gold')} />
+        <RocketBetPanel {...build(1)} />
+        <RocketBetPanel {...build(2)} />
+        <span aria-hidden="true" className="rk-spine" />
         <div className="rk-hub" aria-hidden="true">
-          <Film className="h-3.5 w-3.5 text-[#ffb800]" />
+          <Rocket className="h-3.5 w-3.5 text-[#facd15]" />
         </div>
       </div>
 
