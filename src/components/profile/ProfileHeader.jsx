@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Camera, Crown, Loader2, Shield, Users } from 'lucide-react';
+import { Camera, Crown, Loader2, Shield } from 'lucide-react';
 import RoleBadge from '@/components/RoleBadge';
 import XpAvatar from '@/components/xp/XpAvatar';
 import { isRedNameVip } from '@/lib/userLevels';
@@ -13,6 +13,8 @@ export default function ProfileHeader({ user, avatar, onAvatar, uploading }) {
   const isAdmin = user.role === 'admin';
   const hasRole = user.display_role || user.custom_role?.name;
   const xpStats = useXp([user.id])[user.id];
+  // Asistan etiketi rengi: erkeklerde mavi, kadınlarda pembe.
+  const assistantTone = user.gender === 'erkek' ? '#2E7DFF' : '#FF006E';
 
   const avatarBox = (
     <span className="block rounded-full p-[3px]" style={{ background: 'linear-gradient(135deg, #c62828, #f2ce6b)', boxShadow: '0 0 18px rgba(242,206,107,0.45), 0 0 34px rgba(198,40,40,0.35)' }}>
@@ -68,11 +70,14 @@ export default function ProfileHeader({ user, avatar, onAvatar, uploading }) {
           )}
         </div>
       )}
-      {/* Asistanlık etiketi: ajans asistanı olan kullanıcının profilinde görünür. */}
+      {/* Asistan etiketi: kadınlarda pembe, erkeklerde mavi. */}
       {user.agency_role === 'assistant' && (
         <div className="mt-2 flex items-center justify-center">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-[#F5C542]/55 bg-[#F5C542]/10 px-3 py-1 text-xs font-black text-[#F5C542]">
-            <Users className="h-3.5 w-3.5" /> ASİSTAN{user.agency_name ? ` • ${user.agency_name}` : ''}{user.agency_code ? ` (${user.agency_code})` : ''}
+          <span
+            className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-black"
+            style={{ borderColor: assistantTone, background: `${assistantTone}1f`, color: assistantTone }}
+          >
+            🤝 ASİSTAN{user.agency_name ? ` • ${user.agency_name}` : ''}{user.agency_code ? ` (${user.agency_code})` : ''}
           </span>
         </div>
       )}

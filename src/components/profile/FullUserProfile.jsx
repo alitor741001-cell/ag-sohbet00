@@ -190,9 +190,13 @@ export default function FullUserProfile({
                     <Mic2 className="h-3 w-3" /> 🎤 YAYINCI
                   </span>
                 )}
+                {/* Asistan etiketi: kadınlarda pembe, erkeklerde mavi. */}
                 {profile?.agency_role === 'assistant' && (
-                  <span className="flex items-center gap-1 rounded-full border border-[#F5C542]/50 bg-[#F5C542]/10 px-3 py-1 text-[11px] font-black text-[#F5C542]">
-                    🤝 ASİSTANLIK
+                  <span
+                    className="flex items-center gap-1 rounded-full border px-3 py-1 text-[11px] font-black"
+                    style={{ borderColor: palette.accent, background: palette.soft, color: palette.accent }}
+                  >
+                    🤝 ASİSTAN
                   </span>
                 )}
                 {ownerAgency ? (
