@@ -1,9 +1,9 @@
 import { Image } from '@/components/ui/image';
 import GiftVisual from '@/components/voice/scenes/GiftVisual';
 
-// Spor araba görselinin siyah zemini alfaya çevrildi: araba kutunun içinde değil,
-// gerçekten yolda gidiyor gibi görünür (bkz. public/gifts/spor-araba.png).
-const CAR_CUTOUT = '/gifts/spor-araba.png';
+// Spor araba görselinin siyah zemini şeffafa çevrildi: araba kutunun içinde değil,
+// gerçekten yolda gidiyor gibi görünür (bkz. public/gifts/spor-araba.webp).
+const CAR_CUTOUT = '/gifts/spor-araba.webp';
 
 /** Yol sahnesi: hediye arabanın üstünde, farları yanarak gece yolunda hızla geçer. */
 export default function SceneCar({ gift }) {
