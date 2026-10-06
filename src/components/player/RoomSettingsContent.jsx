@@ -12,10 +12,10 @@ export default function RoomSettingsContent({ room, canMod, participants, roomMo
   useEffect(() => { if (!room?.owner_id) return; base44.entities.RoomMod.filter({ owner_id: room.owner_id }, 'created_date', 100).then(setSavedMods).catch(() => {}); }, [room?.owner_id]);
   // Ayarlar kartları: siyah zemin + parlayan altın çerçeve.
   const button = `w-full flex items-center gap-3 px-3 py-3 text-sm font-semibold text-white transition-colors hover:border-[#FFD700]/80 ${neonCardClass('gold')}`;
-  const shareText = `FILMKEYFİ odasına katıl: ${window.location.href}`;
+  const shareText = `🎬🍿 Canlı odaya katıl: ${window.location.href}`;
   const shareWhatsApp = () => window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank', 'noopener,noreferrer');
   const shareInstagram = async () => {
-    if (navigator.share) await navigator.share({ title: room.name, text: 'FILMKEYFİ odasına katıl', url: window.location.href }).catch(() => {});
+    if (navigator.share) await navigator.share({ title: room.name, text: '🎬🍿 Canlı odaya katıl', url: window.location.href }).catch(() => {});
     else { await navigator.clipboard?.writeText(window.location.href); window.open('https://www.instagram.com/', '_blank', 'noopener,noreferrer'); }
   };
   const bannedUsers = room.banned_users || [];

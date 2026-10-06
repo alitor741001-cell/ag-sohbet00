@@ -12,7 +12,7 @@ export default function DownloadButtons({ variant = 'light' }) {
   }, []);
   const install = async (platform) => {
     if (platform === 'android' && prompt) { await prompt.prompt(); await prompt.userChoice; setPrompt(null); return; }
-    if (platform === 'ios') { if (navigator.share) await navigator.share({ title: 'FILMKEYFİ', url: window.location.href }); return; }
+    if (platform === 'ios') { if (navigator.share) await navigator.share({ title: document.title, url: window.location.href }); return; }
     setGuide('android');
   };
   const light = variant === 'light';
