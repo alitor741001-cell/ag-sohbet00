@@ -26,9 +26,15 @@ export default async function(req) {
       chat_enabled: 'chat_enabled' in raw ? raw.chat_enabled !== false : null,
       hidden: 'hidden' in raw ? !!raw.hidden : null,
       password: 'password' in raw ? String(raw.password || '').slice(0, 100) : null,
+      seat_count: 'seat_count' in raw ? Number(raw.seat_count) || 0 : null,
     } : null;
     // Kişisel odada kapasite sorulmaz: herkes girebilir, pratikte sınırsız.
     const PERSONAL_MAX_USERS = 250;
+    // Kurulumda seçilen sesli bölüm (mikrofon koltukları) odaya işlenir; oda içinden değiştirilebilir.
+    const SEAT_OPTIONS = [1, 2, 5, 8, 9, 12, 15, 20, 24];
+    const requestedSeats = Number(settings?.seat_count) || 0;
+    const voiceSeats = SEAT_OPTIONS.includes(requestedSeats) ? requestedSeats : 0;
+    const buildSeats = (count) => Array.from({ length: count }, (_, index) => ({ index, locked: false, muted: false }));
 
     // Gizli kullanıcı (VIP10+): kişisel odasında da kimliği görünmez.
     const ownerRecord = await base44.asServiceRole.entities.User.get(user.id).catch(() => null);
@@ -90,6 +96,11 @@ export default async function(req) {
         if (settings.name) patch.name = settings.name;
         if (settings.chat_enabled !== null) patch.chat_enabled = settings.chat_enabled;
         if (settings.password !== null) await applyPassword(existing[0].id, patch);
+        // Koltuk düzeni yalnızca oda hiç kurulmamışsa yazılır: içeride yapılan değişiklik korunur.
+        if (voiceSeats && !(existing[0].seats || []).length) {
+          patch.seat_count = voiceSeats;
+          patch.seats = buildSeats(voiceSeats);
+        }
       }
       await base44.asServiceRole.entities.Room.update(existing[0].id, patch);
       return Response.json({ id: existing[0].id });
@@ -119,6 +130,8 @@ export default async function(req) {
       chat_enabled: settings?.chat_enabled ?? true,
       password: '',
       voice_enabled: true,
+      seat_count: voiceSeats,
+      seats: voiceSeats ? buildSeats(voiceSeats) : [],
       is_playing: false,
       current_time: 0,
       status: 'active',

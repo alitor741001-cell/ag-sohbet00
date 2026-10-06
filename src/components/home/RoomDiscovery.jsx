@@ -1,6 +1,6 @@
 import { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Film, Gamepad2, Loader2, Mic, Search } from 'lucide-react';
+import { Film, Gamepad2, Loader2, Search, Users } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import RoomDiscoveryCard from '@/components/home/RoomDiscoveryCard';
@@ -32,7 +32,7 @@ export default function RoomDiscovery({ shortcuts = null }) {
   const [owners, setOwners] = useState({});
   const [titles, setTitles] = useState({});
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState('voice');
+  const [tab, setTab] = useState('friends');
   const [query, setQuery] = useState('');
   // Açık oyun: ana sayfadan seçilen oyun tam ekran oynanır.
   const [gameOpen, setGameOpen] = useState(null);
@@ -179,8 +179,11 @@ export default function RoomDiscovery({ shortcuts = null }) {
     return [...latest.values()].sort((a, b) => new Date(b.created_date || 0) - new Date(a.created_date || 0));
   }, [rooms]);
 
-  const voiceRooms = useMemo(() => uniqueRooms.filter((room) => isVoiceRoom(room)), [uniqueRooms]);
   const filmRooms = useMemo(() => uniqueRooms.filter((room) => !isVoiceRoom(room)), [uniqueRooms]);
+  // Sekmeler ilişkiye göre ayrılır: "Arkadaşlar" ekli arkadaşların odalarını, "Sesli+Film" ise
+  // arkadaş olmayanların odalarını gösterir; her iki sekmede sesli ve film odaları birlikte listelenir.
+  const friendRooms = useMemo(() => uniqueRooms.filter((room) => friendIds.includes(room.owner_id)), [uniqueRooms, friendIds]);
+  const otherRooms = useMemo(() => uniqueRooms.filter((room) => !friendIds.includes(room.owner_id)), [uniqueRooms, friendIds]);
 
   // Film odalarında açılan videonun adı: kayıtlı başlık anlamsızsa YouTube'dan bir kez okunur.
   useEffect(() => {
@@ -209,9 +212,9 @@ export default function RoomDiscovery({ shortcuts = null }) {
 
   // Arkadaşının bulunduğu odalar her zaman en üstte görünür.
   const list = useMemo(() => {
-    const tabRooms = tab === 'voice' ? voiceRooms : filmRooms;
+    const tabRooms = tab === 'friends' ? friendRooms : otherRooms;
     return [...tabRooms].sort((a, b) => Number(hasFriendInside(b)) - Number(hasFriendInside(a)));
-  }, [tab, voiceRooms, filmRooms, friendRoomIds]);
+  }, [tab, friendRooms, otherRooms, friendRoomIds]);
   const searching = query.trim().length > 0;
 
   // Arama açıkken iki sekme birlikte taranır: oda numarası veya üye kimliğiyle oda bulunur.
@@ -238,25 +241,25 @@ export default function RoomDiscovery({ shortcuts = null }) {
       <div className="mb-3 flex items-center gap-1.5 rounded-2xl border border-premium-gold/20 bg-black/25 p-1 backdrop-blur">
         <button
           type="button"
-          onClick={() => setTab('voice')}
+          onClick={() => setTab('friends')}
           className={`flex min-w-0 flex-1 items-center justify-center gap-1 rounded-xl py-2 text-[10.5px] font-extrabold transition ${
-            tab === 'voice'
+            tab === 'friends'
               ? 'border border-premium-gold/55 bg-gradient-to-r from-premium-red-deep via-premium-red to-premium-gold text-white shadow-[0_0_18px_-6px_rgba(198,40,40,0.95)]'
               : 'border border-transparent text-white/60'
           }`}
         >
-          <Mic className="h-4 w-4 shrink-0" /> <span className="truncate">Koltuklu Odalar</span>
+          <Users className="h-4 w-4 shrink-0" /> <span className="truncate">Arkadaşlar</span>
         </button>
         <button
           type="button"
-          onClick={() => setTab('film')}
+          onClick={() => setTab('all')}
           className={`flex min-w-0 flex-1 items-center justify-center gap-1 rounded-xl py-2 text-[10.5px] font-extrabold transition ${
-            tab === 'film'
+            tab === 'all'
               ? 'border border-premium-gold/55 bg-gradient-to-r from-premium-red-deep via-premium-red to-premium-gold text-white shadow-[0_0_18px_-6px_rgba(198,40,40,0.95)]'
               : 'border border-transparent text-white/60'
           }`}
         >
-          <Film className="h-4 w-4 shrink-0" /> <span className="truncate">Film Odaları</span>
+          <Film className="h-4 w-4 shrink-0" /> <span className="truncate">Sesli+Film</span>
         </button>
         <button
           type="button"
@@ -302,13 +305,13 @@ export default function RoomDiscovery({ shortcuts = null }) {
         ) : (
           <div className="premium-panel rounded-2xl px-4 py-8 text-center">
             <p className="text-sm font-bold text-white">
-              {tab === 'voice' ? 'Şu an açık koltuklu oda yok.' : 'Şu an açık film odası yok.'}
+              {tab === 'friends' ? 'Şu an arkadaşlarının açık odası yok.' : 'Şu an açık oda yok.'}
             </p>
             <Link
-              to={tab === 'voice' ? '/sesli-oda-kur' : '/oda-kur'}
+              to={tab === 'friends' ? '/arkadaslar' : '/oda-kur'}
               className="mt-2 inline-block rounded-lg border border-premium-gold/50 px-3 py-1.5 text-xs font-black text-premium-gold"
             >
-              {tab === 'voice' ? 'İlk koltuklu odayı sen aç →' : 'İlk film odasını sen aç →'}
+              {tab === 'friends' ? 'Arkadaş ekle →' : 'İlk odayı sen aç →'}
             </Link>
           </div>
         )
@@ -317,7 +320,7 @@ export default function RoomDiscovery({ shortcuts = null }) {
           <div className="mb-2 flex items-center gap-2">
             <span className="h-3 w-1 rounded-full bg-gradient-to-b from-premium-gold to-premium-red" />
             <h2 className="text-[10.5px] font-black tracking-[0.18em] text-premium-gold">
-              {searching ? 'ARAMA SONUCU' : tab === 'voice' ? 'CANLI KOLTUKLU ODALAR' : 'CANLI FİLM ODALARI'}
+              {searching ? 'ARAMA SONUCU' : tab === 'friends' ? 'ARKADAŞLARININ ODALARI' : 'CANLI SESLİ + FİLM ODALARI'}
             </h2>
             <span className="ml-auto text-[10px] font-bold text-white/40">{items.length} oda</span>
           </div>

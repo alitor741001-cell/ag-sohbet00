@@ -73,7 +73,7 @@ export default function RoomDiscoveryCard({ room, owner, kind, filmTitle, friend
 
         <span className="flex items-center gap-1">
           <span className="rounded-full border border-premium-gold/55 bg-gradient-to-r from-premium-red-deep to-premium-red px-2 py-0.5 text-[9.5px] font-black text-white shadow-[0_0_10px_-3px_rgba(198,40,40,0.9)]">
-            {isVoice ? 'Koltuklu' : 'Film'}
+            {isVoice ? 'Sesli' : 'Film'}
           </span>
           <span className="ml-auto flex items-center gap-1">
             {people.map((person) => (
