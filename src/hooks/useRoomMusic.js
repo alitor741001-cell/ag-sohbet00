@@ -3,7 +3,7 @@ import { base44 } from '@/api/base44Client';
 
 const VOLUME_KEY = 'filmykeyfi:roomMusicVolume';
 // Telefondan seçilen şarkı için üst sınır: yükleme uzun sürmesin.
-const MAX_TRACK_MB = 15;
+const MAX_TRACK_MB = 25;
 // İmzalı bağlantı şarkı boyunca geçerli kalır (6 saat).
 const URL_TTL = 21600;
 

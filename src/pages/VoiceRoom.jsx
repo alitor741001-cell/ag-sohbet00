@@ -1,6 +1,6 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Armchair, Eye, Gift, Loader2, Lock, LogOut, MessageSquare, Mic, MicOff, Music, Shield, ShieldAlert, Unlock, UserMinus, UserPlus, UserRound } from 'lucide-react';
+import { Armchair, Eye, Gift, Loader2, Lock, LogOut, MessageSquare, Mic, MicOff, MoreHorizontal, Shield, ShieldAlert, Unlock, UserMinus, UserPlus, UserRound } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useVoiceChat } from '@/hooks/useVoiceChat';
@@ -997,16 +997,17 @@ export default function VoiceRoom() {
               <Eye className="h-5 w-5 text-white/80" />
               <span className="text-sm font-bold tabular-nums">{participants.length}</span>
             </button>
-            {/* "…" yerine müzik: oda sahibi ve yöneticiler telefondan şarkı açıp yönetir.
-                Oda ayarları müzik penceresinin içinden açılır; şarkı çalarken tuş altın renkte parlar. */}
+            {/* "…" menüsü yalnızca oda sahibi ve yöneticilerde görünür; yetki verildiği/alındığı
+                an (oda kaydı canlı takip edilir) tuş sayfa yenilenmeden gelir veya kaybolur.
+                Müzik de bu menünün içinde: şarkı çalarken tuş altın renkte parlar. */}
             {canMod && (
               <button
                 type="button"
-                onClick={() => setMusicOpen(true)}
-                aria-label="Oda müziği"
+                onClick={() => setMenuOpen(true)}
+                aria-label="Oda ayarları"
                 className={`flex h-[clamp(38px,11vw,44px)] w-[clamp(38px,11vw,44px)] items-center justify-center rounded-full active:scale-95 transition-transform ${music.music?.is_playing ? 'bg-[#FFD700] text-black shadow-[0_0_16px_-4px_rgba(255,215,0,0.95)]' : 'bg-white/10'}`}
               >
-                <Music className="h-5 w-5" />
+                <MoreHorizontal className="h-5 w-5" />
               </button>
             )}
             <button type="button" onClick={() => setExitOpen(true)} aria-label="Odadan çık" className="flex h-[clamp(38px,11vw,44px)] w-[clamp(38px,11vw,44px)] items-center justify-center rounded-full bg-red-600 active:scale-95 transition-transform">
@@ -1110,6 +1111,8 @@ export default function VoiceRoom() {
       <VoiceRoomMenu
         open={menuOpen}
         onClose={() => setMenuOpen(false)}
+        musicPlaying={!!music.music?.is_playing}
+        onOpenMusic={() => setMusicOpen(true)}
         room={room}
         userId={user?.id}
         participants={participants}
@@ -1151,7 +1154,6 @@ export default function VoiceRoom() {
         uploading={music.uploading}
         onUpload={music.uploadTrack}
         onControl={music.control}
-        onOpenSettings={() => { setMusicOpen(false); setMenuOpen(true); }}
       />
 
       <GiftBoardSheet

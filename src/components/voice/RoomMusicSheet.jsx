@@ -1,7 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
-import { Loader2, Music, Pause, Play, Settings, Square, Upload, Volume2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Loader2, Music, Pause, Play, Square, Upload, Volume2 } from 'lucide-react';
 import VoiceSheet from '@/components/voice/VoiceSheet';
-import VoiceMenuTile from '@/components/voice/VoiceMenuTile';
 import { useToast } from '@/components/ui/use-toast';
 
 const clock = (seconds) => {
@@ -13,9 +12,8 @@ const clock = (seconds) => {
  * Oda müziği penceresi: oda sahibi ve yöneticiler telefondan şarkı seçer,
  * odadaki herkes aynı şarkıyı duyar ve kendi telefonunda sesini ayarlar.
  */
-export default function RoomMusicSheet({ open, onClose, music, volume, onVolume, isMod, uploading, onUpload, onControl, onOpenSettings }) {
+export default function RoomMusicSheet({ open, onClose, music, volume, onVolume, isMod, uploading, onUpload, onControl }) {
   const { toast } = useToast();
-  const fileRef = useRef(null);
   const [now, setNow] = useState(() => Date.now());
 
   // Süre yalnızca şarkı çalarken ve pencere açıkken ilerler.
@@ -34,7 +32,7 @@ export default function RoomMusicSheet({ open, onClose, music, volume, onVolume,
     event.target.value = '';
     if (!file) return;
     const result = await onUpload(file);
-    if (result === 'too-large') toast({ title: 'Şarkı çok büyük', description: 'En fazla 15 MB boyutunda bir şarkı seç.', variant: 'destructive' });
+    if (result === 'too-large') toast({ title: 'Şarkı çok büyük', description: 'En fazla 25 MB boyutunda bir şarkı seç.', variant: 'destructive' });
     else if (result === 'busy') toast({ title: 'Çok sık şarkı değiştiriliyor', description: 'Biraz bekleyip tekrar dene.', variant: 'destructive' });
     else if (result === 'error') toast({ title: 'Şarkı açılamadı', description: 'Dosyayı tekrar seç.', variant: 'destructive' });
     else if (result === 'ok') toast({ title: '🎵 Müzik açıldı', description: 'Odadaki herkes şarkıyı duyuyor.' });
@@ -66,9 +64,9 @@ export default function RoomMusicSheet({ open, onClose, music, volume, onVolume,
                 >
                   {music.is_playing ? <><Pause className="h-4 w-4" /> Duraklat</> : <><Play className="h-4 w-4" /> Çal</>}
                 </button>
-                <button type="button" onClick={() => fileRef.current?.click()} className="flex h-11 items-center justify-center gap-1.5 rounded-xl bg-white/10 text-sm font-bold">
+                <label htmlFor="room-music-file" className="flex h-11 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-white/10 text-sm font-bold">
                   <Upload className="h-4 w-4" /> Şarkı değiştir
-                </button>
+                </label>
                 <button type="button" onClick={() => onControl('stop')} className="flex h-11 items-center justify-center gap-1.5 rounded-xl bg-red-600 text-sm font-bold">
                   <Square className="h-4 w-4" /> Durdur
                 </button>
@@ -82,13 +80,12 @@ export default function RoomMusicSheet({ open, onClose, music, volume, onVolume,
               {isMod ? 'Telefonundaki şarkıyı seç; odadaki herkes aynı şarkıyı duyar.' : 'Müziği oda sahibi ve yöneticiler açabilir.'}
             </p>
             {isMod && (
-              <button
-                type="button"
-                onClick={() => fileRef.current?.click()}
-                className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#FFD700] text-sm font-bold text-black"
+              <label
+                htmlFor="room-music-file"
+                className="mt-3 flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#FFD700] text-sm font-bold text-black"
               >
                 <Upload className="h-4 w-4" /> Telefondan şarkı seç
-              </button>
+              </label>
             )}
           </div>
         )}
@@ -98,6 +95,11 @@ export default function RoomMusicSheet({ open, onClose, music, volume, onVolume,
           </p>
         )}
       </div>
+
+      {/* iPhone'da müzik dosyası Dosyalar'dan seçilir; Apple Music şarkıları korumalıdır. */}
+      <p className="mt-2 px-1 text-[11px] leading-snug text-white/45">
+        iPhone'da şarkıyı Dosyalar (Files) uygulamasında bulup oradan seç. Apple Music'te indirilen korumalı şarkılar yüklenemez.
+      </p>
 
       {/* Ses seviyesi yalnızca bu cihazda çalışır: herkes müziği kendi telefonunda kısar. */}
       <div className="mt-3 rounded-2xl border border-white/10 bg-black/60 p-3">
@@ -117,13 +119,14 @@ export default function RoomMusicSheet({ open, onClose, music, volume, onVolume,
         <p className="mt-2 text-[11px] text-white/45">Ses seviyesi yalnızca senin telefonunda değişir.</p>
       </div>
 
-      {isMod && (
-        <div className="mt-4">
-          <VoiceMenuTile icon={Settings} label="Oda Ayarları" tone="gold" onClick={onOpenSettings} />
-        </div>
-      )}
-
-      <input ref={fileRef} type="file" accept="audio/*" className="hidden" onChange={pick} />
+      {/* Seçici iPhone'da en güvenilir şekilde etiketle açılır: input görünmez ama sayfada durur. */}
+      <input
+        id="room-music-file"
+        type="file"
+        accept="audio/*,.mp3,.m4a,.aac,.m4b,.wav,.ogg,.oga,.opus,.flac,.mp4,.webm"
+        className="absolute h-px w-px overflow-hidden opacity-0"
+        onChange={pick}
+      />
     </VoiceSheet>
   );
 }
