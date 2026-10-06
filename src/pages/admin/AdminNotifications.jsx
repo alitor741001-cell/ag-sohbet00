@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
+import subscribeEntity from '@/components/data/entitySubscriptions';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
 import { useAdminNotifications, requestNotificationPermission } from '@/hooks/useAdminNotifications';
@@ -47,7 +48,7 @@ export default function AdminNotifications() {
   useEffect(() => {
     const loadUsers = () => base44.entities.User.list(500).then(setUsers).catch(() => {});
     loadUsers();
-    const unsubscribe = base44.entities.User.subscribe(loadUsers);
+    const unsubscribe = subscribeEntity('User', () => loadUsers());
     return () => unsubscribe?.();
   }, []);
 

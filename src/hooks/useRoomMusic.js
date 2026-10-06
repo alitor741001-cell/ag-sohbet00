@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { base44 } from '@/api/base44Client';
+import subscribeEntity from '@/components/data/entitySubscriptions';
 import useRoomMusicVolume from '@/hooks/useRoomMusicVolume';
 // Telefondan seçilen şarkı için üst sınır: yükleme uzun sürmesin.
 const MAX_TRACK_MB = 25;
@@ -64,7 +65,7 @@ export default function useRoomMusic(roomId, enabled) {
     base44.functions.invoke('voice-room', { room_id: roomId, action: 'music-state' })
       .then((response) => { if (alive) setMusic(response?.data?.music || null); })
       .catch(() => {});
-    const unsubscribe = base44.entities.RoomMusic.subscribe((event) => {
+    const unsubscribe = subscribeEntity('RoomMusic', (event) => {
       const row = event?.data;
       if (!row || row.room_id !== roomId) return;
       setMusic(event.type === 'delete' ? null : row);

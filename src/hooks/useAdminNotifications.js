@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
+import subscribeEntity from '@/components/data/entitySubscriptions';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 
 function urlBase64ToUint8Array(base64String) {
@@ -34,7 +35,7 @@ export function useAdminNotifications() {
   // Real-time subscription — admin panele girmeden de çalışan in-app bildirim
   useEffect(() => {
     if (!isAdmin || !user?.id) return;
-    const unsub = base44.entities.Notification.subscribe((ev) => {
+    const unsub = subscribeEntity('Notification', (ev) => {
       if (ev.type === 'create' && ev.data?.user_id === user.id && !notifiedRef.current.has(ev.data.id)) {
         notifiedRef.current.add(ev.data.id);
         setNotifications(prev => [ev.data, ...prev].slice(0, 50));

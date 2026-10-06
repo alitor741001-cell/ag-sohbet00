@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
+import subscribeEntity from '@/components/data/entitySubscriptions';
 import { useToast } from '@/components/ui/use-toast';
 import { isModerator } from '@/lib/roles';
 
@@ -15,7 +16,7 @@ export default function ProfileRoomActions({ userId, me, roomId }) {
     let active = true;
     setRoom(null); setError('');
     base44.functions.invoke('room-presence', { action: 'get', room_id: roomId }).then((res) => { if (active) setRoom(res.data?.room); }).catch(() => { if (active) setError('Oda bilgileri yüklenemedi.'); });
-    const off = base44.entities.Room.subscribe((event) => { if ((event.data?.id || event.id) === roomId) setRoom((prev) => event.type === 'delete' ? null : { ...prev, ...event.data }); });
+    const off = subscribeEntity('Room', (event) => { if ((event.data?.id || event.id) === roomId) setRoom((prev) => event.type === 'delete' ? null : { ...prev, ...event.data }); });
     return () => { active = false; off(); };
   }, [roomId]);
   if (!me || me.id === userId) return null;

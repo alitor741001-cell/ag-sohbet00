@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Check, Coins, Loader2, Trash2, X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import subscribeEntity from '@/components/data/entitySubscriptions';
 import { Image } from '@/components/ui/image';
 import { useToast } from '@/components/ui/use-toast';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
@@ -44,7 +45,7 @@ export default function CoinRequestList({ onReviewed }) {
   // Yeni başvuru geldiği anda liste kendiliğinden güncellenir — sayfayı yenilemek gerekmez.
   useEffect(() => {
     load();
-    const unsubscribe = base44.entities.CoinRequest.subscribe(() => load(true));
+    const unsubscribe = subscribeEntity('CoinRequest', () => load(true));
     const refresh = () => { if (document.visibilityState === 'visible') load(true); };
     const timer = setInterval(refresh, 20000);
     window.addEventListener('focus', refresh);

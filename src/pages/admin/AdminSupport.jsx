@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
+import subscribeEntity from '@/components/data/entitySubscriptions';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
 import { Send, Trash2, XCircle } from 'lucide-react';
@@ -28,7 +29,7 @@ export default function AdminSupport() {
   useEffect(load, []);
   // Gerçek zamanlı abonelik — polling yok
   useEffect(() => {
-    const unsub = base44.entities.SupportTicket.subscribe((ev) => {
+    const unsub = subscribeEntity('SupportTicket', (ev) => {
       if (ev.type === 'create') {
         setTickets((prev) => [ev.data, ...prev.filter((t) => t.id !== ev.data.id)]);
         setActive((cur) => cur || ev.data);
@@ -48,7 +49,7 @@ export default function AdminSupport() {
     if (!active) return;
     const fetchMsgs = () => base44.entities.SupportMessage.filter({ ticket_id: active.id }, 'created_date', 200).then((m) => { setMessages(m); setTimeout(() => endRef.current?.scrollIntoView(), 50); }).catch(() => {});
     fetchMsgs();
-    const unsub = base44.entities.SupportMessage.subscribe((ev) => {
+    const unsub = subscribeEntity('SupportMessage', (ev) => {
       if (ev.type === 'create' && ev.data?.ticket_id === active.id) { setMessages((p) => p.some((m) => m.id === ev.data.id) ? p : [...p, ev.data]); setTimeout(() => endRef.current?.scrollIntoView(), 50); }
       if (ev.type === 'delete' && ev.data?.ticket_id === active.id) { setMessages((p) => p.filter((m) => m.id !== ev.data.id)); }
     });

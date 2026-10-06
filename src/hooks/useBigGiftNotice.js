@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { base44 } from '@/api/base44Client';
+import subscribeEntity from '@/components/data/entitySubscriptions';
 
 // Sohbet satırı bu kadar süre görünür kalır — geç fark edilse de tıklanabilir.
 const VISIBLE_MS = 120000;
@@ -27,7 +28,7 @@ export default function useBigGiftNotice(roomId) {
   }, [roomId]);
 
   useEffect(() => {
-    const unsubscribe = base44.entities.BigGiftAlert.subscribe((event) => {
+    const unsubscribe = subscribeEntity('BigGiftAlert', (event) => {
       if (event?.type === 'create' && event.data) accept({ ...event.data, id: event.id });
     });
     const poll = () => base44.entities.BigGiftAlert.list('-created_date', 3)

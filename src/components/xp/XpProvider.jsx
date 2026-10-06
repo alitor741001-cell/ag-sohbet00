@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import subscribeEntity from '@/components/data/entitySubscriptions';
 import { applyUserXp, userXpKey, xpConfigKey } from '@/components/xp/xpCache';
 import { clearFrameCaches } from '@/components/xp/frameTransparency';
 
@@ -8,7 +9,7 @@ import { clearFrameCaches } from '@/components/xp/frameTransparency';
 export default function XpProvider({ children }) {
   const queryClient = useQueryClient();
   useEffect(() => {
-    const offXp = base44.entities.UserXp.subscribe((event) => {
+    const offXp = subscribeEntity('UserXp', (event) => {
       if (event.type === 'delete') queryClient.invalidateQueries({ queryKey: userXpKey });
       else applyUserXp(queryClient, event.data);
     });
@@ -27,8 +28,8 @@ export default function XpProvider({ children }) {
     });
     };
     const applyXpSettings = (event) => queryClient.setQueriesData({ queryKey: xpConfigKey }, (current) => current ? { ...current, settings: event.type === 'delete' ? current.settings : { ...current.settings, ...event.data } } : current);
-    const offFrames = base44.entities.XpFrame.subscribe(applyXpFrame);
-    const offSettings = base44.entities.XpSettings.subscribe(applyXpSettings);
+    const offFrames = subscribeEntity('XpFrame', applyXpFrame);
+    const offSettings = subscribeEntity('XpSettings', applyXpSettings);
     return () => { offXp(); offFrames(); offSettings(); };
   }, [queryClient]);
   return children;

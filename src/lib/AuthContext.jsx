@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
+import subscribeEntity from '@/components/data/entitySubscriptions';
 import { appParams } from '@/lib/app-params';
 import { createAxiosClient } from '@base44/sdk/dist/utils/axios-client';
 import { detectConnectionType } from '@/lib/connectionType';
@@ -25,7 +26,7 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     if (!user?.id) return;
-    const unsubscribe = base44.entities.User.subscribe((event) => {
+    const unsubscribe = subscribeEntity('User', (event) => {
       const changedId = event.data?.id || event.id;
       if (changedId !== user.id) return;
       if (event.type === 'delete') {

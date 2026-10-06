@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { MessageCircle, UsersRound, Shield, UserPlus, Search, SlidersHorizontal } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
+import subscribeEntity from '@/components/data/entitySubscriptions';
 import ConversationList from '@/components/friends/ConversationList';
 import FriendsPanel from '@/components/friends/FriendsPanel';
 import ChatPanel from '@/components/friends/ChatPanel';
@@ -25,7 +26,7 @@ export default function Friends() {
     load();
     // Odalardan çok sık güncelleme gelir: liste yeniden çekilirken kısa bir bekleme
     // ile tek çağrıda toplanır, arkadaşların oda durumu yine canlı görünür.
-    const unsub = base44.entities.Room.subscribe(() => { clearTimeout(timer); timer = setTimeout(load, 2500); });
+    const unsub = subscribeEntity('Room', () => { clearTimeout(timer); timer = setTimeout(load, 2500); });
     return () => { clearTimeout(timer); unsub(); };
   }, []);
   const [params, setParams] = useSearchParams();

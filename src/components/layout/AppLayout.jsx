@@ -1,6 +1,7 @@
 import { Suspense, useEffect, useRef } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
+import subscribeEntity from '@/components/data/entitySubscriptions';
 import { useCurrentUser, membershipActive } from '@/lib/useCurrentUser';
 import { useAuth } from '@/lib/AuthContext';
 import Navbar from '@/components/layout/Navbar';
@@ -118,7 +119,7 @@ export default function AppLayout() {
   // Gerçek zamanlı askıya alma tespiti
   useEffect(() => {
     if (!user) return;
-    const unsubNotif = base44.entities.Notification.subscribe((ev) => {
+    const unsubNotif = subscribeEntity('Notification', (ev) => {
       if (ev.type !== 'create' || ev.data?.user_id !== user.id) return;
       if (ev.data?.type === 'suspended') {
         triggerBanNotice('banned');
@@ -132,7 +133,7 @@ export default function AppLayout() {
       if (ev.data?.type === 'assistant_invite' || ev.data?.type === 'assistant_accepted') return;
       toast({ title: ev.data?.title || 'Bildirim', description: ev.data?.body });
     });
-    const unsubUser = base44.entities.User.subscribe((ev) => {
+    const unsubUser = subscribeEntity('User', (ev) => {
       if (ev.type === 'update' && ev.data?.id === user.id && ev.data?.is_banned) {
         triggerBanNotice('banned');
         base44.auth.logout().catch(() => {});

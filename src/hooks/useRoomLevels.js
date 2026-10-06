@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { base44 } from '@/api/base44Client';
+import subscribeEntity from '@/components/data/entitySubscriptions';
 
 /**
  * Odadaki kişilerin oda LVL'i.
@@ -30,7 +31,7 @@ export default function useRoomLevels(userIds = []) {
       .catch(() => {});
 
     // Seviye atlama anında ekrana düşer — oda yenilenmez.
-    const unsubscribe = base44.entities.RoomLevel.subscribe((event) => {
+    const unsubscribe = subscribeEntity('RoomLevel', (event) => {
       const row = event?.data;
       if (!row?.user_id || !ids.includes(row.user_id)) return;
       if (event.type === 'delete') {

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { base44 } from '@/api/base44Client';
+import subscribeEntity from '@/components/data/entitySubscriptions';
 import rocketRequests from '@/components/games/rocket/rocketRequests';
 import {
   multiplierAt,
@@ -210,7 +211,7 @@ export default function useRocketGame() {
   // beklemez, odadaki herkes aynı anda görür. Yayın gelince cüzdan ve bahisler
   // tek istekle arkadan tazelenir.
   useEffect(() => {
-    const unsubscribe = base44.entities.RocketLive.subscribe((event) => {
+    const unsubscribe = subscribeEntity('RocketLive', (event) => {
       const live = event?.data;
       if (!live || typeof live.round_no !== 'number') return;
       setData((prev) => {

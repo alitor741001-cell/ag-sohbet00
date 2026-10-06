@@ -33,7 +33,7 @@ export default function useRoomTyping(roomId, user) {
       clearTimeout(idleTimer); idleTimer = setTimeout(removeOwn, 3000);
       if (busy || Date.now() - lastWrite < 1200) return;
       busy = true; lastWrite = Date.now();
-      const data = { updated_at: new Date().toISOString() };
+      const data = { user_id: user.id, updated_at: new Date().toISOString() };
       const write = ownId
         ? base44.entities.RoomTyping.update(ownId, data)
         : base44.entities.RoomTyping.create({ room_id: roomId, user_id: user.id, user_name: user.username || user.full_name || 'Kullanıcı', ...data });

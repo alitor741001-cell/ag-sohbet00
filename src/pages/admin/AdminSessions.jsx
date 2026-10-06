@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
+import subscribeEntity from '@/components/data/entitySubscriptions';
 import { Smartphone, Monitor, Tablet, Wifi, WifiOff, Search, Trash2, ShieldCheck, AlertTriangle, Copy } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -48,7 +49,7 @@ export default function AdminSessions() {
 
   useEffect(() => {
     load();
-    const off = base44.entities.UserSession.subscribe((ev) => {
+    const off = subscribeEntity('UserSession', (ev) => {
       if (ev.type === 'create') setSessions((p) => [ev.data, ...p.filter((x) => x.id !== ev.data.id)]);
       else if (ev.type === 'update') setSessions((p) => p.map((x) => (x.id === ev.data.id ? { ...x, ...ev.data } : x)));
       else if (ev.type === 'delete') setSessions((p) => p.filter((x) => x.id !== ev.id));

@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
+import subscribeEntity from '@/components/data/entitySubscriptions';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { Send, X, Search, Ban, Trash2, ShieldOff, ShieldCheck, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
@@ -43,7 +44,7 @@ export default function LiveChatButton({ placement = 'top' }) {
         t.forEach((tk) => seenIds.current.add(tk.id));
       })
       .catch(() => {});
-    const unsub = base44.entities.SupportTicket.subscribe((ev) => {
+    const unsub = subscribeEntity('SupportTicket', (ev) => {
       if (ev.type === 'create' && ev.data?.status !== 'closed') {
         setTickets((p) => [ev.data, ...p.filter((t) => t.id !== ev.data.id)]);
         if (!seenIds.current.has(ev.data.id)) {
@@ -74,7 +75,7 @@ export default function LiveChatButton({ placement = 'top' }) {
     base44.entities.SupportMessage.filter({ ticket_id: active.id }, 'created_date', 100)
       .then((m) => { setMessages(m); setTimeout(() => endRef.current?.scrollIntoView(), 50); })
       .catch(() => {});
-    const unsub = base44.entities.SupportMessage.subscribe((ev) => {
+    const unsub = subscribeEntity('SupportMessage', (ev) => {
       if (ev.type !== 'create') return;
       const incoming = ev.data?.sender === 'user';
       const isVisibleThread = open && ev.data?.ticket_id === active.id && !selectedUser && !isSearching;

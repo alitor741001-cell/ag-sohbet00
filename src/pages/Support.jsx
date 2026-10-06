@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
+import subscribeEntity from '@/components/data/entitySubscriptions';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
 import { MessageCircle, Send, Image as ImageIcon, Headset, X } from 'lucide-react';
@@ -36,7 +37,7 @@ export default function Support() {
       setMessages(m); setTimeout(() => endRef.current?.scrollIntoView(), 50);
     }).catch(() => {});
     fetchMsgs();
-    const unsubMsg = base44.entities.SupportMessage.subscribe((ev) => {
+    const unsubMsg = subscribeEntity('SupportMessage', (ev) => {
       if (ev.type === 'create' && ev.data?.ticket_id === active.id) {
         setMessages((p) => p.some((m) => m.id === ev.data.id) ? p : [...p, ev.data]);
         setTimeout(() => endRef.current?.scrollIntoView(), 50);
@@ -46,7 +47,7 @@ export default function Support() {
       }
     });
     // Admin kapatma/silme işlemlerini yakalamak için abonelik
-    const unsubTicket = base44.entities.SupportTicket.subscribe((ev) => {
+    const unsubTicket = subscribeEntity('SupportTicket', (ev) => {
       if (ev.type === 'update' && ev.data?.id === active.id && ev.data?.status === 'closed') {
         setMessages([]);
         setActive(null);

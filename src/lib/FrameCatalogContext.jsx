@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { base44 } from '@/api/base44Client';
+import subscribeEntity from '@/components/data/entitySubscriptions';
 import { FRAME_DEFINITIONS } from '@/lib/roles';
 import { clearFrameCaches } from '@/components/xp/frameTransparency';
 
@@ -8,7 +9,7 @@ const FrameCatalogContext = createContext({ frames: FRAME_DEFINITIONS, refreshFr
 export function FrameCatalogProvider({ children }) {
   const [specialFrames, setSpecialFrames] = useState([]);
   const refreshFrames = useCallback(() => { clearFrameCaches(); return base44.entities.SpecialFrame.filter({ active: true }, '-created_date', 100).then(setSpecialFrames); }, []);
-  useEffect(() => { refreshFrames(); const off = base44.entities.SpecialFrame.subscribe(refreshFrames); return off; }, [refreshFrames]);
+  useEffect(() => { refreshFrames(); const off = subscribeEntity('SpecialFrame', refreshFrames); return off; }, [refreshFrames]);
   const frames = useMemo(() => {
     const custom = Object.fromEntries(specialFrames.map((item) => [`special:${item.id}`, {
       label: item.name, color: item.theme_color || '#f97316', image_url: item.image_url,

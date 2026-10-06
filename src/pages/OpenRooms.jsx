@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
+import subscribeEntity from '@/components/data/entitySubscriptions';
 import { Users, Lock, Loader2, Shield, Star, DoorOpen, Search, SlidersHorizontal, Plus, Mic } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import VoiceRoomCard from '@/components/voice/VoiceRoomCard';
@@ -51,7 +52,7 @@ export default function OpenRooms() {
       } finally { setLoading(false); }
     };
     load();
-    const unsub = base44.entities.Room.subscribe((ev) => {
+    const unsub = subscribeEntity('Room', (ev) => {
       const isVisible = (x) => x.status === 'active' && !x.hidden;
       if (ev.type === 'create') {
         if (isVoiceRoom(ev.data)) {

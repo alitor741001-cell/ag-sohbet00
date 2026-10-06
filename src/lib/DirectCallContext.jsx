@@ -3,6 +3,7 @@ import { RoomEvent, Track, createLocalVideoTrack } from 'livekit-client';
 import NativeCallAudio, { NativeCallTrack } from '@/lib/NativeCallAudio';
 import { claimCallAudioFocus, releaseCallAudioFocus } from '@/lib/callAudioFocus';
 import { base44 } from '@/api/base44Client';
+import subscribeEntity from '@/components/data/entitySubscriptions';
 import { createVoiceOutput, ensureMicTrack, releaseMic, resetAudioRouting, startRingtone, unlockVoicePlayback } from '@/lib/callAudio';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import useCallModeration from '@/hooks/useCallModeration';
@@ -485,7 +486,7 @@ export default function DirectCallProvider({ children }) {
       if (ENDED_STATUSES.includes(record.status)) teardown();
     };
 
-    const unsubscribe = base44.entities.DirectCall.subscribe((event) => {
+    const unsubscribe = subscribeEntity('DirectCall', (event) => {
       applyRecord(event?.data, event?.type);
     });
 

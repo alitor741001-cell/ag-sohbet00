@@ -60,7 +60,7 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
     base44.entities.RoomMod.filter({ owner_id: ownerId }, 'created_date', 100)
       .then((mods) => setRoomMods(mods))
       .catch(() => {});
-    const unsub = base44.entities.RoomMod.subscribe((ev) => {
+    const unsub = subscribeEntity('RoomMod', (ev) => {
       if (ev.data?.owner_id !== ownerId) return;
       base44.entities.RoomMod.filter({ owner_id: ownerId }, 'created_date', 100)
         .then((mods) => setRoomMods(mods))

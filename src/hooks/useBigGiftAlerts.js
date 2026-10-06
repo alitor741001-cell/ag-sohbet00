@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { base44 } from '@/api/base44Client';
+import subscribeEntity from '@/components/data/entitySubscriptions';
 
 // Duyuru ekranda bu kadar kalır (CSS big-gift-life süresiyle aynı).
 const VISIBLE_MS = 7000;
@@ -27,7 +28,7 @@ export default function useBigGiftAlerts() {
   }, []);
 
   useEffect(() => {
-    const unsubscribe = base44.entities.BigGiftAlert.subscribe((event) => {
+    const unsubscribe = subscribeEntity('BigGiftAlert', (event) => {
       if (event?.type === 'create' && event.data) accept({ ...event.data, id: event.id });
     });
     const poll = () => base44.entities.BigGiftAlert.list('-created_date', MAX_QUEUE)

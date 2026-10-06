@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
+import subscribeEntity from '@/components/data/entitySubscriptions';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { Image } from '@/components/ui/image';
 import { ArrowLeft, Crown, Hash, MessageCircle, UserPlus, Copy, Flag } from 'lucide-react';
@@ -39,7 +40,7 @@ export default function UserProfile({ userId, roomIdOverride, onBack, onMessage,
       .catch((e) => { if (active) { if (e?.response?.status === 404) setProfile({ account_status: 'deleted' }); else setErr(e.response?.data?.error || e.message); } })
       .finally(() => { if (active) setLoading(false); });
     load();
-    const off = base44.entities.User.subscribe((event) => { if ((event.data?.id || event.id) === id) load(); });
+    const off = subscribeEntity('User', (event) => { if ((event.data?.id || event.id) === id) load(); });
     return () => { active = false; off(); };
   }, [id]);
 
@@ -50,7 +51,7 @@ export default function UserProfile({ userId, roomIdOverride, onBack, onMessage,
     const load = () => base44.entities.Friendship.filter({ members: me.id }, '-updated_date', 200)
       .then((items) => { if (active) setRelation(items.find((item) => item.members?.includes(id)) || null); });
     load();
-    const off = base44.entities.Friendship.subscribe(load);
+    const off = subscribeEntity('Friendship', () => load());
     return () => { active = false; off(); };
   }, [id, me?.id]);
 

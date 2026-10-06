@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
+import subscribeEntity from '@/components/data/entitySubscriptions';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { Bell, Check, Trash2, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
@@ -41,7 +42,7 @@ export default function Notifications() {
   useEffect(() => {
     load();
     loadInvites();
-    const unsub = base44.entities.Notification.subscribe(load);
+    const unsub = subscribeEntity('Notification', () => load());
     // Yoklama yedeği — realtime kaçırsa diye 30sn'de bir; sekme arkadayken durur.
     const interval = setInterval(() => { if (document.visibilityState !== 'hidden') { load(); loadInvites(); } }, 30000);
     return () => { unsub(); clearInterval(interval); };

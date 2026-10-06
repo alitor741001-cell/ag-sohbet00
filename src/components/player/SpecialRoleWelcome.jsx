@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { base44 } from '@/api/base44Client';
+import subscribeEntity from '@/components/data/entitySubscriptions';
 import RoomWelcomeVisual from '@/components/player/RoomWelcomeVisual';
 
 const VISUAL_BY_ROLE = {
@@ -26,7 +27,7 @@ export default function SpecialRoleWelcome({ roomId }) {
   useEffect(() => {
     base44.entities.RoomMessage.filter({ room_id: roomId, type: 'system' }, '-created_date', 12)
       .then((items) => items.filter((item) => Date.now() - new Date(item.created_date).getTime() < 15000).reverse().forEach(processMessage)).catch(() => {});
-    const off = base44.entities.RoomMessage.subscribe((event) => event.type === 'create' && processMessage(event.data));
+    const off = subscribeEntity('RoomMessage', (event) => event.type === 'create' && processMessage(event.data));
     return off;
   }, [roomId, processMessage]);
   useEffect(() => {

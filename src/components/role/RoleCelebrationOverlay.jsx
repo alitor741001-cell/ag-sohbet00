@@ -4,6 +4,7 @@
 import { useEffect, useRef, useState } from 'react';
 import confetti from 'canvas-confetti';
 import { base44 } from '@/api/base44Client';
+import subscribeEntity from '@/components/data/entitySubscriptions';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { getRoleInfo } from '@/lib/roles';
 import { useToast } from '@/components/ui/use-toast';
@@ -26,7 +27,7 @@ export default function RoleCelebrationOverlay() {
       prevFrameRef.current = user.profile_frame || '';
     }
 
-    const unsub = base44.entities.User.subscribe((ev) => {
+    const unsub = subscribeEntity('User', (ev) => {
       if (ev.type !== 'update' || ev.data?.id !== user.id) return;
       const newRole = ev.data.display_role || '';
       const newCustom = JSON.stringify(ev.data.custom_role || null);

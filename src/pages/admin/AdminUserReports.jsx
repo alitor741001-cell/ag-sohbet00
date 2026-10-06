@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
+import subscribeEntity from '@/components/data/entitySubscriptions';
 import { Flag, X, Trash2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { Image } from '@/components/ui/image';
@@ -16,7 +17,7 @@ export default function AdminUserReports() {
   };
   useEffect(() => {
     load();
-    const unsub = base44.entities.Report.subscribe(() => load());
+    const unsub = subscribeEntity('Report', () => load());
     return () => unsub();
   }, []);
 

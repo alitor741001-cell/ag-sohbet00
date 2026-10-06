@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import subscribeEntity from '@/components/data/entitySubscriptions';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 
 /** Sistem bildirim butonu: tüm bildirimlerin okunmamış sayısını gösterir,
@@ -17,9 +18,9 @@ export default function NotificationBell() {
       .then((rows) => setUnread(rows.filter((n) => !n.read).length))
       .catch(() => {});
     load();
-    const unsub = base44.entities.Notification.subscribe(load);
+    const unsub = subscribeEntity('Notification', () => load());
     // Yoklama yedeği — realtime kaçırsa diye 30 saniyede bir.
-    const interval = setInterval(() => { if (document.visibilityState !== 'hidden') load(); }, 30000);
+    const interval = setInterval(() => { if (document.visibilityState !== 'hidden') load(); }, 120000);
     return () => { unsub(); clearInterval(interval); };
   }, [user?.id]);
 

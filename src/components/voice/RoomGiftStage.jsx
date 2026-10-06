@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { base44 } from '@/api/base44Client';
+import subscribeEntity from '@/components/data/entitySubscriptions';
 import GiftScene from '@/components/voice/GiftScene';
 import useGiftAlerts from '@/hooks/useGiftAlerts';
 import { useGiftCatalog } from '@/hooks/useGiftCatalog';
@@ -21,7 +22,7 @@ export default function RoomGiftStage({ roomId }) {
     base44.entities.RoomMessage.filter({ room_id: roomId, type: 'gift' }, '-created_date', 20)
       .then((list) => { if (active) setMessages([...list].reverse()); })
       .catch(() => {});
-    const unsubscribe = base44.entities.RoomMessage.subscribe((event) => {
+    const unsubscribe = subscribeEntity('RoomMessage', (event) => {
       const data = event?.data;
       if (event.type !== 'create' || !data || data.room_id !== roomId || data.type !== 'gift') return;
       setMessages((prev) => (prev.some((item) => item.id === event.id) ? prev : [...prev, { ...data, id: event.id }].slice(-40)));

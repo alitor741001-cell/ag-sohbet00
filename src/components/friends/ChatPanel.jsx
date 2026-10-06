@@ -3,6 +3,7 @@ import { ArrowLeft, Send, Settings, Phone, Trash2, X, Image as ImageIcon, Check,
 import { useDirectCall } from '@/lib/DirectCallContext';
 import { Image } from '@/components/ui/image';
 import { base44 } from '@/api/base44Client';
+import subscribeEntity from '@/components/data/entitySubscriptions';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
 import useChatMessages from '@/hooks/useChatMessages';
@@ -124,7 +125,7 @@ export default function ChatPanel({ conversation, userId, onBack, online, embedd
     setReadReceiptsDisabledFor(conversation.read_receipts_disabled_for || []);
     setDndFor(conversation.dnd_for || []);
     setCallDisabledFor(conversation.call_disabled_for || []);
-    const unsub = base44.entities.Conversation.subscribe((event) => {
+    const unsub = subscribeEntity('Conversation', (event) => {
       if ((event.data?.id || event.id) !== conversation.id) return;
       if (Array.isArray(event.data?.offline_for)) setOfflineFor(event.data.offline_for);
       if (Array.isArray(event.data?.read_receipts_disabled_for)) setReadReceiptsDisabledFor(event.data.read_receipts_disabled_for);
@@ -150,8 +151,8 @@ export default function ChatPanel({ conversation, userId, onBack, online, embedd
     };
     loadProfile();
     fetchFriendship();
-    const unsub = base44.entities.Friendship.subscribe(() => fetchFriendship());
-    const unsubUser = base44.entities.User.subscribe((event) => {
+    const unsub = subscribeEntity('Friendship', () => fetchFriendship());
+    const unsubUser = subscribeEntity('User', (event) => {
       if ((event.data?.id || event.id) === friendId) loadProfile();
     });
     return () => { active = false; unsub(); unsubUser(); };
