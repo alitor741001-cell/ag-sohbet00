@@ -17,7 +17,7 @@ export default function CashOutMarkers({ bets }) {
     .slice(0, MAX_MARKERS);
 
   return (
-    <div className="pointer-events-none absolute inset-0 z-10 overflow-hidden">
+    <div className="pointer-events-none absolute inset-0 z-40 overflow-hidden">
       {cashed.map((bet) => {
         const point = pointForMult(bet.cashout_at);
         return (

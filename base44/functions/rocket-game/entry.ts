@@ -9,6 +9,7 @@ import {
   BETTING_MS,
   GAP_MS,
   DEFAULT_ROCKET_BET,
+  MAX_ROCKET_AUTO,
 } from '../../shared/rocketEngine.ts';
 
 const START_COINS = 100000;
@@ -18,7 +19,7 @@ const LEGACY_MAX_COINS = 1000000000;
 let historyCache = { key: '', rows: [] };
 
 // Otomatik çekilme kademeleri: 0 = kapalı.
-const AUTO_LEVELS = [0, 1.1, 1.2, 1.5, 2, 3, 5, 7, 10];
+const AUTO_LEVELS = [0, 1.1, 1.2, 1.5, 2, 3, 5, 7, 10, 25, 50, 100, 250, 500];
 
 const betSlot = (bet) => (bet.slot === 2 ? 2 : 1);
 const betField = (slot) => (slot === 2 ? 'rocket_bet_2' : 'rocket_bet');
@@ -38,7 +39,7 @@ function shiftAuto(current, direction) {
 function clampAuto(value) {
   const n = Number(value);
   if (!Number.isFinite(n) || n <= 1) return 0;
-  return Math.min(100, Math.round(n * 100) / 100);
+  return Math.min(MAX_ROCKET_AUTO, Math.round(n * 100) / 100);
 }
 
 

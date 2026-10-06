@@ -13,7 +13,7 @@ import {
 
 // Tur durumu canlı yayından gelir; yoklama yalnızca çakılma anını yakalamak
 // için çalışır. Seyrek tutulur ki istek bütçesi oyuncunun basışlarına kalsın.
-const POLL_FLIGHT = 4000;
+const POLL_FLIGHT = 2000;
 // Çakılma sonrası yeni tur yoklanır (tur arası bekleme kadar sonra).
 const POLL_CRASHED = 2200;
 const POLL_BETTING = 9000;
@@ -21,7 +21,8 @@ const POLL_BETTING = 9000;
 const POLL_COOLDOWN = 6000;
 // Uçuş sırasında bekleme kısa tutulur: çakılma anı ve gerçek çarpan yakalanır.
 const POLL_COOLDOWN_FLIGHT = 3000;
-const CLOCK_TICK = 50;
+// Ekran tazelemesi: çarpan ve geri sayım okunaklı akar, gereksiz çizim olmaz.
+const CLOCK_TICK = 100;
 // Otomatik hedef ok tuşlarına hızlı basmak tek istek üretir.
 const AUTO_SAVE_MS = 600;
 
@@ -82,6 +83,13 @@ export default function useRocketGame() {
   const autoSaveRef = useRef({});
   const betAmtRef = useRef({ 1: DEFAULT_ROCKET_BET, 2: DEFAULT_ROCKET_BET });
   const autoAmtRef = useRef({ 1: 0, 2: 0 });
+
+  // Uçuş animasyonu her karede sunucu saatiyle akar: yoklama gecikse de roket
+  // ile çarpan aynı anda ilerler.
+  const getNow = useCallback(
+    () => serverNowRef.current + (Date.now() - fetchedAtRef.current),
+    []
+  );
 
   const applyResult = useCallback((res) => {
     if (!res) return;
@@ -417,6 +425,10 @@ export default function useRocketGame() {
   if (phase === 'betting' && launchAt) {
     countdown = Math.max(0, Math.ceil((launchAt - serverNow) / 1000));
   }
+  // Ortadaki halkanın geri sayımla dolması için kalan süre (ms).
+  const countdownMs = phase === 'betting' && launchAt ? Math.max(0, launchAt - serverNow) : null;
+  // Uçuş animasyonunun zaman tabanı: turun kalkış anı (sunucu saati).
+  const startedAt = round?.started_at ? new Date(round.started_at).getTime() : null;
 
   // İki bahis alanı için aktif bahisler.
   const myBets = { 1: null, 2: null };
@@ -472,6 +484,9 @@ export default function useRocketGame() {
     displayMult,
     liveColor: MULT_COLOR_CLASS[colorForMult(liveMult)],
     countdown,
+    countdownMs,
+    startedAt,
+    getNow,
     ledger,
     loadLedger,
     busy,

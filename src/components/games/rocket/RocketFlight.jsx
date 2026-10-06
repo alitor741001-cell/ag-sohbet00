@@ -9,7 +9,7 @@ import { FLIGHT_CURVE } from './rocketPath';
  */
 export default function RocketFlight({ shipRef, flameRef, trailRef }) {
   return (
-    <div className="pointer-events-none absolute inset-0 z-20 overflow-hidden">
+    <div className="pointer-events-none absolute inset-0 z-50 overflow-hidden">
       {/* Kalkış rampası: roket geri sayım ve hazırlık boyunca burada bekler. */}
       <div
         className="rk-pad absolute"

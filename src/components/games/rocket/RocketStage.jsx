@@ -21,6 +21,7 @@ export default function RocketStage({ game }) {
   const flight = useRocketFlight({
     phase,
     startedAt: game.startedAt,
+    crashMult,
     getNow: game.getNow,
     size,
     roundNo: round?.round_no,
@@ -49,7 +50,7 @@ export default function RocketStage({ game }) {
       {crashed && (
         <div
           key={round?.round_no}
-          className="rk-burst pointer-events-none absolute z-30 h-40 w-40 -translate-x-1/2 -translate-y-1/2"
+          className="rk-burst pointer-events-none absolute z-40 h-40 w-40 -translate-x-1/2 -translate-y-1/2"
           style={{ left: `${burst.x * 100}%`, top: `${burst.y * 100}%` }}
         />
       )}

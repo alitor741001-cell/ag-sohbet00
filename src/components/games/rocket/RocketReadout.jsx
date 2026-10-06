@@ -29,8 +29,8 @@ export default function RocketReadout({ phase, mult, countdown, countdownMs, rou
 
         <div className="rk-dial-core">
           <p
-            key={`${roundNo}-${phase}-${betting ? seconds : Math.round((mult || 1) * 100)}`}
-            className={`rk-mult leading-none ${betting ? 'text-[44px]' : 'text-[52px]'} ${
+            key={`${roundNo}-${phase}-${betting ? seconds : ''}`}
+            className={`rk-mult leading-none text-[clamp(26px,8.5vw,46px)] ${
               crashed ? 'rk-mult-crash' : betting ? 'text-[#cdeeff]' : MULT_COLOR_CLASS[colorForMult(mult)]
             }`}
           >

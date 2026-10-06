@@ -9,9 +9,9 @@ const CURVE_SPAN = 0.66;
 // Uçuş yolu: kalkış noktasından önce ileri, zamanla yukarı kıvrılan yumuşak kavis.
 // Noktalar sahne oranlarıdır (0-1), böylece her ekranda aynı iz çizilir.
 export const FLIGHT_CURVE = {
-  start: { x: 0.12, y: 0.83 },
-  control: { x: 0.46, y: 0.75 },
-  end: { x: 0.84, y: 0.13 },
+  start: { x: 0.34, y: 0.86 },
+  control: { x: 0.62, y: 0.79 },
+  end: { x: 0.88, y: 0.15 },
 };
 
 const clamp01 = (value) => Math.min(1, Math.max(0, value || 0));

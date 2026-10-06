@@ -6,6 +6,7 @@ import {
   flightDir,
   flightPoint,
   flightProgress,
+  secondsForMult,
 } from './rocketPath';
 
 /**
@@ -21,7 +22,7 @@ const CRASH_MS = 800;
 // Çakılınca uçuş yönünde ekran dışına fırlama mesafesi (sahne oranı).
 const ESCAPE = 1.6;
 
-export default function useRocketFlight({ phase, startedAt, getNow, size, roundNo }) {
+export default function useRocketFlight({ phase, startedAt, crashMult, getNow, size, roundNo }) {
   const shipRef = useRef(null);
   const flameRef = useRef(null);
   const trailRef = useRef(null);
@@ -29,6 +30,7 @@ export default function useRocketFlight({ phase, startedAt, getNow, size, roundN
   const live = useRef({
     phase,
     startedAt,
+    crashMult,
     size,
     state: 'COUNTDOWN',
     crashAt: 0,
@@ -37,6 +39,7 @@ export default function useRocketFlight({ phase, startedAt, getNow, size, roundN
 
   live.current.phase = phase;
   live.current.startedAt = startedAt;
+  live.current.crashMult = crashMult;
   live.current.size = size;
 
   // Yeni tur: önceki turun patlama anı ve konumu sıfırlanır.
@@ -71,7 +74,10 @@ export default function useRocketFlight({ phase, startedAt, getNow, size, roundN
       if (gamePhase === 'crashed') {
         if (!live.current.crashAt) {
           live.current.crashAt = now;
-          live.current.crashProgress = flightProgress(Math.max(0, t - IGNITION_S));
+          // Patlama, turun gerçek çakılma çarpanının uçuş konumunda olur:
+          // yoklama gecikse bile roket ile patlama aynı noktada buluşur.
+          const crash = live.current.crashMult || 1;
+          live.current.crashProgress = flightProgress(secondsForMult(crash) - IGNITION_S);
         }
         const k = Math.min(1, (now - live.current.crashAt) / CRASH_MS);
         const progress = live.current.crashProgress;
