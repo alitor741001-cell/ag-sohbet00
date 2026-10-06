@@ -37,11 +37,11 @@ export default function RoomDiscovery({ shortcuts = null }) {
   // Açık oyun: ana sayfadan seçilen oyun tam ekran oynanır.
   const [gameOpen, setGameOpen] = useState(null);
 
-  const isAdmin = user?.role === 'admin';
+  // Gizli oda hiçbir listede görünmez: yönetici hesabında da ana sayfada çıkmaz.
   const isVisible = (room) =>
     !!room &&
     room.status === 'active' &&
-    (isAdmin || !room.hidden) &&
+    !room.hidden &&
     ((room.participants?.length || 0) > 0 || room.owner_id === user?.id);
 
   useEffect(() => {

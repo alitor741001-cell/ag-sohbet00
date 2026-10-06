@@ -21,6 +21,7 @@ import VoiceRoomMenu from '@/components/voice/VoiceRoomMenu';
 import VoiceSeatSheet from '@/components/voice/VoiceSeatSheet';
 import InviteSheet from '@/components/voice/InviteSheet';
 import FullUserProfile from '@/components/profile/FullUserProfile';
+import RoomOwnerBadge from '@/components/player/RoomOwnerBadge';
 import RoomLogSheet from '@/components/voice/RoomLogSheet';
 import GiftScoreChip from '@/components/voice/GiftScoreChip';
 import GiftBoardSheet from '@/components/voice/GiftBoardSheet';
@@ -846,6 +847,7 @@ export default function VoiceRoom() {
     return (
       <div className="fixed inset-0 z-[150] flex flex-col items-center justify-center gap-4 bg-catalog px-6 text-white">
         <Lock className="h-10 w-10 text-amber-400" />
+        <RoomOwnerBadge ownerId={room?.owner_id} fallbackName={room?.owner_name} />
         <p className="text-sm text-white/70">{room?.name || 'Oda'} kilitli. Şifreyi gir.</p>
         <form onSubmit={(event) => { event.preventDefault(); attemptJoin(password); }} className="w-full max-w-xs space-y-3">
           <input

@@ -560,9 +560,13 @@ export default async function(req) {
     // leave (explicit kontrol — kırılgan varsayılan düşüş yerine)
     if (action !== 'leave') return Response.json({ error: 'geçersiz işlem' }, { status: 400 });
     // Koltuk bırakma: odadan hangi ekrandan çıkılırsa çıkılsın kişi koltukta kalmaz.
-    if ((Array.isArray(room.seats) ? room.seats : []).some((seat) => seat.user_id === user.id)) {
+    // Koltuk listesi yazmadan hemen önce tazelenir: istek başlarken alınan eski kayıt
+    // arada koltuğa oturan başka birinin yerini silmez.
+    const freshRoom = await base44.asServiceRole.entities.Room.get(room_id).catch(() => room);
+    const freshSeats = Array.isArray(freshRoom?.seats) ? freshRoom.seats : [];
+    if (freshSeats.some((seat) => seat.user_id === user.id)) {
       await base44.asServiceRole.entities.Room.update(room_id, {
-        seats: room.seats.map((seat) => (seat.user_id === user.id
+        seats: freshSeats.map((seat) => (seat.user_id === user.id
           ? { index: seat.index, user_id: '', name: '', avatar: '', frame: '', frame_scale: 100, locked: !!seat.locked, muted: false }
           : seat)),
       }).catch(() => {});

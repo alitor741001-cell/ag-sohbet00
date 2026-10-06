@@ -34,6 +34,7 @@ import { triggerBanNotice } from '@/lib/banNotice';
 import { isHiddenName } from '@/lib/hiddenUser';
 import XpAvatar from '@/components/xp/XpAvatar';
 import FullUserProfile from '@/components/profile/FullUserProfile';
+import RoomOwnerBadge from '@/components/player/RoomOwnerBadge';
 
 
 export default function WatchParty() {
@@ -726,8 +727,9 @@ export default function WatchParty() {
     return (
       <div className="fixed inset-0 bg-black flex flex-col items-center justify-center p-6">
         <div className="bg-card border border-border rounded-xl p-5 w-full max-w-xs">
-          <h2 className="font-bold mb-1">Şifreli Oda</h2>
-          <p className="text-sm text-muted-foreground mb-3">Bu oda şifre korumalı. Katılmak için şifreyi girin.</p>
+          <RoomOwnerBadge ownerId={room.owner_id} fallbackName={room.owner_name} className="mb-3" />
+          <h2 className="font-bold mb-1 text-center">Şifreli Oda</h2>
+          <p className="text-sm text-muted-foreground mb-3 text-center">Bu oda şifre korumalı. Katılmak için şifreyi girin.</p>
           <input value={pwInput} onChange={(e) => setPwInput(e.target.value)} type="password" placeholder="Oda şifresi" className="w-full bg-secondary/60 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring mb-3" />
           <div className="flex gap-2">
             <button onClick={() => navigate(-1)} className="flex-1 bg-secondary py-2 rounded-lg text-sm">Geri</button>

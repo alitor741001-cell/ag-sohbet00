@@ -30,19 +30,18 @@ export default function OpenRooms() {
   };
 
   // Sesli sohbet odaları ayrı listede gösterilir.
-  const voiceVisible = (room) => !!room && isVoiceRoom(room) && room.status === 'active' && (user?.role === 'admin' || !room.hidden)
+  const voiceVisible = (room) => !!room && isVoiceRoom(room) && room.status === 'active' && !room.hidden
     && ((room.participants?.length || 0) > 0 || room.owner_id === user?.id);
 
   useEffect(() => {
-    const isAdmin = user?.role === 'admin';
     const load = async () => {
       try {
         const [r, m] = await Promise.all([
           base44.entities.Room.filter({ status: 'active' }, '-created_date', 100).catch(() => []),
           base44.entities.Movie.list('-created_date', 200).catch(() => []),
         ]);
-        const normal = r.filter((x) => !x.is_personal && !isVoiceRoom(x) && (isAdmin || !x.hidden) && (x.participants?.length || 0) > 0);
-        const personal = r.filter((x) => x.is_personal && (isAdmin || !x.hidden) && x.status === 'active');
+        const normal = r.filter((x) => !x.is_personal && !isVoiceRoom(x) && !x.hidden && (x.participants?.length || 0) > 0);
+        const personal = r.filter((x) => x.is_personal && !x.hidden && x.status === 'active');
         setRooms(normal);
         setPersonalRooms(personal);
         setVoiceRooms(r.filter((x) => voiceVisible(x)));
@@ -53,14 +52,13 @@ export default function OpenRooms() {
     };
     load();
     const unsub = base44.entities.Room.subscribe((ev) => {
-      const isAdmin2 = user?.role === 'admin';
-      const isVisible = (x) => x.status === 'active' && (isAdmin2 || !x.hidden);
+      const isVisible = (x) => x.status === 'active' && !x.hidden;
       if (ev.type === 'create') {
         if (isVoiceRoom(ev.data)) {
           if (voiceVisible(ev.data)) setVoiceRooms((p) => [ev.data, ...p.filter((x) => x.id !== ev.data.id)]);
           return;
         }
-        if (ev.data?.status === 'active' && (isAdmin2 || !ev.data.hidden)) {
+        if (ev.data?.status === 'active' && !ev.data.hidden) {
           if (ev.data.is_personal) {
             setPersonalRooms((p) => [ev.data, ...p.filter((x) => x.id !== ev.data.id)]);
           } else if ((ev.data.participants?.length || 0) > 0) {
