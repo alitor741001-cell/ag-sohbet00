@@ -9,10 +9,7 @@ export const MAX_R = 500;
 export const HOUSE_EDGE = 0.91;
 export const ROCKET_BASE = 1.09;
 export const DEFAULT_ROCKET_BET = 500;
-export const ROCKET_BET_LEVELS = [500, 1000, 2500, 5000, 10000, 25000, 50000, 100000, 250000, 500000, 1000000];
-// Bahis üst sınırı ve otomatik çekilme üst sınırı.
-export const MAX_ROCKET_BET = 1000000;
-export const MAX_ROCKET_AUTO = 500;
+export const ROCKET_BET_LEVELS = [500, 1000, 2500, 5000, 10000, 25000, 50000, 100000];
 
 // Geçen süreye göre çarpan: m = 1.09^(saniye). Uçuş uzun tutulur ki oyuncu
 // geri çekmek için gerçek bir zaman penceresi bulsun: 2x ~8 sn, 10x ~27 sn.

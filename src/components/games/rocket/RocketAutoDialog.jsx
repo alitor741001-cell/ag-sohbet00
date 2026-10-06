@@ -2,9 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MAX_ROCKET_AUTO } from './rocketConfig';
 
-const PRESETS = [1.5, 2, 3, 5, 7, 10, 25, 50, 100, 250, 500];
+const PRESETS = [1.5, 2, 3, 5, 7, 10];
 
 /** Otomatik çekilme hedefi: hazır kademeler veya elle yazılan çarpan (örn. 7x). */
 export default function RocketAutoDialog({ open, value, onSave, onClose }) {
@@ -16,8 +15,7 @@ export default function RocketAutoDialog({ open, value, onSave, onClose }) {
 
   const submit = () => {
     const parsed = Number(text.replace(',', '.'));
-    // Hedef en fazla 500x: sunucu da aynı sınırla kaydeder.
-    onSave(Number.isFinite(parsed) ? Math.min(MAX_ROCKET_AUTO, parsed) : 0);
+    onSave(Number.isFinite(parsed) ? parsed : 0);
     onClose();
   };
 
@@ -27,7 +25,7 @@ export default function RocketAutoDialog({ open, value, onSave, onClose }) {
         <DialogHeader>
           <DialogTitle className="text-base">Otomatik çekilme</DialogTitle>
           <DialogDescription className="text-xs">
-            Çarpan bu değere ulaştığında bahsin kendiliğinden çekilir. En fazla 500x.
+            Çarpan bu değere ulaştığında bahsin kendiliğinden çekilir.
           </DialogDescription>
         </DialogHeader>
 

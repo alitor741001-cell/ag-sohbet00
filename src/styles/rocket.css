@@ -1,11 +1,10 @@
-/* Crash Rocket — lacivert uzay, neon mavi ve altın. */
+/* Crash Rocket — görseldeki tasarım: lacivert uzay, neon mavi ve altın. */
 :root {
   --rk-bg: #0a0f1d;
   --rk-cyan: #00d4ff;
   --rk-gold: #ffb800;
 }
 
-/* === HUD === */
 .rk-icon-btn {
   display: flex;
   height: 2rem;
@@ -40,7 +39,6 @@
   -webkit-backdrop-filter: blur(12px);
 }
 
-/* === BAHİS PANELLERİ === */
 .rk-panel {
   display: flex;
   flex-direction: column;
@@ -120,155 +118,46 @@
   box-shadow: 0 0 14px rgba(255, 184, 0, 0.35);
 }
 
-/* === ÇARPAN === */
 .rk-mult {
   font-weight: 900;
   letter-spacing: -0.02em;
   color: #cdeeff;
-  text-shadow: 0 0 10px currentColor, 0 0 30px currentColor, 0 2px 0 rgba(0, 0, 0, 0.5);
-  animation: rk-pop 0.3s ease-out;
+  text-shadow: 0 0 12px rgba(0, 212, 255, 0.85), 0 0 36px rgba(0, 212, 255, 0.5), 0 2px 0 rgba(0, 0, 0, 0.5);
+  animation: rk-pop 0.35s ease-out;
 }
-.rk-mult-crash { color: #ffd0d0; }
-.rocket-script { font-family: 'Great Vibes', 'Segoe Script', cursive; }
-
-/* === ORTADAKİ DAİRESEL GÖSTERGE === */
-.rk-dial {
-  position: relative;
-  display: flex;
-  width: min(60vw, 13.5rem);
-  aspect-ratio: 1 / 1;
-  align-items: center;
-  justify-content: center;
-}
-.rk-dial-track {
-  position: absolute;
-  inset: 0;
-  border-radius: 9999px;
-  border: 2px solid rgba(0, 212, 255, 0.22);
-  box-shadow: inset 0 0 26px rgba(0, 212, 255, 0.16);
-}
-.rk-dial-fill {
-  position: absolute;
-  inset: 0;
-  border-radius: 9999px;
-  filter: drop-shadow(0 0 6px rgba(0, 212, 255, 0.6));
-}
-.rk-dial-live {
-  position: absolute;
-  inset: 0;
-  border-radius: 9999px;
-  border: 2px solid rgba(0, 212, 255, 0.45);
-  animation: rk-dial-pulse 1.6s ease-in-out infinite;
-}
-.rk-dial-core {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  width: calc(100% - 0.85rem);
-  height: calc(100% - 0.85rem);
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.15rem;
-  border-radius: 9999px;
-  background: rgba(10, 15, 29, 0.55);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-}
-@keyframes rk-dial-pulse {
-  0%, 100% { opacity: 0.65; box-shadow: 0 0 12px rgba(0, 212, 255, 0.3); }
-  50% { opacity: 1; box-shadow: 0 0 30px rgba(0, 212, 255, 0.75); }
+.rk-mult-crash {
+  color: #ffd0d0;
+  text-shadow: 0 0 14px rgba(239, 68, 68, 0.9), 0 0 40px rgba(239, 68, 68, 0.6), 0 2px 0 rgba(0, 0, 0, 0.5);
 }
 
-/* === ROKET UÇUŞU ===
-   Konum, dönüş ve motor gücü her karede doğrudan transform ile yazılır. */
-/* Ölçüm yapılana kadar görünmez: roket köşede bir kare bile parlamaz. */
-.rk-ship-wrap { opacity: 0; will-change: transform; }
-.rk-flame {
-  position: absolute;
-  left: 50%;
-  top: 60%;
-  width: 44%;
-  height: 118%;
-  transform-origin: 50% 0%;
-  transform: translateX(-50%);
-  background: radial-gradient(ellipse at 50% 0%, #ffffff 0%, #cdeeff 12%, var(--rk-cyan) 32%, #ff9a2e 62%, rgba(255, 90, 0, 0) 80%);
-  filter: blur(2px);
+.rocket-script {
+  font-family: 'Great Vibes', 'Segoe Script', cursive;
+}
+
+/* Mekik görseli kendi şeffaf zeminini taşır: karışım ve maske gerekmez. */
+.rk-engine-glow {
+  background: radial-gradient(ellipse at 50% 15%, hsl(var(--slot-text)) 0%, hsl(var(--slot-blue) / .9) 18%, hsl(var(--slot-orange) / .6) 40%, transparent 72%);
+  transform-origin: center top;
   mix-blend-mode: screen;
-  opacity: 0.2;
-  pointer-events: none;
 }
-.rk-trail {
-  position: absolute;
-  left: 50%;
-  top: 38%;
-  width: 34%;
-  height: 180%;
-  transform-origin: 50% 0%;
-  transform: translateX(-50%);
-  background: linear-gradient(180deg, rgba(0, 212, 255, 0.5), rgba(0, 212, 255, 0.12) 45%, rgba(0, 212, 255, 0) 100%);
-  filter: blur(6px);
-  opacity: 0;
-  pointer-events: none;
+.rk-engine { animation: rk-engine 0.7s ease-in-out infinite; }
+.rk-streak {
+  background: linear-gradient(180deg, transparent 35%, rgba(0, 212, 255, 0.14) 100%);
+  animation: rk-streak 0.9s ease-in-out infinite;
 }
-.rk-pad {
-  width: 9rem;
-  height: 2.2rem;
-  transform: translate(-50%, -50%);
-  border-radius: 9999px;
-  background: radial-gradient(ellipse at 50% 50%, rgba(0, 212, 255, 0.4), rgba(0, 212, 255, 0.06) 55%, rgba(0, 212, 255, 0) 75%);
-  pointer-events: none;
-}
-
+/* Bahis aşamasında mekik yerinde süzülür: havalanmaya hazır görünür. */
+.rk-idle { animation: rk-idle 2.4s ease-in-out infinite; }
 .rk-shake { animation: rk-shake 0.5s ease-out; }
 .rk-burst {
-  border-radius: 9999px;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.95), rgba(255, 160, 40, 0.5) 22%, rgba(255, 80, 0, 0.15) 45%, transparent 65%);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.9), rgba(255, 140, 0, 0.45) 22%, transparent 62%);
   mix-blend-mode: screen;
   animation: rk-burst 0.8s ease-out forwards;
 }
 
-/* === ÇEKİM PROFİLLERİ === */
-.cashmark {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  transform: translate(-50%, -50%);
-  animation: cashmark-pop 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.3) both;
-}
-.cashmark-avatar {
-  display: flex;
-  height: 2.15rem;
-  width: 2.15rem;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  border-radius: 9999px;
-  border: 2px solid var(--rk-cyan);
-  background: rgba(10, 15, 29, 0.9);
-  box-shadow: 0 0 10px rgba(0, 212, 255, 0.8), 0 0 22px rgba(0, 212, 255, 0.35);
-  font-size: 0.72rem;
-  font-weight: 900;
-  color: #dff6ff;
-}
-.cashmark-mult {
-  border-radius: 9999px;
-  border: 1px solid rgba(0, 212, 255, 0.55);
-  background: rgba(10, 15, 29, 0.85);
-  padding: 0 0.3rem;
-  font-size: 0.6rem;
-  font-weight: 900;
-  color: #eaf9ff;
-  text-shadow: 0 0 6px rgba(0, 212, 255, 0.8);
-}
-@keyframes cashmark-pop {
-  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.35); }
-  55% { opacity: 1; transform: translate(-50%, -50%) scale(1.18); }
-  100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-}
-
 @keyframes rk-pop { from { transform: scale(0.86); opacity: 0.4; } to { transform: scale(1); opacity: 1; } }
+@keyframes rk-engine { 0%, 100% { opacity: 0.8; transform: translateX(-50%) scaleY(1); } 50% { opacity: 1; transform: translateX(-50%) scaleY(1.2); } }
+@keyframes rk-streak { 0%, 100% { opacity: 0.25; } 50% { opacity: 0.6; } }
+@keyframes rk-idle { 0%, 100% { transform: translateY(-3px); } 50% { transform: translateY(4px); } }
 @keyframes rk-shake {
   0%, 100% { transform: translate(0); }
   20% { transform: translate(-5px, 3px); }
@@ -279,5 +168,5 @@
 @keyframes rk-burst { 0% { opacity: 0; } 12% { opacity: 1; } 100% { opacity: 0; } }
 
 @media (prefers-reduced-motion: reduce) {
-  .rk-shake, .rk-burst, .rk-dial-live, .cashmark { animation-duration: 0.01s; }
+  .rk-engine, .rk-streak, .rk-shake, .rk-burst, .rk-idle { animation: none; }
 }
