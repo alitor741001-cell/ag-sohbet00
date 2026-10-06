@@ -151,6 +151,8 @@ function toRow(record, columns) {
     payload: record,
   };
   columns.forEach((column) => { row[column] = coerce(column, record[column]); });
+  // Oda satırlarında kişi sayısı katılımcı listesinden hesaplanır.
+  if (columns.includes('participant_count')) row.participant_count = (record.participants || []).length;
   return row;
 }
 
