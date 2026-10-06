@@ -1,14 +1,17 @@
 import { ChevronDown, ListMusic, Pause, Play, Power, SkipForward, Volume2 } from 'lucide-react';
 
-/** Açılan müzik paneli: şarkıyı yönet, ses seviyesini bu cihazda canlı ayarla. */
-export default function MusicControllerCard({ title, playing, volume, onVolume, isMod, onToggle, onNext, onOpenList, onStop, onCollapse }) {
+/** Açılan müzik paneli: üst şeritten tutulup ekranda gezdirilir, şarkı ve ses bu cihazda yönetilir. */
+export default function MusicControllerCard({ title, playing, volume, onVolume, isMod, onToggle, onNext, onOpenList, onStop, onCollapse, pos, bind, cardRef }) {
   return (
     <div
+      ref={cardRef}
       role="group"
       aria-label="Müzik denetleyicisi"
-      className="premium-panel fixed bottom-[calc(6.5rem+env(safe-area-inset-bottom))] left-1/2 z-[210] w-[min(92vw,22rem)] -translate-x-1/2 rounded-[22px] px-3.5 py-3"
+      style={pos ? { left: pos.x, top: pos.y, bottom: 'auto', transform: 'none' } : undefined}
+      className="premium-panel fixed bottom-[calc(6.5rem+env(safe-area-inset-bottom))] left-1/2 z-[210] w-[min(92vw,22rem)] max-w-[calc(100vw-1rem)] -translate-x-1/2 rounded-[22px] px-3.5 py-3"
     >
-      <div className="flex items-center gap-2">
+      {/* Üst şerit tutamak: panel parmakla sağa sola taşınır. */}
+      <div {...bind} className="flex touch-none items-center gap-2">
         {isMod ? (
           <button type="button" onClick={onStop} aria-label="Müziği durdur" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white/85 active:scale-95">
             <Power className="h-4 w-4" />

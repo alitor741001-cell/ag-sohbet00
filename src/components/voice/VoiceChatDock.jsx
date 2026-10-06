@@ -7,6 +7,7 @@ import SlotWinMessage from '@/components/games/SlotWinMessage';
 import BigGiftChatNotice from '@/components/voice/BigGiftChatNotice';
 import { plainText } from '@/components/voice/voiceText';
 import { LEVEL_UP_TONE, levelUpName, parseLevelUpNotice } from '@/lib/levelUpNotice';
+import isQuietNotice from '@/lib/roomNotices';
 import useMessageProfiles from '@/hooks/useMessageProfiles';
 
 /**
@@ -29,7 +30,8 @@ export default function VoiceChatDock({ messages = [], onSend, open, onCloseComp
   const profiles = useMessageProfiles(userIds);
 
   // Geçmiş dahil tüm akış butona basmadan görünür; metinsiz sistem işaretleri atlanır.
-  const visible = messages.filter((message) => message.type !== 'system' || plainText(message.text));
+  // Hediye, müzik, odadan ayrılma, koltuk ve mikrofon işlemleri bildirim alanında görünmez.
+  const visible = messages.filter((message) => !isQuietNotice(message) && (message.type !== 'system' || plainText(message.text)));
 
   useEffect(() => {
     if (composerOpen) inputRef.current?.focus();

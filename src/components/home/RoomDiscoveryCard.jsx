@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { BarChart3, Check, Film, Lock, Mic } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import { youtubeIdFromMovieId } from '@/lib/youtubeTitle';
+import { prefetchRoomCancel, prefetchRoomSoon } from '@/lib/roomPrefetch';
 
 /** Ana sayfa keşfet ızgarasındaki kare oda kartı: altın çerçeveli premium kart. */
 export default function RoomDiscoveryCard({ room, owner, kind, filmTitle, friendInside }) {
@@ -16,6 +17,10 @@ export default function RoomDiscoveryCard({ room, owner, kind, filmTitle, friend
   return (
     <Link
       to={to}
+      onPointerDown={() => prefetchRoomSoon(room.id)}
+      onPointerMove={() => prefetchRoomCancel(room.id)}
+      onPointerUp={() => prefetchRoomCancel(room.id)}
+      onPointerLeave={() => prefetchRoomCancel(room.id)}
       className="relative flex aspect-square flex-col overflow-hidden rounded-2xl border border-premium-gold/30 bg-anthracite-raised shadow-[0_0_24px_-12px_rgba(198,40,40,0.95)] transition-transform active:scale-[0.98]"
     >
       {/* Kapak kartı tamamen kaplar: kart kare kalır, bilgiler kapak üstünde durur. */}

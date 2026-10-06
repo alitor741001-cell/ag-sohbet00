@@ -29,9 +29,9 @@ import RoomExitOverlay from '@/components/voice/RoomExitOverlay';
 import { clearMinimizedRoom, getMinimizedRoom, isRoomMinimized, setMinimizedRoom } from '@/lib/minimizedRoom';
 import VoicePrivateChatSheet from '@/components/voice/VoicePrivateChatSheet';
 import useRoomMusic from '@/hooks/useRoomMusic';
-import RoomMusicSheet from '@/components/voice/RoomMusicSheet';
-import MusicController from '@/components/voice/MusicController';
+import RoomMusicLayer from '@/components/voice/RoomMusicLayer';
 import { withBoardStep } from '@/lib/numberBoard';
+import { takeRoomPrefetch } from '@/lib/roomPrefetch';
 // Oyun paneli ağır: oda açılışında indirilmez, yalnızca açıldığında yüklenir.
 const GamePanel = lazy(() => import('@/components/games/GamePanel'));
 import GiftBoard from '@/components/voice/GiftBoard';
@@ -284,9 +284,15 @@ export default function VoiceRoom() {
     let cancelled = false;
     const load = async () => {
       try {
-        const response = await base44.functions.invoke('room-presence', { action: 'get', room_id: id });
+        // Karta dokunulduğunda istek önden başlatıldıysa o cevap kullanılır; cevap boş dönerse
+        // taze istek yapılır — oda açılışı her koşulda çalışır.
+        const prefetched = takeRoomPrefetch(id);
+        let response = prefetched ? await prefetched : null;
+        if (!response?.data?.room) {
+          response = await base44.functions.invoke('room-presence', { action: 'get', room_id: id });
+        }
         if (cancelled) return;
-        const record = response.data?.room;
+        const record = response?.data?.room;
         if (!record) { setNotice('Oda bulunamadı.'); return; }
         // Sesli odalar ve sesli moda alınmış film odaları bu arayüzü kullanır.
         if (record.room_type !== 'voice' && record.voice_mode !== true) { navigate(`/oda/${id}`, { replace: true }); return; }
@@ -1143,34 +1149,17 @@ export default function VoiceRoom() {
         onUnban={unbanUser}
       />
 
-      {/* Odadaki şarkı bu cihazda çalar; ses seviyesi herkesin kendi telefonunda. */}
-      <audio ref={music.audioRef} crossOrigin="anonymous" className="hidden" playsInline preload="auto" />
-
-      <RoomMusicSheet
-        open={musicOpen}
-        onClose={() => setMusicOpen(false)}
-        music={music.music}
-        tracks={music.library}
-        currentUri={music.music?.file_uri}
-        uploading={music.uploading}
-        onUpload={music.uploadTrack}
-        onPlayTrack={music.playTrack}
+      {/* Odadaki şarkı bu cihazda çalar; liste ve denetleyici kendi bileşeninde durur. */}
+      <RoomMusicLayer
+        music={music}
+        sheetOpen={musicOpen}
+        onCloseSheet={() => setMusicOpen(false)}
+        controllerVisible={!!music.music && !musicOpen && !menuOpen}
+        onOpenList={() => setMusicOpen(true)}
+        isMod={canMod}
+        onControl={music.control}
+        onPlayNext={music.playNext}
       />
-
-      {/* Müzik denetleyicisi: pencere kapanınca köşedeki çember olarak kalır, dokununca panel açılır. */}
-      {music.music && !musicOpen && !menuOpen && (
-        <MusicController
-          title={music.music.title}
-          playing={!!music.music.is_playing}
-          volume={music.volume}
-          onVolume={music.setVolume}
-          isMod={canMod}
-          onToggle={() => music.control(music.music?.is_playing ? 'pause' : 'play')}
-          onNext={music.playNext}
-          onOpenList={() => setMusicOpen(true)}
-          onStop={() => music.control('stop')}
-        />
-      )}
 
       <GiftBoardSheet
         open={giftBoardOpen}

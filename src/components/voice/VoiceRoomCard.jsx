@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Lock, Mic, Users } from 'lucide-react';
+import { prefetchRoomCancel, prefetchRoomSoon } from '@/lib/roomPrefetch';
 
 /** Açık odalar listesindeki sesli sohbet odası kartı. `action` yönetici oda menüsü için ayrılmıştır. */
 export default function VoiceRoomCard({ room, action }) {
@@ -7,7 +8,13 @@ export default function VoiceRoomCard({ room, action }) {
   const speakers = (room.seats || []).filter((seat) => seat.user_id).length;
 
   return (
-    <div className="flex items-center gap-3 rounded-2xl border border-white/5 bg-[#16161e] p-3">
+    <div
+      className="flex items-center gap-3 rounded-2xl border border-white/5 bg-[#16161e] p-3"
+      onPointerDown={() => prefetchRoomSoon(room.id)}
+      onPointerMove={() => prefetchRoomCancel(room.id)}
+      onPointerUp={() => prefetchRoomCancel(room.id)}
+      onPointerLeave={() => prefetchRoomCancel(room.id)}
+    >
       <Link to={`/sesli-oda/${room.id}`} className="flex min-w-0 flex-1 items-center gap-3 active:scale-[0.99] transition-transform">
         <div className="flex shrink-0 flex-col items-center gap-1">
           <div className="flex h-14 w-14 items-center justify-center rounded-full" style={{ background: 'linear-gradient(135deg, #dc2626, #991b1b)' }}>

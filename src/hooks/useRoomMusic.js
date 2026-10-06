@@ -38,10 +38,8 @@ export default function useRoomMusic(roomId, enabled) {
     }
   }, [roomId, enabled]);
 
+  // Liste kişiye özeldir: bir kez okunur, şarkı değişiminde yeniden istenmez.
   useEffect(() => { fetchLibrary(); }, [fetchLibrary]);
-
-  // Başka bir yönetici şarkı açtığında liste de tazelenir.
-  useEffect(() => { if (music?.file_uri) fetchLibrary(); }, [music?.file_uri, fetchLibrary]);
 
   // Şarkı kaydı canlı izlenir: odaya sonradan giren de çalan şarkıyı alır.
   useEffect(() => {

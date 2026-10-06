@@ -1,12 +1,16 @@
 import { Music } from 'lucide-react';
 
-/** Köşedeki müzik çemberi: plak görünümü, parmakla taşınır, dokununca panel açılır. */
+/**
+ * Köşedeki müzik çemberi: plak görünümü, parmakla taşınır, dokununca panel açılır.
+ * Açılma, dokunuş bırakıldığında yapılır — Android tarayıcılarda tıklama olayı her zaman gelmez.
+ */
 export default function MusicControllerBubble({ pos, playing, bind, onOpen, didDrag }) {
   return (
     <button
       type="button"
       aria-label="Müzik denetleyicisini aç"
       {...bind}
+      onPointerUp={() => { if (!didDrag()) onOpen(); }}
       onClick={() => { if (!didDrag()) onOpen(); }}
       className="fixed z-[205] flex h-14 w-14 touch-none items-center justify-center rounded-full border-2 border-white/85 bg-black shadow-[0_8px_24px_rgba(0,0,0,0.75)] transition-transform active:scale-95"
       style={{ left: pos.x, top: pos.y }}
