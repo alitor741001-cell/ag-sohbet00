@@ -153,6 +153,21 @@ export default function useRoomMusic(roomId, enabled) {
     }
   }, [roomId]);
 
+  // Kendi listenden şarkı silme: kayıt sunucudan kaldırılır, liste yenilenir.
+  const removeTrack = useCallback(async (track) => {
+    if (!track?.id || !roomId) return 'empty';
+    try {
+      const response = await withTimeout(base44.functions.invoke('voice-room', { room_id: roomId, action: 'music-remove', track_id: track.id }));
+      if (response?.timeout) return 'timeout';
+      if (response?.error) return 'error';
+      setLibrary((rows) => rows.filter((row) => row.id !== track.id));
+      await withTimeout(fetchLibrary());
+      return 'ok';
+    } catch (error) {
+      return error?.response?.status === 429 ? 'busy' : 'error';
+    }
+  }, [roomId, fetchLibrary]);
+
   // Sıradaki şarkı: listede bir sonraki; son şarkıdaysa başa döner.
   const playNext = useCallback(async () => {
     if (!library.length) return 'empty';
@@ -162,5 +177,5 @@ export default function useRoomMusic(roomId, enabled) {
     return playTrack(next);
   }, [library, music?.file_uri, playTrack]);
 
-  return { music, library, volume, setVolume, audioRef, uploading, uploadTrack, playTrack, playNext, control };
+  return { music, library, volume, setVolume, audioRef, uploading, uploadTrack, playTrack, removeTrack, playNext, control };
 }

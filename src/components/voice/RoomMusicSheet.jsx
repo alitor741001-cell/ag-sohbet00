@@ -7,7 +7,7 @@ import { useToast } from '@/components/ui/use-toast';
  * Oda müziği penceresi: herkes kendi şarkılarını telefondan yükler ve kendi
  * listesinden odaya açar; liste kişiye özeldir, ses seviyesi köşedeki denetleyiciden ayarlanır.
  */
-export default function RoomMusicSheet({ open, onClose, music, tracks = [], currentUri, uploading, onUpload, onPlayTrack }) {
+export default function RoomMusicSheet({ open, onClose, music, tracks = [], currentUri, uploading, onUpload, onPlayTrack, onDeleteTrack }) {
   const { toast } = useToast();
 
   // Sonuç bildirimleri tek yerde: yükleme ve listeden çalma aynı mesajları kullanır.
@@ -35,6 +35,14 @@ export default function RoomMusicSheet({ open, onClose, music, tracks = [], curr
     report(await onPlayTrack(track));
   };
 
+  // Sola kaydırıp Sil'e basılan şarkı kendi listenden kaldırılır.
+  const remove = async (track) => {
+    const result = await onDeleteTrack(track);
+    if (result === 'ok') toast({ title: '🗑️ Şarkı silindi', description: 'Şarkı listenden kaldırıldı.' });
+    else if (result === 'busy') toast({ title: 'Çok sık işlem yapılıyor', description: 'Biraz bekleyip tekrar dene.', variant: 'destructive' });
+    else toast({ title: 'Şarkı silinemedi', description: 'Bağlantını kontrol edip tekrar dene.', variant: 'destructive' });
+  };
+
   return (
     <VoiceSheet open={open} onClose={onClose} title="Oda müziği">
       <div className="rounded-2xl border border-[#FFD700]/45 bg-black/70 p-3">
@@ -50,7 +58,7 @@ export default function RoomMusicSheet({ open, onClose, music, tracks = [], curr
       </div>
 
       {/* Kendi şarkıların: yüklediklerin yalnızca senin listende görünür. */}
-      <RoomTrackList tracks={tracks} currentUri={currentUri} busy={uploading} onPlay={play} />
+      <RoomTrackList tracks={tracks} currentUri={currentUri} busy={uploading} onPlay={play} onDelete={remove} />
 
       {/* iPhone'da müzik dosyası Dosyalar'dan seçilir; Apple Music şarkıları korumalıdır. */}
       <p className="mt-2 px-1 text-[11px] leading-snug text-white/45">

@@ -14,7 +14,7 @@ import { HIDDEN_AVATAR_URL, hiddenDisplayName, isHiddenDisplayName, isHiddenUser
 const SEAT_OPTIONS = [1, 2, 5, 8, 9, 12, 15, 20, 24];
 // Bu değerin (coin) üzerindeki hediyeler bütün sesli odalara duyurulur.
 const BIG_GIFT_SCORE = 1000000;
-const ACTIONS = ['seat-take', 'seat-leave', 'seat-lock', 'seat-mute', 'seat-kick', 'set-seat-count', 'invite', 'seat-invite', 'seat-invite-clear', 'gift-state', 'gift-send', 'gift-finalize', 'gift-board', 'number-board-open', 'number-board-close', 'number-step', 'number-reset', 'number-settings', 'chat-ban', 'music-state', 'music-set', 'music-control', 'music-library'];
+const ACTIONS = ['seat-take', 'seat-leave', 'seat-lock', 'seat-mute', 'seat-kick', 'set-seat-count', 'invite', 'seat-invite', 'seat-invite-clear', 'gift-state', 'gift-send', 'gift-finalize', 'gift-board', 'number-board-open', 'number-board-close', 'number-step', 'number-reset', 'number-settings', 'chat-ban', 'music-state', 'music-set', 'music-control', 'music-library', 'music-remove'];
 
 const emptySeat = (index, locked = false) => ({
   index, user_id: '', name: '', avatar: '', frame: '', frame_scale: 100, locked, muted: false,
@@ -513,6 +513,17 @@ export default async function (req: Request): Promise<Response> {
         return true;
       }).slice(0, 30);
       return Response.json({ ok: true, tracks });
+    }
+
+    // Kendi listenden şarkı silme: yalnızca senin yüklediğin kayıt kaldırılır.
+    if (action === 'music-remove') {
+      if (!isParticipant && !canMod) return Response.json({ error: 'Önce odaya katılmalısın.' }, { status: 403 });
+      const trackId = typeof body.track_id === 'string' ? body.track_id.trim() : '';
+      if (!trackId) return Response.json({ error: 'Şarkı bulunamadı.' }, { status: 400 });
+      const row = await base44.asServiceRole.entities.RoomTrack.get(trackId).catch(() => null);
+      if (!row || row.added_by !== user.id) return Response.json({ error: 'Bu şarkı senin listende değil.' }, { status: 403 });
+      await base44.asServiceRole.entities.RoomTrack.delete(trackId);
+      return Response.json({ ok: true, removed: trackId });
     }
 
     if (action === 'music-set') {

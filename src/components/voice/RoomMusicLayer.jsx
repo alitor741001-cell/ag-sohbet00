@@ -19,6 +19,7 @@ export default function RoomMusicLayer({ music, sheetOpen, onCloseSheet, control
         uploading={music.uploading}
         onUpload={music.uploadTrack}
         onPlayTrack={music.playTrack}
+        onDeleteTrack={music.removeTrack}
       />
 
       {/* Denetleyici: pencere kapanınca köşedeki çember olarak kalır, dokununca panel açılır. */}
