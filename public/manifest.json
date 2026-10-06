@@ -1,6 +1,6 @@
 {
-  "name": "Canlı Odalar",
-  "short_name": "Canlı Odalar",
+  "name": "AG",
+  "short_name": "SOHBET",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#000000",
@@ -8,12 +8,12 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "https://media.base44.com/images/public/6a77d66e4da6de214628ee62/25f1dd86b_351A5169-7769-4C41-8816-B20112620648.png",
+      "src": "/icon-192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "https://media.base44.com/images/public/6a77d66e4da6de214628ee62/25f1dd86b_351A5169-7769-4C41-8816-B20112620648.png",
+      "src": "/icon-512.png",
       "sizes": "512x512",
       "type": "image/png"
     }
