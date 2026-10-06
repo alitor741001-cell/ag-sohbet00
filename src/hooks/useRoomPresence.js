@@ -6,9 +6,11 @@ import { base44 } from '@/api/base44Client';
 const ONLINE_WINDOW_MS = 60000;
 
 /**
- * Odalarda bulunan kişilerin çevrim içi durumunu izler. Bir oda yalnızca sahibi
- * dışında en az bir kişi çevrim içiyse "açık" sayılır: sahibi tek başınayken
- * oda ana sayfada açık görünmez.
+ * Odaların canlılığını çevrim içi kayıtlarından izler. Bir oda, içinde çevrim içi en az
+ * bir kişi (sahibi dahil) varken açık sayılır: odaya girenin kaydı anında yayınlandığı
+ * için oda herkeste aynı saniyede belirir, son kişi çıktıktan sonra en geç bir dakika
+ * içinde listeden düşer. Gizlenen odada içeridekilerin canlı işaretçisi silindiğinden
+ * gizleme ve yeniden gösterme de anında yansır.
  */
 export default function useRoomPresence(rooms) {
   const [records, setRecords] = useState({});
@@ -16,33 +18,40 @@ export default function useRoomPresence(rooms) {
 
   const ids = useMemo(() => {
     const unique = new Set();
-    (rooms || []).forEach((room) => (room.participants || []).forEach((person) => {
-      if (person.user_id) unique.add(person.user_id);
-    }));
+    (rooms || []).forEach((room) => { if (room?.id) unique.add(room.id); });
     return [...unique].sort();
   }, [rooms]);
   const idsKey = ids.join(',');
 
   useEffect(() => {
     if (!idsKey) { setRecords({}); return; }
-    const list = idsKey.split(',');
+    const roomIds = idsKey.split(',');
+    // Yalnızca bu odaları işaret eden kayıtlar tutulur.
+    const keep = (record) => Boolean(record?.user_id && record.current_room_id && roomIds.includes(record.current_room_id));
     let alive = true;
-    // N+1 önleme: tüm katılımcıların çevrim içi kayıtları tek sorguda çekilir.
-    base44.entities.UserPresence.filter({ user_id: { $in: list } }, '-updated_date', list.length)
+    // N+1 önleme: odalara bağlı tüm çevrim içi kayıtlar tek sorguda çekilir.
+    base44.entities.UserPresence.filter({ current_room_id: { $in: roomIds } }, '-updated_date', 200)
       .then((found) => {
         if (!alive) return;
         const map = {};
-        (found || []).forEach((record) => { if (record?.user_id) map[record.user_id] = record; });
+        (found || []).forEach((record) => { if (keep(record)) map[record.user_id] = record; });
         setRecords(map);
       })
       .catch(() => {});
 
-    // Nabız: odadaki kişi uygulamayı kapattığı anda kayıt canlı olarak güncellenir.
+    // Anlık yansıma: biri odaya girdiği ya da çıktığı anda kayıt canlı güncellenir.
     const unsubscribe = base44.entities.UserPresence.subscribe((event) => {
       const record = event.data;
-      if (!record?.user_id || !list.includes(record.user_id)) return;
-      // Olay yalnızca değişen alanları taşıyabilir: kayıt eskisiyle birleştirilir.
-      setRecords((prev) => ({ ...prev, [record.user_id]: { ...(prev[record.user_id] || {}), ...record } }));
+      if (!record?.user_id) return;
+      setRecords((prev) => {
+        const next = { ...prev };
+        // Olay yalnızca değişen alanları taşıyabilir: kayıt eskisiyle birleştirilir.
+        const merged = { ...(prev[record.user_id] || {}), ...record };
+        // Kayıt artık bir odayı işaret etmiyorsa (ya da silindiyse) listeden düşer.
+        if (event.type === 'delete' || !merged.current_room_id || !keep(merged)) delete next[record.user_id];
+        else next[record.user_id] = merged;
+        return next;
+      });
       setNow(Date.now());
     });
     return () => { alive = false; unsubscribe(); };
@@ -50,20 +59,21 @@ export default function useRoomPresence(rooms) {
 
   // Tazelik yoklanır: kimse kalmayan oda en geç bir dakika sonra listeden düşer.
   useEffect(() => {
-    const timer = window.setInterval(() => setNow(Date.now()), 20000);
+    const timer = window.setInterval(() => setNow(Date.now()), 15000);
     return () => window.clearInterval(timer);
   }, []);
 
-  const isOnline = useCallback((userId) => {
-    const record = records[userId];
-    return Boolean(record?.online && record.last_seen && now - new Date(record.last_seen).getTime() < ONLINE_WINDOW_MS);
+  /** Çevrim içi kaydı bu odayı işaret eden herkesin odası canlı sayılır. */
+  const liveRoomIds = useMemo(() => {
+    const live = new Set();
+    Object.values(records).forEach((record) => {
+      const fresh = record.last_seen && now - new Date(record.last_seen).getTime() < ONLINE_WINDOW_MS;
+      if (record.current_room_id && fresh) live.add(record.current_room_id);
+    });
+    return live;
   }, [records, now]);
 
-  /** Odada sahibi dışında çevrim içi en az bir kişi var mı? */
-  const hasLiveOthers = useCallback((room) => {
-    const owner = room?.owner_id;
-    return (room?.participants || []).some((person) => person.user_id && person.user_id !== owner && isOnline(person.user_id));
-  }, [isOnline]);
+  const isLive = useCallback((room) => Boolean(room?.id && liveRoomIds.has(room.id)), [liveRoomIds]);
 
-  return { hasLiveOthers, isOnline };
+  return { isLive, liveRoomIds };
 }

@@ -381,19 +381,18 @@ export default async function(req) {
       if (!canModRoom) return Response.json({ error: 'yetkisiz' }, { status: 403 });
       const willHide = !room.hidden;
       await base44.asServiceRole.entities.Room.update(room_id, { hidden: willHide });
-      // Gizlenen oda kimseye "canlı" görünmez: içeridekilerin canlı oda işaretçisi silinir,
-      // arkadaşlarında "odasında / Katıl" ve yayında bilgisi kalmaz.
-      if (willHide) {
-        const insideIds = [...new Set([
-          ...(room.participants || []).map((person) => person.user_id),
-          ...(room.seats || []).map((seat) => seat.user_id),
-        ].filter(Boolean))];
-        if (insideIds.length) {
-          const records = await base44.asServiceRole.entities.UserPresence
-            .filter({ user_id: { $in: insideIds } }, '-created_date', insideIds.length).catch(() => []);
-          await Promise.all(records.map((record) => base44.asServiceRole.entities.UserPresence
-            .update(record.id, { current_room_id: '' }).catch(() => {})));
-        }
+      // Gizlenen oda kimseye "canlı" görünmez, görünür yapılınca yeniden canlı sayılır:
+      // içeridekilerin canlı oda işaretçisi buna göre yazılır. İşaretçi tüm uygulamalara
+      // anlık yayınlandığı için gizleme/gösterme ana sayfaya anında yansır.
+      const insideIds = [...new Set([
+        ...(room.participants || []).map((person) => person.user_id),
+        ...(room.seats || []).map((seat) => seat.user_id),
+      ].filter(Boolean))];
+      if (insideIds.length) {
+        const records = await base44.asServiceRole.entities.UserPresence
+          .filter({ user_id: { $in: insideIds } }, '-created_date', insideIds.length).catch(() => []);
+        await Promise.all(records.map((record) => base44.asServiceRole.entities.UserPresence
+          .update(record.id, { current_room_id: willHide ? '' : room_id }).catch(() => {})));
       }
       return Response.json({ ok: true, hidden: willHide });
     }

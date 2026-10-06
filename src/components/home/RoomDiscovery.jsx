@@ -49,10 +49,34 @@ export default function RoomDiscovery({ shortcuts = null }) {
     room.hidden !== true &&
     !hiddenIdsRef.current.has(room.id);
 
-  // Açık oda ölçütü: odada sahibi dışında çevrim içi en az bir kişi olmalı. Sahibi tek
-  // başınayken oda ana sayfada görünmez; kimse kalmazsa en geç bir dakika sonra düşer.
-  const { hasLiveOthers } = useRoomPresence(allRooms);
-  const rooms = useMemo(() => allRooms.filter((room) => hasLiveOthers(room)), [allRooms, hasLiveOthers]);
+  // Açık oda ölçütü: içinde çevrim içi en az bir kişi (sahibi dahil) olmalı. Odaya girenin
+  // kaydı anında yayınlandığı için oda herkeste aynı anda belirir; son kişi çıktıktan
+  // sonra en geç bir dakika içinde listeden düşer.
+  const { isLive, liveRoomIds } = useRoomPresence(allRooms);
+  const rooms = useMemo(() => allRooms.filter((room) => isLive(room)), [allRooms, isLive]);
+
+  // Canlı işaretçisi olup listede bulunmayan oda (yeni açıldı ya da gizliden çıktı)
+  // anında çekilip eklenir: kart herkeste aynı saniyede belirir.
+  const knownIds = useMemo(() => new Set(allRooms.map((room) => room.id)), [allRooms]);
+  const requestedRef = useRef(new Set());
+  useEffect(() => {
+    const missing = [];
+    liveRoomIds.forEach((id) => {
+      if (!id) return;
+      if (knownIds.has(id)) { requestedRef.current.delete(id); return; }
+      if (!requestedRef.current.has(id)) missing.push(id);
+    });
+    if (!missing.length) return;
+    missing.forEach((id) => requestedRef.current.add(id));
+    Promise.all(missing.map((id) => base44.entities.Room.get(id).catch(() => null))).then((found) => {
+      const fetched = found.filter((room) => room?.id && room.hidden !== true && room.status === 'active');
+      if (!fetched.length) return;
+      setAllRooms((prev) => {
+        const seen = new Set(prev.map((room) => room.id));
+        return [...prev, ...fetched.filter((room) => !seen.has(room.id))];
+      });
+    });
+  }, [liveRoomIds, knownIds]);
 
   useEffect(() => {
     let alive = true;
@@ -110,7 +134,8 @@ export default function RoomDiscovery({ shortcuts = null }) {
       if (data?.hidden === true) hiddenIdsRef.current.add(id);
       else if (data?.hidden === false) hiddenIdsRef.current.delete(id);
       pending.set(id, event);
-      if (!flushTimer) flushTimer = window.setTimeout(flush, 700);
+      // Kısa bir toplama penceresi: kartlar gözle görülür bir gecikme olmadan güncellenir.
+      if (!flushTimer) flushTimer = window.setTimeout(flush, 250);
     });
 
     return () => {
