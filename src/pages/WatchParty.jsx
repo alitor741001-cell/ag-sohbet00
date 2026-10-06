@@ -165,6 +165,33 @@ export default function WatchParty() {
     }
   }, [room?.is_personal, room?.movie_id, joinCount, user?.id]);
 
+  // Katılım: anlık yoğunluk kaynaklı geçici hatalarda kısa aralıklarla tekrar denenir.
+  // Böylece odadan çıkıp tekrar girerken tek seferlik bir aksaklık hata ekranı çıkarmaz.
+  const joinWithRetry = useCallback(async () => {
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        const res = await base44.functions.invoke('room-presence', { action: 'join', room_id: id });
+        joinedRef.current = true;
+        setVoiceReady(true);
+        setJoinCount((c) => c + 1);
+        if (res.data?.ghost) ghostRef.current = true;
+        return;
+      } catch (error) {
+        const data = error?.response?.data || {};
+        // Şifre, onay ve yasak gibi kesin cevaplar bekletilmez; yalnızca geçici hatalar tekrarlanır.
+        const transient = !data.error || error?.response?.status >= 500;
+        if (transient && attempt < 2) {
+          await new Promise((resolve) => window.setTimeout(resolve, 700 * (attempt + 1)));
+          continue;
+        }
+        const message = data.error || error.message;
+        setJoinError(message);
+        toast({ title: 'Katılım başarısız', description: message, variant: 'destructive' });
+        return;
+      }
+    }
+  }, [id, toast]);
+
   useEffect(() => {
     if (!user || !hasMembership || !room || joinedRef.current) return;
     if (room.password && room.owner_id !== user.id && !isModerator(user) && !room.participants?.some((p) => p.user_id === user.id)) {
@@ -178,13 +205,7 @@ export default function WatchParty() {
         .then((res) => {
           if (res.data?.approved) {
             // Onaylı istek var — normal katılıma geç
-            base44.functions.invoke('room-presence', { action: 'join', room_id: id })
-              .then((r) => {
-                joinedRef.current = true; setVoiceReady(true);
-                setJoinCount((c) => c + 1);
-                if (r.data?.ghost) ghostRef.current = true;
-              })
-              .catch((e) => { const m = e.response?.data?.error || e.message; setJoinError(m); toast({ title: 'Katılım başarısız', description: m, variant: 'destructive' }); });
+            joinWithRetry();
           } else if (res.data?.pending) {
             setWaitingForApproval(true);
           }
@@ -192,18 +213,7 @@ export default function WatchParty() {
         .catch((e) => { const m = e.response?.data?.error || e.message; setJoinError(m); toast({ title: 'İstek gönderilemedi', description: m, variant: 'destructive' }); });
       return;
     }
-    base44.functions.invoke('room-presence', { action: 'join', room_id: id })
-      .then((res) => {
-        joinedRef.current = true;
-        setVoiceReady(true);
-        setJoinCount((c) => c + 1);
-        if (res.data?.ghost) ghostRef.current = true;
-      })
-      .catch((e) => {
-        const message = e.response?.data?.error || e.message;
-        setJoinError(message);
-        toast({ title: 'Katılım başarısız', description: message, variant: 'destructive' });
-      });
+    joinWithRetry();
   }, [user?.id, room?.id]);
 
   // Bekleyen isteğin durumunu izle (onay/red)
@@ -214,13 +224,7 @@ export default function WatchParty() {
       if (ev.type === 'update') {
         if (ev.data.status === 'approved') {
           setWaitingForApproval(false);
-          base44.functions.invoke('room-presence', { action: 'join', room_id: id })
-            .then((r) => {
-              joinedRef.current = true; setVoiceReady(true);
-              setJoinCount((c) => c + 1);
-              if (r.data?.ghost) ghostRef.current = true;
-            })
-            .catch((e) => { const m = e.response?.data?.error || e.message; setJoinError(m); toast({ title: 'Katılım başarısız', description: m, variant: 'destructive' }); });
+          joinWithRetry();
         } else if (ev.data.status === 'rejected') {
           setWaitingForApproval(false);
           setJoinRejected(true);

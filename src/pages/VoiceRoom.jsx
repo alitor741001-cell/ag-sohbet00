@@ -320,28 +320,39 @@ export default function VoiceRoom() {
     navigate(`/oda/${id}`, { replace: true });
   }, [room, id, navigate]);
 
+  // Odaya katılım: anlık yoğunluk kaynaklı geçici hatalarda kısa aralıklarla tekrar denenir.
+  // Böylece odadan çıkıp tekrar girerken tek seferlik bir aksaklık hata ekranı çıkarmaz.
   const attemptJoin = useCallback(async (pw = '') => {
-    try {
-      const response = await base44.functions.invoke('room-presence', { action: 'join', room_id: id, password: pw });
-      if (response?.data?.ghost) ghostRef.current = true;
-      joinedRef.current = true;
-      setJoined(true);
-      setNeedsPassword(false);
-      setPassword('');
-      setNotice('');
-      // Kendi kaydımız sunucudan gelen taze odada doğrulanır: eski listede görünmediğimiz
-      // ara an "odadan çıkarıldım" sanılmasın.
-      const record = await syncRoom();
-      if ((record?.participants || []).some((person) => person.user_id === user?.id)) sawSelfRef.current = true;
-      return true;
-    } catch (error) {
-      const data = error?.response?.data || {};
-      setNeedsPassword(!!data.needsPassword);
-      // Odadan atılan kişi 24 saat giremez: uyarı ekranda gösterilir.
-      if (data.banned) setBanNotice(data.error || '24 saat boyunca bu odaya giremezsiniz.');
-      setNotice(data.error || 'Odaya katılamadınız.');
-      return false;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        const response = await base44.functions.invoke('room-presence', { action: 'join', room_id: id, password: pw });
+        if (response?.data?.ghost) ghostRef.current = true;
+        joinedRef.current = true;
+        setJoined(true);
+        setNeedsPassword(false);
+        setPassword('');
+        setNotice('');
+        // Kendi kaydımız sunucudan gelen taze odada doğrulanır: eski listede görünmediğimiz
+        // ara an "odadan çıkarıldım" sanılmasın.
+        const record = await syncRoom();
+        if ((record?.participants || []).some((person) => person.user_id === user?.id)) sawSelfRef.current = true;
+        return true;
+      } catch (error) {
+        const data = error?.response?.data || {};
+        // Şifre, onay ve yasak gibi kesin cevaplar bekletilmez; yalnızca geçici hatalar tekrarlanır.
+        const transient = !data.error || error?.response?.status >= 500;
+        if (transient && attempt < 2) {
+          await new Promise((resolve) => window.setTimeout(resolve, 700 * (attempt + 1)));
+          continue;
+        }
+        setNeedsPassword(!!data.needsPassword);
+        // Odadan atılan kişi 24 saat giremez: uyarı ekranda gösterilir.
+        if (data.banned) setBanNotice(data.error || '24 saat boyunca bu odaya giremezsiniz.');
+        setNotice(data.error || 'Odaya katılamadınız.');
+        return false;
+      }
     }
+    return false;
   }, [id, syncRoom, user?.id]);
 
   // Şifresiz odalara otomatik katıl.
