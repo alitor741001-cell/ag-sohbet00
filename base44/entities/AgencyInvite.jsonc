@@ -47,6 +47,10 @@
       "type": "string",
       "default": ""
     },
+    "invitee_member_id": {
+      "type": "string",
+      "default": ""
+    },
     "kind": {
       "type": "string",
       "enum": [

@@ -208,6 +208,7 @@ export default async function (req) {
         agency_rules: agency.rules || AGENCY_RULES.join('\n'),
         owner_id: account.id, owner_name: displayName, owner_avatar: account.avatar || '',
         invitee_id: target.id, invitee_name: target.username || target.full_name || 'Kullanıcı', invitee_avatar: target.avatar || '',
+        invitee_member_id: target.member_id || '',
         status: 'pending',
       });
       await sendDirect(base44, account, target, inviteMarker(invite.id)).catch(() => {});
@@ -528,6 +529,7 @@ export default async function (req) {
         agency_logo: agency.logo || '', agency_description: agency.description || '', agency_rules: agency.rules || AGENCY_RULES.join('\n'),
         owner_id: account.id, owner_name: displayName, owner_avatar: account.avatar || '',
         invitee_id: target.id, invitee_name: target.username || target.full_name || 'Kullanıcı', invitee_avatar: target.avatar || '',
+        invitee_member_id: target.member_id || '',
         status: 'pending',
       });
       const entry = {
@@ -539,14 +541,14 @@ export default async function (req) {
       };
       const assistants = [...(agency.assistants || []).filter((row: any) => row.user_id !== target.id), entry];
       await base44.asServiceRole.entities.Agency.update(agency.id, { assistants });
-      await sendDirect(base44, account, target, assistantInviteText({
-        ownerName: displayName, ownerMemberId: account.member_id || '-', agencyName: agency.name, agencyId: agency.agency_id, share,
-      })).catch(() => {});
-      await sendDirect(base44, account, target, inviteMarker(invite.id)).catch(() => {});
+      // Asistanlık daveti sohbet mesajı olarak gitmez: sistem bildirimine düşer,
+      // detay kartından ajans ve davet edilen bilgileriyle onaylanır.
       await notifyUser(base44, {
         user_id: target.id, type: 'assistant_invite', title: '🤝 Asistanlık daveti',
-        body: `${displayName} seni ${agency.name} ajansına asistan olarak davet etti • komisyon payı %${share}.`,
-        link: '/arkadaslar', ref_id: inviteRefId(invite.id),
+        body: assistantInviteText({
+          ownerName: displayName, ownerMemberId: account.member_id || '-', agencyName: agency.name, agencyId: agency.agency_id, share,
+        }),
+        link: '/bildirimler', ref_id: inviteRefId(invite.id),
       }).catch(() => {});
       return Response.json({ ok: true, invite, assistants });
     }

@@ -3,6 +3,7 @@ import { Check, Clock, Loader2, ShieldCheck, X } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { Image } from '@/components/ui/image';
 import AgencySheet from '@/components/agency/AgencySheet';
+import { useCurrentUser } from '@/lib/useCurrentUser';
 import { AGENCY_GOLD, agencyApi } from '@/lib/agency';
 
 const COUNTDOWN_SECONDS = 10;
@@ -13,6 +14,7 @@ const COUNTDOWN_SECONDS = 10;
  */
 export default function InviteDetailSheet({ open, inviteId, onClose, onAnswered }) {
   const { toast } = useToast();
+  const { user } = useCurrentUser();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [left, setLeft] = useState(COUNTDOWN_SECONDS);
@@ -54,6 +56,8 @@ export default function InviteDetailSheet({ open, inviteId, onClose, onAnswered 
 
   const invite = data?.invite;
   const isAssistantInvite = invite?.kind === 'assistant';
+  // Kimlik numarası davet kaydında saklanır; kendi davetinde hesabından da okunur.
+  const inviteeMemberId = invite?.invitee_member_id || (invite?.invitee_id === user?.id ? user?.member_id || '' : '') || '—';
   const rules = String(data?.rules || '').split('\n').filter(Boolean);
 
   return (
@@ -88,6 +92,23 @@ export default function InviteDetailSheet({ open, inviteId, onClose, onAnswered 
               <p className="truncate text-sm font-bold">{invite.owner_name}</p>
             </div>
             <ShieldCheck className="h-4 w-4 shrink-0" style={{ color: AGENCY_GOLD }} />
+          </div>
+
+          {/* Davet edilen kişi: profili, ismi ve kimlik numarası. */}
+          <div className="flex items-center gap-3 rounded-2xl border border-emerald-400/35 bg-emerald-500/10 p-3">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-emerald-400/40 bg-black/50">
+              {invite.invitee_avatar
+                ? <Image src={invite.invitee_avatar} className="h-full w-full object-cover" fittingType="fill" />
+                : <span className="text-sm font-bold">{(invite.invitee_name || 'K')[0]}</span>}
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] uppercase tracking-wider text-white/45">Davet Edilen</p>
+              <p className="truncate text-sm font-bold">{invite.invitee_name || user?.username || user?.full_name || 'Kullanıcı'}</p>
+            </div>
+            <div className="shrink-0 text-right">
+              <p className="text-[10px] uppercase tracking-wider text-white/45">Kimlik</p>
+              <p className="text-xs font-black" style={{ color: AGENCY_GOLD }}>{inviteeMemberId}</p>
+            </div>
           </div>
 
           <div className="rounded-2xl border border-white/10 bg-white/5 p-4">

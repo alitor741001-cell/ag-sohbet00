@@ -6,6 +6,7 @@ import { Bell, Check, Trash2, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import EmptyState from '@/components/movie/EmptyState';
 import AgencyInviteActions from '@/components/notifications/AgencyInviteActions';
+import InviteDetailSheet from '@/components/agency/InviteDetailSheet';
 import { parseInviteRef } from '@/lib/agency';
 
 /** Bildirimin geldiği tarih ve saat: 06.10.2026 02:20 */
@@ -25,6 +26,7 @@ export default function Notifications() {
   const { toast } = useToast();
   const [items, setItems] = useState([]);
   const [inviteIds, setInviteIds] = useState([]);
+  const [detailInviteId, setDetailInviteId] = useState('');
   const [loading, setLoading] = useState(true);
 
   const load = () => {
@@ -80,6 +82,9 @@ export default function Notifications() {
            {items.map((n) => {
              const inviteId = parseInviteRef(n.ref_id);
              const showInvite = n.type === 'agency_invite' && !!inviteId && inviteIds.includes(inviteId);
+             // Asistanlık daveti: yeşil kart detay penceresini açar, onay orada verilir.
+             const assistantInviteId = n.type === 'assistant_invite' ? parseInviteRef(n.ref_id) : '';
+             const showAssistantInvite = !!assistantInviteId && inviteIds.includes(assistantInviteId);
              return (
              <div key={n.id} className={`p-3 rounded-xl border flex gap-3 ${n.read ? 'bg-card border-border' : 'bg-primary/10 border-primary/30'}`}>
                <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${n.read ? 'bg-transparent' : 'bg-primary'}`} />
@@ -88,6 +93,13 @@ export default function Notifications() {
                  {n.body && <p className="text-sm text-gray-400">{n.body}</p>}
                  {showInvite ? (
                    <AgencyInviteActions inviteId={inviteId} onAnswered={() => { markRead(n); loadInvites(); }} />
+                 ) : showAssistantInvite ? (
+                   <button
+                     onClick={() => { markRead(n); setDetailInviteId(assistantInviteId); }}
+                     className="mt-2 w-full rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-3 py-2 text-center text-xs font-bold text-white active:scale-[0.99]"
+                   >
+                     Detaylı görüntülemek için tıklayın
+                   </button>
                  ) : n.link && <Link to={n.link} className="text-xs text-primary">Görüntüle →</Link>}
                </div>
                <div className="flex shrink-0 flex-col items-end gap-1">
@@ -99,6 +111,14 @@ export default function Notifications() {
            })}
          </div>}
       </div>
+
+      {/* Asistanlık daveti detayı: ajans ve davet edilen bilgileri, 10 saniyelik onay sayacı. */}
+      <InviteDetailSheet
+        open={!!detailInviteId}
+        inviteId={detailInviteId}
+        onClose={() => setDetailInviteId('')}
+        onAnswered={() => { load(); loadInvites(); }}
+      />
     </div>
   );
 }
