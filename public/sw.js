@@ -7,8 +7,8 @@ self.addEventListener('push', (event) => {
   event.waitUntil(
     self.registration.showNotification(data.title, {
       body: data.body,
-      icon: '/favicon.ico',
-      badge: '/favicon.ico',
+      icon: '/icon-ag-192.png',
+      badge: '/icon-ag-192.png',
       data: { url: data.url || '/' },
       vibrate: [200, 100, 200]
     })
