@@ -15,13 +15,15 @@ const NAME = { xs: 'max-w-[42px]', sm: 'max-w-[52px]', md: 'max-w-[68px]', lg: '
 const FRAME_SCALE = 0.78;
 
 /** Tek koltuk: boş koltukta + ve numara, dolu koltukta profil görseli ve isim. */
-export default function VoiceSeat({ seat, index, size = 'md', musicPlaying, speaking, isSelf, isOwner, isMod, accent = '#ef4444', gifted, onClick, micMuted }) {
+export default function VoiceSeat({ seat, index, size = 'md', musicPlaying, speaking, gender, isSelf, isOwner, isMod, accent = '#ef4444', gifted, onClick, micMuted }) {
   const cell = CELL[size] || CELL.md;
   const face = FACE[size] || FACE.md;
   const ring = RING[size] || RING.md;
   const emptyCircle = EMPTY[size] || EMPTY.md;
   const badge = BADGE[size] || BADGE.md;
   const nameWidth = NAME[size] || NAME.md;
+  // Konuşma dalgası rengi: erkeklerde mavi, kadınlarda pembe.
+  const speakingGender = gender === 'erkek' ? 'erkek' : 'kadin';
 
   if (!seat?.user_id) {
     return (
@@ -56,7 +58,8 @@ export default function VoiceSeat({ seat, index, size = 'md', musicPlaying, spea
     >
       <span className={`relative flex ${cell} shrink-0 items-center justify-center`}>
         {musicPlaying && <span aria-label="Müzik çalıyor" className={`pointer-events-none absolute ${ring} z-[7] rounded-full room-music-glow`} />}
-        {speaking && <span className={`pointer-events-none absolute ${ring} z-[5] rounded-full speaking-glow`} />}
+        {/* Konuşma ses dalgası: çemberin dışına pembe/mavi halkalar olarak taşar. */}
+        {speaking && <span data-gender={speakingGender} aria-hidden="true" className={`voice-speaking-wave pointer-events-none absolute ${ring} z-[5] rounded-full`} />}
         {halo && <span className="pointer-events-none absolute inset-0 z-[6] rounded-full" style={{ boxShadow: halo }} />}
         <VoiceSeatPortrait seat={seat} className={face} />
         {seat.muted && (

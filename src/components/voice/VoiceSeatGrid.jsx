@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import VoiceSeat from '@/components/voice/VoiceSeat';
 import VoiceSeatScore from '@/components/voice/VoiceSeatScore';
 import VoiceBoardTimer from '@/components/voice/VoiceBoardTimer';
+import useMessageProfiles from '@/hooks/useMessageProfiles';
 
 import { seatIndexRows } from '@/components/voice/seatLayout';
 import { useSize } from '@/hooks/use-size';
@@ -17,6 +18,8 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
   const wrapRef = useRef(null);
   const measured = useSize(wrapRef);
   const rows = seatIndexRows(seats.length);
+  // Konuşma dalgası rengi kişinin cinsiyetine göre seçilir: profil bilgisi koltuklara iletilir.
+  const seatProfiles = useMessageProfiles(seats.map((seat) => seat.user_id).filter(Boolean));
 
   const widestRow = Math.max(1, ...rows.map((row) => row.length));
   const gap = measured && measured.width < 640 ? 12 : 20;
@@ -43,6 +46,7 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
                   isOwner={occupied && seat.user_id === ownerId}
                   isMod={occupied && moderators.includes(seat.user_id)}
                   speaking={occupied && (seat.user_id === userId ? localSpeaking : speakingIds.includes(seat.user_id))}
+                  gender={occupied ? seatProfiles[seat.user_id]?.gender : ''}
                   onClick={() => onSelectSeat(index)}
                   accent={accent}
                   gifted={occupied ? gifted[seat.user_id] : undefined}
