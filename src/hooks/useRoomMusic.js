@@ -41,6 +41,19 @@ export default function useRoomMusic(roomId, enabled) {
   // Liste kişiye özeldir: bir kez okunur, şarkı değişiminde yeniden istenmez.
   useEffect(() => { fetchLibrary(); }, [fetchLibrary]);
 
+  // Oda değişince önceki odanın şarkısı anında susar: yeni odanın müzik durumu gelene kadar
+  // eski şarkı çalmaya devam etmez, iki odanın sesi birbirine karışmaz.
+  useEffect(() => {
+    setMusic(null);
+    setLibrary([]);
+    const audio = audioRef.current;
+    if (!audio) return undefined;
+    audio.pause();
+    audio.removeAttribute('src');
+    delete audio.dataset.track;
+    return undefined;
+  }, [roomId]);
+
   // Şarkı kaydı canlı izlenir: odaya sonradan giren de çalan şarkıyı alır.
   useEffect(() => {
     if (!roomId || !enabled) {

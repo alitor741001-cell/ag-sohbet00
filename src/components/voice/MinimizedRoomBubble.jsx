@@ -1,5 +1,5 @@
 import { useEffect, useRef, useSyncExternalStore } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
@@ -18,6 +18,7 @@ export default function MinimizedRoomBubble() {
   const room = useSyncExternalStore(subscribeMinimizedRoom, getMinimizedRoom);
   const filmState = useSyncExternalStore(subscribeMinimizedFilm, getMinimizedFilm);
   const navigate = useNavigate();
+  const location = useLocation();
   const bounds = useRef(null);
   const moved = useRef(false);
   const videoRef = useRef(null);
@@ -35,6 +36,29 @@ export default function MinimizedRoomBubble() {
     return () => window.removeEventListener('pointerdown', retry);
   }, [film]);
 
+  const closeRoom = async () => {
+    if (!room) return;
+    const roomId = room.id;
+    // Çember anında kaybolur; odadan çıkış arkada tamamlanır.
+    clearMinimizedRoom();
+    // Arka planda süren ses oturumu ve küçültülmüş film de kapatılır.
+    disposeVoiceSession(roomId);
+    clearMinimizedFilm(roomId);
+    await base44.functions.invoke('voice-room', { action: 'seat-leave', room_id: roomId }).catch(() => {});
+    await base44.functions.invoke('room-presence', { action: 'leave', room_id: roomId }).catch(() => {});
+  };
+
+  // X ile çıkış: çember sürüklendikten sonraki kazara dokunuş odadan çıkarmasın.
+  const leaveRoom = () => { if (!moved.current) closeRoom(); };
+
+  // Başka bir odanın içindeyken küçültülmüş oda balonu çıkmaz: eski odadan tamamen çıkılır,
+  // böylece sağ alttaki çember görünmez ve kişiyi eski odaya geri götürmez.
+  const openedRoomId = location.pathname.match(/^\/(?:sesli-oda|oda)\/([^/]+)/)?.[1] || '';
+  const insideOtherRoom = !!room && !!openedRoomId && openedRoomId !== room.id;
+  useEffect(() => {
+    if (insideOtherRoom) closeRoom();
+  }, [insideOtherRoom, room?.id]);
+
   if (!room) return null;
 
   const openRoom = () => {
@@ -42,16 +66,6 @@ export default function MinimizedRoomBubble() {
     const path = room.path || `/sesli-oda/${room.id}`;
     clearMinimizedRoom();
     navigate(path);
-  };
-
-  const leaveRoom = async () => {
-    if (moved.current) return;
-    // Odadan tamamen çıkılır: arka planda süren ses oturumu ve küçültülmüş film kapatılır.
-    disposeVoiceSession(room.id);
-    clearMinimizedFilm(room.id);
-    await base44.functions.invoke('voice-room', { action: 'seat-leave', room_id: room.id }).catch(() => {});
-    await base44.functions.invoke('room-presence', { action: 'leave', room_id: room.id }).catch(() => {});
-    clearMinimizedRoom();
   };
 
   // Film kaldığı yerden sürer; oda sahibi filmi sürdürürken odanın zamanı tazelenir.
