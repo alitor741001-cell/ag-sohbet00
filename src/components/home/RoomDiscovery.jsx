@@ -68,30 +68,49 @@ export default function RoomDiscovery({ shortcuts = null }) {
     };
     load();
 
+    // Oda olayları çok sık gelir (koltuk, sayaç, hediye): hepsi toplanıp tek seferde
+    // uygulanır, böylece ana sayfa saniyede defalarca yeniden çizilmez.
+    const pending = new Map();
+    let flushTimer = null;
+    const flush = () => {
+      flushTimer = null;
+      const events = [...pending.values()];
+      pending.clear();
+      if (!events.length) return;
+      setRooms((prev) => {
+        let next = prev;
+        events.forEach((event) => {
+          const data = event.data;
+          if (event.type === 'delete') {
+            next = next.filter((room) => room.id !== event.id);
+            return;
+          }
+          if (!data) return;
+          const id = data.id || event.id;
+          const known = next.find((item) => item.id === id);
+          // Canlı olay yalnızca değişen alanları taşıyabilir: kayıt eskisiyle birleştirilir,
+          // aksi halde gizli oda kısmi güncellemeyle ana sayfaya geri gelir.
+          const room = known ? { ...known, ...data, id } : { ...data, id };
+          const rest = next.filter((item) => item.id !== id);
+          // Yeni gelen oda listede yoksa yalnızca açıkça görünür olduğunda eklenir.
+          next = isVisible(room) && (known || room.hidden === false) ? [room, ...rest] : rest;
+        });
+        return next;
+      });
+    };
     const unsubscribe = base44.entities.Room.subscribe((event) => {
       const data = event.data;
-      if (event.type === 'delete') {
-        setRooms((prev) => prev.filter((room) => room.id !== event.id));
-        return;
-      }
-      if (!data) return;
-      const id = data.id || event.id;
+      const id = data?.id || event.id;
       // Sunucu "gizli" derse işaretlenir, "görünür" derse işaret kalkar.
-      if (data.hidden === true) hiddenIdsRef.current.add(id);
-      else if (data.hidden === false) hiddenIdsRef.current.delete(id);
-      setRooms((prev) => {
-        const known = prev.find((item) => item.id === id);
-        // Canlı olay yalnızca değişen alanları taşıyabilir: kayıt eskisiyle birleştirilir,
-        // aksi halde gizli oda kısmi güncellemeyle ana sayfaya geri gelir.
-        const room = known ? { ...known, ...data, id } : { ...data, id };
-        const rest = prev.filter((item) => item.id !== id);
-        // Yeni gelen oda listede yoksa yalnızca açıkça görünür olduğunda eklenir.
-        return isVisible(room) && (known || room.hidden === false) ? [room, ...rest] : rest;
-      });
+      if (data?.hidden === true) hiddenIdsRef.current.add(id);
+      else if (data?.hidden === false) hiddenIdsRef.current.delete(id);
+      pending.set(id, event);
+      if (!flushTimer) flushTimer = window.setTimeout(flush, 700);
     });
 
     return () => {
       alive = false;
+      if (flushTimer) window.clearTimeout(flushTimer);
       unsubscribe();
     };
   }, [user?.id, user?.role]);

@@ -80,8 +80,8 @@ export default function VoiceRoomMenu({ open, onClose, room, userId, participant
             onClick={() => { onClose(); onInvite(); }}
           />
         )}
-        {/* Müzik: oda sahibi ve yöneticiler telefondan şarkı açar, herkes aynı şarkıyı duyar. */}
-        {canMod && onOpenMusic && (
+        {/* Müzik: herkes kendi listesinden şarkı açar, oda aynı şarkıyı duyar. */}
+        {onOpenMusic && (
           <VoiceMenuTile
             icon={Music}
             label="Müzik"

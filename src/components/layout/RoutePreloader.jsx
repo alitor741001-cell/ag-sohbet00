@@ -36,9 +36,8 @@ const preload = (path) => {
 
 export default function RoutePreloader() {
   useEffect(() => {
-    // Açık sayfa ve ana sekmeler önceliklidir; kalan paketler arkada indirilir.
+    // Açık sayfa hemen iner; kalan paketler sırayla, açılışı yavaşlatmadan indirilir.
     preload(window.location.pathname);
-    PRIMARY_ROUTES.forEach((path) => routeLoaders[path]?.());
 
     const onIntent = (event) => {
       const anchor = event.target.closest?.('a[href]');
@@ -47,27 +46,42 @@ export default function RoutePreloader() {
     document.addEventListener('pointerdown', onIntent, { passive: true });
     document.addEventListener('pointerover', onIntent, { passive: true });
 
-    // Yavaş bağlantıda kalan paketler indirilmez.
+    // Yavaş bağlantıda arka plan indirmesi yapılmaz.
     const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
     const canWarm = !connection?.saveData && !['slow-2g', '2g'].includes(connection?.effectiveType);
     const queue = canWarm
       ? Object.keys(routeLoaders).filter((path) => !PRIMARY_ROUTES.includes(path)).map((path) => routeLoaders[path])
       : [];
-    // Kalan paketler tarayıcı boşa çıktığında indirilir: ilk açılışın bant genişliğini
-    // ve veri isteklerini yavaşlatmaz, sekmeye dokunulduğunda paket yine hazırdır.
     const idle = window.requestIdleCallback ? window.requestIdleCallback.bind(window) : (callback) => window.setTimeout(callback, 800);
     const cancelIdle = window.cancelIdleCallback ? window.cancelIdleCallback.bind(window) : window.clearTimeout;
-    let handle = 0;
+
+    let primaryTimer = 0;
+    let warmTimer = 0;
+    let idleHandle = 0;
+
+    // Ana sekmeler sırayla, kısa aralıklarla ısıtılır: ilk boyama bant genişliğini paylaşmaz.
+    const primaryQueue = PRIMARY_ROUTES
+      .filter((path) => path !== window.location.pathname)
+      .map((path) => routeLoaders[path]);
+    const warmPrimary = () => {
+      primaryQueue.shift()?.();
+      if (primaryQueue.length) primaryTimer = window.setTimeout(warmPrimary, 400);
+    };
+    primaryTimer = window.setTimeout(warmPrimary, 1200);
+
+    // Kalan paketler açılıştan sonra, tarayıcı boşa çıktığında teker teker indirilir.
     const warmNext = () => {
       queue.shift()?.();
-      if (queue.length) handle = idle(warmNext, { timeout: 4000 });
+      if (queue.length) idleHandle = idle(warmNext, { timeout: 8000 });
     };
-    if (queue.length) handle = idle(warmNext, { timeout: 4000 });
+    if (queue.length) warmTimer = window.setTimeout(() => { idleHandle = idle(warmNext, { timeout: 8000 }); }, 6000);
 
     return () => {
       document.removeEventListener('pointerdown', onIntent);
       document.removeEventListener('pointerover', onIntent);
-      if (handle) cancelIdle(handle);
+      window.clearTimeout(primaryTimer);
+      window.clearTimeout(warmTimer);
+      if (idleHandle) cancelIdle(idleHandle);
     };
   }, []);
 

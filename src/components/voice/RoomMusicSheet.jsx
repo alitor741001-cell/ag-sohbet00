@@ -4,10 +4,10 @@ import RoomTrackList from '@/components/voice/RoomTrackList';
 import { useToast } from '@/components/ui/use-toast';
 
 /**
- * Oda müziği penceresi: oda sahibi ve yöneticiler telefondan şarkı seçer,
- * çalan şarkı listeden de açılır; ses seviyesi köşedeki denetleyiciden ayarlanır.
+ * Oda müziği penceresi: herkes kendi şarkılarını telefondan yükler ve kendi
+ * listesinden odaya açar; liste kişiye özeldir, ses seviyesi köşedeki denetleyiciden ayarlanır.
  */
-export default function RoomMusicSheet({ open, onClose, music, tracks = [], currentUri, isMod, uploading, onUpload, onPlayTrack }) {
+export default function RoomMusicSheet({ open, onClose, music, tracks = [], currentUri, uploading, onUpload, onPlayTrack }) {
   const { toast } = useToast();
 
   // Sonuç bildirimleri tek yerde: yükleme ve listeden çalma aynı mesajları kullanır.
@@ -38,22 +38,19 @@ export default function RoomMusicSheet({ open, onClose, music, tracks = [], curr
   return (
     <VoiceSheet open={open} onClose={onClose} title="Oda müziği">
       <div className="rounded-2xl border border-[#FFD700]/45 bg-black/70 p-3">
-        {isMod ? (
-          <label
-            htmlFor="room-music-file"
-            className="flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#FFD700] text-sm font-bold text-black"
-          >
-            {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />} Telefondan yükle
-          </label>
-        ) : (
-          <p className="py-2 text-center text-[11px] text-white/55">
-            {music ? 'Odada müzik çalıyor.' : 'Müziği oda sahibi ve yöneticiler açabilir.'}
-          </p>
-        )}
+        <label
+          htmlFor="room-music-file"
+          className="flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#FFD700] text-sm font-bold text-black"
+        >
+          {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />} Telefondan yükle
+        </label>
+        <p className="mt-2 text-center text-[11px] leading-snug text-white/55">
+          {music ? 'Odada müzik çalıyor.' : 'Listendeki bir şarkıya dokunduğunda odada çalar.'}
+        </p>
       </div>
 
-      {/* Yüklenen şarkılar: müzik tuşuna basıldığında liste hâlinde görünür. */}
-      <RoomTrackList tracks={tracks} currentUri={currentUri} canPlay={isMod} busy={uploading} onPlay={play} />
+      {/* Kendi şarkıların: yüklediklerin yalnızca senin listende görünür. */}
+      <RoomTrackList tracks={tracks} currentUri={currentUri} busy={uploading} onPlay={play} />
 
       {/* iPhone'da müzik dosyası Dosyalar'dan seçilir; Apple Music şarkıları korumalıdır. */}
       <p className="mt-2 px-1 text-[11px] leading-snug text-white/45">

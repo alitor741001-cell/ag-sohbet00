@@ -500,15 +500,24 @@ export default async function (req: Request): Promise<Response> {
       return Response.json({ ok: true, music: await loadRoomMusic(base44, room_id) });
     }
 
-    // Odanın şarkı listesi: yüklenen şarkılar burada birikir, yönetici listeden şarkı açar.
+    // Şarkı listesi kişiye özeldir: yüklediğin şarkılar yalnızca senin listende görünür,
+    // hangi odaya gidersen git kendi şarkıların listelenir.
     if (action === 'music-library') {
       if (!isParticipant && !canMod) return Response.json({ error: 'Önce odaya katılmalısın.' }, { status: 403 });
-      const tracks = await base44.asServiceRole.entities.RoomTrack.filter({ room_id }, '-created_date', 30).catch(() => []);
-      return Response.json({ ok: true, tracks: Array.isArray(tracks) ? tracks : [] });
+      const rows = await base44.asServiceRole.entities.RoomTrack.filter({ added_by: user.id }, '-created_date', 60).catch(() => []);
+      const seen = new Set<string>();
+      const tracks = (Array.isArray(rows) ? rows : []).filter((row: any) => {
+        const uri = String(row?.file_uri || '');
+        if (!uri || seen.has(uri)) return false;
+        seen.add(uri);
+        return true;
+      }).slice(0, 30);
+      return Response.json({ ok: true, tracks });
     }
 
     if (action === 'music-set') {
-      if (!canMod) return Response.json({ error: 'Müziği oda sahibi ve yöneticiler açabilir.' }, { status: 403 });
+      // Herkes kendi şarkısını odada açabilir: şarkı odada ortak çalar, liste kişiye özeldir.
+      if (!isParticipant && !canMod) return Response.json({ error: 'Önce odaya katılmalısın.' }, { status: 403 });
       const fileUri = typeof body.file_uri === 'string' ? body.file_uri.trim().slice(0, 400) : '';
       const fileUrl = typeof body.url === 'string' ? body.url.trim().slice(0, 1200) : '';
       if (!fileUri || !/^https?:\/\//.test(fileUrl)) return Response.json({ error: 'Şarkı dosyası geçersiz.' }, { status: 400 });
@@ -526,7 +535,7 @@ export default async function (req: Request): Promise<Response> {
         : await base44.asServiceRole.entities.RoomMusic.create(patch);
       await say(`${shownName}, odaya müzik açtı: ${title}`);
       // Şarkı listesi: aynı dosya ikinci kez eklenmez, her yeni şarkı listeye düşer.
-      const known = await base44.asServiceRole.entities.RoomTrack.filter({ room_id, file_uri: fileUri }, '-created_date', 1).catch(() => []);
+      const known = await base44.asServiceRole.entities.RoomTrack.filter({ added_by: user.id, file_uri: fileUri }, '-created_date', 1).catch(() => []);
       if (!Array.isArray(known) || known.length === 0) {
         await base44.asServiceRole.entities.RoomTrack.create({
           room_id, title, file_uri: fileUri, added_by: user.id, added_by_name: shownName,
@@ -536,9 +545,12 @@ export default async function (req: Request): Promise<Response> {
     }
 
     if (action === 'music-control') {
-      if (!canMod) return Response.json({ error: 'Müziği oda sahibi ve yöneticiler yönetir.' }, { status: 403 });
       const record = await loadRoomMusic(base44, room_id);
       if (!record) return Response.json({ error: 'Açık şarkı yok.' }, { status: 404 });
+      // Şarkıyı açan kişi kendi şarkısını yönetir; oda sahibi ve adminler her şarkıyı yönetir.
+      if (!canMod && record.owner_id !== user.id) {
+        return Response.json({ error: 'Bu şarkıyı yalnızca açan kişi ve yöneticiler yönetir.' }, { status: 403 });
+      }
       const op = String(body.op || '');
       const elapsed = record.is_playing && record.started_at
         ? Math.max(0, (Date.now() - new Date(record.started_at).getTime()) / 1000)
