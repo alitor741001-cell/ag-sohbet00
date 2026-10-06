@@ -125,6 +125,8 @@ export default function AppLayout() {
       }
       // Özel mesajlar üst bildirim yerine yalnızca sohbet rozetinde gösterilir.
       if (ev.data?.type === 'dm') return;
+      // Asistanlık daveti ve onayı siyah kutuda değil, yalnızca sistem bildiriminde görünür.
+      if (ev.data?.type === 'assistant_invite' || ev.data?.type === 'assistant_accepted') return;
       toast({ title: ev.data?.title || 'Bildirim', description: ev.data?.body });
     });
     const unsubUser = base44.entities.User.subscribe((ev) => {

@@ -8,6 +8,22 @@ import { AGENCY_GOLD, agencyApi } from '@/lib/agency';
 
 const COUNTDOWN_SECONDS = 10;
 
+// Asistanlık davetinde gösterilen görev ve sınırlar listesi.
+const ASSISTANT_RULES = [
+  '🎤 Odalara giriş yapıp kullanıcıları karşılar.',
+  '👥 Yeni kullanıcılarla ilgilenir ve yardımcı olur.',
+  '🛡️ Oda düzenini ve sohbet kurallarını takip eder.',
+  '🚫 Kural ihlallerini yöneticilere bildirir.',
+  '⚠️ Kullanıcılara gerektiğinde uyarı verir.',
+  '🎁 Etkinlik, hediye ve oda aktivitelerine destek olur.',
+  '💬 Kullanıcı sorularına cevap verir.',
+  '👑 Admin veya yöneticinin verdiği görevleri yerine getirir.',
+  '❌ Kendi başına admin yetkisi kullanamaz.',
+  '🔒 Kullanıcıların özel bilgilerini paylaşamaz.',
+  '⚖️ Kullanıcılara karşı tarafsız ve saygılı davranır.',
+  '🚫 Yetkisini kötüye kullanamaz veya kişisel çıkar için kullanamaz.',
+];
+
 /**
  * Davet detayı: ajans bilgisi, ajans sahibi ve sözleşme kuralları.
  * Onay butonu 10 saniye geri sayımdan sonra aktifleşir.
@@ -112,11 +128,11 @@ export default function InviteDetailSheet({ open, inviteId, onClose, onAnswered 
           </div>
 
           <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-            <p className="mb-2 text-[11px] font-black uppercase tracking-wider" style={{ color: AGENCY_GOLD }}>Ajans Kuralları & Sözleşme</p>
+            <p className="mb-2 text-[11px] font-black uppercase tracking-wider" style={{ color: AGENCY_GOLD }}>{isAssistantInvite ? 'Asistanlık Kuralları' : 'Ajans Kuralları & Sözleşme'}</p>
             <ul className="space-y-1.5">
-              {rules.map((rule) => (
+              {(isAssistantInvite ? ASSISTANT_RULES : rules).map((rule) => (
                 <li key={rule} className="flex gap-2 text-[11px] leading-relaxed text-white/70">
-                  <Check className="mt-0.5 h-3 w-3 shrink-0" style={{ color: AGENCY_GOLD }} />
+                  {!isAssistantInvite && <Check className="mt-0.5 h-3 w-3 shrink-0" style={{ color: AGENCY_GOLD }} />}
                   <span>{rule}</span>
                 </li>
               ))}
