@@ -103,6 +103,10 @@ export default function AgencySection({ user, onRefresh, showHeading = true }) {
                 {isBroadcaster && profile.broadcaster_status !== 'active' && (
                   <p className="mt-0.5 text-[10px] text-white/45">Yayıncı durumun pasif</p>
                 )}
+                {/* Asistanlık yayıncı rolünü kaldırmaz: aktif yayıncıysa profilinde yayıncı etiketi kalır. */}
+                {isAssistant && profile.broadcaster_status === 'active' && (
+                  <p className="mt-0.5 text-[10px] text-white/45">🎤 Yayıncı rolün de aktif — hediyeler ve kotan ajansa işler.</p>
+                )}
               </>
             ) : (
               <>

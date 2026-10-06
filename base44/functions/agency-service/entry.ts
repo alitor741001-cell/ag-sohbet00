@@ -258,15 +258,14 @@ export default async function (req) {
         if (invite.kind === 'assistant') await clearAssistantEntry('removed');
         return Response.json({ ok: true, accepted: false });
       }
-      // Asistanlık kabulü: kişi ajansa asistan olarak katılır, yayıncı kaydı açılmaz.
+      // Asistanlık kabulü: kişi ajansa asistan olarak katılır, yayıncı rolü elinden alınmaz.
       if (invite.kind === 'assistant') {
         if (!invitedAgency) return Response.json({ error: 'Ajans bulunamadı.' }, { status: 404 });
-        // Ajansın mevcut yayıncısı asistan olduğunda yayıncı kaydı ve kota kazancı korunur.
-        const existingMember = account.agency_record_id === invitedAgency.id && account.broadcaster_status === 'active';
+        // Asistan aynı zamanda ajansın yayıncısı olarak kalır: yayıncı etiketi ve kota kazancı korunur.
         await base44.asServiceRole.entities.User.update(account.id, {
           agency_code: invitedAgency.agency_id, agency_record_id: invitedAgency.id, agency_name: invitedAgency.name,
           agency_owner_id: invitedAgency.owner_id, agency_role: 'assistant',
-          broadcaster_status: existingMember ? 'active' : '',
+          broadcaster_status: 'active',
         });
         await base44.asServiceRole.entities.AgencyInvite.update(invite.id, { status: 'accepted', responded_at: new Date().toISOString() });
         await base44.asServiceRole.entities.Agency.update(invitedAgency.id, {
