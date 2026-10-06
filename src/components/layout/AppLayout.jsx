@@ -17,6 +17,7 @@ import MessageRealtimeProvider from '@/components/messages/MessageRealtimeProvid
 import RoutePreloader from '@/components/layout/RoutePreloader';
 import { isBasicPath } from '@/lib/access';
 import { isMultiDeviceExempt } from '@/lib/sessionPolicy';
+import useSupabaseMirror from '@/hooks/useSupabaseMirror';
 
 export default function AppLayout() {
   const { pathname } = useLocation();
@@ -25,6 +26,8 @@ export default function AppLayout() {
   useFriendPresence(user, true);
   useRoleCelebration();
   useRoleLabels();
+  // Supabase aynası: canlı veri oturum açıkken kendiliğinden eşitlenir.
+  useSupabaseMirror(user);
   const { publicSettings } = useAuth();
   const { toast } = useToast();
   // RoleCelebrationOverlay renders a full-screen animated character when role changes

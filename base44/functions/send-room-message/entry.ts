@@ -3,6 +3,8 @@ import { sanitizeText, rateLimit, safeErrorResponse, logSecurity } from '../../s
 import { findProfanity } from '../../shared/profanity.ts';
 import { awardMessageXp } from '../../shared/xp.ts';
 import { HIDDEN_AVATAR_URL, hiddenDisplayName, isHiddenUser } from '../../shared/vip.ts';
+import { mirrorRecord } from '../../shared/supabaseMirror.ts';
+import { waitUntil } from 'base44:runtime';
 
 export default async function(req) {
   try {
@@ -73,6 +75,8 @@ export default async function(req) {
     // Arka planda XP kazanımı — kullanıcı arayüzünde mesaj sayısı gösterilmez.
     // Oda LVL'i mesajla yükselmez; hediye atışıyla yükselir (bkz. voice-room gift-send).
     try { await awardMessageXp(base44, user.id, name, created.id); } catch {}
+    // Supabase aynası yanıt gönderildikten sonra yazılır: mesaj iletimi bekletilmez.
+    waitUntil(mirrorRecord(base44, 'RoomMessage', created));
     return Response.json({ ok: true, message: created });
   } catch (e) {
     return safeErrorResponse(e);

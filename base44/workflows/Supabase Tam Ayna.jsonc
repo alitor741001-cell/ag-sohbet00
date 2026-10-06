@@ -1,0 +1,44 @@
+{
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "recurring",
+      "cron_expression": "*/15 * * * *",
+      "one_time_date": null,
+      "timezone": "Europe/Istanbul",
+      "interval_value": null,
+      "interval_unit": null,
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  },
+  "description": "T\u00fcm koleksiyonlar\u0131 Supabase'e ta\u015f\u0131r ve kayna\u011f\u0131ndan silinen kay\u0131tlar\u0131 aynadan d\u00fc\u015f\u00fcr\u00fcr",
+  "name": "Supabase Tam Ayna",
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "supabase_full_mirror",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "aynala": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "supabase-sync-full"
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "T\u00fcm veriyi aynala",
+            "description": "Ekonomi, oyun, ajans, destek ve katalog kay\u0131tlar\u0131 dahil"
+          }
+        }
+      }
+    ]
+  }
+}

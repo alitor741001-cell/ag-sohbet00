@@ -1,0 +1,44 @@
+{
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "recurring",
+      "cron_expression": "*/2 * * * *",
+      "one_time_date": null,
+      "timezone": "Europe/Istanbul",
+      "interval_value": null,
+      "interval_unit": null,
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  },
+  "description": "Oda, kat\u0131l\u0131mc\u0131, mesaj, arkada\u015fl\u0131k ve \u00e7evrim i\u00e7i durum verisini 2 dakikada bir Supabase'e yans\u0131t\u0131r",
+  "name": "Supabase Canl\u0131 Ayna",
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "supabase_live_mirror",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "aynala": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "supabase-sync"
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Canl\u0131 veriyi aynala",
+            "description": "Odalar, kat\u0131l\u0131mc\u0131lar, mesajlar, arkada\u015fl\u0131klar ve \u00e7evrim i\u00e7i durum"
+          }
+        }
+      }
+    ]
+  }
+}
