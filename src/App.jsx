@@ -48,7 +48,6 @@ const AdminReports = lazy(() => import('@/pages/admin/AdminReports'));
 const AdminUserReports = lazy(() => import('@/pages/admin/AdminUserReports'));
 const AdminSettings = lazy(() => import('@/pages/admin/AdminSettings'));
 const AdminSecurity = lazy(() => import('@/pages/admin/AdminSecurity'));
-const AdminPromoVideo = lazy(() => import('@/pages/admin/AdminPromoVideo'));
 const AdminSessions = lazy(() => import('@/pages/admin/AdminSessions'));
 const AdminUpdates = lazy(() => import('@/pages/admin/AdminUpdates'));
 const AdminGifts = lazy(() => import('@/pages/admin/AdminGifts'));
@@ -154,7 +153,6 @@ const AuthenticatedApp = () => {
           <Route path="sikayetler" element={<AdminUserReports />} />
           <Route path="ayarlar" element={<AdminSettings />} />
           <Route path="ayalar" element={<AdminSettings />} />
-          <Route path="tanitim-videosu" element={<AdminPromoVideo />} />
           <Route path="oturumlar" element={<AdminSessions />} />
           <Route path="guncellemeler" element={<AdminUpdates />} />
           <Route path="xp" element={<Navigate to="/admin/kullanicilar" replace />} />
