@@ -21,12 +21,12 @@ export default async function(req) {
     // Batch modu: birden fazla kullanıcı profilini tek sorguda getir (N+1 önleme)
     const { user_id, user_ids } = body || {};
     if (Array.isArray(user_ids) && user_ids.length > 0) {
-      const ids = user_ids.filter(Boolean).slice(0, 100);
-      const users = await Promise.all(ids.map((uid) => base44.asServiceRole.entities.User.get(uid).catch(() => null)));
+      const ids = [...new Set(user_ids.filter((id) => typeof id === 'string' && id))].slice(0, 100);
+      const users = ids.length ? await base44.asServiceRole.entities.User.filter({ id: { $in: ids } }, '-created_date', ids.length) : [];
       const profiles = {};
-      users.forEach((u, i) => {
+      users.forEach((u) => {
         if (!u) return;
-        profiles[ids[i]] = {
+        profiles[u.id] = {
           username: u.username || '', full_name: u.full_name || '', avatar: u.avatar || '',
           member_id: u.member_id || '-', role: u.role || '', display_role: u.display_role || '',
           custom_role: u.custom_role || null, profile_frame: u.profile_frame || '',

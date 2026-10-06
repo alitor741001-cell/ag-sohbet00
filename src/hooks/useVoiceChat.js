@@ -6,6 +6,7 @@ import { hasDirectCallAudioFocus, subscribeCallAudioFocus } from '@/lib/callAudi
 import { hasSharedMic, releaseSharedMic, setSharedMicActive, sharedMicTrack } from '@/lib/micSource';
 import { isRoomMinimized } from '@/lib/minimizedRoom';
 import { disposeOtherVoiceSessions, registerVoiceSession, takeVoiceSession } from '@/lib/roomVoiceSession';
+import shallowEqual from '@/components/data/shallowEqual';
 
 const initialDebug = { participantCount: 0, remoteParticipants: 0, remoteTracks: 0, playback: 'hazır' };
 // Mikrofon izni verilmese bile kişi odayı dinlemeye devam eder; mesaj bunu açıkça söyler.
@@ -29,6 +30,8 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
   const remoteAudioControlRef = useRef(null);
   const [active, setActive] = useState(false);
   const [requesting, setRequesting] = useState(false);
+  const micTogglePendingRef = useRef(false);
+  const micEnablePendingRef = useRef(new WeakMap());
   const [deafened, setDeafened] = useState(false);
   const [remoteMuted, setRemoteMuted] = useState(false);
   const [localSpeaking, setLocalSpeaking] = useState(false);
@@ -59,15 +62,16 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
       const publication = participant.getTrackPublication(Track.Source.Microphone);
       micStates[participant.identity] = !!publication && !publication.isMuted;
     });
-    setParticipantMicStates(micStates);
+    setParticipantMicStates((previous) => shallowEqual(previous, micStates) ? previous : micStates);
     setActive(!!micStates[room.localParticipant.identity]);
     setLocalSpeaking(room.localParticipant.isSpeaking && !!micStates[room.localParticipant.identity]);
-    setDebug({
+    const nextDebug = {
       participantCount: people.length,
       remoteParticipants: room.remoteParticipants.size,
       remoteTracks: audioElementsRef.current.size,
       playback: room.canPlaybackAudio ? 'oynatılıyor' : 'engellendi',
-    });
+    };
+    setDebug((previous) => shallowEqual(previous, nextDebug) ? previous : nextDebug);
   }, []);
 
   // Mikrofonu aç: yayın varsa yalnızca geri açılır, yoksa izinli paylaşılan kanal yayınlanır.
@@ -75,16 +79,23 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
   const enableMic = useCallback(async (room) => {
     if (!room) return;
     micWantedRef.current = true;
-    const publication = room.localParticipant.getTrackPublication(Track.Source.Microphone);
-    if (publication) {
-      if (publication.isMuted) await room.localParticipant.setMicrophoneEnabled(true);
+    const pending = micEnablePendingRef.current.get(room);
+    if (pending) return pending;
+    const request = (async () => {
+      const publication = room.localParticipant.getTrackPublication(Track.Source.Microphone);
+      if (publication) {
+        if (publication.isMuted) await room.localParticipant.setMicrophoneEnabled(true);
+        setSharedMicActive(true);
+        return;
+      }
+      const track = await sharedMicTrack();
+      if (!track || roomRef.current !== room || room.state !== 'connected') return;
       setSharedMicActive(true);
-      return;
-    }
-    const track = await sharedMicTrack();
-    if (!track) return;
-    setSharedMicActive(true);
-    await room.localParticipant.publishTrack(track, { source: Track.Source.Microphone });
+      await room.localParticipant.publishTrack(track, { source: Track.Source.Microphone });
+    })();
+    micEnablePendingRef.current.set(room, request);
+    try { await request; }
+    finally { if (micEnablePendingRef.current.get(room) === request) micEnablePendingRef.current.delete(room); }
   }, []);
 
   const attachRemoteAudio = useCallback((track) => {
@@ -150,7 +161,8 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
     roomRef.current = room;
 
     const updateSpeakers = (speakers) => {
-      setSpeakingIds(speakers.filter((participant) => participant.identity !== user.id).map((participant) => participant.identity));
+      const nextIds = speakers.filter((participant) => participant.identity !== user.id).map((participant) => participant.identity);
+      setSpeakingIds((previous) => previous.length === nextIds.length && previous.every((id, index) => id === nextIds[index]) ? previous : nextIds);
       refreshState();
     };
     const onUnsubscribed = (track) => {
@@ -396,8 +408,9 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
 
   const toggleMute = useCallback(async () => {
     const room = roomRef.current;
-    if (!room || hasDirectCallAudioFocus() || requesting || mutedByModeratorRef.current || connectionState !== 'connected') return;
+    if (!room || hasDirectCallAudioFocus() || requesting || micTogglePendingRef.current || mutedByModeratorRef.current || connectionState !== 'connected') return;
     if (!voiceEnabledRef.current && !active) return;
+    micTogglePendingRef.current = true;
     setRequesting(true);
     setError('');
     try {
@@ -408,7 +421,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
       console.error('[LiveKit] Microphone toggle failed', micError);
       await retryAudio();
       setError(friendlyMicError(micError));
-    } finally { setRequesting(false); }
+    } finally { micTogglePendingRef.current = false; setRequesting(false); }
   }, [active, connectionState, refreshState, requesting, retryAudio]);
 
   const toggleDeafen = useCallback(() => {

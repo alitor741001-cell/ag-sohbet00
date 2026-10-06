@@ -1,4 +1,6 @@
+import { memo } from 'react';
 import { Crown, Lock, MicOff, Plus, Shield } from 'lucide-react';
+import shallowEqual from '@/components/data/shallowEqual';
 import VoiceSeatPortrait from '@/components/voice/VoiceSeatPortrait';
 import { isHiddenName } from '@/lib/hiddenUser';
 
@@ -8,14 +10,13 @@ const CELL = { xs: 'h-[42px] w-[42px]', sm: 'h-[52px] w-[52px]', md: 'h-[68px] w
 const FACE = { xs: 'h-10 w-10', sm: 'h-12 w-12', md: 'h-14 w-14', lg: 'h-20 w-20' };
 const RING = { xs: 'h-10 w-10', sm: 'h-12 w-12', md: 'h-14 w-14', lg: 'h-20 w-20' };
 const EMPTY = { xs: 'h-10 w-10', sm: 'h-12 w-12', md: 'h-14 w-14', lg: 'h-20 w-20' };
-const FRAME = { xs: '2xs', sm: 'xs', md: 'sm', lg: 'md' };
 const BADGE = { xs: 'translate-x-[3px] translate-y-[3px]', sm: 'translate-x-[5px] translate-y-[5px]', md: 'translate-x-[9px] translate-y-[9px]', lg: 'translate-x-[12px] translate-y-[12px]' };
 // İsim alanı koltuk genişliğini aşmaz: uzun isimler satırı yana taşırmaz.
 const NAME = { xs: 'max-w-[42px]', sm: 'max-w-[52px]', md: 'max-w-[68px]', lg: 'max-w-[88px]' };
-const FRAME_SCALE = 0.78;
 
 /** Tek koltuk: boş koltukta + ve numara, dolu koltukta profil görseli ve isim. */
-export default function VoiceSeat({ seat, index, size = 'md', musicPlaying, speaking, gender, isSelf, isOwner, isMod, accent = '#ef4444', gifted, onClick, micMuted }) {
+function VoiceSeat({ seat, index, size = 'md', musicPlaying, speaking, gender, isSelf, isOwner, isMod, accent = '#ef4444', gifted, onClick, onSelect, micMuted }) {
+  const handleClick = onSelect ? () => onSelect(index) : onClick;
   const cell = CELL[size] || CELL.md;
   const face = FACE[size] || FACE.md;
   const ring = RING[size] || RING.md;
@@ -27,7 +28,7 @@ export default function VoiceSeat({ seat, index, size = 'md', musicPlaying, spea
 
   if (!seat?.user_id) {
     return (
-      <button type="button" onClick={onClick} className="flex flex-col items-center gap-1 active:scale-95 transition-transform" aria-label={`${index + 1}. koltuk`}>
+      <button type="button" onClick={handleClick} className="flex flex-col items-center gap-1 active:scale-95 transition-transform" aria-label={`${index + 1}. koltuk`}>
         <span className={`flex ${cell} shrink-0 items-center justify-center`}>
           <span className={`relative flex ${emptyCircle} items-center justify-center rounded-full border ${seat?.locked ? 'border-amber-400/70 bg-amber-500/10' : 'border-white/25 bg-black/40'}`}>
             {seat?.locked ? <Lock className="h-4 w-4 text-amber-400" /> : <Plus className="h-5 w-5 text-white/80" />}
@@ -52,7 +53,7 @@ export default function VoiceSeat({ seat, index, size = 'md', musicPlaying, spea
   return (
     <button
       type="button"
-      onClick={onClick}
+      onClick={handleClick}
       className="flex flex-col items-center gap-1 active:scale-95 transition-transform"
       aria-label={seat.name || 'Koltuk'}
     >
@@ -79,3 +80,9 @@ export default function VoiceSeat({ seat, index, size = 'md', musicPlaying, spea
     </button>
   );
 }
+
+export default memo(VoiceSeat, (previous, next) => {
+  const { seat: previousSeat, ...previousProps } = previous;
+  const { seat: nextSeat, ...nextProps } = next;
+  return shallowEqual(previousSeat, nextSeat) && shallowEqual(previousProps, nextProps);
+});

@@ -8,6 +8,8 @@ import { base44 } from '@/api/base44Client';
  * bir değişiklik yalnızca o kişiyi gösteren bileşenleri yeniden çizer.
  */
 const profiles = new Map();
+const fetchedAt = new Map();
+const PROFILE_TTL_MS = 60000;
 const listeners = new Map(); // dinleyici -> izlediği kimlikler
 let pending = new Set();
 let subscription = null;
@@ -33,7 +35,10 @@ const flush = async () => {
   try {
     const response = await base44.functions.invoke('user-profile', { user_ids: ids });
     const found = response?.data?.data || response?.data || {};
-    ids.forEach((id) => profiles.set(id, found[id] || { account_status: 'deleted' }));
+    ids.forEach((id) => {
+      profiles.set(id, found[id] || { account_status: 'deleted' });
+      fetchedAt.set(id, Date.now());
+    });
   } catch {
     // İstek aksarsa kimlikler beklemede kalır; bir sonraki turda yeniden denenir.
     ids.forEach((id) => pending.add(id));
@@ -52,6 +57,7 @@ const requestMissing = (ids) => {
 };
 
 const requestRefresh = (ids) => {
+  if (!ids.length) return;
   ids.forEach((id) => pending.add(id));
   if (batchTimer) return;
   if (!refreshTimer) refreshTimer = window.setTimeout(flush, 1200);
@@ -59,10 +65,22 @@ const requestRefresh = (ids) => {
 
 const ensureSubscription = () => {
   if (subscription) return;
-  subscription = subscribeEntity('User', (event) => {
+  const off = subscribeEntity('User', (event) => {
     const id = event.data?.id || event.id;
     if (id && [...listeners.values()].some((ids) => ids.has(id))) requestRefresh([id]);
   });
+  const refreshWatched = () => {
+    if (document.visibilityState === 'hidden') return;
+    const ids = [...new Set([...listeners.values()].flatMap((watched) => [...watched]))];
+    requestRefresh(ids.filter((id) => Date.now() - (fetchedAt.get(id) || 0) >= PROFILE_TTL_MS));
+  };
+  window.addEventListener('online', refreshWatched);
+  document.addEventListener('visibilitychange', refreshWatched);
+  subscription = () => {
+    off();
+    window.removeEventListener('online', refreshWatched);
+    document.removeEventListener('visibilitychange', refreshWatched);
+  };
 };
 
 export default function useMessageProfiles(userIds) {
@@ -75,7 +93,7 @@ export default function useMessageProfiles(userIds) {
     ensureSubscription();
     setVersion((value) => value + 1);
     // Hafızadaki profiller beklemeden gösterilir; yalnızca eksikler sunucudan istenir.
-    requestMissing(ids.filter((id) => !profiles.has(id)));
+    requestMissing(ids.filter((id) => !profiles.has(id) || Date.now() - (fetchedAt.get(id) || 0) >= PROFILE_TTL_MS));
     const listener = () => setVersion((value) => value + 1);
     listeners.set(listener, new Set(ids));
     return () => {
@@ -85,7 +103,10 @@ export default function useMessageProfiles(userIds) {
         window.clearTimeout(batchTimer); window.clearTimeout(refreshTimer);
         batchTimer = null; refreshTimer = null; pending.clear();
         // Preserve a small warm cache, not every profile ever visited.
-        while (profiles.size > 1000) profiles.delete(profiles.keys().next().value);
+        while (profiles.size > 1000) {
+          const oldest = profiles.keys().next().value;
+          profiles.delete(oldest); fetchedAt.delete(oldest);
+        }
       }
     };
   }, [key]);

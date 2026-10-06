@@ -27,6 +27,7 @@ export default function useChatMessages(conversationId) {
   const lastMessageAtRef = useRef(null);
   const sendingRef = useRef(false);
   const readPendingRef = useRef(new Set());
+  const loadPendingRef = useRef(null);
 
   useEffect(() => {
     activeIdRef.current = conversationId;
@@ -35,6 +36,10 @@ export default function useChatMessages(conversationId) {
   const load = useCallback(async () => {
     if (!conversationId || !userId) { setLoading(false); return; }
     const reqId = conversationId;
+    const key = `${userId}:${reqId}`;
+    if (loadPendingRef.current?.key === key) return;
+    const request = { key };
+    loadPendingRef.current = request;
     try {
       const items = await base44.entities.ChatMessage.filter({ conversation_id: conversationId }, 'created_date', 500);
       if (activeIdRef.current !== reqId) return;
@@ -51,6 +56,8 @@ export default function useChatMessages(conversationId) {
     } catch {
       if (activeIdRef.current !== reqId) return;
       setLoading(false);
+    } finally {
+      if (loadPendingRef.current === request) loadPendingRef.current = null;
     }
   }, [conversationId, userId]);
 
@@ -59,6 +66,7 @@ export default function useChatMessages(conversationId) {
 
   useEffect(() => {
     if (!conversationId) return;
+    activeIdRef.current = conversationId;
     setMessages([]);
     setLoading(true);
     seenRef.current = new Set();
@@ -70,7 +78,7 @@ export default function useChatMessages(conversationId) {
       const msg = event.data;
       if (!msg || !userId) return;
       if ((msg.deleted_for || []).includes(userId)) { setMessages((prev) => prev.filter((m) => m.id !== msg.id)); return; }
-      if (seenRef.current.has(msg.id)) { setMessages((prev) => prev.map((m) => m.id === msg.id ? { ...m, ...msg } : m)); return; }
+      if (seenRef.current.has(msg.id)) { setMessages((prev) => upsertMessage(prev, msg)); return; }
       seenRef.current.add(msg.id);
       setMessages((prev) => {
         const tempMatch = prev.find((m) => m.id?.startsWith('temp-') && m.sender_id === msg.sender_id && m.content === msg.content);
@@ -82,7 +90,12 @@ export default function useChatMessages(conversationId) {
     const onOnline = () => loadRef.current();
     document.addEventListener('visibilitychange', onVisible);
     window.addEventListener('online', onOnline);
-    return () => { window.removeEventListener('filmkeyfi-message-realtime', onRealtimeMessage); document.removeEventListener('visibilitychange', onVisible); window.removeEventListener('online', onOnline); };
+    return () => {
+      if (activeIdRef.current === conversationId) activeIdRef.current = null;
+      window.removeEventListener('filmkeyfi-message-realtime', onRealtimeMessage);
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('online', onOnline);
+    };
   }, [conversationId, userId]);
 
   const send = useCallback(async (content) => {

@@ -29,6 +29,7 @@ import { YT_PREFIX, youtubeVideoId } from '@/lib/mediaSource';
 import SpecialRoleWelcome from '@/components/player/SpecialRoleWelcome';
 import ProfileFrame from '@/components/ProfileFrame';
 import useSocialBadges from '@/hooks/useSocialBadges';
+import useMessageProfiles from '@/hooks/useMessageProfiles';
 import useRoomLevels from '@/hooks/useRoomLevels';
 import useRoomSwipeNav from '@/hooks/useRoomSwipeNav';
 import useOfflineExit from '@/hooks/useOfflineExit';
@@ -67,7 +68,6 @@ export default function WatchParty() {
   const [showPwRemoveConfirm, setShowPwRemoveConfirm] = useState(false);
   const [syncState, setSyncState] = useState({ is_playing: false, current_time: 0, last_sync: null });
   const [unread, setUnread] = useState(0);
-  const [viewerProfiles, setViewerProfiles] = useState({});
   const [joinCount, setJoinCount] = useState(0);
 
   const [joinError, setJoinError] = useState('');
@@ -350,25 +350,7 @@ export default function WatchParty() {
 
   // İzleyici profillerini çek (gerçek avatarlar için)
   const participantIdsKey = [...(room?.participants || []), ...(room?.recent_participants || [])].map((p) => p.user_id).filter(Boolean).filter((value, index, all) => all.indexOf(value) === index).sort().join(',');
-  useEffect(() => {
-    if (!participantIdsKey) return;
-    const ids = participantIdsKey.split(',');
-    let active = true;
-    // N+1 önleme: tüm profilleri tek batch çağrısıyla getir
-    const load = () => base44.functions.invoke('user-profile', { user_ids: ids })
-      .then((response) => { if (!active) return; const map = response.data?.data || response.data || {}; setViewerProfiles(map); })
-      .catch(() => { if (active) setViewerProfiles({}); });
-    load();
-    // Profil (fotoğraf, çerçeve, rol, seviye) değiştiği an odadaki görünüm de güncellenir;
-    // art arda gelen değişiklikler tek çağrıda birleşir, böylece oda kasmaz.
-    let timer = null;
-    const unsubscribe = subscribeEntity('User', (event) => {
-      if (!ids.includes(event.data?.id || event.id)) return;
-      if (timer) clearTimeout(timer);
-      timer = setTimeout(load, 700);
-    });
-    return () => { active = false; if (timer) clearTimeout(timer); unsubscribe(); };
-  }, [participantIdsKey]);
+  const viewerProfiles = useMessageProfiles(participantIdsKey ? participantIdsKey.split(',') : []);
 
   useEffect(() => {
     if (!participantIdsKey) return;

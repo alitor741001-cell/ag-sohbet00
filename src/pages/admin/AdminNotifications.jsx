@@ -46,10 +46,22 @@ export default function AdminNotifications() {
   );
 
   useEffect(() => {
-    const loadUsers = () => base44.entities.User.list(500).then(setUsers).catch(() => {});
-    loadUsers();
-    const unsubscribe = subscribeEntity('User', () => loadUsers());
-    return () => unsubscribe?.();
+    let alive = true;
+    base44.entities.User.list('-created_date', 500).then((items) => { if (alive) setUsers(items); }).catch(() => {});
+    const unsubscribe = subscribeEntity('User', (event) => {
+      const id = event.data?.id || event.id;
+      if (!id) return;
+      setUsers((current) => {
+        if (event.type === 'delete') return current.filter((item) => item.id !== id);
+        if (!event.data) return current;
+        const index = current.findIndex((item) => item.id === id);
+        if (index < 0) return [{ ...event.data, id }, ...current];
+        const next = [...current];
+        next[index] = { ...next[index], ...event.data };
+        return next;
+      });
+    });
+    return () => { alive = false; unsubscribe(); };
   }, []);
 
   const handleNotifPermission = async () => {

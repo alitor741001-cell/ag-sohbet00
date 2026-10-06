@@ -33,7 +33,7 @@ export default function VoiceChatDock({ messages = [], onSend, open, onCloseComp
 
   // Geçmiş dahil tüm akış butona basmadan görünür; metinsiz sistem işaretleri atlanır.
   // Hediye, müzik, odadan ayrılma, koltuk ve mikrofon işlemleri bildirim alanında görünmez.
-  const visible = messages.filter((message) => !isQuietNotice(message) && (message.type !== 'system' || plainText(message.text)));
+  const visible = useMemo(() => messages.filter((message) => !isQuietNotice(message) && (message.type !== 'system' || plainText(message.text))), [messages]);
 
   useEffect(() => {
     if (composerOpen) inputRef.current?.focus();

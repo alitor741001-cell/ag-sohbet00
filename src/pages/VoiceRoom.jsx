@@ -12,7 +12,7 @@ import VoiceSeatGrid from '@/components/voice/VoiceSeatGrid';
 import { resizeSeats } from '@/components/voice/seatLayout';
 import HiddenUserMarquee from '@/components/voice/HiddenUserMarquee';
 import { isHiddenName } from '@/lib/hiddenUser';
-import { mergeMessages } from '@/lib/realtimeMessages';
+import useVoiceRoomMessages from '@/hooks/useVoiceRoomMessages';
 import VoiceControlBar from '@/components/voice/VoiceControlBar';
 import VoiceChatDock from '@/components/voice/VoiceChatDock';
 import VoiceViewerSheet from '@/components/voice/VoiceViewerSheet';
@@ -22,7 +22,9 @@ import VoiceRoomMenu from '@/components/voice/VoiceRoomMenu';
 import VoiceSeatSheet from '@/components/voice/VoiceSeatSheet';
 import InviteSheet from '@/components/voice/InviteSheet';
 import FullUserProfile from '@/components/profile/FullUserProfile';
-import RoomOwnerBadge from '@/components/player/RoomOwnerBadge';
+import useLatestCallback from '@/hooks/useLatestCallback';
+import useRoomActionGate from '@/hooks/useRoomActionGate';
+import useVoiceRoomAction from '@/hooks/useVoiceRoomAction';
 import RoomLogSheet from '@/components/voice/RoomLogSheet';
 import GiftScoreChip from '@/components/voice/GiftScoreChip';
 import GiftBoardSheet from '@/components/voice/GiftBoardSheet';
@@ -58,6 +60,7 @@ export default function VoiceRoom() {
   const navigate = useNavigate();
   const { user } = useCurrentUser();
   const { toast } = useToast();
+  const { begin: beginAction, end: endAction } = useRoomActionGate(id);
 
   const [room, setRoom] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -136,10 +139,12 @@ export default function VoiceRoom() {
   );
   const participants = useMemo(() => room?.participants || [], [room?.participants]);
   // Gizli kullanıcıların takma adı → kimliği: yalnızca N/VIP rozetleri için kullanılır, kimlik gösterilmez.
-  const hiddenUsersByName = {};
-  // Takma ad koltuğa veya katılım listesine yazılmış olabilir: ikisi birlikte eşlenir.
-  [...participants, ...seats].forEach((person) => { if (person?.user_id && isHiddenName(person.name)) hiddenUsersByName[person.name] = person.user_id; });
-  const moderators = room?.room_moderators || [];
+  const hiddenUsersByName = useMemo(() => {
+    const names = {};
+    [...participants, ...seats].forEach((person) => { if (person?.user_id && isHiddenName(person.name)) names[person.name] = person.user_id; });
+    return names;
+  }, [participants, seats]);
+  const moderators = useMemo(() => room?.room_moderators || [], [room?.room_moderators]);
   // Oda LVL'i: odadakilerin seviyesi canlı izlenir — seviye atlayınca rozet anında değişir.
   const roomLevels = useRoomLevels([...participants.map((person) => person.user_id), ...seats.map((seat) => seat.user_id), room?.owner_id].filter(Boolean));
   const mySeatIndex = seats.findIndex((seat) => seat.user_id === user?.id);
@@ -181,14 +186,13 @@ export default function VoiceRoom() {
     exemptIds: [user?.id, room?.owner_id].filter(Boolean),
   });
 
-  const seatsView = useMemo(
-    () => seats.map((seat) => ({
-      ...seat,
-      // Dolu koltukta kişinin mikrofonu, boş koltukta koltuğun kendi mik durumu gösterilir.
-      muted: seat.user_id ? !!participants.find((person) => person.user_id === seat.user_id)?.muted : !!seat.muted,
-    })),
-    [seats, participants]
-  );
+  const seatsView = useMemo(() => {
+    const mutedByUser = new Map(participants.map((person) => [person.user_id, !!person.muted]));
+    return seats.map((seat) => {
+      const muted = seat.user_id ? !!mutedByUser.get(seat.user_id) : !!seat.muted;
+      return seat.muted === muted ? seat : { ...seat, muted };
+    });
+  }, [seats, participants]);
 
   // Mik'e davet listesi: koltukta oturmayan odadakiler (kendisi hariç).
   const unseatedViewers = useMemo(() => {
@@ -315,14 +319,8 @@ export default function VoiceRoom() {
 
   // Kaydırarak oda değiştirildiğinde eski odadan çıkılır ve giriş durumu sıfırlanır:
   // yeni odaya temiz bir oturumla katılınır.
-  const previousRoomIdRef = useRef(id);
+  // The departure requests already run in the membership effect's cleanup.
   useEffect(() => {
-    const previous = previousRoomIdRef.current;
-    if (previous && previous !== id) {
-      base44.functions.invoke('voice-room', { action: 'seat-leave', room_id: previous }).catch(() => {});
-      base44.functions.invoke('room-presence', { action: 'leave', room_id: previous }).catch(() => {});
-    }
-    previousRoomIdRef.current = id;
     joinedRef.current = false;
     sawSelfRef.current = false;
     joinTriedRef.current = false;
@@ -456,22 +454,7 @@ export default function VoiceRoom() {
     }
   }, [room?.status, joined]);
 
-  // Sohbet akışı
-  useEffect(() => {
-    if (!id) return;
-    let alive = true;
-    setMessages([]);
-    // Geçmiş dahil son mesajlar yüklenir; akış butona basmadan görünür.
-    base44.entities.RoomMessage.filter({ room_id: id }, '-created_date', 80)
-      .then((list) => { if (alive) setMessages((prev) => mergeMessages(prev, [...list].reverse())); })
-      .catch(() => {});
-    const unsubscribe = subscribeEntity('RoomMessage', (event) => {
-      const data = event?.data;
-      if (!data || data.room_id !== id || event.type !== 'create') return;
-      setMessages((prev) => (prev.some((item) => item.id === event.id) ? prev : [...prev, { ...data, id: event.id }]));
-    });
-    return () => { alive = false; unsubscribe(); };
-  }, [id]);
+  useVoiceRoomMessages(id, setMessages);
 
   // Sekme kapanırken / sayfadan çıkılırken odadan ayrıl.
   useEffect(() => () => {
@@ -485,31 +468,7 @@ export default function VoiceRoom() {
     base44.functions.invoke('room-presence', { action: 'leave', room_id: id }).catch(() => {});
   }, [id]);
 
-  const invokeVoice = async (payload) => {
-    try {
-      const response = await base44.functions.invoke('voice-room', { room_id: id, ...payload });
-      const data = response?.data || {};
-      setRoom((prev) => {
-        if (!prev) return prev;
-        const next = { ...prev };
-        if (Array.isArray(data.seats)) {
-          next.seats = data.seats;
-          next.seat_count = data.seat_count ?? data.seats.length;
-        }
-        if (typeof data.number_board === 'boolean') next.number_board = data.number_board;
-        if (Array.isArray(data.number_scores)) next.number_scores = data.number_scores;
-        if (typeof data.number_board_reset_seat === 'boolean') next.number_board_reset_seat = data.number_board_reset_seat;
-        if (typeof data.number_board_reset_room === 'boolean') next.number_board_reset_room = data.number_board_reset_room;
-        if (typeof data.board_started_at === 'string') next.board_started_at = data.board_started_at;
-        if (typeof data.chat_seated_only === 'boolean') next.chat_seated_only = data.chat_seated_only;
-        return next;
-      });
-      return true;
-    } catch (error) {
-      toast({ title: 'İşlem başarısız', description: error?.response?.data?.error || error.message, variant: 'destructive' });
-      return false;
-    }
-  };
+  const invokeVoice = useVoiceRoomAction(id, setRoom, toast);
 
   // Oda ayarı ekranda anında değişir: sunucu cevabı beklenmeden yerel kayıt güncellenir,
   // ardından diğer cihazlara canlı yayınla aynı değer düşer.
@@ -562,7 +521,7 @@ export default function VoiceRoom() {
 
   // Profil kartı açıcı — sohbet satırı ve izleyici listesinden kullanılır.
   // Gizli kullanıcıda da açılır; kimlik yerine maskeli profil gösterilir.
-  const openProfile = (userId) => { if (userId) setProfileUserId(userId); };
+  const openProfile = useLatestCallback((userId) => { if (userId) setProfileUserId(userId); });
 
   // Anonsta gösterilecek takma ad — gerçek isim hiçbir yerde kullanılmaz.
   const hiddenAnnounceName = useMemo(() => {
@@ -578,19 +537,15 @@ export default function VoiceRoom() {
   };
 
   // Dolu koltuk profil kartını, boş koltuk beyaz koltuk menüsünü açar.
-  const handleSeatPress = (index) => {
+  const handleSeatPress = useLatestCallback((index) => {
     const seat = seats[index];
     if (seat?.user_id) {
-      // Hediye tahtası açıkken dokunma, alıcı seçimini değiştirir.
       if (giftOpen) { toggleGiftPerson(seat.user_id); return; }
-      // Kendi koltuğum (gizli modda da): benim profil kartım açılır, koltuktan inme oradan yapılır.
-      if (seat.user_id === user?.id) { setProfileUserId(seat.user_id); return; }
-      // Gizli kullanıcıda da profil açılır — kimliği yine gösterilmez.
       setProfileUserId(seat.user_id);
       return;
     }
     setSeatIndex(index);
-  };
+  });
 
   const handleTakeSeat = () => {
     const index = seatIndex;
@@ -646,14 +601,17 @@ export default function VoiceRoom() {
   };
 
   const handleSetPassword = async (pw) => {
+    if (!beginAction('password')) return;
+    const previousPassword = room?.password || '';
     try {
       // Kilit durumu anında değişir, sunucu kaydı arkadan yazılır.
       patchRoom({ password: pw ? 'protected' : '' });
       await base44.functions.invoke('room-presence', { action: 'set-password', room_id: id, password: pw });
       toast({ title: pw ? 'Oda kilitlendi' : 'Oda kilidi kaldırıldı' });
     } catch (error) {
+      patchRoom({ password: previousPassword });
       toast({ title: 'İşlem başarısız', description: error?.response?.data?.error || error.message, variant: 'destructive' });
-    }
+    } finally { endAction('password'); }
   };
 
   // Oda ismi: başlıktaki kalemle değiştirilir, odadaki herkese anında yansır.
@@ -670,6 +628,7 @@ export default function VoiceRoom() {
   }, [id, syncRoom, toast]);
 
   const handleToggleHidden = async () => {
+    if (!beginAction('hidden')) return;
     const previousHidden = !!room?.hidden;
     try {
       patchRoom({ hidden: !previousHidden });
@@ -679,7 +638,7 @@ export default function VoiceRoom() {
     } catch (error) {
       patchRoom({ hidden: previousHidden });
       toast({ title: 'İşlem başarısız', description: error?.response?.data?.error || error.message, variant: 'destructive' });
-    }
+    } finally { endAction('hidden'); }
   };
 
   const clearChat = useCallback(async () => {
@@ -737,26 +696,33 @@ export default function VoiceRoom() {
   }, [id, toast]);
 
   const handleToggleMod = async (targetId, makeMod) => {
+    const actionKey = `mod:${targetId}`;
+    if (!beginAction(actionKey)) return;
+    const previousModerators = room?.room_moderators || [];
     try {
       const mods = room?.room_moderators || [];
       patchRoom({ room_moderators: makeMod ? [...new Set([...mods, targetId])] : mods.filter((value) => value !== targetId) });
       await base44.functions.invoke('room-presence', { action: makeMod ? 'assign-mod' : 'remove-mod', room_id: id, target_id: targetId });
       toast({ title: makeMod ? 'Yönetici yapıldı' : 'Yöneticilik kaldırıldı' });
     } catch (error) {
+      patchRoom({ room_moderators: previousModerators });
       toast({ title: 'İşlem başarısız', description: error?.response?.data?.error || error.message, variant: 'destructive' });
-    }
+    } finally { endAction(actionKey); }
   };
 
   const toggleMuteFor = async (targetId) => {
     if (!targetId) return;
+    const actionKey = `mute:${targetId}`;
+    if (!beginAction(actionKey)) return;
     const muted = !!participants.find((person) => person.user_id === targetId)?.muted;
     try {
       patchRoom({ participants: (room?.participants || []).map((person) => (person.user_id === targetId ? { ...person, muted: !muted } : person)) });
       await base44.functions.invoke('room-presence', { action: 'toggle-mute', room_id: id, target_id: targetId });
       toast({ title: muted ? 'Mikrofonu açıldı' : 'Mikrofonu kapatıldı' });
     } catch (error) {
+      setRoom((current) => current ? { ...current, participants: (current.participants || []).map((person) => person.user_id === targetId ? { ...person, muted } : person) } : current);
       toast({ title: 'İşlem başarısız', description: error?.response?.data?.error || error.message, variant: 'destructive' });
-    }
+    } finally { endAction(actionKey); }
   };
 
   const kickFromRoom = async (targetId) => {

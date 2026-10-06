@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import VoiceSeat from '@/components/voice/VoiceSeat';
 import VoiceSeatScore from '@/components/voice/VoiceSeatScore';
 import VoiceBoardTimer from '@/components/voice/VoiceBoardTimer';
@@ -17,7 +17,8 @@ import { useSize } from '@/hooks/use-size';
 export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerId, moderators = [], speakingIds = [], localSpeaking, onSelectSeat, boardActive, boardStartedAt, scores = {}, accent = '#ef4444', gifted = {} }) {
   const wrapRef = useRef(null);
   const measured = useSize(wrapRef);
-  const rows = seatIndexRows(seats.length);
+  const rows = useMemo(() => seatIndexRows(seats.length), [seats.length]);
+  const onSeatClick = useCallback((index) => onSelectSeat(index), [onSelectSeat]);
   // Konuşma dalgası rengi kişinin cinsiyetine göre seçilir: profil bilgisi koltuklara iletilir.
   const seatProfiles = useMessageProfiles(seats.map((seat) => seat.user_id).filter(Boolean));
 
@@ -47,7 +48,7 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
                   isMod={occupied && moderators.includes(seat.user_id)}
                   speaking={occupied && (seat.user_id === userId ? localSpeaking : speakingIds.includes(seat.user_id))}
                   gender={occupied ? seatProfiles[seat.user_id]?.gender : ''}
-                  onClick={() => onSelectSeat(index)}
+                  onSelect={onSeatClick}
                   accent={accent}
                   gifted={occupied ? gifted[seat.user_id] : undefined}
                   micMuted={!occupied && !!seat?.muted}
