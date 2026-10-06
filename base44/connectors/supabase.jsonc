@@ -2,8 +2,9 @@
   "type": "supabase",
   "scopes": [
     "projects:read",
-    "organizations:read",
     "database:read",
+    "database:write",
+    "organizations:read",
     "rest:read",
     "auth:read",
     "storage:read",
