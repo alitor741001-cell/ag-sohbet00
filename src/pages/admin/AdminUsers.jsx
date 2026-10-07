@@ -122,16 +122,6 @@ export default function AdminUsers({ pendingOnly = false }) {
       load();
     } catch (e) { toast({ title: 'İşlem başarısız', description: e.message, variant: 'destructive' }); }
   };
-  const extend = async (u) => {
-    try {
-      const base = u.membership_end && new Date(u.membership_end) > new Date() ? new Date(u.membership_end) : new Date();
-      base.setDate(base.getDate() + 30);
-      await base44.entities.User.update(u.id, { membership_end: base.toISOString(), membership_status: 'active' });
-      await notify(u.id, 'Üyeliğiniz uzatıldı', '30 gün eklendi.');
-      await log('Üyelik uzatıldı', u.email);
-      toast({ title: '30 gün uzatıldı' }); load();
-    } catch (e) { toast({ title: 'Uzatılamadı', description: e.message, variant: 'destructive' }); }
-  };
   const resetPass = async (u) => {
     try {
       await base44.auth.resetPasswordRequest(u.email);
@@ -172,7 +162,7 @@ export default function AdminUsers({ pendingOnly = false }) {
                     {u.payment_reference && <p className="text-xs text-purple-400 font-mono truncate">Ref: {u.payment_reference}</p>}
                   </div>
                 </div>
-                <span className={`text-xs px-2 py-1 rounded ${isActive ? 'bg-green-500/20 text-green-400' : u.membership_status === 'pending' ? 'bg-amber-500/20 text-amber-400' : 'bg-red-500/20 text-red-400'}`}>{isActive ? 'Aktif' : u.membership_status === 'pending' ? 'Beklemede' : 'Askıya Alındı'}</span>
+                {!u.is_banned && <span className={`text-xs px-2 py-1 rounded ${isActive ? 'bg-green-500/20 text-green-400' : u.membership_status === 'pending' ? 'bg-amber-500/20 text-amber-400' : 'bg-red-500/20 text-red-400'}`}>{isActive ? 'Aktif' : u.membership_status === 'pending' ? 'Beklemede' : 'Pasif'}</span>}
                 {paidUserIds.has(u.id) && <span className="text-xs px-2 py-1 rounded bg-green-500/20 text-green-400 font-semibold">ÖDENDİ</span>}
                 {onlineUsers.has(u.id) ? <span className="text-xs px-2 py-1 rounded bg-green-500/20 text-green-400">Online</span> : <span className="text-xs px-2 py-1 rounded bg-muted text-muted-foreground">Offline</span>}
                 {u.is_banned && <span className="text-xs px-2 py-1 rounded bg-red-500/20 text-red-400 font-semibold" title={u.ban_reason}>🚫 ENGELLİ</span>}
@@ -182,7 +172,6 @@ export default function AdminUsers({ pendingOnly = false }) {
                 {pendingOnly && !isActive && !paidUserIds.has(u.id) && <button onClick={() => approve(u)} className={`${btn} bg-green-500/20 text-green-400 hover:bg-green-500/30`}>ONAYLA</button>}
                   {!pendingOnly && <button onClick={() => toggleBan(u)} className={`${btn} ${u.is_banned ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30' : 'bg-red-500/20 text-red-400 hover:bg-red-500/30'}`}>{u.is_banned ? 'BANI KALDIR' : 'BANLA'}</button>}
                   {pendingOnly && <button onClick={() => reject(u)} className={`${btn} bg-red-500/20 text-red-400 hover:bg-red-500/30`}>REDDET</button>}
-                  {!pendingOnly && <button onClick={() => extend(u)} className={`${btn} bg-blue-500/20 text-blue-400 hover:bg-blue-500/30`}>+30 GÜN</button>}
                   {!pendingOnly && <button onClick={() => resetPass(u)} className={`${btn} bg-purple-500/20 text-purple-400 hover:bg-purple-500/30`}>ŞİFRE SIFIRLA</button>}
                   {!pendingOnly && <button onClick={() => setGenderTarget(u)} className={`${btn} bg-fuchsia-500/20 text-fuchsia-300 hover:bg-fuchsia-500/30`}>{genderButtonLabel(u)}</button>}
                   <button onClick={() => setConfirm(u)} className={`${btn} bg-red-500/20 text-red-400 hover:bg-red-500/30`}>SİL</button>
@@ -206,9 +195,6 @@ export default function AdminUsers({ pendingOnly = false }) {
               <button onClick={() => { setGenderTarget(detail); setDetail(null); }} className={`${btn} mt-1 bg-fuchsia-500/20 text-fuchsia-300 hover:bg-fuchsia-500/30`}>{genderButtonLabel(detail)} — DÜZELT</button>
               <p><span className="text-muted-foreground">Üyelik durumu:</span> {detail.membership_status || '-'}</p>
               <p><span className="text-muted-foreground">Aktif/Pasif:</span> {detail.membership_status === 'active' ? 'Aktif' : 'Pasif'}</p>
-              <p><span className="text-muted-foreground">Üyelik başlangıcı:</span> {detail.membership_start ? new Date(detail.membership_start).toLocaleDateString('tr-TR') : '-'}</p>
-              <p><span className="text-muted-foreground">Üyelik bitişi:</span> {detail.membership_end ? new Date(detail.membership_end).toLocaleDateString('tr-TR') : '-'}</p>
-              <p><span className="text-muted-foreground">Kalan gün:</span> {detail.membership_end ? Math.max(0, Math.ceil((new Date(detail.membership_end) - new Date()) / 86400000)) : '-'}</p>
               {detail.is_banned && <>
                 <p className="text-red-400 font-semibold mt-2">🚫 ENGELLİ</p>
                 {detail.ban_reason && <p><span className="text-muted-foreground">Engel nedeni:</span> {detail.ban_reason}</p>}
