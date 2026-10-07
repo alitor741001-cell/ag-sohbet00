@@ -394,10 +394,6 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
         </div>
       )}
       {chatEnabled && msgFilter === 'all' && !chatLocked && <div className="flex items-center gap-2 border-t border-[#FFD700]/25 bg-black p-2.5">
-        <label title="Fotoğraf" className={`h-10 w-10 shrink-0 cursor-pointer text-[#4DA3FF] active:scale-95 ${neonCircleClass('blue')}`}>
-          <ImageIcon className="w-4 h-4" />
-          <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" tabIndex={-1} aria-hidden="true" onChange={onPhoto} disabled={uploading} />
-        </label>
         <button type="button" onClick={() => setShowEmoji(!showEmoji)} title="Emoji" className={`h-10 w-10 shrink-0 text-[#00FF66] active:scale-95 ${neonCircleClass('green')}`}><Smile className="w-4 h-4" /></button>
         <div className="flex h-11 min-w-0 flex-1 items-center gap-1.5 rounded-full border border-white/15 bg-[#0d0d0d] px-3 focus-within:border-[#FFD700]/60">
           <MessageSquare className="h-4 w-4 shrink-0 text-[#A0A0A0]" />
