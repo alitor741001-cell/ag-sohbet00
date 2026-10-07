@@ -16,19 +16,51 @@ import { isModerator } from '@/lib/roles';
 export default function Friends() {
   const { user, relations, loading: friendsLoading, invoke, reload: reloadFriends } = useFriends();
   const { conversations, loading: convosLoading, optimisticHide } = useConversations();
-  const { isOnline, getRoomId, getLastSeen } = useFriendPresence(user);
+  const { isOnline, getLastSeen } = useFriendPresence(user);
   const { toast } = useToast();
   const [adminLoading, setAdminLoading] = useState(false);
   const [rooms, setRooms] = useState([]);
   useEffect(() => {
+    let active = true;
     let timer = null;
-    const load = async () => { const items = await base44.entities.Room.filter({ status: 'active' }, '-updated_date', 100).catch(() => []); setRooms(items); };
+    const load = async () => {
+      const items = await base44.entities.Room.filter({ status: 'active' }, '-updated_date', 200).catch(() => []);
+      if (active) setRooms(items);
+    };
     load();
-    // Odalardan çok sık güncelleme gelir: liste yeniden çekilirken kısa bir bekleme
-    // ile tek çağrıda toplanır, arkadaşların oda durumu yine canlı görünür.
-    const unsub = subscribeEntity('Room', () => { clearTimeout(timer); timer = setTimeout(load, 2500); });
-    return () => { clearTimeout(timer); unsub(); };
+    const unsub = subscribeEntity('Room', (event) => {
+      // Oda kaydı olayın içinde geldiği için yayın göstergesi beklemeden güncellenir:
+      // kişi odaya girdiği an listede "yayında" görünür.
+      const incoming = event.data;
+      const id = incoming?.id || event.id;
+      if (!id) return;
+      setRooms((current) => {
+        const rest = current.filter((room) => room.id !== id);
+        return incoming && event.type !== 'delete' && incoming.status !== 'closed' ? [incoming, ...rest] : rest;
+      });
+      // Liste ayrıca tazelenir: sıralama yenilenir, kaçan kayıtlar tamamlanır.
+      clearTimeout(timer);
+      timer = setTimeout(load, 2500);
+    });
+    // Abonelik düşen cihazlarda (mobil/PWA) gösterge doğru kalsın diye düzenli tazeleme.
+    const interval = setInterval(load, 60000);
+    return () => { active = false; clearTimeout(timer); clearInterval(interval); unsub(); };
   }, []);
+
+  // Kişinin yayında olduğu oda, oda kaydından okunur: kişi hangi cihazdan/oturumdan
+  // girerse girsin katılımcı listesinde görünür. Birden fazla odada kaydı kalmışsa
+  // en son hareket gören oda geçerli sayılır. Gizli odalar arkadaşlara gösterilmez.
+  const getRoomId = (personId) => {
+    if (!personId) return '';
+    let best = null;
+    rooms.forEach((room) => {
+      if (room.status !== 'active' || room.hidden) return;
+      const inside = [...(room.participants || []), ...(room.seats || [])].some((person) => person?.user_id === personId);
+      if (!inside) return;
+      if (!best || new Date(room.updated_date || 0) > new Date(best.updated_date || 0)) best = room;
+    });
+    return best?.id || '';
+  };
   const [params, setParams] = useSearchParams();
   const [view, setView] = useState(() => {
     const target = params.get('view');
