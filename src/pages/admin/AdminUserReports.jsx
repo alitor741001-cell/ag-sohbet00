@@ -35,10 +35,6 @@ export default function AdminUserReports() {
     try { await base44.functions.invoke('role-management', { action: 'ban_user', user_id: uid, reason: 'Şikayet üzerinden engellendi' }); toast({ title: `${name} engellendi` }); }
     catch (e) { toast({ title: 'İşlem başarısız', variant: 'destructive' }); }
   };
-  const suspendUser = async (uid) => {
-    try { await base44.functions.invoke('role-management', { action: 'suspend_user', user_id: uid, reason: 'Şikayet üzerinden askıya alındı' }); toast({ title: 'Kullanıcı askıya alındı' }); }
-    catch { toast({ title: 'İşlem başarısız', variant: 'destructive' }); }
-  };
   const deleteUser = async (uid, name) => {
     if (!confirm(`${name} kalıcı olarak silinsin mi?`)) return;
     try { await base44.functions.invoke('role-management', { action: 'delete_user', user_id: uid }); toast({ title: 'Kullanıcı silindi' }); }
@@ -76,7 +72,6 @@ export default function AdminUserReports() {
                 {r.status === 'pending' && <button onClick={() => updateStatus(r.id, 'reviewed')} className="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded font-semibold whitespace-nowrap">İncelendi</button>}
                 {r.status !== 'resolved' && <button onClick={() => updateStatus(r.id, 'resolved')} className="text-xs bg-green-500/20 text-green-300 px-2 py-1 rounded font-semibold whitespace-nowrap">Çözüldü</button>}
                 <button onClick={() => blockUser(r.target_id, r.target_name)} className="text-xs bg-amber-500/20 text-amber-400 px-2 py-1 rounded font-semibold whitespace-nowrap">Engelle</button>
-                <button onClick={() => suspendUser(r.target_id)} className="text-xs bg-orange-500/20 text-orange-400 px-2 py-1 rounded font-semibold whitespace-nowrap">Askıya Al</button>
                 <button onClick={() => deleteUser(r.target_id, r.target_name)} className="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded font-semibold whitespace-nowrap">Sil</button>
               </div>
             </div>

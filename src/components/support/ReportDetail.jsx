@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import { ArrowLeft, Ban, Check, ShieldOff, Trash2, User } from 'lucide-react';
+import { ArrowLeft, Ban, Check, Trash2, User } from 'lucide-react';
 import SupportAttachment from '@/components/support/SupportAttachment';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -71,9 +71,6 @@ export default function ReportDetail({ report, onBack, onProfile, openAction, ac
         )}
         <button onClick={() => openAction('ban', targetUser)} disabled={acting} className="flex w-full items-center justify-center gap-2 rounded-lg bg-red-500/20 py-2 text-xs font-semibold text-red-400 disabled:opacity-50">
           <Ban className="w-3.5 h-3.5" />Engelle
-        </button>
-        <button onClick={() => openAction('suspend', targetUser)} disabled={acting} className="flex w-full items-center justify-center gap-2 rounded-lg bg-amber-500/20 py-2 text-xs font-semibold text-amber-400 disabled:opacity-50">
-          <ShieldOff className="w-3.5 h-3.5" />Askıya Al
         </button>
         <button onClick={() => openAction('delete', targetUser)} disabled={acting} className="flex w-full items-center justify-center gap-2 rounded-lg bg-red-500/20 py-2 text-xs font-semibold text-red-400 disabled:opacity-50">
           <Trash2 className="w-3.5 h-3.5" />Kullanıcıyı Sil

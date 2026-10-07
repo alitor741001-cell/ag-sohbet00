@@ -42,11 +42,10 @@ export const AuthProvider = ({ children }) => {
           window.location.replace('/');
           return;
         }
-        if (event.data.is_banned || event.data.is_suspended || event.data.membership_status === 'suspended') {
-          const suspended = event.data.is_suspended || event.data.membership_status === 'suspended';
-          triggerBanNotice(suspended ? 'suspended' : 'banned', suspended ? event.data.suspend_reason : event.data.ban_reason, suspended ? event.data.suspend_description : event.data.ban_description);
+        if (event.data.is_banned) {
+          triggerBanNotice('banned', event.data.ban_reason, event.data.ban_description);
           setIsAuthenticated(false);
-          base44.auth.logout(`/login?${suspended ? 'suspended' : 'banned'}=1`);
+          base44.auth.logout('/login?banned=1');
         }
       }
     });
@@ -132,12 +131,9 @@ export const AuthProvider = ({ children }) => {
       // Now check if the user is authenticated
       setIsLoadingAuth(true);
       const currentUser = await base44.auth.me();
-      if (currentUser.is_banned || currentUser.role === 'banned' || currentUser.membership_status === 'suspended') {
-        const isSuspended = !currentUser.is_banned && currentUser.role !== 'banned' && currentUser.membership_status === 'suspended';
-        const reason = isSuspended ? (currentUser.suspend_reason || '') : (currentUser.ban_reason || '');
-        const description = isSuspended ? (currentUser.suspend_description || '') : (currentUser.ban_description || '');
+      if (currentUser.is_banned || currentUser.role === 'banned') {
         if (window.location.pathname !== '/login') {
-          triggerBanNotice(isSuspended ? 'suspended' : 'banned', reason, description);
+          triggerBanNotice('banned', currentUser.ban_reason || '', currentUser.ban_description || '');
           await base44.auth.logout();
           window.location.href = '/login?banned=1';
           return;

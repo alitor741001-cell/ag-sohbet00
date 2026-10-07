@@ -315,7 +315,7 @@ export default function WatchParty() {
       (async () => {
         try {
           const me = await base44.entities.User.get(user.id);
-          if (me.role === 'banned' || me.membership_status === 'suspended') {
+          if (me.role === 'banned' || me.is_banned) {
             triggerBanNotice('banned');
             await base44.auth.logout();
             window.location.href = '/login?banned=1';

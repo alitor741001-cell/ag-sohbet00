@@ -13,12 +13,6 @@ export const ACCOUNT_STATES = {
     name: 'Engellenmiş Hesap',
     message: 'Bu hesap yönetici tarafından engellenmiştir.'
   },
-  suspended: {
-    status: 'suspended',
-    image: 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/d59dc5667_generated_image.png',
-    name: 'Askıya Alınmış Hesap',
-    message: 'Bu hesap yönetici tarafından askıya alınmıştır.'
-  }
 };
 
 export function getAccountState(profile, fallbackText = '') {
@@ -31,14 +25,12 @@ export function getAccountState(profile, fallbackText = '') {
 /** Durum işaretinin altındaki etiket: kart üstünde büyük harfle yazılır. */
 export const ACCOUNT_MARKS = {
   banned: 'BANNED',
-  deleted: 'DELETED',
-  suspended: 'SUSPENDED'
+  deleted: 'DELETED'
 };
 
 /**
  * Profil kartındaki durum işareti: kişinin kendi fotoğrafı grileşir, üzerine 🚫
- * basılır ve altına durum adı yazılır. Engellenen, askıya alınan ve silinen
- * hesapta görünüm aynıdır.
+ * basılır ve altına durum adı yazılır. Engellenen ve silinen hesapta görünüm aynıdır.
  */
 export function AccountStatusMark({ status, size = 'h-28 w-28', showLabel = true }) {
   const state = ACCOUNT_STATES[status] || ACCOUNT_STATES.deleted;

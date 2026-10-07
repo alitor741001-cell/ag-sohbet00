@@ -44,7 +44,7 @@ export default function AppLayout() {
   }, [isMaintenance]);
 
   // Tek noktadan yedek durum kontrolü — anlık işlemler realtime, güvenlik doğrulaması 30 saniyede bir:
-  // ban/askıya alma/silme + abonelik onayı + cihaz/session + bakım modu
+  // ban/silme + abonelik onayı + cihaz/session + bakım modu
   const wasInactiveRef = useRef(false);
   useEffect(() => {
     if (!user) return;
@@ -53,14 +53,9 @@ export default function AppLayout() {
       if (document.visibilityState === 'hidden') return;
       try {
         const u = await base44.auth.me();
-        // Ban / askıya alma / silme
-        if (u?.is_banned || u?.role === 'banned' || u?.is_suspended || u?.membership_status === 'suspended') {
-          const isSusp = !u?.is_banned && u?.role !== 'banned' && (u?.is_suspended || u?.membership_status === 'suspended');
-          triggerBanNotice(
-            isSusp ? 'suspended' : 'banned',
-            isSusp ? (u?.suspend_reason || '') : (u?.ban_reason || ''),
-            isSusp ? (u?.suspend_description || '') : (u?.ban_description || '')
-          );
+        // Ban / silme
+        if (u?.is_banned || u?.role === 'banned') {
+          triggerBanNotice('banned', u?.ban_reason || '', u?.ban_description || '');
           base44.auth.logout().catch(() => {});
           window.location.href = '/login?banned=1';
           return;
@@ -117,7 +112,7 @@ export default function AppLayout() {
     }
   }, [user?.is_banned, pathname]);
 
-  // Gerçek zamanlı askıya alma tespiti
+  // Gerçek zamanlı hesap durumu tespiti
   useEffect(() => {
     if (!user) return;
     const unsubNotif = subscribeEntity('Notification', (ev) => {
@@ -136,13 +131,6 @@ export default function AppLayout() {
     });
     const unsubUser = subscribeEntity('User', (ev) => {
       if (ev.type === 'update' && ev.data?.id === user.id && ev.data?.is_banned) {
-        triggerBanNotice('banned');
-        base44.auth.logout().catch(() => {});
-        window.location.href = '/login?banned=1';
-        return;
-      }
-      // Askıya alma (suspend) — anlık çıkış
-      if (ev.type === 'update' && ev.data?.id === user.id && (ev.data?.is_suspended || ev.data?.membership_status === 'suspended')) {
         triggerBanNotice('banned');
         base44.auth.logout().catch(() => {});
         window.location.href = '/login?banned=1';

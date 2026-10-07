@@ -31,8 +31,6 @@ export default function Login() {
   const noticeDesc = notice?.description || '';
   const bannedParam = new URLSearchParams(window.location.search).get('banned');
   const [banned] = useState(bannedParam === '1' || noticeType === 'banned');
-  const suspendedParam = new URLSearchParams(window.location.search).get('suspended');
-  const [suspended] = useState(suspendedParam === '1' || noticeType === 'suspended');
   const removedParam = new URLSearchParams(window.location.search).get('removed');
   const [removed] = useState(removedParam === '1' || noticeType === 'removed');
   const kickedParam = new URLSearchParams(window.location.search).get('kicked');
@@ -64,15 +62,6 @@ export default function Login() {
         setError(reason
           ? `Hesabınız engellenmiştir. Neden: ${reason}${desc ? ` — ${desc}` : ''}`
           : "Hesabınız engellenmiştir. Giriş yapamazsınız.");
-        return;
-      }
-      if (me.membership_status === 'suspended' || me.is_suspended) {
-        const reason = me.suspend_reason || me.ban_reason || '';
-        const desc = me.suspend_description || me.ban_description || '';
-        await base44.auth.logout();
-        setError(reason
-          ? `Hesabınız askıya alınmıştır. Neden: ${reason}${desc ? ` — ${desc}` : ''}`
-          : "Hesabınız askıya alınmıştır. Giriş yapamazsınız. İletişime geçin.");
         return;
       }
       const privileged = me.role === 'admin' || me.role === 'moderator';
@@ -120,17 +109,6 @@ export default function Login() {
             <div>
               <p className="font-semibold">Hesabınız Engellendi</p>
               <p className="mt-1 text-xs">Hesabınız yönetici tarafından engellenmiştir. Giriş yapamazsınız.</p>
-              {noticeReason && <p className="mt-1 text-xs font-medium">Neden: {noticeReason}</p>}
-              {noticeDesc && <p className="mt-0.5 text-xs">Açıklama: {noticeDesc}</p>}
-            </div>
-          </div>
-        )}
-        {suspended && !banned && (
-          <div className="mb-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400 text-sm flex items-start gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-            <div>
-              <p className="font-semibold">Hesabınız Askıya Alındı</p>
-              <p className="mt-1 text-xs">Hesabınız yönetici tarafından askıya alınmıştır. Giriş yapamazsınız. Lütfen destekle iletişime geçin.</p>
               {noticeReason && <p className="mt-1 text-xs font-medium">Neden: {noticeReason}</p>}
               {noticeDesc && <p className="mt-0.5 text-xs">Açıklama: {noticeDesc}</p>}
             </div>
