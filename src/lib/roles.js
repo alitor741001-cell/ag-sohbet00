@@ -1,11 +1,6 @@
 // Role and frame definitions + permission helpers
 // Shared frontend module (JavaScript)
 
-// Runtime override map for custom role labels (set by useRoleLabels hook)
-let ROLE_LABEL_OVERRIDES = {};
-export function setRoleLabelOverrides(map) { ROLE_LABEL_OVERRIDES = map || {}; }
-export function getRoleLabelOverride(roleKey) { return ROLE_LABEL_OVERRIDES[roleKey] || ''; }
-
 export const ROLE_DEFINITIONS = {
   '': { label: '', icon: '', color: '', neon: false, priority: 0 },
   'founder': {
@@ -260,11 +255,10 @@ export function immuneToModeration(user) {
 export function getRoleInfo(user) {
   const predefined = ROLE_DEFINITIONS[user?.display_role || ''];
   if (predefined && predefined.label) {
-    const overrideLabel = ROLE_LABEL_OVERRIDES[user.display_role];
     const baseMsgEffect = MSG_EFFECTS[user.display_role] || null;
     return {
       ...predefined,
-      label: overrideLabel || predefined.label,
+      label: predefined.label,
       key: user.display_role,
       custom: false,
       name_effect: user?.name_effect || predefined.name_effect || null,

@@ -8,7 +8,6 @@ import Navbar from '@/components/layout/Navbar';
 import BottomNav from '@/components/layout/BottomNav';
 import useFriendPresence from '@/hooks/useFriendPresence';
 import useRoleCelebration from '@/hooks/useRoleCelebration';
-import useRoleLabels from '@/hooks/useRoleLabels';
 import RoleCelebrationOverlay from '@/components/role/RoleCelebrationOverlay';
 import WhatsNewModal from '@/components/WhatsNewModal';
 import { detectConnectionType } from '@/lib/connectionType';
@@ -27,7 +26,6 @@ export default function AppLayout() {
   const { user, loading } = useCurrentUser();
   useFriendPresence(user, true);
   useRoleCelebration();
-  useRoleLabels();
   // Supabase aynası: canlı veri oturum açıkken kendiliğinden eşitlenir.
   useSupabaseMirror(user);
   const { publicSettings } = useAuth();

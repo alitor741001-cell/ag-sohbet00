@@ -4,6 +4,9 @@ import App from '@/App.jsx'
 import '@/index.css'
 import '@/styles/giftMotions.css'
 
+// Uygulama her zaman karanlık tema kullanır: tema değiştirme katmanı kaldırıldı.
+document.documentElement.classList.add('dark');
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <App />
 )

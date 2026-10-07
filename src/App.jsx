@@ -14,7 +14,6 @@ const DirectCallOverlay = lazy(() => import('@/components/friends/DirectCallOver
 const MinimizedRoomBubble = lazy(() => import('@/components/voice/MinimizedRoomBubble'));
 // Add page imports here
 import AppLayout from '@/components/layout/AppLayout';
-import { ThemeProvider } from '@/lib/ThemeContext';
 import useDeferredMount from '@/hooks/useDeferredMount';
 import XpProvider from '@/components/xp/XpProvider';
 import DirectCallProvider from '@/lib/DirectCallContext';
@@ -173,7 +172,6 @@ function App() {
       <QueryClientProvider client={queryClientInstance}>
         <FrameCatalogProvider>
         <XpProvider>
-        <ThemeProvider>
           <DirectCallProvider>
             <Router>
               <ScrollToTop />
@@ -188,7 +186,6 @@ function App() {
             </Router>
           </DirectCallProvider>
           <Toaster />
-        </ThemeProvider>
         </XpProvider>
         </FrameCatalogProvider>
       </QueryClientProvider>

@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useToast } from '@/components/ui/use-toast';
-import { useTheme } from '@/lib/ThemeContext';
-import { Wrench, UserPlus, Palette, Sun, Moon } from 'lucide-react';
-import RoleLabelEditor from '@/components/admin/RoleLabelEditor';
+import { Wrench, UserPlus } from 'lucide-react';
 
 function Toggle({ on, onChange, disabled }) {
   return (
@@ -16,7 +14,6 @@ function Toggle({ on, onChange, disabled }) {
 
 export default function AdminSettings() {
   const { toast } = useToast();
-  const { theme, setTheme } = useTheme();
   const [cfg, setCfg] = useState({});
   const [saving, setSaving] = useState(false);
 
@@ -26,7 +23,6 @@ export default function AdminSettings() {
     setCfg({
       maintenance_mode: get('maintenance_mode', 'false') === 'true',
       registration_open: get('registration_open', 'true') === 'true',
-      app_theme: get('app_theme', 'dark'),
     });
   };
   useEffect(() => { load(); }, []);
@@ -79,29 +75,6 @@ export default function AdminSettings() {
           </div>
         </div>
 
-        {/* Tema */}
-        <div className={card}>
-          <div className="flex items-start gap-3 mb-3">
-            <div className="p-2 rounded-lg bg-accent/15 text-accent"><Palette className="w-5 h-5" /></div>
-            <div>
-              <h3 className="font-bold">Tema / Görünüm</h3>
-              <p className="text-sm text-muted-foreground">Varsayılan tema seçimi. Kullanıcılar kendi tercihlerini değiştirebilir.</p>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            {[
-              { v: 'dark', label: 'Karanlık', Icon: Moon },
-              { v: 'light', label: 'Aydınlık', Icon: Sun },
-            ].map(({ v, label, Icon }) => (
-              <button key={v} onClick={() => { setTheme(v); save('app_theme', v); }} className={`flex flex-col items-center gap-1.5 py-3 rounded-lg border transition-colors ${(theme === v) ? 'border-primary bg-primary/10 text-primary' : 'border-border hover:bg-secondary'}`}>
-                <Icon className="w-5 h-5" />
-                <span className="text-xs font-semibold">{label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <RoleLabelEditor />
       </div>
     </div>
   );
