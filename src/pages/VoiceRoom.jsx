@@ -1187,15 +1187,12 @@ export default function VoiceRoom() {
         musicPlaying={!!music.music?.is_playing}
         onOpenMusic={() => { setMusicBubble(true); setMusicOpen(true); }}
         room={room}
-        userId={user?.id}
-        participants={participants}
         isOwner={isOwner}
         isAdmin={user?.role === 'admin'}
         canMod={canMod}
         onSeatCount={changeSeatCount}
         onSetPassword={handleSetPassword}
         onToggleHidden={handleToggleHidden}
-        onToggleMod={handleToggleMod}
         onShare={canMod ? () => setShareOpen(true) : null}
         boardActive={boardActive}
         onToggleBoard={toggleBoard}

@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Armchair, Eraser, Eye, EyeOff, Film, Hash, Lock, MessageSquareOff, Music, Play, ScrollText, Share2, Shield, Square, Unlock } from 'lucide-react';
+import { Armchair, Eraser, Eye, EyeOff, Film, Hash, Lock, MessageSquareOff, Music, Play, ScrollText, Share2, Square, Unlock } from 'lucide-react';
 import BoardToggleRow from '@/components/voice/BoardToggleRow';
 import SeatCountPicker from '@/components/voice/SeatCountPicker';
 import VoiceMenuTile from '@/components/voice/VoiceMenuTile';
 import VoiceSheet from '@/components/voice/VoiceSheet';
-import { Image } from '@/components/ui/image';
 
 const Panel = ({ children, hint }) => (
   <div className="mt-4 rounded-2xl border border-[#FFD700]/45 bg-black/70 p-3 shadow-[0_0_18px_-8px_rgba(255,215,0,0.9)]">
@@ -14,7 +13,7 @@ const Panel = ({ children, hint }) => (
 );
 
 /** "…" menüsü: yuvarlak ikon ızgarası — kilit, gizlilik, koltuk, sayaç, sohbet temizleme, sohbet yasağı ve kayıt defteri. */
-export default function VoiceRoomMenu({ open, onClose, room, userId, participants = [], isOwner, isAdmin, canMod, onSeatCount, onSetPassword, onToggleHidden, onToggleMod, onShare, boardActive, onToggleBoard, onBoardSettings, onClearChat, onToggleChatBan, onOpenLog, onExitVoiceMode, musicPlaying, onOpenMusic }) {
+export default function VoiceRoomMenu({ open, onClose, room, isOwner, isAdmin, canMod, onSeatCount, onSetPassword, onToggleHidden, onShare, boardActive, onToggleBoard, onBoardSettings, onClearChat, onToggleChatBan, onOpenLog, onExitVoiceMode, musicPlaying, onOpenMusic }) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [panel, setPanel] = useState(null);
@@ -23,8 +22,6 @@ export default function VoiceRoomMenu({ open, onClose, room, userId, participant
   // Sayaç sıfırlama seçenekleri: koltuktan inme ve odadan çıkma durumları.
   const seatReset = room?.number_board_reset_seat !== false;
   const roomReset = room?.number_board_reset_room !== false;
-  const moderators = room?.room_moderators || [];
-  const others = participants.filter((item) => item.user_id !== room?.owner_id);
 
   useEffect(() => {
     if (open) return;
@@ -170,42 +167,6 @@ export default function VoiceRoomMenu({ open, onClose, room, userId, participant
         <p className="mt-3 rounded-xl bg-primary/15 px-3 py-2 text-[11px] font-semibold text-primary">
           Sohbet yasağı açık — yalnızca koltuktakiler yazabilir.
         </p>
-      )}
-
-      {fullAccess && (
-        <section className="mt-4 rounded-2xl border border-[#FFD700]/45 bg-black/70 p-3 shadow-[0_0_18px_-8px_rgba(255,215,0,0.9)]">
-          <p className="mb-2 text-xs font-bold uppercase tracking-wide text-[#FFD700]">Yöneticiler</p>
-          {others.length === 0 ? (
-            <p className="text-xs text-white/50">Odada başka kişi yok.</p>
-          ) : (
-            <div className="space-y-2">
-              {others.map((person) => {
-                const isMod = moderators.includes(person.user_id);
-                return (
-                  <div key={person.user_id} className="flex items-center gap-2 rounded-xl bg-black/30 px-3 py-2">
-                    {/* Kişinin profil fotoğrafı ve ismi birlikte görünür. */}
-                    {person.avatar ? (
-                      <Image src={person.avatar} alt={person.name || 'Profil'} className="h-9 w-9 shrink-0 overflow-hidden rounded-full" fittingType="fill" />
-                    ) : (
-                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#FFD700]/20 text-sm font-black text-[#FFD700]">
-                        {String(person.name || 'K').trim().charAt(0).toLocaleUpperCase('tr-TR')}
-                      </span>
-                    )}
-                    <span className="min-w-0 flex-1 truncate text-sm text-white">{person.name || 'Kullanıcı'}{person.user_id === userId && ' (Sen)'}</span>
-                    <button
-                      type="button"
-                      onClick={() => onToggleMod(person.user_id, !isMod)}
-                      disabled={!fullAccess && !isMod}
-                      className={`flex shrink-0 items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] font-bold disabled:opacity-40 ${isMod ? 'bg-sky-500/20 text-sky-300' : 'bg-white/10 text-white'}`}
-                    >
-                      <Shield className="h-3.5 w-3.5" /> {isMod ? 'Yetkiyi al' : 'Yönetici yap'}
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </section>
       )}
     </VoiceSheet>
   );
