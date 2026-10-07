@@ -204,10 +204,6 @@ export default async function(req) {
     if (action === 'delete_user') {
       const targetName = target.username || target.full_name || 'Kullanıcı';
       await syncAccountStatus(base44, target, 'deleted');
-      await base44.asServiceRole.entities.UserSession.updateMany(
-        { user_id, status: 'active' },
-        { $set: { status: 'inactive', ended_at: new Date().toISOString() } }
-      ).catch(() => {});
       await removeFromAllRooms(base44, user_id, targetName);
       // Silinen hesabın ajans tarafındaki asistanlığı kalmasın.
       await detachAssistant(base44, user_id).catch(() => {});
@@ -231,10 +227,6 @@ export default async function(req) {
         membership_status: 'blocked',
         active_session_id: '',
       });
-      await base44.asServiceRole.entities.UserSession.updateMany(
-        { user_id, status: 'active' },
-        { $set: { status: 'inactive', ended_at: new Date().toISOString() } }
-      ).catch(() => {});
       await removeFromAllRooms(base44, user_id, targetName);
       // Engellenen kişinin isim ve fotoğrafı sohbetlerde/arkadaş listelerinde kalır:
       // ban görseli yalnızca profil kartında gösterilir.

@@ -40,11 +40,9 @@ const Friends = lazy(() => import('@/pages/Friends'));
 const AdminLayout = lazy(() => import('@/pages/admin/AdminLayout'));
 const AdminUsers = lazy(() => import('@/pages/admin/AdminUsers'));
 const AdminSupport = lazy(() => import('@/pages/admin/AdminSupport'));
-const AdminInbox = lazy(() => import('@/pages/admin/AdminInbox'));
 const AdminTelegram = lazy(() => import('@/pages/admin/AdminTelegram'));
 const AdminSettings = lazy(() => import('@/pages/admin/AdminSettings'));
 const AdminSecurity = lazy(() => import('@/pages/admin/AdminSecurity'));
-const AdminSessions = lazy(() => import('@/pages/admin/AdminSessions'));
 const AdminGifts = lazy(() => import('@/pages/admin/AdminGifts'));
 const AdminCoins = lazy(() => import('@/pages/admin/AdminCoins'));
 const AdminVip = lazy(() => import('@/pages/admin/AdminVip'));
@@ -142,14 +140,12 @@ const AuthenticatedApp = () => {
           <Route path="kategoriler" element={<Navigate to="/admin" replace />} />
 
           <Route path="destek" element={<AdminSupport />} />
-          <Route path="bildirimler" element={<AdminInbox />} />
           <Route path="telegram" element={<AdminTelegram />} />
           <Route path="guvenlik" element={<AdminSecurity />} />
-          {/* Şikayet akışı kaldırıldı: eski bağlantılar bildirim ekranına düşer. */}
-          <Route path="sikayetler" element={<Navigate to="/admin/bildirimler" replace />} />
+          {/* Şikayet akışı kaldırıldı: eski bağlantılar kullanıcı yönetimine düşer. */}
+          <Route path="sikayetler" element={<Navigate to="/admin/kullanicilar" replace />} />
           <Route path="ayarlar" element={<AdminSettings />} />
           <Route path="ayalar" element={<AdminSettings />} />
-          <Route path="oturumlar" element={<AdminSessions />} />
           <Route path="xp" element={<Navigate to="/admin/kullanicilar" replace />} />
         </Route>
       </Route>

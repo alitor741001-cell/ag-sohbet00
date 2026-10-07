@@ -65,7 +65,6 @@ export const ALL_COLLECTIONS = [
   { entity: 'RoomSecret', table: 'room_secrets', columns: ['room_id'] },
   { entity: 'ChatMessage', table: 'chat_messages', columns: ['room_id', 'user_id'] },
   { entity: 'UserXp', table: 'user_xp', columns: ['user_id', 'user_name', 'xp', 'message_count'] },
-  { entity: 'UserSession', table: 'user_sessions', columns: ['user_id'] },
   { entity: 'SecurityLog', table: 'security_logs', columns: ['user_id'] },
   { entity: 'FriendshipProgression', table: 'friendship_progressions', columns: ['user_id'] },
   { entity: 'DmTyping', table: 'dm_typing', columns: ['user_id', 'friendship_id'] },

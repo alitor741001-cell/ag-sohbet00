@@ -1,13 +1,11 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useNavigate } from 'react-router-dom';
-import { Bell, Trash2, CheckCheck, ChevronRight, ArrowLeft } from 'lucide-react';
+import { Bell, Trash2, CheckCheck, ArrowLeft } from 'lucide-react';
 import { useAdminNotifications } from '@/hooks/useAdminNotifications';
 
 export default function AdminNotifBell({ notifGranted }) {
   const { notifications, unreadCount, markAllRead, deleteAll } = useAdminNotifications();
   const [open, setOpen] = useState(false);
-  const navigate = useNavigate();
 
   return (
     <div className="shrink-0">
@@ -39,9 +37,6 @@ export default function AdminNotifBell({ notifGranted }) {
                 </div>
               ))}
             </div>
-            <button onClick={() => { setOpen(false); navigate('/admin/bildirimler'); }} className="w-full flex items-center justify-center gap-1 px-4 py-3 text-xs font-semibold text-purple-400 hover:bg-white/5 border-t border-white/10 shrink-0">
-              Tüm Bildirimler <ChevronRight className="w-3.5 h-3.5" />
-            </button>
           </div>
         </div>,
         document.body

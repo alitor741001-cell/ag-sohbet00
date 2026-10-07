@@ -147,25 +147,6 @@ export default function AppLayout() {
     return () => { unsubNotif(); unsubUser(); };
   }, [user?.id]);
 
-  // Oturum heartbeat — aktif kalma sinyali + opsiyonel GPS
-  useEffect(() => {
-    if (!user) return;
-    const beat = async () => {
-      if (document.visibilityState === 'hidden') return;
-      const sessionId = localStorage.getItem('filmkeyfi_session_' + user.id);
-      if (!sessionId) return;
-      const payload = { session_id: sessionId, connection_type: detectConnectionType() };
-      const gpsRaw = localStorage.getItem('filmkeyfi_gps_' + user.id);
-      if (gpsRaw) {
-        try { const c = JSON.parse(gpsRaw); if (typeof c.lat === 'number' && typeof c.lng === 'number') { payload.gps_lat = c.lat; payload.gps_lng = c.lng; payload.gps_accuracy = c.acc; } } catch {}
-      }
-      base44.functions.invoke('update-presence', payload).catch(() => {});
-    };
-    beat();
-    const id = setInterval(beat, 45000);
-    return () => clearInterval(id);
-  }, [user?.id]);
-
   // Sayfa görünür olunca anlık güvenlik kontrolü — kullanıcı geri döndüğünde ban/silme tespiti
   useEffect(() => {
     const onVisible = async () => {

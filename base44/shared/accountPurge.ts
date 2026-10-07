@@ -15,7 +15,6 @@ export async function purgeAccount(base44: any, opts: {
 
   await sr.Notification.deleteMany({ user_id: userId }).catch(() => {});
   await sr.UserPresence.deleteMany({ user_id: userId }).catch(() => {});
-  await sr.UserSession.deleteMany({ user_id: userId }).catch(() => {});
   await sr.DirectMessage.deleteMany({ participants: userId }).catch(() => {});
   await sr.Friendship.deleteMany({ members: userId }).catch(() => {});
   await sr.Payment.deleteMany({ user_id: userId }).catch(() => {});
