@@ -60,8 +60,8 @@ export default function Login() {
         const desc = me.ban_description || '';
         await base44.auth.logout();
         setError(reason
-          ? `Hesabınız engellenmiştir. Neden: ${reason}${desc ? ` — ${desc}` : ''}`
-          : "Hesabınız engellenmiştir. Giriş yapamazsınız.");
+          ? `Hesabınız banlanmıştır. Neden: ${reason}${desc ? ` — ${desc}` : ''}`
+          : "Hesabınız banlanmıştır. Giriş yapamazsınız.");
         return;
       }
       const privileged = me.role === 'admin' || me.role === 'moderator';
@@ -107,8 +107,8 @@ export default function Login() {
           <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm flex items-start gap-2">
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
             <div>
-              <p className="font-semibold">Hesabınız Engellendi</p>
-              <p className="mt-1 text-xs">Hesabınız yönetici tarafından engellenmiştir. Giriş yapamazsınız.</p>
+              <p className="font-semibold">Hesabınız Banlandı</p>
+              <p className="mt-1 text-xs">Hesabınız banlanmıştır. Yönetici tarafından engellendiğiniz için giriş yapamazsınız.</p>
               {noticeReason && <p className="mt-1 text-xs font-medium">Neden: {noticeReason}</p>}
               {noticeDesc && <p className="mt-0.5 text-xs">Açıklama: {noticeDesc}</p>}
             </div>

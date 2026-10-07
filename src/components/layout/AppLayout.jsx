@@ -128,8 +128,8 @@ export default function AppLayout() {
       toast({ title: ev.data?.title || 'Bildirim', description: ev.data?.body });
     });
     const unsubUser = subscribeEntity('User', (ev) => {
-      if (ev.type === 'update' && ev.data?.id === user.id && ev.data?.is_banned) {
-        triggerBanNotice('banned');
+      if (ev.type === 'update' && ev.data?.id === user.id && (ev.data?.is_banned || ev.data?.role === 'banned')) {
+        triggerBanNotice('banned', ev.data?.ban_reason || '', ev.data?.ban_description || '');
         base44.auth.logout().catch(() => {});
         window.location.href = '/login?banned=1';
         return;

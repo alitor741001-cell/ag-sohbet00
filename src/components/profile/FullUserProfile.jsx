@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Ban, Building2, ChevronRight, Loader2, MessageSquare, Mic2, MicOff, Settings, UserPlus } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import subscribeEntity from '@/components/data/entitySubscriptions';
 import { useToast } from '@/components/ui/use-toast';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { HIDDEN_AVATAR_URL } from '@/lib/hiddenUser';
@@ -39,9 +40,13 @@ export default function FullUserProfile({
     let alive = true;
     setProfile(null);
     setRelation('');
-    base44.functions.invoke('user-profile', { user_id: userId })
+    // Profil, açıkken tazelenebilsin diye fonksiyona alındı: ban anında görsel değişir.
+    const load = () => base44.functions.invoke('user-profile', { user_id: userId })
       .then((response) => { if (alive) setProfile(response?.data || {}); })
       .catch((error) => { if (alive) setProfile(error?.response?.status === 404 ? { account_status: 'deleted' } : {}); });
+    load();
+    // Kart açıkken ban / ban kaldırma anında işler: kayıt değişince profil yeniden okunur.
+    const off = subscribeEntity('User', (event) => { if ((event.data?.id || event.id) === userId) load(); });
     if (user?.id && userId !== user.id) {
       base44.entities.Friendship.filter({ members: userId }, '-created_date', 50)
         .then((rows) => {
@@ -50,7 +55,7 @@ export default function FullUserProfile({
         })
         .catch(() => {});
     }
-    return () => { alive = false; };
+    return () => { alive = false; off(); };
   }, [open, userId, hidden, user?.id]);
 
   if (!open || !userId) return null;
