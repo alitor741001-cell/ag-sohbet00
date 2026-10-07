@@ -1097,7 +1097,7 @@ export default function VoiceRoom() {
 
       </div>
       {/* Controls never receive keyboard transforms; the keyboard covers them while typing. */}
-      <div className="shrink-0" hidden={composerOpen}>
+      <div className="voice-controls-anchor shrink-0" hidden={composerOpen}>
       {!composerOpen && (
       <VoiceControlBar
         keyboardOpen={keyboardOpen}

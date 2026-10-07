@@ -164,7 +164,6 @@ export default function RoomDiscovery({ shortcuts = null }) {
     return () => {
       alive = false;
       if (flushTimer) window.clearTimeout(flushTimer);
-      window.clearTimeout(refreshTimer.current);
       window.clearInterval(refresh);
       unsubscribe();
     };

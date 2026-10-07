@@ -15,3 +15,17 @@
 @media (hover: none) {
   .voice-control-bar { padding-bottom: max(0.25rem, env(safe-area-inset-bottom, 0px)); }
 }
+
+@media (max-width: 767px) {
+  /* Mesaj akışının yüksekliği ve klavye, butonların ekran altındaki yerini değiştirmez. */
+  .voice-viewport {
+    padding-bottom: calc(64px + max(0.25rem, env(safe-area-inset-bottom, 0px)));
+  }
+  .voice-viewport:has(.voice-chat-composer) { padding-bottom: 0; }
+  .voice-controls-anchor {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: calc(var(--visual-viewport-height, 100dvh) + var(--viewport-offset, 0px) - var(--voice-controls-height, 100dvh));
+  }
+}

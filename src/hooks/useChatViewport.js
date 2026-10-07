@@ -39,6 +39,7 @@ export default function useChatViewport(ref, onKeyboardChange) {
       if (signature !== last) {
         last = signature;
         node.style.setProperty('--visual-viewport-height', `${height}px`);
+        node.style.setProperty('--voice-controls-height', `${Math.max(baseline, window.innerHeight)}px`);
         node.style.setProperty('--viewport-offset', `${offset}px`);
         node.style.setProperty('--keyboard-height', `${nextOpen ? keyboard : 0}px`);
         node.dataset.keyboard = nextOpen ? 'open' : 'closed';
