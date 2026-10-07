@@ -1,13 +1,13 @@
 import { useRef } from 'react';
-import { ChevronLeft, Ban, UserMinus, UserPlus, Trash, CheckCheck, Check, Wifi } from 'lucide-react';
+import { ChevronLeft, Ban, UserMinus, UserPlus, CheckCheck, Check, Wifi } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import RoleBadge from '@/components/RoleBadge';
 
 export default function ChatSettingsPanel({
   name, avatar, friendProfile,   isBlocked, isFriend, requestSent, showFriendButton, onlineEnabled,
   readReceiptsEnabled, onToggleReadReceipts, onToggleOnline,
-  onBlock, onUnfriend, onRefriend, onClearChat, onClose,
-  blocking, unfriending, clearing
+  onBlock, onUnfriend, onRefriend, onClose,
+  blocking, unfriending
 }) {
   const touchStart = useRef({ x: 0, y: 0 });
   return (
@@ -35,11 +35,6 @@ export default function ChatSettingsPanel({
         </div>
         {/* Ayar listesi */}
         <div className="divide-y divide-border">
-          {/* Engelle / Engeli Kaldır */}
-          <button onClick={onBlock} disabled={blocking} className="w-full flex items-center gap-3 px-4 py-4 hover:bg-secondary disabled:opacity-50">
-            <Ban className="w-5 h-5 text-destructive shrink-0" />
-            <span className="font-medium text-destructive">{blocking ? 'İşleniyor...' : isBlocked ? 'Engeli Kaldır' : 'Engelle'}</span>
-          </button>
           {/* Okundu Tikleri */}
           <div className="w-full flex items-center justify-between px-4 py-4 gap-3">
             <span className="flex items-center gap-3 font-medium min-w-0"><CheckCheck className="w-5 h-5 shrink-0" />Okundu Tikleri</span>
@@ -64,10 +59,10 @@ export default function ChatSettingsPanel({
               <span className={`font-medium ${isFriend ? 'text-destructive' : requestSent ? 'text-muted-foreground' : 'text-primary'}`}>{unfriending ? 'İşleniyor...' : isFriend ? 'Arkadaşı Sil' : requestSent ? 'İstek Gönderildi' : 'Arkadaş olarak ekle'}</span>
             </button>
           )}
-          {/* Sohbeti Sil */}
-          <button onClick={onClearChat} disabled={clearing} className="w-full flex items-center gap-3 px-4 py-4 hover:bg-secondary disabled:opacity-50">
-            <Trash className="w-5 h-5 text-destructive shrink-0" />
-            <span className="font-medium text-destructive">{clearing ? 'Siliniyor...' : 'Sohbeti Sil'}</span>
+          {/* Engelle / Engeli Kaldır */}
+          <button onClick={onBlock} disabled={blocking} className="w-full flex items-center gap-3 px-4 py-4 hover:bg-secondary disabled:opacity-50">
+            <Ban className="w-5 h-5 text-destructive shrink-0" />
+            <span className="font-medium text-destructive">{blocking ? 'İşleniyor...' : isBlocked ? 'Engeli Kaldır' : 'Engelle'}</span>
           </button>
         </div>
       </div>
