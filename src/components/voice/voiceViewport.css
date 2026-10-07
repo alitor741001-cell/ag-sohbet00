@@ -27,7 +27,14 @@
     height: calc(var(--visual-viewport-height, 100dvh) * 0.24);
     min-height: 104px;
   }
-  .voice-chat-dock .voice-chat-flow { flex: 1 1 auto; min-height: 0; max-height: none; }
+  /* Mesajlar koltukların altındaki boş alana kadar yukarı uzanır: akış koltukların alt
+     hizasından başlar. Yalnızca akış yukarı taşar, koltukların yeri ve boyutu değişmez. */
+  .voice-chat-dock .voice-chat-flow {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none;
+    margin-top: calc(-1 * var(--voice-seat-free, 0px));
+  }
   .voice-chat-dock .voice-chat-composer { flex: 0 0 auto; }
 
   /* Sohbet alanı için yalnızca çubuğun kapladığı yer ayrılır (yükseklik çubuktan ölçülüp

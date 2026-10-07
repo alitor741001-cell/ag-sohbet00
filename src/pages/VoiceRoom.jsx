@@ -1033,8 +1033,6 @@ export default function VoiceRoom() {
         seatAccent={seatAccent}
         onClearSelection={() => setSelectedIds([])}
         hiddenAnnounce={{ active: room?.ghost_entered_at, name: hiddenAnnounceName }}
-        seated={seated}
-        muted={voice.muted}
         keyboardOpen={keyboardOpen}
         grid={{
           seats: seatsView,
