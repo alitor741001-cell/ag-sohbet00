@@ -1,6 +1,6 @@
 // Hesap silme (GDPR): kullanıcıya ait kişisel veriler temizlenir, veda e-postası gönderilir
 // ve kullanıcı kaydı silinir. Hem kullanıcının kendi silme talebi (delete-account) hem de
-// canlı görüntülü arama ihlali sonrası hesap kapatma (call-moderation) bu modülü kullanır.
+// Hesap kapatma akışı (delete-account) bu modülü kullanır.
 import { accountDeletedEmail } from './membershipEmails.ts';
 import { detachAssistant } from './agency.ts';
 

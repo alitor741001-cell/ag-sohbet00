@@ -4,7 +4,6 @@ import { base44 } from '@/api/base44Client';
 import subscribeEntity from '@/components/data/entitySubscriptions';
 import { createVoiceOutput, ensureMicTrack, releaseMic, resetAudioRouting, setSpeakerMode, startRingtone, unlockVoicePlayback } from '@/lib/callAudio';
 import { useCurrentUser } from '@/lib/useCurrentUser';
-import useCallModeration from '@/hooks/useCallModeration';
 
 // Görüşme motoru (LiveKit) yalnızca arama başlarken indirilir: açılış paketi
 // yarım megabayt hafifler, çağrı akışı birebir aynı kalır.
@@ -19,7 +18,6 @@ const loadCallEngine = () => {
       callEngine = {
         RoomEvent: livekit.RoomEvent,
         Track: livekit.Track,
-        createLocalVideoTrack: livekit.createLocalVideoTrack,
         NativeCallAudio: engine.default,
         NativeCallTrack: engine.NativeCallTrack,
       };
@@ -36,8 +34,7 @@ const ENDED_STATUSES = ['rejected', 'ended', 'cancelled', 'missed'];
 const CALL_TIMEOUT_MS = 45000;
 // webAudioMix kapalı: uzak ses Web Audio'dan geçerse iOS ahize yönlendirmesi bozulur.
 const ROOM_OPTIONS = {
-  // Birebir aramada uyarlanabilir yayın ve yayın kısıtlama kapalı: sunucu, izleyen taraf
-  // hazır olana kadar kamera yayınını duraklatıp görüntünün hiç gelmemesine yol açıyordu.
+  // Birebir aramada uyarlanabilir yayın kapalı: ses akışı her cihazda sabit ve kesintisiz kalır.
   adaptiveStream: false,
   dynacast: false,
   autoSubscribe: true,
@@ -45,31 +42,6 @@ const ROOM_OPTIONS = {
   audioCaptureDefaults: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
 };
 const micPublication = (Track) => ({ name: 'microphone', source: Track.Source.Microphone, dtx: false, red: false, forceStereo: false, audioPreset: { maxBitrate: 32000 }, stopMicTrackOnMute: false });
-// Görüntü kalitesi: tek katman + yüksek bit hızı. Katman seçimi en düşük çözünürlükte kalıp
-// karşı tarafta bulanık görüntüye yol açıyordu.
-const CAMERA_PUBLICATION = {
-  name: 'camera',
-  simulcast: false,
-  // Akıcılık korunur: bant darsa çözünürlük düşer, görüntü donmaz (kasma bundandı).
-  degradationPreference: 'maintain-framerate',
-  videoEncoding: { maxBitrate: 1_200_000, maxFramerate: 30 },
-};
-const CAMERA_RESOLUTION = { width: 1280, height: 720 };
-
-// Kamera kaynağı geç serbest kalırsa ilk deneme boş döner: kısa bir arayla bir kez daha
-// denenir. Böylece kullanıcı düğmeye iki kez basmak zorunda kalmıyor.
-const createCameraTrack = async (engine, facingMode) => {
-  try {
-    return await engine.createLocalVideoTrack({ facingMode, resolution: CAMERA_RESOLUTION });
-  } catch (error) {
-    // İzin reddi tekrar denenmez; cihaz o yönü desteklemiyorsa kısıt düşürülerek denenir.
-    if (error?.name === 'NotAllowedError' || error?.name === 'PermissionDeniedError') throw error;
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    const loose = error?.name === 'OverconstrainedError' || error?.name === 'NotFoundError';
-    return engine.createLocalVideoTrack({ ...(loose ? {} : { facingMode }), resolution: CAMERA_RESOLUTION });
-  }
-};
-
 export default function DirectCallProvider({ children }) {
   const { user } = useCurrentUser();
   const [call, setCall] = useState(null);
@@ -81,11 +53,6 @@ export default function DirectCallProvider({ children }) {
   const [error, setError] = useState('');
   const [minimized, setMinimized] = useState(false);
   const [remoteMuted, setRemoteMuted] = useState(false);
-  const [cameraOn, setCameraOn] = useState(false);
-  const [remoteCameraOn, setRemoteCameraOn] = useState(false);
-  const [localVideoTrack, setLocalVideoTrack] = useState(null);
-  const [remoteVideoTrack, setRemoteVideoTrack] = useState(null);
-  const [facing, setFacing] = useState('user');
 
   const roomRef = useRef(null);
   const tokenRef = useRef(null);
@@ -103,10 +70,6 @@ export default function DirectCallProvider({ children }) {
   const speakerRef = useRef(true);
   const micTrackRef = useRef(null);
   const publishedTrackRef = useRef(null);
-  const cameraTrackRef = useRef(null);
-  // Onay bekleyen görüntülü istekte kamera hazır tutulur, onay gelince yayına girer.
-  const pendingCameraRef = useRef(null);
-  const facingRef = useRef('user');
   // Kaydı beklemeden hemen okutmak için: bağlantı olayları (karşı tarafın odaya girmesi
   // ya da çıkması) bu fonksiyonu tetikler ve arama durumu anında yerine oturur.
   const checkNowRef = useRef(null);
@@ -134,9 +97,6 @@ export default function DirectCallProvider({ children }) {
       // Mikrofon yayından çıkarılır ama durdurulmaz: oturum boyunca aynı izinle kullanılır.
       const micTrack = micTrackRef.current;
       if (micTrack) room.localParticipant.unpublishTrack(micTrack, false).catch(() => {});
-      // Kamera yayından çıkarılır ve durdurulur: görüşme bitince ışığı söner.
-      const cameraTrack = cameraTrackRef.current;
-      if (cameraTrack) room.localParticipant.unpublishTrack(cameraTrack, true).catch(() => {});
       room.disconnect();
       roomRef.current = null;
     }
@@ -147,18 +107,7 @@ export default function DirectCallProvider({ children }) {
     publishedRef.current = null;
     publishedTrackRef.current = null;
     micTrackRef.current = null;
-    cameraTrackRef.current?.stop();
-    cameraTrackRef.current = null;
-    // Onay bekleyen kamera da kapatılır: sonraki aramada ışık yanık kalmaz.
-    pendingCameraRef.current?.stop();
-    pendingCameraRef.current = null;
     setRemoteMuted(false);
-    setCameraOn(false);
-    facingRef.current = 'user';
-    setFacing('user');
-    setRemoteCameraOn(false);
-    setLocalVideoTrack(null);
-    setRemoteVideoTrack(null);
     // Mikrofon serbest bırakılır: sonraki arama temiz akışla başlar, izin tekrar sorulmaz.
     releaseMic();
     resetAudioRouting();
@@ -192,24 +141,6 @@ export default function DirectCallProvider({ children }) {
       if (phaseRef.current === 'active') setError('Karşı tarafı duymak için ekrana dokunun.');
     });
   }, []);
-
-  // Karşı taraf kamerasını açtığında görüntü sahneye alınır.
-  const attachRemoteVideo = useCallback((track) => {
-    const kinds = callEngine?.Track?.Kind;
-    if (!kinds || track.kind !== kinds.Video) return;
-    setRemoteVideoTrack(track);
-    setRemoteCameraOn(true);
-  }, []);
-
-  // Yeniden bağlanma ya da sonradan katılma sonrası açık kalmış kamera yayını sahneye alınır.
-  const attachAllRemoteVideo = useCallback(() => {
-    roomRef.current?.remoteParticipants.forEach((participant) => {
-      participant.videoTrackPublications.forEach((publication) => {
-        publication.setSubscribed(true);
-        if (publication.track) attachRemoteVideo(publication.track);
-      });
-    });
-  }, [attachRemoteVideo]);
 
   // Karşı tarafın mikrofonu kapalıysa oda yayınlarından damıtılır.
   const syncRemoteMute = useCallback(() => {
@@ -332,20 +263,18 @@ export default function DirectCallProvider({ children }) {
           const engine = await loadCallEngine();
           const room = new engine.NativeCallAudio(ROOM_OPTIONS);
           roomRef.current = room;
-          room.on(engine.RoomEvent.TrackSubscribed, (track) => { attachRemoteAudio(track); attachRemoteVideo(track); markAnswered(); });
-          room.on(engine.RoomEvent.ParticipantConnected, () => { attachAllRemoteAudio(); attachAllRemoteVideo(); markAnswered(); });
+          room.on(engine.RoomEvent.TrackSubscribed, (track) => { attachRemoteAudio(track); markAnswered(); });
+          room.on(engine.RoomEvent.ParticipantConnected, () => { attachAllRemoteAudio(); markAnswered(); });
           room.on(engine.RoomEvent.TrackPublished, (publication) => {
             publication.setSubscribed(true);
             if (publication.kind === engine.Track.Kind.Audio && publication.track) attachRemoteAudio(publication.track);
-            if (publication.kind === engine.Track.Kind.Video && publication.track) attachRemoteVideo(publication.track);
             markAnswered();
           });
-          room.on(engine.RoomEvent.Reconnected, () => { attachAllRemoteAudio(); attachAllRemoteVideo(); markAnswered(); });
+          room.on(engine.RoomEvent.Reconnected, () => { attachAllRemoteAudio(); markAnswered(); });
           // Karşı taraf görüşmeden ayrıldıysa (kapatma ya da reddetme) kayıt anında okunur:
           // arama karşı tarafta saniyeler beklemeden kapanır; kararı sunucu kaydı verir.
           room.on(engine.RoomEvent.ParticipantDisconnected, () => { checkNowRef.current?.(); });
-          // Karşı tarafın mikrofon durumu yayın bilgisi üzerinden yakalanır. Görüntüde
-          // "susturulma" yok sayılır: kamera kapatılınca yayın tamamen kaldırılır ve sahne o an düşer.
+          // Karşı tarafın mikrofon durumu yayın bilgisi üzerinden yakalanır.
           room.on(engine.RoomEvent.TrackMuted, (publication, participant) => {
             if (participant?.identity === room.localParticipant.identity) return;
             if (publication.kind === engine.Track.Kind.Audio) setRemoteMuted(true);
@@ -355,7 +284,6 @@ export default function DirectCallProvider({ children }) {
             if (publication.kind === engine.Track.Kind.Audio) setRemoteMuted(false);
           });
           room.on(engine.RoomEvent.TrackUnsubscribed, (track) => {
-            if (track.kind === engine.Track.Kind.Video) { setRemoteVideoTrack(null); setRemoteCameraOn(false); return; }
             audioRef.current.forEach((output) => {
               if (output.dataset.livekitTrack !== track.sid) return;
               audioRef.current.delete(output);
@@ -379,7 +307,7 @@ export default function DirectCallProvider({ children }) {
     } catch {
       if (callRef.current?.id === callId) setError('Ses bağlantısı kurulamadı.');
     }
-  }, [attachAllRemoteAudio, attachAllRemoteVideo, attachRemoteAudio, attachRemoteVideo, markAnswered, publishMic]);
+  }, [attachAllRemoteAudio, attachRemoteAudio, markAnswered, publishMic]);
 
   // Zil çalarken ses kanalını ve mikrofonu hazırla — kabulde gecikme olmasın.
   const prepareSession = useCallback((callId) => {
@@ -508,156 +436,6 @@ export default function DirectCallProvider({ children }) {
     });
   }, []);
 
-  // --- Görüntülü görüşme ---
-
-  // Aynalama gerçek kameraya göre belirlenir. Tarayıcı "arka kamera" isteğini yok sayıp ön
-  // kamerayı açık bırakırsa ayna kapanıyor ve kişi kendini ters görüyordu.
-  const syncFacing = useCallback((track) => {
-    const mode = track?.mediaStreamTrack?.getSettings?.().facingMode;
-    const next = mode === 'environment' ? 'environment' : 'user';
-    facingRef.current = next;
-    setFacing(next);
-  }, []);
-
-  // Kamera izni her zaman kullanıcı dokunuşunun içinde istenir: iOS'ta izin isteği bir
-  // beklemenin ardından yapılırsa tarayıcı kamerayı hiç açmıyordu.
-  // 720p: düşük çözünürlük karşı tarafta bulanık görünüyordu.
-  const acquireCamera = useCallback(async () => {
-    const engine = callEngine || (await loadCallEngine());
-    const track = await createCameraTrack(engine, facingRef.current);
-    syncFacing(track);
-    return track;
-  }, [syncFacing]);
-
-  // Kamera yayına girer: karşı taraf açmasa bile bizi görür.
-  const publishCamera = useCallback(async (track) => {
-    const room = roomRef.current;
-    if (!room || !track) { track?.stop(); return; }
-    cameraTrackRef.current = track;
-    setLocalVideoTrack(track);
-    setCameraOn(true);
-    try {
-      await room.localParticipant.publishTrack(track, { ...CAMERA_PUBLICATION, source: callEngine.Track.Source.Camera });
-      setError('');
-    } catch {
-      cameraTrackRef.current = null;
-      setLocalVideoTrack(null);
-      setCameraOn(false);
-      track.stop();
-      setError('Kamera yayına alınamadı.');
-    }
-  }, []);
-
-  const stopCamera = useCallback(async () => {
-    const room = roomRef.current;
-    const track = cameraTrackRef.current;
-    if (!track) return;
-    cameraTrackRef.current = null;
-    setLocalVideoTrack(null);
-    setCameraOn(false);
-    if (room) await room.localParticipant.unpublishTrack(track, true).catch(() => {});
-    else track.stop();
-  }, []);
-
-  // Kamerayı aç/kapat. Ücret bu aramada bir kez ödendiği için kapatıp açmak coin istemez.
-  const toggleCamera = useCallback(async () => {
-    if (cameraTrackRef.current) { await stopCamera(); return; }
-    try {
-      const track = await acquireCamera();
-      if (!roomRef.current) { track.stop(); return; }
-      await publishCamera(track);
-    } catch (cameraError) {
-      setError(cameraError?.name === 'NotAllowedError' ? 'Kamera izni verilmedi.' : 'Kamera açılamadı.');
-    }
-  }, [acquireCamera, publishCamera, stopCamera]);
-
-  // Görüntülü görüşme isteği. Ücret yalnızca erkek → kadın görüşmede alınır ve karşı taraf
-  // onayladığında tahsil edilir; onaylanmazsa isteyenden hiç coin kesilmez.
-  const startVideo = useCallback(async () => {
-    const current = callRef.current;
-    if (!current || !roomRef.current || cameraTrackRef.current || pendingCameraRef.current) return;
-    let track = null;
-    try {
-      track = await acquireCamera();
-    } catch (cameraError) {
-      setError(cameraError?.name === 'NotAllowedError' ? 'Kamera izni verilmedi.' : 'Kamera açılamadı.');
-      return;
-    }
-    try {
-      const response = await base44.functions.invoke('direct-call', { action: 'video-request', call_id: current.id });
-      const data = response.data || {};
-      if (data.call) setCall(data.call);
-      if (data.status === 'accepted') { await publishCamera(track); return; }
-      if (data.status === 'pending') { pendingCameraRef.current = track; return; }
-      track.stop();
-      setError('Görüntülü istek gönderilemedi.');
-    } catch (requestError) {
-      track.stop();
-      setError(requestError?.response?.data?.error || 'Görüntülü görüşme başlatılamadı.');
-    }
-  }, [acquireCamera, publishCamera]);
-
-  // Karşı taraftan gelen görüntülü isteği yanıtla: reddedilirse ücret alınmaz.
-  const answerVideo = useCallback(async (accept) => {
-    const current = callRef.current;
-    if (!current) return;
-    if (!accept) {
-      pendingCameraRef.current?.stop();
-      pendingCameraRef.current = null;
-      await base44.functions.invoke('direct-call', { action: 'video-respond', call_id: current.id, accept: false }).catch(() => {});
-      return;
-    }
-    // Onayda kamera izni de dokunma anında alınır.
-    let track = null;
-    try { track = await acquireCamera(); } catch { track = null; }
-    try {
-      const response = await base44.functions.invoke('direct-call', { action: 'video-respond', call_id: current.id, accept: true });
-      if (response.data?.call) setCall(response.data.call);
-      if (track) await publishCamera(track);
-    } catch (answerError) {
-      track?.stop();
-      setError(answerError?.response?.data?.error || 'Görüntülü görüşme başlatılamadı.');
-    }
-  }, [acquireCamera, publishCamera]);
-
-  // Bekleyen isteği geri çek: kamera kapanır, karşı tarafa bildirilir, ücret alınmaz.
-  const cancelVideo = useCallback(async () => {
-    const current = callRef.current;
-    pendingCameraRef.current?.stop();
-    pendingCameraRef.current = null;
-    if (current) await base44.functions.invoke('direct-call', { action: 'video-respond', call_id: current.id, accept: false }).catch(() => {});
-  }, []);
-
-  // Ön/arka kamera geçişi: yeni kamera yayına alınır, eski kamera kapatılır.
-  const switchCamera = useCallback(async () => {
-    const room = roomRef.current;
-    const current = cameraTrackRef.current;
-    if (!room || !current) return;
-    const next = facingRef.current === 'user' ? 'environment' : 'user';
-    try {
-      const engine = callEngine || (await loadCallEngine());
-      const track = await createCameraTrack(engine, next);
-      if (roomRef.current !== room) { track.stop(); return; }
-      cameraTrackRef.current = track;
-      // Aynalama açılan gerçek kameraya göre ayarlanır, istenen yöne göre değil.
-      syncFacing(track);
-      setLocalVideoTrack(track);
-      await room.localParticipant.unpublishTrack(current, true).catch(() => {});
-      await room.localParticipant.publishTrack(track, { ...CAMERA_PUBLICATION, source: engine.Track.Source.Camera });
-      setError('');
-    } catch (cameraError) {
-      setError(cameraError?.name === 'NotAllowedError' ? 'Kamera izni verilmedi.' : 'Kamera değiştirilemedi.');
-    }
-  }, [syncFacing]);
-
-  // Canlı denetim: kamera açıkken kareler kontrol edilir, ihlalde arama anında kapanır.
-  const moderation = useCallModeration({
-    callId: call?.id,
-    active: phase === 'active' && cameraOn,
-    track: localVideoTrack,
-    onViolation: teardown,
-  });
-
   // Gelen/biten arama senkronizasyonu — gerçek zamanlı abonelik + yedek sorgu
   useEffect(() => {
     const myId = user?.id;
@@ -689,16 +467,6 @@ export default function DirectCallProvider({ children }) {
       const current = callRef.current;
       if (!current || current.id !== record.id) return;
 
-      // Görüntülü isteğin sonucu: onaylandıysa bekleyen kamera yayına girer, reddedilirse kapanır.
-      if (record.video_fee_status === 'accepted' && pendingCameraRef.current) {
-        const pendingTrack = pendingCameraRef.current;
-        pendingCameraRef.current = null;
-        publishCamera(pendingTrack);
-      } else if (record.video_fee_status === 'rejected' && pendingCameraRef.current) {
-        pendingCameraRef.current.stop();
-        pendingCameraRef.current = null;
-      }
-
       if (record.status === 'ringing') {
         if (current.status !== 'ringing') setCall(record);
         return;
@@ -726,7 +494,7 @@ export default function DirectCallProvider({ children }) {
     syncActive();
 
     // Arama sürerken kayıt 5 saniyede bir tazelenir: canlı akış gecikse de (mobil/PWA)
-    // görüntülü isteğin sonucu ve karşı tarafın kamerası kendiliğinden yerine oturur.
+    // kabul, ret ve kapanma durumu kendiliğinden yerine oturur.
     const refreshCall = async () => {
       const current = callRef.current;
       if (!current || document.visibilityState === 'hidden') return;
@@ -734,8 +502,6 @@ export default function DirectCallProvider({ children }) {
         const response = await base44.functions.invoke('direct-call', { action: 'get', call_id: current.id });
         if (response.data?.call) applyRecord(response.data.call, 'update');
       } catch {}
-      // Olay kaçırıldıysa açık kalan karşı taraf kamerası sahneye alınır.
-      attachAllRemoteVideo();
     };
 
     const onVisible = () => {
@@ -766,7 +532,7 @@ export default function DirectCallProvider({ children }) {
       clearInterval(livePoll);
       if (checkNowRef.current === refreshCall) checkNowRef.current = null;
     };
-  }, [user?.id, activateCall, attachAllRemoteVideo, beginLocalCall, prepareSession, publishCamera, stopRingtone, teardown]);
+  }, [user?.id, activateCall, beginLocalCall, prepareSession, stopRingtone, teardown]);
 
   // Cevapsız aramayı otomatik iptal et
   useEffect(() => {
@@ -794,15 +560,11 @@ export default function DirectCallProvider({ children }) {
 
   const value = useMemo(() => ({
     call, role, phase, seconds, muted, speaker, error, minimized, remoteMuted,
-    cameraOn, remoteCameraOn, localVideoTrack, remoteVideoTrack, facing,
-    moderationNotice: moderation.notice,
-    startCall, acceptCall, rejectCall, endCall, toggleMute, toggleSpeaker, toggleCamera, switchCamera,
-    startVideo, answerVideo, cancelVideo,
-    clearModerationNotice: moderation.clearNotice,
+    startCall, acceptCall, rejectCall, endCall, toggleMute, toggleSpeaker,
     minimizeCall: () => setMinimized(true),
     restoreCall: () => { setMinimized(false); armOutputs(phaseRef.current === 'active'); },
     clearError: () => setError(''),
-  }), [call, role, phase, seconds, muted, speaker, error, minimized, remoteMuted, cameraOn, remoteCameraOn, localVideoTrack, remoteVideoTrack, facing, moderation.notice, moderation.clearNotice, armOutputs, startCall, acceptCall, rejectCall, endCall, toggleMute, toggleSpeaker, toggleCamera, switchCamera, startVideo, answerVideo, cancelVideo]);
+  }), [call, role, phase, seconds, muted, speaker, error, minimized, remoteMuted, armOutputs, startCall, acceptCall, rejectCall, endCall, toggleMute, toggleSpeaker]);
 
   return <DirectCallContext.Provider value={value}>{children}</DirectCallContext.Provider>;
 }
