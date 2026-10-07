@@ -10,7 +10,6 @@ import useFriendPresence from '@/hooks/useFriendPresence';
 import useRoleCelebration from '@/hooks/useRoleCelebration';
 import RoleCelebrationOverlay from '@/components/role/RoleCelebrationOverlay';
 import WhatsNewModal from '@/components/WhatsNewModal';
-import { detectConnectionType } from '@/lib/connectionType';
 import { triggerBanNotice } from '@/lib/banNotice';
 import { useToast } from '@/components/ui/use-toast';
 import MessageRealtimeProvider from '@/components/messages/MessageRealtimeProvider';
