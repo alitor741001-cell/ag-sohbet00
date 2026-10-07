@@ -6,52 +6,62 @@ import FaceRing from '@/components/face/FaceRing';
 
 // Üst üste başarısız denemede cihaz erişimi kapatılır.
 const MAX_ATTEMPTS = 3;
-// Her kafa hareketi adımının süresi ve fotoğrafın alındığı an: kullanıcı kafasını
-// çevirmeye zaman bulur, halka adımlar boyunca yavaş yavaş dolar.
-const STEP_MS = 3600;
-const CAPTURE_AT = 2700;
 const TICK_MS = 90;
 const RETRY_MS = 1600;
 const DONE_MS = 750;
 
-// Kafa hareketi adımları: kafanın çevrileceği yönler, sırayla.
+// Kafa hareketi adımları: her adımın süresi ve fotoğrafın alındığı an ayrı verilir,
+// böylece kullanıcı hareketi yapmaya zaman bulur ve halka yavaş yavaş dolar.
 const HEAD_STEPS = [
-  { key: 'up', label: 'Yukarı', hint: 'Kafanızı yukarı çevirin' },
-  { key: 'down', label: 'Aşağı', hint: 'Kafanızı aşağı çevirin' },
-  { key: 'right', label: 'Sağa', hint: 'Kafanızı sağa çevirin' },
-  { key: 'left', label: 'Sola', hint: 'Kafanızı sola çevirin' },
+  { key: 'up', label: 'Yukarı', hint: 'Kafanızı yukarı çevirin', ms: 3400, at: 2500 },
+  { key: 'down', label: 'Aşağı', hint: 'Kafanızı aşağı çevirin', ms: 3400, at: 2500 },
+  { key: 'right', label: 'Sağa', hint: 'Kafanızı sağa çevirin', ms: 3400, at: 2500 },
+  { key: 'left', label: 'Sola', hint: 'Kafanızı sola çevirin', ms: 3400, at: 2500 },
+];
+// Göz kırpma: gözler kapatılır, hemen ardından açılır; iki kare birlikte kırpmayı doğrular.
+const BLINK_STEPS = [
+  { key: 'eyes_closed', label: 'Kapat', hint: 'Gözlerinizi kapatın ve kısa süre kapalı tutun', ms: 3000, at: 2100 },
+  { key: 'eyes_open', label: 'Aç', hint: 'Gözlerinizi açın', ms: 2200, at: 1000 },
 ];
 // Kayıtta referans yüz için düz bakan fotoğraf alınır.
-const FRONT_STEP = { key: 'front', label: 'Ön', hint: 'Kameraya düz bakın' };
-const ENROLL_STEPS = [FRONT_STEP, ...HEAD_STEPS];
-const POSE_NAMES = { up: 'yukarı', down: 'aşağı', right: 'sağa', left: 'sola' };
+const FRONT_STEP = { key: 'front', label: 'Ön', hint: 'Kameraya düz bakın', ms: 3000, at: 1800 };
+const VERIFY_STEPS = [...HEAD_STEPS, ...BLINK_STEPS];
+const ENROLL_STEPS = [FRONT_STEP, ...VERIFY_STEPS];
+const STEP_NAMES = {
+  up: 'yukarı bakma',
+  down: 'aşağı bakma',
+  right: 'sağa bakma',
+  left: 'sola bakma',
+  eyes_closed: 'gözlerinizi kapatma',
+  eyes_open: 'gözlerinizi açma',
+};
 
 const COPY = {
   enroll: {
     title: 'Yüz kaydı oluştur',
-    hint: 'Hesabınıza bir kez yüz kaydı alınır. Ekrandaki yönergelerle kafanızı çevirin; bu kayıt sonraki doğrulamalarda kullanılır.',
+    hint: 'Hesabınıza bir kez yüz kaydı alınır. Ekrandaki yönergelerle kafanızı çevirin ve gözlerinizi kırpın.',
   },
   device: {
     title: 'Yüz doğrulaması',
-    hint: 'Hesabınıza bu cihazdan ilk kez giriş yapılıyor. Ekrandaki yönergelerle kafanızı yukarı, aşağı, sağa ve sola çevirin.',
+    hint: 'Hesabınıza bu cihazdan ilk kez giriş yapılıyor. Ekrandaki yönergelerle kafanızı çevirin ve gözlerinizi kırpın.',
   },
   balance: {
     title: 'Bakiye doğrulaması',
-    hint: 'Elmas ve bakiye bölümü yüz doğrulamasıyla korunur. Ekrandaki yönergelerle kafanızı yukarı, aşağı, sağa ve sola çevirin.',
+    hint: 'Elmas ve bakiye bölümü yüz doğrulamasıyla korunur. Ekrandaki yönergelerle kafanızı çevirin ve gözlerinizi kırpın.',
   },
 };
 
 const PHASE_TEXT = {
-  verifying: 'Kafa hareketiniz ve yüzünüz karşılaştırılıyor...',
+  verifying: 'Hareketleriniz ve yüzünüz karşılaştırılıyor...',
   ok: 'Doğrulandı',
   fail: 'Tekrar deneniyor...',
 };
 
 /**
  * Tam ekran yüz kilidi: kamera açıkken iPhone Face ID gibi halka yavaş yavaş
- * dolar. Kullanıcı her adımda kafasını istenen yöne (yukarı, aşağı, sağa, sola)
- * çevirir ve o anda fotoğraf alınır; sunucu dört fotoğrafı referans yüzle
- * karşılaştırır. Kafa çevrilmezse ya da yüz eşleşmezse halka kırmızıya döner.
+ * dolar. Kullanıcı her adımda kafasını istenen yöne çevirir ve gözlerini kırpar;
+ * her adımın sonunda fotoğraf alınır. Sunucu dört yönü ve göz kırpmayı referans
+ * yüzle karşılaştırır. Hareket ya da kırpma algılanmazsa halka kırmızıya döner.
  */
 export default function FaceLockOverlay({
   open = true,
@@ -72,7 +82,7 @@ export default function FaceLockOverlay({
   const attemptsRef = useRef(0);
   const retryRef = useRef(null);
   const doneRef = useRef(null);
-  const steps = mode === 'enroll' ? ENROLL_STEPS : HEAD_STEPS;
+  const steps = mode === 'enroll' ? ENROLL_STEPS : VERIFY_STEPS;
   const [cameraReady, setCameraReady] = useState(false);
   const [cameraError, setCameraError] = useState('');
   const [phase, setPhase] = useState('scanning');
@@ -182,12 +192,12 @@ export default function FaceLockOverlay({
         scheduleRetry('Yüzünüz tam görünmüyor. Yüzünüzün tamamı çemberin içinde olacak şekilde tekrar deneyin.');
         return;
       }
-      // Kafa istenen yöne çevrilmemiş: deneme sayılmaz, hangi yön olduğu söylenir.
+      // Kafa hareketi ya da göz kırpma algılanmadı: hangi adımların eksik olduğu söylenir.
       if (result?.reason === 'no_pose') {
-        const missing = (result.missing || []).map((key) => POSE_NAMES[key]).filter(Boolean);
+        const missing = (result.missing || []).map((key) => STEP_NAMES[key]).filter(Boolean);
         scheduleRetry(missing.length
-          ? `Kafa hareketiniz algılanmadı: ${missing.join(', ')}. Kafanızı belirgin şekilde çevirip tekrar deneyin.`
-          : 'Kafa hareketiniz algılanmadı. Kafanızı belirgin şekilde çevirip tekrar deneyin.');
+          ? `Algılanmayan adımlar: ${missing.join(', ')}. Yönergeleri belirgin şekilde tekrar uygulayın.`
+          : 'Hareketleriniz algılanmadı. Yönergeleri belirgin şekilde tekrar uygulayın.');
         return;
       }
       attemptsRef.current += 1;
@@ -202,24 +212,33 @@ export default function FaceLockOverlay({
     }
   }, [blocked, mode, onVerified, scheduleRetry, scope, user?.id]);
 
-  // Tarama adımları: her adımda ekranda yönerge görünür, adımın sonunda fotoğraf
-  // alınır ve halka adımlar boyunca yavaş yavaş dolar.
+  // Tarama adımları: her adımda ekranda yönerge görünür, adımın belirlenen anında
+  // fotoğraf alınır ve halka adımlar boyunca yavaş yavaş dolar.
   useEffect(() => {
     if (!open || blocked || !cameraReady || phase !== 'scanning') return undefined;
-    const total = steps.length * STEP_MS;
+    const total = steps.reduce((sum, step) => sum + step.ms, 0);
     const started = Date.now();
     let index = -1;
     const id = setInterval(async () => {
       if (shootingRef.current) return;
       const elapsed = Date.now() - started;
-      const current = Math.min(steps.length - 1, Math.floor(elapsed / STEP_MS));
+      // Adım sınırları: her adımın kendi süresi vardır.
+      let start = 0;
+      let current = steps.length - 1;
+      for (let i = 0; i < steps.length; i += 1) {
+        if (elapsed < start + steps[i].ms) {
+          current = i;
+          break;
+        }
+        start += steps[i].ms;
+      }
       if (current !== index) {
         index = current;
         setStepIndex(current);
       }
       setProgress(Math.min(1, elapsed / total));
       const step = steps[current];
-      if (elapsed - current * STEP_MS >= CAPTURE_AT && !shotsRef.current[step.key]) {
+      if (elapsed - start >= step.at && !shotsRef.current[step.key]) {
         shootingRef.current = true;
         const file = await captureSelfie().catch(() => null);
         shootingRef.current = false;
@@ -274,7 +293,7 @@ export default function FaceLockOverlay({
             />
             <p className={`mt-3 text-[12px] font-black ${phase === 'scanning' ? 'text-premium-gold' : 'text-white/70'}`}>{statusText}</p>
             {phase !== 'ok' && (
-              <div className="mt-2 flex items-center justify-center gap-1.5">
+              <div className="mt-2 flex flex-wrap items-center justify-center gap-1.5">
                 {steps.map(({ key, label }, index) => (
                   <span
                     key={key}

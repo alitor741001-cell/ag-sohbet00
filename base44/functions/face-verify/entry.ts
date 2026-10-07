@@ -8,9 +8,10 @@ import { refreshAgencyTotals } from '../../shared/agency.ts';
  *
  * - Kayıt (enroll): hesabın referans yüz fotoğrafı bir kez alınır, cihaz güvenilir
  *   cihaz listesine yazılır ve yeni hesap aynı yüzle eşleşiyor mu diye taranır.
- * - Doğrulama (verify): dört yöne (yukarı, aşağı, sağa, sola) çevrilmiş canlı fotoğraflar
- *   referans fotoğrafla karşılaştırılır; kimlik ve kafa hareketi birlikte doğrulanır,
- *   eşleşirse cihaz (giriş kapısı) ya da bakiye kilidi açılır.
+ * - Doğrulama (verify): dört yöne (yukarı, aşağı, sağa, sola) çevrilmiş ve göz kırpma
+ *   (kapalı/açık) karelerini içeren canlı fotoğraflar referans fotoğrafla karşılaştırılır;
+ *   kimlik, kafa hareketi ve göz kırpma birlikte doğrulanır, eşleşirse cihaz
+ *   (giriş kapısı) ya da bakiye kilidi açılır.
  * - Durum (status) / aç-kapat (toggle): yüz doğrulamasının açık olup olmadığı.
  *
  * Yan hesap kuralı: aynı yüzle doğrulanan iki hesaptan YENİ açılan hesabın yayıncılığı
@@ -112,16 +113,18 @@ async function checkFace(base44, selfieUri) {
   }
 }
 
-// Kafa hareketi adımları: istemci bu sırayla yukarı, aşağı, sağa ve sola çevrilmiş
-// fotoğrafları yükler; canlılık bu dört pozla doğrulanır.
-const POSE_KEYS = ['up', 'down', 'right', 'left'];
+// Canlılık adımları: istemci bu sırayla yukarı, aşağı, sağa, sola çevrilmiş dört
+// fotoğraf ile gözler kapalı ve açık iki fotoğraf yükler.
+const SHOT_KEYS = ['up', 'down', 'right', 'left', 'eyes_closed', 'eyes_open'];
 
 const POSE_PROMPT = [
   'You are a strict biometric liveness verifier for account security.',
   'Image 1 is the enrolled reference face of the account owner.',
   'Images 2 to 5 are live selfies taken in one session, in this order: image 2 = head turned UP, image 3 = head turned DOWN, image 4 = head turned RIGHT, image 5 = head turned LEFT.',
+  'Images 6 and 7 come from the same live session: image 6 was captured while the eyes are closed (both eyelids fully down) and image 7 right after the eyes opened again.',
   'For each of the images 2-5 set the matching pose flag to true only when the head is clearly rotated in the expected direction: the visible side of the face and the chin/forehead angle must show a real head rotation of roughly 20 degrees or more.',
   'Set the pose flag to false when the head faces straight into the camera, when it is turned to a different direction than expected, or when the frame shows a hand, an object, a covered face or a photo of a screen.',
+  'Set eyes_closed to true only when image 6 really shows closed eyelids, and eyes_open to true only when image 7 really shows open eyes. Set them to false when image 6 shows open eyes, when image 7 shows closed eyes, or when either frame shows a hand, an object, a covered face or a photo of a screen.',
   'Set same_person to true only when every image shows the same human face as Image 1. Ignore lighting, camera angle, expression, make-up, glasses, hair and background.',
   'Set face_visible to true only when every image shows one complete face: forehead, both eyes, nose, mouth and chin inside the frame.',
   'Return JSON with your decisions and a confidence value between 0 and 1.',
@@ -137,9 +140,11 @@ const POSE_SCHEMA = {
     down: { type: 'boolean' },
     right: { type: 'boolean' },
     left: { type: 'boolean' },
+    eyes_closed: { type: 'boolean' },
+    eyes_open: { type: 'boolean' },
     note: { type: 'string' },
   },
-  required: ['same_person', 'confidence', 'face_visible', 'up', 'down', 'right', 'left'],
+  required: ['same_person', 'confidence', 'face_visible', 'up', 'down', 'right', 'left', 'eyes_closed', 'eyes_open'],
 };
 
 /**
@@ -160,13 +165,13 @@ async function checkPoses(base44, referenceUri, poses: any[]) {
       response_json_schema: POSE_SCHEMA,
     });
     const seen: any = {};
-    POSE_KEYS.forEach((key) => { seen[key] = result?.[key] === true; });
+    SHOT_KEYS.forEach((key) => { seen[key] = result?.[key] === true; });
     return {
       same: result?.same_person === true,
       confidence: Math.max(0, Math.min(1, Number(result?.confidence) || 0)),
       faceVisible: result?.face_visible !== false,
       // Kafa beklenen yöne çevrilmemiş adımlar: istemci bunları kullanıcıya söyler.
-      missing: POSE_KEYS.filter((key) => !seen[key]),
+      missing: SHOT_KEYS.filter((key) => !seen[key]),
     };
   } catch {
     return null;
@@ -305,11 +310,11 @@ export default async function (req) {
     }
     const now = new Date().toISOString();
     const devices = addDevice(record?.trusted_devices, deviceId);
-    // Kafa hareketi fotoğrafları: yukarı, aşağı, sağa, sola sırasıyla beklenir.
+    // Canlılık fotoğrafları: dört yön ile gözler kapalı/açık, bu sırayla beklenir.
     const poseSource = body.pose_uris && typeof body.pose_uris === 'object' ? body.pose_uris : null;
-    const poses = poseSource ? POSE_KEYS.map((key) => ({ key, uri: String(poseSource[key] || '') })) : null;
+    const poses = poseSource ? SHOT_KEYS.map((key) => ({ key, uri: String(poseSource[key] || '') })) : null;
     if (poses && poses.some((pose) => !pose.uri)) {
-      return Response.json({ error: 'Kafa hareketi fotoğrafları eksik.' }, { status: 400 });
+      return Response.json({ error: 'Kafa hareketi ve göz kırpma fotoğrafları eksik.' }, { status: 400 });
     }
 
     if (action === 'enroll') {

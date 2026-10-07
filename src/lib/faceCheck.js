@@ -8,8 +8,8 @@ import { base44 } from '@/api/base44Client';
  * karşılaştırma anında geçici imzalı bağlantı üretir.
  */
 const DEVICE_PREFIX = 'filmkeyfi_device_';
-// Kafa hareketi adımları: sunucu bu sırayla bekler (yukarı, aşağı, sağa, sola).
-const POSE_KEYS = ['up', 'down', 'right', 'left'];
+// Canlılık adımları: sunucu bu sırayla bekler — dört kafa yönü ve göz kırpma.
+const SHOT_KEYS = ['up', 'down', 'right', 'left', 'eyes_closed', 'eyes_open'];
 
 export function deviceId(userId) {
   const key = DEVICE_PREFIX + (userId || 'misafir');
@@ -37,15 +37,15 @@ async function uploadSelfie(file) {
   return file_uri;
 }
 
-/** Kafa hareketi fotoğraflarını yükler: her yön kendi dosyasına gider. */
-async function uploadPoses(photos) {
+/** Canlılık karelerini yükler: her adım kendi dosyasına gider. */
+async function uploadShots(photos) {
   const uris = {};
-  for (const key of POSE_KEYS) uris[key] = await uploadSelfie(photos[key]);
+  for (const key of SHOT_KEYS) uris[key] = await uploadSelfie(photos[key]);
   return uris;
 }
 
 export async function enrollFace(userId, photos) {
-  const pose_uris = await uploadPoses(photos);
+  const pose_uris = await uploadShots(photos);
   // Referans yüz düz bakan fotoğraftan alınır.
   const face_uri = await uploadSelfie(photos.front);
   const res = await base44.functions.invoke('face-verify', {
@@ -55,8 +55,8 @@ export async function enrollFace(userId, photos) {
 }
 
 export async function verifyFace(userId, photos, scope = 'device') {
-  const pose_uris = await uploadPoses(photos);
-  // Kimlik denetimi kafa hareketi fotoğraflarıyla yapılır; ilk adım ana fotoğraftır.
+  const pose_uris = await uploadShots(photos);
+  // Kimlik denetimi canlılık kareleriyle yapılır; ilk adım ana fotoğraftır.
   const res = await base44.functions.invoke('face-verify', {
     action: 'verify', device_id: deviceId(userId), face_uri: pose_uris.up, pose_uris, scope,
   });
