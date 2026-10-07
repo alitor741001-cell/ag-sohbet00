@@ -4,19 +4,20 @@ import { base44 } from '@/api/base44Client';
 import { useToast } from '@/components/ui/use-toast';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { vipLevelOf } from '@/lib/userLevels';
-
-const REQUIRED_VIP = 10;
+import { HIDDEN_REQUIRED_VIP, hiddenUnlocked } from '@/lib/hiddenUser';
 
 /**
- * Gizli Kullanıcı: VIP10 ve üzeri hesaplarda açılır.
- * Buton VIP olmasa da her zaman görünür; VIP10 yoksa aktif edilemez.
+ * Gizli Kullanıcı: VIP10 ve üzeri hesaplarda açılır; yönetici hesabı VIP şartı olmadan açar.
+ * Buton her zaman görünür; kilidi olmayan hesap aktif edemez.
  */
 export default function HiddenUserCard({ user, onUpdated }) {
   const { toast } = useToast();
   const { setUser } = useCurrentUser();
   const [saving, setSaving] = useState(false);
   const level = vipLevelOf(user);
-  const unlocked = level >= REQUIRED_VIP;
+  const unlocked = hiddenUnlocked(user);
+  // Yönetici hesabı, VIP seviyesi yetersiz olsa da gizli modu açabilir.
+  const adminBypass = user?.role === 'admin' && level < HIDDEN_REQUIRED_VIP;
   const enabled = !!user?.hidden_user;
 
   const toggle = async () => {
@@ -49,10 +50,12 @@ export default function HiddenUserCard({ user, onUpdated }) {
         <p className="font-bold">Gizli Kullanıcı</p>
         <p className="text-xs text-muted-foreground">
           {!unlocked
-            ? `VIP${REQUIRED_VIP} ve üzeri hesaplarda aktif edilir (VIP${level}).`
-            : enabled
-              ? 'Açık — odalara görünmeden giriyorsun.'
-              : 'Kapalı — odalarda görünürsün.'}
+            ? `VIP${HIDDEN_REQUIRED_VIP} ve üzeri hesaplarda aktif edilir (VIP${level}).`
+            : adminBypass
+              ? 'Yönetici hesabı — VIP şartı aranmaz.'
+              : enabled
+                ? 'Açık — odalara görünmeden giriyorsun.'
+                : 'Kapalı — odalarda görünürsün.'}
         </p>
       </div>
       <button

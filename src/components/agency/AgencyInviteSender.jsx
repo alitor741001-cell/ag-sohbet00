@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Loader2, Search, Send, UserPlus, X } from 'lucide-react';
+import { Ban, Loader2, Search, Send, UserPlus, X } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { Image } from '@/components/ui/image';
 import { AGENCY_GOLD, agencyApi } from '@/lib/agency';
@@ -85,13 +85,24 @@ export default function AgencyInviteSender({ invites = [], onChanged }) {
               <p className="truncate text-sm font-bold">{found.name}</p>
               <p className="text-[10px] text-white/45">#{found.member_id}{found.agency_name ? ` • ${found.agency_name}` : ''}</p>
             </div>
-            <button onClick={send} disabled={sending || !!found.agency_name || !found.friend} className="flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-black text-black disabled:opacity-50" style={{ background: AGENCY_GOLD }}>
-              {sending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : found.agency_name ? <X className="h-3.5 w-3.5" /> : <Send className="h-3.5 w-3.5" />}
-              {found.agency_name ? 'Bağlı' : found.friend ? 'Davet Et' : 'Arkadaş Ekle'}
-            </button>
+            {found.invite_blocked ? (
+              <span className="flex shrink-0 items-center gap-1.5 rounded-xl border border-[#FF8080]/45 px-3 py-2 text-[11px] font-black text-[#FF8080]">
+                <Ban className="h-3.5 w-3.5" /> Davet Edilemez
+              </span>
+            ) : (
+              <button onClick={send} disabled={sending || !!found.agency_name || !found.friend} className="flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-black text-black disabled:opacity-50" style={{ background: AGENCY_GOLD }}>
+                {sending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : found.agency_name ? <X className="h-3.5 w-3.5" /> : <Send className="h-3.5 w-3.5" />}
+                {found.agency_name ? 'Bağlı' : found.friend ? 'Davet Et' : 'Arkadaş Ekle'}
+              </button>
+            )}
           </div>
         )}
-        {found && !found.friend && !found.agency_name && (
+        {found?.invite_blocked && (
+          <p className="mt-2 text-[10px] leading-snug text-[#FF8080]">
+            Bu hesabın yayıncılığı yan hesap nedeniyle iptal edildi; tekrar davet gönderilemez.
+          </p>
+        )}
+        {found && !found.invite_blocked && !found.friend && !found.agency_name && (
           <p className="mt-2 text-[10px] leading-snug" style={{ color: AGENCY_GOLD }}>
             Davet gönderebilmek için önce arkadaş olmanız gerekir. Kullanıcının profilinden arkadaşlık isteği gönder, kabul edilince davet edebilirsin.
           </p>

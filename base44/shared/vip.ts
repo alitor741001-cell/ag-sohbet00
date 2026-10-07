@@ -62,8 +62,11 @@ export const effectiveVipLevel = (user: any) => {
   return vipActive(user) ? level : 0;
 };
 
-/** Gizli kullanıcı modu açık ve VIP seviyesi yeterliyse kişi odalarda kimliğini göstermez. */
-export const isHiddenUser = (user: any) => !!user?.hidden_user && effectiveVipLevel(user) >= HIDDEN_REQUIRED_VIP;
+/** Gizli mod kilidi: yönetici hesabı VIP şartı aranmadan açar, diğerleri VIP10 ve üzeri. */
+export const hiddenUnlocked = (user: any) => user?.role === 'admin' || effectiveVipLevel(user) >= HIDDEN_REQUIRED_VIP;
+
+/** Gizli kullanıcı modu açık ve kilidi açıksa kişi odalarda kimliğini göstermez. */
+export const isHiddenUser = (user: any) => !!user?.hidden_user && hiddenUnlocked(user);
 
 /** Kalan gün: süresiz VIP'de null döner. */
 export const vipDaysLeft = (user: any) => {

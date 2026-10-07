@@ -23,5 +23,8 @@ export const hiddenUserCode = (user) => {
 /** Odalarda görünen tam takma ad. */
 export const hiddenDisplayName = (user) => `${HIDDEN_DISPLAY_NAME}${hiddenUserCode(user)}`;
 
-/** Gizli kullanıcı modu açık ve VIP seviyesi yeterliyse kişi odalarda kimliğini göstermez. */
-export const isHiddenUser = (user) => !!user?.hidden_user && vipActive(user) && vipLevelOf(user) >= HIDDEN_REQUIRED_VIP;
+/** Gizli mod kilidi: yönetici hesabı VIP şartı aranmadan açar, diğerleri VIP10 ve üzeri. */
+export const hiddenUnlocked = (user) => user?.role === 'admin' || (vipActive(user) && vipLevelOf(user) >= HIDDEN_REQUIRED_VIP);
+
+/** Gizli kullanıcı modu açık ve kilidi açıksa kişi odalarda kimliğini göstermez. */
+export const isHiddenUser = (user) => !!user?.hidden_user && hiddenUnlocked(user);

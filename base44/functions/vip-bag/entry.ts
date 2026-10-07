@@ -52,10 +52,10 @@ export default async function (req: Request): Promise<Response> {
       return Response.json({ ok: true, items: bag.map(view), history: history.map(view) });
     }
 
-    // Gizli kullanıcı modu: VIP10 ve üzeri hesaplarda açılır, altındaki hesaplarda açılmaz.
+    // Gizli kullanıcı modu: VIP10 ve üzeri hesaplarda açılır; yönetici hesabında VIP şartı aranmaz.
     if (action === 'hidden') {
       const level = effectiveVipLevel(me);
-      if (level < HIDDEN_REQUIRED_VIP) {
+      if (level < HIDDEN_REQUIRED_VIP && me.role !== 'admin') {
         return Response.json({ error: `Gizli kullanıcı modu VIP${HIDDEN_REQUIRED_VIP} ve üzeri hesaplarda açılabilir.` }, { status: 403 });
       }
       const enabled = !!body?.enabled;

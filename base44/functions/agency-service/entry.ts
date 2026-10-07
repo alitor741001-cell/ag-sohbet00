@@ -49,6 +49,12 @@ export default async function (req) {
       return (rows || []).some((row) => row.status === 'accepted' && (row.members || []).includes(targetId));
     };
 
+    // Yan hesabı doğrulanıp yayıncılığı iptal edilen kişiye tekrar davet gönderilemez.
+    const isDuplicateAccount = async (userId: string) => {
+      const flags = await base44.asServiceRole.entities.FaceCheck.filter({ user_id: userId }, '-created_date', 5).catch(() => []);
+      return (flags || []).some((row: any) => !!row.duplicate_of);
+    };
+
     // Başvuru aşamasındaki (onaylanmamış) ajanslarla işlem yapılamaz.
     const isAgencyActive = (agency: any) => !!agency && agency.status !== 'pending' && agency.status !== 'rejected' && agency.active !== false;
 
@@ -192,6 +198,7 @@ export default async function (req) {
       if (!target) return Response.json({ error: 'Kullanıcı bulunamadı.' }, { status: 404 });
       if (target.agency_record_id) return Response.json({ error: 'Bu kullanıcı zaten bir ajansa bağlı.' }, { status: 400 });
       if (!(await isFriendOf(account.id, target.id))) return Response.json({ error: 'Yalnızca arkadaşlarını yayıncı olarak davet edebilirsin. Önce arkadaş ekle.' }, { status: 403 });
+      if (await isDuplicateAccount(target.id)) return Response.json({ error: 'Bu hesabın yayıncılığı yan hesap nedeniyle iptal edildi; tekrar davet gönderilemez.' }, { status: 403 });
       const rl = await rateLimit(base44, 'agency-invite:' + account.id, account.id, 40, 60000);
       if (!rl.allowed) return Response.json({ error: 'Çok fazla davet gönderdin, biraz bekleyin.' }, { status: 429 });
       const existing = await base44.asServiceRole.entities.AgencyInvite
@@ -485,6 +492,7 @@ export default async function (req) {
           member_id: found.member_id || '-', agency_name: inSameAgency ? (found.agency_name || 'Ajansın') : (found.agency_name || ''),
           agency_role: found.agency_role || '', in_agency: !!found.agency_record_id, in_same_agency: inSameAgency && !!lookupAgency,
           friend: await isFriendOf(account.id, found.id),
+          invite_blocked: await isDuplicateAccount(found.id),
         },
       });
     }
