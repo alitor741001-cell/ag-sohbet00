@@ -869,8 +869,25 @@ export default async function (req) {
       }
       if (action === 'admin-reward-paid') {
         const paid = body.paid !== false;
+        const nowIso = new Date().toISOString();
+        // Kart bazlı işaretleme: kişinin panelde tek kartta toplanan tüm kota kayıtları birlikte güncellenir.
+        if (!body.reward_id && body.user_id) {
+          const rows = await base44.asServiceRole.entities.QuotaReward.filter({ user_id: body.user_id }, '-created_date', 500).catch(() => []);
+          if (!rows?.length) return Response.json({ error: 'Kayıt bulunamadı.' }, { status: 404 });
+          await withLimitRetry(() => base44.asServiceRole.entities.QuotaReward.bulkUpdate(rows.map((row: any) => ({
+            id: row.id, status: paid ? 'paid' : 'pending', paid_at: paid ? nowIso : null,
+          }))));
+          const cardTotal = Math.round(rows.reduce((sum: number, row: any) => sum + (Number(row.amount) || 0), 0) * 100) / 100;
+          if (paid) {
+            await notifyUser(base44, {
+              user_id: body.user_id, type: 'quota_paid', title: '💸 Ödeme yapıldı',
+              body: `$${cardTotal} tutarındaki kota kazancın ödendi olarak işaretlendi.`, link: '/profil',
+            }).catch(() => {});
+          }
+          return Response.json({ ok: true, user_id: body.user_id, ids: rows.map((row: any) => row.id) });
+        }
         const updated = await base44.asServiceRole.entities.QuotaReward.update(String(body.reward_id || ''), {
-          status: paid ? 'paid' : 'pending', paid_at: paid ? new Date().toISOString() : null,
+          status: paid ? 'paid' : 'pending', paid_at: paid ? nowIso : null,
         });
         if (paid) {
           await notifyUser(base44, {

@@ -265,7 +265,9 @@ export async function syncQuotaRewards(base44: any, userId: string) {
       agency_owner_id: account.agency_owner_id || '', period, tier_id: tier.id,
       diamonds: Number(tier.diamonds) || 0, amount: round(tier.broadcaster_dollars),
       agency_amount: round(tier.agency_dollars) || agencyCommissionFor(tier.diamonds),
-      status: 'pending', transaction_id: `Q-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`,
+      // Kota tamamlandığı anda kayıt ödendi sayılır: panelde ayrıca işaretlemek gerekmez.
+      status: 'paid', paid_at: new Date().toISOString(),
+      transaction_id: `Q-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`,
       completed_at: new Date().toISOString(),
     }).catch(() => null);
     if (!reward) continue;
@@ -292,7 +294,7 @@ export async function syncQuotaRewards(base44: any, userId: string) {
           assistant_id: assistant.user_id, assistant_name: assistant.name || 'Asistan', assistant_amount: cut,
           agency_id: reward.agency_id, agency_code: reward.agency_code, agency_name: reward.agency_name,
           agency_owner_id: reward.agency_owner_id, period, tier_id: tier.id,
-          diamonds: Number(tier.diamonds) || 0, amount: cut, agency_amount: 0, status: 'pending',
+          diamonds: Number(tier.diamonds) || 0, amount: cut, agency_amount: 0, status: 'paid', paid_at: new Date().toISOString(),
           transaction_id: `A-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`,
           completed_at: new Date().toISOString(),
         }).catch(() => null);

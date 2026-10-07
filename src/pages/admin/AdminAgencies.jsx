@@ -34,9 +34,17 @@ export default function AdminAgencies() {
 
   useEffect(() => { load(); }, [load]);
 
-  // Ödeme işaretlendiğinde panelin tamamı değil, yalnızca ilgili kazanç kaydı güncellenir.
+  // Canlı güncelleme: ödeme işareti var olan kaydı günceller, yeni tamamlanan kota
+  // kaydı listeye eklenir — panelin tamamı yeniden yüklenmez.
   const patchReward = useCallback((id, patch) => {
-    setData((prev) => (prev?.rewards ? { ...prev, rewards: prev.rewards.map((row) => (row.id === id ? { ...row, ...patch } : row)) } : prev));
+    setData((prev) => {
+      if (!prev?.rewards) return prev;
+      const known = prev.rewards.some((row) => row.id === id);
+      const rewards = known
+        ? prev.rewards.map((row) => (row.id === id ? { ...row, ...patch } : row))
+        : [patch, ...prev.rewards];
+      return { ...prev, rewards };
+    });
   }, []);
 
   if (loading) {
