@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
 import { findProfanity } from '../../shared/profanity.ts';
 import { incrementFriendshipProgression } from '../../shared/friendshipProgression.ts';
+import { chargeDirectMessageFee, directMessageBlock, directRelation } from '../../shared/directMessage.ts';
 import { mirrorRecord, readRows } from '../../shared/supabaseMirror.ts';
 import { waitUntil } from 'base44:runtime';
 
@@ -27,11 +28,10 @@ export default async function(req) {
       const targetAvatar = target.avatar || '';
       const isAdminChat = user.role === 'admin' || target.role === 'admin';
       if (!isAdminChat) {
-        const friendships = await base44.asServiceRole.entities.Friendship.filter({
-          $or: [{ requester_id: user.id, recipient_id: targetId }, { requester_id: targetId, recipient_id: user.id }],
-          status: 'accepted'
-        }, '-created_date', 1).catch(() => []);
-        if (!friendships.length) return Response.json({ error: 'Yalnızca arkadaşlarınıza mesaj gönderebilirsiniz' }, { status: 403 });
+        // Arkadaşlık şartı yok: engel ve karşı tarafın "Rahatsız Etme" ayarı belirler.
+        const relation = await directRelation(base44, user.id, targetId);
+        const blockedReason = directMessageBlock(user, target, relation);
+        if (blockedReason) return Response.json({ error: blockedReason }, { status: 403 });
       }
 
       // İki kullanıcı arasındaki sohbetleri user1_id/user2_id ile bul (members array filter güvenilir değil)
@@ -84,15 +84,11 @@ export default async function(req) {
       if (friendUser.is_banned || friendUser.role === 'banned' || friendUser.membership_status === 'blocked') return Response.json({ error: 'Bu hesap yönetici tarafından engellenmiştir.' }, { status: 403 });
       const recipientExpired = friendUser.role !== 'admin' && friendUser.role !== 'moderator' && (friendUser.membership_status === 'expired' || (friendUser.membership_end && new Date(friendUser.membership_end).getTime() <= Date.now()));
       const isAdminChat = user.role === 'admin' || friendUser.role === 'admin';
+      const relation = isAdminChat ? null : await directRelation(base44, user.id, friendId);
+      const isFriend = isAdminChat || relation?.status === 'accepted';
       if (!isAdminChat) {
-        const friendships = await base44.asServiceRole.entities.Friendship.filter({
-          $or: [
-            { requester_id: user.id, recipient_id: friendId },
-            { requester_id: friendId, recipient_id: user.id }
-          ]
-        }, '-created_date', 10).catch(() => []);
-        const friendship = friendships[0];
-        if (!friendship || friendship.status !== 'accepted') return Response.json({ error: 'Yalnızca arkadaşlarınıza mesaj gönderebilirsiniz' }, { status: 403 });
+        const blockedReason = directMessageBlock(user, friendUser, relation);
+        if (blockedReason) return Response.json({ error: blockedReason }, { status: 403 });
       }
 
       // Küfür filtresi
@@ -111,11 +107,19 @@ export default async function(req) {
       const receiverId = conversation.user1_id === user.id ? conversation.user2_id : conversation.user1_id;
       const receiverName = conversation.user1_id === user.id ? conversation.user2_name : conversation.user1_name;
 
+      // Arkadaş olmayan erkek → kadın mesajı 100 coin: gönderenden düşer, alıcının elmasına yazılır.
+      let giftCoins = 0;
+      if (!isFriend) {
+        const fee = await chargeDirectMessageFee(base44, user, friendUser);
+        if (fee.error) return Response.json({ error: fee.error }, { status: 400 });
+        giftCoins = fee.coins;
+      }
+
       const message = await base44.asServiceRole.entities.ChatMessage.create({
         conversation_id: conversationId,
         sender_id: user.id, sender_name: userName,
         receiver_id: receiverId,
-        content, deleted_for: [], read_by: [user.id]
+        content, gift_coins: giftCoins, deleted_for: [], read_by: [user.id]
       });
 
       // Sohbeti güncelle — son mesaj ve okunmamış sayısı

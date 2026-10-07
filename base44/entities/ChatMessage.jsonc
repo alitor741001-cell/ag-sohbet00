@@ -21,6 +21,10 @@
     "file_url": {
       "type": "string"
     },
+    "gift_coins": {
+      "type": "number",
+      "default": 0
+    },
     "deleted_for": {
       "type": "array",
       "items": {

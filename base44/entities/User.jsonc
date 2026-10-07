@@ -210,6 +210,10 @@
       },
       "default": []
     },
+    "dnd_messages": {
+      "type": "boolean",
+      "default": false
+    },
     "membership_status": {
       "type": "string",
       "enum": [

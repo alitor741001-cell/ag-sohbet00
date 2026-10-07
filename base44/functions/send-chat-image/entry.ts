@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
 import { incrementFriendshipProgression } from '../../shared/friendshipProgression.ts';
+import { chargeDirectMessageFee, directMessageBlock, directRelation } from '../../shared/directMessage.ts';
 import { HIDDEN_AVATAR_URL, hiddenDisplayName, isHiddenUser } from '../../shared/vip.ts';
 
 export default async function(req) {
@@ -74,18 +75,25 @@ export default async function(req) {
       const receiver = await base44.asServiceRole.entities.User.get(receiverId).catch(() => null);
       if (!receiver) return Response.json({ error: 'Bu hesap yönetici tarafından silinmiştir.' }, { status: 404 });
       if (receiver.is_banned || receiver.role === 'banned' || receiver.membership_status === 'blocked') return Response.json({ error: 'Bu hesap yönetici tarafından engellenmiştir.' }, { status: 403 });
-      if (user.role !== 'admin' && receiver.role !== 'admin') {
-        const friendships = await base44.asServiceRole.entities.Friendship.filter({
-          $or: [{ requester_id: user.id, recipient_id: receiverId }, { requester_id: receiverId, recipient_id: user.id }],
-          status: 'accepted'
-        }, '-created_date', 1).catch(() => []);
-        if (!friendships.length) return Response.json({ error: 'Yalnızca arkadaşlarınıza mesaj gönderebilirsiniz' }, { status: 403 });
+      // Arkadaşlık şartı yok: engel ve karşı tarafın "Rahatsız Etme" ayarı belirler.
+      const relation = await directRelation(base44, user.id, receiverId);
+      const friendChat = user.role === 'admin' || receiver.role === 'admin' || relation?.status === 'accepted';
+      const blockedReason = directMessageBlock(user, receiver, relation, user.role === 'admin' || receiver.role === 'admin');
+      if (blockedReason) return Response.json({ error: blockedReason }, { status: 403 });
+
+      // Arkadaş olmayan erkek → kadın görseli de mesaj sayılır: aynı ücret işlenir.
+      let giftCoins = 0;
+      if (!friendChat) {
+        const fee = await chargeDirectMessageFee(base44, user, receiver);
+        if (fee.error) return Response.json({ error: fee.error }, { status: 400 });
+        giftCoins = fee.coins;
       }
+
       const message = await base44.asServiceRole.entities.ChatMessage.create({
         conversation_id: context_id,
         sender_id: user.id, sender_name: senderName,
         receiver_id: receiverId,
-        content: caption, file_url,
+        content: caption, file_url, gift_coins: giftCoins,
         deleted_for: [], read_by: [user.id]
       });
       const updates: any = {

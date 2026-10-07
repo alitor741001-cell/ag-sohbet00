@@ -1,11 +1,12 @@
 import { useRef } from 'react';
-import { ChevronLeft, Ban, UserMinus, UserPlus, CheckCheck, Check, Wifi } from 'lucide-react';
+import { ChevronLeft, Ban, BellOff, UserMinus, UserPlus, CheckCheck, Check, Wifi } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import RoleBadge from '@/components/RoleBadge';
 
 export default function ChatSettingsPanel({
   name, avatar, friendProfile,   isBlocked, isFriend, requestSent, showFriendButton, onlineEnabled,
   readReceiptsEnabled, onToggleReadReceipts, onToggleOnline,
+  dndEnabled, onToggleDnd,
   onBlock, onUnfriend, onRefriend, onClose,
   blocking, unfriending
 }) {
@@ -50,6 +51,16 @@ export default function ChatSettingsPanel({
             </div>
             <button onClick={onToggleOnline} className={`w-12 h-7 rounded-full transition-colors shrink-0 ${onlineEnabled ? 'bg-primary' : 'bg-muted'}`}>
               <span className={`block w-5 h-5 bg-white rounded-full transition-transform ${onlineEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
+            </button>
+          </div>
+          {/* Rahatsız Etme: açıkken arkadaş olmayanlar bu kişiye mesaj gönderemez */}
+          <div className="w-full flex items-center justify-between px-4 py-4 gap-3">
+            <div className="flex-1 min-w-0">
+              <span className="flex items-center gap-3 font-medium"><BellOff className="w-5 h-5 shrink-0" />Rahatsız Etme</span>
+              <p className="text-xs text-muted-foreground mt-0.5">Açıkken arkadaşın olmayanlar sana mesaj gönderemez</p>
+            </div>
+            <button onClick={onToggleDnd} className={`w-12 h-7 rounded-full transition-colors shrink-0 ${dndEnabled ? 'bg-primary' : 'bg-muted'}`}>
+              <span className={`block w-5 h-5 bg-white rounded-full transition-transform ${dndEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
             </button>
           </div>
           {/* Arkadaşı Sil / Arkadaş olarak ekle / İstek gönderildi */}
