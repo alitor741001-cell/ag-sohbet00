@@ -235,11 +235,12 @@ export default async function (req) {
       const freeCount = grid.flat().filter((symbol) => symbol === 'free').length;
       const freeTrigger = freeCount >= FREE_SYMBOLS;
       const freeSpins = Math.max(0, (wallet.free_spins ?? 0) - (isFree ? 1 : 0)) + (freeTrigger ? FREE_SPINS : 0);
-      // Kaybedilen miktar (bahis − kazanç), o anki bahis kademesinin havuzunda birikir.
-      const lost = Math.max(0, cost - total);
+      // Havuz, turun net tutarıyla işler: kaybedilen (bahis − kazanç) havuza birikir,
+      // kazanılan turda aynı havuz azalır — kazanç havuzdan ödenir. Havuz sıfırın altına inmez.
+      const net = cost - total;
       const pools = poolValues(wallet);
       const poolKey = poolKeyForTotalBet(stake);
-      if (poolKey && lost > 0) pools[poolKey] += lost;
+      if (poolKey && net !== 0) pools[poolKey] = Math.max(0, pools[poolKey] + net);
       // Jackpot havuzu: bütün havuzlarda birikenlerin toplamı.
       const grand = jackpotTotal(pools);
       const bigWin = stake > 0 && total >= stake * BIG_WIN_MULTIPLE;
