@@ -193,7 +193,7 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
           {isOwner && chatEnabled && (
             <button onClick={clearAll} className="flex items-center gap-1 whitespace-nowrap rounded-full border border-[#FF6B6B]/60 px-2.5 py-1 text-[11px] font-semibold text-[#FF9A9A] shadow-[0_0_12px_-5px_rgba(255,107,107,0.9)]"><Trash2 className="h-3 w-3" /> Temizle</button>
           )}
-          <button onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-full border border-white/25 bg-black/60 text-white active:scale-95"><X className="w-5 h-5" /></button>
+          <button onClick={onClose} aria-label="Sohbeti kapat" className="flex h-11 w-11 items-center justify-center rounded-full border border-white/25 bg-black/60 text-white active:scale-95"><X className="w-5 h-5" /></button>
         </div>
       </div>
       {(voiceEnabled || onSettings || onDirect) && (
@@ -214,7 +214,7 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
             const Icon = f.icon;
             const active = msgFilter === f.key;
             return (
-              <button key={f.key} onClick={() => setMsgFilter(f.key)} className={`flex min-w-[3.75rem] flex-1 flex-col items-center gap-0.5 px-1.5 py-1 text-[9px] font-bold ${index > 0 ? 'border-l border-white/10' : ''} ${active ? 'rounded-lg bg-[#FFD700] text-black shadow-[0_0_14px_-3px_rgba(255,215,0,0.95)]' : 'text-white/80'}`}>
+              <button key={f.key} onClick={() => setMsgFilter(f.key)} aria-pressed={active} className={`flex min-h-11 min-w-[3.75rem] flex-1 flex-col items-center justify-center gap-0.5 px-1.5 py-1 text-[9px] font-bold ${index > 0 ? 'border-l border-white/10' : ''} ${active ? 'rounded-lg bg-[#FFD700] text-black shadow-[0_0_14px_-3px_rgba(255,215,0,0.95)]' : 'text-white/80'}`}>
                 <Icon className="h-3.5 w-3.5" />
                 <span className="whitespace-nowrap leading-none">{f.label}</span>
               </button>
@@ -331,12 +331,12 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
         </div>
       )}
       {chatEnabled && msgFilter === 'all' && !chatLocked && <div className="flex items-center gap-2 border-t border-[#FFD700]/25 bg-black p-2.5">
-        <button type="button" onClick={() => setShowEmoji(!showEmoji)} title="Emoji" className={`h-10 w-10 shrink-0 text-[#00FF66] active:scale-95 ${neonCircleClass('green')}`}><Smile className="w-4 h-4" /></button>
+        <button type="button" onClick={() => setShowEmoji(!showEmoji)} aria-label="Emoji seç" aria-expanded={showEmoji} title="Emoji" className={`h-11 w-11 shrink-0 text-[#00FF66] active:scale-95 ${neonCircleClass('green')}`}><Smile className="w-4 h-4" /></button>
         <div className="flex h-11 min-w-0 flex-1 items-center gap-1.5 rounded-full border border-white/15 bg-[#0d0d0d] px-3 focus-within:border-[#FFD700]/60">
           <MessageSquare className="h-4 w-4 shrink-0 text-[#A0A0A0]" />
           <input value={text} onChange={(e) => { setText(e.target.value); sendTyping(); }} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(e); } }} inputMode="text" enterKeyHint="send" autoComplete="off" autoCorrect="off" autoCapitalize="sentences" spellCheck={false} placeholder="Mesaj yazın..." className="h-full min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-[#A0A0A0]" />
         </div>
-        <button type="button" onClick={send} disabled={!text.trim() || uploading || sending} className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 border-[#FFD700] bg-[#FFD700] text-black shadow-[0_0_22px_-2px_rgba(255,215,0,0.95)] active:scale-95 disabled:opacity-50"><Send className="w-5 h-5" /></button>
+        <button type="button" onClick={send} disabled={!text.trim() || uploading || sending} aria-label="Mesaj gönder" className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 border-[#FFD700] bg-[#FFD700] text-black shadow-[0_0_22px_-2px_rgba(255,215,0,0.95)] active:scale-95 disabled:opacity-50"><Send className="w-5 h-5" /></button>
         {(uploading || sending) && <span className="shrink-0 animate-pulse text-xs text-[#A0A0A0]">...</span>}
       </div>}
 

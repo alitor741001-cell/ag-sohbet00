@@ -106,7 +106,7 @@ export default function GiftManager() {
             <input type="file" accept="image/*" className="hidden" onChange={(e) => upload(e.target.files?.[0])} />
           </label>
           {form.image_url && (
-            <button type="button" onClick={() => set({ image_url: '' })} className="rounded-lg bg-secondary px-2 py-2 text-xs font-semibold">
+            <button type="button" onClick={() => set({ image_url: '' })} aria-label="Görseli kaldır" className="flex h-11 w-11 items-center justify-center rounded-lg bg-secondary text-xs font-semibold">
               <X className="h-4 w-4" />
             </button>
           )}
@@ -156,10 +156,10 @@ export default function GiftManager() {
                 </div>
 
                 <div className="mt-3 flex items-center gap-1.5">
-                  <button type="button" onClick={() => startEdit(gift)} className="rounded-lg bg-secondary px-2.5 py-1.5 text-xs font-semibold"><Pencil className="h-3.5 w-3.5" /></button>
-                  <button type="button" onClick={() => move(gift, -1)} className="rounded-lg bg-secondary px-2.5 py-1.5 text-xs font-semibold"><ArrowUp className="h-3.5 w-3.5" /></button>
-                  <button type="button" onClick={() => move(gift, 1)} className="rounded-lg bg-secondary px-2.5 py-1.5 text-xs font-semibold"><ArrowDown className="h-3.5 w-3.5" /></button>
-                  <button type="button" onClick={() => toggleActive(gift)} className="rounded-lg bg-secondary px-2.5 py-1.5 text-xs font-semibold">
+                  <button type="button" onClick={() => startEdit(gift)} aria-label="Hediyeyi düzenle" className="flex h-11 w-11 items-center justify-center rounded-lg bg-secondary text-xs font-semibold"><Pencil className="h-3.5 w-3.5" /></button>
+                  <button type="button" onClick={() => move(gift, -1)} aria-label="Yukarı taşı" className="flex h-11 w-11 items-center justify-center rounded-lg bg-secondary text-xs font-semibold"><ArrowUp className="h-3.5 w-3.5" /></button>
+                  <button type="button" onClick={() => move(gift, 1)} aria-label="Aşağı taşı" className="flex h-11 w-11 items-center justify-center rounded-lg bg-secondary text-xs font-semibold"><ArrowDown className="h-3.5 w-3.5" /></button>
+                  <button type="button" onClick={() => toggleActive(gift)} aria-label={gift.active === false ? 'Hediyeyi yayına al' : 'Hediyeyi yayından kaldır'} aria-pressed={gift.active !== false} className="flex h-11 w-11 items-center justify-center rounded-lg bg-secondary text-xs font-semibold">
                     {gift.active === false ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                   </button>
                   {confirmId === gift.id ? (
@@ -168,7 +168,7 @@ export default function GiftManager() {
                       <button type="button" onClick={() => setConfirmId(null)} className="rounded-lg bg-secondary px-2.5 py-1.5 text-xs font-semibold">Vazgeç</button>
                     </span>
                   ) : (
-                    <button type="button" onClick={() => setConfirmId(gift.id)} className="ml-auto rounded-lg bg-secondary px-2.5 py-1.5 text-xs font-semibold text-red-500">
+                    <button type="button" onClick={() => setConfirmId(gift.id)} aria-label="Hediyeyi sil" className="ml-auto flex h-11 w-11 items-center justify-center rounded-lg bg-secondary text-xs font-semibold text-red-500">
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   )}

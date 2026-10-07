@@ -9,7 +9,7 @@ export default function AdminNotifBell({ notifGranted }) {
 
   return (
     <div className="shrink-0">
-      <button onClick={() => setOpen(true)} className="p-2 rounded-lg hover:bg-white/5 relative" title="Bildirimler">
+      <button onClick={() => setOpen(true)} aria-label="Bildirimler" aria-expanded={open} className="flex h-11 w-11 items-center justify-center rounded-lg hover:bg-white/5 relative" title="Bildirimler">
         <Bell className="w-5 h-5 text-white" />
         {unreadCount > 0 && <span className="absolute -top-0.5 -right-0.5 min-w-4 h-4 px-1 rounded-full bg-purple-500 text-white text-[10px] font-bold flex items-center justify-center">{unreadCount > 9 ? '9+' : unreadCount}</span>}
         {notifGranted && unreadCount === 0 && <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-green-500" />}
@@ -23,8 +23,8 @@ export default function AdminNotifBell({ notifGranted }) {
               <button onClick={() => setOpen(false)} title="Geri" aria-label="Geri" className="p-2 rounded-full hover:bg-white/10 text-white shrink-0"><ArrowLeft className="w-6 h-6" /></button>
               <p className="text-sm font-bold text-white">Bildirimler</p>
               <div className="ml-auto flex gap-1">
-                <button onClick={markAllRead} title="Tümünü okundu işaretle" className="p-1.5 rounded-lg hover:bg-white/5"><CheckCheck className="w-4 h-4 text-white/60" /></button>
-                <button onClick={deleteAll} title="Tümünü sil" className="p-1.5 rounded-lg hover:bg-red-500/10"><Trash2 className="w-4 h-4 text-red-400" /></button>
+                <button onClick={markAllRead} aria-label="Tümünü okundu işaretle" title="Tümünü okundu işaretle" className="flex h-11 w-11 items-center justify-center rounded-lg hover:bg-white/5"><CheckCheck className="w-4 h-4 text-white/60" /></button>
+                <button onClick={deleteAll} aria-label="Tümünü sil" title="Tümünü sil" className="flex h-11 w-11 items-center justify-center rounded-lg hover:bg-red-500/10"><Trash2 className="w-4 h-4 text-red-400" /></button>
               </div>
             </div>
             <div className="flex-1 min-h-0 overflow-y-auto sm:max-h-96">

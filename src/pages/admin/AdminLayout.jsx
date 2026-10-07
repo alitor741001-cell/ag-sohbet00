@@ -148,7 +148,7 @@ export default function AdminLayout() {
           <Link to="/admin" className="text-lg font-extrabold tracking-tight" style={{ color: SIDEBAR_TEXT }}>
             <span className="text-gradient">FILM</span>KEYFİ <span className="block text-[10px] font-normal tracking-widest mt-0.5" style={{ color: SIDEBAR_HEADING }}>ADMIN PANEL</span>
           </Link>
-          <button onClick={() => setOpen(false)} className="lg:hidden p-1.5 rounded-full bg-white/5" style={{ color: SIDEBAR_TEXT }}><X className="w-4 h-4" /></button>
+          <button onClick={() => setOpen(false)} aria-label="Yan menüyü kapat" className="lg:hidden flex h-11 w-11 items-center justify-center rounded-full bg-white/5" style={{ color: SIDEBAR_TEXT }}><X className="w-4 h-4" /></button>
         </div>
         <nav className="flex-1 overflow-y-auto px-2">
           {navGroups.map(renderGroup)}
@@ -172,7 +172,7 @@ export default function AdminLayout() {
         onTouchEnd={(e) => { const dx = e.changedTouches[0].clientX - (touchX.current ?? 0); const dy = e.changedTouches[0].clientY - (touchY.current ?? 0); if (Math.abs(dx) > Math.abs(dy) * 1.5 && dx > 50 && (touchX.current ?? 999) < 80) setOpen(true); else if (Math.abs(dx) > Math.abs(dy) * 1.5 && dx < -50) setOpen(false); }}>
         <header className="lg:hidden sticky top-0 z-20 border-b border-red-500/20 min-h-14 flex items-center px-4 pb-2 pt-[max(env(safe-area-inset-top),0.75rem)] bg-[#1A1414]/95 backdrop-blur"
           style={{ touchAction: 'pan-y' }}>
-          <button onClick={() => setOpen(true)}><Menu className="w-6 h-6 text-white" /></button>
+          <button onClick={() => setOpen(true)} aria-label="Yan menüyü aç" aria-expanded={open} className="flex h-11 w-11 items-center justify-center"><Menu className="w-6 h-6 text-white" /></button>
           <span className="ml-1 hidden min-[390px]:block font-bold text-white whitespace-nowrap">Admin Panel</span>
           <div className="ml-auto flex items-center gap-1">
             <AdminNotifBell notifGranted={notifGranted} />

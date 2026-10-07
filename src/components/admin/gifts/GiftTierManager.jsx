@@ -99,17 +99,17 @@ export default function GiftTierManager() {
                 </p>
                 <p className="text-xs text-muted-foreground">{formatK(tier.min_k)} ve üzeri</p>
               </div>
-              <button type="button" onClick={() => toggleActive(tier)} className="rounded-lg bg-secondary px-2.5 py-1.5 text-xs font-semibold">
+              <button type="button" onClick={() => toggleActive(tier)} aria-label={tier.active === false ? 'Basamağı yayına al' : 'Basamağı yayından kaldır'} aria-pressed={tier.active !== false} className="flex h-11 w-11 items-center justify-center rounded-lg bg-secondary text-xs font-semibold">
                 {tier.active === false ? 'Aktif et' : 'Pasif yap'}
               </button>
-              <button type="button" onClick={() => startEdit(tier)} className="rounded-lg bg-secondary px-2.5 py-1.5 text-xs font-semibold"><Pencil className="h-3.5 w-3.5" /></button>
+              <button type="button" onClick={() => startEdit(tier)} aria-label="Basamağı düzenle" className="flex h-11 w-11 items-center justify-center rounded-lg bg-secondary text-xs font-semibold"><Pencil className="h-3.5 w-3.5" /></button>
               {confirmId === tier.id ? (
                 <span className="flex items-center gap-1">
                   <button type="button" onClick={() => remove(tier)} className="rounded-lg bg-red-600 px-2.5 py-1.5 text-xs font-bold text-white">Sil</button>
                   <button type="button" onClick={() => setConfirmId(null)} className="rounded-lg bg-secondary px-2.5 py-1.5 text-xs font-semibold">Vazgeç</button>
                 </span>
               ) : (
-                <button type="button" onClick={() => setConfirmId(tier.id)} className="rounded-lg bg-secondary px-2.5 py-1.5 text-xs font-semibold text-red-500"><Trash2 className="h-3.5 w-3.5" /></button>
+                <button type="button" onClick={() => setConfirmId(tier.id)} aria-label="Basamağı sil" className="flex h-11 w-11 items-center justify-center rounded-lg bg-secondary text-xs font-semibold text-red-500"><Trash2 className="h-3.5 w-3.5" /></button>
               )}
             </div>
           ))

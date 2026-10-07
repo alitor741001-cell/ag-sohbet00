@@ -6,6 +6,7 @@ import useSupportBadge from '@/hooks/useSupportBadge';
 import LiveChatButton from '@/components/layout/LiveChatButton';
 import UserSupportButton from '@/components/layout/UserSupportButton';
 import useKeyboardInset from '@/hooks/useKeyboardInset';
+import { TAB_PATHS } from '@/lib/tabPaths';
 
 const fullItems = [
   { label: 'Ana Sayfa', path: '/', icon: Home },
@@ -43,7 +44,11 @@ export default function BottomNav() {
       navigate(targetSearch ? `${targetPath}?${targetSearch}` : targetPath, { replace: true });
       return;
     }
-    navigate(item.path);
+    // Sekme geçişi geçmişe yeni kayıt eklemez: geri tuşu sekmeler arasında dolaşmaz,
+    // gerçek önceki sayfaya ya da çıkışa döner. "Oda Kur" bir işlem ekranı olduğu için
+    // adım olarak açılır, geri tuşu onu kapatır.
+    const isTab = TAB_PATHS.includes(targetPath);
+    navigate(item.path, isTab ? { replace: true } : undefined);
   };
 
   return (

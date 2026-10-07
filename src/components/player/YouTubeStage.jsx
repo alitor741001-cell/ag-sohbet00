@@ -323,9 +323,9 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
           <p className="mb-1 text-xs font-semibold text-white/60">YouTube sesi iPhone’da telefonun ses tuşlarıyla azaltılır.</p>
         )}
         <div className="flex items-center gap-1 text-white sm:gap-2">
-          {isOwner && <button onClick={togglePlay} className="rounded-lg p-2 hover:bg-white/10">{playing ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}</button>}
-          {isOwner && <button onClick={() => skip(-10)} className="rounded-lg p-2 hover:bg-white/10" title="10 sn geri"><Rewind className="h-5 w-5" /></button>}
-          {isOwner && <button onClick={() => skip(10)} className="rounded-lg p-2 hover:bg-white/10" title="10 sn ileri"><FastForward className="h-5 w-5" /></button>}
+          {isOwner && <button onClick={togglePlay} aria-label={playing ? 'Duraklat' : 'Oynat'} className="flex h-11 w-11 items-center justify-center rounded-lg hover:bg-white/10">{playing ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}</button>}
+          {isOwner && <button onClick={() => skip(-10)} aria-label="10 saniye geri" className="flex h-11 w-11 items-center justify-center rounded-lg hover:bg-white/10" title="10 sn geri"><Rewind className="h-5 w-5" /></button>}
+          {isOwner && <button onClick={() => skip(10)} aria-label="10 saniye ileri" className="flex h-11 w-11 items-center justify-center rounded-lg hover:bg-white/10" title="10 sn ileri"><FastForward className="h-5 w-5" /></button>}
           {IOS_VOLUME_LOCKED ? (
             <button
               type="button"
@@ -357,7 +357,7 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
           >
             {captions ? <Captions className="h-5 w-5" /> : <CaptionsOff className="h-5 w-5" />}
           </button>
-          <button onClick={toggleFullscreen} className="ml-auto rounded-lg p-2 hover:bg-white/10" title="Tam ekran">
+          <button onClick={toggleFullscreen} aria-label={fullscreen ? 'Tam ekrandan çık' : 'Tam ekran'} className="ml-auto flex h-11 w-11 items-center justify-center rounded-lg hover:bg-white/10" title="Tam ekran">
             {fullscreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
           </button>
         </div>

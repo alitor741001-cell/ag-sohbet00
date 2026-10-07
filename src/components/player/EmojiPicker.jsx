@@ -14,8 +14,8 @@ export default function EmojiPicker({ onSelect }) {
   return (
     <div className="border-t border-border bg-card/95">
       <div className="flex gap-1 px-2 pt-2">
-        <button onClick={() => setTab('animated')} className={`text-[10px] font-semibold px-2 py-1 rounded ${tab === 'animated' ? 'bg-primary/20 text-primary' : 'text-muted-foreground'}`}>🎬 Hareketli</button>
-        <button onClick={() => setTab('regular')} className={`text-[10px] font-semibold px-2 py-1 rounded ${tab === 'regular' ? 'bg-primary/20 text-primary' : 'text-muted-foreground'}`}>😊 Normal</button>
+        <button onClick={() => setTab('animated')} aria-pressed={tab === 'animated'} className={`min-h-9 text-[10px] font-semibold px-2.5 py-1 rounded ${tab === 'animated' ? 'bg-primary/20 text-primary' : 'text-muted-foreground'}`}>🎬 Hareketli</button>
+        <button onClick={() => setTab('regular')} aria-pressed={tab === 'regular'} className={`min-h-9 text-[10px] font-semibold px-2.5 py-1 rounded ${tab === 'regular' ? 'bg-primary/20 text-primary' : 'text-muted-foreground'}`}>😊 Normal</button>
       </div>
       {tab === 'animated' ? (
         <div className="px-2 py-2 grid grid-cols-6 gap-1">

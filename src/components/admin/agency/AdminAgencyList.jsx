@@ -88,10 +88,10 @@ export default function AdminAgencyList({ data = {}, reload }) {
                   <p className="truncate text-[11px] text-white/50">{agency.owner_name} • {agency.agency_id} • {dateText(agency.created_date)}</p>
                 </div>
                 <div className="flex shrink-0 gap-1.5">
-                  <button onClick={() => decide(agency, true)} disabled={busy === agency.id} className="rounded-lg px-3 py-1.5 text-[11px] font-black text-black disabled:opacity-60" style={{ background: AGENCY_GOLD }}>
+                  <button onClick={() => decide(agency, true)} disabled={busy === agency.id} className="inline-flex min-h-11 items-center rounded-lg px-3 text-[11px] font-black text-black disabled:opacity-60" style={{ background: AGENCY_GOLD }}>
                     {busy === agency.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Onayla'}
                   </button>
-                  <button onClick={() => decide(agency, false)} disabled={busy === agency.id} className="rounded-lg border border-[#FF8080]/45 px-3 py-1.5 text-[11px] font-bold text-[#FF8080] disabled:opacity-60">
+                  <button onClick={() => decide(agency, false)} disabled={busy === agency.id} className="inline-flex min-h-11 items-center rounded-lg border border-[#FF8080]/45 px-3 text-[11px] font-bold text-[#FF8080] disabled:opacity-60">
                     Reddet
                   </button>
                 </div>

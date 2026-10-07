@@ -146,7 +146,7 @@ export default function AdminTelegram() {
       {/* Tabs */}
       <div className="flex gap-1 mb-4 border-b border-border">
         {tabs.map((t) => (
-          <button key={t.key} onClick={() => setTab(t.key)} className={`px-4 py-2 text-sm font-semibold border-b-2 transition-colors ${tab === t.key ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>{t.label}</button>
+          <button key={t.key} onClick={() => setTab(t.key)} aria-pressed={tab === t.key} className={`min-h-11 px-4 py-2 text-sm font-semibold border-b-2 transition-colors ${tab === t.key ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>{t.label}</button>
         ))}
       </div>
 
@@ -158,7 +158,7 @@ export default function AdminTelegram() {
               <p className="font-semibold text-sm">Telegram Bildirimleri</p>
               <p className="text-xs text-muted-foreground">Açık olduğunda olaylar Telegram'a gönderilir</p>
             </div>
-            <button onClick={() => save({ enabled: !settings.enabled })} className={`w-12 h-7 rounded-full transition-colors relative ${settings.enabled ? 'bg-primary' : 'bg-secondary'}`}>
+            <button onClick={() => save({ enabled: !settings.enabled })} role="switch" aria-checked={settings.enabled} className={`w-12 h-7 rounded-full transition-colors relative ${settings.enabled ? 'bg-primary' : 'bg-secondary'}`}>
               <span className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-transform ${settings.enabled ? 'left-6' : 'left-1'}`} />
             </button>
           </label>
@@ -200,7 +200,7 @@ export default function AdminTelegram() {
           {Object.entries(EVENT_LABELS).map(([key, label]) => (
             <label key={key} className="flex items-center justify-between bg-card border border-border rounded-xl p-3">
               <span className="text-sm font-medium">{label}</span>
-              <button onClick={() => save({ events: { ...settings.events, [key]: !settings.events[key] } })} className={`w-12 h-7 rounded-full transition-colors relative ${settings.events[key] ? 'bg-primary' : 'bg-secondary'}`}>
+              <button onClick={() => save({ events: { ...settings.events, [key]: !settings.events[key] } })} role="switch" aria-checked={!!settings.events[key]} className={`w-12 h-7 rounded-full transition-colors relative ${settings.events[key] ? 'bg-primary' : 'bg-secondary'}`}>
                 <span className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-transform ${settings.events[key] ? 'left-6' : 'left-1'}`} />
               </button>
             </label>

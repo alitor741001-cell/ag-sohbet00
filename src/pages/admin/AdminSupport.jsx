@@ -99,8 +99,8 @@ export default function AdminSupport() {
               <div className="min-w-0"><p className="font-semibold truncate">{active.subject}</p><div className="mt-1"><UserBadge userId={active.user_id} name={active.user_name} avatar={profiles[active.user_id]?.avatar} memberId={profiles[active.user_id]?.member_id} size="sm" /></div><p className="text-xs text-muted-foreground mt-1">{active.category}</p></div>
               <div className="flex items-center gap-2">
                 <SupportStatusSelect value={active.status} onChange={setStatus} />
-                <button onClick={() => setConfirm('close')} className="p-2 rounded-lg bg-amber-500/20 text-amber-400" title="Kapat ve mesajları sil"><XCircle className="w-4 h-4" /></button>
-                <button onClick={() => setConfirm('delete')} className="p-2 rounded-lg bg-red-500/20 text-red-400" title="Sil"><Trash2 className="w-4 h-4" /></button>
+                <button onClick={() => setConfirm('close')} aria-label="Görüşmeyi kapat" className="flex h-11 w-11 items-center justify-center rounded-lg bg-amber-500/20 text-amber-400" title="Kapat ve mesajları sil"><XCircle className="w-4 h-4" /></button>
+                <button onClick={() => setConfirm('delete')} aria-label="Görüşmeyi sil" className="flex h-11 w-11 items-center justify-center rounded-lg bg-red-500/20 text-red-400" title="Sil"><Trash2 className="w-4 h-4" /></button>
               </div>
             </div>
             <div className="flex-1 overflow-y-auto p-3 space-y-2">
@@ -109,7 +109,7 @@ export default function AdminSupport() {
             </div>
             <form onSubmit={send} className="p-3 border-t border-border flex items-center gap-2">
               <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Cevap yazın..." className="flex-1 bg-secondary/60 rounded-full px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
-              <button type="submit" className="p-2.5 rounded-full bg-primary text-primary-foreground"><Send className="w-4 h-4" /></button>
+              <button type="submit" aria-label="Mesaj gönder" className="flex h-11 w-11 items-center justify-center rounded-full bg-primary text-primary-foreground"><Send className="w-4 h-4" /></button>
             </form>
           </> : <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">Talep seçin.</div>}
         </div>

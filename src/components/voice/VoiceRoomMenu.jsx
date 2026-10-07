@@ -125,11 +125,11 @@ export default function VoiceRoomMenu({ open, onClose, room, userId, participant
                 placeholder="Oda şifresi"
                 className="h-10 w-full rounded-xl bg-white/10 px-3 pr-9 text-sm text-white outline-none placeholder:text-white/40"
               />
-              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-2 top-1/2 -translate-y-1/2 text-white/50">
+              <button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Şifreyi gizle' : 'Şifreyi göster'} aria-pressed={showPassword} className="absolute right-1 top-1/2 -translate-y-1/2 p-3 text-white/50">
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
-            <button type="button" disabled={!password.trim()} onClick={() => { onSetPassword(password.trim()); setPassword(''); setPanel(null); }} className="flex h-10 items-center gap-1.5 rounded-full border border-[#FFD700] bg-[#FFD700] px-4 text-sm font-bold text-black shadow-[0_0_14px_-3px_rgba(255,215,0,0.95)] disabled:opacity-40">
+            <button type="button" disabled={!password.trim()} onClick={() => { onSetPassword(password.trim()); setPassword(''); setPanel(null); }} className="flex h-11 items-center gap-1.5 rounded-full border border-[#FFD700] bg-[#FFD700] px-4 text-sm font-bold text-black shadow-[0_0_14px_-3px_rgba(255,215,0,0.95)] disabled:opacity-40">
               <Lock className="h-4 w-4" /> Şifrele
             </button>
           </div>

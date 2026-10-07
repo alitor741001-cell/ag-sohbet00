@@ -174,7 +174,7 @@ export default function VideoPlayer({ src, title, onTimeUpdate, onPlayPause, onS
       {audioError && <div className="absolute left-3 right-3 top-14 z-50 rounded-lg border border-amber-500/60 bg-black/90 px-3 py-2 text-center text-xs text-amber-300">Ses sistemi: {audioError} (native kontrol kullanılıyor)</div>}
 
       {isOwner && !playing && !buffering && !suppressControls && (
-        <button onClick={togglePlay} className="absolute inset-0 flex items-center justify-center">
+        <button onClick={togglePlay} aria-label={playing ? 'Duraklat' : 'Oynat'} className="absolute inset-0 flex items-center justify-center">
           <span className="w-20 h-20 rounded-full bg-primary/90 flex items-center justify-center hover:scale-110 transition-transform">
             <Play className="w-10 h-10 fill-white text-white ml-1" />
           </span>
@@ -195,9 +195,9 @@ export default function VideoPlayer({ src, title, onTimeUpdate, onPlayPause, onS
           {isOwner && <span>{fmt(duration)}</span>}
         </div>
         <div className="flex flex-wrap items-center gap-1 text-white sm:gap-2">
-          {isOwner && <button onClick={togglePlay} className="p-2 hover:bg-white/10 rounded-lg">{playing ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}</button>}
-          {isOwner && <button onClick={() => skip(-10)} className="p-2 hover:bg-white/10 rounded-lg" title="10 sn geri"><Rewind className="w-5 h-5" /></button>}
-          {isOwner && <button onClick={() => skip(10)} className="p-2 hover:bg-white/10 rounded-lg" title="10 sn ileri"><FastForward className="w-5 h-5" /></button>}
+          {isOwner && <button onClick={togglePlay} aria-label={playing ? 'Duraklat' : 'Oynat'} className="flex h-11 w-11 items-center justify-center hover:bg-white/10 rounded-lg">{playing ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}</button>}
+          {isOwner && <button onClick={() => skip(-10)} aria-label="10 saniye geri" className="flex h-11 w-11 items-center justify-center hover:bg-white/10 rounded-lg" title="10 sn geri"><Rewind className="w-5 h-5" /></button>}
+          {isOwner && <button onClick={() => skip(10)} aria-label="10 saniye ileri" className="flex h-11 w-11 items-center justify-center hover:bg-white/10 rounded-lg" title="10 sn ileri"><FastForward className="w-5 h-5" /></button>}
           <div
             className="relative z-[80] pointer-events-auto"
             onClick={(event) => event.stopPropagation()}
@@ -211,20 +211,20 @@ export default function VideoPlayer({ src, title, onTimeUpdate, onPlayPause, onS
           <div className="ml-auto flex items-center gap-1 sm:gap-2">
             {isOwner && (
               <div className="relative">
-                <button onClick={() => setShowSettings(!showSettings)} className="p-2 hover:bg-white/10 rounded-lg" title="Ayarlar"><Settings className="w-5 h-5" /></button>
+                <button onClick={() => setShowSettings(!showSettings)} aria-label="Oynatma ayarları" aria-expanded={showSettings} className="flex h-11 w-11 items-center justify-center hover:bg-white/10 rounded-lg" title="Ayarlar"><Settings className="w-5 h-5" /></button>
                 {showSettings && (
                   <div className="absolute bottom-12 right-0 w-40 bg-card border border-border rounded-lg p-2 text-sm space-y-2">
                     <div>
                       <p className="text-xs text-muted-foreground mb-1">Hız</p>
                       <div className="flex flex-wrap gap-1">
-                        {SPEEDS.map((s) => <button key={s} onClick={() => { setSpeed(s); videoRef.current.playbackRate = s; }} className={`px-2 py-1 rounded text-xs ${speed === s ? 'bg-primary text-primary-foreground' : 'bg-secondary'}`}>{s}x</button>)}
+                        {SPEEDS.map((s) => <button key={s} onClick={() => { setSpeed(s); videoRef.current.playbackRate = s; }} aria-pressed={speed === s} aria-label={`${s} kat hız`} className={`flex min-h-11 min-w-11 items-center justify-center rounded text-xs ${speed === s ? 'bg-primary text-primary-foreground' : 'bg-secondary'}`}>{s}x</button>)}
                       </div>
                     </div>
                   </div>
                 )}
               </div>
             )}
-            <button onClick={toggleFullscreen} className="p-2 hover:bg-white/10 rounded-lg">{fullscreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}</button>
+            <button onClick={toggleFullscreen} aria-label={fullscreen ? 'Tam ekrandan çık' : 'Tam ekran'} className="flex h-11 w-11 items-center justify-center hover:bg-white/10 rounded-lg">{fullscreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}</button>
           </div>
         </div>
       </div>
