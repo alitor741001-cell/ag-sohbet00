@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { Outlet, NavLink, useNavigate, Link } from 'react-router-dom';
-import { Users, Film, FolderTree, Bell, Settings, LogOut, Menu, X, ShieldAlert, KeyRound, ChevronDown, ChevronRight, Flag, MessageCircle, Smartphone, Sparkles, Home, Gift, Coins, Building2 } from 'lucide-react';
+import { Users, Film, FolderTree, Bell, Settings, LogOut, Menu, X, ShieldAlert, KeyRound, ChevronRight, Flag, MessageCircle, Smartphone, Sparkles, Home, Gift, Coins, Building2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { requestNotificationPermission } from '@/hooks/useAdminNotifications';
 import { useCurrentUser } from '@/lib/useCurrentUser';
@@ -176,31 +176,16 @@ export default function AdminLayout() {
           style={{ touchAction: 'pan-y' }}>
           <button onClick={() => setOpen(true)}><Menu className="w-6 h-6 text-white" /></button>
           <span className="ml-1 hidden min-[390px]:block font-bold text-white whitespace-nowrap">Admin Panel</span>
-          <div className="ml-auto flex min-w-0 items-center gap-1">
-            <LiveChatButton />
+          <div className="ml-auto flex items-center gap-1">
             <AdminNotifBell notifGranted={notifGranted} />
-            <div className="flex shrink-0 items-center gap-1 rounded-lg bg-[#241A1A] p-1">
-              {user?.avatar ? <Image src={user.avatar} className="w-7 h-7 rounded-full shrink-0" fittingType="fill" /> : <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ background: 'linear-gradient(135deg, #dc2626, #991b1b)' }}>{(user.username || user.full_name || user.email || 'A')[0].toUpperCase()}</div>}
-              <div className="hidden min-[430px]:block">
-                <p className="text-xs font-semibold leading-tight text-white">Yönetici</p>
-                <p className="text-[10px] text-gray-400 leading-tight max-w-[90px] truncate">{user.email}</p>
-              </div>
-            </div>
+            <LiveChatButton />
           </div>
         </header>
         <header className="hidden lg:flex sticky top-0 z-20 border-b border-red-500/20 h-14 items-center px-6 bg-[#1A1414]/95 backdrop-blur">
           <span className="font-bold text-white">Admin Panel</span>
-          <div className="ml-auto flex items-center gap-3">
-            <LiveChatButton />
+          <div className="ml-auto flex items-center gap-2">
             <AdminNotifBell notifGranted={notifGranted} />
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#241A1A]">
-              {user?.avatar ? <Image src={user.avatar} className="w-8 h-8 rounded-full shrink-0" fittingType="fill" /> : <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white" style={{ background: 'linear-gradient(135deg, #dc2626, #991b1b)' }}>{(user.username || user.full_name || user.email || 'A')[0].toUpperCase()}</div>}
-              <div>
-                <p className="text-sm font-semibold leading-tight text-white">Yönetici</p>
-                <p className="text-xs text-gray-400 leading-tight max-w-[160px] truncate">{user.email}</p>
-              </div>
-              <ChevronDown className="w-4 h-4 text-gray-400" />
-            </div>
+            <LiveChatButton />
           </div>
         </header>
         <div className="w-full min-h-[calc(100vh-3.5rem)] min-w-0 overflow-x-clip bg-background p-3 sm:p-5 xl:p-6">
