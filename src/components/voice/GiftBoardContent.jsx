@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react';
-import { ChevronDown } from 'lucide-react';
 import GiftCard from '@/components/voice/GiftCard';
 import GiftRecipientRow from '@/components/voice/GiftRecipientRow';
 import GiftLevelTicker from '@/components/voice/GiftLevelTicker';
@@ -70,14 +69,6 @@ export default function GiftBoardContent({
             </button>
           ))}
         </div>
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Hediye kutusunu kapat"
-          className="mb-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/10 text-white/75 transition-transform active:scale-95"
-        >
-          <ChevronDown className="h-4 w-4" />
-        </button>
       </div>
 
       {/* Hediye ızgarası kendi alanında kayar; kalan yüksekliği doldurur. */}

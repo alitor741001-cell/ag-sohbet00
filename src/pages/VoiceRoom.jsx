@@ -127,8 +127,9 @@ export default function VoiceRoom() {
   const giftFlashRef = useRef(null);
   const giftBoardRef = useRef(0);
   const giftRefreshTimerRef = useRef(null);
-  // Sayı tahtasının son hali: iyimser güncelleme başarısız olursa geri alınır.
-  const numberScoresRef = useRef([]);
+  // Hediye gönderim kuyruğu: istekler tek tek işlenir, kuyruk boşalınca tahta sunucudan eşitlenir.
+  const giftQueueRef = useRef([]);
+  const giftFlushingRef = useRef(false);
 
   const seats = useMemo(() => (Array.isArray(room?.seats) ? room.seats : []), [room?.seats]);
   const myInvite = useMemo(
@@ -219,10 +220,6 @@ export default function VoiceRoom() {
     return map;
   }, [room?.number_scores]);
 
-  // Tahtanın son hali saklanır: hediye gönderimi başarısız olursa iyimser değer geri alınır.
-  useEffect(() => {
-    numberScoresRef.current = Array.isArray(room?.number_scores) ? room.number_scores : [];
-  }, [room?.number_scores]);
   // Hediye gönderilebilecek kişiler: odadaki herkes ve kendisi (kendine de hediye gönderebilir).
   const giftPeople = useMemo(() => {
     const map = new Map();
@@ -423,7 +420,16 @@ export default function VoiceRoom() {
     const unsubscribe = subscribeEntity('Room', (event) => {
       if (event.id !== id) return;
       if (event.type === 'delete') { setNotice('Oda kapatıldı.'); return; }
-      if (event.type === 'update' || event.type === 'create') setRoom((prev) => (prev ? { ...prev, ...event.data } : event.data));
+      if (event.type === 'update' || event.type === 'create') {
+        setRoom((prev) => {
+          if (!prev) return event.data;
+          const next = { ...prev, ...(event.data || {}) };
+          // Gönderim sırasında gelen oda kopyası sayı tahtasının eski halini taşıyabilir:
+          // iyimser değer korunur, tahta kuyruk boşalınca sunucudan kesin haliyle eşitlenir.
+          if (giftFlushingRef.current) next.number_scores = prev.number_scores;
+          return next;
+        });
+      }
     });
     return unsubscribe;
   }, [id]);
@@ -803,28 +809,11 @@ export default function VoiceRoom() {
   const sendGiftOnce = async (gift, ids, quantity = 1) => {
     // Sahne tek kez oynasın: hediye satırının canlı yayın kopyası bu gönderim için yok sayılır.
     markOwnSend();
-    // Sayı tahtası gönderim anında ilerler: sunucu cevabı beklenmez, hata olursa geri alınır.
-    const snapshot = numberScoresRef.current;
-    const step = Math.max(0, Number(gift.k_value) || 0) * 1000 * quantity;
-    if (step > 0 && ids.length) {
-      setRoom((prev) => {
-        if (!prev) return prev;
-        const next = ids.reduce((list, value) => withBoardStep(list, value, step), Array.isArray(prev.number_scores) ? prev.number_scores : []);
-        return { ...prev, number_board: true, number_scores: next };
-      });
-    }
-    let data;
-    try {
-      const response = await base44.functions.invoke('voice-room', {
-        room_id: id, action: 'gift-send', gift_id: gift.id, target_ids: ids, quantity,
-      });
-      data = response.data;
-    } catch (error) {
-      if (Array.isArray(snapshot)) setRoom((prev) => (prev ? { ...prev, number_scores: snapshot } : prev));
-      throw error;
-    }
+    const response = await base44.functions.invoke('voice-room', {
+      room_id: id, action: 'gift-send', gift_id: gift.id, target_ids: ids, quantity,
+    });
+    const data = response.data;
     if (typeof data.coins === 'number') setCoins(data.coins);
-    setRoom((prev) => ({ ...prev, number_board: data.number_board, number_scores: data.number_scores }));
     // Ağır işler cevabı beklemez: hediye kayıtları, seviye/kota senkronu ve büyük hediye
     // duyurusu hemen ardından arka planda tamamlanır.
     base44.functions.invoke('voice-room', {
@@ -859,12 +848,61 @@ export default function VoiceRoom() {
     });
   };
 
-  // Kutudaki gönder tuşu: hediye gönderilir ve kutu kapanır.
+  // Kuyruğu boşaltır: istekler tek tek gider, geçici hatalarda kısa beklemeyle yeniden denenir.
+  // Böylece aynı anda gönderilen iki hediye sunucudaki sayı kaydını birbirinin üstüne yazmaz
+  // (sayaç bir anda yükselip geri düşmez) ve hızlı seri gönderimde istek yoğunluğu hatası olmaz.
+  const flushGiftQueue = async () => {
+    if (giftFlushingRef.current) return;
+    giftFlushingRef.current = true;
+    let lastError = null;
+    try {
+      while (giftQueueRef.current.length) {
+        const job = giftQueueRef.current.shift();
+        let done = false;
+        for (let attempt = 0; attempt < 3 && !done; attempt += 1) {
+          try {
+            await sendGiftOnce(job.gift, job.ids, job.quantity);
+            done = true;
+          } catch (error) {
+            lastError = error;
+            const status = error?.response?.status || 0;
+            // Kesin cevap (bakiye yetersiz, geçersiz hediye): kalan gönderimler bekletilmez.
+            if (status >= 400 && status < 500 && status !== 429) {
+              giftQueueRef.current = [];
+              break;
+            }
+            await new Promise((resolve) => window.setTimeout(resolve, 500));
+          }
+        }
+      }
+    } finally {
+      giftFlushingRef.current = false;
+    }
+    // Kuyruk boşaldı: tahtanın kesin hali sunucudan okunur — iyimser değer geri düşmez.
+    await syncRoom().catch(() => {});
+    if (lastError) throw lastError;
+  };
+
+  // Gönderim isteği: sayı tahtası dokunuş anında ilerler, istek kuyruğa girip sırayla işlenir.
+  const queueGiftSend = (gift, ids, quantity = 1) => {
+    const step = Math.max(0, Number(gift.k_value) || 0) * 1000 * quantity;
+    if (step > 0 && ids.length) {
+      setRoom((prev) => {
+        if (!prev) return prev;
+        const next = ids.reduce((list, value) => withBoardStep(list, value, step), Array.isArray(prev.number_scores) ? prev.number_scores : []);
+        return { ...prev, number_board: true, number_scores: next };
+      });
+    }
+    giftQueueRef.current.push({ gift, ids, quantity });
+    return flushGiftQueue();
+  };
+
+  // Kutudaki ve köşedeki gönder tuşu: hediye gönderilir ve kutu kapanır.
   const pressGift = async () => {
     if (!selectedGift || !selectedIds.length) return;
     setGiftOpen(false);
     try {
-      await sendGiftOnce(selectedGift, [...selectedIds]);
+      await queueGiftSend(selectedGift, [...selectedIds]);
     } catch (error) {
       toast({ title: 'Hediye gönderilemedi', description: error?.response?.data?.error || error.message, variant: 'destructive' });
     }

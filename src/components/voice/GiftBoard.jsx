@@ -11,11 +11,11 @@ export default function GiftBoard({ open, onClose, coins, onSend, sendDisabled, 
   // gönderilebilir. 5 saniye boyunca hediye atılmazsa düğme kendiliğinden kaybolur, kutu
   // yeniden açıldığında kalıcılık sıfırlanır.
   const [stayVisible, setStayVisible] = useState(false);
-  // Her gönderimde artan sayaç: düğmenin ekranda kalma süresi bu sayede yeniden başlar.
+  // Gönderilen hediye sayısı: kutu kapandıktan sonra düğmenin üstünde X1, X2… olarak ilerler.
   const [sendTick, setSendTick] = useState(0);
   const hideTimerRef = useRef(null);
 
-  useEffect(() => { if (open) { setView('gifts'); setStayVisible(false); } }, [open]);
+  useEffect(() => { if (open) { setView('gifts'); setStayVisible(false); setSendTick(0); } }, [open]);
 
   const handleSend = () => { setStayVisible(true); setSendTick((value) => value + 1); onSend?.(); };
 
@@ -23,7 +23,7 @@ export default function GiftBoard({ open, onClose, coins, onSend, sendDisabled, 
   useEffect(() => {
     window.clearTimeout(hideTimerRef.current);
     if (open || !stayVisible) return undefined;
-    hideTimerRef.current = window.setTimeout(() => setStayVisible(false), 5000);
+    hideTimerRef.current = window.setTimeout(() => { setStayVisible(false); setSendTick(0); }, 5000);
     return () => window.clearTimeout(hideTimerRef.current);
   }, [open, stayVisible, sendTick]);
 
@@ -54,6 +54,7 @@ export default function GiftBoard({ open, onClose, coins, onSend, sendDisabled, 
       <GiftSendButton
         visible={!open && stayVisible}
         disabled={sendDisabled}
+        count={sendTick}
         onSend={handleSend}
         multiplier={multiplier}
         onMultiplier={onMultiplier}
