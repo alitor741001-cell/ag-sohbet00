@@ -36,7 +36,12 @@ export default function Support() {
   const messagesRef = useRef([]);
   const seenKey = user ? `destek-okundu:${user.id}` : '';
   const conversationKey = user ? `destek-gorusme:${user.id}` : '';
-  const markSeen = () => { if (seenKey) localStorage.setItem(seenKey, new Date().toISOString()); };
+  const markSeen = () => {
+    if (!seenKey) return;
+    localStorage.setItem(seenKey, new Date().toISOString());
+    // Alt menüdeki canlı destek rozeti anında sıfırlanır.
+    window.dispatchEvent(new Event('destek-goruldu'));
+  };
 
   // Silinme olayları geldiğinde kapanan görüşme kaybolmasın diye son dolu mesaj listesi tutulur.
   useEffect(() => { if (messages.length) messagesRef.current = messages; }, [messages]);
@@ -184,6 +189,13 @@ export default function Support() {
           ))}
           <div ref={endRef} />
         </div>
+
+        {/* Yönetici konuyu kapattığında yazma alanının üstünde görüşmenin kapandığı yazar. */}
+        {closedNotice && (
+          <p className="border-t border-[#f2ce6b]/25 bg-[#f2ce6b]/10 px-4 py-2 text-center text-[11px] font-semibold text-[#f2ce6b]">
+            Konuşma sonlandırılmıştır. Yazdığınızda yeni bir görüşme başlar.
+          </p>
+        )}
 
         <SupportComposer
           busy={sending}

@@ -2,6 +2,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Home, MessageCircle, Plus, User } from 'lucide-react';
 import { useCurrentUser, membershipActive } from '@/lib/useCurrentUser';
 import useSocialBadges from '@/hooks/useSocialBadges';
+import useSupportBadge from '@/hooks/useSupportBadge';
 import LiveChatButton from '@/components/layout/LiveChatButton';
 import UserSupportButton from '@/components/layout/UserSupportButton';
 import useKeyboardInset from '@/hooks/useKeyboardInset';
@@ -24,6 +25,8 @@ export default function BottomNav() {
   const navigate = useNavigate();
   const { user } = useCurrentUser();
   const { messages, requests } = useSocialBadges(user?.id);
+  // Destek düğmesinde özel sohbetlerdeki gibi okunmamış yanıt sayısı görünür.
+  const supportBadge = useSupportBadge(user?.id);
   // Klavye açılınca alt menü klavyenin üstüne kayar: en altta sabit kalır, arada kaybolmaz.
   const keyboardInset = useKeyboardInset();
   const baseItems = membershipActive(user) ? fullItems : limitedItems;
@@ -51,7 +54,7 @@ export default function BottomNav() {
           if (item.dock === 'support') {
             return (
               <div key={`dock-${index}`} className="flex-1 flex flex-col items-center justify-center gap-0.5">
-                {user?.role === 'admin' ? <LiveChatButton placement="dock" /> : <UserSupportButton />}
+                {user?.role === 'admin' ? <LiveChatButton placement="dock" /> : <UserSupportButton badge={supportBadge} />}
                 <span className="text-[10px] text-white/50">Canlı Destek</span>
               </div>
             );

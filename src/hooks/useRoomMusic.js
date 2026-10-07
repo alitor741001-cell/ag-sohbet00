@@ -27,6 +27,8 @@ export default function useRoomMusic(roomId, enabled) {
   const { volume, setVolume, resume } = useRoomMusicVolume(audioRef);
   // Müzik mikrofon durumundan bağımsız bir ses çıkışıdır.
   const wantPlayRef = useRef(false);
+  // Çalma oturumu: aynı şarkı yeniden başlatıldığında sesin başa alınması için izlenir.
+  const sessionRef = useRef('');
 
   // Odanın şarkı listesi: yüklenen şarkılar burada birikir, listeden tek dokunuşla açılır.
   const fetchLibrary = useCallback(async () => {
@@ -90,8 +92,15 @@ export default function useRoomMusic(roomId, enabled) {
     const elapsed = music.is_playing && music.started_at
       ? Math.max(0, (Date.now() - new Date(music.started_at).getTime()) / 1000)
       : 0;
-    const target = Math.max(0, (Number(music.position) || 0) + elapsed);
-    if (Math.abs((audio.currentTime || 0) - target) > 1.5) {
+    const position = Number(music.position) || 0;
+    const target = Math.max(0, position + elapsed);
+    const started = music.started_at || '';
+    // Yeni çalma oturumu: duraklatıp yeniden başlatılan ya da durdurulan şarkı baştan çalar.
+    const restarted = !!started && started !== sessionRef.current;
+    if (started) sessionRef.current = started;
+    if (restarted && position === 0 && audio.readyState > 0) {
+      try { audio.currentTime = 0; } catch { /* dosya hazır değilse konum atlanamaz */ }
+    } else if (Math.abs((audio.currentTime || 0) - target) > 1.5) {
       try { audio.currentTime = target; } catch { /* dosya yüklenmeden konum atlanamaz */ }
     }
     if (music.is_playing) { resume(); audio.play().catch(() => {}); }
@@ -113,7 +122,20 @@ export default function useRoomMusic(roomId, enabled) {
     };
   }, [resume]);
 
+  // Duraklatma ve durdurma bu cihazda anında uygulanır: düğme sunucu turunu beklemez,
+  // müzik hemen susar. Sunucu kaydı arkadan güncellenir ve odaya yayılır.
   const control = useCallback(async (op) => {
+    const audio = audioRef.current;
+    if (audio && (op === 'stop' || op === 'pause')) {
+      wantPlayRef.current = false;
+      audio.pause();
+      if (op === 'stop') {
+        try { audio.currentTime = 0; } catch { /* dosya hazır değilse konum atlanamaz */ }
+        setMusic((current) => (current ? { ...current, is_playing: false, position: 0, started_at: '' } : current));
+      } else {
+        setMusic((current) => (current ? { ...current, is_playing: false, position: audio.currentTime || current.position } : current));
+      }
+    }
     await base44.functions.invoke('voice-room', { room_id: roomId, action: 'music-control', op }).catch(() => {});
   }, [roomId]);
 
