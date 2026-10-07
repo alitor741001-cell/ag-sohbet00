@@ -21,13 +21,13 @@ const formatDuration = (total) => {
 export default function DirectCallOverlay() {
   const navigate = useNavigate();
   const { call, role, phase, seconds, muted, speaker, error, minimized, remoteMuted, cameraOn, remoteCameraOn, localVideoTrack, remoteVideoTrack, facing, moderationNotice, clearModerationNotice, minimizeCall, restoreCall, acceptCall, rejectCall, endCall, toggleMute, toggleSpeaker, toggleCamera, switchCamera } = useDirectCall();
-  // Uygunsuz görüntü uyarısı arama kapandıktan sonra da ekranda kalır.
-  if (moderationNotice) return <CallModerationNotice notice={moderationNotice} onClose={clearModerationNotice} />;
-  if (!call || phase === 'idle') return null;
-
+  // Kancalar erken çıkışların üstünde durur: arama başlarken durum değişse bile sıra bozulmaz.
   const { toast } = useToast();
   const [feeAsk, setFeeAsk] = useState(false);
   const [feeBusy, setFeeBusy] = useState(false);
+  // Uygunsuz görüntü uyarısı arama kapandıktan sonra da ekranda kalır.
+  if (moderationNotice) return <CallModerationNotice notice={moderationNotice} onClose={clearModerationNotice} />;
+  if (!call || phase === 'idle') return null;
 
   const other = role === 'callee'
     ? { id: call.caller_id, name: call.caller_name, avatar: call.caller_avatar, frame: call.caller_frame, frameScale: call.caller_frame_scale, gender: call.caller_gender }
