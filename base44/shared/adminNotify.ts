@@ -1,5 +1,5 @@
 // Shared admin notification: creates Notification records for all admins,
-// sends Web Push, and sends Telegram message. Used by admin-notify and shopier-webhook.
+// sends Web Push, and sends Telegram message. Used by admin-notify.
 import { sendPushToAdmins } from './webPush.ts';
 import { sendTelegram } from './telegram.ts';
 
