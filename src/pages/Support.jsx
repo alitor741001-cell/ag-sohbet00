@@ -27,14 +27,31 @@ export default function Support() {
   const keyboardInset = useKeyboardInset();
   const [ticket, setTicket] = useState(null);
   const [messages, setMessages] = useState([]);
+  // Yönetici konuyu kapatınca görüşme silinir: son hâli ve "sonlandırıldı" uyarısı ekranda kalır.
+  const [closedMessages, setClosedMessages] = useState([]);
+  const [closedNotice, setClosedNotice] = useState(false);
   const [lightbox, setLightbox] = useState(null);
   const [sending, setSending] = useState(false);
   const endRef = useRef(null);
+  const messagesRef = useRef([]);
+  const seenKey = user ? `destek-okundu:${user.id}` : '';
+  const conversationKey = user ? `destek-gorusme:${user.id}` : '';
+  const markSeen = () => { if (seenKey) localStorage.setItem(seenKey, new Date().toISOString()); };
+
+  // Silinme olayları geldiğinde kapanan görüşme kaybolmasın diye son dolu mesaj listesi tutulur.
+  useEffect(() => { if (messages.length) messagesRef.current = messages; }, [messages]);
+  useEffect(() => { if (ticket?.id) markSeen(); }, [ticket?.id]);
 
   useEffect(() => {
     if (!user) return;
     base44.entities.SupportTicket.filter({ user_id: user.id }, '-created_date', 1)
-      .then((t) => setTicket(t?.[0] || null))
+      .then((t) => {
+        const open = t?.[0] || null;
+        setTicket(open);
+        if (open) { localStorage.setItem(conversationKey, '1'); return; }
+        // Açık görüşme yoktu ama daha önce vardı: yönetici konuyu kapatıp görüşmeyi silmiş.
+        if (localStorage.getItem(conversationKey)) { setClosedNotice(true); localStorage.removeItem(conversationKey); }
+      })
       .catch(() => {});
   }, [user?.id]);
 
@@ -47,16 +64,20 @@ export default function Support() {
       if (ev.data?.ticket_id !== ticket.id) return;
       if (ev.type === 'create') {
         setMessages((p) => (p.some((m) => m.id === ev.data.id) ? p : [...p, ev.data]));
+        markSeen();
         setTimeout(() => endRef.current?.scrollIntoView(), 50);
       }
       if (ev.type === 'delete') setMessages((p) => p.filter((m) => m.id !== ev.data.id));
     });
-    // Yönetici görüşmeyi kapatıp silerse sohbet temizlenir; sonraki mesaj yeni görüşme açar.
+    // Yönetici görüşmeyi kapatıp silerse son hâli korunur; yazma alanının üstünde uyarı çıkar.
     const unsubTicket = subscribeEntity('SupportTicket', (ev) => {
       if (ev.data?.id !== ticket.id) return;
       if (ev.type === 'delete' || (ev.type === 'update' && ev.data?.status === 'closed')) {
+        setClosedMessages(messagesRef.current);
         setMessages([]);
         setTicket(null);
+        localStorage.setItem(conversationKey, '1');
+        setClosedNotice(true);
       }
     });
     return () => { unsubMsg(); unsubTicket(); };
@@ -105,8 +126,12 @@ export default function Support() {
       const active = await ensureTicket(isNew ? subjectFrom(payload.text, payload.media_type) : ticket.subject);
       const msg = await base44.entities.SupportMessage.create({ ticket_id: active.id, owner_id: user.id, user_id: user.id, sender: 'user', ...payload });
       if (msg?.id) {
-        setMessages((p) => (p.some((m) => m.id === msg.id) ? p : [...p, msg]));
+        // Yeni görüşme başlıyorsa kapanmış görüşmenin izleri temizlenir.
+        if (isNew) { setMessages([msg]); setClosedMessages([]); setClosedNotice(false); }
+        else setMessages((p) => (p.some((m) => m.id === msg.id) ? p : [...p, msg]));
         setTimeout(() => endRef.current?.scrollIntoView(), 60);
+        if (active?.id) localStorage.setItem(conversationKey, '1');
+        markSeen();
         notifyAdmin(msg, isNew, payload.text || 'Ek gönderildi');
       }
     } catch {
@@ -116,6 +141,8 @@ export default function Support() {
   };
 
   if (!user) return <div className="flex h-[60vh] items-center justify-center text-sm text-muted-foreground">Yükleniyor...</div>;
+
+  const thread = closedNotice ? closedMessages : messages;
 
   // Özel sohbet gibi tam ekran panel: alt menünün üzerini kaplar, geri okuyla kapanır.
   return (
@@ -142,12 +169,12 @@ export default function Support() {
       </div>
 
         <div className="flex-1 space-y-2 overflow-y-auto p-3">
-          {messages.length === 0 && (
+          {thread.length === 0 && !closedNotice && (
             <p className="px-4 pt-6 text-center text-xs text-muted-foreground">
               Merhaba! Sorununuzu buradan doğrudan yazabilir, fotoğraf veya 30 saniyelik video gönderebilirsiniz.
             </p>
           )}
-          {messages.map((m) => (
+          {thread.map((m) => (
             <div key={m.id} className={`flex ${m.user_id === m.owner_id ? 'justify-end' : 'justify-start'}`}>
               <div className={`max-w-[80%] overflow-hidden rounded-2xl px-3 py-2 text-sm ${m.user_id === m.owner_id ? 'bg-primary text-primary-foreground' : 'bg-secondary'}`}>
                 <SupportAttachment message={m} className="mb-1 max-h-48 max-w-full rounded-lg" onImageClick={setLightbox} />

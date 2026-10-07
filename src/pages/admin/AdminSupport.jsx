@@ -8,7 +8,6 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import UserBadge from '@/components/admin/UserBadge';
 import { statusLabel, STATUS_COLORS } from '@/lib/supportStatus';
 import SupportAttachment from '@/components/support/SupportAttachment';
-import { upsertNotification } from '@/lib/upsertNotification';
 
 export default function AdminSupport() {
   const { user: admin } = useCurrentUser();
@@ -62,7 +61,6 @@ export default function AdminSupport() {
     if (!text.trim() || !active) return;
     base44.entities.SupportMessage.create({ ticket_id: active.id, owner_id: active.user_id, user_id: admin.id, sender: 'admin', text: text.trim() }).catch(() => {});
     base44.entities.SupportTicket.update(active.id, { status: 'answered' }).catch(() => {});
-    upsertNotification({ user_id: active.user_id, title: 'Destek mesajınıza cevap verildi', body: active.subject, type: 'support', link: '/destek' });
     setText(''); load();
   };
 
@@ -70,7 +68,6 @@ export default function AdminSupport() {
 
   const closeAndClear = async () => {
     const closingTicket = active;
-    await upsertNotification({ user_id: closingTicket.user_id, title: 'Konuşma kapandı', body: closingTicket.subject, type: 'support', link: '/destek' });
     await base44.entities.SupportMessage.deleteMany({ ticket_id: closingTicket.id }).catch(() => {});
     await base44.entities.SupportTicket.delete(closingTicket.id).catch(() => {});
     setTickets((current) => current.filter((ticket) => ticket.id !== closingTicket.id));

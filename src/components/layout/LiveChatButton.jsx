@@ -4,7 +4,6 @@ import subscribeEntity from '@/components/data/entitySubscriptions';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { Send, X, Search, Ban, Trash2, ShieldOff, ShieldCheck, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { upsertNotification } from '@/lib/upsertNotification';
 import SupportAvatarButton, { SUPPORT_AVATAR_URL } from '@/components/layout/SupportAvatarButton';
 import SupportAttachment from '@/components/support/SupportAttachment';
 import ReportDetail from '@/components/support/ReportDetail';
@@ -181,13 +180,6 @@ export default function LiveChatButton({ placement = 'top' }) {
     const closingTicket = active;
     setActing(true);
     try {
-      await upsertNotification({
-        user_id: closingTicket.user_id,
-        title: 'Konuşma kapandı',
-        body: closingTicket.subject,
-        type: 'support',
-        link: '/destek'
-      });
       await base44.entities.SupportMessage.deleteMany({ ticket_id: closingTicket.id });
       await base44.entities.SupportTicket.delete(closingTicket.id);
       setTickets((current) => current.filter((ticket) => ticket.id !== closingTicket.id));
