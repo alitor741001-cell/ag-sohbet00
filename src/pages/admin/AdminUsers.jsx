@@ -86,8 +86,7 @@ export default function AdminUsers({ pendingOnly = false }) {
 
   const approve = async (u) => {
     try {
-      const start = new Date(); const end = new Date(); end.setDate(end.getDate() + 30);
-      await base44.entities.User.update(u.id, { membership_status: 'active', membership_start: start.toISOString(), membership_end: end.toISOString() });
+      await base44.entities.User.update(u.id, { membership_status: 'active', membership_start: new Date().toISOString(), membership_end: '' });
       await notify(u.id, 'Üyeliğiniz onaylandı', 'Premium içeriklere erişebilirsiniz.');
       await log('Üyelik onaylandı', u.email);
       base44.functions.invoke('admin-notify', {
