@@ -41,7 +41,9 @@ export default function useChatMessages(conversationId) {
     const request = { key };
     loadPendingRef.current = request;
     try {
-      const items = await base44.entities.ChatMessage.filter({ conversation_id: conversationId }, 'created_date', 500);
+      // Sohbet geçmişi Supabase aynasından okunur: ağır okuma kaynağa yüklenmez.
+      const response = await base44.functions.invoke('dm-service', { action: 'history', conversation_id: conversationId });
+      const items = response?.data?.messages || [];
       if (activeIdRef.current !== reqId) return;
       const visible = (items || []).filter((m) => !(m.deleted_for || []).includes(userId));
       seenRef.current = new Set(visible.map((m) => m.id));

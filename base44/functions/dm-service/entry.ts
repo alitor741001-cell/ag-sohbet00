@@ -1,6 +1,8 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
 import { findProfanity } from '../../shared/profanity.ts';
 import { incrementFriendshipProgression } from '../../shared/friendshipProgression.ts';
+import { mirrorRecord, readRows } from '../../shared/supabaseMirror.ts';
+import { waitUntil } from 'base44:runtime';
 
 export default async function(req) {
   try {
@@ -131,9 +133,31 @@ export default async function(req) {
         updates.unread_user1 = (conversation.unread_user1 || 0) + 1;
       }
       await base44.asServiceRole.entities.Conversation.update(conversationId, updates);
+      // Yeni mesaj aynaya yanıt sonrası yazılır: gönderim bekletilmez, geçmiş Supabase'ten okunur.
+      waitUntil(mirrorRecord(base44, 'ChatMessage', message));
       const progression = isAdminChat ? null : await incrementFriendshipProgression(base44, user.id, receiverId, message.id);
 
       return Response.json({ message, progression, ...(recipientExpired ? { warning: `${receiverName} adlı kullanıcının üyeliği sona erdi. Mesajı yenilediğinde görebilir.` } : {}) });
+    }
+
+    // history: Sohbet geçmişi — ağır okuma Supabase aynasından gelir.
+    // Aynadaki satırlar `payload` içinde tam mesaj kaydını taşır.
+    if (action === 'history') {
+      const conversationId = String(body.conversation_id || '');
+      const conversation = await base44.asServiceRole.entities.Conversation.get(conversationId).catch(() => null);
+      if (!conversation) return Response.json({ error: 'Sohbet bulunamadı' }, { status: 404 });
+      if (!(conversation.members || []).includes(user.id)) return Response.json({ error: 'yetkisiz' }, { status: 403 });
+      const rows = await readRows(
+        base44,
+        'chat_messages',
+        `select=payload&payload->>conversation_id=eq.${encodeURIComponent(conversationId)}&order=created_date.asc&limit=500`
+      );
+      // Ayna boş ya da erişilemezse geçmiş kaynaktan okunur: sohbet boş görünmez.
+      const mirrored = (Array.isArray(rows) ? rows : []).map((row) => row?.payload).filter(Boolean);
+      const messages = mirrored.length
+        ? mirrored
+        : await base44.asServiceRole.entities.ChatMessage.filter({ conversation_id: conversationId }, 'created_date', 500).catch(() => []);
+      return Response.json({ messages: messages.filter((m) => !(m.deleted_for || []).includes(user.id)) });
     }
 
     // delete_conversation: Sohbeti SADECE bu kullanıcı için sil + tüm mesajları temizle (clean slate)
@@ -150,7 +174,9 @@ export default async function(req) {
       // Tüm mesajları bu kullanıcı için sil — tekrar açınca eski mesajlar görünmesin
       const messages = await base44.asServiceRole.entities.ChatMessage.filter({ conversation_id: conversationId }, 'created_date', 500).catch(() => []);
       if (messages.length) {
-        await base44.asServiceRole.entities.ChatMessage.bulkUpdate(messages.map((m) => ({ id: m.id, deleted_for: [...new Set([...(m.deleted_for || []), user.id])] })));
+        const hidden = messages.map((m) => ({ ...m, deleted_for: [...new Set([...(m.deleted_for || []), user.id])] }));
+        await base44.asServiceRole.entities.ChatMessage.bulkUpdate(hidden.map((m) => ({ id: m.id, deleted_for: m.deleted_for })));
+        waitUntil(mirrorRecord(base44, 'ChatMessage', hidden));
       }
       return Response.json({ ok: true });
     }
@@ -226,6 +252,7 @@ export default async function(req) {
       if (message.sender_id !== user.id && message.receiver_id !== user.id) return Response.json({ error: 'yetkisiz' }, { status: 403 });
       const deletedFor = [...new Set([...(message.deleted_for || []), user.id])];
       await base44.asServiceRole.entities.ChatMessage.update(messageId, { deleted_for: deletedFor });
+      waitUntil(mirrorRecord(base44, 'ChatMessage', { ...message, deleted_for: deletedFor }));
       return Response.json({ ok: true });
     }
 
@@ -238,7 +265,10 @@ export default async function(req) {
       const messages = await base44.asServiceRole.entities.ChatMessage.filter({ conversation_id: conversationId, receiver_id: user.id }, 'created_date', 500).catch(() => []);
       const unread = (messages || []).filter((m) => !(m.read_by || []).includes(user.id));
       if (unread.length) {
-        await base44.asServiceRole.entities.ChatMessage.bulkUpdate(unread.map((m) => ({ id: m.id, read_by: [...new Set([...(m.read_by || []), user.id])] })));
+        const readMessages = unread.map((m) => ({ ...m, read_by: [...new Set([...(m.read_by || []), user.id])] }));
+        await base44.asServiceRole.entities.ChatMessage.bulkUpdate(readMessages.map((m) => ({ id: m.id, read_by: m.read_by })));
+        // Okundu tikleri aynada da güncellenir: geçmiş oradan okunuyor.
+        waitUntil(mirrorRecord(base44, 'ChatMessage', readMessages));
       }
       const unreadUpdate = conversation.user1_id === user.id ? { unread_user1: 0 } : { unread_user2: 0 };
       await base44.asServiceRole.entities.Conversation.update(conversationId, unreadUpdate);

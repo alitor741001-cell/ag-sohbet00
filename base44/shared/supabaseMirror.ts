@@ -178,6 +178,24 @@ export async function upsertRows(base44, table, rows) {
   return { ok: true, count: rows.length };
 }
 
+/**
+ * Aynadan satır okur: sohbet geçmişi ve profiller gibi ağır okumalar Supabase'ten gelir.
+ * Ayna erişilemezse null döner, çağıran katman kaynaktan okumaya düşer.
+ */
+export async function readRows(base44, table, query) {
+  try {
+    const auth = await supabaseAuth(base44);
+    const response = await fetch(`${auth.base}/${table}?${query}`, {
+      headers: { apikey: auth.key, Authorization: `Bearer ${auth.key}` },
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!response.ok) return null;
+    return await response.json();
+  } catch {
+    return null;
+  }
+}
+
 /** Bu turda tazelenmeyen satırları siler: kaynağından silinen veri aynada da kalmaz. */
 export async function deleteStale(base44, table, runStart) {
   const auth = await supabaseAuth(base44);
