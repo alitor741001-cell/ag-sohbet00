@@ -109,7 +109,7 @@ export default function VoiceRoom() {
 
   // Hediye Tahtası: katalog, K seviyeleri, bakiye ve gelen hediye animasyonları.
   const { gifts, tiers } = useGiftCatalog();
-  const { coins, setCoins } = useGiftBalance(id, giftOpen);
+  const { coins, setCoins, refresh: refreshCoins } = useGiftBalance(id, giftOpen);
   const giftMap = useMemo(() => new Map(gifts.map((item) => [item.id, item])), [gifts]);
   const resolveGift = useCallback((giftKey) => giftMap.get(giftKey) || null, [giftMap]);
   const { alert: giftAlert, push: pushGiftAlert, markSeen: markGiftSeen, markOwnSend } = useGiftAlerts(messages, resolveGift, user?.id);
@@ -817,7 +817,9 @@ export default function VoiceRoom() {
       room_id: id, action: 'gift-send', gift_id: gift.id, target_ids: ids, quantity,
     });
     const data = response.data;
-    if (typeof data.coins === 'number') setCoins(data.coins);
+    // Kuyrukta bekleyen gönderim yoksa bakiye sunucudan gelen gerçek değerle eşitlenir;
+    // bekleyen gönderim varsa anlık düşen değer korunur (kuyruk boşalınca gerçek değer okunur).
+    if (typeof data.coins === 'number' && !giftQueueRef.current.length) setCoins(data.coins);
     // Ağır işler cevabı beklemez: hediye kayıtları, seviye/kota senkronu ve büyük hediye
     // duyurusu hemen ardından arka planda tamamlanır.
     base44.functions.invoke('voice-room', {
@@ -882,15 +884,21 @@ export default function VoiceRoom() {
     } finally {
       giftFlushingRef.current = false;
     }
-    // Kuyruk boşaldı: tahtanın kesin hali sunucudan okunur — iyimser değer geri düşmez.
+    // Kuyruk boşaldı: tahtanın kesin hali ve gerçek coin bakiyesi sunucudan okunur — ekranda
+    // gösterilen değer her zaman gerçek cüzdan değeridir.
     await syncRoom().catch(() => {});
+    refreshCoins();
     if (lastError) throw lastError;
   };
 
-  // Gönderim isteği: sayı tahtası dokunuş anında ilerler, istek kuyruğa girip sırayla işlenir.
+  // Gönderim isteği: coin dokunuş anında gerçekten düşer, sayı tahtası ilerler ve istek
+  // kuyruğa girip sırayla işlenir (bakiyeye her hediye tek tek işlenir).
   const queueGiftSend = (gift, ids, quantity = 1) => {
     const step = Math.max(0, Number(gift.k_value) || 0) * 1000 * quantity;
     if (step > 0 && ids.length) {
+      // Coin bakiyesi anında düşer: ekranda eski değer kalmaz.
+      const cost = step * ids.length;
+      setCoins((prev) => (prev === null || prev === undefined ? prev : Math.max(0, prev - cost)));
       setRoom((prev) => {
         if (!prev) return prev;
         const next = ids.reduce((list, value) => withBoardStep(list, value, step), Array.isArray(prev.number_scores) ? prev.number_scores : []);
