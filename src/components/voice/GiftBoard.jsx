@@ -29,8 +29,6 @@ export default function GiftBoard({ open, onClose, coins, onSend, sendDisabled, 
         <GiftBoardContent
           {...props}
           coins={coins}
-          multiplier={multiplier}
-          onMultiplier={onMultiplier}
           onClose={onClose}
           onOpenCoins={() => setView('coins')}
           onSend={handleSend}

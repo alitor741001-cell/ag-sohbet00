@@ -5,32 +5,25 @@ import GiftRecipientRow from '@/components/voice/GiftRecipientRow';
 import GiftBoardFooter from '@/components/voice/GiftBoardFooter';
 import { K_UNIT, formatCoins, formatPrice, tierForK, toneColor } from '@/lib/giftTone';
 
-// Hediye sıralaması: varsayılan diziliş ve K değerine göre popüler sıralama.
-const SORTS = [{ key: 'default', label: 'Tüm' }, { key: 'popular', label: 'Popüler' }];
-
 /** Hediye Tahtası içeriği: kategori sekmeleri, hediye ızgarası, alıcılar ve alt gönderim çubuğu. */
 export default function GiftBoardContent({
   user, gifts = [], tiers = [], people = [], selectedIds = [], giftId, coins,
-  multiplier = 1, onMultiplier, onSelectGift, onTogglePerson, onSelectAll, onClear, onOpenCoins, onClose,
-  onSend, sendDisabled,
+  onSelectGift, onTogglePerson, onSelectAll, onClear, onOpenCoins, onClose, onSend, sendDisabled,
 }) {
   const [category, setCategory] = useState('Tümü');
-  const [sort, setSort] = useState('default');
 
   const categories = useMemo(() => ['Tümü', ...new Set(gifts.map((gift) => gift.category || 'Diğer'))], [gifts]);
-  const shown = useMemo(() => {
-    const list = category === 'Tümü' ? gifts : gifts.filter((gift) => (gift.category || 'Diğer') === category);
-    return sort === 'popular' ? [...list].sort((a, b) => (Number(b.k_value) || 0) - (Number(a.k_value) || 0)) : list;
-  }, [gifts, category, sort]);
+  const shown = useMemo(
+    () => (category === 'Tümü' ? gifts : gifts.filter((gift) => (gift.category || 'Diğer') === category)),
+    [gifts, category]
+  );
 
   const gift = gifts.find((item) => item.id === giftId) || null;
   // Alıcı seçiminin rengi seçilen hediyenin seviyesinden gelir.
   const color = toneColor(tierForK(tiers, gift?.k_value || 0));
-  const quantity = Math.max(1, Number(multiplier) || 1);
-  const count = selectedIds.length;
-  const totalK = (Number(gift?.k_value) || 0) * count * quantity;
+  const totalK = (Number(gift?.k_value) || 0) * selectedIds.length;
   const totalCoins = totalK * K_UNIT;
-  const insufficient = !!gift && count > 0 && coins !== null && coins !== undefined && totalCoins > coins;
+  const insufficient = !!gift && selectedIds.length > 0 && coins !== null && coins !== undefined && totalCoins > coins;
 
   return (
     // h-full: panelin kalan yüksekliği içeriğe geçer, böylece yalnızca hediye ızgarası kayar
@@ -68,21 +61,8 @@ export default function GiftBoardContent({
         </button>
       </div>
 
-      <div className="mt-2 flex shrink-0 items-center gap-1.5">
-        {SORTS.map((option) => (
-          <button
-            key={option.key}
-            type="button"
-            onClick={() => setSort(option.key)}
-            className={`rounded-full px-3 py-1 text-[11px] font-bold transition-transform active:scale-95 ${sort === option.key ? 'bg-[#d9d9de] text-[#1b1226]' : 'border border-white/25 text-white/80'}`}
-          >
-            {option.label}
-          </button>
-        ))}
-      </div>
-
       {/* Hediye ızgarası kendi alanında kayar; kalan yüksekliği doldurur. */}
-      <div className="no-scrollbar mt-2 min-h-0 flex-1 overflow-y-auto overscroll-contain">
+      <div className="no-scrollbar mt-3 min-h-0 flex-1 overflow-y-auto overscroll-contain">
         {shown.length === 0 ? (
           <p className="rounded-xl bg-white/5 px-3 py-3 text-center text-xs text-white/50">Bu kategoride hediye yok.</p>
         ) : (
@@ -113,8 +93,6 @@ export default function GiftBoardContent({
 
       <GiftBoardFooter
         coins={coins}
-        multiplier={quantity}
-        onMultiplier={onMultiplier}
         onOpenCoins={onOpenCoins}
         onSend={onSend}
         sendDisabled={sendDisabled}
