@@ -92,7 +92,6 @@ export const ALL_COLLECTIONS = [
   { entity: 'QuotaReward', table: 'quota_rewards', columns: ['user_id', 'agency_owner_id', 'tier_id', 'diamonds', 'amount', 'status', 'period', 'kind'] },
   { entity: 'QuotaTier', table: 'quota_tiers', columns: ['diamonds', 'broadcaster_dollars', 'agency_dollars', 'active'] },
   { entity: 'Movie', table: 'movies', columns: ['title', 'video_id'] },
-  { entity: 'Package', table: 'packages', columns: ['name', 'active'] },
   { entity: 'AppConfig', table: 'app_config', columns: ['key'] },
   { entity: 'UpdateAnnouncement', table: 'update_announcements', columns: [] },
   { entity: 'AdminLog', table: 'admin_logs', columns: ['user_id'] },
