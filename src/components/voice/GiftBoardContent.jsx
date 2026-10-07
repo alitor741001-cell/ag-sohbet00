@@ -1,51 +1,118 @@
 import { useMemo, useState } from 'react';
-import { Coins, Plus } from 'lucide-react';
+import { ChevronDown, ShoppingBag } from 'lucide-react';
 import GiftCard from '@/components/voice/GiftCard';
 import GiftRecipientRow from '@/components/voice/GiftRecipientRow';
 import GiftLevelTicker from '@/components/voice/GiftLevelTicker';
-import { K_UNIT, coinToK, formatCoins, formatK, formatPrice, tierForK, toneColor } from '@/lib/giftTone';
+import GiftBoardFooter from '@/components/voice/GiftBoardFooter';
+import { K_UNIT, formatCoins, formatPrice, tierForK, toneColor } from '@/lib/giftTone';
 
-/** Hediye Tahtası içeriği: kategoriler, hediyeler (K değeriyle) ve çoklu alıcı seçimi. */
-export default function GiftBoardContent({ gifts = [], tiers = [], people = [], selectedIds = [], giftId, coins, giftTick = 0, onSelectGift, onTogglePerson, onSelectAll, onClear, onOpenCoins }) {
+// Hediye sıralaması: varsayılan diziliş ve K değerine göre popüler sıralama.
+const SORTS = [{ key: 'default', label: 'Tüm' }, { key: 'popular', label: 'Popüler' }];
+
+/** Hediye Tahtası içeriği: seviye barı, kategoriler, hediye ızgarası, alıcılar ve alt gönderim çubuğu. */
+export default function GiftBoardContent({
+  user, gifts = [], tiers = [], people = [], selectedIds = [], giftId, coins, giftTick = 0,
+  multiplier = 1, onMultiplier, onSelectGift, onTogglePerson, onSelectAll, onClear, onOpenCoins, onClose,
+  onSend, sendDisabled,
+}) {
   const [category, setCategory] = useState('Tümü');
+  const [sort, setSort] = useState('default');
 
   const categories = useMemo(() => ['Tümü', ...new Set(gifts.map((gift) => gift.category || 'Diğer'))], [gifts]);
-  const shown = useMemo(
-    () => (category === 'Tümü' ? gifts : gifts.filter((gift) => (gift.category || 'Diğer') === category)),
-    [gifts, category]
-  );
+  const shown = useMemo(() => {
+    const list = category === 'Tümü' ? gifts : gifts.filter((gift) => (gift.category || 'Diğer') === category);
+    return sort === 'popular' ? [...list].sort((a, b) => (Number(b.k_value) || 0) - (Number(a.k_value) || 0)) : list;
+  }, [gifts, category, sort]);
 
   const gift = gifts.find((item) => item.id === giftId) || null;
   const tone = tierForK(tiers, gift?.k_value || 0);
   const color = toneColor(tone);
+  const quantity = Math.max(1, Number(multiplier) || 1);
   const count = selectedIds.length;
-  const totalK = (Number(gift?.k_value) || 0) * count;
-  const balanceK = coins === null || coins === undefined ? null : coinToK(coins);
-  // Fiyat karşılaştırması coin üzerinden yapılır: 1K altındaki hediyeler de doğru hesaplanır.
-  const totalCoins = (Number(gift?.k_value) || 0) * K_UNIT * count;
+  const totalK = (Number(gift?.k_value) || 0) * count * quantity;
+  const totalCoins = totalK * K_UNIT;
   const insufficient = !!gift && count > 0 && coins !== null && coins !== undefined && totalCoins > coins;
 
   return (
-    // Üstteki bölümler (bakiye, alıcılar, seviye şeridi, kategoriler) sabit durur;
-    // kaydırma yalnızca hediye listesine aittir.
+    // Üst bölümler (seviye barı, sekmeler, filtreler, alıcılar, alt çubuk) sabit durur;
+    // kaydırma yalnızca hediye ızgarasına aittir.
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="mb-3 flex shrink-0 flex-wrap items-center gap-2">
-        <span className="flex items-center gap-1.5 rounded-full bg-black/40 px-3 py-1.5 text-xs font-black tabular-nums text-amber-300">
-          <Coins className="h-4 w-4" /> {coins === null || coins === undefined ? '—' : formatCoins(coins)}
-          {balanceK !== null && <span className="text-[10px] font-bold text-amber-300/60">({formatK(balanceK)})</span>}
+      <div className="flex shrink-0 items-center gap-2">
+        <div className="min-w-0 flex-1"><GiftLevelTicker giftTick={giftTick} /></div>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Hediye kutusunu kapat"
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/10 text-white/75 transition-transform active:scale-95"
+        >
+          <ChevronDown className="h-4 w-4" />
+        </button>
+      </div>
+
+      {/* Üst sekmeler: hediye kategorileri. Soldaki çember kendi profilimiz, sağdaki çanta
+          Coins Yükle mağazasını açar. */}
+      <div className="mt-2 flex shrink-0 items-end gap-2 border-b border-white/10">
+        <span className="relative flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/10 ring-1 ring-[#45d6c8]/60">
+          {user?.avatar ? (
+            <img src={user.avatar} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" draggable={false} />
+          ) : (
+            <span className="text-[11px] font-black text-white">{(user?.full_name || '?').trim().charAt(0).toUpperCase()}</span>
+          )}
         </span>
+        <div className="no-scrollbar flex min-w-0 flex-1 gap-4 overflow-x-auto">
+          {categories.map((item) => (
+            <button
+              key={item}
+              type="button"
+              onClick={() => setCategory(item)}
+              className={`relative shrink-0 pb-2 text-[13px] transition-colors ${category === item ? 'font-black text-white' : 'font-semibold text-white/45'}`}
+            >
+              {item}
+              {category === item && <span className="absolute inset-x-0.5 bottom-0 h-[2px] rounded-full bg-[#45d6c8]" />}
+            </button>
+          ))}
+        </div>
         <button
           type="button"
           onClick={onOpenCoins}
-          className="flex shrink-0 items-center gap-1 rounded-full bg-amber-300/15 px-3 py-1.5 text-[11px] font-black text-amber-300 transition-transform active:scale-95"
+          aria-label="Coins Yükle"
+          className="mb-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/10 text-white/85 transition-transform active:scale-95"
         >
-          <Plus className="h-3.5 w-3.5" /> Coins Yükle
+          <ShoppingBag className="h-4 w-4" />
         </button>
-        <span className="rounded-full bg-white/10 px-3 py-1.5 text-[11px] font-bold text-white/80">{count} alıcı</span>
-        {gift && <span className="min-w-0 flex-1 truncate text-right text-[11px] font-bold" style={{ color }}>{tone?.name || 'Standart'} seviye</span>}
       </div>
 
-      <div className="shrink-0">
+      <div className="mt-2 flex shrink-0 items-center gap-1.5">
+        {SORTS.map((option) => (
+          <button
+            key={option.key}
+            type="button"
+            onClick={() => setSort(option.key)}
+            className={`rounded-full px-3 py-1 text-[11px] font-bold transition-transform active:scale-95 ${sort === option.key ? 'bg-[#d9d9de] text-[#1b1226]' : 'border border-white/25 text-white/80'}`}
+          >
+            {option.label}
+          </button>
+        ))}
+        {gift && (
+          <span className="ml-auto shrink-0 truncate rounded-full border px-2.5 py-1 text-[10px] font-bold" style={{ borderColor: `${color}99`, color }}>
+            {tone?.name || 'Standart'} seviye
+          </span>
+        )}
+      </div>
+
+      {shown.length === 0 ? (
+        <p className="mt-2 shrink-0 rounded-xl bg-white/5 px-3 py-3 text-center text-xs text-white/50">Bu kategoride hediye yok.</p>
+      ) : (
+        <div className="no-scrollbar mt-2 min-h-0 flex-1 overflow-y-auto overscroll-contain">
+          <div className="grid grid-cols-3 gap-2 pb-1">
+            {shown.map((item) => (
+              <GiftCard key={item.id} gift={item} selected={giftId === item.id} onSelect={onSelectGift} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="shrink-0 pt-2">
         <GiftRecipientRow
           people={people}
           selectedIds={selectedIds}
@@ -56,50 +123,20 @@ export default function GiftBoardContent({ gifts = [], tiers = [], people = [], 
         />
       </div>
 
-      {/* "Tümü" kategorisinin üstünde dönüşümlü seviye şeridi: atış LVL → hediye alma LVL.
-          Bar, odada hediye atıldıkça canlı ilerler. */}
-      <div className="shrink-0">
-        <GiftLevelTicker giftTick={giftTick} />
-      </div>
-
-      <div className="no-scrollbar my-3 flex shrink-0 gap-2 overflow-x-auto pb-1">
-        {categories.map((item) => (
-          <button
-            key={item}
-            type="button"
-            onClick={() => setCategory(item)}
-            className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-bold transition-transform active:scale-95 ${category === item ? 'bg-primary text-primary-foreground' : 'bg-white/10 text-white'}`}
-          >
-            {item}
-          </button>
-        ))}
-      </div>
-
-      {shown.length === 0 ? (
-        <p className="shrink-0 rounded-xl bg-white/5 px-3 py-3 text-center text-xs text-white/50">Bu kategoride hediye yok.</p>
-      ) : (
-        // Hediye listesi kendi içinde kayar; alttaki boşluk sağ alttaki gönder düğmesi için ayrılır.
-        <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain pb-24">
-          <div className="grid grid-cols-3 gap-2 pb-1">
-            {shown.map((item) => (
-              <GiftCard
-                key={item.id}
-                gift={item}
-                color={tierForK(tiers, item.k_value)?.color || '#ef4444'}
-                selected={giftId === item.id}
-                onSelect={onSelectGift}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
       {insufficient && (
-        <p className="mt-2 shrink-0 rounded-xl bg-red-500/15 px-3 py-2 text-center text-[11px] font-bold text-red-300">
+        <p className="mt-1.5 shrink-0 rounded-xl bg-red-500/15 px-3 py-1.5 text-center text-[11px] font-bold text-red-300">
           Yetersiz bakiye — gereken {formatPrice(totalK)}, bakiyen {formatCoins(coins)} coin
         </p>
       )}
 
+      <GiftBoardFooter
+        coins={coins}
+        multiplier={quantity}
+        onMultiplier={onMultiplier}
+        onOpenCoins={onOpenCoins}
+        onSend={onSend}
+        sendDisabled={sendDisabled}
+      />
     </div>
   );
 }

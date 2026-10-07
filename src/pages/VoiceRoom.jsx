@@ -1228,6 +1228,7 @@ export default function VoiceRoom() {
       <GiftBoard
         open={giftOpen}
         onClose={closeGifts}
+        user={user}
         gifts={gifts}
         tiers={tiers}
         people={giftPeople}

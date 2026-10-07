@@ -6,8 +6,8 @@ export default function GiftRecipientRow({ people = [], selectedIds = [], color,
 
   return (
     <section>
-      <div className="mb-2 flex items-center justify-between gap-2">
-        <p className="text-xs font-bold uppercase tracking-wide text-white/60">
+      <div className="mb-1.5 flex items-center justify-between gap-2">
+        <p className="text-[11px] font-bold uppercase tracking-wide text-white/60">
           Alıcılar {selectedIds.length > 0 && <span style={{ color }}>• {selectedIds.length} kişi</span>}
         </p>
         {people.length > 0 && (
@@ -32,10 +32,10 @@ export default function GiftRecipientRow({ people = [], selectedIds = [], color,
                 type="button"
                 onClick={() => onToggle(person.user_id)}
                 aria-pressed={selected}
-                className="relative flex w-14 shrink-0 flex-col items-center gap-1"
+                className="relative flex w-12 shrink-0 flex-col items-center gap-1"
               >
                 <span
-                  className="relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-white/10"
+                  className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-white/10"
                   style={selected ? { boxShadow: `0 0 0 2px ${color}, 0 0 14px ${color}` } : undefined}
                 >
                   {person.avatar ? (
