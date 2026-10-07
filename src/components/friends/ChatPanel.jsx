@@ -9,6 +9,7 @@ import subscribeEntity from '@/components/data/entitySubscriptions';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
 import useChatMessages from '@/hooks/useChatMessages';
+import { refreshFriends } from '@/hooks/useFriends';
 import useKeyboardInset from '@/hooks/useKeyboardInset';
 import RoleMessageEffect from '@/components/role/RoleMessageEffect';
 import ChatSettingsPanel from '@/components/friends/ChatSettingsPanel';
@@ -228,6 +229,7 @@ export default function ChatPanel({ conversation, userId, onBack, online, embedd
     setBlocking(true);
     try {
       await base44.functions.invoke('friend-service', { action: 'block', friendship_id: friendship.id });
+      refreshFriends();
       setSettingsOpen(false);
     } catch {} finally { setBlocking(false); }
   };
@@ -236,6 +238,7 @@ export default function ChatPanel({ conversation, userId, onBack, online, embedd
     setUnblocking(true);
     try {
       await base44.functions.invoke('friend-service', { action: 'unblock', friendship_id: friendship.id });
+      refreshFriends();
       setSettingsOpen(false);
     } catch { toast({ title: 'Engel kaldırılamadı', variant: 'destructive' }); }
     finally { setUnblocking(false); }
@@ -289,6 +292,7 @@ export default function ChatPanel({ conversation, userId, onBack, online, embedd
     try {
       await base44.functions.invoke('friend-service', { action: 'unfriend', friendship_id: friendship.id });
       setFriendship((prev) => prev ? { ...prev, status: 'removed' } : prev);
+      refreshFriends();
     } catch { toast({ title: 'Kaldırılamadı', variant: 'destructive' }); }
     finally { setUnfriending(false); }
   };
@@ -298,6 +302,7 @@ export default function ChatPanel({ conversation, userId, onBack, online, embedd
     try {
       await base44.functions.invoke('friend-service', { action: 'refriend', friendship_id: friendship.id });
       setFriendship((prev) => prev ? { ...prev, status: 'pending', requester_id: userId } : prev);
+      refreshFriends();
     } catch { toast({ title: 'Eklenemedi', variant: 'destructive' }); }
     finally { setUnfriending(false); }
   };
@@ -306,6 +311,7 @@ export default function ChatPanel({ conversation, userId, onBack, online, embedd
     try {
       await base44.functions.invoke('friend-service', { action: 'respond', friendship_id: friendship.id, accept: true });
       setFriendship((prev) => prev ? { ...prev, status: 'accepted' } : prev);
+      refreshFriends();
       toast({ title: 'Arkadaşlık isteğiniz onaylandı' });
     } catch { toast({ title: 'Kabul edilemedi', variant: 'destructive' }); }
   };
@@ -314,6 +320,7 @@ export default function ChatPanel({ conversation, userId, onBack, online, embedd
     try {
       await base44.functions.invoke('friend-service', { action: 'respond', friendship_id: friendship.id, accept: false });
       setFriendship((prev) => prev ? { ...prev, status: 'rejected' } : prev);
+      refreshFriends();
     } catch { toast({ title: 'Reddedilemedi', variant: 'destructive' }); }
   };
 

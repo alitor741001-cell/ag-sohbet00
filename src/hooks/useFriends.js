@@ -17,9 +17,20 @@ const store = {
   unsubscribe: null,
   interval: null,
   onOnline: null,
+  onRefresh: null,
   loadedAt: 0,
   pendingLoad: null,
 };
+
+// Arkadaşlık başka bir ekrandan değiştirildiğinde (ör. sohbet ayarlarından arkadaş silme)
+// liste beklemeden tazelenir: ana sayfa kartlarındaki "Ekli" işareti anında kalkar.
+const REFRESH_EVENT = 'friends-refresh';
+
+/** Arkadaşlık durumu değiştiğinde çağrılır: liste açık ekranlarda hemen, sonraki açılışta yeniden okunur. */
+export function refreshFriends() {
+  store.loadedAt = 0;
+  window.dispatchEvent(new Event(REFRESH_EVENT));
+}
 
 const publish = (patch) => {
   Object.assign(store, patch);
@@ -54,6 +65,7 @@ const stop = () => {
   if (store.unsubscribe) { store.unsubscribe(); store.unsubscribe = null; }
   if (store.interval) { window.clearInterval(store.interval); store.interval = null; }
   if (store.onOnline) { window.removeEventListener('online', store.onOnline); store.onOnline = null; }
+  if (store.onRefresh) { window.removeEventListener(REFRESH_EVENT, store.onRefresh); store.onRefresh = null; }
 };
 
 const start = (userId) => {
@@ -74,6 +86,8 @@ const start = (userId) => {
   });
   store.onOnline = () => load();
   window.addEventListener('online', store.onOnline);
+  store.onRefresh = () => load();
+  window.addEventListener(REFRESH_EVENT, store.onRefresh);
   // Yoklama yedeği — realtime kaçırsa diye; sekme arkadayken durur ve tüm bileşenler aynı turu paylaşır.
   store.interval = window.setInterval(() => { if (document.visibilityState !== 'hidden') load(); }, 60000);
 };
