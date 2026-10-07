@@ -31,7 +31,7 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
   const rowGap = narrow ? (maxHeight && maxHeight < rowsNeeded ? 6 : 12) : 20;
   const available = width - 4;
   const perSeat = (available - gap * (widestRow - 1)) / widestRow;
-  const widthSize = perSeat >= 110 ? 'lg' : perSeat >= 62 ? 'md' : perSeat >= 52 ? 'sm' : 'xs';
+  const widthSize = perSeat >= 84 ? 'lg' : perSeat >= 62 ? 'md' : perSeat >= 46 ? 'sm' : 'xs';
   // Yükseklik de hesaba katılır: koltuğun altındaki isim ve (tahta açıkken) sayı şeridi için
   // gereken yer düşülür, kalan yükseklik koltuk boyutunu belirler. Böylece koltuk sayısı
   // artırıldığında alttaki sıraların rakamları görünmez olmaz.

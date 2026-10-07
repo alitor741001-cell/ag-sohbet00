@@ -13,6 +13,8 @@ const EMPTY = { xs: 'h-10 w-10', sm: 'h-12 w-12', md: 'h-14 w-14', lg: 'h-20 w-2
 const BADGE = { xs: 'translate-x-[3px] translate-y-[3px]', sm: 'translate-x-[5px] translate-y-[5px]', md: 'translate-x-[9px] translate-y-[9px]', lg: 'translate-x-[12px] translate-y-[12px]' };
 // İsim alanı koltuk genişliğini aşmaz: uzun isimler satırı yana taşırmaz.
 const NAME = { xs: 'max-w-[42px]', sm: 'max-w-[52px]', md: 'max-w-[68px]', lg: 'max-w-[88px]' };
+// Kilit ve + ikonları koltuk büyüdükçe büyür: referanstaki oran korunur.
+const ICON = { xs: 'h-3.5 w-3.5', sm: 'h-4 w-4', md: 'h-5 w-5', lg: 'h-7 w-7' };
 
 /** Tek koltuk: boş koltukta + ve numara, dolu koltukta profil görseli ve isim. */
 function VoiceSeat({ seat, index, size = 'md', musicPlaying, speaking, gender, isSelf, isOwner, isMod, accent = '#ef4444', gifted, onClick, onSelect, micMuted }) {
@@ -23,6 +25,7 @@ function VoiceSeat({ seat, index, size = 'md', musicPlaying, speaking, gender, i
   const emptyCircle = EMPTY[size] || EMPTY.md;
   const badge = BADGE[size] || BADGE.md;
   const nameWidth = NAME[size] || NAME.md;
+  const iconSize = ICON[size] || ICON.md;
   // Konuşma dalgası rengi: erkeklerde mavi, kadınlarda pembe.
   const speakingGender = gender === 'erkek' ? 'erkek' : 'kadin';
 
@@ -30,8 +33,8 @@ function VoiceSeat({ seat, index, size = 'md', musicPlaying, speaking, gender, i
     return (
       <button type="button" onClick={handleClick} className="flex flex-col items-center gap-1 active:scale-95 transition-transform" aria-label={`${index + 1}. koltuk`}>
         <span className={`flex ${cell} shrink-0 items-center justify-center`}>
-          <span className={`relative flex ${emptyCircle} items-center justify-center rounded-full border ${seat?.locked ? 'border-amber-400/70 bg-amber-500/10' : 'border-white/25 bg-black/40'}`}>
-            {seat?.locked ? <Lock className="h-4 w-4 text-amber-400" /> : <Plus className="h-5 w-5 text-white/80" />}
+          <span className={`relative flex ${emptyCircle} items-center justify-center rounded-full border border-white/20 bg-black/45`}>
+            {seat?.locked ? <Lock className={`${iconSize} text-white`} /> : <Plus className={`${iconSize} text-white`} />}
             {/* Mikrofonu kendi elimle kapattığımda görünen sade rozet; mikrofonu açınca kaybolur. */}
             {micMuted && (
               <span aria-label="Mikrofon kapalı" className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full border border-white/25 bg-black/80">
@@ -40,7 +43,7 @@ function VoiceSeat({ seat, index, size = 'md', musicPlaying, speaking, gender, i
             )}
           </span>
         </span>
-        <span className="text-[10px] leading-none text-white/60">{index + 1}</span>
+        <span className="text-[10px] font-medium leading-none text-white/85">{index + 1}</span>
       </button>
     );
   }
