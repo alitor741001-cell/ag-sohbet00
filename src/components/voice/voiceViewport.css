@@ -17,6 +17,18 @@
 }
 
 @media (max-width: 767px) {
+  /* Sohbet alanı sabit yükseklikte durur: yeni mesaj gelmesi ya da yazma alanının açılıp
+     kapanması koltukların yerini değiştirmez, akış kendi içinde kayar.
+     Kapsam seçiciler Tailwind sınıflarını kesin olarak geçersiz kılar. */
+  .voice-viewport .voice-chat-dock {
+    display: flex;
+    flex-direction: column;
+    height: calc(var(--visual-viewport-height, 100dvh) * 0.24);
+    min-height: 104px;
+  }
+  .voice-chat-dock .voice-chat-flow { flex: 1 1 auto; min-height: 0; max-height: none; }
+  .voice-chat-dock .voice-chat-composer { flex: 0 0 auto; }
+
   /* Mesaj akışının yüksekliği ve klavye, butonların ekran altındaki yerini değiştirmez. */
   .voice-viewport {
     padding-bottom: calc(64px + max(0.25rem, env(safe-area-inset-bottom, 0px)));

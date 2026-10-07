@@ -9,9 +9,8 @@ import { useVoiceChat } from '@/hooks/useVoiceChat';
 import VoiceViewport from '@/components/voice/VoiceViewport';
 import useRoomLevels from '@/hooks/useRoomLevels';
 import { useToast } from '@/components/ui/use-toast';
-import VoiceSeatGrid from '@/components/voice/VoiceSeatGrid';
+import VoiceStage from '@/components/voice/VoiceStage';
 import { resizeSeats } from '@/components/voice/seatLayout';
-import HiddenUserMarquee from '@/components/voice/HiddenUserMarquee';
 import { isHiddenName } from '@/lib/hiddenUser';
 import useVoiceRoomMessages from '@/hooks/useVoiceRoomMessages';
 import VoiceControlBar from '@/components/voice/VoiceControlBar';
@@ -1026,46 +1025,33 @@ export default function VoiceRoom() {
         </div>
       </header>
 
-      <div
-        ref={swipeGesture.scrollRef}
-        {...swipeGesture.handlers}
-        className="relative min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-3 pb-4 pt-1"
-      >
-        {room?.password && (
-          <p className="mb-3 flex items-center justify-center gap-1.5 text-[11px] text-amber-400">
-            <Lock className="h-3 w-3" /> Şifreli oda
-          </p>
-        )}
-        {selectedIds.length > 0 && (
-          <div className="mb-3 flex items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2">
-            <span className="flex min-w-0 items-center gap-1.5 text-[11px] font-bold" style={{ color: seatAccent }}>
-              <Gift className="h-3.5 w-3.5 shrink-0" /> {selectedIds.length} kişi seçildi
-            </span>
-            <button type="button" onClick={() => setSelectedIds([])} className="shrink-0 text-[11px] font-bold text-white/60">Temizle</button>
-          </div>
-        )}
-        <VoiceSeatGrid
-          seats={seatsView}
-          musicOwnerId={music.music?.is_playing ? music.music.owner_id : null}
-          userId={user?.id}
-          ownerId={room?.owner_id}
-          moderators={moderators}
-          speakingIds={voice.speakingIds}
-          localSpeaking={voice.localSpeaking}
-          onSelectSeat={handleSeatPress}
-          boardActive={boardActive}
-          boardStartedAt={boardStartedAt}
-          scores={scores}
-          accent={seatAccent}
-          gifted={gifted}
-        />
-        <HiddenUserMarquee active={room?.ghost_entered_at} name={hiddenAnnounceName} />
-        <p className="mt-5 text-center text-[11px] text-white/50">
-          {seated
-            ? (voice.muted ? 'Mikrofonun kapalı — konuşmak için mikrofon tuşuna bas.' : 'Koltuktayken mikrofonun açık, konuşabilirsin.')
-            : 'Sese çıkmak için boş bir koltuğa dokun.'}
-        </p>
-      </div>
+      <VoiceStage
+        scrollRef={swipeGesture.scrollRef}
+        handlers={swipeGesture.handlers}
+        room={room}
+        selectedCount={selectedIds.length}
+        seatAccent={seatAccent}
+        onClearSelection={() => setSelectedIds([])}
+        hiddenAnnounce={{ active: room?.ghost_entered_at, name: hiddenAnnounceName }}
+        seated={seated}
+        muted={voice.muted}
+        keyboardOpen={keyboardOpen}
+        grid={{
+          seats: seatsView,
+          musicOwnerId: music.music?.is_playing ? music.music.owner_id : null,
+          userId: user?.id,
+          ownerId: room?.owner_id,
+          moderators,
+          speakingIds: voice.speakingIds,
+          localSpeaking: voice.localSpeaking,
+          onSelectSeat: handleSeatPress,
+          boardActive,
+          boardStartedAt,
+          scores,
+          accent: seatAccent,
+          gifted,
+        }}
+      />
 
       <div className="voice-chat-dock min-h-0 shrink-0">
       <VoiceChatDock

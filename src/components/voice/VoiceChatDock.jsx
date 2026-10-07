@@ -87,7 +87,7 @@ export default function VoiceChatDock({ messages = [], onSend, open, onCloseComp
   };
 
   return (
-    <div className="relative shrink-0">
+    <div className="relative flex h-full min-h-0 shrink-0 flex-col justify-end">
       {(visible.length > 0 || !!bigGiftNotice) && (
         <div
           style={{ touchAction: 'pan-y' }}

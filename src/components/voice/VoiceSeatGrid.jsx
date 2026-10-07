@@ -7,6 +7,14 @@ import useMessageProfiles from '@/hooks/useMessageProfiles';
 import { seatIndexRows } from '@/components/voice/seatLayout';
 import { useSize } from '@/hooks/use-size';
 
+// Koltuk hücresi yükseklikleri: portre + isim satırı (sayaç açıkken şerit rozet de eklenir).
+const CELL_HEIGHT = { xs: 56, sm: 66, md: 82, lg: 102 };
+const SCORE_HEIGHT = 21;
+const TIMER_HEIGHT = 34;
+// Koltukların altındaki açıklama satırı ve anons şeridi için ayrılan sabit yer.
+const FOOTER_SPACE = 48;
+const ORDER = ['xs', 'sm', 'md', 'lg'];
+
 
 
 /**
@@ -14,7 +22,7 @@ import { useSize } from '@/hooks/use-size';
  * Koltuk boyutu ölçülen genişliğe göre seçilir: dar telefonlarda da satır yana taşmaz,
  * geniş ekranlarda koltuklar gereksiz küçülmez.
  */
-export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerId, moderators = [], speakingIds = [], localSpeaking, onSelectSeat, boardActive, boardStartedAt, scores = {}, accent = '#ef4444', gifted = {} }) {
+export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerId, moderators = [], speakingIds = [], localSpeaking, onSelectSeat, boardActive, boardStartedAt, scores = {}, accent = '#ef4444', gifted = {}, stageHeight = 0, keyboardOpen = false }) {
   const wrapRef = useRef(null);
   const measured = useSize(wrapRef);
   const rows = useMemo(() => seatIndexRows(seats.length), [seats.length]);
@@ -23,16 +31,28 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
   const seatProfiles = useMessageProfiles(seats.map((seat) => seat.user_id).filter(Boolean));
 
   const widestRow = Math.max(1, ...rows.map((row) => row.length));
-  const gap = measured && measured.width < 640 ? 12 : 20;
-  const available = (measured?.width || 360) - 4;
+  const width = measured?.width || 360;
+  const narrow = width < 640;
+  const gap = narrow ? 12 : 20;
+  const rowGap = narrow ? 12 : 20;
+  const available = width - 4;
   const perSeat = (available - gap * (widestRow - 1)) / widestRow;
-  const size = perSeat >= 110 ? 'lg' : perSeat >= 62 ? 'md' : perSeat >= 52 ? 'sm' : 'xs';
+  // Genişliğe sığan en büyük koltuk boyutu.
+  const widthLimit = perSeat >= 110 ? 'lg' : perSeat >= 62 ? 'md' : perSeat >= 52 ? 'sm' : 'xs';
+  // Yüksekliğe sığan en büyük koltuk boyutu: koltuk sayısı artınca koltuklar küçülür ama
+  // ızgaranın yeri ve satır düzeni değişmez, hiçbir koltuk ya da rakam kesilmez.
+  const budget = (stageHeight || 0) - FOOTER_SPACE;
+  const lineHeight = (option) => CELL_HEIGHT[option] + (boardActive ? SCORE_HEIGHT : 0);
+  const fits = (option) => rows.length * lineHeight(option) + (rows.length - 1) * rowGap + (boardActive ? TIMER_HEIGHT : 0) <= budget;
+  const allowed = ORDER.slice(0, ORDER.indexOf(widthLimit) + 1);
+  // Klavye açıkken koltuk boyutu değişmez: düzen olduğu yerde kalır.
+  const size = keyboardOpen || budget < 120 ? widthLimit : (allowed.slice().reverse().find(fits) || 'xs');
 
   return (
-    <div ref={wrapRef} className="flex w-full flex-col items-center gap-4 sm:gap-5">
+    <div ref={wrapRef} className="flex w-full flex-col items-center" style={{ rowGap }}>
       {rows.map((row, rowIndex) => (
         <div key={rowIndex} className="flex flex-col items-center gap-1">
-          <div className="flex items-start justify-center gap-3 sm:gap-5">
+          <div className="flex items-start justify-center" style={{ columnGap: gap }}>
           {row.map((index) => {
             const seat = seats[index];
             const occupied = !!seat?.user_id;
