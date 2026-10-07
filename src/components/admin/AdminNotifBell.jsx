@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { Bell, Trash2, CheckCheck, ChevronRight, ArrowLeft } from 'lucide-react';
 import { useAdminNotifications } from '@/hooks/useAdminNotifications';
@@ -15,12 +16,13 @@ export default function AdminNotifBell({ notifGranted }) {
         {unreadCount > 0 && <span className="absolute -top-0.5 -right-0.5 min-w-4 h-4 px-1 rounded-full bg-purple-500 text-white text-[10px] font-bold flex items-center justify-center">{unreadCount > 9 ? '9+' : unreadCount}</span>}
         {notifGranted && unreadCount === 0 && <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-green-500" />}
       </button>
-      {open && (
-        // Tam ekran bildirim paneli: mobilde ekranın tamamı, masaüstünde ortalanmış kart.
+      {open && createPortal(
+        // Tam ekran bildirim paneli. Portal ile doğrudan gövdeye taşınır: üst çubuktaki
+        // bulanıklık katmanı fixed kutuyu kendi boyuna kısıtlıyordu, panel ekranı kaplamıyordu.
         <div className="fixed inset-0 z-[70] flex flex-col bg-[#121215] sm:items-center sm:justify-center sm:bg-black/70 sm:p-6 sm:backdrop-blur-sm">
           <div className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-[#121215] pt-[env(safe-area-inset-top)] sm:h-auto sm:max-h-[80vh] sm:w-96 sm:rounded-xl sm:border sm:border-white/10 sm:pt-0 sm:shadow-2xl">
             <div className="flex items-center gap-2 px-3 py-3 border-b border-white/10">
-              <button onClick={() => setOpen(false)} title="Geri" className="p-1.5 rounded-full hover:bg-white/10 text-white/70"><ArrowLeft className="w-5 h-5" /></button>
+              <button onClick={() => setOpen(false)} title="Geri" aria-label="Geri" className="p-2 rounded-full hover:bg-white/10 text-white shrink-0"><ArrowLeft className="w-6 h-6" /></button>
               <p className="text-sm font-bold text-white">Bildirimler</p>
               <div className="ml-auto flex gap-1">
                 <button onClick={markAllRead} title="Tümünü okundu işaretle" className="p-1.5 rounded-lg hover:bg-white/5"><CheckCheck className="w-4 h-4 text-white/60" /></button>
@@ -41,7 +43,8 @@ export default function AdminNotifBell({ notifGranted }) {
               Tüm Bildirimler <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
