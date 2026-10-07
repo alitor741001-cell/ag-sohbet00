@@ -11,8 +11,8 @@
 .voice-viewport[data-keyboard="open"] .room-direct-composer {
   padding-bottom: 0.5rem;
 }
-/* Butonlar cihazın alt güvenli alanının üzerinde tamamen görünür kalır. */
-.voice-control-bar { padding-bottom: max(0.25rem, env(safe-area-inset-bottom, 0px)); }
+/* Butonlar cihazın alt güvenli alanının üzerinde durur ama ekranın dibine yakın oturur. */
+.voice-control-bar { padding-bottom: max(0.25rem, calc(env(safe-area-inset-bottom, 0px) * 0.5)); }
 
 @media (max-width: 767px) {
   /* Sohbet alanı sabit yükseklikte durur: yeni mesaj gelmesi ya da yazma alanının açılıp
@@ -24,13 +24,13 @@
     height: calc(var(--visual-viewport-height, 100dvh) * 0.24);
     min-height: 104px;
   }
-  /* Mesajlar koltukların altındaki boş alana kadar yukarı uzanır: akış koltukların alt
-     hizasından başlar. Yalnızca akış yukarı taşar, koltukların yeri ve boyutu değişmez. */
+  /* Sohbet akışı içeriği kadar yer kaplar ve alttaki butonların dibine yaslanır: mesajlar
+     arttıkça koltuk altındaki boşluğa kadar yukarı uzar. Kısa sohbette altta boş alan kalmaz,
+     koltukların yeri ve boyutu değişmez. */
   .voice-chat-dock .voice-chat-flow {
-    flex: 1 1 auto;
+    flex: 0 0 auto;
     min-height: 0;
-    max-height: none;
-    margin-top: calc(-1 * var(--voice-seat-free, 0px));
+    max-height: calc(100% + var(--voice-seat-free, 0px));
   }
   .voice-chat-dock .voice-chat-composer { flex: 0 0 auto; }
 
@@ -41,6 +41,13 @@
     padding-bottom: var(--voice-bar-height, calc(64px + max(0.25rem, env(safe-area-inset-bottom, 0px))));
   }
   .voice-viewport:has(.voice-chat-composer) { padding-bottom: 0; }
+  /* Özel sohbet paneli ekranın dibine tam oturur: kontrol çubuğu için ayrılan yer çerçeveden
+     düşülmez, yazma çubuğunun altında boş şerit kalmaz. */
+  .voice-viewport.voice-private-chat { padding-bottom: 0; }
+  .voice-viewport.voice-private-chat .room-direct-selected { padding-bottom: 0; }
+  .voice-viewport.voice-private-chat .room-direct-composer {
+    padding-bottom: max(0.5rem, calc(env(safe-area-inset-bottom, 0px) * 0.5));
+  }
   /* Çubuk siyah zeminin üstünde durur: hiçbir katman butonların önüne geçmez. */
   .voice-controls-anchor {
     position: absolute;
