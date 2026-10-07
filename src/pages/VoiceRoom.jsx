@@ -51,7 +51,7 @@ import useBigGiftAlerts from '@/hooks/useBigGiftAlerts';
 import useBigGiftNotice from '@/hooks/useBigGiftNotice';
 import BigGiftStage from '@/components/voice/BigGiftStage';
 import { useGiftBalance, useGiftCatalog } from '@/hooks/useGiftCatalog';
-import { tierForK, toneColor } from '@/lib/giftTone';
+import { K_UNIT, formatCoins, tierForK, toneColor } from '@/lib/giftTone';
 
 export default function VoiceRoom() {
   const { id } = useParams();
@@ -240,6 +240,10 @@ export default function VoiceRoom() {
   // Seçim rengi: seçilen hediyenin K seviyesi belirler.
   const selectedGift = useMemo(() => gifts.find((item) => item.id === giftId) || null, [gifts, giftId]);
   const seatAccent = toneColor(tierForK(tiers, selectedGift?.k_value || 0));
+  // Bakiye yetmiyorsa gönderim hiç başlatılmaz: hediye işleme alınmaz, bakiyeye dokunulmaz.
+  const giftCost = (Number(selectedGift?.k_value) || 0) * K_UNIT * selectedIds.length;
+  const giftUnaffordable = !!selectedGift && selectedIds.length > 0
+    && coins !== null && coins !== undefined && giftCost > coins;
 
   // Odada atılan/alan her hediye seviye çubuğunu tazeler: bar hediye atıldığı anda canlı ilerler.
   const giftCount = useMemo(() => messages.filter((message) => message.type === 'gift').length, [messages]);
@@ -897,15 +901,23 @@ export default function VoiceRoom() {
     return flushGiftQueue();
   };
 
-  // Kutudaki ve köşedeki gönder tuşu: hediye gönderilir ve kutu kapanır.
-  const pressGift = async () => {
-    if (!selectedGift || !selectedIds.length) return;
-    setGiftOpen(false);
-    try {
-      await queueGiftSend(selectedGift, [...selectedIds]);
-    } catch (error) {
-      toast({ title: 'Hediye gönderilemedi', description: error?.response?.data?.error || error.message, variant: 'destructive' });
+  // Kutudaki ve köşedeki gönder tuşu: bakiye yetmiyorsa hediye hiç işleme alınmaz, uyarı verilir
+  // ve bakiyeye dokunulmaz; yeterliyse gönderim kuyruğa girer. Dönen değer: gönderim kabul edildi mi.
+  const pressGift = () => {
+    if (!selectedGift || !selectedIds.length) return false;
+    if (giftUnaffordable) {
+      toast({
+        title: 'Yetersiz bakiye',
+        description: `Gereken ${formatCoins(giftCost)} coin, bakiyen ${formatCoins(coins)} coin.`,
+        variant: 'destructive',
+      });
+      return false;
     }
+    setGiftOpen(false);
+    queueGiftSend(selectedGift, [...selectedIds]).catch((error) => {
+      toast({ title: 'Hediye gönderilemedi', description: error?.response?.data?.error || error.message, variant: 'destructive' });
+    });
+    return true;
   };
 
   // Odaya giriş ekranları (yükleme, giriş yasağı, şifre ve bağlanma beklemesi) tek bileşende toplanır.

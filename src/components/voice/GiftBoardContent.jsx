@@ -3,7 +3,7 @@ import GiftCard from '@/components/voice/GiftCard';
 import GiftRecipientRow from '@/components/voice/GiftRecipientRow';
 import GiftLevelTicker from '@/components/voice/GiftLevelTicker';
 import GiftBoardFooter from '@/components/voice/GiftBoardFooter';
-import { K_UNIT, formatCoins, formatPrice, tierForK, toneColor } from '@/lib/giftTone';
+import { K_UNIT, formatCoins, tierForK, toneColor } from '@/lib/giftTone';
 
 /** Hediye Tahtası içeriği: kategori sekmeleri, hediye ızgarası, alıcılar ve alt gönderim çubuğu. */
 export default function GiftBoardContent({
@@ -86,7 +86,7 @@ export default function GiftBoardContent({
 
       {insufficient && (
         <p className="mt-1.5 shrink-0 rounded-xl bg-red-500/15 px-3 py-1.5 text-center text-[11px] font-bold text-red-300">
-          Yetersiz bakiye — gereken {formatPrice(totalK)}, bakiyen {formatCoins(coins)} coin
+          Yetersiz bakiye — gereken {formatCoins(totalCoins)} coin, bakiyen {formatCoins(coins)} coin
         </p>
       )}
 

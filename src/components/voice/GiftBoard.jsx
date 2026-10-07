@@ -17,7 +17,12 @@ export default function GiftBoard({ open, onClose, coins, onSend, sendDisabled, 
 
   useEffect(() => { if (open) { setView('gifts'); setStayVisible(false); setSendTick(0); } }, [open]);
 
-  const handleSend = () => { setStayVisible(true); setSendTick((value) => value + 1); onSend?.(); };
+  // Gönderim kabul edilmediyse (bakiye yetersiz) sayaç artmaz ve düğme ekranda kalmaz.
+  const handleSend = () => {
+    if (onSend?.() === false) return;
+    setStayVisible(true);
+    setSendTick((value) => value + 1);
+  };
 
   // Hediye atılmadığı sürece düğme ekranda kalır; her gönderim süreyi baştan başlatır.
   useEffect(() => {
