@@ -17,6 +17,7 @@ export function broadcasterState(profile) {
     active,
     country: active ? 'Almanya' : 'Türkiye',
     flag: active ? '🇩🇪' : '🇹🇷',
-    games: active,
+    // Oyun merkezi yönetici hesabında da açıktır; ülke etiketi ve geri kalan her şey aynı kalır.
+    games: active || source.role === 'admin',
   };
 }

@@ -9,7 +9,9 @@
 const KEY_TTL_MS = 30 * 60 * 1000;
 const PAGE_SIZE = 500;
 const MAX_PAGES = 20;
-const SINCE_LIMIT = 300;
+// Son turdan beri değişenler tek istekte alınır: 500, sayfa boyutuyla aynı hizada
+// tutulur, yoğun dakikalarda kuyruk taşmaz ve veri bir tur geriden gelmez.
+const SINCE_LIMIT = 500;
 const BATCH = 2;
 // Tam eşitleme dilimlere bölünür: her tur canlı veriyi ve sıradaki dilimi işler.
 // Böylece platformun istek sınırı aşılmaz, tüm veri birkaç turda tazelenir.
@@ -348,7 +350,9 @@ async function syncCollection(base44, collection, context) {
 
       // Yalnızca tamamen okunan tablolar budanabilir: artımlı okunan veri eksiktir, silinemez.
       if (collection.live !== 'since') context.prunable.add(collection.table);
-      await writeCursor(base44, collection.entity, context.runStart, records.length);
+      // İmleç yalnızca artımlı okunan koleksiyonlarda okunur: tam okunanlar için
+      // yazmak turu boşuna uzatır.
+      if (collection.live === 'since') await writeCursor(base44, collection.entity, context.runStart, records.length);
       return true;
     } catch (error) {
       if (attempt === 0) {
