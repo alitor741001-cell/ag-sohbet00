@@ -1,0 +1,17 @@
+.voice-viewport {
+  top: var(--viewport-offset, 0px);
+  height: var(--visual-viewport-height, 100dvh);
+  overscroll-behavior: none;
+}
+.voice-viewport[data-keyboard="open"] .voice-chat-flow { max-height: calc(var(--visual-viewport-height) * 0.28); }
+.voice-viewport .voice-chat-composer { margin-bottom: 0; }
+.voice-viewport .voice-chat-dock:has(.voice-chat-composer) { padding-bottom: env(safe-area-inset-bottom, 0px); }
+.voice-viewport[data-keyboard="open"] .voice-chat-dock { padding-bottom: 0; }
+.voice-viewport[data-keyboard="open"] .room-direct-selected { padding-bottom: 0; }
+.voice-viewport[data-keyboard="open"] .room-direct-composer {
+  padding-bottom: 0.5rem;
+}
+.voice-control-bar { padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px)); }
+@media (hover: none) {
+  .voice-control-bar { padding-bottom: max(0.25rem, env(safe-area-inset-bottom, 0px)); }
+}

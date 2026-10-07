@@ -6,7 +6,7 @@ import subscribeEntity from '@/components/data/entitySubscriptions';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { broadcasterState } from '@/lib/broadcaster';
 import { useVoiceChat } from '@/hooks/useVoiceChat';
-import { useKeyboardCoverHeight, useKeyboardOpen, useStableViewportHeight } from '@/hooks/useKeyboardInset';
+import VoiceViewport from '@/components/voice/VoiceViewport';
 import useRoomLevels from '@/hooks/useRoomLevels';
 import { useToast } from '@/components/ui/use-toast';
 import VoiceSeatGrid from '@/components/voice/VoiceSeatGrid';
@@ -102,11 +102,11 @@ export default function VoiceRoom() {
   const [selectedIds, setSelectedIds] = useState([]);
   const [gifted, setGifted] = useState({});
 
-  // Klavye açıldığında oda çerçevesi (koltuklar, sahne) hiç oynamaz: yalnızca alt blok
-  // klavyenin üstüne kayar. Kaydırma miktarı klavye açılmadan önceki çerçeveye göre ölçülür.
-  const keyboardCover = useKeyboardCoverHeight();
-  const keyboardOpen = useKeyboardOpen();
-  const roomHeight = useStableViewportHeight();
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
+  const handleKeyboardChange = useCallback((open) => {
+    setKeyboardOpen(open);
+    if (!open) setComposerOpen(false);
+  }, []);
   // Hediye efektleri tercihi: kapalıyken atılan hediyelerin görselleri gösterilmez.
   const { giftEffects, setGiftEffects } = useGiftEffects();
 
@@ -979,8 +979,7 @@ export default function VoiceRoom() {
   // Klavye açılınca oda düzeni yerinden oynamaz: yalnızca sohbet bölümü klavyenin üstüne kayar,
   // alttaki kontrol çubuğu (mik/hoparlör) hep aynı yerde durur.
   return (
-    // Çerçeve yüksekliği klavyeden bağımsız sabit kalır: koltuklar ve sahne yerinden oynamaz.
-    <div className="fixed inset-x-0 top-0 z-[150] flex flex-col bg-catalog text-white" style={{ height: roomHeight }}>
+    <VoiceViewport className="z-[150]" onKeyboardChange={handleKeyboardChange}>
       <div className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-gradient-to-b from-primary/25 to-transparent" />
 
       <header className="relative shrink-0 px-3 pb-2 pt-[max(0.75rem,env(safe-area-inset-top))]">
@@ -1068,12 +1067,7 @@ export default function VoiceRoom() {
         </p>
       </div>
 
-      {/* Alt blok (sohbet + kontrol çubuğu) tek parça hâlinde durur: klavye açılınca klavyenin
-          hemen üstüne kayar. Oda yerleşimi yeniden akışa girmez, çubuklar hep en altta kalır. */}
-      <div
-        className="shrink-0"
-        style={{ transform: composerOpen && keyboardCover ? `translateY(-${keyboardCover}px)` : 'translateY(0)', transition: 'transform 180ms ease-out' }}
-      >
+      <div className="voice-chat-dock min-h-0 shrink-0">
       <VoiceChatDock
         messages={messages}
         chatLocked={chatLocked}
@@ -1101,8 +1095,9 @@ export default function VoiceRoom() {
         </p>
       )}
 
-      {/* Yazma alanı açıkken alt kontrol çubuğu tamamen gizlenir: mikrofon, hoparlör,
-          hediye, oyun ve ayarlar tuşları yerini klavyeye bırakır. */}
+      </div>
+      {/* Controls never receive keyboard transforms; the keyboard covers them while typing. */}
+      <div className="shrink-0" hidden={composerOpen}>
       {!composerOpen && (
       <VoiceControlBar
         keyboardOpen={keyboardOpen}
@@ -1311,6 +1306,6 @@ export default function VoiceRoom() {
       {notice && joined && (
         <p className="pointer-events-none absolute left-1/2 top-20 z-[170] -translate-x-1/2 rounded-full bg-black/80 px-4 py-2 text-xs text-white">{notice}</p>
       )}
-    </div>
+    </VoiceViewport>
   );
 }

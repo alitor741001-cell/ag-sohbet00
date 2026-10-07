@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Gift, Send, Smile, Trophy } from 'lucide-react';
 import EmojiPicker from '@/components/player/EmojiPicker';
 import VoiceChatMessage from '@/components/voice/VoiceChatMessage';
@@ -35,8 +35,8 @@ export default function VoiceChatDock({ messages = [], onSend, open, onCloseComp
   // Hediye, müzik, odadan ayrılma, koltuk ve mikrofon işlemleri bildirim alanında görünmez.
   const visible = useMemo(() => messages.filter((message) => !isQuietNotice(message) && (message.type !== 'system' || plainText(message.text))), [messages]);
 
-  useEffect(() => {
-    if (composerOpen) inputRef.current?.focus();
+  useLayoutEffect(() => {
+    if (composerOpen) inputRef.current?.focus({ preventScroll: true });
     // Sohbet kapanınca emoji paneli de kapanır: alan her açılışta temiz görünür.
     else setEmojiOpen(false);
   }, [composerOpen]);
@@ -58,7 +58,8 @@ export default function VoiceChatDock({ messages = [], onSend, open, onCloseComp
   }, [keyboardOpen]);
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ block: 'end' });
+    const scroller = endRef.current?.parentElement?.parentElement;
+    if (scroller) scroller.scrollTop = scroller.scrollHeight;
   }, [messages.length, bigGiftNotice?.id]);
 
   // Yazma alanı odaktan çıkınca (klavye kapandığında, ekranda başka bir yere dokunulduğunda)
@@ -90,7 +91,7 @@ export default function VoiceChatDock({ messages = [], onSend, open, onCloseComp
       {(visible.length > 0 || !!bigGiftNotice) && (
         <div
           style={{ touchAction: 'pan-y' }}
-          className={`${composerOpen ? 'max-h-[16vh]' : open ? 'max-h-[30vh]' : 'max-h-[22vh]'} shrink-0 overflow-y-auto overscroll-contain pb-1 [mask-image:linear-gradient(to_bottom,transparent,black_14%)] [-webkit-mask-image:linear-gradient(to_bottom,transparent,black_14%)]`}
+          className={`voice-chat-flow ${composerOpen ? 'max-h-[16vh]' : open ? 'max-h-[30vh]' : 'max-h-[22vh]'} shrink-0 overflow-y-auto overscroll-contain pb-1 [mask-image:linear-gradient(to_bottom,transparent,black_14%)] [-webkit-mask-image:linear-gradient(to_bottom,transparent,black_14%)]`}
         >
           <div className="flex flex-col gap-1.5 px-4">
             {visible.map((message) => {
@@ -152,7 +153,7 @@ export default function VoiceChatDock({ messages = [], onSend, open, onCloseComp
 
           <form
             onSubmit={submit}
-            className="mx-3 mb-2 mt-1.5 flex items-center gap-1 rounded-full border border-[#FFD700]/45 bg-black/70 px-3 py-1.5 shadow-[0_0_16px_-6px_rgba(255,215,0,0.85)] backdrop-blur-md"
+            className="voice-chat-composer mx-3 mb-2 mt-1.5 flex items-center gap-1 rounded-full border border-[#FFD700]/45 bg-black/70 px-3 py-1.5 shadow-[0_0_16px_-6px_rgba(255,215,0,0.85)] backdrop-blur-md"
           >
             <input
               ref={inputRef}

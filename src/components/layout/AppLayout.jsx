@@ -34,7 +34,7 @@ export default function AppLayout() {
   const { toast } = useToast();
   // RoleCelebrationOverlay renders a full-screen animated character when role changes
   const isRoom = pathname.startsWith('/oda/') || pathname.startsWith('/sesli-oda/') || pathname === '/sesli-oda-kur';
-  const isDarkSurface = pathname === '/' || pathname === '/profil' || pathname.startsWith('/kullanici/');
+  const isDarkSurface = pathname === '/' || pathname === '/profil' || pathname === '/oda-kur' || pathname === '/arkadaslar' || pathname.startsWith('/kullanici/');
   // Alt menü sekmeleri bellekte kalır: sekme değişiminde sayfa değişmez, görünürlük değişir.
   const activeTabPath = matchTabPath(pathname);
   const reduceMotion = useReducedMotion();
@@ -191,7 +191,7 @@ export default function AppLayout() {
   }, [user?.id]);
 
   if (isRoom) {
-    return <MessageRealtimeProvider userId={user?.id}><div className="min-h-screen bg-background"><RoutePreloader /><RoleCelebrationOverlay /><Suspense fallback={null}><Outlet /></Suspense></div></MessageRealtimeProvider>;
+    return <MessageRealtimeProvider userId={user?.id}><div className="min-h-screen bg-catalog"><RoutePreloader /><RoleCelebrationOverlay /><Suspense fallback={null}><Outlet /></Suspense></div></MessageRealtimeProvider>;
   }
   return (
     <MessageRealtimeProvider userId={user?.id}><div className={`min-h-screen w-full min-w-0 overflow-x-clip ${isDarkSurface ? 'bg-catalog' : 'bg-background'}`}>

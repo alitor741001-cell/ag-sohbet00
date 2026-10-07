@@ -56,7 +56,7 @@ function subscribe(listener) {
   if (!monitor.teardown) {
     const viewport = window.visualViewport;
     let frame = 0;
-    const schedule = () => { if (!frame) frame = requestAnimationFrame(measure); };
+    const schedule = () => { if (!frame) frame = requestAnimationFrame(() => { frame = 0; measure(); }); };
     // Klavye kapanışı her cihazda olayla gelmez: yazarken kısa aralıklarla yeniden ölçülür.
     const poll = setInterval(() => { if (isTyping() || monitor.visible) schedule(); }, 400);
     monitor.base = layoutHeight();

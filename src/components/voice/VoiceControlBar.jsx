@@ -32,7 +32,7 @@ export default function VoiceControlBar({ micActive, deafened, gamesOpen, gamesE
   return (
     // Klavye açıkken alttaki boşluk kaldırılır: çubuk klavyenin hemen üstüne oturur, arada
     // siyah şerit kalmaz. Klavye kapalıyken alt güvenli alan (çubuk/gesture alanı) korunur.
-    <div className={`flex shrink-0 items-center justify-between gap-1 px-3 pt-2 ${keyboardOpen ? 'pb-1.5' : 'pb-[max(0.75rem,env(safe-area-inset-bottom))]'}`}>
+    <div className="voice-control-bar flex shrink-0 items-center justify-between gap-1 px-3 pt-2">
       {/* Sohbet düğmesi sabittir: açıkken ikonu ve rengi değişmez, hep aynı görünür. */}
       <RoundButton onClick={onToggleChat} label="Sohbet">
         <MessageSquare className="h-6 w-6" />
