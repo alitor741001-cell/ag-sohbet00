@@ -8,8 +8,9 @@ import { refreshAgencyTotals } from '../../shared/agency.ts';
  *
  * - Kayıt (enroll): hesabın referans yüz fotoğrafı bir kez alınır, cihaz güvenilir
  *   cihaz listesine yazılır ve yeni hesap aynı yüzle eşleşiyor mu diye taranır.
- * - Doğrulama (verify): canlı fotoğraf referans fotoğrafla karşılaştırılır; eşleşirse
- *   cihaz (giriş kapısı) ya da bakiye kilidi açılır.
+ * - Doğrulama (verify): dört yöne (yukarı, aşağı, sağa, sola) çevrilmiş canlı fotoğraflar
+ *   referans fotoğrafla karşılaştırılır; kimlik ve kafa hareketi birlikte doğrulanır,
+ *   eşleşirse cihaz (giriş kapısı) ya da bakiye kilidi açılır.
  * - Durum (status) / aç-kapat (toggle): yüz doğrulamasının açık olup olmadığı.
  *
  * Yan hesap kuralı: aynı yüzle doğrulanan iki hesaptan YENİ açılan hesabın yayıncılığı
@@ -106,6 +107,67 @@ async function checkFace(base44, selfieUri) {
       response_json_schema: FACE_SCHEMA,
     });
     return result?.face_visible !== false;
+  } catch {
+    return null;
+  }
+}
+
+// Kafa hareketi adımları: istemci bu sırayla yukarı, aşağı, sağa ve sola çevrilmiş
+// fotoğrafları yükler; canlılık bu dört pozla doğrulanır.
+const POSE_KEYS = ['up', 'down', 'right', 'left'];
+
+const POSE_PROMPT = [
+  'You are a strict biometric liveness verifier for account security.',
+  'Image 1 is the enrolled reference face of the account owner.',
+  'Images 2 to 5 are live selfies taken in one session, in this order: image 2 = head turned UP, image 3 = head turned DOWN, image 4 = head turned RIGHT, image 5 = head turned LEFT.',
+  'For each of the images 2-5 set the matching pose flag to true only when the head is clearly rotated in the expected direction: the visible side of the face and the chin/forehead angle must show a real head rotation of roughly 20 degrees or more.',
+  'Set the pose flag to false when the head faces straight into the camera, when it is turned to a different direction than expected, or when the frame shows a hand, an object, a covered face or a photo of a screen.',
+  'Set same_person to true only when every image shows the same human face as Image 1. Ignore lighting, camera angle, expression, make-up, glasses, hair and background.',
+  'Set face_visible to true only when every image shows one complete face: forehead, both eyes, nose, mouth and chin inside the frame.',
+  'Return JSON with your decisions and a confidence value between 0 and 1.',
+].join(' ');
+
+const POSE_SCHEMA = {
+  type: 'object',
+  properties: {
+    same_person: { type: 'boolean' },
+    confidence: { type: 'number' },
+    face_visible: { type: 'boolean' },
+    up: { type: 'boolean' },
+    down: { type: 'boolean' },
+    right: { type: 'boolean' },
+    left: { type: 'boolean' },
+    note: { type: 'string' },
+  },
+  required: ['same_person', 'confidence', 'face_visible', 'up', 'down', 'right', 'left'],
+};
+
+/**
+ * Kimliği ve kafa hareketini tek çağrıda denetler: dört yöne çevrilmiş canlı
+ * fotoğrafların hepsi referans yüzle aynı kişiye mi ait ve her adımda kafa
+ * gerçekten o yöne çevrilmiş mi? Servis hatasında null döner: kullanıcı kilitlenmez.
+ */
+async function checkPoses(base44, referenceUri, poses: any[]) {
+  try {
+    const [reference, ...shots] = await Promise.all([
+      signedUrl(base44, referenceUri),
+      ...poses.map((pose: any) => signedUrl(base44, pose.uri)),
+    ]);
+    if (!reference || shots.some((url: string) => !url)) return null;
+    const result = await base44.asServiceRole.integrations.Core.InvokeLLM({
+      prompt: POSE_PROMPT,
+      file_urls: [reference, ...shots],
+      response_json_schema: POSE_SCHEMA,
+    });
+    const seen: any = {};
+    POSE_KEYS.forEach((key) => { seen[key] = result?.[key] === true; });
+    return {
+      same: result?.same_person === true,
+      confidence: Math.max(0, Math.min(1, Number(result?.confidence) || 0)),
+      faceVisible: result?.face_visible !== false,
+      // Kafa beklenen yöne çevrilmemiş adımlar: istemci bunları kullanıcıya söyler.
+      missing: POSE_KEYS.filter((key) => !seen[key]),
+    };
   } catch {
     return null;
   }
@@ -243,14 +305,30 @@ export default async function (req) {
     }
     const now = new Date().toISOString();
     const devices = addDevice(record?.trusted_devices, deviceId);
+    // Kafa hareketi fotoğrafları: yukarı, aşağı, sağa, sola sırasıyla beklenir.
+    const poseSource = body.pose_uris && typeof body.pose_uris === 'object' ? body.pose_uris : null;
+    const poses = poseSource ? POSE_KEYS.map((key) => ({ key, uri: String(poseSource[key] || '') })) : null;
+    if (poses && poses.some((pose) => !pose.uri)) {
+      return Response.json({ error: 'Kafa hareketi fotoğrafları eksik.' }, { status: 400 });
+    }
 
     if (action === 'enroll') {
       if (!(await signedUrl(base44, selfieUri))) {
         return Response.json({ error: 'Fotoğraf yüklenemedi, tekrar deneyin.' }, { status: 400 });
       }
       // Referans yüz yalnızca bir kez alınır: yarım görünen yüz kaydedilmez.
-      if ((await checkFace(base44, selfieUri)) === false) {
+      const poseCheck = poses ? await checkPoses(base44, selfieUri, poses) : null;
+      // Fotoğraflar yüklenmediyse kayıt yalnızca yüz görünürlüğüyle denetlenir.
+      if (!poses && (await checkFace(base44, selfieUri)) === false) {
         return Response.json({ ok: false, reason: 'no_face' });
+      }
+      if (poseCheck) {
+        if (!poseCheck.faceVisible) return Response.json({ ok: false, reason: 'no_face' });
+        if (!poseCheck.same || poseCheck.confidence < VERIFY_CONFIDENCE) {
+          return Response.json({ ok: false, reason: 'mismatch', confidence: poseCheck.confidence });
+        }
+        // Kafa dört yöne çevrilmemişse kayıt yapılmaz.
+        if (poseCheck.missing.length) return Response.json({ ok: false, reason: 'no_pose', missing: poseCheck.missing });
       }
       let target = record;
       if (!target) {
@@ -276,7 +354,10 @@ export default async function (req) {
     if (action === 'verify') {
       if (!record?.face_uri) return Response.json({ ok: false, reason: 'enroll_required' });
       const scope = body.scope === 'balance' ? 'balance' : 'device';
-      const match = await compareFaces(base44, record.face_uri, selfieUri);
+      // Kafa hareketi fotoğrafları varsa kimlik ve canlılık tek denetimde ölçülür.
+      const match = poses
+        ? await checkPoses(base44, record.face_uri, poses)
+        : await compareFaces(base44, record.face_uri, selfieUri);
       // Karşılaştırma servisi yanıt vermezse erişim kapatılmaz, kullanıcı içeri alınır.
       if (!match) return Response.json({ ok: false, reason: 'unavailable' });
       // Yüz çemberin içinde tam görünmüyorsa deneme sayılmaz: halka kırmızıya döner.
@@ -284,6 +365,8 @@ export default async function (req) {
       if (!match.same || match.confidence < VERIFY_CONFIDENCE) {
         return Response.json({ ok: false, reason: 'mismatch', confidence: match.confidence });
       }
+      // Kafa dört yöne çevrilmemişse (örneğin fotoğraf gösterilmesi) doğrulama sayılmaz.
+      if (match.missing?.length) return Response.json({ ok: false, reason: 'no_pose', missing: match.missing });
       await base44.asServiceRole.entities.FaceCheck.update(record.id, scope === 'balance'
         ? { balance_devices: addDevice(record.balance_devices, deviceId), balance_at: now, last_device: deviceId }
         : { trusted_devices: devices, verified_at: now, last_device: deviceId });

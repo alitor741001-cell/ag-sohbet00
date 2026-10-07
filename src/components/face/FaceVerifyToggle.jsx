@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ScanFace } from 'lucide-react';
 import { faceStatus, setFaceEnabled } from '@/lib/faceCheck';
-import { requestTiltPermission } from '@/lib/faceTilt';
 import { useToast } from '@/components/ui/use-toast';
 import FaceLockOverlay from '@/components/face/FaceLockOverlay';
 
@@ -25,8 +24,6 @@ export default function FaceVerifyToggle({ user }) {
   const change = async () => {
     if (saving || enabled === null) return;
     const next = !enabled;
-    // Sensör izni dokunuş anında istenir ki doğrulama ekranı hazır olsun.
-    if (next) requestTiltPermission();
     setSaving(true);
     setEnabled(next);
     try {

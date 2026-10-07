@@ -6,7 +6,6 @@ import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
 import { findProtectedName } from '@/lib/protectedNames';
 import { faceStatus } from '@/lib/faceCheck';
-import { requestTiltPermission } from '@/lib/faceTilt';
 import ProfileTopBar from '@/components/profile/ProfileTopBar';
 import ProfileHeader from '@/components/profile/ProfileHeader';
 import ProfileWalletCards from '@/components/profile/ProfileWalletCards';
@@ -110,8 +109,6 @@ export default function Profile() {
 
   // Elmas/bakiye bölümüne giriş: yüz doğrulaması cihaz başına bir kez istenir.
   const openGiftBox = async () => {
-    // Sensör izni bu dokunuşta istenir: iOS hareket iznini yalnızca kullanıcı etkileşiminde verir.
-    requestTiltPermission();
     const status = await faceStatus(user?.id).catch(() => null);
     // Daha önce yüzü doğrulanan cihazda tekrar sorulmaz.
     if (!status || !status.enabled || status.balance || status.trusted) { setGiftBoxOpen(true); return; }
