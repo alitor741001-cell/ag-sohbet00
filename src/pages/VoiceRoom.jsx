@@ -80,6 +80,9 @@ export default function VoiceRoom() {
   const [viewerOpen, setViewerOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [musicOpen, setMusicOpen] = useState(false);
+  // Köşedeki müzik çemberi odaya girildiğinde kendiliğinden gelmez: yalnızca müzik
+  // menüden elle açıldığında görünür, sonra köşede durur.
+  const [musicBubble, setMusicBubble] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [seatIndex, setSeatIndex] = useState(null);
   const [profileUserId, setProfileUserId] = useState(null);
@@ -1093,6 +1096,7 @@ export default function VoiceRoom() {
       )}
 
       <VoiceControlBar
+        keyboardOpen={keyboardInset > 0}
         micActive={!voice.muted}
         deafened={voice.deafened}
         chatOpen={chatOpen}
@@ -1125,7 +1129,7 @@ export default function VoiceRoom() {
         open={menuOpen}
         onClose={() => setMenuOpen(false)}
         musicPlaying={!!music.music?.is_playing}
-        onOpenMusic={() => setMusicOpen(true)}
+        onOpenMusic={() => { setMusicBubble(true); setMusicOpen(true); }}
         room={room}
         userId={user?.id}
         participants={participants}
@@ -1160,7 +1164,7 @@ export default function VoiceRoom() {
         music={music}
         sheetOpen={musicOpen}
         onCloseSheet={() => setMusicOpen(false)}
-        controllerVisible={canMod && !!music.music && !musicOpen && !menuOpen}
+        controllerVisible={canMod && musicBubble && !!music.music && !musicOpen && !menuOpen}
         onOpenList={() => setMusicOpen(true)}
         isMod={canMod}
         onControl={music.control}

@@ -28,9 +28,11 @@ function RoundButton({ onClick, label, tone = 'gray', active, size = 'lg', child
 }
 
 /** Alt kontrol çubuğu: sohbet, mikrofon, hoparlör, oyun merkezi ve özel sohbet. */
-export default function VoiceControlBar({ micActive, deafened, chatOpen, gamesOpen, gamesEnabled = true, giftOpen, settingsOpen, onToggleMic, onToggleSpeaker, onOpenGames, onOpenGifts, onOpenSettings, onOpenPrivateChat, onToggleChat }) {
+export default function VoiceControlBar({ micActive, deafened, chatOpen, gamesOpen, gamesEnabled = true, giftOpen, settingsOpen, keyboardOpen, onToggleMic, onToggleSpeaker, onOpenGames, onOpenGifts, onOpenSettings, onOpenPrivateChat, onToggleChat }) {
   return (
-    <div className="flex shrink-0 items-center justify-between gap-1 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2">
+    // Klavye açıkken alttaki boşluk kaldırılır: çubuk klavyenin hemen üstüne oturur, arada
+    // siyah şerit kalmaz. Klavye kapalıyken alt güvenli alan (çubuk/gesture alanı) korunur.
+    <div className={`flex shrink-0 items-center justify-between gap-1 px-3 pt-2 ${keyboardOpen ? 'pb-1.5' : 'pb-[max(0.75rem,env(safe-area-inset-bottom))]'}`}>
       <RoundButton tone={chatOpen ? 'active' : 'gray'} active={chatOpen} onClick={onToggleChat} label={chatOpen ? 'Sohbeti kapat' : 'Sohbeti aç'}>
         {chatOpen ? <Keyboard className="h-6 w-6" /> : <MessageSquare className="h-6 w-6" />}
       </RoundButton>
