@@ -45,6 +45,14 @@ const ROOM_OPTIONS = {
   audioCaptureDefaults: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
 };
 const micPublication = (Track) => ({ name: 'microphone', source: Track.Source.Microphone, dtx: false, red: false, forceStereo: false, audioPreset: { maxBitrate: 32000 }, stopMicTrackOnMute: false });
+// Görüntü kalitesi: tek katman + yüksek bit hızı. Katman seçimi en düşük çözünürlükte kalıp
+// karşı tarafta bulanık görüntüye yol açıyordu.
+const CAMERA_PUBLICATION = {
+  name: 'camera',
+  simulcast: false,
+  degradationPreference: 'maintain-resolution',
+  videoEncoding: { maxBitrate: 1_700_000, maxFramerate: 30 },
+};
 
 export default function DirectCallProvider({ children }) {
   const { user } = useCurrentUser();
@@ -445,12 +453,24 @@ export default function DirectCallProvider({ children }) {
 
   // --- Görüntülü görüşme ---
 
+  // Aynalama gerçek kameraya göre belirlenir. Tarayıcı "arka kamera" isteğini yok sayıp ön
+  // kamerayı açık bırakırsa ayna kapanıyor ve kişi kendini ters görüyordu.
+  const syncFacing = useCallback((track) => {
+    const mode = track?.mediaStreamTrack?.getSettings?.().facingMode;
+    const next = mode === 'environment' ? 'environment' : 'user';
+    facingRef.current = next;
+    setFacing(next);
+  }, []);
+
   // Kamera izni her zaman kullanıcı dokunuşunun içinde istenir: iOS'ta izin isteği bir
   // beklemenin ardından yapılırsa tarayıcı kamerayı hiç açmıyordu.
+  // 720p: düşük çözünürlük karşı tarafta bulanık görünüyordu.
   const acquireCamera = useCallback(async () => {
     const engine = callEngine || (await loadCallEngine());
-    return engine.createLocalVideoTrack({ facingMode: facingRef.current, resolution: { width: 640, height: 360 } });
-  }, []);
+    const track = await engine.createLocalVideoTrack({ facingMode: facingRef.current, resolution: { width: 1280, height: 720 } });
+    syncFacing(track);
+    return track;
+  }, [syncFacing]);
 
   // Kamera yayına girer: karşı taraf açmasa bile bizi görür.
   const publishCamera = useCallback(async (track) => {
@@ -460,7 +480,7 @@ export default function DirectCallProvider({ children }) {
     setLocalVideoTrack(track);
     setCameraOn(true);
     try {
-      await room.localParticipant.publishTrack(track, { name: 'camera', source: callEngine.Track.Source.Camera });
+      await room.localParticipant.publishTrack(track, { ...CAMERA_PUBLICATION, source: callEngine.Track.Source.Camera });
       setError('');
     } catch {
       cameraTrackRef.current = null;
@@ -559,19 +579,19 @@ export default function DirectCallProvider({ children }) {
     const next = facingRef.current === 'user' ? 'environment' : 'user';
     try {
       const engine = callEngine || (await loadCallEngine());
-      const track = await engine.createLocalVideoTrack({ facingMode: next, resolution: { width: 640, height: 360 } });
+      const track = await engine.createLocalVideoTrack({ facingMode: next, resolution: { width: 1280, height: 720 } });
       if (roomRef.current !== room) { track.stop(); return; }
       cameraTrackRef.current = track;
-      facingRef.current = next;
-      setFacing(next);
+      // Aynalama açılan gerçek kameraya göre ayarlanır, istenen yöne göre değil.
+      syncFacing(track);
       setLocalVideoTrack(track);
       await room.localParticipant.unpublishTrack(current, true).catch(() => {});
-      await room.localParticipant.publishTrack(track, { name: 'camera', source: engine.Track.Source.Camera });
+      await room.localParticipant.publishTrack(track, { ...CAMERA_PUBLICATION, source: engine.Track.Source.Camera });
       setError('');
     } catch (cameraError) {
       setError(cameraError?.name === 'NotAllowedError' ? 'Kamera izni verilmedi.' : 'Kamera değiştirilemedi.');
     }
-  }, []);
+  }, [syncFacing]);
 
   // Canlı denetim: kamera açıkken kareler kontrol edilir, ihlalde arama anında kapanır.
   const moderation = useCallModeration({
