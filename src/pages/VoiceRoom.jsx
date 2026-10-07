@@ -1076,6 +1076,7 @@ export default function VoiceRoom() {
         open={chatOpen}
         onCloseComposer={() => setComposerOpen(false)}
         composerOpen={composerOpen}
+        keyboardOpen={keyboardInset > 0}
         currentUserId={user?.id}
         ownerId={room?.owner_id}
         moderators={moderators}

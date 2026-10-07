@@ -16,7 +16,7 @@ import useMessageProfiles from '@/hooks/useMessageProfiles';
  * klavye iner, akış görünür kalır. Klavye açıkken oda alt bloğu (bu akış + kontrol çubuğu) tek
  * parça hâlinde klavyenin üstüne kayar; oda yerleşimi yeniden akışa girmez.
  */
-export default function VoiceChatDock({ messages = [], onSend, open, onCloseComposer, composerOpen, chatLocked, currentUserId, ownerId, moderators = [], onOpenProfile, bigGiftNotice, onOpenBigGiftRoom, hiddenUsers = {} }) {
+export default function VoiceChatDock({ messages = [], onSend, open, onCloseComposer, composerOpen, keyboardOpen = false, chatLocked, currentUserId, ownerId, moderators = [], onOpenProfile, bigGiftNotice, onOpenBigGiftRoom, hiddenUsers = {} }) {
   const [text, setText] = useState('');
   const [emojiOpen, setEmojiOpen] = useState(false);
   const inputRef = useRef(null);
@@ -40,6 +40,22 @@ export default function VoiceChatDock({ messages = [], onSend, open, onCloseComp
     // Sohbet kapanınca emoji paneli de kapanır: alan her açılışta temiz görünür.
     else setEmojiOpen(false);
   }, [composerOpen]);
+
+  // Klavye açıldıktan sonra kendiliğinden kapanırsa (bir panel açılınca, geri hareketiyle ya da
+  // klavye indirilince) yazma alanı da kapanır: ekranda boş bir yazma çubuğu takılı kalmaz.
+  // Emoji paneli açıkken kapanmaz; emoji seçilirken alan yerinde kalır.
+  const keyboardWasOpen = useRef(false);
+  const emojiOpenRef = useRef(false);
+  emojiOpenRef.current = emojiOpen;
+  const closeComposerRef = useRef(onCloseComposer);
+  closeComposerRef.current = onCloseComposer;
+
+  useEffect(() => {
+    if (keyboardOpen) { keyboardWasOpen.current = true; return; }
+    if (!keyboardWasOpen.current) return;
+    keyboardWasOpen.current = false;
+    if (!emojiOpenRef.current) closeComposerRef.current?.();
+  }, [keyboardOpen]);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: 'end' });
