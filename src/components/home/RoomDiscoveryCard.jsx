@@ -1,10 +1,13 @@
 import { memo } from 'react';
 import { Link } from 'react-router-dom';
-import { BarChart3, Check, EyeOff, Film, Lock, Mic } from 'lucide-react';
+import { BarChart3, Check, EyeOff, Film, Gamepad2, Lock, MessageSquare, Mic, Music, PartyPopper, Sparkles } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import { youtubeIdFromMovieId } from '@/lib/youtubeTitle';
 import { prefetchRoomCancel, prefetchRoomSoon } from '@/lib/roomPrefetch';
 import { useCurrentUser } from '@/lib/useCurrentUser';
+
+/** Oda kategorisi kartın sağ üstünde kendi ikonuyla gösterilir. */
+const CATEGORY_ICONS = { Sohbet: MessageSquare, DJ: Music, 'Eğlence': Sparkles, 'Parti': PartyPopper, Oyun: Gamepad2 };
 
 /** Ana sayfa keşfet ızgarasındaki kare oda kartı: altın çerçeveli premium kart. */
 function RoomDiscoveryCard({ room, owner, kind, filmTitle, friendInside }) {
@@ -20,6 +23,9 @@ function RoomDiscoveryCard({ room, owner, kind, filmTitle, friendInside }) {
   // Gizli etiketi sığsın diye o kartta iki kişi gösterilir.
   const people = (room.participants || []).slice(0, isHidden ? 2 : 3);
   const ownerName = owner?.username || owner?.full_name || room.owner_name || 'Kullanıcı';
+  // Oda panelinden seçilen kategori (Sohbet, DJ, Oyun…) kartın sağ üstünde görünür.
+  const category = room.category || '';
+  const CategoryIcon = CATEGORY_ICONS[category] || null;
   const to = isVoice ? `/sesli-oda/${room.id}` : `/oda/${room.id}`;
 
   return (
@@ -51,12 +57,26 @@ function RoomDiscoveryCard({ room, owner, kind, filmTitle, friendInside }) {
         <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" /> CANLI
       </span>
 
-      {friendInside && (
-        <span
-          title="Arkadaşın"
-          className="absolute right-2 top-2 flex items-center gap-1 rounded-full border border-premium-gold/60 bg-anthracite/90 px-2 py-0.5 text-[9.5px] font-black text-premium-gold shadow-[0_0_12px_-3px_rgba(212,175,55,0.9)]"
-        >
-          <Check className="h-3 w-3" strokeWidth={3} /> Ekli
+      {/* Sağ üst: oda kategorisi ve arkadaş işareti alt alta durur. */}
+      {(category || friendInside) && (
+        <span className="absolute right-2 top-2 flex max-w-[72%] flex-col items-end gap-1">
+          {category && (
+            <span
+              title={`Kategori: ${category}`}
+              className="flex items-center gap-1 rounded-full border border-premium-gold/60 bg-gradient-to-r from-premium-red-deep to-premium-red px-2 py-0.5 text-[9.5px] font-black text-white shadow-[0_0_12px_-3px_rgba(198,40,40,0.95)]"
+            >
+              {CategoryIcon && <CategoryIcon className="h-3 w-3" />}
+              {category}
+            </span>
+          )}
+          {friendInside && (
+            <span
+              title="Arkadaşın"
+              className="flex items-center gap-1 rounded-full border border-premium-gold/60 bg-anthracite/90 px-2 py-0.5 text-[9.5px] font-black text-premium-gold shadow-[0_0_12px_-3px_rgba(212,175,55,0.9)]"
+            >
+              <Check className="h-3 w-3" strokeWidth={3} /> Ekli
+            </span>
+          )}
         </span>
       )}
 
