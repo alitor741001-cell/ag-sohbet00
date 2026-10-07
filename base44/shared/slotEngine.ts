@@ -6,9 +6,9 @@ export const BET_LEVELS = [10, 20, 50, 100, 500, 1000, 5000, 8000, 10000];
 // Toplam bahsin bu katı ve üzeri kazançlar "büyük ödül" sayılır.
 export const BIG_WIN_MULTIPLE = 10;
 
-// Ödeme oranı: tablodaki kazançların bu kadarı ödenir. Oyun kasası bu farkla
-// ayakta kalır; değer 1'e çekilirse makine uzun vadede kaybettirir.
-export const PAYOUT_RATE = 0.75;
+// Ödeme oranı: tablodaki her kazanca uygulanır, kazancın bu kadarı ödenir.
+// Oyun kasası bu farkla ayakta kalır; değer 1'e çekilirse makine uzun vadede kaybettirir.
+export const PAYOUT_RATE = 0.6;
 
 export const SYMBOLS = [
   { id: 'ten', weight: 14, pays: [10, 30, 100] },
@@ -21,7 +21,8 @@ export const SYMBOLS = [
   { id: 'tiger', weight: 5, pays: [60, 300, 1500] },
   { id: 'lion', weight: 3, wild: true, pays: [100, 600, 3000] },
   { id: 'free', weight: 2, scatter: true, pays: [20, 100, 500] },
-  { id: 'jackpot', weight: 5, pays: [150, 1000, 5000] },
+  // Jackpot sembolü sık gelir; ekranda 5 tanesi gelince jackpot çıkar.
+  { id: 'jackpot', weight: 8, pays: [150, 1000, 5000] },
 ];
 
 const SYMBOL_MAP = SYMBOLS.reduce((acc, symbol) => {
@@ -121,7 +122,7 @@ export function evaluateGrid(grid, bet) {
     const target = base || 'lion';
     if (count >= 3) {
       const definition = SYMBOL_MAP[target];
-      const amount = definition.pays[count - 3] * bet;
+      const amount = Math.round(definition.pays[count - 3] * bet * PAYOUT_RATE);
       total += amount;
       wins.push({ line: index + 1, symbol: target, count, amount, cells: cells.slice(0, count) });
     }
@@ -135,7 +136,7 @@ export function evaluateGrid(grid, bet) {
   });
   if (scatterCells.length >= 3) {
     const definition = SYMBOL_MAP.free;
-    const amount = definition.pays[Math.min(scatterCells.length, 5) - 3] * bet * 5;
+    const amount = Math.round(definition.pays[Math.min(scatterCells.length, 5) - 3] * bet * 5 * PAYOUT_RATE);
     total += amount;
     wins.push({ line: 0, symbol: 'free', count: scatterCells.length, amount, cells: scatterCells });
   }
