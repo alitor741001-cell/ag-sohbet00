@@ -74,7 +74,6 @@ export default async function(req) {
       const receiver = await base44.asServiceRole.entities.User.get(receiverId).catch(() => null);
       if (!receiver) return Response.json({ error: 'Bu hesap yönetici tarafından silinmiştir.' }, { status: 404 });
       if (receiver.is_banned || receiver.role === 'banned' || receiver.membership_status === 'blocked') return Response.json({ error: 'Bu hesap yönetici tarafından engellenmiştir.' }, { status: 403 });
-      if (receiver.is_suspended || receiver.membership_status === 'suspended') return Response.json({ error: 'Bu hesap yönetici tarafından askıya alınmıştır.' }, { status: 403 });
       if (user.role !== 'admin' && receiver.role !== 'admin') {
         const friendships = await base44.asServiceRole.entities.Friendship.filter({
           $or: [{ requester_id: user.id, recipient_id: receiverId }, { requester_id: receiverId, recipient_id: user.id }],

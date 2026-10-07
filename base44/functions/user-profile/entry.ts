@@ -18,9 +18,7 @@ export default async function(req) {
 
     const accountStatus = (u) => u?.is_banned || u?.role === 'banned' || u?.membership_status === 'blocked'
       ? 'banned'
-      : u?.is_suspended || u?.membership_status === 'suspended'
-        ? 'suspended'
-        : 'active';
+      : 'active';
 
     const toProfile = (u) => ({
       username: u.username || '', full_name: u.full_name || '', avatar: u.avatar || '',

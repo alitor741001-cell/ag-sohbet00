@@ -63,7 +63,7 @@ export default function FullUserProfile({
     ? ROOM_BLUE
     : genderPalette(profile?.gender, hidden);
   const loading = !hidden && !profile;
-  // Engellenen, askıya alınan ya da silinen hesapta kart normal profil yerine durum işaretini gösterir.
+  // Engellenen ya da silinen hesapta kart normal profil yerine durum işaretini gösterir.
   const accountState = hidden ? null : getAccountState(profile);
   const shownName = hidden ? (name || 'Gizli Kullanıcı') : (profile?.username || profile?.full_name || name || 'Kullanıcı');
   const shownAvatar = hidden ? HIDDEN_AVATAR_URL : (profile?.avatar || avatar || '');

@@ -22,7 +22,6 @@ export default async function(req) {
       const target = await base44.asServiceRole.entities.User.get(targetId).catch(() => null);
       if (!target) return Response.json({ error: 'Bu hesap yönetici tarafından silinmiştir.' }, { status: 404 });
       if (target.is_banned || target.role === 'banned' || target.membership_status === 'blocked') return Response.json({ error: 'Bu hesap yönetici tarafından engellenmiştir.' }, { status: 403 });
-      if (target.is_suspended || target.membership_status === 'suspended') return Response.json({ error: 'Bu hesap yönetici tarafından askıya alınmıştır.' }, { status: 403 });
       const targetExpired = target.role !== 'admin' && target.role !== 'moderator' && (target.membership_status === 'expired' || (target.membership_end && new Date(target.membership_end).getTime() <= Date.now()));
       const targetName = target.username || target.full_name || 'Kullanıcı';
       const targetAvatar = target.avatar || '';
@@ -83,7 +82,6 @@ export default async function(req) {
       const friendUser = await base44.asServiceRole.entities.User.get(friendId).catch(() => null);
       if (!friendUser) return Response.json({ error: 'Bu hesap yönetici tarafından silinmiştir.' }, { status: 404 });
       if (friendUser.is_banned || friendUser.role === 'banned' || friendUser.membership_status === 'blocked') return Response.json({ error: 'Bu hesap yönetici tarafından engellenmiştir.' }, { status: 403 });
-      if (friendUser.is_suspended || friendUser.membership_status === 'suspended') return Response.json({ error: 'Bu hesap yönetici tarafından askıya alınmıştır.' }, { status: 403 });
       const recipientExpired = friendUser.role !== 'admin' && friendUser.role !== 'moderator' && (friendUser.membership_status === 'expired' || (friendUser.membership_end && new Date(friendUser.membership_end).getTime() <= Date.now()));
       const isAdminChat = user.role === 'admin' || friendUser.role === 'admin';
       if (!isAdminChat) {

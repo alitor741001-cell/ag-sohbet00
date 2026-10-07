@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import subscribeEntity from '@/components/data/entitySubscriptions';
 import { useCurrentUser } from '@/lib/useCurrentUser';
-import { Send, X, Search, Ban, Trash2, ShieldOff, ShieldCheck, ArrowLeft } from 'lucide-react';
+import { Send, X, Search, Ban, Trash2, ShieldCheck, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import SupportAvatarButton, { SUPPORT_AVATAR_URL } from '@/components/layout/SupportAvatarButton';
 import SupportAttachment from '@/components/support/SupportAttachment';
@@ -32,7 +32,7 @@ export default function LiveChatButton({ placement = 'top' }) {
   const [acting, setActing] = useState(false);
 
   // Aksiyon neden modalı
-  const [actionModal, setActionModal] = useState(null); // { type: 'ban'|'suspend'|'delete', user }
+  const [actionModal, setActionModal] = useState(null); // { type: 'ban'|'delete', user }
   const [reason, setReason] = useState('');
   const [description, setDescription] = useState('');
 
@@ -217,10 +217,6 @@ export default function LiveChatButton({ placement = 'top' }) {
         await base44.functions.invoke('role-management', { action: 'ban_user', user_id: u.id, reason: reason.trim(), description: description.trim() });
         toast({ title: `${u.username || u.email} engellendi` });
         setSelectedUser((prev) => prev && prev.id === u.id ? { ...prev, is_banned: true, ban_reason: reason.trim(), ban_description: description.trim(), membership_status: 'blocked' } : prev);
-      } else if (type === 'suspend') {
-        await base44.functions.invoke('role-management', { action: 'suspend_user', user_id: u.id, reason: reason.trim(), description: description.trim() });
-        toast({ title: `${u.username || u.email} askıya alındı` });
-        setSelectedUser((prev) => prev && prev.id === u.id ? { ...prev, is_suspended: true, suspend_reason: reason.trim(), suspend_description: description.trim(), membership_status: 'suspended' } : prev);
       } else if (type === 'delete') {
         await base44.functions.invoke('role-management', { action: 'delete_user', user_id: u.id });
         toast({ title: 'Kullanıcı silindi' });
@@ -238,16 +234,6 @@ export default function LiveChatButton({ placement = 'top' }) {
       await base44.functions.invoke('role-management', { action: 'unban_user', user_id: u.id });
       toast({ title: 'Engel kaldırıldı' });
       setSelectedUser((prev) => prev && prev.id === u.id ? { ...prev, is_banned: false, ban_reason: '', ban_description: '', membership_status: 'active' } : prev);
-    } catch { toast({ title: 'İşlem başarısız', variant: 'destructive' }); }
-    setActing(false);
-  };
-
-  const unsuspend = async (u) => {
-    setActing(true);
-    try {
-      await base44.functions.invoke('role-management', { action: 'unsuspend_user', user_id: u.id });
-      toast({ title: 'Askıya alma kaldırıldı' });
-      setSelectedUser((prev) => prev && prev.id === u.id ? { ...prev, is_suspended: false, suspend_reason: '', suspend_description: '', membership_status: 'active' } : prev);
     } catch { toast({ title: 'İşlem başarısız', variant: 'destructive' }); }
     setActing(false);
   };
@@ -298,7 +284,7 @@ export default function LiveChatButton({ placement = 'top' }) {
             {/* Sol kolon: sohbet (aktif talep) veya profil detayı */}
             <div className="flex-1 flex flex-col min-w-0 border-r border-[#2a2a2a]">
               {selectedUser ? (
-                <UserProfileDetail user={selectedUser} onBack={() => setSelectedUser(null)} openAction={openAction} unban={unban} unsuspend={unsuspend} acting={acting} />
+                <UserProfileDetail user={selectedUser} onBack={() => setSelectedUser(null)} openAction={openAction} unban={unban} acting={acting} />
               ) : activeReport ? (
                 <ReportDetail report={activeReport} acting={acting} openAction={openAction} onProfile={setSelectedUser} onBack={() => setActiveReport(null)} />
               ) : isSearching ? (
@@ -412,10 +398,9 @@ export default function LiveChatButton({ placement = 'top' }) {
               <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-4 w-full max-w-[300px]">
                 <div className="flex items-center gap-2 mb-3">
                   {actionModal.type === 'ban' && <Ban className="w-4 h-4 text-red-400" />}
-                  {actionModal.type === 'suspend' && <ShieldOff className="w-4 h-4 text-amber-400" />}
                   {actionModal.type === 'delete' && <Trash2 className="w-4 h-4 text-red-400" />}
                   <p className="text-sm font-bold text-white">
-                    {actionModal.type === 'ban' ? 'Engelle' : actionModal.type === 'suspend' ? 'Askıya Al' : 'Kullanıcıyı Sil'}
+                    {actionModal.type === 'ban' ? 'Engelle' : 'Kullanıcıyı Sil'}
                   </p>
                   <button onClick={closeAction} className="ml-auto text-white/30 hover:text-white/60"><X className="w-4 h-4" /></button>
                 </div>
@@ -429,9 +414,9 @@ export default function LiveChatButton({ placement = 'top' }) {
                   <button
                     onClick={confirmAction}
                     disabled={acting}
-                    className={`flex-1 text-xs py-2 rounded-lg font-semibold text-white disabled:opacity-50 ${actionModal.type === 'suspend' ? 'bg-amber-500' : 'bg-red-500'}`}
+                    className="flex-1 text-xs py-2 rounded-lg font-semibold text-white disabled:opacity-50 bg-red-500"
                   >
-                    {acting ? 'İşleniyor...' : actionModal.type === 'ban' ? 'Engelle' : actionModal.type === 'suspend' ? 'Askıya Al' : 'Sil'}
+                    {acting ? 'İşleniyor...' : actionModal.type === 'ban' ? 'Engelle' : 'Sil'}
                   </button>
                 </div>
               </div>
@@ -447,10 +432,9 @@ export default function LiveChatButton({ placement = 'top' }) {
   );
 }
 
-function UserProfileDetail({ user, onBack, openAction, unban, unsuspend, acting }) {
+function UserProfileDetail({ user, onBack, openAction, unban, acting }) {
   const isBanned = user.is_banned;
-  const isSuspended = user.is_suspended || user.membership_status === 'suspended';
-  const isActive = !isBanned && !isSuspended;
+  const isActive = !isBanned;
   const fmtDate = (d) => d ? new Date(d).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-';
 
   return (
@@ -469,28 +453,24 @@ function UserProfileDetail({ user, onBack, openAction, unban, unsuspend, acting 
           </div>
         </div>
         <div className="space-y-1.5 text-[11px] text-white/50 mb-3">
-          <div className="flex justify-between"><span>Durum:</span><span className={isActive ? 'text-green-400' : 'text-red-400'}>{isBanned ? '🚫 Engelli' : isSuspended ? '⏸️ Askıda' : '✅ Aktif'}</span></div>
+          <div className="flex justify-between"><span>Durum:</span><span className={isActive ? 'text-green-400' : 'text-red-400'}>{isBanned ? '🚫 Engelli' : '✅ Aktif'}</span></div>
           <div className="flex justify-between"><span>Rol:</span><span className="text-white/70">{user.role || 'user'}</span></div>
           <div className="flex justify-between"><span>Kayıt:</span><span className="text-white/70">{fmtDate(user.created_date)}</span></div>
           <div className="flex justify-between"><span>Üyelik Bitiş:</span><span className="text-white/70">{fmtDate(user.membership_end)}</span></div>
           {user.last_login && <div className="flex justify-between"><span>Son Giriş:</span><span className="text-white/70">{fmtDate(user.last_login)}</span></div>}
         </div>
-        {(isBanned || isSuspended) && (
+        {isBanned && user.ban_reason && (
           <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-2 mb-3">
-            {isBanned && user.ban_reason && <p className="text-[10px] text-red-400"><span className="font-semibold">Engel nedeni:</span> {user.ban_reason}</p>}
-            {isSuspended && user.suspend_reason && <p className="text-[10px] text-amber-400"><span className="font-semibold">Askıya alma nedeni:</span> {user.suspend_reason}</p>}
+            <p className="text-[10px] text-red-400"><span className="font-semibold">Engel nedeni:</span> {user.ban_reason}</p>
           </div>
         )}
       </div>
       <div className="p-2 border-t border-[#2a2a2a] space-y-1.5">
         {isBanned ? (
           <button onClick={() => unban(user)} disabled={acting} className="w-full flex items-center gap-2 justify-center text-xs bg-green-500/20 text-green-400 py-2 rounded-lg font-semibold disabled:opacity-50"><ShieldCheck className="w-3.5 h-3.5" />Engeli Kaldır</button>
-        ) : isSuspended ? (
-          <button onClick={() => unsuspend(user)} disabled={acting} className="w-full flex items-center gap-2 justify-center text-xs bg-green-500/20 text-green-400 py-2 rounded-lg font-semibold disabled:opacity-50"><ShieldCheck className="w-3.5 h-3.5" />Aktif Et</button>
         ) : (
-          <button onClick={() => openAction('suspend', user)} disabled={acting} className="w-full flex items-center gap-2 justify-center text-xs bg-amber-500/20 text-amber-400 py-2 rounded-lg font-semibold disabled:opacity-50"><ShieldOff className="w-3.5 h-3.5" />Askıya Al</button>
+          <button onClick={() => openAction('ban', user)} disabled={acting} className="w-full flex items-center gap-2 justify-center text-xs bg-red-500/20 text-red-400 py-2 rounded-lg font-semibold disabled:opacity-50"><Ban className="w-3.5 h-3.5" />Engelle</button>
         )}
-        {!isBanned && <button onClick={() => openAction('ban', user)} disabled={acting} className="w-full flex items-center gap-2 justify-center text-xs bg-red-500/20 text-red-400 py-2 rounded-lg font-semibold disabled:opacity-50"><Ban className="w-3.5 h-3.5" />Engelle</button>}
         <button onClick={() => openAction('delete', user)} disabled={acting} className="w-full flex items-center gap-2 justify-center text-xs bg-red-500/20 text-red-400 py-2 rounded-lg font-semibold disabled:opacity-50"><Trash2 className="w-3.5 h-3.5" />Kullanıcıyı Sil</button>
       </div>
     </div>

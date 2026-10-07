@@ -29,7 +29,6 @@ export default async function(req) {
       const callee = await base44.asServiceRole.entities.User.get(calleeId).catch(() => null);
       if (!callee) return Response.json({ error: 'Bu hesap bulunamadı.' }, { status: 404 });
       if (callee.is_banned || callee.role === 'banned' || callee.membership_status === 'blocked') return Response.json({ error: 'Bu hesap yönetici tarafından engellenmiştir.' }, { status: 403 });
-      if (callee.is_suspended || callee.membership_status === 'suspended') return Response.json({ error: 'Bu hesap askıya alınmıştır.' }, { status: 403 });
 
       const calleeName = callee.username || callee.full_name || 'Kullanıcı';
       const isAdminChat = user.role === 'admin' || callee.role === 'admin';

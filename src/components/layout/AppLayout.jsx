@@ -117,7 +117,7 @@ export default function AppLayout() {
     if (!user) return;
     const unsubNotif = subscribeEntity('Notification', (ev) => {
       if (ev.type !== 'create' || ev.data?.user_id !== user.id) return;
-      if (ev.data?.type === 'suspended') {
+      if (ev.data?.type === 'banned') {
         triggerBanNotice('banned');
         base44.auth.logout().catch(() => {});
         window.location.href = '/login?banned=1';
@@ -168,14 +168,14 @@ export default function AppLayout() {
     return () => clearInterval(id);
   }, [user?.id]);
 
-  // Sayfa görünür olunca anlık güvenlik kontrolü — kullanıcı geri döndüğünde ban/askıya alma/silme tespiti
+  // Sayfa görünür olunca anlık güvenlik kontrolü — kullanıcı geri döndüğünde ban/silme tespiti
   useEffect(() => {
     const onVisible = async () => {
       if (document.visibilityState !== 'visible' || !user) return;
       try {
         const u = await base44.auth.me();
-        if (u?.is_banned || u?.role === 'banned' || u?.is_suspended || u?.membership_status === 'suspended') {
-          triggerBanNotice('banned');
+        if (u?.is_banned || u?.role === 'banned') {
+          triggerBanNotice('banned', u?.ban_reason || '', u?.ban_description || '');
           base44.auth.logout().catch(() => {});
           window.location.href = '/login?banned=1';
         }

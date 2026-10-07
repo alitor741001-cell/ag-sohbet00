@@ -1,4 +1,4 @@
-// Engelleme/askıya alma/silme bildirimlerini login ekranına taşımak için
+// Engelleme/silme bildirimlerini login ekranına taşımak için
 // sessionStorage köprüsü — URL parametresi redirect sırasında kaybolsa bile
 // login ekranı uyarıyı ve nedenini gösterir.
 export function triggerBanNotice(type, reason = '', description = '') {
