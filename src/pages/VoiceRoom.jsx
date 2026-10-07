@@ -1097,6 +1097,9 @@ export default function VoiceRoom() {
         </p>
       )}
 
+      {/* Yazma alanı açıkken alt kontrol çubuğu tamamen gizlenir: mikrofon, hoparlör,
+          hediye, oyun ve ayarlar tuşları yerini klavyeye bırakır. */}
+      {!composerOpen && (
       <VoiceControlBar
         keyboardOpen={keyboardOpen}
         micActive={!voice.muted}
@@ -1125,6 +1128,7 @@ export default function VoiceRoom() {
           setComposerOpen(true);
         }}
       />
+      )}
       </div>
 
       <VoiceRoomMenu
