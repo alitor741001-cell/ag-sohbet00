@@ -11,11 +11,8 @@
 .voice-viewport[data-keyboard="open"] .room-direct-composer {
   padding-bottom: 0.5rem;
 }
-/* Kontrol çubuğu ekranın dibine yakın durur: alt güvenli alanın yalnızca bir kısmı bırakılır. */
-.voice-control-bar { padding-bottom: max(0.25rem, calc(env(safe-area-inset-bottom, 0px) * 0.5)); }
-@media (hover: none) {
-  .voice-control-bar { padding-bottom: max(0.125rem, calc(env(safe-area-inset-bottom, 0px) * 0.4)); }
-}
+/* Butonlar cihazın alt güvenli alanının üzerinde tamamen görünür kalır. */
+.voice-control-bar { padding-bottom: max(0.25rem, env(safe-area-inset-bottom, 0px)); }
 
 @media (max-width: 767px) {
   /* Sohbet alanı sabit yükseklikte durur: yeni mesaj gelmesi ya da yazma alanının açılıp
@@ -50,6 +47,8 @@
     left: 0;
     right: 0;
     z-index: 20;
-    bottom: calc(var(--visual-viewport-height, 100dvh) + var(--viewport-offset, 0px) - var(--voice-controls-height, 100dvh));
+    /* Çerçeve zaten görünür ekran boyundadır; eski ekran yüksekliğiyle tekrar
+       kaydırmak çubuğu çerçevenin dışına çıkarıp overflow ile kırpıyordu. */
+    bottom: 0;
   }
 }

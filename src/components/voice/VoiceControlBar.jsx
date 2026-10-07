@@ -52,9 +52,7 @@ export default function VoiceControlBar({ micActive, deafened, gamesOpen, gamesE
   }, []);
 
   return (
-    // Çubuk kendi siyah zeminiyle durur: siyah alan butonların altında kalır, ikonların önüne
-    // geçen bir katman olmaz. Klavye açıkken ayrılan boşluk kaldırılır, çubuk klavyenin
-    // hemen üstüne oturur.
+    // Zemin ikonların arkasındadır; çubuğun tamamı görünür ekranın içinde tutulur.
     <div ref={barRef} className="voice-control-bar flex shrink-0 items-center justify-between gap-1 bg-catalog px-3 pt-2">
       {/* Sohbet düğmesi sabittir: açıkken ikonu ve rengi değişmez, hep aynı görünür. */}
       <RoundButton onClick={onToggleChat} label="Sohbet">
