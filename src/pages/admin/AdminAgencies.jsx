@@ -34,6 +34,11 @@ export default function AdminAgencies() {
 
   useEffect(() => { load(); }, [load]);
 
+  // Ödeme işaretlendiğinde panelin tamamı değil, yalnızca ilgili kazanç kaydı güncellenir.
+  const patchReward = useCallback((id, patch) => {
+    setData((prev) => (prev?.rewards ? { ...prev, rewards: prev.rewards.map((row) => (row.id === id ? { ...row, ...patch } : row)) } : prev));
+  }, []);
+
   if (loading) {
     return <div className="flex items-center justify-center py-24"><Loader2 className="h-6 w-6 animate-spin text-red-400" /></div>;
   }
@@ -68,7 +73,7 @@ export default function AdminAgencies() {
           {tab === 'agencies' && <AdminAgencyList data={data} reload={load} />}
           {tab === 'broadcasters' && <AdminBroadcasterTable data={data} reload={load} />}
           {tab === 'tiers' && <AdminQuotaTiers data={data} reload={load} />}
-          {tab === 'rewards' && <AdminRewardTable data={data} reload={load} />}
+          {tab === 'rewards' && <AdminRewardTable data={data} onPatch={patchReward} />}
           {tab === 'transfers' && <AdminTransferTable data={data} />}
           {tab === 'manual' && <AdminManualTransferTable data={data} reload={load} />}
         </>

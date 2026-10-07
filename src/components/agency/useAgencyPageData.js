@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import subscribeEntity from '@/components/data/entitySubscriptions';
 import { agencyApi } from '@/lib/agency';
 import { resolveAgencyRole } from '@/lib/agencyRole';
 import { useCurrentUser } from '@/lib/useCurrentUser';
@@ -6,6 +7,18 @@ import { useCurrentUser } from '@/lib/useCurrentUser';
 // Ajans sayfaları arasında gezinirken bekleme olmasın: son veri anında gösterilir,
 // yenisi arka planda alınır. Oturum kapanınca/başka hesapla girişte sayfa yeniden yüklenir.
 let pageCache = null;
+
+/** Kazanç toplamları: ödeme durumu değiştiğinde kartlar da anında güncellenir. */
+function rewardTotals(rewards, previous = {}) {
+  const sum = (list) => Math.round(list.reduce((total, row) => total + (Number(row.amount) || 0), 0) * 100) / 100;
+  return {
+    pending: sum(rewards.filter((row) => row.status !== 'paid')),
+    paid: sum(rewards.filter((row) => row.status === 'paid')),
+    total: sum(rewards),
+    count: rewards.length,
+    ...(previous.share === undefined ? {} : { share: previous.share }),
+  };
+}
 
 /**
  * Ajans sayfalarının ortak verisi: kullanıcının ajans rolü, özet bilgileri ve
@@ -48,6 +61,24 @@ export default function useAgencyPageData() {
   const refresh = useCallback(() => load(true), [load]);
 
   useEffect(() => { load(); }, [load]);
+
+  // Yönetici "ödendi" işaretlediğinde yayıncı tarafında anında görünür: yalnızca
+  // değişen kazanç kaydı ve toplamlar güncellenir, sayfa yenilenmez.
+  useEffect(() => {
+    if (!user?.id) return undefined;
+    return subscribeEntity('QuotaReward', (event) => {
+      const row = event.data || {};
+      const id = row.id || event.id;
+      if (!id || (row.user_id !== user.id && row.assistant_id !== user.id)) return;
+      setBroadcaster((prev) => {
+        if (!prev?.rewards?.some((item) => item.id === id)) return prev;
+        const rewards = prev.rewards.map((item) => (item.id === id
+          ? { ...item, status: row.status || item.status, transaction_id: row.transaction_id || item.transaction_id }
+          : item));
+        return { ...prev, rewards, totals: rewardTotals(rewards, prev.totals) };
+      });
+    });
+  }, [user?.id]);
 
   const profile = summary?.profile || {};
   // Özet gelmeden önce rol kullanıcı kaydından okunur; sahiplik üyelikten önce gelir.

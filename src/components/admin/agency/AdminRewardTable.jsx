@@ -1,19 +1,31 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { BadgeCheck, Loader2, Wallet } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import subscribeEntity from '@/components/data/entitySubscriptions';
 import { AGENCY_GOLD, agencyApi, dateText, formatMoney, formatShortDiamonds } from '@/lib/agency';
 
-/** Yönetim paneli — kota kazançları: ödendi/bekliyor durumunu yönetir. */
-export default function AdminRewardTable({ data = {}, reload }) {
+/**
+ * Yönetim paneli — kota kazançları: ödendi/bekliyor durumunu yönetir.
+ * İşaretleme yalnızca ilgili yayıncının kaydını günceller: panelin tamamı yeniden yüklenmez.
+ */
+export default function AdminRewardTable({ data = {}, onPatch }) {
   const { toast } = useToast();
   const [busy, setBusy] = useState('');
 
+  // Kazanç kaydı değiştiğinde (bu panelden ya da başka yerden) yalnızca o satır güncellenir.
+  useEffect(() => subscribeEntity('QuotaReward', (event) => {
+    const row = event.data || {};
+    if (row.id) onPatch?.(row.id, row);
+  }), [onPatch]);
+
   const toggle = async (reward) => {
+    const paid = reward.status !== 'paid';
     setBusy(reward.id);
     try {
-      await agencyApi('admin-reward-paid', { reward_id: reward.id, paid: reward.status !== 'paid' });
-      toast({ title: reward.status === 'paid' ? 'Ödeme geri alındı' : 'Ödeme yapıldı olarak işaretlendi' });
-      reload?.();
+      const result = await agencyApi('admin-reward-paid', { reward_id: reward.id, paid });
+      // Sunucudan dönen kayıt yerine yazılır: satır beklemeden "Ödendi" görünür.
+      onPatch?.(reward.id, result.reward || { status: paid ? 'paid' : 'pending' });
+      toast({ title: paid ? 'Ödeme yapıldı olarak işaretlendi' : 'Ödeme geri alındı' });
     } catch (error) {
       toast({ title: 'İşlem başarısız', description: error.response?.data?.error || error.message, variant: 'destructive' });
     } finally {
