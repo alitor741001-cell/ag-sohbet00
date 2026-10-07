@@ -16,7 +16,7 @@ const JACKPOT_MULTIPLE = 120;
 // Ücretsiz çevirme: ekranda 3 'free' sembolü gelince 3 çevirme hakkı verilir.
 const FREE_SYMBOLS = 3;
 const FREE_SPINS = 3;
-// Havuzlar: kaybedilenler o anki bahis kademesinin havuzunda birikir.
+// Havuzlar: kaybedilen turda bahis, kazanılan turda kazanç tutarı o anki bahis kademesinin havuzunda işler.
 const POOL_BASE = { mini: 5000, big: 25000, mega: 250000, xmega: 400000 };
 const POOL_KEYS = Object.keys(POOL_BASE);
 
@@ -235,12 +235,13 @@ export default async function (req) {
       const freeCount = grid.flat().filter((symbol) => symbol === 'free').length;
       const freeTrigger = freeCount >= FREE_SYMBOLS;
       const freeSpins = Math.max(0, (wallet.free_spins ?? 0) - (isFree ? 1 : 0)) + (freeTrigger ? FREE_SPINS : 0);
-      // Havuz, turun net tutarıyla işler: kaybedilen (bahis − kazanç) havuza birikir,
-      // kazanılan turda aynı havuz azalır — kazanç havuzdan ödenir. Havuz sıfırın altına inmez.
-      const net = cost - total;
+      // Havuz, turun sonucuyla işler: kaybedilen turda bahsin tamamı havuza eklenir,
+      // kazanan turda ödenen kazancın tamamı havuzdan düşülür (bahis mahsup edilmez).
+      // Havuz sıfırın altına inmez.
       const pools = poolValues(wallet);
       const poolKey = poolKeyForTotalBet(stake);
-      if (poolKey && net !== 0) pools[poolKey] = Math.max(0, pools[poolKey] + net);
+      const poolDelta = total > 0 ? -total : cost;
+      if (poolKey && poolDelta !== 0) pools[poolKey] = Math.max(0, pools[poolKey] + poolDelta);
       // Jackpot havuzu: bütün havuzlarda birikenlerin toplamı.
       const grand = jackpotTotal(pools);
       const bigWin = stake > 0 && total >= stake * BIG_WIN_MULTIPLE;
