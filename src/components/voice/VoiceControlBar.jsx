@@ -1,7 +1,9 @@
 import { Gamepad2, Gift, MessageCircle, MessageSquare, Mic, MicOff, Settings, Volume2, VolumeX } from 'lucide-react';
 
 const TONES = {
-  gray: 'bg-white/10 text-white',
+  // Sade düğmede arka plan yok: ikonlar siyah zemine gömülmez, doğrudan görünür.
+  // Yalnızca durum bildiren düğmeler (mikrofon, hoparlör, hediye) renkli kalır.
+  gray: 'text-white',
   red: 'bg-red-600 text-white',
   active: 'bg-primary text-primary-foreground',
   gift: 'bg-gradient-to-br from-pink-500 to-amber-400 text-white',
@@ -20,7 +22,7 @@ function RoundButton({ onClick, label, tone = 'gray', active, size = 'lg', child
       type="button"
       onClick={onClick}
       aria-label={label}
-      className={`flex ${SIZES[size] || SIZES.lg} shrink-0 items-center justify-center rounded-full backdrop-blur-md transition-transform active:scale-95 ${TONES[tone] || TONES.gray} ${active ? 'ring-2 ring-white/30' : ''}`}
+      className={`flex ${SIZES[size] || SIZES.lg} shrink-0 items-center justify-center rounded-full transition-transform active:scale-95 ${TONES[tone] || TONES.gray} ${active ? 'ring-2 ring-white/30' : ''}`}
     >
       {children}
     </button>

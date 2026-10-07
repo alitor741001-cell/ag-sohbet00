@@ -11,9 +11,10 @@
 .voice-viewport[data-keyboard="open"] .room-direct-composer {
   padding-bottom: 0.5rem;
 }
-.voice-control-bar { padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px)); }
+/* Kontrol çubuğu ekranın dibine yakın durur: alt güvenli alanın yalnızca bir kısmı bırakılır. */
+.voice-control-bar { padding-bottom: max(0.25rem, calc(env(safe-area-inset-bottom, 0px) * 0.5)); }
 @media (hover: none) {
-  .voice-control-bar { padding-bottom: max(0.25rem, env(safe-area-inset-bottom, 0px)); }
+  .voice-control-bar { padding-bottom: max(0.125rem, calc(env(safe-area-inset-bottom, 0px) * 0.4)); }
 }
 
 @media (max-width: 767px) {
