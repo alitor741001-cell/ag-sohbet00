@@ -17,6 +17,10 @@
     "caller_frame_scale": {
       "type": "number"
     },
+    "caller_gender": {
+      "type": "string",
+      "default": ""
+    },
     "callee_id": {
       "type": "string"
     },
@@ -31,6 +35,10 @@
     },
     "callee_frame_scale": {
       "type": "number"
+    },
+    "callee_gender": {
+      "type": "string",
+      "default": ""
     },
     "conversation_id": {
       "type": "string"

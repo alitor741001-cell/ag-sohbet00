@@ -43,8 +43,8 @@ export default function Notifications() {
     load();
     loadInvites();
     const unsub = subscribeEntity('Notification', () => load());
-    // Yoklama yedeği — realtime kaçırsa diye 30sn'de bir; sekme arkadayken durur.
-    const interval = setInterval(() => { if (document.visibilityState !== 'hidden') { load(); loadInvites(); } }, 30000);
+    // Yoklama yedeği — realtime kaçırsa diye 5 saniyede bir; sekme arkadayken durur.
+    const interval = setInterval(() => { if (document.visibilityState !== 'hidden') { load(); loadInvites(); } }, 5000);
     return () => { unsub(); clearInterval(interval); };
   }, [user?.id]);
 

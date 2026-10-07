@@ -78,6 +78,16 @@ export default function Profile() {
     loadSummary();
   }, []);
 
+  // Sayfa kendini 5 saniyede bir sessizce tazeler: bakiye ve sayaçlar kimse fark etmeden
+  // güncellenir — yükleme göstergesi çıkmaz, ekran yerinden oynamaz.
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'hidden') return;
+      loadSummary();
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
   useEffect(() => {
     if (!user) return;
     setForm({ username: user.username || '', full_name: user.full_name || '', phone: user.phone || '', avatar: user.avatar || '', birth_date: user.birth_date || '' });

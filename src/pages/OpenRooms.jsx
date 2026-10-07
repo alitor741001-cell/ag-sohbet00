@@ -52,6 +52,12 @@ export default function OpenRooms() {
       } finally { setLoading(false); }
     };
     load();
+    // Canlı akışın gecikebildiği cihazlarda (özellikle Android) liste 5 saniyede bir sessizce
+    // tazelenir: kişi sayıları ve odalar kimse fark etmeden güncel kalır.
+    const refresh = window.setInterval(() => {
+      if (document.visibilityState === 'hidden') return;
+      load();
+    }, 5000);
     const unsub = subscribeEntity('Room', (ev) => {
       const isVisible = (x) => x.status === 'active' && !x.hidden;
       if (ev.type === 'create') {
@@ -90,7 +96,7 @@ export default function OpenRooms() {
         setVoiceRooms((p) => p.filter((x) => x.id !== ev.id));
       }
     });
-    return unsub;
+    return () => { window.clearInterval(refresh); unsub(); };
   }, [user?.id, user?.role]);
 
   const activeCount = rooms.length + personalRooms.length + voiceRooms.length;

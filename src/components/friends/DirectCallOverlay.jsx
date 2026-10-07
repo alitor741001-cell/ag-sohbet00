@@ -1,5 +1,9 @@
+import { useState } from 'react';
 import { ArrowLeft, Mic, MicOff, Phone, PhoneOff, SwitchCamera, Video, VideoOff, Volume2, VolumeX } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { base44 } from '@/api/base44Client';
+import { useToast } from '@/components/ui/use-toast';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import CallBubble from '@/components/friends/CallBubble';
 import CallModerationNotice from '@/components/friends/CallModerationNotice';
 import CallVideoTile from '@/components/friends/CallVideoTile';
@@ -21,9 +25,35 @@ export default function DirectCallOverlay() {
   if (moderationNotice) return <CallModerationNotice notice={moderationNotice} onClose={clearModerationNotice} />;
   if (!call || phase === 'idle') return null;
 
+  const { toast } = useToast();
+  const [feeAsk, setFeeAsk] = useState(false);
+  const [feeBusy, setFeeBusy] = useState(false);
+
   const other = role === 'callee'
-    ? { id: call.caller_id, name: call.caller_name, avatar: call.caller_avatar, frame: call.caller_frame, frameScale: call.caller_frame_scale }
-    : { id: call.callee_id, name: call.callee_name, avatar: call.callee_avatar, frame: call.callee_frame, frameScale: call.callee_frame_scale };
+    ? { id: call.caller_id, name: call.caller_name, avatar: call.caller_avatar, frame: call.caller_frame, frameScale: call.caller_frame_scale, gender: call.caller_gender }
+    : { id: call.callee_id, name: call.callee_name, avatar: call.callee_avatar, frame: call.callee_frame, frameScale: call.callee_frame_scale, gender: call.callee_gender };
+  const myGender = role === 'callee' ? call.callee_gender : call.caller_gender;
+  // Görüntülü görüşme yalnızca erkek → kadın aramada ücretlidir; her açılışta yeniden sorulur.
+  const videoFeeDue = myGender === 'erkek' && other.gender === 'kadın';
+
+  const pressVideo = () => {
+    if (cameraOn || !videoFeeDue) { toggleCamera(); return; }
+    setFeeAsk(true);
+  };
+
+  // Onaylanınca 3.000 coin karşı tarafa gönderilir; elmasına ve kotasına işlenir.
+  const confirmVideoFee = async () => {
+    if (feeBusy) return;
+    setFeeBusy(true);
+    try {
+      await base44.functions.invoke('direct-call', { action: 'video-fee', callee_id: other.id });
+      setFeeAsk(false);
+      toast({ title: '💎 3.000 coin gönderildi', description: `${other.name || 'Karşı taraf'} kişisinin elmasına eklendi.` });
+      toggleCamera();
+    } catch (feeError) {
+      toast({ title: 'Görüntülü görüşme başlatılamadı', description: feeError.response?.data?.error || feeError.message, variant: 'destructive' });
+    } finally { setFeeBusy(false); }
+  };
 
   const statusText = phase === 'active'
     ? formatDuration(seconds)
@@ -106,7 +136,7 @@ export default function DirectCallOverlay() {
             <CallCircleButton tone="gray" onClick={toggleMute} label={muted ? 'Sesi aç' : 'Sessiz'}>
               {muted ? <MicOff className="h-7 w-7" /> : <Mic className="h-7 w-7" />}
             </CallCircleButton>
-            <CallCircleButton tone={cameraOn ? 'green' : 'gray'} onClick={toggleCamera} label={cameraOn ? 'Kamerayı kapat' : 'Görüntülü'}>
+            <CallCircleButton tone={cameraOn ? 'green' : 'gray'} onClick={pressVideo} label={cameraOn ? 'Kamerayı kapat' : 'Görüntülü'}>
               {cameraOn ? <Video className="h-7 w-7" /> : <VideoOff className="h-7 w-7" />}
             </CallCircleButton>
             <CallCircleButton tone="gray" onClick={toggleSpeaker} label={speaker ? 'Sesi kapat' : 'Sesi aç'}>
@@ -116,6 +146,14 @@ export default function DirectCallOverlay() {
           </>
         )}
       </div>
+      <ConfirmDialog
+        open={feeAsk}
+        onOpenChange={setFeeAsk}
+        title="Görüntülü görüşme"
+        description={`Görüntülü görüşmek için ${other.name || 'karşı tarafa'} 3.000 coin gönderilsin mi? Onayladığınızda 3.000 coin karşı tarafın elmasına ve kotasına işlenir.`}
+        confirmText={feeBusy ? 'Gönderiliyor...' : 'Onayla'}
+        onConfirm={confirmVideoFee}
+      />
     </section>
   );
 }
