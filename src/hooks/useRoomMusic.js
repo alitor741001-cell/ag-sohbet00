@@ -30,6 +30,8 @@ export default function useRoomMusic(roomId, enabled, options = {}) {
   const wantPlayRef = useRef(false);
   // Çalma oturumu: aynı şarkı yeniden başlatıldığında sesin başa alınması için izlenir.
   const sessionRef = useRef('');
+  // Şarkı henüz yüklenmediyse konum atlanamaz: hedef konum hatırlanır ve dosya hazır olunca uygulanır.
+  const pendingSeekRef = useRef(0);
 
   // Çalan şarkıyı devralan katman liste istemez: gereksiz çağrı yapılmaz.
   const withLibrary = options.library !== false;
@@ -78,6 +80,21 @@ export default function useRoomMusic(roomId, enabled, options = {}) {
     return () => { alive = false; unsubscribe(); };
   }, [roomId, enabled]);
 
+  // Dosya hazır olduğu anda bekleyen konuma atlanır: yeni açılan katman (küçültülmüş oda ya da
+  // odaya dönüş) şarkıyı baştan başlatmaz, odanın çaldığı yerden devam eder.
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return undefined;
+    const applyPending = () => {
+      const pending = pendingSeekRef.current;
+      if (!pending) return;
+      pendingSeekRef.current = 0;
+      try { audio.currentTime = pending; } catch { /* dosya yine hazır değilse akış devam eder */ }
+    };
+    audio.addEventListener('loadedmetadata', applyPending);
+    return () => audio.removeEventListener('loadedmetadata', applyPending);
+  }, []);
+
   // Oynatma: çalıyor/duraklatıldı bilgisi ve pozisyon sunucudan gelir, cihaz kendini hizalar.
   useEffect(() => {
     wantPlayRef.current = !!music?.is_playing;
@@ -91,6 +108,8 @@ export default function useRoomMusic(roomId, enabled, options = {}) {
     if (audio.dataset.track !== trackKey) {
       audio.dataset.track = trackKey;
       audio.src = music.url;
+      // Yeni şarkı: önceki şarkıdan kalan bekleyen konum geçersiz.
+      pendingSeekRef.current = 0;
     }
     const elapsed = music.is_playing && music.started_at
       ? Math.max(0, (Date.now() - new Date(music.started_at).getTime()) / 1000)
@@ -98,14 +117,22 @@ export default function useRoomMusic(roomId, enabled, options = {}) {
     const position = Number(music.position) || 0;
     const target = Math.max(0, position + elapsed);
     const started = music.started_at || '';
-    // Yeni çalma oturumu: duraklatıp yeniden başlatılan ya da durdurulan şarkı baştan çalar.
-    const restarted = !!started && started !== sessionRef.current;
+    const startedAt = started ? new Date(started).getTime() : 0;
+    // Yalnızca demin başlatılan bir çalma (durdur → başlat) baştan başlar. Çalmakta olan şarkıyı
+    // devralan katman sunucudaki konuma hizalanır ve şarkı kaldığı yerden devam eder.
+    const freshSession = !!startedAt && Date.now() - startedAt < 3000;
+    const restarted = freshSession && started !== sessionRef.current;
     if (started) sessionRef.current = started;
-    if (restarted && position === 0 && audio.readyState > 0) {
-      try { audio.currentTime = 0; } catch { /* dosya hazır değilse konum atlanamaz */ }
-    } else if (Math.abs((audio.currentTime || 0) - target) > 1.5) {
-      try { audio.currentTime = target; } catch { /* dosya yüklenmeden konum atlanamaz */ }
-    }
+    // Dosya hazır değilken konum atlanamaz: hedef hatırlanır, dosya yüklenince uygulanır.
+    const seekTo = (seconds) => {
+      if (audio.readyState > 0) {
+        try { audio.currentTime = seconds; } catch { /* konum atlanamadı */ }
+      } else {
+        pendingSeekRef.current = seconds;
+      }
+    };
+    if (restarted && position === 0) seekTo(0);
+    else if (Math.abs((audio.currentTime || 0) - target) > 1.5) seekTo(target);
     if (music.is_playing) { resume(); audio.play().catch(() => {}); }
     else audio.pause();
   }, [music, resume]);
