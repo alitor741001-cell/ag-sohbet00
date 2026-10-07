@@ -1,4 +1,4 @@
-import { Gamepad2, Gift, Keyboard, MessageCircle, MessageSquare, Mic, MicOff, Settings, Volume2, VolumeX } from 'lucide-react';
+import { Gamepad2, Gift, MessageCircle, MessageSquare, Mic, MicOff, Settings, Volume2, VolumeX } from 'lucide-react';
 
 const TONES = {
   gray: 'bg-white/10 text-white',
@@ -28,13 +28,14 @@ function RoundButton({ onClick, label, tone = 'gray', active, size = 'lg', child
 }
 
 /** Alt kontrol çubuğu: sohbet, mikrofon, hoparlör, oyun merkezi ve özel sohbet. */
-export default function VoiceControlBar({ micActive, deafened, chatOpen, gamesOpen, gamesEnabled = true, giftOpen, settingsOpen, keyboardOpen, onToggleMic, onToggleSpeaker, onOpenGames, onOpenGifts, onOpenSettings, onOpenPrivateChat, onToggleChat }) {
+export default function VoiceControlBar({ micActive, deafened, gamesOpen, gamesEnabled = true, giftOpen, settingsOpen, keyboardOpen, onToggleMic, onToggleSpeaker, onOpenGames, onOpenGifts, onOpenSettings, onOpenPrivateChat, onToggleChat }) {
   return (
     // Klavye açıkken alttaki boşluk kaldırılır: çubuk klavyenin hemen üstüne oturur, arada
     // siyah şerit kalmaz. Klavye kapalıyken alt güvenli alan (çubuk/gesture alanı) korunur.
     <div className={`flex shrink-0 items-center justify-between gap-1 px-3 pt-2 ${keyboardOpen ? 'pb-1.5' : 'pb-[max(0.75rem,env(safe-area-inset-bottom))]'}`}>
-      <RoundButton tone={chatOpen ? 'active' : 'gray'} active={chatOpen} onClick={onToggleChat} label={chatOpen ? 'Sohbeti kapat' : 'Sohbeti aç'}>
-        {chatOpen ? <Keyboard className="h-6 w-6" /> : <MessageSquare className="h-6 w-6" />}
+      {/* Sohbet düğmesi sabittir: açıkken ikonu ve rengi değişmez, hep aynı görünür. */}
+      <RoundButton onClick={onToggleChat} label="Sohbet">
+        <MessageSquare className="h-6 w-6" />
       </RoundButton>
       <div className="flex min-w-0 items-center gap-1.5">
         <RoundButton size="md" tone={micActive ? 'active' : 'gray'} active={micActive} onClick={onToggleMic} label="Mikrofon">
