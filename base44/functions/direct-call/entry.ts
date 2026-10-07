@@ -3,6 +3,7 @@ import { rateLimit } from '../../shared/security.ts';
 import { ensureGiftWallet } from '../../shared/giftWallet.ts';
 import { addGiftTotals } from '../../shared/userLevels.ts';
 import { syncQuotaRewards } from '../../shared/agency.ts';
+import { mirrorRecord } from '../../shared/supabaseMirror.ts';
 
 const OPEN_STATUSES = ['ringing', 'accepted'];
 const STALE_MS = 90 * 1000;
@@ -93,6 +94,7 @@ export default async function(req) {
         silent,
         started_at: new Date().toISOString(),
       });
+      await mirrorRecord(base44, 'DirectCall', created);
       return Response.json({ call: created });
     }
 
@@ -118,12 +120,14 @@ export default async function(req) {
         const free = await base44.asServiceRole.entities.DirectCall.update(call.id, {
           video_fee_status: 'accepted', video_fee_by: user.id, video_fee_paid: false,
         }).catch(() => null);
+        await mirrorRecord(base44, 'DirectCall', free);
         return Response.json({ status: 'accepted', coins: 0, call: free || { ...call, video_fee_status: 'accepted' } });
       }
 
       const pending = await base44.asServiceRole.entities.DirectCall.update(call.id, {
         video_fee_status: 'pending', video_fee_by: user.id, video_fee_paid: false,
       }).catch(() => null);
+      await mirrorRecord(base44, 'DirectCall', pending);
       return Response.json({
         status: 'pending', coins: VIDEO_CALL_COINS, other_id: otherId,
         call: pending || { ...call, video_fee_status: 'pending', video_fee_by: user.id },
@@ -144,6 +148,7 @@ export default async function(req) {
       // Red ya da isteği geri çekme: ücret alınmaz.
       if (!accept) {
         const rejected = await base44.asServiceRole.entities.DirectCall.update(call.id, { video_fee_status: 'rejected' });
+        await mirrorRecord(base44, 'DirectCall', rejected);
         return Response.json({ call: rejected, charged: 0 });
       }
 
@@ -160,6 +165,7 @@ export default async function(req) {
       // Kural yanıt anında yeniden doğrulanır: ücret yalnızca erkek → kadın görüşmede alınır.
       if (payer.gender !== 'erkek' || receiver.gender !== 'kadın') {
         const free = await base44.asServiceRole.entities.DirectCall.update(call.id, { video_fee_status: 'accepted', video_fee_paid: false });
+        await mirrorRecord(base44, 'DirectCall', free);
         return Response.json({ call: free, charged: 0 });
       }
 
@@ -171,7 +177,8 @@ export default async function(req) {
       const payerName = payer.username || payer.full_name || 'Kullanıcı';
       const receiverName = receiver.username || receiver.full_name || 'Kullanıcı';
       if (balance < VIDEO_CALL_COINS) {
-        await base44.asServiceRole.entities.DirectCall.update(call.id, { video_fee_status: 'rejected' }).catch(() => {});
+        const unpaid = await base44.asServiceRole.entities.DirectCall.update(call.id, { video_fee_status: 'rejected' }).catch(() => null);
+        await mirrorRecord(base44, 'DirectCall', unpaid);
         return Response.json({
           error: `${payerName} kişisinin coin bakiyesi yetersiz. Görüntülü görüşme için ${VIDEO_CALL_COINS.toLocaleString('tr-TR')} coin gerekir.`,
         }, { status: 400 });
@@ -193,6 +200,7 @@ export default async function(req) {
       const updated = await base44.asServiceRole.entities.DirectCall.update(call.id, {
         video_fee_status: 'accepted', video_fee_paid: true,
       });
+      await mirrorRecord(base44, 'DirectCall', updated);
       await base44.asServiceRole.entities.Notification.create({
         user_id: receiver.id,
         title: '📹 Görüntülü görüşme',
@@ -203,6 +211,15 @@ export default async function(req) {
       }).catch(() => {});
 
       return Response.json({ call: updated, charged: VIDEO_CALL_COINS });
+    }
+
+    // get: süren aramanın güncel hâli — uygulama bunu 5 saniyede bir okuyup tazeler
+    if (action === 'get') {
+      const callId = String(body.call_id || '');
+      const call = await base44.asServiceRole.entities.DirectCall.get(callId).catch(() => null);
+      if (!call) return Response.json({ call: null });
+      if (call.caller_id !== user.id && call.callee_id !== user.id) return Response.json({ error: 'Bu aramaya erişiminiz yok.' }, { status: 403 });
+      return Response.json({ call });
     }
 
     // active: kaçırılan gelen aramayı yakalamak için yedek sorgu
@@ -229,6 +246,7 @@ export default async function(req) {
           accepted_at: nowIso,
           started_at: call.started_at || nowIso,
         });
+        await mirrorRecord(base44, 'DirectCall', updated);
         return Response.json({ call: updated });
       }
 
@@ -236,16 +254,19 @@ export default async function(req) {
         if (!isCallee) return Response.json({ error: 'yetkisiz' }, { status: 403 });
         if (call.status !== 'ringing') return Response.json({ call });
         const updated = await base44.asServiceRole.entities.DirectCall.update(callId, { status: 'rejected', ended_at: nowIso, ended_by: user.id });
+        await mirrorRecord(base44, 'DirectCall', updated);
         return Response.json({ call: updated });
       }
 
       if (action === 'cancel') {
         if (!isCaller) return Response.json({ error: 'yetkisiz' }, { status: 403 });
         const updated = await base44.asServiceRole.entities.DirectCall.update(callId, { status: 'cancelled', ended_at: nowIso, ended_by: user.id });
+        await mirrorRecord(base44, 'DirectCall', updated);
         return Response.json({ call: updated });
       }
 
       const updated = await base44.asServiceRole.entities.DirectCall.update(callId, { status: 'ended', ended_at: nowIso, ended_by: user.id });
+      await mirrorRecord(base44, 'DirectCall', updated);
       return Response.json({ call: updated });
     }
 

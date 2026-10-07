@@ -34,6 +34,7 @@ const NUMERIC_COLUMNS = new Set([
 const BOOLEAN_COLUMNS = new Set([
   'hidden', 'is_playing', 'voice_mode', 'voice_enabled', 'is_personal', 'chat_enabled',
   'online', 'read', 'active', 'muted', 'speaking', 'locked', 'is_banned', 'is_suspended', 'hidden_user',
+  'video_fee_paid', 'silent',
 ]);
 
 const ROOM_COLUMNS = ['name', 'owner_id', 'owner_name', 'room_type', 'status', 'hidden', 'room_number', 'movie_id', 'movie_title', 'is_playing', 'voice_mode', 'voice_enabled', 'participant_count', 'is_personal', 'max_users', 'seat_count', 'personal_room_code', 'chat_enabled', 'current_time', 'last_sync'];
@@ -53,6 +54,8 @@ export const LIVE_COLLECTIONS = [
   { entity: 'Friendship', table: 'friendships', columns: ['requester_id', 'requester_name', 'recipient_id', 'recipient_name', 'status', 'typing_user_id', 'members', 'blocked_by'], live: 'since' },
   { entity: 'RocketLive', table: 'rocket_live', columns: ['key', 'round_no', 'status', 'crash_at', 'phase_ends_at'], live: 'full' },
   { entity: 'User', table: 'app_users', columns: ['full_name', 'email', 'username', 'member_id', 'avatar', 'role', 'gender', 'title', 'display_role', 'vip_level', 'membership_status', 'hidden_user', 'loaded_coins', 'gift_sent_k', 'gift_received_k', 'is_banned', 'is_suspended', 'agency_code', 'agency_name', 'owned_agency_id', 'diamond_month', 'profile_frame', 'special_frame_id', 'last_login'], live: 'full' },
+  // Görüntülü arama durumu canlı koleksiyona alındı: arama kayıtları aynada taze kalır.
+  { entity: 'DirectCall', table: 'direct_calls', columns: ['caller_id', 'caller_name', 'callee_id', 'callee_name', 'conversation_id', 'status', 'video_fee_status', 'video_fee_by', 'video_fee_paid', 'silent', 'started_at', 'accepted_at', 'ended_at', 'ended_by'], live: 'since' },
 ];
 
 /** Tam ayna: canlı veriler + ekonomi, oyun, ajans, destek ve katalog kayıtları. */
@@ -69,7 +72,6 @@ export const ALL_COLLECTIONS = [
   { entity: 'FriendshipProgression', table: 'friendship_progressions', columns: ['user_id'] },
   { entity: 'DmTyping', table: 'dm_typing', columns: ['user_id', 'friendship_id'] },
   { entity: 'Report', table: 'reports', columns: ['reporter_id', 'target_id', 'status'] },
-  { entity: 'DirectCall', table: 'direct_calls', columns: ['caller_id', 'callee_id', 'status'] },
   { entity: 'SupportTicket', table: 'support_tickets', columns: ['user_id', 'status'] },
   { entity: 'SupportMessage', table: 'support_messages', columns: ['ticket_id', 'user_id'] },
   { entity: 'Gift', table: 'gifts', columns: ['name', 'emoji', 'image_url', 'k_value', 'category', 'sort_order', 'active'] },

@@ -50,8 +50,24 @@ const micPublication = (Track) => ({ name: 'microphone', source: Track.Source.Mi
 const CAMERA_PUBLICATION = {
   name: 'camera',
   simulcast: false,
-  degradationPreference: 'maintain-resolution',
-  videoEncoding: { maxBitrate: 1_700_000, maxFramerate: 30 },
+  // Akıcılık korunur: bant darsa çözünürlük düşer, görüntü donmaz (kasma bundandı).
+  degradationPreference: 'maintain-framerate',
+  videoEncoding: { maxBitrate: 1_200_000, maxFramerate: 30 },
+};
+const CAMERA_RESOLUTION = { width: 1280, height: 720 };
+
+// Kamera kaynağı geç serbest kalırsa ilk deneme boş döner: kısa bir arayla bir kez daha
+// denenir. Böylece kullanıcı düğmeye iki kez basmak zorunda kalmıyor.
+const createCameraTrack = async (engine, facingMode) => {
+  try {
+    return await engine.createLocalVideoTrack({ facingMode, resolution: CAMERA_RESOLUTION });
+  } catch (error) {
+    // İzin reddi tekrar denenmez; cihaz o yönü desteklemiyorsa kısıt düşürülerek denenir.
+    if (error?.name === 'NotAllowedError' || error?.name === 'PermissionDeniedError') throw error;
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    const loose = error?.name === 'OverconstrainedError' || error?.name === 'NotFoundError';
+    return engine.createLocalVideoTrack({ ...(loose ? {} : { facingMode }), resolution: CAMERA_RESOLUTION });
+  }
 };
 
 export default function DirectCallProvider({ children }) {
@@ -467,7 +483,7 @@ export default function DirectCallProvider({ children }) {
   // 720p: düşük çözünürlük karşı tarafta bulanık görünüyordu.
   const acquireCamera = useCallback(async () => {
     const engine = callEngine || (await loadCallEngine());
-    const track = await engine.createLocalVideoTrack({ facingMode: facingRef.current, resolution: { width: 1280, height: 720 } });
+    const track = await createCameraTrack(engine, facingRef.current);
     syncFacing(track);
     return track;
   }, [syncFacing]);
@@ -579,7 +595,7 @@ export default function DirectCallProvider({ children }) {
     const next = facingRef.current === 'user' ? 'environment' : 'user';
     try {
       const engine = callEngine || (await loadCallEngine());
-      const track = await engine.createLocalVideoTrack({ facingMode: next, resolution: { width: 1280, height: 720 } });
+      const track = await createCameraTrack(engine, next);
       if (roomRef.current !== room) { track.stop(); return; }
       cameraTrackRef.current = track;
       // Aynalama açılan gerçek kameraya göre ayarlanır, istenen yöne göre değil.
@@ -606,10 +622,17 @@ export default function DirectCallProvider({ children }) {
     const myId = user?.id;
     if (!myId) return;
 
+    // Aynı aramanın gecikmiş eski bir kopyası durumu geriye sarmasın: kayıt zamanı izlenir.
+    const applied = { id: '', at: 0 };
+
     const applyRecord = (record, type) => {
       if (!record) return;
       const involved = record.caller_id === myId || record.callee_id === myId;
       if (!involved) return;
+      const at = new Date(record.updated_date || record.created_date || 0).getTime() || 0;
+      if (applied.id === record.id && applied.at > at) return;
+      if (applied.id !== record.id) { applied.id = record.id; applied.at = 0; }
+      applied.at = Math.max(applied.at, at);
 
       if (type === 'create') {
         if (record.callee_id === myId && record.status === 'ringing' && phaseRef.current === 'idle') {
@@ -661,19 +684,37 @@ export default function DirectCallProvider({ children }) {
     };
     syncActive();
 
-    const onVisible = () => { if (document.visibilityState === 'visible') syncActive(); };
+    // Arama sürerken kayıt 5 saniyede bir tazelenir: canlı akış gecikse de (mobil/PWA)
+    // görüntülü isteğin sonucu ve karşı tarafın kamerası kendiliğinden yerine oturur.
+    const refreshCall = async () => {
+      const current = callRef.current;
+      if (!current || document.visibilityState === 'hidden') return;
+      try {
+        const response = await base44.functions.invoke('direct-call', { action: 'get', call_id: current.id });
+        if (response.data?.call) applyRecord(response.data.call, 'update');
+      } catch {}
+      // Olay kaçırıldıysa açık kalan karşı taraf kamerası sahneye alınır.
+      attachAllRemoteVideo();
+    };
+
+    const onVisible = () => {
+      if (document.visibilityState !== 'visible') return;
+      if (phaseRef.current === 'idle') syncActive(); else refreshCall();
+    };
     document.addEventListener('visibilitychange', onVisible);
     // Yedek yoklama 15sn'de bir; sekme arkadayken çağrılmaz.
     const poll = setInterval(() => {
       if (phaseRef.current === 'idle' && document.visibilityState !== 'hidden') syncActive();
     }, 15000);
+    const live = setInterval(() => { if (phaseRef.current !== 'idle') refreshCall(); }, 5000);
 
     return () => {
       unsubscribe();
       document.removeEventListener('visibilitychange', onVisible);
       clearInterval(poll);
+      clearInterval(live);
     };
-  }, [user?.id, activateCall, beginLocalCall, prepareSession, publishCamera, stopRingtone, teardown]);
+  }, [user?.id, activateCall, attachAllRemoteVideo, beginLocalCall, prepareSession, publishCamera, stopRingtone, teardown]);
 
   // Cevapsız aramayı otomatik iptal et
   useEffect(() => {
