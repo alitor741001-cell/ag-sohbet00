@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Link } from 'react-router-dom';
 import { BarChart3, Check, EyeOff, Film, Lock, Mic } from 'lucide-react';
 import { Image } from '@/components/ui/image';
@@ -6,7 +7,7 @@ import { prefetchRoomCancel, prefetchRoomSoon } from '@/lib/roomPrefetch';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 
 /** Ana sayfa keşfet ızgarasındaki kare oda kartı: altın çerçeveli premium kart. */
-export default function RoomDiscoveryCard({ room, owner, kind, filmTitle, friendInside }) {
+function RoomDiscoveryCard({ room, owner, kind, filmTitle, friendInside }) {
   const { user } = useCurrentUser();
   const viewers = room.participants?.length || 0;
   // İçeride kimse yoksa oda kilitlidir: sahibi odaya girene kadar kimse içeri alınmaz.
@@ -119,3 +120,6 @@ export default function RoomDiscoveryCard({ room, owner, kind, filmTitle, friend
     </Link>
   );
 }
+
+// Kart yalnızca kendi verisi değiştiğinde yeniden çizilir: liste tazelenirken ızgara akıcı kalır.
+export default memo(RoomDiscoveryCard);
