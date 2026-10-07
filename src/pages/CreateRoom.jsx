@@ -77,7 +77,15 @@ export default function CreateRoom() {
   const inputCls = "w-full bg-[hsl(var(--secondary))] rounded-xl px-3 py-2.5 text-sm text-white outline-none focus:ring-2 focus:ring-[#f2ce6b]/40 border border-[#f2ce6b]/20 placeholder:text-gray-500";
 
   return (
-    <div className="dark mx-auto w-full max-w-md px-3 py-6 text-white sm:px-5">
+    <div className="dark relative min-h-screen overflow-x-clip bg-anthracite text-white">
+      {/* Zemin ana sayfayla aynı: antrasit üstünde hafif altın/kırmızı ışıklar. */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+        <div className="absolute -left-24 -top-28 h-72 w-72 rounded-full bg-premium-red/10 blur-3xl" />
+        <div className="absolute -right-20 top-20 h-64 w-64 rounded-full bg-premium-gold/10 blur-3xl" />
+        <div className="absolute bottom-10 left-1/4 h-64 w-64 rounded-full bg-premium-gold-deep/10 blur-3xl" />
+      </div>
+
+      <div className="relative mx-auto w-full max-w-md px-3 py-6 text-white sm:px-5">
       {/* Tek düğme: ev işareti. Bilgiler kayıtlıysa basıldığı anda oda açılır. */}
       <div className="relative overflow-hidden rounded-2xl p-5 text-center" style={{ background: 'linear-gradient(135deg, rgba(220,38,38,0.16), rgba(242,206,107,0.08))', border: '1px solid rgba(242,206,107,0.28)' }}>
         <div className="absolute -right-6 -bottom-6 w-28 h-28 rounded-full blur-2xl opacity-30" style={{ background: 'radial-gradient(circle, #dc2626, transparent 70%)' }} />
@@ -125,6 +133,7 @@ export default function CreateRoom() {
           </button>
         </form>
       )}
+      </div>
     </div>
   );
 }
