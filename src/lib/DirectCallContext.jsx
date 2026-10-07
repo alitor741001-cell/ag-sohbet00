@@ -234,6 +234,21 @@ export default function DirectCallProvider({ children }) {
     });
   }, []);
 
+  // Karşı tarafın sesi odadaysa çağrı gerçekten cevaplanmıştır: arayan taraf, kayıt
+  // güncellemesi gecikse bile "Bağlanıyor" ekranında kilitli kalmaz ve sesi duyar.
+  // Zil çalarken karşı taraf yalnızca odaya katılır, mikrofonunu yayınlamaz.
+  const markAnswered = useCallback(() => {
+    if (phaseRef.current !== 'outgoing') return;
+    let live = false;
+    roomRef.current?.remoteParticipants.forEach((participant) => {
+      participant.audioTrackPublications.forEach((publication) => { if (publication.track) live = true; });
+    });
+    if (!live) return;
+    phaseRef.current = 'active';
+    setPhase('active');
+    armOutputs(true);
+  }, [armOutputs]);
+
   // --- Bağlantı ---
 
   const watchMic = useCallback((room, track) => {
@@ -309,14 +324,15 @@ export default function DirectCallProvider({ children }) {
           const engine = await loadCallEngine();
           const room = new engine.NativeCallAudio(ROOM_OPTIONS);
           roomRef.current = room;
-          room.on(engine.RoomEvent.TrackSubscribed, (track) => { attachRemoteAudio(track); attachRemoteVideo(track); });
-          room.on(engine.RoomEvent.ParticipantConnected, () => { attachAllRemoteAudio(); attachAllRemoteVideo(); });
+          room.on(engine.RoomEvent.TrackSubscribed, (track) => { attachRemoteAudio(track); attachRemoteVideo(track); markAnswered(); });
+          room.on(engine.RoomEvent.ParticipantConnected, () => { attachAllRemoteAudio(); attachAllRemoteVideo(); markAnswered(); });
           room.on(engine.RoomEvent.TrackPublished, (publication) => {
             publication.setSubscribed(true);
             if (publication.kind === engine.Track.Kind.Audio && publication.track) attachRemoteAudio(publication.track);
             if (publication.kind === engine.Track.Kind.Video && publication.track) attachRemoteVideo(publication.track);
+            markAnswered();
           });
-          room.on(engine.RoomEvent.Reconnected, () => { attachAllRemoteAudio(); attachAllRemoteVideo(); });
+          room.on(engine.RoomEvent.Reconnected, () => { attachAllRemoteAudio(); attachAllRemoteVideo(); markAnswered(); });
           // Karşı tarafın mikrofon durumu yayın bilgisi üzerinden yakalanır. Görüntüde
           // "susturulma" yok sayılır: kamera kapatılınca yayın tamamen kaldırılır ve sahne o an düşer.
           room.on(engine.RoomEvent.TrackMuted, (publication, participant) => {
@@ -346,11 +362,13 @@ export default function DirectCallProvider({ children }) {
       const room = await task.promise;
       if (!room || roomRef.current !== room) return;
       attachAllRemoteAudio();
+      // Odaya girildiğinde karşı tarafın sesi zaten varsa görüşme doğrudan açılır.
+      markAnswered();
       if (publish) await publishMic(room);
     } catch {
       if (callRef.current?.id === callId) setError('Ses bağlantısı kurulamadı.');
     }
-  }, [attachAllRemoteAudio, attachAllRemoteVideo, attachRemoteAudio, attachRemoteVideo, publishMic]);
+  }, [attachAllRemoteAudio, attachAllRemoteVideo, attachRemoteAudio, attachRemoteVideo, markAnswered, publishMic]);
 
   // Zil çalarken ses kanalını ve mikrofonu hazırla — kabulde gecikme olmasın.
   const prepareSession = useCallback((callId) => {
@@ -416,7 +434,15 @@ export default function DirectCallProvider({ children }) {
     }).catch(() => setError('Mikrofon başka bir görüşmede kullanılıyor.'));
     try {
       const response = await base44.functions.invoke('direct-call', { action: 'accept', call_id: current.id });
-      setCall(response.data?.call || { ...current, status: 'accepted', accepted_at: new Date().toISOString() });
+      const record = response.data?.call;
+      // Sunucu aramayı yanıtlanmış saymadıysa görüşme açılmaz: karşı taraf "Bağlanıyor"
+      // ekranında kilitli kalırken burada yanlış bir süre işlemesin.
+      if (!record || record.status !== 'accepted') {
+        setError(response.data?.error || 'Aramaya yanıt verilemedi.');
+        teardown();
+        return;
+      }
+      setCall(record);
     } catch {
       setError('Aramaya yanıt verilemedi.');
       teardown();
