@@ -6,12 +6,6 @@ import useMessageProfiles from '@/hooks/useMessageProfiles';
 import { seatIndexRows } from '@/components/voice/seatLayout';
 import { useSize } from '@/hooks/use-size';
 
-// Koltuk hücresinin piksel genişliği (VoiceSeat CELL ölçüleriyle birebir aynı):
-// satır genişliği ve koltuk arası boşluk bu değerlere göre hesaplanır.
-const CELL_PX = { xs: 42, sm: 52, md: 68, lg: 88, xl: 96 };
-
-
-
 /**
  * Sahnedeki yuvarlak oturma düzeni — satırlar ortalanır. Sayı tahtası açıkken her kişinin altında sayı hücresi durur.
  * Koltuk boyutu ölçülen genişliğe göre seçilir: dar telefonlarda da satır yana taşmaz,
@@ -43,11 +37,9 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
   const widthSize = featureTop
     ? (perSeat >= 96 ? 'xl' : perSeat >= 86 ? 'lg' : perSeat >= 66 ? 'md' : perSeat >= 50 ? 'sm' : 'xs')
     : (perSeat >= 84 ? 'lg' : perSeat >= 62 ? 'md' : perSeat >= 46 ? 'sm' : 'xs');
-  // 9'lu düzen: satırda artan boşluk koltuk aralarına dağıtılır, dörtlü satırlar sahnenin
-  // iki kenarına yanaşır. Geniş ekranda boşluk şişmesin diye üst sınır konur.
-  const gap = featureTop
-    ? Math.min(narrow ? 24 : 40, Math.max(baseGap, (available - CELL_PX[widthSize] * widestRow) / (widestRow - 1)))
-    : baseGap;
+  // Koltuk arası boşluk dardır: 9'lu düzende de koltuklar referanstaki gibi bitişik durur,
+  // satır genişliği aralar açılarak değil koltuk boyuyla doldurulur.
+  const gap = baseGap;
   // Yükseklik de hesaba katılır: koltuğun altındaki isim ve (tahta açıkken) sayı şeridi için
   // gereken yer düşülür, kalan yükseklik koltuk boyutunu belirler. Böylece koltuk sayısı
   // artırıldığında alttaki sıraların rakamları görünmez olmaz.
@@ -65,9 +57,13 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
   const fitSize = SIZES[Math.min(SIZES.indexOf(widthSize), SIZES.indexOf(heightSize))];
   // Kalabalık düzende boyut yükseklik yüzünden kısılmaz: en az 'md' genişlik korunur,
   // sığmayan satırlar sahne içinde kaydırılarak görünür.
+  // 9'lu düzende de koltuk boyu genişlikten gelir: koltuklar referanstaki gibi büyük ve
+  // satır kenarlara yanaşık kalır, sığmayan içerik sahne içinde kaydırılır.
   const size = dense
     ? SIZES[Math.min(SIZES.indexOf(widthSize), Math.max(SIZES.indexOf(heightSize), SIZES.indexOf('md')))]
-    : fitSize;
+    : featureTop
+      ? widthSize
+      : fitSize;
   // Orta çerçeve bir beden büyük: referanstaki 9'lu düzenin oranı korunur.
   const topSize = SIZES[Math.min(SIZES.indexOf(size) + 1, SIZES.length - 1)];
 
