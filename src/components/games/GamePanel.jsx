@@ -4,6 +4,8 @@ import { Image } from '@/components/ui/image';
 import { GAMES, ROCKET_ID } from './gameCatalog';
 import SlotGame from './SlotGame';
 import CrashRocketGame from './CrashRocketGame';
+import { useCurrentUser } from '@/lib/useCurrentUser';
+import { broadcasterState } from '@/lib/broadcaster';
 
 // Sinematik geçişin toplam süresi.
 const TRANSITION_MS = 700;
@@ -11,6 +13,7 @@ const TRANSITION_MS = 700;
 /** Oyun merkezi: sohbet alanındaki kumanda butonuyla açılan ayrı panel.
     initialGame verilirse panel listeyi atlayıp oyunu doğrudan tam ekran açar. */
 export default function GamePanel({ open, onClose, roomId, initialGame = null }) {
+  const { user } = useCurrentUser();
   const [selected, setSelected] = useState(initialGame);
   const [phase, setPhase] = useState(initialGame ? 'opening' : 'idle'); // 'opening' | 'closing'
   const timerRef = useRef(null);
@@ -46,6 +49,8 @@ export default function GamePanel({ open, onClose, roomId, initialGame = null })
   }, [onClose]);
 
   if (!open) return null;
+  // Oyun merkezi yalnızca yayıncı/ajans üyesi hesaplara açıktır.
+  if (!broadcasterState(user).games) return null;
 
   const transitioning = phase !== 'idle';
 

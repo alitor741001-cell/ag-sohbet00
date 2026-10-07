@@ -10,6 +10,7 @@ import { agencyApi } from '@/lib/agency';
 import ProfileHeroBlock from '@/components/profile/ProfileHeroBlock';
 import ProfileStatsRow from '@/components/profile/ProfileStatsRow';
 import ProfileIdentityBlock from '@/components/profile/ProfileIdentityBlock';
+import { broadcasterState } from '@/lib/broadcaster';
 
 const REPORT_REASONS = ['Spam', 'Taciz', 'Uygunsuz İçerik', 'Diğer'];
 
@@ -70,6 +71,8 @@ export default function FullUserProfile({
   const ownerAgency = !hidden && (profile?.owned_agency_name
     ? { name: profile.owned_agency_name, code: profile.owned_agency_code || '' }
     : (profile?.agency_role === 'owner' && profile?.agency_name ? { name: profile.agency_name, code: profile.agency_code || '' } : null));
+  // Ülke etiketi: normal üyede Türkiye, yayıncı/ajans üyesinde Almanya.
+  const badge = broadcasterState(profile);
   const showSocial = !isSelf && !hidden;
   // Ajans sahibi, kendi ajansında olmayan bir kullanıcıyı yayıncı olarak davet edebilir.
   // Yayıncı daveti yalnızca arkadaş olduğun kullanıcılara gönderilebilir.
@@ -228,6 +231,8 @@ export default function FullUserProfile({
                 palette={palette}
                 genderLabel={genderLabel}
                 age={age}
+                country={badge.country}
+                flag={badge.flag}
                 memberId={memberId}
                 joinDate={formatDate(profile?.created_date)}
                 copied={copied}

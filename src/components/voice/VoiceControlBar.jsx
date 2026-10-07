@@ -28,7 +28,7 @@ function RoundButton({ onClick, label, tone = 'gray', active, size = 'lg', child
 }
 
 /** Alt kontrol çubuğu: sohbet, mikrofon, hoparlör, oyun merkezi ve özel sohbet. */
-export default function VoiceControlBar({ micActive, deafened, chatOpen, gamesOpen, giftOpen, settingsOpen, onToggleMic, onToggleSpeaker, onOpenGames, onOpenGifts, onOpenSettings, onOpenPrivateChat, onToggleChat }) {
+export default function VoiceControlBar({ micActive, deafened, chatOpen, gamesOpen, gamesEnabled = true, giftOpen, settingsOpen, onToggleMic, onToggleSpeaker, onOpenGames, onOpenGifts, onOpenSettings, onOpenPrivateChat, onToggleChat }) {
   return (
     <div className="flex shrink-0 items-center justify-between gap-1 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2">
       <RoundButton tone={chatOpen ? 'active' : 'gray'} active={chatOpen} onClick={onToggleChat} label={chatOpen ? 'Sohbeti kapat' : 'Sohbeti aç'}>
@@ -47,9 +47,12 @@ export default function VoiceControlBar({ micActive, deafened, chatOpen, gamesOp
         <RoundButton size="md" onClick={onOpenPrivateChat} label="Özel sohbet">
           <MessageCircle className="h-5 w-5" />
         </RoundButton>
-        <RoundButton size="md" tone={gamesOpen ? 'active' : 'gray'} active={gamesOpen} onClick={onOpenGames} label="Oyun merkezi">
-          <Gamepad2 className="h-5 w-5" />
-        </RoundButton>
+        {/* Oyun merkezi yalnızca yayıncı/ajans üyesi hesaplarda görünür. */}
+        {gamesEnabled && (
+          <RoundButton size="md" tone={gamesOpen ? 'active' : 'gray'} active={gamesOpen} onClick={onOpenGames} label="Oyun merkezi">
+            <Gamepad2 className="h-5 w-5" />
+          </RoundButton>
+        )}
       </div>
       <RoundButton size="md" tone={settingsOpen ? 'active' : 'gray'} active={settingsOpen} onClick={onOpenSettings} label="Oda ayarları">
         <Settings className="h-5 w-5" />

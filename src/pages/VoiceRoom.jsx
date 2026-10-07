@@ -4,6 +4,7 @@ import { Armchair, Eye, Gift, Lock, LogOut, MessageSquare, Mic, MicOff, MoreHori
 import { base44 } from '@/api/base44Client';
 import subscribeEntity from '@/components/data/entitySubscriptions';
 import { useCurrentUser } from '@/lib/useCurrentUser';
+import { broadcasterState } from '@/lib/broadcaster';
 import { useVoiceChat } from '@/hooks/useVoiceChat';
 import useKeyboardInset from '@/hooks/useKeyboardInset';
 import useRoomLevels from '@/hooks/useRoomLevels';
@@ -59,6 +60,8 @@ export default function VoiceRoom() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useCurrentUser();
+  // Oyun merkezi yalnızca yayıncı/ajans üyesi hesaplara açıktır.
+  const gamesEnabled = broadcasterState(user).games;
   const { toast } = useToast();
   const { begin: beginAction, end: endAction } = useRoomActionGate(id);
 
@@ -1097,6 +1100,7 @@ export default function VoiceRoom() {
         onToggleMic={handleMic}
         onToggleSpeaker={voice.toggleDeafen}
         gamesOpen={gamesOpen}
+        gamesEnabled={gamesEnabled}
         giftOpen={giftOpen}
         settingsOpen={settingsOpen}
         onOpenGames={() => setGamesOpen(true)}
@@ -1242,7 +1246,7 @@ export default function VoiceRoom() {
 
       <InviteSheet open={inviteOpen} onClose={() => setInviteOpen(false)} onInvite={sendInvites} />
 
-      {gamesOpen && (
+      {gamesOpen && gamesEnabled && (
         <Suspense fallback={null}>
           <GamePanel open={gamesOpen} onClose={() => setGamesOpen(false)} roomId={id} />
         </Suspense>

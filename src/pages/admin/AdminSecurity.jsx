@@ -3,24 +3,18 @@ import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
 import { ShieldAlert, ShieldCheck, ShieldOff, QrCode, KeyRound } from 'lucide-react';
-import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 export default function AdminSecurity() {
   const { user } = useCurrentUser();
   const { toast } = useToast();
-  const [logs, setLogs] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState({ enabled: false, hasSecret: false });
   const [setup, setSetup] = useState(null);
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
-  const [showClearConfirm, setShowClearConfirm] = useState(false);
-  const [clearing, setClearing] = useState(false);
 
   const loadStatus = () => base44.functions.invoke('admin-2fa', { action: 'status' }).then((r) => setStatus(r.data)).catch(() => {});
-  const loadLogs = () => base44.entities.SecurityLog.list(200).then((r) => { setLogs(r); setLoading(false); }).catch(() => setLoading(false));
 
-  useEffect(() => { loadStatus(); loadLogs(); }, []);
+  useEffect(() => { loadStatus(); }, []);
 
   const doSetup = async () => {
     setBusy(true);
@@ -47,18 +41,6 @@ export default function AdminSecurity() {
     } catch (e) { toast({ title: 'İşlem başarısız', variant: 'destructive' }); }
     setBusy(false);
   };
-
-  const clearLogs = async () => {
-    setClearing(true);
-    try {
-      await base44.entities.SecurityLog.deleteMany({});
-      setLogs([]); setShowClearConfirm(false);
-      toast({ title: 'Tüm güvenlik kayıtları silindi' });
-    } catch (e) { toast({ title: 'Kayıtlar silinemedi', variant: 'destructive' }); }
-    setClearing(false);
-  };
-
-  const color = (l) => l === 'critical' ? 'bg-red-500/20 text-red-400' : l === 'warning' ? 'bg-amber-500/20 text-amber-400' : 'bg-blue-500/20 text-blue-400';
 
   return (
     <div>
@@ -95,25 +77,6 @@ export default function AdminSecurity() {
         {status.enabled && <p className="text-xs text-muted-foreground mt-2">2FA açıkken admin paneline her girişte doğrulama kodu istenir.</p>}
       </div>
 
-      <div className="mb-2 flex items-center justify-between gap-3">
-        <h2 className="font-bold">Güvenlik Olayları</h2>
-        {logs.length > 0 && <button onClick={() => setShowClearConfirm(true)} className="rounded-lg bg-destructive px-3 py-2 text-xs font-semibold text-destructive-foreground hover:bg-destructive/90">TÜMÜNÜ SİL</button>}
-      </div>
-      {loading ? <p className="text-muted-foreground">Yükleniyor...</p> :
-       logs.length === 0 ? <p className="text-muted-foreground text-sm">Kayıtlı güvenlik olayı yok.</p> :
-       <div className="space-y-2">
-         {logs.map((l) => (
-           <div key={l.id} className="bg-card border border-border rounded-xl p-3 flex items-center gap-3">
-             <span className={`text-xs px-2 py-1 rounded ${color(l.level)}`}>{l.level}</span>
-             <div className="flex-1 min-w-0">
-               <p className="font-medium text-sm">{l.action}</p>
-               <p className="text-xs text-muted-foreground truncate">{l.user_email || l.user_id}{l.detail ? ` · ${l.detail}` : ''}</p>
-             </div>
-             <span className="text-xs text-muted-foreground shrink-0">{l.created_date ? new Date(l.created_date).toLocaleString('tr-TR') : ''}</span>
-           </div>
-         ))}
-       </div>}
-      <ConfirmDialog open={showClearConfirm} onOpenChange={setShowClearConfirm} title="Tüm kayıtlar silinsin mi?" description="Bütün güvenlik olayları kalıcı olarak silinecek. Bu işlem geri alınamaz." confirmText={clearing ? 'Siliniyor...' : 'Tümünü Sil'} onConfirm={clearLogs} />
     </div>
   );
 }

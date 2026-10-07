@@ -4,6 +4,7 @@ import { Film, Gamepad2, Loader2, Search, Users } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import subscribeEntity from '@/components/data/entitySubscriptions';
 import { useCurrentUser } from '@/lib/useCurrentUser';
+import { broadcasterState } from '@/lib/broadcaster';
 import RoomDiscoveryCard from '@/components/home/RoomDiscoveryCard';
 import GameDiscoveryRow from '@/components/home/GameDiscoveryRow';
 import useFriends from '@/hooks/useFriends';
@@ -41,6 +42,13 @@ export default function RoomDiscovery({ shortcuts = null }) {
   const [query, setQuery] = useState('');
   // Açık oyun: ana sayfadan seçilen oyun tam ekran oynanır.
   const [gameOpen, setGameOpen] = useState(null);
+  // Oyunlar yalnızca yayıncı/ajans üyesi hesaplara açıktır; ülke etiketiyle aynı kaynaktan çözülür.
+  const gamesEnabled = broadcasterState(user).games;
+
+  // Ayrıcalık kalkarsa oyun sekmesi kendiliğinden kapanır.
+  useEffect(() => {
+    if (!gamesEnabled && tab === 'games') setTab('friends');
+  }, [gamesEnabled, tab]);
 
   // Gizlendiğini bildiğimiz odalar kimliğiyle işaretlenir: canlı güncelleme gelse
   // de ana sayfaya geri dönmez (olay yalnızca değişen alanları taşıyabilir).
@@ -290,6 +298,7 @@ export default function RoomDiscovery({ shortcuts = null }) {
         >
           <Users className="h-4 w-4 shrink-0" /> <span className="truncate">Arkadaşlar</span>
         </button>
+        {gamesEnabled && (
         <button
           type="button"
           onClick={() => setTab('games')}
@@ -301,6 +310,7 @@ export default function RoomDiscovery({ shortcuts = null }) {
         >
           <Gamepad2 className="h-4 w-4 shrink-0" /> <span className="truncate">Oyunlar</span>
         </button>
+        )}
       </div>
 
       {tab !== 'games' && (
@@ -372,7 +382,7 @@ export default function RoomDiscovery({ shortcuts = null }) {
       )}
 
       {/* Seçilen oyun tam ekran açılır: oda kurmaya gerek yok. */}
-      {gameOpen && (
+      {gameOpen && gamesEnabled && (
         <Suspense fallback={null}>
           <GamePanel open initialGame={gameOpen} onClose={() => setGameOpen(null)} />
         </Suspense>

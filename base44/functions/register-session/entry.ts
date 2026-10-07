@@ -1,6 +1,29 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
 import { getClientIp, parseUserAgent, geoLookup } from '../../shared/sessionInfo.ts';
 
+// Tek kişi tek oturum kartı: her girişte yeni satır açılmaz, kişinin mevcut oturum
+// satırı tazelenir. Böylece listede kişi başına tek kayıt kalır, veri birikmez.
+async function saveSession(base44, user, fields) {
+  const rows = await base44.asServiceRole.entities.UserSession
+    .filter({ user_id: user.id }, '-last_active', 5)
+    .catch(() => []);
+  const current = rows[0];
+  if (!current) {
+    await base44.asServiceRole.entities.UserSession.create({
+      user_id: user.id,
+      user_name: user.username || user.full_name || 'Kullanıcı',
+      ...fields,
+    }).catch(() => {});
+    return;
+  }
+  await base44.asServiceRole.entities.UserSession.update(current.id, {
+    ...fields,
+    // İlk giriş tarihi korunur, kapanış bilgisi temizlenir: satır yeniden kullanılır.
+    first_login: current.first_login || fields.first_login,
+    ended_at: '',
+  }).catch(() => {});
+}
+
 export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
@@ -46,10 +69,8 @@ export default async function(req) {
         ).catch(() => {});
       }
 
-      // Yeni oturum kaydı oluştur
-      await base44.asServiceRole.entities.UserSession.create({
-        user_id: user.id,
-        user_name: userName,
+      // Oturum kaydı kişi başına tek satırda tutulur.
+      await saveSession(base44, user, {
         session_id: sessionId,
         ip, last_ip: ip,
         country: geo.country, city: geo.city, region: geo.region, isp: geo.isp,
@@ -58,17 +79,15 @@ export default async function(req) {
         first_login: new Date().toISOString(),
         last_active: new Date().toISOString(),
         status: 'active'
-      }).catch(() => {});
+      });
 
       await base44.asServiceRole.entities.User.update(user.id, {
         active_session_id: sessionId,
         last_login: new Date().toISOString()
       });
     } else {
-      // Admin / çoklu cihaz muaf hesap için sadece yeni oturum kaydı oluştur (öncekileri kapatma)
-      await base44.asServiceRole.entities.UserSession.create({
-        user_id: user.id,
-        user_name: userName,
+      // Çoklu cihaz muaf hesapta da kişi başına tek satır güncellenir.
+      await saveSession(base44, user, {
         session_id: sessionId,
         ip, last_ip: ip,
         country: geo.country, city: geo.city, region: geo.region, isp: geo.isp,
@@ -77,7 +96,7 @@ export default async function(req) {
         first_login: new Date().toISOString(),
         last_active: new Date().toISOString(),
         status: 'active'
-      }).catch(() => {});
+      });
 
       await base44.asServiceRole.entities.User.update(user.id, {
         last_login: new Date().toISOString()

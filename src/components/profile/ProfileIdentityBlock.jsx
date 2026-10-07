@@ -1,7 +1,7 @@
-import { Cake, CalendarDays, Check, Copy } from 'lucide-react';
+import { Cake, CalendarDays, Check, Copy, MapPin } from 'lucide-react';
 
-/** Kimlik şeridi: cinsiyet + yaş, kopyalanabilir üye numarası ve kayıt tarihi. */
-export default function ProfileIdentityBlock({ palette, genderLabel, age, memberId, joinDate, copied, onCopyId }) {
+/** Kimlik şeridi: cinsiyet + yaş, ülke, kopyalanabilir üye numarası ve kayıt tarihi. */
+export default function ProfileIdentityBlock({ palette, genderLabel, age, country, flag, memberId, joinDate, copied, onCopyId }) {
   return (
     <div className="mt-5 space-y-3">
       <div
@@ -17,6 +17,18 @@ export default function ProfileIdentityBlock({ palette, genderLabel, age, member
           {age === null ? 'Belirtilmedi' : `${age} Yaş`}
         </span>
       </div>
+
+      {country && (
+        <div className="flex items-center justify-between rounded-2xl border px-4 py-2.5" style={{ borderColor: palette.soft, background: 'rgba(0,0,0,0.5)' }}>
+          <span className="flex items-center gap-2 text-xs font-semibold text-white/70">
+            <MapPin className="h-4 w-4" style={{ color: palette.accent2 }} />
+            Ülke
+          </span>
+          <span className="flex items-center gap-1.5 text-sm font-bold text-white">
+            <span className="text-base">{flag}</span> {country}
+          </span>
+        </div>
+      )}
 
       <div className="flex items-center justify-between rounded-2xl border px-4 py-2.5" style={{ borderColor: palette.soft, background: 'rgba(0,0,0,0.5)' }}>
         <span className="font-mono text-base font-bold text-white"># {memberId || '-'}</span>
