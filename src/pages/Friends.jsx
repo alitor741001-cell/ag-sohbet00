@@ -83,10 +83,11 @@ export default function Friends() {
   const [selected, setSelected] = useState(null);
   const [search, setSearch] = useState('');
 
-  // Sekme bellekte kaldığı için adresteki görünüm değişikliği de uygulanır: alt menüden
-  // "Sohbet"e basıldığında mesaj listesi açılır, açık duran sohbet bozulmaz.
+  // Adres çubuğu görünümün tek kaynağıdır: alt menüden sekmeye basıldığında, sohbetten
+  // geri dönüldüğünde ya da geri tuşuyla gelindiğinde görünüm adresteki değere kurulur.
   useEffect(() => {
-    if (params.get('view') === 'chats') setView((current) => (current === 'chat' ? current : 'chats'));
+    if (params.get('chat')) return; // açık sohbeti sohbet efekti kurar
+    setView(params.get('view') === 'chats' ? 'chats' : 'friends');
   }, [params]);
 
   useEffect(() => {
@@ -109,10 +110,18 @@ export default function Friends() {
       if (!adminId) { toast({ title: 'Yönetici bulunamadı' }); return; }
       const convoRes = await base44.functions.invoke('dm-service', { action: 'start', target_id: adminId });
       if (convoRes?.data?.warning) toast({ description: convoRes.data.warning, duration: 6000 });
-      if (convoRes?.data?.conversation) { setSelected(convoRes.data.conversation); setView('chat'); }
+      if (convoRes?.data?.conversation) openChatView(convoRes.data.conversation);
     } catch (e) {
       toast({ title: 'Başlatılamadı', description: e.response?.data?.error || e.message, variant: 'destructive' });
     } finally { setAdminLoading(false); }
+  };
+
+  // Sohbet açılırken adrese yeni bir geçmiş kaydı eklenir: iOS kaydırma-geri hareketi ve
+  // Android geri tuşu uygulamayı kapatmak yerine sohbet listesine döner.
+  const openChatView = (conversation) => {
+    setSelected(conversation);
+    setView('chat');
+    setParams({ view: 'chats', chat: conversation.id });
   };
 
   const openChat = async (relation) => {
@@ -120,13 +129,13 @@ export default function Friends() {
     try {
       const res = await base44.functions.invoke('dm-service', { action: 'start', target_id: friendId });
       if (res?.data?.warning) toast({ description: res.data.warning, duration: 6000 });
-      if (res?.data?.conversation) { setSelected(res.data.conversation); setView('chat'); }
+      if (res?.data?.conversation) openChatView(res.data.conversation);
     } catch (e) {
       toast({ title: 'Sohbet açılamadı', description: e.response?.data?.error || e.message, variant: 'destructive' });
     }
   };
 
-  const openConversation = (conversation) => { setSelected(conversation); setView('chat'); };
+  const openConversation = (conversation) => openChatView(conversation);
 
   const hide = (conversation) => {
     optimisticHide(conversation.id);

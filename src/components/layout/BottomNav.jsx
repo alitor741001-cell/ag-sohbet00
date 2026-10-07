@@ -33,8 +33,18 @@ export default function BottomNav() {
   // Canlı destek düğmesi herkeste profil sekmesinin hemen solunda durur.
   const items = [...baseItems.slice(0, -1), { dock: 'support' }, ...baseItems.slice(-1)];
 
-  // Profil butonu doğrudan profil sayfasına gider.
-  const handleNav = (item) => navigate(item.path);
+  // Aynı sekmeye tekrar basıldığında kök görünüme dönülür: iç içe adres parametreleri
+  // (ör. /arkadaslar?chat=…, /profil?tab=…) temizlenir ve sayfa başına kaydırılır.
+  const handleNav = (item) => {
+    const [targetPath, targetSearch = ''] = item.path.split('?');
+    if (location.pathname === (item.activePath || targetPath)) {
+      window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+      // Aynı sekmede kalındığı için geçmiş kaydı büyütülmez.
+      navigate(targetSearch ? `${targetPath}?${targetSearch}` : targetPath, { replace: true });
+      return;
+    }
+    navigate(item.path);
+  };
 
   return (
     <nav className="lg:hidden fixed bottom-0 inset-x-0 z-50 overflow-hidden pb-[env(safe-area-inset-bottom)]" style={{ background: 'linear-gradient(180deg, #2a1508 0%, #1a0b06 45%, #0d0503 100%)', borderTop: '1px solid rgba(242,206,107,0.4)', transform: keyboardInset ? `translateY(-${keyboardInset}px)` : 'translateY(0)', transition: 'transform 180ms ease-out' }}>
