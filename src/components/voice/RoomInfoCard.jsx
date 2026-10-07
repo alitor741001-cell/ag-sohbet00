@@ -8,8 +8,8 @@ import useMessageProfiles from '@/hooks/useMessageProfiles';
 const MARQUEE_AFTER = 10;
 
 /**
- * Oda kimlik kartı: solda oda sahibinin profili; sağda oda ismi, kimlik numarası ve oda numarası yazar.
- * Kullanıcı adı gösterilmez; karta dokununca oda paneli açılır.
+ * Oda kimlik kartı: solda oda sahibinin küçük profili; sağda oda ismi ve kimlik numarası yazar.
+ * Kart dardır ve uzunlamasına yüksektir; kullanıcı adı ile oda numarası yazmaz, dokununca oda paneli açılır.
  */
 export default function RoomInfoCard({ room, canEdit, onRename, onOpen }) {
   const [editing, setEditing] = useState(false);
@@ -29,8 +29,6 @@ export default function RoomInfoCard({ room, canEdit, onRename, onOpen }) {
   const memberId = !ownerHidden && profile.member_id && profile.member_id !== '-' ? String(profile.member_id) : '';
   const label = room?.name || 'Oda';
   const scrolls = label.length > MARQUEE_AFTER;
-  // Oda numarası: özel oda kodu varsa o, yoksa oda numarası yazılır.
-  const code = room?.personal_room_code || (room?.room_number ? String(room.room_number) : '');
 
   // Oda ismi başka yerden değişirse kart kendini günceller.
   useEffect(() => { if (!editing) setDraft(room?.name || ''); }, [room?.name, editing]);
@@ -51,9 +49,9 @@ export default function RoomInfoCard({ room, canEdit, onRename, onOpen }) {
       tabIndex={0}
       onClick={() => { if (!editing) onOpen?.(); }}
       onKeyDown={(event) => { if (!editing && (event.key === 'Enter' || event.key === ' ')) onOpen?.(); }}
-      className={`relative flex min-h-[60px] w-[12.5rem] min-w-0 max-w-full cursor-pointer items-center gap-2.5 rounded-2xl border border-white/10 bg-white/[0.07] py-2 pl-2.5 transition-transform active:scale-[0.99] ${editing || !canEdit ? 'pr-3' : 'pr-10'}`}
+      className={`relative flex min-h-[76px] w-[11rem] min-w-0 max-w-full cursor-pointer items-center gap-2.5 rounded-2xl border border-white/10 bg-white/[0.07] py-2.5 pl-2.5 transition-transform active:scale-[0.99] ${editing || !canEdit ? 'pr-3' : 'pr-10'}`}
     >
-      <span className="inline-flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/15 bg-white/10">
+      <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/15 bg-white/10">
         {profile.avatar
           ? <Image src={profile.avatar} alt={ownerName} className="h-full w-full" fittingType="fill" draggable={false} />
           : <span className="text-base font-bold text-white/80">{ownerName.trim().charAt(0)}</span>}
@@ -96,15 +94,10 @@ export default function RoomInfoCard({ room, canEdit, onRename, onOpen }) {
             ) : (
               <span className="block w-full truncate text-sm font-bold">{label}</span>
             )}
-            {/* Kullanıcı adı kartta yazmaz: oda isminin altında kimlik ve oda numarası kalır. */}
+            {/* Kullanıcı adı ve oda numarası kartta yazmaz: oda isminin altında yalnızca kimlik numarası kalır. */}
             {memberId && (
-              <span className="mt-0.5 block w-full truncate text-[11px] leading-tight tabular-nums text-white/60">
+              <span className="mt-1 block w-full truncate text-[11px] leading-tight tabular-nums text-white/60">
                 ID:{memberId}
-              </span>
-            )}
-            {code && (
-              <span className="mt-0.5 block w-full truncate text-[10px] leading-tight tabular-nums text-white/45">
-                Oda No: {code}
               </span>
             )}
           </>
