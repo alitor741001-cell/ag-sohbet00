@@ -93,7 +93,7 @@ export default function Login() {
     <AuthBackground>
       {/* Açılışta marka logosu gösterilmez: uygulama doğrudan içeriğe geçer. */}
       <div className="text-center mb-8">
-        <p className="text-sm text-[#a0a0a0]">Filmini seç, keyfini çıkar.</p>
+        <h1 className="neon-welcome text-2xl sm:text-3xl font-black tracking-[0.14em] text-white">AG HOŞ GELDİNİZ</h1>
       </div>
 
       {/* Login Box */}

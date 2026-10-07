@@ -309,6 +309,17 @@
   }
   .neon-entrance { animation: neon-entrance 0.7s ease-out; }
 
+  /* Giriş ekranı: neon karşılama başlığı — beyaz çekirdek, kırmızı ışıltı, hafif nabız. */
+  .neon-welcome {
+    text-shadow: 0 0 6px #fff, 0 0 14px hsl(var(--primary) / 0.85), 0 0 30px hsl(var(--primary)), 0 0 55px hsl(var(--primary) / 0.65);
+    animation: neon-welcome-pulse 2.8s ease-in-out infinite;
+  }
+  @keyframes neon-welcome-pulse {
+    0%, 100% { text-shadow: 0 0 6px #fff, 0 0 14px hsl(var(--primary) / 0.85), 0 0 30px hsl(var(--primary)), 0 0 55px hsl(var(--primary) / 0.65); }
+    50% { text-shadow: 0 0 9px #fff, 0 0 20px hsl(var(--primary) / 0.95), 0 0 40px hsl(var(--primary)), 0 0 72px hsl(var(--primary) / 0.7); }
+  }
+  @media (prefers-reduced-motion: reduce) { .neon-welcome { animation: none; } }
+
 
   /* === TAKIM ÇERÇEVE ANİMASYONLARI === */
   @keyframes frame-rotate {
