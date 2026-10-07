@@ -5,7 +5,6 @@ import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import UserBadge from '@/components/admin/UserBadge';
-import RoleLabelEditor from '@/components/admin/RoleLabelEditor';
 import UserGenderDialog from '@/components/admin/UserGenderDialog';
 import FullUserProfile from '@/components/profile/FullUserProfile';
 import { visibleEmail } from '@/lib/visibleEmail';
@@ -141,7 +140,6 @@ export default function AdminUsers({ pendingOnly = false }) {
   return (
     <div>
       <h1 className="text-2xl font-extrabold mb-4">{pendingOnly ? 'Kayıt Kontrol' : 'Kullanıcı Yönetimi'}</h1>
-      {!pendingOnly && <div className="mb-4"><RoleLabelEditor onUpdated={load} /></div>}
       {!pendingOnly && (
         <div className="flex flex-wrap gap-2 mb-4">
           <input value={idQuery} onChange={(e) => setIdQuery(e.target.value)} placeholder="Üye No ile ara (8 haneli)" className="bg-card border border-border rounded-lg px-3 py-2 text-sm w-44 outline-none focus:ring-2 focus:ring-ring" />
