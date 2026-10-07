@@ -21,6 +21,8 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
   // Konuşma dalgası rengi kişinin cinsiyetine göre seçilir: profil bilgisi koltuklara iletilir.
   const seatProfiles = useMessageProfiles(seats.map((seat) => seat.user_id).filter(Boolean));
 
+  // 9'lu düzende üstteki tek koltuk (orta çerçeve) referanstaki gibi daha büyük çizilir.
+  const featureTop = seats.length === 9;
   const widestRow = Math.max(1, ...rows.map((row) => row.length));
   const width = measured?.width || 360;
   const narrow = width < 640;
@@ -37,12 +39,16 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
   // artırıldığında alttaki sıraların rakamları görünmez olmaz.
   const SIZES = ['xs', 'sm', 'md', 'lg'];
   const columnExtra = boardActive ? 41 : 20;
+  // Üstteki büyük çerçeve fazladan yer kaplar: kalan satırlar ona göre ölçülür.
+  const rowUnits = rows.length + (featureTop ? 0.4 : 0);
   const perRow = maxHeight
-    ? (maxHeight - rowGap * Math.max(0, rows.length - 1)) / (rows.length || 1)
+    ? (maxHeight - rowGap * Math.max(0, rows.length - 1)) / (rowUnits || 1)
     : Infinity;
   const maxCell = perRow - columnExtra;
   const heightSize = maxCell >= 88 ? 'lg' : maxCell >= 68 ? 'md' : maxCell >= 52 ? 'sm' : 'xs';
   const size = SIZES[Math.min(SIZES.indexOf(widthSize), SIZES.indexOf(heightSize))];
+  // Orta çerçeve bir beden büyük: referanstaki 9'lu düzenin oranı korunur.
+  const topSize = SIZES[Math.min(SIZES.indexOf(size) + 1, SIZES.length - 1)];
 
   return (
     <div ref={wrapRef} className="flex w-full flex-col items-center" style={{ rowGap }}>
@@ -52,13 +58,14 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
           {row.map((index) => {
             const seat = seats[index];
             const occupied = !!seat?.user_id;
+            const seatSize = featureTop && row.length === 1 ? topSize : size;
             return (
               <div key={index} className="flex flex-col items-center">
                 <VoiceSeat
                   index={index}
                   seat={seat}
                   musicPlaying={occupied && seat.user_id === musicOwnerId}
-                  size={size}
+                  size={seatSize}
                   isSelf={occupied && seat.user_id === userId}
                   isOwner={occupied && seat.user_id === ownerId}
                   isMod={occupied && moderators.includes(seat.user_id)}
@@ -70,7 +77,7 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
                   micMuted={!occupied && !!seat?.muted}
                 />
                 {boardActive && (
-                  <VoiceSeatScore value={occupied ? scores[seat.user_id] || 0 : 0} size={size} />
+                  <VoiceSeatScore value={occupied ? scores[seat.user_id] || 0 : 0} size={seatSize} />
                 )}
 
               </div>
