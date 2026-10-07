@@ -13,16 +13,12 @@ export async function purgeAccount(base44: any, opts: {
   const { userId, email, name, subject } = opts;
   const sr = base44.asServiceRole.entities;
 
-  await sr.Favorite.deleteMany({ user_id: userId }).catch(() => {});
-  await sr.WatchHistory.deleteMany({ user_id: userId }).catch(() => {});
-  await sr.Watchlist.deleteMany({ user_id: userId }).catch(() => {});
   await sr.Notification.deleteMany({ user_id: userId }).catch(() => {});
   await sr.UserPresence.deleteMany({ user_id: userId }).catch(() => {});
   await sr.UserSession.deleteMany({ user_id: userId }).catch(() => {});
   await sr.DirectMessage.deleteMany({ participants: userId }).catch(() => {});
   await sr.Friendship.deleteMany({ members: userId }).catch(() => {});
   await sr.Payment.deleteMany({ user_id: userId }).catch(() => {});
-  await sr.Subscription.deleteMany({ user_id: userId }).catch(() => {});
   await sr.PushSubscription.deleteMany({ user_id: userId }).catch(() => {});
   await sr.SupportTicket.deleteMany({ user_id: userId }).catch(() => {});
   await sr.UserXp.deleteMany({ user_id: userId }).catch(() => {});

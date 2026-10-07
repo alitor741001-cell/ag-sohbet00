@@ -15,6 +15,7 @@ const MinimizedRoomBubble = lazy(() => import('@/components/voice/MinimizedRoomB
 // Add page imports here
 import AppLayout from '@/components/layout/AppLayout';
 import { ThemeProvider } from '@/lib/ThemeContext';
+import useDeferredMount from '@/hooks/useDeferredMount';
 import XpProvider from '@/components/xp/XpProvider';
 import DirectCallProvider from '@/lib/DirectCallContext';
 import { FrameCatalogProvider } from '@/lib/FrameCatalogContext';
@@ -164,6 +165,8 @@ const AuthenticatedApp = () => {
 
 
 function App() {
+  // Arama katmanı ve küçültülmüş oda balonu ilk boyamayı beklemez.
+  const deferredReady = useDeferredMount();
 
   return (
     <AuthProvider>
@@ -176,10 +179,12 @@ function App() {
               <ScrollToTop />
               <AuthenticatedApp />
               {/* Bu iki katman ana pakete dahil değil: açılış hızlı kalır, davranış aynı. */}
-              <Suspense fallback={null}>
-                <DirectCallOverlay />
-                <MinimizedRoomBubble />
-              </Suspense>
+              {deferredReady && (
+                <Suspense fallback={null}>
+                  <DirectCallOverlay />
+                  <MinimizedRoomBubble />
+                </Suspense>
+              )}
             </Router>
           </DirectCallProvider>
           <Toaster />
