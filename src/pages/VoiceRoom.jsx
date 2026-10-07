@@ -43,8 +43,6 @@ import useOfflineParticipantCleanup from '@/hooks/useOfflineParticipantCleanup';
 // Oyun paneli ağır: oda açılışında indirilmez, yalnızca açıldığında yüklenir.
 const GamePanel = lazy(() => import('@/components/games/GamePanel'));
 import GiftBoard from '@/components/voice/GiftBoard';
-import GiftSendButton from '@/components/voice/GiftSendButton';
-import drainGiftQueue from '@/components/voice/drainGiftQueue';
 import GiftScene from '@/components/voice/GiftScene';
 import GiftEffectsSheet from '@/components/voice/GiftEffectsSheet';
 import useGiftEffects from '@/hooks/useGiftEffects';
@@ -97,8 +95,6 @@ export default function VoiceRoom() {
   const [giftBoardOpen, setGiftBoardOpen] = useState(false);
   const [giftBoard, setGiftBoard] = useState(null);
   const [giftBoardLoading, setGiftBoardLoading] = useState(false);
-  const [giftSendActive, setGiftSendActive] = useState(false);
-  const [giftSendCount, setGiftSendCount] = useState(0);
   const [giftId, setGiftId] = useState(null);
   const [selectedIds, setSelectedIds] = useState([]);
   const [gifted, setGifted] = useState({});
@@ -129,19 +125,10 @@ export default function VoiceRoom() {
   const ghostRef = useRef(false);
   const keepSeatRef = useRef(false);
   const giftFlashRef = useRef(null);
-  const giftIdleRef = useRef(null);
-  const giftQueueRef = useRef([]);
-  const giftBusyRef = useRef(false);
-  const giftSessionRef = useRef(0);
   const giftBoardRef = useRef(0);
   const giftRefreshTimerRef = useRef(null);
   // Sayı tahtasının son hali: iyimser güncelleme başarısız olursa geri alınır.
   const numberScoresRef = useRef([]);
-
-  useEffect(() => {
-    giftSessionRef.current += 1;
-    setGiftSendCount(0);
-  }, [giftId, selectedIds.join('|')]);
 
   const seats = useMemo(() => (Array.isArray(room?.seats) ? room.seats : []), [room?.seats]);
   const myInvite = useMemo(
@@ -803,27 +790,8 @@ export default function VoiceRoom() {
 
   useEffect(() => () => window.clearTimeout(giftFlashRef.current), []);
 
-  // Gönder tuşu: son basıştan 5 saniye sonra ortadan kaybolur, seçim temizlenir.
-  const armGiftHide = useCallback(() => {
-    window.clearTimeout(giftIdleRef.current);
-    giftIdleRef.current = window.setTimeout(() => {
-      if (giftBusyRef.current || giftQueueRef.current.length) { armGiftHide(); return; }
-      setGiftOpen(false);
-      setGiftSendActive(false);
-      setSelectedIds([]);
-      setGiftSendCount(0);
-    }, 5000);
-  }, []);
-
-  // Hediye kutusunu aç; elle kapatınca gönder tuşu da gizlenir.
-  const openGifts = useCallback(() => { window.clearTimeout(giftIdleRef.current); setGiftOpen(true); }, []);
-  const closeGifts = useCallback(() => {
-    window.clearTimeout(giftIdleRef.current);
-    setGiftOpen(false);
-    setGiftSendActive(false);
-  }, []);
-
-  useEffect(() => () => window.clearTimeout(giftIdleRef.current), []);
+  const openGifts = useCallback(() => setGiftOpen(true), []);
+  const closeGifts = useCallback(() => setGiftOpen(false), []);
 
   // Hediye tahtası açıkken profiller çoklu seçilir — kişi kendini de seçebilir.
   const toggleGiftPerson = useCallback((userId) => {
@@ -891,18 +859,15 @@ export default function VoiceRoom() {
     });
   };
 
-  // Gönder tuşu: kutu kapanır ama tuş kalır; her basış sıraya girer ve takılmadan gönderilir.
+  // Kutudaki gönder tuşu: hediye gönderilir ve kutu kapanır.
   const pressGift = async () => {
     if (!selectedGift || !selectedIds.length) return;
     setGiftOpen(false);
-    setGiftSendActive(true);
-    armGiftHide();
-    setGiftSendCount((count) => count + 1);
-    giftQueueRef.current.push({ gift: selectedGift, ids: [...selectedIds], session: giftSessionRef.current });
-    await drainGiftQueue(giftQueueRef, giftBusyRef, sendGiftOnce, (error, job, quantity) => {
-      if (job.session === giftSessionRef.current) setGiftSendCount((count) => Math.max(0, count - quantity));
+    try {
+      await sendGiftOnce(selectedGift, [...selectedIds]);
+    } catch (error) {
       toast({ title: 'Hediye gönderilemedi', description: error?.response?.data?.error || error.message, variant: 'destructive' });
-    });
+    }
   };
 
   // Odaya giriş ekranları (yükleme, giriş yasağı, şifre ve bağlanma beklemesi) tek bileşende toplanır.
@@ -1044,7 +1009,6 @@ export default function VoiceRoom() {
         seatAccent={seatAccent}
         onClearSelection={() => setSelectedIds([])}
         hiddenAnnounce={{ active: room?.ghost_entered_at, name: hiddenAnnounceName }}
-        keyboardOpen={keyboardOpen}
         grid={{
           seats: seatsView,
           musicOwnerId: music.music?.is_playing ? music.music.owner_id : null,
@@ -1278,13 +1242,8 @@ export default function VoiceRoom() {
         onTogglePerson={toggleGiftPerson}
         onSelectAll={() => setSelectedIds(giftPeople.map((person) => person.user_id))}
         onClear={() => setSelectedIds([])}
-      />
-
-      <GiftSendButton
-        visible={giftOpen || giftSendActive}
-        disabled={!selectedGift || !selectedIds.length}
         onSend={pressGift}
-        count={giftSendCount}
+        sendDisabled={!selectedGift || !selectedIds.length}
       />
 
       <GiftScene key={overlayAlert?.key} alert={giftEffects && !bigGift ? overlayAlert : null} tiers={tiers} />

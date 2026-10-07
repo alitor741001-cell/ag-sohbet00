@@ -1,18 +1,17 @@
-/** Sağ altta duran yuvarlak gönder düğmesi — slottaki yeşil SPIN düğmesi işçiliği, üzerinde yalnızca "Gönder" yazar. */
-export default function GiftSendButton({ visible, disabled, onSend, count = 0 }) {
+import { Send } from 'lucide-react';
+
+/** Hediye kutusunun sağ alt köşesindeki küçük yuvarlak gönder düğmesi. */
+export default function GiftSendButton({ visible, disabled, onSend }) {
   if (!visible) return null;
   return (
-    <div className="pointer-events-none fixed right-5 bottom-[calc(6rem+env(safe-area-inset-bottom))] z-[250] flex flex-col items-center gap-2">
-      {count > 0 && <span aria-live="polite" className="rounded-full border border-slot-gold/60 bg-slot-panel px-3 py-1 text-lg font-black tabular-nums text-slot-gold">X{count}</span>}
-      <button
-        type="button"
-        disabled={disabled}
-        onClick={onSend}
-        aria-label="Gönder"
-        className="slot-spin pointer-events-auto flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-full text-[11px] font-black leading-none text-black/80 touch-manipulation transition-transform active:scale-90 disabled:opacity-40"
-      >
-        Gönder
-      </button>
-    </div>
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onSend}
+      aria-label="Hediyeyi gönder"
+      className="slot-spin gift-send-corner flex h-14 w-14 items-center justify-center rounded-full text-black/80 touch-manipulation transition-transform active:scale-90 disabled:opacity-40"
+    >
+      <Send className="h-6 w-6" />
+    </button>
   );
 }

@@ -78,8 +78,8 @@ export default function GiftBoardContent({ gifts = [], tiers = [], people = [], 
       {shown.length === 0 ? (
         <p className="shrink-0 rounded-xl bg-white/5 px-3 py-3 text-center text-xs text-white/50">Bu kategoride hediye yok.</p>
       ) : (
-        // Hediye listesi kendi içinde kayar; alttaki boşluk sağ alttaki "Gönder" düğmesi için ayrılır.
-        <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain pb-40">
+        // Hediye listesi kendi içinde kayar; alttaki boşluk sağ alttaki gönder düğmesi için ayrılır.
+        <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain pb-24">
           <div className="grid grid-cols-3 gap-2 pb-1">
             {shown.map((item) => (
               <GiftCard

@@ -8,10 +8,8 @@ import { useSize } from '@/hooks/use-size';
  * Sahne: üst başlık ile alt sohbet alanı arasında kalan sabit bölge.
  * Koltuklar bu bölgenin tepesine demirlenir; sohbet açılıp kapansa, yeni mesaj gelse ya da
  * koltuk sayısı değişse bile bu alanın yüksekliği değişmez, dolayısıyla koltuklar oynamaz.
- * Ölçülen yükseklik koltuk ızgarasına verilir: ızgara kendini bu alana sığdıracak boyutu seçer,
- * böylece her telefonda tüm koltuklar ve koltuk altı rakamlar tamamen görünür.
  */
-export default function VoiceStage({ scrollRef, handlers, room, selectedCount, seatAccent, onClearSelection, hiddenAnnounce, keyboardOpen, grid }) {
+export default function VoiceStage({ scrollRef, handlers, room, selectedCount, seatAccent, onClearSelection, hiddenAnnounce, grid }) {
   const boxRef = useRef(null);
   const gridBoxRef = useRef(null);
   const measured = useSize(boxRef);
@@ -46,7 +44,7 @@ export default function VoiceStage({ scrollRef, handlers, room, selectedCount, s
           </div>
         )}
         <div ref={gridBoxRef} className="flex w-full flex-col items-center">
-          <VoiceSeatGrid {...grid} stageHeight={measured?.height} keyboardOpen={keyboardOpen} />
+          <VoiceSeatGrid {...grid} />
         </div>
         <HiddenUserMarquee active={hiddenAnnounce.active} name={hiddenAnnounce.name} />
       </div>
