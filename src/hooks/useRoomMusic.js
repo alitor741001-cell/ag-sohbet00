@@ -18,8 +18,9 @@ const withTimeout = (promise) => Promise.race([
 /**
  * Oda müziği: odanın açık şarkısını canlı izler ve herkesin kendi telefonunda çalar.
  * Konum sunucu saatine göre hizalanır; ses seviyesi cihazda saklanır.
+ * `options.library: false` çalan şarkıyı devralan katmanlar içindir (küçültülmüş oda).
  */
-export default function useRoomMusic(roomId, enabled) {
+export default function useRoomMusic(roomId, enabled, options = {}) {
   const [music, setMusic] = useState(null);
   const [library, setLibrary] = useState([]);
   const [uploading, setUploading] = useState(false);
@@ -30,16 +31,18 @@ export default function useRoomMusic(roomId, enabled) {
   // Çalma oturumu: aynı şarkı yeniden başlatıldığında sesin başa alınması için izlenir.
   const sessionRef = useRef('');
 
+  // Çalan şarkıyı devralan katman liste istemez: gereksiz çağrı yapılmaz.
+  const withLibrary = options.library !== false;
   // Odanın şarkı listesi: yüklenen şarkılar burada birikir, listeden tek dokunuşla açılır.
   const fetchLibrary = useCallback(async () => {
-    if (!roomId || !enabled) return;
+    if (!roomId || !enabled || !withLibrary) return;
     try {
       const response = await base44.functions.invoke('voice-room', { room_id: roomId, action: 'music-library' });
       setLibrary(response?.data?.tracks || []);
     } catch {
       setLibrary([]);
     }
-  }, [roomId, enabled]);
+  }, [roomId, enabled, withLibrary]);
 
   // Liste kişiye özeldir: bir kez okunur, şarkı değişiminde yeniden istenmez.
   useEffect(() => { fetchLibrary(); }, [fetchLibrary]);

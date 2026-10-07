@@ -1,17 +1,19 @@
 import { useEffect, useRef, useSyncExternalStore } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Image } from '@/components/ui/image';
 import useMessageProfiles from '@/hooks/useMessageProfiles';
+import useDraggableBubble from '@/hooks/useDraggableBubble';
+import MinimizedRoomMusic from '@/components/voice/MinimizedRoomMusic';
 import { clearMinimizedRoom, getMinimizedRoom, subscribeMinimizedRoom } from '@/lib/minimizedRoom';
 import { clearMinimizedFilm, getMinimizedFilm, subscribeMinimizedFilm } from '@/lib/minimizedFilm';
 import { disposeVoiceSession } from '@/lib/roomVoiceSession';
 
 /**
- * Küçültülmüş oda balonu: sağ altta sürüklenebilir profil çemberi.
- * Film odası küçültüldüğünde film ayrı pencere açmadan bu çemberin içinde oynamaya devam eder.
+ * Küçültülmüş oda balonu: parmakla ekranın her yerine taşınabilen profil çemberi.
+ * Müzik ve ses oturumu odadan çıkılsa da sürer; film odası küçültüldüğünde film
+ * ayrı pencere açmadan bu çemberin içinde oynamaya devam eder.
  * Üstteki X ile odadan çıkılır, çembere dokununca odaya dönülür.
  */
 export default function MinimizedRoomBubble() {
@@ -19,14 +21,14 @@ export default function MinimizedRoomBubble() {
   const filmState = useSyncExternalStore(subscribeMinimizedFilm, getMinimizedFilm);
   const navigate = useNavigate();
   const location = useLocation();
-  const bounds = useRef(null);
-  const moved = useRef(false);
   const videoRef = useRef(null);
   const lastSyncRef = useRef(0);
   const profiles = useMessageProfiles([room?.owner_id]);
   const profile = profiles[room?.owner_id] || {};
   const name = profile.username || room?.owner_name || 'Sesli oda';
   const film = filmState && filmState.roomId === room?.id ? filmState : null;
+  // Çember her yöne taşınır; konum cihazda saklanır, ekran ölçüsü değişince görünür alana çekilir.
+  const { pos, boxRef, didDrag, bind } = useDraggableBubble('filmkeyfi_oda_balonu', { measure: true });
 
   // iOS'ta sesli oynatma kullanıcı dokunuşuyla açılır: dokunuşta yeniden denenir.
   useEffect(() => {
@@ -49,7 +51,7 @@ export default function MinimizedRoomBubble() {
   };
 
   // X ile çıkış: çember sürüklendikten sonraki kazara dokunuş odadan çıkarmasın.
-  const leaveRoom = () => { if (!moved.current) closeRoom(); };
+  const leaveRoom = () => { if (!didDrag()) closeRoom(); };
 
   // Başka bir odanın içindeyken küçültülmüş oda balonu çıkmaz: eski odadan tamamen çıkılır,
   // böylece sağ alttaki çember görünmez ve kişiyi eski odaya geri götürmez.
@@ -62,7 +64,7 @@ export default function MinimizedRoomBubble() {
   if (!room) return null;
 
   const openRoom = () => {
-    if (moved.current) return;
+    if (didDrag()) return;
     const path = room.path || `/sesli-oda/${room.id}`;
     clearMinimizedRoom();
     navigate(path);
@@ -87,17 +89,15 @@ export default function MinimizedRoomBubble() {
   };
 
   return (
-    // Sürükleme alanı tüm ekran: balon yukarı, aşağı, sola ve sağa taşınabilir.
-    <div ref={bounds} className="pointer-events-none fixed inset-0 z-[240]">
-      <motion.div
-        drag
-        dragConstraints={{ top: 8, right: 12, bottom: 84, left: 12 }}
-        dragMomentum={false}
-        dragElastic={0}
-        onPointerDown={() => { moved.current = false; }}
-        onDragStart={() => { moved.current = true; }}
-        className={`pointer-events-auto absolute right-3 flex ${film ? 'w-20' : 'w-14'} touch-none flex-col items-center`}
-        style={{ bottom: 'calc(4.75rem + env(safe-area-inset-bottom))' }}
+    <div className="pointer-events-none fixed inset-0 z-[240]">
+      {/* Oda küçültüldüğü sürece şarkı burada çalar: sayfa kapansa da müzik kesilmez. */}
+      {!film && <MinimizedRoomMusic roomId={room.id} />}
+      {/* Sürükleme doğrudan çemberin üstünde: balon ekranın her yerine taşınabilir. */}
+      <div
+        ref={boxRef}
+        {...bind}
+        className={`pointer-events-auto fixed flex touch-none flex-col items-center ${film ? 'w-20' : 'w-14'}`}
+        style={{ left: pos?.x ?? 0, top: pos?.y ?? 0 }}
       >
         <button
           type="button"
@@ -130,7 +130,7 @@ export default function MinimizedRoomBubble() {
             <span className="text-lg font-bold text-white">{name.trim().charAt(0)}</span>
           )}
         </button>
-      </motion.div>
+      </div>
     </div>
   );
 }
