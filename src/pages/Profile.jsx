@@ -75,15 +75,17 @@ export default function Profile() {
   };
 
   useEffect(() => {
+    // Ayna hızlı açılış sağlar; bakiye hemen canlı değerle doğrulanır.
     loadSummary();
+    loadWallet();
   }, []);
 
-  // Sayfa kendini 5 saniyede bir sessizce tazeler: bakiye ve sayaçlar kimse fark etmeden
-  // güncellenir — yükleme göstergesi çıkmaz, ekran yerinden oynamaz.
+  // Sayfa kendini 5 saniyede bir sessizce tazeler: bakiye canlı değerden okunur, böylece
+  // hediye/oyun harcamaları ekranda eski tutarla kalmaz — yükleme göstergesi çıkmaz.
   useEffect(() => {
     const interval = setInterval(() => {
       if (document.visibilityState === 'hidden') return;
-      loadSummary();
+      loadWallet();
     }, 5000);
     return () => clearInterval(interval);
   }, []);
@@ -205,7 +207,8 @@ export default function Profile() {
         onCancel={() => setBalanceLocked(false)}
         onVerified={() => { setBalanceLocked(false); setGiftBoxOpen(true); }}
       />
-      <GiftBoxPanel open={giftBoxOpen} onClose={() => setGiftBoxOpen(false)} />
+      {/* Kutu kapanınca bakiye canlı değerden tazelenir: kart eski tutarı göstermez. */}
+      <GiftBoxPanel open={giftBoxOpen} onClose={() => { setGiftBoxOpen(false); loadWallet(); }} />
       <CoinActivityPanel open={activityOpen} onClose={() => setActivityOpen(false)} />
       <VipBagPanel open={vipBagOpen} onClose={() => setVipBagOpen(false)} onChanged={loadVipCount} />
       <CoinPurchasePanel

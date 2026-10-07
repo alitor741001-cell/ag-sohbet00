@@ -19,8 +19,6 @@ export default function useSlotGame({ roomId } = {}) {
   const [lines, setLines] = useState(LINES);
   const [spins, setSpins] = useState(0);
   const [jackpots, setJackpots] = useState({ mega: 0, grand: 0, minor: 0, major: 0, mini: 0 });
-  const [bonusReady, setBonusReady] = useState(false);
-  const [bonusAmount, setBonusAmount] = useState(0);
   const [spinning, setSpinning] = useState(false);
   const [grid, setGrid] = useState(null);
   const [win, setWin] = useState(0);
@@ -68,8 +66,6 @@ export default function useSlotGame({ roomId } = {}) {
     if (typeof data.lines === 'number') setLines(data.lines);
     if (typeof data.spins === 'number') setSpins(data.spins);
     if (data.jackpots) setJackpots(data.jackpots);
-    if (typeof data.bonus_ready === 'boolean') setBonusReady(data.bonus_ready);
-    if (typeof data.bonus_amount === 'number') setBonusAmount(data.bonus_amount);
   }, []);
 
   useEffect(() => {
@@ -95,7 +91,7 @@ export default function useSlotGame({ roomId } = {}) {
     const cost = freeSpins > 0 ? 0 : bet * lines;
     if (!noLimit && coins < cost) {
       setAuto(false);
-      setMessage('Yetersiz coin. Coin yanındaki + ile bonus al.');
+      setMessage('Yetersiz coin. Coin kutusuna dokunup coin yükle.');
       return;
     }
     busyRef.current = true;
@@ -166,20 +162,6 @@ export default function useSlotGame({ roomId } = {}) {
     saveBet(affordable);
   }, [bet, coins, lines, noLimit, saveBet]);
 
-  const claimBonus = useCallback(async () => {
-    if (!bonusReady) {
-      setMessage('Bonus henüz hazır değil.');
-      return;
-    }
-    try {
-      const response = await base44.functions.invoke('slot-game', { action: 'bonus' });
-      applyState(response.data);
-      setMessage('Bonus hesabına eklendi.');
-    } catch (error) {
-      setMessage(error?.response?.data?.error || 'Bonus alınamadı.');
-    }
-  }, [applyState, bonusReady]);
-
   const toggleAuto = useCallback(() => setAuto((value) => !value), []);
 
   useEffect(() => {
@@ -206,8 +188,6 @@ export default function useSlotGame({ roomId } = {}) {
     lines,
     spins,
     jackpots,
-    bonusReady,
-    bonusAmount,
     spinning,
     stopping,
     stop,
@@ -222,7 +202,6 @@ export default function useSlotGame({ roomId } = {}) {
     spin,
     changeBet,
     maxBet,
-    claimBonus,
     toggleAuto,
   };
 }

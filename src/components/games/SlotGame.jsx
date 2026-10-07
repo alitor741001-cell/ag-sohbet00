@@ -10,7 +10,7 @@ import SlotReels from './slot/SlotReels';
 import SlotWinLines from './slot/SlotWinLines';
 import SlotReadout from './slot/SlotReadout';
 import SlotWinOverlay from './slot/SlotWinOverlay';
-import CoinSheet from './slot/CoinSheet';
+import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
 import WinnerTicker, { TICKER_ROW_HEIGHT } from './slot/WinnerTicker';
 import SlotStopButton from './slot/SlotStopButton';
 import SlotPoolLabels from './slot/SlotPoolLabels';
@@ -225,14 +225,11 @@ export default function SlotGame({ onExit, onBack, roomId }) {
         onAccept={() => setPrize(null)}
       />
 
-      <CoinSheet
+      {/* Coin kutusuna dokununca uygulamanın coin mağazası açılır. */}
+      <CoinPurchasePanel
         open={coinOpen}
-        onClose={() => setCoinOpen(false)}
         coins={game.coins}
-        bonusReady={game.bonusReady}
-        bonusAmount={game.bonusAmount}
-        message={game.message}
-        onClaim={game.claimBonus}
+        onBack={() => setCoinOpen(false)}
       />
     </div>
   );
