@@ -13,6 +13,8 @@ const DEFAULT_BET = 100;
 // Jackpot: ekranda 5 jackpot sembolü geldiğinde bahsin 120 katı ödenir.
 const JACKPOT_SYMBOLS = 5;
 const JACKPOT_MULTIPLE = 120;
+// En düşük kademelerde jackpot çıkmaz: toplam bahis (bahis × 50 satır) 5.000'i geçmelidir.
+const JACKPOT_MIN_STAKE = 5000;
 // Ücretsiz çevirme: ekranda 3 'free' sembolü gelince 3 çevirme hakkı verilir.
 const FREE_SYMBOLS = 3;
 const FREE_SPINS = 3;
@@ -228,7 +230,9 @@ export default async function (req) {
       const grid = spinReels();
       const result = evaluateGrid(grid, bet);
       // Ekranda 5 jackpot sembolü geldiğinde jackpot çıkar: bahsin 120 katı ödenir.
-      const jackpotHit = grid.flat().filter((symbol) => symbol === 'jackpot').length >= JACKPOT_SYMBOLS;
+      // Toplam bahis 5.000'i geçmeyen (en düşük kademe) turlarda jackpot çıkmaz.
+      const jackpotHit = stake > JACKPOT_MIN_STAKE
+        && grid.flat().filter((symbol) => symbol === 'jackpot').length >= JACKPOT_SYMBOLS;
       const jackpotPayout = jackpotHit ? bet * JACKPOT_MULTIPLE : 0;
       const total = result.total + jackpotPayout;
       // Ücretsiz çevirme: 3 'free' sembolü gelince 3 hak verilir, sonraki turlar bedava.
