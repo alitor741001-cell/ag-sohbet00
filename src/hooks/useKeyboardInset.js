@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 /** Yazma alanı odakta mı: klavye yalnızca bir metin alanı odaktayken açılmış sayılır. */
 function isTyping() {
@@ -7,63 +7,87 @@ function isTyping() {
   return el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable === true;
 }
 
+const layoutHeight = () => Math.round(document.documentElement?.clientHeight || window.innerHeight);
+
 /**
- * Sanal klavye açıldığında ekranın altından kapanan yüksekliği (px) verir.
- * Değer klavyeyle birlikte anlık güncellenir: çubuklar klavyenin hemen üstünde durur,
- * klavye kapanınca aynı anda eski yerine döner — arada siyah boşluk kalmaz.
- * Android ile iOS aynı davranır: ölçü sayfa alanının kendi yüksekliğinden alınır, klavye
- * kapanışını olayla bildirmeyen cihazlarda değer kendini kısa aralıklarla doğrular.
+ * Klavye ölçümü bütün bileşenler için tek yerde yapılır: kaç bileşen isterse istesin
+ * tek dinleyici çalışır, ölçüm saniyede birkaç kez yinelenmez.
  */
-export default function useKeyboardInset() {
-  const [inset, setInset] = useState(0);
-  const insetRef = useRef(0);
+const monitor = { inset: 0, visible: false, base: 0, listeners: new Set(), teardown: null };
 
-  useEffect(() => {
+function publish(inset, visible) {
+  if (monitor.inset === inset && monitor.visible === visible) return;
+  monitor.inset = inset;
+  monitor.visible = visible;
+  [...monitor.listeners].forEach((listener) => listener(inset, visible));
+}
+
+/**
+ * İki cihaz davranışı birlikte karşılanır: sayfa alanı klavye için kısalmıyorsa (iOS)
+ * klavye yüksekliği görünür alanın kapanan kısmıdır; sayfa alanı kısalıyorsa (Android,
+ * uygulama içi görünüm) kısalma miktarıdır. Küçük oynamalar (adres çubuğu) klavye sayılmaz.
+ */
+function measure() {
+  const layout = layoutHeight();
+  if (!isTyping()) {
+    // Klavye kapalıyken sayfa alanı en geniş hâlindedir: karşılaştırmanın tabanı budur.
+    monitor.base = Math.max(monitor.base, layout);
+    publish(0, false);
+    return;
+  }
+  const viewport = window.visualViewport;
+  const covered = viewport ? Math.round(layout - viewport.height - viewport.offsetTop) : 0;
+  const limit = Math.round(layout * 0.7);
+  const inset = covered > 90 ? Math.min(Math.max(covered, 0), limit) : 0;
+  publish(inset, inset > 0 || monitor.base - layout > 90);
+}
+
+function subscribe(listener) {
+  monitor.listeners.add(listener);
+  if (!monitor.teardown) {
     const viewport = window.visualViewport;
-    if (!viewport) return undefined;
     let frame = 0;
-
-    const apply = (next) => {
-      insetRef.current = next;
-      setInset((prev) => (prev === next ? prev : next));
-    };
-
-    const measure = () => {
-      frame = 0;
-      // Yazma alanı odakta değilse klavye yoktur: çubuklar anında eski yerine döner
-      // (adres çubuğu açılıp kapanırken veya sayfa kayarken zıplama olmaz).
-      if (!isTyping()) { apply(0); return; }
-      // Ölçü sayfa alanının kendi yüksekliğinden alınır. Android'de klavye açılınca alan
-      // kendiliğinden kısalıyorsa ayrıca kaydırmaya gerek yoktur; kısalmıyorsa yalnızca
-      // görünür alanın kapanan kısmı kadar kaydırılır. iOS'ta alan kısalmadığı için
-      // klavye yüksekliği tam olarak buradan gelir.
-      const layout = document.documentElement?.clientHeight || window.innerHeight;
-      const covered = Math.round(layout - viewport.height - viewport.offsetTop);
-      const limit = Math.round(layout * 0.7);
-      // Adres çubuğu kaynaklı küçük oynamalar klavye sayılmaz.
-      apply(covered > 90 ? Math.min(Math.max(covered, 0), limit) : 0);
-    };
-
     const schedule = () => { if (!frame) frame = requestAnimationFrame(measure); };
-
-    measure();
-    viewport.addEventListener('resize', schedule);
-    viewport.addEventListener('scroll', schedule);
+    // Klavye kapanışı her cihazda olayla gelmez: yazarken kısa aralıklarla yeniden ölçülür.
+    const poll = setInterval(() => { if (isTyping() || monitor.visible) schedule(); }, 400);
+    monitor.base = layoutHeight();
+    viewport?.addEventListener('resize', schedule);
+    viewport?.addEventListener('scroll', schedule);
+    window.addEventListener('resize', schedule);
     // Odak değişimi klavye açılış/kapanışını en güvenilir şekilde bildirir.
     document.addEventListener('focusin', schedule);
     document.addEventListener('focusout', schedule);
-    // Klavye kapanışı her cihazda olayla gelmez: yazarken ya da çubuk kaydırılmışken
-    // değer yeniden ölçülür, çubuk yukarıda takılı kalmaz.
-    const poll = setInterval(() => { if (isTyping() || insetRef.current) schedule(); }, 400);
-    return () => {
+    monitor.teardown = () => {
       cancelAnimationFrame(frame);
       clearInterval(poll);
-      viewport.removeEventListener('resize', schedule);
-      viewport.removeEventListener('scroll', schedule);
+      viewport?.removeEventListener('resize', schedule);
+      viewport?.removeEventListener('scroll', schedule);
+      window.removeEventListener('resize', schedule);
       document.removeEventListener('focusin', schedule);
       document.removeEventListener('focusout', schedule);
     };
-  }, []);
+  }
+  measure();
+  listener(monitor.inset, monitor.visible);
+  return () => {
+    monitor.listeners.delete(listener);
+    if (!monitor.listeners.size) { monitor.teardown?.(); monitor.teardown = null; }
+  };
+}
 
+/**
+ * Sanal klavye açıldığında ekranın altından kapanan yüksekliği (px) verir: çubuklar
+ * klavyenin hemen üstünde durur, klavye kapanınca aynı anda eski yerine döner.
+ */
+export default function useKeyboardInset() {
+  const [inset, setInset] = useState(monitor.inset);
+  useEffect(() => subscribe((nextInset) => setInset(nextInset)), []);
   return inset;
+}
+
+/** Klavye görünür mü: yazma alanı klavye kapanınca kendiliğinden kapanır. */
+export function useKeyboardOpen() {
+  const [open, setOpen] = useState(monitor.visible);
+  useEffect(() => subscribe((_, visible) => setOpen(visible)), []);
+  return open;
 }

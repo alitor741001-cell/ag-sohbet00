@@ -6,7 +6,7 @@ import subscribeEntity from '@/components/data/entitySubscriptions';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { broadcasterState } from '@/lib/broadcaster';
 import { useVoiceChat } from '@/hooks/useVoiceChat';
-import useKeyboardInset from '@/hooks/useKeyboardInset';
+import useKeyboardInset, { useKeyboardOpen } from '@/hooks/useKeyboardInset';
 import useRoomLevels from '@/hooks/useRoomLevels';
 import { useToast } from '@/components/ui/use-toast';
 import VoiceSeatGrid from '@/components/voice/VoiceSeatGrid';
@@ -103,6 +103,7 @@ export default function VoiceRoom() {
   const [gifted, setGifted] = useState({});
 
   const keyboardInset = useKeyboardInset();
+  const keyboardOpen = useKeyboardOpen();
   // Hediye efektleri tercihi: kapalıyken atılan hediyelerin görselleri gösterilmez.
   const { giftEffects, setGiftEffects } = useGiftEffects();
 
@@ -1076,7 +1077,7 @@ export default function VoiceRoom() {
         open={chatOpen}
         onCloseComposer={() => setComposerOpen(false)}
         composerOpen={composerOpen}
-        keyboardOpen={keyboardInset > 0}
+        keyboardOpen={keyboardOpen}
         currentUserId={user?.id}
         ownerId={room?.owner_id}
         moderators={moderators}
@@ -1097,7 +1098,7 @@ export default function VoiceRoom() {
       )}
 
       <VoiceControlBar
-        keyboardOpen={keyboardInset > 0}
+        keyboardOpen={keyboardOpen}
         micActive={!voice.muted}
         deafened={voice.deafened}
         chatOpen={chatOpen}
