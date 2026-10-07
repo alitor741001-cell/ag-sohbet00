@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
+import FullUserProfile from '@/components/profile/FullUserProfile';
 import subscribeEntity from '@/components/data/entitySubscriptions';
 import { Smartphone, Monitor, Tablet, Wifi, WifiOff, Search, Trash2, ShieldCheck, AlertTriangle, Copy } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
@@ -32,6 +32,7 @@ export default function AdminSessions() {
   const [query, setQuery] = useState('');
   const [clearing, setClearing] = useState(false);
   const [profiles, setProfiles] = useState({});
+  const [detailUser, setDetailUser] = useState(null);
 
   const load = () => {
     base44.entities.UserSession.list('-last_active', 500)
@@ -124,10 +125,10 @@ export default function AdminSessions() {
               return (
                 <div key={s.user_id} className="rounded-xl border border-border bg-card p-3 flex flex-col gap-2">
                   <div className="flex items-center justify-between gap-2">
-                    <Link to={`/kullanici/${s.user_id}`} className="flex items-center gap-2 min-w-0 hover:underline">
+                    <button type="button" onClick={() => setDetailUser(s)} className="flex items-center gap-2 min-w-0 active:opacity-70" aria-label="Profil kartını aç">
                       {prof?.avatar ? <img src={prof.avatar} className="w-7 h-7 rounded-full object-cover" alt="" /> : <span className="w-7 h-7 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-[10px] font-bold">{(s.user_name || '?')[0]}</span>}
                       <span className="font-semibold text-sm truncate">{s.user_name || 'Kullanıcı'}</span>
-                    </Link>
+                    </button>
                     {online ? <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded bg-green-500/20 text-green-400 shrink-0"><Wifi className="w-3 h-3" />Çevrimiçi</span> : <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground shrink-0"><WifiOff className="w-3 h-3" />Çevrimdışı</span>}
                   </div>
                   <div className="flex items-center gap-1.5 flex-wrap">
@@ -150,6 +151,24 @@ export default function AdminSessions() {
             })}
           </div>
         )}
+
+      {detailUser && (
+        <FullUserProfile
+          userId={detailUser.user_id}
+          name={detailUser.user_name}
+          avatar={profiles[detailUser.user_id]?.avatar}
+          onClose={() => setDetailUser(null)}
+          info={[
+            { label: 'Üye no', value: profiles[detailUser.user_id]?.member_id || detailUser.user_id?.slice(-8) || '-' },
+            { label: 'Durum', value: isOnline(detailUser) ? 'Çevrimiçi' : 'Çevrimdışı' },
+            { label: 'Cihaz', value: detailUser.device_type || '-' },
+            { label: 'Bağlantı', value: connLabel(detailUser.connection_type) },
+            { label: 'IP adresi', value: [...(userIPs[detailUser.user_id] || [])].filter(Boolean).join(', ') || '-' },
+            { label: 'Konum', value: [detailUser.city, detailUser.country].filter(Boolean).join(', ') || '-' },
+            { label: 'Son aktif', value: relTime(detailUser.last_active) },
+          ]}
+        />
+      )}
     </div>
   );
 }

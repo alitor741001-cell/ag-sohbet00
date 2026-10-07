@@ -24,7 +24,7 @@ export default function FullUserProfile({
   open = true, userId, name, avatar, frame, frameScale,
   hidden = false, muted = false, level = 0, roomId, self = false, sheet = false,
   theme = '', hideSettings = false, hideBlock = false,
-  onClose, onMessage, tiles = [], footer = [],
+  onClose, onMessage, tiles = [], footer = [], info = [],
 }) {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -247,6 +247,17 @@ export default function FullUserProfile({
                 copied={copied}
                 onCopyId={copyId}
               />
+            )}
+
+            {!hidden && info.length > 0 && (
+              <div className="mt-5 space-y-1.5 rounded-2xl border px-4 py-3 text-[12px]" style={{ borderColor: palette.soft, background: 'rgba(0,0,0,0.45)' }}>
+                {info.map((row) => (
+                  <div key={row.label} className="flex items-start justify-between gap-3">
+                    <span className="shrink-0 text-white/55">{row.label}</span>
+                    <span className="min-w-0 break-words text-right font-semibold text-white">{row.value}</span>
+                  </div>
+                ))}
+              </div>
             )}
 
             {showSocial && (

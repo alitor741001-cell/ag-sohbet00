@@ -7,6 +7,7 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import UserBadge from '@/components/admin/UserBadge';
 import RoleLabelEditor from '@/components/admin/RoleLabelEditor';
 import UserGenderDialog from '@/components/admin/UserGenderDialog';
+import FullUserProfile from '@/components/profile/FullUserProfile';
 import { visibleEmail } from '@/lib/visibleEmail';
 
 
@@ -155,7 +156,9 @@ export default function AdminUsers({ pendingOnly = false }) {
             return (
               <div key={u.id} className="bg-card border border-border rounded-xl p-3 flex flex-wrap items-center gap-2">
                 <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <UserBadge userId={u.id} name={u.username || u.full_name || '?'} avatar={u.avatar} memberId={u.member_id} size="md" displayRole={u.display_role} customRole={u.custom_role} profileFrame={u.profile_frame} frameScale={u.profile_frame_scale} />
+                  <button type="button" onClick={() => setDetail(u)} className="shrink-0 active:opacity-70" aria-label="Profil kartını aç">
+                    <UserBadge userId={u.id} name={u.username || u.full_name || '?'} avatar={u.avatar} memberId={u.member_id} size="md" displayRole={u.display_role} customRole={u.custom_role} profileFrame={u.profile_frame} frameScale={u.profile_frame_scale} />
+                  </button>
                   <div className="hidden sm:block min-w-0">
                     {visibleEmail(u) && <p className="text-xs text-muted-foreground truncate">{visibleEmail(u)}</p>}
                     {u.payment_reference && <p className="text-xs text-purple-400 font-mono truncate">Ref: {u.payment_reference}</p>}
@@ -181,28 +184,21 @@ export default function AdminUsers({ pendingOnly = false }) {
         </div>}
 
       {detail && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={() => setDetail(null)}>
-          <div className="bg-card border border-border rounded-xl p-5 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
-            <div className="mb-4"><UserBadge userId={detail.id} name={detail.username || detail.full_name || '?'} avatar={detail.avatar} memberId={detail.member_id} size="lg" displayRole={detail.display_role} customRole={detail.custom_role} profileFrame={detail.profile_frame} /></div>
-            <div className="space-y-1.5 text-sm">
-              <p><span className="text-muted-foreground">Kullanıcı adı:</span> {detail.username || detail.full_name || '-'}</p>
-              <p><span className="text-muted-foreground">Üye No:</span> {detail.member_id || '-'}</p>
-              <p><span className="text-muted-foreground">Ödeme Referans No:</span> <span className="font-mono font-bold text-purple-400">{detail.payment_reference || '-'}</span></p>
-              {visibleEmail(detail) && <p><span className="text-muted-foreground">E-posta:</span> {visibleEmail(detail)}</p>}
-              <p><span className="text-muted-foreground">Kayıt tarihi:</span> {detail.created_date ? new Date(detail.created_date).toLocaleDateString('tr-TR') : '-'}</p>
-              <p><span className="text-muted-foreground">Cinsiyet:</span> {detail.gender === 'kadın' ? 'Kadın' : detail.gender === 'erkek' ? 'Erkek' : 'Belirtilmedi'}</p>
-              <button onClick={() => { setGenderTarget(detail); setDetail(null); }} className={`${btn} mt-1 bg-fuchsia-500/20 text-fuchsia-300 hover:bg-fuchsia-500/30`}>{genderButtonLabel(detail)} — DÜZELT</button>
-              <p><span className="text-muted-foreground">Üyelik durumu:</span> {detail.membership_status || '-'}</p>
-              <p><span className="text-muted-foreground">Aktif/Pasif:</span> {detail.membership_status === 'active' ? 'Aktif' : 'Pasif'}</p>
-              {detail.is_banned && <>
-                <p className="text-red-400 font-semibold mt-2">🚫 ENGELLİ</p>
-                {detail.ban_reason && <p><span className="text-muted-foreground">Engel nedeni:</span> {detail.ban_reason}</p>}
-                {detail.ban_description && <p><span className="text-muted-foreground">Açıklama:</span> {detail.ban_description}</p>}
-              </>}
-            </div>
-            <button onClick={() => setDetail(null)} className="mt-4 bg-secondary px-4 py-2 rounded-lg text-sm w-full">Kapat</button>
-          </div>
-        </div>
+        <FullUserProfile
+          userId={detail.id}
+          name={detail.username || detail.full_name}
+          avatar={detail.avatar}
+          frame={detail.profile_frame}
+          frameScale={detail.profile_frame_scale}
+          onClose={() => setDetail(null)}
+          info={[
+            { label: 'E-posta', value: visibleEmail(detail) || '-' },
+            { label: 'Ödeme referans no', value: detail.payment_reference || '-' },
+            { label: 'Üyelik durumu', value: detail.is_banned ? 'Engelli' : detail.membership_status === 'active' ? 'Aktif' : detail.membership_status === 'pending' ? 'Beklemede' : 'Pasif' },
+            ...(detail.is_banned && detail.ban_reason ? [{ label: 'Engel nedeni', value: detail.ban_reason }] : []),
+            ...(detail.is_banned && detail.ban_description ? [{ label: 'Engel açıklaması', value: detail.ban_description }] : []),
+          ]}
+        />
       )}
       <UserGenderDialog
         user={genderTarget}
