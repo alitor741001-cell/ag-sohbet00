@@ -17,6 +17,10 @@ const GamePanel = lazy(() => import('@/components/games/GamePanel'));
 
 const isVoiceRoom = (room) => room?.room_type === 'voice' || room?.voice_mode === true;
 
+/** Tazeleme karşılaştırması: oda kayıtları değişmediyse liste yerinde bırakılır. */
+const roomListSignature = (items) =>
+  items.map((room) => `${room.id}:${room.updated_date || room.created_date || ''}`).join('|');
+
 /** Odada kimse yoksa kart hiç listelenmez; içeri giren olunca kart kendiliğinden gelir. */
 const hasPeopleInside = (room) => (room?.participants || []).some((person) => person?.user_id);
 
@@ -69,6 +73,21 @@ export default function RoomDiscovery({ shortcuts = null }) {
 
   useEffect(() => {
     let alive = true;
+    // Oda listesi tek yoldan okunur: ilk yükleme de düzenli tazeleme de bunu kullanır.
+    const readRooms = async () => {
+      const list = await base44.entities.Room.filter({ status: 'active' }, '-created_date', 100).catch(() => []);
+      if (!alive) return null;
+      const live = list.filter((room) => {
+        if (room.hidden === true) hiddenIdsRef.current.add(room.id);
+        else hiddenIdsRef.current.delete(room.id);
+        return isCandidate(room);
+      });
+      // Liste gerçekten değişmediyse aynı kayıt korunur: 5 saniyelik tazeleme boşa
+      // yeniden çizim ve kayıt yazımı yapmaz, telefon akıcı kalır.
+      setAllRooms((prev) => (roomListSignature(prev) === roomListSignature(live) ? prev : live));
+      setLoading(false);
+      return live;
+    };
     const load = async () => {
       // Son görülen liste hafızadan gelir: ana sayfaya dönüşte ağ beklenmeden çizilir,
       // tazeleme arkada sürer — aynı oda ve kullanıcı verisi tekrar tekrar çekilmez.
@@ -78,15 +97,8 @@ export default function RoomDiscovery({ shortcuts = null }) {
         setOwners(cached.owners);
         setLoading(false);
       }
-      const list = await base44.entities.Room.filter({ status: 'active' }, '-created_date', 100).catch(() => []);
-      if (!alive) return;
-      const live = list.filter((room) => {
-        if (room.hidden === true) hiddenIdsRef.current.add(room.id);
-        else hiddenIdsRef.current.delete(room.id);
-        return isCandidate(room);
-      });
-      setAllRooms(live);
-      setLoading(false);
+      const live = await readRooms();
+      if (!live) return;
       const ownerIds = [...new Set(live.map((room) => room.owner_id).filter(Boolean))];
       if (!ownerIds.length) return;
       const response = await base44.functions.invoke('user-profile', { user_ids: ownerIds }).catch(() => null);
@@ -137,9 +149,17 @@ export default function RoomDiscovery({ shortcuts = null }) {
       if (!flushTimer) flushTimer = window.setTimeout(flush, 250);
     });
 
+    // Canlı akışın gecikebildiği cihazlarda (özellikle Android) liste kendini 5 saniyede bir
+    // tazeler: odadaki kişiler ve oda bilgileri her cihazda güncel kalır.
+    const refresh = window.setInterval(() => {
+      if (document.visibilityState === 'hidden') return;
+      readRooms();
+    }, 5000);
+
     return () => {
       alive = false;
       if (flushTimer) window.clearTimeout(flushTimer);
+      window.clearInterval(refresh);
       unsubscribe();
     };
   }, [user?.id, user?.role]);

@@ -15,7 +15,7 @@ import { isModerator } from '@/lib/roles';
 
 export default function Friends() {
   const { user, relations, loading: friendsLoading, invoke, reload: reloadFriends } = useFriends();
-  const { conversations, loading: convosLoading, optimisticHide } = useConversations();
+  const { conversations, loading: convosLoading, optimisticHide, reload: reloadConversations } = useConversations();
   const { isOnline, getLastSeen } = useFriendPresence(user);
   const { toast } = useToast();
   const [adminLoading, setAdminLoading] = useState(false);
@@ -43,9 +43,23 @@ export default function Friends() {
       timer = setTimeout(load, 2500);
     });
     // Abonelik düşen cihazlarda (mobil/PWA) gösterge doğru kalsın diye düzenli tazeleme.
-    const interval = setInterval(load, 60000);
+    // Android'de canlı akış gecikebildiği için yayın durumu 5 saniyede bir yeniden okunur.
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'hidden') return;
+      load();
+    }, 5000);
     return () => { active = false; clearTimeout(timer); clearInterval(interval); unsub(); };
   }, []);
+
+  // Özel sohbet bölümü kendini 5 saniyede bir tazeler: sohbet listesi, okunmamış sayıları
+  // ve son mesaj önizlemesi canlı akış gecikse de (Android) güncel kalır.
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'hidden') return;
+      reloadConversations();
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [reloadConversations]);
 
   // Kişinin yayında olduğu oda, oda kaydından okunur: kişi hangi cihazdan/oturumdan
   // girerse girsin katılımcı listesinde görünür. Birden fazla odada kaydı kalmışsa

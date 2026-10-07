@@ -10,7 +10,7 @@ import SeatCountPicker from '@/components/voice/SeatCountPicker';
 /**
  * Oda kur sayfası: tek bir ev düğmesi vardır. Oda adı ve sesli bölüm kayıtlıysa
  * basıldığı anda oda doğrudan açılır; ilk basışta bu iki bilgi sorulur ve kaydedilir.
- * Oda hem film hem sesli sohbet modunda kullanılır.
+ * Oda sesli sohbet odası olarak açılır; film odası kurulmaz.
  */
 export default function CreateRoom() {
   const navigate = useNavigate();
@@ -22,7 +22,8 @@ export default function CreateRoom() {
   const [saving, setSaving] = useState(false);
   const [opening, setOpening] = useState(false);
   const prefilled = useRef(false);
-  const preset = readRoomPreset(user, 'film');
+  // Oda sesli sohbet odası olarak açıldığı için kayıtlı bilgiler sesli oda kaydından okunur.
+  const preset = readRoomPreset(user, 'voice');
 
   // Kayıtlı bilgiler forma hazır gelir: düzenlerken tekrar yazmak gerekmez.
   useEffect(() => {
@@ -42,8 +43,8 @@ export default function CreateRoom() {
     if (opening) return;
     setOpening(true);
     try {
-      const res = await base44.functions.invoke('personal-room', { settings: settingsOf(values) });
-      navigate(`/oda/${res.data.id}`);
+      const res = await base44.functions.invoke('personal-room', { settings: { ...settingsOf(values), voice: true } });
+      navigate(`/sesli-oda/${res.data.id}`);
     } catch (e) {
       toast({ title: 'Oda açılamadı', description: e.response?.data?.error || e.message, variant: 'destructive' });
     } finally { setOpening(false); }
@@ -63,11 +64,11 @@ export default function CreateRoom() {
     setSaving(true);
     const values = settingsOf({ name, seat_count: seatCount });
     try {
-      const res = await base44.functions.invoke('personal-room', { settings: values });
+      const res = await base44.functions.invoke('personal-room', { settings: { ...values, voice: true } });
       // Girilen bilgiler otomatik kaydedilir: sonraki açılışta hiçbir şey sorulmaz.
-      await saveRoomPreset('film', values, setUser);
-      toast({ title: 'Oda açıldı' });
-      navigate(`/oda/${res.data.id}`);
+      await saveRoomPreset('voice', values, setUser);
+      toast({ title: 'Sesli oda açıldı' });
+      navigate(`/sesli-oda/${res.data.id}`);
     } catch (err) {
       toast({ title: 'Hata', description: err.response?.data?.error || err.message, variant: 'destructive' });
     } finally { setSaving(false); }
@@ -116,7 +117,7 @@ export default function CreateRoom() {
               <Mic className="w-4 h-4 text-[#f2ce6b]" /> Sesli Bölüm
             </label>
             <SeatCountPicker value={seatCount} onChange={setSeatCount} />
-            <p className="mt-2 text-xs text-gray-500">Seçtiğin sayı kadar mikrofon koltuğu açılır; odan hem film hem sesli sohbet modunda kullanılır.</p>
+            <p className="mt-2 text-xs text-gray-500">Seçtiğin sayı kadar mikrofon koltuğu açılır; odan sesli sohbet odası olarak açılır.</p>
           </div>
 
           <button type="submit" disabled={saving || !user} className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold text-white active:scale-95 transition-transform disabled:opacity-50" style={{ background: 'linear-gradient(135deg, #b91c1c, #dc2626 52%, #f2ce6b)' }}>

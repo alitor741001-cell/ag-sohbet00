@@ -27,6 +27,8 @@ export default async function(req) {
       hidden: 'hidden' in raw ? !!raw.hidden : null,
       password: 'password' in raw ? String(raw.password || '').slice(0, 100) : null,
       seat_count: 'seat_count' in raw ? Number(raw.seat_count) || 0 : null,
+      // Sesli oda isteği: oda film odası yerine sesli sohbet odası olarak açılır.
+      voice: 'voice' in raw ? raw.voice !== false : null,
     } : null;
     // Kişisel odada kapasite sorulmaz: herkes girebilir, pratikte sınırsız.
     const PERSONAL_MAX_USERS = 250;
@@ -98,6 +100,12 @@ export default async function(req) {
       }
       // Her açılış görünür başlar; önceki oturumun gizli durumu taşınmaz.
       const patch = { max_users: PERSONAL_MAX_USERS, hidden: settings?.hidden ?? false };
+      // Sesli oda isteği: oda sesli moda alınır — film arayüzü yerine sesli oda açılır.
+      if (settings?.voice) {
+        patch.room_type = 'voice';
+        patch.voice_mode = true;
+        patch.voice_enabled = true;
+      }
       if (settings) {
         if (settings.name) patch.name = settings.name;
         if (settings.chat_enabled !== null) patch.chat_enabled = settings.chat_enabled;
@@ -135,6 +143,8 @@ export default async function(req) {
       max_users: PERSONAL_MAX_USERS,
       chat_enabled: settings?.chat_enabled ?? true,
       password: '',
+      room_type: settings?.voice ? 'voice' : 'watch',
+      voice_mode: settings?.voice === true,
       voice_enabled: true,
       seat_count: voiceSeats,
       seats: voiceSeats ? buildSeats(voiceSeats) : [],
