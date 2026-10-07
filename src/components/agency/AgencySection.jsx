@@ -12,18 +12,26 @@ import { AGENCY_GOLD, agencyApi, currentPeriod } from '@/lib/agency';
  * Profil sayfasındaki "AJANS İŞLEMLERİ" bölümü: rol ve duruma göre
  * değişen butonlar (ajans oluştur, davetler, yayıncı/ajans paneli, transfer).
  */
+// Profil her açıldığında ajans bölümü beklemeden görünsün: son veri anında gösterilir,
+// yenisi arka planda tazelenir. Hesap değişince önbellek kullanılmaz.
+let agencyCache = { userId: '', summary: null, quota: null };
+
 export default function AgencySection({ user, onRefresh, showHeading = true }) {
   const navigate = useNavigate();
-  const [summary, setSummary] = useState(null);
+  const cache = user?.id && agencyCache.userId === user.id ? agencyCache : null;
+  const [summary, setSummary] = useState(cache?.summary || null);
   const [sheet, setSheet] = useState('');
   const [justCreated, setJustCreated] = useState(false);
-  const [quota, setQuota] = useState(null);
+  const [quota, setQuota] = useState(cache?.quota || null);
 
   const load = useCallback(() => {
     agencyApi('summary')
-      .then((data) => setSummary(data))
+      .then((data) => {
+        agencyCache = { userId: user?.id || '', summary: data, quota: agencyCache.userId === user?.id ? agencyCache.quota : null };
+        setSummary(data);
+      })
       .catch(() => setSummary(null));
-  }, []);
+  }, [user?.id]);
 
   useEffect(() => { if (user) load(); }, [user?.id, load]);
 
@@ -59,7 +67,10 @@ export default function AgencySection({ user, onRefresh, showHeading = true }) {
   useEffect(() => {
     if (!user?.id || (role !== 'owner' && role !== 'broadcaster')) { setQuota(null); return; }
     agencyApi(role === 'owner' ? 'agency-panel' : 'broadcaster')
-      .then((data) => setQuota(data))
+      .then((data) => {
+        agencyCache = { userId: user.id, summary: agencyCache.userId === user.id ? agencyCache.summary : null, quota: data };
+        setQuota(data);
+      })
       .catch(() => setQuota(null));
   }, [role, user?.id]);
 

@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
 import { rateLimit, safeErrorResponse } from '../../shared/security.ts';
+import { withLimitRetry } from '../../shared/retryLimit.ts';
 import { notifyUser } from '../../shared/notifyUser.ts';
 import { notifyAdmins } from '../../shared/adminNotify.ts';
 import {
@@ -60,13 +61,16 @@ export default async function (req) {
 
     // Ajans adı, üyelerin ve ajans sahibinin profil kayıtlarına yansıtılır.
     const syncAgencyName = async (agencyId: string, name: string) => {
-      const members = await base44.asServiceRole.entities.User.filter({ agency_record_id: agencyId }, '-created_date', 500).catch(() => []);
+      // Kullanıcı kayıtları toplu güncellenemez: tek tek yazılır, yoğunluk hatasında tekrar denenir.
+      const [members, owners] = await Promise.all([
+        base44.asServiceRole.entities.User.filter({ agency_record_id: agencyId }, '-created_date', 500).catch(() => []),
+        base44.asServiceRole.entities.User.filter({ owned_agency_id: agencyId }, '-created_date', 20).catch(() => []),
+      ]);
       for (const member of members || []) {
-        await base44.asServiceRole.entities.User.update(member.id, { agency_name: name }).catch(() => {});
+        await withLimitRetry(() => base44.asServiceRole.entities.User.update(member.id, { agency_name: name })).catch(() => {});
       }
-      const owners = await base44.asServiceRole.entities.User.filter({ owned_agency_id: agencyId }, '-created_date', 20).catch(() => []);
       for (const owner of owners || []) {
-        await base44.asServiceRole.entities.User.update(owner.id, { owned_agency_name: name }).catch(() => {});
+        await withLimitRetry(() => base44.asServiceRole.entities.User.update(owner.id, { owned_agency_name: name })).catch(() => {});
       }
     };
 
@@ -751,7 +755,7 @@ export default async function (req) {
             // Sahiplik ayrı yazılır: sahip başka bir ajanda yayıncıysa üyeliği bozulmaz.
             const ownPatch: any = ownedAgencyPatch({ ...agency, status: 'active' }, 'active');
             if (!owner.agency_record_id) Object.assign(ownPatch, userPatch({ ...agency, status: 'active' }));
-            await base44.asServiceRole.entities.User.update(owner.id, ownPatch);
+            await withLimitRetry(() => base44.asServiceRole.entities.User.update(owner.id, ownPatch));
             await notifyUser(base44, {
               user_id: owner.id, type: 'agency_approved', title: '✅ Ajansın onaylandı',
               body: `${agency.name} (${agency.agency_id}) ajansı onaylandı. Artık yayıncı davet edebilirsin.`, link: '/profil',
@@ -766,7 +770,7 @@ export default async function (req) {
           if (owner.agency_record_id === agency.id) {
             Object.assign(rejectPatch, { agency_code: '', agency_record_id: '', agency_name: '', agency_owner_id: '', agency_role: '', broadcaster_status: '' });
           }
-          await base44.asServiceRole.entities.User.update(owner.id, rejectPatch);
+          await withLimitRetry(() => base44.asServiceRole.entities.User.update(owner.id, rejectPatch));
           await notifyUser(base44, {
             user_id: owner.id, type: 'agency_rejected', title: '❌ Ajans başvurun reddedildi',
             body: `${agency.name} başvurun onaylanmadı. Dilersen yeniden başvurabilirsin.`, link: '/profil',
@@ -777,17 +781,28 @@ export default async function (req) {
       if (action === 'admin-agency-delete') {
         const agency = await base44.asServiceRole.entities.Agency.get(String(body.agency_id || '')).catch(() => null);
         if (!agency) return Response.json({ error: 'Ajans bulunamadı.' }, { status: 404 });
-        const members = await base44.asServiceRole.entities.User.filter({ agency_record_id: agency.id }, '-created_date', 500).catch(() => []);
+        // Üyeler, ajansın sahibi ve bekleyen davetler tek turda okunur, yazma toplu yapılır:
+        // uzun listelerde tek tek güncelleme istek yoğunluğuna takılıp butonu hataya düşürüyordu.
+        const [members, owners, openInvites] = await Promise.all([
+          base44.asServiceRole.entities.User.filter({ agency_record_id: agency.id }, '-created_date', 500).catch(() => []),
+          base44.asServiceRole.entities.User.filter({ owned_agency_id: agency.id }, '-created_date', 20).catch(() => []),
+          base44.asServiceRole.entities.AgencyInvite.filter({ agency_record_id: agency.id, status: 'pending' }, '-created_date', 500).catch(() => []),
+        ]);
+        const cleared: any = { agency_code: '', agency_record_id: '', agency_name: '', agency_owner_id: '', agency_role: '', broadcaster_status: '' };
+        // Kullanıcı kayıtları toplu güncellenemez: her kayıt tek tek yazılır, yoğunluk hatasında tekrar denenir.
         for (const member of members || []) {
-          await base44.asServiceRole.entities.User.update(member.id, {
-            agency_code: '', agency_record_id: '', agency_name: '', agency_owner_id: '', agency_role: '', broadcaster_status: '',
-          }).catch(() => {});
+          await withLimitRetry(() => base44.asServiceRole.entities.User.update(member.id, cleared)).catch(() => {});
         }
-        const openInvites = await base44.asServiceRole.entities.AgencyInvite.filter({ agency_record_id: agency.id, status: 'pending' }, '-created_date', 500).catch(() => []);
-        for (const invite of openInvites || []) {
-          await base44.asServiceRole.entities.AgencyInvite.update(invite.id, { status: 'cancelled' }).catch(() => {});
+        // Ajans silinince sahibinin profilindeki "ajansım" bağlantısı da kalkar.
+        for (const owner of owners || []) {
+          await withLimitRetry(() => base44.asServiceRole.entities.User.update(owner.id, clearOwnedAgencyPatch())).catch(() => {});
         }
-        await base44.asServiceRole.entities.Agency.delete(agency.id);
+        if (openInvites?.length) {
+          await withLimitRetry(() => base44.asServiceRole.entities.AgencyInvite
+            .bulkUpdate(openInvites.map((invite: any) => ({ id: invite.id, status: 'cancelled' })))).catch(() => {});
+        }
+        // Kısa süreli yoğunluk hatasında silme tekrar denenir: işlem yarım kalmaz.
+        await withLimitRetry(() => base44.asServiceRole.entities.Agency.delete(agency.id));
         return Response.json({ ok: true });
       }
       if (action === 'admin-set-owner') {
@@ -800,9 +815,9 @@ export default async function (req) {
         await base44.asServiceRole.entities.Agency.update(agency.id, {
           owner_id: owner.id, owner_name: owner.username || owner.full_name || 'Kullanıcı', owner_avatar: owner.avatar || '',
         });
-        await base44.asServiceRole.entities.User.update(owner.id, userPatch({ ...agency, owner_id: owner.id }));
+        await withLimitRetry(() => base44.asServiceRole.entities.User.update(owner.id, userPatch({ ...agency, owner_id: owner.id })));
         if (previous && previous !== owner.id) {
-          await base44.asServiceRole.entities.User.update(previous, { agency_role: 'broadcaster', broadcaster_status: 'active' }).catch(() => {});
+          await withLimitRetry(() => base44.asServiceRole.entities.User.update(previous, { agency_role: 'broadcaster', broadcaster_status: 'active' })).catch(() => {});
         }
         return Response.json({ ok: true });
       }
@@ -812,7 +827,7 @@ export default async function (req) {
           : await findUserByMemberId(body.member_id);
         const agency = await base44.asServiceRole.entities.Agency.get(String(body.agency_id || '')).catch(() => null);
         if (!member || !agency) return Response.json({ error: 'Kullanıcı veya ajans bulunamadı.' }, { status: 404 });
-        await base44.asServiceRole.entities.User.update(member.id, userPatch({ ...agency, owner_id: agency.owner_id }));
+        await withLimitRetry(() => base44.asServiceRole.entities.User.update(member.id, userPatch({ ...agency, owner_id: agency.owner_id })));
         await refreshAgencyTotals(base44, agency.id).catch(() => {});
         return Response.json({ ok: true });
       }
@@ -820,13 +835,13 @@ export default async function (req) {
         const member = await base44.asServiceRole.entities.User.get(String(body.user_id || '')).catch(() => null);
         if (!member) return Response.json({ error: 'Kullanıcı bulunamadı.' }, { status: 404 });
         const agencyId = member.agency_record_id;
-        await base44.asServiceRole.entities.User.update(member.id, { agency_code: '', agency_record_id: '', agency_name: '', agency_owner_id: '', agency_role: '', broadcaster_status: '' });
+        await withLimitRetry(() => base44.asServiceRole.entities.User.update(member.id, { agency_code: '', agency_record_id: '', agency_name: '', agency_owner_id: '', agency_role: '', broadcaster_status: '' }));
         if (agencyId) await refreshAgencyTotals(base44, agencyId).catch(() => {});
         return Response.json({ ok: true });
       }
       if (action === 'admin-broadcaster-status') {
         const status = body.status === 'active' ? 'active' : 'inactive';
-        await base44.asServiceRole.entities.User.update(String(body.user_id || ''), { broadcaster_status: status });
+        await withLimitRetry(() => base44.asServiceRole.entities.User.update(String(body.user_id || ''), { broadcaster_status: status }));
         return Response.json({ ok: true, status });
       }
       if (action === 'admin-tier-save') {
@@ -846,7 +861,7 @@ export default async function (req) {
         return Response.json({ ok: true, tier: created });
       }
       if (action === 'admin-tier-delete') {
-        await base44.asServiceRole.entities.QuotaTier.delete(String(body.id || ''));
+        await withLimitRetry(() => base44.asServiceRole.entities.QuotaTier.delete(String(body.id || '')));
         return Response.json({ ok: true });
       }
       if (action === 'admin-reward-paid') {
@@ -866,6 +881,7 @@ export default async function (req) {
       // etiketi ve varsa asistanlığı kalkar.
       if (action === 'admin-manual-transfer-decide') {
         const transfer = await base44.asServiceRole.entities.AgencyTransfer.get(String(body.transfer_id || '')).catch(() => null);
+        // Normal transfer kararı aşağıda işlenir.
         if (!transfer || transfer.mode !== 'manual' || transfer.status !== 'pending') {
           return Response.json({ error: 'Talep bulunamadı.' }, { status: 404 });
         }

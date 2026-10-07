@@ -212,9 +212,32 @@ export function todayKey(date: Date = new Date()) {
  * Tamamlanan kotaları ödüllendirir. Aynı kota (kişi + kademe + ay) ikinci kez ödenmez:
  * kayıt varsa atlanır. Hediye geldiğinde ve paneller açıldığında çalışır.
  */
+const QUOTA_SCAN_WINDOW_MS = 30000;
+
+/**
+ * Aynı kişinin elması 30 saniyede bir taranır: profil açılırken üst üste gelen
+ * çağrılar (özet + yayıncı paneli) aynı taramayı tekrarlayıp bölümü bekletmez.
+ * Damga her durumda yazılır; okuma başarısız olursa tarama yine yapılır.
+ */
+async function quotaScanRecent(base44: any, userId: string) {
+  const key = `quota-scan:${userId}`;
+  const rows = await base44.asServiceRole.entities.RateLimit.filter({ key }).catch(() => []);
+  const at = rows?.[0]?.window_start ? new Date(rows[0].window_start).getTime() : 0;
+  if (at && Date.now() - at < QUOTA_SCAN_WINDOW_MS) return true;
+  const stamp = new Date().toISOString();
+  if (rows?.[0]) {
+    await base44.asServiceRole.entities.RateLimit.update(rows[0].id, { count: 1, window_start: stamp }).catch(() => {});
+  } else {
+    await base44.asServiceRole.entities.RateLimit.create({ key, user_id: userId, count: 1, window_start: stamp }).catch(() => {});
+  }
+  return false;
+}
+
 export async function syncQuotaRewards(base44: any, userId: string) {
   const account = await base44.asServiceRole.entities.User.get(userId).catch(() => null);
   if (!account || account.broadcaster_status !== 'active') return { awarded: [] as any[] };
+  // Az önce tarandıysa tekrar taranmaz: kota kazançları o taramada yazılmıştır.
+  if (await quotaScanRecent(base44, userId)) return { awarded: [] as any[] };
   const { month } = await broadcasterDiamonds(base44, userId);
   const period = periodKey();
   if (Number(account.diamond_month) !== month || account.diamond_month_period !== period) {
