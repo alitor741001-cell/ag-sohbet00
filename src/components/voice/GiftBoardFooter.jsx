@@ -2,7 +2,7 @@ import { ChevronRight, Coins } from 'lucide-react';
 import { formatCoins } from '@/lib/giftTone';
 
 /** Hediye Tahtası alt çubuğu: bakiye kutusu (dokununca coin mağazası) ve Gönder düğmesi. */
-export default function GiftBoardFooter({ coins, onOpenCoins, onSend, sendDisabled }) {
+export default function GiftBoardFooter({ coins, count = 0, onOpenCoins, onSend, sendDisabled }) {
   return (
     <footer className="mt-2 flex shrink-0 items-center gap-1.5 rounded-2xl border border-white/10 bg-white/[0.06] p-1.5 backdrop-blur">
       <button
@@ -21,7 +21,7 @@ export default function GiftBoardFooter({ coins, onOpenCoins, onSend, sendDisabl
         disabled={sendDisabled}
         className="ml-auto shrink-0 rounded-xl bg-gradient-to-r from-[#6af5d9] to-[#4adec9] px-4 py-2 text-sm font-black text-[#0d2b28] transition-transform active:scale-95 disabled:opacity-40"
       >
-        Gönder
+        Gönder{count > 0 ? ` · ${count}` : ''}
       </button>
     </footer>
   );

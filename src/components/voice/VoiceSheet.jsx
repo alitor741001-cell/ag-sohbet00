@@ -22,9 +22,10 @@ export default function VoiceSheet({ open, title, onClose, children, halfHeight 
             </button>
           </div>
         )}
-        {/* halfHeight: başlık sabit kalır, gövde kalan alanı kaplar — kaydırma yalnızca
-            içerikteki listeye (hediye ızgarası) aittir. */}
-        <div className={`mx-auto w-full max-w-lg ${halfHeight ? 'flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain' : ''}`}>{children}</div>
+        {/* halfHeight / tall: başlık sabit kalır, gövde kalan alanı kaplar — kaydırma yalnızca
+            içerikteki listeye (hediye ızgarası) aittir. Gövde kolon olarak kurulmazsa içerik
+            panelin boyunu aşar ve alttaki satırlar (alıcılar, Gönder) kırpılır. */}
+        <div className={`mx-auto w-full max-w-lg ${halfHeight || tall ? 'flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain' : ''}`}>{children}</div>
       </div>
     </div>
   );

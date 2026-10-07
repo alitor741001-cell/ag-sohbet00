@@ -2,12 +2,13 @@ import { useMemo, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import GiftCard from '@/components/voice/GiftCard';
 import GiftRecipientRow from '@/components/voice/GiftRecipientRow';
+import GiftLevelTicker from '@/components/voice/GiftLevelTicker';
 import GiftBoardFooter from '@/components/voice/GiftBoardFooter';
 import { K_UNIT, formatCoins, formatPrice, tierForK, toneColor } from '@/lib/giftTone';
 
 /** Hediye Tahtası içeriği: kategori sekmeleri, hediye ızgarası, alıcılar ve alt gönderim çubuğu. */
 export default function GiftBoardContent({
-  user, gifts = [], tiers = [], people = [], selectedIds = [], giftId, coins,
+  user, gifts = [], tiers = [], people = [], selectedIds = [], giftId, coins, giftTick = 0,
   onSelectGift, onTogglePerson, onSelectAll, onClear, onOpenCoins, onClose, onSend, sendDisabled,
 }) {
   const [category, setCategory] = useState('Tümü');
@@ -28,7 +29,12 @@ export default function GiftBoardContent({
   return (
     // h-full: panelin kalan yüksekliği içeriğe geçer, böylece yalnızca hediye ızgarası kayar
     // ve alttaki satırlar (alıcılar, gönderim çubuğu) her zaman görünür kalır.
-    <div className="flex h-full min-h-0 flex-col">
+    <div className="flex min-h-0 flex-1 flex-col">
+      {/* Atış ve alış seviyesinin ilerlemesi. */}
+      <div className="shrink-0">
+        <GiftLevelTicker giftTick={giftTick} />
+      </div>
+
       {/* Üst sekmeler: hediye kategorileri. Soldaki çember kendi profilimiz, sağdaki ok kapatır. */}
       <div className="flex shrink-0 items-end gap-2 border-b border-white/10">
         <span className="relative flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/10 ring-1 ring-[#45d6c8]/60">
@@ -93,6 +99,7 @@ export default function GiftBoardContent({
 
       <GiftBoardFooter
         coins={coins}
+        count={selectedIds.length}
         onOpenCoins={onOpenCoins}
         onSend={onSend}
         sendDisabled={sendDisabled}
