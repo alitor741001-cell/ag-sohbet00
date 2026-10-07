@@ -90,6 +90,8 @@ export default function VoiceRoom() {
   const [exitOpen, setExitOpen] = useState(false);
   const [gamesOpen, setGamesOpen] = useState(false);
   const [giftOpen, setGiftOpen] = useState(false);
+  // Coin yetmediğinde hediye kutusu açılıp doğrudan coin yükleme ekranı gösterilir (sayaç sinyali).
+  const [coinsRequest, setCoinsRequest] = useState(0);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [logOpen, setLogOpen] = useState(false);
   const [giftBoardOpen, setGiftBoardOpen] = useState(false);
@@ -919,6 +921,9 @@ export default function VoiceRoom() {
         description: `Gereken ${formatCoins(giftCost)} coin, bakiyen ${formatCoins(coins)} coin.`,
         variant: 'destructive',
       });
+      // Hediye işleme alınmaz; doğrudan coin yükleme ekranı açılır.
+      setGiftOpen(true);
+      setCoinsRequest((value) => value + 1);
       return false;
     }
     setGiftOpen(false);
@@ -1286,6 +1291,7 @@ export default function VoiceRoom() {
       <GiftBoard
         open={giftOpen}
         onClose={closeGifts}
+        coinsRequest={coinsRequest}
         user={user}
         gifts={gifts}
         tiers={tiers}

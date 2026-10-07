@@ -5,7 +5,7 @@ import GiftSendButton from '@/components/voice/GiftSendButton';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
 
 /** Hediye Tahtası: hediye seçimi (alt panel) ve tam ekran "Coins Yükle" mağazası. */
-export default function GiftBoard({ open, onClose, coins, onSend, sendDisabled, multiplier = 1, onMultiplier, ...props }) {
+export default function GiftBoard({ open, onClose, coins, onSend, sendDisabled, coinsRequest = 0, multiplier = 1, onMultiplier, ...props }) {
   const [view, setView] = useState('gifts');
   // Gönderimden sonra düğme kısa süre ekranda kalır: kutu kapanır ama aynı hediye arka arkaya
   // gönderilebilir. 5 saniye boyunca hediye atılmazsa düğme kendiliğinden kaybolur, kutu
@@ -16,6 +16,9 @@ export default function GiftBoard({ open, onClose, coins, onSend, sendDisabled, 
   const hideTimerRef = useRef(null);
 
   useEffect(() => { if (open) { setView('gifts'); setStayVisible(false); setSendTick(0); } }, [open]);
+
+  // Coin yetmediğinde hediye gönderilmez: kutu doğrudan coin yükleme ekranıyla açılır.
+  useEffect(() => { if (coinsRequest > 0) setView('coins'); }, [coinsRequest]);
 
   // Gönderim kabul edilmediyse (bakiye yetersiz) sayaç artmaz ve düğme ekranda kalmaz.
   const handleSend = () => {
