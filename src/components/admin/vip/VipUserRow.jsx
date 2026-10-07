@@ -12,13 +12,14 @@ const DURATIONS = [
 ];
 
 /** VIP Merkezi satırı: kişi bilgisi, rozetleri, süre seçimi ve seviye düğmeleri. */
-export default function VipUserRow({ person, busy, onSet }) {
+export default function VipUserRow({ person, busy, onSet, onOpen }) {
   const [duration, setDuration] = useState('month');
   const active = (person.vip_level || 0) > 0;
 
   return (
     <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
-      <div className="flex items-center gap-2.5">
+      {/* Kişiye dokununca özel sohbetle aynı profil kartı açılır. */}
+      <button type="button" onClick={onOpen} className="flex w-full items-center gap-2.5 text-left active:opacity-70" aria-label="Profil kartını aç">
         <span className="h-10 w-10 shrink-0 overflow-hidden rounded-full border border-white/10 bg-white/10">
           {person.avatar ? (
             <Image src={person.avatar} alt={person.name} className="h-full w-full" fittingType="fill" draggable={false} />
@@ -37,7 +38,7 @@ export default function VipUserRow({ person, busy, onSet }) {
             </p>
           )}
         </div>
-      </div>
+      </button>
 
       <div className="mt-2">
         <UserStatusBadges

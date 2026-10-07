@@ -153,14 +153,13 @@ export default function AdminUsers({ pendingOnly = false }) {
             const isActive = u.membership_status === 'active';
             return (
               <div key={u.id} className="bg-card border border-border rounded-xl p-3 flex flex-wrap items-center gap-2">
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <button type="button" onClick={() => setDetail(u)} className="shrink-0 active:opacity-70" aria-label="Profil kartını aç">
-                    <UserBadge userId={u.id} name={u.username || u.full_name || '?'} avatar={u.avatar} memberId={u.member_id} size="md" displayRole={u.display_role} customRole={u.custom_role} profileFrame={u.profile_frame} frameScale={u.profile_frame_scale} />
-                  </button>
+                {/* Fotoğrafa ya da isme dokununca özel sohbetle aynı profil kartı açılır. */}
+                <button type="button" onClick={() => setDetail(u)} className="flex flex-1 min-w-0 items-center gap-3 text-left active:opacity-70" aria-label="Profil kartını aç">
+                  <UserBadge userId={u.id} name={u.username || u.full_name || '?'} avatar={u.avatar} memberId={u.member_id} size="md" displayRole={u.display_role} customRole={u.custom_role} profileFrame={u.profile_frame} frameScale={u.profile_frame_scale} />
                   <div className="hidden sm:block min-w-0">
                     {visibleEmail(u) && <p className="text-xs text-muted-foreground truncate">{visibleEmail(u)}</p>}
                   </div>
-                </div>
+                </button>
                 {!u.is_banned && <span className={`text-xs px-2 py-1 rounded ${isActive ? 'bg-green-500/20 text-green-400' : u.membership_status === 'pending' ? 'bg-amber-500/20 text-amber-400' : 'bg-red-500/20 text-red-400'}`}>{isActive ? 'Aktif' : u.membership_status === 'pending' ? 'Beklemede' : 'Pasif'}</span>}
                 {paidUserIds.has(u.id) && <span className="text-xs px-2 py-1 rounded bg-green-500/20 text-green-400 font-semibold">ÖDENDİ</span>}
                 {onlineUsers.has(u.id) ? <span className="text-xs px-2 py-1 rounded bg-green-500/20 text-green-400">Online</span> : <span className="text-xs px-2 py-1 rounded bg-muted text-muted-foreground">Offline</span>}

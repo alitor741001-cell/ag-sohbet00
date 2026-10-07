@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Crown, Loader2, Search } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import VipUserRow from '@/components/admin/vip/VipUserRow';
+import FullUserProfile from '@/components/profile/FullUserProfile';
 import { useToast } from '@/components/ui/use-toast';
 
 /** VIP Merkezi: kullanıcı arar, VIP5–VIP12 (ve 10–12 özel) seviyesi verir ya da kaldırır. */
@@ -12,6 +13,7 @@ export default function AdminVip() {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [profile, setProfile] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -98,9 +100,18 @@ export default function AdminVip() {
       ) : (
         <div className="space-y-2.5">
           {people.map((person) => (
-            <VipUserRow key={person.user_id} person={person} busy={busy} onSet={setVip} />
+            <VipUserRow key={person.user_id} person={person} busy={busy} onSet={setVip} onOpen={() => setProfile(person)} />
           ))}
         </div>
+      )}
+
+      {profile && (
+        <FullUserProfile
+          userId={profile.user_id}
+          name={profile.name}
+          avatar={profile.avatar}
+          onClose={() => setProfile(null)}
+        />
       )}
     </div>
   );
