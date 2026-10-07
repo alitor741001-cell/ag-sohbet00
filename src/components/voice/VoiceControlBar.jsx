@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef } from 'react';
 import { Gamepad2, Gift, MessageCircle, MessageSquare, Mic, MicOff, Settings, Volume2, VolumeX } from 'lucide-react';
 
 const TONES = {
@@ -31,10 +32,30 @@ function RoundButton({ onClick, label, tone = 'gray', active, size = 'lg', child
 
 /** Alt kontrol çubuğu: sohbet, mikrofon, hoparlör, oyun merkezi ve özel sohbet. */
 export default function VoiceControlBar({ micActive, deafened, gamesOpen, gamesEnabled = true, giftOpen, settingsOpen, keyboardOpen, onToggleMic, onToggleSpeaker, onOpenGames, onOpenGifts, onOpenSettings, onOpenPrivateChat, onToggleChat }) {
+  const barRef = useRef(null);
+
+  // Çubuğun gerçek yüksekliği oda çerçevesine bildirilir: sohbet alanı tam butonların üstünde
+  // biter, butonlarla sohbet arasında siyah bir şerit kalmaz. Ekran boyutu ya da alt güvenli
+  // alan değişirse ayrılan yer kendiliğinden güncellenir.
+  useLayoutEffect(() => {
+    const bar = barRef.current;
+    const frame = bar?.closest('.voice-viewport');
+    if (!bar || !frame) return undefined;
+    const apply = () => frame.style.setProperty('--voice-bar-height', `${Math.round(bar.getBoundingClientRect().height)}px`);
+    apply();
+    const observer = new ResizeObserver(apply);
+    observer.observe(bar);
+    return () => {
+      observer.disconnect();
+      frame.style.removeProperty('--voice-bar-height');
+    };
+  }, []);
+
   return (
-    // Klavye açıkken alttaki boşluk kaldırılır: çubuk klavyenin hemen üstüne oturur, arada
-    // siyah şerit kalmaz. Klavye kapalıyken alt güvenli alan (çubuk/gesture alanı) korunur.
-    <div className="voice-control-bar flex shrink-0 items-center justify-between gap-1 px-3 pt-2">
+    // Çubuk kendi siyah zeminiyle durur: siyah alan butonların altında kalır, ikonların önüne
+    // geçen bir katman olmaz. Klavye açıkken ayrılan boşluk kaldırılır, çubuk klavyenin
+    // hemen üstüne oturur.
+    <div ref={barRef} className="voice-control-bar flex shrink-0 items-center justify-between gap-1 bg-catalog px-3 pt-2">
       {/* Sohbet düğmesi sabittir: açıkken ikonu ve rengi değişmez, hep aynı görünür. */}
       <RoundButton onClick={onToggleChat} label="Sohbet">
         <MessageSquare className="h-6 w-6" />

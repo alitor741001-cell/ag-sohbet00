@@ -30,15 +30,19 @@
   .voice-chat-dock .voice-chat-flow { flex: 1 1 auto; min-height: 0; max-height: none; }
   .voice-chat-dock .voice-chat-composer { flex: 0 0 auto; }
 
-  /* Mesaj akışının yüksekliği ve klavye, butonların ekran altındaki yerini değiştirmez. */
+  /* Sohbet alanı için yalnızca çubuğun kapladığı yer ayrılır (yükseklik çubuktan ölçülüp
+     buraya yazılır): sohbet tam butonların üstünde biter, butonların üstünde siyah bir
+     şerit kalmaz. Klavye açıkken çubuk gizlendiği için ayrılan yer de kalmaz. */
   .voice-viewport {
-    padding-bottom: calc(64px + max(0.25rem, env(safe-area-inset-bottom, 0px)));
+    padding-bottom: var(--voice-bar-height, calc(64px + max(0.25rem, env(safe-area-inset-bottom, 0px))));
   }
   .voice-viewport:has(.voice-chat-composer) { padding-bottom: 0; }
+  /* Çubuk siyah zeminin üstünde durur: hiçbir katman butonların önüne geçmez. */
   .voice-controls-anchor {
     position: absolute;
     left: 0;
     right: 0;
+    z-index: 20;
     bottom: calc(var(--visual-viewport-height, 100dvh) + var(--viewport-offset, 0px) - var(--voice-controls-height, 100dvh));
   }
 }
