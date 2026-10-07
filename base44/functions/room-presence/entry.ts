@@ -7,6 +7,7 @@ import { HIDDEN_AVATAR_URL, hiddenDisplayName, isHiddenUser } from '../../shared
 import { scoresAfterRoomLeave } from '../../shared/numberBoard.ts';
 import { maskRoomIdentities } from '../../shared/hiddenUserRoom.ts';
 import { appendRoomLog } from '../../shared/roomLog.ts';
+import { sendDirect } from '../../shared/agency.ts';
 
 async function sha256Hex(salt, pw) {
   const data = new TextEncoder().encode(salt + pw);
@@ -42,7 +43,7 @@ export default async function(req) {
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
     const body = await req.json();
     const { action, room_id, password, target_id } = body || {};
-    if (!room_id || !['get', 'join', 'leave', 'kick', 'ban', 'unban', 'set-password', 'set-name', 'toggle-hidden', 'enable-voice', 'toggle-voice', 'toggle-mute', 'toggle-chat', 'chat-ban', 'toggle-approval', 'change-movie', 'assign-mod', 'remove-mod', 'delete-room', 'request-join', 'approve-join', 'reject-join', 'admin-room'].includes(action)) {
+    if (!room_id || !['get', 'join', 'leave', 'kick', 'ban', 'unban', 'set-password', 'set-name', 'toggle-hidden', 'enable-voice', 'toggle-voice', 'toggle-mute', 'toggle-chat', 'chat-ban', 'toggle-approval', 'change-movie', 'share', 'assign-mod', 'remove-mod', 'delete-room', 'request-join', 'approve-join', 'reject-join', 'admin-room'].includes(action)) {
       return Response.json({ error: 'invalid request' }, { status: 400 });
     }
     const name = user.username || user.full_name || 'Kullanıcı';
@@ -123,6 +124,14 @@ export default async function(req) {
       }
       // Odada hâlihazırda bulunan kişi (sesli/film modu geçişi) yeniden onay beklemez.
       const alreadyInRoom = (room.participants || []).some((p) => p.user_id === user.id);
+      // Gizli oda: yalnızca oda sahibi, yöneticiler ve yayının paylaşıldığı kişiler girebilir.
+      if (room.hidden === true && !canModRoom && !alreadyInRoom) {
+        const sharedRows = await base44.asServiceRole.entities.RoomJoinRequest
+          .filter({ room_id, user_id: user.id, status: 'approved' }, '-created_date', 1).catch(() => []);
+        if (!sharedRows?.length) {
+          return Response.json({ error: 'Bu gizli yayın yalnızca sahibinin paylaştığı kişilere açık.', hidden: true }, { status: 403 });
+        }
+      }
       // Kişisel oda: sadece onaylı istek sahipleri girebilir (admin/mod hariç)
       // requires_approval kapalıysa doğrudan giriş yapılabilir.
       if (room.is_personal && room.requires_approval !== false && !isOwner && !isMod && !alreadyInRoom) {
@@ -409,6 +418,42 @@ export default async function(req) {
           .update(record.id, { current_room_id: willHide ? '' : room_id }).catch(() => {})));
       }
       return Response.json({ ok: true, hidden: willHide });
+    }
+
+    // Yayını paylaş: seçilen arkadaşlara özel sohbetten katılım kartı gönderilir.
+    // Paylaşılan kişiler gizli odada da girebilir — giriş izni onaylı katılım kaydıyla verilir.
+    if (action === 'share') {
+      if (!canModRoom) return Response.json({ error: 'yetkisiz' }, { status: 403 });
+      const ids = Array.isArray(body.target_ids)
+        ? [...new Set(body.target_ids.filter((value: any) => typeof value === 'string' && value && value !== user.id))].slice(0, 30)
+        : [];
+      if (!ids.length) return Response.json({ error: 'Paylaşılacak kişi seçilmedi.' }, { status: 400 });
+      const rlShare = await rateLimit(base44, 'room-share:' + user.id, user.id, 20, 60000);
+      if (!rlShare.allowed) return Response.json({ error: 'Çok fazla paylaşım, biraz bekleyin.' }, { status: 429 });
+      // Kart oda türünü taşır: paylaşılan kişi doğru ekrana (sesli/film) yönlendirilir.
+      const voiceRoom = room.voice_mode === true || room.room_type === 'voice';
+      const marker = `{{ROOM_SHARE|${room_id}|${voiceRoom ? 'voice' : 'watch'}}}`;
+      let shared = 0;
+      for (const id of ids) {
+        const target = await base44.asServiceRole.entities.User.get(id).catch(() => null);
+        if (!target || target.id === user.id) continue;
+        const known = await base44.asServiceRole.entities.RoomJoinRequest.filter({ room_id, user_id: id }, '-created_date', 1).catch(() => []);
+        if (known?.[0]) {
+          if (known[0].status !== 'approved') {
+            await base44.asServiceRole.entities.RoomJoinRequest.update(known[0].id, { status: 'approved' }).catch(() => {});
+          }
+        } else {
+          await base44.asServiceRole.entities.RoomJoinRequest.create({
+            room_id, room_name: room.name || '', user_id: id,
+            user_name: target.username || target.full_name || 'Kullanıcı', user_avatar: target.avatar || '',
+            owner_id: room.owner_id, status: 'approved',
+          }).catch(() => {});
+        }
+        await sendDirect(base44, me, target, marker).catch(() => {});
+        shared += 1;
+      }
+      if (!shared) return Response.json({ error: 'Paylaşılacak kişi bulunamadı.' }, { status: 404 });
+      return Response.json({ ok: true, shared });
     }
 
     // Film odasındaki mikrofon: odayı sesli sohbet moduna geçirmeden sesli sohbeti açar.

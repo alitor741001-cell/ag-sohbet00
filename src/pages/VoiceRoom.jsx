@@ -81,6 +81,7 @@ export default function VoiceRoom() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [musicOpen, setMusicOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const [seatIndex, setSeatIndex] = useState(null);
   const [profileUserId, setProfileUserId] = useState(null);
   const [dmUserId, setDmUserId] = useState(null);
@@ -601,6 +602,20 @@ export default function VoiceRoom() {
     const ok = await invokeVoice({ action: 'invite', target_ids: ids });
     if (ok) { toast({ title: 'Davet gönderildi', description: `${ids.length} kişi davet edildi.` }); setInviteOpen(false); }
     return ok;
+  };
+
+  // Yayını paylaş: seçilen arkadaşlara özel sohbetten katılma kartı gönderilir.
+  // Paylaşılan kişiler oda gizli olsa da girebilir.
+  const shareRoom = async (ids) => {
+    try {
+      const response = await base44.functions.invoke('room-presence', { action: 'share', room_id: id, target_ids: ids });
+      toast({ title: 'Yayın paylaşıldı', description: `${response.data?.shared || ids.length} kişiye özel sohbetten gönderildi.` });
+      setShareOpen(false);
+      return true;
+    } catch (error) {
+      toast({ title: 'Paylaşım başarısız', description: error?.response?.data?.error || error.message, variant: 'destructive' });
+      return false;
+    }
   };
 
   const handleSetPassword = async (pw) => {
@@ -1138,6 +1153,7 @@ export default function VoiceRoom() {
         onToggleHidden={handleToggleHidden}
         onToggleMod={handleToggleMod}
         onInvite={handleInvite}
+        onShare={canMod ? () => setShareOpen(true) : null}
         boardActive={boardActive}
         onToggleBoard={toggleBoard}
         onBoardSettings={saveBoardSettings}
@@ -1245,6 +1261,16 @@ export default function VoiceRoom() {
       />
 
       <InviteSheet open={inviteOpen} onClose={() => setInviteOpen(false)} onInvite={sendInvites} />
+
+      {/* Yayını paylaş: arkadaşlar tek tek seçilir, oda gizliyse giriş izni de verilir. */}
+      <InviteSheet
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        onInvite={shareRoom}
+        title="Yayını paylaş"
+        submitLabel="Paylaş"
+        emptyText="Paylaşabileceğin arkadaş yok."
+      />
 
       {gamesOpen && gamesEnabled && (
         <Suspense fallback={null}>

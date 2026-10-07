@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Eye, EyeOff, Instagram, Lock, MessageCircle, MessageSquare, MessageSquareOff, Mic, Unlock, UserX, Film, Shield, Trash2 } from 'lucide-react';
+import { Eye, EyeOff, Lock, MessageCircle, MessageSquare, MessageSquareOff, Mic, Share2, Unlock, UserX, Film, Shield, Trash2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { base44 } from '@/api/base44Client';
 import { neonCardClass } from '@/lib/neonStyle';
 
-export default function RoomSettingsContent({ room, canMod, participants, roomModerators, onAssignMod, onRemoveMod, roomName, setRoomName, onSaveName, password, setPassword, passwordOpen, setPasswordOpen, onVoice, onChat, onHidden, onPassword, onRemovePassword, onUnban, onPickMovie, onDeleteRoom, onToggleApproval, onChatBan }) {
+export default function RoomSettingsContent({ room, canMod, participants, roomModerators, onAssignMod, onRemoveMod, roomName, setRoomName, onSaveName, password, setPassword, passwordOpen, setPasswordOpen, onVoice, onChat, onHidden, onPassword, onRemovePassword, onUnban, onPickMovie, onDeleteRoom, onShare, onChatBan }) {
   const { toast } = useToast();
   const [showBanned, setShowBanned] = useState(false);
   const [showMods, setShowMods] = useState(false);
@@ -14,10 +14,7 @@ export default function RoomSettingsContent({ room, canMod, participants, roomMo
   const button = `w-full flex items-center gap-3 px-3 py-3 text-sm font-semibold text-white transition-colors hover:border-[#FFD700]/80 ${neonCardClass('gold')}`;
   const shareText = `🎬🍿 Canlı odaya katıl: ${window.location.href}`;
   const shareWhatsApp = () => window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank', 'noopener,noreferrer');
-  const shareInstagram = async () => {
-    if (navigator.share) await navigator.share({ title: room.name, text: '🎬🍿 Canlı odaya katıl', url: window.location.href }).catch(() => {});
-    else { await navigator.clipboard?.writeText(window.location.href); window.open('https://www.instagram.com/', '_blank', 'noopener,noreferrer'); }
-  };
+  // Paylaş: arkadaş listesinden tek tek seçim yapılır (sesli odadaki paylaşımla aynı akış).
   const bannedUsers = room.banned_users || [];
   // Sesli sohbet alanı açıkken buton film odasına dönüş yapar.
   const voiceMode = room?.voice_mode === true;
@@ -59,13 +56,6 @@ export default function RoomSettingsContent({ room, canMod, participants, roomMo
           <button onClick={() => room.password ? onRemovePassword() : setPasswordOpen(!passwordOpen)} className={button}>{room.password ? <Unlock className="w-4 h-4" /> : <Lock className="w-4 h-4" />} {room.password ? 'Kilidi Aç' : 'Kilitle'}</button>
         </div>
         {passwordOpen && !room.password && <div className="flex gap-2"><input value={password} onChange={(e) => setPassword(e.target.value)} type="password" placeholder="Oda şifresi" className="min-w-0 flex-1 rounded-full border border-white/15 bg-[#0d0d0d] px-4 py-2 text-sm text-white outline-none placeholder:text-white/40 focus:border-[#FFD700]/60" /><button onClick={onPassword} disabled={!password.trim()} className="shrink-0 rounded-full border border-[#FFD700] bg-[#FFD700] px-4 text-xs font-bold text-black shadow-[0_0_14px_-3px_rgba(255,215,0,0.95)] disabled:opacity-50">KAYDET</button></div>}
-        {room.is_personal && onToggleApproval && (
-              <button onClick={onToggleApproval} className={`w-full flex items-center gap-3 rounded-xl border px-3 py-3 text-sm font-semibold transition-colors ${room.requires_approval === false ? 'border-green-500/40 bg-green-500/10 text-green-400' : 'border-amber-500/40 bg-amber-500/10 text-amber-400'}`}>
-                {room.requires_approval === false ? <Unlock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
-                <span className="flex-1 text-left">{room.requires_approval === false ? 'Onay Gerekmez (Serbest Giriş)' : 'Onay Gerekli (Manuel Onay)'}</span>
-                <span className={`w-10 h-5 rounded-full relative overflow-hidden transition-colors shrink-0 ${room.requires_approval === false ? 'bg-green-500' : 'bg-amber-500'}`}><span className={`absolute top-0.5 left-0 w-4 h-4 rounded-full bg-white transition-transform ${room.requires_approval === false ? 'translate-x-5' : 'translate-x-0.5'}`} /></span>
-              </button>
-        )}
         <button onClick={() => setShowBanned(!showBanned)} className={button}><UserX className="w-4 h-4 text-red-400" /> Atılan Kullanıcılar ({bannedUsers.length})</button>
         {canMod && ((participants && participants.length > 1) || savedMods.length > 0) && (
           <>
@@ -110,7 +100,7 @@ export default function RoomSettingsContent({ room, canMod, participants, roomMo
           <Trash2 className="w-4 h-4" /> Odayı Sil
         </button>
       )}
-      <div className="grid grid-cols-2 gap-2 border-t border-[#FFD700]/25 p-3"><button onClick={shareWhatsApp} className={button}><MessageCircle className="w-4 h-4 text-green-500" /> WhatsApp</button><button onClick={shareInstagram} className={button}><Instagram className="w-4 h-4 text-pink-500" /> Instagram</button></div>
+      <div className="grid grid-cols-2 gap-2 border-t border-[#FFD700]/25 p-3"><button onClick={shareWhatsApp} className={button}><MessageCircle className="w-4 h-4 text-green-500" /> WhatsApp</button><button onClick={onShare} className={button}><Share2 className="w-4 h-4 text-pink-500" /> Paylaş</button></div>
     </>
   );
 }

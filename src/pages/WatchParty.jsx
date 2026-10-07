@@ -12,6 +12,7 @@ import { Ban, Crown, Eye, LogOut, UserMinus } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import RoomSettingsMenu from '@/components/player/RoomSettingsMenu';
+import InviteSheet from '@/components/voice/InviteSheet';
 import RoomGiftStage from '@/components/voice/RoomGiftStage';
 import RoomExitOverlay from '@/components/voice/RoomExitOverlay';
 import { clearMinimizedRoom, getMinimizedRoom, isRoomMinimized, setMinimizedRoom } from '@/lib/minimizedRoom';
@@ -57,6 +58,7 @@ export default function WatchParty() {
   const [showViewers, setShowViewers] = useState(false);
   const [exitOpen, setExitOpen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const [ytOpen, setYtOpen] = useState(false);
   const [filmOpen, setFilmOpen] = useState(false);
   const [filmQuery, setFilmQuery] = useState('');
@@ -617,12 +619,18 @@ export default function WatchParty() {
     }
   };
 
-  const toggleApproval = async () => {
-    if (!isOwner && !isMod) { toast({ title: 'Yetkiniz yok', variant: 'destructive' }); return; }
+  // Yayını paylaş: seçilen arkadaşlara özel sohbetten katılma kartı gönderilir.
+  // Paylaşılan kişiler oda gizli olsa da girebilir.
+  const shareRoom = async (ids) => {
     try {
-      await base44.functions.invoke('room-presence', { action: 'toggle-approval', room_id: id });
-      toast({ title: room.requires_approval === false ? 'Onay gerektirme açıldı' : 'Serbest giriş açıldı' });
-    } catch (e) { toast({ title: 'İşlem başarısız', description: e.response?.data?.error || e.message, variant: 'destructive' }); }
+      const response = await base44.functions.invoke('room-presence', { action: 'share', room_id: id, target_ids: ids });
+      toast({ title: 'Yayın paylaşıldı', description: `${response.data?.shared || ids.length} kişiye özel sohbetten gönderildi.` });
+      setShareOpen(false);
+      return true;
+    } catch (e) {
+      toast({ title: 'Paylaşım başarısız', description: e.response?.data?.error || e.message, variant: 'destructive' });
+      return false;
+    }
   };
 
   const savePassword = async (override) => {
@@ -811,7 +819,7 @@ export default function WatchParty() {
             onTouchEnd={(e) => { if (!touchStart.current) return; const dx = e.changedTouches[0].clientX - touchStart.current.x; const dy = e.changedTouches[0].clientY - touchStart.current.y; if (dx > 80 && dx > Math.abs(dy) * 1.5) setChatOpen(false); }}
           >
 
-            {chatOpen && <ChatOverlay roomId={id} chatEnabled={chatEnabled} chatLocked={chatLocked} isOwner={canMod} isAdmin={isMod} onClose={() => setChatOpen(false)} autoDeleteMinutes={autoDeleteMinutes} countdownText={countdownText} clearToken={chatClearToken} onSetAutoDelete={setAutoDelete} voice={voice} voiceEnabled={room.voice_enabled} onDirect={() => { setDirectTarget(null); setDirectOpen(!directOpen); setChatOpen(false); setShowViewers(false); setShowSettings(false); }} onDirectUser={openDirectMessage} directUnread={directUnread} ownerId={room?.owner_id} roomModerators={room?.room_moderators || []} participants={room?.participants || []} recentParticipants={room?.recent_participants || []} viewerProfiles={viewerProfiles} presenceMap={presenceMap} levels={roomLevels} onProfileCard={openUserProfile} onToggleChat={toggleChat} onMicPress={handleMicPress} settingsProps={{ room, canMod, participants: room?.participants || [], roomModerators: room?.room_moderators || [], onAssignMod: assignMod, onRemoveMod: removeMod, roomName: roomNameEdit, setRoomName: setRoomNameEdit, onSaveName: saveRoomName, password: pwSetInput, setPassword: setPwSetInput, passwordOpen: showPwSet, setPasswordOpen: setShowPwSet, onVoice: toggleVoice, onChat: toggleChat, onChatBan: toggleChatBan, onHidden: toggleHidden, onPassword: () => savePassword(), onRemovePassword: () => setShowPwRemoveConfirm(true), onUnban: unbanUser, onPickMovie: () => setFilmOpen(true), onDeleteRoom: deleteRoom, onToggleApproval: toggleApproval }} />}
+            {chatOpen && <ChatOverlay roomId={id} chatEnabled={chatEnabled} chatLocked={chatLocked} isOwner={canMod} isAdmin={isMod} onClose={() => setChatOpen(false)} autoDeleteMinutes={autoDeleteMinutes} countdownText={countdownText} clearToken={chatClearToken} onSetAutoDelete={setAutoDelete} voice={voice} voiceEnabled={room.voice_enabled} onDirect={() => { setDirectTarget(null); setDirectOpen(!directOpen); setChatOpen(false); setShowViewers(false); setShowSettings(false); }} onDirectUser={openDirectMessage} directUnread={directUnread} ownerId={room?.owner_id} roomModerators={room?.room_moderators || []} participants={room?.participants || []} recentParticipants={room?.recent_participants || []} viewerProfiles={viewerProfiles} presenceMap={presenceMap} levels={roomLevels} onProfileCard={openUserProfile} onToggleChat={toggleChat} onMicPress={handleMicPress} settingsProps={{ room, canMod, participants: room?.participants || [], roomModerators: room?.room_moderators || [], onAssignMod: assignMod, onRemoveMod: removeMod, roomName: roomNameEdit, setRoomName: setRoomNameEdit, onSaveName: saveRoomName, password: pwSetInput, setPassword: setPwSetInput, passwordOpen: showPwSet, setPasswordOpen: setShowPwSet, onVoice: toggleVoice, onChat: toggleChat, onChatBan: toggleChatBan, onHidden: toggleHidden, onPassword: () => savePassword(), onRemovePassword: () => setShowPwRemoveConfirm(true), onUnban: unbanUser, onPickMovie: () => setFilmOpen(true), onDeleteRoom: deleteRoom, onShare: () => { setShowSettings(false); setShareOpen(true); } }} />}
           </div>
         )}
 
@@ -856,7 +864,17 @@ export default function WatchParty() {
             </div>
           </>
         )}
-        <RoomSettingsMenu open={showSettings} onClose={() => setShowSettings(false)} room={room} canMod={canMod} participants={room.participants || []} roomModerators={room.room_moderators || []} onAssignMod={assignMod} onRemoveMod={removeMod} roomName={roomNameEdit} setRoomName={setRoomNameEdit} onSaveName={saveRoomName} password={pwSetInput} setPassword={setPwSetInput} passwordOpen={showPwSet} setPasswordOpen={setShowPwSet} onVoice={toggleVoice} onChat={toggleChat} onChatBan={toggleChatBan} onHidden={toggleHidden} onPassword={() => savePassword()} onRemovePassword={() => setShowPwRemoveConfirm(true)} onUnban={unbanUser} onPickMovie={() => { setFilmOpen(true); setShowSettings(false); }} onDeleteRoom={deleteRoom} onToggleApproval={toggleApproval} />
+        <RoomSettingsMenu open={showSettings} onClose={() => setShowSettings(false)} room={room} canMod={canMod} participants={room.participants || []} roomModerators={room.room_moderators || []} onAssignMod={assignMod} onRemoveMod={removeMod} roomName={roomNameEdit} setRoomName={setRoomNameEdit} onSaveName={saveRoomName} password={pwSetInput} setPassword={setPwSetInput} passwordOpen={showPwSet} setPasswordOpen={setShowPwSet} onVoice={toggleVoice} onChat={toggleChat} onChatBan={toggleChatBan} onHidden={toggleHidden} onPassword={() => savePassword()} onRemovePassword={() => setShowPwRemoveConfirm(true)} onUnban={unbanUser} onPickMovie={() => { setFilmOpen(true); setShowSettings(false); }} onDeleteRoom={deleteRoom} onShare={() => { setShowSettings(false); setShareOpen(true); }} />
+
+        {/* Yayını paylaş: arkadaşlar tek tek seçilir, oda gizliyse giriş izni de verilir. */}
+        <InviteSheet
+          open={shareOpen}
+          onClose={() => setShareOpen(false)}
+          onInvite={shareRoom}
+          title="Yayını paylaş"
+          submitLabel="Paylaş"
+          emptyText="Paylaşabileceğin arkadaş yok."
+        />
       </div>
 
       <LiveKitDebugPanel voice={voice} />

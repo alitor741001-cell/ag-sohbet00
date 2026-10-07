@@ -5,7 +5,7 @@ import useFriends from '@/hooks/useFriends';
 import VoiceSheet from '@/components/voice/VoiceSheet';
 
 /** Odadaki kişiler arkadaşlarını odaya davet edebilir. */
-export default function InviteSheet({ open, onClose, onInvite }) {
+export default function InviteSheet({ open, onClose, onInvite, title = 'Arkadaşını davet et', submitLabel = 'Davet et', emptyText = 'Davet edebileceğin arkadaş yok.' }) {
   const { user, relations, loading } = useFriends();
   const [selected, setSelected] = useState([]);
 
@@ -32,11 +32,11 @@ export default function InviteSheet({ open, onClose, onInvite }) {
   };
 
   return (
-    <VoiceSheet open={open} onClose={onClose} title="Arkadaşını davet et">
+    <VoiceSheet open={open} onClose={onClose} title={title}>
       {loading ? (
         <p className="py-8 text-center text-xs text-white/50">Yükleniyor...</p>
       ) : friends.length === 0 ? (
-        <p className="py-8 text-center text-xs text-white/50">Davet edebileceğin arkadaş yok.</p>
+        <p className="py-8 text-center text-xs text-white/50">{emptyText}</p>
       ) : (
         <div className="max-h-[45vh] space-y-2 overflow-y-auto">
           {friends.map((friend) => {
@@ -66,7 +66,7 @@ export default function InviteSheet({ open, onClose, onInvite }) {
         onClick={submit}
         className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground disabled:opacity-40"
       >
-        <Send className="h-4 w-4" /> Davet et {selected.length > 0 && `(${selected.length})`}
+        <Send className="h-4 w-4" /> {submitLabel} {selected.length > 0 && `(${selected.length})`}
       </button>
     </VoiceSheet>
   );

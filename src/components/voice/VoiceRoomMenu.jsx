@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Armchair, Eraser, Eye, EyeOff, Film, Hash, Lock, MessageSquareOff, Music, Play, ScrollText, Shield, Square, Unlock, UserPlus } from 'lucide-react';
+import { Armchair, Eraser, Eye, EyeOff, Film, Hash, Lock, MessageSquareOff, Music, Play, ScrollText, Share2, Shield, Square, Unlock, UserPlus } from 'lucide-react';
 import BoardToggleRow from '@/components/voice/BoardToggleRow';
 import SeatCountPicker from '@/components/voice/SeatCountPicker';
 import VoiceMenuTile from '@/components/voice/VoiceMenuTile';
@@ -14,7 +14,7 @@ const Panel = ({ children, hint }) => (
 );
 
 /** "…" menüsü: yuvarlak ikon ızgarası — kilit, gizlilik, koltuk, sayaç, sohbet temizleme, sohbet yasağı ve kayıt defteri. */
-export default function VoiceRoomMenu({ open, onClose, room, userId, participants = [], isOwner, isAdmin, canMod, onSeatCount, onSetPassword, onToggleHidden, onToggleMod, onInvite, boardActive, onToggleBoard, onBoardSettings, onClearChat, onToggleChatBan, onOpenLog, onExitVoiceMode, musicPlaying, onOpenMusic }) {
+export default function VoiceRoomMenu({ open, onClose, room, userId, participants = [], isOwner, isAdmin, canMod, onSeatCount, onSetPassword, onToggleHidden, onToggleMod, onInvite, onShare, boardActive, onToggleBoard, onBoardSettings, onClearChat, onToggleChatBan, onOpenLog, onExitVoiceMode, musicPlaying, onOpenMusic }) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [panel, setPanel] = useState(null);
@@ -78,6 +78,15 @@ export default function VoiceRoomMenu({ open, onClose, room, userId, participant
             label="Davet et"
             tone="green"
             onClick={() => { onClose(); onInvite(); }}
+          />
+        )}
+        {/* Yayını paylaş: seçilen arkadaşlara özel sohbetten katılma kartı gönderilir. */}
+        {onShare && (
+          <VoiceMenuTile
+            icon={Share2}
+            label="Paylaş"
+            tone="blue"
+            onClick={() => { onClose(); onShare(); }}
           />
         )}
         {/* Müzik: herkes kendi listesinden şarkı açar, oda aynı şarkıyı duyar. */}
