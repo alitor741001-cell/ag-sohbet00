@@ -1230,6 +1230,16 @@
     .big-gift-aura { animation: none; }
     .big-gift-float { animation: none; }
   }
+  /* Yüz halkası eşleşmediğinde kamera çemberi kısa bir sarsıntıyla kırmızıda kalır. */
+  @keyframes face-ring-shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(5px); }
+    60% { transform: translateX(-3px); }
+    80% { transform: translateX(2px); }
+  }
+  .face-ring-shake { animation: face-ring-shake 0.45s ease-in-out; }
+  @media (prefers-reduced-motion: reduce) { .face-ring-shake { animation: none; } }
 }
 
 /* Tüm cihazlar için ortak responsive güvenlik katmanı */
