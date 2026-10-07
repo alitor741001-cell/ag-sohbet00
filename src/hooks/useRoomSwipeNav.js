@@ -59,14 +59,26 @@ export default function useRoomSwipeNav({ roomId, userId, active, navigate }) {
         loadFriendIds(userId),
       ]);
       if (!alive) return;
-      roomsRef.current = list.filter(
-        (room) =>
-          room.hidden !== true &&
+      // Gezinirken yalnızca girilebilen canlı yayınlar karşımıza çıkar: kapalı (içinde kimse
+      // olmayan kilitli), şifreli, gizli, dolu ve giriş yasağı olan odalar listeye girmez.
+      roomsRef.current = list.filter((room) => {
+        const inside = room.participants || [];
+        return room.status === 'active'
+          && room.hidden !== true
           // Kendi yayını listede yer almaz: gezerken kişinin kendi odası karşısına çıkmaz.
-          (!userId || room.owner_id !== userId) &&
+          && (!userId || room.owner_id !== userId)
+          // İçinde kimse olmayan oda kilitlidir: gezinirken girilmez.
+          && inside.length > 0
+          // Şifreli oda şifre sorar: kaydırırken kendiliğinden açılmaz.
+          && !room.password
+          // Odadan atılan kişi yasağı bitene kadar o yayında karşımıza çıkmaz.
+          && !(room.banned_users || []).some((ban) => ban.user_id === userId
+            && (!ban.banned_until || new Date(ban.banned_until).getTime() > Date.now()))
+          // Dolu odaya girilemez.
+          && inside.length < (room.max_users || 10)
           // Sesli odalar herkes için gezinir; arkadaşların yayınları türüne bakılmadan eklenir.
-          (isVoiceRoom(room) || friendIds.has(room.owner_id))
-      );
+          && (isVoiceRoom(room) || friendIds.has(room.owner_id));
+      });
     };
     load().catch(() => {});
     return () => { alive = false; };
