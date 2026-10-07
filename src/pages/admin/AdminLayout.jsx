@@ -38,7 +38,6 @@ const navGroups = [
       { to: '/admin/oturumlar', label: 'Oturumlar / Cihazlar', icon: Smartphone },
       { to: '/admin/bildirimler', label: 'Bildirimler & Şikayetler', icon: Bell },
       { to: '/admin/telegram', label: 'Telegram Bildirimleri', icon: MessageCircle },
-      { to: '/admin/guncellemeler', label: 'Güncelleme Duyuruları', icon: Sparkles },
       { to: '/admin/ayarlar', label: 'Ayarlar', icon: Settings },
     ],
   },

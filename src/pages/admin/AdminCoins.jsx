@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import CoinStack from '@/components/admin/coins/CoinStack';
 import CoinLoadForm from '@/components/admin/coins/CoinLoadForm';
-import CoinRevertCard from '@/components/admin/coins/CoinRevertCard';
 import CoinRecentTable from '@/components/admin/coins/CoinRecentTable';
 import CoinRequestList from '@/components/admin/coins/CoinRequestList';
 
@@ -27,7 +26,6 @@ export default function AdminCoins() {
   useEffect(() => { load(); }, [load, refreshKey]);
 
   const refresh = () => setRefreshKey((value) => value + 1);
-  const lastActive = grants.find((grant) => grant.status === 'active') || null;
 
   return (
     <div className="mx-auto w-full max-w-2xl pb-6">
@@ -46,7 +44,6 @@ export default function AdminCoins() {
       <div className="space-y-4">
         <CoinRequestList onReviewed={refresh} />
         <CoinLoadForm onGranted={refresh} />
-        <CoinRevertCard grant={lastActive} onReverted={refresh} />
         <CoinRecentTable grants={grants} loading={loading} onReverted={refresh} />
       </div>
     </div>

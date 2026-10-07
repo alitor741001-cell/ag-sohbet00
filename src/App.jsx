@@ -48,7 +48,6 @@ const AdminReports = lazy(() => import('@/pages/admin/AdminReports'));
 const AdminSettings = lazy(() => import('@/pages/admin/AdminSettings'));
 const AdminSecurity = lazy(() => import('@/pages/admin/AdminSecurity'));
 const AdminSessions = lazy(() => import('@/pages/admin/AdminSessions'));
-const AdminUpdates = lazy(() => import('@/pages/admin/AdminUpdates'));
 const AdminGifts = lazy(() => import('@/pages/admin/AdminGifts'));
 const AdminCoins = lazy(() => import('@/pages/admin/AdminCoins'));
 const AdminVip = lazy(() => import('@/pages/admin/AdminVip'));
@@ -154,7 +153,6 @@ const AuthenticatedApp = () => {
           <Route path="ayarlar" element={<AdminSettings />} />
           <Route path="ayalar" element={<AdminSettings />} />
           <Route path="oturumlar" element={<AdminSessions />} />
-          <Route path="guncellemeler" element={<AdminUpdates />} />
           <Route path="xp" element={<Navigate to="/admin/kullanicilar" replace />} />
         </Route>
       </Route>
