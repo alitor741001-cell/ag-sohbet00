@@ -57,7 +57,7 @@ export default function DeleteAccountSection() {
       <div className="w-full max-w-md rounded-2xl border border-destructive/30 bg-card p-6 text-foreground" onClick={(e) => e.stopPropagation()}>
         {step === 1 && (<>
           <h3 className="text-lg font-bold text-destructive mb-2">Hesabını silmek istediğine emin misin?</h3>
-          <p className="text-sm text-muted-foreground mb-4">Bu işlem tüm verilerini kalıcı olarak siler ve geri alınamaz. Favorilerin, izleme geçmişin, mesajların, arkadaşlıkların ve aboneliğin tamamen silinecek.</p>
+          <p className="text-sm text-muted-foreground mb-4">Bu işlem tüm verilerini kalıcı olarak siler ve geri alınamaz. Mesajların, arkadaşlıkların ve kişisel bilgilerin tamamen silinecek.</p>
           <div className="flex gap-2">
             <button onClick={close} disabled={deleting} className="flex-1 rounded-lg bg-secondary px-4 py-2.5 text-sm font-semibold">Vazgeç</button>
             <button onClick={() => setStep(2)} disabled={deleting} className="flex-1 rounded-lg bg-destructive px-4 py-2.5 text-sm font-semibold text-destructive-foreground">Evet, devam et</button>
