@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import useRoomTyping from '@/components/data/useRoomTyping';
 import subscribeEntity from '@/components/data/entitySubscriptions';
-import { Clock, Crown, Eye, Image as ImageIcon, LayoutGrid, MessageSquare, MessageSquareOff, MessagesSquare, Send, Shield, Smile, Sparkles, Users, X } from 'lucide-react';
+import { Crown, Eye, Image as ImageIcon, LayoutGrid, MessageSquare, MessageSquareOff, MessagesSquare, Send, Shield, Smile, Sparkles, Trash2, Users, X } from 'lucide-react';
 import { neonCircleClass } from '@/lib/neonStyle';
 import VoiceControls from '@/components/player/VoiceControls';
 import { base44 } from '@/api/base44Client';
@@ -32,7 +32,7 @@ const FILTERS = [
   { key: 'yonetici', label: 'Yönetici', icon: Users },
 ];
 
-export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, isOwner, isAdmin, onClose, autoDeleteMinutes = 0, countdownText = '', clearToken = 0, onSetAutoDelete, voice, voiceEnabled, onSettings, onDirect, onDirectUser, directUnread = 0, ownerId, roomModerators = [], participants = [], recentParticipants = [], viewerProfiles = {}, presenceMap = {}, onProfileCard, settingsProps, levels = {}, onToggleChat, onMicPress }) {
+export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, isOwner, isAdmin, onClose, voice, voiceEnabled, onSettings, onDirect, onDirectUser, directUnread = 0, ownerId, roomModerators = [], participants = [], recentParticipants = [], viewerProfiles = {}, presenceMap = {}, onProfileCard, settingsProps, levels = {}, onToggleChat, onMicPress }) {
   const { user } = useCurrentUser();
   const { toast } = useToast();
   // Cheat temizleme işaretçisi: oda için ortak zaman damgası; bu andan eski bildirimler gizlenir.
@@ -47,7 +47,6 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
   const [uploading, setUploading] = useState(false);
 
   const [lightbox, setLightbox] = useState(null);
-  const [showAutoDeleteMenu, setShowAutoDeleteMenu] = useState(false);
   const [msgFilter, setMsgFilter] = useState('all');
   // Gizli kullanıcıların takma adı → kimliği: yalnızca N/VIP rozetleri için seviye verisi çekilir, kimlik gösterilmez.
   const hiddenUsersByName = {};
@@ -124,18 +123,6 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
     return () => { unsub(); window.removeEventListener('online', reconnect); clearInterval(poll); };
   }, [roomId]);
 
-  // Otomatik silme süresi dolduğunda açık panel anında temizlenir. Temizleme panel
-  // kapalıyken yapıldıysa yeniden açıldığında mesajlar silinmez: yalnızca panel açıkken
-  // artan işaret uygulanır.
-  const handledClearToken = useRef(clearToken);
-  useEffect(() => {
-    if (clearToken > handledClearToken.current) {
-      setMessages([]);
-      setLoading(false);
-    }
-    handledClearToken.current = clearToken;
-  }, [clearToken]);
-
   const send = async (e) => {
     e?.preventDefault();
     if (chatLocked) { toast({ title: 'Sohbet yasağı var', description: 'Yazmak için bir koltuğa otur.', variant: 'destructive' }); return; }
@@ -202,21 +189,9 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
+          {/* Sohbet mesajları kendiliğinden silinmez: temizleme yalnızca bu düğmeyle, elle yapılır. */}
           {isOwner && chatEnabled && (
-            <div className="relative">
-              <button onClick={() => setShowAutoDeleteMenu(!showAutoDeleteMenu)} className="flex items-center gap-1 whitespace-nowrap rounded-full border border-[#FFD700]/60 px-2.5 py-1 text-[11px] font-semibold text-[#FFD700] shadow-[0_0_12px_-5px_rgba(255,215,0,0.9)]"><Clock className="h-3 w-3" /> Oto-sil: {autoDeleteMinutes ? `${autoDeleteMinutes}dk` : 'Kapalı'}</button>
-              {showAutoDeleteMenu && (
-                <div className="absolute right-0 top-full mt-1 z-50 w-36 rounded-xl border border-[#FFD700]/45 bg-[#0b0b0b] p-2 shadow-[0_0_18px_-4px_rgba(255,215,0,0.7)]">
-                  <p className="text-xs text-[#A0A0A0] mb-1.5 text-center">Otomatik Silme Süresi</p>
-                  <div className="grid grid-cols-3 gap-1">
-                    <button onClick={() => { onSetAutoDelete?.(0); setShowAutoDeleteMenu(false); }} className={`px-1.5 py-1 rounded text-xs font-semibold ${!autoDeleteMinutes ? 'text-[#FFD700]' : 'text-[#A0A0A0] hover:bg-white/5'}`} style={!autoDeleteMinutes ? { background: 'rgba(255, 215, 0, 0.15)' } : {}}>Kapalı</button>
-                    {[2,3,4,5,6,7,8,9,10].map((m) => (
-                      <button key={m} onClick={() => { onSetAutoDelete?.(m); setShowAutoDeleteMenu(false); }} className={`px-1.5 py-1 rounded text-xs font-semibold ${autoDeleteMinutes === m ? 'text-[#FFD700]' : 'text-[#A0A0A0] hover:bg-white/5'}`} style={autoDeleteMinutes === m ? { background: 'rgba(255, 215, 0, 0.15)' } : {}}>{m}dk</button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
+            <button onClick={clearAll} className="flex items-center gap-1 whitespace-nowrap rounded-full border border-[#FF6B6B]/60 px-2.5 py-1 text-[11px] font-semibold text-[#FF9A9A] shadow-[0_0_12px_-5px_rgba(255,107,107,0.9)]"><Trash2 className="h-3 w-3" /> Temizle</button>
           )}
           <button onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-full border border-white/25 bg-black/60 text-white active:scale-95"><X className="w-5 h-5" /></button>
         </div>
@@ -333,11 +308,6 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
           <RoomSettingsContent {...(settingsProps || {})} />
           </div>
           )}
-          {chatEnabled && msgFilter === 'all' && autoDeleteMinutes > 0 && countdownText && (
-        <p className="flex items-center justify-center gap-1.5 border-t border-[#FFD700]/20 px-3 py-2 text-center text-[11px] font-semibold text-[#FFD700]">
-          <Clock className="h-3 w-3" /> Otomatik silme: {autoDeleteMinutes} dk (kalan: {countdownText})
-        </p>
-      )}
       {chatEnabled && msgFilter === 'all' && showEmoji && (
         <EmojiPicker onSelect={(e) => { setText((t) => t + e); setShowEmoji(false); }} />
       )}

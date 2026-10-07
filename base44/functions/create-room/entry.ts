@@ -98,8 +98,6 @@ export default async function(req) {
       seat_count: isVoiceRoom ? voiceSeats : 0,
       seats,
       is_playing: false, current_time: 0, status: 'active', hidden: !!hidden,
-      chat_auto_delete_minutes: 3,
-      chat_auto_delete_at: new Date(Date.now() + 3 * 60000).toISOString(),
       recent_participants: [],
       participants: [{ user_id: user.id, name: owner_name, avatar: owner_avatar, joined_at: new Date().toISOString(), muted: false, speaking: false }]
     });

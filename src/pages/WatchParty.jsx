@@ -91,9 +91,6 @@ export default function WatchParty() {
   const seenRoomMessagesRef = useRef(new Set());
   const voice = useVoiceChat({ roomId: id, user, participants: room?.participants, voiceEnabled: !!room?.voice_enabled && voiceReady });
   const { messages: directUnread } = useSocialBadges(user?.id);
-  const [countdownText, setCountdownText] = useState('');
-  const [autoDeleteMinutes, setAutoDeleteMinutes] = useState(0);
-  const [chatClearToken, setChatClearToken] = useState(0);
 
   const [roomNameEdit, setRoomNameEdit] = useState('');
 
@@ -408,60 +405,9 @@ export default function WatchParty() {
   // Yukarı/aşağı kaydırma: sesli odalardaki gibi sıradaki canlı yayına geçilir.
   const swipe = useRoomSwipeNav({ roomId: id, userId: user?.id, active: voiceReady, navigate });
 
-  // Otomatik sohbet silme sayacı: her turda temizleme bir kez tetiklenir, yeni hedef
-  // yazıldığında sayaç kendiliğinden baştan başlar ve tur tekrarlanır.
-  const clearedTargetRef = useRef('');
-  useEffect(() => {
-    const minutes = room?.chat_auto_delete_minutes || 0;
-    setAutoDeleteMinutes(minutes);
-    if (!minutes || !room?.chat_auto_delete_at) { setCountdownText(''); return; }
-    const tick = () => {
-      const target = new Date(room.chat_auto_delete_at).getTime();
-      const remaining = Math.max(0, target - Date.now());
-      if (remaining <= 0) {
-        // Temizleme tek bir kişi (oda sahibi/yönetici) tarafından tetiklenir; odadaki diğer
-        // herkes temizliği canlı bildirimle alır — aynı anda çok kez temizleme olmaz.
-        if (canMod && clearedTargetRef.current !== room.chat_auto_delete_at) {
-          clearedTargetRef.current = room.chat_auto_delete_at;
-          base44.functions.invoke('clear-room-messages', { room_id: id }).catch(() => {});
-          const newTarget = new Date(Date.now() + minutes * 60000).toISOString();
-          base44.entities.Room.update(id, { chat_auto_delete_at: newTarget }).catch(() => {});
-          setChatClearToken((t) => t + 1);
-        }
-        setCountdownText('0:00');
-      } else {
-        const m = Math.floor(remaining / 60000);
-        const s = Math.floor((remaining % 60000) / 1000);
-        setCountdownText(`${m}:${s.toString().padStart(2, '0')}`);
-      }
-    };
-    tick();
-    const interval = setInterval(tick, 1000);
-    return () => clearInterval(interval);
-  }, [room?.chat_auto_delete_minutes, room?.chat_auto_delete_at, id, canMod]);
-
   // Odadan çıkınca sohbet giriş anı sıfırlanır: yeniden girildiğinde eski sohbet
   // görünmez, sohbet paneli sıfırdan akar.
   useEffect(() => () => clearChatEntry(id, user?.id), [id, user?.id]);
-
-  const setAutoDelete = async (minutes) => {
-    if (!canMod) return;
-    try {
-      const updates = { chat_auto_delete_minutes: minutes };
-      if (minutes > 0) updates.chat_auto_delete_at = new Date(Date.now() + minutes * 60000).toISOString();
-      else updates.chat_auto_delete_at = null;
-      await base44.entities.Room.update(id, updates);
-    } catch (e) {
-      toast({ title: 'Ayar güncellenemedi', variant: 'destructive' });
-    }
-  };
-
-  const clearAllMessages = async () => {
-    if (!canMod) return;
-    if (!confirm('Sohbetin tüm mesajlarını silmek istediğinize emin misiniz?')) return;
-    try { await base44.functions.invoke('clear-room-messages', { room_id: id }); toast({ title: 'Tüm mesajlar silindi' }); }
-    catch (e) { toast({ title: 'Silinemedi', variant: 'destructive' }); }
-  };
 
   const assignMod = async (uid) => {
     if (!isOwner && !isMod) return;
@@ -739,7 +685,7 @@ export default function WatchParty() {
             onTouchEnd={(e) => { if (!touchStart.current) return; const dx = e.changedTouches[0].clientX - touchStart.current.x; const dy = e.changedTouches[0].clientY - touchStart.current.y; if (dx > 80 && dx > Math.abs(dy) * 1.5) setChatOpen(false); }}
           >
 
-            {chatOpen && <ChatOverlay roomId={id} chatEnabled={chatEnabled} chatLocked={chatLocked} isOwner={canMod} isAdmin={isMod} onClose={() => setChatOpen(false)} autoDeleteMinutes={autoDeleteMinutes} countdownText={countdownText} clearToken={chatClearToken} onSetAutoDelete={setAutoDelete} voice={voice} voiceEnabled={room.voice_enabled} onDirect={() => { setDirectTarget(null); setDirectOpen(!directOpen); setChatOpen(false); setShowViewers(false); setShowSettings(false); }} onDirectUser={openDirectMessage} directUnread={directUnread} ownerId={room?.owner_id} roomModerators={room?.room_moderators || []} participants={room?.participants || []} recentParticipants={room?.recent_participants || []} viewerProfiles={viewerProfiles} presenceMap={presenceMap} levels={roomLevels} onProfileCard={openUserProfile} onToggleChat={toggleChat} onMicPress={handleMicPress} settingsProps={{ room, canMod, participants: room?.participants || [], roomModerators: room?.room_moderators || [], onAssignMod: assignMod, onRemoveMod: removeMod, roomName: roomNameEdit, setRoomName: setRoomNameEdit, onSaveName: saveRoomName, password: pwSetInput, setPassword: setPwSetInput, passwordOpen: showPwSet, setPasswordOpen: setShowPwSet, onVoice: toggleVoice, onChat: toggleChat, onChatBan: toggleChatBan, onHidden: toggleHidden, onPassword: () => savePassword(), onRemovePassword: () => setShowPwRemoveConfirm(true), onUnban: unbanUser, onPickMovie: () => setFilmOpen(true), onDeleteRoom: deleteRoom, onShare: () => { setShowSettings(false); setShareOpen(true); } }} />}
+            {chatOpen && <ChatOverlay roomId={id} chatEnabled={chatEnabled} chatLocked={chatLocked} isOwner={canMod} isAdmin={isMod} onClose={() => setChatOpen(false)} voice={voice} voiceEnabled={room.voice_enabled} onDirect={() => { setDirectTarget(null); setDirectOpen(!directOpen); setChatOpen(false); setShowViewers(false); setShowSettings(false); }} onDirectUser={openDirectMessage} directUnread={directUnread} ownerId={room?.owner_id} roomModerators={room?.room_moderators || []} participants={room?.participants || []} recentParticipants={room?.recent_participants || []} viewerProfiles={viewerProfiles} presenceMap={presenceMap} levels={roomLevels} onProfileCard={openUserProfile} onToggleChat={toggleChat} onMicPress={handleMicPress} settingsProps={{ room, canMod, participants: room?.participants || [], roomModerators: room?.room_moderators || [], onAssignMod: assignMod, onRemoveMod: removeMod, roomName: roomNameEdit, setRoomName: setRoomNameEdit, onSaveName: saveRoomName, password: pwSetInput, setPassword: setPwSetInput, passwordOpen: showPwSet, setPasswordOpen: setShowPwSet, onVoice: toggleVoice, onChat: toggleChat, onChatBan: toggleChatBan, onHidden: toggleHidden, onPassword: () => savePassword(), onRemovePassword: () => setShowPwRemoveConfirm(true), onUnban: unbanUser, onPickMovie: () => setFilmOpen(true), onDeleteRoom: deleteRoom, onShare: () => { setShowSettings(false); setShareOpen(true); } }} />}
           </div>
         )}
 
