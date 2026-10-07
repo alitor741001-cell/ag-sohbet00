@@ -2,14 +2,22 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { LogOut, ScanFace, TriangleAlert } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { enrollFace, verifyFace } from '@/lib/faceCheck';
-import { requestTiltPermission, watchTilt } from '@/lib/faceTilt';
+import { requestTiltPermission, watchOrientation } from '@/lib/faceTilt';
 import FaceRing from '@/components/face/FaceRing';
 
 // Üst üste başarısız denemede cihaz erişimi kapatılır.
 const MAX_ATTEMPTS = 3;
-// Halka kendiliğinden bu sürede dolar; telefon yukarı-aşağı çevrildikçe hızlanır.
-const SCAN_MS = 3400;
-const TILT_DEGREES = 150;
+// Halka yavaş yavaş bu sürede dolar; yüzde olarak ilerler.
+const SCAN_MS = 8000;
+// Yön hareketinin sayıldığı eğim miktarı ve istenen dört yön.
+const MOVE_DEGREES = 22;
+const MOVES = [
+  { key: 'up', label: 'Yukarı' },
+  { key: 'down', label: 'Aşağı' },
+  { key: 'right', label: 'Sağ' },
+  { key: 'left', label: 'Sol' },
+];
+const NO_MARKS = { up: false, down: false, left: false, right: false };
 const RETRY_MS = 1400;
 const DONE_MS = 750;
 const TICK_MS = 80;
@@ -21,7 +29,7 @@ const COPY = {
   },
   device: {
     title: 'Yüz doğrulaması',
-    hint: 'Hesabınıza bu cihazdan ilk kez giriş yapılıyor. Devam etmek için telefonu yukarı-aşağı çevirip yüzünüzü doğrulayın.',
+    hint: 'Hesabınıza bu cihazdan ilk kez giriş yapılıyor. Devam etmek için kafanızı yukarı aşağı sağ sola çevirip yüzünüzü doğrulayın.',
   },
   balance: {
     title: 'Bakiye doğrulaması',
@@ -30,16 +38,16 @@ const COPY = {
 };
 
 const PHASE_TEXT = {
-  scanning: 'Telefonu yukarı-aşağı çevirin — halka dolunca kendiliğinden onaylanır.',
+  scanning: 'Kafanızı yukarı aşağı sağ sola çevirin — halka dolunca kendiliğinden onaylanır.',
   verifying: 'Yüzünüz karşılaştırılıyor...',
   ok: 'Doğrulandı',
   fail: 'Tekrar deneniyor...',
 };
 
 /**
- * Tam ekran yüz kilidi: kamera açıkken iPhone Face ID gibi bir halka dolar,
- * telefon yukarı-aşağı çevrildikçe hızlanır ve halka dolduğunda kendi kendine
- * doğrular. Eşleşmezse halka kırmızıya döner ve yeniden dener.
+ * Tam ekran yüz kilidi: kamera açıkken iPhone Face ID gibi halka yavaş yavaş
+ * dolar ve yüzde olarak ilerler. Kullanıcı kafasını yukarı, aşağı, sağa ve sola
+ * çevirmeli; yönler tamamlanmazsa ya da yüz eşleşmezse halka kırmızıya döner.
  */
 export default function FaceLockOverlay({
   open = true,
@@ -55,7 +63,9 @@ export default function FaceLockOverlay({
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const scanStartRef = useRef(Date.now());
-  const tiltBoostRef = useRef(0);
+  const marksRef = useRef(NO_MARKS);
+  const baseRef = useRef(null);
+  const tiltSeenRef = useRef(false);
   const busyRef = useRef(false);
   const attemptsRef = useRef(0);
   const retryRef = useRef(null);
@@ -67,6 +77,7 @@ export default function FaceLockOverlay({
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState('');
   const [attempts, setAttempts] = useState(0);
+  const [marks, setMarks] = useState(NO_MARKS);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -133,7 +144,9 @@ export default function FaceLockOverlay({
     setError(message);
     if (blockOnFail && scope === 'device' && attemptsRef.current >= MAX_ATTEMPTS) return;
     retryRef.current = setTimeout(() => {
-      tiltBoostRef.current = 0;
+      marksRef.current = NO_MARKS;
+      baseRef.current = null;
+      setMarks(NO_MARKS);
       scanStartRef.current = Date.now();
       setProgress(0);
       setPhase('scanning');
@@ -181,28 +194,54 @@ export default function FaceLockOverlay({
     }
   }, [blocked, captureSelfie, mode, onVerified, scheduleRetry, scope, user?.id]);
 
-  // Tarama halkası: kendi süresiyle dolar, çevirme hareketi hızlandırır.
+  // Tarama halkası yavaş yavaş dolar ve yüzde olarak gösterilir.
   useEffect(() => {
     if (!open || blocked || !cameraReady || phase !== 'scanning') return undefined;
     const id = setInterval(() => {
-      const value = Math.min(1, (Date.now() - scanStartRef.current) / SCAN_MS + tiltBoostRef.current);
+      const value = Math.min(1, (Date.now() - scanStartRef.current) / SCAN_MS);
       setProgress(value);
-      if (value >= 1) submit();
+      if (value < 1) return;
+      // Sensör verisi geldiyse dört yönün tamamı yapılmış olmalı; eksikse kırmızıya döner.
+      const missing = tiltSeenRef.current && MOVES.some(({ key }) => !marksRef.current[key]);
+      if (missing) {
+        scheduleRetry('Yön hareketleri tamamlanmadı. Kafanızı yukarı, aşağı, sağa ve sola çevirip tekrar deneyin.');
+        return;
+      }
+      submit();
     }, TICK_MS);
     return () => clearInterval(id);
-  }, [open, blocked, cameraReady, phase, submit]);
+  }, [open, blocked, cameraReady, phase, scheduleRetry, submit]);
 
-  // iOS'ta sensör izni yalnızca dokunuşla istenir; istemezse tarama yine ilerler.
+  // iOS'ta sensör izni yalnızca dokunuşla istenir; izin verilmezse hareket şartı aranmaz.
   const beginTilt = useCallback(() => {
     if (askedRef.current) return;
     askedRef.current = true;
     requestTiltPermission();
   }, []);
 
+  // Yukarı/aşağı/sağ/sol hareketleri ilk duruşa göre ölçülür.
   useEffect(() => {
     if (!open || blocked || phase !== 'scanning') return undefined;
-    return watchTilt((delta) => {
-      tiltBoostRef.current = Math.min(0.85, tiltBoostRef.current + delta / TILT_DEGREES);
+    return watchOrientation(({ beta, gamma }) => {
+      tiltSeenRef.current = true;
+      if (!baseRef.current) {
+        baseRef.current = { beta, gamma };
+        return;
+      }
+      const dBeta = beta - baseRef.current.beta;
+      const dGamma = gamma - baseRef.current.gamma;
+      const next = { ...marksRef.current };
+      if (dBeta <= -MOVE_DEGREES) next.up = true;
+      if (dBeta >= MOVE_DEGREES) next.down = true;
+      if (dGamma >= MOVE_DEGREES) next.right = true;
+      if (dGamma <= -MOVE_DEGREES) next.left = true;
+      if (
+        next.up !== marksRef.current.up || next.down !== marksRef.current.down
+        || next.left !== marksRef.current.left || next.right !== marksRef.current.right
+      ) {
+        marksRef.current = next;
+        setMarks(next);
+      }
     });
   }, [open, blocked, phase]);
 
@@ -240,6 +279,18 @@ export default function FaceLockOverlay({
               onStart={beginTilt}
             />
             <p className="mt-3 text-[11px] font-semibold text-white/55">{PHASE_TEXT[phase]}</p>
+            {phase !== 'ok' && (
+              <div className="mt-2 flex items-center justify-center gap-1.5">
+                {MOVES.map(({ key, label }) => (
+                  <span
+                    key={key}
+                    className={`rounded-full border px-2 py-0.5 text-[11px] font-bold ${marks[key] ? 'border-green-500/60 bg-green-500/15 text-green-300' : 'border-white/12 text-white/45'}`}
+                  >
+                    {label}
+                  </span>
+                ))}
+              </div>
+            )}
           </>
         )}
 

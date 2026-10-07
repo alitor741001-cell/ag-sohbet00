@@ -18,18 +18,14 @@ export async function requestTiltPermission() {
   }
 }
 
-/** Çevirme miktarını derece olarak bildirir; durdurmak için dönen fonksiyon çağrılır. */
-export function watchTilt(handler) {
+/** Telefonun duruş açılarını (yukarı-aşağı beta, sağ-sol gamma) bildirir. */
+export function watchOrientation(handler) {
   if (typeof window === 'undefined') return () => {};
-  let last = null;
   const onEvent = (event) => {
     const beta = typeof event.beta === 'number' ? event.beta : null;
-    if (beta === null) return;
-    if (last !== null) {
-      const delta = Math.abs(beta - last);
-      if (delta > 0) handler(delta);
-    }
-    last = beta;
+    const gamma = typeof event.gamma === 'number' ? event.gamma : null;
+    if (beta === null || gamma === null) return;
+    handler({ beta, gamma });
   };
   window.addEventListener('deviceorientation', onEvent, true);
   return () => window.removeEventListener('deviceorientation', onEvent, true);

@@ -42,6 +42,11 @@ export default function FaceRing({ phase = 'scanning', progress = 0, videoRef, c
           className="h-full w-full scale-x-[-1] object-cover"
           style={{ clipPath: 'circle(50% at 50% 50%)', borderRadius: '9999px' }}
         />
+        {phase === 'scanning' && cameraReady && (
+          <span className="pointer-events-none absolute inset-x-0 bottom-2 mx-auto w-fit rounded-full bg-black/70 px-2.5 py-0.5 text-[11px] font-black text-white">
+            {Math.round(progress * 100)}%
+          </span>
+        )}
         {!cameraReady && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/85 px-4 text-center">
             {cameraError ? (
