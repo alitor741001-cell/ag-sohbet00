@@ -18,6 +18,7 @@ import VoiceChatDock from '@/components/voice/VoiceChatDock';
 import VoiceViewerSheet from '@/components/voice/VoiceViewerSheet';
 import VoiceSeatInvitePrompt from '@/components/voice/VoiceSeatInvitePrompt';
 import RoomInfoCard from '@/components/voice/RoomInfoCard';
+import RoomProfileSheet from '@/components/voice/RoomProfileSheet';
 import VoiceRoomMenu from '@/components/voice/VoiceRoomMenu';
 import VoiceSeatSheet from '@/components/voice/VoiceSeatSheet';
 import InviteSheet from '@/components/voice/InviteSheet';
@@ -94,6 +95,8 @@ export default function VoiceRoom() {
   const [coinsRequest, setCoinsRequest] = useState(0);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [logOpen, setLogOpen] = useState(false);
+  // Oda paneli: profilim, oda ismi düzenleme, kategori, duyuru ve yöneticiler burada durur.
+  const [profilePanelOpen, setProfilePanelOpen] = useState(false);
   const [giftBoardOpen, setGiftBoardOpen] = useState(false);
   const [giftBoard, setGiftBoard] = useState(null);
   const [giftBoardLoading, setGiftBoardLoading] = useState(false);
@@ -637,6 +640,34 @@ export default function VoiceRoom() {
     }
   }, [id, syncRoom, toast]);
 
+  // Duyuru kaydı: oda kaydına yazılır ve kayıt defterine (cheat paneli) düşer.
+  const saveAnnouncement = useCallback(async (text) => {
+    patchRoom({ announcement: text });
+    try {
+      const response = await base44.functions.invoke('room-presence', { action: 'set-announcement', room_id: id, announcement: text });
+      patchRoom({ announcement: response.data?.announcement ?? text });
+      toast({ title: text ? 'Duyuru kaydedildi' : 'Duyuru silindi' });
+      return true;
+    } catch (error) {
+      toast({ title: 'Duyuru kaydedilemedi', description: error?.response?.data?.error || error.message, variant: 'destructive' });
+      return false;
+    }
+  }, [id, patchRoom, toast]);
+
+  // Kategori etiketi: seçim anında uygulanır, sunucu kaydı arkadan yazılır.
+  const saveCategory = useCallback(async (category) => {
+    const previous = room?.category || '';
+    patchRoom({ category });
+    try {
+      await base44.functions.invoke('room-presence', { action: 'set-category', room_id: id, category });
+      return true;
+    } catch (error) {
+      patchRoom({ category: previous });
+      toast({ title: 'Kategori kaydedilemedi', description: error?.response?.data?.error || error.message, variant: 'destructive' });
+      return false;
+    }
+  }, [id, room?.category, patchRoom, toast]);
+
   const handleToggleHidden = async () => {
     if (!beginAction('hidden')) return;
     const previousHidden = !!room?.hidden;
@@ -1053,6 +1084,7 @@ export default function VoiceRoom() {
               room={room}
               canEdit={isOwner || moderators.includes(user?.id)}
               onRename={renameRoom}
+              onOpen={() => setProfilePanelOpen(true)}
             />
             <GiftScoreChip
               score={giftBoard?.all?.total || 0}
@@ -1206,6 +1238,21 @@ export default function VoiceRoom() {
         logs={roomLogs}
         bannedUsers={bannedUsers}
         onUnban={unbanUser}
+      />
+
+      {/* Oda paneli: oda kartına dokununca yarıdan açılır. */}
+      <RoomProfileSheet
+        open={profilePanelOpen}
+        onClose={() => setProfilePanelOpen(false)}
+        room={room}
+        user={user}
+        moderators={moderators}
+        canMod={canMod}
+        onRename={renameRoom}
+        onSaveAnnouncement={saveAnnouncement}
+        onSaveCategory={saveCategory}
+        onOpenProfile={(targetId) => { setProfilePanelOpen(false); setProfileUserId(targetId); }}
+        onRemoveMod={(targetId) => handleToggleMod(targetId, false)}
       />
 
       {/* Odadaki şarkı bu cihazda çalar; liste ve denetleyici kendi bileşeninde durur.

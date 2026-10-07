@@ -43,7 +43,7 @@ export default async function(req) {
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
     const body = await req.json();
     const { action, room_id, password, target_id } = body || {};
-    if (!room_id || !['get', 'join', 'leave', 'kick', 'ban', 'unban', 'set-password', 'set-name', 'toggle-hidden', 'enable-voice', 'toggle-voice', 'toggle-mute', 'toggle-chat', 'chat-ban', 'change-movie', 'share', 'assign-mod', 'remove-mod', 'delete-room', 'admin-room'].includes(action)) {
+    if (!room_id || !['get', 'join', 'leave', 'kick', 'ban', 'unban', 'set-password', 'set-name', 'set-announcement', 'set-category', 'toggle-hidden', 'enable-voice', 'toggle-voice', 'toggle-mute', 'toggle-chat', 'chat-ban', 'change-movie', 'share', 'assign-mod', 'remove-mod', 'delete-room', 'admin-room'].includes(action)) {
       return Response.json({ error: 'invalid request' }, { status: 400 });
     }
     const name = user.username || user.full_name || 'Kullanıcı';
@@ -194,7 +194,11 @@ export default async function(req) {
           return Response.json({ error: 'oda dolu' }, { status: 403 });
         }
         participants.push({ user_id: user.id, name, avatar: user.avatar || '', joined_at: new Date().toISOString(), muted: false, speaking: false });
-        await base44.asServiceRole.entities.Room.update(room_id, { participants });
+        // Odaya giren herkese oda duyurusu kayıt defterine (cheat paneli) düşer.
+        const joinLogs = room.announcement
+          ? appendRoomLog(room, { text: `Duyuru: ${room.announcement}`, kind: 'announcement', actor_id: user.id, actor_name: name })
+          : null;
+        await base44.asServiceRole.entities.Room.update(room_id, joinLogs ? { participants, room_logs: joinLogs } : { participants });
       }
       const roleInfo = getRoleInfo(me, await labelOverrides());
       const frameInfo = await getSpecialFrameInfo(base44, me, true);
@@ -455,6 +459,28 @@ export default async function(req) {
       const cleanName = newName.trim().slice(0, 80);
       await base44.asServiceRole.entities.Room.update(room_id, { name: cleanName });
       return Response.json({ ok: true });
+    }
+
+    // Duyuru: oda kaydına yazılır ve kayıt defterine (cheat paneli) düşer.
+    if (action === 'set-announcement') {
+      if (!canModRoom) return Response.json({ error: 'yetkisiz' }, { status: 403 });
+      const announcement = String(body?.announcement || '').trim().slice(0, 200);
+      const actorName = me?.username || me?.full_name || 'Kullanıcı';
+      await base44.asServiceRole.entities.Room.update(room_id, {
+        announcement,
+        room_logs: appendRoomLog(room, {
+          text: `Duyuru: ${announcement || '(boş)'}`, kind: 'announcement', actor_id: user.id, actor_name: actorName,
+        }),
+      });
+      return Response.json({ ok: true, announcement });
+    }
+
+    // Kategori: Sohbet, DJ, Eğlence, Parti, Oyun etiketlerinden biri.
+    if (action === 'set-category') {
+      if (!canModRoom) return Response.json({ error: 'yetkisiz' }, { status: 403 });
+      const category = String(body?.category || '').trim().slice(0, 20);
+      await base44.asServiceRole.entities.Room.update(room_id, { category });
+      return Response.json({ ok: true, category });
     }
 
     if (action === 'assign-mod' || action === 'remove-mod') {

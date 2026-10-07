@@ -9,7 +9,6 @@ import BottomNav from '@/components/layout/BottomNav';
 import useFriendPresence from '@/hooks/useFriendPresence';
 import useRoleCelebration from '@/hooks/useRoleCelebration';
 import RoleCelebrationOverlay from '@/components/role/RoleCelebrationOverlay';
-import WhatsNewModal from '@/components/WhatsNewModal';
 import { triggerBanNotice } from '@/lib/banNotice';
 import { useToast } from '@/components/ui/use-toast';
 import MessageRealtimeProvider from '@/components/messages/MessageRealtimeProvider';
@@ -197,7 +196,6 @@ export default function AppLayout() {
     <MessageRealtimeProvider userId={user?.id}><div className={`min-h-screen w-full min-w-0 overflow-x-clip ${isDarkSurface ? 'bg-catalog' : 'bg-background'}`}>
       <RoutePreloader />
       <RoleCelebrationOverlay />
-      <WhatsNewModal />
       <Navbar />
       {/* Klavye kullanıcısı menüyü atlayıp doğrudan içeriğe geçebilir. */}
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-[100] focus:rounded-lg focus:bg-card focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-foreground focus:ring-2 focus:ring-ring">İçeriğe geç</a>

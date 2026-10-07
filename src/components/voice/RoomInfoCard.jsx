@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Pencil } from 'lucide-react';
 import { Image } from '@/components/ui/image';
-import RoleNameEffect from '@/components/role/RoleNameEffect';
-import { getRoleInfo } from '@/lib/roles';
 import { isHiddenName } from '@/lib/hiddenUser';
 import useMessageProfiles from '@/hooks/useMessageProfiles';
 
@@ -10,11 +8,10 @@ import useMessageProfiles from '@/hooks/useMessageProfiles';
 const MARQUEE_AFTER = 10;
 
 /**
- * Oda kimlik kartı: solda oda sahibinin profili; sağda üstten alta oda ismi,
- * kullanıcının adı, kullanıcının kimlik numarası ve oda numarası yazar.
- * Kart boyutu isimden bağımsız sabittir; isim uzunsa sağ kenarda sönümlenerek akar.
+ * Oda kimlik kartı: solda oda sahibinin profili; sağda oda ismi, kimlik numarası ve oda numarası yazar.
+ * Kullanıcı adı gösterilmez; karta dokununca oda paneli açılır.
  */
-export default function RoomInfoCard({ room, canEdit, onRename }) {
+export default function RoomInfoCard({ room, canEdit, onRename, onOpen }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(room?.name || '');
   const [saving, setSaving] = useState(false);
@@ -23,7 +20,6 @@ export default function RoomInfoCard({ room, canEdit, onRename }) {
   const ids = useMemo(() => (ownerId ? [ownerId] : []), [ownerId]);
   const profile = useMessageProfiles(ids)[ownerId] || {};
 
-  const role = getRoleInfo(profile);
   // Gizli kullanıcının odasında takma ad kalır; kimlik numarası yazılmaz.
   const ownerHidden = isHiddenName(room?.owner_name);
   const ownerName = ownerHidden
@@ -50,7 +46,13 @@ export default function RoomInfoCard({ room, canEdit, onRename }) {
   };
 
   return (
-    <div className={`relative flex min-h-[60px] w-[12.5rem] min-w-0 max-w-full items-center gap-2.5 rounded-2xl border border-white/10 bg-white/[0.07] py-2 pl-2.5 ${editing || !canEdit ? 'pr-3' : 'pr-10'}`}>
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={() => { if (!editing) onOpen?.(); }}
+      onKeyDown={(event) => { if (!editing && (event.key === 'Enter' || event.key === ' ')) onOpen?.(); }}
+      className={`relative flex min-h-[60px] w-[12.5rem] min-w-0 max-w-full cursor-pointer items-center gap-2.5 rounded-2xl border border-white/10 bg-white/[0.07] py-2 pl-2.5 transition-transform active:scale-[0.99] ${editing || !canEdit ? 'pr-3' : 'pr-10'}`}
+    >
       <span className="inline-flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/15 bg-white/10">
         {profile.avatar
           ? <Image src={profile.avatar} alt={ownerName} className="h-full w-full" fittingType="fill" draggable={false} />
@@ -94,14 +96,7 @@ export default function RoomInfoCard({ room, canEdit, onRename }) {
             ) : (
               <span className="block w-full truncate text-sm font-bold">{label}</span>
             )}
-            {/* Sıra: kullanıcı adı, altında kullanıcının kimlik numarası, en altta oda numarası. */}
-            <RoleNameEffect
-              nameEffect={role.name_effect}
-              color={role.color}
-              className={`mt-0.5 block w-full truncate text-[11px] leading-tight ${role.name_effect ? '' : 'text-white/80'}`}
-            >
-              {ownerName}
-            </RoleNameEffect>
+            {/* Kullanıcı adı kartta yazmaz: oda isminin altında kimlik ve oda numarası kalır. */}
             {memberId && (
               <span className="mt-0.5 block w-full truncate text-[11px] leading-tight tabular-nums text-white/60">
                 ID:{memberId}
@@ -119,7 +114,7 @@ export default function RoomInfoCard({ room, canEdit, onRename }) {
       {canEdit && !editing && (
         <button
           type="button"
-          onClick={() => setEditing(true)}
+          onClick={(event) => { event.stopPropagation(); setEditing(true); }}
           aria-label="Oda ismini değiştir"
           className="absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white/75 transition-transform active:scale-95"
         >

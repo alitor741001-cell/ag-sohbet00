@@ -17,6 +17,14 @@
     "owner_name": {
       "type": "string"
     },
+    "announcement": {
+      "type": "string",
+      "default": ""
+    },
+    "category": {
+      "type": "string",
+      "default": ""
+    },
     "password": {
       "type": "string"
     },
