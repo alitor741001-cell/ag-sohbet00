@@ -33,7 +33,14 @@ export default function FaceRing({ phase = 'scanning', progress = 0, videoRef, c
         />
       </svg>
       <div className={`absolute inset-[11px] overflow-hidden rounded-full border border-white/10 bg-black ${phase === 'fail' ? 'face-ring-shake' : ''}`}>
-        <video ref={videoRef} playsInline muted className="h-full w-full scale-x-[-1] object-cover" />
+        {/* Video kendi çemberine kırpılır: kapsayıcının yuvarlaklığı videoyu her tarayıcıda kesmiyor. */}
+        <video
+          ref={videoRef}
+          playsInline
+          muted
+          className="h-full w-full scale-x-[-1] object-cover"
+          style={{ clipPath: 'circle(50% at 50% 50%)', borderRadius: '9999px' }}
+        />
         {!cameraReady && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/85 px-4 text-center">
             {cameraError ? (

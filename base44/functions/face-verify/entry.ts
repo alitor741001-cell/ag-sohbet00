@@ -175,9 +175,15 @@ export default async function (req) {
 
     if (action === 'toggle') {
       const enabled = body.enabled !== false;
-      if (record) await base44.asServiceRole.entities.FaceCheck.update(record.id, { enabled });
-      else await base44.asServiceRole.entities.FaceCheck.create({ user_id: user.id, user_name: displayName, enabled });
-      return Response.json({ ok: true, enabled });
+      if (record) {
+        // Kapatıp yeniden açıldığında cihaz güveni sıfırlanır: yüz doğrulaması tekrar istenir.
+        await base44.asServiceRole.entities.FaceCheck.update(record.id, enabled
+          ? { enabled, trusted_devices: [], balance_devices: [], last_device: '' }
+          : { enabled });
+      } else {
+        await base44.asServiceRole.entities.FaceCheck.create({ user_id: user.id, user_name: displayName, enabled });
+      }
+      return Response.json({ ok: true, enabled, enrolled: !!record?.face_uri });
     }
 
     // Kayıt ve doğrulama yüz fotoğrafı ister: yüklenen dosya imzalanabiliyorsa geçerlidir.

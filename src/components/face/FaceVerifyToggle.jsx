@@ -2,12 +2,15 @@ import { useEffect, useState } from 'react';
 import { ScanFace } from 'lucide-react';
 import { faceStatus, setFaceEnabled } from '@/lib/faceCheck';
 import { useToast } from '@/components/ui/use-toast';
+import FaceLockOverlay from '@/components/face/FaceLockOverlay';
 
 /** Eklentiler bölümündeki anahtar: yüz doğrulaması istemlerini açar/kapatır. */
 export default function FaceVerifyToggle({ user }) {
   const { toast } = useToast();
   const [enabled, setEnabled] = useState(null);
   const [saving, setSaving] = useState(false);
+  // Açma işleminden sonra cihaz güveni sıfırlanır: doğrulama hemen yeniden istenir.
+  const [verify, setVerify] = useState(null);
 
   useEffect(() => {
     if (!user?.id) return undefined;
@@ -24,7 +27,8 @@ export default function FaceVerifyToggle({ user }) {
     setSaving(true);
     setEnabled(next);
     try {
-      await setFaceEnabled(next);
+      const result = await setFaceEnabled(next);
+      if (next) setVerify({ mode: result?.enrolled === false ? 'enroll' : 'verify' });
       toast({
         title: next ? 'Yüz doğrulaması açıldı' : 'Yüz doğrulaması kapatıldı',
         description: next
@@ -41,6 +45,7 @@ export default function FaceVerifyToggle({ user }) {
 
   const on = enabled === true;
   return (
+    <>
     <section className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4">
       <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-premium-gold/10">
         <ScanFace className="h-5 w-5 text-premium-gold" />
@@ -67,5 +72,16 @@ export default function FaceVerifyToggle({ user }) {
         />
       </button>
     </section>
+    <FaceLockOverlay
+      open={!!verify}
+      user={user}
+      mode={verify?.mode || 'verify'}
+      scope="device"
+      canCancel
+      showLogout={false}
+      onCancel={() => setVerify(null)}
+      onVerified={() => setVerify(null)}
+    />
+    </>
   );
 }

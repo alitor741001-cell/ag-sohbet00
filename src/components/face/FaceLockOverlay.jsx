@@ -47,6 +47,7 @@ export default function FaceLockOverlay({
   mode = 'verify',
   scope = 'device',
   canCancel = false,
+  showLogout = true,
   onVerified,
   onCancel,
 }) {
@@ -248,7 +249,7 @@ export default function FaceLockOverlay({
               Vazgeç
             </button>
           )}
-          {(blocked || cameraError || scope === 'device') && (
+          {(blocked || cameraError || (scope === 'device' && showLogout)) && (
             <button
               type="button"
               onClick={logout}
