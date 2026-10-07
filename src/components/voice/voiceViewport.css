@@ -74,3 +74,13 @@
 .voice-viewport.voice-dm-open .voice-controls-anchor {
   display: none;
 }
+
+/* Hediye kutusu: telefonlarda ekranın yarısı kadar açılır. Panelin kendi içeriği kayar,
+   altta oda arka planı görünmez; daha geniş ekranlarda 86vh sınırı geçerli kalır. */
+.voice-sheet-half { max-height: 86vh; }
+@media (max-width: 767px) {
+  .voice-sheet-half {
+    max-height: 50vh;
+    max-height: 50dvh;
+  }
+}
