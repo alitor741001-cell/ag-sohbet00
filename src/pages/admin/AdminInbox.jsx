@@ -1,16 +1,14 @@
 import { useState } from 'react';
-import { Bell, Flag, Headset } from 'lucide-react';
+import { Bell, Headset } from 'lucide-react';
 import AdminNotifications from '@/pages/admin/AdminNotifications';
-import AdminUserReports from '@/pages/admin/AdminUserReports';
 import AdminSupport from '@/pages/admin/AdminSupport';
 
 const TABS = [
   { key: 'bildirim', label: 'Bildirimler', icon: Bell },
-  { key: 'sikayet', label: 'Şikayetler', icon: Flag },
   { key: 'destek', label: 'Destek Mesajları', icon: Headset },
 ];
 
-/** Bildirimler, şikayetler ve destek mesajları tek ekranda toplanır: üstteki sekmelerle geçilir. */
+/** Bildirimler ve destek mesajları tek ekranda toplanır: üstteki sekmelerle geçilir. */
 export default function AdminInbox() {
   const [tab, setTab] = useState(() => {
     const wanted = new URLSearchParams(window.location.search).get('tab');
@@ -30,7 +28,7 @@ export default function AdminInbox() {
           </button>
         ))}
       </div>
-      {tab === 'sikayet' ? <AdminUserReports /> : tab === 'destek' ? <AdminSupport /> : <AdminNotifications />}
+      {tab === 'destek' ? <AdminSupport /> : <AdminNotifications />}
     </div>
   );
 }

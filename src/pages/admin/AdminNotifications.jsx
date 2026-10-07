@@ -6,19 +6,17 @@ import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
 import { useAdminNotifications, requestNotificationPermission } from '@/hooks/useAdminNotifications';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
-import { Trash2, Send, Trash, Bell, BellOff, CheckCheck, UserPlus, Headset, Flag } from 'lucide-react';
+import { Trash2, Send, Trash, Bell, BellOff, CheckCheck, UserPlus, Headset } from 'lucide-react';
 
 const TYPE_ICONS = {
   new_user: UserPlus,
   support: Headset,
-  report: Flag,
   info: Bell,
 };
 
 const TYPE_LINKS = {
   new_user: '/admin/kullanicilar',
   support: '/admin/destek',
-  report: '/admin/sikayetler',
 };
 
 function timeAgo(dateStr) {

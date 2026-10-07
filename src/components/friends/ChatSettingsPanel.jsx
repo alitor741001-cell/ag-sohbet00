@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { ChevronLeft, Ban, UserMinus, UserPlus, Trash, Flag, CheckCheck, Check, Wifi, BellOff, PhoneOff } from 'lucide-react';
+import { ChevronLeft, Ban, UserMinus, UserPlus, Trash, CheckCheck, Check, Wifi, BellOff, PhoneOff } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import RoleBadge from '@/components/RoleBadge';
 
@@ -8,7 +8,7 @@ export default function ChatSettingsPanel({
   readReceiptsEnabled, onToggleReadReceipts, onToggleOnline,
   dndEnabled, dndBusy, onToggleDnd,
   callsBlocked, callsBusy, onToggleCalls,
-  onBlock, onUnfriend, onRefriend, onClearChat, onReport, onClose,
+  onBlock, onUnfriend, onRefriend, onClearChat, onClose,
   blocking, unfriending, clearing
 }) {
   const touchStart = useRef({ x: 0, y: 0 });
@@ -96,11 +96,6 @@ export default function ChatSettingsPanel({
           <button onClick={onClearChat} disabled={clearing} className="w-full flex items-center gap-3 px-4 py-4 hover:bg-secondary disabled:opacity-50">
             <Trash className="w-5 h-5 text-destructive shrink-0" />
             <span className="font-medium text-destructive">{clearing ? 'Siliniyor...' : 'Sohbeti Sil'}</span>
-          </button>
-          {/* Şikayet Et */}
-          <button onClick={onReport} className="w-full flex items-center gap-3 px-4 py-4 hover:bg-secondary">
-            <Flag className="w-5 h-5 text-destructive shrink-0" />
-            <span className="font-medium text-destructive">Şikayet Et</span>
           </button>
         </div>
       </div>

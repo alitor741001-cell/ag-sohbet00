@@ -4,8 +4,7 @@ import { base44 } from '@/api/base44Client';
 import subscribeEntity from '@/components/data/entitySubscriptions';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { Image } from '@/components/ui/image';
-import { ArrowLeft, Crown, Hash, MessageCircle, UserPlus, Copy, Flag } from 'lucide-react';
-import ReportDialog from '@/components/ReportDialog';
+import { ArrowLeft, Crown, Hash, MessageCircle, UserPlus, Copy } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import RoleBadge from '@/components/RoleBadge';
 import ProfileFrame from '@/components/ProfileFrame';
@@ -14,7 +13,7 @@ import ProfileRoomActions from '@/components/profile/ProfileRoomActions';
 import useXp from '@/hooks/useXp';
 import XpAvatar from '@/components/xp/XpAvatar';
 import XpStatsCard from '@/components/xp/XpStatsCard';
-import { AccountStatusMark, getAccountState } from '@/components/friends/AccountStatusAvatar';
+import { AccountStatusMark, ACCOUNT_MARKS, ACCOUNT_STATES, getAccountState } from '@/components/friends/AccountStatusAvatar';
 import { daysInApp } from '@/lib/xp';
 
 export default function UserProfile({ userId, roomIdOverride, onBack, onMessage, embedded = false }) {
@@ -27,7 +26,6 @@ export default function UserProfile({ userId, roomIdOverride, onBack, onMessage,
   const [profile, setProfile] = useState(null);
   const [relation, setRelation] = useState(null);
   const [requesting, setRequesting] = useState(false);
-  const [reportOpen, setReportOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState('');
   const xpStats = useXp([id])[id];
@@ -83,7 +81,8 @@ export default function UserProfile({ userId, roomIdOverride, onBack, onMessage,
   const isSelf = me?.id === id;
   const accountState = getAccountState(profile);
 
-  if (accountState && !isSelf) return (
+  // Engellenen hesapta bilgiler görünür kalır; yalnızca profil resmi ban görseline döner.
+  if (accountState && !isSelf && accountState.status !== 'banned') return (
     <div className={`dark ${embedded ? 'fixed inset-0 z-[100] bg-black pt-[env(safe-area-inset-top)]' : 'bg-black'} flex min-h-screen items-center justify-center p-4 text-white`}>
       <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 text-center">
         <AccountStatusMark status={accountState.status} />
@@ -101,7 +100,9 @@ export default function UserProfile({ userId, roomIdOverride, onBack, onMessage,
       {err ? <p className="text-center text-destructive py-10">{err}</p> : profile && (
         <div className="bg-card border border-border rounded-2xl p-6 flex flex-col items-center text-center">
           <div className="relative mb-8">
-            {profile.profile_frame ? (
+            {accountState?.status === 'banned' ? (
+              <Image src={ACCOUNT_STATES.banned.image} className="w-28 h-28 rounded-full border border-border object-cover" fittingType="fill" />
+            ) : profile.profile_frame ? (
               <ProfileFrame frame={profile.profile_frame} size="lg" avatar={profile.avatar} name={profile.username || profile.full_name} frameScale={profile.profile_frame_scale} panX={profile.profile_avatar_x} panY={profile.profile_avatar_y}>
                 {profile.avatar ? <Image src={profile.avatar} className="w-28 h-28 rounded-full object-cover" fittingType="fill" /> :
                   <div className="w-28 h-28 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-4xl font-bold">{(profile.username || profile.full_name || '?')[0]}</div>}
@@ -110,6 +111,7 @@ export default function UserProfile({ userId, roomIdOverride, onBack, onMessage,
               <XpAvatar avatar={profile.avatar} name={profile.username || profile.full_name} frame={xpStats?.frame} size="lg" />
             )}
           </div>
+          {accountState?.status === 'banned' && <p className="mb-3 text-[11px] font-black tracking-[0.3em] text-destructive">{ACCOUNT_MARKS.banned}</p>}
           <h1 className="max-w-full text-2xl font-extrabold flex flex-wrap justify-center items-center gap-2 [overflow-wrap:anywhere]">{profile.title || profile.username || profile.full_name || 'Kullanıcı'} {(profile.role === 'admin' || profile.role === 'moderator') && <Crown className="w-5 h-5 text-amber-400" />}</h1>
           {getRoleInfo(profile).label && <div className="mt-1.5"><RoleBadge user={profile} size="md" /></div>}
           {['admin', 'moderator'].includes(profile.role) && <p className="mt-2 text-sm font-bold text-primary">{profile.role === 'admin' ? 'YÖNETİCİ' : 'MODERATÖR'}</p>}
@@ -123,16 +125,14 @@ export default function UserProfile({ userId, roomIdOverride, onBack, onMessage,
           </div>
           <p className="text-xs text-muted-foreground mt-1">Üye No</p>
           {profile.created_date && <p className="text-xs text-muted-foreground mt-3">Katılım: {new Date(profile.created_date).toLocaleDateString('tr-TR')}</p>}
-          {!isSelf && (!relation || ['removed', 'rejected'].includes(relation.status)) && <button onClick={addFriend} disabled={requesting} className="mt-5 inline-flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2 rounded-lg text-sm font-semibold disabled:opacity-50"><UserPlus className="w-4 h-4" />{requesting ? 'Gönderiliyor...' : 'Arkadaş Ekle'}</button>}
-          {!isSelf && relation?.status === 'pending' && <p className="mt-5 text-sm font-semibold text-amber-400">Arkadaşlık isteği bekliyor</p>}
-          {!isSelf && relation?.status === 'accepted' && <div className="mt-5 flex flex-col items-center gap-3"><p className="text-sm font-semibold text-green-400">Arkadaşsınız</p><button onClick={startChat} className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2 rounded-lg text-sm font-semibold"><MessageCircle className="w-4 h-4" /> Mesaj Yaz</button></div>}
-          {!isSelf && relation?.status !== 'accepted' && (me?.role === 'admin' || profile.role === 'admin') && <button onClick={startChat} className="mt-3 rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground">Mesaj Yaz</button>}
-          <ProfileRoomActions userId={id} me={me} roomId={roomId} />
+          {!isSelf && !accountState && (!relation || ['removed', 'rejected'].includes(relation.status)) && <button onClick={addFriend} disabled={requesting} className="mt-5 inline-flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2 rounded-lg text-sm font-semibold disabled:opacity-50"><UserPlus className="w-4 h-4" />{requesting ? 'Gönderiliyor...' : 'Arkadaş Ekle'}</button>}
+          {!isSelf && !accountState && relation?.status === 'pending' && <p className="mt-5 text-sm font-semibold text-amber-400">Arkadaşlık isteği bekliyor</p>}
+          {!isSelf && !accountState && relation?.status === 'accepted' && <div className="mt-5 flex flex-col items-center gap-3"><p className="text-sm font-semibold text-green-400">Arkadaşsınız</p><button onClick={startChat} className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2 rounded-lg text-sm font-semibold"><MessageCircle className="w-4 h-4" /> Mesaj Yaz</button></div>}
+          {!isSelf && !accountState && relation?.status !== 'accepted' && (me?.role === 'admin' || profile.role === 'admin') && <button onClick={startChat} className="mt-3 rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground">Mesaj Yaz</button>}
+          {!accountState && <ProfileRoomActions userId={id} me={me} roomId={roomId} />}
           {isSelf && <Link to="/profil" className="mt-5 bg-primary text-primary-foreground px-5 py-2 rounded-lg text-sm font-semibold">Profili Düzenle</Link>}
-          {!isSelf && <button onClick={() => setReportOpen(true)} className="mt-3 inline-flex items-center gap-2 bg-destructive/10 text-destructive border border-destructive/20 px-4 py-2 rounded-lg text-sm font-semibold"><Flag className="w-4 h-4" /> Şikayet Et</button>}
         </div>
       )}
-      {reportOpen && <ReportDialog targetId={id} targetName={profile?.username || profile?.full_name} context="profile" onClose={() => setReportOpen(false)} />}
     </div>
     </div>
   );

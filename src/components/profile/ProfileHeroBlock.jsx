@@ -2,7 +2,7 @@ import { Crown, Heart } from 'lucide-react';
 import ProfileFrame from '@/components/ProfileFrame';
 
 /** Profil kartının üst bölümü: çerçeveli profil fotoğrafı, cinsiyet rozeti ve süslü isim alanı. */
-export default function ProfileHeroBlock({ name, avatar, frame, frameScale, palette, hidden, roleLabel }) {
+export default function ProfileHeroBlock({ name, avatar, frame, frameScale, palette, hidden, roleLabel, statusLabel }) {
   return (
     <div className="relative flex flex-col items-center">
       <div className="relative" style={{ filter: `drop-shadow(0 0 20px ${palette.glow})` }}>
@@ -14,6 +14,8 @@ export default function ProfileHeroBlock({ name, avatar, frame, frameScale, pale
           {hidden ? '?' : palette.symbol}
         </span>
       </div>
+
+      {statusLabel && <p className="mt-2 text-center text-[11px] font-black tracking-[0.3em] text-destructive">{statusLabel}</p>}
 
       <div className="mt-5 flex w-full items-center justify-between gap-2">
         <span className="flex items-center gap-1 text-[9px] font-extrabold uppercase tracking-wider" style={{ color: palette.accent2 }}>

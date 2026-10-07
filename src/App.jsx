@@ -44,7 +44,6 @@ const AdminUsers = lazy(() => import('@/pages/admin/AdminUsers'));
 const AdminSupport = lazy(() => import('@/pages/admin/AdminSupport'));
 const AdminInbox = lazy(() => import('@/pages/admin/AdminInbox'));
 const AdminTelegram = lazy(() => import('@/pages/admin/AdminTelegram'));
-const AdminReports = lazy(() => import('@/pages/admin/AdminReports'));
 const AdminSettings = lazy(() => import('@/pages/admin/AdminSettings'));
 const AdminSecurity = lazy(() => import('@/pages/admin/AdminSecurity'));
 const AdminSessions = lazy(() => import('@/pages/admin/AdminSessions'));
@@ -149,7 +148,7 @@ const AuthenticatedApp = () => {
           <Route path="telegram" element={<AdminTelegram />} />
           <Route path="guvenlik" element={<AdminSecurity />} />
           {/* Şikayetler aynı ekranın sekmesi: eski bağlantılar şikayet sekmesini açar. */}
-          <Route path="sikayetler" element={<Navigate to="/admin/bildirimler?tab=sikayet" replace />} />
+          <Route path="sikayetler" element={<Navigate to="/admin/bildirimler" replace />} />
           <Route path="ayarlar" element={<AdminSettings />} />
           <Route path="ayalar" element={<AdminSettings />} />
           <Route path="oturumlar" element={<AdminSessions />} />

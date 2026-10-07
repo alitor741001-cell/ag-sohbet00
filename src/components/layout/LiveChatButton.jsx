@@ -6,7 +6,6 @@ import { Send, X, Search, Ban, Trash2, ShieldCheck, ArrowLeft } from 'lucide-rea
 import { useToast } from '@/components/ui/use-toast';
 import SupportAvatarButton, { SUPPORT_AVATAR_URL } from '@/components/layout/SupportAvatarButton';
 import SupportAttachment from '@/components/support/SupportAttachment';
-import ReportDetail from '@/components/support/ReportDetail';
 import { createPortal } from 'react-dom';
 import useKeyboardInset from '@/hooks/useKeyboardInset';
 
@@ -35,11 +34,6 @@ export default function LiveChatButton({ placement = 'top' }) {
   const [actionModal, setActionModal] = useState(null); // { type: 'ban'|'delete', user }
   const [reason, setReason] = useState('');
   const [description, setDescription] = useState('');
-
-  // Şikayetler de bu panelde listelenir: ayrı sayfaya gitmeden görülür ve işlem yapılır.
-  const [reports, setReports] = useState([]);
-  const [showReports, setShowReports] = useState(false);
-  const [activeReport, setActiveReport] = useState(null);
 
   const isSearching = query.trim().length > 0;
   // Sanal klavye açılınca tam ekran panel yukarı kayar: yazma alanı görünür kalır.
@@ -102,23 +96,6 @@ export default function LiveChatButton({ placement = 'top' }) {
     });
     return unsub;
   }, [active?.id, open, selectedUser, isSearching]);
-
-  // Şikayetler: yeni şikayet anında listeye düşer, durum değişiklikleri yansır.
-  useEffect(() => {
-    base44.entities.Report.list('-created_date', 50).then(setReports).catch(() => {});
-    const unsub = subscribeEntity('Report', (ev) => {
-      if (ev.type === 'create') setReports((p) => [ev.data, ...p.filter((r) => r.id !== ev.data.id)]);
-      if (ev.type === 'update') {
-        setReports((p) => p.map((r) => (r.id === ev.data.id ? { ...r, ...ev.data } : r)));
-        setActiveReport((cur) => (cur?.id === ev.data.id ? { ...cur, ...ev.data } : cur));
-      }
-      if (ev.type === 'delete') {
-        setReports((p) => p.filter((r) => r.id !== ev.data.id));
-        setActiveReport((cur) => (cur?.id === ev.data.id ? null : cur));
-      }
-    });
-    return unsub;
-  }, []);
 
   // Kullanıcı arama — ID (member_id) veya isim
   const doSearch = async (q) => {
@@ -261,7 +238,7 @@ export default function LiveChatButton({ placement = 'top' }) {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold text-white">Canlı Sohbet</p>
-              <p className="text-[10px] text-green-400">● Çevrimiçi · {tickets.length} açık talep · {reports.length} şikayet</p>
+              <p className="text-[10px] text-green-400">● Çevrimiçi · {tickets.length} açık talep</p>
             </div>
             <button onClick={() => setOpen(false)} className="p-1.5 rounded-full hover:bg-white/10 text-white/60"><X className="w-4 h-4" /></button>
           </div>
@@ -285,8 +262,6 @@ export default function LiveChatButton({ placement = 'top' }) {
             <div className="flex-1 flex flex-col min-w-0 border-r border-[#2a2a2a]">
               {selectedUser ? (
                 <UserProfileDetail user={selectedUser} onBack={() => setSelectedUser(null)} openAction={openAction} unban={unban} acting={acting} />
-              ) : activeReport ? (
-                <ReportDetail report={activeReport} acting={acting} openAction={openAction} onProfile={setSelectedUser} onBack={() => setActiveReport(null)} />
               ) : isSearching ? (
                 <div className="flex-1 flex items-center justify-center text-xs text-white/30 px-3 text-center">Sağ taraftan kullanıcı seçin</div>
               ) : active ? (
@@ -331,12 +306,9 @@ export default function LiveChatButton({ placement = 'top' }) {
               ) : <div className="flex-1 flex items-center justify-center text-xs text-white/30 px-3 text-center">Sağ taraftan bir talep seçin</div>}
             </div>
 
-            {/* Sağ kolon: destek talepleri, şikayetler ve arama sonuçları */}
+            {/* Sağ kolon: destek talepleri ve arama sonuçları */}
             <div className="flex w-32 shrink-0 flex-col min-h-0">
-              <div className="flex shrink-0 border-b border-[#2a2a2a]">
-                <button onClick={() => { setShowReports(false); setActiveReport(null); }} className={`flex-1 py-1.5 text-[10px] font-semibold ${showReports ? 'text-white/40' : 'bg-purple-500/15 text-purple-300'}`}>Destek</button>
-                <button onClick={() => { setShowReports(true); setSelectedUser(null); }} className={`flex-1 py-1.5 text-[10px] font-semibold ${showReports ? 'bg-red-500/15 text-red-300' : 'text-white/40'}`}>Şikayet{reports.length ? ` ${reports.length}` : ''}</button>
-              </div>
+              <div className="shrink-0 border-b border-[#2a2a2a] py-1.5 text-center text-[10px] font-semibold bg-purple-500/15 text-purple-300">Destek</div>
               <div className="min-h-0 flex-1 overflow-y-auto">
               {isSearching ? (
                 searching ? <p className="p-3 text-xs text-white/30 text-center">Aranıyor...</p> :
@@ -350,19 +322,6 @@ export default function LiveChatButton({ placement = 'top' }) {
                         <p className="text-[10px] text-white/40 truncate">{u.member_id ? `#${u.member_id}` : u.email}</p>
                       </div>
                     </div>
-                  </button>
-                ))
-              ) : showReports ? (
-                reports.length === 0 ? <p className="p-3 text-xs text-white/30 text-center">Şikayet yok</p> :
-                reports.map((r) => (
-                  <button
-                    key={r.id}
-                    onClick={() => { setActiveReport(r); setSelectedUser(null); }}
-                    className={`relative w-full text-left p-2 border-b border-[#2a2a2a] hover:bg-white/5 ${activeReport?.id === r.id && !selectedUser ? 'bg-red-500/20' : ''}`}
-                  >
-                    <p className="text-xs font-semibold text-white truncate">{r.target_name || 'Bilinmeyen'}</p>
-                    <p className="text-[10px] text-white/40 truncate">{r.reason || 'Sebep yok'}</p>
-                    {r.status !== 'resolved' && <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-red-500" />}
                   </button>
                 ))
               ) : (

@@ -6,7 +6,7 @@ import XpAvatar from '@/components/xp/XpAvatar';
 import useMessageProfiles from '@/hooks/useMessageProfiles';
 import FriendSearch from '@/components/friends/FriendSearch';
 import FriendRequests from '@/components/friends/FriendRequests';
-import AccountStatusAvatar, { getAccountState } from '@/components/friends/AccountStatusAvatar';
+import { getAccountState } from '@/components/friends/AccountStatusAvatar';
 import FullUserProfile from '@/components/profile/FullUserProfile';
 
 export default function FriendsPanel({ relations, userId, invoke, onChat, isOnline, getRoomId, rooms }) {
@@ -44,7 +44,7 @@ export default function FriendsPanel({ relations, userId, invoke, onChat, isOnli
       return <div key={r.id} className="border-b last:border-0 border-border p-3">
         <div className="flex items-center gap-3">
           <button onClick={() => setCardUser({ id: friendId, name, avatar: profile?.avatar || avatar, frame: profile?.profile_frame, frameScale: profile?.profile_frame_scale })} className="flex items-center gap-3 flex-1 min-w-0 text-left">
-            <div className="relative shrink-0">{accountState ? <AccountStatusAvatar status={accountState.status} className="h-12 w-12" /> : profile?.profile_frame ? <ProfileFrame frame={profile.profile_frame} avatar={profile.avatar || avatar} name={name} size="sm" /> : <XpAvatar avatar={profile?.avatar || avatar} name={name} userId={friendId} size="sm" />}{!accountState && <span className={`absolute right-0 bottom-0 w-3 h-3 rounded-full border-2 border-card ${online ? 'bg-green-500' : 'bg-muted-foreground'}`} />}</div>
+            <div className="relative shrink-0">{profile?.profile_frame ? <ProfileFrame frame={profile.profile_frame} avatar={profile.avatar || avatar} name={name} size="sm" /> : <XpAvatar avatar={profile?.avatar || avatar} name={name} userId={friendId} size="sm" />}{!accountState && <span className={`absolute right-0 bottom-0 w-3 h-3 rounded-full border-2 border-card ${online ? 'bg-green-500' : 'bg-muted-foreground'}`} />}</div>
             <div className="flex-1 min-w-0"><p className="font-semibold truncate">{name}</p><p className="text-xs truncate text-muted-foreground">{friendRoom?.isPublic ? <span className="text-red-500 font-semibold">{friendRoom.room.owner_name}'in odasında</span> : online ? <span className="text-green-500">Çevrim içi</span> : 'Çevrim dışı'}{member ? ` · ${member}` : ''}</p></div>
           </button>
           <button onClick={() => onChat(r)} className="shrink-0 flex items-center gap-1 bg-primary text-primary-foreground rounded-lg px-2.5 py-1.5 text-xs font-semibold"><MessageCircle className="w-3.5 h-3.5" /> Sohbet</button>

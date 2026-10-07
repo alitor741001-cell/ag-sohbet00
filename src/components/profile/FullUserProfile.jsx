@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Ban, Building2, ChevronRight, Flag, Loader2, MessageSquare, Mic2, MicOff, Settings, UserPlus } from 'lucide-react';
+import { ArrowLeft, Ban, Building2, ChevronRight, Loader2, MessageSquare, Mic2, MicOff, Settings, UserPlus } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useToast } from '@/components/ui/use-toast';
 import { useCurrentUser } from '@/lib/useCurrentUser';
@@ -10,10 +10,8 @@ import { agencyApi } from '@/lib/agency';
 import ProfileHeroBlock from '@/components/profile/ProfileHeroBlock';
 import ProfileStatsRow from '@/components/profile/ProfileStatsRow';
 import ProfileIdentityBlock from '@/components/profile/ProfileIdentityBlock';
-import { AccountStatusMark, getAccountState } from '@/components/friends/AccountStatusAvatar';
+import { AccountStatusMark, ACCOUNT_MARKS, ACCOUNT_STATES, getAccountState } from '@/components/friends/AccountStatusAvatar';
 import { broadcasterState } from '@/lib/broadcaster';
-
-const REPORT_REASONS = ['Spam', 'Taciz', 'Uygunsuz İçerik', 'Diğer'];
 
 /**
  * Odalarda (film ve sesli oda) sohbet, izleyici listesi ya da koltukta bir profilin üstüne
@@ -31,7 +29,6 @@ export default function FullUserProfile({
   const { user } = useCurrentUser();
   const [profile, setProfile] = useState(null);
   const [relation, setRelation] = useState('');
-  const [reportOpen, setReportOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [inviteSent, setInviteSent] = useState(false);
 
@@ -63,8 +60,10 @@ export default function FullUserProfile({
     ? ROOM_BLUE
     : genderPalette(profile?.gender, hidden);
   const loading = !hidden && !profile;
-  // Engellenen ya da silinen hesapta kart normal profil yerine durum işaretini gösterir.
+  // Engellenen hesapta bilgiler görünür kalır: yalnızca profil resmi ban görseline döner.
+  // Silinen hesapta gösterilecek bilgi kalmadığı için kart durum ekranına geçer.
   const accountState = hidden ? null : getAccountState(profile);
+  const banned = accountState?.status === 'banned';
   const shownName = hidden ? (name || 'Gizli Kullanıcı') : (profile?.username || profile?.full_name || name || 'Kullanıcı');
   const shownAvatar = hidden ? HIDDEN_AVATAR_URL : (profile?.avatar || avatar || '');
   const memberId = !hidden && profile?.member_id && profile.member_id !== '-' ? String(profile.member_id) : '';
@@ -76,7 +75,7 @@ export default function FullUserProfile({
     : (profile?.agency_role === 'owner' && profile?.agency_name ? { name: profile.agency_name, code: profile.agency_code || '' } : null));
   // Ülke etiketi: normal üyede Türkiye, yayıncı/ajans üyesinde Almanya.
   const badge = broadcasterState(profile);
-  const showSocial = !isSelf && !hidden;
+  const showSocial = !isSelf && !hidden && !accountState;
   // Ajans sahibi, kendi ajansında olmayan bir kullanıcıyı yayıncı olarak davet edebilir.
   // Yayıncı daveti yalnızca arkadaş olduğun kullanıcılara gönderilebilir.
   const canInvite = showSocial && relation === 'friend'
@@ -125,25 +124,6 @@ export default function FullUserProfile({
     }
   };
 
-  const submitReport = async (reason) => {
-    try {
-      await base44.entities.Report.create({
-        reporter_id: user.id,
-        reporter_name: user.username || user.full_name,
-        target_id: userId,
-        target_name: shownName,
-        context: 'room',
-        context_id: roomId,
-        reason,
-        status: 'pending',
-      });
-      toast({ title: 'Şikayet gönderildi' });
-      setReportOpen(false);
-    } catch {
-      toast({ title: 'Şikayet başarısız', variant: 'destructive' });
-    }
-  };
-
   const header = (
     <header className="flex items-center justify-between">
           <button
@@ -175,7 +155,7 @@ export default function FullUserProfile({
           <div className="flex flex-1 items-center justify-center py-24">
             <Loader2 className="h-6 w-6 animate-spin" style={{ color: palette.accent }} />
           </div>
-        ) : accountState ? (
+        ) : accountState && !banned ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <AccountStatusMark status={accountState.status} />
             <h2 className="mt-4 text-lg font-black text-white">{accountState.name}</h2>
@@ -186,11 +166,12 @@ export default function FullUserProfile({
             <div className="mt-4">
               <ProfileHeroBlock
                 name={shownName}
-                avatar={shownAvatar}
-                frame={hidden ? '' : (profile?.profile_frame || frame)}
+                avatar={banned ? ACCOUNT_STATES.banned.image : shownAvatar}
+                frame={hidden || banned ? '' : (profile?.profile_frame || frame)}
                 frameScale={profile?.profile_frame_scale || frameScale}
                 palette={palette}
                 hidden={hidden}
+                statusLabel={banned ? ACCOUNT_MARKS.banned : ''}
                 roleLabel={hidden ? '' : (profile?.title || profile?.display_role || '')}
               />
             </div>
@@ -342,34 +323,6 @@ export default function FullUserProfile({
               </div>
             )}
 
-            {showSocial && (
-              <div className="mt-3">
-                {reportOpen ? (
-                  <div className="rounded-2xl border p-3" style={{ borderColor: palette.danger, background: 'rgba(0,0,0,0.55)' }}>
-                    <p className="mb-2 text-xs font-bold text-white/70">Şikayet nedeni seç</p>
-                    {REPORT_REASONS.map((reason) => (
-                      <button
-                        key={reason}
-                        type="button"
-                        onClick={() => submitReport(reason)}
-                        className="w-full rounded-lg px-3 py-2 text-left text-sm font-semibold text-white hover:bg-white/10"
-                      >
-                        {reason}
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setReportOpen(true)}
-                    className="flex w-full items-center justify-center gap-2 rounded-full border px-4 py-3 text-sm font-bold"
-                    style={{ borderColor: palette.danger, color: palette.danger, boxShadow: `0 0 18px -6px ${palette.glow}` }}
-                  >
-                    <Flag className="h-4 w-4" /> Şikayet Et
-                  </button>
-                )}
-              </div>
-            )}
     </>
   );
 
