@@ -90,7 +90,7 @@ export default function Friends() {
 
   if (view === 'chat') {
     const friendId = selected?.user1_id === user.id ? selected?.user2_id : selected?.user1_id;
-    return <div className="mx-auto w-full min-w-0 max-w-5xl sm:p-4"><ChatPanel key={selected?.id} conversation={selected} userId={user.id} onBack={() => switchView('chats')} online={isOnline(friendId)} getLastSeen={getLastSeen} /></div>;
+    return <div className="mx-auto w-full min-w-0 max-w-5xl sm:p-4"><ChatPanel key={selected?.id} conversation={selected} userId={user.id} onBack={() => switchView('chats')} online={isOnline(friendId)} getLastSeen={getLastSeen} rooms={rooms} getRoomId={getRoomId} /></div>;
   }
 
   return (
@@ -132,7 +132,7 @@ export default function Friends() {
             <SlidersHorizontal className="absolute right-7 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
           </div>
           {conversations.length > 0 ? (
-            <ConversationList conversations={conversations.filter((c) => { const name = c.user1_id === user.id ? c.user2_name : c.user1_name; return !search.trim() || name?.toLowerCase().includes(search.toLowerCase()); })} userId={user.id} onOpen={openConversation} onHide={hide} isOnline={isOnline} getLastSeen={getLastSeen} />
+            <ConversationList conversations={conversations.filter((c) => { const name = c.user1_id === user.id ? c.user2_name : c.user1_name; return !search.trim() || name?.toLowerCase().includes(search.toLowerCase()); })} userId={user.id} onOpen={openConversation} onHide={hide} isOnline={isOnline} getLastSeen={getLastSeen} rooms={rooms} getRoomId={getRoomId} />
           ) : (
             <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
               <div className="relative w-20 h-20 rounded-full bg-[hsl(var(--secondary))] flex items-center justify-center mb-5">
