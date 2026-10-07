@@ -1,20 +1,25 @@
 import { useState } from 'react';
-import { Bell, Flag } from 'lucide-react';
+import { Bell, Flag, Headset } from 'lucide-react';
 import AdminNotifications from '@/pages/admin/AdminNotifications';
 import AdminUserReports from '@/pages/admin/AdminUserReports';
+import AdminSupport from '@/pages/admin/AdminSupport';
 
 const TABS = [
   { key: 'bildirim', label: 'Bildirimler', icon: Bell },
   { key: 'sikayet', label: 'Şikayetler', icon: Flag },
+  { key: 'destek', label: 'Destek Mesajları', icon: Headset },
 ];
 
-/** Bildirimler ve şikayetler tek ekranda toplanır: üstteki sekmelerle geçilir. */
+/** Bildirimler, şikayetler ve destek mesajları tek ekranda toplanır: üstteki sekmelerle geçilir. */
 export default function AdminInbox() {
-  const [tab, setTab] = useState(() => (new URLSearchParams(window.location.search).get('tab') === 'sikayet' ? 'sikayet' : 'bildirim'));
+  const [tab, setTab] = useState(() => {
+    const wanted = new URLSearchParams(window.location.search).get('tab');
+    return TABS.some((item) => item.key === wanted) ? wanted : 'bildirim';
+  });
 
   return (
     <div>
-      <div className="mb-4 flex gap-2">
+      <div className="mb-4 flex flex-wrap gap-2">
         {TABS.map(({ key, label, icon: Icon }) => (
           <button
             key={key}
@@ -25,7 +30,7 @@ export default function AdminInbox() {
           </button>
         ))}
       </div>
-      {tab === 'sikayet' ? <AdminUserReports /> : <AdminNotifications />}
+      {tab === 'sikayet' ? <AdminUserReports /> : tab === 'destek' ? <AdminSupport /> : <AdminNotifications />}
     </div>
   );
 }
