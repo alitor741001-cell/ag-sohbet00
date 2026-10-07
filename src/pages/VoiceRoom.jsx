@@ -1082,7 +1082,6 @@ export default function VoiceRoom() {
           <RoomInfoCard
             room={room}
             onOpen={() => setProfilePanelOpen(true)}
-            onOpenOwner={(ownerId) => { if (ownerId) setProfileUserId(ownerId); }}
             viewerCount={participants.length}
             onOpenViewers={() => setViewerOpen(true)}
             canMod={canMod}
