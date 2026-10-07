@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import subscribeEntity from '@/components/data/entitySubscriptions';
 import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
@@ -18,6 +19,7 @@ const genderButtonLabel = (u) => (u?.gender === 'kadın' ? 'CİNSİYET: KADIN' :
 export default function AdminUsers({ pendingOnly = false }) {
   const { user: admin } = useCurrentUser();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [confirm, setConfirm] = useState(null);
@@ -121,6 +123,13 @@ export default function AdminUsers({ pendingOnly = false }) {
       load();
     } catch (e) { toast({ title: 'İşlem başarısız', description: e.message, variant: 'destructive' }); }
   };
+  // Karttaki "Mesaj Yaz": sohbet panelindeki gibi çalışır, özel sohbeti açar.
+  const openChat = async (targetId) => {
+    try {
+      const res = await base44.functions.invoke('dm-service', { action: 'start', target_id: targetId });
+      if (res?.data?.conversation) { setDetail(null); navigate(`/arkadaşlar?view=chats&chat=${res.data.conversation.id}`); }
+    } catch (e) { toast({ title: 'Sohbet açılamadı', description: e.response?.data?.error || e.message, variant: 'destructive' }); }
+  };
   const resetPass = async (u) => {
     try {
       await base44.auth.resetPasswordRequest(u.email);
@@ -153,13 +162,13 @@ export default function AdminUsers({ pendingOnly = false }) {
             const isActive = u.membership_status === 'active';
             return (
               <div key={u.id} className="bg-card border border-border rounded-xl p-3 flex flex-wrap items-center gap-2">
-                {/* Fotoğrafa ya da isme dokununca özel sohbetle aynı profil kartı açılır. */}
-                <button type="button" onClick={() => setDetail(u)} className="flex flex-1 min-w-0 items-center gap-3 text-left active:opacity-70" aria-label="Profil kartını aç">
-                  <UserBadge userId={u.id} name={u.username || u.full_name || '?'} avatar={u.avatar} memberId={u.member_id} size="md" displayRole={u.display_role} customRole={u.custom_role} profileFrame={u.profile_frame} frameScale={u.profile_frame_scale} />
+                {/* Fotoğrafa dokununca sayfaya gitmek yerine sohbet panelindeki profil kartı açılır. */}
+                <div className="flex flex-1 min-w-0 items-center gap-3">
+                  <UserBadge userId={u.id} name={u.username || u.full_name || '?'} avatar={u.avatar} memberId={u.member_id} size="md" displayRole={u.display_role} customRole={u.custom_role} profileFrame={u.profile_frame} frameScale={u.profile_frame_scale} onOpen={() => setDetail(u)} />
                   <div className="hidden sm:block min-w-0">
                     {visibleEmail(u) && <p className="text-xs text-muted-foreground truncate">{visibleEmail(u)}</p>}
                   </div>
-                </button>
+                </div>
                 {!u.is_banned && <span className={`text-xs px-2 py-1 rounded ${isActive ? 'bg-green-500/20 text-green-400' : u.membership_status === 'pending' ? 'bg-amber-500/20 text-amber-400' : 'bg-red-500/20 text-red-400'}`}>{isActive ? 'Aktif' : u.membership_status === 'pending' ? 'Beklemede' : 'Pasif'}</span>}
                 {paidUserIds.has(u.id) && <span className="text-xs px-2 py-1 rounded bg-green-500/20 text-green-400 font-semibold">ÖDENDİ</span>}
                 {onlineUsers.has(u.id) ? <span className="text-xs px-2 py-1 rounded bg-green-500/20 text-green-400">Online</span> : <span className="text-xs px-2 py-1 rounded bg-muted text-muted-foreground">Offline</span>}
@@ -187,6 +196,7 @@ export default function AdminUsers({ pendingOnly = false }) {
           frame={detail.profile_frame}
           frameScale={detail.profile_frame_scale}
           onClose={() => setDetail(null)}
+          onMessage={openChat}
           info={[
             { label: 'E-posta', value: visibleEmail(detail) || '-' },
             { label: 'Üyelik durumu', value: detail.is_banned ? 'Engelli' : detail.membership_status === 'active' ? 'Aktif' : detail.membership_status === 'pending' ? 'Beklemede' : 'Pasif' },

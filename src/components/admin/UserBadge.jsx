@@ -6,7 +6,7 @@ import RoleBadge from '@/components/RoleBadge';
 import ProfileFrame from '@/components/ProfileFrame';
 import { getRoleInfo } from '@/lib/roles';
 
-export default function UserBadge({ userId, name, avatar, memberId, size = 'sm', showCopy = true, isOwner = false, displayRole, customRole, profileFrame, frameScale = 100, className = '' }) {
+export default function UserBadge({ userId, name, avatar, memberId, size = 'sm', showCopy = true, isOwner = false, displayRole, customRole, profileFrame, frameScale = 100, className = '', onOpen }) {
   const { toast } = useToast();
   const copy = (e) => {
     e.preventDefault();
@@ -25,8 +25,8 @@ export default function UserBadge({ userId, name, avatar, memberId, size = 'sm',
     ? <Image src={avatar} className={`${sizes[size]} rounded-full object-cover shrink-0`} fittingType="fill" />
     : <span className={`${sizes[size]} rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center font-bold shrink-0`}>{(name || '?')[0]}</span>;
 
-  return (
-    <Link to={userId ? `/kullanici/${userId}` : '#'} className={`inline-flex items-center gap-2 min-w-0 group hover:opacity-90 ${className}`}>
+  const content = (
+    <>
       {hasFrame
         ? <ProfileFrame frame={profileFrame} size={size} avatar={avatar} name={name} frameScale={frameScale}>{avatarEl}</ProfileFrame>
         : avatarEl}
@@ -38,6 +38,21 @@ export default function UserBadge({ userId, name, avatar, memberId, size = 'sm',
         </p>
         {memberId && memberId !== '-' && <div className="flex items-center gap-1"><span className="text-xs text-muted-foreground">#{memberId}</span>{showCopy && <button onClick={copy} className="text-muted-foreground hover:text-primary shrink-0" title="Üye No kopyala"><Copy className="w-3 h-3" /></button>}</div>}
       </div>
+    </>
+  );
+
+  // onOpen verildiğinde profil sayfasına gitmek yerine sohbet panelindeki profil kartını açar.
+  if (onOpen) {
+    return (
+      <button type="button" onClick={onOpen} aria-label="Profil kartını aç" className={`inline-flex items-center gap-2 min-w-0 text-left active:opacity-70 ${className}`}>
+        {content}
+      </button>
+    );
+  }
+
+  return (
+    <Link to={userId ? `/kullanici/${userId}` : '#'} className={`inline-flex items-center gap-2 min-w-0 group hover:opacity-90 ${className}`}>
+      {content}
     </Link>
   );
 }
