@@ -1,13 +1,11 @@
 import { useRef } from 'react';
-import { ChevronLeft, Ban, UserMinus, UserPlus, Trash, CheckCheck, Check, Wifi, BellOff, PhoneOff } from 'lucide-react';
+import { ChevronLeft, Ban, UserMinus, UserPlus, Trash, CheckCheck, Check, Wifi } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import RoleBadge from '@/components/RoleBadge';
 
 export default function ChatSettingsPanel({
   name, avatar, friendProfile,   isBlocked, isFriend, requestSent, showFriendButton, onlineEnabled,
   readReceiptsEnabled, onToggleReadReceipts, onToggleOnline,
-  dndEnabled, dndBusy, onToggleDnd,
-  callsBlocked, callsBusy, onToggleCalls,
   onBlock, onUnfriend, onRefriend, onClearChat, onClose,
   blocking, unfriending, clearing
 }) {
@@ -58,32 +56,6 @@ export default function ChatSettingsPanel({
             <button onClick={onToggleOnline} className={`w-12 h-7 rounded-full transition-colors shrink-0 ${onlineEnabled ? 'bg-primary' : 'bg-muted'}`}>
               <span className={`block w-5 h-5 bg-white rounded-full transition-transform ${onlineEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
             </button>
-          </div>
-          {/* Rahatsız Etme (bu sohbette) */}
-          <div className="w-full px-4 py-4">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex-1 min-w-0">
-                <span className="flex items-center gap-3 font-medium"><BellOff className="w-5 h-5 shrink-0" />Rahatsız Etme</span>
-                <p className="text-xs text-muted-foreground mt-0.5">Açıkken bu kişiden gelen aramalar sessiz bildirilir</p>
-              </div>
-              <button onClick={onToggleDnd} disabled={dndBusy} className={`w-12 h-7 rounded-full transition-colors shrink-0 disabled:opacity-50 ${dndEnabled ? 'bg-primary' : 'bg-muted'}`}>
-                <span className={`block w-5 h-5 bg-white rounded-full transition-transform ${dndEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
-              </button>
-            </div>
-            {dndEnabled && <p className="mt-3 rounded-lg bg-amber-500/10 px-3 py-2 text-xs font-medium text-amber-500">Rahatsız etme açık — bu sohbetten gelen aramalarda zil çalmaz ve telefon titremez.</p>}
-          </div>
-          {/* Aramaları kapat/aç — kapalıyken karşı taraf arama tuşunu görmez */}
-          <div className="w-full px-4 py-4">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex-1 min-w-0">
-                <span className="flex items-center gap-3 font-medium"><PhoneOff className="w-5 h-5 shrink-0" />Aramaları kapat</span>
-                <p className="text-xs text-muted-foreground mt-0.5">Açıkken bu kişi sizi arayamaz — yöneticiler arayabilir</p>
-              </div>
-              <button onClick={onToggleCalls} disabled={callsBusy} className={`w-12 h-7 rounded-full transition-colors shrink-0 disabled:opacity-50 ${callsBlocked ? 'bg-primary' : 'bg-muted'}`}>
-                <span className={`block w-5 h-5 bg-white rounded-full transition-transform ${callsBlocked ? 'translate-x-6' : 'translate-x-1'}`} />
-              </button>
-            </div>
-            {callsBlocked && <p className="mt-3 rounded-lg bg-amber-500/10 px-3 py-2 text-xs font-medium text-amber-500">Aramalar kapalı — karşı tarafta arama tuşu görünmüyor (yöneticiler hariç).</p>}
           </div>
           {/* Arkadaşı Sil / Arkadaş olarak ekle / İstek gönderildi */}
           {showFriendButton && (

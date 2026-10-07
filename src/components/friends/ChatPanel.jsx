@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, Send, Settings, Phone, Trash2, X, Image as ImageIcon, Check, CheckCheck, Mic2 } from 'lucide-react';
-import { useDirectCall } from '@/lib/DirectCallContext';
+import { ArrowLeft, Send, Settings, Trash2, X, Image as ImageIcon, Check, CheckCheck, Mic2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import LiveBadge from '@/components/friends/LiveBadge';
 import { findLiveRoom } from '@/lib/liveRoom';
@@ -28,7 +27,6 @@ export default function ChatPanel({ conversation, userId, onBack, online, embedd
   const { messages: allMessages, loading, sending, send: sendMsg, markRead, deleteMessage, deleteConversation } = useChatMessages(conversation?.id);
   const { user: currentUser } = useCurrentUser();
   const { toast } = useToast();
-  const { startCall } = useDirectCall();
   const navigate = useNavigate();
   const { conversations, optimisticPatch, isTyping } = useMessageRealtime();
   const realtimeConversation = conversations.find((item) => item.id === conversation?.id) || conversation;
@@ -43,10 +41,6 @@ export default function ChatPanel({ conversation, userId, onBack, online, embedd
   const [clearing, setClearing] = useState(false);
   const [offlineFor, setOfflineFor] = useState(conversation?.offline_for || []);
   const [readReceiptsDisabledFor, setReadReceiptsDisabledFor] = useState(conversation?.read_receipts_disabled_for || []);
-  const [dndFor, setDndFor] = useState(conversation?.dnd_for || []);
-  const [dndBusy, setDndBusy] = useState(false);
-  const [callDisabledFor, setCallDisabledFor] = useState(conversation?.call_disabled_for || []);
-  const [callsBusy, setCallsBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [lightbox, setLightbox] = useState(null);
   const [profilePopup, setProfilePopup] = useState(false);
@@ -127,14 +121,10 @@ export default function ChatPanel({ conversation, userId, onBack, online, embedd
     if (!conversation?.id) return;
     setOfflineFor(conversation.offline_for || []);
     setReadReceiptsDisabledFor(conversation.read_receipts_disabled_for || []);
-    setDndFor(conversation.dnd_for || []);
-    setCallDisabledFor(conversation.call_disabled_for || []);
     const unsub = subscribeEntity('Conversation', (event) => {
       if ((event.data?.id || event.id) !== conversation.id) return;
       if (Array.isArray(event.data?.offline_for)) setOfflineFor(event.data.offline_for);
       if (Array.isArray(event.data?.read_receipts_disabled_for)) setReadReceiptsDisabledFor(event.data.read_receipts_disabled_for);
-      if (Array.isArray(event.data?.dnd_for)) setDndFor(event.data.dnd_for);
-      if (Array.isArray(event.data?.call_disabled_for)) setCallDisabledFor(event.data.call_disabled_for);
     });
     return unsub;
   }, [conversation?.id, userId]);
@@ -182,23 +172,12 @@ export default function ChatPanel({ conversation, userId, onBack, online, embedd
   const items = allMessages;
   const onlineEnabled = !offlineFor.includes(userId);
   const readReceiptsEnabled = !readReceiptsDisabledFor.includes(userId);
-  const dndEnabled = dndFor.includes(userId);
   const friendReadReceiptsEnabled = !readReceiptsDisabledFor.includes(friendId);
   const friendVisibleOnline = online && !offlineFor.includes(friendId);
   // Karşı taraf bir odada yayındaysa başlıkta canlı şerit ve "Katıl" düğmesi çıkar.
   const liveRoom = findLiveRoom(rooms, friendId, getRoomId ? getRoomId(friendId) : '');
   const accountState = getAccountState(friendProfile, realtimeConversation?.last_message_text);
   const canMessage = !accountState && (isAdmin || friendProfile?.role === 'admin' || friendship?.status === 'accepted');
-  const callsBlocked = callDisabledFor.includes(userId);
-  // Karşı taraf aramaları kapattıysa tuş gizlenir; yöneticide her zaman görünür.
-  const canCall = canMessage && (isAdmin || !callDisabledFor.includes(friendId));
-
-  const callFriend = async () => {
-    if (!canMessage) return;
-    const failure = await startCall({ calleeId: friendId, conversationId: conversation.id });
-    if (failure) toast({ title: 'Arama başlatılamadı', description: failure, variant: 'destructive' });
-  };
-
   // Ajans sahibi, sohbet ettiği arkadaşını kendi ajansına yayıncı olarak davet edebilir.
   const canInviteAgency = canMessage && currentUser?.agency_role === 'owner' && !!currentUser?.agency_record_id
     && friendship?.status === 'accepted' && !friendProfile?.agency_record_id;
@@ -284,42 +263,6 @@ export default function ChatPanel({ conversation, userId, onBack, online, embedd
       toast({ title: 'Değiştirilemedi', variant: 'destructive' });
     }
   };
-  const toggleDnd = async () => {
-    if (!conversation?.id) return;
-    const nextEnabled = !dndEnabled;
-    const previous = dndFor;
-    const next = nextEnabled ? [...new Set([...previous, userId])] : previous.filter((id) => id !== userId);
-    setDndFor(next);
-    setDndBusy(true);
-    try {
-      const response = await base44.functions.invoke('dm-service', { action: 'toggle_dnd', conversation_id: conversation.id, enabled: nextEnabled });
-      setDndFor(response.data?.dnd_for || next);
-      toast(nextEnabled
-        ? { title: 'Rahatsız etme açıldı', description: 'Bu sohbetten gelen aramalarda zil çalmaz ve telefon titremez.', duration: 6000 }
-        : { title: 'Rahatsız etme kapatıldı', description: 'Bu sohbetten gelen aramalar yeniden zil çalacak.' });
-    } catch {
-      setDndFor(previous);
-      toast({ title: 'Rahatsız etme değiştirilemedi', variant: 'destructive' });
-    } finally { setDndBusy(false); }
-  };
-  const toggleCalls = async () => {
-    if (!conversation?.id) return;
-    const nextBlocked = !callsBlocked;
-    const previous = callDisabledFor;
-    const next = nextBlocked ? [...new Set([...previous, userId])] : previous.filter((id) => id !== userId);
-    setCallDisabledFor(next);
-    setCallsBusy(true);
-    try {
-      const response = await base44.functions.invoke('dm-service', { action: 'toggle_calls', conversation_id: conversation.id, enabled: nextBlocked });
-      setCallDisabledFor(response.data?.call_disabled_for || next);
-      toast(nextBlocked
-        ? { title: 'Aramalar kapatıldı', description: 'Bu kişi sizi arayamaz; yöneticiler aramaya devam edebilir.', duration: 6000 }
-        : { title: 'Aramalar açıldı', description: 'Bu kişi sizi yeniden arayabilir.' });
-    } catch {
-      setCallDisabledFor(previous);
-      toast({ title: 'Arama ayarı değiştirilemedi', variant: 'destructive' });
-    } finally { setCallsBusy(false); }
-  };
   const clearChat = async () => { setClearing(true); try { await deleteConversation(); setSettingsOpen(false); } catch {} finally { setClearing(false); } };
   const unfriend = async () => {
     if (!friendship) { toast({ title: 'Arkadaşlık kaydı bulunamadı', variant: 'destructive' }); return; }
@@ -371,7 +314,7 @@ export default function ChatPanel({ conversation, userId, onBack, online, embedd
 
 
   return <section className={embedded ? "room-direct-chat dark relative inset-auto z-auto h-full min-h-0 flex flex-col bg-anthracite text-white" : "standalone-private-chat dark fixed top-0 left-0 right-0 bottom-0 z-[60] min-h-0 flex flex-col overflow-hidden border-y border-[#f2ce6b]/20 bg-anthracite text-white sm:relative sm:inset-auto sm:z-auto sm:h-[72vh] sm:min-h-[72vh] sm:rounded-xl sm:border sm:pt-0"} style={embedded ? undefined : { transform: keyboardInset ? `translateY(-${keyboardInset}px)` : undefined, transition: 'transform 180ms ease-out' }} onTouchStart={(e) => { touchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }; }} onTouchEnd={(e) => { const dx = e.changedTouches[0].clientX - touchStart.current.x; const dy = e.changedTouches[0].clientY - touchStart.current.y; if (dx > 80 && dx > Math.abs(dy) * 1.5) onBack(); }}>
-    <header className="room-direct-header relative shrink-0 px-3 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 border-b border-[#f2ce6b]/20 bg-anthracite/95 backdrop-blur"><div className="flex items-center justify-between"><button onClick={onBack} className="p-2 rounded-full hover:bg-secondary" aria-label="Geri dön"><ArrowLeft className="w-6 h-6" /></button><div className="flex items-center gap-1">{canInviteAgency && <button onClick={inviteBroadcaster} disabled={inviting || invited} className="flex items-center gap-1 rounded-full px-2.5 py-1.5 text-[11px] font-bold text-[#F5C542] disabled:opacity-60" style={{ border: '1px solid rgba(245,197,66,0.5)', background: 'rgba(245,197,66,0.12)' }} aria-label="Ajansa davet et"><Mic2 className="w-4 h-4" /> {invited ? 'Gönderildi' : 'Davet Et'}</button>}{!accountState && canCall && <button onClick={callFriend} className="p-2 rounded-full hover:bg-secondary text-green-500" aria-label="Sesli ara"><Phone className="w-5 h-5" /></button>}{!accountState && <button onClick={() => setSettingsOpen(true)} className="p-2 rounded-full hover:bg-secondary" aria-label="Sohbet ayarları"><Settings className="w-5 h-5" /></button>}</div></div>{liveRoom ? (
+    <header className="room-direct-header relative shrink-0 px-3 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 border-b border-[#f2ce6b]/20 bg-anthracite/95 backdrop-blur"><div className="flex items-center justify-between"><button onClick={onBack} className="p-2 rounded-full hover:bg-secondary" aria-label="Geri dön"><ArrowLeft className="w-6 h-6" /></button><div className="flex items-center gap-1">{canInviteAgency && <button onClick={inviteBroadcaster} disabled={inviting || invited} className="flex items-center gap-1 rounded-full px-2.5 py-1.5 text-[11px] font-bold text-[#F5C542] disabled:opacity-60" style={{ border: '1px solid rgba(245,197,66,0.5)', background: 'rgba(245,197,66,0.12)' }} aria-label="Ajansa davet et"><Mic2 className="w-4 h-4" /> {invited ? 'Gönderildi' : 'Davet Et'}</button>}{!accountState && <button onClick={() => setSettingsOpen(true)} className="p-2 rounded-full hover:bg-secondary" aria-label="Sohbet ayarları"><Settings className="w-5 h-5" /></button>}</div></div>{liveRoom ? (
         <div className="room-direct-profile flex items-center gap-3">
           <button type="button" onClick={() => setProfilePopup(true)} className="flex shrink-0 flex-col items-center gap-1 active:opacity-70">
             <div className="relative">{friendProfile?.profile_frame ? <ProfileFrame frame={friendProfile.profile_frame} avatar={friendProfile.avatar || avatar} name={name} size="sm" frameScale={friendProfile.profile_frame_scale} /> : <XpAvatar avatar={friendProfile?.avatar || avatar} name={name} userId={friendId} size="sm" />}<LiveBadge /></div>
@@ -388,7 +331,7 @@ export default function ChatPanel({ conversation, userId, onBack, online, embedd
         <div className="room-direct-profile flex flex-col items-center gap-1 cursor-pointer active:opacity-70" onClick={() => setProfilePopup(true)}><div className="relative">{friendProfile?.profile_frame ? <ProfileFrame frame={friendProfile.profile_frame} avatar={friendProfile.avatar || avatar} name={name} size="sm" frameScale={friendProfile.profile_frame_scale} /> : <XpAvatar avatar={friendProfile?.avatar || avatar} name={name} userId={friendId} size="sm" />}</div><h2 className="font-bold text-sm truncate max-w-[70%]">{name}</h2><p className={`text-[11px] ${friendTyping ? 'text-green-500' : friendVisibleOnline ? 'text-green-500' : 'text-muted-foreground'}`}>{friendTyping ? `${name} yazıyor...` : online ? '• Çevrim içi' : friendLastSeen ? `Son görülme: ${new Date(friendLastSeen).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}` : 'Çevrim dışı'}</p></div>
       )}
     </header>
-    {settingsOpen && <ChatSettingsPanel name={name} avatar={avatar} friendProfile={friendProfile} isBlocked={(friendship?.status === 'blocked' && (friendship?.blocked_by || []).includes(userId))} isFriend={friendship?.status === 'accepted'} requestSent={friendship?.status === 'pending' && friendship?.requester_id === userId} showFriendButton={!!friendship} onlineEnabled={onlineEnabled} readReceiptsEnabled={readReceiptsEnabled} onToggleReadReceipts={toggleReadReceipts} onToggleOnline={toggleOnline} dndEnabled={dndEnabled} dndBusy={dndBusy} onToggleDnd={toggleDnd} callsBlocked={callsBlocked} callsBusy={callsBusy} onToggleCalls={toggleCalls} onBlock={(friendship?.status === 'blocked' && (friendship?.blocked_by || []).includes(userId)) ? unblock : block} onUnfriend={unfriend} onRefriend={refriend} onClearChat={clearChat} onClose={() => setSettingsOpen(false)} blocking={blocking || unblocking} unfriending={unfriending} clearing={clearing} />}
+    {settingsOpen && <ChatSettingsPanel name={name} avatar={avatar} friendProfile={friendProfile} isBlocked={(friendship?.status === 'blocked' && (friendship?.blocked_by || []).includes(userId))} isFriend={friendship?.status === 'accepted'} requestSent={friendship?.status === 'pending' && friendship?.requester_id === userId} showFriendButton={!!friendship} onlineEnabled={onlineEnabled} readReceiptsEnabled={readReceiptsEnabled} onToggleReadReceipts={toggleReadReceipts} onToggleOnline={toggleOnline} onBlock={(friendship?.status === 'blocked' && (friendship?.blocked_by || []).includes(userId)) ? unblock : block} onUnfriend={unfriend} onRefriend={refriend} onClearChat={clearChat} onClose={() => setSettingsOpen(false)} blocking={blocking || unblocking} unfriending={unfriending} clearing={clearing} />}
     <div ref={messagesRef} className="room-direct-messages min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 space-y-4" style={{ touchAction: 'pan-y', WebkitOverflowScrolling: 'touch' }}><div className="rounded-xl bg-secondary/70 px-4 py-3 text-center text-xs text-muted-foreground">{name} ile sohbet</div>{loading && <p className="text-center text-sm text-muted-foreground py-12">Mesajlar yükleniyor...</p>}{!loading && !items.length && <p className="text-center text-sm text-muted-foreground py-12">İlk mesajı siz gönderin.</p>}{items.map((message) => { const sent = message.sender_id === userId; const senderRoleKey = sent ? (currentUser?.display_role || '') : (friendProfile?.display_role || ''); const shareCard = parseRoomShareMarker(message.content); return <div key={message.id} className={`group flex items-end gap-1.5 ${sent ? 'justify-end' : 'justify-start'}`}><RoleMessageEffect roleKey={senderRoleKey} className="max-w-[80%]"><div className={`rounded-2xl px-3.5 py-2 text-sm shadow-md ${sent ? 'rounded-br-md bg-gradient-to-br from-[#c62828] to-[#7f1d1d] border border-[#f2ce6b]/25 text-white' : 'rounded-bl-md bg-[#1e1e24] text-white'}`}>{message.file_url && <Image src={message.file_url} alt="foto" className="rounded-lg max-w-[200px] max-h-56 object-cover mb-1 cursor-pointer" fittingType="fit" onClick={() => setLightbox(message.file_url)} />}{parseInviteMarker(message.content) ? <AgencyInviteCard inviteId={parseInviteMarker(message.content)} /> : shareCard ? <RoomShareCard roomId={shareCard.roomId} voice={shareCard.voice} senderName={message.sender_name} /> : message.content && <p className="whitespace-pre-wrap break-words">{message.content}</p>}<p className="text-[10px] opacity-50 mt-1 text-right flex items-center justify-end gap-1">{new Date(message.created_date).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}{sent && ((message.read_by || []).includes(message.receiver_id) ? <CheckCheck className={`w-3.5 h-3.5 ${friendReadReceiptsEnabled ? 'text-[#f2ce6b]' : ''}`} /> : <Check className="w-3.5 h-3.5" />)}</p></div></RoleMessageEffect>{(sent || isAdmin) && <button onClick={() => deleteMessage(message.id)} className="p-1 text-muted-foreground/50 hover:text-destructive shrink-0 opacity-0 group-hover:opacity-100" title="Sil"><Trash2 className="w-3.5 h-3.5" /></button>}</div>; })}{friendship?.status === 'blocked' && (friendship?.blocked_by || []).includes(friendId) && <div className="rounded-xl bg-destructive/10 px-4 py-3 text-center text-xs text-destructive">Engellendiniz — bu kullanıcı sizi engelledi</div>}{friendship?.status === 'blocked' && (friendship?.blocked_by || []).includes(userId) && <div className="rounded-xl bg-destructive/10 px-4 py-3 text-center text-xs text-destructive">Bu kullanıcıyı engellediniz — engeli kaldırın</div>}{friendship?.status === 'pending' && friendship?.recipient_id === userId && <div className="rounded-xl bg-primary/10 border border-primary/30 px-4 py-3 flex items-center justify-between gap-3"><span className="text-sm text-foreground">{name} sizi arkadaş olarak eklemek istiyor</span><div className="flex gap-2 shrink-0"><button onClick={acceptRequest} className="bg-primary text-primary-foreground px-3 py-1.5 rounded-lg text-xs font-semibold">Onayla</button><button onClick={rejectRequest} className="bg-secondary text-foreground px-3 py-1.5 rounded-lg text-xs font-semibold">Red</button></div></div>}{friendship?.status === 'pending' && friendship?.requester_id === userId && <div className="rounded-xl bg-secondary/70 px-4 py-3 text-center text-xs text-muted-foreground">Arkadaşlık isteği gönderildi — onay bekleniyor</div>}{acceptedNotice && <div className="rounded-xl bg-green-500/10 border border-green-500/30 px-4 py-3 text-center text-xs text-green-400">✓ Arkadaşlık isteğiniz onaylandı</div>}
 {friendship?.status === 'rejected' && <div className="rounded-xl bg-destructive/10 px-4 py-3 text-center text-xs text-destructive">Arkadaşlık isteğiniz reddedildi</div>}{friendship?.status === 'removed' && <div className="rounded-xl bg-secondary/70 px-4 py-3 text-center text-xs text-muted-foreground">Arkadaşlık kaldırıldı — tekrar eklemek için ayarlardan istek gönderin</div>}</div>
     {/* Klavye açıkken alt boşluk kaldırılır: yazma çubuğu klavyenin hemen üstüne oturur. */}

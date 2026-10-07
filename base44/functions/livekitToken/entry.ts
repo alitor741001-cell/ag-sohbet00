@@ -11,31 +11,6 @@ export default async function(req: Request): Promise<Response> {
     const body = await req.json();
     const displayName = String(body.participantName || user.full_name || 'Kullanıcı').trim().slice(0, 80);
 
-    // Birebir arama: katılımcı ve durum doğrulanır, LiveKit odası arama kaydından türetilir.
-    const callId = String(body.callId || '').trim();
-    if (callId) {
-      const call = await base44.entities.DirectCall.get(callId).catch(() => null);
-      if (!call) return Response.json({ error: 'Arama bulunamadı.' }, { status: 404 });
-      const isCaller = call.caller_id === user.id;
-      const isCallee = call.callee_id === user.id;
-      if (!isCaller && !isCallee) return Response.json({ error: 'Bu aramaya erişiminiz yok.' }, { status: 403 });
-      if (!['ringing', 'accepted'].includes(call.status)) return Response.json({ error: 'Arama sona erdi.' }, { status: 409 });
-
-      const livekitRoom = `filmkeyfi-call-${call.id}`;
-      const callToken = new AccessToken(secrets.get('LIVEKIT_API_KEY'), secrets.get('LIVEKIT_API_SECRET'), {
-        identity: user.id,
-        name: displayName,
-        ttl: '2h',
-      });
-      callToken.addGrant({ roomJoin: true, room: livekitRoom, canPublish: true, canSubscribe: true });
-
-      return Response.json({
-        token: await callToken.toJwt(),
-        url: secrets.get('LIVEKIT_URL'),
-        roomName: livekitRoom,
-      });
-    }
-
     const roomName = body.roomName;
     if (typeof roomName !== 'string' || !roomName.trim() || roomName.length > 100) {
       return Response.json({ error: 'Geçersiz oda.' }, { status: 400 });

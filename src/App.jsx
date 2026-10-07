@@ -9,14 +9,12 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ScrollToTop from './components/ScrollToTop';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import LoginRedirect from '@/components/LoginRedirect';
-// Açılış paketini küçük tutar: arama katmanı ve küçültülmüş oda balonu ayrı indirilir.
-const DirectCallOverlay = lazy(() => import('@/components/friends/DirectCallOverlay'));
+// Açılış paketini küçük tutar: küçültülmüş oda balonu ayrı indirilir.
 const MinimizedRoomBubble = lazy(() => import('@/components/voice/MinimizedRoomBubble'));
 // Add page imports here
 import AppLayout from '@/components/layout/AppLayout';
 import useDeferredMount from '@/hooks/useDeferredMount';
 import XpProvider from '@/components/xp/XpProvider';
-import DirectCallProvider from '@/lib/DirectCallContext';
 import { FrameCatalogProvider } from '@/lib/FrameCatalogContext';
 import { Navigate } from 'react-router-dom';
 
@@ -171,19 +169,16 @@ function App() {
       <QueryClientProvider client={queryClientInstance}>
         <FrameCatalogProvider>
         <XpProvider>
-          <DirectCallProvider>
             <Router>
               <ScrollToTop />
               <AuthenticatedApp />
-              {/* Bu iki katman ana pakete dahil değil: açılış hızlı kalır, davranış aynı. */}
+              {/* Küçültülmüş oda balonu ana pakete dahil değil: açılış hızlı kalır. */}
               {deferredReady && (
                 <Suspense fallback={null}>
-                  <DirectCallOverlay />
                   <MinimizedRoomBubble />
                 </Suspense>
               )}
             </Router>
-          </DirectCallProvider>
           <Toaster />
         </XpProvider>
         </FrameCatalogProvider>
