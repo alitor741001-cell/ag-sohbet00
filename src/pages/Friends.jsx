@@ -107,8 +107,9 @@ export default function Friends() {
             <UsersRound className="w-4 h-4" /> Arkadaşlarım
             {incomingRequests > 0 && <span className="min-w-5 h-5 px-1 rounded-full bg-[#f2ce6b] text-black text-[10px] flex items-center justify-center">{incomingRequests}</span>}
           </button>
-          {/* Sistem bildirim butonu: tüm bildirimler buraya düşer, dokununca tam ekran açılır. */}
-          <NotificationBell />
+          {/* Sistem bildirim butonu: tüm bildirimler buraya düşer, dokununca tam ekran açılır.
+              Yönetici hesabında gösterilmez — bildirimler yönetim panelinden takip edilir. */}
+          {!isModerator(user) && <NotificationBell />}
         </div>
       </header>
 
