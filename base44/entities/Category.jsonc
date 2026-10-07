@@ -1,37 +1,19 @@
 {
-  "name": "Episode",
+  "name": "Category",
   "type": "object",
   "properties": {
-    "series_id": {
+    "name": {
       "type": "string"
     },
-    "season": {
-      "type": "integer",
-      "default": 1
-    },
-    "episode": {
-      "type": "integer",
-      "default": 1
-    },
-    "title": {
+    "slug": {
       "type": "string"
     },
-    "description": {
+    "icon": {
       "type": "string"
-    },
-    "video_url": {
-      "type": "string"
-    },
-    "hls_url": {
-      "type": "string"
-    },
-    "duration": {
-      "type": "integer"
     }
   },
   "required": [
-    "series_id",
-    "title"
+    "name"
   ],
   "rls": {
     "read": {},
