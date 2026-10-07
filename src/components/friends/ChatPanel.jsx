@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, Send, Settings, Trash2, X, Image as ImageIcon, Check, CheckCheck, Gift, Mic2 } from 'lucide-react';
+import { ArrowLeft, Send, Settings, Trash2, Image as ImageIcon, Check, CheckCheck, Gift, Mic2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import LiveBadge from '@/components/friends/LiveBadge';
 import { findLiveRoom } from '@/lib/liveRoom';
@@ -19,6 +19,7 @@ import { getAccountState } from '@/components/friends/AccountStatusAvatar';
 import AgencyInviteCard from '@/components/agency/AgencyInviteCard';
 import { agencyApi, parseInviteMarker } from '@/lib/agency';
 import RoomShareCard from '@/components/friends/RoomShareCard';
+import ImageLightbox from '@/components/friends/ImageLightbox';
 import { parseRoomShareMarker } from '@/lib/roomShare';
 import { useMessageRealtime } from '@/components/messages/MessageRealtimeProvider';
 
@@ -365,6 +366,6 @@ export default function ChatPanel({ conversation, userId, onBack, online, embedd
         onMessage={() => setProfilePopup(false)}
       />
     )}
-    {lightbox && <div onClick={() => setLightbox(null)} className="fixed inset-0 z-[110] bg-black/90 flex items-center justify-center p-4"><button type="button" className="absolute top-4 right-4 text-white p-2 min-h-11 min-w-11" aria-label="Görseli kapat"><X aria-hidden="true" className="w-6 h-6" /></button><Image src={lightbox} className="max-w-full max-h-full rounded-lg" fittingType="fit" /></div>}
+    {lightbox && <ImageLightbox url={lightbox} onClose={() => setLightbox(null)} />}
   </section>;
 }

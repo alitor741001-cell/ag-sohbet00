@@ -1,7 +1,11 @@
 import { X } from 'lucide-react';
+import useBackDismiss from '@/hooks/useBackDismiss';
 
 /** Sesli oda içi alt panel — menü, koltuk ve davet pencereleri için ortak kabuk. */
 export default function VoiceSheet({ open, title, onClose, children }) {
+  // Geri tuşu önce bu paneli kapatır.
+  useBackDismiss(open, onClose);
+
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-[245] flex flex-col justify-end">

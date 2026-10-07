@@ -1,9 +1,13 @@
 import { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
+import useBackDismiss from '@/hooks/useBackDismiss';
 
 /** Alttan yukarı kayarak açılan yarı yükseklik sayfa — boş alana dokununca veya X ile kapanır. */
 export default function VoiceBottomSheet({ open, title, onClose, children }) {
   const [visible, setVisible] = useState(false);
+
+  // Geri tuşu önce bu sayfayı kapatır.
+  useBackDismiss(open, onClose);
 
   useEffect(() => {
     if (!open) {

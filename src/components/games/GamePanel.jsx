@@ -6,6 +6,7 @@ import SlotGame from './SlotGame';
 import CrashRocketGame from './CrashRocketGame';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { broadcasterState } from '@/lib/broadcaster';
+import useBackDismiss from '@/hooks/useBackDismiss';
 
 // Sinematik geçişin toplam süresi.
 const TRANSITION_MS = 700;
@@ -16,6 +17,9 @@ export default function GamePanel({ open, onClose, roomId, initialGame = null })
   const { user } = useCurrentUser();
   const [selected, setSelected] = useState(initialGame);
   const [phase, setPhase] = useState(initialGame ? 'opening' : 'idle'); // 'opening' | 'closing'
+
+  // Oyun paneli de birleşik geri yığınında: geri tuşu önce oyunu kapatır.
+  useBackDismiss(open, onClose);
   const timerRef = useRef(null);
 
   useEffect(() => () => window.clearTimeout(timerRef.current), []);

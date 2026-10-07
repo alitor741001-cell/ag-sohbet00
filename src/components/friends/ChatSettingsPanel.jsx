@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { ChevronLeft, Ban, BellOff, UserMinus, UserPlus, CheckCheck, Check, Wifi } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import RoleBadge from '@/components/RoleBadge';
+import useBackDismiss from '@/hooks/useBackDismiss';
 
 export default function ChatSettingsPanel({
   name, avatar, friendProfile,   isBlocked, isFriend, requestSent, showFriendButton, onlineEnabled,
@@ -11,6 +12,10 @@ export default function ChatSettingsPanel({
   blocking, unfriending
 }) {
   const touchStart = useRef({ x: 0, y: 0 });
+
+  // Açıkken görünen bir katman: geri tuşu sohbet ayarlarını kapatır.
+  useBackDismiss(true, onClose);
+
   return (
     <div
       className="absolute inset-0 z-40 bg-background flex flex-col animate-slide-down overflow-hidden"

@@ -13,6 +13,7 @@ import ProfileStatsRow from '@/components/profile/ProfileStatsRow';
 import ProfileIdentityBlock from '@/components/profile/ProfileIdentityBlock';
 import { AccountStatusMark, ACCOUNT_MARKS, ACCOUNT_STATES, getAccountState } from '@/components/friends/AccountStatusAvatar';
 import { broadcasterState } from '@/lib/broadcaster';
+import useBackDismiss from '@/hooks/useBackDismiss';
 
 /**
  * Odalarda (film ve sesli oda) sohbet, izleyici listesi ya da koltukta bir profilin üstüne
@@ -32,6 +33,9 @@ export default function FullUserProfile({
   const [relation, setRelation] = useState('');
   const [copied, setCopied] = useState(false);
   const [inviteSent, setInviteSent] = useState(false);
+
+  // Profil kartı birleşik geri yığınında: geri tuşu önce kartı kapatır.
+  useBackDismiss(open, onClose);
 
   const isSelf = self || userId === user?.id;
 
