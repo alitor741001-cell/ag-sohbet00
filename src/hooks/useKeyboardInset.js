@@ -13,13 +13,14 @@ const layoutHeight = () => Math.round(document.documentElement?.clientHeight || 
  * Klavye ölçümü bütün bileşenler için tek yerde yapılır: kaç bileşen isterse istesin
  * tek dinleyici çalışır, ölçüm saniyede birkaç kez yinelenmez.
  */
-const monitor = { inset: 0, visible: false, base: 0, listeners: new Set(), teardown: null };
+const monitor = { inset: 0, cover: 0, visible: false, base: 0, width: 0, listeners: new Set(), teardown: null };
 
-function publish(inset, visible) {
-  if (monitor.inset === inset && monitor.visible === visible) return;
+function publish(inset, cover, visible) {
+  if (monitor.inset === inset && monitor.cover === cover && monitor.visible === visible) return;
   monitor.inset = inset;
+  monitor.cover = cover;
   monitor.visible = visible;
-  [...monitor.listeners].forEach((listener) => listener(inset, visible));
+  [...monitor.listeners].forEach((listener) => listener(monitor));
 }
 
 /**
@@ -29,17 +30,25 @@ function publish(inset, visible) {
  */
 function measure() {
   const layout = layoutHeight();
+  const rotated = window.innerWidth !== monitor.width;
+  monitor.width = window.innerWidth;
   if (!isTyping()) {
     // Klavye kapalıyken sayfa alanı en geniş hâlindedir: karşılaştırmanın tabanı budur.
-    monitor.base = Math.max(monitor.base, layout);
-    publish(0, false);
+    // Döndürmede taban yeni yüksekliğe geçer; klavye için kısalan alan tabanı bozmaz.
+    if (rotated || layout >= monitor.base) monitor.base = layout;
+    publish(0, 0, false);
     return;
   }
   const viewport = window.visualViewport;
-  const covered = viewport ? Math.round(layout - viewport.height - viewport.offsetTop) : 0;
+  const visibleBottom = viewport ? viewport.height + viewport.offsetTop : layout;
+  const covered = Math.round(layout - visibleBottom);
   const limit = Math.round(layout * 0.7);
   const inset = covered > 90 ? Math.min(Math.max(covered, 0), limit) : 0;
-  publish(inset, inset > 0 || monitor.base - layout > 90);
+  // Çerçevesi klavyeden bağımsız sabit duran ekranlar için kaydırma, klavye açılmadan önceki
+  // yükseklikten ölçülür: sayfa alanı kısalsa da kısalmıyor olsa da klavyenin kapladığı
+  // yükseklik doğru çıkar.
+  const cover = Math.round(monitor.base - visibleBottom);
+  publish(inset, cover > 0 ? Math.min(cover, Math.round(monitor.base * 0.7)) : 0, inset > 0 || monitor.base - layout > 90);
 }
 
 function subscribe(listener) {
@@ -51,6 +60,7 @@ function subscribe(listener) {
     // Klavye kapanışı her cihazda olayla gelmez: yazarken kısa aralıklarla yeniden ölçülür.
     const poll = setInterval(() => { if (isTyping() || monitor.visible) schedule(); }, 400);
     monitor.base = layoutHeight();
+    monitor.width = window.innerWidth;
     viewport?.addEventListener('resize', schedule);
     viewport?.addEventListener('scroll', schedule);
     window.addEventListener('resize', schedule);
@@ -68,7 +78,7 @@ function subscribe(listener) {
     };
   }
   measure();
-  listener(monitor.inset, monitor.visible);
+  listener(monitor);
   return () => {
     monitor.listeners.delete(listener);
     if (!monitor.listeners.size) { monitor.teardown?.(); monitor.teardown = null; }
@@ -81,13 +91,45 @@ function subscribe(listener) {
  */
 export default function useKeyboardInset() {
   const [inset, setInset] = useState(monitor.inset);
-  useEffect(() => subscribe((nextInset) => setInset(nextInset)), []);
+  useEffect(() => subscribe((state) => setInset(state.inset)), []);
   return inset;
+}
+
+/**
+ * Klavyenin kapladığı yükseklik, klavye açılmadan önceki çerçeve yüksekliğine göre ölçülür.
+ * Çerçevesi klavyeden bağımsız sabit duran ekranlarda (sesli oda) gereken kaydırma miktarı budur.
+ */
+export function useKeyboardCoverHeight() {
+  const [cover, setCover] = useState(monitor.cover);
+  useEffect(() => subscribe((state) => setCover(state.cover)), []);
+  return cover;
 }
 
 /** Klavye görünür mü: yazma alanı klavye kapanınca kendiliğinden kapanır. */
 export function useKeyboardOpen() {
   const [open, setOpen] = useState(monitor.visible);
-  useEffect(() => subscribe((_, visible) => setOpen(visible)), []);
+  useEffect(() => subscribe((state) => setOpen(state.visible)), []);
   return open;
+}
+
+/**
+ * Klavye açılıp kapansa da değişmeyen çerçeve yüksekliği: oda düzeni klavyeden etkilenmez,
+ * koltuklar ve sahne yerinden oynamaz — yalnızca sohbet bölümü yukarı kayar.
+ */
+export function useStableViewportHeight() {
+  const [height, setHeight] = useState(() => layoutHeight());
+  useEffect(() => {
+    let lastWidth = window.innerWidth;
+    const update = () => {
+      const next = layoutHeight();
+      const rotated = window.innerWidth !== lastWidth;
+      lastWidth = window.innerWidth;
+      // Klavye için kısalan yükseklik yok sayılır; büyüme ve küçük oynamalar (adres çubuğu) uygulanır.
+      setHeight((prev) => (!rotated && next < prev - 90 ? prev : next));
+    };
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
+  return height;
 }

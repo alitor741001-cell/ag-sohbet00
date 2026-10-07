@@ -6,7 +6,7 @@ import subscribeEntity from '@/components/data/entitySubscriptions';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { broadcasterState } from '@/lib/broadcaster';
 import { useVoiceChat } from '@/hooks/useVoiceChat';
-import useKeyboardInset, { useKeyboardOpen } from '@/hooks/useKeyboardInset';
+import { useKeyboardCoverHeight, useKeyboardOpen, useStableViewportHeight } from '@/hooks/useKeyboardInset';
 import useRoomLevels from '@/hooks/useRoomLevels';
 import { useToast } from '@/components/ui/use-toast';
 import VoiceSeatGrid from '@/components/voice/VoiceSeatGrid';
@@ -102,8 +102,11 @@ export default function VoiceRoom() {
   const [selectedIds, setSelectedIds] = useState([]);
   const [gifted, setGifted] = useState({});
 
-  const keyboardInset = useKeyboardInset();
+  // Klavye açıldığında oda çerçevesi (koltuklar, sahne) hiç oynamaz: yalnızca alt blok
+  // klavyenin üstüne kayar. Kaydırma miktarı klavye açılmadan önceki çerçeveye göre ölçülür.
+  const keyboardCover = useKeyboardCoverHeight();
   const keyboardOpen = useKeyboardOpen();
+  const roomHeight = useStableViewportHeight();
   // Hediye efektleri tercihi: kapalıyken atılan hediyelerin görselleri gösterilmez.
   const { giftEffects, setGiftEffects } = useGiftEffects();
 
@@ -976,7 +979,8 @@ export default function VoiceRoom() {
   // Klavye açılınca oda düzeni yerinden oynamaz: yalnızca sohbet bölümü klavyenin üstüne kayar,
   // alttaki kontrol çubuğu (mik/hoparlör) hep aynı yerde durur.
   return (
-    <div className="fixed inset-0 z-[150] flex flex-col bg-catalog text-white">
+    // Çerçeve yüksekliği klavyeden bağımsız sabit kalır: koltuklar ve sahne yerinden oynamaz.
+    <div className="fixed inset-x-0 top-0 z-[150] flex flex-col bg-catalog text-white" style={{ height: roomHeight }}>
       <div className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-gradient-to-b from-primary/25 to-transparent" />
 
       <header className="relative shrink-0 px-3 pb-2 pt-[max(0.75rem,env(safe-area-inset-top))]">
@@ -1068,7 +1072,7 @@ export default function VoiceRoom() {
           hemen üstüne kayar. Oda yerleşimi yeniden akışa girmez, çubuklar hep en altta kalır. */}
       <div
         className="shrink-0"
-        style={{ transform: keyboardInset ? `translateY(-${keyboardInset}px)` : 'translateY(0)', transition: 'transform 180ms ease-out' }}
+        style={{ transform: composerOpen && keyboardCover ? `translateY(-${keyboardCover}px)` : 'translateY(0)', transition: 'transform 180ms ease-out' }}
       >
       <VoiceChatDock
         messages={messages}
