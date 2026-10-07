@@ -1,6 +1,6 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Armchair, Eye, Gift, Lock, LogOut, MessageSquare, Mic, MicOff, MoreHorizontal, Shield, Unlock, UserMinus, UserPlus, UserRound } from 'lucide-react';
+import { Armchair, Gift, Lock, MessageSquare, Mic, MicOff, Shield, Unlock, UserMinus, UserPlus, UserRound } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import subscribeEntity from '@/components/data/entitySubscriptions';
 import { useCurrentUser } from '@/lib/useCurrentUser';
@@ -1077,48 +1077,23 @@ export default function VoiceRoom() {
     >
       <div className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-gradient-to-b from-primary/25 to-transparent" />
 
-      <header className="relative shrink-0 px-3 pb-2 pt-[max(0.75rem,env(safe-area-inset-top))]">
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex min-w-0 flex-col items-start">
-            <RoomInfoCard
-              room={room}
-              canEdit={isOwner || moderators.includes(user?.id)}
-              onRename={renameRoom}
-              onOpen={() => setProfilePanelOpen(true)}
-            />
-            <GiftScoreChip
-              score={giftBoard?.all?.total || 0}
-              onClick={() => { setGiftBoardOpen(true); loadGiftBoard(); }}
-            />
-          </div>
-          <div className="flex shrink-0 items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setViewerOpen(true)}
-              title={`Odada ${participants.length} kişi var`}
-              aria-label={`Odada ${participants.length} kişi var — kimler izliyor gör`}
-              className="flex h-[clamp(38px,11vw,44px)] min-w-[clamp(38px,11vw,44px)] items-center justify-center gap-1.5 rounded-full bg-white/10 px-2.5 transition-transform active:scale-95 sm:px-3"
-            >
-              <Eye className="h-5 w-5 text-white/80" />
-              <span className="text-sm font-bold tabular-nums">{participants.length}</span>
-            </button>
-            {/* "…" menüsü yalnızca oda sahibi ve yöneticilerde görünür; yetki verildiği/alındığı
-                an (oda kaydı canlı takip edilir) tuş sayfa yenilenmeden gelir veya kaybolur.
-                Müzik de bu menünün içinde: şarkı çalarken tuş altın renkte parlar. */}
-            {canMod && (
-              <button
-                type="button"
-                onClick={() => setMenuOpen(true)}
-                aria-label="Oda ayarları"
-                className={`flex h-[clamp(38px,11vw,44px)] w-[clamp(38px,11vw,44px)] items-center justify-center rounded-full active:scale-95 transition-transform ${music.music?.is_playing ? 'bg-[#FFD700] text-black shadow-[0_0_16px_-4px_rgba(255,215,0,0.95)]' : 'bg-white/10'}`}
-              >
-                <MoreHorizontal className="h-5 w-5" />
-              </button>
-            )}
-            <button type="button" onClick={() => setExitOpen(true)} aria-label="Odadan çık" className="flex h-[clamp(38px,11vw,44px)] w-[clamp(38px,11vw,44px)] items-center justify-center rounded-full bg-red-600 active:scale-95 transition-transform">
-              <LogOut className="h-5 w-5" />
-            </button>
-          </div>
+      <header className="relative shrink-0 px-4 pb-2 pt-[max(0.75rem,env(safe-area-inset-top))]">
+        <div className="flex min-w-0 flex-col items-start">
+          <RoomInfoCard
+            room={room}
+            onOpen={() => setProfilePanelOpen(true)}
+            onOpenOwner={(ownerId) => { if (ownerId) setProfileUserId(ownerId); }}
+            viewerCount={participants.length}
+            onOpenViewers={() => setViewerOpen(true)}
+            canMod={canMod}
+            menuHighlighted={!!music.music?.is_playing}
+            onOpenMenu={() => setMenuOpen(true)}
+            onExit={() => setExitOpen(true)}
+          />
+          <GiftScoreChip
+            score={giftBoard?.all?.total || 0}
+            onClick={() => { setGiftBoardOpen(true); loadGiftBoard(); }}
+          />
         </div>
       </header>
 

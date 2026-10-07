@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Pencil } from 'lucide-react';
+import { useMemo } from 'react';
+import { Eye, LogOut, MoreHorizontal } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import { isHiddenName } from '@/lib/hiddenUser';
 import useMessageProfiles from '@/hooks/useMessageProfiles';
@@ -8,14 +8,22 @@ import useMessageProfiles from '@/hooks/useMessageProfiles';
 const MARQUEE_AFTER = 10;
 
 /**
- * Oda kimlik kartı: solda oda sahibinin küçük profili; sağda oda ismi ve kimlik numarası yazar.
- * Kart dardır ve uzunlamasına yüksektir; kullanıcı adı ile oda numarası yazmaz, dokununca oda paneli açılır.
+ * Oda kimlik kartı (referans ölçüsü): solda oda sahibinin kare profili, ortada büyük oda ismi ve
+ * altında gri kimlik numarası; sağda izleyici sayacı, "..." menüsü ve kırmızı çıkış tuşu.
+ * Kart geniş ve yataydır, ekran genişliğinin ~%92'sini kaplar; hiçbir nesne sıkıştırılmaz.
+ * Sahibin profiline dokununca kişinin profili, kartın diğer yerine dokununca oda paneli açılır.
  */
-export default function RoomInfoCard({ room, canEdit, onRename, onOpen }) {
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(room?.name || '');
-  const [saving, setSaving] = useState(false);
-
+export default function RoomInfoCard({
+  room,
+  onOpen,
+  onOpenOwner,
+  viewerCount = 0,
+  onOpenViewers,
+  canMod = false,
+  menuHighlighted = false,
+  onOpenMenu,
+  onExit,
+}) {
   const ownerId = room?.owner_id;
   const ids = useMemo(() => (ownerId ? [ownerId] : []), [ownerId]);
   const profile = useMessageProfiles(ids)[ownerId] || {};
@@ -30,90 +38,74 @@ export default function RoomInfoCard({ room, canEdit, onRename, onOpen }) {
   const label = room?.name || 'Oda';
   const scrolls = label.length > MARQUEE_AFTER;
 
-  // Oda ismi başka yerden değişirse kart kendini günceller.
-  useEffect(() => { if (!editing) setDraft(room?.name || ''); }, [room?.name, editing]);
-
-  const submit = async (event) => {
-    event.preventDefault();
-    const value = draft.trim();
-    if (!value) return;
-    setSaving(true);
-    const ok = await onRename(value);
-    setSaving(false);
-    if (ok) setEditing(false);
-  };
-
   return (
-    <div
-      role="button"
-      tabIndex={0}
-      onClick={() => { if (!editing) onOpen?.(); }}
-      onKeyDown={(event) => { if (!editing && (event.key === 'Enter' || event.key === ' ')) onOpen?.(); }}
-      className={`relative flex min-h-[76px] w-[11rem] min-w-0 max-w-full cursor-pointer items-center gap-2.5 rounded-2xl border border-white/10 bg-white/[0.07] py-2.5 pl-2.5 transition-transform active:scale-[0.99] ${editing || !canEdit ? 'pr-3' : 'pr-10'}`}
-    >
-      <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/15 bg-white/10">
+    <div className="flex min-h-[88px] w-full items-center gap-2.5 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.07] py-3 pl-3 pr-2.5 backdrop-blur-md">
+      {/* Sol: oda sahibinin kare profili — dokununca oda sahibinin profili açılır. */}
+      <button
+        type="button"
+        onClick={() => onOpenOwner?.(ownerId)}
+        aria-label={`${ownerName} profilini gör`}
+        className="inline-flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/15 bg-white/10 transition-transform active:scale-95"
+      >
         {profile.avatar
           ? <Image src={profile.avatar} alt={ownerName} className="h-full w-full" fittingType="fill" draggable={false} />
           : <span className="text-base font-bold text-white/80">{ownerName.trim().charAt(0)}</span>}
-      </span>
+      </button>
 
-      <div className="min-w-0 flex-1">
-        {editing ? (
-          <form onSubmit={submit} className="flex flex-col gap-1">
-            <input
-              autoFocus
-              value={draft}
-              maxLength={80}
-              onChange={(event) => setDraft(event.target.value)}
-              placeholder="Oda ismi"
-              className="h-8 w-full min-w-0 rounded-lg bg-black/40 px-2 text-sm font-bold text-white outline-none placeholder:text-white/40"
-            />
-            <span className="flex items-center gap-2">
-              <button
-                type="submit"
-                disabled={saving || !draft.trim()}
-                className="rounded-lg bg-primary px-2 py-0.5 text-[10px] font-bold text-primary-foreground disabled:opacity-50"
-              >
-                Kaydet
-              </button>
-              <button type="button" onClick={() => setEditing(false)} className="text-[10px] font-bold text-white/60">İptal</button>
+      {/* Orta: oda ismi büyük ve beyaz, altında kimlik numarası küçük ve gri. */}
+      <button type="button" onClick={() => onOpen?.()} className="min-w-0 flex-1 text-left">
+        {scrolls ? (
+          <span className="room-name-fade block w-full overflow-hidden">
+            <span
+              className="room-name-marquee flex w-max whitespace-nowrap"
+              style={{ animationDuration: `${Math.max(8, label.length * 0.5)}s` }}
+            >
+              <span className="pr-8 text-base font-bold text-white">{label}</span>
+              <span className="pr-8 text-base font-bold text-white" aria-hidden="true">{label}</span>
             </span>
-          </form>
+          </span>
         ) : (
-          <>
-            {scrolls ? (
-              <span className="room-name-fade block w-full overflow-hidden">
-                <span
-                  className="room-name-marquee flex w-max whitespace-nowrap"
-                  style={{ animationDuration: `${Math.max(8, label.length * 0.5)}s` }}
-                >
-                  <span className="pr-8 text-sm font-bold">{label}</span>
-                  <span className="pr-8 text-sm font-bold" aria-hidden="true">{label}</span>
-                </span>
-              </span>
-            ) : (
-              <span className="block w-full truncate text-sm font-bold">{label}</span>
-            )}
-            {/* Kullanıcı adı ve oda numarası kartta yazmaz: oda isminin altında yalnızca kimlik numarası kalır. */}
-            {memberId && (
-              <span className="mt-1 block w-full truncate text-[11px] leading-tight tabular-nums text-white/60">
-                ID:{memberId}
-              </span>
-            )}
-          </>
+          <span className="block w-full truncate text-base font-bold text-white">{label}</span>
         )}
-      </div>
+        {memberId && (
+          <span className="mt-1 block w-full truncate text-xs leading-tight tabular-nums text-white/60">
+            ID:{memberId}
+          </span>
+        )}
+      </button>
 
-      {canEdit && !editing && (
+      {/* Sağ: izleyici sayacı, "..." menüsü ve kırmızı çıkış — referanstaki üç nesne yan yana. */}
+      <div className="flex shrink-0 items-center gap-1.5">
         <button
           type="button"
-          onClick={(event) => { event.stopPropagation(); setEditing(true); }}
-          aria-label="Oda ismini değiştir"
-          className="absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white/75 transition-transform active:scale-95"
+          onClick={() => onOpenViewers?.()}
+          title={`Odada ${viewerCount} kişi var`}
+          aria-label={`Odada ${viewerCount} kişi var — kimler izliyor gör`}
+          className="flex h-10 min-w-[2.5rem] items-center justify-center gap-1 rounded-full bg-white/10 px-2.5 text-white transition-transform active:scale-95"
         >
-          <Pencil className="h-3.5 w-3.5" />
+          <Eye className="h-4 w-4 text-white/80" />
+          <span className="text-sm font-bold tabular-nums">{viewerCount}</span>
         </button>
-      )}
+        {/* "…" menüsü yalnızca oda sahibi ve yöneticilerde görünür; müzik çalarken altın renkte parlar. */}
+        {canMod && (
+          <button
+            type="button"
+            onClick={() => onOpenMenu?.()}
+            aria-label="Oda ayarları"
+            className={`flex h-10 w-10 items-center justify-center rounded-full transition-transform active:scale-95 ${menuHighlighted ? 'bg-[#FFD700] text-black shadow-[0_0_16px_-4px_rgba(255,215,0,0.95)]' : 'bg-white/10 text-white'}`}
+          >
+            <MoreHorizontal className="h-5 w-5" />
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={() => onExit?.()}
+          aria-label="Odadan çık"
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-red-600 text-white transition-transform active:scale-95"
+        >
+          <LogOut className="h-5 w-5" />
+        </button>
+      </div>
     </div>
   );
 }
