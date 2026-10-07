@@ -35,6 +35,19 @@ export default function GiftBoardContent({
         <GiftLevelTicker giftTick={giftTick} />
       </div>
 
+      {/* Alıcılar: seviye barının hemen altında durur — kutu açıldığında kime gönderileceği
+          ilk bakışta görünür, hediye ızgarası arada kalan alanı doldurur. */}
+      <div className="shrink-0 pt-3">
+        <GiftRecipientRow
+          people={people}
+          selectedIds={selectedIds}
+          color={color}
+          onToggle={onTogglePerson}
+          onSelectAll={onSelectAll}
+          onClear={onClear}
+        />
+      </div>
+
       {/* Üst sekmeler: hediye kategorileri. Soldaki çember kendi profilimiz, sağdaki ok kapatır. */}
       <div className="flex shrink-0 items-end gap-2 border-b border-white/10">
         <span className="relative flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/10 ring-1 ring-[#45d6c8]/60">
@@ -78,17 +91,6 @@ export default function GiftBoardContent({
             ))}
           </div>
         )}
-      </div>
-
-      <div className="shrink-0 pt-2">
-        <GiftRecipientRow
-          people={people}
-          selectedIds={selectedIds}
-          color={color}
-          onToggle={onTogglePerson}
-          onSelectAll={onSelectAll}
-          onClear={onClear}
-        />
       </div>
 
       {insufficient && (

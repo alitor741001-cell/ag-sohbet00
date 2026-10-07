@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import VoiceSheet from '@/components/voice/VoiceSheet';
 import GiftBoardContent from '@/components/voice/GiftBoardContent';
 import GiftSendButton from '@/components/voice/GiftSendButton';
@@ -7,13 +7,25 @@ import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
 /** Hediye Tahtası: hediye seçimi (alt panel) ve tam ekran "Coins Yükle" mağazası. */
 export default function GiftBoard({ open, onClose, coins, onSend, sendDisabled, multiplier = 1, onMultiplier, ...props }) {
   const [view, setView] = useState('gifts');
-  // Gönderimden sonra düğme ekranda kalır: kutu kapanır ama aynı hediye arka arkaya
-  // gönderilebilir. Kutu yeniden açıldığında bu kalıcılık sıfırlanır.
+  // Gönderimden sonra düğme kısa süre ekranda kalır: kutu kapanır ama aynı hediye arka arkaya
+  // gönderilebilir. 5 saniye boyunca hediye atılmazsa düğme kendiliğinden kaybolur, kutu
+  // yeniden açıldığında kalıcılık sıfırlanır.
   const [stayVisible, setStayVisible] = useState(false);
+  // Her gönderimde artan sayaç: düğmenin ekranda kalma süresi bu sayede yeniden başlar.
+  const [sendTick, setSendTick] = useState(0);
+  const hideTimerRef = useRef(null);
 
   useEffect(() => { if (open) { setView('gifts'); setStayVisible(false); } }, [open]);
 
-  const handleSend = () => { setStayVisible(true); onSend?.(); };
+  const handleSend = () => { setStayVisible(true); setSendTick((value) => value + 1); onSend?.(); };
+
+  // Hediye atılmadığı sürece düğme ekranda kalır; her gönderim süreyi baştan başlatır.
+  useEffect(() => {
+    window.clearTimeout(hideTimerRef.current);
+    if (open || !stayVisible) return undefined;
+    hideTimerRef.current = window.setTimeout(() => setStayVisible(false), 5000);
+    return () => window.clearTimeout(hideTimerRef.current);
+  }, [open, stayVisible, sendTick]);
 
   return (
     <>
