@@ -48,6 +48,7 @@ export default function FaceLockOverlay({
   scope = 'device',
   canCancel = false,
   showLogout = true,
+  blockOnFail = true,
   onVerified,
   onCancel,
 }) {
@@ -105,7 +106,7 @@ export default function FaceLockOverlay({
     clearTimeout(doneRef.current);
   }, []);
 
-  const blocked = scope === 'device' && attempts >= MAX_ATTEMPTS;
+  const blocked = blockOnFail && scope === 'device' && attempts >= MAX_ATTEMPTS;
 
   const captureSelfie = useCallback(() => new Promise((resolve) => {
     const video = videoRef.current;
@@ -130,14 +131,14 @@ export default function FaceLockOverlay({
   const scheduleRetry = useCallback((message) => {
     setPhase('fail');
     setError(message);
-    if (scope === 'device' && attemptsRef.current >= MAX_ATTEMPTS) return;
+    if (blockOnFail && scope === 'device' && attemptsRef.current >= MAX_ATTEMPTS) return;
     retryRef.current = setTimeout(() => {
       tiltBoostRef.current = 0;
       scanStartRef.current = Date.now();
       setProgress(0);
       setPhase('scanning');
     }, RETRY_MS);
-  }, [scope]);
+  }, [scope, blockOnFail]);
 
   const submit = useCallback(async () => {
     if (busyRef.current || blocked) return;
@@ -161,6 +162,11 @@ export default function FaceLockOverlay({
       }
       if (result?.reason === 'enroll_required') {
         scheduleRetry('Yüz kaydı bulunamadı. Lütfen tekrar giriş yapın.');
+        return;
+      }
+      // Yarım yüz ya da yüz yerine başka bir nesne: halka kırmızıya döner, deneme sayılmaz.
+      if (result?.reason === 'no_face') {
+        scheduleRetry('Yüzünüz tam görünmüyor. Yüzünüzün tamamı çemberin içinde olacak şekilde tekrar deneyin.');
         return;
       }
       attemptsRef.current += 1;

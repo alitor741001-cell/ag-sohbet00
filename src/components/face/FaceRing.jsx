@@ -2,9 +2,10 @@ import { Check, Loader2, TriangleAlert, X } from 'lucide-react';
 
 // iPhone Face ID halkası: kameranın çevresinde dolan çember.
 // Tarama altın, doğrulandı yeşil, eşleşmedi kırmızı.
+// Halka tarama boyunca yeşil dolar; yüz tam görünmezse ya da eşleşmezse kırmızıya döner.
 const TONE = {
-  scanning: '#f2ce6b',
-  verifying: '#f2ce6b',
+  scanning: '#22c55e',
+  verifying: '#22c55e',
   ok: '#22c55e',
   fail: '#ef4444',
 };

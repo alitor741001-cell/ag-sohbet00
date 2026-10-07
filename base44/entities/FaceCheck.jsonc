@@ -17,6 +17,10 @@
       "type": "boolean",
       "default": true
     },
+    "toggle_checks": {
+      "type": "number",
+      "default": 0
+    },
     "trusted_devices": {
       "type": "array",
       "items": {

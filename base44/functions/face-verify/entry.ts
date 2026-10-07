@@ -19,6 +19,8 @@ const VERIFY_CONFIDENCE = 0.6;
 const DUPLICATE_CONFIDENCE = 0.8;
 const SCAN_LIMIT = 6;
 const DEVICE_LIMIT = 8;
+// Aç/kapa ile yüz doğrulaması bu kadar kez yeniden istenir; sonrasında bir daha sorulmaz.
+const TOGGLE_CHECK_LIMIT = 2;
 
 const COMPARE_PROMPT = [
   'You are a strict biometric verifier for account security.',
@@ -27,6 +29,8 @@ const COMPARE_PROMPT = [
   'Compare the face structure: face shape, eyes, eyebrows, nose, mouth, jawline, ears.',
   'Ignore lighting, camera angle, expression, make-up, glasses, hair style, clothing and background.',
   'If either image does not show one single clearly visible human face — for example a photo of a screen, a group photo, or a blurred/covered face — set same_person to false and confidence to 0.',
+  'Set face_visible to true only when Image 2 (the live selfie) shows one complete face: forehead, both eyes, nose, mouth and chin all inside the frame.',
+  'Set face_visible to false for a half or cropped face, a hand, an object, a covered or blurred face, or a photo of a screen.',
   'Return JSON with your decision and a confidence value between 0 and 1.',
 ].join(' ');
 
@@ -35,9 +39,10 @@ const MATCH_SCHEMA = {
   properties: {
     same_person: { type: 'boolean' },
     confidence: { type: 'number' },
+    face_visible: { type: 'boolean' },
     note: { type: 'string' },
   },
-  required: ['same_person', 'confidence'],
+  required: ['same_person', 'confidence', 'face_visible'],
 };
 
 async function faceRecord(base44, userId) {
@@ -67,7 +72,40 @@ async function compareFaces(base44, referenceUri, selfieUri) {
       response_json_schema: MATCH_SCHEMA,
     });
     const confidence = Math.max(0, Math.min(1, Number(result?.confidence) || 0));
-    return { same: result?.same_person === true, confidence };
+    return { same: result?.same_person === true, confidence, faceVisible: result?.face_visible !== false };
+  } catch {
+    return null;
+  }
+}
+
+const FACE_PROMPT = [
+  'You are a strict selfie quality verifier.',
+  'Decide whether the image shows exactly one complete, clearly visible human face.',
+  'The whole face — forehead, both eyes, nose, mouth and chin — must be inside the frame and in focus.',
+  'Set face_visible to false for a half or cropped face, a covered or blurred face, a hand, an object, a group photo, or a photo of a screen.',
+  'Return JSON with your decision.',
+].join(' ');
+
+const FACE_SCHEMA = {
+  type: 'object',
+  properties: {
+    face_visible: { type: 'boolean' },
+    note: { type: 'string' },
+  },
+  required: ['face_visible'],
+};
+
+/** Fotoğrafta tek ve tam bir yüz var mı? Servis hatasında null döner: kullanıcı kilitlenmez. */
+async function checkFace(base44, selfieUri) {
+  try {
+    const url = await signedUrl(base44, selfieUri);
+    if (!url) return null;
+    const result = await base44.asServiceRole.integrations.Core.InvokeLLM({
+      prompt: FACE_PROMPT,
+      file_urls: [url],
+      response_json_schema: FACE_SCHEMA,
+    });
+    return result?.face_visible !== false;
   } catch {
     return null;
   }
@@ -175,15 +213,25 @@ export default async function (req) {
 
     if (action === 'toggle') {
       const enabled = body.enabled !== false;
+      // Açma işleminde yüz doğrulaması en fazla TOGGLE_CHECK_LIMIT kez yeniden istenir.
+      const checks = Number(record?.toggle_checks) || 0;
+      const askCheck = enabled && checks < TOGGLE_CHECK_LIMIT;
       if (record) {
-        // Kapatıp yeniden açıldığında cihaz güveni sıfırlanır: yüz doğrulaması tekrar istenir.
         await base44.asServiceRole.entities.FaceCheck.update(record.id, enabled
-          ? { enabled, trusted_devices: [], balance_devices: [], last_device: '' }
+          ? {
+            enabled,
+            toggle_checks: askCheck ? checks + 1 : checks,
+            // Doğrulama istenecekse cihaz güveni sıfırlanır ki yüz yeniden sorulsun.
+            ...(askCheck ? { trusted_devices: [], balance_devices: [], last_device: '' } : {}),
+          }
           : { enabled });
       } else {
-        await base44.asServiceRole.entities.FaceCheck.create({ user_id: user.id, user_name: displayName, enabled });
+        await base44.asServiceRole.entities.FaceCheck.create({
+          user_id: user.id, user_name: displayName, enabled,
+          ...(enabled ? { toggle_checks: 1 } : {}),
+        });
       }
-      return Response.json({ ok: true, enabled, enrolled: !!record?.face_uri });
+      return Response.json({ ok: true, enabled, enrolled: !!record?.face_uri, check: askCheck });
     }
 
     // Kayıt ve doğrulama yüz fotoğrafı ister: yüklenen dosya imzalanabiliyorsa geçerlidir.
@@ -199,6 +247,10 @@ export default async function (req) {
     if (action === 'enroll') {
       if (!(await signedUrl(base44, selfieUri))) {
         return Response.json({ error: 'Fotoğraf yüklenemedi, tekrar deneyin.' }, { status: 400 });
+      }
+      // Referans yüz yalnızca bir kez alınır: yarım görünen yüz kaydedilmez.
+      if ((await checkFace(base44, selfieUri)) === false) {
+        return Response.json({ ok: false, reason: 'no_face' });
       }
       let target = record;
       if (!target) {
@@ -227,6 +279,8 @@ export default async function (req) {
       const match = await compareFaces(base44, record.face_uri, selfieUri);
       // Karşılaştırma servisi yanıt vermezse erişim kapatılmaz, kullanıcı içeri alınır.
       if (!match) return Response.json({ ok: false, reason: 'unavailable' });
+      // Yüz çemberin içinde tam görünmüyorsa deneme sayılmaz: halka kırmızıya döner.
+      if (!match.faceVisible) return Response.json({ ok: false, reason: 'no_face' });
       if (!match.same || match.confidence < VERIFY_CONFIDENCE) {
         return Response.json({ ok: false, reason: 'mismatch', confidence: match.confidence });
       }

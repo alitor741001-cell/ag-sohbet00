@@ -28,7 +28,7 @@ export default function FaceVerifyToggle({ user }) {
     setEnabled(next);
     try {
       const result = await setFaceEnabled(next);
-      if (next) setVerify({ mode: result?.enrolled === false ? 'enroll' : 'verify' });
+      if (result?.check) setVerify({ mode: result?.enrolled === false ? 'enroll' : 'verify' });
       toast({
         title: next ? 'Yüz doğrulaması açıldı' : 'Yüz doğrulaması kapatıldı',
         description: next
@@ -79,6 +79,7 @@ export default function FaceVerifyToggle({ user }) {
       scope="device"
       canCancel
       showLogout={false}
+      blockOnFail={false}
       onCancel={() => setVerify(null)}
       onVerified={() => setVerify(null)}
     />
