@@ -11,7 +11,7 @@ export default function GiftBoard({ open, onClose, coins, ...props }) {
 
   return (
     <>
-      <VoiceSheet open={open && view === 'gifts'} onClose={onClose} title="Hediye Tahtası">
+      <VoiceSheet open={open && view === 'gifts'} onClose={onClose} title="Hediye Tahtası" fullHeight>
         <GiftBoardContent {...props} coins={coins} onOpenCoins={() => setView('coins')} />
       </VoiceSheet>
       <CoinPurchasePanel open={open && view === 'coins'} coins={coins} onBack={() => setView('gifts')} />

@@ -26,8 +26,9 @@ export default function GiftBoardContent({ gifts = [], tiers = [], people = [], 
   const insufficient = !!gift && count > 0 && coins !== null && coins !== undefined && totalCoins > coins;
 
   return (
-    // Alt boşluk: sağ alttaki yuvarlak "Gönder" düğmesi son hediye satırını kapatmasın.
-    <div className="pb-24">
+    // Alt boşluk: sağ alttaki yuvarlak "Gönder" düğmesi son satırın önüne geçmez —
+    // liste en alta kaydırıldığında son satır (Taç dahil) tümüyle görünür.
+    <div className="pb-40">
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <span className="flex items-center gap-1.5 rounded-full bg-black/40 px-3 py-1.5 text-xs font-black tabular-nums text-amber-300">
           <Coins className="h-4 w-4" /> {coins === null || coins === undefined ? '—' : formatCoins(coins)}
@@ -73,7 +74,7 @@ export default function GiftBoardContent({ gifts = [], tiers = [], people = [], 
       {shown.length === 0 ? (
         <p className="rounded-xl bg-white/5 px-3 py-3 text-center text-xs text-white/50">Bu kategoride hediye yok.</p>
       ) : (
-        <div className="grid max-h-[32vh] grid-cols-3 gap-2 overflow-y-auto pb-1">
+        <div className="grid grid-cols-3 gap-2 pb-1">
           {shown.map((item) => (
             <GiftCard
               key={item.id}
