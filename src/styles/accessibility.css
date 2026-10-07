@@ -1,0 +1,42 @@
+/* === ERİŞİLEBİLİRLİK: ODAK, OKUNURLUK VE KONTRAST === */
+
+/* Klavye ile gezinirken odak halkası her yerde görünür kalır: bileşenlerdeki
+   outline-none kuralları klavye kullanıcısını sessizce engellemesin.
+   Dokunma/fare ile gelen odakta halka çizilmez, tasarım sade kalır. */
+:focus-visible {
+  outline: 2px solid hsl(var(--ring)) !important;
+  outline-offset: 2px !important;
+}
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Kapsayıcı paneller (diyalog, menü zemini) klavye ile açıldığında çerçeve halkası
+   çizilmez; halka yalnızca gerçek kontrollerde görünür. */
+[role="dialog"]:focus-visible,
+[role="alertdialog"]:focus-visible,
+[role="menu"]:focus-visible,
+[role="listbox"]:focus-visible {
+  outline: none !important;
+}
+
+/* Yer tutucu metin tarayıcıya göre soluklaşmaz, okunur kalır. */
+::placeholder {
+  color: hsl(var(--muted-foreground));
+  opacity: 1;
+}
+
+/* Yüksek kontrast isteyen kullanıcılar için metin ve kenarlar güçlendirilir.
+   Katmansız yazıldığı için index.css içindeki token değerlerini geçersiz kılar. */
+@media (prefers-contrast: more) {
+  :root {
+    --muted-foreground: 220 10% 26%;
+    --border: 240 10% 60%;
+    --input: 240 10% 60%;
+  }
+  .dark {
+    --muted-foreground: 220 8% 86%;
+    --border: 0 6% 40%;
+    --input: 0 6% 40%;
+  }
+}

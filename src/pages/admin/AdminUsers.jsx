@@ -11,7 +11,11 @@ import FullUserProfile from '@/components/profile/FullUserProfile';
 import { visibleEmail } from '@/lib/visibleEmail';
 
 
-const btn = 'px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap';
+// Dokunma alanı en az 44px: telefon ve tablette ıskalanmadan basılır.
+const btn = 'px-3 py-2 min-h-11 rounded-lg text-xs font-semibold whitespace-nowrap';
+
+/** Ekran okuyucu etiketlerinde hangi hesabın işlem gördüğü belirtilir. */
+const userName = (u) => u?.username || u?.full_name || visibleEmail(u) || 'Kullanıcı';
 
 /** Cinsiyet düğmesi: kayıtlı cinsiyeti gösterir, eksikse düzeltmeye çağırır. */
 const genderButtonLabel = (u) => (u?.gender === 'kadın' ? 'CİNSİYET: KADIN' : u?.gender === 'erkek' ? 'CİNSİYET: ERKEK' : 'CİNSİYET EKLE');
@@ -144,15 +148,15 @@ export default function AdminUsers({ pendingOnly = false }) {
     } catch (e) { toast({ title: 'Silinemedi', description: e.message, variant: 'destructive' }); }
   };
 
-  if (loading) return <p className="text-muted-foreground">Yükleniyor...</p>;
+  if (loading) return <p role="status" className="text-muted-foreground">Yükleniyor...</p>;
 
   return (
     <div>
       <h1 className="text-2xl font-extrabold mb-4">{pendingOnly ? 'Kayıt Kontrol' : 'Kullanıcı Yönetimi'}</h1>
       {!pendingOnly && (
         <div className="flex flex-wrap gap-2 mb-4">
-          <input value={idQuery} onChange={(e) => setIdQuery(e.target.value)} placeholder="Üye No ile ara (8 haneli)" className="bg-card border border-border rounded-lg px-3 py-2 text-sm w-44 outline-none focus:ring-2 focus:ring-ring" />
-          <input value={nameQuery} onChange={(e) => setNameQuery(e.target.value)} placeholder="İsim / kullanıcı adı / e-posta ile ara" className="bg-card border border-border rounded-lg px-3 py-2 text-sm flex-1 min-w-[200px] outline-none focus:ring-2 focus:ring-ring" />
+          <input value={idQuery} onChange={(e) => setIdQuery(e.target.value)} type="search" aria-label="Üye numarası ile ara" placeholder="Üye No ile ara (8 haneli)" className="bg-card border border-border rounded-lg px-3 min-h-11 text-sm w-44 outline-none focus:ring-2 focus:ring-ring" />
+          <input value={nameQuery} onChange={(e) => setNameQuery(e.target.value)} type="search" aria-label="İsim, kullanıcı adı veya e-posta ile ara" placeholder="İsim / kullanıcı adı / e-posta ile ara" className="bg-card border border-border rounded-lg px-3 min-h-11 text-sm flex-1 min-w-[200px] outline-none focus:ring-2 focus:ring-ring" />
         </div>
       )}
       {users.length === 0 ? <p className="text-muted-foreground text-sm">{pendingOnly ? 'Onay bekleyen kayıt yok.' : 'Kullanıcı yok.'}</p> :
@@ -172,16 +176,16 @@ export default function AdminUsers({ pendingOnly = false }) {
                 {!u.is_banned && <span className={`text-xs px-2 py-1 rounded ${isActive ? 'bg-green-500/20 text-green-400' : u.membership_status === 'pending' ? 'bg-amber-500/20 text-amber-400' : 'bg-red-500/20 text-red-400'}`}>{isActive ? 'Aktif' : u.membership_status === 'pending' ? 'Beklemede' : 'Pasif'}</span>}
                 {paidUserIds.has(u.id) && <span className="text-xs px-2 py-1 rounded bg-green-500/20 text-green-400 font-semibold">ÖDENDİ</span>}
                 {onlineUsers.has(u.id) ? <span className="text-xs px-2 py-1 rounded bg-green-500/20 text-green-400">Online</span> : <span className="text-xs px-2 py-1 rounded bg-muted text-muted-foreground">Offline</span>}
-                {u.is_banned && <span className="text-xs px-2 py-1 rounded bg-red-500/20 text-red-400 font-semibold" title={u.ban_reason}>🚫 ENGELLİ</span>}
-                <div className="flex flex-wrap gap-1.5">
-                {!pendingOnly && <button onClick={() => setDetail(u)} className={`${btn} bg-secondary hover:bg-secondary/70`}>GÖRÜNTÜLE</button>}
-                {pendingOnly && !isActive && paidUserIds.has(u.id) && <button onClick={() => approve(u)} className={`${btn} bg-green-500/20 text-green-400 hover:bg-green-500/30`}>AKTİF ET</button>}
-                {pendingOnly && !isActive && !paidUserIds.has(u.id) && <button onClick={() => approve(u)} className={`${btn} bg-green-500/20 text-green-400 hover:bg-green-500/30`}>ONAYLA</button>}
-                  {!pendingOnly && <button onClick={() => toggleBan(u)} className={`${btn} ${u.is_banned ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30' : 'bg-red-500/20 text-red-400 hover:bg-red-500/30'}`}>{u.is_banned ? 'BANI KALDIR' : 'BANLA'}</button>}
-                  {pendingOnly && <button onClick={() => reject(u)} className={`${btn} bg-red-500/20 text-red-400 hover:bg-red-500/30`}>REDDET</button>}
-                  {!pendingOnly && <button onClick={() => resetPass(u)} className={`${btn} bg-purple-500/20 text-purple-400 hover:bg-purple-500/30`}>ŞİFRE SIFIRLA</button>}
-                  {!pendingOnly && <button onClick={() => setGenderTarget(u)} className={`${btn} bg-fuchsia-500/20 text-fuchsia-300 hover:bg-fuchsia-500/30`}>{genderButtonLabel(u)}</button>}
-                  <button onClick={() => setConfirm(u)} className={`${btn} bg-red-500/20 text-red-400 hover:bg-red-500/30`}>SİL</button>
+                {u.is_banned && <span className="text-xs px-2 py-1 rounded bg-red-500/20 text-red-400 font-semibold" title={u.ban_reason}><span aria-hidden="true">🚫</span> ENGELLİ</span>}
+                <div className="flex flex-wrap gap-1.5" role="group" aria-label={`${userName(u)} için işlemler`}>
+                {!pendingOnly && <button type="button" aria-label={`${userName(u)} profilini görüntüle`} onClick={() => setDetail(u)} className={`${btn} bg-secondary hover:bg-secondary/70`}>GÖRÜNTÜLE</button>}
+                {pendingOnly && !isActive && paidUserIds.has(u.id) && <button type="button" aria-label={`${userName(u)} üyeliğini aktif et`} onClick={() => approve(u)} className={`${btn} bg-green-500/20 text-green-400 hover:bg-green-500/30`}>AKTİF ET</button>}
+                {pendingOnly && !isActive && !paidUserIds.has(u.id) && <button type="button" aria-label={`${userName(u)} kaydını onayla`} onClick={() => approve(u)} className={`${btn} bg-green-500/20 text-green-400 hover:bg-green-500/30`}>ONAYLA</button>}
+                  {!pendingOnly && <button type="button" aria-label={`${userName(u)} kullanıcısının engelini ${u.is_banned ? 'kaldır' : 'koy'}`} onClick={() => toggleBan(u)} className={`${btn} ${u.is_banned ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30' : 'bg-red-500/20 text-red-400 hover:bg-red-500/30'}`}>{u.is_banned ? 'BANI KALDIR' : 'BANLA'}</button>}
+                  {pendingOnly && <button type="button" aria-label={`${userName(u)} kaydını reddet`} onClick={() => reject(u)} className={`${btn} bg-red-500/20 text-red-400 hover:bg-red-500/30`}>REDDET</button>}
+                  {!pendingOnly && <button type="button" aria-label={`${userName(u)} için şifre sıfırlama bağlantısı gönder`} onClick={() => resetPass(u)} className={`${btn} bg-purple-500/20 text-purple-400 hover:bg-purple-500/30`}>ŞİFRE SIFIRLA</button>}
+                  {!pendingOnly && <button type="button" aria-label={`${userName(u)} cinsiyet bilgisini düzenle`} onClick={() => setGenderTarget(u)} className={`${btn} bg-fuchsia-500/20 text-fuchsia-300 hover:bg-fuchsia-500/30`}>{genderButtonLabel(u)}</button>}
+                  <button type="button" aria-label={`${userName(u)} hesabını sil`} onClick={() => setConfirm(u)} className={`${btn} bg-red-500/20 text-red-400 hover:bg-red-500/30`}>SİL</button>
                 </div>
               </div>
             );

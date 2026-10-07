@@ -47,7 +47,7 @@ export default function BottomNav() {
   };
 
   return (
-    <nav className="lg:hidden fixed bottom-0 inset-x-0 z-50 overflow-hidden pb-[env(safe-area-inset-bottom)]" style={{ background: 'linear-gradient(180deg, #2a1508 0%, #1a0b06 45%, #0d0503 100%)', borderTop: '1px solid rgba(242,206,107,0.4)', transform: keyboardInset ? `translateY(-${keyboardInset}px)` : 'translateY(0)', transition: 'transform 180ms ease-out' }}>
+    <nav aria-label="Ana menü" className="lg:hidden fixed bottom-0 inset-x-0 z-50 overflow-hidden pb-[env(safe-area-inset-bottom)]" style={{ background: 'linear-gradient(180deg, #2a1508 0%, #1a0b06 45%, #0d0503 100%)', borderTop: '1px solid rgba(242,206,107,0.4)', transform: keyboardInset ? `translateY(-${keyboardInset}px)` : 'translateY(0)', transition: 'transform 180ms ease-out' }}>
       {/* Altın sarısı + kırmızı tonlar: alt menü zemini. */}
       <div className="absolute inset-0 pointer-events-none opacity-30"
         style={{
@@ -65,7 +65,7 @@ export default function BottomNav() {
             return (
               <div key={`dock-${index}`} className="flex-1 flex flex-col items-center justify-center gap-0.5">
                 {user?.role === 'admin' ? <LiveChatButton placement="dock" /> : <UserSupportButton badge={supportBadge} />}
-                <span className="text-[10px] text-white/50">Canlı Destek</span>
+                <span className="text-[10px] text-white/75">Canlı Destek</span>
               </div>
             );
           }
@@ -75,7 +75,7 @@ export default function BottomNav() {
           const isCenter = path === '/oda-kur' && baseItems === fullItems;
           if (isCenter) {
             return (
-              <button key={path} onClick={() => handleNav({ path })} className="flex-1 flex flex-col items-center justify-center gap-0.5 relative">
+              <button key={path} type="button" onClick={() => handleNav({ path })} className="flex-1 flex flex-col items-center justify-center gap-0.5 relative min-h-11">
                 <span className="-mt-6 w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-transform active:scale-90" style={{ background: 'linear-gradient(135deg, #dc2626, #f2ce6b)', boxShadow: '0 0 18px rgba(242,206,107,0.6)' }}>
                   <Icon className="w-6 h-6 text-white" />
                 </span>
@@ -84,12 +84,14 @@ export default function BottomNav() {
             );
           }
           return (
-            <button key={path} onClick={() => handleNav({ path, activePath })} className="flex-1 flex flex-col items-center justify-center gap-0.5 relative active:scale-95 transition-transform">
-              {active && <span className="absolute top-0 h-0.5 w-8 rounded-full" style={{ background: 'linear-gradient(90deg, #dc2626, #f2ce6b)', boxShadow: '0 0 10px rgba(242,206,107,0.75)' }} />}
-              <Icon className={`w-5 h-5 ${active ? 'text-[#f2ce6b]' : 'text-white/50'}`} />
-              {activePath === '/arkadaslar' && messages > 0 && <span className="absolute right-[18%] top-1 min-w-5 h-5 px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">{messages > 99 ? '99+' : messages}</span>}
-              {activePath === '/arkadaslar' && requests > 0 && <span className="absolute right-[30%] top-0 w-3 h-3 rounded-full bg-red-500 border-2 border-[#14141a]" aria-label="Yeni arkadaşlık isteği" />}
-              <span className={`text-[10px] ${active ? 'text-[#f2ce6b] font-semibold' : 'text-white/50'}`}>{label}</span>
+            <button key={path} type="button" aria-current={active ? 'page' : undefined}
+              aria-label={activePath === '/arkadaslar' && messages > 0 ? `${label}, ${messages} okunmamış mesaj` : undefined}
+              onClick={() => handleNav({ path, activePath })} className="flex-1 flex flex-col items-center justify-center gap-0.5 relative min-h-11 active:scale-95 transition-transform">
+              {active && <span aria-hidden="true" className="absolute top-0 h-0.5 w-8 rounded-full" style={{ background: 'linear-gradient(90deg, #dc2626, #f2ce6b)', boxShadow: '0 0 10px rgba(242,206,107,0.75)' }} />}
+              <Icon aria-hidden="true" className={`w-5 h-5 ${active ? 'text-[#f2ce6b]' : 'text-white/75'}`} />
+              {activePath === '/arkadaslar' && messages > 0 && <span aria-hidden="true" className="absolute right-[18%] top-1 min-w-5 h-5 px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">{messages > 99 ? '99+' : messages}</span>}
+              {activePath === '/arkadaslar' && requests > 0 && <span aria-hidden="true" className="absolute right-[30%] top-0 w-3 h-3 rounded-full bg-red-500 border-2 border-[#14141a]" />}
+              <span className={`text-[10px] ${active ? 'text-[#f2ce6b] font-semibold' : 'text-white/75'}`}>{label}</span>
             </button>
           );
         })}

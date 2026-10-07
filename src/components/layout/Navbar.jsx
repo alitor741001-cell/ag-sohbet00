@@ -40,20 +40,20 @@ export default function Navbar() {
 
       <div className="relative max-w-[1600px] mx-auto px-4 sm:px-6 h-16 flex items-center gap-4">
 
-        <nav className="hidden lg:flex items-center gap-1">
+        <nav aria-label="Ana menü" className="hidden lg:flex items-center gap-1">
             {links.map((l) => (
-              <Link key={l.path} to={l.path}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  location.pathname === l.path ? 'text-white bg-red-500/15 shadow-[0_0_14px_rgba(239,68,68,0.3)]' : 'text-white/60 hover:text-white hover:bg-red-500/10'}`}>
+              <Link key={l.path} to={l.path} aria-current={location.pathname === l.path ? 'page' : undefined}
+                className={`px-3 min-h-11 inline-flex items-center rounded-lg text-sm font-medium transition-colors ${
+                  location.pathname === l.path ? 'text-white bg-red-500/15 shadow-[0_0_14px_rgba(239,68,68,0.3)]' : 'text-white/75 hover:text-white hover:bg-red-500/10'}`}>
                 {l.label}
               </Link>
             ))}
           </nav>
 
         <form onSubmit={submit} className="relative hidden md:flex items-center ml-auto bg-white/5 rounded-full px-3 py-1.5 w-44 lg:w-64 focus-within:ring-2 focus-within:ring-red-500/30">
-            <Search className="w-4 h-4 text-white/40 shrink-0" />
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Google'da ara..." autoComplete="off"
-              className="bg-transparent outline-none px-2 text-sm w-full placeholder:text-white/40 text-white" />
+            <Search aria-hidden="true" className="w-4 h-4 text-white/60 shrink-0" />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Google'da ara..." aria-label="Google'da ara" autoComplete="off"
+              className="bg-transparent outline-none px-2 py-1 text-sm w-full placeholder:text-white/60 text-white" />
           </form>
 
         <div className="flex items-center gap-2 ml-auto md:ml-2">
