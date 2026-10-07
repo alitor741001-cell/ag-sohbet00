@@ -63,9 +63,18 @@ export default function Profile() {
       .catch(() => {});
   };
 
+  // Profil açılışı tek çağrıda Supabase aynasından gelir: cüzdan ve VIP sayısı birlikte.
+  const loadSummary = () => {
+    base44.functions.invoke('profile-summary', {})
+      .then((response) => {
+        setWallet(response.data);
+        setVipCount(response.data?.vip_count ?? 0);
+      })
+      .catch(() => {});
+  };
+
   useEffect(() => {
-    loadWallet();
-    loadVipCount();
+    loadSummary();
   }, []);
 
   useEffect(() => {

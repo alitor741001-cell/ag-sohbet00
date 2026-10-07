@@ -1,5 +1,7 @@
+import { waitUntil } from 'base44:runtime';
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import { rateLimit, safeErrorResponse } from '../../shared/security.ts';
+import { writeProfileSummary } from '../../shared/supabaseMirror.ts';
 import { applyVipToUser, vipDurationLabel, effectiveVipLevel } from '../../shared/vip.ts';
 import { findByMemberId } from '../../shared/giftBox.ts';
 import { maskUserInCurrentRoom, restoreUserInRooms } from '../../shared/hiddenUserRoom.ts';
@@ -45,6 +47,8 @@ export default async function (req: Request): Promise<Response> {
         base44.asServiceRole.entities.VipItem.filter({ owner_id: user.id, status: 'bag' }, '-created_date', 50).catch(() => []),
         base44.asServiceRole.entities.VipItem.filter({ owner_id: user.id, status: { $ne: 'bag' } }, '-created_date', 20).catch(() => []),
       ]);
+      // Profil sayfası rozet sayısını aynadan okur: sayı burada tazelenir.
+      waitUntil(writeProfileSummary(base44, user.id, { vip_count: bag.length }));
       return Response.json({ ok: true, items: bag.map(view), history: history.map(view) });
     }
 

@@ -196,6 +196,42 @@ export async function readRows(base44, table, query) {
   }
 }
 
+/**
+ * Profil özetini aynaya yazar: profil sayfası cüzdan hesabını beklemeden okur.
+ * Yalnızca verilen alanlar güncellenir; yazma hatası ana akışı etkilemez.
+ */
+export async function writeProfileSummary(base44, userId, patch) {
+  if (!userId) return false;
+  try {
+    const auth = await supabaseAuth(base44);
+    const row = { user_id: String(userId), synced_at: new Date().toISOString() };
+    if (patch?.wallet !== undefined) row.wallet = patch.wallet;
+    if (patch?.vip_count !== undefined) row.vip_count = Number(patch.vip_count) || 0;
+    if (Object.keys(row).length < 3) return false;
+    const response = await fetch(`${auth.base}/profile_summaries`, {
+      method: 'POST',
+      headers: {
+        apikey: auth.key,
+        Authorization: `Bearer ${auth.key}`,
+        'Content-Type': 'application/json',
+        Prefer: 'resolution=merge-duplicates,return=minimal',
+      },
+      body: JSON.stringify([row]),
+      signal: AbortSignal.timeout(10000),
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
+/** Profil özetini aynadan okur; ayna boş ya da erişilemezse null döner. */
+export async function readProfileSummary(base44, userId) {
+  if (!userId) return null;
+  const rows = await readRows(base44, 'profile_summaries', `select=wallet,vip_count,synced_at&user_id=eq.${encodeURIComponent(userId)}&limit=1`);
+  return Array.isArray(rows) && rows[0] ? rows[0] : null;
+}
+
 /** Bu turda tazelenmeyen satırları siler: kaynağından silinen veri aynada da kalmaz. */
 export async function deleteStale(base44, table, runStart) {
   const auth = await supabaseAuth(base44);

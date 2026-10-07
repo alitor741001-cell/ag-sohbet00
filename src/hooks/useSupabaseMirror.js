@@ -5,6 +5,9 @@ import { base44 } from '@/api/base44Client';
 const LIVE_MS = 3 * 60 * 1000;
 const FULL_MS = 10 * 60 * 1000;
 const inFlight = new Set();
+// Profil özeti de arka planda tazelenir: profil sayfası açılırken hesap beklenmez.
+const WARM_MS = 3 * 60 * 1000;
+const WARM_KEY = 'filmkeyfi_profile_warm';
 
 /**
  * Supabase aynasını uygulama açıkken taze tutar: oda, katılımcı, mesaj,
@@ -28,13 +31,22 @@ export default function useSupabaseMirror(user) {
       localStorage.setItem(key, String(Date.now()));
       base44.functions.invoke('supabase-sync', { mode }).catch(() => {}).finally(() => inFlight.delete(mode));
     };
+    // Profil özeti arka planda hazırlanır: sayfa açıldığında Supabase'teki hazır değer gelir.
+    const warm = () => {
+      if (cancelled || document.visibilityState === 'hidden') return;
+      if (Date.now() - Number(localStorage.getItem(WARM_KEY) || 0) < WARM_MS) return;
+      localStorage.setItem(WARM_KEY, String(Date.now()));
+      base44.functions.invoke('profile-summary', {}).catch(() => {});
+    };
     const tick = () => {
       run('live', LIVE_MS);
+      warm();
       // Tam eşitleme yalnızca yönetici oturumunda çalışır: ekonomi, oyun ve katalog kayıtları tazelenir.
       if (isAdmin) run('all', FULL_MS);
     };
+    const warmFirst = setTimeout(warm, 4000);
     const first = setTimeout(tick, 20000);
     const timer = setInterval(tick, 60000);
-    return () => { cancelled = true; clearTimeout(first); clearInterval(timer); };
+    return () => { cancelled = true; clearTimeout(warmFirst); clearTimeout(first); clearInterval(timer); };
   }, [userId, isAdmin]);
 }

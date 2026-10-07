@@ -1,3 +1,5 @@
+import { waitUntil } from 'base44:runtime';
+import { writeProfileSummary } from './supabaseMirror.ts';
 import { giftBalance } from './giftWallet.ts';
 import { getUsdTry, tlFromDollars, tlRateFrom } from './exchangeRate.ts';
 import { loadQuotaTiers, quotaDollarsFromK } from './quotaLadder.ts';
@@ -142,7 +144,7 @@ export async function giftBoxSummary(base44: any, user: any) {
   const available = Math.max(0, Math.floor(received.reset_dollars + commission.total - spent));
   const tl_rate = tlRateFrom(market.rate);
 
-  return {
+  const summary = {
     received_k: received.k,
     received_score: Math.round(received.k * 1000),
     // Elmas her ayın 1'inde sıfırlanır: yalnızca bu ayın hediyeleri sayılır.
@@ -160,6 +162,9 @@ export async function giftBoxSummary(base44: any, user: any) {
     available_tl: tlFromDollars(available, tl_rate),
     rate_stale: !!market.stale,
   };
+  // Özet her hesaplandığında aynaya yazılır: profil sayfası hazır değeri okur.
+  waitUntil(writeProfileSummary(base44, user.id, { wallet: summary }));
+  return summary;
 }
 
 /** Kimlik numarasına göre kişi: üye numarası ya da ödeme referansı. */
