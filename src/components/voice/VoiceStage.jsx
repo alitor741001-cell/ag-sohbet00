@@ -9,8 +9,8 @@ import { useSize } from '@/hooks/use-size';
  * Sahne: üst başlık ile alt sohbet alanı arasında kalan sabit bölge.
  * Koltuklar bu bölgenin tepesine demirlenir; sohbet açılıp kapansa, yeni mesaj gelse ya da
  * koltuk sayısı değişse bile bu alanın yüksekliği değişmez, dolayısıyla koltuklar oynamaz.
- * Sayı tahtası süresi koltukların hemen altında, sahnenin dışında durur: koltukların altında
- * kırpılmaz, her koşulda görünür.
+ * Sayı tahtası süresi koltukların hemen altında durur (ölçülen boşluk kadar yukarı taşınır) ve
+ * sahnenin dışında kaldığı için kırpılmaz, her koltuk düzeninde görünür.
  */
 export default function VoiceStage({ scrollRef, handlers, room, hiddenAnnounce, grid }) {
   const boxRef = useRef(null);
@@ -33,7 +33,14 @@ export default function VoiceStage({ scrollRef, handlers, room, hiddenAnnounce, 
     if (!box || !gridBox || !frame) return undefined;
     const free = Math.max(0, Math.round(box.getBoundingClientRect().bottom - gridBox.getBoundingClientRect().bottom));
     frame.style.setProperty('--voice-seat-free', `${free}px`);
-    return () => frame.style.removeProperty('--voice-seat-free');
+    // "Devam Ediyor" kartı koltukların hemen altına çekilir: koltuk sayısı ne olursa olsun
+    // kart son satırın (sayı şeritlerinin) altında durur. Kart kendi yerleşiminde kalır,
+    // yalnızca yukarı taşınır — koltukların yeri ve boyutu değişmez.
+    frame.style.setProperty('--voice-board-lift', `${free}px`);
+    return () => {
+      frame.style.removeProperty('--voice-seat-free');
+      frame.style.removeProperty('--voice-board-lift');
+    };
   }, [measured?.height, gridMeasured?.height, grid.seats?.length, grid.boardActive, room?.password]);
 
   return (
@@ -41,7 +48,7 @@ export default function VoiceStage({ scrollRef, handlers, room, hiddenAnnounce, 
       <div
         ref={scrollRef}
         {...handlers}
-        // Sayı tahtası açıkken süre kartı sahnenin hemen altında durur; sahnenin alt boşluğu
+        // Sayı tahtası açıkken süre kartı koltukların hemen altına oturur; sahnenin alt boşluğu
         // ona devredilir, koltuklar için ayrılan yer değişmez.
         className={`voice-stage relative min-h-0 flex-1 ${nine ? 'px-1' : 'px-3'} pt-1 ${dense ? 'overflow-y-auto overflow-x-hidden' : 'overflow-hidden'} ${grid.boardActive ? 'pb-0' : 'pb-4'}`}
       >
