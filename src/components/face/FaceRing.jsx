@@ -13,13 +13,13 @@ const TONE = {
 const RADIUS = 56;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
-export default function FaceRing({ phase = 'scanning', progress = 0, videoRef, cameraReady, cameraError, onStart }) {
-  const tone = TONE[phase] || TONE.scanning;
-  const shown = phase === 'scanning' ? progress : 1;
+export default function FaceRing({ phase = 'scanning', rejected = false, progress = 0, videoRef, cameraReady, cameraError, onStart }) {
+  const tone = rejected ? TONE.fail : TONE[phase] || TONE.scanning;
+  const shown = phase === 'ok' ? 1 : progress;
   return (
     <div className="relative mx-auto mt-4 h-[228px] w-[228px]" onPointerDown={onStart}>
       <svg className="absolute inset-0 h-full w-full -rotate-90" viewBox="0 0 120 120" aria-hidden="true">
-        <circle cx="60" cy="60" r={RADIUS} fill="none" stroke="rgba(255,255,255,0.09)" strokeWidth="3.5" />
+        <circle cx="60" cy="60" r={RADIUS} fill="none" stroke={rejected ? TONE.fail : 'rgba(255,255,255,0.09)'} strokeWidth="3.5" />
         <circle
           cx="60"
           cy="60"

@@ -3,15 +3,14 @@ import { LogOut, ScanFace, TriangleAlert } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { enrollFace, verifyFace } from '@/lib/faceCheck';
 import FaceRing from '@/components/face/FaceRing';
+import useLiveFaceSteps from '@/components/face/useLiveFaceSteps';
 
 // Üst üste başarısız denemede cihaz erişimi kapatılır.
 const MAX_ATTEMPTS = 3;
-const TICK_MS = 90;
 const RETRY_MS = 1600;
 const DONE_MS = 750;
 
-// Kafa hareketi adımları: her adımın süresi ve fotoğrafın alındığı an ayrı verilir,
-// böylece kullanıcı hareketi yapmaya zaman bulur ve halka yavaş yavaş dolar.
+// Her adım yalnızca kamera görüntüsünde istenen hareket doğrulanırsa ilerler.
 const HEAD_STEPS = [
   { key: 'up', label: 'Yukarı', hint: 'Kafanızı yukarı çevirin', ms: 3400, at: 2500 },
   { key: 'down', label: 'Aşağı', hint: 'Kafanızı aşağı çevirin', ms: 3400, at: 2500 },
@@ -77,7 +76,6 @@ export default function FaceLockOverlay({
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const shotsRef = useRef({});
-  const shootingRef = useRef(false);
   const busyRef = useRef(false);
   const attemptsRef = useRef(0);
   const retryRef = useRef(null);
@@ -177,10 +175,14 @@ export default function FaceLockOverlay({
       const result = mode === 'enroll'
         ? await enrollFace(user.id, photos)
         : await verifyFace(user.id, photos, scope);
-      if (result?.ok || result?.reason === 'unavailable') {
+      if (result?.ok === true) {
         setProgress(1);
         setPhase('ok');
         doneRef.current = setTimeout(() => onVerified?.(), DONE_MS);
+        return;
+      }
+      if (result?.reason === 'unavailable' || result?.reason === 'busy') {
+        scheduleRetry(result?.error || 'Görüntü doğrulanamadı; onay verilmedi. Lütfen tekrar deneyin.');
         return;
       }
       if (result?.reason === 'enroll_required') {
@@ -212,50 +214,19 @@ export default function FaceLockOverlay({
     }
   }, [blocked, mode, onVerified, scheduleRetry, scope, user?.id]);
 
-  // Tarama adımları: her adımda ekranda yönerge görünür, adımın belirlenen anında
-  // fotoğraf alınır ve halka adımlar boyunca yavaş yavaş dolar.
-  useEffect(() => {
-    if (!open || blocked || !cameraReady || phase !== 'scanning') return undefined;
-    const total = steps.reduce((sum, step) => sum + step.ms, 0);
-    const started = Date.now();
-    let index = -1;
-    const id = setInterval(async () => {
-      if (shootingRef.current) return;
-      const elapsed = Date.now() - started;
-      // Adım sınırları: her adımın kendi süresi vardır.
-      let start = 0;
-      let current = steps.length - 1;
-      for (let i = 0; i < steps.length; i += 1) {
-        if (elapsed < start + steps[i].ms) {
-          current = i;
-          break;
-        }
-        start += steps[i].ms;
-      }
-      if (current !== index) {
-        index = current;
-        setStepIndex(current);
-      }
-      setProgress(Math.min(1, elapsed / total));
-      const step = steps[current];
-      if (elapsed - start >= step.at && !shotsRef.current[step.key]) {
-        shootingRef.current = true;
-        const file = await captureSelfie().catch(() => null);
-        shootingRef.current = false;
-        if (file) {
-          shotsRef.current = { ...shotsRef.current, [step.key]: file };
-          setShots(shotsRef.current);
-        }
-      }
-      if (elapsed < total) return;
-      if (steps.some((item) => !shotsRef.current[item.key])) {
-        scheduleRetry('Kamera görüntüsü alınamadı.');
-        return;
-      }
-      submit();
-    }, TICK_MS);
-    return () => clearInterval(id);
-  }, [open, blocked, cameraReady, phase, steps, captureSelfie, scheduleRetry, submit]);
+  const acceptStep = useCallback((file) => {
+    const step = steps[stepIndex];
+    shotsRef.current = { ...shotsRef.current, [step.key]: file };
+    setShots(shotsRef.current);
+    setProgress((stepIndex + 1) / steps.length);
+    if (stepIndex + 1 === steps.length) submit();
+    else setStepIndex(stepIndex + 1);
+  }, [steps, stepIndex, submit]);
+
+  const { checking, rejected } = useLiveFaceSteps({
+    active: open && !blocked && cameraReady && phase === 'scanning',
+    steps, index: stepIndex, capture: captureSelfie, accept: acceptStep, feedback: setError,
+  });
 
   if (!open) return null;
 
@@ -265,7 +236,9 @@ export default function FaceLockOverlay({
 
   const logout = () => base44.auth.logout('/login');
   const currentStep = steps[Math.min(stepIndex, steps.length - 1)];
-  const statusText = phase === 'scanning' ? currentStep.hint : PHASE_TEXT[phase];
+  const statusText = phase === 'scanning'
+    ? `${currentStep.hint}${checking ? ' — görüntü kontrol ediliyor, hareketi koruyun...' : ''}`
+    : PHASE_TEXT[phase];
 
   return (
     <div className="fixed inset-0 z-[300] flex items-center justify-center overflow-y-auto bg-[#08080c]/98 px-4 py-6 backdrop-blur">
@@ -286,6 +259,7 @@ export default function FaceLockOverlay({
           <>
             <FaceRing
               phase={phase}
+              rejected={rejected && phase === 'scanning'}
               progress={progress}
               videoRef={videoRef}
               cameraReady={cameraReady}
