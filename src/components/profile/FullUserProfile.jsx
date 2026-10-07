@@ -177,11 +177,7 @@ export default function FullUserProfile({
           </div>
         ) : accountState ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <AccountStatusMark
-              status={accountState.status}
-              avatar={profile?.avatar}
-              name={profile?.username || profile?.full_name || name}
-            />
+            <AccountStatusMark status={accountState.status} />
             <h2 className="mt-4 text-lg font-black text-white">{accountState.name}</h2>
             <p className="mx-auto mt-2 max-w-[300px] text-xs leading-snug text-white/70">{accountState.message}</p>
           </div>

@@ -110,21 +110,15 @@ export default function AdminUsers({ pendingOnly = false }) {
       toast({ title: 'Kullanıcı reddedildi.' }); load();
     } catch (e) { toast({ title: 'Reddedilemedi', description: e.message, variant: 'destructive' }); }
   };
-  const toggleActive = async (u) => {
+  // Banla / Banı kaldır: engellenen hesap giriş yapamaz, odalardan düşer.
+  const toggleBan = async (u) => {
     try {
-      const suspending = u.membership_status === 'active';
-      if (suspending) {
-        await base44.functions.invoke('role-management', { action: 'suspend_user', user_id: u.id, reason: 'Yönetici tarafından askıya alındı' });
-      } else if (u.is_suspended || u.membership_status === 'suspended') {
-        await base44.functions.invoke('role-management', { action: 'unsuspend_user', user_id: u.id });
-      } else {
-        await base44.entities.User.update(u.id, { membership_status: 'active' });
-      }
-      await log(suspending ? 'Kullanıcı askıya alındı' : 'Kullanıcı aktif edildi', u.email);
-      if (!suspending) {
-        await base44.functions.invoke('send-approval-email', { user_id: u.id }).catch(() => {});
-      }
-      toast({ title: suspending ? 'Kullanıcı askıya alındı' : 'Kullanıcı aktif edildi ve e-posta gönderildi' });
+      const banning = !u.is_banned;
+      await base44.functions.invoke('role-management', banning
+        ? { action: 'ban_user', user_id: u.id, reason: 'Yönetici tarafından engellendi' }
+        : { action: 'unban_user', user_id: u.id });
+      await log(banning ? 'Kullanıcı engellendi' : 'Kullanıcı engeli kaldırıldı', u.email);
+      toast({ title: banning ? 'Kullanıcı engellendi' : 'Kullanıcı engeli kaldırıldı' });
       load();
     } catch (e) { toast({ title: 'İşlem başarısız', description: e.message, variant: 'destructive' }); }
   };
@@ -184,9 +178,9 @@ export default function AdminUsers({ pendingOnly = false }) {
                 {u.is_banned && <span className="text-xs px-2 py-1 rounded bg-red-500/20 text-red-400 font-semibold" title={u.ban_reason}>🚫 ENGELLİ</span>}
                 <div className="flex flex-wrap gap-1.5">
                 {!pendingOnly && <button onClick={() => setDetail(u)} className={`${btn} bg-secondary hover:bg-secondary/70`}>GÖRÜNTÜLE</button>}
-                {!isActive && paidUserIds.has(u.id) && <button onClick={() => approve(u)} className={`${btn} bg-green-500/20 text-green-400 hover:bg-green-500/30`}>AKTİF ET</button>}
-                {!isActive && !paidUserIds.has(u.id) && <button onClick={() => approve(u)} className={`${btn} bg-green-500/20 text-green-400 hover:bg-green-500/30`}>ONAYLA</button>}
-                  {!pendingOnly && <button onClick={() => toggleActive(u)} className={`${btn} ${isActive ? 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30' : 'bg-green-500/20 text-green-400 hover:bg-green-500/30'}`}>{isActive ? 'ASKIYA AL' : 'AKTİF ET'}</button>}
+                {pendingOnly && !isActive && paidUserIds.has(u.id) && <button onClick={() => approve(u)} className={`${btn} bg-green-500/20 text-green-400 hover:bg-green-500/30`}>AKTİF ET</button>}
+                {pendingOnly && !isActive && !paidUserIds.has(u.id) && <button onClick={() => approve(u)} className={`${btn} bg-green-500/20 text-green-400 hover:bg-green-500/30`}>ONAYLA</button>}
+                  {!pendingOnly && <button onClick={() => toggleBan(u)} className={`${btn} ${u.is_banned ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30' : 'bg-red-500/20 text-red-400 hover:bg-red-500/30'}`}>{u.is_banned ? 'BANI KALDIR' : 'BANLA'}</button>}
                   {pendingOnly && <button onClick={() => reject(u)} className={`${btn} bg-red-500/20 text-red-400 hover:bg-red-500/30`}>REDDET</button>}
                   {!pendingOnly && <button onClick={() => extend(u)} className={`${btn} bg-blue-500/20 text-blue-400 hover:bg-blue-500/30`}>+30 GÜN</button>}
                   {!pendingOnly && <button onClick={() => resetPass(u)} className={`${btn} bg-purple-500/20 text-purple-400 hover:bg-purple-500/30`}>ŞİFRE SIFIRLA</button>}

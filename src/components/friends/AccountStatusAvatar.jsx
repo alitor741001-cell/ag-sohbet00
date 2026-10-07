@@ -40,30 +40,22 @@ export const ACCOUNT_MARKS = {
  * basılır ve altına durum adı yazılır. Engellenen, askıya alınan ve silinen
  * hesapta görünüm aynıdır.
  */
-export function AccountStatusMark({ status, avatar = '', name = '', size = 'h-28 w-28', markClass = 'text-3xl' }) {
+export function AccountStatusMark({ status, size = 'h-28 w-28', showLabel = true }) {
   const state = ACCOUNT_STATES[status] || ACCOUNT_STATES.deleted;
-  const initial = (name || '?').trim().charAt(0).toUpperCase() || '?';
   return (
     <div className="mx-auto w-fit">
-      <div className={`relative mx-auto ${size}`}>
-        {avatar ? (
-          <Image
-            src={avatar}
-            alt={state.name}
-            className={`${size} overflow-hidden rounded-full border border-border object-cover grayscale`}
-            fittingType="fill"
-          />
-        ) : (
-          <div className={`flex items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent text-4xl font-bold ${size}`}>{initial}</div>
-        )}
-        <span className={`absolute inset-0 flex items-center justify-center rounded-full bg-black/55 ${markClass}`}>🚫</span>
-      </div>
-      <p className="mt-2 text-center text-[11px] font-black tracking-[0.3em] text-destructive">{ACCOUNT_MARKS[status] || ACCOUNT_MARKS.deleted}</p>
+      <Image
+        src={state.image}
+        alt={state.name}
+        className={`${size} overflow-hidden rounded-full border border-border object-cover`}
+        fittingType="fill"
+      />
+      {showLabel && <p className="mt-2 text-center text-[11px] font-black tracking-[0.3em] text-destructive">{ACCOUNT_MARKS[status] || ACCOUNT_MARKS.deleted}</p>}
     </div>
   );
 }
 
 export default function AccountStatusAvatar({ status, className = 'h-12 w-12' }) {
   const state = ACCOUNT_STATES[status] || ACCOUNT_STATES.deleted;
-  return <Image src={state.image} alt={state.name} className={`${className} rounded-full border border-border`} fittingType="fill" />;
+  return <Image src={state.image} alt={state.name} className={`${className} overflow-hidden rounded-full border border-border object-cover`} fittingType="fill" />;
 }

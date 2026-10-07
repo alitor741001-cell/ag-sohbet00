@@ -86,11 +86,7 @@ export default function UserProfile({ userId, roomIdOverride, onBack, onMessage,
   if (accountState && !isSelf) return (
     <div className={`dark ${embedded ? 'fixed inset-0 z-[100] bg-black pt-[env(safe-area-inset-top)]' : 'bg-black'} flex min-h-screen items-center justify-center p-4 text-white`}>
       <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 text-center">
-        <AccountStatusMark
-          status={accountState.status}
-          avatar={profile?.avatar}
-          name={profile?.username || profile?.full_name || accountState.name}
-        />
+        <AccountStatusMark status={accountState.status} />
         <h1 className="mt-4 text-xl font-bold">{accountState.name}</h1>
         <p className="mt-2 text-sm text-destructive">{accountState.message}</p>
         <button onClick={() => onBack ? onBack() : navigate(-1)} className="mt-5 rounded-lg bg-secondary px-5 py-2 text-sm font-semibold">Geri</button>
