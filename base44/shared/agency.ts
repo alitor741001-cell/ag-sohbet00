@@ -99,6 +99,40 @@ export async function detachAssistant(base44: any, userId: string) {
   return true;
 }
 
+/** Serbest bırakılan üyede ajans bağlantısının tamamı temizlenir. */
+const RELEASED_MEMBER_PATCH = {
+  agency_code: '', agency_record_id: '', agency_name: '', agency_owner_id: '', agency_role: '', broadcaster_status: '',
+};
+
+/**
+ * Anormal transfer: ajans sahibi engellendiğinde ajans kapanır ve bütün üyeler
+ * kendiliğinden serbest bırakılır — sahip ya da yönetici onayı beklenmez.
+ * Üyeler bağlantısız kalır ve serbestçe yeni bir ajansa başvurabilir.
+ */
+export async function releaseAgencyMembers(base44: any, agency: any, reason = '') {
+  if (!agency?.id) return 0;
+  const members = await base44.asServiceRole.entities.User
+    .filter({ agency_record_id: agency.id }, '-created_date', 500).catch(() => []);
+  // Asistan satırları ve bekleyen davetler kapanır: ölü ajansa davet gitmez.
+  const assistants = (agency.assistants || []).map((row: any) =>
+    (row.status === 'active' || row.status === 'invited' ? { ...row, status: 'removed' } : row));
+  await base44.asServiceRole.entities.Agency.update(agency.id, { active: false, assistants }).catch(() => {});
+  const invites = await base44.asServiceRole.entities.AgencyInvite
+    .filter({ agency_record_id: agency.id, status: 'pending' }, '-created_date', 200).catch(() => []);
+  await Promise.all((invites || []).map((invite: any) => base44.asServiceRole.entities.AgencyInvite
+    .update(invite.id, { status: 'cancelled', responded_at: new Date().toISOString() }).catch(() => {})));
+  for (const member of members || []) {
+    await base44.asServiceRole.entities.User.update(member.id, RELEASED_MEMBER_PATCH).catch(() => {});
+    await notifyUser(base44, {
+      user_id: member.id, type: 'agency_transfer', title: '⚠️ Anormal transfer',
+      body: `${agency.name || 'Ajans'} ajansının sahibi engellendiği için ajans bağlantın kaldırıldı. Yeni bir ajansa başvurabilirsin.${reason ? ` Not: ${reason}` : ''}`,
+      link: '/ajans',
+    }).catch(() => {});
+  }
+  await refreshAgencyTotals(base44, agency.id).catch(() => {});
+  return (members || []).length;
+}
+
 /** Yayıncıyı ajansa kazandıran asistan: kabul edilmiş davetten bulunur. */
 export async function broadcasterAssistantLink(base44: any, userId: string, agencyId: string) {
   const rows = await base44.asServiceRole.entities.AgencyInvite

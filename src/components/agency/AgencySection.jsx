@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ArrowLeftRight, Building2, ChevronRight, Gem, Handshake, Hourglass, MailOpen, Mic2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import AgencyChangeSheet from '@/components/agency/AgencyChangeSheet';
 import AgencyCreateSheet from '@/components/agency/AgencyCreateSheet';
+import QuotaProgressCard from '@/components/agency/QuotaProgressCard';
 import { agencySectionBadge, agencySections } from '@/components/agency/agencySections';
 import { agencyLabel, resolveAgencyRole } from '@/lib/agencyRole';
-import { AGENCY_GOLD, agencyApi } from '@/lib/agency';
+import { AGENCY_GOLD, agencyApi, currentPeriod } from '@/lib/agency';
 
 /**
  * Profil sayfasındaki "AJANS İŞLEMLERİ" bölümü: rol ve duruma göre
@@ -15,6 +17,7 @@ export default function AgencySection({ user, onRefresh, showHeading = true }) {
   const [summary, setSummary] = useState(null);
   const [sheet, setSheet] = useState('');
   const [justCreated, setJustCreated] = useState(false);
+  const [quota, setQuota] = useState(null);
 
   const load = useCallback(() => {
     agencyApi('summary')
@@ -51,6 +54,25 @@ export default function AgencySection({ user, onRefresh, showHeading = true }) {
   const pendingTransfer = transfer?.status === 'pending' ? transfer : null;
 
   const afterChange = () => { load(); onRefresh?.(); };
+
+  // Kota özeti: sahip ve yayıncı bu ayki elmasına göre ilerler; asistan kotada ilerlemez.
+  useEffect(() => {
+    if (!user?.id || (role !== 'owner' && role !== 'broadcaster')) { setQuota(null); return; }
+    agencyApi(role === 'owner' ? 'agency-panel' : 'broadcaster')
+      .then((data) => setQuota(data))
+      .catch(() => setQuota(null));
+  }, [role, user?.id]);
+
+  const quotaTiers = (quota?.tiers || []).filter((tier) => tier.active !== false);
+  // Sahip kendi elmasıyla ilerler; geçen aydan kalan değer kota tamamlanmış sayılmaz.
+  const monthDiamonds = role === 'owner'
+    ? (user?.diamond_month_period === currentPeriod() ? (Number(user?.diamond_month) || 0) : 0)
+    : (quota?.diamonds?.month || 0);
+  const totalDiamonds = role === 'owner'
+    ? Math.round((Number(user?.gift_received_k) || 0) * 1000)
+    : (quota?.diamonds?.total || 0);
+  const nextTier = quotaTiers.find((tier) => Number(tier.diamonds) > monthDiamonds) || null;
+  const showQuota = !!quota && (role === 'owner' || role === 'broadcaster');
 
   const baseActions = role ? agencySections(role) : [
     { key: 'davetler', label: 'Ajans Davetlerim', icon: MailOpen, path: '/ajans/davetler' },
@@ -133,6 +155,12 @@ export default function AgencySection({ user, onRefresh, showHeading = true }) {
           </Link>
         )}
 
+        {showQuota && (
+          <div className="mt-3">
+            <QuotaProgressCard month={monthDiamonds} total={totalDiamonds} nextTier={nextTier} tiers={quotaTiers} />
+          </div>
+        )}
+
         <div className="mt-3 grid grid-cols-2 gap-2">
           {actions.map((action) => {
             const rowClass = 'flex items-center gap-2 rounded-xl border border-white/12 bg-white/5 px-3 py-3 text-left active:scale-[0.98]';
@@ -143,6 +171,11 @@ export default function AgencySection({ user, onRefresh, showHeading = true }) {
                 <ChevronRight className="h-3.5 w-3.5 shrink-0 text-white/35" />
               </>
             );
+            // Ajans değişikliği buradan başlar: ayrı sayfaya gitmeden yeni ajans
+            // sorgulanır, talep gönderilir ve onaylar aynı yerden izlenir.
+            if (action.key === 'transferler') {
+              return <button key={action.key} type="button" onClick={() => setSheet('change')} className={rowClass}>{row}</button>;
+            }
             return action.path
               ? <Link key={action.key} to={action.path} className={rowClass}>{row}</Link>
               : <button key={action.key} type="button" onClick={() => setSheet('create')} className={rowClass}>{row}</button>;
@@ -160,6 +193,9 @@ export default function AgencySection({ user, onRefresh, showHeading = true }) {
           if (justCreated) { setJustCreated(false); navigate('/ajans/ajansim'); }
         }}
       />
+
+      {/* Ajans değişikliği: eski ve yeni ajans sahibinin onayıyla tamamlanır. */}
+      <AgencyChangeSheet open={sheet === 'change'} onClose={() => setSheet('')} onChanged={afterChange} />
     </section>
   );
 }

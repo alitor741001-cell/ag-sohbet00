@@ -4,7 +4,7 @@ import { isSiteOwner, FRAME_DEFINITIONS, ROLE_DEFINITIONS } from '../../shared/r
 import { upsertNotification } from '../../shared/upsertNotification.ts';
 import { setRoomLevel, validRoomLevel } from '../../shared/roomLevels.ts';
 import { resolveProfileFrame } from '../../shared/profileFrames.ts';
-import { detachAssistant } from '../../shared/agency.ts';
+import { detachAssistant, releaseAgencyMembers } from '../../shared/agency.ts';
 
 async function removeFromAllRooms(base44, userId, userName) {
   const rooms = await base44.asServiceRole.entities.Room.filter({ status: 'active' }, '-created_date', 200).catch(() => []);
@@ -247,6 +247,20 @@ export default async function(req) {
         await base44.asServiceRole.entities.FaceCheck.update(faceRows[0].id, {
           face_uri: '', note: 'Hesap engellendi: yüz kaydı kaldırıldı', revoked_at: new Date().toISOString(),
         }).catch(() => {});
+      }
+      // Anormal transfer: engellenen kişi bir ajansın sahibiyse ajans kapanır ve
+      // üyeleri kendiliğinden serbest bırakılır; hiçbir onay beklenmez.
+      const ownedAgencies = await base44.asServiceRole.entities.Agency
+        .filter({ owner_id: user_id }, '-created_date', 20).catch(() => []);
+      for (const ownedAgency of ownedAgencies || []) {
+        const released = await releaseAgencyMembers(base44, ownedAgency, reason || '').catch(() => 0);
+        if (released) {
+          await base44.asServiceRole.entities.AdminLog.create({
+            admin_id: me.id, admin_name: adminName,
+            action: 'Anormal transfer', target: target.email || user_id,
+            details: `${ownedAgency.name} (${ownedAgency.agency_id}) • ${released} üye serbest bırakıldı`
+          }).catch(() => {});
+        }
       }
       await upsertNotification(base44, {
         user_id, title: '🚫 Hesabınız engellendi',
