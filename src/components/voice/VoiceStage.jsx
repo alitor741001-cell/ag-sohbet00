@@ -15,8 +15,10 @@ import { useSize } from '@/hooks/use-size';
 export default function VoiceStage({ scrollRef, handlers, room, hiddenAnnounce, grid }) {
   const boxRef = useRef(null);
   const gridBoxRef = useRef(null);
+  const areaRef = useRef(null);
   const measured = useSize(boxRef);
   const gridMeasured = useSize(gridBoxRef);
+  const areaMeasured = useSize(areaRef);
 
   // Koltukların altında kalan boşluk sohbet alanına bildirilir: mesajlar tam koltukların alt
   // hizasından başlar. Koltukların boyutu ve yeri değişmez — yalnızca sohbet yukarı taşar.
@@ -45,8 +47,12 @@ export default function VoiceStage({ scrollRef, handlers, room, hiddenAnnounce, 
               <Lock className="h-3 w-3" /> Şifreli oda
             </p>
           )}
-          <div ref={gridBoxRef} className="flex w-full flex-col items-center">
-            <VoiceSeatGrid {...grid} />
+          {/* Koltuk ızgarasına kalan alan ölçülür: satırlar bu yüksekliğe sığacak boyutta çizilir,
+              böylece alttaki koltukların rakam şeritleri kırpılmaz. */}
+          <div ref={areaRef} className="flex w-full min-h-0 flex-1 flex-col items-center">
+            <div ref={gridBoxRef} className="flex w-full flex-col items-center">
+              <VoiceSeatGrid {...grid} maxHeight={areaMeasured?.height} />
+            </div>
           </div>
           <HiddenUserMarquee active={hiddenAnnounce.active} name={hiddenAnnounce.name} />
         </div>

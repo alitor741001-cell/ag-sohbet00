@@ -13,7 +13,7 @@ import { useSize } from '@/hooks/use-size';
  * Koltuk boyutu ölçülen genişliğe göre seçilir: dar telefonlarda da satır yana taşmaz,
  * geniş ekranlarda koltuklar gereksiz küçülmez.
  */
-export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerId, moderators = [], speakingIds = [], localSpeaking, onSelectSeat, boardActive, scores = {}, accent = '#ef4444', gifted = {} }) {
+export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerId, moderators = [], speakingIds = [], localSpeaking, onSelectSeat, boardActive, scores = {}, accent = '#ef4444', gifted = {}, maxHeight }) {
   const wrapRef = useRef(null);
   const measured = useSize(wrapRef);
   const rows = useMemo(() => seatIndexRows(seats.length), [seats.length]);
@@ -25,11 +25,24 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
   const width = measured?.width || 360;
   const narrow = width < 640;
   const gap = narrow ? 12 : 20;
-  const rowGap = narrow ? 12 : 20;
+  // Alçak ekranda satır araları daralır: en küçük koltukta bile tüm satırlar ve
+  // altlarındaki sayı şeritleri sahneye sığar.
+  const rowsNeeded = (rows.length || 1) * (boardActive ? 83 : 62) + 12 * Math.max(0, rows.length - 1);
+  const rowGap = narrow ? (maxHeight && maxHeight < rowsNeeded ? 6 : 12) : 20;
   const available = width - 4;
   const perSeat = (available - gap * (widestRow - 1)) / widestRow;
-  // Koltuk boyutu yalnızca genişliğe göre seçilir: koltuklar eskisi gibi büyük kalır.
-  const size = perSeat >= 110 ? 'lg' : perSeat >= 62 ? 'md' : perSeat >= 52 ? 'sm' : 'xs';
+  const widthSize = perSeat >= 110 ? 'lg' : perSeat >= 62 ? 'md' : perSeat >= 52 ? 'sm' : 'xs';
+  // Yükseklik de hesaba katılır: koltuğun altındaki isim ve (tahta açıkken) sayı şeridi için
+  // gereken yer düşülür, kalan yükseklik koltuk boyutunu belirler. Böylece koltuk sayısı
+  // artırıldığında alttaki sıraların rakamları görünmez olmaz.
+  const SIZES = ['xs', 'sm', 'md', 'lg'];
+  const columnExtra = boardActive ? 41 : 20;
+  const perRow = maxHeight
+    ? (maxHeight - rowGap * Math.max(0, rows.length - 1)) / (rows.length || 1)
+    : Infinity;
+  const maxCell = perRow - columnExtra;
+  const heightSize = maxCell >= 88 ? 'lg' : maxCell >= 68 ? 'md' : maxCell >= 52 ? 'sm' : 'xs';
+  const size = SIZES[Math.min(SIZES.indexOf(widthSize), SIZES.indexOf(heightSize))];
 
   return (
     <div ref={wrapRef} className="flex w-full flex-col items-center" style={{ rowGap }}>

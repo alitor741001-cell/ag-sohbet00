@@ -34,9 +34,10 @@ const NUMERIC_COLUMNS = new Set([
 const BOOLEAN_COLUMNS = new Set([
   'hidden', 'is_playing', 'voice_mode', 'voice_enabled', 'is_personal', 'chat_enabled',
   'online', 'read', 'active', 'muted', 'speaking', 'locked', 'is_banned', 'is_suspended', 'hidden_user',
+  'number_board',
 ]);
 
-const ROOM_COLUMNS = ['name', 'owner_id', 'owner_name', 'room_type', 'status', 'hidden', 'room_number', 'movie_id', 'movie_title', 'is_playing', 'voice_mode', 'voice_enabled', 'participant_count', 'is_personal', 'max_users', 'seat_count', 'personal_room_code', 'chat_enabled', 'current_time', 'last_sync'];
+const ROOM_COLUMNS = ['name', 'owner_id', 'owner_name', 'room_type', 'status', 'hidden', 'room_number', 'movie_id', 'movie_title', 'is_playing', 'voice_mode', 'voice_enabled', 'participant_count', 'is_personal', 'max_users', 'seat_count', 'personal_room_code', 'chat_enabled', 'current_time', 'last_sync', 'number_board', 'board_started_at', 'number_scores'];
 const PARTICIPANT_COLUMNS = ['room_id', 'user_id', 'name', 'avatar', 'muted', 'speaking', 'joined_at'];
 const SEAT_COLUMNS = ['room_id', 'seat_index', 'user_id', 'name', 'avatar', 'frame', 'locked', 'muted'];
 

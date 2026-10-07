@@ -40,10 +40,15 @@ export function useGiftBalance(roomId, enabled) {
   const [coins, setCoins] = useState(null);
 
   const refresh = useCallback(() => {
-    if (!roomId) return;
-    base44.functions.invoke('voice-room', { room_id: roomId, action: 'gift-state' })
-      .then((response) => setCoins(Math.max(0, Number(response.data?.coins) || 0)))
-      .catch(() => {});
+    if (!roomId) return Promise.resolve(null);
+    return base44.functions.invoke('voice-room', { room_id: roomId, action: 'gift-state' })
+      .then((response) => {
+        const value = Math.max(0, Number(response.data?.coins) || 0);
+        setCoins(value);
+        return value;
+      })
+      // Bakiye okunamazsa son bilinen değer korunur; gönderim kararını sunucu verir.
+      .catch(() => null);
   }, [roomId]);
 
   useEffect(() => { if (enabled) refresh(); }, [enabled, refresh]);

@@ -856,6 +856,20 @@ export default function VoiceRoom() {
     });
   };
 
+  // Sunucu gönderimi kabul etmediyse yerelde işlenen adım geri alınır: bakiyeden düşmeyen
+  // hediyenin sayı tahtasına işlememesi için tahta ve bakiye aynı anda eski haline döner.
+  const revertGiftStep = (job) => {
+    const step = Math.max(0, Number(job.gift?.k_value) || 0) * 1000 * (job.quantity || 1);
+    if (step <= 0 || !job.ids?.length) return;
+    const cost = step * job.ids.length;
+    setCoins((prev) => (prev === null || prev === undefined ? prev : prev + cost));
+    setRoom((prev) => {
+      if (!prev) return prev;
+      const next = job.ids.reduce((list, value) => withBoardStep(list, value, -step), Array.isArray(prev.number_scores) ? prev.number_scores : []);
+      return { ...prev, number_scores: next };
+    });
+  };
+
   // Kuyruğu boşaltır: istekler tek tek gider, geçici hatalarda kısa beklemeyle yeniden denenir.
   // Böylece aynı anda gönderilen iki hediye sunucudaki sayı kaydını birbirinin üstüne yazmaz
   // (sayaç bir anda yükselip geri düşmez) ve hızlı seri gönderimde istek yoğunluğu hatası olmaz.
@@ -867,6 +881,7 @@ export default function VoiceRoom() {
       while (giftQueueRef.current.length) {
         const job = giftQueueRef.current.shift();
         let done = false;
+        let rejected = false;
         for (let attempt = 0; attempt < 3 && !done; attempt += 1) {
           try {
             await sendGiftOnce(job.gift, job.ids, job.quantity);
@@ -874,14 +889,25 @@ export default function VoiceRoom() {
           } catch (error) {
             lastError = error;
             const status = error?.response?.status || 0;
-            // Kesin cevap (bakiye yetersiz, geçersiz hediye): kalan gönderimler bekletilmez.
+            // Kesin cevap (bakiyede para yok, geçersiz hediye): kalan gönderimler bekletilmez.
             if (status >= 400 && status < 500 && status !== 429) {
+              rejected = true;
               giftQueueRef.current = [];
+              const data = error?.response?.data || {};
+              // Bakiye yetmediyse kullanıcı doğrudan coin yükleme ekranına alınır.
+              if (data.needed_k !== undefined || /Yetersiz/i.test(data.error || '')) {
+                setGiftOpen(true);
+                setCoinsRequest((value) => value + 1);
+              }
               break;
             }
             await new Promise((resolve) => window.setTimeout(resolve, 500));
           }
         }
+        // Sunucu bu gönderimi işlemediyse yereldeki adım geri alınır: bakiyeden düşmeyen
+        // hediye sayı tahtasında kalmaz. İşlenen gönderimler olduğu gibi bırakılır.
+        if (!done) revertGiftStep(job);
+        if (rejected) break;
       }
     } finally {
       giftFlushingRef.current = false;
