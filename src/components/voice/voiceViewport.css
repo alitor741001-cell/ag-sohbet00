@@ -75,12 +75,13 @@
   display: none;
 }
 
-/* Hediye kutusunun sağ alt köşesindeki küçük yuvarlak gönder düğmesi: kutunun içinde durur,
-   kutu kapanınca kaybolur. */
+/* Hediye kutusunun sağ alt köşesindeki küçük yuvarlak gönder düğmesi: kutu kapansa da
+   yerinde kalır ve seçili hediye tekrar tekrar gönderilebilir. Kontrol çubuğunun üstünde
+   durur, böylece çubuktaki düğmelerin (oda ayarları) üstüne binmez. */
 .gift-send-corner {
   position: fixed;
   right: 1rem;
-  bottom: calc(max(1rem, env(safe-area-inset-bottom)) + 0.5rem);
+  bottom: calc(var(--keyboard-height, 0px) + max(var(--voice-bar-height, 72px), 72px) + 0.5rem);
   z-index: 250;
 }
 
