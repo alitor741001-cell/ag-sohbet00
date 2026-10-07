@@ -13,7 +13,8 @@ import {
 
 // Tur durumu canlı yayından gelir. Uçuş sırasında hafif bir tik çalışır: çakılma
 // anı tam zamanında yakalanır, ekrandaki çarpan gerçek patlama noktasını geçmez.
-const TICK_MS = 250;
+// Tik aralığı istek yükünü şişirmez: çakılma anı yarım saniyede yakalanır.
+const TICK_MS = 500;
 // Uçuşta ağır durum tazelemesi seyrek yapılır (bahis listesi ve cüzdan için).
 const STATE_EVERY_MS = 4000;
 // Çakılma sonrası yeni tur yoklanır (tur arası bekleme kadar sonra).
@@ -22,7 +23,10 @@ const POLL_BETTING = 9000;
 // Hata sonrası yenilemeler kısa süre bekler; butonlar beklemez.
 const POLL_COOLDOWN = 6000;
 // Uçuş sırasında bekleme kısa tutulur: çakılma anı ve gerçek çarpan yakalanır.
-const POLL_COOLDOWN_FLIGHT = 3000;
+const POLL_COOLDOWN_FLIGHT = 1500;
+// Ekrandaki çarpan son sunucu onayından en fazla bu kadar ileri gidebilir: yoklama
+// geciktiğinde ekran, turun çoktan çakılmış olabileceği bir çarpanı göstermez.
+const FLIGHT_LEAD_MS = 2000;
 const CLOCK_TICK = 50;
 // Otomatik hedef ok tuşlarına hızlı basmak tek istek üretir.
 const AUTO_SAVE_MS = 600;
@@ -195,8 +199,9 @@ export default function useRocketGame() {
       const result = await rocketRequests({ action: 'tick' });
       applyRound(result?.round, result?.now);
     } catch {
-      // Yoğunlukta tik bekler; ekranda uçuş yerel olarak akmaya devam eder.
-      cooldownRef.current = Date.now() + POLL_COOLDOWN;
+      // Yoğunlukta tik kısa süre bekler ve hemen tekrar denenir: uçuş sırasında
+      // uzun bir mola çakılma haberini geciktirip çarpanı gerçek noktadan koparır.
+      cooldownRef.current = Date.now() + POLL_COOLDOWN_FLIGHT;
     }
   }, [applyRound]);
 
@@ -424,10 +429,11 @@ export default function useRocketGame() {
   const round = data?.round;
   const sinceSync = clock - fetchedAtRef.current;
   const serverNow = serverNowRef.current + sinceSync;
-  // Görsel uçuş yerel saatle akar: yoklama gecikse ya da yoğunluk molası girse de
-  // mekik durmaz. Çakılma haberi gelince çarpan gerçek çakılma noktasına oturur;
-  // ödeme kararı her durumda sunucuda verilir.
-  const displayNow = serverNow;
+  // Görsel uçuş yerel saatle akar ama son sunucu onayından en fazla FLIGHT_LEAD_MS
+  // ileri gider: yoklama gecikse de mekik durmaz, ekranda turun çoktan çakılmış
+  // olabileceği bir çarpan görünmez. Çakılma haberi gelince çarpan gerçek çakılma
+  // noktasına oturur; ödeme kararı her durumda sunucuda verilir.
+  const displayNow = serverNowRef.current + Math.min(sinceSync, FLIGHT_LEAD_MS);
   const launchAt = round?.phase_ends_at ? new Date(round.phase_ends_at).getTime() : null;
   // Geri sayım 0'a indiği saniyede uçuş başlar; sunucu yanıtı beklenmez.
   const phase = phaseAt(round?.status, launchAt, serverNow);

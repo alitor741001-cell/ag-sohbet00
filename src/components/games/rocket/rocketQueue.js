@@ -3,7 +3,9 @@ const jobs = [];
 let running = false;
 let blockedUntil = 0;
 let wakeTimer;
-const priority = { cashout: 0, bet: 1, setAutoValue: 2, setAuto: 2, changeBet: 2, ledger: 3, state: 4 };
+// Uçuş tik'i oyun isteği sayılır (2): yoğunluk molası roketin çakılma anını
+// öğrenmesini engellemez, ekran gerçek patlama noktasından kopmaz.
+const priority = { cashout: 0, bet: 1, tick: 2, setAutoValue: 2, setAuto: 2, changeBet: 2, ledger: 3, state: 4 };
 function pump() {
   clearTimeout(wakeTimer);
   if (running || !jobs.length) return;
