@@ -12,6 +12,7 @@ import useConversations from '@/hooks/useConversations';
 import useFriendPresence from '@/hooks/useFriendPresence';
 import { useToast } from '@/components/ui/use-toast';
 import { isModerator } from '@/lib/roles';
+import PullToRefresh from '@/components/home/PullToRefresh';
 
 export default function Friends() {
   const { user, relations, loading: friendsLoading, invoke, reload: reloadFriends } = useFriends();
@@ -156,6 +157,8 @@ export default function Friends() {
 
   return (
     <div className="dark mx-auto min-h-[calc(100dvh-8rem)] w-full min-w-0 max-w-5xl bg-background text-white">
+      {/* Aşağı çekerek tazeleme: arkadaşlar, istekler ve sohbetler yeniden okunur. */}
+      <PullToRefresh onRefresh={() => { reloadFriends(); reloadConversations(); }}>
       <header className="px-4 py-5">
         <h1 className="text-2xl font-extrabold">Arkadaşlar</h1>
         <p className="text-sm text-gray-400 mt-1">Sohbet ve arkadaşlarını yönet.</p>
@@ -209,6 +212,7 @@ export default function Friends() {
           )}
         </>
       )}
+      </PullToRefresh>
     </div>
   );
 }

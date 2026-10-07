@@ -3,6 +3,7 @@ import { KeyRound, ChevronDown, ShieldOff } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useToast } from '@/components/ui/use-toast';
 import BlockedUsers from '@/components/profile/BlockedUsers';
+import ThemeModeSelector from '@/components/profile/ThemeModeSelector';
 import HiddenUserCard from '@/components/profile/HiddenUserCard';
 import FaceVerifyToggle from '@/components/face/FaceVerifyToggle';
 import useFriends from '@/hooks/useFriends';
@@ -21,6 +22,7 @@ export default function ProfileSettings({ user, onUpdated }) {
     finally { setSaving(false); }
   };
   return <div className="space-y-5">
+    <ThemeModeSelector />
     <HiddenUserCard user={user} onUpdated={onUpdated} />
     <FaceVerifyToggle user={user} />
     {/* Çerçeve ve çerçeve ayarı bölümleri kaldırıldı. */}

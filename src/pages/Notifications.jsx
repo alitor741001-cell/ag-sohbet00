@@ -9,6 +9,7 @@ import EmptyState from '@/components/movie/EmptyState';
 import AgencyInviteActions from '@/components/notifications/AgencyInviteActions';
 import InviteDetailSheet from '@/components/agency/InviteDetailSheet';
 import { parseInviteRef } from '@/lib/agency';
+import PullToRefresh from '@/components/home/PullToRefresh';
 
 /** Bildirimin geldiği tarih ve saat: 06.10.2026 02:20 */
 const formatWhen = (iso) => {
@@ -63,6 +64,8 @@ export default function Notifications() {
 
   return (
     <div className="dark mx-auto min-h-[calc(100dvh-8rem)] w-full min-w-0 max-w-5xl bg-background text-white">
+      {/* Aşağı çekerek tazeleme: bildirimler ve bekleyen davetler yeniden okunur. */}
+      <PullToRefresh onRefresh={() => { load(); loadInvites(); }}>
       <header className="sticky top-0 z-10 flex items-center gap-2 border-b border-white/10 bg-background px-3 py-2.5">
         <button onClick={() => navigate('/arkadaslar')} aria-label="Geri" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/5 active:scale-95">
           <ArrowLeft className="h-4 w-4 text-white" />
@@ -112,6 +115,7 @@ export default function Notifications() {
            })}
          </div>}
       </div>
+      </PullToRefresh>
 
       {/* Asistanlık daveti detayı: ajans ve davet edilen bilgileri, 10 saniyelik onay sayacı. */}
       <InviteDetailSheet
