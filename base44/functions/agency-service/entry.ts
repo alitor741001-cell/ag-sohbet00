@@ -742,7 +742,7 @@ export default async function (req) {
         // Admin kurduğu ajans aktif sayılır; kişinin başka ajandaki yayıncılığı korunur.
         const ownPatch: any = ownedAgencyPatch({ ...agency, status: 'active' }, 'active');
         if (!owner.agency_record_id) Object.assign(ownPatch, userPatch(agency));
-        await base44.asServiceRole.entities.User.update(owner.id, ownPatch);
+        await withLimitRetry(() => base44.asServiceRole.entities.User.update(owner.id, ownPatch));
         return Response.json({ ok: true, agency });
       }
       if (action === 'admin-agency-decide') {
@@ -780,16 +780,16 @@ export default async function (req) {
       }
       if (action === 'admin-agency-delete') {
         const agency = await base44.asServiceRole.entities.Agency.get(String(body.agency_id || '')).catch(() => null);
-        if (!agency) return Response.json({ error: 'Ajans bulunamadı.' }, { status: 404 });
-        // Üyeler, ajansın sahibi ve bekleyen davetler tek turda okunur, yazma toplu yapılır:
-        // uzun listelerde tek tek güncelleme istek yoğunluğuna takılıp butonu hataya düşürüyordu.
-        const [members, owners, openInvites] = await Promise.all([
-          base44.asServiceRole.entities.User.filter({ agency_record_id: agency.id }, '-created_date', 500).catch(() => []),
-          base44.asServiceRole.entities.User.filter({ owned_agency_id: agency.id }, '-created_date', 20).catch(() => []),
-          base44.asServiceRole.entities.AgencyInvite.filter({ agency_record_id: agency.id, status: 'pending' }, '-created_date', 500).catch(() => []),
+        const agencyId = agency?.id || String(body.agency_id || '');
+        if (!agencyId) return Response.json({ error: 'Ajans bulunamadı.' }, { status: 404 });
+        // Üyeler, ajansın sahibi ve bekleyen davetler tek turda okunur; yazmalar tek tek ve
+        // yoğunluk hatasında tekrar denemeli yapılır ki buton hataya düşmesin.
+        const [members, owners, invites] = await Promise.all([
+          base44.asServiceRole.entities.User.filter({ agency_record_id: agencyId }, '-created_date', 500).catch(() => []),
+          base44.asServiceRole.entities.User.filter({ owned_agency_id: agencyId }, '-created_date', 20).catch(() => []),
+          base44.asServiceRole.entities.AgencyInvite.filter({ agency_record_id: agencyId, status: 'pending' }, '-created_date', 500).catch(() => []),
         ]);
         const cleared: any = { agency_code: '', agency_record_id: '', agency_name: '', agency_owner_id: '', agency_role: '', broadcaster_status: '' };
-        // Kullanıcı kayıtları toplu güncellenemez: her kayıt tek tek yazılır, yoğunluk hatasında tekrar denenir.
         for (const member of members || []) {
           await withLimitRetry(() => base44.asServiceRole.entities.User.update(member.id, cleared)).catch(() => {});
         }
@@ -797,12 +797,15 @@ export default async function (req) {
         for (const owner of owners || []) {
           await withLimitRetry(() => base44.asServiceRole.entities.User.update(owner.id, clearOwnedAgencyPatch())).catch(() => {});
         }
-        if (openInvites?.length) {
+        if (invites?.length) {
           await withLimitRetry(() => base44.asServiceRole.entities.AgencyInvite
-            .bulkUpdate(openInvites.map((invite: any) => ({ id: invite.id, status: 'cancelled' })))).catch(() => {});
+            .bulkUpdate(invites.map((invite: any) => ({ id: invite.id, status: 'cancelled' })))).catch(() => {});
         }
+        // Ajans kaydı daha önce silinmişse (panelde kalan kart) hata verilmez:
+        // geriye kalan izler temizlenir ve işlem başarılı sayılır.
+        if (!agency) return Response.json({ ok: true, already_deleted: true });
         // Kısa süreli yoğunluk hatasında silme tekrar denenir: işlem yarım kalmaz.
-        await withLimitRetry(() => base44.asServiceRole.entities.Agency.delete(agency.id));
+        await withLimitRetry(() => base44.asServiceRole.entities.Agency.delete(agencyId));
         return Response.json({ ok: true });
       }
       if (action === 'admin-set-owner') {
@@ -881,7 +884,6 @@ export default async function (req) {
       // etiketi ve varsa asistanlığı kalkar.
       if (action === 'admin-manual-transfer-decide') {
         const transfer = await base44.asServiceRole.entities.AgencyTransfer.get(String(body.transfer_id || '')).catch(() => null);
-        // Normal transfer kararı aşağıda işlenir.
         if (!transfer || transfer.mode !== 'manual' || transfer.status !== 'pending') {
           return Response.json({ error: 'Talep bulunamadı.' }, { status: 404 });
         }
