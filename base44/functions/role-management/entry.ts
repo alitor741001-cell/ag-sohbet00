@@ -4,6 +4,7 @@ import { isSiteOwner, FRAME_DEFINITIONS, ROLE_DEFINITIONS } from '../../shared/r
 import { upsertNotification } from '../../shared/upsertNotification.ts';
 import { setRoomLevel, validRoomLevel } from '../../shared/roomLevels.ts';
 import { resolveProfileFrame } from '../../shared/profileFrames.ts';
+import { detachAssistant } from '../../shared/agency.ts';
 
 async function removeFromAllRooms(base44, userId, userName) {
   const rooms = await base44.asServiceRole.entities.Room.filter({ status: 'active' }, '-created_date', 200).catch(() => []);
@@ -211,6 +212,8 @@ export default async function(req) {
         { $set: { status: 'inactive', ended_at: new Date().toISOString() } }
       ).catch(() => {});
       await removeFromAllRooms(base44, user_id, targetName);
+      // Silinen hesabın ajans tarafındaki asistanlığı kalmasın.
+      await detachAssistant(base44, user_id).catch(() => {});
       await base44.asServiceRole.entities.User.delete(user_id);
       await base44.asServiceRole.entities.AdminLog.create({
         admin_id: me.id, admin_name: adminName,
@@ -237,6 +240,16 @@ export default async function(req) {
       ).catch(() => {});
       await removeFromAllRooms(base44, user_id, targetName);
       await syncAccountStatus(base44, target, 'banned');
+      // Engellenen hesap ajans tarafında asistan olarak kalmaz; yüz kaydı düşer ki
+      // kişi yeni bir hesapla yüzünü yeniden doğrulayabilsin (engellenmemiş hesaplarda
+      // aynı yüzle açılan yan hesabın yayıncılığı iptal edilmeye devam eder).
+      await detachAssistant(base44, user_id).catch(() => {});
+      const faceRows = await base44.asServiceRole.entities.FaceCheck.filter({ user_id }, '-created_date', 1).catch(() => []);
+      if (faceRows?.[0]?.face_uri) {
+        await base44.asServiceRole.entities.FaceCheck.update(faceRows[0].id, {
+          face_uri: '', note: 'Hesap engellendi: yüz kaydı kaldırıldı', revoked_at: new Date().toISOString(),
+        }).catch(() => {});
+      }
       await upsertNotification(base44, {
         user_id, title: '🚫 Hesabınız engellendi',
         body: `Engel nedeni: ${reason || 'Belirtilmedi'}`,

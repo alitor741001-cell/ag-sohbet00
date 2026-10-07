@@ -37,12 +37,20 @@ export default function AgencyTransfers({ transfers = [], userId = '', approveRo
             </div>
             {pending && (
               <div className="mt-2 flex flex-wrap gap-2 text-[10px]">
-                <span className={`rounded-full border px-2 py-0.5 ${transfer.from_approved ? 'border-[#4ade80]/45 text-[#4ade80]' : 'border-white/20 text-white/45'}`}>
-                  Eski ajans {transfer.from_approved ? '✓ onayladı' : 'onay bekliyor'}
-                </span>
-                <span className={`rounded-full border px-2 py-0.5 ${transfer.to_approved ? 'border-[#4ade80]/45 text-[#4ade80]' : 'border-white/20 text-white/45'}`}>
-                  Yeni ajans {transfer.to_approved ? '✓ onayladı' : 'onay bekliyor'}
-                </span>
+                {transfer.mode === 'manual' ? (
+                  <span className="rounded-full border border-[#F5C542]/45 px-2 py-0.5 text-[#F5C542]">
+                    Normal transfer • yönetici incelemesinde
+                  </span>
+                ) : (
+                  <>
+                    <span className={`rounded-full border px-2 py-0.5 ${transfer.from_approved ? 'border-[#4ade80]/45 text-[#4ade80]' : 'border-white/20 text-white/45'}`}>
+                      Eski ajans {transfer.from_approved ? '✓ onayladı' : 'onay bekliyor'}
+                    </span>
+                    <span className={`rounded-full border px-2 py-0.5 ${transfer.to_approved ? 'border-[#4ade80]/45 text-[#4ade80]' : 'border-white/20 text-white/45'}`}>
+                      Yeni ajans {transfer.to_approved ? '✓ onayladı' : 'onay bekliyor'}
+                    </span>
+                  </>
+                )}
               </div>
             )}
             {transfer.decided_at && <p className="mt-1.5 text-[10px] text-white/35">{dateText(transfer.decided_at)}</p>}

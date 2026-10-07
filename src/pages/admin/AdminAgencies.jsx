@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Building2, Gem, Loader2, Mic2, MoveRight, Table2, Wallet } from 'lucide-react';
+import { Building2, Camera, Gem, Loader2, Mic2, MoveRight, Table2, Wallet } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { agencyApi } from '@/lib/agency';
 import AdminAgencyList from '@/components/admin/agency/AdminAgencyList';
@@ -7,6 +7,7 @@ import AdminBroadcasterTable from '@/components/admin/agency/AdminBroadcasterTab
 import AdminQuotaTiers from '@/components/admin/agency/AdminQuotaTiers';
 import AdminRewardTable from '@/components/admin/agency/AdminRewardTable';
 import AdminTransferTable from '@/components/admin/agency/AdminTransferTable';
+import AdminManualTransferTable from '@/components/admin/agency/AdminManualTransferTable';
 
 const TABS = [
   { key: 'agencies', label: 'Ajanslar', icon: Building2 },
@@ -14,6 +15,7 @@ const TABS = [
   { key: 'tiers', label: 'Kota Tablosu', icon: Table2 },
   { key: 'rewards', label: 'Kazançlar', icon: Wallet },
   { key: 'transfers', label: 'Transferler', icon: MoveRight },
+  { key: 'manual', label: 'Normal Transfer', icon: Camera },
 ];
 
 /** Yönetim paneli — Ajans & Yayıncı yönetimi. */
@@ -68,6 +70,7 @@ export default function AdminAgencies() {
           {tab === 'tiers' && <AdminQuotaTiers data={data} reload={load} />}
           {tab === 'rewards' && <AdminRewardTable data={data} reload={load} />}
           {tab === 'transfers' && <AdminTransferTable data={data} />}
+          {tab === 'manual' && <AdminManualTransferTable data={data} reload={load} />}
         </>
       )}
     </div>

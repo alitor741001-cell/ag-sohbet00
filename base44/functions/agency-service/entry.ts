@@ -6,7 +6,7 @@ import {
   AGENCY_RULES, AGENCY_COMMISSION_PER_200K, agencyCommissionFor, generateAgencyCode, ensureQuotaTiers,
   syncQuotaRewards, refreshAgencyTotals, agencyStats, sendDirect, inviteMarker, inviteRefId, periodKey, todayKey,
   ASSISTANT_LIMIT, ASSISTANT_SHARES, assistantInviteExpiry, assistantInviteText, activeAssistant, expireAssistantInvites,
-  ownedAgencyPatch, clearOwnedAgencyPatch,
+  ownedAgencyPatch, clearOwnedAgencyPatch, detachAssistant,
 } from '../../shared/agency.ts';
 
 /**
@@ -411,6 +411,8 @@ export default async function (req) {
     if (action === 'transfer-respond') {
       const transfer = await base44.asServiceRole.entities.AgencyTransfer.get(String(body.transfer_id || '')).catch(() => null);
       if (!transfer || transfer.status !== 'pending') return Response.json({ error: 'Talep bulunamadı.' }, { status: 404 });
+      // Normal transfer yalnızca yönetici incelemesiyle tamamlanır.
+      if (transfer.mode === 'manual') return Response.json({ error: 'Bu talep yönetici incelemesinde; ajans sahibi onayı gerekmez.' }, { status: 400 });
       const isFromOwner = transfer.from_owner_id === account.id;
       const isToOwner = transfer.to_owner_id === account.id;
       if (!isFromOwner && !isToOwner && !isAdmin) return Response.json({ error: 'Yetkisiz.' }, { status: 403 });
@@ -464,13 +466,61 @@ export default async function (req) {
       return Response.json({ ok: true });
     }
 
+    // ——— NORMAL TRANSFER: FOTOĞRAF + YÖNETİCİ İNCELEMESİ ———
+    // Ajans sahibi engellenmiş ya da hesabını kapatmışsa sahip onayı alınamaz: yayıncı
+    // fotoğraflı talep gönderir, yönetici onayladığında yeni ajansa otomatik geçer.
+    if (action === 'manual-transfer-request') {
+      const code = String(body.agency_code || '').trim().toUpperCase();
+      if (!/^AG-\d{6}$/.test(code)) return Response.json({ error: 'Geçerli bir ajans kimliği gir (AG-000000).' }, { status: 400 });
+      if (!account.agency_record_id || !account.agency_code) return Response.json({ error: 'Bir ajansa bağlı değilsin.' }, { status: 400 });
+      if (account.agency_role === 'owner') return Response.json({ error: 'Ajans sahibi transfer olamaz.' }, { status: 400 });
+      if (account.agency_code === code) return Response.json({ error: 'Zaten bu ajansın üyesisin.' }, { status: 400 });
+      const photo = String(body.photo_uri || '');
+      if (!photo || photo.length > 600) return Response.json({ error: 'İnceleme için bir fotoğraf gönder.' }, { status: 400 });
+      const target = await findAgencyByCode(code);
+      if (!target || !isAgencyActive(target)) return Response.json({ error: 'Bu kimliğe ait aktif bir ajans yok.' }, { status: 404 });
+      const opened = await base44.asServiceRole.entities.AgencyTransfer
+        .filter({ user_id: account.id, status: 'pending' }, '-created_date', 5).catch(() => []);
+      if ((opened || []).some((row: any) => row.mode === 'manual')) {
+        return Response.json({ error: 'Zaten incelemede olan bir normal transfer talebin var.' }, { status: 400 });
+      }
+      const rl = await rateLimit(base44, 'agency-manual-transfer:' + account.id, account.id, 10, 60000);
+      if (!rl.allowed) return Response.json({ error: 'Çok fazla talep, biraz bekleyin.' }, { status: 429 });
+      const transfer = await base44.asServiceRole.entities.AgencyTransfer.create({
+        mode: 'manual', photo_uri: photo, note: String(body.note || '').trim().slice(0, 300),
+        user_id: account.id, user_name: displayName, user_avatar: account.avatar || '',
+        from_agency_id: account.agency_record_id, from_agency_code: account.agency_code,
+        from_agency_name: account.agency_name || '', from_owner_id: account.agency_owner_id || '',
+        to_agency_id: target.id, to_agency_code: target.agency_id, to_agency_name: target.name,
+        to_owner_id: target.owner_id, status: 'pending',
+      });
+      await notifyAdmins(base44, {
+        event: 'agency_manual_transfer',
+        title: '📄 Normal transfer talebi',
+        body: `${displayName}: ${account.agency_name || 'Eski ajans'} → ${target.name} (${target.agency_id}) normal transfer talebi inceleme bekliyor.`,
+        link: '/admin/ajanslar',
+      }).catch(() => {});
+      return Response.json({ ok: true, transfer });
+    }
+
+    if (action === 'manual-transfer-cancel') {
+      const transfer = await base44.asServiceRole.entities.AgencyTransfer.get(String(body.transfer_id || '')).catch(() => null);
+      if (!transfer || transfer.mode !== 'manual' || transfer.user_id !== account.id || transfer.status !== 'pending') {
+        return Response.json({ error: 'Talep bulunamadı.' }, { status: 404 });
+      }
+      await base44.asServiceRole.entities.AgencyTransfer.update(transfer.id, { status: 'cancelled', decided_at: new Date().toISOString() });
+      return Response.json({ ok: true });
+    }
+
     if (action === 'transfers') {
       const rows = await base44.asServiceRole.entities.AgencyTransfer.filter({
         $or: [{ user_id: account.id }, { from_owner_id: account.id }, { to_owner_id: account.id }],
       }, '-created_date', 200).catch(() => []);
+      const manual = (row: any) => row.mode === 'manual';
       const mine = (rows || []).filter((row) => row.user_id === account.id);
-      const approvals = (rows || []).filter((row) => row.user_id !== account.id && row.status === 'pending');
-      return Response.json({ mine, approvals, history: rows || [] });
+      // Normal transfer talepleri sahip onayına düşmez: yalnızca yönetici inceler.
+      const approvals = (rows || []).filter((row) => row.user_id !== account.id && row.status === 'pending' && !manual(row));
+      return Response.json({ mine, manual: mine.filter(manual), approvals, history: rows || [] });
     }
 
     // ——— ÜYE KİMLİĞİYLE KULLANICI ARAMA (davet için) ———
@@ -652,7 +702,10 @@ export default async function (req) {
             agency_record_id: row.agency_record_id || '', status: row.broadcaster_status || '', diamonds: Number(row.diamond_month) || 0,
             total_diamonds: Math.round((Number(row.gift_received_k) || 0) * 1000),
           })),
-          transfers: transfers || [], tiers: tiers || [], rewards: rewards || [],
+          transfers: transfers || [],
+          // Fotoğraflı normal transfer talepleri ayrı sekmede incelenir.
+          manual_transfers: (transfers || []).filter((row: any) => row.mode === 'manual'),
+          tiers: tiers || [], rewards: rewards || [],
         });
       }
       if (action === 'admin-agency-save') {
@@ -808,6 +861,51 @@ export default async function (req) {
           }).catch(() => {});
         }
         return Response.json({ ok: true, reward: updated });
+      }
+      // Normal transfer kararı: onaylanırsa yayıncı yeni ajansa geçer, eski ajans
+      // etiketi ve varsa asistanlığı kalkar.
+      if (action === 'admin-manual-transfer-decide') {
+        const transfer = await base44.asServiceRole.entities.AgencyTransfer.get(String(body.transfer_id || '')).catch(() => null);
+        if (!transfer || transfer.mode !== 'manual' || transfer.status !== 'pending') {
+          return Response.json({ error: 'Talep bulunamadı.' }, { status: 404 });
+        }
+        const note = String(body.note || '').trim().slice(0, 300);
+        const now = new Date().toISOString();
+        if (!body.approve) {
+          await base44.asServiceRole.entities.AgencyTransfer.update(transfer.id, {
+            status: 'rejected', reviewed_by: account.id, reviewed_at: now, decided_at: now, admin_note: note,
+          });
+          await notifyUser(base44, {
+            user_id: transfer.user_id, type: 'agency_transfer_result', title: '❌ Normal transfer reddedildi',
+            body: `${transfer.to_agency_name} ajansına normal transfer talebin reddedildi.${note ? ` Not: ${note}` : ''}`,
+            link: '/ajans/transferler',
+          }).catch(() => {});
+          return Response.json({ ok: true, status: 'rejected' });
+        }
+        const target = await base44.asServiceRole.entities.Agency.get(transfer.to_agency_id).catch(() => null);
+        if (!target || !isAgencyActive(target)) return Response.json({ error: 'Hedef ajans aktif değil.' }, { status: 400 });
+        const member = await base44.asServiceRole.entities.User.get(transfer.user_id).catch(() => null);
+        if (!member) return Response.json({ error: 'Kullanıcı bulunamadı.' }, { status: 404 });
+        // Eski ajandaki asistanlık kalkar, üyelik yeni ajansa taşınır.
+        await detachAssistant(base44, member.id).catch(() => {});
+        await base44.asServiceRole.entities.User.update(member.id, {
+          agency_code: target.agency_id, agency_record_id: target.id, agency_name: target.name,
+          agency_owner_id: target.owner_id, agency_role: 'broadcaster', broadcaster_status: 'active',
+        });
+        await base44.asServiceRole.entities.AgencyTransfer.update(transfer.id, {
+          status: 'completed', decided_at: now, reviewed_by: account.id, reviewed_at: now, admin_note: note,
+        });
+        await Promise.all([
+          refreshAgencyTotals(base44, target.id).catch(() => {}),
+          transfer.from_agency_id ? refreshAgencyTotals(base44, transfer.from_agency_id).catch(() => {}) : null,
+        ]);
+        await notifyUser(base44, {
+          user_id: member.id, type: 'agency_transfer_result', title: '✅ Normal transfer tamamlandı',
+          body: `${transfer.from_agency_name || 'Eski ajans'} → ${target.name} geçişin tamamlandı.`, link: '/ajans/transferler',
+        }).catch(() => {});
+        const newOwner = await base44.asServiceRole.entities.User.get(target.owner_id).catch(() => null);
+        if (newOwner) await sendDirect(base44, newOwner, member, `🔄 ${transfer.user_name} artık ${target.name} ajansının yayıncısı!`).catch(() => {});
+        return Response.json({ ok: true, status: 'completed' });
       }
       return Response.json({ error: 'Geçersiz admin işlemi.' }, { status: 400 });
     }

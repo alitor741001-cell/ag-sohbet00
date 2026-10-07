@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ArrowLeftRight } from 'lucide-react';
+import { ArrowLeftRight, FileImage } from 'lucide-react';
 import AgencyPageShell from '@/components/agency/AgencyPageShell';
 import AgencyTransfersList from '@/components/agency/AgencyTransfers';
 import AgencyChangeSheet from '@/components/agency/AgencyChangeSheet';
+import AgencyManualTransferSheet from '@/components/agency/AgencyManualTransferSheet';
 import useAgencyPageData from '@/components/agency/useAgencyPageData';
 import { agencySections } from '@/components/agency/agencySections';
 import { useToast } from '@/components/ui/use-toast';
@@ -15,6 +16,7 @@ export default function AgencyTransfers() {
   const [data, setData] = useState(null);
   const [busyId, setBusyId] = useState('');
   const [changeOpen, setChangeOpen] = useState(false);
+  const [manualOpen, setManualOpen] = useState(false);
 
   const load = useCallback(() => {
     agencyApi('transfers')
@@ -71,6 +73,16 @@ export default function AgencyTransfers() {
           </button>
         )}
 
+        {role === 'broadcaster' && (
+          <button
+            type="button"
+            onClick={() => setManualOpen(true)}
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/18 bg-white/5 py-3 text-xs font-black text-white/85 active:scale-[0.99]"
+          >
+            <FileImage className="h-4 w-4" style={{ color: AGENCY_GOLD }} /> Normal Transfer (Fotoğraflı • Yönetici Onaylı)
+          </button>
+        )}
+
         <AgencyTransfersList
           transfers={data?.history || []}
           userId={user?.id || ''}
@@ -82,6 +94,7 @@ export default function AgencyTransfers() {
       </div>
 
       <AgencyChangeSheet open={changeOpen} onClose={() => setChangeOpen(false)} onChanged={load} />
+      <AgencyManualTransferSheet open={manualOpen} onClose={() => setManualOpen(false)} onChanged={load} />
     </AgencyPageShell>
   );
 }

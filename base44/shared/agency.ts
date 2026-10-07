@@ -75,6 +75,30 @@ export function assistantInviteText({ ownerName, ownerMemberId, agencyName, agen
 export const activeAssistant = (agency: any, userId: string) =>
   (agency?.assistants || []).find((row: any) => row.user_id === userId && row.status === 'active') || null;
 
+/**
+ * Kişinin asistanlığını sona erdirir: ajans kaydındaki asistan satırı kapatılır.
+ * Ajansın kendi üyesiyse üyeliği korunur ve rolü yayıncıya döner; dışarıdan
+ * asistan olarak katıldıysa ajans bağı tümüyle kaldırılır.
+ * Ban, hesap kapatma ve yönetici onaylı normal transferde kullanılır.
+ */
+export async function detachAssistant(base44: any, userId: string) {
+  const account = await base44.asServiceRole.entities.User.get(userId).catch(() => null);
+  if (!account?.agency_record_id || account.agency_role !== 'assistant') return false;
+  const agency = await base44.asServiceRole.entities.Agency.get(account.agency_record_id).catch(() => null);
+  if (!agency) return false;
+  const entry = (agency.assistants || []).find((row: any) => row.user_id === userId) || null;
+  const assistants = (agency.assistants || []).map((row: any) => (row.user_id === userId ? { ...row, status: 'removed' } : row));
+  await base44.asServiceRole.entities.Agency.update(agency.id, { assistants }).catch(() => {});
+  if (entry?.invite_id && entry.status === 'invited') {
+    await base44.asServiceRole.entities.AgencyInvite
+      .update(entry.invite_id, { status: 'cancelled', responded_at: new Date().toISOString() }).catch(() => {});
+  }
+  await base44.asServiceRole.entities.User.update(userId, entry?.from_agency
+    ? { agency_role: 'broadcaster' }
+    : { agency_code: '', agency_record_id: '', agency_name: '', agency_owner_id: '', agency_role: '', broadcaster_status: '' }).catch(() => {});
+  return true;
+}
+
 /** Yayıncıyı ajansa kazandıran asistan: kabul edilmiş davetten bulunur. */
 export async function broadcasterAssistantLink(base44: any, userId: string, agencyId: string) {
   const rows = await base44.asServiceRole.entities.AgencyInvite

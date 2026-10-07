@@ -45,6 +45,34 @@
       "type": "string",
       "default": ""
     },
+    "mode": {
+      "type": "string",
+      "enum": [
+        "dual",
+        "manual"
+      ],
+      "default": "dual"
+    },
+    "photo_uri": {
+      "type": "string",
+      "default": ""
+    },
+    "note": {
+      "type": "string",
+      "default": ""
+    },
+    "reviewed_by": {
+      "type": "string",
+      "default": ""
+    },
+    "reviewed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "admin_note": {
+      "type": "string",
+      "default": ""
+    },
     "status": {
       "type": "string",
       "enum": [

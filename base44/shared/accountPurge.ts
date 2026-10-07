@@ -2,6 +2,7 @@
 // ve kullanıcı kaydı silinir. Hem kullanıcının kendi silme talebi (delete-account) hem de
 // canlı görüntülü arama ihlali sonrası hesap kapatma (call-moderation) bu modülü kullanır.
 import { accountDeletedEmail } from './membershipEmails.ts';
+import { detachAssistant } from './agency.ts';
 
 export async function purgeAccount(base44: any, opts: {
   userId: string;
@@ -26,6 +27,10 @@ export async function purgeAccount(base44: any, opts: {
   await sr.SupportTicket.deleteMany({ user_id: userId }).catch(() => {});
   await sr.UserXp.deleteMany({ user_id: userId }).catch(() => {});
   await sr.RoomLevels.deleteMany({ user_id: userId }).catch(() => {});
+
+  // Yüz doğrulama kaydı hesabıyla birlikte silinir; ajans tarafında asistanlık kalmaz.
+  await sr.FaceCheck.deleteMany({ user_id: userId }).catch(() => {});
+  await detachAssistant(base44, userId).catch(() => {});
 
   // Oda içi izler: sohbet satırları, "yazıyor" kaydı, yöneticilik ve katılma istekleri
   await sr.RoomMessage.deleteMany({ user_id: userId }).catch(() => {});
