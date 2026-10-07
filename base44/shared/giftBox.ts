@@ -54,6 +54,16 @@ export function monthStartIso(now = new Date()) {
   return new Date(`${year}-${month}-01T00:00:00+03:00`).toISOString().slice(0, 19);
 }
 
+const TR_DAY = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Istanbul', year: 'numeric', month: '2-digit', day: '2-digit' });
+
+/**
+ * Bugünün başlangıcı (Türkiye saatiyle 00:00) — günlük listeler her gece 24:00'te sıfırlanır.
+ * Elmasın ay başı kuralı ayrı kalır; yalnızca günlük listeler bu eşiği kullanır.
+ */
+export function dayStartIso(now = new Date()) {
+  return new Date(`${TR_DAY.format(now)}T00:00:00+03:00`).toISOString().slice(0, 19);
+}
+
 /** Bir kaydın ait olduğu ayın başı — kademe aylık gruplandığı için anahtar olarak kullanılır. */
 function monthStartOf(created: any) {
   const date = new Date(String(created || ''));

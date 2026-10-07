@@ -1,7 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import { rateLimit, safeErrorResponse } from '../../shared/security.ts';
 import { ensureGiftWallet, giftBalance } from '../../shared/giftWallet.ts';
-import { COINS_PER_DOLLAR, findByMemberId, giftBoxSummary, giftDollarsFromK, monthStartIso } from '../../shared/giftBox.ts';
+import { COINS_PER_DOLLAR, findByMemberId, giftBoxSummary, giftDollarsFromK, dayStartIso } from '../../shared/giftBox.ts';
 import { loadQuotaTiers } from '../../shared/quotaLadder.ts';
 import { getUsdTry, tlFromDollars, tlRateFrom } from '../../shared/exchangeRate.ts';
 import { addLoadedCoins } from '../../shared/userLevels.ts';
@@ -143,23 +143,23 @@ export default async function (req: Request): Promise<Response> {
       coinRows(sentCoins, 'sent');
       coinRows(receivedCoins, 'received');
 
-      // Liste her ayın 1'inde sıfırlanır: yalnızca içinde bulunulan ayın hareketleri gösterilir.
-      const monthStart = monthStartIso();
-      const monthlyItems = items.filter((item: any) => String(item.created_date || '').slice(0, 19) >= monthStart);
-      monthlyItems.sort((a: any, b: any) => (String(a.created_date) < String(b.created_date) ? 1 : -1));
+      // Liste her gece 24:00'te (Türkiye saatiyle) sıfırlanır: yalnızca bugünün hareketleri gösterilir.
+      const dayStart = dayStartIso();
+      const dayItems = items.filter((item: any) => String(item.created_date || '').slice(0, 19) >= dayStart);
+      dayItems.sort((a: any, b: any) => (String(a.created_date) < String(b.created_date) ? 1 : -1));
 
-      return Response.json({ ok: true, items: monthlyItems.slice(0, per) });
+      return Response.json({ ok: true, items: dayItems.slice(0, per) });
     }
 
-    // Hediye gönderenler: her ayın 1'inde sıfırlanır — yalnızca bu ayın gönderimleri listelenir.
+    // Hediye gönderenler: her gece 24:00'te (Türkiye saatiyle) sıfırlanır — yalnızca bugünün gönderimleri listelenir.
     if (action === 'received') {
-      const monthStart = monthStartIso();
+      const dayStart = dayStartIso();
       const records = (await base44.asServiceRole.entities.GiftSend
         .filter({ recipient_id: user.id }, '-created_date', 2000)
         .catch(() => []))
         .filter((record) => {
           const created = String(record?.created_date || '');
-          return created ? created.slice(0, 19) >= monthStart : false;
+          return created ? created.slice(0, 19) >= dayStart : false;
         });
       const grouped = new Map();
       records.forEach((record) => {
@@ -214,10 +214,10 @@ export default async function (req: Request): Promise<Response> {
       const tlRate = tlRateFrom(market.rate);
       let totalK = 0;
       senders.forEach((item) => { totalK += item.total_k; });
-      // Bu ayın kazancı kota tablosundan gelir; her gönderenin payı elmas oranına göre dağıtılır.
-      const monthDollars = giftDollarsFromK(totalK, tiers);
+      // Bugünün kazancı kota tablosundan gelir; her gönderenin payı elmas oranına göre dağıtılır.
+      const dayDollars = giftDollarsFromK(totalK, tiers);
       senders.forEach((item) => {
-        item.dollars = totalK > 0 ? Math.round((monthDollars * item.total_k) / totalK) : 0;
+        item.dollars = totalK > 0 ? Math.round((dayDollars * item.total_k) / totalK) : 0;
         item.tl = tlFromDollars(item.dollars, tlRate);
         item.items.sort((a, b) => (String(a.created_date) < String(b.created_date) ? 1 : -1));
       });
@@ -227,8 +227,8 @@ export default async function (req: Request): Promise<Response> {
         ok: true,
         senders,
         total_k: Math.round(totalK * 100) / 100,
-        total_dollars: monthDollars,
-        total_tl: tlFromDollars(monthDollars, tlRate),
+        total_dollars: dayDollars,
+        total_tl: tlFromDollars(dayDollars, tlRate),
         tl_rate: tlRate,
       });
     }
