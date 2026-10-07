@@ -96,61 +96,113 @@ export default async function(req) {
       return Response.json({ call: created });
     }
 
-    // video-fee: görüntülü görüşme ücreti. Yalnızca erkek bir kullanıcı kadın bir kullanıcıyla
-    // görüntülü görüşürken 3.000 coin alınır; tutar karşı tarafın elmasına ve kotasına işlenir.
-    if (action === 'video-fee') {
-      const calleeId = String(body.callee_id || '');
-      if (!calleeId || calleeId === user.id) return Response.json({ error: 'Geçersiz kullanıcı.' }, { status: 400 });
+    // video-request: görüntülü görüşme isteği. Ücret yalnızca erkek → kadın görüşmede alınır ve
+    // KARŞI TARAF onayladığında tahsil edilir; onaylanmazsa isteyenden tek kuruş kesilmez.
+    if (action === 'video-request') {
+      const callId = String(body.call_id || '');
+      const call = await base44.asServiceRole.entities.DirectCall.get(callId).catch(() => null);
+      if (!call) return Response.json({ error: 'Arama bulunamadı.' }, { status: 404 });
+      if (call.caller_id !== user.id && call.callee_id !== user.id) return Response.json({ error: 'Bu aramaya erişiminiz yok.' }, { status: 403 });
+      if (call.status !== 'accepted') return Response.json({ error: 'Arama henüz başlamadı.' }, { status: 409 });
 
-      const [caller, callee] = await Promise.all([
-        base44.asServiceRole.entities.User.get(user.id).catch(() => null),
-        base44.asServiceRole.entities.User.get(calleeId).catch(() => null),
-      ]);
-      if (!callee) return Response.json({ error: 'Bu hesap bulunamadı.' }, { status: 404 });
-
+      const isCaller = call.caller_id === user.id;
+      const otherId = isCaller ? call.callee_id : call.caller_id;
       // Ücret yalnızca erkek → kadın görüşmede alınır; diğer tüm eşleşmeler ücretsizdir.
-      if (caller?.gender !== 'erkek' || callee.gender !== 'kadın') {
-        return Response.json({ ok: true, charged: 0, free: true });
+      const needsPayment = (isCaller ? call.caller_gender : call.callee_gender) === 'erkek'
+        && (isCaller ? call.callee_gender : call.caller_gender) === 'kadın';
+
+      // Ücret bu aramada bir kez ödenir: görüntüyü kapatıp açmak yeniden coin istemez.
+      if (call.video_fee_paid) return Response.json({ status: 'accepted', already_paid: true, call });
+
+      if (!needsPayment) {
+        const free = await base44.asServiceRole.entities.DirectCall.update(call.id, {
+          video_fee_status: 'accepted', video_fee_by: user.id, video_fee_paid: false,
+        }).catch(() => null);
+        return Response.json({ status: 'accepted', coins: 0, call: free || { ...call, video_fee_status: 'accepted' } });
       }
 
-      const rl = await rateLimit(base44, 'video-fee:' + user.id, user.id, 60, 60000);
+      const pending = await base44.asServiceRole.entities.DirectCall.update(call.id, {
+        video_fee_status: 'pending', video_fee_by: user.id, video_fee_paid: false,
+      }).catch(() => null);
+      return Response.json({
+        status: 'pending', coins: VIDEO_CALL_COINS, other_id: otherId,
+        call: pending || { ...call, video_fee_status: 'pending', video_fee_by: user.id },
+      });
+    }
+
+    // video-respond: gelen görüntülü isteği yanıtla. Onaylanırsa ücret isteyenden alınıp karşı
+    // tarafın elmasına ve kotasına işlenir; reddedilirse hiçbir coin kesilmez.
+    if (action === 'video-respond') {
+      const callId = String(body.call_id || '');
+      const accept = body.accept === true;
+      const call = await base44.asServiceRole.entities.DirectCall.get(callId).catch(() => null);
+      if (!call) return Response.json({ error: 'Arama bulunamadı.' }, { status: 404 });
+      if (call.caller_id !== user.id && call.callee_id !== user.id) return Response.json({ error: 'Bu aramaya erişiminiz yok.' }, { status: 403 });
+      const isPayer = !!call.video_fee_by && call.video_fee_by === user.id;
+      if (!call.video_fee_by || call.video_fee_status !== 'pending') return Response.json({ call });
+
+      // Red ya da isteği geri çekme: ücret alınmaz.
+      if (!accept) {
+        const rejected = await base44.asServiceRole.entities.DirectCall.update(call.id, { video_fee_status: 'rejected' });
+        return Response.json({ call: rejected, charged: 0 });
+      }
+
+      // Onayı yalnızca isteği alan taraf verir; isteyen kendi isteğini yalnızca geri çekebilir.
+      if (isPayer) return Response.json({ error: 'Onayı karşı taraf verir.' }, { status: 403 });
+      if (call.video_fee_paid) return Response.json({ call, charged: 0 });
+
+      const [payer, receiver] = await Promise.all([
+        base44.asServiceRole.entities.User.get(call.video_fee_by).catch(() => null),
+        base44.asServiceRole.entities.User.get(user.id).catch(() => null),
+      ]);
+      if (!payer || !receiver) return Response.json({ error: 'Hesap bulunamadı.' }, { status: 404 });
+
+      // Kural yanıt anında yeniden doğrulanır: ücret yalnızca erkek → kadın görüşmede alınır.
+      if (payer.gender !== 'erkek' || receiver.gender !== 'kadın') {
+        const free = await base44.asServiceRole.entities.DirectCall.update(call.id, { video_fee_status: 'accepted', video_fee_paid: false });
+        return Response.json({ call: free, charged: 0 });
+      }
+
+      const rl = await rateLimit(base44, 'video-fee:' + call.id, user.id, 20, 60000);
       if (!rl.allowed) return Response.json({ error: 'Çok hızlı denediniz, kısa süre sonra tekrar deneyin.' }, { status: 429 });
 
-      const wallet = await ensureGiftWallet(base44, { id: user.id, role: caller.role || user.role, full_name: caller.full_name || '' });
+      const wallet = await ensureGiftWallet(base44, { id: payer.id, role: payer.role, full_name: payer.full_name || '' });
       const balance = Math.max(0, Number(wallet.coins) || 0);
+      const payerName = payer.username || payer.full_name || 'Kullanıcı';
+      const receiverName = receiver.username || receiver.full_name || 'Kullanıcı';
       if (balance < VIDEO_CALL_COINS) {
+        await base44.asServiceRole.entities.DirectCall.update(call.id, { video_fee_status: 'rejected' }).catch(() => {});
         return Response.json({
-          error: `Yetersiz coin bakiyesi. Görüntülü görüşme için ${VIDEO_CALL_COINS.toLocaleString('tr-TR')} coin gerekir.`,
-          needed_coins: VIDEO_CALL_COINS,
-          available_coins: balance,
+          error: `${payerName} kişisinin coin bakiyesi yetersiz. Görüntülü görüşme için ${VIDEO_CALL_COINS.toLocaleString('tr-TR')} coin gerekir.`,
         }, { status: 400 });
       }
-      const spent = await base44.asServiceRole.entities.GameWallet.update(wallet.id, { coins: balance - VIDEO_CALL_COINS });
 
-      const callerName = caller.username || caller.full_name || meName;
-      const calleeName = callee.username || callee.full_name || 'Kullanıcı';
-      // Karşı tarafın elmas bölümü: 3.000 coin = 3K = 3.000 elmas, aylık kotaya da işler.
+      await base44.asServiceRole.entities.GameWallet.update(wallet.id, { coins: balance - VIDEO_CALL_COINS });
+      // 3.000 coin = 3K = 3.000 elmas: karşı tarafın elmas bölümüne ve aylık kotasına işlenir.
       await base44.asServiceRole.entities.GiftSend.create({
         room_id: '',
-        sender_id: user.id, sender_name: callerName,
-        recipient_id: callee.id, recipient_name: calleeName,
+        sender_id: payer.id, sender_name: payerName,
+        recipient_id: receiver.id, recipient_name: receiverName,
         gift_id: 'video-call', gift_name: 'Görüntülü Görüşme', gift_emoji: '📹',
         gift_image_url: '', k_value: VIDEO_CALL_K, total_k: VIDEO_CALL_K,
         recipient_count: 1, mode: 'single', status: 'success',
       }).catch(() => {});
-      await addGiftTotals(base44, { recipientIds: [callee.id], kPerRecipient: VIDEO_CALL_K }).catch(() => null);
+      await addGiftTotals(base44, { recipientIds: [receiver.id], kPerRecipient: VIDEO_CALL_K }).catch(() => null);
       // Elması kademeyi geçtiyse tamamlanan kota anında ödüllenir.
-      await syncQuotaRewards(base44, callee.id).catch(() => {});
+      await syncQuotaRewards(base44, receiver.id).catch(() => {});
+      const updated = await base44.asServiceRole.entities.DirectCall.update(call.id, {
+        video_fee_status: 'accepted', video_fee_paid: true,
+      });
       await base44.asServiceRole.entities.Notification.create({
-        user_id: callee.id,
+        user_id: receiver.id,
         title: '📹 Görüntülü görüşme',
         type: 'video_call_coins',
-        body: `${callerName}, seninle görüntülü görüşmek için ${VIDEO_CALL_COINS.toLocaleString('tr-TR')} coin gönderdi — elmaslarına eklendi.`,
+        body: `${payerName}, görüntülü görüşme için ${VIDEO_CALL_COINS.toLocaleString('tr-TR')} coin gönderdi — elmaslarına eklendi.`,
         link: '/profil',
-        ref_id: user.id,
+        ref_id: payer.id,
       }).catch(() => {});
 
-      return Response.json({ ok: true, charged: VIDEO_CALL_COINS, coins: Math.max(0, Number(spent?.coins) || 0) });
+      return Response.json({ call: updated, charged: VIDEO_CALL_COINS });
     }
 
     // active: kaçırılan gelen aramayı yakalamak için yedek sorgu

@@ -1,8 +1,6 @@
 import { useState } from 'react';
-import { ArrowLeft, Mic, MicOff, Phone, PhoneOff, SwitchCamera, Video, VideoOff, Volume2, VolumeX } from 'lucide-react';
+import { ArrowLeft, Loader2, Mic, MicOff, Phone, PhoneOff, SwitchCamera, Video, VideoOff, Volume2, VolumeX } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
-import { useToast } from '@/components/ui/use-toast';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import CallBubble from '@/components/friends/CallBubble';
 import CallModerationNotice from '@/components/friends/CallModerationNotice';
@@ -20,11 +18,9 @@ const formatDuration = (total) => {
 
 export default function DirectCallOverlay() {
   const navigate = useNavigate();
-  const { call, role, phase, seconds, muted, speaker, error, minimized, remoteMuted, cameraOn, remoteCameraOn, localVideoTrack, remoteVideoTrack, facing, moderationNotice, clearModerationNotice, minimizeCall, restoreCall, acceptCall, rejectCall, endCall, toggleMute, toggleSpeaker, toggleCamera, switchCamera } = useDirectCall();
+  const { call, role, phase, seconds, muted, speaker, error, minimized, remoteMuted, cameraOn, remoteCameraOn, localVideoTrack, remoteVideoTrack, facing, moderationNotice, clearModerationNotice, minimizeCall, restoreCall, acceptCall, rejectCall, endCall, toggleMute, toggleSpeaker, toggleCamera, switchCamera, startVideo, answerVideo, cancelVideo } = useDirectCall();
   // Kancalar erken çıkışların üstünde durur: arama başlarken durum değişse bile sıra bozulmaz.
-  const { toast } = useToast();
   const [feeAsk, setFeeAsk] = useState(false);
-  const [feeBusy, setFeeBusy] = useState(false);
   // Uygunsuz görüntü uyarısı arama kapandıktan sonra da ekranda kalır.
   if (moderationNotice) return <CallModerationNotice notice={moderationNotice} onClose={clearModerationNotice} />;
   if (!call || phase === 'idle') return null;
@@ -36,23 +32,26 @@ export default function DirectCallOverlay() {
   // Görüntülü görüşme yalnızca erkek → kadın aramada ücretlidir; her açılışta yeniden sorulur.
   const videoFeeDue = myGender === 'erkek' && other.gender === 'kadın';
 
+  const myId = role === 'callee' ? call.callee_id : call.caller_id;
+  // Görüntülü istek durumu: bekleyen istek, isteği yapan taraf ve bu aramada ödenmiş ücret.
+  const videoPending = call.video_fee_status === 'pending';
+  const videoMine = !!call.video_fee_by && call.video_fee_by === myId;
+  const videoRejected = call.video_fee_status === 'rejected' && videoMine;
+  const videoPaid = call.video_fee_paid === true;
+  const requesterName = call.video_fee_by === call.caller_id ? call.caller_name : call.callee_name;
+
   const pressVideo = () => {
-    if (cameraOn || !videoFeeDue) { toggleCamera(); return; }
-    setFeeAsk(true);
+    // Açıkken kapatmak ücretsizdir; bu aramada ücret ödendiyse yeniden coin istenmez.
+    if (cameraOn) { toggleCamera(); return; }
+    if (videoPending && videoMine) return;
+    if (videoFeeDue && !videoPaid) { setFeeAsk(true); return; }
+    startVideo();
   };
 
-  // Onaylanınca 3.000 coin karşı tarafa gönderilir; elmasına ve kotasına işlenir.
+  // İstek karşı tarafa iletilir: kabul ederse 3.000 coin gönderilir, reddederse hiç coin kesilmez.
   const confirmVideoFee = async () => {
-    if (feeBusy) return;
-    setFeeBusy(true);
-    try {
-      await base44.functions.invoke('direct-call', { action: 'video-fee', callee_id: other.id });
-      setFeeAsk(false);
-      toast({ title: '💎 3.000 coin gönderildi', description: `${other.name || 'Karşı taraf'} kişisinin elmasına eklendi.` });
-      toggleCamera();
-    } catch (feeError) {
-      toast({ title: 'Görüntülü görüşme başlatılamadı', description: feeError.response?.data?.error || feeError.message, variant: 'destructive' });
-    } finally { setFeeBusy(false); }
+    setFeeAsk(false);
+    await startVideo();
   };
 
   const statusText = phase === 'active'
@@ -124,7 +123,27 @@ export default function DirectCallOverlay() {
         )}
       </div>
       {error && <p className="relative px-6 pb-3 text-center text-xs text-red-400">{error}</p>}
+      {videoRejected && <p className="relative px-6 pb-2 text-center text-xs text-amber-400">Görüntülü istek reddedildi — coin gönderilmedi.</p>}
+      {videoPending && videoMine && (
+        <div className="relative mx-auto mb-3 flex items-center gap-2 rounded-full border border-white/20 bg-black/55 px-4 py-2 text-xs text-white/85">
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          <span>{other.name || 'Karşı taraf'} onayı bekleniyor…</span>
+          <button type="button" onClick={cancelVideo} className="rounded-full bg-white/10 px-2.5 py-1 font-bold text-white active:scale-95">Vazgeç</button>
+        </div>
+      )}
 
+      {videoPending && !videoMine ? (
+        <div className="relative mx-auto mb-4 w-full max-w-[440px] shrink-0 rounded-3xl border border-primary/40 bg-black/60 px-5 py-4 text-center">
+          <p className="text-sm font-bold text-white">{requesterName || 'Karşı taraf'} görüntülü görüşme istiyor</p>
+          <p className="mt-1 text-[11px] leading-snug text-white/70">
+            Kabul edersen görüntülü görüşme için 3.000 coin gönderilir ve elmaslarına eklenir.
+          </p>
+          <div className="mt-4 flex items-center justify-center gap-10">
+            <CallCircleButton tone="red" onClick={() => answerVideo(false)} label="Reddet"><PhoneOff className="h-7 w-7" /></CallCircleButton>
+            <CallCircleButton tone="green" onClick={() => answerVideo(true)} label="Kabul et" pulsing><Video className="h-7 w-7" /></CallCircleButton>
+          </div>
+        </div>
+      ) : (
       <div className="relative flex shrink-0 items-center justify-center gap-4 pb-12 sm:gap-9">
         {phase === 'incoming' ? (
           <>
@@ -146,12 +165,13 @@ export default function DirectCallOverlay() {
           </>
         )}
       </div>
+      )}
       <ConfirmDialog
         open={feeAsk}
         onOpenChange={setFeeAsk}
         title="Görüntülü görüşme"
-        description={`Görüntülü görüşmek için ${other.name || 'karşı tarafa'} 3.000 coin gönderilsin mi? Onayladığınızda 3.000 coin karşı tarafın elmasına ve kotasına işlenir.`}
-        confirmText={feeBusy ? 'Gönderiliyor...' : 'Onayla'}
+        description={`Görüntülü görüşme isteği ${other.name || 'karşı tarafa'} gönderilsin mi? Kabul ederse 3.000 coin gönderilir ve elmaslarına eklenir; reddederse coin kesilmez.`}
+        confirmText="İstek gönder"
         onConfirm={confirmVideoFee}
       />
     </section>

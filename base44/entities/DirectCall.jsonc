@@ -40,6 +40,24 @@
       "type": "string",
       "default": ""
     },
+    "video_fee_status": {
+      "type": "string",
+      "enum": [
+        "",
+        "pending",
+        "accepted",
+        "rejected"
+      ],
+      "default": ""
+    },
+    "video_fee_by": {
+      "type": "string",
+      "default": ""
+    },
+    "video_fee_paid": {
+      "type": "boolean",
+      "default": false
+    },
     "conversation_id": {
       "type": "string"
     },
