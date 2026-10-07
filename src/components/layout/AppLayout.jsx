@@ -14,6 +14,9 @@ import { triggerBanNotice } from '@/lib/banNotice';
 import { useToast } from '@/components/ui/use-toast';
 import MessageRealtimeProvider from '@/components/messages/MessageRealtimeProvider';
 import RoutePreloader from '@/components/layout/RoutePreloader';
+import TabStack from '@/components/layout/TabStack';
+import { matchTabPath } from '@/lib/tabPaths';
+import { motion, useReducedMotion } from 'framer-motion';
 import { isBasicPath } from '@/lib/access';
 import { isMultiDeviceExempt } from '@/lib/sessionPolicy';
 // Yüz doğrulaması uygulamaya girişte sorulmaz: yalnızca elmaslar/bakiye bölümünde istenir.
@@ -32,6 +35,9 @@ export default function AppLayout() {
   // RoleCelebrationOverlay renders a full-screen animated character when role changes
   const isRoom = pathname.startsWith('/oda/') || pathname.startsWith('/sesli-oda/') || pathname === '/sesli-oda-kur';
   const isDarkSurface = pathname === '/' || pathname === '/profil' || pathname.startsWith('/kullanici/');
+  // Alt menü sekmeleri bellekte kalır: sekme değişiminde sayfa değişmez, görünürlük değişir.
+  const activeTabPath = matchTabPath(pathname);
+  const reduceMotion = useReducedMotion();
 
   // Bakım modu: admin olmayan kullanıcılar bakım ekranı görür
   const isAdmin = user?.role === 'admin';
@@ -196,7 +202,19 @@ export default function AppLayout() {
       <main className="mx-auto w-full min-w-0 max-w-[1600px] overflow-x-clip pt-[max(env(safe-area-inset-top),0.5rem)] pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pt-16 lg:pb-8" style={{ touchAction: 'pan-y' }}>
         {/* Sayfa paketi yüklenirken kabuk (menü, sohbetler, bildirimler) yerinde kalır. */}
         <Suspense fallback={null}>
-          <Outlet />
+          {activeTabPath ? (
+            <TabStack activePath={activeTabPath} />
+          ) : (
+            /* Sayfa geçişi mobil uygulama hissiyle akar: hafif aşağıdan yukarı + belirginlik. */
+            <motion.div
+              key={pathname}
+              initial={reduceMotion ? false : { opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: reduceMotion ? 0 : 0.24, ease: 'easeOut' }}
+            >
+              <Outlet />
+            </motion.div>
+          )}
         </Suspense>
       </main>
       <BottomNav />

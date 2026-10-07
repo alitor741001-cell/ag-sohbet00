@@ -31,6 +31,9 @@ const normalizeId = (value) =>
     .replace(/[^a-z0-9]/g, '')
     .replace(/^tr(?=\d)/, '');
 
+// Aşağı çekerek yenileme: bu mesafeye ulaşınca liste tazelenir.
+const PULL_THRESHOLD = 55;
+
 /**
  * Ana sayfa keşfet bölümü: en üstte arkadaş şeridi, altında koltuklu odalar ve
  * film odaları sekmeleri, oda numarası / üye kimliği araması ve oda kartları.
@@ -70,6 +73,53 @@ export default function RoomDiscovery({ shortcuts = null }) {
   // Oda açıldığı anda listelenir; çevrim içi işaretçisi beklenmez.
   // Görünürlük yalnızca odanın aktif ve gizlenmemiş olmasına bağlıdır.
   const rooms = allRooms;
+
+  // Aşağı çekerek yenileme: kullanıcı listeyi beklemeden tazeleyebilir.
+  const [refreshToken, setRefreshToken] = useState(0);
+  const [pullDistance, setPullDistance] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
+  const pullStartY = useRef(null);
+  const pullRef = useRef(0);
+  const refreshTimer = useRef(null);
+
+  const applyPull = (value) => {
+    // Çok küçük farklar için yeniden çizim yapılmaz: liste akıcı kalır.
+    if (Math.abs(value - pullRef.current) < 4 && value !== 0) return;
+    pullRef.current = value;
+    setPullDistance(value);
+  };
+
+  const triggerRefresh = () => {
+    setRefreshing(true);
+    applyPull(48);
+    // Listeyi baştan okur: hafızadaki liste ve canlı kayıtlar birlikte tazelenir.
+    setRefreshToken((token) => token + 1);
+    window.clearTimeout(refreshTimer.current);
+    refreshTimer.current = window.setTimeout(() => {
+      setRefreshing(false);
+      applyPull(0);
+    }, 1200);
+  };
+
+  const onPullStart = (event) => {
+    if (refreshing || event.touches.length !== 1) return;
+    const scroller = document.scrollingElement || document.documentElement;
+    // Yalnızca sayfanın en üstünden başlayan hareket yenileme sayılır.
+    pullStartY.current = scroller.scrollTop > 2 ? null : event.touches[0].clientY;
+  };
+
+  const onPullMove = (event) => {
+    if (pullStartY.current == null) return;
+    const delta = event.touches[0].clientY - pullStartY.current;
+    applyPull(delta <= 0 ? 0 : Math.min(delta * 0.45, 88));
+  };
+
+  const onPullEnd = () => {
+    if (pullStartY.current == null) return;
+    pullStartY.current = null;
+    if (pullRef.current >= PULL_THRESHOLD) triggerRefresh();
+    else applyPull(0);
+  };
 
   useEffect(() => {
     let alive = true;
@@ -159,10 +209,11 @@ export default function RoomDiscovery({ shortcuts = null }) {
     return () => {
       alive = false;
       if (flushTimer) window.clearTimeout(flushTimer);
+      window.clearTimeout(refreshTimer.current);
       window.clearInterval(refresh);
       unsubscribe();
     };
-  }, [user?.id, user?.role]);
+  }, [user?.id, user?.role, refreshToken]);
 
   // Liste ve sahip profilleri hafızada tutulur: sayfa değişip geri gelindiğinde veri hazır olur.
   useEffect(() => {
@@ -294,7 +345,14 @@ export default function RoomDiscovery({ shortcuts = null }) {
   const items = searching ? searched : list;
 
   return (
-    <section>
+    <section onTouchStart={onPullStart} onTouchMove={onPullMove} onTouchEnd={onPullEnd} onTouchCancel={onPullEnd}>
+      {/* Aşağı çekince açılan tazeleme göstergesi. */}
+      <div className="flex items-center justify-center overflow-hidden" style={{ height: pullDistance }}>
+        <span className={`flex items-center gap-1.5 pb-2 text-[11px] font-bold text-premium-gold ${pullDistance ? '' : 'opacity-0'}`}>
+          <Loader2 className={`h-3.5 w-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+          {refreshing ? 'Odalar yenileniyor…' : pullDistance >= PULL_THRESHOLD ? 'Bırak, yenile' : 'Yenilemek için çek'}
+        </span>
+      </div>
       <div className="mb-3 flex items-center gap-1.5 rounded-2xl border border-premium-gold/20 bg-black/25 p-1 backdrop-blur">
         <button
           type="button"

@@ -8,6 +8,7 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import UserBadge from '@/components/admin/UserBadge';
 import { statusLabel, STATUS_COLORS } from '@/lib/supportStatus';
 import SupportAttachment from '@/components/support/SupportAttachment';
+import SupportStatusSelect from '@/components/admin/SupportStatusSelect';
 
 export default function AdminSupport() {
   const { user: admin } = useCurrentUser();
@@ -97,9 +98,7 @@ export default function AdminSupport() {
             <div className="px-4 py-3 border-b border-border flex items-center justify-between gap-2">
               <div className="min-w-0"><p className="font-semibold truncate">{active.subject}</p><div className="mt-1"><UserBadge userId={active.user_id} name={active.user_name} avatar={profiles[active.user_id]?.avatar} memberId={profiles[active.user_id]?.member_id} size="sm" /></div><p className="text-xs text-muted-foreground mt-1">{active.category}</p></div>
               <div className="flex items-center gap-2">
-                <select value={active.status} onChange={(e) => setStatus(e.target.value)} className="bg-secondary rounded-lg px-2 py-1 text-xs">
-                  <option value="new">Yeni</option><option value="reviewing">İnceleniyor</option><option value="answered">Cevaplandı</option><option value="closed">Kapatıldı</option>
-                </select>
+                <SupportStatusSelect value={active.status} onChange={setStatus} />
                 <button onClick={() => setConfirm('close')} className="p-2 rounded-lg bg-amber-500/20 text-amber-400" title="Kapat ve mesajları sil"><XCircle className="w-4 h-4" /></button>
                 <button onClick={() => setConfirm('delete')} className="p-2 rounded-lg bg-red-500/20 text-red-400" title="Sil"><Trash2 className="w-4 h-4" /></button>
               </div>

@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useLocation, useNavigationType } from "react-router-dom";
+import { TAB_PATHS } from "@/lib/tabPaths";
 
 const getHashId = (hash) => {
   const rawId = hash.slice(1);
@@ -17,6 +18,9 @@ export default function ScrollToTop() {
 
   useEffect(() => {
     if (navigationType === "POP") return;
+
+    // Alt menü sekmeleri bellekte kalır: başa dönülmez, kaydırma konumunu sekme yığını geri getirir.
+    if (TAB_PATHS.includes(pathname)) return;
 
     if (hash) {
       const id = getHashId(hash);

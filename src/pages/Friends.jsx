@@ -83,6 +83,12 @@ export default function Friends() {
   const [selected, setSelected] = useState(null);
   const [search, setSearch] = useState('');
 
+  // Sekme bellekte kaldığı için adresteki görünüm değişikliği de uygulanır: alt menüden
+  // "Sohbet"e basıldığında mesaj listesi açılır, açık duran sohbet bozulmaz.
+  useEffect(() => {
+    if (params.get('view') === 'chats') setView((current) => (current === 'chat' ? current : 'chats'));
+  }, [params]);
+
   useEffect(() => {
     const chatId = params.get('chat');
     if (!chatId) return;
