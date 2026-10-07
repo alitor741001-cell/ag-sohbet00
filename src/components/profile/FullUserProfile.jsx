@@ -10,6 +10,7 @@ import { agencyApi } from '@/lib/agency';
 import ProfileHeroBlock from '@/components/profile/ProfileHeroBlock';
 import ProfileStatsRow from '@/components/profile/ProfileStatsRow';
 import ProfileIdentityBlock from '@/components/profile/ProfileIdentityBlock';
+import { AccountStatusMark, getAccountState } from '@/components/friends/AccountStatusAvatar';
 import { broadcasterState } from '@/lib/broadcaster';
 
 const REPORT_REASONS = ['Spam', 'Taciz', 'Uygunsuz İçerik', 'Diğer'];
@@ -43,7 +44,7 @@ export default function FullUserProfile({
     setRelation('');
     base44.functions.invoke('user-profile', { user_id: userId })
       .then((response) => { if (alive) setProfile(response?.data || {}); })
-      .catch(() => { if (alive) setProfile({}); });
+      .catch((error) => { if (alive) setProfile(error?.response?.status === 404 ? { account_status: 'deleted' } : {}); });
     if (user?.id && userId !== user.id) {
       base44.entities.Friendship.filter({ members: userId }, '-created_date', 50)
         .then((rows) => {
@@ -62,6 +63,8 @@ export default function FullUserProfile({
     ? ROOM_BLUE
     : genderPalette(profile?.gender, hidden);
   const loading = !hidden && !profile;
+  // Engellenen, askıya alınan ya da silinen hesapta kart normal profil yerine durum işaretini gösterir.
+  const accountState = hidden ? null : getAccountState(profile);
   const shownName = hidden ? (name || 'Gizli Kullanıcı') : (profile?.username || profile?.full_name || name || 'Kullanıcı');
   const shownAvatar = hidden ? HIDDEN_AVATAR_URL : (profile?.avatar || avatar || '');
   const memberId = !hidden && profile?.member_id && profile.member_id !== '-' ? String(profile.member_id) : '';
@@ -171,6 +174,16 @@ export default function FullUserProfile({
   const content = loading ? (
           <div className="flex flex-1 items-center justify-center py-24">
             <Loader2 className="h-6 w-6 animate-spin" style={{ color: palette.accent }} />
+          </div>
+        ) : accountState ? (
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <AccountStatusMark
+              status={accountState.status}
+              avatar={profile?.avatar}
+              name={profile?.username || profile?.full_name || name}
+            />
+            <h2 className="mt-4 text-lg font-black text-white">{accountState.name}</h2>
+            <p className="mx-auto mt-2 max-w-[300px] text-xs leading-snug text-white/70">{accountState.message}</p>
           </div>
         ) : (
           <>

@@ -14,7 +14,7 @@ import ProfileRoomActions from '@/components/profile/ProfileRoomActions';
 import useXp from '@/hooks/useXp';
 import XpAvatar from '@/components/xp/XpAvatar';
 import XpStatsCard from '@/components/xp/XpStatsCard';
-import AccountStatusAvatar, { getAccountState } from '@/components/friends/AccountStatusAvatar';
+import { AccountStatusMark, getAccountState } from '@/components/friends/AccountStatusAvatar';
 import { daysInApp } from '@/lib/xp';
 
 export default function UserProfile({ userId, roomIdOverride, onBack, onMessage, embedded = false }) {
@@ -86,23 +86,11 @@ export default function UserProfile({ userId, roomIdOverride, onBack, onMessage,
   if (accountState && !isSelf) return (
     <div className={`dark ${embedded ? 'fixed inset-0 z-[100] bg-black pt-[env(safe-area-inset-top)]' : 'bg-black'} flex min-h-screen items-center justify-center p-4 text-white`}>
       <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 text-center">
-        {accountState.status === 'banned' ? (
-          <div className="mx-auto w-fit">
-            <div className="relative mx-auto h-28 w-28">
-              {profile?.avatar ? (
-                <Image src={profile.avatar} className="h-28 w-28 rounded-full object-cover grayscale" fittingType="fill" />
-              ) : (
-                <div className="flex h-28 w-28 items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent text-4xl font-bold">
-                  {(profile?.username || profile?.full_name || '?')[0]}
-                </div>
-              )}
-              <span className="absolute inset-0 flex items-center justify-center rounded-full bg-black/55 text-4xl">🚫</span>
-            </div>
-            <p className="mt-2 text-[11px] font-black tracking-[0.3em] text-destructive">BANNED</p>
-          </div>
-        ) : (
-          <AccountStatusAvatar status={profile.account_status} className="mx-auto h-28 w-28" />
-        )}
+        <AccountStatusMark
+          status={accountState.status}
+          avatar={profile?.avatar}
+          name={profile?.username || profile?.full_name || accountState.name}
+        />
         <h1 className="mt-4 text-xl font-bold">{accountState.name}</h1>
         <p className="mt-2 text-sm text-destructive">{accountState.message}</p>
         <button onClick={() => onBack ? onBack() : navigate(-1)} className="mt-5 rounded-lg bg-secondary px-5 py-2 text-sm font-semibold">Geri</button>
