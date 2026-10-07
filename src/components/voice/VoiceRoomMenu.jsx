@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Armchair, Eraser, Eye, EyeOff, Film, Hash, Lock, MessageSquareOff, Music, Play, ScrollText, Share2, Shield, Square, Unlock, UserPlus } from 'lucide-react';
+import { Armchair, Eraser, Eye, EyeOff, Film, Hash, Lock, MessageSquareOff, Music, Play, ScrollText, Share2, Shield, Square, Unlock } from 'lucide-react';
 import BoardToggleRow from '@/components/voice/BoardToggleRow';
 import SeatCountPicker from '@/components/voice/SeatCountPicker';
 import VoiceMenuTile from '@/components/voice/VoiceMenuTile';
@@ -14,7 +14,7 @@ const Panel = ({ children, hint }) => (
 );
 
 /** "…" menüsü: yuvarlak ikon ızgarası — kilit, gizlilik, koltuk, sayaç, sohbet temizleme, sohbet yasağı ve kayıt defteri. */
-export default function VoiceRoomMenu({ open, onClose, room, userId, participants = [], isOwner, isAdmin, canMod, onSeatCount, onSetPassword, onToggleHidden, onToggleMod, onInvite, onShare, boardActive, onToggleBoard, onBoardSettings, onClearChat, onToggleChatBan, onOpenLog, onExitVoiceMode, musicPlaying, onOpenMusic }) {
+export default function VoiceRoomMenu({ open, onClose, room, userId, participants = [], isOwner, isAdmin, canMod, onSeatCount, onSetPassword, onToggleHidden, onToggleMod, onShare, boardActive, onToggleBoard, onBoardSettings, onClearChat, onToggleChatBan, onOpenLog, onExitVoiceMode, musicPlaying, onOpenMusic }) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [panel, setPanel] = useState(null);
@@ -71,15 +71,6 @@ export default function VoiceRoomMenu({ open, onClose, room, userId, participant
   return (
     <VoiceSheet open={open} onClose={onClose} title="Oda ayarları">
       <div className="grid grid-cols-4 gap-x-2 gap-y-4">
-        {/* Davet herkes için açık: oda sahibi, yöneticiler ve izleyiciler arkadaşını davet edebilir. */}
-        {onInvite && (
-          <VoiceMenuTile
-            icon={UserPlus}
-            label="Davet et"
-            tone="green"
-            onClick={() => { onClose(); onInvite(); }}
-          />
-        )}
         {/* Yayını paylaş: seçilen arkadaşlara özel sohbetten katılma kartı gönderilir. */}
         {onShare && (
           <VoiceMenuTile

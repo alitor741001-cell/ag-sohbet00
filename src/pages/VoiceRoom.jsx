@@ -80,7 +80,6 @@ export default function VoiceRoom() {
   const [viewerOpen, setViewerOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [musicOpen, setMusicOpen] = useState(false);
-  const [inviteOpen, setInviteOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [seatIndex, setSeatIndex] = useState(null);
   const [profileUserId, setProfileUserId] = useState(null);
@@ -573,14 +572,6 @@ export default function VoiceRoom() {
     invokeVoice({ action: 'seat-mute', seat_index: index, muted: !seats[index]?.muted });
   };
 
-  const handleInvite = () => {
-    if (!seated && !canMod) {
-      toast({ title: 'Davet etmek için bir koltuğa otur' });
-      return;
-    }
-    setInviteOpen(true);
-  };
-
   // Koltuk daveti: hedef koltuk verilirse o koltuğa, verilmezse ilk boş koltuğa gider.
   const inviteToSeat = async (targetId, index) => {
     if (!targetId) return;
@@ -597,12 +588,6 @@ export default function VoiceRoom() {
   };
 
   const declineSeatInvite = () => { invokeVoice({ action: 'seat-invite-clear' }); };
-
-  const sendInvites = async (ids) => {
-    const ok = await invokeVoice({ action: 'invite', target_ids: ids });
-    if (ok) { toast({ title: 'Davet gönderildi', description: `${ids.length} kişi davet edildi.` }); setInviteOpen(false); }
-    return ok;
-  };
 
   // Yayını paylaş: seçilen arkadaşlara özel sohbetten katılma kartı gönderilir.
   // Paylaşılan kişiler oda gizli olsa da girebilir.
@@ -1152,7 +1137,6 @@ export default function VoiceRoom() {
         onSetPassword={handleSetPassword}
         onToggleHidden={handleToggleHidden}
         onToggleMod={handleToggleMod}
-        onInvite={handleInvite}
         onShare={canMod ? () => setShareOpen(true) : null}
         boardActive={boardActive}
         onToggleBoard={toggleBoard}
@@ -1259,8 +1243,6 @@ export default function VoiceRoom() {
         initialUserId={dmUserId}
         onClose={() => { setDmOpen(false); setDmUserId(null); }}
       />
-
-      <InviteSheet open={inviteOpen} onClose={() => setInviteOpen(false)} onInvite={sendInvites} />
 
       {/* Yayını paylaş: arkadaşlar tek tek seçilir, oda gizliyse giriş izni de verilir. */}
       <InviteSheet
