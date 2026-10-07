@@ -3,7 +3,9 @@ import { base44 } from '@/api/base44Client';
 import subscribeEntity from '@/components/data/entitySubscriptions';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
-import { Headset, X } from 'lucide-react';
+import { ArrowLeft, Headset, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import useKeyboardInset from '@/hooks/useKeyboardInset';
 import { Image } from '@/components/ui/image';
 import SupportAttachment from '@/components/support/SupportAttachment';
 import SupportComposer from '@/components/support/SupportComposer';
@@ -20,6 +22,9 @@ const subjectFrom = (text, mediaType) =>
 export default function Support() {
   const { user } = useCurrentUser();
   const { toast } = useToast();
+  const navigate = useNavigate();
+  // Özel sohbetteki gibi: klavye açılınca panel yukarı kayar.
+  const keyboardInset = useKeyboardInset();
   const [ticket, setTicket] = useState(null);
   const [messages, setMessages] = useState([]);
   const [lightbox, setLightbox] = useState(null);
@@ -112,22 +117,29 @@ export default function Support() {
 
   if (!user) return <div className="flex h-[60vh] items-center justify-center text-sm text-muted-foreground">Yükleniyor...</div>;
 
+  // Özel sohbet gibi tam ekran panel: alt menünün üzerini kaplar, geri okuyla kapanır.
   return (
-    <div className="mx-auto flex max-w-2xl flex-col px-4 py-4 sm:px-6">
-      <h1 className="mb-3 flex items-center gap-2 text-xl font-extrabold">
-        <Headset className="h-5 w-5 text-primary" /> Canlı Destek
-      </h1>
-      <div className="flex h-[calc(100dvh-13rem)] flex-col overflow-hidden rounded-xl border border-border bg-card sm:h-[62vh]">
-        <div className="flex items-center gap-2.5 border-b border-border px-4 py-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full" style={{ background: 'linear-gradient(135deg, #c62828, #f2ce6b)' }}>
-            <Headset className="h-4 w-4 text-white" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-bold">Destek Ekibi</p>
-            <p className="text-[11px] text-green-500">● Çevrimiçi — hemen yazabilirsiniz</p>
-          </div>
-          {ticket && <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${STATUS_COLORS[ticket.status] || ''}`}>{statusLabel(ticket.status)}</span>}
+    <div
+      className="standalone-private-chat dark fixed inset-0 z-[60] flex min-h-0 flex-col overflow-hidden bg-anthracite text-white"
+      style={{ transform: keyboardInset ? `translateY(-${keyboardInset}px)` : undefined, transition: 'transform 180ms ease-out' }}
+    >
+      <div className="flex items-center gap-2.5 border-b border-[#f2ce6b]/25 px-4 pb-3 pt-[max(env(safe-area-inset-top),0.75rem)]">
+        <button
+          onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/'))}
+          aria-label="Geri"
+          className="shrink-0 p-1 text-white/60 hover:text-white"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </button>
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full" style={{ background: 'linear-gradient(135deg, #c62828, #f2ce6b)' }}>
+          <Headset className="h-4 w-4 text-white" />
         </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-bold">Canlı Destek</p>
+          <p className="text-[11px] text-green-400">● Çevrimiçi — hemen yazabilirsiniz</p>
+        </div>
+        {ticket && <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${STATUS_COLORS[ticket.status] || ''}`}>{statusLabel(ticket.status)}</span>}
+      </div>
 
         <div className="flex-1 space-y-2 overflow-y-auto p-3">
           {messages.length === 0 && (
@@ -151,7 +163,6 @@ export default function Support() {
           onSendText={(text) => push({ text })}
           onSendMedia={(file_url, media_type) => push({ text: '', file_url, media_type })}
         />
-      </div>
 
       {lightbox && (
         <div onClick={() => setLightbox(null)} className="fixed inset-0 z-[110] flex items-center justify-center bg-black/90 p-4">

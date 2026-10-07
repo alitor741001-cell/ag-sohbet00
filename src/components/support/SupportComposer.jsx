@@ -67,7 +67,7 @@ export default function SupportComposer({ onSendText, onSendMedia, busy = false 
   };
 
   return (
-    <form onSubmit={submit} className="flex items-center gap-1.5 border-t border-border p-3">
+    <form onSubmit={submit} className="flex shrink-0 items-center gap-1.5 border-t border-border p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
       <div className="relative shrink-0">
         <button
           type="button"

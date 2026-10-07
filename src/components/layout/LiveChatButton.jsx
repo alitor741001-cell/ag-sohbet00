@@ -9,6 +9,7 @@ import SupportAvatarButton, { SUPPORT_AVATAR_URL } from '@/components/layout/Sup
 import SupportAttachment from '@/components/support/SupportAttachment';
 import ReportDetail from '@/components/support/ReportDetail';
 import { createPortal } from 'react-dom';
+import useKeyboardInset from '@/hooks/useKeyboardInset';
 
 export default function LiveChatButton({ placement = 'top' }) {
   const { user } = useCurrentUser();
@@ -42,6 +43,8 @@ export default function LiveChatButton({ placement = 'top' }) {
   const [activeReport, setActiveReport] = useState(null);
 
   const isSearching = query.trim().length > 0;
+  // Sanal klavye açılınca tam ekran panel yukarı kayar: yazma alanı görünür kalır.
+  const keyboardInset = useKeyboardInset();
 
   // Açık destek talepleri + anlık yeni talep bildirimi
   useEffect(() => {
@@ -270,7 +273,10 @@ export default function LiveChatButton({ placement = 'top' }) {
 
       {/* Panel gövdeye taşınır: üst katmanlardaki bulanıklık/dönüşüm onu kırpamaz. */}
       {open && createPortal(
-        <div className={`fixed right-3 z-[70] w-[360px] max-w-[calc(100vw-1.5rem)] bg-[#141414] border border-[#2a2a2a] rounded-2xl shadow-2xl flex flex-col ${placement === 'dock' ? 'bottom-[calc(4.75rem+env(safe-area-inset-bottom))]' : 'top-[calc(4rem+max(env(safe-area-inset-top),1.5rem))] lg:top-20'}`} style={{ height: '560px', maxHeight: placement === 'dock' ? 'calc(100dvh - 7rem)' : undefined }}>
+        // Tam ekran panel: özel sohbet gibi ekranın tamamını kaplar, masaüstünde ortalanır.
+        <div className="fixed inset-0 z-[80] flex flex-col bg-black/85 sm:items-center sm:justify-center sm:p-6 sm:backdrop-blur-sm"
+          style={{ transform: keyboardInset ? `translateY(-${keyboardInset}px)` : undefined, transition: 'transform 180ms ease-out' }}>
+          <div className="relative flex h-full min-h-0 w-full flex-col overflow-hidden bg-[#141414] text-white pt-[env(safe-area-inset-top)] sm:h-[86vh] sm:w-[min(1100px,94vw)] sm:rounded-2xl sm:border sm:border-[#2a2a2a] sm:pt-0 sm:shadow-2xl">
           <div className="px-3 py-2.5 border-b border-[#2a2a2a] flex items-center gap-2">
             <div className="w-8 h-8 rounded-full overflow-hidden border border-purple-500/40 shrink-0">
               <img src={SUPPORT_AVATAR_URL} alt="" className="w-full h-full object-cover" />
@@ -339,7 +345,7 @@ export default function LiveChatButton({ placement = 'top' }) {
                     ))}
                     <div ref={endRef} />
                   </div>
-                  <form onSubmit={send} className="p-2 border-t border-[#2a2a2a] flex gap-1.5">
+                  <form onSubmit={send} className="flex gap-1.5 border-t border-[#2a2a2a] p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] sm:pb-2">
                     <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Cevap yaz..." className="flex-1 bg-[#0a0a0a] border border-[#2a2a2a] rounded-full px-3 py-1.5 text-xs text-white outline-none focus:border-purple-500 min-w-0" />
                     <button type="submit" className="p-2 rounded-full bg-purple-500 text-white shrink-0"><Send className="w-3.5 h-3.5" /></button>
                   </form>
@@ -439,6 +445,7 @@ export default function LiveChatButton({ placement = 'top' }) {
               </div>
             </div>
           )}
+          </div>
         </div>,
         document.body
       )}
