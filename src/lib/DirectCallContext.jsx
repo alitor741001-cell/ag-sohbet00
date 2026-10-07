@@ -107,6 +107,9 @@ export default function DirectCallProvider({ children }) {
   // Onay bekleyen görüntülü istekte kamera hazır tutulur, onay gelince yayına girer.
   const pendingCameraRef = useRef(null);
   const facingRef = useRef('user');
+  // Kaydı beklemeden hemen okutmak için: bağlantı olayları (karşı tarafın odaya girmesi
+  // ya da çıkması) bu fonksiyonu tetikler ve arama durumu anında yerine oturur.
+  const checkNowRef = useRef(null);
 
   useEffect(() => { userRef.current = user; }, [user]);
   useEffect(() => { phaseRef.current = phase; }, [phase]);
@@ -244,10 +247,15 @@ export default function DirectCallProvider({ children }) {
       participant.audioTrackPublications.forEach((publication) => { if (publication.track) live = true; });
     });
     if (!live) return;
+    // Cevapla birlikte zil sesi de susar: ekran açılırken zilin çalmaya devam ettiği
+    // durum tam olarak buydu.
+    stopRingtone();
     phaseRef.current = 'active';
     setPhase('active');
     armOutputs(true);
-  }, [armOutputs]);
+    // Kayıt da hemen okunur: görüntülü görüşme ve süre sayaç doğru anda başlar.
+    checkNowRef.current?.();
+  }, [armOutputs, stopRingtone]);
 
   // --- Bağlantı ---
 
@@ -333,6 +341,9 @@ export default function DirectCallProvider({ children }) {
             markAnswered();
           });
           room.on(engine.RoomEvent.Reconnected, () => { attachAllRemoteAudio(); attachAllRemoteVideo(); markAnswered(); });
+          // Karşı taraf görüşmeden ayrıldıysa (kapatma ya da reddetme) kayıt anında okunur:
+          // arama karşı tarafta saniyeler beklemeden kapanır; kararı sunucu kaydı verir.
+          room.on(engine.RoomEvent.ParticipantDisconnected, () => { checkNowRef.current?.(); });
           // Karşı tarafın mikrofon durumu yayın bilgisi üzerinden yakalanır. Görüntüde
           // "susturulma" yok sayılır: kamera kapatılınca yayın tamamen kaldırılır ve sahne o an düşer.
           room.on(engine.RoomEvent.TrackMuted, (publication, participant) => {
@@ -439,6 +450,8 @@ export default function DirectCallProvider({ children }) {
       // ekranında kilitli kalırken burada yanlış bir süre işlemesin.
       if (!record || record.status !== 'accepted') {
         setError(response.data?.error || 'Aramaya yanıt verilemedi.');
+        // Kayıt açık kalmasın: açık kalan kayıt karşı tarafın zilini gereksiz çaldırır.
+        base44.functions.invoke('direct-call', { action: 'reject', call_id: current.id }).catch(() => {});
         teardown();
         return;
       }
@@ -459,7 +472,9 @@ export default function DirectCallProvider({ children }) {
   const endCall = useCallback(() => {
     const current = callRef.current;
     if (current) {
-      const action = roleRef.current === 'caller' && current.status === 'ringing' ? 'cancel' : 'end';
+      // Zil ekranında kapatmak iptal, görüşmede kapatmak bitirmedir; kayıt gecikse de
+      // doğru işlem gitsin diye ekrandaki durum (faz) esas alınır.
+      const action = roleRef.current === 'caller' && phaseRef.current === 'outgoing' ? 'cancel' : 'end';
       base44.functions.invoke('direct-call', { action, call_id: current.id }).catch(() => {});
     }
     teardown();
@@ -727,18 +742,29 @@ export default function DirectCallProvider({ children }) {
       if (document.visibilityState !== 'visible') return;
       if (phaseRef.current === 'idle') syncActive(); else refreshCall();
     };
+    // Bağlantı olayları (karşı tarafın girmesi/çıkması) kaydı anında okutur.
+    checkNowRef.current = refreshCall;
     document.addEventListener('visibilitychange', onVisible);
     // Yedek yoklama 15sn'de bir; sekme arkadayken çağrılmaz.
     const poll = setInterval(() => {
       if (phaseRef.current === 'idle' && document.visibilityState !== 'hidden') syncActive();
     }, 15000);
-    const live = setInterval(() => { if (phaseRef.current !== 'idle') refreshCall(); }, 5000);
+    // Zil çalarken 2,5 saniyede bir okunur: kabul/red karşı tarafta anında belirir.
+    const ringPoll = setInterval(() => {
+      if (phaseRef.current === 'incoming' || phaseRef.current === 'outgoing') refreshCall();
+    }, 2500);
+    // Görüşme sürerken 5 saniyede bir yedek yoklama; asıl kapanma sinyali bağlantıdan gelir.
+    const livePoll = setInterval(() => {
+      if (phaseRef.current === 'active') refreshCall();
+    }, 5000);
 
     return () => {
       unsubscribe();
       document.removeEventListener('visibilitychange', onVisible);
       clearInterval(poll);
-      clearInterval(live);
+      clearInterval(ringPoll);
+      clearInterval(livePoll);
+      if (checkNowRef.current === refreshCall) checkNowRef.current = null;
     };
   }, [user?.id, activateCall, attachAllRemoteVideo, beginLocalCall, prepareSession, publishCamera, stopRingtone, teardown]);
 
