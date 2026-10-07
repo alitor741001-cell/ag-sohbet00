@@ -22,7 +22,7 @@ export default function GiftBoard({ open, onClose, coins, onSend, sendDisabled, 
         open={open && view === 'gifts'}
         onClose={onClose}
         title="Hediye Tahtası"
-        halfHeight
+        tall
         hideTitle
         panelClass="bg-[#231a31]/95 backdrop-blur-xl"
       >

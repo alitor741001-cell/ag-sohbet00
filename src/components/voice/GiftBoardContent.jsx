@@ -1,17 +1,16 @@
 import { useMemo, useState } from 'react';
-import { ChevronDown, ShoppingBag } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import GiftCard from '@/components/voice/GiftCard';
 import GiftRecipientRow from '@/components/voice/GiftRecipientRow';
-import GiftLevelTicker from '@/components/voice/GiftLevelTicker';
 import GiftBoardFooter from '@/components/voice/GiftBoardFooter';
 import { K_UNIT, formatCoins, formatPrice, tierForK, toneColor } from '@/lib/giftTone';
 
 // Hediye sıralaması: varsayılan diziliş ve K değerine göre popüler sıralama.
 const SORTS = [{ key: 'default', label: 'Tüm' }, { key: 'popular', label: 'Popüler' }];
 
-/** Hediye Tahtası içeriği: seviye barı, kategoriler, hediye ızgarası, alıcılar ve alt gönderim çubuğu. */
+/** Hediye Tahtası içeriği: kategori sekmeleri, hediye ızgarası, alıcılar ve alt gönderim çubuğu. */
 export default function GiftBoardContent({
-  user, gifts = [], tiers = [], people = [], selectedIds = [], giftId, coins, giftTick = 0,
+  user, gifts = [], tiers = [], people = [], selectedIds = [], giftId, coins,
   multiplier = 1, onMultiplier, onSelectGift, onTogglePerson, onSelectAll, onClear, onOpenCoins, onClose,
   onSend, sendDisabled,
 }) {
@@ -25,8 +24,8 @@ export default function GiftBoardContent({
   }, [gifts, category, sort]);
 
   const gift = gifts.find((item) => item.id === giftId) || null;
-  const tone = tierForK(tiers, gift?.k_value || 0);
-  const color = toneColor(tone);
+  // Alıcı seçiminin rengi seçilen hediyenin seviyesinden gelir.
+  const color = toneColor(tierForK(tiers, gift?.k_value || 0));
   const quantity = Math.max(1, Number(multiplier) || 1);
   const count = selectedIds.length;
   const totalK = (Number(gift?.k_value) || 0) * count * quantity;
@@ -34,24 +33,11 @@ export default function GiftBoardContent({
   const insufficient = !!gift && count > 0 && coins !== null && coins !== undefined && totalCoins > coins;
 
   return (
-    // Üst bölümler (seviye barı, sekmeler, filtreler, alıcılar, alt çubuk) sabit durur;
-    // kaydırma yalnızca hediye ızgarasına aittir.
-    <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex shrink-0 items-center gap-2">
-        <div className="min-w-0 flex-1"><GiftLevelTicker giftTick={giftTick} /></div>
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Hediye kutusunu kapat"
-          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/10 text-white/75 transition-transform active:scale-95"
-        >
-          <ChevronDown className="h-4 w-4" />
-        </button>
-      </div>
-
-      {/* Üst sekmeler: hediye kategorileri. Soldaki çember kendi profilimiz, sağdaki çanta
-          Coins Yükle mağazasını açar. */}
-      <div className="mt-2 flex shrink-0 items-end gap-2 border-b border-white/10">
+    // h-full: panelin kalan yüksekliği içeriğe geçer, böylece yalnızca hediye ızgarası kayar
+    // ve alttaki satırlar (alıcılar, gönderim çubuğu) her zaman görünür kalır.
+    <div className="flex h-full min-h-0 flex-col">
+      {/* Üst sekmeler: hediye kategorileri. Soldaki çember kendi profilimiz, sağdaki ok kapatır. */}
+      <div className="flex shrink-0 items-end gap-2 border-b border-white/10">
         <span className="relative flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/10 ring-1 ring-[#45d6c8]/60">
           {user?.avatar ? (
             <img src={user.avatar} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" draggable={false} />
@@ -74,11 +60,11 @@ export default function GiftBoardContent({
         </div>
         <button
           type="button"
-          onClick={onOpenCoins}
-          aria-label="Coins Yükle"
-          className="mb-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/10 text-white/85 transition-transform active:scale-95"
+          onClick={onClose}
+          aria-label="Hediye kutusunu kapat"
+          className="mb-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/10 text-white/75 transition-transform active:scale-95"
         >
-          <ShoppingBag className="h-4 w-4" />
+          <ChevronDown className="h-4 w-4" />
         </button>
       </div>
 
@@ -93,24 +79,20 @@ export default function GiftBoardContent({
             {option.label}
           </button>
         ))}
-        {gift && (
-          <span className="ml-auto shrink-0 truncate rounded-full border px-2.5 py-1 text-[10px] font-bold" style={{ borderColor: `${color}99`, color }}>
-            {tone?.name || 'Standart'} seviye
-          </span>
-        )}
       </div>
 
-      {shown.length === 0 ? (
-        <p className="mt-2 shrink-0 rounded-xl bg-white/5 px-3 py-3 text-center text-xs text-white/50">Bu kategoride hediye yok.</p>
-      ) : (
-        <div className="no-scrollbar mt-2 min-h-0 flex-1 overflow-y-auto overscroll-contain">
+      {/* Hediye ızgarası kendi alanında kayar; kalan yüksekliği doldurur. */}
+      <div className="no-scrollbar mt-2 min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        {shown.length === 0 ? (
+          <p className="rounded-xl bg-white/5 px-3 py-3 text-center text-xs text-white/50">Bu kategoride hediye yok.</p>
+        ) : (
           <div className="grid grid-cols-3 gap-2 pb-1">
             {shown.map((item) => (
               <GiftCard key={item.id} gift={item} selected={giftId === item.id} onSelect={onSelectGift} />
             ))}
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       <div className="shrink-0 pt-2">
         <GiftRecipientRow

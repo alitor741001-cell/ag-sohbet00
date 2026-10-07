@@ -97,6 +97,18 @@
   }
 }
 
+/* Hediye tahtası: telefonlarda ekranın büyük bölümünü kaplar, hediye ızgarası arada kalan
+   alanı doldurur ve kendi içinde kayar — hediyeler her zaman görünür olur. */
+.voice-sheet-tall { max-height: 86vh; }
+@media (max-width: 767px) {
+  .voice-sheet-tall {
+    height: 70vh;
+    height: 70dvh;
+    max-height: 70vh;
+    max-height: 70dvh;
+  }
+}
+
 /* Klavye açıldığında oda yerleşimi kısalmaz: koltuklar aynı boyutta ve aynı yerde kalır,
    klavye oturma düzeninin üstüne biner. Yazma alanı taşıyan sohbet bloğu klavyenin hemen
    üstüne taşınır, böylece yazarken koltuklar yerinden oynamaz. */

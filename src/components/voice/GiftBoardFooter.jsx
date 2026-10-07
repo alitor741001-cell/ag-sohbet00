@@ -5,7 +5,7 @@ import { formatCoins } from '@/lib/giftTone';
 // Gönderim adedi seçenekleri (sunucu en fazla 10 kabul eder).
 const QUANTITIES = [1, 2, 5, 10];
 
-/** Hediye Tahtası alt çubuğu: bakiye, Coins Yükle, gönderim adedi ve Gönder düğmesi. */
+/** Hediye Tahtası alt çubuğu: bakiye kutusu (dokununca coin mağazası), gönderim adedi ve Gönder düğmesi. */
 export default function GiftBoardFooter({ coins, multiplier = 1, onMultiplier, onOpenCoins, onSend, sendDisabled }) {
   const [openQty, setOpenQty] = useState(false);
   const quantity = Math.max(1, Number(multiplier) || 1);
@@ -37,14 +37,6 @@ export default function GiftBoardFooter({ coins, multiplier = 1, onMultiplier, o
           <Coins className="h-4 w-4 shrink-0 text-[#fbc02d]" />
           <span className="truncate">{coins === null || coins === undefined ? '—' : formatCoins(coins)}</span>
           <ChevronRight className="h-3.5 w-3.5 shrink-0 text-white/50" />
-        </button>
-
-        <button
-          type="button"
-          onClick={onOpenCoins}
-          className="shrink-0 rounded-xl bg-gradient-to-r from-[#b0268a] to-[#7b2ff7] px-2.5 py-1.5 text-[11px] font-black text-white transition-transform active:scale-95"
-        >
-          Coins Yükle
         </button>
 
         <button
