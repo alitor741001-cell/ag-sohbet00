@@ -2,13 +2,12 @@ import { memo } from 'react';
 import { Image } from '@/components/ui/image';
 import RoleNameEffect from '@/components/role/RoleNameEffect';
 import UserBadgeRow from '@/components/status/UserBadgeRow';
-import RoomLevelBadge from '@/components/status/RoomLevelBadge';
 import { getRoleInfo, isModerator } from '@/lib/roles';
 import { plainText } from '@/components/voice/voiceText';
 import { HIDDEN_AVATAR_URL, isHiddenName } from '@/lib/hiddenUser';
 
 /** Sohbet satırı: üye no, rol ve durum rozetleri + renkli isim + mesaj. */
-function VoiceChatMessage({ message, profile, ownerId, moderators = [], currentUserId, onOpenProfile, level = 0 }) {
+function VoiceChatMessage({ message, profile, ownerId, moderators = [], currentUserId, onOpenProfile }) {
   const role = getRoleInfo(profile || message);
   const isOwner = message.user_id === ownerId;
   const isMod = !isOwner && (moderators.includes(message.user_id) || isModerator(profile));
@@ -39,9 +38,7 @@ function VoiceChatMessage({ message, profile, ownerId, moderators = [], currentU
             )}
           </button>
           {label && <span className={`text-[10px] font-bold ${isOwner ? 'text-amber-400' : 'text-sky-400'}`}>{label}</span>}
-          {/* Oda sahibinin seviyesi sabit 1000 olduğu için satırda gösterilmez.
-              Normal üyelerin isminde de seviye yazmaz; LVL rozeti yalnızca VIP üyelerde görünür. */}
-          {!hidden && !isOwner && Number(profile?.vip_level || 0) > 0 && <RoomLevelBadge level={level} />}
+          {/* Mesajlarda seviye rozeti gösterilmez. */}
         </div>
 
         <div className="mt-1 flex flex-wrap items-center gap-1">

@@ -16,7 +16,7 @@ import useMessageProfiles from '@/hooks/useMessageProfiles';
  * klavye iner, akış görünür kalır. Klavye açıkken oda alt bloğu (bu akış + kontrol çubuğu) tek
  * parça hâlinde klavyenin üstüne kayar; oda yerleşimi yeniden akışa girmez.
  */
-export default function VoiceChatDock({ messages = [], onSend, open, onCloseComposer, composerOpen, chatLocked, currentUserId, ownerId, moderators = [], onOpenProfile, bigGiftNotice, onOpenBigGiftRoom, levels = {}, hiddenUsers = {} }) {
+export default function VoiceChatDock({ messages = [], onSend, open, onCloseComposer, composerOpen, chatLocked, currentUserId, ownerId, moderators = [], onOpenProfile, bigGiftNotice, onOpenBigGiftRoom, hiddenUsers = {} }) {
   const [text, setText] = useState('');
   const [emojiOpen, setEmojiOpen] = useState(false);
   const inputRef = useRef(null);
@@ -96,7 +96,6 @@ export default function VoiceChatDock({ messages = [], onSend, open, onCloseComp
                 <VoiceChatMessage
                   key={message.id}
                   message={message}
-                  level={levels[message.user_id] || levels[hiddenUsers[message.user_name]] || 0}
                   profile={profiles[message.user_id] || profiles[hiddenUsers[message.user_name]]}
                   ownerId={ownerId}
                   moderators={moderators}

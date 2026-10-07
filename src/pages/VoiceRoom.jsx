@@ -1077,7 +1077,6 @@ export default function VoiceRoom() {
         ownerId={room?.owner_id}
         moderators={moderators}
         onOpenProfile={openProfile}
-        levels={roomLevels}
         hiddenUsers={hiddenUsersByName}
         bigGiftNotice={bigGiftNotice}
         onOpenBigGiftRoom={() => {

@@ -16,6 +16,7 @@ import InviteSheet from '@/components/voice/InviteSheet';
 import RoomGiftStage from '@/components/voice/RoomGiftStage';
 import RoomExitOverlay from '@/components/voice/RoomExitOverlay';
 import { clearMinimizedRoom, getMinimizedRoom, isRoomMinimized, setMinimizedRoom } from '@/lib/minimizedRoom';
+import { clearChatEntry } from '@/lib/roomChatEntry';
 import { clearMinimizedFilm, getMinimizedFilm, setMinimizedFilm } from '@/lib/minimizedFilm';
 
 
@@ -407,7 +408,9 @@ export default function WatchParty() {
   // Yukarı/aşağı kaydırma: sesli odalardaki gibi sıradaki canlı yayına geçilir.
   const swipe = useRoomSwipeNav({ roomId: id, userId: user?.id, active: voiceReady, navigate });
 
-  // Otomatik sohbet silme sayacı
+  // Otomatik sohbet silme sayacı: her turda temizleme bir kez tetiklenir, yeni hedef
+  // yazıldığında sayaç kendiliğinden baştan başlar ve tur tekrarlanır.
+  const clearedTargetRef = useRef('');
   useEffect(() => {
     const minutes = room?.chat_auto_delete_minutes || 0;
     setAutoDeleteMinutes(minutes);
@@ -418,13 +421,14 @@ export default function WatchParty() {
       if (remaining <= 0) {
         // Temizleme tek bir kişi (oda sahibi/yönetici) tarafından tetiklenir; odadaki diğer
         // herkes temizliği canlı bildirimle alır — aynı anda çok kez temizleme olmaz.
-        if (canMod) {
+        if (canMod && clearedTargetRef.current !== room.chat_auto_delete_at) {
+          clearedTargetRef.current = room.chat_auto_delete_at;
           base44.functions.invoke('clear-room-messages', { room_id: id }).catch(() => {});
           const newTarget = new Date(Date.now() + minutes * 60000).toISOString();
           base44.entities.Room.update(id, { chat_auto_delete_at: newTarget }).catch(() => {});
+          setChatClearToken((t) => t + 1);
         }
         setCountdownText('0:00');
-        setChatClearToken((t) => t + 1);
       } else {
         const m = Math.floor(remaining / 60000);
         const s = Math.floor((remaining % 60000) / 1000);
@@ -435,6 +439,10 @@ export default function WatchParty() {
     const interval = setInterval(tick, 1000);
     return () => clearInterval(interval);
   }, [room?.chat_auto_delete_minutes, room?.chat_auto_delete_at, id, canMod]);
+
+  // Odadan çıkınca sohbet giriş anı sıfırlanır: yeniden girildiğinde eski sohbet
+  // görünmez, sohbet paneli sıfırdan akar.
+  useEffect(() => () => clearChatEntry(id, user?.id), [id, user?.id]);
 
   const setAutoDelete = async (minutes) => {
     if (!canMod) return;

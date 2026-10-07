@@ -13,6 +13,7 @@ import useMessageProfiles from '@/hooks/useMessageProfiles';
 import { isHiddenName } from '@/lib/hiddenUser';
 import { parseLevelUpNotice } from '@/lib/levelUpNotice';
 import { mergeMessages, upsertMessage } from '@/lib/realtimeMessages';
+import { chatEntryAt } from '@/lib/roomChatEntry';
 import { parseRoleMetadata, parseFrameMetadata } from '@/lib/roles';
 import RoomChatMessage from '@/components/player/RoomChatMessage';
 import RoomCheatNotice from '@/components/player/RoomCheatNotice';
@@ -86,22 +87,16 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
     return match ? Number(match[1]) : 0;
   };
   const isCheatClearNotice = (m) => m?.type === 'system' && /cheati temizledi/i.test(m?.text || '');
-  // Odaya girmeden önce yazılmış mesajlar gösterilmez: ilk okuma yalnızca bu eski
-  // mesajların kimliklerini işaretler, sohbet giriş anından itibaren akar.
-  const preEntryIds = useRef(new Set());
-  const seededRef = useRef(false);
+  // Odaya girmeden önce yazılmış eski mesajlar gösterilmez. Giriş anı oda + kullanıcı
+  // bazında saklanır: sohbet paneli kapatılıp açıldığında o ana kadar gelen mesajlar
+  // ekranda kalır, yalnızca odadan çıkılınca sıfırlanır.
+  const entryAt = useRef(chatEntryAt(roomId, user?.id));
   const load = () => {
     base44.entities.RoomMessage.filter({ room_id: roomId }, '-created_date', 200)
       .then((r) => {
         setCheatClearedAt((current) => r.reduce((max, m) => Math.max(max, cheatMarkerTime(m)), current || 0));
-        const visible = r.filter((m) => !isHiddenMarker(m));
-        if (!seededRef.current) {
-          seededRef.current = true;
-          visible.forEach((m) => preEntryIds.current.add(m.id));
-          setLoading(false);
-          return;
-        }
-        setMessages((current) => mergeMessages(current, visible.filter((m) => !preEntryIds.current.has(m.id))));
+        const visible = r.filter((m) => !isHiddenMarker(m) && new Date(m.created_date || 0).getTime() >= entryAt.current);
+        setMessages((current) => mergeMessages(current, visible));
         setLoading(false); setTimeout(scrollToBottom, 100);
       })
       .catch(() => setLoading(false));
@@ -129,12 +124,16 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
     return () => { unsub(); window.removeEventListener('online', reconnect); clearInterval(poll); };
   }, [roomId]);
 
-  // Otomatik silme süresi doldğunda açık panelde anlık temizle
+  // Otomatik silme süresi dolduğunda açık panel anında temizlenir. Temizleme panel
+  // kapalıyken yapıldıysa yeniden açıldığında mesajlar silinmez: yalnızca panel açıkken
+  // artan işaret uygulanır.
+  const handledClearToken = useRef(clearToken);
   useEffect(() => {
-    if (clearToken > 0) {
+    if (clearToken > handledClearToken.current) {
       setMessages([]);
       setLoading(false);
     }
+    handledClearToken.current = clearToken;
   }, [clearToken]);
 
   const send = async (e) => {
