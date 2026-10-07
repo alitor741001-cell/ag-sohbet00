@@ -9,6 +9,7 @@ import { faceStatus } from '@/lib/faceCheck';
 import ProfileTopBar from '@/components/profile/ProfileTopBar';
 import ProfileHeader from '@/components/profile/ProfileHeader';
 import ProfileWalletCards from '@/components/profile/ProfileWalletCards';
+import { giftBoxLocked } from '@/lib/giftAccess';
 import ProfileNeonRow from '@/components/profile/ProfileNeonRow';
 import ProfileDetailsSection from '@/components/profile/ProfileDetailsSection';
 import ProfileSettings from '@/components/profile/ProfileSettings';
@@ -116,8 +117,12 @@ export default function Profile() {
     } finally { setUploading(false); event.target.value = ''; }
   };
 
-  // Elmas/bakiye bölümüne giriş: yüz doğrulaması cihaz başına bir kez istenir.
+  // Elmas/bakiye bölümüne giriş: yalnızca yayıncı hesaba açılır, sonra yüz doğrulaması istenir.
   const openGiftBox = async () => {
+    if (giftBoxLocked(user)) {
+      toast({ title: 'Elmas ve bakiye bölümü yayıncılara açıktır', description: 'Yayıncı olduğunuzda elmas ve bakiye bölümünü kullanabilirsiniz.', variant: 'destructive' });
+      return;
+    }
     const status = await faceStatus(user?.id).catch(() => null);
     // Daha önce yüzü doğrulanan cihazda tekrar sorulmaz.
     if (!status || !status.enabled || status.balance || status.trusted) { setGiftBoxOpen(true); return; }
@@ -127,6 +132,7 @@ export default function Profile() {
 
   if (!user) return <div className="dark min-h-screen p-6 text-white">Yükleniyor...</div>;
   const isAdmin = user.role === 'admin';
+  const elmasLocked = giftBoxLocked(user);
   const resetForm = () => setForm({ username: user.username || '', full_name: user.full_name || '', phone: user.phone || '', avatar: user.avatar || '', birth_date: user.birth_date || '' });
   const toggle = (key) => setOpenKey((current) => (current === key ? null : key));
   // Paket/abonelik sistemi kaldırıldı: üyelik süresi artık erişimi etkilemez.
@@ -142,6 +148,7 @@ export default function Profile() {
             coins={wallet?.coins ?? null}
             giftScore={wallet?.month_score ?? null}
             vipCount={vipCount}
+            locked={elmasLocked}
             onOpenCoins={() => setActivityOpen(true)}
             onOpenGiftBox={openGiftBox}
             onOpenVipBag={() => setVipBagOpen(true)}

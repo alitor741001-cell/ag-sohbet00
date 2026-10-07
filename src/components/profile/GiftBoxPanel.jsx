@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ChevronLeft, Gem, Loader2, Send } from 'lucide-react';
+import { ChevronLeft, Gem, Loader2, Lock, Send } from 'lucide-react';
+import { useCurrentUser } from '@/lib/useCurrentUser';
+import { giftBoxLocked } from '@/lib/giftAccess';
 import { base44 } from '@/api/base44Client';
 import { Image } from '@/components/ui/image';
 import { formatCoins } from '@/lib/giftTone';
@@ -17,6 +19,7 @@ const formatTl = (value) => `${(Number(value) || 0).toLocaleString('tr-TR', { mi
  * Bakiye, piyasa kuru eksi 2 TL üzerinden otomatik hesaplanır.
  */
 export default function GiftBoxPanel({ open, onClose }) {
+  const { user } = useCurrentUser();
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(false);
   const [memberId, setMemberId] = useState('');
@@ -144,6 +147,20 @@ export default function GiftBoxPanel({ open, onClose }) {
   };
 
   if (!open) return null;
+
+  // Yayıncı olmayan hesapta elmas/bakiye bölümü açılmaz.
+  if (giftBoxLocked(user)) {
+    return (
+      <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 p-4" onClick={onClose}>
+        <div className="w-full max-w-sm rounded-2xl border border-premium-gold/40 p-5 text-center" style={{ background: 'linear-gradient(150deg, rgba(38,16,16,0.96), rgba(12,8,8,0.98))' }}>
+          <Lock className="mx-auto h-8 w-8 text-premium-gold" />
+          <p className="mt-3 text-sm font-bold text-white">Elmas ve bakiye bölümü yayıncılara açıktır</p>
+          <p className="mt-1 text-[12px] leading-relaxed text-white/60">Yayıncı olduğunuzda elmaslarınızı ve bakiyenizi buradan yönetebilirsiniz.</p>
+          <button onClick={onClose} className="mt-4 w-full rounded-xl border border-white/15 py-2.5 text-sm font-semibold text-white/80">Kapat</button>
+        </div>
+      </div>
+    );
+  }
 
   const available = Number(summary?.available_dollars) || 0;
   const availableTl = Number(summary?.available_tl) || 0;

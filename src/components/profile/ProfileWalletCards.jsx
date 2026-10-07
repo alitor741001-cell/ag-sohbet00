@@ -1,4 +1,4 @@
-import { Briefcase, ChevronRight, Coins, Crown, Gem } from 'lucide-react';
+import { Briefcase, ChevronRight, Coins, Crown, Gem, Lock } from 'lucide-react';
 import { formatCoins } from '@/lib/giftTone';
 import { formatScore } from '@/components/voice/scoreTier';
 
@@ -19,7 +19,7 @@ const GOLD_TONE = {
   boxShadow: '0 0 18px rgba(242,206,107,0.22)',
 };
 
-export default function ProfileWalletCards({ coins, giftScore, vipCount = 0, onOpenGiftBox, onOpenCoins, onOpenVipBag, onOpenAgency, onOpenCoinShop }) {
+export default function ProfileWalletCards({ coins, giftScore, vipCount = 0, locked = false, onOpenGiftBox, onOpenCoins, onOpenVipBag, onOpenAgency, onOpenCoinShop }) {
   const coinText = coins === null || coins === undefined ? '—' : formatCoins(coins);
   const giftText = giftScore === null || giftScore === undefined ? '—' : formatScore(giftScore);
 
@@ -40,18 +40,23 @@ export default function ProfileWalletCards({ coins, giftScore, vipCount = 0, onO
           <ChevronRight className="h-4 w-4 shrink-0 text-white/40" />
         </button>
 
+        {/* Elmas ve bakiye bölümü yayıncı hesaba açılır: yayıncı değilse kart kilitli görünür. */}
         <button
           type="button"
           onClick={onOpenGiftBox}
-          className="flex items-center gap-2.5 rounded-2xl px-3 py-2.5 text-left transition-transform active:scale-95"
+          className={`flex items-center gap-2.5 rounded-2xl px-3 py-2.5 text-left transition-transform active:scale-95 ${locked ? 'opacity-75' : ''}`}
           style={GOLD_TONE}
         >
           <Gem className="h-7 w-7 shrink-0 text-[#f2ce6b]" />
           <span className="min-w-0 flex-1">
             <span className="block text-[11px] font-semibold text-white/70">Elmaslar</span>
-            <span className="block truncate text-base font-extrabold tabular-nums text-white">{giftText}</span>
+            <span className={`block truncate tabular-nums text-white ${locked ? 'text-[11px] font-bold' : 'text-base font-extrabold'}`}>
+              {locked ? 'Yayıncıya özel' : giftText}
+            </span>
           </span>
-          <ChevronRight className="h-4 w-4 shrink-0 text-white/40" />
+          {locked
+            ? <Lock className="h-4 w-4 shrink-0 text-white/40" />
+            : <ChevronRight className="h-4 w-4 shrink-0 text-white/40" />}
         </button>
       </div>
 

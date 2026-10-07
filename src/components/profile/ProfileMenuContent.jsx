@@ -5,6 +5,8 @@ import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { Image } from '@/components/ui/image';
 import ProfileWalletCards from '@/components/profile/ProfileWalletCards';
+import { giftBoxLocked } from '@/lib/giftAccess';
+import { useToast } from '@/components/ui/use-toast';
 
 /**
  * Profil menüsünün içeriği: coins, elmaslar (hediye kutusu), mavi çanta ve
@@ -13,6 +15,7 @@ import ProfileWalletCards from '@/components/profile/ProfileWalletCards';
  */
 export default function ProfileMenuContent({ onClose, onOpenPanel }) {
   const { user } = useCurrentUser();
+  const { toast } = useToast();
   const navigate = useNavigate();
   const [vipCount, setVipCount] = useState(0);
   const [wallet, setWallet] = useState(null);
@@ -35,6 +38,7 @@ export default function ProfileMenuContent({ onClose, onOpenPanel }) {
   if (!user) return null;
 
   const displayName = user?.username || user?.full_name || 'Profilim';
+  const elmasLocked = giftBoxLocked(user);
 
   return (
     <>
@@ -65,7 +69,10 @@ export default function ProfileMenuContent({ onClose, onOpenPanel }) {
         coins={wallet?.coins ?? null}
         giftScore={wallet?.month_score ?? null}
         vipCount={vipCount}
-        onOpenGiftBox={() => onOpenPanel?.('gift')}
+        locked={elmasLocked}
+        onOpenGiftBox={() => (elmasLocked
+          ? toast({ title: 'Elmas ve bakiye bölümü yayıncılara açıktır', description: 'Yayıncı olduğunuzda bölüm açılır.', variant: 'destructive' })
+          : onOpenPanel?.('gift'))}
         onOpenCoins={() => onOpenPanel?.('coins')}
         onOpenVipBag={() => onOpenPanel?.('vip')}
         onOpenAgency={user?.role === 'admin' ? undefined : () => { onClose(); navigate('/ajans'); }}

@@ -2,6 +2,9 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
 import { rateLimit } from '../../shared/security.ts';
 import { notifyUser } from '../../shared/notifyUser.ts';
 import { refreshAgencyTotals } from '../../shared/agency.ts';
+import { COINS_PER_DOLLAR, giftBoxSummary } from '../../shared/giftBox.ts';
+import { ensureGiftWallet } from '../../shared/giftWallet.ts';
+import { addLoadedCoins } from '../../shared/userLevels.ts';
 
 /**
  * Yüz doğrulama servisi.
@@ -197,6 +200,35 @@ const isBroadcaster = (account: any) =>
     || !!account.owned_agency_id
   );
 
+/**
+ * Yayıncılığı iptal edilen hesabın elması boşa gitmez: bozdurulabilir bakiye
+ * (kota tablosundan hesaplanan dolar karşılığı) otomatik olarak coine çevrilir.
+ */
+async function convertDiamondsToCoins(base44, loser) {
+  try {
+    const account = { id: loser.id, role: loser.role, full_name: loser.full_name };
+    const summary = await giftBoxSummary(base44, account);
+    // Küsurat coine çevrilmez: tam dolar üzerinden hesaplanır.
+    const dollars = Math.floor(Math.max(0, Number(summary?.available_dollars) || 0));
+    if (dollars < 1) return 0;
+    const coins = Math.round(dollars * COINS_PER_DOLLAR);
+    await base44.asServiceRole.entities.GiftTransfer.create({
+      kind: 'convert', status: 'completed', sender_id: loser.id,
+      sender_name: loser.username || loser.full_name || 'Kullanıcı',
+      dollars, coins, rate: summary.tl_rate,
+    });
+    const wallet = await ensureGiftWallet(base44, account);
+    await base44.asServiceRole.entities.GameWallet.update(wallet.id, {
+      coins: Math.max(0, Number(wallet.coins) || 0) + coins,
+    });
+    // Bozdurulan coin yüklenen coin sayılır: seviye de aynı kuralla ilerler.
+    await addLoadedCoins(base44, loser.id, coins);
+    return coins;
+  } catch {
+    return 0;
+  }
+}
+
 /** Yan hesabın yayıncılığını iptal eder: ajans üyeliği, yayıncı durumu ve rozet temizlenir. */
 async function revokeBroadcaster(base44, loser, keeper) {
   const agencyId = loser.agency_record_id || '';
@@ -205,9 +237,13 @@ async function revokeBroadcaster(base44, loser, keeper) {
     owned_agency_id: '', owned_agency_code: '', owned_agency_name: '', owned_agency_status: '',
   }).catch(() => {});
   if (agencyId) await refreshAgencyTotals(base44, agencyId).catch(() => {});
+  // Elmas bölümü kapanır: elde kalan elmaslar otomatik hesaplanıp coine çevrilir.
+  const coins = await convertDiamondsToCoins(base44, loser);
   await notifyUser(base44, {
     user_id: loser.id, type: 'security', title: 'Yayıncılık iptal edildi',
-    body: 'Aynı yüzle ikinci bir hesap doğrulandığı için bu hesabın ajans üyeliği ve yayıncılığı iptal edildi.',
+    body: coins
+      ? `Aynı yüzle ikinci bir hesap doğrulandığı için bu hesabın ajans üyeliği ve yayıncılığı iptal edildi. Elmas ve bakiye bölümü kapatıldı; elmaslarınız otomatik olarak ${coins.toLocaleString('tr-TR')} coin olarak hesabınıza aktarıldı.`
+      : 'Aynı yüzle ikinci bir hesap doğrulandığı için bu hesabın ajans üyeliği ve yayıncılığı iptal edildi. Elmas ve bakiye bölümü kapatıldı.',
     link: '/profil',
   }).catch(() => {});
   // Denetim izi: kimin yüzü hangi hesapla eşleşti.
