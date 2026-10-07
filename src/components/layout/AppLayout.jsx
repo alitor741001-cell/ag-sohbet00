@@ -18,6 +18,7 @@ import MessageRealtimeProvider from '@/components/messages/MessageRealtimeProvid
 import RoutePreloader from '@/components/layout/RoutePreloader';
 import { isBasicPath } from '@/lib/access';
 import { isMultiDeviceExempt } from '@/lib/sessionPolicy';
+import FaceGate from '@/components/face/FaceGate';
 import useSupabaseMirror from '@/hooks/useSupabaseMirror';
 
 export default function AppLayout() {
@@ -218,11 +219,12 @@ export default function AppLayout() {
   }, [user?.id]);
 
   if (isRoom) {
-    return <MessageRealtimeProvider userId={user?.id}><div className="min-h-screen bg-background"><RoutePreloader /><RoleCelebrationOverlay /><Suspense fallback={null}><Outlet /></Suspense></div></MessageRealtimeProvider>;
+    return <MessageRealtimeProvider userId={user?.id}><div className="min-h-screen bg-background"><RoutePreloader /><FaceGate user={user} /><RoleCelebrationOverlay /><Suspense fallback={null}><Outlet /></Suspense></div></MessageRealtimeProvider>;
   }
   return (
     <MessageRealtimeProvider userId={user?.id}><div className={`min-h-screen w-full min-w-0 overflow-x-clip ${isDarkSurface ? 'bg-catalog' : 'bg-background'}`}>
       <RoutePreloader />
+      <FaceGate user={user} />
       <RoleCelebrationOverlay />
       <WhatsNewModal />
       <Navbar />

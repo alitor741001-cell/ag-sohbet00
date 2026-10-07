@@ -5,12 +5,14 @@ import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
 import { findProtectedName } from '@/lib/protectedNames';
+import { faceStatus } from '@/lib/faceCheck';
 import ProfileTopBar from '@/components/profile/ProfileTopBar';
 import ProfileHeader from '@/components/profile/ProfileHeader';
 import ProfileWalletCards from '@/components/profile/ProfileWalletCards';
 import ProfileNeonRow from '@/components/profile/ProfileNeonRow';
 import ProfileDetailsSection from '@/components/profile/ProfileDetailsSection';
 import ProfileSettings from '@/components/profile/ProfileSettings';
+import FaceLockOverlay from '@/components/face/FaceLockOverlay';
 import DeleteAccountSection from '@/components/profile/DeleteAccountSection';
 import GiftBoxPanel from '@/components/profile/GiftBoxPanel';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
@@ -30,6 +32,9 @@ export default function Profile() {
   const [wallet, setWallet] = useState(null);
   const [vipCount, setVipCount] = useState(0);
   const [giftBoxOpen, setGiftBoxOpen] = useState(false);
+  // Elmaslar/bakiye bölümü yüz doğrulamasıyla korunur.
+  const [balanceLocked, setBalanceLocked] = useState(false);
+  const [balanceEnroll, setBalanceEnroll] = useState(false);
   const [activityOpen, setActivityOpen] = useState(false);
   const [vipBagOpen, setVipBagOpen] = useState(false);
   const [coinShopOpen, setCoinShopOpen] = useState(false);
@@ -102,6 +107,14 @@ export default function Profile() {
     } finally { setUploading(false); event.target.value = ''; }
   };
 
+  // Elmas/bakiye bölümüne giriş: yüz doğrulaması cihaz başına bir kez istenir.
+  const openGiftBox = async () => {
+    const status = await faceStatus(user?.id).catch(() => null);
+    if (!status || !status.enabled || status.balance) { setGiftBoxOpen(true); return; }
+    setBalanceEnroll(!status.enrolled);
+    setBalanceLocked(true);
+  };
+
   if (!user) return <div className="dark min-h-screen p-6 text-white">Yükleniyor...</div>;
   const isAdmin = user.role === 'admin';
   const resetForm = () => setForm({ username: user.username || '', full_name: user.full_name || '', phone: user.phone || '', avatar: user.avatar || '', birth_date: user.birth_date || '' });
@@ -120,7 +133,7 @@ export default function Profile() {
             giftScore={wallet?.month_score ?? null}
             vipCount={vipCount}
             onOpenCoins={() => setActivityOpen(true)}
-            onOpenGiftBox={() => setGiftBoxOpen(true)}
+            onOpenGiftBox={openGiftBox}
             onOpenVipBag={() => setVipBagOpen(true)}
             onOpenCoinShop={() => setCoinShopOpen(true)}
             onOpenAgency={isAdmin ? undefined : () => navigate('/ajans')}
@@ -156,6 +169,15 @@ export default function Profile() {
         </div>
       </div>
 
+      <FaceLockOverlay
+        open={balanceLocked}
+        user={user}
+        mode={balanceEnroll ? 'enroll' : 'verify'}
+        scope="balance"
+        canCancel
+        onCancel={() => setBalanceLocked(false)}
+        onVerified={() => { setBalanceLocked(false); setGiftBoxOpen(true); }}
+      />
       <GiftBoxPanel open={giftBoxOpen} onClose={() => setGiftBoxOpen(false)} />
       <CoinActivityPanel open={activityOpen} onClose={() => setActivityOpen(false)} />
       <VipBagPanel open={vipBagOpen} onClose={() => setVipBagOpen(false)} onChanged={loadVipCount} />
