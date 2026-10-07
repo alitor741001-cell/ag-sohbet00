@@ -1,178 +1,164 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import subscribeEntity from '@/components/data/entitySubscriptions';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
-import { MessageCircle, Send, Image as ImageIcon, Headset, X } from 'lucide-react';
+import { Headset, X } from 'lucide-react';
 import { Image } from '@/components/ui/image';
-import { statusLabel } from '@/lib/supportStatus';
+import SupportAttachment from '@/components/support/SupportAttachment';
+import SupportComposer from '@/components/support/SupportComposer';
+import { statusLabel, STATUS_COLORS } from '@/lib/supportStatus';
 
-const CATS = ['Genel', 'Teknik Sorun', 'Üyelik', 'Ödeme', 'İçerik Talebi', 'Diğer'];
+/** İlk mesaj görüşmenin konusu olur: yönetici panelinde sohbet bununla listelenir. */
+const subjectFrom = (text, mediaType) =>
+  text ? text.slice(0, 60) : mediaType === 'video' ? '🎥 Video' : '📷 Fotoğraf';
 
+/**
+ * Canlı destek: üye konu/kategori seçmeden doğrudan yazar. İlk mesajla görüşme
+ * otomatik açılır; yönetici görüşmeyi kapatırsa sonraki mesaj yeni görüşme başlatır.
+ */
 export default function Support() {
   const { user } = useCurrentUser();
   const { toast } = useToast();
-  const [tickets, setTickets] = useState([]);
-  const [active, setActive] = useState(null);
+  const [ticket, setTicket] = useState(null);
   const [messages, setMessages] = useState([]);
-  const [text, setText] = useState('');
-  const [showNew, setShowNew] = useState(false);
-  const [form, setForm] = useState({ subject: '', category: 'Genel', message: '' });
-  const [uploading, setUploading] = useState(false);
   const [lightbox, setLightbox] = useState(null);
+  const [sending, setSending] = useState(false);
   const endRef = useRef(null);
 
-  const load = () => {
+  useEffect(() => {
     if (!user) return;
-    base44.entities.SupportTicket.filter({ user_id: user.id }, '-created_date', 50).then(async (t) => {
-      setTickets(t);
-      if (t.length > 0 && !active) setActive(t[0]);
-    }).catch(() => {});
-  };
-  useEffect(load, [user?.id]);
+    base44.entities.SupportTicket.filter({ user_id: user.id }, '-created_date', 1)
+      .then((t) => setTicket(t?.[0] || null))
+      .catch(() => {});
+  }, [user?.id]);
 
   useEffect(() => {
-    if (!active) return;
-    const fetchMsgs = () => base44.entities.SupportMessage.filter({ ticket_id: active.id }, 'created_date', 200).then((m) => {
-      setMessages(m); setTimeout(() => endRef.current?.scrollIntoView(), 50);
-    }).catch(() => {});
-    fetchMsgs();
+    if (!ticket) return undefined;
+    base44.entities.SupportMessage.filter({ ticket_id: ticket.id }, 'created_date', 200)
+      .then((m) => { setMessages(m); setTimeout(() => endRef.current?.scrollIntoView(), 50); })
+      .catch(() => {});
     const unsubMsg = subscribeEntity('SupportMessage', (ev) => {
-      if (ev.type === 'create' && ev.data?.ticket_id === active.id) {
-        setMessages((p) => p.some((m) => m.id === ev.data.id) ? p : [...p, ev.data]);
+      if (ev.data?.ticket_id !== ticket.id) return;
+      if (ev.type === 'create') {
+        setMessages((p) => (p.some((m) => m.id === ev.data.id) ? p : [...p, ev.data]));
         setTimeout(() => endRef.current?.scrollIntoView(), 50);
       }
-      if (ev.type === 'delete' && ev.data?.ticket_id === active.id) {
-        setMessages((p) => p.filter((m) => m.id !== ev.data.id));
-      }
+      if (ev.type === 'delete') setMessages((p) => p.filter((m) => m.id !== ev.data.id));
     });
-    // Admin kapatma/silme işlemlerini yakalamak için abonelik
+    // Yönetici görüşmeyi kapatıp silerse sohbet temizlenir; sonraki mesaj yeni görüşme açar.
     const unsubTicket = subscribeEntity('SupportTicket', (ev) => {
-      if (ev.type === 'update' && ev.data?.id === active.id && ev.data?.status === 'closed') {
+      if (ev.data?.id !== ticket.id) return;
+      if (ev.type === 'delete' || (ev.type === 'update' && ev.data?.status === 'closed')) {
         setMessages([]);
-        setActive(null);
-        load();
-      }
-      if (ev.type === 'delete' && ev.data?.id === active.id) {
-        setMessages([]);
-        setActive(null);
-        load();
+        setTicket(null);
       }
     });
     return () => { unsubMsg(); unsubTicket(); };
-  }, [active?.id]);
+  }, [ticket?.id]);
 
-  const create = async (e) => {
-    e.preventDefault();
-    if (!form.subject || !form.message) return;
+  /** Görüşme yoksa ilk mesajla birlikte açılır: üye konu seçmez. */
+  const ensureTicket = async (subject) => {
+    if (ticket) {
+      if (ticket.status !== 'answered' && ticket.status !== 'closed') {
+        base44.entities.SupportTicket.update(ticket.id, { status: 'reviewing' }).catch(() => {});
+        setTicket({ ...ticket, status: 'reviewing' });
+      }
+      return ticket;
+    }
+    const created = await base44.entities.SupportTicket.create({
+      user_id: user.id,
+      user_name: user.username || user.full_name,
+      subject,
+      category: 'Genel',
+      status: 'reviewing',
+    });
+    setTicket(created);
+    return created;
+  };
+
+  // Yöneticiye anlık bildirim: yeni görüşme ya da yeni mesaj.
+  const notifyAdmin = (msg, isNew, bodyText) => base44.functions.invoke('admin-notify', {
+    event: isNew ? 'support' : 'support_message',
+    ref_id: `support_msg:${msg?.id || Date.now()}`,
+    title: isNew ? 'Yeni destek talebi geldi' : 'Yeni destek mesajı geldi',
+    body: `${user.username || user.full_name}: ${String(bodyText).slice(0, 80)}`,
+    link: '/admin/destek',
+    telegram_data: {
+      username: user.username || user.full_name,
+      subject: ticket?.subject || '',
+      message: String(bodyText).slice(0, 200),
+      date: new Date().toLocaleString('tr-TR'),
+    },
+  }).catch(() => {});
+
+  const push = async (payload) => {
+    if (!user || sending) return;
+    setSending(true);
     try {
-      const t = await base44.entities.SupportTicket.create({ user_id: user.id, user_name: user.username || user.full_name, subject: form.subject, category: form.category, status: 'new' });
-      const msg = await base44.entities.SupportMessage.create({ ticket_id: t.id, owner_id: user.id, user_id: user.id, sender: 'user', text: form.message });
-      // Admin'e realtime + web push bildirimi
-      base44.functions.invoke('admin-notify', {
-        event: 'support',
-        ref_id: `support_msg:${msg?.id || t.id}`,
-        title: 'Yeni destek talebi geldi',
-        body: `${user.username || user.full_name}: ${form.subject}`,
-        link: '/admin/destek',
-        telegram_data: { username: user.username || user.full_name, subject: form.subject, message: form.message, date: new Date().toLocaleString('tr-TR') }
-      }).catch(() => {});
-      setForm({ subject: '', category: 'Genel', message: '' }); setShowNew(false); setActive(t);
-      load();
-      toast({ title: 'Destek talebi oluşturuldu' });
-    } catch (err) { toast({ title: 'Hata', variant: 'destructive' }); }
+      const isNew = !ticket;
+      const active = await ensureTicket(isNew ? subjectFrom(payload.text, payload.media_type) : ticket.subject);
+      const msg = await base44.entities.SupportMessage.create({ ticket_id: active.id, owner_id: user.id, user_id: user.id, sender: 'user', ...payload });
+      if (msg?.id) {
+        setMessages((p) => (p.some((m) => m.id === msg.id) ? p : [...p, msg]));
+        setTimeout(() => endRef.current?.scrollIntoView(), 60);
+        notifyAdmin(msg, isNew, payload.text || 'Ek gönderildi');
+      }
+    } catch {
+      toast({ title: 'Mesaj gönderilemedi', variant: 'destructive' });
+    }
+    setSending(false);
   };
 
-  const send = (e) => {
-    e.preventDefault();
-    if (!text.trim() || !active) return;
-    const msgText = text.trim();
-    base44.entities.SupportMessage.create({ ticket_id: active.id, owner_id: user.id, user_id: user.id, sender: 'user', text: msgText })
-      .then((msg) => {
-        if (msg?.id) {
-          // Kullanıcı mesaj attığında durum "İnceleniyor" olur (admin henüz cevaplamadı)
-          if (active.status !== 'answered' && active.status !== 'closed') {
-            base44.entities.SupportTicket.update(active.id, { status: 'reviewing' }).catch(() => {});
-          }
-          base44.functions.invoke('admin-notify', {
-            event: 'support_message',
-            ref_id: `support_msg:${msg.id}`,
-            title: 'Yeni destek mesajı geldi',
-            body: `${user.username || user.full_name}: ${msgText.slice(0, 80)}`,
-            link: '/admin/destek',
-            telegram_data: { username: user.username || user.full_name, subject: active?.subject || '', message: msgText.slice(0, 200), date: new Date().toLocaleString('tr-TR') }
-          }).catch(() => {});
-        }
-      })
-      .catch(() => {});
-    setText('');
-  };
-
-  const onFile = async (e) => {
-    const f = e.target.files?.[0]; if (!f) return;
-    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-    if (!validTypes.includes(f.type)) { toast({ title: 'Sadece JPG, PNG, WEBP', variant: 'destructive' }); e.target.value = ''; return; }
-    if (f.size > 10 * 1024 * 1024) { toast({ title: 'Maksimum 10 MB', variant: 'destructive' }); e.target.value = ''; return; }
-    setUploading(true);
-    try { const { file_url } = await base44.integrations.Core.UploadFile({ file: f }); await base44.entities.SupportMessage.create({ ticket_id: active.id, owner_id: user.id, user_id: user.id, sender: 'user', text: '', file_url }); }
-    catch { toast({ title: 'Yükleme hatası', variant: 'destructive' }); }
-    finally { setUploading(false); e.target.value = ''; }
-  };
+  if (!user) return <div className="flex h-[60vh] items-center justify-center text-sm text-muted-foreground">Yükleniyor...</div>;
 
   return (
-    <div className="px-4 sm:px-6 py-6 max-w-5xl mx-auto">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-extrabold flex items-center gap-2"><Headset className="w-6 h-6 text-primary" /> Destek / Sohbet</h1>
-        <button onClick={() => setShowNew(!showNew)} className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-semibold">Yeni Talep</button>
-      </div>
-
-      {showNew && (
-        <form onSubmit={create} className="bg-card border border-border rounded-xl p-4 space-y-3 mb-4">
-          <input value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} placeholder="Konu" className="w-full bg-secondary/60 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring" required />
-          <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="w-full bg-secondary/60 rounded-lg px-3 py-2.5 text-sm outline-none">
-            {CATS.map((c) => <option key={c} value={c}>{c}</option>)}
-          </select>
-          <textarea value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} placeholder="Mesajınız..." rows={3} className="w-full bg-secondary/60 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring" required />
-          <button type="submit" className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-semibold">Gönder</button>
-        </form>
-      )}
-
-      <div className="grid sm:grid-cols-[260px_1fr] gap-4 h-[calc(100vh-180px)] sm:h-[60vh]">
-        <div className="overflow-y-auto space-y-2 pr-1 max-h-[25vh] sm:max-h-none">
-          {tickets.length === 0 ? <p className="text-sm text-muted-foreground text-center py-10">Henüz destek konuşmanız bulunmuyor.</p> :
-            tickets.map((t) => (
-              <button key={t.id} onClick={() => setActive(t)} className={`w-full text-left p-3 rounded-lg border ${active?.id === t.id ? 'border-primary bg-primary/10' : 'border-border bg-card'}`}>
-                <p className="font-medium text-sm truncate">{t.subject}</p>
-                <p className="text-xs text-muted-foreground">{t.category} · {statusLabel(t.status)}</p>
-              </button>
-            ))}
+    <div className="mx-auto flex max-w-2xl flex-col px-4 py-4 sm:px-6">
+      <h1 className="mb-3 flex items-center gap-2 text-xl font-extrabold">
+        <Headset className="h-5 w-5 text-primary" /> Canlı Destek
+      </h1>
+      <div className="flex h-[calc(100dvh-13rem)] flex-col overflow-hidden rounded-xl border border-border bg-card sm:h-[62vh]">
+        <div className="flex items-center gap-2.5 border-b border-border px-4 py-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full" style={{ background: 'linear-gradient(135deg, #c62828, #f2ce6b)' }}>
+            <Headset className="h-4 w-4 text-white" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold">Destek Ekibi</p>
+            <p className="text-[11px] text-green-500">● Çevrimiçi — hemen yazabilirsiniz</p>
+          </div>
+          {ticket && <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${STATUS_COLORS[ticket.status] || ''}`}>{statusLabel(ticket.status)}</span>}
         </div>
-        <div className="flex flex-col bg-card border border-border rounded-xl overflow-hidden">
-          {active ? (
-            <>
-              <div className="px-4 py-3 border-b border-border"><p className="font-semibold">{active.subject}</p><p className="text-xs text-muted-foreground">{active.category}</p></div>
-              <div className="flex-1 overflow-y-auto p-3 space-y-2">
-                {messages.map((m) => (
-                  <div key={m.id} className={`flex ${m.user_id === m.owner_id ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[80%] rounded-lg px-3 py-2 text-sm overflow-hidden ${m.user_id === m.owner_id ? 'bg-primary text-primary-foreground' : 'bg-secondary'}`}>
-                      {m.file_url && <Image src={m.file_url} alt="foto" className="rounded-lg max-w-full max-h-48 object-cover mb-1 cursor-pointer" fittingType="fit" onClick={() => setLightbox(m.file_url)} />}
-                      {m.text && <p>{m.text}</p>}
-                    </div>
-                  </div>
-                ))}
-                <div ref={endRef} />
+
+        <div className="flex-1 space-y-2 overflow-y-auto p-3">
+          {messages.length === 0 && (
+            <p className="px-4 pt-6 text-center text-xs text-muted-foreground">
+              Merhaba! Sorununuzu buradan doğrudan yazabilir, fotoğraf veya 30 saniyelik video gönderebilirsiniz.
+            </p>
+          )}
+          {messages.map((m) => (
+            <div key={m.id} className={`flex ${m.user_id === m.owner_id ? 'justify-end' : 'justify-start'}`}>
+              <div className={`max-w-[80%] overflow-hidden rounded-2xl px-3 py-2 text-sm ${m.user_id === m.owner_id ? 'bg-primary text-primary-foreground' : 'bg-secondary'}`}>
+                <SupportAttachment message={m} className="mb-1 max-h-48 max-w-full rounded-lg" onImageClick={setLightbox} />
+                {m.text && <p className="whitespace-pre-wrap break-words">{m.text}</p>}
               </div>
-              <form onSubmit={send} className="p-3 border-t border-border flex items-center gap-2">
-                <label className="p-2 rounded-lg hover:bg-secondary cursor-pointer"><ImageIcon className="w-5 h-5" /><input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={onFile} disabled={uploading} /></label>
-                <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Mesaj yazın..." className="flex-1 bg-secondary/60 rounded-full px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
-                <button type="submit" disabled={uploading} className="p-2.5 rounded-full bg-primary text-primary-foreground disabled:opacity-50"><Send className="w-4 h-4" /></button>
-                {uploading && <span className="text-xs text-muted-foreground animate-pulse">Gönderiliyor...</span>}
-              </form>
-              {lightbox && <div onClick={() => setLightbox(null)} className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4"><button className="absolute top-4 right-4 text-white p-2"><X className="w-6 h-6" /></button><Image src={lightbox} className="max-w-full max-h-full rounded-lg" fittingType="fit" /></div>}
-            </>
-          ) : <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm"><MessageCircle className="w-8 h-8 mb-2" /><p>Bir konuşma seçin veya yeni talep oluşturun.</p></div>}
+            </div>
+          ))}
+          <div ref={endRef} />
         </div>
+
+        <SupportComposer
+          busy={sending}
+          onSendText={(text) => push({ text })}
+          onSendMedia={(file_url, media_type) => push({ text: '', file_url, media_type })}
+        />
       </div>
+
+      {lightbox && (
+        <div onClick={() => setLightbox(null)} className="fixed inset-0 z-[110] flex items-center justify-center bg-black/90 p-4">
+          <button className="absolute right-4 top-4 p-2 text-white"><X className="h-6 w-6" /></button>
+          <Image src={lightbox} className="max-h-full max-w-full rounded-lg" fittingType="fit" />
+        </div>
+      )}
     </div>
   );
 }

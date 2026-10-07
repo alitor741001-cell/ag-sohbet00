@@ -6,6 +6,8 @@ import { Send, X, Search, Ban, Trash2, ShieldOff, ShieldCheck, ArrowLeft } from 
 import { useToast } from '@/components/ui/use-toast';
 import { upsertNotification } from '@/lib/upsertNotification';
 import SupportAvatarButton, { SUPPORT_AVATAR_URL } from '@/components/layout/SupportAvatarButton';
+import SupportAttachment from '@/components/support/SupportAttachment';
+import { createPortal } from 'react-dom';
 
 export default function LiveChatButton({ placement = 'top' }) {
   const { user } = useCurrentUser();
@@ -243,7 +245,8 @@ export default function LiveChatButton({ placement = 'top' }) {
     <>
       <SupportAvatarButton onClick={toggle} badge={badge} pulse={pulse} />
 
-      {open && (
+      {/* Panel gövdeye taşınır: üst katmanlardaki bulanıklık/dönüşüm onu kırpamaz. */}
+      {open && createPortal(
         <div className={`fixed right-3 z-[70] w-[360px] max-w-[calc(100vw-1.5rem)] bg-[#141414] border border-[#2a2a2a] rounded-2xl shadow-2xl flex flex-col ${placement === 'dock' ? 'bottom-[calc(4.75rem+env(safe-area-inset-bottom))]' : 'top-[calc(4rem+max(env(safe-area-inset-top),1.5rem))] lg:top-20'}`} style={{ height: '560px', maxHeight: placement === 'dock' ? 'calc(100dvh - 7rem)' : undefined }}>
           <div className="px-3 py-2.5 border-b border-[#2a2a2a] flex items-center gap-2">
             <div className="w-8 h-8 rounded-full overflow-hidden border border-purple-500/40 shrink-0">
@@ -304,8 +307,8 @@ export default function LiveChatButton({ placement = 'top' }) {
                     {messages.map((m) => (
                       <div key={m.id} className={`flex ${m.user_id !== m.owner_id ? 'justify-end' : 'justify-start'}`}>
                         <div className={`max-w-[80%] rounded-lg px-2.5 py-1.5 text-xs ${m.user_id !== m.owner_id ? 'bg-purple-500 text-white' : 'bg-[#2a2a2a] text-white'}`}>
-                          {m.file_url && <img src={m.file_url} alt="" className="rounded max-w-full max-h-32 mb-1" />}
-                          {m.text && m.text !== '📷 Fotoğraf' && <p>{m.text}</p>}
+                          <SupportAttachment message={m} className="rounded max-w-full max-h-32 mb-1" />
+                          {m.text && m.text !== '📷 Fotoğraf' && m.text !== '🎥 Video' && <p>{m.text}</p>}
                         </div>
                       </div>
                     ))}
@@ -392,7 +395,8 @@ export default function LiveChatButton({ placement = 'top' }) {
               </div>
             </div>
           )}
-        </div>
+        </div>,
+        document.body
       )}
 
       <style>{`@keyframes scale-in { from { transform: scale(0); } to { transform: scale(1); } }`}</style>
