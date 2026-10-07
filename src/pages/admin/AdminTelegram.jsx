@@ -8,7 +8,6 @@ const EVENT_LABELS = {
   new_user: 'Yeni Kullanıcı',
   support: 'Yeni Destek Talebi',
   support_message: 'Yeni Destek Mesajı',
-  report: 'Yeni Şikayet',
   payment: 'Ödeme Gerçekleşti',
   subscription_active: 'Abonelik Aktif',
   subscription_cancelled: 'Abonelik İptal',

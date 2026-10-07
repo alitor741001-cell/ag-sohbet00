@@ -37,9 +37,7 @@ async function removeFromAllRooms(base44, userId, userName) {
 
 async function syncAccountStatus(base44, target, status) {
   const states = {
-    deleted: { name: 'Silinmiş Hesap', avatar: 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/0665aaba3_generated_image.png', message: 'Bu hesap yönetici tarafından silinmiştir.' },
-    banned: { name: 'Engellenmiş Hesap', avatar: 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/63e635ef8_generated_image.png', message: 'Bu hesap yönetici tarafından engellenmiştir.' },
-    active: { name: target.username || target.full_name || 'Kullanıcı', avatar: target.avatar || '', message: '' }
+    deleted: { name: 'Silinmiş Hesap', avatar: 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/0665aaba3_generated_image.png', message: 'Bu hesap yönetici tarafından silinmiştir.' }
   };
   const state = states[status];
   const conversations = await base44.asServiceRole.entities.Conversation.filter({ $or: [{ user1_id: target.id }, { user2_id: target.id }] }, '-updated_date', 500).catch(() => []);
@@ -238,7 +236,8 @@ export default async function(req) {
         { $set: { status: 'inactive', ended_at: new Date().toISOString() } }
       ).catch(() => {});
       await removeFromAllRooms(base44, user_id, targetName);
-      await syncAccountStatus(base44, target, 'banned');
+      // Engellenen kişinin isim ve fotoğrafı sohbetlerde/arkadaş listelerinde kalır:
+      // ban görseli yalnızca profil kartında gösterilir.
       // Engellenen hesap ajans tarafında asistan olarak kalmaz; yüz kaydı düşer ki
       // kişi yeni bir hesapla yüzünü yeniden doğrulayabilsin (engellenmemiş hesaplarda
       // aynı yüzle açılan yan hesabın yayıncılığı iptal edilmeye devam eder).
@@ -272,7 +271,6 @@ export default async function(req) {
         banned_by: '',
         membership_status: 'active',
       });
-      await syncAccountStatus(base44, target, 'active');
       await upsertNotification(base44, {
         user_id, title: '✅ Engel kaldırıldı',
         body: 'Hesabınız tekrar aktif edildi.',

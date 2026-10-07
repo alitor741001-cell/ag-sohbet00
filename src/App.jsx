@@ -147,7 +147,7 @@ const AuthenticatedApp = () => {
           <Route path="bildirimler" element={<AdminInbox />} />
           <Route path="telegram" element={<AdminTelegram />} />
           <Route path="guvenlik" element={<AdminSecurity />} />
-          {/* Şikayetler aynı ekranın sekmesi: eski bağlantılar şikayet sekmesini açar. */}
+          {/* Şikayet akışı kaldırıldı: eski bağlantılar bildirim ekranına düşer. */}
           <Route path="sikayetler" element={<Navigate to="/admin/bildirimler" replace />} />
           <Route path="ayarlar" element={<AdminSettings />} />
           <Route path="ayalar" element={<AdminSettings />} />
