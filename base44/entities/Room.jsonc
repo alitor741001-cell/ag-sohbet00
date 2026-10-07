@@ -192,9 +192,12 @@
       "type": "boolean",
       "default": false
     },
-    "requires_approval": {
-      "type": "boolean",
-      "default": true
+    "shared_users": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
     },
     "room_moderators": {
       "type": "array",
@@ -331,6 +334,9 @@
         },
         {
           "data.participants.user_id": "{{user.id}}"
+        },
+        {
+          "data.shared_users": "{{user.id}}"
         }
       ]
     },
