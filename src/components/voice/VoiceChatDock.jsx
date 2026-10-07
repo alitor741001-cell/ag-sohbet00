@@ -61,6 +61,16 @@ export default function VoiceChatDock({ messages = [], onSend, open, onCloseComp
     endRef.current?.scrollIntoView({ block: 'end' });
   }, [messages.length, bigGiftNotice?.id]);
 
+  // Yazma alanı odaktan çıkınca (klavye kapandığında, ekranda başka bir yere dokunulduğunda)
+  // kendiliğinden kapanır — iOS ve Android'de aynı davranış. Emoji seçilirken açık kalır.
+  const handleInputBlur = () => {
+    window.setTimeout(() => {
+      if (emojiOpenRef.current) return;
+      if (document.activeElement === inputRef.current) return;
+      closeComposerRef.current?.();
+    }, 160);
+  };
+
   const submit = async (event) => {
     event.preventDefault();
     const value = text.trim();
@@ -148,6 +158,7 @@ export default function VoiceChatDock({ messages = [], onSend, open, onCloseComp
               ref={inputRef}
               value={text}
               onChange={(event) => setText(event.target.value)}
+              onBlur={handleInputBlur}
               placeholder="Selam…"
               autoComplete="off"
               enterKeyHint="send"
