@@ -334,6 +334,7 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
               aria-pressed={silent}
               onPointerDown={(event) => event.stopPropagation()}
               onTouchStart={(event) => event.stopPropagation()}
+              onTouchEnd={(event) => event.stopPropagation()}
               onClick={(event) => { event.stopPropagation(); toggleMute(); }}
               className="relative z-[70] rounded-lg p-2 hover:bg-foreground/10 disabled:opacity-50"
             >
@@ -350,6 +351,7 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
             title={captions ? 'Altyazıyı kapat' : 'Altyazıyı aç'}
             onPointerDown={(event) => event.stopPropagation()}
             onTouchStart={(event) => event.stopPropagation()}
+            onTouchEnd={(event) => event.stopPropagation()}
             onClick={(event) => { event.stopPropagation(); toggleCaptions(); }}
             className={`relative z-[70] rounded-lg p-2 hover:bg-white/10 disabled:opacity-50 ${captions ? 'text-primary' : 'text-white/70'}`}
           >
