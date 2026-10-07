@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef } from 'react';
-import { Gift, Lock } from 'lucide-react';
+import { Lock } from 'lucide-react';
 import VoiceSeatGrid from '@/components/voice/VoiceSeatGrid';
+import VoiceBoardTimer from '@/components/voice/VoiceBoardTimer';
 import HiddenUserMarquee from '@/components/voice/HiddenUserMarquee';
 import { useSize } from '@/hooks/use-size';
 
@@ -8,8 +9,10 @@ import { useSize } from '@/hooks/use-size';
  * Sahne: üst başlık ile alt sohbet alanı arasında kalan sabit bölge.
  * Koltuklar bu bölgenin tepesine demirlenir; sohbet açılıp kapansa, yeni mesaj gelse ya da
  * koltuk sayısı değişse bile bu alanın yüksekliği değişmez, dolayısıyla koltuklar oynamaz.
+ * Sayı tahtası süresi koltukların hemen altında, sahnenin dışında durur: koltukların altında
+ * kırpılmaz, her koşulda görünür.
  */
-export default function VoiceStage({ scrollRef, handlers, room, selectedCount, seatAccent, onClearSelection, hiddenAnnounce, grid }) {
+export default function VoiceStage({ scrollRef, handlers, room, hiddenAnnounce, grid }) {
   const boxRef = useRef(null);
   const gridBoxRef = useRef(null);
   const measured = useSize(boxRef);
@@ -25,29 +28,30 @@ export default function VoiceStage({ scrollRef, handlers, room, selectedCount, s
     const free = Math.max(0, Math.round(box.getBoundingClientRect().bottom - gridBox.getBoundingClientRect().bottom));
     frame.style.setProperty('--voice-seat-free', `${free}px`);
     return () => frame.style.removeProperty('--voice-seat-free');
-  }, [measured?.height, gridMeasured?.height, grid.seats?.length, grid.boardActive, room?.password, selectedCount]);
+  }, [measured?.height, gridMeasured?.height, grid.seats?.length, grid.boardActive, room?.password]);
 
   return (
-    <div ref={scrollRef} {...handlers} className="voice-stage relative min-h-0 flex-1 overflow-hidden px-3 pb-4 pt-1">
-      <div ref={boxRef} className="flex h-full min-h-0 flex-col items-center">
-        {room?.password && (
-          <p className="mb-3 flex items-center justify-center gap-1.5 text-[11px] text-amber-400">
-            <Lock className="h-3 w-3" /> Şifreli oda
-          </p>
-        )}
-        {selectedCount > 0 && (
-          <div className="mb-3 flex w-full items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2">
-            <span className="flex min-w-0 items-center gap-1.5 text-[11px] font-bold" style={{ color: seatAccent }}>
-              <Gift className="h-3.5 w-3.5 shrink-0" /> {selectedCount} kişi seçildi
-            </span>
-            <button type="button" onClick={onClearSelection} className="shrink-0 text-[11px] font-bold text-white/60">Temizle</button>
+    <>
+      <div
+        ref={scrollRef}
+        {...handlers}
+        // Sayı tahtası açıkken süre kartı sahnenin hemen altında durur; sahnenin alt boşluğu
+        // ona devredilir, koltuklar için ayrılan yer değişmez.
+        className={`voice-stage relative min-h-0 flex-1 overflow-hidden px-3 pt-1 ${grid.boardActive ? 'pb-0' : 'pb-4'}`}
+      >
+        <div ref={boxRef} className="flex h-full min-h-0 flex-col items-center">
+          {room?.password && (
+            <p className="mb-3 flex items-center justify-center gap-1.5 text-[11px] text-amber-400">
+              <Lock className="h-3 w-3" /> Şifreli oda
+            </p>
+          )}
+          <div ref={gridBoxRef} className="flex w-full flex-col items-center">
+            <VoiceSeatGrid {...grid} />
           </div>
-        )}
-        <div ref={gridBoxRef} className="flex w-full flex-col items-center">
-          <VoiceSeatGrid {...grid} />
+          <HiddenUserMarquee active={hiddenAnnounce.active} name={hiddenAnnounce.name} />
         </div>
-        <HiddenUserMarquee active={hiddenAnnounce.active} name={hiddenAnnounce.name} />
       </div>
-    </div>
+      <VoiceBoardTimer active={grid.boardActive} startedAt={grid.boardStartedAt} />
+    </>
   );
 }

@@ -1005,9 +1005,6 @@ export default function VoiceRoom() {
         scrollRef={swipeGesture.scrollRef}
         handlers={swipeGesture.handlers}
         room={room}
-        selectedCount={selectedIds.length}
-        seatAccent={seatAccent}
-        onClearSelection={() => setSelectedIds([])}
         hiddenAnnounce={{ active: room?.ghost_entered_at, name: hiddenAnnounceName }}
         grid={{
           seats: seatsView,

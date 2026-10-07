@@ -1,7 +1,6 @@
 import { useCallback, useMemo, useRef } from 'react';
 import VoiceSeat from '@/components/voice/VoiceSeat';
 import VoiceSeatScore from '@/components/voice/VoiceSeatScore';
-import VoiceBoardTimer from '@/components/voice/VoiceBoardTimer';
 import useMessageProfiles from '@/hooks/useMessageProfiles';
 
 import { seatIndexRows } from '@/components/voice/seatLayout';
@@ -14,7 +13,7 @@ import { useSize } from '@/hooks/use-size';
  * Koltuk boyutu ölçülen genişliğe göre seçilir: dar telefonlarda da satır yana taşmaz,
  * geniş ekranlarda koltuklar gereksiz küçülmez.
  */
-export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerId, moderators = [], speakingIds = [], localSpeaking, onSelectSeat, boardActive, boardStartedAt, scores = {}, accent = '#ef4444', gifted = {} }) {
+export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerId, moderators = [], speakingIds = [], localSpeaking, onSelectSeat, boardActive, scores = {}, accent = '#ef4444', gifted = {} }) {
   const wrapRef = useRef(null);
   const measured = useSize(wrapRef);
   const rows = useMemo(() => seatIndexRows(seats.length), [seats.length]);
@@ -65,9 +64,6 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
             );
           })}
           </div>
-          {(row.includes(20) || (seats.length < 21 && rowIndex === rows.length - 1)) && (
-            <VoiceBoardTimer active={boardActive} startedAt={boardStartedAt} />
-          )}
         </div>
       ))}
     </div>
