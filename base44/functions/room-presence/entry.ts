@@ -43,7 +43,7 @@ export default async function(req) {
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
     const body = await req.json();
     const { action, room_id, password, target_id } = body || {};
-    if (!room_id || !['get', 'join', 'leave', 'kick', 'ban', 'unban', 'set-password', 'set-name', 'toggle-hidden', 'enable-voice', 'toggle-voice', 'toggle-mute', 'toggle-chat', 'chat-ban', 'toggle-approval', 'change-movie', 'share', 'assign-mod', 'remove-mod', 'delete-room', 'request-join', 'approve-join', 'reject-join', 'admin-room'].includes(action)) {
+    if (!room_id || !['get', 'join', 'leave', 'kick', 'ban', 'unban', 'set-password', 'set-name', 'toggle-hidden', 'enable-voice', 'toggle-voice', 'toggle-mute', 'toggle-chat', 'chat-ban', 'change-movie', 'share', 'assign-mod', 'remove-mod', 'delete-room', 'admin-room'].includes(action)) {
       return Response.json({ error: 'invalid request' }, { status: 400 });
     }
     const name = user.username || user.full_name || 'Kullanıcı';
@@ -92,14 +92,14 @@ export default async function(req) {
       return labelOverridesCache;
     };
 
-    if ((action === 'join' || action === 'request-join') && !hasActiveMembership(me)) {
+    if (action === 'join' && !hasActiveMembership(me)) {
       await logSecurity(base44, 'room_join_denied', user, 'membership inactive', 'warning');
       return Response.json({ error: 'aktif üyelik gerekli' }, { status: 403 });
     }
 
     // Oda kilidi: içeride kimse yoksa (sıfır kişi) oda kilitlidir — oda sahibi odaya
     // girene kadar kimse katılamaz, katılım isteği de gönderilemez.
-    if ((action === 'join' || action === 'request-join')
+    if (action === 'join'
       && (room.participants || []).length === 0
       && !isOwner && !isAdmin && !isMod) {
       return Response.json({ error: 'Oda kilitli: oda sahibi odada değil.', locked: true }, { status: 403 });
@@ -125,21 +125,8 @@ export default async function(req) {
       // Odada hâlihazırda bulunan kişi (sesli/film modu geçişi) yeniden onay beklemez.
       const alreadyInRoom = (room.participants || []).some((p) => p.user_id === user.id);
       // Gizli oda: yalnızca oda sahibi, yöneticiler ve yayının paylaşıldığı kişiler girebilir.
-      if (room.hidden === true && !canModRoom && !alreadyInRoom) {
-        const sharedRows = await base44.asServiceRole.entities.RoomJoinRequest
-          .filter({ room_id, user_id: user.id, status: 'approved' }, '-created_date', 1).catch(() => []);
-        if (!sharedRows?.length) {
-          return Response.json({ error: 'Bu gizli yayın yalnızca sahibinin paylaştığı kişilere açık.', hidden: true }, { status: 403 });
-        }
-      }
-      // Kişisel oda: sadece onaylı istek sahipleri girebilir (admin/mod hariç)
-      // requires_approval kapalıysa doğrudan giriş yapılabilir.
-      if (room.is_personal && room.requires_approval !== false && !isOwner && !isMod && !alreadyInRoom) {
-        const approvedReq = await base44.asServiceRole.entities.RoomJoinRequest.filter({ room_id, user_id: user.id, status: 'approved' }, '-created_date', 1).catch(() => []);
-        const hasApproved = approvedReq && approvedReq.length > 0;
-        if (!hasApproved) {
-          return Response.json({ error: 'Oda sahibinin onayı gerekli', needsApproval: true }, { status: 403 });
-        }
+      if (room.hidden === true && !canModRoom && !alreadyInRoom && !(room.shared_users || []).includes(user.id)) {
+        return Response.json({ error: 'Bu gizli yayın yalnızca sahibinin paylaştığı kişilere açık.', hidden: true }, { status: 403 });
       }
       // Ban check: odadan atılan kişi 24 saat giremez; süre dolunca yasak kendiliğinden kalkar.
       const banNow = Date.now();
