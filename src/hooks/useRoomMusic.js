@@ -19,13 +19,14 @@ const withTimeout = (promise) => Promise.race([
  * Oda müziği: odanın açık şarkısını canlı izler ve herkesin kendi telefonunda çalar.
  * Konum sunucu saatine göre hizalanır; ses seviyesi cihazda saklanır.
  * `options.library: false` çalan şarkıyı devralan katmanlar içindir (küçültülmüş oda).
+ * `options.muted: true` iken şarkı yalnızca kısılır (hoparlör kapalı): konum ve ses seviyesi korunur.
  */
 export default function useRoomMusic(roomId, enabled, options = {}) {
   const [music, setMusic] = useState(null);
   const [library, setLibrary] = useState([]);
   const [uploading, setUploading] = useState(false);
   const audioRef = useRef(null);
-  const { volume, setVolume, resume } = useRoomMusicVolume(audioRef);
+  const { volume, setVolume, resume } = useRoomMusicVolume(audioRef, options.muted);
   // Müzik mikrofon durumundan bağımsız bir ses çıkışıdır.
   const wantPlayRef = useRef(false);
   // Çalma oturumu: aynı şarkı yeniden başlatıldığında sesin başa alınması için izlenir.

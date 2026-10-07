@@ -272,7 +272,8 @@ export default function VoiceRoom() {
   });
 
   // Oda müziği: odanın açık şarkısı canlı izlenir, herkes kendi telefonunda duyar.
-  const music = useRoomMusic(id, joined);
+  // Hoparlör kapatıldığında şarkı da susar; açıldığında kullanıcı sesleriyle birlikte geri gelir.
+  const music = useRoomMusic(id, joined, { muted: voice.deafened });
 
   const syncRoom = useCallback(async () => {
     const response = await base44.functions.invoke('room-presence', { action: 'get', room_id: id }).catch(() => null);
