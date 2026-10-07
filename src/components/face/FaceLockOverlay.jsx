@@ -38,7 +38,7 @@ const COPY = {
 };
 
 const PHASE_TEXT = {
-  scanning: 'Kafanızı yukarı aşağı sağ sola çevirin — halka dolunca kendiliğinden onaylanır.',
+  scanning: 'Kafanızı yukarı aşağı sağ sola çevirin — telefon da sizinle birlikte hareket etmeli.',
   verifying: 'Yüzünüz karşılaştırılıyor...',
   ok: 'Doğrulandı',
   fail: 'Tekrar deneniyor...',
@@ -70,7 +70,6 @@ export default function FaceLockOverlay({
   const attemptsRef = useRef(0);
   const retryRef = useRef(null);
   const doneRef = useRef(null);
-  const askedRef = useRef(false);
   const [cameraReady, setCameraReady] = useState(false);
   const [cameraError, setCameraError] = useState('');
   const [phase, setPhase] = useState('scanning');
@@ -201,10 +200,12 @@ export default function FaceLockOverlay({
       const value = Math.min(1, (Date.now() - scanStartRef.current) / SCAN_MS);
       setProgress(value);
       if (value < 1) return;
-      // Sensör verisi geldiyse dört yönün tamamı yapılmış olmalı; eksikse kırmızıya döner.
-      const missing = tiltSeenRef.current && MOVES.some(({ key }) => !marksRef.current[key]);
+      // Dört yönün tamamı yapılmadan onay verilmez: hareketsiz duran geçemez.
+      const missing = MOVES.some(({ key }) => !marksRef.current[key]);
       if (missing) {
-        scheduleRetry('Yön hareketleri tamamlanmadı. Kafanızı yukarı, aşağı, sağa ve sola çevirip tekrar deneyin.');
+        scheduleRetry(tiltSeenRef.current
+          ? 'Yön hareketleri tamamlanmadı. Kafanızı yukarı, aşağı, sağa ve sola çevirip tekrar deneyin.'
+          : 'Hareket algılanamadı. Tarayıcı izinlerinden hareket sensörünü açıp kafanızı yukarı, aşağı, sağa ve sola çevirin.');
         return;
       }
       submit();
@@ -212,12 +213,14 @@ export default function FaceLockOverlay({
     return () => clearInterval(id);
   }, [open, blocked, cameraReady, phase, scheduleRetry, submit]);
 
-  // iOS'ta sensör izni yalnızca dokunuşla istenir; izin verilmezse hareket şartı aranmaz.
+  // iOS sensör iznini yalnızca dokunuşla verir: ekran açılırken ve her dokunuşta istenir.
   const beginTilt = useCallback(() => {
-    if (askedRef.current) return;
-    askedRef.current = true;
-    requestTiltPermission();
+    if (!tiltSeenRef.current) requestTiltPermission();
   }, []);
+
+  useEffect(() => {
+    if (open) beginTilt();
+  }, [open, beginTilt]);
 
   // Yukarı/aşağı/sağ/sol hareketleri ilk duruşa göre ölçülür.
   useEffect(() => {
