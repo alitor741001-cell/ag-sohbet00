@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import useRoomTyping from '@/components/data/useRoomTyping';
 import subscribeEntity from '@/components/data/entitySubscriptions';
-import { Clock, Crown, Eye, Image as ImageIcon, LayoutGrid, MessageSquare, MessageSquareOff, MessagesSquare, Send, Shield, Smile, Sparkles, UserPlus, Users, X } from 'lucide-react';
+import { Clock, Crown, Eye, Image as ImageIcon, LayoutGrid, MessageSquare, MessageSquareOff, MessagesSquare, Send, Shield, Smile, Sparkles, Users, X } from 'lucide-react';
 import { neonCircleClass } from '@/lib/neonStyle';
 import VoiceControls from '@/components/player/VoiceControls';
 import { base44 } from '@/api/base44Client';
@@ -29,7 +29,6 @@ const FILTERS = [
   { key: 'yetkililer', label: 'Yetkililer', icon: Shield },
   { key: 'izleyici', label: 'İzleyici', icon: Eye },
   { key: 'yonetici', label: 'Yönetici', icon: Users },
-  { key: 'istekler', label: 'İstekler', icon: UserPlus },
 ];
 
 export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, isOwner, isAdmin, onClose, autoDeleteMinutes = 0, countdownText = '', clearToken = 0, onSetAutoDelete, voice, voiceEnabled, onSettings, onDirect, onDirectUser, directUnread = 0, ownerId, roomModerators = [], participants = [], recentParticipants = [], viewerProfiles = {}, presenceMap = {}, onProfileCard, settingsProps, levels = {}, onToggleChat, onMicPress }) {
@@ -68,22 +67,6 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
     });
     return unsub;
   }, [ownerId]);
-  const [joinRequests, setJoinRequests] = useState([]);
-  useEffect(() => {
-    if (!roomId || !isOwner) return;
-    const load = () => {
-      base44.entities.RoomJoinRequest.filter({ room_id: roomId, status: 'pending' }, '-created_date', 50)
-        .then((reqs) => setJoinRequests(reqs))
-        .catch(() => {});
-    };
-    load();
-    const unsub = subscribeEntity('RoomJoinRequest', (ev) => {
-      if (ev.data?.room_id !== roomId) return;
-      load();
-    });
-    return unsub;
-  }, [roomId, isOwner]);
-
   const { typingUsers, sendTyping } = useRoomTyping(roomId, user);
 
   const scrollToBottom = () => {
@@ -253,13 +236,13 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
       )}
       {(chatEnabled || isOwner) && (
         <div className="room-chat-tabs mx-3 my-2 flex items-stretch overflow-x-auto rounded-2xl border border-[#FFD700]/40 bg-black py-1 no-scrollbar shadow-[0_0_16px_-6px_rgba(255,215,0,0.85)]" onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
-          {FILTERS.filter((f) => f.key !== 'istekler' || isOwner).map((f, index) => {
+          {FILTERS.map((f, index) => {
             const Icon = f.icon;
             const active = msgFilter === f.key;
             return (
               <button key={f.key} onClick={() => setMsgFilter(f.key)} className={`flex min-w-[3.75rem] flex-1 flex-col items-center gap-0.5 px-1.5 py-1 text-[9px] font-bold ${index > 0 ? 'border-l border-white/10' : ''} ${active ? 'rounded-lg bg-[#FFD700] text-black shadow-[0_0_14px_-3px_rgba(255,215,0,0.95)]' : 'text-white/80'}`}>
                 <Icon className="h-3.5 w-3.5" />
-                <span className="whitespace-nowrap leading-none">{f.key === 'istekler' ? `İstekler${joinRequests.length > 0 ? ` (${joinRequests.length})` : ''}` : f.label}</span>
+                <span className="whitespace-nowrap leading-none">{f.label}</span>
               </button>
             );
           })}
@@ -343,21 +326,6 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
               </span>
               <span className="flex-1 truncate text-sm text-white">{mod.user_name || mod.name || 'Kullanıcı'}</span>
               <span className="text-[10px] text-[#c39bd3] font-semibold">Mod</span>
-            </div>
-          ))}
-          </div>
-          ) : msgFilter === 'istekler' ? (
-          <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-2 bg-black">
-          {joinRequests.length === 0 ? <p className="text-center text-sm text-[#A0A0A0] py-8">Bekleyen katılım isteği yok.</p> :
-          joinRequests.map((req) => (
-            <div key={req.id} className="flex items-center gap-2 p-2 rounded-xl bg-[#1a1a1a] border border-amber-400/30">
-              {req.user_avatar ? <Image src={req.user_avatar} className="w-9 h-9 rounded-full object-cover shrink-0" fittingType="fill" /> : <div className="w-9 h-9 rounded-full bg-amber-500 text-white flex items-center justify-center font-bold text-sm shrink-0">{(req.user_name || '?')[0]}</div>}
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-bold truncate text-white">{req.user_name}</p>
-                <p className="text-[10px] text-[#A0A0A0]">odaya katılmak istiyor</p>
-              </div>
-              <button onClick={async () => { await base44.functions.invoke('room-presence', { action: 'approve-join', room_id: roomId, request_id: req.id }); toast({ title: 'İstek onaylandı' }); }} className="px-3 py-1.5 rounded-lg bg-green-500 text-white text-xs font-bold whitespace-nowrap">Onayla</button>
-              <button onClick={async () => { await base44.functions.invoke('room-presence', { action: 'reject-join', room_id: roomId, request_id: req.id }); toast({ title: 'İstek reddedildi' }); }} className="px-2.5 py-1.5 rounded-lg bg-red-500/80 text-white text-xs font-bold whitespace-nowrap">Reddet</button>
             </div>
           ))}
           </div>

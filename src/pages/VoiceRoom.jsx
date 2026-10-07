@@ -398,7 +398,7 @@ export default function VoiceRoom() {
         return true;
       } catch (error) {
         const data = error?.response?.data || {};
-        // Şifre, onay ve yasak gibi kesin cevaplar bekletilmez; yalnızca geçici hatalar tekrarlanır.
+        // Şifre ve yasak gibi kesin cevaplar bekletilmez; yalnızca geçici hatalar tekrarlanır.
         // Yoğunluk (429) da geçici sayılır: yayınlar arasında gezinirken anlık sınır hata ekranı çıkarmaz.
         const transient = !data.error || error?.response?.status >= 500 || error?.response?.status === 429;
         if (transient && attempt < 2) {

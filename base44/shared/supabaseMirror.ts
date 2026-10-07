@@ -32,11 +32,11 @@ const NUMERIC_COLUMNS = new Set([
 ]);
 
 const BOOLEAN_COLUMNS = new Set([
-  'hidden', 'is_playing', 'voice_mode', 'voice_enabled', 'is_personal', 'requires_approval', 'chat_enabled',
+  'hidden', 'is_playing', 'voice_mode', 'voice_enabled', 'is_personal', 'chat_enabled',
   'online', 'read', 'active', 'muted', 'speaking', 'locked', 'is_banned', 'is_suspended', 'hidden_user',
 ]);
 
-const ROOM_COLUMNS = ['name', 'owner_id', 'owner_name', 'room_type', 'status', 'hidden', 'room_number', 'movie_id', 'movie_title', 'is_playing', 'voice_mode', 'voice_enabled', 'participant_count', 'is_personal', 'requires_approval', 'max_users', 'seat_count', 'personal_room_code', 'chat_enabled', 'current_time', 'last_sync'];
+const ROOM_COLUMNS = ['name', 'owner_id', 'owner_name', 'room_type', 'status', 'hidden', 'room_number', 'movie_id', 'movie_title', 'is_playing', 'voice_mode', 'voice_enabled', 'participant_count', 'is_personal', 'max_users', 'seat_count', 'personal_room_code', 'chat_enabled', 'current_time', 'last_sync'];
 const PARTICIPANT_COLUMNS = ['room_id', 'user_id', 'name', 'avatar', 'muted', 'speaking', 'joined_at'];
 const SEAT_COLUMNS = ['room_id', 'seat_index', 'user_id', 'name', 'avatar', 'frame', 'locked', 'muted'];
 
@@ -59,7 +59,6 @@ export const LIVE_COLLECTIONS = [
 export const ALL_COLLECTIONS = [
   ...LIVE_COLLECTIONS,
   { entity: 'RoomTrack', table: 'room_tracks', columns: ['room_id', 'title', 'file_uri', 'added_by', 'added_by_name'] },
-  { entity: 'RoomJoinRequest', table: 'room_join_requests', columns: ['room_id', 'user_id', 'status'] },
   { entity: 'RoomMod', table: 'room_mods', columns: ['room_id', 'user_id'] },
   { entity: 'RoomLevel', table: 'room_levels', columns: ['room_id'] },
   { entity: 'RoomSecret', table: 'room_secrets', columns: ['room_id'] },

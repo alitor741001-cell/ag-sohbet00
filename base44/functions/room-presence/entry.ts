@@ -216,66 +216,6 @@ export default async function(req) {
       return Response.json({ ok: true });
     }
 
-    // Özel oda katılım isteği gönder
-    if (action === 'request-join') {
-      if (!room.is_personal) return Response.json({ error: 'bu oda kişisel değil' }, { status: 400 });
-      if (isOwner) return Response.json({ ok: true, approved: true });
-      if (isMod || isAdmin) return Response.json({ ok: true, approved: true });
-      if ((room.participants || []).some((p) => p.user_id === user.id)) return Response.json({ ok: true, approved: true });
-      // Zaten onaylı istek varsa direkt katıl
-      const existing = await base44.asServiceRole.entities.RoomJoinRequest.filter({ room_id, user_id: user.id }, '-created_date', 5).catch(() => []);
-      const approved = existing.find((r) => r.status === 'approved');
-      if (approved) return Response.json({ ok: true, approved: true });
-      const pending = existing.find((r) => r.status === 'pending');
-      if (pending) return Response.json({ ok: true, pending: true });
-      // Yeni istek oluştur
-      await base44.asServiceRole.entities.RoomJoinRequest.create({
-        room_id, room_name: room.name || '',
-        user_id: user.id, user_name: name, user_avatar: user.avatar || '',
-        owner_id: room.owner_id, status: 'pending'
-      });
-      // Oda sahibine bildirim (tek kayıt üzerinden güncelle)
-      await upsertNotification(base44, {
-        user_id: room.owner_id, title: 'Oda katılım isteği',
-        body: `${name} odaya katılmak istiyor.`, type: 'room_join_request', link: `/oda/${room_id}`,
-        ref_id: room_id
-      });
-      return Response.json({ ok: true, pending: true });
-    }
-
-    // Oda sahibi isteği onayla
-    if (action === 'approve-join') {
-      if (!isOwner && !isMod) return Response.json({ error: 'yetkisiz' }, { status: 403 });
-      const { request_id } = body || {};
-      if (!request_id) return Response.json({ error: 'istek gerekli' }, { status: 400 });
-      const req = await base44.asServiceRole.entities.RoomJoinRequest.get(request_id).catch(() => null);
-      if (!req || req.room_id !== room_id) return Response.json({ error: 'istek bulunamadı' }, { status: 404 });
-      await base44.asServiceRole.entities.RoomJoinRequest.update(request_id, { status: 'approved' });
-      // Kullanıcıya bildirim (tek kayıt üzerinden güncelle)
-      await upsertNotification(base44, {
-        user_id: req.user_id, title: 'Oda isteği onaylandı',
-        body: `${room.name || 'Oda'} sahibi katılım isteğinizi onayladı.`, type: 'room_join_approved', link: `/oda/${room_id}`,
-        ref_id: room_id
-      });
-      return Response.json({ ok: true });
-    }
-
-    // Oda sahibi isteği reddet
-    if (action === 'reject-join') {
-      if (!isOwner && !isMod) return Response.json({ error: 'yetkisiz' }, { status: 403 });
-      const { request_id } = body || {};
-      if (!request_id) return Response.json({ error: 'istek gerekli' }, { status: 400 });
-      const req = await base44.asServiceRole.entities.RoomJoinRequest.get(request_id).catch(() => null);
-      if (!req || req.room_id !== room_id) return Response.json({ error: 'istek bulunamadı' }, { status: 404 });
-      await base44.asServiceRole.entities.RoomJoinRequest.update(request_id, { status: 'rejected' });
-      await upsertNotification(base44, {
-        user_id: req.user_id, title: 'Oda isteği reddedildi',
-        body: `${room.name || 'Oda'} sahibi katılım isteğinizi reddetti.`, type: 'room_join_rejected', link: `/oda/${room_id}`,
-        ref_id: room_id
-      });
-      return Response.json({ ok: true });
-    }
-
     if (action === 'kick' || action === 'ban') {
       // Odadan atma ve engelleme: oda sahibi, oda moderatörleri, yönetici rolü ve admin yetkilidir.
       if (!canModRoom) return Response.json({ error: 'yetkisiz' }, { status: 403 });
@@ -408,7 +348,7 @@ export default async function(req) {
     }
 
     // Yayını paylaş: seçilen arkadaşlara özel sohbetten katılım kartı gönderilir.
-    // Paylaşılan kişiler gizli odada da girebilir — giriş izni onaylı katılım kaydıyla verilir.
+    // Paylaşılan kişiler gizli odada da girebilir — giriş izni odanın paylaşım listesine yazılır.
     if (action === 'share') {
       if (!canModRoom) return Response.json({ error: 'yetkisiz' }, { status: 403 });
       const ids = Array.isArray(body.target_ids)
@@ -420,24 +360,18 @@ export default async function(req) {
       // Kart oda türünü taşır: paylaşılan kişi doğru ekrana (sesli/film) yönlendirilir.
       const voiceRoom = room.voice_mode === true || room.room_type === 'voice';
       const marker = `{{ROOM_SHARE|${room_id}|${voiceRoom ? 'voice' : 'watch'}}}`;
+      const currentShared = Array.isArray(room.shared_users) ? room.shared_users : [];
+      const added: string[] = [];
       let shared = 0;
       for (const id of ids) {
         const target = await base44.asServiceRole.entities.User.get(id).catch(() => null);
         if (!target || target.id === user.id) continue;
-        const known = await base44.asServiceRole.entities.RoomJoinRequest.filter({ room_id, user_id: id }, '-created_date', 1).catch(() => []);
-        if (known?.[0]) {
-          if (known[0].status !== 'approved') {
-            await base44.asServiceRole.entities.RoomJoinRequest.update(known[0].id, { status: 'approved' }).catch(() => {});
-          }
-        } else {
-          await base44.asServiceRole.entities.RoomJoinRequest.create({
-            room_id, room_name: room.name || '', user_id: id,
-            user_name: target.username || target.full_name || 'Kullanıcı', user_avatar: target.avatar || '',
-            owner_id: room.owner_id, status: 'approved',
-          }).catch(() => {});
-        }
+        if (!currentShared.includes(id)) added.push(id);
         await sendDirect(base44, me, target, marker).catch(() => {});
         shared += 1;
+      }
+      if (added.length) {
+        await base44.asServiceRole.entities.Room.update(room_id, { shared_users: [...currentShared, ...added].slice(-200) }).catch(() => {});
       }
       if (!shared) return Response.json({ error: 'Paylaşılacak kişi bulunamadı.' }, { status: 404 });
       return Response.json({ ok: true, shared });
@@ -483,25 +417,6 @@ export default async function(req) {
           : `${noteName} sohbet yasağını kaldırdı.`, type: 'system'
       }).catch(() => {});
       return Response.json({ ok: true, chat_seated_only: bannedNow });
-    }
-
-    if (action === 'toggle-approval') {
-      if (!isOwner && !isMod) return Response.json({ error: 'yetkisiz' }, { status: 403 });
-      const next = room.requires_approval === false;
-      await base44.asServiceRole.entities.Room.update(room_id, { requires_approval: next });
-      // Onay kapatılırsa bekleyen tüm istekleri otomatik onayla ve bildirim gönder
-      if (next === false) {
-        const pending = await base44.asServiceRole.entities.RoomJoinRequest.filter({ room_id, status: 'pending' }, '-created_date', 100).catch(() => []);
-        for (const req of pending) {
-          await base44.asServiceRole.entities.RoomJoinRequest.update(req.id, { status: 'approved' }).catch(() => {});
-          await upsertNotification(base44, {
-            user_id: req.user_id, title: 'Oda isteği onaylandı',
-            body: `${room.name || 'Oda'} sahibi katılım isteğinizi onayladı.`, type: 'room_join_approved', link: `/oda/${room_id}`,
-            ref_id: room_id
-          }).catch(() => {});
-        }
-      }
-      return Response.json({ ok: true, requires_approval: next });
     }
 
     if (action === 'toggle-mute') {
@@ -641,10 +556,6 @@ export default async function(req) {
     await updatePresenceRoom(base44, user.id, '');
     // Hayalet yönetici katılım listesine hiç girmez: oda/sohbet kaydı temizlenmez, yalnızca izleri bırakılır.
     if (ghost) return Response.json({ ok: true });
-    // Kişisel oda: kullanıcı ayrıldığında onay kaydını sil, tekrar katılmak için yeniden onay istesin
-    if (room.is_personal && !isOwner && !isMod) {
-      await base44.asServiceRole.entities.RoomJoinRequest.deleteMany({ room_id, user_id: user.id }).catch(() => {});
-    }
     const leavingParticipant = (room.participants || []).find((p) => p.user_id === user.id);
     const recentParticipants = silent ? (room.recent_participants || []) : rememberParticipant(room, leavingParticipant);
     let participants = (room.participants || []).filter((p) => p.user_id !== user.id);

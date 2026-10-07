@@ -32,7 +32,6 @@ export async function purgeAccount(base44: any, opts: {
   await sr.RoomMessage.deleteMany({ user_id: userId }).catch(() => {});
   await sr.RoomTyping.deleteMany({ user_id: userId }).catch(() => {});
   await sr.RoomMod.deleteMany({ user_id: userId }).catch(() => {});
-  await sr.RoomJoinRequest.deleteMany({ user_id: userId }).catch(() => {});
 
   // Kullanıcının sahip olduğu odaları kapat
   await sr.Room.deleteMany({ owner_id: userId }).catch(() => {});
