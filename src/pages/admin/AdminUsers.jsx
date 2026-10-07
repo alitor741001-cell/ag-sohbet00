@@ -161,7 +161,6 @@ export default function AdminUsers({ pendingOnly = false }) {
                   </button>
                   <div className="hidden sm:block min-w-0">
                     {visibleEmail(u) && <p className="text-xs text-muted-foreground truncate">{visibleEmail(u)}</p>}
-                    {u.payment_reference && <p className="text-xs text-purple-400 font-mono truncate">Ref: {u.payment_reference}</p>}
                   </div>
                 </div>
                 {!u.is_banned && <span className={`text-xs px-2 py-1 rounded ${isActive ? 'bg-green-500/20 text-green-400' : u.membership_status === 'pending' ? 'bg-amber-500/20 text-amber-400' : 'bg-red-500/20 text-red-400'}`}>{isActive ? 'Aktif' : u.membership_status === 'pending' ? 'Beklemede' : 'Pasif'}</span>}
@@ -193,7 +192,6 @@ export default function AdminUsers({ pendingOnly = false }) {
           onClose={() => setDetail(null)}
           info={[
             { label: 'E-posta', value: visibleEmail(detail) || '-' },
-            { label: 'Ödeme referans no', value: detail.payment_reference || '-' },
             { label: 'Üyelik durumu', value: detail.is_banned ? 'Engelli' : detail.membership_status === 'active' ? 'Aktif' : detail.membership_status === 'pending' ? 'Beklemede' : 'Pasif' },
             ...(detail.is_banned && detail.ban_reason ? [{ label: 'Engel nedeni', value: detail.ban_reason }] : []),
             ...(detail.is_banned && detail.ban_description ? [{ label: 'Engel açıklaması', value: detail.ban_description }] : []),
