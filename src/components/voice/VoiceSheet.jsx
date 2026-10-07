@@ -12,14 +12,16 @@ export default function VoiceSheet({ open, title, onClose, children, halfHeight 
   return (
     <div className="fixed inset-0 z-[245] flex flex-col justify-end">
       <button type="button" aria-label="Kapat" className="absolute inset-0 bg-black/70" onClick={onClose} />
-      <div className={`relative w-full overflow-y-auto overscroll-contain rounded-t-3xl border-t border-white/10 bg-[#12121a] px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 text-white ${halfHeight ? 'voice-sheet-half' : 'max-h-[86vh]'}`}>
-        <div className="mx-auto mb-3 flex w-full max-w-lg items-center justify-between gap-3">
+      <div className={`relative flex w-full flex-col rounded-t-3xl border-t border-white/10 bg-[#12121a] px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 text-white ${halfHeight ? 'voice-sheet-half overflow-hidden' : 'max-h-[86vh] overflow-y-auto overscroll-contain'}`}>
+        <div className="mx-auto mb-3 flex w-full max-w-lg shrink-0 items-center justify-between gap-3">
           <p className="text-base font-bold">{title}</p>
           <button type="button" onClick={onClose} aria-label="Kapat" className="rounded-full bg-white/10 p-2">
             <X className="h-4 w-4" />
           </button>
         </div>
-        <div className="mx-auto w-full max-w-lg">{children}</div>
+        {/* halfHeight: başlık sabit kalır, gövde kalan alanı kaplar — kaydırma yalnızca
+            içerikteki listeye (hediye ızgarası) aittir. */}
+        <div className={`mx-auto w-full max-w-lg ${halfHeight ? 'flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain' : ''}`}>{children}</div>
       </div>
     </div>
   );

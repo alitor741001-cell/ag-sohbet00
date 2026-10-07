@@ -80,6 +80,8 @@
 .voice-sheet-half { max-height: 86vh; }
 @media (max-width: 767px) {
   .voice-sheet-half {
+    height: 50vh;
+    height: 50dvh;
     max-height: 50vh;
     max-height: 50dvh;
   }

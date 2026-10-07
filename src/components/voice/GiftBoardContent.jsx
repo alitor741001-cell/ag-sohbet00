@@ -26,10 +26,10 @@ export default function GiftBoardContent({ gifts = [], tiers = [], people = [], 
   const insufficient = !!gift && count > 0 && coins !== null && coins !== undefined && totalCoins > coins;
 
   return (
-    // Alt boşluk: sağ alttaki yuvarlak "Gönder" düğmesi son satırın önüne geçmez —
-    // liste en alta kaydırıldığında son satır (Taç dahil) tümüyle görünür.
-    <div className="pb-40">
-      <div className="mb-3 flex flex-wrap items-center gap-2">
+    // Üstteki bölümler (bakiye, alıcılar, seviye şeridi, kategoriler) sabit durur;
+    // kaydırma yalnızca hediye listesine aittir.
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="mb-3 flex shrink-0 flex-wrap items-center gap-2">
         <span className="flex items-center gap-1.5 rounded-full bg-black/40 px-3 py-1.5 text-xs font-black tabular-nums text-amber-300">
           <Coins className="h-4 w-4" /> {coins === null || coins === undefined ? '—' : formatCoins(coins)}
           {balanceK !== null && <span className="text-[10px] font-bold text-amber-300/60">({formatK(balanceK)})</span>}
@@ -45,20 +45,24 @@ export default function GiftBoardContent({ gifts = [], tiers = [], people = [], 
         {gift && <span className="min-w-0 flex-1 truncate text-right text-[11px] font-bold" style={{ color }}>{tone?.name || 'Standart'} seviye</span>}
       </div>
 
-      <GiftRecipientRow
-        people={people}
-        selectedIds={selectedIds}
-        color={color}
-        onToggle={onTogglePerson}
-        onSelectAll={onSelectAll}
-        onClear={onClear}
-      />
+      <div className="shrink-0">
+        <GiftRecipientRow
+          people={people}
+          selectedIds={selectedIds}
+          color={color}
+          onToggle={onTogglePerson}
+          onSelectAll={onSelectAll}
+          onClear={onClear}
+        />
+      </div>
 
       {/* "Tümü" kategorisinin üstünde dönüşümlü seviye şeridi: atış LVL → hediye alma LVL.
           Bar, odada hediye atıldıkça canlı ilerler. */}
-      <GiftLevelTicker giftTick={giftTick} />
+      <div className="shrink-0">
+        <GiftLevelTicker giftTick={giftTick} />
+      </div>
 
-      <div className="no-scrollbar my-3 flex gap-2 overflow-x-auto pb-1">
+      <div className="no-scrollbar my-3 flex shrink-0 gap-2 overflow-x-auto pb-1">
         {categories.map((item) => (
           <button
             key={item}
@@ -72,23 +76,26 @@ export default function GiftBoardContent({ gifts = [], tiers = [], people = [], 
       </div>
 
       {shown.length === 0 ? (
-        <p className="rounded-xl bg-white/5 px-3 py-3 text-center text-xs text-white/50">Bu kategoride hediye yok.</p>
+        <p className="shrink-0 rounded-xl bg-white/5 px-3 py-3 text-center text-xs text-white/50">Bu kategoride hediye yok.</p>
       ) : (
-        <div className="grid grid-cols-3 gap-2 pb-1">
-          {shown.map((item) => (
-            <GiftCard
-              key={item.id}
-              gift={item}
-              color={tierForK(tiers, item.k_value)?.color || '#ef4444'}
-              selected={giftId === item.id}
-              onSelect={onSelectGift}
-            />
-          ))}
+        // Hediye listesi kendi içinde kayar; alttaki boşluk sağ alttaki "Gönder" düğmesi için ayrılır.
+        <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain pb-40">
+          <div className="grid grid-cols-3 gap-2 pb-1">
+            {shown.map((item) => (
+              <GiftCard
+                key={item.id}
+                gift={item}
+                color={tierForK(tiers, item.k_value)?.color || '#ef4444'}
+                selected={giftId === item.id}
+                onSelect={onSelectGift}
+              />
+            ))}
+          </div>
         </div>
       )}
 
       {insufficient && (
-        <p className="mt-2 rounded-xl bg-red-500/15 px-3 py-2 text-center text-[11px] font-bold text-red-300">
+        <p className="mt-2 shrink-0 rounded-xl bg-red-500/15 px-3 py-2 text-center text-[11px] font-bold text-red-300">
           Yetersiz bakiye — gereken {formatPrice(totalK)}, bakiyen {formatCoins(coins)} coin
         </p>
       )}
