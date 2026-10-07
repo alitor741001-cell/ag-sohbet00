@@ -1,13 +1,13 @@
 import { memo } from 'react';
 import { Link } from 'react-router-dom';
-import { BarChart3, Check, EyeOff, Film, Gamepad2, Lock, MessageSquare, Mic, Music, PartyPopper, Sparkles } from 'lucide-react';
+import { BarChart3, Cake, Check, EyeOff, Film, Gamepad2, Lock, MessageSquare, Mic, Music, PartyPopper, Sparkles } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import { youtubeIdFromMovieId } from '@/lib/youtubeTitle';
 import { prefetchRoomCancel, prefetchRoomSoon } from '@/lib/roomPrefetch';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 
 /** Oda kategorisi kartın sağ üstünde kendi ikonuyla gösterilir. */
-const CATEGORY_ICONS = { Sohbet: MessageSquare, DJ: Music, 'Eğlence': Sparkles, 'Parti': PartyPopper, Oyun: Gamepad2 };
+const CATEGORY_ICONS = { Sohbet: MessageSquare, DJ: Music, 'Eğlence': Sparkles, 'Parti': PartyPopper, Oyun: Gamepad2, 'Doğum Günü': Cake };
 
 /** Ana sayfa keşfet ızgarasındaki kare oda kartı: altın çerçeveli premium kart. */
 function RoomDiscoveryCard({ room, owner, kind, filmTitle, friendInside }) {

@@ -23,6 +23,8 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
 
   // 9'lu düzende üstteki tek koltuk (orta çerçeve) referanstaki gibi daha büyük çizilir.
   const featureTop = seats.length === 9;
+  // Kalabalık düzen (15/20 koltuk): koltuklar daraltılmaz, geniş kalır.
+  const dense = seats.length >= 15;
   const widestRow = Math.max(1, ...rows.map((row) => row.length));
   const width = measured?.width || 360;
   const narrow = width < 640;
@@ -46,7 +48,12 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
     : Infinity;
   const maxCell = perRow - columnExtra;
   const heightSize = maxCell >= 88 ? 'lg' : maxCell >= 68 ? 'md' : maxCell >= 52 ? 'sm' : 'xs';
-  const size = SIZES[Math.min(SIZES.indexOf(widthSize), SIZES.indexOf(heightSize))];
+  const fitSize = SIZES[Math.min(SIZES.indexOf(widthSize), SIZES.indexOf(heightSize))];
+  // Kalabalık düzende boyut yükseklik yüzünden kısılmaz: en az 'md' genişlik korunur,
+  // sığmayan satırlar sahne içinde kaydırılarak görünür.
+  const size = dense
+    ? SIZES[Math.min(SIZES.indexOf(widthSize), Math.max(SIZES.indexOf(heightSize), SIZES.indexOf('md')))]
+    : fitSize;
   // Orta çerçeve bir beden büyük: referanstaki 9'lu düzenin oranı korunur.
   const topSize = SIZES[Math.min(SIZES.indexOf(size) + 1, SIZES.length - 1)];
 

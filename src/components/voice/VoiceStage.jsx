@@ -19,6 +19,8 @@ export default function VoiceStage({ scrollRef, handlers, room, hiddenAnnounce, 
   const measured = useSize(boxRef);
   const gridMeasured = useSize(gridBoxRef);
   const areaMeasured = useSize(areaRef);
+  // Kalabalık düzende (15/20 koltuk) satırlar sahneye sığmazsa sahne kendi içinde kayar.
+  const dense = (grid.seats?.length || 0) >= 15;
 
   // Koltukların altında kalan boşluk sohbet alanına bildirilir: mesajlar tam koltukların alt
   // hizasından başlar. Koltukların boyutu ve yeri değişmez — yalnızca sohbet yukarı taşar.
@@ -39,7 +41,7 @@ export default function VoiceStage({ scrollRef, handlers, room, hiddenAnnounce, 
         {...handlers}
         // Sayı tahtası açıkken süre kartı sahnenin hemen altında durur; sahnenin alt boşluğu
         // ona devredilir, koltuklar için ayrılan yer değişmez.
-        className={`voice-stage relative min-h-0 flex-1 overflow-hidden px-3 pt-1 ${grid.boardActive ? 'pb-0' : 'pb-4'}`}
+        className={`voice-stage relative min-h-0 flex-1 px-3 pt-1 ${dense ? 'overflow-y-auto overflow-x-hidden' : 'overflow-hidden'} ${grid.boardActive ? 'pb-0' : 'pb-4'}`}
       >
         <div ref={boxRef} className="flex h-full min-h-0 flex-col items-center">
           {room?.password && (

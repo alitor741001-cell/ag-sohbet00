@@ -11,6 +11,7 @@ export default function RoomInfoCard({ room, onOpen, viewerCount = 0, onOpenView
   const ownerHidden = isHiddenName(room?.owner_name);
   const ownerName = ownerHidden ? room.owner_name : profile.username || room?.owner_name || profile.full_name || 'Kullanıcı';
   const memberId = !ownerHidden && profile.member_id && profile.member_id !== '-' ? String(profile.member_id) : '';
+  const roomName = room?.name || 'Oda';
 
   return (
     <div className="flex w-full items-center justify-between gap-2">
@@ -22,8 +23,14 @@ export default function RoomInfoCard({ room, onOpen, viewerCount = 0, onOpenView
               : <span className="text-base font-bold text-slot-text">{ownerName.trim().charAt(0)}</span>}
           </span>
         </button>
-        <div className="min-w-0 flex-1 text-left">
-          <span className="block truncate text-sm font-bold leading-tight text-slot-text min-[390px]:text-base" title={room?.name || 'Oda'}>{room?.name || 'Oda'}</span>
+        <div className="min-w-0 flex-1 overflow-hidden text-left">
+          {/* Oda ismi sürekli sola kayar: iki kopya arasında kesintisiz döngü kurulur. */}
+          <span className="room-name-fade block overflow-hidden" title={roomName}>
+            <span className="room-name-marquee flex w-max">
+              <span className="pr-8 text-sm font-bold leading-tight text-slot-text min-[390px]:text-base">{roomName}</span>
+              <span aria-hidden="true" className="pr-8 text-sm font-bold leading-tight text-slot-text min-[390px]:text-base">{roomName}</span>
+            </span>
+          </span>
           {memberId && <span className="mt-1 block truncate text-xs leading-tight tabular-nums text-slot-text/60">ID:{memberId}</span>}
         </div>
       </div>
