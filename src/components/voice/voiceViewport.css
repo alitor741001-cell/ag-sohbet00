@@ -95,3 +95,20 @@
     max-height: 50dvh;
   }
 }
+
+/* Klavye açıldığında oda yerleşimi kısalmaz: koltuklar aynı boyutta ve aynı yerde kalır,
+   klavye oturma düzeninin üstüne biner. Yazma alanı taşıyan sohbet bloğu klavyenin hemen
+   üstüne taşınır, böylece yazarken koltuklar yerinden oynamaz. */
+@media (max-width: 767px) {
+  .voice-viewport[data-keyboard="open"] {
+    height: calc(var(--visual-viewport-height, 100dvh) + var(--keyboard-height, 0px));
+  }
+
+  .voice-viewport[data-keyboard="open"] .voice-chat-dock {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: var(--keyboard-height, 0px);
+    z-index: 30;
+  }
+}
