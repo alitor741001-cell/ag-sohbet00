@@ -1,5 +1,5 @@
 // Sesli oda koltuk düzeni — sabit kapasiteler (tekli koltuk dahil).
-export const SEAT_OPTIONS = [1, 2, 5, 8, 9, 12, 15, 20];
+export const SEAT_OPTIONS = [1, 2, 5, 8, 9, 12, 15];
 
 // Satır düzeni referans görsellerle aynı: az koltukta satır başına 4, çok koltukta 5;
 // artan koltuklar en üstteki ortalanmış satıra yazılır (5 → 1+4, 8 → 4+4, 12 → 2+5+5).

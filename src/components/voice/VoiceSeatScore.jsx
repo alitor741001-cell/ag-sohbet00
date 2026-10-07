@@ -7,7 +7,7 @@ import { formatScore, scoreTier } from '@/components/voice/scoreTier';
  * Her hücre aynı genişlikte kaldığı için koltuk ızgarası kaymaz.
  */
 // Şerit genişliği koltuk boyutuna göre: koltuk ne kadar küçükse şerit de o kadar dar kalır.
-const WIDTH = { xs: 'w-[42px]', sm: 'w-[52px]', md: 'w-[68px]', lg: 'w-[88px]' };
+const WIDTH = { xs: 'w-[42px]', sm: 'w-[52px]', md: 'w-[68px]', lg: 'w-[88px]', xl: 'w-[96px]' };
 
 export default function VoiceSeatScore({ value = 0, size = 'md' }) {
   const shown = Math.max(1, Math.round(Number(value) || 0));

@@ -6,6 +6,10 @@ import useMessageProfiles from '@/hooks/useMessageProfiles';
 import { seatIndexRows } from '@/components/voice/seatLayout';
 import { useSize } from '@/hooks/use-size';
 
+// Koltuk hücresinin piksel genişliği (VoiceSeat CELL ölçüleriyle birebir aynı):
+// satır genişliği ve koltuk arası boşluk bu değerlere göre hesaplanır.
+const CELL_PX = { xs: 42, sm: 52, md: 68, lg: 88, xl: 96 };
+
 
 
 /**
@@ -28,26 +32,36 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
   const widestRow = Math.max(1, ...rows.map((row) => row.length));
   const width = measured?.width || 360;
   const narrow = width < 640;
-  const gap = narrow ? 12 : 20;
+  const baseGap = featureTop ? (narrow ? 6 : 14) : narrow ? 12 : 20;
   // Alçak ekranda satır araları daralır: en küçük koltukta bile tüm satırlar ve
   // altlarındaki sayı şeritleri sahneye sığar.
   const rowsNeeded = (rows.length || 1) * (boardActive ? 83 : 62) + 12 * Math.max(0, rows.length - 1);
-  const rowGap = narrow ? (maxHeight && maxHeight < rowsNeeded ? 6 : 12) : 20;
+  const rowGap = featureTop ? (narrow ? 8 : 14) : narrow ? (maxHeight && maxHeight < rowsNeeded ? 6 : 12) : 20;
   const available = width - 4;
-  const perSeat = (available - gap * (widestRow - 1)) / widestRow;
-  const widthSize = perSeat >= 84 ? 'lg' : perSeat >= 62 ? 'md' : perSeat >= 46 ? 'sm' : 'xs';
+  const perSeat = (available - baseGap * (widestRow - 1)) / widestRow;
+  // 9'lu düzende koltuk bir beden büyük çizilir: 'xl' sınırı da açıktır.
+  const widthSize = featureTop
+    ? (perSeat >= 96 ? 'xl' : perSeat >= 86 ? 'lg' : perSeat >= 66 ? 'md' : perSeat >= 50 ? 'sm' : 'xs')
+    : (perSeat >= 84 ? 'lg' : perSeat >= 62 ? 'md' : perSeat >= 46 ? 'sm' : 'xs');
+  // 9'lu düzen: satırda artan boşluk koltuk aralarına dağıtılır, dörtlü satırlar sahnenin
+  // iki kenarına yanaşır. Geniş ekranda boşluk şişmesin diye üst sınır konur.
+  const gap = featureTop
+    ? Math.min(narrow ? 24 : 40, Math.max(baseGap, (available - CELL_PX[widthSize] * widestRow) / (widestRow - 1)))
+    : baseGap;
   // Yükseklik de hesaba katılır: koltuğun altındaki isim ve (tahta açıkken) sayı şeridi için
   // gereken yer düşülür, kalan yükseklik koltuk boyutunu belirler. Böylece koltuk sayısı
   // artırıldığında alttaki sıraların rakamları görünmez olmaz.
-  const SIZES = ['xs', 'sm', 'md', 'lg'];
-  const columnExtra = boardActive ? 41 : 20;
+  const SIZES = ['xs', 'sm', 'md', 'lg', 'xl'];
+  const columnExtra = boardActive ? (featureTop ? 33 : 41) : featureTop ? 16 : 20;
   // Üstteki büyük çerçeve fazladan yer kaplar: kalan satırlar ona göre ölçülür.
-  const rowUnits = rows.length + (featureTop ? 0.4 : 0);
+  const rowUnits = rows.length + (featureTop ? 0.2 : 0);
   const perRow = maxHeight
     ? (maxHeight - rowGap * Math.max(0, rows.length - 1)) / (rowUnits || 1)
     : Infinity;
   const maxCell = perRow - columnExtra;
-  const heightSize = maxCell >= 88 ? 'lg' : maxCell >= 68 ? 'md' : maxCell >= 52 ? 'sm' : 'xs';
+  const heightSize = featureTop
+    ? (maxCell >= 96 ? 'xl' : maxCell >= 86 ? 'lg' : maxCell >= 66 ? 'md' : maxCell >= 50 ? 'sm' : 'xs')
+    : (maxCell >= 88 ? 'lg' : maxCell >= 68 ? 'md' : maxCell >= 52 ? 'sm' : 'xs');
   const fitSize = SIZES[Math.min(SIZES.indexOf(widthSize), SIZES.indexOf(heightSize))];
   // Kalabalık düzende boyut yükseklik yüzünden kısılmaz: en az 'md' genişlik korunur,
   // sığmayan satırlar sahne içinde kaydırılarak görünür.

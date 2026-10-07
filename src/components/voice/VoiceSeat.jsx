@@ -6,15 +6,15 @@ import { isHiddenName } from '@/lib/hiddenUser';
 
 // Her koltuk aynı boyutta sabit bir portre alanı kullanır: profil boyutu değişse de
 // ızgara kaymaz, çerçeveler komşu koltuğa taşmaz.
-const CELL = { xs: 'h-[42px] w-[42px]', sm: 'h-[52px] w-[52px]', md: 'h-[68px] w-[68px]', lg: 'h-[88px] w-[88px]' };
-const FACE = { xs: 'h-10 w-10', sm: 'h-12 w-12', md: 'h-14 w-14', lg: 'h-20 w-20' };
-const RING = { xs: 'h-10 w-10', sm: 'h-12 w-12', md: 'h-14 w-14', lg: 'h-20 w-20' };
-const EMPTY = { xs: 'h-10 w-10', sm: 'h-12 w-12', md: 'h-14 w-14', lg: 'h-20 w-20' };
-const BADGE = { xs: 'translate-x-[3px] translate-y-[3px]', sm: 'translate-x-[5px] translate-y-[5px]', md: 'translate-x-[9px] translate-y-[9px]', lg: 'translate-x-[12px] translate-y-[12px]' };
+const CELL = { xs: 'h-[42px] w-[42px]', sm: 'h-[52px] w-[52px]', md: 'h-[68px] w-[68px]', lg: 'h-[88px] w-[88px]', xl: 'h-[96px] w-[96px]' };
+const FACE = { xs: 'h-10 w-10', sm: 'h-12 w-12', md: 'h-14 w-14', lg: 'h-20 w-20', xl: 'h-[88px] w-[88px]' };
+const RING = { xs: 'h-10 w-10', sm: 'h-12 w-12', md: 'h-14 w-14', lg: 'h-20 w-20', xl: 'h-[88px] w-[88px]' };
+const EMPTY = { xs: 'h-10 w-10', sm: 'h-12 w-12', md: 'h-14 w-14', lg: 'h-20 w-20', xl: 'h-[88px] w-[88px]' };
+const BADGE = { xs: 'translate-x-[3px] translate-y-[3px]', sm: 'translate-x-[5px] translate-y-[5px]', md: 'translate-x-[9px] translate-y-[9px]', lg: 'translate-x-[12px] translate-y-[12px]', xl: 'translate-x-[14px] translate-y-[14px]' };
 // İsim alanı koltuk genişliğini aşmaz: uzun isimler satırı yana taşırmaz.
-const NAME = { xs: 'max-w-[42px]', sm: 'max-w-[52px]', md: 'max-w-[68px]', lg: 'max-w-[88px]' };
+const NAME = { xs: 'max-w-[42px]', sm: 'max-w-[52px]', md: 'max-w-[68px]', lg: 'max-w-[88px]', xl: 'max-w-[96px]' };
 // Kilit ve + ikonları koltuk büyüdükçe büyür: referanstaki oran korunur.
-const ICON = { xs: 'h-3.5 w-3.5', sm: 'h-4 w-4', md: 'h-5 w-5', lg: 'h-7 w-7' };
+const ICON = { xs: 'h-3.5 w-3.5', sm: 'h-4 w-4', md: 'h-5 w-5', lg: 'h-7 w-7', xl: 'h-7 w-7' };
 
 /** Tek koltuk: boş koltukta + ve numara, dolu koltukta profil görseli ve isim. */
 function VoiceSeat({ seat, index, size = 'md', musicPlaying, speaking, gender, isSelf, isOwner, isMod, accent = '#ef4444', gifted, onClick, onSelect, micMuted }) {
