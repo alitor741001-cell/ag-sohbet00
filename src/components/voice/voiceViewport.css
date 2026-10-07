@@ -1,3 +1,9 @@
+/* Özel sohbet yarım panelinin yüksekliği: panel ile odaya ayrılan alan aynı ölçüyü kullanır,
+   böylece panelin üst kenarı ile sahnenin alt sınırı tam olarak çakışır. */
+:root {
+  --voice-dm-height: 56dvh;
+}
+
 .voice-viewport {
   top: var(--viewport-offset, 0px);
   height: var(--visual-viewport-height, 100dvh);
@@ -58,4 +64,13 @@
        kaydırmak çubuğu çerçevenin dışına çıkarıp overflow ile kırpıyordu. */
     bottom: 0;
   }
+}
+
+/* Özel sohbet yarım panel olarak açıkken oda yalnızca panelin üstünde kalan alana yerleşir
+   (ayrılan yer panel yüksekliği kadar alt dolguyla verilir): sahne bu alana sığar ve koltuk
+   ızgarası kesilmeden tam görünür. Panelin örttüğü alt bölgede kalan sohbet akışı ve kontrol
+   çubuğu zaten görünmediği için gizlenir. */
+.voice-viewport.voice-dm-open .voice-chat-dock,
+.voice-viewport.voice-dm-open .voice-controls-anchor {
+  display: none;
 }

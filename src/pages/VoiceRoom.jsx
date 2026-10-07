@@ -87,6 +87,8 @@ export default function VoiceRoom() {
   const [profileUserId, setProfileUserId] = useState(null);
   const [dmUserId, setDmUserId] = useState(null);
   const [dmOpen, setDmOpen] = useState(false);
+  // Özel sohbet paneli tam ekrana geçti mi? Yarım panelken oda panelin üstüne sığar.
+  const [dmExpanded, setDmExpanded] = useState(false);
   const [exitOpen, setExitOpen] = useState(false);
   const [gamesOpen, setGamesOpen] = useState(false);
   const [giftOpen, setGiftOpen] = useState(false);
@@ -920,6 +922,11 @@ export default function VoiceRoom() {
     );
   }
 
+  // Özel sohbet yarım panel olarak açıkken oda yalnızca panelin üstünde kalan alana yerleşir:
+  // sahne bu alana sığar, koltuk ızgarası kesilmeden tam görünür. Panel tam ekrana geçince
+  // (zaten her yeri kapladığı için) oda normal düzeninde kalır.
+  const dmHalfOpen = (dmOpen || !!dmUserId) && !dmExpanded;
+
   const sheetSeat = seatIndex === null ? null : seats[seatIndex];
   const profileTarget = profileUserId;
   const profileSeatIndex = profileTarget ? seats.findIndex((item) => item.user_id === profileTarget) : -1;
@@ -978,7 +985,11 @@ export default function VoiceRoom() {
   // Klavye açılınca oda düzeni yerinden oynamaz: yalnızca sohbet bölümü klavyenin üstüne kayar,
   // alttaki kontrol çubuğu (mik/hoparlör) hep aynı yerde durur.
   return (
-    <VoiceViewport className="z-[150]" onKeyboardChange={handleKeyboardChange}>
+    <VoiceViewport
+      className={`z-[150] ${dmHalfOpen ? 'voice-dm-open' : ''}`}
+      style={dmHalfOpen ? { paddingBottom: 'var(--voice-dm-height)' } : undefined}
+      onKeyboardChange={handleKeyboardChange}
+    >
       <div className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-gradient-to-b from-primary/25 to-transparent" />
 
       <header className="relative shrink-0 px-3 pb-2 pt-[max(0.75rem,env(safe-area-inset-top))]">
@@ -1233,7 +1244,8 @@ export default function VoiceRoom() {
       <VoicePrivateChatSheet
         open={dmOpen || !!dmUserId}
         initialUserId={dmUserId}
-        onClose={() => { setDmOpen(false); setDmUserId(null); }}
+        onExpandChange={setDmExpanded}
+        onClose={() => { setDmOpen(false); setDmUserId(null); setDmExpanded(false); }}
       />
 
       {/* Yayını paylaş: arkadaşlar tek tek seçilir, oda gizliyse giriş izni de verilir. */}

@@ -3,21 +3,24 @@ import RoomDirectMessages from '@/components/player/RoomDirectMessages';
 import VoiceViewport from '@/components/voice/VoiceViewport';
 
 /**
- * Özel sohbet: ekranın dibinden yarıya kadar altın-kırmızı bir panel olarak açılır.
+ * Özel sohbet: ekranın dibinden yarıya kadar altın-kırmızı bir panel olarak açılır; oda
+ * panelin üstünde kalan alana yerleştiği için koltuklar kesilmeden tam görünür.
  * Panelden bir mesaj açıldığında tam ekrana geçer; geri tuşuna basıldığında
  * yarım panele dönmeden özel sohbet alanı tümüyle kapanır.
  */
-export default function VoicePrivateChatSheet({ open, initialUserId, onClose }) {
+export default function VoicePrivateChatSheet({ open, initialUserId, onClose, onExpandChange }) {
   const [full, setFull] = useState(false);
   const wasFullRef = useRef(false);
 
 
   useEffect(() => {
-    if (!open) { setFull(false); wasFullRef.current = false; }
-  }, [open]);
+    if (!open) { setFull(false); wasFullRef.current = false; onExpandChange?.(false); }
+  }, [open, onExpandChange]);
 
   // Tam ekrandan geri dönüş: yarım panele inmek yerine paneli kapatır.
   const handleFullChange = (next) => {
+    // Oda, panelin yarım mı tam ekran mı olduğunu bilir: yarımken koltuklar görünür kalır.
+    onExpandChange?.(next);
     if (wasFullRef.current && !next) {
       wasFullRef.current = false;
       setFull(false);
@@ -39,7 +42,7 @@ export default function VoicePrivateChatSheet({ open, initialUserId, onClose }) 
         className={
           full
             ? 'relative flex h-full w-full flex-col overflow-hidden bg-[#150A0A]'
-            : 'animate-sheet-up relative flex h-[56dvh] w-full flex-col overflow-hidden rounded-t-[26px] bg-gradient-to-b from-[#2C1512] to-[#150A0A] ring-1 ring-[#F2CE6B]/40'
+            : 'animate-sheet-up relative flex h-[var(--voice-dm-height)] w-full flex-col overflow-hidden rounded-t-[26px] bg-gradient-to-b from-[#2C1512] to-[#150A0A] ring-1 ring-[#F2CE6B]/40'
         }
       >
         {!full && <span className="mx-auto mt-2 h-1 w-10 shrink-0 self-center rounded-full bg-[#F2CE6B]/60" />}
