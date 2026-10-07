@@ -103,12 +103,22 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
     return match ? Number(match[1]) : 0;
   };
   const isCheatClearNotice = (m) => m?.type === 'system' && /cheati temizledi/i.test(m?.text || '');
+  // Odaya girmeden önce yazılmış mesajlar gösterilmez: ilk okuma yalnızca bu eski
+  // mesajların kimliklerini işaretler, sohbet giriş anından itibaren akar.
+  const preEntryIds = useRef(new Set());
+  const seededRef = useRef(false);
   const load = () => {
     base44.entities.RoomMessage.filter({ room_id: roomId }, '-created_date', 200)
       .then((r) => {
-        // Sonradan katılan da odanın güncel (temizlenmiş) görünümünü görür.
         setCheatClearedAt((current) => r.reduce((max, m) => Math.max(max, cheatMarkerTime(m)), current || 0));
-        setMessages((current) => mergeMessages(current, r.filter((m) => !isHiddenMarker(m))));
+        const visible = r.filter((m) => !isHiddenMarker(m));
+        if (!seededRef.current) {
+          seededRef.current = true;
+          visible.forEach((m) => preEntryIds.current.add(m.id));
+          setLoading(false);
+          return;
+        }
+        setMessages((current) => mergeMessages(current, visible.filter((m) => !preEntryIds.current.has(m.id))));
         setLoading(false); setTimeout(scrollToBottom, 100);
       })
       .catch(() => setLoading(false));

@@ -1,9 +1,12 @@
 import { useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
 import subscribeEntity from '@/components/data/entitySubscriptions';
-import { mergeMessages, upsertMessage } from '@/lib/realtimeMessages';
+import { upsertMessage } from '@/lib/realtimeMessages';
 
-// Only this room is applied to the UI. A burst is committed once per frame.
+/**
+ * Odadaki sohbet yalnızca girişten sonra akan mesajları gösterir: odaya girmeden
+ * önce yazılmış eski mesajlar hiç yüklenmez, böylece kimse geçmiş sohbeti görmez.
+ * Aynı odanın içinde kalındığı sürece yazışma ekranda birikir.
+ */
 export default function useVoiceRoomMessages(roomId, setMessages) {
   useEffect(() => {
     if (!roomId) return;
@@ -11,9 +14,7 @@ export default function useVoiceRoomMessages(roomId, setMessages) {
     let timer = null;
     const pending = [];
     setMessages([]);
-    base44.entities.RoomMessage.filter({ room_id: roomId }, '-created_date', 80)
-      .then((items) => { if (alive) setMessages((current) => mergeMessages(current, [...items].reverse())); })
-      .catch(() => {});
+    // Yoğun akış tek karede uygulanır: kısa aralıkla gelen mesajlar kaybolmaz.
     const flush = () => {
       timer = null;
       const events = pending.splice(0);

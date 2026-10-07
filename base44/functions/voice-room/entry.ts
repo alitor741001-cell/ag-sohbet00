@@ -14,7 +14,7 @@ import { HIDDEN_AVATAR_URL, hiddenDisplayName, isHiddenDisplayName, isHiddenUser
 const SEAT_OPTIONS = [1, 2, 5, 8, 9, 12, 15, 20, 24];
 // Bu değerin (coin) üzerindeki hediyeler bütün sesli odalara duyurulur.
 const BIG_GIFT_SCORE = 1000000;
-const ACTIONS = ['seat-take', 'seat-leave', 'seat-lock', 'seat-mute', 'seat-kick', 'set-seat-count', 'invite', 'seat-invite', 'seat-invite-clear', 'gift-state', 'gift-send', 'gift-finalize', 'gift-board', 'number-board-open', 'number-board-close', 'number-step', 'number-reset', 'number-settings', 'chat-ban', 'music-state', 'music-set', 'music-control', 'music-library', 'music-remove'];
+const ACTIONS = ['seat-take', 'seat-leave', 'seat-lock', 'seat-mute', 'seat-kick', 'set-seat-count', 'invite', 'seat-invite', 'seat-invite-clear', 'gift-state', 'gift-send', 'gift-finalize', 'gift-board', 'number-board-open', 'number-board-close', 'number-step', 'number-reset', 'number-settings', 'chat-ban', 'music-state', 'music-set', 'music-control', 'music-library', 'music-remove', 'music-add'];
 
 const emptySeat = (index, locked = false) => ({
   index, user_id: '', name: '', avatar: '', frame: '', frame_scale: 100, locked, muted: false,
@@ -524,6 +524,32 @@ export default async function (req: Request): Promise<Response> {
       if (!row || row.added_by !== user.id) return Response.json({ error: 'Bu şarkı senin listende değil.' }, { status: 403 });
       await base44.asServiceRole.entities.RoomTrack.delete(trackId);
       return Response.json({ ok: true, removed: trackId });
+    }
+
+    // Telefondan yüklenen şarkılar yalnızca kendi listene eklenir; kendiliğinden çalmaz.
+    // Çalma yalnızca listeden dokunulduğunda (music-set) başlar.
+    if (action === 'music-add') {
+      if (!isParticipant && !canMod) return Response.json({ error: 'Önce odaya katılmalısın.' }, { status: 403 });
+      const raw = Array.isArray(body.tracks) ? body.tracks : [];
+      const items = raw.slice(0, 20).map((item: any) => ({
+        title: String(item?.title || '').trim().slice(0, 80) || 'Şarkı',
+        file_uri: String(item?.file_uri || '').trim().slice(0, 400),
+      })).filter((item: any) => item.file_uri);
+      if (!items.length) return Response.json({ error: 'Şarkı dosyası geçersiz.' }, { status: 400 });
+      const rlAdd = await rateLimit(base44, 'voice-music-add:' + user.id, user.id, 30, 60000);
+      if (!rlAdd.allowed) return Response.json({ error: 'Çok sık şarkı yükleniyor.', retry_after_ms: 60000 }, { status: 429 });
+      const mine = await base44.asServiceRole.entities.RoomTrack.filter({ added_by: user.id }, '-created_date', 100).catch(() => []);
+      const known = new Set((Array.isArray(mine) ? mine : []).map((row: any) => row.file_uri));
+      const created: any[] = [];
+      for (const item of items) {
+        if (known.has(item.file_uri)) continue;
+        known.add(item.file_uri);
+        const row = await base44.asServiceRole.entities.RoomTrack.create({
+          room_id, title: item.title, file_uri: item.file_uri, added_by: user.id, added_by_name: shownName,
+        }).catch(() => null);
+        if (row) created.push(row);
+      }
+      return Response.json({ ok: true, created });
     }
 
     if (action === 'music-set') {

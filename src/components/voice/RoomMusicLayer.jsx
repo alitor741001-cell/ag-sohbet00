@@ -17,7 +17,7 @@ export default function RoomMusicLayer({ music, sheetOpen, onCloseSheet, control
         tracks={music.library}
         currentUri={music.music?.file_uri}
         uploading={music.uploading}
-        onUpload={music.uploadTrack}
+        onUpload={music.uploadTracks}
         onPlayTrack={music.playTrack}
         onDeleteTrack={music.removeTrack}
       />

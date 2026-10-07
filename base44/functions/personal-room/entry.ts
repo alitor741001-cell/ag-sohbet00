@@ -64,9 +64,11 @@ export default async function(req) {
 
     // Tek kişisel oda kuralı: fazlası varsa kapat
     if (existing.length > 1) {
-      await Promise.all(existing.slice(1).map((r) =>
-        base44.asServiceRole.entities.Room.update(r.id, { status: 'closed', is_playing: false, recent_participants: [] }).catch(() => {})
-      ));
+      await Promise.all(existing.slice(1).map(async (r) => {
+        await base44.asServiceRole.entities.Room.update(r.id, { status: 'closed', is_playing: false, recent_participants: [] }).catch(() => {});
+        // Kapanan odanın sohbeti kimseye görünmez: mesajları silinir.
+        await base44.asServiceRole.entities.RoomMessage.deleteMany({ room_id: r.id }).catch(() => {});
+      }));
     }
 
     // Tek oda kuralı: kişisel oda açılırken sahibin diğer aktif odaları (sesli oda vb.)
@@ -75,9 +77,13 @@ export default async function(req) {
       .filter({ owner_id: user.id, status: 'active' }, '-created_date', 30).catch(() => []);
     await Promise.all(ownerRooms
       .filter((r) => !r.is_personal)
-      .map((r) => base44.asServiceRole.entities.Room.update(r.id, {
-        status: 'closed', is_playing: false, participants: [], recent_participants: []
-      }).catch(() => {})));
+      .map(async (r) => {
+        await base44.asServiceRole.entities.Room.update(r.id, {
+          status: 'closed', is_playing: false, participants: [], recent_participants: []
+        }).catch(() => {});
+        // Kapanan odanın sohbeti kimseye görünmez: mesajları silinir.
+        await base44.asServiceRole.entities.RoomMessage.deleteMany({ room_id: r.id }).catch(() => {});
+      }));
 
     if (existing[0]) {
       // Eski odada kod yoksa ekle

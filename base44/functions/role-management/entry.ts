@@ -22,6 +22,11 @@ async function removeFromAllRooms(base44, userId, userName) {
       }
     }
     await base44.asServiceRole.entities.Room.update(room.id, update).catch(() => {});
+    // Oda kapandıysa sohbeti de silinir: eski mesajlar kimseye görünmez.
+    if (update.status === 'closed') {
+      await base44.asServiceRole.entities.RoomMessage.deleteMany({ room_id: room.id }).catch(() => {});
+      continue;
+    }
     await base44.asServiceRole.entities.RoomMessage.create({
       room_id: room.id, user_id: userId, user_name: userName,
       text: `${userName} engellendi ve odadan kaldırıldı.`, type: 'system'

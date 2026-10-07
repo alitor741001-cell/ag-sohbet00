@@ -117,31 +117,36 @@ export default function useRoomMusic(roomId, enabled) {
     await base44.functions.invoke('voice-room', { room_id: roomId, action: 'music-control', op }).catch(() => {});
   }, [roomId]);
 
-  // Telefondan seçilen şarkı gizli yüklenir, imzalı bağlantısı alınır ve odanın müziği olur.
-  const uploadTrack = useCallback(async (file) => {
-    if (!file || !roomId) return 'empty';
-    if (file.size > MAX_TRACK_MB * 1024 * 1024) return 'too-large';
+  // Telefondan seçilen şarkılar (birden fazla olabilir) gizli yüklenir ve yalnızca
+  // kendi listene eklenir. Yükleme müziği başlatmaz: şarkı listeden dokununca çalar.
+  const uploadTracks = useCallback(async (files) => {
+    const list = (Array.isArray(files) ? files : [files]).filter(Boolean);
+    if (!roomId || !list.length) return { status: 'empty', added: 0, skipped: 0 };
+    const allowed = list.filter((file) => file.size <= MAX_TRACK_MB * 1024 * 1024);
+    const skipped = list.length - allowed.length;
+    if (!allowed.length) return { status: 'too-large', added: 0, skipped };
     setUploading(true);
+    let status = 'ok';
+    const tracks = [];
     try {
-      const uploaded = await withTimeout(base44.integrations.Core.UploadPrivateFile({ file }));
-      if (uploaded?.timeout) return 'timeout';
-      if (uploaded?.error || !uploaded?.file_uri) return uploaded?.error?.response?.status === 429 ? 'busy' : 'error';
-      const signed = await withTimeout(base44.integrations.Core.CreateFileSignedUrl({ file_uri: uploaded.file_uri, expires_in: URL_TTL }));
-      if (signed?.timeout || !signed?.signed_url) return signed?.error?.response?.status === 429 ? 'busy' : 'error';
-      const response = await withTimeout(base44.functions.invoke('voice-room', {
-        room_id: roomId,
-        action: 'music-set',
-        title: String(file.name || '').replace(/\.[^.]+$/, '').slice(0, 80) || 'Şarkı',
-        file_uri: uploaded.file_uri,
-        url: signed.signed_url,
-      }));
-      if (response?.timeout) return 'timeout';
-      if (response?.error) return 'error';
-      setMusic(response.data?.music || null);
+      // Dosyalar tek tek yüklenir: biri takılırsa diğerleri yine listeye girer.
+      for (const file of allowed) {
+        const uploaded = await withTimeout(base44.integrations.Core.UploadPrivateFile({ file }));
+        if (uploaded?.timeout) { status = 'timeout'; break; }
+        if (uploaded?.error || !uploaded?.file_uri) { status = uploaded?.error?.response?.status === 429 ? 'busy' : 'error'; break; }
+        tracks.push({
+          title: String(file.name || '').replace(/\.[^.]+$/, '').slice(0, 80) || 'Şarkı',
+          file_uri: uploaded.file_uri,
+        });
+      }
+      if (!tracks.length) return { status, added: 0, skipped };
+      const response = await withTimeout(base44.functions.invoke('voice-room', { room_id: roomId, action: 'music-add', tracks }));
+      if (response?.timeout) return { status: 'timeout', added: 0, skipped };
+      if (response?.error) return { status: response.error?.response?.status === 429 ? 'busy' : 'error', added: 0, skipped };
       await withTimeout(fetchLibrary());
-      return 'ok';
+      return { status: 'ok', added: response.data?.created?.length || tracks.length, skipped };
     } catch (error) {
-      return error?.response?.status === 429 ? 'busy' : 'error';
+      return { status: error?.response?.status === 429 ? 'busy' : 'error', added: 0, skipped };
     } finally {
       setUploading(false);
     }
@@ -191,5 +196,5 @@ export default function useRoomMusic(roomId, enabled) {
     return playTrack(next);
   }, [library, music?.file_uri, playTrack]);
 
-  return { music, library, volume, setVolume, audioRef, uploading, uploadTrack, playTrack, removeTrack, playNext, control };
+  return { music, library, volume, setVolume, audioRef, uploading, uploadTracks, playTrack, removeTrack, playNext, control };
 }

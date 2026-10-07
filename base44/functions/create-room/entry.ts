@@ -78,9 +78,13 @@ export default async function(req) {
     // odaları kapatılır; böylece ana sayfada kişi tek odayla ve o anki moduyla görünür.
     await Promise.all(activeRooms
       .filter((r) => r.owner_id === user.id)
-      .map((r) => base44.asServiceRole.entities.Room.update(r.id, {
-        status: 'closed', is_playing: false, participants: [], recent_participants: []
-      })));
+      .map(async (r) => {
+        await base44.asServiceRole.entities.Room.update(r.id, {
+          status: 'closed', is_playing: false, participants: [], recent_participants: []
+        }).catch(() => {});
+        // Kapanan odanın sohbeti kimseye görünmez: mesajları silinir.
+        await base44.asServiceRole.entities.RoomMessage.deleteMany({ room_id: r.id }).catch(() => {});
+      }));
 
     const room = await base44.asServiceRole.entities.Room.create({
       name, movie_id: isVoiceRoom ? 'voice' : movie_id, movie_title: isVoiceRoom ? '' : (movie_title || ''),
