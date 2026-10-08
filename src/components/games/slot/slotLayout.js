@@ -70,7 +70,8 @@ export const SLOT_FIELDS = {
   totalBet: frame(296, 1268, 144, 54),
   win: frame(585, 1268, 150, 54),
   bet: frame(330, 1370, 104, 56),
-  balance: frame(90, 1456, 170, 54),
+  // Bakiye alanı: altındaki altın şeride değmemesi için biraz daha kısa tutulur.
+  balance: frame(90, 1460, 170, 46),
   // Ödül havuzları: kaybedilenler o anki bahis kademesinin havuzunda birikir.
   jackpots: [
     frame(168, 296, 200, 48),
@@ -81,9 +82,20 @@ export const SLOT_FIELDS = {
   ],
 };
 
+// Görselin kendi rakam alanlarının zemin renkleri (görselden örneklendi): canlı değerler
+// bu renge yazılır, böylece alanın üstüne siyah bir dikdörtgen konmuş gibi görünmez.
+export const SLOT_FIELD_SKINS = {
+  lines: '#050415',
+  totalBet: '#01051d',
+  win: '#010925',
+  bet: '#050319',
+  balance: '#000215',
+  jackpots: ['#2b0117', '#180906', '#011345', '#5f0323', '#022802'],
+};
+
 // Görselde yazan havuz adlarının üzerine yazılan yeni adlar.
 export const SLOT_POOL_LABELS = [
-  { text: 'X MEGA', tone: 'text-slot-pink', box: poolLabel(24, 358, 158, 46) },
-  { text: 'BIG', tone: 'text-slot-blue', box: poolLabel(662, 296, 192, 48) },
-  { text: 'JACKPOT', tone: 'text-slot-gold', box: poolLabel(402, 296, 222, 48) },
+  { text: 'X MEGA', tone: 'text-slot-pink', box: poolLabel(24, 358, 158, 46), skin: '#610216' },
+  { text: 'BIG', tone: 'text-slot-blue', box: poolLabel(662, 296, 192, 48), skin: '#111331' },
+  { text: 'JACKPOT', tone: 'text-slot-gold', box: poolLabel(402, 296, 222, 48), skin: '#251615' },
 ];
