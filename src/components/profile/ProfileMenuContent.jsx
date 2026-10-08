@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ChevronRight, Headphones, LogOut, Shield, User } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { Image } from '@/components/ui/image';
 import ProfileWalletCards from '@/components/profile/ProfileWalletCards';
+import useWalletCoinsLive from '@/hooks/useWalletCoinsLive';
 import { giftBoxLocked } from '@/lib/giftAccess';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -27,13 +28,20 @@ export default function ProfileMenuContent({ onClose, onOpenPanel }) {
       .catch(() => {});
   };
 
-  // Menü açıldığında coin ve elmas (hediye kutusu) değerleri tazelenir.
-  useEffect(() => {
+  const loadWallet = useCallback(() => {
     base44.functions.invoke('gift-box', { action: 'summary' })
       .then((response) => setWallet(response.data))
       .catch(() => {});
-    loadVipCount();
   }, []);
+
+  // Menü açıldığında coin ve elmas (hediye kutusu) değerleri tazelenir.
+  useEffect(() => {
+    loadWallet();
+    loadVipCount();
+  }, [loadWallet]);
+
+  // Cüzdan değiştiğinde coin bakiyesi menüde anında güncellenir.
+  useWalletCoinsLive(user?.id, loadWallet);
 
   if (!user) return null;
 

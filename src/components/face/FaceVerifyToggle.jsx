@@ -2,15 +2,12 @@ import { useEffect, useState } from 'react';
 import { ScanFace } from 'lucide-react';
 import { faceStatus, setFaceEnabled } from '@/lib/faceCheck';
 import { useToast } from '@/components/ui/use-toast';
-import FaceLockOverlay from '@/components/face/FaceLockOverlay';
 
 /** Eklentiler bölümündeki anahtar: yüz doğrulaması istemlerini açar/kapatır. */
 export default function FaceVerifyToggle({ user }) {
   const { toast } = useToast();
   const [enabled, setEnabled] = useState(null);
   const [saving, setSaving] = useState(false);
-  // Açma işleminden sonra cihaz güveni sıfırlanır: doğrulama hemen yeniden istenir.
-  const [verify, setVerify] = useState(null);
 
   useEffect(() => {
     if (!user?.id) return undefined;
@@ -27,13 +24,12 @@ export default function FaceVerifyToggle({ user }) {
     setSaving(true);
     setEnabled(next);
     try {
-      const result = await setFaceEnabled(next);
-      if (result?.check) setVerify({ mode: result?.enrolled === false ? 'enroll' : 'verify' });
+      await setFaceEnabled(next);
       toast({
         title: next ? 'Yüz doğrulaması açıldı' : 'Yüz doğrulaması kapatıldı',
         description: next
-          ? 'Farklı cihazdan girişte ve elmas/bakiye bölümünde yüz doğrulaması istenir.'
-          : 'Yüz doğrulaması istemleri kapatıldı; yeni cihazlar sorulmadan giriş yapar.',
+          ? 'Yüzünüz bir kez alınır; yeni cihazlarda ve güncellemelerden sonra tekrar sorulmaz.'
+          : 'Yüz doğrulaması istenmez.',
       });
     } catch (e) {
       setEnabled(!next);
@@ -45,7 +41,6 @@ export default function FaceVerifyToggle({ user }) {
 
   const on = enabled === true;
   return (
-    <>
     <section className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4">
       <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-premium-gold/10">
         <ScanFace className="h-5 w-5 text-premium-gold" />
@@ -56,7 +51,7 @@ export default function FaceVerifyToggle({ user }) {
           {enabled === null
             ? 'Durum yükleniyor...'
             : on
-              ? 'Açık — farklı cihazdan girişte ve bakiyede yüzünüz sorulur.'
+              ? 'Açık — yüzünüz bir kez alınır, bir daha sorulmaz.'
               : 'Kapalı — yüz doğrulaması istenmez.'}
         </p>
       </div>
@@ -72,17 +67,5 @@ export default function FaceVerifyToggle({ user }) {
         />
       </button>
     </section>
-    <FaceLockOverlay
-      open={!!verify}
-      user={user}
-      mode={verify?.mode || 'verify'}
-      scope="device"
-      canCancel
-      showLogout={false}
-      blockOnFail={false}
-      onCancel={() => setVerify(null)}
-      onVerified={() => setVerify(null)}
-    />
-    </>
   );
 }
