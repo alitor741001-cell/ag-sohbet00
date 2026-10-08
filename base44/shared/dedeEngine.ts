@@ -41,10 +41,9 @@ export const SYMBOLS = [
   { id: 'bolt', name: 'Şimşek', weight: 18, pays: [10, 30, 90] },
 ];
 
-// Skatter ağırlığı: 4+ dede ortalama her 40 turda bir gelir.
-const SCATTER_WEIGHT = 3;
-// Çevirme hakkı turlarında skatter seyrekleşir: ek 15 hak ortalama 10 hakkın birinde gelir
-// (normal turlarda 4+ skatter tur başına ~%2,7, çevirme hakkında ~%0,7).
+// Skatter ağırlığı: 4+ dede seyrektir, tur başına ~%0,7 (yaklaşık 140 turda bir).
+const SCATTER_WEIGHT = 2;
+// Çevirme hakkı turlarında aynı seyrek oran korunur: ek 15 hak ortalama 10 hakkın birinde gelir.
 const FREE_SCATTER_WEIGHT = 2;
 
 // Çarpan küreleri: [değer, ağırlık]. Referans tasarımdaki 3x, 4x, 30x, 50x, 100x, 500x kademeleri.
@@ -58,9 +57,10 @@ const ORB_VALUES = [
 ];
 
 // Jeton bir kareyi sembol gibi kaplar: kare başına inme şansı (ilk ızgara, tumbler, satın alınan tur).
-const INITIAL_ORB_CHANCE = 0.05;
-const TUMBLE_ORB_CHANCE = 0.07;
-const FREE_ORB_CHANCE = 0.09;
+// Oranlar düşük tutulur: çarpan jetonları her turda değil, seyrek anlarda gelir.
+const INITIAL_ORB_CHANCE = 0.025;
+const TUMBLE_ORB_CHANCE = 0.035;
+const FREE_ORB_CHANCE = 0.045;
 
 // Kare kimliğinden jeton değeri: 'orb30' -> 30; jeton değilse 0.
 export function orbValue(cell) {
