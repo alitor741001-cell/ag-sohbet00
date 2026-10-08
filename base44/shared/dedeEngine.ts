@@ -34,7 +34,10 @@ export const SCATTER_PAYS = [60, 150, 600];
 // pays: 8-9, 10-11 ve 12+ sembol kümesi için bahis katı.
 export const SYMBOLS = [
   { id: 'crown', name: 'Taç', weight: 8, pays: [60, 180, 540] },
+  // Referans tasarımdan eklenen iki yeni madalyon: taç ile elmasın, elmas ile yüzüğün arasında öder.
+  { id: 'amethyst', name: 'Mor Damla', weight: 6, pays: [50, 150, 450] },
   { id: 'gem', name: 'Elmas', weight: 10, pays: [40, 120, 360] },
+  { id: 'topaz', name: 'Altın Sekizgen', weight: 7, pays: [35, 105, 315] },
   { id: 'ring', name: 'Yüzük', weight: 12, pays: [30, 90, 270] },
   { id: 'hour', name: 'Kum Saati', weight: 14, pays: [25, 75, 225] },
   { id: 'chalice', name: 'Kupa', weight: 16, pays: [20, 60, 180] },

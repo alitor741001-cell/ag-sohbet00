@@ -13,7 +13,10 @@ export const DEDE_DEITY = `${MEDIA_BASE}/8484dbf0d_generated_image.png`;
 // taç, kum saati, yüzük, kupa, elmas ve yakut yıldız; bonus kartı Zeus kabartmasıdır.
 export const DEDE_ART = {
   crown: `${MEDIA_BASE}/76e6d916f_generated_image.png`,
+  // Yeni iki madalyon: kullanıcının referans tasarımından üretilen mor damla ve altın sekizgen.
+  amethyst: `${MEDIA_BASE}/dd3dc2ec1_generated_image.png`,
   gem: `${MEDIA_BASE}/d330a3b46_generated_image.png`,
+  topaz: `${MEDIA_BASE}/a9dfeb2ce_generated_image.png`,
   ring: `${MEDIA_BASE}/17cc1dfab_generated_image.png`,
   hour: `${MEDIA_BASE}/e133f6756_generated_image.png`,
   chalice: `${MEDIA_BASE}/9dddaf2c3_generated_image.png`,
