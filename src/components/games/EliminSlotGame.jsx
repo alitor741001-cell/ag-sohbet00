@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ChevronLeft, HelpCircle, Play, Volume2, VolumeX, X } from 'lucide-react';
 import '@/styles/elimin.css';
 import '@/styles/eliminExtras.css';
@@ -30,6 +30,8 @@ export default function EliminSlotGame({ onExit, onBack }) {
   const [helpOpen, setHelpOpen] = useState(false);
   const [flash, setFlash] = useState(0);
   const [prize, setPrize] = useState(null);
+  // Kazanç yazısının kapanma sayacı: yeni tur başlasa da çalışmaya devam eder.
+  const flashTimer = useRef(null);
   const shownWin = useCountUp(game.win, 420);
   const ready = game.status === 'ready';
 
@@ -41,6 +43,7 @@ export default function EliminSlotGame({ onExit, onBack }) {
 
   // Tur sonucu: büyük kazançta kutlama ekranı, küçük kazançta ızgaranın ortasında parıltı.
   useEffect(() => {
+    window.clearTimeout(flashTimer.current);
     if (!game.spins) return undefined;
     // Zar dörtlüsünde jackpot patlar: kutlama ekranı jackpotu öne çıkarır.
     if (game.jackpotWin > 0) {
@@ -55,13 +58,16 @@ export default function EliminSlotGame({ onExit, onBack }) {
       setPrize({ amount: game.bigWin });
       return undefined;
     }
+    // Kazanç yoksa yazı hemen silinir; varsa kısa süre görünüp kendiliğinden kapanır.
+    setFlash(game.win > 0 ? game.win : 0);
     if (game.win > 0) {
-      setFlash(game.win);
-      const timer = window.setTimeout(() => setFlash(0), WIN_FLASH_MS);
-      return () => window.clearTimeout(timer);
+      flashTimer.current = window.setTimeout(() => setFlash(0), WIN_FLASH_MS);
     }
     return undefined;
   }, [game.spins]);
+
+  // Oyun kapanırken bekleyen sayaç temizlenir.
+  useEffect(() => () => window.clearTimeout(flashTimer.current), []);
 
   return (
     <div className="el-sky">
@@ -132,7 +138,7 @@ export default function EliminSlotGame({ onExit, onBack }) {
                 wins={game.wins}
               />
               {/* Tur kazancı ızgaranın ortasında belirir. */}
-              {flash > 0 && !prize && <p key={flash} className="el-center-win">KAZANÇ {formatCoins(flash)}</p>}
+              {flash > 0 && !game.spinning && !prize && <p key={flash} className="el-center-win">KAZANÇ {formatCoins(flash)}</p>}
             </div>
           </div>
         </div>

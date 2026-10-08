@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronLeft, Play, Volume2, VolumeX, X } from 'lucide-react';
+import { ChevronLeft, HelpCircle, Play, Volume2, VolumeX, X } from 'lucide-react';
 import '@/styles/sekerli.css';
 import '@/styles/gameControls.css';
 import { Image } from '@/components/ui/image';
@@ -8,6 +8,7 @@ import SekerliGrid from './sekerli/SekerliGrid';
 import SekerliTopPanel from './sekerli/SekerliTopPanel';
 import SekerliHud from './sekerli/SekerliHud';
 import SekerliWinOverlay from './sekerli/SekerliWinOverlay';
+import GameHelpSheet from './help/GameHelpSheet';
 import useSekerliGame from './sekerli/useSekerliGame';
 import useCountUp from './sekerli/useCountUp';
 import { LINES, formatCredits, formatMult } from './sekerli/sekerliConfig';
@@ -23,6 +24,7 @@ import GameTurnBadge from './controls/GameTurnBadge';
 export default function SekerliMeyveGame({ onExit, onBack }) {
   const game = useSekerliGame();
   const [coinOpen, setCoinOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const shownWin = useCountUp(game.spinWin, 420);
   const ready = game.status === 'ready';
 
@@ -51,6 +53,14 @@ export default function SekerliMeyveGame({ onExit, onBack }) {
           className={`gctl-pill gctl-icon ${game.sound ? 'gctl-pill-on' : ''}`}
         >
           {game.sound ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
+        </button>
+        <button
+          type="button"
+          onClick={() => setHelpOpen(true)}
+          aria-label="Nasıl oynanır"
+          className="gctl-pill gctl-icon"
+        >
+          <HelpCircle className="h-5 w-5" />
         </button>
         <button type="button" onClick={onExit} aria-label="Oyunu kapat" className="gctl-pill gctl-icon sl-close">
           <X className="h-5 w-5" />
@@ -118,6 +128,7 @@ export default function SekerliMeyveGame({ onExit, onBack }) {
 
       {/* Coin bakiyesine dokununca uygulamanın coin mağazası açılır. */}
       <CoinPurchasePanel open={coinOpen} coins={game.coins} onBack={() => setCoinOpen(false)} />
+      <GameHelpSheet game="sekerli" open={helpOpen} onClose={() => setHelpOpen(false)} />
 
       <SekerliWinOverlay
         open={!!game.prize}

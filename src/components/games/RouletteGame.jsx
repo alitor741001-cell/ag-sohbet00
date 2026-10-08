@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { Clapperboard, ChevronLeft, Coins, Crown, Star, X } from 'lucide-react';
+import { Clapperboard, ChevronLeft, Coins, Crown, HelpCircle, Star, X } from 'lucide-react';
 import '@/styles/roulette.css';
 import '@/styles/gameControls.css';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
 import { Image } from '@/components/ui/image';
 import useRouletteGame from './roulette/useRouletteGame';
 import useRouletteBoard from './roulette/useRouletteBoard';
+import GameHelpSheet from './help/GameHelpSheet';
 import RouletteWheel from './roulette/RouletteWheel';
 import RoulettePodium from './roulette/RoulettePodium';
 import RouletteHistory from './roulette/RouletteHistory';
@@ -26,6 +27,7 @@ const WHEEL_ZOOM_MS = 2600;
 export default function RouletteGame({ onExit, onBack }) {
   const game = useRouletteGame();
   const [coinOpen, setCoinOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const [prize, setPrize] = useState(null);
   // Çark durduğunda top kazanan cebe oturur ve o cep yakınlaştırılır.
   const [settled, setSettled] = useState(false);
@@ -84,6 +86,14 @@ export default function RouletteGame({ onExit, onBack }) {
             <p className="rl-subtitle">TEK SIFIR · 0 x36 ÖDER</p>
           </span>
         </div>
+        <button
+          type="button"
+          onClick={() => setHelpOpen(true)}
+          aria-label="Nasıl oynanır"
+          className="gctl-pill gctl-icon"
+        >
+          <HelpCircle className="h-5 w-5" />
+        </button>
         <button
           type="button"
           onClick={onExit}
@@ -162,6 +172,7 @@ export default function RouletteGame({ onExit, onBack }) {
 
       {/* Coin bakiyesine dokununca uygulamanın coin mağazası açılır. */}
       <CoinPurchasePanel open={coinOpen} coins={game.available} onBack={() => setCoinOpen(false)} />
+      <GameHelpSheet game="roulette" open={helpOpen} onClose={() => setHelpOpen(false)} />
 
       <RouletteWinOverlay
         open={!!prize}

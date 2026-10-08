@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ChevronLeft, X } from 'lucide-react';
+import { ChevronLeft, HelpCircle, X } from 'lucide-react';
+import GameHelpSheet from './help/GameHelpSheet';
 import { Image } from '@/components/ui/image';
 import { useSize } from '@/hooks/use-size';
 import { useCurrentUser } from '@/lib/useCurrentUser';
@@ -33,26 +34,33 @@ export default function SlotGame({ onExit, onBack, roomId }) {
   const { user } = useCurrentUser();
   const game = useSlotGame({ roomId });
   const [coinOpen, setCoinOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const [flash, setFlash] = useState(0);
   const [prize, setPrize] = useState(null);
+  // Kazanç yazısının kapanma sayacı: yeni tur başlasa da çalışmaya devam eder.
+  const flashTimer = useRef(null);
   const areaRef = useRef(null);
   const size = useSize(areaRef);
   const tickerHeight = TICKER_ROW_HEIGHT * TICKER_ROWS;
 
   // Her turun sonucu: büyük kazançta kutlama ekranı, küçük kazançta kısa parıltı.
   useEffect(() => {
+    window.clearTimeout(flashTimer.current);
     if (!game.spins) return undefined;
     if (game.win >= PRIZE_THRESHOLD) {
       setPrize({ amount: game.win, jackpot: game.jackpotHit });
       return undefined;
     }
+    // Kazanç yoksa yazı hemen silinir; varsa kısa süre görünüp kendiliğinden kapanır.
+    setFlash(game.win > 0 ? game.win : 0);
     if (game.win > 0) {
-      setFlash(game.win);
-      const timer = window.setTimeout(() => setFlash(0), WIN_FLASH_MS);
-      return () => window.clearTimeout(timer);
+      flashTimer.current = window.setTimeout(() => setFlash(0), WIN_FLASH_MS);
     }
     return undefined;
   }, [game.spins]);
+
+  // Oyun kapanırken bekleyen sayaç temizlenir.
+  useEffect(() => () => window.clearTimeout(flashTimer.current), []);
 
   // Görsel, kendi üst jackpot paneli ile alt kontrol alanı arasında gösterilir.
   const areaWidth = size?.width || 0;
@@ -92,6 +100,14 @@ export default function SlotGame({ onExit, onBack, roomId }) {
       </button>
       <button
         type="button"
+        onClick={() => setHelpOpen(true)}
+        aria-label="Nasıl oynanır"
+        className="absolute right-14 top-[env(safe-area-inset-top)] z-20 mt-2 flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm active:scale-95"
+      >
+        <HelpCircle className="h-5 w-5" />
+      </button>
+      <button
+        type="button"
         onClick={onExit}
         aria-label="Oyunu kapat"
         className="absolute right-2 top-[env(safe-area-inset-top)] z-20 mt-2 flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm active:scale-95"
@@ -124,7 +140,7 @@ export default function SlotGame({ onExit, onBack, roomId }) {
                 </p>
               )}
 
-              {flash > 0 && !prize && (
+              {flash > 0 && !game.spinning && !prize && (
                 <p
                   key={flash}
                   className="game-win-float pointer-events-none absolute left-1/2 top-[54%] z-10 rounded-full border border-slot-gold/60 bg-black/70 px-3 py-1 font-mono text-sm font-black text-slot-gold"
@@ -177,6 +193,8 @@ export default function SlotGame({ onExit, onBack, roomId }) {
         coins={game.coins}
         onBack={() => setCoinOpen(false)}
       />
+
+      <GameHelpSheet game="slot" open={helpOpen} onClose={() => setHelpOpen(false)} />
     </div>
   );
 }

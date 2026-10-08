@@ -1,5 +1,5 @@
 import React from 'react';
-import { Coins, Volume2, VolumeX, X } from 'lucide-react';
+import { Coins, HelpCircle, Volume2, VolumeX, X } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import { FUTBOL_LOGO } from './futbolAssets';
 
@@ -15,6 +15,16 @@ export default function FutbolHeader({ roundNo, sound, onSound, onMenu, onCoins,
           className={`gctl-pill gctl-icon ${sound ? 'gctl-pill-on' : ''}`}
         >
           {sound ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
+        </button>
+
+        {/* Nasıl oynanır: oyunun kural menüsünü açar. */}
+        <button
+          type="button"
+          onClick={onMenu}
+          aria-label="Nasıl oynanır"
+          className="gctl-pill gctl-icon"
+        >
+          <HelpCircle className="h-5 w-5" />
         </button>
 
         <button type="button" onClick={onMenu} aria-label="Nasıl oynanır" className="fut-brand">

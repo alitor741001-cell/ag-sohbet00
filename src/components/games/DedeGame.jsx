@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { ChevronLeft, X, Zap } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { ChevronLeft, HelpCircle, X, Zap } from 'lucide-react';
 import '@/styles/dede.css';
 import '@/styles/gameControls.css';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
@@ -8,6 +8,7 @@ import useCutoutImage from '@/lib/cutoutImage';
 import useDedeGame from './dede/useDedeGame';
 import DedeReels from './dede/DedeReels';
 import DedeHud from './dede/DedeHud';
+import GameHelpSheet from './help/GameHelpSheet';
 import GameBetBar from './controls/GameBetBar';
 import GameSpinButton from './controls/GameSpinButton';
 import GameTurnBadge from './controls/GameTurnBadge';
@@ -24,12 +25,16 @@ export default function DedeGame({ onExit, onBack }) {
   const [coinOpen, setCoinOpen] = useState(false);
   const [flash, setFlash] = useState(0);
   const [prize, setPrize] = useState(null);
+  const [helpOpen, setHelpOpen] = useState(false);
+  // Kazanç yazısının kapanma sayacı: yeni tur başlasa da çalışmaya devam eder.
+  const flashTimer = useRef(null);
   const ready = game.status === 'ready';
   // Siyah zemini tarayıcıda gerçek zamanlı kesilmiş dede karakteri.
   const deity = useCutoutImage(DEDE_DEITY);
 
   // Tur sonucu: büyük kazançta kutlama ekranı, küçük kazançta kısa parıltı.
   useEffect(() => {
+    window.clearTimeout(flashTimer.current);
     if (!game.spins) return undefined;
     // Çevirme hakkı sürerken ara kutlama yapılmaz; sonuç tur bitince gösterilir.
     if (game.sessionSpins > 0) return undefined;
@@ -37,13 +42,16 @@ export default function DedeGame({ onExit, onBack }) {
       setPrize({ amount: game.bigWin });
       return undefined;
     }
+    // Kazanç yoksa yazı hemen silinir; varsa kısa süre görünüp kendiliğinden kapanır.
+    setFlash(game.win > 0 ? game.win : 0);
     if (game.win > 0) {
-      setFlash(game.win);
-      const timer = window.setTimeout(() => setFlash(0), WIN_FLASH_MS);
-      return () => window.clearTimeout(timer);
+      flashTimer.current = window.setTimeout(() => setFlash(0), WIN_FLASH_MS);
     }
     return undefined;
   }, [game.spins]);
+
+  // Oyun kapanırken bekleyen sayaç temizlenir.
+  useEffect(() => () => window.clearTimeout(flashTimer.current), []);
 
   return (
     <div className="dede-sky relative flex h-full min-h-0 w-full flex-col overflow-hidden">
@@ -70,6 +78,14 @@ export default function DedeGame({ onExit, onBack }) {
             ÇARPAN KÜRELERİ · 4+ DEDE BONUS ÖDER
           </p>
         </div>
+        <button
+          type="button"
+          onClick={() => setHelpOpen(true)}
+          aria-label="Nasıl oynanır"
+          className="gctl-pill gctl-icon"
+        >
+          <HelpCircle className="h-5 w-5" />
+        </button>
         <button
           type="button"
           onClick={onExit}
@@ -139,7 +155,7 @@ export default function DedeGame({ onExit, onBack }) {
         </div>
       </footer>
 
-      {flash > 0 && !prize && game.sessionResult === null && (
+      {flash > 0 && !game.spinning && !prize && game.sessionResult === null && (
         <p
           key={flash}
           className="dede-float-win pointer-events-none absolute left-1/2 top-[48%] z-20 w-max rounded-full border border-[#ffe9a8]/80 bg-black/75 px-4 py-1.5 font-mono text-base font-black text-[#ffd35c]"
@@ -156,6 +172,7 @@ export default function DedeGame({ onExit, onBack }) {
 
       {/* Coin bakiyesine dokununca uygulamanın coin mağazası açılır. */}
       <CoinPurchasePanel open={coinOpen} coins={game.coins} onBack={() => setCoinOpen(false)} />
+      <GameHelpSheet game="dede" open={helpOpen} onClose={() => setHelpOpen(false)} />
 
       <DedeWinOverlay open={!!prize} amount={prize?.amount || 0} onAccept={() => setPrize(null)} />
 

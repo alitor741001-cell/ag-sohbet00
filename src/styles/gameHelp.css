@@ -1,0 +1,117 @@
+/* Nasıl oynanır paneli: tüm oyunlarda ortak — siyah parlak zemin, altın çerçeve. */
+.gh-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.gh-veil {
+  position: absolute;
+  inset: 0;
+  background: rgba(3, 3, 8, 0.72);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+
+.gh-body {
+  position: relative;
+  width: 100%;
+  max-width: 34rem;
+  max-height: 86dvh;
+  overflow-y: auto;
+  border: 2px solid rgba(232, 185, 90, 0.55);
+  border-bottom: none;
+  border-radius: 1.25rem 1.25rem 0 0;
+  background: linear-gradient(180deg, rgba(24, 18, 8, 0.98), rgba(8, 6, 4, 0.99));
+  box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 226, 150, 0.25);
+  padding: 0.9rem 1rem max(1.25rem, env(safe-area-inset-bottom));
+  animation: gh-in 260ms cubic-bezier(0.22, 0.9, 0.3, 1) both;
+}
+
+@keyframes gh-in {
+  from { transform: translateY(12%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.gh-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  border-bottom: 1px solid rgba(232, 185, 90, 0.3);
+  padding-bottom: 0.6rem;
+}
+
+.gh-title {
+  font-size: 1rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  color: #ffd76a;
+  text-shadow: 0 0 10px rgba(255, 200, 90, 0.45);
+}
+
+.gh-tagline {
+  margin-top: 0.15rem;
+  font-size: 0.5625rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  color: rgba(255, 226, 160, 0.75);
+}
+
+.gh-close {
+  display: flex;
+  height: 2.25rem;
+  width: 2.25rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  border: 1px solid rgba(232, 185, 90, 0.45);
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffe9b8;
+}
+
+.gh-section {
+  margin-top: 0.9rem;
+  font-size: 0.5625rem;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  color: rgba(255, 214, 102, 0.85);
+}
+
+.gh-list {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding-left: 1.15rem;
+  list-style: decimal;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.gh-list-dot { list-style: disc; }
+
+.gh-list li::marker {
+  color: #ffd76a;
+  font-weight: 900;
+}
+
+.gh-note {
+  margin-top: 0.9rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(232, 185, 90, 0.25);
+  background: rgba(232, 185, 90, 0.08);
+  padding: 0.5rem 0.65rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  color: rgba(255, 226, 160, 0.9);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gh-body { animation: none; }
+}

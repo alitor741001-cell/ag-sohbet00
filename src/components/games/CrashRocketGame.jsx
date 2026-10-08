@@ -6,6 +6,7 @@ import RocketStatsBar from './rocket/RocketStatsBar';
 import RocketStage from './rocket/RocketStage';
 import RocketBetDock from './rocket/RocketBetDock';
 import RocketLedger from './rocket/RocketLedger';
+import GameHelpSheet from './help/GameHelpSheet';
 
 /**
  * Crash Rocket: görseldeki tasarımın kendisi canlı arayüz olarak kurulur.
@@ -15,6 +16,7 @@ import RocketLedger from './rocket/RocketLedger';
 export default function CrashRocketGame({ onExit, onBack }) {
   const game = useRocketGame();
   const [ledgerOpen, setLedgerOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
 
   // Defter yalnızca açıldığında sunucudan istenir.
   const openLedger = () => {
@@ -24,12 +26,18 @@ export default function CrashRocketGame({ onExit, onBack }) {
 
   return (
     <div className="rk-game relative flex h-full min-h-0 w-full flex-col overflow-hidden">
-      <RocketHeader onBack={onBack} onExit={onExit} onLedger={openLedger} />
+      <RocketHeader
+        onBack={onBack}
+        onExit={onExit}
+        onLedger={openLedger}
+        onHelp={() => setHelpOpen(true)}
+      />
       <RocketStatsBar roundNo={game.round?.round_no} coins={game.coins} history={game.history} />
       <RocketStage game={game} />
       <RocketBetDock game={game} />
 
       <RocketLedger open={ledgerOpen} onClose={() => setLedgerOpen(false)} data={game.ledger} />
+      <GameHelpSheet game="rocket" open={helpOpen} onClose={() => setHelpOpen(false)} />
 
       {(game.status === 'loading' || game.status === 'error') && (
         <div className="absolute inset-0 z-30 flex items-center justify-center bg-[#05070f]/85">
