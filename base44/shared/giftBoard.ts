@@ -1,13 +1,14 @@
 /**
- * Oda hediye sıralaması: son 24 saat ve tüm zamanlar.
+ * Oda hediye sıralaması: bugünün listesi ve tüm zamanlar.
  * Sıralama değeri koltuk sayaçlarıyla aynı birimdir (1 K = 1.000 puan).
- * Sıfırlama anından (AppConfig: room_gift_reset_at) önceki hediyeler sayılmaz.
+ * Tüm zamanlar listesi sıfırlama anından (AppConfig: room_gift_reset_at) önceki
+ * hediyeleri saymaz; 24 saatlik liste her akşam 24:00'da (Türkiye saatiyle) sıfırlanır.
  */
 
 import { HIDDEN_AVATAR_URL, hiddenDisplayName, isHiddenUser } from './vip.ts';
+import { dayStartIso } from './giftBox.ts';
 
 const K_UNIT = 1000;
-const DAY_MS = 24 * 60 * 60 * 1000;
 // Oda başına okunacak en fazla hediye kaydı.
 const MAX_RECORDS = 2000;
 // Listede gösterilecek kişi sayısı.
@@ -78,14 +79,13 @@ export async function giftBoard(base44: any, roomId: string) {
       })
     : allRecords;
 
-  const since = Date.now() - DAY_MS;
-  // 24 saatlik kısım ayrıca kendi sıfırlama anına uyar: sıfırlandıysa tüm zamanlar etkilenmez.
+  // 24 saatlik liste her akşam 24:00'da (Türkiye saatiyle) sıfırlanır: o andan sonra
+  // hediye atanlar listeye girer. Elle sıfırlama anı daha yeniyse o geçerlidir.
+  const dayStart = dayStartIso();
+  const dayFloor = dayResetAt && dayResetAt > dayStart ? dayResetAt : dayStart;
   const recent = records.filter((record) => {
-    const at = new Date(record?.created_date || 0).getTime();
-    if (!Number.isFinite(at) || at < since) return false;
-    if (!dayResetAt) return true;
     const created = String(record?.created_date || '').slice(0, 19);
-    return !!created && created >= dayResetAt;
+    return !!created && created >= dayFloor;
   });
 
   const dayAgg = aggregate(recent);
