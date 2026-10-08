@@ -1,0 +1,174 @@
+/* Şeker oyunu: altın çerçeveli premium şeker tahtası — kömür grisi ızgara,
+   referanstaki parlak renkli şekerler ve cam parlamaları. */
+
+.seker-sky {
+  background: radial-gradient(118% 72% at 50% 2%, #3f4d59 0%, #262f36 46%, #10171c 100%);
+}
+
+/* Şeker renkli ışık huzmeleri: sahnenin arkasında yavaşça döner. */
+.seker-rays {
+  position: absolute;
+  left: -18%;
+  top: -20%;
+  height: 104%;
+  width: 136%;
+  background: conic-gradient(
+    from 0deg at 50% 24%,
+    rgba(255, 122, 198, 0) 0deg,
+    rgba(255, 122, 198, 0.16) 16deg,
+    rgba(255, 122, 198, 0) 32deg,
+    rgba(255, 122, 198, 0) 96deg,
+    rgba(90, 200, 255, 0.13) 110deg,
+    rgba(90, 200, 255, 0) 126deg,
+    rgba(90, 200, 255, 0) 210deg,
+    rgba(255, 220, 0, 0.12) 224deg,
+    rgba(255, 220, 0, 0) 240deg,
+    rgba(255, 220, 0, 0) 312deg,
+    rgba(192, 40, 255, 0.14) 326deg,
+    rgba(192, 40, 255, 0) 342deg
+  );
+  animation: seker-rays 34s linear infinite;
+  pointer-events: none;
+}
+@keyframes seker-rays { to { transform: rotate(360deg); } }
+
+/* Altın çerçeveli logo: başlıkta küçük yuvarlak amblem olarak durur. */
+.seker-logo {
+  height: 2.5rem;
+  width: 2.5rem;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  box-shadow: 0 0 0 1px rgba(240, 196, 106, 0.65), 0 0 18px rgba(255, 122, 198, 0.35);
+}
+
+/* Altın-pembe parlak başlık. */
+.seker-title {
+  font-weight: 900;
+  letter-spacing: 0.2em;
+  background-image: linear-gradient(180deg, #fffdf2, #ffd35c 52%, #ff8a00);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: #ffd35c;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.65)) drop-shadow(0 0 12px rgba(255, 122, 198, 0.6));
+}
+
+/* Tahta çerçevesi: kalın altın kenar, içeride kömür grisi ızgara. */
+.seker-frame {
+  position: relative;
+  border: 3px solid #f0c46a;
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(52, 64, 74, 0.95), rgba(20, 27, 33, 0.96));
+  animation: seker-frame-pulse 3.8s ease-in-out infinite;
+}
+@keyframes seker-frame-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 2px rgba(255, 246, 214, 0.45), 0 0 16px rgba(240, 196, 106, 0.45),
+      0 0 44px -12px rgba(255, 122, 198, 0.42), inset 0 0 32px rgba(0, 0, 0, 0.6),
+      0 24px 50px -24px rgba(0, 0, 0, 0.95);
+  }
+  50% {
+    box-shadow: 0 0 0 2px rgba(255, 246, 214, 0.7), 0 0 28px rgba(255, 214, 130, 0.7),
+      0 0 60px -6px rgba(255, 122, 198, 0.55), inset 0 0 32px rgba(0, 0, 0, 0.6),
+      0 24px 50px -24px rgba(0, 0, 0, 0.95);
+  }
+}
+
+/* --- 6x6 tahta --- */
+/* Izgara zemini referanstaki gibi koyu kömür grisi; ince çizgiler kareleri ayırır. */
+.seker-board {
+  background-color: #2c343a;
+  background-image:
+    repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.34) 0 1px, transparent 1px 16.6667%),
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.34) 0 1px, transparent 1px 16.6667%);
+  border-radius: 16px;
+  box-shadow: inset 0 0 26px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+}
+
+.seker-column {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-width: 0;
+  flex: 1 1 0;
+  overflow: hidden;
+}
+.seker-cell {
+  position: relative;
+  display: flex;
+  flex: 1 1 0;
+  min-height: 0;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Tur sırasında sütunun içinde şekerler aşağı akar; iki kopya olduğu için döngü kesintisiz. */
+.seker-strip {
+  display: flex;
+  flex-direction: column;
+  height: 200%;
+  animation-name: seker-scroll;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+@keyframes seker-scroll {
+  from { transform: translateY(-50%); }
+  to { transform: translateY(0); }
+}
+
+/* Şeker karesi: gövdе kareye ortalanır, kenarlarda eşit boşluk kalır, dışına taşmaz. */
+.seker-tile {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 9%;
+}
+.seker-art {
+  display: block;
+  height: 100%;
+  width: 100%;
+  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.6));
+}
+/* Altın şeker: parlak altın halkayla öne çıkar. */
+.seker-tile-scatter .seker-art {
+  filter: drop-shadow(0 0 6px rgba(255, 214, 90, 0.95)) drop-shadow(0 3px 4px rgba(0, 0, 0, 0.55));
+}
+
+.seker-settle { animation: seker-settle 0.32s ease-out both; }
+@keyframes seker-settle {
+  from { transform: scale(0.9); opacity: 0.65; }
+  to { transform: scale(1); opacity: 1; }
+}
+/* Kazanan kümenin şekerleri parlar. */
+.seker-cell-win .seker-art { animation: seker-win 1s ease-in-out infinite; }
+@keyframes seker-win {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.85)) drop-shadow(0 3px 4px rgba(0, 0, 0, 0.6));
+  }
+  50% {
+    transform: scale(1.1);
+    filter: drop-shadow(0 0 14px rgba(255, 255, 255, 1)) drop-shadow(0 0 26px rgba(255, 214, 115, 0.95));
+  }
+}
+
+/* --- kazanç --- */
+.seker-float-win { animation: seker-float-win 2.4s ease-out forwards; }
+@keyframes seker-float-win {
+  0% { opacity: 0; transform: translate(-50%, 12px) scale(0.8); }
+  18% { opacity: 1; transform: translate(-50%, 0) scale(1.08); }
+  72% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -28px) scale(1); }
+}
+.seker-overlay {
+  background: radial-gradient(circle at 50% 40%, rgba(255, 214, 102, 0.28), rgba(12, 18, 23, 0.93) 62%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .seker-strip, .seker-cell-win .seker-art, .seker-settle, .seker-rays, .seker-frame, .seker-float-win {
+    animation: none;
+  }
+}
