@@ -1,18 +1,20 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { Coins, Crown, Trophy, Users } from 'lucide-react';
 import '@/styles/futbol.css';
+import '@/styles/gameControls.css';
 import { Image } from '@/components/ui/image';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
+import GameStatCards from '@/components/games/controls/GameStatCards';
 import FutbolHeader from './futbol/FutbolHeader';
 import FutbolPitch from './futbol/FutbolPitch';
 import FutbolLegend from './futbol/FutbolLegend';
 import FutbolStakeDock from './futbol/FutbolStakeDock';
-import FutbolBalanceBar from './futbol/FutbolBalanceBar';
 import FutbolResults from './futbol/FutbolResults';
 import FutbolMenu from './futbol/FutbolMenu';
 import FutbolWinOverlay from './futbol/FutbolWinOverlay';
 import useFutbolGame from './futbol/useFutbolGame';
 import { FUTBOL_BACKDROP } from './futbol/futbolAssets';
-import { MODES, TEAMS, formatClock, formatCoins } from './futbol/futbolConfig';
+import { TEAMS, formatClock, formatCoins } from './futbol/futbolConfig';
 
 // Seçim süresi: çubuğun dolması için tur uzunluğuyla aynı olmalı (sunucu 45 saniye verir).
 const BET_MS = 45000;
@@ -54,7 +56,14 @@ export default function FootballGame({ onExit, onBack }) {
   const hasPicks = game.teams.some((team) => (team.mine || 0) > 0);
   const clock = formatClock(game.left);
   const ratio = drawing ? game.left / DRAW_MS : game.left / BET_MS;
-  const modeLabel = MODES.find((item) => item.id === game.mode)?.label || 'Normal';
+
+  // Üst metrikler: roulette'teki kartların aynısı.
+  const statItems = [
+    { key: 'coins', label: 'COIN BAKİYEM', value: formatCoins(game.coins), icon: Coins },
+    { key: 'today', label: 'BUGÜNÜN ÖDÜLLERİ', value: formatCoins(game.today), icon: Trophy, win: game.today > 0 },
+    { key: 'picks', label: 'TUR SEÇİMİ', value: formatCoins(game.picksCount), icon: Users },
+    { key: 'total', label: 'TOPLAM KAZANÇ', value: formatCoins(game.totalWon), icon: Crown },
+  ];
 
   return (
     <div className="fut-sky">
@@ -65,15 +74,17 @@ export default function FootballGame({ onExit, onBack }) {
 
       <div className="fut-scroll">
         <FutbolHeader
-          mode={game.mode}
           roundNo={roundNo}
           sound={game.sound}
-          onMode={game.changeMode}
           onSound={game.toggleSound}
           onMenu={() => setMenuOpen(true)}
           onBack={onBack}
           onExit={onExit}
         />
+
+        <div className="fut-stats">
+          <GameStatCards items={statItems} />
+        </div>
 
         <FutbolPitch
           teams={TEAMS}
@@ -106,11 +117,7 @@ export default function FootballGame({ onExit, onBack }) {
           onFollow={game.toggleFollow}
         />
 
-        <FutbolBalanceBar coins={game.coins} today={game.today} onCoins={() => setCoinOpen(true)} />
-
         <FutbolResults history={game.history} />
-
-        <p className="fut-footnote">Mod: {modeLabel} · Toplam kazanç {formatCoins(game.totalWon)} coin</p>
 
         {game.status === 'loading' && <p className="fut-message">Oyun yükleniyor...</p>}
         {game.status === 'error' && <p className="fut-message">Bağlantı kurulamadı, tekrar deniyorum...</p>}
@@ -121,7 +128,6 @@ export default function FootballGame({ onExit, onBack }) {
 
       <FutbolMenu
         open={menuOpen}
-        mode={game.mode}
         sound={game.sound}
         onSound={game.toggleSound}
         onCoins={() => { setMenuOpen(false); setCoinOpen(true); }}

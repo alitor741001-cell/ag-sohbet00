@@ -36,6 +36,7 @@ export default function useFutbolGame() {
   const prevRoundRef = useRef(0);
   const seenResultRef = useRef(0);
   const mountedRef = useRef(true);
+  const healedRef = useRef(false);
 
   useEffect(() => { soundRef.current = sound; }, [sound]);
   useEffect(() => { followRef.current = follow; }, [follow]);
@@ -179,12 +180,12 @@ export default function useFutbolGame() {
     setBusy(false);
   }, [invoke]);
 
-  const changeMode = useCallback(async (next) => {
-    if (next === mode) return;
-    unlockAudio();
-    if (soundRef.current) gameSound.click();
-    await invoke({ action: 'mode', mode: next });
-  }, [invoke, mode]);
+  // Mod seçici kaldırıldı: kayıtlı mod kapalı bir modsa sekiz kartın hepsi açılır.
+  useEffect(() => {
+    if (status !== 'ready' || mode === 'normal' || healedRef.current) return;
+    healedRef.current = true;
+    invoke({ action: 'mode', mode: 'normal' });
+  }, [status, mode, invoke]);
 
   const toggleSound = useCallback(() => {
     setSound((value) => {
@@ -223,7 +224,6 @@ export default function useFutbolGame() {
     pickTeam,
     addStake,
     clearPicks,
-    changeMode,
     toggleSound,
     toggleFollow,
     clearPrize: useCallback(() => setPrize(null), []),

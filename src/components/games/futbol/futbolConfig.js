@@ -18,16 +18,6 @@ export const TEAM_MAP = TEAMS.reduce((acc, team) => ({ ...acc, [team.id]: team }
 // Kemer dizilimi: en dıştaki kartlar kalenin hizasında, alttakiler ortada.
 export const PITCH_ROWS = ['a', 'b', 'c', 'd'];
 
-// Oyun modları: kazanan her zaman sekiz takım arasından çekilir, mod yalnızca
-// seçilebilecek kartları belirler — yani risk profilini.
-export const MODES = [
-  { id: 'normal', label: 'Normal', hint: 'sekiz takım da açık' },
-  { id: 'gelismis', label: 'Gelişmiş', hint: 'sadece BJK, GS, FB ve TS' },
-  { id: 'usta', label: 'Usta', hint: 'sadece ANT, DEN, BUR ve ADS' },
-];
-
-export const MODE_MAP = MODES.reduce((acc, mode) => ({ ...acc, [mode.id]: mode }), {});
-
 // Bahis kademeleri: referanstaki dört para butonu.
 export const STAKE_LEVELS = [10, 100, 1000, 10000];
 
