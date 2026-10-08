@@ -99,11 +99,15 @@
   display: flex;
   min-height: 0;
   width: 100%;
-  flex: 1;
+  flex: 1 1 0;
+  container-type: size;
+  overflow: hidden;
   align-items: center;
   justify-content: center;
   gap: 0.6rem;
 }
+
+.sl-main > :not(.sl-stage) { flex-shrink: 0; }
 
 /* === TAKLA KAZANCI PANELİ === */
 .sl-top {
@@ -171,9 +175,12 @@
 /* === MAKARA ÇERÇEVESİ VE IZGARA === */
 .sl-frame {
   position: relative;
-  width: 100%;
-  /* Yükseklik yetmezse çerçeve küçülür: kısa ekranlarda da taşmaz, alt sınırı korur. */
-  max-width: min(44rem, max(14rem, calc((100dvh - 25rem) * 1.09)));
+  display: flex;
+  flex: none;
+  width: min(100%, 100cqh);
+  max-width: 46rem;
+  aspect-ratio: 1;
+  max-height: 100%;
   border-radius: 1.7rem;
   padding: 0.45rem;
   background-image: repeating-linear-gradient(
@@ -203,6 +210,8 @@
 
 .sl-frame-inner {
   position: relative;
+  flex: 1;
+  min-height: 0;
   border-radius: 1.2rem;
   padding: 0.3rem;
   background: linear-gradient(180deg, rgba(26, 6, 46, 0.96), rgba(14, 3, 26, 0.98));
@@ -212,7 +221,8 @@
 .sl-board {
   display: grid;
   width: 100%;
-  aspect-ratio: 5 / 4.6;
+  height: 100%;
+  min-height: 0;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   /* Her sütun alanın tamamını kaplar; dört hücre sütunun içinde bölünür. */
   grid-template-rows: minmax(0, 1fr);
@@ -555,9 +565,7 @@
     display: none;
   }
 
-  .sl-frame {
-    max-width: calc((100dvh - 23rem) * 1.09);
-  }
+
 }
 
 @media (orientation: landscape) and (max-height: 640px) {
@@ -587,9 +595,7 @@
     font-size: 0.95rem;
   }
 
-  .sl-frame {
-    max-width: min(38rem, max(13rem, calc((100dvh - 16.5rem) * 1.09)));
-  }
+
 
   .sl-foot {
     padding-top: 0.3rem;
