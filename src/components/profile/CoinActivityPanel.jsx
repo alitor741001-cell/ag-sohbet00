@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ChevronLeft, Coins, Gift, Loader2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Image } from '@/components/ui/image';
 import GiftSendersPanel from '@/components/profile/GiftSendersPanel';
+import { useCurrentUser } from '@/lib/useCurrentUser';
+import useWalletCoinsLive from '@/hooks/useWalletCoinsLive';
 
 const formatCoins = (value) => Math.max(0, Math.round(Number(value) || 0)).toLocaleString('tr-TR');
 const formatK = (value) => `${Math.max(0, Number(value) || 0).toLocaleString('tr-TR', { maximumFractionDigits: 2 })}K`;
@@ -23,20 +25,26 @@ const formatWhen = (iso) => {
  * Gönderimler hesaptan çıktığı için eksi (-), hesaba girenler artı (+) görünür.
  */
 export default function CoinActivityPanel({ open, onClose }) {
+  const { user } = useCurrentUser();
   const [loading, setLoading] = useState(false);
   const [items, setItems] = useState([]);
   const [view, setView] = useState('feed');
 
   useEffect(() => { if (open) setView('feed'); }, [open]);
 
-  useEffect(() => {
-    if (!open) return;
+  const loadActivity = useCallback(() => {
     setLoading(true);
-    base44.functions.invoke('gift-box', { action: 'activity' })
+    return base44.functions.invoke('gift-box', { action: 'activity' })
       .then((response) => setItems(response.data?.items || []))
       .catch(() => setItems([]))
       .finally(() => setLoading(false));
-  }, [open]);
+  }, []);
+
+  useEffect(() => { if (open) loadActivity(); }, [open, loadActivity]);
+
+  // Cüzdan değiştiğinde liste anında tazelenir: oyun kazancı, gelen ve giden coinler
+  // sayfa yenilenmeden görünür.
+  useWalletCoinsLive(open ? user?.id : null, loadActivity);
 
   if (!open) return null;
 

@@ -19,6 +19,7 @@ import GiftBoxPanel from '@/components/profile/GiftBoxPanel';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
 import CoinActivityPanel from '@/components/profile/CoinActivityPanel';
 import VipBagPanel from '@/components/profile/VipBagPanel';
+import useWalletCoinsLive from '@/hooks/useWalletCoinsLive';
 
 const EMPTY_FORM = { username: '', full_name: '', phone: '', avatar: '', birth_date: '' };
 
@@ -79,6 +80,10 @@ export default function Profile() {
     loadSummary();
     loadWallet();
   }, []);
+
+  // Cüzdan canlıdır: oyun kazancı, hesaba gelen coin ve hediye harcaması bakiyeye
+  // anında işler — kart 5 saniyelik yenilemeyi beklemez.
+  useWalletCoinsLive(user?.id, (coins) => setWallet((prev) => (prev ? { ...prev, coins } : prev)));
 
   // Sayfa kendini 5 saniyede bir sessizce tazeler: bakiye canlı değerden okunur, böylece
   // hediye/oyun harcamaları ekranda eski tutarla kalmaz — yükleme göstergesi çıkmaz.
