@@ -1,0 +1,175 @@
+/* Oyun kontrol düğmeleri: MEYVE ve DEDE aynı altın kabartma düğme setini kullanır. */
+
+/* --- ana tur düğmesi: fildişi-altın kabartma, alt kenarda koyu gölge --- */
+.gctl-spin {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.05rem;
+  height: 5.75rem;
+  width: 5.75rem;
+  border-radius: 9999px;
+  color: #3b2103;
+  background:
+    radial-gradient(circle at 50% 16%, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0) 52%),
+    linear-gradient(180deg, #fff6d8 1%, #ffd85f 36%, #e9a712 66%, #9d6a06 100%);
+  border: 1px solid rgba(255, 250, 230, 0.9);
+  box-shadow:
+    inset 0 2px 1px rgba(255, 255, 255, 0.95),
+    inset 0 -7px 14px rgba(112, 62, 0, 0.5),
+    0 2px 0 #6f4705,
+    0 16px 30px -14px rgba(0, 0, 0, 0.95);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+  transition: transform 130ms ease, filter 130ms ease;
+}
+.gctl-spin:active { transform: translateY(1px) scale(0.97); }
+.gctl-spin:disabled { filter: saturate(0.4) brightness(0.8); }
+.gctl-spin-label { font-size: 0.6rem; font-weight: 900; letter-spacing: 0.2em; }
+
+/* Durdurma: aynı kabartma, kırmızı gövde. */
+.gctl-spin-stop {
+  color: #fff6f3;
+  border-color: rgba(255, 226, 220, 0.85);
+  background:
+    radial-gradient(circle at 50% 16%, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0) 52%),
+    linear-gradient(180deg, #ff9a9a 1%, #f0384a 40%, #b01324 72%, #6d0714 100%);
+  box-shadow:
+    inset 0 2px 1px rgba(255, 255, 255, 0.8),
+    inset 0 -7px 14px rgba(90, 0, 10, 0.5),
+    0 2px 0 #620512,
+    0 16px 30px -14px rgba(0, 0, 0, 0.95);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+}
+
+/* Tur boyunca düğmenin çevresinde dönen ışık halkası. */
+.gctl-spin-ring {
+  position: absolute;
+  inset: -0.62rem;
+  border-radius: 9999px;
+  pointer-events: none;
+  background: conic-gradient(
+    from 0deg,
+    rgba(255, 236, 178, 0) 0deg,
+    rgba(255, 236, 178, 0.9) 48deg,
+    rgba(255, 236, 178, 0) 122deg,
+    rgba(255, 236, 178, 0.65) 214deg,
+    rgba(255, 236, 178, 0) 302deg
+  );
+  -webkit-mask: radial-gradient(farthest-side, rgba(0, 0, 0, 0) calc(100% - 2px), #000 calc(100% - 2px));
+  mask: radial-gradient(farthest-side, rgba(0, 0, 0, 0) calc(100% - 2px), #000 calc(100% - 2px));
+  animation: gctl-ring 5.5s linear infinite;
+}
+@keyframes gctl-ring { to { transform: rotate(360deg); } }
+.gctl-spin-live { animation: gctl-spin-live 1.4s ease-in-out infinite; }
+@keyframes gctl-spin-live {
+  0%, 100% { transform: scale(1); filter: brightness(1); }
+  50% { transform: scale(1.04); filter: brightness(1.16); }
+}
+
+/* --- ikincil düğmeler: MAX, AUTOPLAY, bahis +/- , başlık ikonları --- */
+.gctl-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 216, 120, 0.5);
+  padding: 0.5rem 0.85rem;
+  font-size: 0.6rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  color: #ffeec2;
+  background: linear-gradient(180deg, rgba(74, 42, 24, 0.88), rgba(20, 10, 6, 0.92));
+  box-shadow: inset 0 1px 0 rgba(255, 240, 200, 0.25), 0 10px 20px -16px rgba(0, 0, 0, 0.95);
+  transition: filter 150ms ease, transform 150ms ease;
+}
+.gctl-pill:active { transform: translateY(1px); filter: brightness(1.2); }
+.gctl-pill:disabled { filter: saturate(0.4) brightness(0.75); }
+.gctl-pill-on {
+  color: #2b1602;
+  border-color: rgba(255, 250, 230, 0.95);
+  background: linear-gradient(180deg, #fff2ca, #ffc63c 54%, #d79a12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 0 18px rgba(255, 190, 60, 0.55);
+}
+.gctl-square { height: 2.4rem; width: 2.4rem; padding: 0; }
+.gctl-icon {
+  height: 2.4rem;
+  width: 2.4rem;
+  flex-shrink: 0;
+  padding: 0;
+  color: #ffeec2;
+  background: linear-gradient(180deg, rgba(30, 14, 24, 0.72), rgba(12, 5, 10, 0.82));
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+/* --- bahis göstergesi: kademe, güncel bahis ve toplam --- */
+.gctl-readout {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(255, 216, 120, 0.45);
+  padding: 0.3rem 0.5rem;
+  background: linear-gradient(180deg, rgba(60, 32, 20, 0.82), rgba(16, 8, 5, 0.92));
+  box-shadow: inset 0 1px 0 rgba(255, 240, 200, 0.2), 0 10px 20px -16px rgba(0, 0, 0, 0.95);
+}
+.gctl-readout-label { font-size: 0.5625rem; font-weight: 900; letter-spacing: 0.1em; color: rgba(255, 226, 160, 0.75); }
+.gctl-readout-value {
+  font-size: 0.95rem;
+  font-weight: 900;
+  color: #ffe9b0;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 1px 0 #6b3d05, 0 0 14px rgba(255, 190, 80, 0.55);
+}
+.gctl-readout-sub { font-size: 0.5625rem; font-weight: 700; color: rgba(255, 226, 160, 0.7); }
+
+/* --- eylem düğmeleri: çevirme hakkı ve coin yükleme --- */
+.gctl-action {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(255, 216, 120, 0.45);
+  padding: 0.4rem 0.6rem;
+  text-align: left;
+  background: linear-gradient(180deg, rgba(74, 42, 24, 0.85), rgba(18, 9, 6, 0.92));
+  box-shadow: inset 0 1px 0 rgba(255, 240, 200, 0.22), 0 10px 20px -16px rgba(0, 0, 0, 0.95);
+  transition: filter 150ms ease, transform 150ms ease;
+}
+.gctl-action:active { transform: translateY(1px); filter: brightness(1.15); }
+.gctl-action:disabled { filter: saturate(0.45) brightness(0.8); }
+.gctl-action-gold {
+  color: #3b2103;
+  border-color: rgba(255, 250, 230, 0.9);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0) 62%),
+    linear-gradient(180deg, #fff2ca, #ffca48 52%, #d99a11);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 2px 0 #6f4705, 0 12px 22px -16px rgba(0, 0, 0, 0.95);
+}
+.gctl-action-body { display: flex; min-width: 0; flex-direction: column; }
+.gctl-action-title { font-size: 0.58rem; font-weight: 900; letter-spacing: 0.11em; white-space: nowrap; }
+.gctl-action-price { font-size: 0.7rem; font-weight: 900; font-variant-numeric: tabular-nums; }
+.gctl-coin {
+  display: inline-flex;
+  height: 1.6rem;
+  width: 1.6rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  color: #4a2a03;
+  background: radial-gradient(circle at 40% 28%, #fff8dc, #ffcf4a 58%, #b17c06);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85), 0 2px 6px -2px rgba(0, 0, 0, 0.75);
+}
+.gctl-action-gold .gctl-coin { background: radial-gradient(circle at 40% 28%, #fffdf2, #ffb512 60%, #7a4a02); }
+
+@media (prefers-reduced-motion: reduce) {
+  .gctl-spin-ring, .gctl-spin-live { animation: none; }
+}

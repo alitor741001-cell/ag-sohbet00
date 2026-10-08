@@ -246,80 +246,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* --- tur ve panel düğmeleri --- */
-.dede-round {
-  display: flex;
-  height: 2.25rem;
-  width: 2.25rem;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  border-radius: 9999px;
-  color: #2a0c02;
-  background: linear-gradient(180deg, #ffe9a8, #d9a326);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 6px 14px -8px rgba(0, 0, 0, 0.95);
-}
-.dede-round:disabled { filter: saturate(0.5) brightness(0.9); }
-.dede-icon-btn {
-  display: flex;
-  height: 2.25rem;
-  width: 2.25rem;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  border-radius: 9999px;
-  color: #ffe9a8;
-  background: rgba(20, 5, 32, 0.6);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-}
-.dede-auto {
-  border-radius: 9999px;
-  border: 1px solid rgba(255, 211, 92, 0.75);
-  padding: 0.45rem 0.75rem;
-  font-size: 0.6rem;
-  font-weight: 900;
-  letter-spacing: 0.12em;
-  color: #ffe9a8;
-  background: rgba(20, 5, 32, 0.6);
-}
-.dede-auto-on {
-  color: #2a0c02;
-  background: linear-gradient(180deg, #ffe9a8, #ffbe2e);
-  border-color: #fff6d0;
-}
 
-/* --- yuvarlak spin butonu --- */
-.dede-spin-btn {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.1rem;
-  height: 5.5rem;
-  width: 5.5rem;
-  border-radius: 9999px;
-  color: #2a0c02;
-  background: radial-gradient(circle at 50% 24%, #fffbe6, #ffc93c 52%, #b47c05);
-  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.85), 0 10px 24px -10px rgba(0, 0, 0, 0.95);
-  transition: transform 140ms ease;
-}
-.dede-spin-btn:active { transform: scale(0.94); }
-.dede-spin-btn-stop { background: radial-gradient(circle at 50% 24%, #ffd0d0, #ff5a5a 52%, #a81b1b); color: #fff; }
-.dede-spin-btn-live { animation: dede-spin-pulse 1.2s ease-in-out infinite; }
-@keyframes dede-spin-pulse {
-  0%, 100% { box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.85), 0 0 0 4px rgba(255, 233, 168, 0.55), 0 0 26px rgba(255, 190, 60, 0.8); }
-  50% { box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.85), 0 0 0 11px rgba(255, 233, 168, 0.14), 0 0 44px rgba(255, 190, 60, 1); }
-}
-.dede-ring {
-  position: absolute;
-  inset: -0.55rem;
-  border-radius: 9999px;
-  border: 2px dashed rgba(255, 226, 145, 0.85);
-  animation: dede-ring 7s linear infinite;
-}
-@keyframes dede-ring { to { transform: rotate(360deg); } }
 
 /* --- bilgi kartları ve kazanç --- */
 .dede-chip {
@@ -358,7 +285,7 @@
 .dede-overlay { background: radial-gradient(circle at 50% 40%, rgba(255, 214, 102, 0.28), rgba(16, 3, 26, 0.92) 62%); }
 
 @media (prefers-reduced-motion: reduce) {
-  .dede-rays, .dede-frame, .dede-strip, .dede-badge-win, .dede-drop, .dede-ring,
-  .dede-spin-btn-live, .dede-float-win, .dede-orb, .dede-mult-bar-orb { animation: none; }
+  .dede-rays, .dede-frame, .dede-strip, .dede-badge-win, .dede-drop,
+  .dede-float-win, .dede-orb, .dede-mult-bar-orb { animation: none; }
   .dede-badge-explode { animation-duration: 0.01s; }
 }

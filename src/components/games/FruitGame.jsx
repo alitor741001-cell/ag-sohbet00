@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { ChevronLeft, Gift, X } from 'lucide-react';
+import { ChevronLeft, Play, X } from 'lucide-react';
 import '@/styles/fruit.css';
+import '@/styles/gameControls.css';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
 import useFruitGame from './fruit/useFruitGame';
 import FruitReels from './fruit/FruitReels';
 import FruitHud from './fruit/FruitHud';
-import FruitBetBar from './fruit/FruitBetBar';
-import FruitSpinButton from './fruit/FruitSpinButton';
+import GameBetBar from './controls/GameBetBar';
+import GameSpinButton from './controls/GameSpinButton';
 import FruitWinOverlay from './fruit/FruitWinOverlay';
 import { FRUIT_LINES, formatCoins } from './fruit/fruitConfig';
 
@@ -40,7 +41,7 @@ export default function FruitGame({ onExit, onBack }) {
       <span aria-hidden="true" className="fruit-rays" />
 
       <header className="relative z-10 flex shrink-0 items-center gap-2 px-3 pt-[max(0.5rem,env(safe-area-inset-top))]">
-        <button type="button" onClick={onBack} aria-label="Oyun listesine dön" className="fruit-icon-btn">
+        <button type="button" onClick={onBack} aria-label="Oyun listesine dön" className="gctl-pill gctl-icon">
           <ChevronLeft className="h-5 w-5" />
         </button>
         <div className="min-w-0 flex-1 text-center">
@@ -53,7 +54,7 @@ export default function FruitGame({ onExit, onBack }) {
           type="button"
           onClick={onExit}
           aria-label="Oyunu kapat"
-          className="fruit-icon-btn ring-1 ring-[#f0c46a]/50"
+          className="gctl-pill gctl-icon ring-1 ring-[#f0c46a]/50"
         >
           <X className="h-5 w-5" />
         </button>
@@ -67,18 +68,13 @@ export default function FruitGame({ onExit, onBack }) {
           </div>
         </div>
 
-        {game.freeSpins > 0 && (
-          <p className="flex items-center gap-1.5 rounded-full border border-[#f0c46a]/80 bg-black/45 px-3 py-1 text-[10px] font-black tracking-[0.12em] text-[#ffe9b8]">
-            <Gift className="h-3.5 w-3.5" /> SERBEST TUR: {game.freeSpins}
-          </p>
-        )}
-
         <FruitHud
           coins={game.coins}
           bet={game.bet}
           lines={FRUIT_LINES}
           win={game.win}
           totalWon={game.totalWon}
+          busy={game.spinning}
           onCoins={() => setCoinOpen(true)}
           onSession={game.buySession}
           sessionPrice={game.sessionPrice}
@@ -90,17 +86,19 @@ export default function FruitGame({ onExit, onBack }) {
       </main>
 
       <footer className="relative z-10 flex shrink-0 flex-col items-center gap-2 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-1">
-        <FruitBetBar
+        <GameBetBar
           bet={game.bet}
           lines={FRUIT_LINES}
           disabled={game.spinning}
           onStep={game.changeBet}
           onMax={game.maxBet}
+          format={formatCoins}
         />
-        <FruitSpinButton
+        <GameSpinButton
           spinning={game.spinning}
           disabled={!ready}
           auto={game.auto}
+          icon={Play}
           onSpin={game.spin}
           onStop={game.stop}
           onAuto={game.toggleAuto}

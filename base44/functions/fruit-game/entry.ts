@@ -2,9 +2,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import {
   BET_LEVELS,
   BIG_WIN_MULTIPLE,
-  FREE_SPINS,
   LINES,
-  SCATTER_MIN,
   evaluateFruit,
   spinFruit,
 } from '../../shared/fruitEngine.ts';
@@ -84,9 +82,8 @@ export default async function (req) {
       const grid = spinFruit();
       const result = evaluateFruit(grid, bet);
       const total = result.total;
-      // Ekranda 4 ve üzeri muz gelince serbest tur verilir.
-      const freeTrigger = grid.flat().filter((symbol) => symbol === 'banana').length >= SCATTER_MIN;
-      const freeSpins = Math.max(0, (wallet.free_spins ?? 0) - (isFree ? 1 : 0)) + (freeTrigger ? FREE_SPINS : 0);
+      // Serbest tur yalnızca satın alınan çevirme hakkından gelir; tur hediye edilmez.
+      const freeSpins = Math.max(0, (wallet.free_spins ?? 0) - (isFree ? 1 : 0));
       const bigWin = stake > 0 && total >= stake * BIG_WIN_MULTIPLE;
 
       const updated = await base44.asServiceRole.entities.GameWallet.update(wallet.id, {
@@ -104,7 +101,6 @@ export default async function (req) {
         wins: result.wins,
         win: total,
         cost,
-        free_trigger: freeTrigger,
         big_win: bigWin ? total : 0,
       });
     }

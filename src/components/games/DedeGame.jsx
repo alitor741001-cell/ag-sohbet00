@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { ChevronLeft, Gift, X, Zap } from 'lucide-react';
+import { ChevronLeft, X, Zap } from 'lucide-react';
 import '@/styles/dede.css';
+import '@/styles/gameControls.css';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
 import { Image } from '@/components/ui/image';
 import useCutoutImage from '@/lib/cutoutImage';
 import useDedeGame from './dede/useDedeGame';
 import DedeReels from './dede/DedeReels';
 import DedeHud from './dede/DedeHud';
-import DedeBetBar from './dede/DedeBetBar';
-import DedeSpinButton from './dede/DedeSpinButton';
+import GameBetBar from './controls/GameBetBar';
+import GameSpinButton from './controls/GameSpinButton';
 import DedeWinOverlay from './dede/DedeWinOverlay';
 import DedeMultiplierBar from './dede/DedeMultiplierBar';
 import { DEDE_DEITY } from './dede/dedeAssets';
@@ -57,20 +58,20 @@ export default function DedeGame({ onExit, onBack }) {
       )}
 
       <header className="relative z-10 flex shrink-0 items-center gap-2 px-3 pt-[max(0.5rem,env(safe-area-inset-top))]">
-        <button type="button" onClick={onBack} aria-label="Oyun listesine dön" className="dede-icon-btn">
+        <button type="button" onClick={onBack} aria-label="Oyun listesine dön" className="gctl-pill gctl-icon">
           <ChevronLeft className="h-5 w-5" />
         </button>
         <div className="min-w-0 flex-1 text-center">
           <p className="dede-title text-lg">DEDE</p>
           <p className="text-[9px] font-black tracking-[0.14em] text-[#ffe9a8]/80">
-            ÇARPAN KÜRELERİ · 4+ DEDE = 15 BEDAVA TUR
+            ÇARPAN KÜRELERİ · 4+ DEDE BONUS ÖDER
           </p>
         </div>
         <button
           type="button"
           onClick={onExit}
           aria-label="Oyunu kapat"
-          className="dede-icon-btn ring-1 ring-[#ffd35c]/50"
+          className="gctl-pill gctl-icon ring-1 ring-[#ffd35c]/50"
         >
           <X className="h-5 w-5" />
         </button>
@@ -90,18 +91,13 @@ export default function DedeGame({ onExit, onBack }) {
           </div>
         </div>
 
-        {game.freeSpins > 0 && (
-          <p className="flex items-center gap-1.5 rounded-full border border-[#ffd35c]/80 bg-black/45 px-3 py-1 text-[10px] font-black tracking-[0.12em] text-[#ffe9a8]">
-            <Gift className="h-3.5 w-3.5" /> BEDAVA TUR: {game.freeSpins}
-          </p>
-        )}
-
         <DedeHud
           coins={game.coins}
           bet={game.bet}
           lines={DEDE_LINES}
           win={game.win}
           totalWon={game.totalWon}
+          busy={game.spinning}
           onCoins={() => setCoinOpen(true)}
           onSession={game.buySession}
           sessionPrice={game.sessionPrice}
@@ -115,28 +111,24 @@ export default function DedeGame({ onExit, onBack }) {
       <footer className="relative z-10 flex shrink-0 flex-col items-center gap-2 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-1">
         {/* Biriken çarpan alt tarafta sabit durur; inen küreler buraya düşer. */}
         <DedeMultiplierBar multiplier={game.multiplier} orbs={game.orbs} />
-        <DedeBetBar
+        <GameBetBar
           bet={game.bet}
           lines={DEDE_LINES}
           disabled={game.spinning}
           onStep={game.changeBet}
           onMax={game.maxBet}
+          format={formatCoins}
         />
-        <DedeSpinButton
+        <GameSpinButton
           spinning={game.spinning}
           disabled={!ready}
           auto={game.auto}
+          icon={Zap}
           onSpin={game.spin}
           onStop={game.stop}
           onAuto={game.toggleAuto}
         />
       </footer>
-
-      {game.freeTrigger && !prize && (
-        <p className="dede-float-win pointer-events-none absolute left-1/2 top-[36%] z-20 flex w-max items-center gap-1.5 rounded-full border border-[#ffe9a8] bg-black/75 px-4 py-1.5 text-sm font-black text-[#ffd35c]">
-          <Zap className="h-4 w-4" /> {game.freeTrigger}
-        </p>
-      )}
 
       {flash > 0 && !prize && (
         <p

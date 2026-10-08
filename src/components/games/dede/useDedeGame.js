@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import { DEDE_BET_LEVELS, DEDE_FREE_SPINS, DEDE_LINES } from './dedeConfig';
+import { DEDE_BET_LEVELS, DEDE_LINES } from './dedeConfig';
 
 // Makaraların akışı, karoların yerine oturması ve kazanç adımlarının süreleri.
 const ROLL_MS = 1400;
@@ -8,7 +8,6 @@ const DROP_MS = 380;
 const HOLD_MS = 950;
 const EXPLODE_MS = 320;
 const END_MS = 650;
-const TRIGGER_MS = 3200;
 
 /** DEDE oyununun durumu: bakiye, bahis, tumbler adımları ve çarpan küreleri. */
 export default function useDedeGame() {
@@ -29,12 +28,9 @@ export default function useDedeGame() {
   const [rolling, setRolling] = useState(false);
   const [win, setWin] = useState(0);
   const [bigWin, setBigWin] = useState(0);
-  const [freeTrigger, setFreeTrigger] = useState('');
   const [spinning, setSpinning] = useState(false);
   const [auto, setAuto] = useState(false);
   const [message, setMessage] = useState('');
-  // Ücretsiz tur hediye edildiğinde turlar kendiliğinden çevrilir.
-  const [freeRun, setFreeRun] = useState(false);
   const busyRef = useRef(false);
   const stopRef = useRef(null);
 
@@ -59,13 +55,6 @@ export default function useDedeGame() {
   }, []);
 
   useEffect(() => () => { stopRef.current?.(); }, []);
-
-  // Bedava tur duyurusu kısa süre görünür.
-  useEffect(() => {
-    if (!freeTrigger) return undefined;
-    const timer = window.setTimeout(() => setFreeTrigger(''), TRIGGER_MS);
-    return () => window.clearTimeout(timer);
-  }, [freeTrigger]);
 
   const applyState = useCallback((data) => {
     if (!data) return;
@@ -97,7 +86,7 @@ export default function useDedeGame() {
 
   const spin = useCallback(async () => {
     if (busyRef.current || status !== 'ready') return;
-    // Bedava tur hakkı varsa tur bedavadır.
+    // Satın alınan çevirme hakkı varsa tur tekrar ücret almaz.
     const cost = freeSpins > 0 ? 0 : bet * DEDE_LINES;
     if (coins < cost) {
       setAuto(false);
@@ -112,7 +101,6 @@ export default function useDedeGame() {
     setWins([]);
     setOrbs([]);
     setMultiplier(0);
-    setFreeTrigger('');
     setMessage('');
     try {
       const [response] = await Promise.all([
@@ -149,8 +137,6 @@ export default function useDedeGame() {
       applyState(data);
       setWin(data.win || 0);
       setBigWin(data.big_win || 0);
-      if (data.free_trigger) setFreeTrigger(`${DEDE_FREE_SPINS} BEDAVA TUR KAZANDIN!`);
-      else if (data.retrigger) setFreeTrigger(`+${data.retrigger} BEDAVA TUR!`);
     } catch (error) {
       const raw = error?.response?.data?.error;
       setAuto(false);
@@ -191,18 +177,13 @@ export default function useDedeGame() {
 
   const toggleAuto = useCallback(() => setAuto((value) => !value), []);
 
-  // Otomatik oyun ve ücretsiz tur akışı; hak bitince kendiliğinden durur.
+  // Otomatik oyun ve satın alınan çevirme hakkı akışı; hak bitince kendiliğinden durur.
   useEffect(() => {
     if (spinning || status !== 'ready') return undefined;
-    if (!auto && !(freeRun && freeSpins > 0)) return undefined;
+    if (!auto && freeSpins <= 0) return undefined;
     const timer = window.setTimeout(() => { spin(); }, 800);
     return () => window.clearTimeout(timer);
-  }, [auto, freeRun, freeSpins, spin, spinning, status]);
-
-  useEffect(() => {
-    if (!freeRun || spinning || freeSpins > 0) return;
-    setFreeRun(false);
-  }, [freeRun, freeSpins, spinning]);
+  }, [auto, freeSpins, spin, spinning, status]);
 
   // "15 çevirme hakkı": bedel coinlerden düşülür, turlar kendiliğinden çevrilir.
   const buySession = useCallback(async () => {
@@ -215,7 +196,6 @@ export default function useDedeGame() {
       const response = await base44.functions.invoke('dede-game', { action: 'session', bet });
       applyState(response.data);
       setMessage('');
-      if ((response.data?.free_spins ?? 0) > 0) setFreeRun(true);
     } catch (error) {
       setMessage(error?.response?.data?.error || 'Çevirme hakkı alınamadı.');
     }
@@ -237,7 +217,6 @@ export default function useDedeGame() {
     multiplier,
     win,
     bigWin,
-    freeTrigger,
     auto,
     message,
     spin,

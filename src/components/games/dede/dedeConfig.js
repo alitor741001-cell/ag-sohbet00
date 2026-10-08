@@ -3,7 +3,6 @@ import { DEDE_ART } from './dedeAssets';
 
 export const DEDE_LINES = 20;
 export const DEDE_BET_LEVELS = [10, 20, 50, 100, 250, 500, 1000, 2500, 5000];
-export const DEDE_FREE_SPINS = 15;
 // Küme ödemesi: ekranda en az bu kadar aynı sembol olunca öder.
 export const DEDE_CLUSTER_MIN = 8;
 export const DEDE_SCATTER_MIN = 4;

@@ -1,5 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
-import { BET_LEVELS, BIG_WIN_MULTIPLE, FREE_SPINS, LINES, playDede } from '../../shared/dedeEngine.ts';
+import { BET_LEVELS, BIG_WIN_MULTIPLE, LINES, playDede } from '../../shared/dedeEngine.ts';
 import {
   DEFAULT_BET,
   SESSION_SPINS,
@@ -74,9 +74,8 @@ export default async function (req) {
 
       const result = playDede(bet, isFree);
       const total = result.total;
-      // Bedava tur: 4+ dede 15 tur, bedava turda 3+ dede +5 tur.
-      const awarded = (result.freeTrigger ? FREE_SPINS : 0) + result.retrigger;
-      const freeSpins = Math.max(0, (wallet.dede_free_spins ?? 0) - (isFree ? 1 : 0)) + awarded;
+      // Serbest tur yalnızca satın alınan çevirme hakkından gelir; tur hediye edilmez.
+      const freeSpins = Math.max(0, (wallet.dede_free_spins ?? 0) - (isFree ? 1 : 0));
       const bigWin = stake > 0 && total >= stake * BIG_WIN_MULTIPLE;
 
       const updated = await base44.asServiceRole.entities.GameWallet.update(wallet.id, {
@@ -95,8 +94,6 @@ export default async function (req) {
         win: total,
         cost,
         scatter_count: result.scatterCount,
-        free_trigger: result.freeTrigger,
-        retrigger: result.retrigger,
         capped: result.capped,
         big_win: bigWin ? total : 0,
       });

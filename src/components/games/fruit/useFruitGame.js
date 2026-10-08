@@ -25,8 +25,6 @@ export default function useFruitGame() {
   const [stopping, setStopping] = useState(false);
   const [auto, setAuto] = useState(false);
   const [message, setMessage] = useState('');
-  // Ücretsiz tur hediye edildiğinde turlar kendiliğinden çevrilir.
-  const [freeRun, setFreeRun] = useState(false);
   const busyRef = useRef(false);
   const stopRef = useRef(null);
 
@@ -82,7 +80,7 @@ export default function useFruitGame() {
 
   const spin = useCallback(async () => {
     if (busyRef.current || status !== 'ready') return;
-    // Serbest tur hakkı varsa tur bedavadır.
+    // Satın alınan çevirme hakkı varsa tur tekrar ücret almaz.
     const cost = freeSpins > 0 ? 0 : bet * FRUIT_LINES;
     if (coins < cost) {
       setAuto(false);
@@ -151,18 +149,13 @@ export default function useFruitGame() {
 
   const toggleAuto = useCallback(() => setAuto((value) => !value), []);
 
-  // Otomatik oyun ve ücretsiz tur akışı; hak bitince kendiliğinden durur.
+  // Otomatik oyun ve satın alınan çevirme hakkı akışı; hak bitince kendiliğinden durur.
   useEffect(() => {
     if (spinning || status !== 'ready') return undefined;
-    if (!auto && !(freeRun && freeSpins > 0)) return undefined;
+    if (!auto && freeSpins <= 0) return undefined;
     const timer = window.setTimeout(() => { spin(); }, 800);
     return () => window.clearTimeout(timer);
-  }, [auto, freeRun, freeSpins, spin, spinning, status]);
-
-  useEffect(() => {
-    if (!freeRun || spinning || freeSpins > 0) return;
-    setFreeRun(false);
-  }, [freeRun, freeSpins, spinning]);
+  }, [auto, freeSpins, spin, spinning, status]);
 
   // "15 çevirme hakkı": bedel coinlerden düşülür, turlar kendiliğinden çevrilir.
   const buySession = useCallback(async () => {
@@ -175,7 +168,6 @@ export default function useFruitGame() {
       const response = await base44.functions.invoke('fruit-game', { action: 'session', bet });
       applyState(response.data);
       setMessage('');
-      if ((response.data?.free_spins ?? 0) > 0) setFreeRun(true);
     } catch (error) {
       setMessage(error?.response?.data?.error || 'Çevirme hakkı alınamadı.');
     }

@@ -25,12 +25,9 @@ export const CLUSTER_MIN = 8;
 // Bir turdaki en fazla tumbler adımı.
 export const DROP_MAX = 8;
 
-// Dede: bedava tur tetikleyen skatter sembolü.
+// Dede: küme dışında kalan skatter sembolü; 4+ gelince ayrıca öder.
 export const SCATTER_ID = 'dede';
 export const SCATTER_MIN = 4;
-export const FREE_SPINS = 15;
-export const FREE_RETRIGGER_MIN = 3;
-export const FREE_RETRIGGER = 5;
 // Skatter ödemesi: 4, 5 ve 6+ dede için bahis katı.
 export const SCATTER_PAYS = [60, 150, 600];
 
@@ -61,10 +58,10 @@ const ORB_VALUES = [
   [500, 1],
 ];
 
-// Küre inme şansı: ilk ızgarada, tumblerda ve bedava turda.
+// Küre inme şansı: ilk ızgarada, tumblerda ve satın alınan çevirme hakkı turlarında.
 const INITIAL_ORB_CHANCE = 0.16;
 const TUMBLE_ORB_CHANCE = 0.34;
-const FREE_ORB_CHANCE = 0.5;
+const SESSION_ORB_CHANCE = 0.5;
 
 function buildPool() {
   const pool = [];
@@ -168,7 +165,7 @@ function rollOrbs(chance, maxCount) {
 
 /** Bir turun tamamı: ilk ızgara, tumbler adımları ve küre çarpanları.
     Her adım ekranda gösterilmek üzere ayrı ayrı döner. */
-export function playDede(bet, isFree) {
+export function playDede(bet, sessionSpin) {
   let grid = spinGrid();
   const scatterCells = [];
   grid.forEach((column, reel) => {
@@ -177,9 +174,9 @@ export function playDede(bet, isFree) {
     });
   });
   const scatterCount = scatterCells.length;
-  const freeTrigger = scatterCount >= SCATTER_MIN;
-  const scatterTier = freeTrigger ? Math.min(scatterCount, SCATTER_MIN + 2) - SCATTER_MIN : 0;
-  const scatterWin = freeTrigger ? Math.round(SCATTER_PAYS[scatterTier] * bet * PAYOUT_RATE) : 0;
+  const scatterPaid = scatterCount >= SCATTER_MIN;
+  const scatterTier = scatterPaid ? Math.min(scatterCount, SCATTER_MIN + 2) - SCATTER_MIN : 0;
+  const scatterWin = scatterPaid ? Math.round(SCATTER_PAYS[scatterTier] * bet * PAYOUT_RATE) : 0;
 
   const ceiling = bet * MAX_WIN_MULTIPLE;
   const steps = [];
@@ -231,7 +228,7 @@ export function playDede(bet, isFree) {
     if (!winning.size) break;
 
     grid = collapse(grid, winning);
-    orbs = rollOrbs(isFree ? FREE_ORB_CHANCE : TUMBLE_ORB_CHANCE, 3);
+    orbs = rollOrbs(sessionSpin ? SESSION_ORB_CHANCE : TUMBLE_ORB_CHANCE, 3);
   }
 
   // Turun tamamı biriken çarpanla çarpılır — orijinal oyundaki gibi.
@@ -242,8 +239,5 @@ export function playDede(bet, isFree) {
     capped = true;
   }
 
-  // Bedava turda 3+ dede turu uzatır.
-  const retrigger = isFree && scatterCount >= FREE_RETRIGGER_MIN ? FREE_RETRIGGER : 0;
-
-  return { steps, grid, total, capped, scatterCount, freeTrigger, retrigger };
+  return { steps, grid, total, capped, scatterCount, scatterPaid };
 }
