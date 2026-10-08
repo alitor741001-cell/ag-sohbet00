@@ -1,0 +1,67 @@
+{
+  "name": "RouletteRound",
+  "type": "object",
+  "properties": {
+    "round_no": {
+      "type": "integer",
+      "default": 0
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "betting",
+        "spinning",
+        "closed"
+      ],
+      "default": "betting"
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "phase_ends_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "ends_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "number": {
+      "type": "integer",
+      "default": 0
+    },
+    "index": {
+      "type": "integer",
+      "default": 0
+    }
+  },
+  "required": [
+    "round_no",
+    "status",
+    "number",
+    "index"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
