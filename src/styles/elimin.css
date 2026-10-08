@@ -346,7 +346,8 @@
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .28), 0 5px 12px -8px #000;
 }
 
-/* Sembol kartı: kare. Nesne kartın karesine oturur, hangi cihazda olursa olsun taşmaz. */
+/* Sembol: kare kart. Sembolün arkasındaki zemin atıldığı için nesne doğrudan
+   tahtanın üstünde durur; gölge nesnenin kendi siluetini izler. */
 .el-sym {
   position: relative;
   z-index: 1;
@@ -354,8 +355,7 @@
   width: 92%;
   max-height: 92%;
   aspect-ratio: 1;
-  overflow: hidden;
-  box-shadow: 0 0 0 1px rgba(255, 226, 150, .4), 0 6px 14px -8px rgba(0, 0, 0, .95);
+  filter: drop-shadow(0 4px 7px rgba(0, 0, 0, .6));
 }
 
 .el-art {
@@ -370,7 +370,7 @@
 }
 
 /* Altın muz: bonus ödeyen sembolün parıltısı. */
-.el-sym-scatter { filter: drop-shadow(0 0 7px rgba(255, 214, 92, .85)); }
+.el-sym-scatter { filter: drop-shadow(0 0 7px rgba(255, 214, 92, .85)) drop-shadow(0 4px 7px rgba(0, 0, 0, .6)); }
 
 /* Dönen şerit: akış ve iniş ortak makara altyapısından gelir (styles/reelRoll.css).
    Şeride bulanıklık verilmez: dönerken nesneler net kalır. */

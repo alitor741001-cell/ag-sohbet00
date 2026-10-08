@@ -2,18 +2,24 @@ import { useEffect, useState } from 'react';
 
 // Kart karesi: görsel kare kırpılır, 512'ye indirilir.
 const TILE = 512;
-// Zemine bu mesafenin altındaki pikseller zemin sayılır (kare uzaklık).
-const NEAR = 34 * 34;
-// Zemine komşu yumuşak geçiş kuşağının genişliği.
-const SOFT = 84 * 84;
-// Karenin dış bandı: hücre çizgileri ve kırpıntılar zemine karıştırılır.
-const RING = 0.05;
+// Sınır yumuşatma: bu mesafenin altındaki pikseller tamamen şeffaf, üstündekiler tamamen opak.
+const CLEAR = 26 * 26;
+const SOLID = 70 * 70;
+// Zemin taraması: komşu farkı bu eşiğin altındaysa akış sürer — zeminin yumuşak
+// ışık halkası da silinir, nesnenin kenarında akış durur. Zemine uzaklık üst
+// sınırı aşılırsa piksel zemin sayılmaz: nesnenin beyaz/krem yerleri korunur.
+const STEP = 20 * 20;
+const FLOOR = 72 * 72;
+// Zemin sınırında kalan ışık halkası bu kalınlıkta temizlenir.
+const HALO = 2;
 // Nesne kenara değmesin: kırpma payı ve leke eşiği.
 const INSET = 0.9;
 const SPECK = 30;
 
-const SUBJECT = new Uint8Array(TILE * TILE);
-const SEEN = new Uint8Array(TILE * TILE);
+const MASK = new Uint8Array(TILE * TILE);
+const EDGE = new Uint8Array(TILE * TILE);
+const SOLID_PIXELS = new Uint8Array(TILE * TILE);
+const VISITED = new Uint8Array(TILE * TILE);
 const STACK = new Int32Array(TILE * TILE);
 
 const cache = new Map();
@@ -29,7 +35,7 @@ function loadImage(src) {
   });
 }
 
-/** Karenin dış bandının medyan rengi: nesnenin korunacak zemin tonu. */
+/** Karenin dış bandının medyan rengi: atılacak zeminin tonu. */
 function backgroundTone(pixels) {
   const band = 6;
   const samples = [[], [], []];
@@ -57,68 +63,139 @@ function backgroundTone(pixels) {
   });
 }
 
-const distanceTo = (pixels, p, tone) => {
+/** İki pikselin renk farkı. */
+function colorGap(pixels, a, b) {
+  const red = pixels[a] - pixels[b];
+  const green = pixels[a + 1] - pixels[b + 1];
+  const blue = pixels[a + 2] - pixels[b + 2];
+  return red * red + green * green + blue * blue;
+}
+
+/** Pikselin zemin tonuna uzaklığı. */
+function floorGap(pixels, p, tone) {
   const red = pixels[p] - tone[0];
   const green = pixels[p + 1] - tone[1];
   const blue = pixels[p + 2] - tone[2];
   return red * red + green * green + blue * blue;
-};
-
-const paint = (pixels, p, tone, amount) => {
-  for (let channel = 0; channel < 3; channel += 1) {
-    pixels[p + channel] = Math.round(pixels[p + channel] * (1 - amount) + tone[channel] * amount);
-  }
-};
+}
 
 /**
- * Zemin tek renge indirilir: zemine yakın pikseller tam tona çekilir, kuşaktakiler
- * yumuşak geçişle temizlenir. Böylece nesnenin kendi zemini korunur, çevresindeki
- * kirli saçılma ve renk geçişleri kalkar.
+ * Zemini karenin dışından içeri doğru tarar. Yumuşak geçişler (ışık halkası,
+ * ızgara çizgisi) boyunca ilerler, nesnenin kenarında komşu farkı büyüdüğü
+ * için durur; böylece nesnenin kendi içindeki benzer renkler korunur.
  */
-function flattenBackground(pixels, tone) {
-  for (let p = 0; p < pixels.length; p += 4) {
-    const distance = distanceTo(pixels, p, tone);
-    if (distance >= SOFT) continue;
-    paint(pixels, p, tone, distance <= NEAR ? 1 : 1 - (distance - NEAR) / (SOFT - NEAR));
+function markBackground(pixels, tone) {
+  MASK.fill(0);
+  let tail = 0;
+  const seed = (index) => {
+    if (MASK[index]) return;
+    MASK[index] = 1;
+    STACK[tail] = index;
+    tail += 1;
+  };
+
+  // Karenin en dış halkası her zaman zemin sayılır: kırpma artıkları kalmaz.
+  for (let i = 0; i < TILE; i += 1) {
+    seed(i);
+    seed((TILE - 1) * TILE + i);
+    seed(i * TILE);
+    seed(i * TILE + TILE - 1);
+  }
+
+  let head = 0;
+  while (head < tail) {
+    const index = STACK[head];
+    head += 1;
+    const x = index % TILE;
+    const y = (index - x) / TILE;
+    const p = index * 4;
+    const neighbours = [
+      x > 0 ? index - 1 : -1,
+      x < TILE - 1 ? index + 1 : -1,
+      y > 0 ? index - TILE : -1,
+      y < TILE - 1 ? index + TILE : -1,
+    ];
+    for (const next of neighbours) {
+      if (next < 0 || MASK[next]) continue;
+      const q = next * 4;
+      if (colorGap(pixels, q, p) > STEP) continue;
+      if (floorGap(pixels, q, tone) > FLOOR) continue;
+      MASK[next] = 1;
+      STACK[tail] = next;
+      tail += 1;
+    }
   }
 }
 
-/** Karenin dış bandındaki hücre çizgileri ve kırpıntılar zemine karıştırılır. */
-function clearOuterRing(pixels, tone) {
-  const ring = Math.round(TILE * RING);
-  for (let y = 0; y < ring; y += 1) {
+/** Zeminin hemen çevresindeki şerit: nesnenin kirli saçılması burada temizlenir. */
+function markHalo() {
+  EDGE.fill(0);
+  for (let y = 0; y < TILE; y += 1) {
     for (let x = 0; x < TILE; x += 1) {
-      const edge = Math.min(x, y, TILE - 1 - x, TILE - 1 - y);
-      const p = (y * TILE + x) * 4;
-      paint(pixels, p, tone, 1 - edge / ring);
-    }
-  }
-  for (let y = TILE - ring; y < TILE; y += 1) {
-    for (let x = 0; x < TILE; x += 1) {
-      const edge = Math.min(x, y, TILE - 1 - x, TILE - 1 - y);
-      const p = (y * TILE + x) * 4;
-      paint(pixels, p, tone, 1 - edge / ring);
+      const index = y * TILE + x;
+      if (MASK[index]) continue;
+      let touching = false;
+      for (let dy = -HALO; dy <= HALO && !touching; dy += 1) {
+        const ny = y + dy;
+        if (ny < 0 || ny >= TILE) continue;
+        for (let dx = -HALO; dx <= HALO; dx += 1) {
+          const nx = x + dx;
+          if (nx < 0 || nx >= TILE) continue;
+          if (MASK[ny * TILE + nx]) {
+            touching = true;
+            break;
+          }
+        }
+      }
+      if (touching) EDGE[index] = 1;
     }
   }
 }
 
-/** Zeminden kopuk küçük lekeler (toz, çizgi artığı) temizlenir. */
-function removeSpecks(pixels, tone) {
+/**
+ * Zemin tamamen silinir; sınırda kalan ışık halkası yumuşak geçişle
+ * şeffaflaştırılır ve zeminden sızan renk nesnenin renginden ayıklanır.
+ */
+function wipeBackground(pixels, tone) {
+  for (let index = 0; index < TILE * TILE; index += 1) {
+    const p = index * 4;
+    if (MASK[index]) {
+      pixels[p + 3] = 0;
+      continue;
+    }
+    if (!EDGE[index]) continue;
+
+    const gap = floorGap(pixels, p, tone);
+    const amount = gap <= CLEAR ? 0 : gap >= SOLID ? 1 : (gap - CLEAR) / (SOLID - CLEAR);
+    if (amount <= 0) {
+      pixels[p + 3] = 0;
+      continue;
+    }
+    for (let channel = 0; channel < 3; channel += 1) {
+      const value = (pixels[p + channel] - (1 - amount) * tone[channel]) / amount;
+      pixels[p + channel] = value < 0 ? 0 : value > 255 ? 255 : Math.round(value);
+    }
+    pixels[p + 3] = Math.round(amount * 255);
+  }
+}
+
+/** Zemin silindikten sonra kalan küçük parçacıklar (toz, çizgi artığı) atılır. */
+function removeSpecks(pixels) {
   const total = TILE * TILE;
-  SUBJECT.fill(0);
-  SEEN.fill(0);
+  SOLID_PIXELS.fill(0);
+  VISITED.fill(0);
   for (let index = 0; index < total; index += 1) {
-    SUBJECT[index] = distanceTo(pixels, index * 4, tone) > NEAR ? 1 : 0;
+    SOLID_PIXELS[index] = pixels[index * 4 + 3] > 128 ? 1 : 0;
   }
 
   for (let start = 0; start < total; start += 1) {
-    if (!SUBJECT[start] || SEEN[start]) continue;
+    if (!SOLID_PIXELS[start] || VISITED[start]) continue;
     const members = [start];
     let speck = true;
     let head = 0;
     let tail = 1;
     STACK[0] = start;
-    SEEN[start] = 1;
+    VISITED[start] = 1;
     while (head < tail) {
       const index = STACK[head];
       head += 1;
@@ -131,26 +208,26 @@ function removeSpecks(pixels, tone) {
         y < TILE - 1 ? index + TILE : -1,
       ];
       for (const next of neighbours) {
-        if (next < 0 || SEEN[next] || !SUBJECT[next]) continue;
-        SEEN[next] = 1;
+        if (next < 0 || VISITED[next] || !SOLID_PIXELS[next]) continue;
+        VISITED[next] = 1;
         STACK[tail] = next;
         tail += 1;
         if (members.length > SPECK) speck = false;
         else members.push(next);
       }
     }
-    if (speck) members.forEach((index) => paint(pixels, index * 4, tone, 1));
+    if (speck) members.forEach((index) => { pixels[index * 4 + 3] = 0; });
   }
 }
 
-/** Nesnenin kendi pikselleri keskinleştirilir; zemin tek renk kalır. */
-function sharpenSubject(pixels, tone) {
+/** Nesnenin kendi pikselleri netleştirilir; şeffaf zemin bu işleme girmez. */
+function sharpenSubject(pixels) {
   const source = new Uint8ClampedArray(pixels);
   const at = (x, y) => (y * TILE + x) * 4;
   for (let y = 1; y < TILE - 1; y += 1) {
     for (let x = 1; x < TILE - 1; x += 1) {
       const p = at(x, y);
-      if (distanceTo(source, p, tone) <= NEAR) continue;
+      if (source[p + 3] < 255) continue;
       for (let channel = 0; channel < 3; channel += 1) {
         const value = source[p + channel] * 5
           - source[at(x - 1, y) + channel]
@@ -182,10 +259,11 @@ async function process(src) {
   const imageData = context.getImageData(0, 0, TILE, TILE);
   const pixels = imageData.data;
   const tone = backgroundTone(pixels);
-  flattenBackground(pixels, tone);
-  clearOuterRing(pixels, tone);
-  removeSpecks(pixels, tone);
-  sharpenSubject(pixels, tone);
+  markBackground(pixels, tone);
+  markHalo();
+  wipeBackground(pixels, tone);
+  removeSpecks(pixels);
+  sharpenSubject(pixels);
 
   context.putImageData(imageData, 0, 0);
   const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
@@ -193,7 +271,7 @@ async function process(src) {
   return URL.createObjectURL(blob);
 }
 
-/** Kare kart: kare kırpılır, zemini tek renge iner, kenarları temizlenir. */
+/** Kare kart: sembolün arkasındaki zemin silinir, nesne tahtanın üstünde durur. */
 export function buildEliminTile(src) {
   const found = cache.get(src);
   if (found) return found;
