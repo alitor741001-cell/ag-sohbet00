@@ -3,6 +3,7 @@ import { base44 } from '@/api/base44Client';
 import gameRequest from '@/lib/gameRequest';
 import { landMs } from '@/components/games/reels/reelRoll';
 import { DEDE_BET_LEVELS, DEDE_LINES, scatterIntroGrid } from './dedeConfig';
+import useBetQueue from '@/hooks/useBetQueue';
 
 // Sonucun üzerine iniş, karoların yerine oturması ve kazanç adımlarının süreleri.
 const LAND_MS = landMs(6);
@@ -195,15 +196,13 @@ export default function useDedeGame() {
     }
   }, [applyState, bet, coins, sessionSpins, status, wait]);
 
-  const saveBet = useCallback(async (next) => {
+  const enqueueBet = useBetQueue();
+
+  const saveBet = useCallback((next) => {
     setBet(next);
-    try {
-      const response = await base44.functions.invoke('dede-game', { action: 'bet', bet: next });
-      applyState(response.data);
-    } catch (error) {
-      // Bahis anlık olarak korunur.
-    }
-  }, [applyState]);
+    // İstekler sıraya girer: hızlı basışta geç dönen eski yanıt yeni bahsi geri düşürmez.
+    enqueueBet(() => base44.functions.invoke('dede-game', { action: 'bet', bet: next }), applyState);
+  }, [applyState, enqueueBet]);
 
   const changeBet = useCallback((direction) => {
     if (busyRef.current) return;

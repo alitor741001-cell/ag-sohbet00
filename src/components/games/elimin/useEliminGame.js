@@ -3,6 +3,7 @@ import gameRequest from '@/lib/gameRequest';
 import { landMs } from '@/components/games/reels/reelRoll';
 import { eliminSound, unlockAudio } from './eliminSound';
 import { BET_LEVELS, CHEST_MAX, LINES } from './eliminConfig';
+import useBetQueue from '@/hooks/useBetQueue';
 
 // Sonucun üzerine iniş: 6 sütunlu kare ızgara, ortak makara altyapısı.
 const LAND_MS = landMs(6);
@@ -178,15 +179,13 @@ export default function useEliminGame() {
     }
   }, [applyState, bet, coins, freeSpins, play, sessionSpins, status, wait]);
 
-  const saveBet = useCallback(async (next) => {
+  const enqueueBet = useBetQueue();
+
+  const saveBet = useCallback((next) => {
     setBet(next);
-    try {
-      const response = await gameRequest('elimin-game', { action: 'bet', bet: next });
-      applyState(response.data);
-    } catch (error) {
-      // Bahis anlık olarak korunur.
-    }
-  }, [applyState]);
+    // İstekler sıraya girer: hızlı basışta geç dönen eski yanıt yeni bahsi geri düşürmez.
+    enqueueBet(() => gameRequest('elimin-game', { action: 'bet', bet: next }), applyState);
+  }, [applyState, enqueueBet]);
 
   const changeBet = useCallback((direction) => {
     if (busyRef.current) return;

@@ -4,6 +4,7 @@ import gameRequest from '@/lib/gameRequest';
 import { BET_LEVELS, LINES, REELS, ROWS, tierFor } from './sekerliConfig';
 import { EMPTY_CELLS, collapseBoard, mergeSymbols, randomSymbol, toBoard } from './sekerliBoard';
 import { sekerliSound, unlockAudio } from '@/lib/sekerliAudio';
+import useBetQueue from '@/hooks/useBetQueue';
 
 // Tur zamanlamaları: sonucun üzerine iniş, kazanan parlaması, patlama ve düşme.
 const LAND_MS = 1450;
@@ -304,15 +305,13 @@ export default function useSekerliGame() {
     else skipLandingRef.current = true;
   }, []);
 
-  const saveBet = useCallback(async (next) => {
+  const enqueueBet = useBetQueue();
+
+  const saveBet = useCallback((next) => {
     setBet(next);
-    try {
-      const response = await base44.functions.invoke('sekerli-game', { action: 'bet', bet: next });
-      applyState(response.data);
-    } catch (error) {
-      // Bahis anlık olarak korunur.
-    }
-  }, [applyState]);
+    // İstekler sıraya girer: hızlı basışta geç dönen eski yanıt yeni bahsi geri düşürmez.
+    enqueueBet(() => base44.functions.invoke('sekerli-game', { action: 'bet', bet: next }), applyState);
+  }, [applyState, enqueueBet]);
 
   const changeBet = useCallback((direction) => {
     if (busyRef.current) return;

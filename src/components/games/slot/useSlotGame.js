@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import gameRequest from '@/lib/gameRequest';
 import { BET_LEVELS, LINES, MAX_BET, MIN_BET } from './slotConfig';
+import useBetQueue from '@/hooks/useBetQueue';
 
 const SPIN_DURATION_MS = 5000;
 const SETTLE_MS = 800;
@@ -141,15 +142,13 @@ export default function useSlotGame({ roomId } = {}) {
     }
   }, [applyState, bet, coins, freeSpins, lines, noLimit, roomId, status, wait]);
 
-  const saveBet = useCallback(async (next) => {
+  const enqueueBet = useBetQueue();
+
+  const saveBet = useCallback((next) => {
     setBet(next);
-    try {
-      const response = await base44.functions.invoke('slot-game', { action: 'bet', bet: next });
-      applyState(response.data);
-    } catch (error) {
-      // Bahis anlık olarak korunur.
-    }
-  }, [applyState]);
+    // İstekler sıraya girer: hızlı basışta geç dönen eski yanıt yeni bahsi geri düşürmez.
+    enqueueBet(() => base44.functions.invoke('slot-game', { action: 'bet', bet: next }), applyState);
+  }, [applyState, enqueueBet]);
 
   const changeBet = useCallback((direction) => {
     if (busyRef.current) return;

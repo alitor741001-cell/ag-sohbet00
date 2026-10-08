@@ -3,6 +3,7 @@ import { base44 } from '@/api/base44Client';
 import gameRequest from '@/lib/gameRequest';
 import { landMs } from '@/components/games/reels/reelRoll';
 import { FRUIT_BET_LEVELS, FRUIT_LINES } from './fruitConfig';
+import useBetQueue from '@/hooks/useBetQueue';
 
 // Sonucun üzerine iniş: 6 sütunlu ızgara, ortak makara altyapısı.
 const LAND_MS = landMs(6);
@@ -150,15 +151,13 @@ export default function useFruitGame() {
     }
   }, [applyState, bet, coins, freeSpins, sessionSpins, status, wait]);
 
-  const saveBet = useCallback(async (next) => {
+  const enqueueBet = useBetQueue();
+
+  const saveBet = useCallback((next) => {
     setBet(next);
-    try {
-      const response = await base44.functions.invoke('fruit-game', { action: 'bet', bet: next });
-      applyState(response.data);
-    } catch (error) {
-      // Bahis anlık olarak korunur.
-    }
-  }, [applyState]);
+    // İstekler sıraya girer: hızlı basışta geç dönen eski yanıt yeni bahsi geri düşürmez.
+    enqueueBet(() => base44.functions.invoke('fruit-game', { action: 'bet', bet: next }), applyState);
+  }, [applyState, enqueueBet]);
 
   const changeBet = useCallback((direction) => {
     if (busyRef.current) return;
