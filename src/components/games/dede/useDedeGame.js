@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import gameRequest from '@/lib/gameRequest';
 import { landMs } from '@/components/games/reels/reelRoll';
-import { DEDE_BET_LEVELS, DEDE_LINES } from './dedeConfig';
+import { DEDE_BET_LEVELS, DEDE_LINES, scatterIntroGrid } from './dedeConfig';
 
 // Sonucun üzerine iniş, karoların yerine oturması ve kazanç adımlarının süreleri.
 const LAND_MS = landMs(6);
@@ -10,6 +10,8 @@ const DROP_MS = 380;
 const HOLD_MS = 950;
 const EXPLODE_MS = 320;
 const END_MS = 650;
+// Çevirme hakkı açılırken dört skatterin ekranda parladığı süre.
+const SCATTER_INTRO_MS = 2200;
 
 /** DEDE oyununun durumu: bakiye, bahis, tumbler adımları ve çarpan küreleri. */
 export default function useDedeGame() {
@@ -23,6 +25,8 @@ export default function useDedeGame() {
   const [sessionResult, setSessionResult] = useState(null);
   // Skatterın başlattığı çevirme hakkı kutlaması: kapanmadan turlar başlamaz.
   const [sessionBonus, setSessionBonus] = useState(null);
+  // Açılış anı: dört skatter ekranda parlar, sonra turlar kendiliğinden başlar.
+  const [intro, setIntro] = useState(false);
   const [bet, setBet] = useState(100);
   const [spins, setSpins] = useState(0);
   const [grid, setGrid] = useState(null);
@@ -214,29 +218,60 @@ export default function useDedeGame() {
 
   // Geri sayım yalnızca satın alınan çevirme hakkında akar; bedava turlar elle oynanır.
   useEffect(() => {
-    if (spinning || status !== 'ready') return undefined;
+    if (spinning || intro || status !== 'ready') return undefined;
     // Kutlama ekranı kapanana kadar beklenir: oyuncu 15 hakkı görüp başlatır.
     if (sessionBonus) return undefined;
     if (!auto && sessionSpins <= 0) return undefined;
     const timer = window.setTimeout(() => { spin(); }, 800);
     return () => window.clearTimeout(timer);
-  }, [auto, sessionBonus, sessionSpins, spin, spinning, status]);
+  }, [auto, intro, sessionBonus, sessionSpins, spin, spinning, status]);
 
-  // "15 çevirme hakkı": bedel coinlerden düşülür, turlar kendiliğinden çevrilir.
+  // Açılış anı: dört skatter dizilir ve parlar; çarpan ya da patlama olmaz,
+  // sonra 15 ücretsiz tur kendiliğinden çevrilir.
+  const playScatterIntro = useCallback(async () => {
+    const grid = scatterIntroGrid();
+    const cells = [];
+    grid.forEach((column, reel) => {
+      column.forEach((symbol, row) => {
+        if (symbol === 'dede') cells.push({ reel, row });
+      });
+    });
+    setIntro(true);
+    setRolling(false);
+    setLanding(null);
+    setExplode(false);
+    setGrid(grid);
+    setWins([{ symbol: 'dede', count: cells.length, amount: 0, cells, scatter: true }]);
+    setOrbs([]);
+    setMultiplier(0);
+    setWin(0);
+    setBigWin(0);
+    sessionWinRef.current = 0;
+    await wait(SCATTER_INTRO_MS);
+    setWins([]);
+    setIntro(false);
+  }, [wait]);
+
+  // "15 çevirme hakkı": bedel coinlerden düşülür; açılışta skatterler parlar,
+  // ardından turlar kendiliğinden çevrilir.
   const buySession = useCallback(async () => {
     if (busyRef.current || status !== 'ready') return;
     if (coins < sessionPrice) {
       setMessage('Yetersiz coin. Coin bakiyene dokunup coin yükle.');
       return;
     }
+    busyRef.current = true;
     try {
       const response = await gameRequest('dede-game', { action: 'session', bet });
       applyState(response.data);
+      await playScatterIntro();
       setMessage('');
     } catch (error) {
       setMessage(error?.response?.data?.error || 'Çevirme hakkı alınamadı.');
+    } finally {
+      busyRef.current = false;
     }
-  }, [applyState, bet, coins, sessionPrice, status]);
+  }, [applyState, bet, coins, playScatterIntro, sessionPrice, status]);
 
   const clearSessionResult = useCallback(() => setSessionResult(null), []);
   const clearSessionBonus = useCallback(() => setSessionBonus(null), []);
@@ -268,6 +303,7 @@ export default function useDedeGame() {
     buySession,
     clearSessionResult,
     clearSessionBonus,
+    intro,
     sessionPrice,
     sessionSpins,
     sessionSize,

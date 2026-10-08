@@ -148,14 +148,14 @@ export default function DedeGame({ onExit, onBack }) {
           <GameBetBar
             bet={game.bet}
             lines={DEDE_LINES}
-            disabled={game.spinning}
+            disabled={game.spinning || game.intro}
             onStep={game.changeBet}
             onMax={game.maxBet}
             format={formatCoins}
           />
           <GameSpinButton
             spinning={game.spinning}
-            disabled={!ready}
+            disabled={!ready || game.intro}
             auto={game.auto}
             icon={Zap}
             onSpin={game.spin}

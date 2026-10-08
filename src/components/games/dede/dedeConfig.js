@@ -32,5 +32,21 @@ export function randomGrid() {
   );
 }
 
+// Çevirme hakkı açılırken görünen açılış dizilimi: dört ayrı sütuna birer skatter,
+// kalanı ödeme yapan nesnelerle dolar. Çarpan jetonu konmaz: çarpan ya da birleşme olmaz.
+export function scatterIntroGrid() {
+  const payers = DEDE_IDS.filter((id) => id !== 'dede');
+  const grid = Array.from({ length: 6 }, () =>
+    Array.from({ length: 5 }, () => payers[Math.floor(Math.random() * payers.length)]),
+  );
+  [0, 1, 2, 3, 4, 5]
+    .sort(() => Math.random() - 0.5)
+    .slice(0, DEDE_SCATTER_MIN)
+    .forEach((reel) => {
+      grid[reel][Math.floor(Math.random() * 5)] = 'dede';
+    });
+  return grid;
+}
+
 export const formatCoins = (value) =>
   new Intl.NumberFormat('tr-TR').format(Math.max(0, Math.round(value || 0)));
