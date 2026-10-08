@@ -11,7 +11,8 @@ export const FRUIT_ART = {
   // Lolipop kartının yerini alan portakal sembolü (referans görselden üretildi).
   lollipop: `${MEDIA_BASE}/e1a05bbe7_generated_image.png`,
   plum: `${MEDIA_BASE}/fcf725055_generated_image.png`,
-  grapes: `${MEDIA_BASE}/14b11f475_generated_image.png`,
+  // Üzüm kartı (referans görselden üretildi).
+  grapes: `${MEDIA_BASE}/effc79a4f_generated_image.png`,
   melon: `${MEDIA_BASE}/f8c19f24e_generated_image.png`,
   apple: `${MEDIA_BASE}/7db26e924_generated_image.png`,
   // Şeker kartının yerini alan çilek sembolü (referans görselden üretildi).
