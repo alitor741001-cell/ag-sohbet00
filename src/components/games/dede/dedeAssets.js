@@ -25,12 +25,11 @@ export const DEDE_ART_SIZE = 1024;
 
 // Çarpan jetonları: referanstaki altın çerçeveli taşlar. Değer görsele gömülü değildir;
 // jetonun ortasına yazıyla bindirilir, böylece her kademe aynı tasarımı kullanır.
-// Taşın rengi kademeyi gösterir: mor düşük kademeler, sarı 20x, mavi 50x, kırmızı 500x.
+// Taşın rengi kademeyi gösterir: mor düşük kademeler, mavi 50x, kırmızı 500x.
 const DEDE_ORB_PURPLE = `${MEDIA_BASE}/29afc73db_generated_image.png`;
 export const DEDE_ORB_ART = {
   3: DEDE_ORB_PURPLE,
   4: DEDE_ORB_PURPLE,
-  20: `${MEDIA_BASE}/389ce6b31_generated_image.png`,
   30: DEDE_ORB_PURPLE,
   50: `${MEDIA_BASE}/5f1ccbc6a_generated_image.png`,
   100: DEDE_ORB_PURPLE,
