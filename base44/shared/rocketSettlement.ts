@@ -13,7 +13,14 @@ export async function creditRocketBet(base44, bet) {
   // can be retried without paying twice or overwriting the other slot's payout.
   await withLimitRetry(() => base44.asServiceRole.entities.GameWallet.updateMany(
     { id: wallet.id, rocket_paid_bets: { $ne: bet.id } },
-    { $inc: { coins: bet.payout, total_won: bet.cancelled ? 0 : bet.payout }, $addToSet: { rocket_paid_bets: bet.id } }
+    {
+      $inc: {
+        coins: bet.payout,
+        total_won: bet.cancelled ? 0 : bet.payout,
+        total_won_rocket: bet.cancelled ? 0 : bet.payout,
+      },
+      $addToSet: { rocket_paid_bets: bet.id },
+    }
   ));
   await withLimitRetry(() => base44.asServiceRole.entities.RocketBet.update(bet.id, { payout_credited: true }));
   // Supabase aynası: nakde çevrilen bahis son haliyle arka planda yazılır.

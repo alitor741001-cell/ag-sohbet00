@@ -10,6 +10,7 @@ export default function SekerliGrid({ game }) {
           key={reel}
           reel={reel}
           column={column}
+          landing={game.landing?.[reel]}
           spinning={game.spinning}
           stopping={game.stopping}
           winCells={game.winCells}

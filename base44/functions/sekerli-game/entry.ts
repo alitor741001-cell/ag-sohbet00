@@ -19,7 +19,8 @@ function walletView(wallet) {
     bet: nearestBet(wallet.bet ?? DEFAULT_BET, BET_LEVELS),
     lines: LINES,
     spins: wallet.spins ?? 0,
-    total_won: wallet.total_won ?? 0,
+    // Bu oyunun kendi toplam kazancı: oyunlar birbirinden ayrı sayılır.
+    total_won: wallet.total_won_sekerli ?? 0,
     // Satın alınan "15 çevirme hakkı" turu.
     session_spins: wallet.sekerli_session_spins ?? 0,
     session_price: sessionPrice(nearestBet(wallet.bet ?? DEFAULT_BET, BET_LEVELS)),
@@ -85,6 +86,7 @@ export default async function (req) {
         sekerli_session_spins: sessionLeft,
         spins: (wallet.spins ?? 0) + 1,
         total_won: (wallet.total_won ?? 0) + win,
+        total_won_sekerli: (wallet.total_won_sekerli ?? 0) + win,
         last_spin_at: new Date().toISOString(),
       });
 

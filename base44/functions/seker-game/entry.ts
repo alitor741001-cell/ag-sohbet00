@@ -31,7 +31,8 @@ function walletView(wallet) {
     // Bedava turlar (altın şeker hediyesi) ve satın alınan çevirme hakkı ayrı sayılır.
     free_spins: wallet.seker_free_spins ?? 0,
     session_spins: wallet.seker_session_spins ?? 0,
-    total_won: wallet.total_won ?? 0,
+    // Bu oyunun kendi toplam kazancı: oyunlar birbirinden ayrı sayılır.
+    total_won: wallet.total_won_seker ?? 0,
     no_limit: false,
     // "Çevirme hakkı" kutusunun güncel coin bedeli ve tur sayısı.
     session_price: sessionPrice(nearestBet(wallet.bet ?? DEFAULT_BET, BET_LEVELS)),
@@ -105,6 +106,7 @@ export default async function (req) {
         seker_session_spins: sessionLeft,
         spins: (wallet.spins ?? 0) + 1,
         total_won: (wallet.total_won ?? 0) + total,
+        total_won_seker: (wallet.total_won_seker ?? 0) + total,
         last_spin_at: new Date().toISOString(),
       });
 

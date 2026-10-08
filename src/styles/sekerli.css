@@ -317,6 +317,12 @@
   animation: sl-roll var(--sl-dur) cubic-bezier(0.2, 0.72, 0.28, 1) both;
 }
 
+/* Sonuç beklenirken şerit kusursuz döngüde akar: içerik iki kez yazıldığı için
+   yarım boy kayınca başladığı görüntüye döner, akış hiç kesilmez. */
+.sl-strip-wait {
+  animation: sl-roll-loop var(--sl-dur) linear infinite;
+}
+
 .sl-cell-roll {
   flex-basis: calc(100% / var(--sl-rows));
   height: calc(100% / var(--sl-rows));
@@ -324,11 +330,6 @@
 
 .sl-cell-roll::before {
   display: none;
-}
-
-.sl-strip-bounce {
-  filter: none;
-  animation: sl-bounce 260ms cubic-bezier(0.28, 1.5, 0.5, 1) both;
 }
 
 .sl-sym-win {
@@ -489,15 +490,16 @@
 }
 
 /* === ANİMASYONLAR === */
+/* Şerit yukarı akar: sonuç sembolleri alttan gelip tam yerine oturur. */
 @keyframes sl-roll {
-  from { transform: translateY(var(--sl-roll)); }
-  to { transform: translateY(0); }
+  from { transform: translateY(var(--sl-from, 0%)); }
+  to { transform: translateY(var(--sl-roll)); }
 }
 
-@keyframes sl-bounce {
-  0% { transform: translateY(-6%); }
-  55% { transform: translateY(2.2%); }
-  100% { transform: translateY(0); }
+/* Bekleme döngüsü: bir turda tam yedi satır kayar, sonra baştan başlar. */
+@keyframes sl-roll-loop {
+  from { transform: translateY(0); }
+  to { transform: translateY(-50%); }
 }
 
 @keyframes sl-win {

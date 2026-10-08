@@ -4,8 +4,8 @@ import { BET_LEVELS, LINES, REELS, ROWS, tierFor } from './sekerliConfig';
 import { EMPTY_CELLS, collapseBoard, mergeSymbols, randomSymbol, toBoard } from './sekerliBoard';
 import { sekerliSound, unlockAudio } from '@/lib/sekerliAudio';
 
-// Tur zamanlamaları: makara akışı, kazanan parlaması, patlama ve düşme.
-const ROLL_MS = 1900;
+// Tur zamanlamaları: sonucun üzerine iniş, kazanan parlaması, patlama ve düşme.
+const LAND_MS = 1450;
 const WIN_HOLD_MS = 780;
 const BOOM_MS = 400;
 const FALL_MS = 480;
@@ -34,6 +34,8 @@ export default function useSekerliGame() {
   const [sessionSize, setSessionSize] = useState(15);
   const [sessionResult, setSessionResult] = useState(null);
   const [board, setBoard] = useState(() => toBoard(fillerGrid()));
+  // Sonuç gelince makaraların ineceği ızgara: şerit doğrudan gerçek sembollere oturur.
+  const [landing, setLanding] = useState(null);
   const [phase, setPhase] = useState('idle'); // idle | spin | win | boom | fall
   const [spinning, setSpinning] = useState(false);
   const [stopping, setStopping] = useState(false);
@@ -63,6 +65,8 @@ export default function useSekerliGame() {
   const soundRef = useRef(true);
   // Çevirme hakkı boyunca biriken kazanç: tur bitene kadar sıfırlanmaz.
   const sessionWinRef = useRef(0);
+  // Tur isteği sürerken STOP'a basılırsa iniş animasyonu atlanır.
+  const skipLandingRef = useRef(false);
 
   useEffect(() => { coinsRef.current = coins; }, [coins]);
   useEffect(() => { betRef.current = bet; }, [bet]);
@@ -166,6 +170,8 @@ export default function useSekerliGame() {
     setSpinWin(0);
     setShowWin(false);
     setStopping(false);
+    setLanding(null);
+    skipLandingRef.current = false;
     // Bahis tur başlarken bakiyeden düşer: coin gerçek zamanlı azalır.
     if (cost > 0) setCoins((value) => Math.max(0, value - cost));
     if (!inSession) {
@@ -182,14 +188,19 @@ export default function useSekerliGame() {
     }
 
     try {
-      const [response] = await Promise.all([
-        base44.functions.invoke('sekerli-game', { action: 'spin', bet: currentBet }),
-        wait(ROLL_MS),
-      ]);
+      const response = await base44.functions.invoke('sekerli-game', { action: 'spin', bet: currentBet });
       const data = response.data || {};
       const steps = Array.isArray(data.steps) ? data.steps : [];
       const landed = steps.length ? steps[0].grid : data.final_grid;
 
+      // Sonuç geldi: makaralar gerçek sembollerin üzerine iner, sonra ızgara sabitlenir.
+      if (landed) {
+        setLanding(landed);
+        if (!skipLandingRef.current) await wait(LAND_MS);
+        if (!mountedRef.current) return;
+      }
+      skipLandingRef.current = false;
+      setLanding(null);
       setSpinning(false);
       setPhase('idle');
       let working = toBoard(landed);
@@ -287,7 +298,9 @@ export default function useSekerliGame() {
   const stop = useCallback(() => {
     if (!busyRef.current) return;
     setStopping(true);
-    stopRef.current?.();
+    // İniş sürerken bekleme kesilir; istek sürerken basıldıysa iniş atlanır.
+    if (stopRef.current) stopRef.current();
+    else skipLandingRef.current = true;
   }, []);
 
   const saveBet = useCallback(async (next) => {
@@ -368,6 +381,7 @@ export default function useSekerliGame() {
     spins,
     totalWon,
     board,
+    landing,
     phase,
     spinning,
     stopping,

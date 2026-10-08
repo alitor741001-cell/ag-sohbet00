@@ -99,6 +99,34 @@
       "type": "number",
       "default": 0
     },
+    "total_won_slot": {
+      "type": "number",
+      "default": 0
+    },
+    "total_won_dede": {
+      "type": "number",
+      "default": 0
+    },
+    "total_won_fruit": {
+      "type": "number",
+      "default": 0
+    },
+    "total_won_seker": {
+      "type": "number",
+      "default": 0
+    },
+    "total_won_sekerli": {
+      "type": "number",
+      "default": 0
+    },
+    "total_won_roulette": {
+      "type": "number",
+      "default": 0
+    },
+    "total_won_rocket": {
+      "type": "number",
+      "default": 0
+    },
     "admin_granted": {
       "type": "boolean",
       "default": false

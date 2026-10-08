@@ -161,7 +161,7 @@ export async function mirrorRoundView(base44, user) {
   return {
     coins: wallet?.coins ?? START_COINS,
     spins: wallet?.spins ?? 0,
-    total_won: wallet?.total_won ?? 0,
+    total_won: wallet?.total_won_roulette ?? 0,
     now: Date.now(),
     round: {
       round_no: live.round_no,

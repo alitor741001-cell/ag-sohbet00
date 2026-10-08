@@ -10,7 +10,8 @@ function walletView(wallet) {
   return {
     coins: wallet.coins ?? START_COINS,
     spins: wallet.spins ?? 0,
-    total_won: wallet.total_won ?? 0,
+    // Bu oyunun kendi toplam kazancı: oyunlar birbirinden ayrı sayılır.
+    total_won: wallet.total_won_roulette ?? 0,
   };
 }
 
@@ -72,6 +73,7 @@ export default async function (req) {
         coins: coins - stake + result.payout,
         spins: (wallet.spins ?? 0) + 1,
         total_won: (wallet.total_won ?? 0) + result.payout,
+        total_won_roulette: (wallet.total_won_roulette ?? 0) + result.payout,
         last_spin_at: new Date().toISOString(),
       });
 

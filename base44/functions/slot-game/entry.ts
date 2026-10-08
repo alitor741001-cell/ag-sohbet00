@@ -142,7 +142,7 @@ export default async function (req) {
           at: spin.created_date,
         })),
         summary: {
-          total_won: wallet.total_won ?? 0,
+          total_won: wallet.total_won_slot ?? 0,
           spins: wallet.spins ?? 0,
           coins: wallet.coins ?? START_COINS,
         },
@@ -207,6 +207,7 @@ export default async function (req) {
         free_spins: freeSpins,
         spins: (wallet.spins ?? 0) + 1,
         total_won: (wallet.total_won ?? 0) + total,
+        total_won_slot: (wallet.total_won_slot ?? 0) + total,
         last_spin_at: new Date().toISOString(),
       });
 
