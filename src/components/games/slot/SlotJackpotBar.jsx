@@ -30,9 +30,14 @@ function PoolChip({ label, value, dot, tone }) {
  * Solda markanın taçlı arması ve aktif bahis kademesi, yanda küçük havuzlar,
  * altta üç ana havuz durur. Panelin kenarları perçin ve ampullerle çevrilidir.
  */
-export default function SlotJackpotBar({ pools, tier }) {
+export default function SlotJackpotBar({ pools, tier, topGap = 0 }) {
   return (
-    <div className="slot-board relative shrink-0 border-b-2 border-slot-gold/60 px-3 pb-3 pt-2.5">
+    // topGap: oyun görselinin altında kalan boşluk panele eklenir, panel makinenin
+    // üst kenarına kadar iner ve aradaki siyah şerit kapanır.
+    <div
+      className="slot-board relative shrink-0 border-b-2 border-slot-gold/60 px-3 pb-3"
+      style={{ paddingTop: `${10 + topGap}px` }}
+    >
       <span aria-hidden="true" className="slot-rivets absolute inset-x-0 top-0" />
 
       <div className="mx-auto flex w-full max-w-2xl flex-col gap-2">

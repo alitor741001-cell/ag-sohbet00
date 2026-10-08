@@ -3,6 +3,7 @@ import { Coins, LayoutGrid, Plus, Trophy } from 'lucide-react';
 import SlotDeckStat from './SlotDeckStat';
 import SlotBetStepper from './SlotBetStepper';
 import SlotMedallionButton from './SlotMedallionButton';
+import FreeSpinBadge from './FreeSpinBadge';
 import { SLOT_BUTTON_ART } from '@/components/games/slotAssets';
 
 const format = (value) => new Intl.NumberFormat('tr-TR').format(Math.max(0, Math.round(value || 0)));
@@ -10,13 +11,14 @@ const format = (value) => new Intl.NumberFormat('tr-TR').format(Math.max(0, Math
 /**
  * Oyunun alt kontrol masası: fırçalanmış çelik gövde üzerinde tur bilgileri,
  * coin kasası, bahis kademesi ve madalyonlu düğmeler durur.
- * Solda MAX (aslan), sağda AUTO (kanarya) ve SPIN (kartal).
+ * Solda MAX (aslan), sağda FREE rozeti, AUTO (kanarya) ve SPIN (kartal).
  */
 export default function SlotControlDeck({
   coins,
   bet,
   lines,
   win,
+  freeSpins,
   auto,
   spinning,
   ready,
@@ -72,6 +74,8 @@ export default function SlotControlDeck({
             ariaLabel="Maksimum bahis"
           />
           <span className="flex items-center gap-2.5">
+            {/* Ücretsiz çevirme hakkı rozeti AUTO düğmesinin solunda durur. */}
+            <FreeSpinBadge count={freeSpins} />
             <SlotMedallionButton
               art={SLOT_BUTTON_ART.canary}
               label="AUTO"

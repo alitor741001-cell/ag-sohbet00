@@ -14,15 +14,14 @@ import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
 import WinnerTicker, { TICKER_ROW_HEIGHT } from './slot/WinnerTicker';
 import SlotJackpotBar from './slot/SlotJackpotBar';
 import SlotTierAlert from './slot/SlotTierAlert';
-import FreeSpinBadge from './slot/FreeSpinBadge';
 import SlotControlDeck from './slot/SlotControlDeck';
 import { tierOfBet } from './slot/slotConfig';
 
 // Görsel alanı doldururken en fazla bu oranda kırpılır; panelde siyah boşluk kalmaz.
 const MAX_CROP = 1.06;
-// Kazanan şeridinde görünen satır sayısı.
-const TICKER_ROWS = 3;
-// Rozetler oyun ekranının üst kenarından bu kadar aşağıda durur.
+// Kazanan şeridinde görünen satır sayısı: şerit aşağı doğru bir satır daha uzar.
+const TICKER_ROWS = 4;
+// Kademe uyarısı oyun ekranının üst kenarından bu kadar aşağıda durur.
 const BADGE_TOP = 8;
 const WIN_FLASH_MS = 2400;
 // Bu tutarın üzerindeki kazançlarda kutlama ekranı açılır.
@@ -42,6 +41,11 @@ export default function SlotGame({ onExit, onBack, roomId }) {
   const areaRef = useRef(null);
   const size = useSize(areaRef);
   const tickerHeight = TICKER_ROW_HEIGHT * TICKER_ROWS;
+  // Jackpot panelinin altında kalan boşluk: görsel, alanı yükseklik olarak
+  // dolduramadığı için artan pay panelin üst dolgusuna eklenir ve panel
+  // makinenin üst kenarına kadar iner.
+  const fillRef = useRef(0);
+  const [panelGap, setPanelGap] = useState(0);
 
   // Her turun sonucu: büyük kazançta kutlama ekranı, küçük kazançta kısa parıltı.
   useEffect(() => {
@@ -61,6 +65,21 @@ export default function SlotGame({ onExit, onBack, roomId }) {
 
   // Oyun kapanırken bekleyen sayaç temizlenir.
   useEffect(() => () => window.clearTimeout(flashTimer.current), []);
+
+  // Boşluk ölçümü taban yükseklik üzerinden yapılır: panel uzadıkça oyun alanı
+  // kısaldığı için ölçülen değer kendini tekrar etmez, tek ölçümde oturur.
+  useEffect(() => {
+    const areaW = size?.width || 0;
+    const areaH = size?.height || 0;
+    if (!areaW || !areaH) return;
+    const baseH = areaH + fillRef.current;
+    const cover = Math.max(areaW / ART_WIDTH, baseH / ART_VISIBLE_HEIGHT);
+    const fitScale = Math.min(areaW / ART_WIDTH, baseH / ART_VISIBLE_HEIGHT);
+    const scale = Math.min(cover, fitScale * MAX_CROP);
+    const gap = Math.max(0, Math.round(baseH - ART_VISIBLE_HEIGHT * scale));
+    fillRef.current = gap;
+    setPanelGap(gap);
+  }, [size?.width, size?.height]);
 
   // Görsel, kendi üst jackpot paneli ile alt kontrol alanı arasında gösterilir.
   const areaWidth = size?.width || 0;
@@ -87,7 +106,7 @@ export default function SlotGame({ onExit, onBack, roomId }) {
       {/* Üst: kazanan şeridi ve kendi jackpot konsolumuz. */}
       <div className="relative z-10 shrink-0 pt-[env(safe-area-inset-top)]">
         <WinnerTicker height={tickerHeight} />
-        <SlotJackpotBar pools={game.pools} tier={tier} />
+        <SlotJackpotBar pools={game.pools} tier={tier} topGap={panelGap} />
       </div>
 
       <button
@@ -158,8 +177,7 @@ export default function SlotGame({ onExit, onBack, roomId }) {
           </div>
         )}
 
-        <FreeSpinBadge count={game.freeSpins} top={BADGE_TOP} />
-        <SlotTierAlert tier={tier} top={BADGE_TOP + (game.freeSpins > 0 ? 36 : 0)} />
+        <SlotTierAlert tier={tier} top={BADGE_TOP} />
       </div>
 
       {/* Alt kontrol paneli: görselin kendi kontrol alanının yerini alır. */}
@@ -168,6 +186,7 @@ export default function SlotGame({ onExit, onBack, roomId }) {
         bet={game.bet}
         lines={game.lines}
         win={game.win}
+        freeSpins={game.freeSpins}
         auto={game.auto}
         spinning={game.spinning}
         ready={ready}
