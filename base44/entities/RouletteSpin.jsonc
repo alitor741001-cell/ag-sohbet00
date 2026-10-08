@@ -1,0 +1,51 @@
+{
+  "name": "RouletteSpin",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "user_name": {
+      "type": "string",
+      "default": ""
+    },
+    "user_avatar": {
+      "type": "string",
+      "default": ""
+    },
+    "number": {
+      "type": "integer",
+      "default": 0
+    },
+    "stake": {
+      "type": "number",
+      "default": 0
+    },
+    "payout": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "user_id",
+    "number"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

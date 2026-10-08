@@ -44,6 +44,17 @@ export default async function (req) {
         last_spin_at: new Date().toISOString(),
       });
 
+      // Tur, canlı sıralama ve numara geçmişi için kaydedilir.
+      // Tur zaten ödendiği için kayıt hatası turu bozmaz.
+      await base44.asServiceRole.entities.RouletteSpin.create({
+        user_id: user.id,
+        user_name: user.username || user.full_name || 'Kullanıcı',
+        user_avatar: user.avatar || '',
+        number,
+        stake,
+        payout: result.payout,
+      }).catch(() => {});
+
       return Response.json({
         ...walletView(updated),
         number,

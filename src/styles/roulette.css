@@ -64,8 +64,10 @@
 }
 .rl-wheel {
   position: relative;
-  height: clamp(8.75rem, 34vw, 12.5rem);
-  width: clamp(8.75rem, 34vw, 12.5rem);
+  height: min(54vw, 30vh, 16rem);
+  width: min(54vw, 30vh, 16rem);
+  min-height: 9.5rem;
+  min-width: 9.5rem;
   filter: drop-shadow(0 18px 32px rgba(0, 0, 0, 0.78));
 }
 /* Kazanan cep üstteki ibrenin altına gelene kadar çark yavaşlayarak döner. */
@@ -77,6 +79,25 @@
 }
 .rl-wheel-live { filter: drop-shadow(0 18px 32px rgba(0, 0, 0, 0.78)) saturate(1.08); }
 
+/* Madeni kasa: çarkın dışında dönen altın kaplama halka. */
+.rl-wheel-bezel {
+  position: absolute;
+  inset: -0.34rem;
+  border-radius: 9999px;
+  background: conic-gradient(
+    from 200deg,
+    #5c3d0c,
+    #f2d68a 10%,
+    #8a6218 24%,
+    #fdf0c8 42%,
+    #7a5510 58%,
+    #e8c469 76%,
+    #563a0b 90%,
+    #5c3d0c
+  );
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.72), inset 0 0 14px rgba(0, 0, 0, 0.65);
+  pointer-events: none;
+}
 /* Cep renkleri hem SVG dilimlerinde hem sonuç rozetlerinde kullanılır. */
 .rl-pocket-red { fill: #a8162c; background: #a8162c; }
 .rl-pocket-black { fill: #16100f; background: #16100f; }
@@ -90,9 +111,15 @@
   text-anchor: middle;
   dominant-baseline: central;
 }
-.rl-wheel-rim { fill: none; stroke: #e6c064; stroke-width: 2.4; }
-.rl-wheel-hub { fill: #31101a; stroke: rgba(240, 201, 107, 0.85); stroke-width: 1.6; }
-.rl-wheel-hub-core { fill: #e6c064; stroke: rgba(60, 20, 10, 0.6); stroke-width: 0.6; }
+.rl-wheel-bowl { fill: #370d17; stroke: #c9a24a; stroke-width: 0.7; }
+.rl-wheel-track { fill: none; stroke: rgba(240, 201, 107, 0.32); stroke-width: 0.45; }
+.rl-wheel-tick { stroke: rgba(240, 201, 107, 0.45); stroke-width: 0.28; }
+.rl-wheel-divider { stroke: rgba(255, 232, 170, 0.42); stroke-width: 0.26; }
+.rl-wheel-rim { fill: none; stroke: #e6c064; stroke-width: 2.2; }
+.rl-wheel-inner { fill: #2b0a12; stroke: #d8b25c; stroke-width: 0.65; }
+.rl-wheel-hub { fill: #4a1420; stroke: rgba(240, 201, 107, 0.9); stroke-width: 1.1; }
+.rl-wheel-turret line { stroke: rgba(240, 201, 107, 0.7); stroke-width: 0.45; }
+.rl-wheel-core { fill: #f4d885; stroke: rgba(90, 50, 10, 0.55); stroke-width: 0.5; }
 
 /* Üstteki ibre ve çarkın kenarında duran top. */
 .rl-wheel-pointer {
@@ -108,13 +135,21 @@
   border-top: 0.8rem solid #f0c96b;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.85));
 }
+/* Top yatağı: çark dönerken top kasanın içinde tur atar. */
+.rl-wheel-ball-track {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  pointer-events: none;
+}
+.rl-wheel-live .rl-wheel-ball-track { animation: rl-ball-orbit 1.5s linear infinite; }
+@keyframes rl-ball-orbit { to { transform: rotate(360deg); } }
 .rl-wheel-ball {
   position: absolute;
   left: 50%;
-  top: 6%;
-  z-index: 2;
-  height: 0.55rem;
-  width: 0.55rem;
+  top: 1.6%;
+  height: 0.5rem;
+  width: 0.5rem;
   transform: translateX(-50%);
   border-radius: 9999px;
   background: radial-gradient(circle at 35% 30%, #ffffff, #d8d2c4 62%, #9c9587);
@@ -320,6 +355,124 @@
   color: #ffe3a8;
 }
 
+/* --- tur sıralaması: en çok kazanan üç oyuncu, profilleri çember içinde --- */
+.rl-podium-strip {
+  width: 100%;
+  max-width: 27rem;
+  border-radius: 0.9rem;
+  border: 1px solid rgba(240, 201, 107, 0.34);
+  padding: 0.3rem 0.5rem 0.45rem;
+  background: linear-gradient(180deg, rgba(88, 16, 30, 0.9), rgba(26, 4, 11, 0.94));
+  box-shadow: inset 0 1px 0 rgba(255, 226, 160, 0.16), 0 12px 24px -20px rgba(0, 0, 0, 0.95);
+}
+.rl-podium-title {
+  text-align: center;
+  font-size: 0.5rem;
+  font-weight: 900;
+  letter-spacing: 0.22em;
+  color: rgba(240, 201, 107, 0.78);
+}
+.rl-podium-empty {
+  padding: 0.55rem 0.25rem 0.4rem;
+  text-align: center;
+  font-size: 0.55rem;
+  font-weight: 800;
+  color: rgba(255, 240, 200, 0.58);
+}
+.rl-podium-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 0.7rem;
+  margin-top: 0.1rem;
+}
+.rl-podium {
+  display: flex;
+  width: 4.6rem;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.08rem;
+  animation: rl-podium-in 0.3s ease-out;
+}
+@keyframes rl-podium-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+.rl-podium-medal { position: relative; display: block; }
+.rl-podium-avatar {
+  display: flex;
+  height: 2.35rem;
+  width: 2.35rem;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 50% 26%, #35101b, #170307);
+}
+.rl-podium-first .rl-podium-avatar { height: 2.95rem; width: 2.95rem; }
+.rl-podium-gold .rl-podium-avatar { box-shadow: 0 0 0 2px #f0c96b, 0 0 18px rgba(240, 201, 107, 0.6); }
+.rl-podium-silver .rl-podium-avatar { box-shadow: 0 0 0 2px #d7dbe0, 0 0 12px rgba(215, 219, 224, 0.42); }
+.rl-podium-bronze .rl-podium-avatar { box-shadow: 0 0 0 2px #cd8a4a, 0 0 12px rgba(205, 138, 74, 0.42); }
+.rl-podium-initial { font-size: 0.9rem; font-weight: 900; color: #ffe9b6; }
+.rl-podium-rank {
+  position: absolute;
+  right: -0.1rem;
+  bottom: -0.1rem;
+  display: flex;
+  height: 0.95rem;
+  width: 0.95rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  font-size: 0.52rem;
+  font-weight: 900;
+  color: #2b1602;
+  background: linear-gradient(180deg, #ffeeb5, #e0b44f);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+.rl-podium-crown {
+  position: absolute;
+  left: 50%;
+  top: -0.6rem;
+  height: 0.9rem;
+  width: 0.9rem;
+  transform: translateX(-50%);
+  color: #ffd35c;
+  filter: drop-shadow(0 0 6px rgba(240, 201, 107, 0.85));
+}
+.rl-podium-name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.55rem;
+  font-weight: 800;
+  color: #ffeec6;
+}
+.rl-podium-amount { font-size: 0.6rem; font-weight: 900; color: #f0c96b; font-variant-numeric: tabular-nums; }
+@media (prefers-reduced-motion: reduce) { .rl-podium { animation: none; } }
+
+/* --- numara geçmişi: son turların çıkan numaraları --- */
+.rl-history {
+  display: flex;
+  max-width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 0.22rem;
+  overflow: hidden;
+}
+.rl-history-pocket {
+  display: inline-flex;
+  height: 1.1rem;
+  min-width: 1.1rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  padding: 0 0.22rem;
+  font-size: 0.5rem;
+  font-weight: 900;
+  color: #fff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+
 /* --- kazanç ekranı --- */
 .rl-overlay {
   background: radial-gradient(circle at 50% 40%, rgba(240, 201, 107, 0.26), rgba(12, 2, 7, 0.94) 62%);
@@ -351,4 +504,5 @@
 @media (prefers-reduced-motion: reduce) {
   .rl-rays, .rl-countdown-live, .rl-overlay { animation: none; }
   .rl-wheel-disc { transition-duration: 0.4s; }
+  .rl-wheel-live .rl-wheel-ball-track { animation: none; }
 }

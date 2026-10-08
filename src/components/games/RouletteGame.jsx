@@ -6,6 +6,9 @@ import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
 import { Image } from '@/components/ui/image';
 import useRouletteGame from './roulette/useRouletteGame';
 import RouletteWheel from './roulette/RouletteWheel';
+import RoulettePodium from './roulette/RoulettePodium';
+import RouletteHistory from './roulette/RouletteHistory';
+import useRouletteBoard from './roulette/useRouletteBoard';
 import RouletteTable from './roulette/RouletteTable';
 import RouletteChipRow from './roulette/RouletteChipRow';
 import RouletteStartButton from './roulette/RouletteStartButton';
@@ -19,6 +22,8 @@ export default function RouletteGame({ onExit, onBack }) {
   const [coinOpen, setCoinOpen] = useState(false);
   const [prize, setPrize] = useState(null);
   const ready = game.status === 'ready';
+  // Tur sıralaması ve numara geçmişi her turda yenilenir.
+  const board = useRouletteBoard(game.spins);
 
   // Tur sonucu: kazanç ödenmişse kutlama ekranı açılır.
   useEffect(() => {
@@ -51,7 +56,9 @@ export default function RouletteGame({ onExit, onBack }) {
         </button>
       </header>
 
-      <main className="relative z-10 flex min-h-0 flex-1 flex-col items-center gap-2 px-2 py-2">
+      <main className="relative z-10 flex min-h-0 flex-1 flex-col items-center gap-2 overflow-y-auto px-2 py-2">
+        <RoulettePodium winners={board.winners} ready={board.status === 'ready'} />
+
         <div className="rl-wheel-wrap">
           <RouletteWheel index={game.result?.index ?? null} spinning={game.spinning} />
         </div>
@@ -70,6 +77,8 @@ export default function RouletteGame({ onExit, onBack }) {
             </span>
           )}
         </div>
+
+        <RouletteHistory spins={board.recent} />
 
         <RouletteTable bets={game.bets} disabled={game.spinning} onPlace={game.placeBet} />
 
