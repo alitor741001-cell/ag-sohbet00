@@ -71,6 +71,10 @@
       "type": "integer",
       "default": 0
     },
+    "elimin_free_spins": {
+      "type": "integer",
+      "default": 0
+    },
     "session_spins": {
       "type": "integer",
       "default": 0
@@ -128,6 +132,10 @@
       "default": 0
     },
     "total_won_futbol": {
+      "type": "number",
+      "default": 0
+    },
+    "total_won_elimin": {
       "type": "number",
       "default": 0
     },
