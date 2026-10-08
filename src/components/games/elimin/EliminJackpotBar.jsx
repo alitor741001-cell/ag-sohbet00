@@ -2,7 +2,7 @@ import React from 'react';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { CHEST_MAX, JACKPOT_PER_CHEST, formatCoins } from './eliminConfig';
 
-// Sandık: jackpot şeridinin önünde duran altın kasa.
+// Sandık: panelin sağında duran altın kasa.
 function Chest() {
   return (
     <svg viewBox="0 0 64 64" className="el-chest" aria-hidden="true">
@@ -15,8 +15,9 @@ function Chest() {
 }
 
 /**
- * Üst şeridin orta-sağ bloğu: ortada jackpot yazısı ve tutar, sağda sandık kutusu ve oyuncu rozeti.
- * Sandık kutusu bar dolduğunda basılabilir: biriken tutar bakiyeye eklenir, bar sıfırlanır.
+ * Üst panel (Şekerli Meyve'nin üst paneliyle aynı tasarım): ortada jackpot tutarı,
+ * sağda sandık kutusu ve oyuncu rozeti. Sandık kutusu bar dolduğunda basılabilir:
+ * biriken tutar bakiyeye eklenir, bar sıfırlanır.
  */
 export default function EliminJackpotBar({ jackpot, chests = 0, bet, busy, onCollect }) {
   const { user } = useCurrentUser();
@@ -26,13 +27,15 @@ export default function EliminJackpotBar({ jackpot, chests = 0, bet, busy, onCol
   const full = filled >= CHEST_MAX;
 
   return (
-    <section className="el-jackpot">
-      <div className="el-jackpot-main">
-        <p className="el-jackpot-label">JACKPOT</p>
-        <p className="el-jackpot-value">{formatCoins(jackpot)}</p>
+    <div className={`el-top ${busy ? 'el-top-live' : ''}`}>
+      <span className="el-top-glow" aria-hidden="true" />
+
+      <div className="el-top-main">
+        <p className="el-top-label">JACKPOT</p>
+        <p className="el-top-value">{formatCoins(jackpot)}</p>
       </div>
 
-      <div className="el-jackpot-side">
+      <div className="el-top-side">
         <button
           type="button"
           onClick={onCollect}
@@ -44,7 +47,7 @@ export default function EliminJackpotBar({ jackpot, chests = 0, bet, busy, onCol
           <span className="el-chest-bar">
             <span className="el-chest-fill" style={{ width: `${(filled / CHEST_MAX) * 100}%` }} />
           </span>
-          <span className="el-chest-text">{filled}/{CHEST_MAX} SANDIK</span>
+          <span className="el-chest-text">{filled}/{CHEST_MAX}</span>
           {/* Bar dolduysa toplanacak tutar, dolmadıysa sandığın eklediği değer yazar. */}
           {full
             ? <span className="el-chest-claim">TOPLA {formatCoins(jackpot)}</span>
@@ -55,6 +58,6 @@ export default function EliminJackpotBar({ jackpot, chests = 0, bet, busy, onCol
           {avatar ? <img src={avatar} alt="" className="el-avatar-img" /> : initials}
         </span>
       </div>
-    </section>
+    </div>
   );
 }

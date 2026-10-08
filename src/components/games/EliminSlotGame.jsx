@@ -1,17 +1,18 @@
 import React, { useEffect, useState } from 'react';
+import { ChevronLeft, HelpCircle, Play, Volume2, VolumeX, X } from 'lucide-react';
 import '@/styles/elimin.css';
 import '@/styles/eliminExtras.css';
 import '@/styles/gameControls.css';
 import { Image } from '@/components/ui/image';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
-import EliminTopBar from './elimin/EliminTopBar';
 import EliminJackpotBar from './elimin/EliminJackpotBar';
 import EliminGrid from './elimin/EliminGrid';
-import EliminFooter from './elimin/EliminFooter';
+import EliminHud from './elimin/EliminHud';
 import EliminRulesSheet from './elimin/EliminRulesSheet';
 import EliminWinOverlay from './elimin/EliminWinOverlay';
 import GameTurnBadge from './controls/GameTurnBadge';
-import GameActionRow from './controls/GameActionRow';
+import GameBetBar from './controls/GameBetBar';
+import GameSpinButton from './controls/GameSpinButton';
 import useEliminGame from './elimin/useEliminGame';
 import useCountUp from './sekerli/useCountUp';
 import { ELIMIN_BACKDROP, ELIMIN_EMBLEM, ELIMIN_EMBLEM_SIZE } from './elimin/eliminAssets';
@@ -19,7 +20,10 @@ import { DICE_MIN, LINES, formatCoins } from './elimin/eliminConfig';
 
 const WIN_FLASH_MS = 2200;
 
-/** ELİMİNSLOT: 6 sütun x 5 satır kare kart meyve slotu. Aynı meyveden 8 ve üzeri öder. */
+/**
+ * ELİMİNSLOT: 6 sütun x 5 satır kare kart meyve slotu. Aynı meyveden 8 ve üzeri öder.
+ * Ekran Şekerli Meyve'nin tasarımını birebir kullanır; nesneler bu oyunun kendi kartlarıdır.
+ */
 export default function EliminSlotGame({ onExit, onBack }) {
   const game = useEliminGame();
   const [coinOpen, setCoinOpen] = useState(false);
@@ -35,7 +39,7 @@ export default function EliminSlotGame({ onExit, onBack }) {
     if (amount > 0) setPrize({ amount, title: 'SANDIK DOLDU!', subtitle: 'JACKPOT BAKİYENE EKLENDİ' });
   };
 
-  // Tur sonucu: büyük kazançta kutlama ekranı, küçük kazançta kısa parıltı.
+  // Tur sonucu: büyük kazançta kutlama ekranı, küçük kazançta ızgaranın ortasında parıltı.
   useEffect(() => {
     if (!game.spins) return undefined;
     // Zar dörtlüsünde jackpot patlar: kutlama ekranı jackpotu öne çıkarır.
@@ -64,37 +68,48 @@ export default function EliminSlotGame({ onExit, onBack }) {
       <div className="el-backdrop" aria-hidden="true">
         <Image src={ELIMIN_BACKDROP} alt="" className="h-full w-full" fittingType="fill" quality={70} />
       </div>
-      <span className="el-veil" aria-hidden="true" />
+      <span className="el-aurora" aria-hidden="true" />
 
-      <EliminTopBar
-        coins={game.coins}
-        sound={game.sound}
-        onSound={game.toggleSound}
-        onCoins={() => setCoinOpen(true)}
-        onHelp={() => setHelpOpen(true)}
-        onBack={onBack}
-        onExit={onExit}
-      />
+      <header className="el-head">
+        <button type="button" onClick={onBack} aria-label="Oyun listesine dön" className="gctl-pill gctl-icon">
+          <ChevronLeft className="h-5 w-5" />
+        </button>
 
-      {/* Tek şerit: solda marka, ortada jackpot, sağda sandık — oyun nesnelerinin üstünde durur. */}
-      <section className="el-toprow">
         <div className="el-brand">
           <Image
             src={ELIMIN_EMBLEM}
             alt=""
             aria-hidden="true"
-            className="el-emblem"
-            fittingType="fit"
+            className="el-logo"
+            fittingType="fill"
             originWidth={ELIMIN_EMBLEM_SIZE}
             originHeight={ELIMIN_EMBLEM_SIZE}
-            quality={86}
+            quality={80}
           />
-          <div className="el-brand-text">
-            <p className="el-wordmark">ELİMİNSLOT</p>
-            <p className="el-hero-tag">MEYVE SLOTU · {LINES} SATIR</p>
-          </div>
+          <span className="el-brand-text">
+            <p className="el-title">ELİMİNSLOT</p>
+            <p className="el-tagline">MEYVE SLOTU · {LINES} SATIR</p>
+          </span>
         </div>
 
+        <button type="button" onClick={() => setHelpOpen(true)} aria-label="Nasıl oynanır" className="gctl-pill gctl-icon">
+          <HelpCircle className="h-5 w-5" />
+        </button>
+        <button
+          type="button"
+          onClick={game.toggleSound}
+          aria-label={game.sound ? 'Sesi kapat' : 'Sesi aç'}
+          className={`gctl-pill gctl-icon ${game.sound ? 'gctl-pill-on' : ''}`}
+        >
+          {game.sound ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
+        </button>
+        <button type="button" onClick={onExit} aria-label="Oyunu kapat" className="gctl-pill gctl-icon el-close-pill">
+          <X className="h-5 w-5" />
+        </button>
+      </header>
+
+      <main className="el-main">
+        {/* Ortada jackpot, sağda sandık ve oyuncu rozeti. */}
         <EliminJackpotBar
           jackpot={game.jackpot}
           chests={game.chests}
@@ -102,12 +117,10 @@ export default function EliminSlotGame({ onExit, onBack }) {
           busy={game.spinning}
           onCollect={handleCollect}
         />
-      </section>
 
-      <div className="el-body">
-        {/* Izgara ekranın kalan tüm alanını kaplar; kartlar kendi karesinde durur. */}
-        <div className="el-board-wrap">
-          <div className="el-frame">
+        <div className="el-stage">
+          <div className={`el-frame ${game.spinning ? 'el-frame-live' : ''}`}>
+            <span className="el-frame-shine" aria-hidden="true" />
             <div className="el-frame-inner">
               <EliminGrid
                 spinning={game.spinning}
@@ -117,51 +130,54 @@ export default function EliminSlotGame({ onExit, onBack }) {
                 grid={game.grid}
                 wins={game.wins}
               />
+              {/* Tur kazancı ızgaranın ortasında belirir. */}
+              {flash > 0 && !prize && <p key={flash} className="el-center-win">KAZANÇ {formatCoins(flash)}</p>}
             </div>
-            <span className="el-frame-shine" aria-hidden="true" />
           </div>
         </div>
 
         {/* Tur durumu: çevirme hakkı sürerken kalan tur sayısı görünür. */}
-        <div className="flex w-full justify-center">
-          <GameTurnBadge sessionSpins={game.sessionSpins} accent="border-[#ffd75c]/80 text-[#ffe9a3]" />
-        </div>
+        <GameTurnBadge sessionSpins={game.sessionSpins} accent="border-[#ffd21f]/80 text-[#ffe9b8]" />
 
-        {/* 15 çevirme hakkı ve coin yükleme: Şekerli Meyve'yle aynı düğmeler. */}
-        <GameActionRow
+        <EliminHud
           coins={game.coins}
+          bet={game.bet}
+          win={shownWin}
+          totalWon={game.totalWon}
+          busy={game.spinning}
+          onCoins={() => setCoinOpen(true)}
+          onSession={game.buySession}
           sessionPrice={game.sessionPrice}
           sessionSpins={game.sessionSpins}
           sessionSize={game.sessionSize}
-          busy={game.spinning}
-          onSession={game.buySession}
-          onCoins={() => setCoinOpen(true)}
-          format={formatCoins}
         />
 
         {game.status === 'loading' && <p className="el-note">Oyun yükleniyor...</p>}
         {game.status === 'error' && <p className="el-note el-note-alert">Bağlantı kurulamadı, tekrar deniyorum...</p>}
         {game.message && <p className="el-note el-note-alert">{game.message}</p>}
-      </div>
+      </main>
 
-      {flash > 0 && !prize && (
-        <p key={flash} className="el-float-win">KAZANÇ {formatCoins(flash)}</p>
-      )}
-
-      <EliminFooter
-        win={shownWin}
-        coins={game.coins}
-        totalWon={game.totalWon}
-        bet={game.bet}
-        spinning={game.spinning}
-        ready={ready}
-        auto={game.auto}
-        onStep={game.changeBet}
-        onMax={game.maxBet}
-        onAuto={game.toggleAuto}
-        onSpin={game.spin}
-        onStop={game.stop}
-      />
+      <footer className="el-foot">
+        <div className="gctl-deck">
+          <GameBetBar
+            bet={game.bet}
+            lines={LINES}
+            disabled={game.spinning}
+            onStep={game.changeBet}
+            onMax={game.maxBet}
+            format={formatCoins}
+          />
+          <GameSpinButton
+            spinning={game.spinning}
+            disabled={!ready}
+            auto={game.auto}
+            icon={Play}
+            onSpin={game.spin}
+            onStop={game.stop}
+            onAuto={game.toggleAuto}
+          />
+        </div>
+      </footer>
 
       {/* Coin bakiyesine dokununca uygulamanın coin mağazası açılır. */}
       <CoinPurchasePanel open={coinOpen} coins={game.coins} onBack={() => setCoinOpen(false)} />

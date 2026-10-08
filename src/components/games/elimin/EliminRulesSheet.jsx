@@ -26,7 +26,7 @@ export default function EliminRulesSheet({ open, onClose }) {
       <div className="el-sheet-body">
         <header className="el-sheet-head">
           <p>NASIL OYNANIR</p>
-          <button type="button" onClick={onClose} aria-label="Kapat" className="el-icon">
+          <button type="button" onClick={onClose} aria-label="Kapat" className="gctl-pill gctl-icon">
             <X className="h-5 w-5" />
           </button>
         </header>
