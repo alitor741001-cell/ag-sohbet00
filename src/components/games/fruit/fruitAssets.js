@@ -17,7 +17,8 @@ export const FRUIT_ART = {
   apple: `${MEDIA_BASE}/7db26e924_generated_image.png`,
   // Şeker kartının yerini alan çilek sembolü (referans görselden üretildi).
   candy: `${MEDIA_BASE}/7331aba36_generated_image.png`,
-  cherry: `${MEDIA_BASE}/62684a9f2_generated_image.png`,
+  // Kiraz kartı (referans görselden üretildi).
+  cherry: `${MEDIA_BASE}/96f2dea41_generated_image.png`,
   banana: `${MEDIA_BASE}/e82024769_generated_image.png`,
 };
 
