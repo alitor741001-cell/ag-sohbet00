@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import '@/styles/elimin.css';
 import '@/styles/eliminExtras.css';
+import '@/styles/gameControls.css';
 import { Image } from '@/components/ui/image';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
 import EliminTopBar from './elimin/EliminTopBar';
@@ -9,6 +10,8 @@ import EliminGrid from './elimin/EliminGrid';
 import EliminFooter from './elimin/EliminFooter';
 import EliminRulesSheet from './elimin/EliminRulesSheet';
 import EliminWinOverlay from './elimin/EliminWinOverlay';
+import GameTurnBadge from './controls/GameTurnBadge';
+import GameActionRow from './controls/GameActionRow';
 import useEliminGame from './elimin/useEliminGame';
 import useCountUp from './sekerli/useCountUp';
 import { ELIMIN_BACKDROP, ELIMIN_EMBLEM, ELIMIN_EMBLEM_SIZE } from './elimin/eliminAssets';
@@ -84,9 +87,6 @@ export default function EliminSlotGame({ onExit, onBack }) {
             <p className="el-wordmark">ELİMİNSLOT</p>
             <p className="el-hero-tag">MEYVE SLOTU · {LINES} SATIR</p>
           </div>
-          {game.freeSpins > 0 && (
-            <span className="el-free-chip">BEDAVA ÇEVİRME {game.freeSpins}</span>
-          )}
         </section>
 
         <EliminJackpotBar jackpot={game.jackpot} chests={game.chests} bet={game.bet} />
@@ -102,6 +102,27 @@ export default function EliminSlotGame({ onExit, onBack }) {
             wins={game.wins}
           />
         </div>
+
+        {/* Tur durumu: çevirme hakkı sürüyorsa geri sayım, bedava tur varsa sayaç. */}
+        <div className="flex w-full justify-center">
+          <GameTurnBadge
+            sessionSpins={game.sessionSpins}
+            freeSpins={game.freeSpins}
+            accent="border-[#ffd75c]/80 text-[#ffe9a3]"
+          />
+        </div>
+
+        {/* 15 çevirme hakkı ve coin yükleme: Şekerli Meyve'yle aynı düğmeler. */}
+        <GameActionRow
+          coins={game.coins}
+          sessionPrice={game.sessionPrice}
+          sessionSpins={game.sessionSpins}
+          sessionSize={game.sessionSize}
+          busy={game.spinning}
+          onSession={game.buySession}
+          onCoins={() => setCoinOpen(true)}
+          format={formatCoins}
+        />
 
         {game.status === 'loading' && <p className="el-note">Oyun yükleniyor...</p>}
         {game.status === 'error' && <p className="el-note el-note-alert">Bağlantı kurulamadı, tekrar deniyorum...</p>}
@@ -121,6 +142,7 @@ export default function EliminSlotGame({ onExit, onBack }) {
         ready={ready}
         auto={game.auto}
         onStep={game.changeBet}
+        onMax={game.maxBet}
         onAuto={game.toggleAuto}
         onSpin={game.spin}
         onStop={game.stop}
@@ -135,6 +157,16 @@ export default function EliminSlotGame({ onExit, onBack }) {
         title={prize?.title}
         subtitle={prize?.subtitle}
         onAccept={() => setPrize(null)}
+      />
+
+      {/* 15 çevirme hakkı bittiğinde biriken toplam kazanç onaya sunulur. */}
+      <EliminWinOverlay
+        open={game.sessionResult !== null}
+        title="15 ÇEVİRME HAKKI BİTTİ"
+        subtitle="TOPLAM KAZANÇ"
+        amount={game.sessionResult || 0}
+        action="KABUL ET"
+        onAccept={game.clearSessionResult}
       />
     </div>
   );

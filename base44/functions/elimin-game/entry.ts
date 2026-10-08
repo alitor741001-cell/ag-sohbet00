@@ -12,7 +12,15 @@ import {
   evaluateFruit,
   spinFruit,
 } from '../../shared/fruitEngine.ts';
-import { DEFAULT_BET, START_COINS, clampBet, loadWallet, nearestBet } from '../../shared/gameWallet.ts';
+import {
+  DEFAULT_BET,
+  SESSION_SPINS,
+  START_COINS,
+  clampBet,
+  loadWallet,
+  nearestBet,
+  sessionPrice,
+} from '../../shared/gameWallet.ts';
 
 // ELİMİNSLOT: 6 sütun x 5 satır kare kart meyve slotu.
 // Motor meyve oyunuyla aynıdır; bu oyunun bedava turları, jackpot barı ve
@@ -69,6 +77,10 @@ function walletView(wallet: Record<string, any>) {
     // Jackpot barda biriken sandıklarla ve bahis kademesiyle yükselir.
     chests,
     jackpot: jackpotValue(chests, bet),
+    // Satın alınan "15 çevirme hakkı" turu.
+    session_spins: wallet.elimin_session_spins ?? 0,
+    session_price: sessionPrice(bet),
+    session_size: SESSION_SPINS,
   };
 }
 
@@ -87,6 +99,23 @@ export default async function (req: Request) {
     const action = body.action || 'state';
     const wallet = await loadWallet(base44, user);
 
+    // 15 çevirme hakkı: bedel bahis kademesine göre baştan düşülür, turlar ücret almaz.
+    if (action === 'session') {
+      const bet = clampBet(body.bet, BET_LEVELS, wallet.bet ?? DEFAULT_BET);
+      const price = sessionPrice(bet);
+      if ((wallet.elimin_session_spins ?? 0) > 0) {
+        return Response.json({ error: 'Devam eden çevirme hakkın var.' }, { status: 400 });
+      }
+      const coins = wallet.coins ?? START_COINS;
+      if (coins < price) return Response.json({ error: 'Yetersiz coin.' }, { status: 400 });
+      const updated = await base44.asServiceRole.entities.GameWallet.update(wallet.id, {
+        coins: coins - price,
+        bet,
+        elimin_session_spins: SESSION_SPINS,
+      });
+      return Response.json({ ...walletView(updated), grid: null, wins: [], win: 0 });
+    }
+
     if (action === 'bet') {
       const bet = clampBet(body.bet, BET_LEVELS, wallet.bet ?? DEFAULT_BET);
       const updated = await base44.asServiceRole.entities.GameWallet.update(wallet.id, { bet });
@@ -96,9 +125,11 @@ export default async function (req: Request) {
     if (action === 'spin') {
       const bet = clampBet(body.bet, BET_LEVELS, wallet.bet ?? DEFAULT_BET);
       const stake = bet * LINES;
-      // Bedava tur hakkı varsa tur ücret almaz.
+      // Çevirme hakkı veya bedava tur varsa tur ücret almaz.
+      const sessionTurns = wallet.elimin_session_spins ?? 0;
+      const inSession = sessionTurns > 0;
       const freeTurns = wallet.elimin_free_spins ?? 0;
-      const isFree = freeTurns > 0;
+      const isFree = inSession || freeTurns > 0;
       const cost = isFree ? 0 : stake;
       const coins = wallet.coins ?? START_COINS;
       if (!isFree && coins < cost) return Response.json({ error: 'Yetersiz coin.' }, { status: 400 });
@@ -120,7 +151,10 @@ export default async function (req: Request) {
       // ayrıca üç bedava tur ekler.
       const freeTrigger = countOf(grid, 'banana') >= SCATTER_MIN;
       const freeAward = countOf(grid, 'chicken') >= CHICKEN_MIN ? CHICKEN_FREE_SPINS : 0;
-      const freeLeft = Math.max(0, freeTurns - (isFree ? 1 : 0)) + (freeTrigger ? FREE_SPINS : 0) + freeAward;
+      // Çevirme hakkı sürerken bedava tur harcanmaz.
+      const usedFree = !inSession && freeTurns > 0 ? 1 : 0;
+      const freeLeft = Math.max(0, freeTurns - usedFree) + (freeTrigger ? FREE_SPINS : 0) + freeAward;
+      const sessionLeft = Math.max(0, sessionTurns - (inSession ? 1 : 0));
 
       const payout = total + jackpotWin;
       const bigWin = stake > 0 && total >= stake * BIG_WIN_MULTIPLE;
@@ -130,6 +164,7 @@ export default async function (req: Request) {
         bet,
         elimin_free_spins: freeLeft,
         elimin_chests: chestsLeft,
+        elimin_session_spins: sessionLeft,
         spins: (wallet.spins ?? 0) + 1,
         total_won: (wallet.total_won ?? 0) + payout,
         total_won_elimin: (wallet.total_won_elimin ?? 0) + payout,

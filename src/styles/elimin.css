@@ -196,7 +196,7 @@
 .el-board {
   display: grid;
   /* Tahta ekranda kalan yüksekliğe göre küçülür: kartlar kare kalır, taşma olmaz. */
-  width: min(100%, 30rem, calc((100dvh - 24rem) * 1.2));
+  width: min(100%, 30rem, calc((100dvh - 27rem) * 1.2));
   max-height: 100%;
   aspect-ratio: 6 / 5;
   grid-template-columns: repeat(6, minmax(0, 1fr));

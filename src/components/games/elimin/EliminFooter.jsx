@@ -1,9 +1,24 @@
 import React from 'react';
-import { Coins, Minus, Plus, RotateCw, Square } from 'lucide-react';
+import { Coins, Play } from 'lucide-react';
 import { LINES, formatCoins } from './eliminConfig';
+import GameBetBar from '../controls/GameBetBar';
+import GameSpinButton from '../controls/GameSpinButton';
 
-/** Alt konsol: WIN, bakiye, bahis kademesi, AUTO ve büyük SPIN düğmesi. */
-export default function EliminFooter({ win, coins, totalWon, bet, spinning, ready, auto, onStep, onAuto, onSpin, onStop }) {
+/** Alt konsol: WIN, bakiye ve Şekerli Meyve'yle aynı bahis kademesi ile tur madalyonu. */
+export default function EliminFooter({
+  win,
+  coins,
+  totalWon,
+  bet,
+  spinning,
+  ready,
+  auto,
+  onStep,
+  onMax,
+  onAuto,
+  onSpin,
+  onStop,
+}) {
   return (
     <footer className="el-foot">
       <div className={`el-win-row ${win > 0 ? 'el-win-row-on' : ''}`}>
@@ -16,40 +31,24 @@ export default function EliminFooter({ win, coins, totalWon, bet, spinning, read
         <span className="el-balance-row-item">TOPLAM {formatCoins(totalWon)}</span>
       </div>
 
-      <div className="el-deck">
-        <div className="el-bet">
-          <span className="el-bet-label">BAHİS YAP</span>
-          <div className="el-stepper">
-            <button type="button" onClick={() => onStep(-1)} disabled={spinning} className="el-step" aria-label="Bahsi azalt">
-              <Minus className="h-4 w-4" />
-            </button>
-            <span className="el-bet-value">{formatCoins(bet)}</span>
-            <button type="button" onClick={() => onStep(1)} disabled={spinning} className="el-step" aria-label="Bahsi artır">
-              <Plus className="h-4 w-4" />
-            </button>
-          </div>
-          <span className="el-bet-total">TOPLAM BAHİS {formatCoins(bet * LINES)}</span>
-        </div>
-
-        <button
-          type="button"
-          onClick={onAuto}
-          aria-pressed={auto}
-          className={`el-auto ${auto ? 'el-auto-on' : ''}`}
-        >
-          AUTO
-        </button>
-
-        <button
-          type="button"
-          onClick={spinning ? onStop : onSpin}
-          disabled={!ready && !spinning}
-          aria-label={spinning ? 'Turu durdur' : 'Turu çevir'}
-          className="el-spin"
-        >
-          {spinning ? <Square className="h-5 w-5" /> : <RotateCw className="h-6 w-6" />}
-          <span>{spinning ? 'DUR' : 'SPIN'}</span>
-        </button>
+      <div className="gctl-deck">
+        <GameBetBar
+          bet={bet}
+          lines={LINES}
+          disabled={spinning}
+          onStep={onStep}
+          onMax={onMax}
+          format={formatCoins}
+        />
+        <GameSpinButton
+          spinning={spinning}
+          disabled={!ready}
+          auto={auto}
+          icon={Play}
+          onSpin={onSpin}
+          onStop={onStop}
+          onAuto={onAuto}
+        />
       </div>
     </footer>
   );

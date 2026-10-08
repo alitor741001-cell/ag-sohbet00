@@ -18,6 +18,11 @@ export default function useEliminGame() {
   const [jackpot, setJackpot] = useState(0);
   // Zar dörtlüsünden gelen jackpot kazancı: ayrı kutlama ekranı açar.
   const [jackpotWin, setJackpotWin] = useState(0);
+  // Satın alınan "15 çevirme hakkı" turu ve tur bittiğinde gösterilen toplam.
+  const [sessionSpins, setSessionSpins] = useState(0);
+  const [sessionPrice, setSessionPrice] = useState(0);
+  const [sessionSize, setSessionSize] = useState(15);
+  const [sessionResult, setSessionResult] = useState(null);
   const [spins, setSpins] = useState(0);
   const [grid, setGrid] = useState(null);
   const [wins, setWins] = useState([]);
@@ -32,6 +37,8 @@ export default function useEliminGame() {
   const [sound, setSound] = useState(true);
   const [message, setMessage] = useState('');
   const busyRef = useRef(false);
+  // Çevirme hakkı turunda biriken kazanç: tur bitince topluca gösterilir.
+  const sessionWinRef = useRef(0);
   const stopRef = useRef(null);
   const soundRef = useRef(true);
   // Tur isteği sürerken DUR'a basılırsa iniş animasyonu atlanır.
@@ -75,6 +82,9 @@ export default function useEliminGame() {
     if (typeof data.free_spins === 'number') setFreeSpins(data.free_spins);
     if (typeof data.chests === 'number') setChests(data.chests);
     if (typeof data.jackpot === 'number') setJackpot(data.jackpot);
+    if (typeof data.session_spins === 'number') setSessionSpins(data.session_spins);
+    if (typeof data.session_price === 'number') setSessionPrice(data.session_price);
+    if (typeof data.session_size === 'number') setSessionSize(data.session_size);
     if (typeof data.bet === 'number') setBet(data.bet);
     if (typeof data.spins === 'number') setSpins(data.spins);
   }, []);
@@ -96,14 +106,17 @@ export default function useEliminGame() {
   const spin = useCallback(async () => {
     if (busyRef.current || status !== 'ready') return;
     unlockAudio();
-    // Bedava tur hakkı varsa tur ücret almaz.
-    const isFree = freeSpins > 0;
+    // Çevirme hakkı veya bedava tur varsa tur ücret almaz.
+    const inSession = sessionSpins > 0;
+    const isFree = inSession || freeSpins > 0;
     const cost = isFree ? 0 : bet * LINES;
     if (coins < cost) {
       setAuto(false);
       setMessage('Yetersiz coin. Coin bakiyene dokunup coin yükle.');
       return;
     }
+    // Çevirme hakkı turu dışındaki turlarda biriken kazanç sıfırlanır.
+    if (!inSession) sessionWinRef.current = 0;
     busyRef.current = true;
     // Bahis tur başlarken bakiyeden düşülür: coin gerçek zamanlı azalır.
     if (cost > 0) setCoins((value) => Math.max(0, value - cost));
@@ -135,8 +148,14 @@ export default function useEliminGame() {
       setWins(data.wins || []);
       applyState(data);
       setWin(data.win || 0);
-      setBigWin(data.big_win || 0);
+      // Çevirme hakkı turunda büyük kazanç ekranı yerine tur sonundaki toplam gösterilir.
+      setBigWin(inSession ? 0 : (data.big_win || 0));
       setJackpotWin(data.jackpot_win || 0);
+      // Tur kazançları çevirme hakkı boyunca toplanır.
+      if (inSession) {
+        sessionWinRef.current += (data.win || 0) + (data.jackpot_win || 0);
+        if ((data.session_spins ?? 0) <= 0) setSessionResult(sessionWinRef.current);
+      }
       if (data.big_win > 0 || data.jackpot_trigger) play('bigWin');
       else if (data.win > 0) play('win');
       // Tavuk üçlüsü ve altın muz bonusu kutlama sesiyle duyurulur.
@@ -153,7 +172,7 @@ export default function useEliminGame() {
       setSpinning(false);
       busyRef.current = false;
     }
-  }, [applyState, bet, coins, freeSpins, play, status, wait]);
+  }, [applyState, bet, coins, freeSpins, play, sessionSpins, status, wait]);
 
   const saveBet = useCallback(async (next) => {
     setBet(next);
@@ -174,15 +193,50 @@ export default function useEliminGame() {
     saveBet(next);
   }, [bet, saveBet]);
 
+  const maxBet = useCallback(() => {
+    if (busyRef.current) return;
+    const highest = BET_LEVELS[BET_LEVELS.length - 1];
+    if (highest === bet) return;
+    saveBet(highest);
+  }, [bet, saveBet]);
+
+  // 15 çevirme hakkı: bedel bahis kademesine göre baştan düşülür, turlar ücretsiz çevrilir.
+  const buySession = useCallback(async () => {
+    if (busyRef.current || status !== 'ready') return;
+    if (sessionSpins > 0) {
+      setMessage('Devam eden çevirme hakkın var.');
+      return;
+    }
+    if (coins < sessionPrice) {
+      setMessage('Yetersiz coin. Coin bakiyene dokunup coin yükle.');
+      return;
+    }
+    unlockAudio();
+    busyRef.current = true;
+    setMessage('');
+    try {
+      const response = await gameRequest('elimin-game', { action: 'session', bet });
+      applyState(response.data);
+    } catch (error) {
+      const raw = error?.response?.data?.error;
+      setMessage(raw && error?.response?.status !== 429 && !/rate|limit|sınır|yoğun/i.test(raw) ? raw : 'Çok hızlı işlem yapıyorsun, birkaç saniye bekle.');
+    } finally {
+      busyRef.current = false;
+    }
+  }, [applyState, bet, coins, sessionPrice, sessionSpins, status]);
+
+  const clearSessionResult = useCallback(() => setSessionResult(null), []);
+
   const toggleAuto = useCallback(() => setAuto((value) => !value), []);
   const toggleSound = useCallback(() => setSound((value) => !value), []);
 
-  // Otomatik tur: kazanç ekranı kapandıktan sonra kendiliğinden devam eder.
+  // Otomatik tur: AUTO açıkken veya çevirme hakkı sürerken kendiliğinden devam eder.
   useEffect(() => {
-    if (!auto || spinning || status !== 'ready') return undefined;
+    if (spinning || status !== 'ready') return undefined;
+    if (!auto && sessionSpins <= 0) return undefined;
     const timer = window.setTimeout(() => { spin(); }, 800);
     return () => window.clearTimeout(timer);
-  }, [auto, spin, spinning, status]);
+  }, [auto, sessionSpins, spin, spinning, status]);
 
   return {
     status,
@@ -208,6 +262,13 @@ export default function useEliminGame() {
     spin,
     stop,
     changeBet,
+    maxBet,
+    buySession,
+    clearSessionResult,
+    sessionSpins,
+    sessionPrice,
+    sessionSize,
+    sessionResult,
     toggleAuto,
     toggleSound,
   };

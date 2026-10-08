@@ -53,24 +53,8 @@
 }
 .el-chest-gain { font-size: .44rem; font-weight: 900; color: #ffe9a3; }
 
-/* Bedava çevirme rozeti: marka panelinde, tur ücretsizken görünür. */
-.el-free-chip {
-  flex-shrink: 0;
-  border-radius: 9999px;
-  border: 2px solid #ffd75c;
-  background: linear-gradient(180deg, #ffe9a3, #e08a14);
-  padding: .2rem .55rem;
-  font-size: .55rem;
-  font-weight: 900;
-  letter-spacing: .08em;
-  color: #2a0c02;
-  box-shadow: 0 0 12px rgba(255, 200, 60, .6);
-  animation: el-free-pulse 1.4s ease-in-out infinite alternate;
-}
-@keyframes el-free-pulse {
-  from { transform: scale(1); }
-  to { transform: scale(1.05); }
-}
+/* Kapatma düğmesi: Şekerli Meyve'deki pill ölçüsünde, kırmızı tonda. */
+.el-close-pill { border-color: rgba(255, 96, 96, .8); color: #ffc2c2; }
 
 /* Ödeme tablosunda ek nesneler: kural metni üç değer sütununu kaplar. */
 .el-pay-note-cell {
@@ -81,8 +65,4 @@
   letter-spacing: .04em;
   font-variant-numeric: tabular-nums;
   color: #ffd35c;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .el-free-chip { animation: none; }
 }
