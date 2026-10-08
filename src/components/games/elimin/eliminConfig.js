@@ -21,7 +21,6 @@ export const CLUSTER_MIN = 9;
 
 // pays: 9-11, 12-14 ve 15+ aynı meyve için bahis katı.
 export const ELIMIN_SYMBOLS = {
-  lollipop: { name: 'Lolipop', art: ELIMIN_SYMBOL_ART.lollipop, pays: [144, 450, 1440] },
   plum: { name: 'Yaban Mersini', art: ELIMIN_SYMBOL_ART.plum, pays: [90, 270, 900] },
   grapes: { name: 'Üzüm', art: ELIMIN_SYMBOL_ART.grapes, pays: [72, 216, 630] },
   melon: { name: 'Ejder Meyvesi', art: ELIMIN_SYMBOL_ART.melon, pays: [54, 162, 450] },

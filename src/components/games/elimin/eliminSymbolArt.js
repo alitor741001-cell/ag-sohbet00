@@ -1,11 +1,8 @@
 // ELİMİNSLOT sembol görselleri: kullanıcının gönderdiği referans seti.
-// Gönderilen sette karşılığı olmadığı için lolipop mevcut görselinde kaldı.
-import { FRUIT_ART } from '../fruit/fruitAssets';
-
+// Lolipop kaldırıldı; set yalnızca referanstaki görsellerden oluşur.
 const MEDIA_BASE = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62';
 
 export const ELIMIN_SYMBOL_ART = {
-  lollipop: FRUIT_ART.lollipop,
   plum: `${MEDIA_BASE}/daf0c5624_IMG_1546.jpg`,
   grapes: `${MEDIA_BASE}/2eaab5ed5_IMG_1545.jpg`,
   melon: `${MEDIA_BASE}/449e969a3_IMG_1550.jpg`,

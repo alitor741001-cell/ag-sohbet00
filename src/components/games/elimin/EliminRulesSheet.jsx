@@ -74,7 +74,7 @@ export default function EliminRulesSheet({ open, onClose }) {
           ))}
         </ul>
 
-        <p className="el-pay-note">Değerler bahis katıdır: 100 bahis 10-11 lolipop = 8.640 coin.</p>
+        <p className="el-pay-note">Değerler bahis katıdır: 100 bahis 10-11 yaban mersini = 5.400 coin.</p>
       </div>
     </div>
   );

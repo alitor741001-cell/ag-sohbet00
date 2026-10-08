@@ -44,11 +44,19 @@ const CHEST_CHANCE = 0.002;
 const CHICKEN_CHANCE = 0.01;
 const DICE_CHANCE = 0.008;
 
+// Lolipop bu oyunda yok: motordan gelen lolipop kareleri kalan meyvelere dağıtılır.
+// (Altın muz skatter olduğu için dağıtıma girmez.)
+const ELIMIN_FRUIT_IDS = ['plum', 'grapes', 'melon', 'apple', 'candy', 'cherry'];
+
+const randomFruit = () => ELIMIN_FRUIT_IDS[Math.floor(Math.random() * ELIMIN_FRUIT_IDS.length)];
+
 // Izgara meyve motoruyla üretilir, sonra karelerin bir kısmı ek nesnelerle değişir.
 function spinElimin() {
   const grid = spinFruit();
   for (let reel = 0; reel < REELS; reel += 1) {
     for (let row = 0; row < ROWS; row += 1) {
+      // Lolipop kaldırıldı: kare kalan meyvelerden birine dönüşür.
+      if (grid[reel][row] === 'lollipop') grid[reel][row] = randomFruit();
       const roll = Math.random();
       if (roll < DICE_CHANCE) grid[reel][row] = 'dice';
       else if (roll < DICE_CHANCE + CHICKEN_CHANCE) grid[reel][row] = 'chicken';
