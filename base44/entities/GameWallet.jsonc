@@ -127,6 +127,27 @@
       "type": "number",
       "default": 0
     },
+    "total_won_futbol": {
+      "type": "number",
+      "default": 0
+    },
+    "futbol_mode": {
+      "type": "string",
+      "enum": [
+        "normal",
+        "gelismis",
+        "usta"
+      ],
+      "default": "normal"
+    },
+    "futbol_today": {
+      "type": "number",
+      "default": 0
+    },
+    "futbol_today_date": {
+      "type": "string",
+      "default": ""
+    },
     "admin_granted": {
       "type": "boolean",
       "default": false

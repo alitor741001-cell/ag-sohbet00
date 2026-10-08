@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Gamepad2, Play, X } from 'lucide-react';
 import { Image } from '@/components/ui/image';
-import { DEDE_ID, FRUIT_ID, GAMES, ROCKET_ID, ROULETTE_ID, SEKERLI_MEYVE_ID, SEKER_ID } from './gameCatalog';
+import { DEDE_ID, FRUIT_ID, FUTBOL_ID, GAMES, ROCKET_ID, ROULETTE_ID, SEKERLI_MEYVE_ID, SEKER_ID } from './gameCatalog';
+import FootballGame from './FootballGame';
 import SekerliMeyveGame from './SekerliMeyveGame';
 import SlotGame from './SlotGame';
 import CrashRocketGame from './CrashRocketGame';
@@ -129,6 +130,8 @@ export default function GamePanel({ open, onClose, roomId, initialGame = null })
           <div className={`game-layer bg-slot ${phase === 'opening' ? 'game-zoom-in' : phase === 'closing' ? 'game-zoom-out' : ''}`}>
             {selected === SEKERLI_MEYVE_ID ? (
               <SekerliMeyveGame onExit={onClose} onBack={closeGame} />
+            ) : selected === FUTBOL_ID ? (
+              <FootballGame onExit={onClose} onBack={closeGame} />
             ) : selected === DEDE_ID ? (
               <DedeGame onExit={onClose} onBack={closeGame} />
             ) : selected === ROCKET_ID ? (
