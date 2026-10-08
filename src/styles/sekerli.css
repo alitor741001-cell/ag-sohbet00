@@ -173,7 +173,7 @@
   position: relative;
   width: 100%;
   /* Yükseklik yetmezse çerçeve küçülür: kısa ekranlarda da taşmaz, alt sınırı korur. */
-  max-width: min(44rem, max(14rem, calc((100dvh - 25rem) * 1.25)));
+  max-width: min(44rem, max(14rem, calc((100dvh - 25rem) * 1.09)));
   border-radius: 1.7rem;
   padding: 0.45rem;
   background-image: repeating-linear-gradient(
@@ -212,7 +212,7 @@
 .sl-board {
   display: grid;
   width: 100%;
-  aspect-ratio: 5 / 4;
+  aspect-ratio: 5 / 4.6;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   /* Her sütun alanın tamamını kaplar; dört hücre sütunun içinde bölünür. */
   grid-template-rows: minmax(0, 1fr);
@@ -556,7 +556,7 @@
   }
 
   .sl-frame {
-    max-width: calc((100dvh - 23rem) * 1.25);
+    max-width: calc((100dvh - 23rem) * 1.09);
   }
 }
 
@@ -588,7 +588,7 @@
   }
 
   .sl-frame {
-    max-width: min(38rem, max(13rem, calc((100dvh - 16.5rem) * 1.25)));
+    max-width: min(38rem, max(13rem, calc((100dvh - 16.5rem) * 1.09)));
   }
 
   .sl-foot {

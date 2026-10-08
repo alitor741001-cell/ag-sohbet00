@@ -84,10 +84,10 @@ export default function SekerGame({ onExit, onBack }) {
         </button>
       </header>
 
-      <main className="relative z-10 flex min-h-0 flex-1 flex-col items-center gap-1.5 px-1 py-1.5">
+      <main className="relative z-10 flex min-h-0 flex-1 flex-col items-center gap-1 px-0 py-1">
         {/* Izgara ekranın kalan tüm alanını kaplar: şekerler olabildiğince büyük durur. */}
         <div className="flex min-h-0 w-full flex-1 items-center justify-center">
-          <div className="seker-frame flex aspect-square max-h-full w-full max-w-[40rem] p-1.5 sm:p-2.5">
+          <div className="seker-frame flex aspect-[1/1.15] max-h-full w-full max-w-[42rem] p-1 sm:p-2">
             <SekerGrid
               spinning={game.spinning}
               stopping={game.stopping}
