@@ -1,27 +1,26 @@
 /* Oyun kontrol masası: MEYVE ve DEDE aynı takımı kullanır.
-   Koyu grafit gövde, ince altın çizgi, tek tur madalyonu — slot panelinin daha yalın hâli. */
+   Bahis kademesi, AUTO ve tur madalyonu tek sırada durur; masa altın-kırmızı boyalıdır. */
 
-/* --- masa gövdesi --- */
+/* --- masa gövdesi: altın sarısından kırmızıya akan parlak şerit --- */
 .gctl-deck {
   position: relative;
   display: flex;
   width: 100%;
   max-width: 27rem;
-  flex-direction: column;
-  gap: 0.55rem;
+  align-items: center;
+  gap: 0.4rem;
   overflow: hidden;
-  border-radius: 1.4rem;
-  border: 1px solid rgba(255, 215, 120, 0.55);
-  padding: 0.7rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 250, 230, 0.85);
+  padding: 0.45rem;
   background:
-    linear-gradient(180deg, rgba(255, 236, 190, 0.13), rgba(255, 236, 190, 0) 34%),
-    linear-gradient(180deg, #16120f, #070606 70%, #030303);
+    radial-gradient(120% 170% at 18% -30%, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0) 58%),
+    linear-gradient(100deg, #ffe27a 0%, #ffc22e 34%, #f0871a 62%, #d81f2a 100%);
   box-shadow:
-    inset 0 0 0 1px rgba(255, 236, 190, 0.14),
-    inset 0 1px 0 rgba(255, 246, 214, 0.26),
-    inset 0 -16px 30px rgba(0, 0, 0, 0.7),
-    0 0 28px -14px rgba(255, 190, 80, 0.5),
-    0 -16px 36px -22px rgba(0, 0, 0, 0.95);
+    inset 0 1px 0 rgba(255, 255, 255, 0.75),
+    inset 0 -10px 20px rgba(120, 20, 10, 0.35),
+    0 12px 24px -18px rgba(0, 0, 0, 0.95),
+    0 0 26px -12px rgba(255, 190, 80, 0.75);
 }
 .gctl-deck::before {
   content: '';
@@ -56,7 +55,7 @@
   overflow: hidden;
   border-radius: 9999px;
   border: 1px solid rgba(255, 214, 120, 0.32);
-  padding: 0.3rem 0.35rem;
+  padding: 0.22rem 0.3rem;
   background:
     linear-gradient(180deg, rgba(255, 236, 190, 0.13), rgba(255, 236, 190, 0) 48%),
     linear-gradient(180deg, #262019, #120d0a 64%, #0a0706);
@@ -82,8 +81,8 @@
   position: relative;
   z-index: 1;
   display: flex;
-  height: 2.3rem;
-  width: 2.3rem;
+  height: 1.85rem;
+  width: 1.85rem;
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
@@ -109,28 +108,28 @@
   align-items: center;
   line-height: 1.05;
 }
-.gctl-stepper-label { font-size: 0.5rem; font-weight: 900; letter-spacing: 0.16em; color: rgba(255, 226, 160, 0.72); }
+.gctl-stepper-label { font-size: 0.46rem; font-weight: 900; letter-spacing: 0.12em; color: rgba(255, 226, 160, 0.72); }
 .gctl-stepper-value {
-  font-size: 1rem;
+  font-size: 0.82rem;
   font-weight: 900;
   font-variant-numeric: tabular-nums;
   color: #fff3cf;
   text-shadow: 0 1px 0 #5c3503, 0 0 14px rgba(255, 190, 80, 0.55);
 }
-.gctl-stepper-sub { font-size: 0.5rem; font-weight: 700; color: rgba(255, 226, 160, 0.62); }
+.gctl-stepper-sub { font-size: 0.44rem; font-weight: 700; letter-spacing: 0; color: rgba(255, 226, 160, 0.62); }
 
 /* --- MAX: kabartmalı altın kapsül --- */
 .gctl-max {
   position: relative;
   display: inline-flex;
-  height: 2.9rem;
+  height: 2.05rem;
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
   border-radius: 9999px;
   border: 1px solid rgba(255, 250, 230, 0.85);
-  padding: 0 1.05rem;
-  font-size: 0.6rem;
+  padding: 0 0.7rem;
+  font-size: 0.54rem;
   font-weight: 900;
   letter-spacing: 0.18em;
   color: #2b1602;
@@ -146,21 +145,26 @@
 .gctl-max:active { transform: translateY(1px); filter: brightness(1.08); }
 .gctl-max:disabled { filter: saturate(0.4) brightness(0.75); }
 
-/* --- AUTO: metal anahtar, yanında lamba --- */
+/* --- AUTO: kare altın düğme; lamba üstte, yazı altta --- */
 .gctl-auto {
   position: relative;
   display: inline-flex;
+  flex-direction: column;
+  height: 2.3rem;
+  width: 2.3rem;
+  flex-shrink: 0;
   align-items: center;
-  gap: 0.4rem;
-  border-radius: 9999px;
-  border: 1px solid rgba(255, 214, 120, 0.3);
-  padding: 0.6rem 0.85rem;
-  font-size: 0.58rem;
+  justify-content: center;
+  gap: 0.14rem;
+  border-radius: 0.6rem;
+  border: 1px solid rgba(255, 250, 230, 0.9);
+  padding: 0;
+  font-size: 0.46rem;
   font-weight: 900;
-  letter-spacing: 0.16em;
-  color: rgba(255, 236, 190, 0.82);
-  background: linear-gradient(180deg, #241e19, #100b09);
-  box-shadow: inset 0 1px 0 rgba(255, 246, 214, 0.22), 0 10px 20px -16px rgba(0, 0, 0, 0.95);
+  letter-spacing: 0.06em;
+  color: #3b2103;
+  background: linear-gradient(180deg, #fff6dc 2%, #ffd35c 48%, #e0a010 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 2px 0 #6f4705, 0 10px 20px -16px rgba(0, 0, 0, 0.85);
   transition: transform 130ms ease, filter 130ms ease, color 130ms ease;
 }
 .gctl-auto:active { transform: translateY(1px); filter: brightness(1.14); }
@@ -174,9 +178,14 @@
   box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.25);
 }
 .gctl-auto-on {
-  color: #2b1602;
-  border-color: rgba(255, 250, 230, 0.85);
-  background: linear-gradient(180deg, #fff3cd, #ffcc45 52%, #d99a11);
+  color: #fff6f3;
+  border-color: rgba(255, 226, 220, 0.95);
+  background: linear-gradient(180deg, #ff9a9a 0%, #f0384a 46%, #a80f1e 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    0 2px 0 #6d0714,
+    0 10px 20px -16px rgba(0, 0, 0, 0.9),
+    0 0 16px -2px rgba(240, 56, 74, 0.75);
 }
 .gctl-auto-on .gctl-auto-lamp {
   background: radial-gradient(circle at 40% 30%, #d6ffe4, #16c76a 60%, #06703a);
@@ -197,7 +206,7 @@
   justify-content: center;
   border-radius: 9999px;
   border: 1px solid rgba(255, 214, 120, 0.34);
-  padding: 0.32rem;
+  padding: 0.2rem;
   background: linear-gradient(180deg, rgba(255, 236, 190, 0.16), rgba(0, 0, 0, 0.55));
   box-shadow: inset 0 1px 0 rgba(255, 246, 214, 0.34), inset 0 -10px 20px rgba(0, 0, 0, 0.6);
 }
@@ -208,8 +217,8 @@
   align-items: center;
   justify-content: center;
   gap: 0.05rem;
-  height: 5.3rem;
-  width: 5.3rem;
+  height: 3.6rem;
+  width: 3.6rem;
   border-radius: 9999px;
   color: #3b2103;
   background:
@@ -233,7 +242,7 @@
   pointer-events: none;
   background: radial-gradient(circle at 50% 8%, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 56%);
 }
-.gctl-spin-label { position: relative; font-size: 0.6rem; font-weight: 900; letter-spacing: 0.2em; }
+.gctl-spin-label { position: relative; font-size: 0.5rem; font-weight: 900; letter-spacing: 0.1em; }
 
 /* Durdurma: aynı kabartma, kırmızı gövde. */
 .gctl-spin-stop {
@@ -253,7 +262,7 @@
 /* Tur boyunca düğmenin çevresinde dönen ışık halkası. */
 .gctl-spin-ring {
   position: absolute;
-  inset: -0.68rem;
+  inset: -0.48rem;
   border-radius: 9999px;
   pointer-events: none;
   background: conic-gradient(

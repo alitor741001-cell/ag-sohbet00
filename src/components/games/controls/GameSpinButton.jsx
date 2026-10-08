@@ -9,15 +9,15 @@ export default function GameSpinButton({ spinning, disabled, auto, icon, onSpin,
   const Icon = spinning ? Square : icon;
 
   return (
-    <div className="flex w-full items-center justify-between gap-3">
+    <div className="flex shrink-0 items-center gap-1.5">
       <button
         type="button"
         onClick={onAuto}
-        aria-label="Otomatik tur"
+        aria-label={auto ? 'Otomatik tur açık' : 'Otomatik tur'}
         className={`gctl-auto ${auto ? 'gctl-auto-on' : ''}`}
       >
         <span aria-hidden="true" className="gctl-auto-lamp" />
-        <span className="gctl-auto-label">{auto ? 'AUTO AÇIK' : 'AUTO'}</span>
+        <span className="gctl-auto-label">AUTO</span>
       </button>
 
       <div className="flex items-center gap-2">
@@ -32,7 +32,7 @@ export default function GameSpinButton({ spinning, disabled, auto, icon, onSpin,
           >
             <span aria-hidden="true" className="gctl-spin-dome" />
             {spinning && <span className="gctl-spin-ring" aria-hidden="true" />}
-            <Icon className="relative h-7 w-7" strokeWidth={2.6} />
+            <Icon className="relative h-5 w-5" strokeWidth={2.6} />
             <span className="gctl-spin-label">{spinning ? 'DURDUR' : 'SPIN'}</span>
           </button>
         </span>

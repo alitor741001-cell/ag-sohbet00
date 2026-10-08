@@ -5,7 +5,7 @@ import '@/styles/gameControls.css';
 /** Bahis kademesi: tek metal kapsül içinde − / kademe / + ve yanında altın MAX. */
 export default function GameBetBar({ bet, lines, disabled, onStep, onMax, format }) {
   return (
-    <div className="flex w-full items-center gap-2">
+    <div className="flex min-w-0 flex-1 items-center gap-1.5">
       <span className="gctl-stepper">
         <button
           type="button"

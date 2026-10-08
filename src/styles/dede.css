@@ -256,8 +256,8 @@
 .dede-mult-circle {
   position: relative;
   display: flex;
-  height: 2.9rem;
-  width: 2.9rem;
+  height: 2.5rem;
+  width: 2.5rem;
   align-items: center;
   justify-content: center;
   border-radius: 9999px;
@@ -274,7 +274,7 @@
   box-shadow: 0 0 26px rgba(255, 205, 90, 0.8), inset 0 0 20px rgba(255, 205, 90, 0.4);
 }
 .dede-mult-circle-value {
-  font-size: 0.95rem;
+  font-size: 0.8rem;
   font-weight: 900;
   line-height: 1;
   letter-spacing: -0.02em;
