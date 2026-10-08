@@ -148,6 +148,8 @@
   pointer-events: none;
   animation: dede-strike-life 1.25s ease-out forwards;
 }
+/* Kare içinde kazanan nesnenin üstüne inen şimşek: hücreyi tam kaplar. */
+.dede-strike-cell { inset: 0; z-index: 6; }
 .dede-strike-flash {
   position: absolute;
   inset: 0;
@@ -217,6 +219,10 @@
   transform: translate(-50%, -50%);
   filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.65));
 }
+/* Değere göre küre rengi: yeşil (3x-8x), mor (10x-50x), altın (100x-500x). */
+.dede-orb-small { --orb-face: radial-gradient(circle at 42% 26%, #6ee7a8, #10b981 58%, #04603a); --orb-glow: rgba(16, 185, 129, 0.78); }
+.dede-orb-mid { --orb-face: radial-gradient(circle at 42% 26%, #c86bff, #9333ea 58%, #45087a); --orb-glow: rgba(168, 85, 247, 0.82); }
+.dede-orb-gold { --orb-face: radial-gradient(circle at 42% 26%, #fff3c4, #ffbe2e 58%, #8a5200); --orb-glow: rgba(255, 190, 60, 0.95); }
 .dede-orb-face {
   position: relative;
   display: flex;
@@ -228,12 +234,14 @@
   font-size: clamp(0.66rem, 3.4vw, 1rem);
   font-weight: 900;
   font-variant-numeric: tabular-nums;
-  color: #fff4cf;
-  background: radial-gradient(circle at 42% 26%, #c86bff, #8b1fd0 58%, #45087a);
+  color: #fffaf0;
+  background: var(--orb-face, radial-gradient(circle at 42% 26%, #c86bff, #9333ea 58%, #45087a));
   border: 2px solid #ffd35c;
-  box-shadow: 0 0 16px rgba(255, 190, 60, 0.75), inset 0 -7px 14px rgba(0, 0, 0, 0.45);
-  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.6);
+  box-shadow: 0 0 16px var(--orb-glow, rgba(255, 190, 60, 0.75)), inset 0 -7px 14px rgba(0, 0, 0, 0.45);
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.65), 0 0 10px rgba(0, 0, 0, 0.35);
 }
+/* Büyük çarpanlar biraz daha iri durur. */
+.dede-orb-gold .dede-orb-face { min-width: clamp(2.15rem, 13.5vw, 3.35rem); font-size: clamp(0.72rem, 3.7vw, 1.08rem); }
 /* --- biriken çarpan şeridi: alt tarafta sabit, inen küreler buraya düşer --- */
 .dede-mult-bar {
   display: flex;

@@ -47,17 +47,18 @@ export const SYMBOLS = [
 // Skatter ağırlığı: 4+ dede ortalama her 40 turda bir gelir.
 const SCATTER_WEIGHT = 3;
 
-// Çarpan küreleri: [değer, ağırlık].
+// Çarpan küreleri: [değer, ağırlık]. Referans tasarımdaki 3x, 4x, 30x, 50x, 100x, 500x kademeleri.
 const ORB_VALUES = [
-  [2, 400],
-  [3, 200],
-  [5, 150],
-  [8, 100],
-  [10, 80],
-  [15, 40],
-  [25, 20],
-  [50, 7],
-  [100, 2],
+  [3, 460],
+  [4, 320],
+  [5, 210],
+  [8, 110],
+  [10, 78],
+  [15, 42],
+  [25, 24],
+  [30, 16],
+  [50, 9],
+  [100, 3],
   [500, 1],
 ];
 

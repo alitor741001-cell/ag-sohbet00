@@ -9,7 +9,7 @@ export const DEDE_SCATTER_MIN = 4;
 
 export const DEDE_SYMBOLS = {
   crown: { name: 'Taç', art: DEDE_ART.crown },
-  gem: { name: 'Elmas', art: DEDE_ART.gem },
+  gem: { name: 'Mücevher', art: DEDE_ART.gem },
   ring: { name: 'Yüzük', art: DEDE_ART.ring },
   hour: { name: 'Kum Saati', art: DEDE_ART.hour },
   chalice: { name: 'Kupa', art: DEDE_ART.chalice },

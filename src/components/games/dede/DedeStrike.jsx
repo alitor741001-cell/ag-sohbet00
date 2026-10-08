@@ -1,9 +1,9 @@
 import React from 'react';
 
 /** Çarpan küresi bir nesnenin üstüne indiğinde o kareye inen şimşek: parlak flaş + yıldırım. */
-export default function DedeStrike() {
+export default function DedeStrike({ className = '' }) {
   return (
-    <span className="dede-strike" aria-hidden="true">
+    <span className={`dede-strike ${className}`} aria-hidden="true">
       <span className="dede-strike-flash" />
       <svg className="dede-strike-bolt" viewBox="0 0 24 44" aria-hidden="true">
         <path

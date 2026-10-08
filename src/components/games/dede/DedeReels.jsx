@@ -69,6 +69,8 @@ export default function DedeReels({ rolling, grid, wins, orbs, explode }) {
                   win={winCells.has(`${reel}-${row}`)}
                   explode={!!explode && explodeCells.has(`${reel}-${row}`)}
                 />
+                {/* Kazanan nesnelerin üstüne de şimşek düşer. */}
+                {winCells.has(`${reel}-${row}`) && <DedeStrike className="dede-strike-cell" />}
               </span>
             ))
           )}
