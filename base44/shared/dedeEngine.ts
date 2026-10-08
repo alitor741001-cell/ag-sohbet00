@@ -46,21 +46,23 @@ const SCATTER_WEIGHT = 2;
 // Çevirme hakkı turlarında aynı seyrek oran korunur: ek 15 hak ortalama 10 hakkın birinde gelir.
 const FREE_SCATTER_WEIGHT = 2;
 
-// Çarpan jetonları: [değer, ağırlık]. Referans tasarımdaki 3x, 4x, 30x, 50x, 100x, 500x kademeleri.
+// Çarpan jetonları: [değer, ağırlık]. Kademeler: 3x, 4x, 20x, 30x, 50x, 100x, 500x.
+// Yeşil jetonlar (3x, 4x, 30x, 100x) eskisinden seyrektir; mavi 20x ile kırmızı 50x/500x çok daha seyrek iner.
 const ORB_VALUES = [
-  [3, 900],
-  [4, 640],
-  [30, 60],
-  [50, 24],
-  [100, 7],
-  [500, 2],
+  [3, 300],
+  [4, 200],
+  [20, 24],
+  [30, 24],
+  [50, 8],
+  [100, 3],
+  [500, 1],
 ];
 
 // Jeton bir kareyi sembol gibi kaplar: kare başına inme şansı (ilk ızgara, tumbler, satın alınan tur).
-// Oranlar düşük tutulur: çarpan jetonları her turda değil, seyrek anlarda gelir.
-const INITIAL_ORB_CHANCE = 0.025;
-const TUMBLE_ORB_CHANCE = 0.035;
-const FREE_ORB_CHANCE = 0.045;
+// Oranlar çok düşük tutulur: çarpan jetonları seyrek anlarda gelir.
+const INITIAL_ORB_CHANCE = 0.012;
+const TUMBLE_ORB_CHANCE = 0.017;
+const FREE_ORB_CHANCE = 0.022;
 
 // Kare kimliğinden jeton değeri: 'orb30' -> 30; jeton değilse 0.
 export function orbValue(cell) {

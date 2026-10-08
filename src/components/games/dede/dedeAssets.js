@@ -23,14 +23,18 @@ export const DEDE_ART = {
 
 export const DEDE_ART_SIZE = 1024;
 
-// Çarpan küreleri: kanatlı yeşil küre. Değer görsele gömülü değildir;
+// Çarpan küreleri: kanatlı küre tasarımı. Değer görsele gömülü değildir;
 // kürenin ortasına yazıyla bindirilir, böylece her kademe aynı tasarımı kullanır.
-const DEDE_ORB = `${MEDIA_BASE}/3ad9d677c_generated_image.png`;
+// Renkler: yeşil 3x · 4x · 30x · 100x, mavi 20x, kırmızı 50x ve 500x.
+const DEDE_ORB_GREEN = `${MEDIA_BASE}/3ad9d677c_generated_image.png`;
+const DEDE_ORB_BLUE = `${MEDIA_BASE}/9ad3847d8_generated_image.png`;
+const DEDE_ORB_RED = `${MEDIA_BASE}/019ce0ef4_generated_image.png`;
 export const DEDE_ORB_ART = {
-  3: DEDE_ORB,
-  4: DEDE_ORB,
-  30: DEDE_ORB,
-  50: DEDE_ORB,
-  100: DEDE_ORB,
-  500: DEDE_ORB,
+  3: DEDE_ORB_GREEN,
+  4: DEDE_ORB_GREEN,
+  20: DEDE_ORB_BLUE,
+  30: DEDE_ORB_GREEN,
+  50: DEDE_ORB_RED,
+  100: DEDE_ORB_GREEN,
+  500: DEDE_ORB_RED,
 };
