@@ -22,8 +22,7 @@ export const SLOT_SYMBOL_ART = {
   ten: `${MEDIA}/6dd890c6d_IMG_1535.jpg`,
   jack: `${MEDIA}/3ee8f9056_IMG_1536.jpg`,
   queen: `${MEDIA}/54e3eb456_IMG_1540.jpg`,
-  // Papaz (K) referansı gelmedi: eski görsel korunur.
-  king: `${MEDIA}/0f6311776_generated_image.png`,
+  king: `${MEDIA}/cd345127b_IMG_1541.jpg`,
   ace: `${MEDIA}/de3fc5d9c_IMG_1537.jpg`,
   gem: `${MEDIA}/9457d570b_IMG_1539.jpg`,
   eagle: `${MEDIA}/920b96084_IMG_1533.jpg`,
