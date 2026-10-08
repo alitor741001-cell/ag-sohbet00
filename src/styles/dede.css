@@ -141,6 +141,55 @@
   to { transform: translateY(0); opacity: 1; }
 }
 
+/* --- çarpan inen nesneye şimşek: kare flaşı + yıldırım --- */
+.dede-strike {
+  position: absolute;
+  z-index: 4;
+  pointer-events: none;
+  animation: dede-strike-life 1.25s ease-out forwards;
+}
+.dede-strike-flash {
+  position: absolute;
+  inset: 0;
+  border-radius: 18%;
+  background: radial-gradient(circle at 50% 55%, rgba(255, 255, 255, 0.95), rgba(255, 214, 92, 0.5) 46%, rgba(255, 190, 60, 0) 74%);
+  box-shadow: 0 0 22px rgba(255, 226, 130, 0.9), inset 0 0 18px rgba(255, 255, 255, 0.7);
+  animation: dede-strike-flash 1.25s ease-out forwards;
+}
+.dede-strike-bolt {
+  position: absolute;
+  left: 50%;
+  bottom: 40%;
+  width: 44%;
+  filter: drop-shadow(0 0 10px rgba(255, 242, 168, 1));
+  animation: dede-strike-bolt 1.25s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
+}
+@keyframes dede-strike-life {
+  0% { opacity: 0; }
+  4% { opacity: 1; }
+  10% { opacity: 0.3; }
+  16% { opacity: 1; }
+  22% { opacity: 0.45; }
+  30%, 72% { opacity: 1; }
+  100% { opacity: 0; }
+}
+@keyframes dede-strike-flash {
+  0% { opacity: 0; transform: scale(0.6); }
+  6% { opacity: 1; transform: scale(1.14); }
+  14% { opacity: 0.35; transform: scale(1); }
+  22% { opacity: 1; transform: scale(1.06); }
+  40% { opacity: 0.8; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1); }
+}
+@keyframes dede-strike-bolt {
+  0% { opacity: 0; transform: translate(-50%, -55%) scaleY(0.35); }
+  8% { opacity: 1; transform: translate(-50%, 0) scaleY(1.06); }
+  14% { opacity: 0.25; transform: translate(-50%, -8%) scaleY(0.92); }
+  22% { opacity: 1; transform: translate(-50%, 0) scaleY(1); }
+  72% { opacity: 1; transform: translate(-50%, 0) scaleY(1); }
+  100% { opacity: 0; transform: translate(-50%, 4%) scaleY(0.9); }
+}
+
 /* --- çarpan küreleri: kanatlı altın madalyon --- */
 .dede-orb-slot {
   position: absolute;
@@ -286,6 +335,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .dede-rays, .dede-frame, .dede-strip, .dede-badge-win, .dede-drop,
-  .dede-float-win, .dede-orb, .dede-mult-bar-orb { animation: none; }
+  .dede-float-win, .dede-orb, .dede-mult-bar-orb, .dede-strike, .dede-strike-flash, .dede-strike-bolt { animation: none; }
   .dede-badge-explode { animation-duration: 0.01s; }
 }

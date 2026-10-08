@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import DedeSymbol from './DedeSymbol';
 import DedeOrb from './DedeOrb';
+import DedeStrike from './DedeStrike';
 import { randomGrid } from './dedeConfig';
 
 /**
@@ -74,15 +75,27 @@ export default function DedeReels({ rolling, grid, wins, orbs, explode }) {
         </div>
       ))}
 
-      {/* Çarpan küreleri: madalyonlar hücrelerin ortasına iner. */}
+      {/* Çarpan küreleri: madalyonlar hücrelerin ortasına iner, altındaki nesneye şimşek düşer. */}
       {(orbs || []).map((orb) => (
-        <span
-          key={`${orb.reel}-${orb.row}-${orb.value}`}
-          className="dede-orb-slot"
-          style={{ left: `${((orb.reel + 0.5) / 6) * 100}%`, top: `${((orb.row + 0.5) / 5) * 100}%` }}
-        >
-          <DedeOrb value={orb.value} />
-        </span>
+        <React.Fragment key={`${orb.reel}-${orb.row}-${orb.value}`}>
+          <span
+            className="dede-strike"
+            style={{
+              left: `${(orb.reel / 6) * 100}%`,
+              top: `${(orb.row / 5) * 100}%`,
+              width: `${100 / 6}%`,
+              height: `${100 / 5}%`,
+            }}
+          >
+            <DedeStrike />
+          </span>
+          <span
+            className="dede-orb-slot"
+            style={{ left: `${((orb.reel + 0.5) / 6) * 100}%`, top: `${((orb.row + 0.5) / 5) * 100}%` }}
+          >
+            <DedeOrb value={orb.value} />
+          </span>
+        </React.Fragment>
       ))}
 
 
