@@ -17,10 +17,10 @@ export const FREE_SPINS = 3;
 // Sandık: jackpot barında birikir; bardaki her sandık bahsin bu katı kadar değer taşır.
 export const CHEST_MAX = 10;
 export const JACKPOT_PER_CHEST = 10;
-// Kazanç seyrek gelsin: küme 10'da başlar (sunucudaki eşikle aynı).
-export const CLUSTER_MIN = 10;
+// Kazanç seyrek gelsin: küme 9'da başlar (sunucudaki eşikle aynı).
+export const CLUSTER_MIN = 9;
 
-// pays: 8-9, 10-11 ve 12+ aynı meyve için bahis katı.
+// pays: 9-11, 12-14 ve 15+ aynı meyve için bahis katı.
 export const ELIMIN_SYMBOLS = {
   lollipop: { name: 'Lolipop', art: FRUIT_ART.lollipop, pays: [144, 450, 1440] },
   plum: { name: 'Erik', art: FRUIT_ART.plum, pays: [90, 270, 900] },

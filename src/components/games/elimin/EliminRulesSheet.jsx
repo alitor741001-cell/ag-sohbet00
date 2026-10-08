@@ -17,9 +17,9 @@ import {
 
 // Ödeme sütun başlıkları: küme büyüdükçe bahis katı artar.
 const HEADINGS = [
-  `${CLUSTER_MIN}-${CLUSTER_MIN + 1}`,
-  `${CLUSTER_MIN + 2}-${CLUSTER_MIN + 4}`,
-  `${CLUSTER_MIN + 5}+`,
+  `${CLUSTER_MIN}-${CLUSTER_MIN + 2}`,
+  `${CLUSTER_MIN + 3}-${CLUSTER_MIN + 5}`,
+  `${CLUSTER_MIN + 6}+`,
 ];
 
 /** Nasıl oynanır: küme kuralı, altın muz bonusu ve ödeme tablosu. */
