@@ -4,7 +4,7 @@ import { Image } from '@/components/ui/image';
 import { useSize } from '@/hooks/use-size';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { SLOT_ART } from './slotAssets';
-import { ART_HEIGHT, ART_WIDTH, LOGO_TOP, SLOT_LAYOUT } from './slot/slotLayout';
+import { ART_HEIGHT, ART_VIEW_HEIGHT, ART_WIDTH, LOGO_TOP } from './slot/slotLayout';
 import useSlotGame from './slot/useSlotGame';
 import SlotReels from './slot/SlotReels';
 import SlotTitle from './slot/SlotTitle';
@@ -13,12 +13,11 @@ import SlotReadout from './slot/SlotReadout';
 import SlotWinOverlay from './slot/SlotWinOverlay';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
 import WinnerTicker, { TICKER_ROW_HEIGHT } from './slot/WinnerTicker';
-import SlotStopButton from './slot/SlotStopButton';
 import SlotPoolLabels from './slot/SlotPoolLabels';
-import SlotFieldLabels from './slot/SlotFieldLabels';
 import SlotProgressCover from './slot/SlotProgressCover';
 import SlotTierAlert from './slot/SlotTierAlert';
 import FreeSpinBadge from './slot/FreeSpinBadge';
+import SlotControlDeck from './slot/SlotControlDeck';
 import { tierOfBet } from './slot/slotConfig';
 
 // Görsel alanı doldururken en fazla bu oranda kırpılır; panelde siyah boşluk kalmaz.
@@ -38,9 +37,9 @@ export default function SlotGame({ onExit, onBack, roomId }) {
   const [coinOpen, setCoinOpen] = useState(false);
   const [flash, setFlash] = useState(0);
   const [prize, setPrize] = useState(null);
-  const frameRef = useRef(null);
+  const areaRef = useRef(null);
   const topRef = useRef(null);
-  const size = useSize(frameRef);
+  const size = useSize(areaRef);
   // Çentik/güvenli alan yüksekliği: şerit görselin üstündeki yazıyı kapatmasın.
   const [safeTop, setSafeTop] = useState(0);
 
@@ -64,23 +63,22 @@ export default function SlotGame({ onExit, onBack, roomId }) {
     return undefined;
   }, [game.spins]);
 
-  // Panel boşluğa siyah bırakmaz: görsel alanı doldurur, en fazla %6 kırpılır.
-  const panelWidth = size?.width || 0;
-  const panelHeight = size?.height || 0;
-  const fit = Math.min(panelWidth / ART_WIDTH, panelHeight / ART_HEIGHT);
-  const cover = Math.max(panelWidth / ART_WIDTH, panelHeight / ART_HEIGHT);
+  // Görsel, kendi alt kontrol alanının üstünde biter: oyun ekranı bu alanı doldurur.
+  const areaWidth = size?.width || 0;
+  const areaHeight = size?.height || 0;
+  const fit = Math.min(areaWidth / ART_WIDTH, areaHeight / ART_VIEW_HEIGHT);
+  const cover = Math.max(areaWidth / ART_WIDTH, areaHeight / ART_VIEW_HEIGHT);
   // Üstte kazanan şeridine ve çentiğe yer ayrılır: şerit görselin üstündeki yazıyı kapatmaz.
-  const reserve = Math.max(0, (panelHeight || 0) - MIN_TICKER_SPACE - safeTop) / ((1 - LOGO_TOP) * ART_HEIGHT);
+  const reserve = Math.max(0, areaHeight - MIN_TICKER_SPACE - safeTop) / (ART_VIEW_HEIGHT - LOGO_TOP * ART_HEIGHT);
   const scale = Math.min(cover || 0, (fit || 0) * MAX_CROP, reserve || 0);
   const width = ART_WIDTH * scale;
   const height = ART_HEIGHT * scale;
-  // Görselin üst kenarı: görselin içindeki yazılar buradan ölçülür.
-  const artTop = Math.max(0, (panelHeight || 0) - height);
+  // Görselin görünen yüksekliği: alt kontrol alanı bu yüksekliğin dışında kalır.
+  const viewHeight = ART_VIEW_HEIGHT * scale;
+  const artTop = Math.max(0, areaHeight - viewHeight);
   // Şerit, başlığın hemen üstündeki altın çizgiye kadar iner.
   const goldLine = artTop + LOGO_TOP * height;
   const tickerHeight = Math.max(MIN_TICKER_SPACE, Math.round(goldLine - safeTop));
-  // Şeridin bittiği yer: altındaki rozet bu altın çizginin altına hizalanır.
-  const tickerBottom = safeTop + tickerHeight;
   // Yazının altındaki boş şerit: FREE rozeti ve kademe uyarısı buraya oturur.
   const badgeTop = artTop + Math.round(height * 0.105);
   const alertTop = badgeTop + (game.freeSpins > 0 ? 36 : 0);
@@ -89,117 +87,64 @@ export default function SlotGame({ onExit, onBack, roomId }) {
   const tier = tierOfBet(game.bet, game.lines);
 
   return (
-    <div ref={frameRef} className="relative flex h-full min-h-0 w-full flex-col overflow-hidden bg-slot">
+    <div className="relative flex h-full min-h-0 w-full flex-col overflow-hidden bg-slot">
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
         <Image src={SLOT_ART.shell} alt="" className="h-full w-full scale-125 blur-2xl" fittingType="fill" quality={25} />
         <div className="absolute inset-0 bg-slot/65" />
       </div>
 
-      {/* Görsel alta yaslanır: alt tarafta boşluk ve siyahlık kalmaz. */}
-      <div className="relative flex min-h-0 flex-1 items-end justify-center">
+      {/* Oyun ekranı: görselin alt kontrol alanı kırpılır, kalan kısım alta yaslanır. */}
+      <div ref={areaRef} className="relative flex min-h-0 flex-1 items-end justify-center">
         {width > 0 && (
-          <div className="relative" style={{ width, height }}>
-            <Image
-              src={SLOT_ART.shell}
-              alt="slot"
-              className="absolute inset-0 h-full w-full"
-              fittingType="fill"
-              quality={92}
-            />
+          <div className="relative overflow-hidden" style={{ width, height: viewHeight }}>
+            <div className="absolute inset-x-0 top-0" style={{ height }}>
+              <Image
+                src={SLOT_ART.shell}
+                alt="slot"
+                className="absolute inset-0 h-full w-full"
+                fittingType="fill"
+                quality={92}
+              />
 
-            {/* Görselde basılı oyun adı kapatılır, yerine AG yazılır. */}
-            <SlotTitle scale={scale} />
+              {/* Görselde basılı oyun adı kapatılır, yerine AG yazılır. */}
+              <SlotTitle scale={scale} />
 
-            {/* Tur sırasında her makaranın sembolleri değişerek aşağı doğru kayar. */}
-            <SlotReels spinning={game.spinning} stopping={game.stopping} slow={game.slow} grid={game.grid} />
+              {/* Tur sırasında her makaranın sembolleri değişerek aşağı doğru kayar. */}
+              <SlotReels spinning={game.spinning} stopping={game.stopping} slow={game.slow} grid={game.grid} />
 
-            {/* Kazanan semboller ve aralarından geçen kazanç çizgileri — yeni tur başlayana kadar ekranda kalır. */}
-            {!game.spinning && <SlotWinLines wins={game.wins} />}
+              {/* Kazanan semboller ve aralarından geçen kazanç çizgileri — yeni tur başlayana kadar ekranda kalır. */}
+              {!game.spinning && <SlotWinLines wins={game.wins} />}
 
-            {/* Görselin kendi rakam alanları: bakiye, WIN, BET, LINES, TOTAL BET ve üst ödüller */}
-            <SlotReadout coins={game.coins} win={game.win} bet={game.bet} lines={game.lines} pools={game.pools} scale={scale} />
+              {/* Görselin kendi ödül havuzu alanları: kaybedilenler bu havuzlarda birikir. */}
+              <SlotReadout pools={game.pools} scale={scale} />
 
-            {/* Görselde basılı alt etiketler gizlenir, yerine canlı değerlerin adları yazılır. */}
-            <SlotFieldLabels scale={scale} />
+              {/* Görselde yazan havuz adlarının üzerine yeni adlar yazılır. */}
+              <SlotPoolLabels scale={scale} />
 
-            {/* Görselde yazan havuz adlarının üzerine yeni adlar yazılır. */}
-            <SlotPoolLabels scale={scale} />
+              {/* Görseldeki statik "2/20" yazısı kapatılır: ilerleme çubuğu temiz kalır. */}
+              <SlotProgressCover />
 
-            {/* Görseldeki statik "2/20" yazısı kapatılır: ilerleme çubuğu temiz kalır. */}
-            <SlotProgressCover />
+              {game.status === 'loading' && (
+                <p className="absolute inset-x-0 top-[62%] -translate-y-1/2 text-center text-xs font-bold text-white/80">
+                  Oyun yükleniyor...
+                </p>
+              )}
 
-            {/* Görselin kendi butonları — görünmez dokunma alanları */}
-            <button
-              type="button"
-              onClick={game.spinning ? game.stop : game.spin}
-              disabled={!ready}
-              aria-label={game.spinning ? 'Makaraları durdur' : 'Turu başlat'}
-              className="absolute flex items-center justify-center active:brightness-125"
-              style={SLOT_LAYOUT.spin}
-            >
-              {/* Durdurma, SPIN düğmesinin tam üstüne gelir: yalnızca rengi değişir, yana taşmaz. */}
-              {game.spinning && <SlotStopButton />}
-            </button>
-            <button
-              type="button"
-              onClick={game.toggleAuto}
-              disabled={!ready}
-              aria-label="Otomatik tur"
-              className={`absolute rounded-2xl ${game.auto ? 'ring-2 ring-slot-green' : ''}`}
-              style={SLOT_LAYOUT.auto}
-            />
-            <button
-              type="button"
-              onClick={game.maxBet}
-              disabled={!ready}
-              aria-label="Maksimum bahis"
-              className="absolute rounded-xl active:brightness-125"
-              style={SLOT_LAYOUT.max}
-            />
-            <button
-              type="button"
-              onClick={() => setCoinOpen(true)}
-              aria-label="Coin yükle"
-              className="absolute rounded-full active:brightness-125"
-              style={SLOT_LAYOUT.balance}
-            />
-            <button
-              type="button"
-              onClick={() => game.changeBet(-1)}
-              disabled={game.spinning}
-              aria-label="Bahsi azalt"
-              className="absolute rounded-lg active:brightness-125"
-              style={SLOT_LAYOUT.betMinus}
-            />
-            <button
-              type="button"
-              onClick={() => game.changeBet(1)}
-              disabled={game.spinning}
-              aria-label="Bahsi artır"
-              className="absolute rounded-lg active:brightness-125"
-              style={SLOT_LAYOUT.betPlus}
-            />
+              {flash > 0 && !prize && (
+                <p
+                  key={flash}
+                  className="game-win-float pointer-events-none absolute left-1/2 top-[54%] z-10 rounded-full border border-slot-gold/60 bg-black/70 px-3 py-1 font-mono text-sm font-black text-slot-gold"
+                >
+                  WIN {format(flash)}
+                </p>
+              )}
 
-            {game.status === 'loading' && (
-              <p className="absolute inset-x-0 top-[62%] -translate-y-1/2 text-center text-xs font-bold text-white/80">
-                Oyun yükleniyor...
-              </p>
-            )}
-
-            {flash > 0 && !prize && (
-              <p
-                key={flash}
-                className="game-win-float pointer-events-none absolute left-1/2 top-[54%] z-10 rounded-full border border-slot-gold/60 bg-black/70 px-3 py-1 font-mono text-sm font-black text-slot-gold"
-              >
-                WIN {format(flash)}
-              </p>
-            )}
-
-            {game.message && !coinOpen && !prize && (
-              <p className="absolute left-1/2 top-[74%] z-10 w-max max-w-[90%] -translate-x-1/2 rounded-full bg-black/70 px-3 py-1.5 text-center text-[11px] font-bold text-slot-gold">
-                {game.message}
-              </p>
-            )}
+              {game.message && !coinOpen && !prize && (
+                <p className="absolute left-1/2 top-[74%] z-10 w-max max-w-[90%] -translate-x-1/2 rounded-full bg-black/70 px-3 py-1.5 text-center text-[11px] font-bold text-slot-gold">
+                  {game.message}
+                </p>
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -228,6 +173,23 @@ export default function SlotGame({ onExit, onBack, roomId }) {
       <FreeSpinBadge count={game.freeSpins} top={badgeTop} />
 
       <SlotTierAlert tier={tier} top={alertTop} />
+
+      {/* Alt kontrol paneli: görselin kendi kontrol alanının yerini alır. */}
+      <SlotControlDeck
+        coins={game.coins}
+        bet={game.bet}
+        lines={game.lines}
+        win={game.win}
+        auto={game.auto}
+        spinning={game.spinning}
+        ready={ready}
+        onStep={game.changeBet}
+        onMax={game.maxBet}
+        onAuto={game.toggleAuto}
+        onSpin={game.spin}
+        onStop={game.stop}
+        onCoins={() => setCoinOpen(true)}
+      />
 
       <SlotWinOverlay
         open={!!prize}
