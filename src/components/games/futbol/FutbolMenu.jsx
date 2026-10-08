@@ -1,8 +1,11 @@
 import React from 'react';
+import HelpSymbolGrid from '@/components/games/help/HelpSymbolGrid';
+import { helpFor } from '@/components/games/help/gameHelpContent';
 
-/** Menü: oyunun kuralları, ses düğmesi ve coin yükleme. */
+/** Menü: oyunun kuralları, takım kartları, ses düğmesi ve coin yükleme. */
 export default function FutbolMenu({ open, sound, onSound, onCoins, onClose }) {
   if (!open) return null;
+  const help = helpFor('futbol');
 
   return (
     <div className="fut-sheet">
@@ -15,6 +18,14 @@ export default function FutbolMenu({ open, sound, onSound, onCoins, onClose }) {
           <li>Kazanan karta bahis koyduysan ödemen <b>bahis x çarpan</b> olarak döner.</li>
           <li>Kazanan her turda sekiz takım arasından çekilir.</li>
         </ol>
+
+        {help?.legend && (
+          <>
+            <p className="gh-section">TAKIM KARTLARI VE ÇARPANLAR</p>
+            <HelpSymbolGrid legend={help.legend} />
+          </>
+        )}
+
         <button type="button" onClick={onSound} className="fut-sheet-btn">
           {sound ? 'SESİ KAPAT' : 'SESİ AÇ'}
         </button>

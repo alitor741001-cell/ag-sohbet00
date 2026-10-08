@@ -115,3 +115,123 @@
 @media (prefers-reduced-motion: reduce) {
   .gh-body { animation: none; }
 }
+
+/* Taş listesi: solda oyunun kendi görseli, sağda adı · bahis katı · ne yaptığı. */
+.gh-symbols {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.gh-symbol {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid rgba(232, 185, 90, 0.22);
+  border-radius: 0.7rem;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 0.35rem 0.45rem;
+}
+
+.gh-sym-tile {
+  position: relative;
+  display: flex;
+  height: 2.6rem;
+  width: 2.6rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 0.55rem;
+  border: 1px solid rgba(232, 185, 90, 0.28);
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.gh-sym-tile[data-tone="sky"] { border-color: rgba(56, 189, 248, 0.6); background: rgba(2, 132, 199, 0.35); }
+.gh-sym-tile[data-tone="green"] { border-color: rgba(74, 222, 128, 0.6); background: rgba(21, 128, 61, 0.4); }
+.gh-sym-tile[data-tone="yellow"] { border-color: rgba(250, 204, 21, 0.65); background: rgba(161, 98, 7, 0.42); }
+.gh-sym-tile[data-tone="red"] { border-color: rgba(248, 113, 113, 0.6); background: rgba(153, 27, 27, 0.45); }
+.gh-sym-tile[data-tone="black"] { border-color: rgba(255, 255, 255, 0.35); background: rgba(0, 0, 0, 0.85); }
+.gh-sym-tile[data-tone="gold"] { border-color: rgba(255, 214, 102, 0.7); background: rgba(120, 80, 10, 0.5); }
+
+.gh-sym-art { width: 100%; height: 100%; }
+
+.gh-sym-badge {
+  padding: 0 0.15rem;
+  font-size: 0.625rem;
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: 0.02em;
+  text-align: center;
+  color: #fff;
+}
+
+.gh-sym-body { min-width: 0; flex: 1; }
+
+.gh-sym-head {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.gh-sym-name {
+  font-size: 0.6875rem;
+  font-weight: 900;
+  color: #ffe9b8;
+}
+
+.gh-sym-tag {
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 214, 102, 0.55);
+  background: rgba(232, 185, 90, 0.16);
+  padding: 0 0.3rem;
+  font-size: 0.5rem;
+  font-weight: 900;
+  font-style: normal;
+  letter-spacing: 0.08em;
+  color: #ffd76a;
+}
+
+.gh-sym-desc {
+  margin-top: 0.1rem;
+  font-size: 0.5625rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.gh-pays {
+  margin-top: 0.25rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.gh-pay {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.2rem;
+  border-radius: 0.4rem;
+  border: 1px solid rgba(232, 185, 90, 0.3);
+  background: rgba(0, 0, 0, 0.45);
+  padding: 0.05rem 0.3rem;
+  font-size: 0.5625rem;
+  font-weight: 900;
+  color: #fff;
+}
+
+.gh-pay em {
+  font-size: 0.5rem;
+  font-style: normal;
+  font-weight: 800;
+  color: rgba(255, 226, 160, 0.75);
+}
+
+.gh-legend-note {
+  margin-top: 0.45rem;
+  font-size: 0.5625rem;
+  font-weight: 700;
+  line-height: 1.4;
+  color: rgba(255, 226, 160, 0.8);
+}

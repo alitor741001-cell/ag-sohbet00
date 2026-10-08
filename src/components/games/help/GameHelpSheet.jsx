@@ -2,6 +2,7 @@ import React from 'react';
 import { X } from 'lucide-react';
 import useBackDismiss from '@/hooks/useBackDismiss';
 import { helpFor } from './gameHelpContent';
+import HelpSymbolGrid from './HelpSymbolGrid';
 import '@/styles/gameHelp.css';
 
 /** Nasıl oynanır: her oyunun kurallarını ve kademelerini gösteren ortak alt panel. */
@@ -26,6 +27,13 @@ export default function GameHelpSheet({ game, open, onClose }) {
 
         <p className="gh-section">NASIL OYNANIR</p>
         <ol className="gh-list">{help.rules.map((line) => <li key={line}>{line}</li>)}</ol>
+
+        {help.legend && (
+          <>
+            <p className="gh-section">TAŞLAR VE NE YAPAR</p>
+            <HelpSymbolGrid legend={help.legend} />
+          </>
+        )}
 
         {help.facts?.length > 0 && (
           <>
