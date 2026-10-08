@@ -10,51 +10,39 @@ const MAX_ATTEMPTS = 3;
 const RETRY_MS = 800;
 const DONE_MS = 450;
 
-// Her adım yalnızca kamera görüntüsünde istenen hareket doğrulanırsa ilerler.
-// Ağız aç/kapa: dudaklar açıkken ve kapalıyken birer kare alınır.
-const MOUTH_STEPS = [
-  { key: 'mouth_open', label: 'Ağız aç', hint: 'Ağzınızı açın ve kısa süre açık tutun', ms: 3000, at: 2100 },
-  { key: 'mouth_closed', label: 'Ağız kapa', hint: 'Ağzınızı kapatın', ms: 2200, at: 1000 },
-];
-// İlk adım her zaman düz bakış: doğrulama düz duruşla başlar.
+// Tek adım: kullanıcı kamera görüntüsünde düz bakmıyorsa doğrulama ilerlemez.
 const FRONT_STEP = { key: 'front', label: 'Düz', hint: 'Kameraya düz bakın', ms: 3000, at: 1800 };
-// Sıra: düz bakış ve ağız aç/kapa. Bu adımlardan biri yapılmazsa doğrulama tamamlanmaz.
-const VERIFY_STEPS = [FRONT_STEP, ...MOUTH_STEPS];
+const VERIFY_STEPS = [FRONT_STEP];
 const ENROLL_STEPS = VERIFY_STEPS;
-// Çemberin adımlarla dönen renkleri: kırmızı, sarı, yeşil, pembe.
+// Çemberin adım renkleri: kırmızı, sarı, yeşil, pembe.
 const RING_COLORS = ['#ef4444', '#eab308', '#22c55e', '#ec4899'];
-const STEP_NAMES = {
-  front: 'düz bakma',
-  mouth_open: 'ağzınızı açma',
-  mouth_closed: 'ağzınızı kapatma',
-};
 
 const COPY = {
   enroll: {
     title: 'Yüz kaydı oluştur',
-    hint: 'Hesabınıza bir kez yüz kaydı alınır. Kameraya düz bakın ve ağzınızı açıp kapatın.',
+    hint: 'Hesabınıza bir kez yüz kaydı alınır. Kameraya düz bakın.',
   },
   device: {
     title: 'Yüz doğrulaması',
-    hint: 'Hesabınıza bu cihazdan ilk kez giriş yapılıyor. Kameraya düz bakın ve ağzınızı açıp kapatın.',
+    hint: 'Hesabınızı korumak için yüzünüz bir kez alınır. Kameraya düz bakın.',
   },
   balance: {
     title: 'Bakiye doğrulaması',
-    hint: 'Elmas ve bakiye bölümü yüz doğrulamasıyla korunur. Kameraya düz bakın ve ağzınızı açıp kapatın.',
+    hint: 'Elmas ve bakiye bölümü yüz doğrulamasıyla korunur. Kameraya düz bakın.',
   },
 };
 
 const PHASE_TEXT = {
-  verifying: 'Hareketleriniz ve yüzünüz karşılaştırılıyor...',
+  verifying: 'Yüzünüz karşılaştırılıyor...',
   ok: 'Doğrulandı',
   fail: 'Tekrar deneniyor...',
 };
 
 /**
  * Tam ekran yüz kilidi: kamera açıkken iPhone Face ID gibi halka renk renk
- * dolar. Kullanıcı önce kameraya düz bakar, sonra ağzını açıp kapatır; her
- * adımın sonunda fotoğraf alınır. Sunucu bu adımları referans yüzle karşılaştırır.
- * Adımlardan biri yapılmazsa halka kırmızıya döner ve doğrulama sayılmaz.
+ * dolar. Kullanıcı yalnızca kameraya düz bakar; kare alınır ve sunucu yüzü
+ * referans yüzle karşılaştırır. Doğrulama bir kez yapılır ve hesapta kalıcı
+ * olarak saklanır; bir daha sorulmaz.
  */
 export default function FaceLockOverlay({
   open = true,
@@ -186,14 +174,6 @@ export default function FaceLockOverlay({
       // Yarım yüz ya da yüz yerine başka bir nesne: halka kırmızıya döner, deneme sayılmaz.
       if (result?.reason === 'no_face') {
         scheduleRetry('Yüzünüz tam görünmüyor. Yüzünüzün tamamı çemberin içinde olacak şekilde tekrar deneyin.');
-        return;
-      }
-      // Kafa hareketi ya da göz kırpma algılanmadı: hangi adımların eksik olduğu söylenir.
-      if (result?.reason === 'no_pose') {
-        const missing = (result.missing || []).map((key) => STEP_NAMES[key]).filter(Boolean);
-        scheduleRetry(missing.length
-          ? `Algılanmayan adımlar: ${missing.join(', ')}. Yönergeleri belirgin şekilde tekrar uygulayın.`
-          : 'Hareketleriniz algılanmadı. Yönergeleri belirgin şekilde tekrar uygulayın.');
         return;
       }
       attemptsRef.current += 1;
