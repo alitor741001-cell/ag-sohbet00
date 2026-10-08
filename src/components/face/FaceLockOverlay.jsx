@@ -7,8 +7,8 @@ import useLiveFaceSteps from '@/components/face/useLiveFaceSteps';
 
 // Üst üste başarısız denemede cihaz erişimi kapatılır.
 const MAX_ATTEMPTS = 3;
-const RETRY_MS = 1600;
-const DONE_MS = 750;
+const RETRY_MS = 800;
+const DONE_MS = 450;
 
 // Her adım yalnızca kamera görüntüsünde istenen hareket doğrulanırsa ilerler.
 const HEAD_STEPS = [
