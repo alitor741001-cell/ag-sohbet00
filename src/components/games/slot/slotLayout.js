@@ -94,6 +94,15 @@ export const SLOT_FIELD_SKINS = {
   jackpots: ['#2b0117', '#180906', '#011345', '#5f0323', '#022802'],
 };
 
+// Görselde basılı alt etiketler (LINES / TOTAL BET / WIN / BET) tamamen kapatılır ve
+// yerine canlı değerlerin kendi adları yazılır. Kutu, değer alanıyla bitişik durur.
+export const SLOT_FIELD_LABELS = [
+  { text: 'HAT', box: frame(92, 1242, 126, 26), skin: SLOT_FIELD_SKINS.lines },
+  { text: 'TOPLAM BAHİS', box: frame(296, 1242, 144, 26), skin: SLOT_FIELD_SKINS.totalBet },
+  { text: 'KAZANÇ', box: frame(585, 1242, 150, 26), skin: SLOT_FIELD_SKINS.win },
+  { text: 'BAHİS', box: frame(330, 1344, 104, 26), skin: SLOT_FIELD_SKINS.bet },
+];
+
 // Görselde yazan havuz adlarının üzerine yazılan yeni adlar.
 export const SLOT_POOL_LABELS = [
   { text: 'X MEGA', tone: 'text-slot-pink', box: poolLabel(24, 358, 158) },
