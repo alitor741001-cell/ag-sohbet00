@@ -76,9 +76,9 @@ export default function EliminSlotGame({ onExit, onBack }) {
         onExit={onExit}
       />
 
-      <div className="el-body">
-        {/* Marka paneli: oyunun kendi logosu ve adı. */}
-        <section className="el-hero">
+      {/* Tek şerit: solda marka, ortada jackpot, sağda sandık — oyun nesnelerinin üstünde durur. */}
+      <section className="el-toprow">
+        <div className="el-brand">
           <Image
             src={ELIMIN_EMBLEM}
             alt=""
@@ -89,11 +89,11 @@ export default function EliminSlotGame({ onExit, onBack }) {
             originHeight={ELIMIN_EMBLEM_SIZE}
             quality={86}
           />
-          <div className="el-hero-text">
+          <div className="el-brand-text">
             <p className="el-wordmark">ELİMİNSLOT</p>
             <p className="el-hero-tag">MEYVE SLOTU · {LINES} SATIR</p>
           </div>
-        </section>
+        </div>
 
         <EliminJackpotBar
           jackpot={game.jackpot}
@@ -102,7 +102,9 @@ export default function EliminSlotGame({ onExit, onBack }) {
           busy={game.spinning}
           onCollect={handleCollect}
         />
+      </section>
 
+      <div className="el-body">
         {/* Izgara ekranın kalan tüm alanını kaplar; kartlar kendi karesinde durur. */}
         <div className="el-board-wrap">
           <div className="el-frame">

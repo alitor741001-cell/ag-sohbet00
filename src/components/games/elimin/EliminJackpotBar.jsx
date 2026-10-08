@@ -15,7 +15,7 @@ function Chest() {
 }
 
 /**
- * Jackpot şeridi: solda jackpot yazısı ve tutar, sağda sandık kutusu ve oyuncu rozeti.
+ * Üst şeridin orta-sağ bloğu: ortada jackpot yazısı ve tutar, sağda sandık kutusu ve oyuncu rozeti.
  * Sandık kutusu bar dolduğunda basılabilir: biriken tutar bakiyeye eklenir, bar sıfırlanır.
  */
 export default function EliminJackpotBar({ jackpot, chests = 0, bet, busy, onCollect }) {
@@ -30,7 +30,6 @@ export default function EliminJackpotBar({ jackpot, chests = 0, bet, busy, onCol
       <div className="el-jackpot-main">
         <p className="el-jackpot-label">JACKPOT</p>
         <p className="el-jackpot-value">{formatCoins(jackpot)}</p>
-        <p className="el-jackpot-hint">{CHEST_MAX} SANDIK DOLUNCA SANDIĞA BAS</p>
       </div>
 
       <div className="el-jackpot-side">
