@@ -95,6 +95,8 @@ export default function useSlotGame({ roomId } = {}) {
       return;
     }
     busyRef.current = true;
+    // Bahis tur başlarken bakiyeden düşülür: coin gerçek zamanlı azalır.
+    if (cost > 0 && !noLimit) setCoins((value) => Math.max(0, value - cost));
     roundRef.current += 1;
     // Birkaç turdan sonra arada sırada makaralar yavaş döner.
     setSlow(roundRef.current > SLOW_AFTER_SPINS && Math.random() < SLOW_CHANCE);
@@ -127,6 +129,8 @@ export default function useSlotGame({ roomId } = {}) {
       const raw = error?.response?.data?.error;
       setAuto(false);
       setAutoFree(false);
+      // Tur oynanmadıysa bahis bakiyeye geri döner.
+      if (cost > 0 && !noLimit) setCoins((value) => value + cost);
       setMessage(raw && !/rate limit/i.test(raw) ? raw : 'Çok hızlı oynuyorsun, birkaç saniye bekle.');
     } finally {
       stopRef.current = null;

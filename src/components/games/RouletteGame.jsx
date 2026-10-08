@@ -28,7 +28,7 @@ export default function RouletteGame({ onExit, onBack }) {
   const board = useRouletteBoard(game.round?.round_no ?? 0);
   // Üst metrikler: referans tasarımdaki siyah-altın kartlar.
   const stats = [
-    { key: 'coins', label: 'COIN BAKİYEM', value: formatCoins(game.coins), icon: Star },
+    { key: 'coins', label: 'COIN BAKİYEM', value: formatCoins(game.available), icon: Star },
     { key: 'stake', label: 'TOPLAM BAHİS', value: formatCoins(game.stake), icon: Clapperboard },
     { key: 'win', label: 'KAZANÇ', value: formatCoins(game.payout), icon: Crown, win: game.payout > 0 },
     { key: 'total', label: 'TOPLAM KAZANÇ', value: formatCoins(game.totalWon), icon: Coins },
@@ -105,7 +105,7 @@ export default function RouletteGame({ onExit, onBack }) {
       <footer className="relative z-10 flex shrink-0 justify-center px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-1">
         <div className="gctl-deck">
           <RouletteChipRow
-            coins={game.coins}
+            coins={game.available}
             chip={game.chip}
             stake={game.stake}
             canRepeat={!!game.lastBets}
@@ -126,7 +126,7 @@ export default function RouletteGame({ onExit, onBack }) {
       )}
 
       {/* Coin bakiyesine dokununca uygulamanın coin mağazası açılır. */}
-      <CoinPurchasePanel open={coinOpen} coins={game.coins} onBack={() => setCoinOpen(false)} />
+      <CoinPurchasePanel open={coinOpen} coins={game.available} onBack={() => setCoinOpen(false)} />
 
       <RouletteWinOverlay
         open={!!prize}

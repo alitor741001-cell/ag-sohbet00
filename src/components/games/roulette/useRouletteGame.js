@@ -175,6 +175,9 @@ export default function useRouletteGame() {
   const phase = phaseAt(round, serverNow);
   const betting = phase === 'betting';
   const stake = Object.values(bets).reduce((sum, amount) => sum + amount, 0);
+  // Masaya konan jeton anında bakiyeden düşmüş sayılır: coin gerçek zamanlı azalır.
+  // Tur sonuçlandığında sunucunun kesin bakiyesi ekrana yazılır.
+  const available = Math.max(0, coins - stake);
 
   // Jeton masaya konur: blok dokunuşu seçili kademe kadar artırır.
   const placeBet = useCallback((blockId) => {
@@ -251,6 +254,7 @@ export default function useRouletteGame() {
   return {
     status,
     coins,
+    available,
     totalWon,
     spins,
     chip,

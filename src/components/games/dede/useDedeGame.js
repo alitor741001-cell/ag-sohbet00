@@ -98,6 +98,8 @@ export default function useDedeGame() {
       return;
     }
     busyRef.current = true;
+    // Bahis tur başlarken bakiyeden düşülür: coin gerçek zamanlı azalır.
+    if (cost > 0) setCoins((value) => Math.max(0, value - cost));
     if (!inSession) sessionWinRef.current = 0;
     setRolling(true);
     setSpinning(true);
@@ -150,6 +152,8 @@ export default function useDedeGame() {
     } catch (error) {
       const raw = error?.response?.data?.error;
       setAuto(false);
+      // Tur oynanmadıysa bahis bakiyeye geri döner.
+      if (cost > 0) setCoins((value) => value + cost);
       setMessage(raw && !/rate limit/i.test(raw) ? raw : 'Çok hızlı oynuyorsun, birkaç saniye bekle.');
     } finally {
       stopRef.current = null;
