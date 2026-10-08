@@ -3,8 +3,9 @@ import { sekerliSound as gameSound } from '@/lib/sekerliAudio';
 import { needleAngle } from './futbolConfig';
 
 // İbre: ortadan hızlı döner, yavaşlar ve kazanan takımın hizasında durur.
-const MAX_SPIN_MS = 4600;
-const MIN_SPIN_MS = 1800;
+// Çekiliş süresi neyse ok da o kadar döner: süre bittiğinde kazananın üstünde durur.
+const MAX_SPIN_MS = 8000;
+const MIN_SPIN_MS = 900;
 // Durmadan önce atılan tam tur sayısı.
 const TURNS = 4;
 
@@ -30,7 +31,7 @@ export default function useNeedleSpin({ angle, active, remaining, sound }) {
     }
 
     const end = TURNS * 360 + needleAngle(angle);
-    const duration = Math.min(MAX_SPIN_MS, Math.max(MIN_SPIN_MS, (remainingRef.current || MAX_SPIN_MS) - 900));
+    const duration = Math.min(MAX_SPIN_MS, Math.max(MIN_SPIN_MS, remainingRef.current || MAX_SPIN_MS));
     const begin = performance.now();
     let frame = 0;
     let band = -1;
