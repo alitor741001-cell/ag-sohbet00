@@ -1,5 +1,6 @@
 import React from 'react';
 import { Image } from '@/components/ui/image';
+import useSlotEdgeCleanup from '@/components/games/slot/useSlotEdgeCleanup';
 import { SLOT_SYMBOL_ART, SLOT_SYMBOL_ART_SIZE } from '@/components/games/slotAssets';
 
 /**
@@ -7,7 +8,7 @@ import { SLOT_SYMBOL_ART, SLOT_SYMBOL_ART_SIZE } from '@/components/games/slotAs
  * Kartlar Şekerli Meyve kartlarıyla aynı dilde: parlak zemin, altın çift çerçeve.
  */
 export default function SlotSymbol({ symbol, top, height }) {
-  const art = SLOT_SYMBOL_ART[symbol] || SLOT_SYMBOL_ART.ten;
+  const art = useSlotEdgeCleanup(SLOT_SYMBOL_ART[symbol] || SLOT_SYMBOL_ART.ten);
   return (
     <span className="absolute left-0 flex w-full items-center justify-center p-[5%]" style={{ top, height }}>
       <Image

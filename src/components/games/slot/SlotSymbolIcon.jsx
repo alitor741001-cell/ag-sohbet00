@@ -1,10 +1,11 @@
 import React from 'react';
 import { Image } from '@/components/ui/image';
+import useSlotEdgeCleanup from '@/components/games/slot/useSlotEdgeCleanup';
 import { SLOT_SYMBOL_ART, SLOT_SYMBOL_ART_SIZE } from '@/components/games/slotAssets';
 
 /** Küçük sembol ikonu: kazanan sembol listelerinde kart görseli kullanılır. */
 export default function SlotSymbolIcon({ symbol, size = 18 }) {
-  const art = SLOT_SYMBOL_ART[symbol] || SLOT_SYMBOL_ART.ten;
+  const art = useSlotEdgeCleanup(SLOT_SYMBOL_ART[symbol] || SLOT_SYMBOL_ART.ten);
   return (
     <Image
       src={art}
