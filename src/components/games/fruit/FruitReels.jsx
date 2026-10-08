@@ -25,9 +25,12 @@ export default function FruitReels({ spinning, stopping, grid, wins }) {
   const strips = useMemo(() => visible.map((column) => [...column, ...column]), [visible]);
 
   return (
-    <div className="grid aspect-[6/5] w-full grid-cols-6 grid-rows-5 gap-[3px] sm:gap-1.5">
+    <div className="flex h-full w-full items-stretch gap-[3px] sm:gap-1.5">
       {visible.map((column, reel) => (
-        <div key={reel} className="fruit-column rounded-xl bg-white/30 p-[2px] sm:rounded-2xl sm:p-1">
+        <div
+          key={reel}
+          className="fruit-column min-w-0 flex-1 rounded-xl bg-white/30 p-[2px] sm:rounded-2xl sm:p-1"
+        >
           {moving ? (
             <div className="fruit-strip" style={{ animationDuration: `${420 + reel * 60}ms` }}>
               {strips[reel].map((id, index) => (

@@ -57,9 +57,12 @@ export default function FruitGame({ onExit, onBack }) {
         </button>
       </header>
 
-      <main className="relative z-10 flex min-h-0 flex-1 flex-col items-center gap-2 overflow-y-auto px-3 py-2">
-        <div className="fruit-frame w-full max-w-[26rem] rounded-[26px] bg-white/15 p-2 sm:p-3">
-          <FruitReels spinning={game.spinning} stopping={game.stopping} grid={game.grid} wins={game.wins} />
+      <main className="relative z-10 flex min-h-0 flex-1 flex-col items-center gap-2 px-2 py-2">
+        {/* Izgara ekranın kalan tüm alanını kaplar: meyveler olabildiğince büyük durur. */}
+        <div className="flex min-h-0 w-full flex-1 items-center justify-center">
+          <div className="fruit-frame flex aspect-[6/5] max-h-full w-full max-w-[34rem] rounded-[26px] bg-white/15 p-2 sm:p-3">
+            <FruitReels spinning={game.spinning} stopping={game.stopping} grid={game.grid} wins={game.wins} />
+          </div>
         </div>
 
         {game.freeSpins > 0 && (
