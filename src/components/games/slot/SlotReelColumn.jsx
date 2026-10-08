@@ -18,7 +18,7 @@ export default function SlotReelColumn({ index, random, landing, stopping, slow,
     setFinish({ tiles, from: -(landing.length + 6 + position - start) / tiles.length * 100 });
   }, [stopping]);
   const tiles = finish?.tiles || loop;
-  return <span className="absolute top-0 h-full overflow-hidden" style={{ left: `${index * 20}%`, width: '20%' }}>
+  return <span className="slot-reel-strip absolute top-0 h-full overflow-hidden" style={{ left: `${index * 20}%`, width: '20%' }}>
     <span ref={stripRef} key={finish ? 'finish' : 'loop'}
       className={`absolute left-0 top-0 w-full ${finish ? 'slot-reel-settle' : 'slot-reel-loop'}`}
       style={{ height: `${tiles.length / rows * 100}%`, '--reel-from': `${finish?.from || 0}%`,
