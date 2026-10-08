@@ -135,6 +135,10 @@ export default function VoiceRoom() {
   // Hediye gönderim kuyruğu: istekler tek tek işlenir, kuyruk boşalınca tahta sunucudan eşitlenir.
   const giftQueueRef = useRef([]);
   const giftFlushingRef = useRef(false);
+  // Tamamlama (ağır işler) kuyruğu ve gönderim bitince yapılan tek seferlik eşitleme.
+  const giftFinalizeRef = useRef([]);
+  const giftFinalizeRunningRef = useRef(false);
+  const giftSyncTimerRef = useRef(0);
 
   const seats = useMemo(() => (Array.isArray(room?.seats) ? room.seats : []), [room?.seats]);
   const myInvite = useMemo(
@@ -843,6 +847,49 @@ export default function VoiceRoom() {
     setSelectedIds((prev) => (prev.includes(userId) ? prev.filter((value) => value !== userId) : [...prev, userId]));
   }, []);
 
+  // Tamamlama adımları tek sırada işlenir: art arda gönderimde aynı anda onlarca ağır istek
+  // (hediye kaydı, kota ve seviye senkronu) birikip gönderimi yavaşlatmaz.
+  const fireGiftFinalize = (job) => base44.functions.invoke('voice-room', {
+    room_id: id, action: 'gift-finalize', gift_id: job.giftId, message_ids: job.messageIds,
+  }).catch(() => {});
+
+  const runGiftFinalize = async () => {
+    if (giftFinalizeRunningRef.current) return;
+    giftFinalizeRunningRef.current = true;
+    try {
+      while (giftFinalizeRef.current.length) await fireGiftFinalize(giftFinalizeRef.current.shift());
+    } finally {
+      giftFinalizeRunningRef.current = false;
+    }
+  };
+
+  const queueGiftFinalize = (giftId, messageIds) => {
+    if (!giftId || !messageIds?.length) return;
+    giftFinalizeRef.current.push({ giftId, messageIds });
+    runGiftFinalize();
+  };
+
+  // Kuyruk boşaldıktan sonra kısa bir sessizlik beklenir: art arda gönderimde her dokunuş için
+  // ayrı tahta/bakiye eşitlemesi yapılmaz, gönderim bitince tek seferde yapılır.
+  const scheduleGiftSync = () => {
+    window.clearTimeout(giftSyncTimerRef.current);
+    giftSyncTimerRef.current = window.setTimeout(() => {
+      giftSyncTimerRef.current = 0;
+      if (giftQueueRef.current.length || giftFlushingRef.current) return;
+      syncRoom().catch(() => {});
+      refreshCoins();
+    }, 400);
+  };
+
+  // Sayfadan çıkılırken bekleyen tamamlamalar bırakılmaz: kalan istekler arka planda yollanır,
+  // alıcının elmas ve kota kaydı eksik kalmaz.
+  useEffect(() => () => {
+    const pending = giftFinalizeRef.current;
+    giftFinalizeRef.current = [];
+    pending.forEach((job) => fireGiftFinalize(job));
+    window.clearTimeout(giftSyncTimerRef.current);
+  }, []);
+
   // Tek gönderim: bakiye düşer, alıcı başına kayıt ve sohbet satırı oluşur.
   const sendGiftOnce = async (gift, ids, quantity = 1) => {
     // Sahne tek kez oynasın: hediye satırının canlı yayın kopyası bu gönderim için yok sayılır.
@@ -856,9 +903,7 @@ export default function VoiceRoom() {
     if (typeof data.coins === 'number' && !giftQueueRef.current.length) setCoins(data.coins);
     // Ağır işler cevabı beklemez: hediye kayıtları, seviye/kota senkronu ve büyük hediye
     // duyurusu hemen ardından arka planda tamamlanır.
-    base44.functions.invoke('voice-room', {
-      room_id: id, action: 'gift-finalize', gift_id: gift.id, message_ids: (data.messages || []).map((message) => message.id),
-    }).catch(() => {});
+    queueGiftFinalize(gift.id, (data.messages || []).map((message) => message.id));
     markGiftSeen((data.messages || []).map((message) => message.id));
     const recipientIds = (data.recipients || []).map((item) => item.user_id);
     // Gönderdiğim hediye kutu toplamına anında yansır, ardından sunucu toplamıyla doğrulanır.
@@ -945,9 +990,8 @@ export default function VoiceRoom() {
       giftFlushingRef.current = false;
     }
     // Kuyruk boşaldı: tahtanın kesin hali ve gerçek coin bakiyesi sunucudan okunur — ekranda
-    // gösterilen değer her zaman gerçek cüzdan değeridir.
-    await syncRoom().catch(() => {});
-    refreshCoins();
+    // gösterilen değer her zaman gerçek cüzdan değeridir. Art arda gönderimde tek seferde yapılır.
+    scheduleGiftSync();
     if (lastError) throw lastError;
   };
 
