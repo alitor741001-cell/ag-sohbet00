@@ -90,6 +90,7 @@ export default function FruitGame({ onExit, onBack }) {
               spinKey={game.spinKey}
               grid={game.grid}
               wins={game.wins}
+              explode={game.explode}
             />
           </div>
         </div>

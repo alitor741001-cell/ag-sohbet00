@@ -142,6 +142,7 @@ export default function EliminSlotGame({ onExit, onBack }) {
                 spinKey={game.spinKey}
                 grid={game.grid}
                 wins={game.wins}
+                explode={game.explode}
               />
               {/* Tur kazancı ızgaranın ortasında belirir. */}
               {flash > 0 && !game.spinning && !prize && <p key={flash} className="el-center-win">KAZANÇ {formatCoins(flash)}</p>}

@@ -1,3 +1,5 @@
+import { collapseColumns } from './tumble.ts';
+
 // Meyve şeker oyunu motoru: 6 sütun x 5 satır, "ekranın her yerinde öde" kuralı.
 // Aynı sembolden 8 ve üzeri gelince küme öder; komşuluk gerekmez.
 export const REELS = 6;
@@ -21,6 +23,9 @@ export const CLUSTER_MIN = 8;
 
 // Ödeme kademesi sınırları: küme büyüdükçe tablodaki bir üst sütun ödenir.
 export const CLUSTER_TIERS = [CLUSTER_MIN, CLUSTER_MIN + 2, CLUSTER_MIN + 4];
+
+// Bir turdaki en fazla tumbler adımı: patlayan kümelerin yerine yenileri düşer.
+export const DROP_MAX = 8;
 
 // Altın muz: 4 ve üzeri gelince hem bonus öder hem bedava tur verir.
 export const SCATTER_ID = 'banana';
@@ -54,17 +59,51 @@ function buildPool() {
 
 const POOL = buildPool();
 
+// Tek karo: makara torbasından gelir.
+export function spinCell() {
+  return POOL[Math.floor(Math.random() * POOL.length)];
+}
+
 // 6 sütun x 5 satır sonuç: grid[sütun][satır].
-export function spinFruit() {
+// `makeCell`: oyun kendi karo üreticisini geçebilir (elimin oyununun ek nesneleri).
+export function spinFruit(makeCell = spinCell) {
   const grid = [];
   for (let reel = 0; reel < REELS; reel += 1) {
     const column = [];
-    for (let row = 0; row < ROWS; row += 1) {
-      column.push(POOL[Math.floor(Math.random() * POOL.length)]);
-    }
+    for (let row = 0; row < ROWS; row += 1) column.push(makeCell());
     grid.push(column);
   }
   return grid;
+}
+
+/** Bir turun tamamı: ilk ızgara ve patlayan kümelerin yerine yenilerinin düştüğü adımlar.
+    Her adım ekranda ayrı oynanır; skatter ödemesi yalnızca ilk adımda verilir. */
+export function playFruit(bet, options = {}, makeCell = spinCell) {
+  let grid = spinFruit(makeCell);
+  const initial = grid.map((column) => [...column]);
+  const steps = [];
+  let total = 0;
+
+  for (let step = 0; step < DROP_MAX; step += 1) {
+    const result = evaluateFruit(grid, bet, options);
+    // Altın muz yerinde durur: skatter ödemesi tekrar etmez.
+    const wins = step === 0 ? result.wins : result.wins.filter((win) => !win.scatter);
+    if (!wins.length) break;
+    const amount = wins.reduce((sum, win) => sum + win.amount, 0);
+    steps.push({ grid: grid.map((column) => [...column]), wins, amount });
+    total += amount;
+
+    // Patlayan karolar: skatter yerinde kalır.
+    const removing = new Set<string>();
+    wins.forEach((win) => {
+      if (win.scatter) return;
+      win.cells.forEach((cell) => removing.add(`${cell.reel}-${cell.row}`));
+    });
+    if (!removing.size) break;
+    grid = collapseColumns(grid, removing, ROWS, makeCell);
+  }
+
+  return { steps, grid, initial, total };
 }
 
 function clusterTier(count, pays, tiers) {

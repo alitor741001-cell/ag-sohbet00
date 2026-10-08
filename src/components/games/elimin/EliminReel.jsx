@@ -8,7 +8,9 @@ import '@/styles/reelRoll.css';
  * Tek makara: tur boyunca kesintisiz döner, sonuç gelince tam sonucun üzerine iner.
  * Kare kartlar kendi hücresinde durur; üst üste binme olmaz.
  */
-export default function EliminReel({ reel, column, landing, spinning, stopping, winCells, spinKey }) {
+export default function EliminReel({
+  reel, column, landing, spinning, stopping, winCells, explodeCells, explode, drops, spinKey,
+}) {
   const roll = useReelRoll({ reel, spinKey, landing, rows: ROWS, symbols: SYMBOL_IDS });
   const visibleRows = String(ROWS);
   const moving = spinning && !stopping;
@@ -55,11 +57,14 @@ export default function EliminReel({ reel, column, landing, spinning, stopping, 
 
   return (
     <div className="el-reel">
-      {column.map((id, row) => (
-        <span key={row} className="el-cell">
-          <EliminSymbol id={id} win={winCells.has(`${reel}-${row}`)} />
-        </span>
-      ))}
+      {column.map((id, row) => {
+        const key = `${reel}-${row}`;
+        return (
+          <span key={row} className={`el-cell ${drops.has(key) ? 'el-drop' : ''}`}>
+            <EliminSymbol id={id} win={winCells.has(key)} explode={!!explode && explodeCells.has(key)} />
+          </span>
+        );
+      })}
     </div>
   );
 }

@@ -1,3 +1,5 @@
+import { collapseColumns } from './tumble.ts';
+
 // DEDE oyunu motoru: 6 sütun x 5 satır, "ekranın her yerinde öde" küme kuralı,
 // patlayan sembollerin yerine yenilerinin düştüğü tumbler akışı ve çarpan küreleri.
 
@@ -138,16 +140,6 @@ export function evaluate(grid, bet) {
   return { wins, total, counts, cells };
 }
 
-// Patlayan karoların yerine üstten yenileri düşer; kalanlar aşağı kayar.
-function collapse(grid, removing, orbChance, pool) {
-  return grid.map((column, reel) => {
-    const kept = column.filter((_, row) => !removing.has(`${reel}-${row}`));
-    const fresh = [];
-    for (let index = kept.length; index < ROWS; index += 1) fresh.push(randomCell(orbChance, pool));
-    return [...fresh, ...kept];
-  });
-}
-
 function rollValue() {
   const total = ORB_VALUES.reduce((sum, entry) => sum + entry[1], 0);
   let roll = Math.random() * total;
@@ -241,7 +233,7 @@ export function playDede(bet, isFree, carried = 0) {
     orbs.forEach((orb) => removing.add(`${orb.reel}-${orb.row}`));
     if (!removing.size) break;
 
-    grid = collapse(grid, removing, orbChance, pool);
+    grid = collapseColumns(grid, removing, ROWS, () => randomCell(orbChance, pool));
   }
 
   // Turun tamamı biriken çarpanla çarpılır — orijinal oyundaki gibi.

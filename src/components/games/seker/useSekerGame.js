@@ -3,6 +3,7 @@ import { base44 } from '@/api/base44Client';
 import gameRequest from '@/lib/gameRequest';
 import { landMs } from '@/components/games/reels/reelRoll';
 import { SEKER_BET_LEVELS, SEKER_LINES } from './sekerConfig';
+import { END_MS, playCascadeSteps } from '@/components/games/reels/cascadeSteps';
 import useBetQueue from '@/hooks/useBetQueue';
 
 // Sonucun üzerine iniş: 6 sütunlu tahta, ortak makara altyapısı.
@@ -27,6 +28,8 @@ export default function useSekerGame() {
   const [bigWin, setBigWin] = useState(0);
   const [spinning, setSpinning] = useState(false);
   const [stopping, setStopping] = useState(false);
+  // Patlama anı: kazanan şekerler bu sırada söner.
+  const [explode, setExplode] = useState(false);
   // Sonuç gelince sütunların ineceği ızgara ve tur anahtarı.
   const [landing, setLanding] = useState(null);
   const [spinKey, setSpinKey] = useState(0);
@@ -116,20 +119,35 @@ export default function useSekerGame() {
     setBigWin(0);
     setWins([]);
     setGrid(null);
+    setExplode(false);
     setMessage('');
     try {
       const response = await gameRequest('seker-game', { action: 'spin', bet });
       const data = response.data || {};
-      // Sonuç geldi: sütunlar gerçek şekerlerin üzerine iner, sonra tahta sabitlenir.
-      if (data.grid) {
-        setLanding(data.grid);
+      const steps = data.steps || [];
+      // Sonuç geldi: sütunlar ilk tahtanın üzerine iner, sonra zincir oynar.
+      const landed = steps[0]?.grid || data.grid || null;
+      if (landed) {
+        setLanding(landed);
         if (!skipLandingRef.current) await wait(LAND_MS);
       }
       skipLandingRef.current = false;
       setLanding(null);
       setStopping(true);
-      setGrid(data.grid || null);
-      setWins(data.wins || []);
+      // Tahta hemen görünür: sütunlar durduğu an ekranda duran dizilim budur.
+      setGrid(landed);
+      // Adımlar sırayla oynar: küme parlar, patlar, yerine yenisi düşer.
+      await playCascadeSteps(steps, {
+        wait,
+        setGrid,
+        setWins,
+        setExplode,
+        addWin: (shown) => setWin(sessionWinRef.current + shown),
+      });
+      // Patlayan şekerler gitti: turun sonunda duran tahta gösterilir.
+      if (data.grid) setGrid(data.grid);
+      setWins([]);
+      await wait(END_MS);
       applyState(data);
       // Çevirme hakkı sürerken kazanç birikir; normal turda sıfırdan başlar.
       sessionWinRef.current += data.win || 0;
@@ -212,6 +230,7 @@ export default function useSekerGame() {
     spins,
     spinning,
     stopping,
+    explode,
     landing,
     spinKey,
     grid,

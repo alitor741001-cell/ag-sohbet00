@@ -5,10 +5,8 @@ import {
   BET_LEVELS,
   BIG_WIN_MULTIPLE,
   LINES,
-  REELS,
-  ROWS,
-  evaluateFruit,
-  spinFruit,
+  playFruit,
+  spinCell,
 } from '../../shared/fruitEngine.ts';
 import {
   DEFAULT_BET,
@@ -50,20 +48,16 @@ const ELIMIN_FRUIT_IDS = ['plum', 'grapes', 'melon', 'apple', 'candy', 'cherry']
 
 const randomFruit = () => ELIMIN_FRUIT_IDS[Math.floor(Math.random() * ELIMIN_FRUIT_IDS.length)];
 
-// Izgara meyve motoruyla üretilir, sonra karelerin bir kısmı ek nesnelerle değişir.
-function spinElimin() {
-  const grid = spinFruit();
-  for (let reel = 0; reel < REELS; reel += 1) {
-    for (let row = 0; row < ROWS; row += 1) {
-      // Lolipop kaldırıldı: kare kalan meyvelerden birine dönüşür.
-      if (grid[reel][row] === 'lollipop') grid[reel][row] = randomFruit();
-      const roll = Math.random();
-      if (roll < DICE_CHANCE) grid[reel][row] = 'dice';
-      else if (roll < DICE_CHANCE + CHICKEN_CHANCE) grid[reel][row] = 'chicken';
-      else if (roll < DICE_CHANCE + CHICKEN_CHANCE + CHEST_CHANCE) grid[reel][row] = 'chest';
-    }
-  }
-  return grid;
+// Tek karo: çoğunlukla meyve, bazen ek nesne (zar, tavuk, sandık). Turun ilk dizilimi de
+// patlayan karelerin yerine düşen karolar da bu üreticiden gelir.
+function eliminCell() {
+  const roll = Math.random();
+  if (roll < DICE_CHANCE) return 'dice';
+  if (roll < DICE_CHANCE + CHICKEN_CHANCE) return 'chicken';
+  if (roll < DICE_CHANCE + CHICKEN_CHANCE + CHEST_CHANCE) return 'chest';
+  // Lolipop bu oyunda yok: kare kalan meyvelerden birine dönüşür.
+  const id = spinCell();
+  return id === 'lollipop' ? randomFruit() : id;
 }
 
 const countOf = (grid: string[][], id: string) =>
@@ -129,7 +123,7 @@ export default async function (req: Request) {
         bet,
         elimin_session_spins: SESSION_SPINS,
       });
-      return Response.json({ ...walletView(updated), grid: null, wins: [], win: 0 });
+      return Response.json({ ...walletView(updated), grid: null, steps: [], win: 0 });
     }
 
     // Sandık barı dolunca sandığa basılır: barda biriken tutar bakiyeye eklenir, bar sıfırlanır.
@@ -148,13 +142,13 @@ export default async function (req: Request) {
       });
       // Supabase aynası: bakiye iki altyapıda birden güncel kalır.
       waitUntil(mirrorRecord(base44, 'GameWallet', updated));
-      return Response.json({ ...walletView(updated), grid: null, wins: [], win: 0, chest_win: amount });
+      return Response.json({ ...walletView(updated), grid: null, steps: [], win: 0, chest_win: amount });
     }
 
     if (action === 'bet') {
       const bet = clampBet(body.bet, BET_LEVELS, wallet.bet ?? DEFAULT_BET);
       const updated = await base44.asServiceRole.entities.GameWallet.update(wallet.id, { bet });
-      return Response.json({ ...walletView(updated), grid: null, wins: [], win: 0 });
+      return Response.json({ ...walletView(updated), grid: null, steps: [], win: 0 });
     }
 
     if (action === 'spin') {
@@ -169,9 +163,15 @@ export default async function (req: Request) {
       const coins = wallet.coins ?? START_COINS;
       if (coins < cost) return Response.json({ error: 'Yetersiz coin.' }, { status: 400 });
 
-      const grid = spinElimin();
       // Küme eşiği bu oyunda daha yüksektir: kazanç daha seyrek gelir.
-      const result = evaluateFruit(grid, bet, { clusterMin: ELIMIN_CLUSTER_MIN, tiers: ELIMIN_CLUSTER_TIERS });
+      // Patlayan kümelerin yerine yenileri düşer; kalan karolar aşağı kayar.
+      const result = playFruit(
+        bet,
+        { clusterMin: ELIMIN_CLUSTER_MIN, tiers: ELIMIN_CLUSTER_TIERS },
+        eliminCell,
+      );
+      // Turun sonunda duran dizilim: ek nesneler bu dizilimden sayılır.
+      const grid = result.grid;
       const total = result.total;
 
       // Sandıklar barda birikir, on sandıkta durur.
@@ -213,7 +213,7 @@ export default async function (req: Request) {
       return Response.json({
         ...walletView(updated),
         grid,
-        wins: result.wins,
+        steps: result.steps,
         win: total,
         cost,
         chest_gain: chestGain,
@@ -225,7 +225,7 @@ export default async function (req: Request) {
       });
     }
 
-    return Response.json({ ...walletView(wallet), grid: null, wins: [], win: 0 });
+    return Response.json({ ...walletView(wallet), grid: null, steps: [], win: 0 });
   } catch (error: any) {
     return Response.json({ error: error.message }, { status: 500 });
   }

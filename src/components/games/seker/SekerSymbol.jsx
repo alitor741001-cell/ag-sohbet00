@@ -3,14 +3,18 @@ import { SEKER_SHAPES } from './sekerShapes';
 import { SEKER_SYMBOLS } from './sekerConfig';
 
 /** Tek şeker: parlak plastik görünümlü gövde, sol üstte beyaz parlama, yumuşak gölge. */
-export default function SekerSymbol({ id, win, scatter }) {
+export default function SekerSymbol({ id, win, scatter, explode }) {
   const symbol = SEKER_SYMBOLS[id];
   const Shape = symbol ? SEKER_SHAPES[symbol.shape] : null;
   if (!symbol || !Shape) return null;
   const gradientId = `seker-gloss-${id}`;
 
   return (
-    <span className={`seker-tile ${scatter ? 'seker-tile-scatter' : ''} ${win ? 'seker-cell-win' : ''}`}>
+    <span
+      className={`seker-tile ${scatter ? 'seker-tile-scatter' : ''} ${win ? 'seker-cell-win' : ''} ${
+        explode ? 'seker-tile-explode' : ''
+      }`}
+    >
       <svg viewBox="0 0 40 40" className="seker-art" aria-hidden="true">
         <defs>
           <radialGradient id={gradientId} cx="36%" cy="28%" r="76%">

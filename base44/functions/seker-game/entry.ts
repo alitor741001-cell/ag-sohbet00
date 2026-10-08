@@ -8,8 +8,7 @@ import {
   LINES,
   SCATTER_ID,
   SCATTER_MIN,
-  evaluateSeker,
-  spinSeker,
+  playSeker,
 } from '../../shared/sekerEngine.ts';
 import {
   DEFAULT_BET,
@@ -69,13 +68,13 @@ export default async function (req) {
         bet,
         seker_session_spins: SESSION_SPINS,
       });
-      return Response.json({ ...walletView(updated), grid: null, wins: [], win: 0 });
+      return Response.json({ ...walletView(updated), grid: null, steps: [], win: 0 });
     }
 
     if (action === 'bet') {
       const bet = clampBet(body.bet, BET_LEVELS, wallet.bet ?? DEFAULT_BET);
       const updated = await base44.asServiceRole.entities.GameWallet.update(wallet.id, { bet });
-      return Response.json({ ...walletView(updated), grid: null, wins: [], win: 0 });
+      return Response.json({ ...walletView(updated), grid: null, steps: [], win: 0 });
     }
 
     if (action === 'spin') {
@@ -89,11 +88,11 @@ export default async function (req) {
       const coins = wallet.coins ?? START_COINS;
       if (!isFree && coins < cost) return Response.json({ error: 'Yetersiz coin.' }, { status: 400 });
 
-      const grid = spinSeker();
-      const result = evaluateSeker(grid, bet);
+      // Patlayan kümelerin yerine yenileri düşer; kalan şekerler aşağı kayar.
+      const result = playSeker(bet);
       const total = result.total;
-      // 4 ve üzeri altın şeker hem bonus öder hem bedava tur verir.
-      const freeTrigger = grid.flat().filter((symbol) => symbol === SCATTER_ID).length >= SCATTER_MIN;
+      // 4 ve üzeri altın şeker hem bonus öder hem bedava tur verir; ilk tahtada sayılır.
+      const freeTrigger = result.initial.flat().filter((symbol) => symbol === SCATTER_ID).length >= SCATTER_MIN;
       // Önce satın alınan tur tükenir, bedava turlar sonraya kalır.
       const sessionLeft = Math.max(0, sessionTurns - (sessionTurns > 0 ? 1 : 0));
       const freeLeft = Math.max(0, freeTurns - (sessionTurns > 0 ? 0 : isFree ? 1 : 0)) + (freeTrigger ? FREE_SPINS : 0);
@@ -115,8 +114,8 @@ export default async function (req) {
 
       return Response.json({
         ...walletView(updated),
-        grid,
-        wins: result.wins,
+        grid: result.grid,
+        steps: result.steps,
         win: total,
         cost,
         free_trigger: freeTrigger,
@@ -124,7 +123,7 @@ export default async function (req) {
       });
     }
 
-    return Response.json({ ...walletView(wallet), grid: null, wins: [], win: 0 });
+    return Response.json({ ...walletView(wallet), grid: null, steps: [], win: 0 });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

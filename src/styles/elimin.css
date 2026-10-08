@@ -375,6 +375,22 @@
   to { transform: scale(1.09); filter: drop-shadow(0 0 16px rgba(255, 214, 102, 1)) brightness(1.4); }
 }
 
+/* Patlayan kart: kazanan sembol parlar, sonra patlar; yerine yenisi düşer. */
+.el-sym-explode { animation: el-explode 320ms ease-out forwards; }
+
+@keyframes el-explode {
+  0% { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(.2); opacity: 0; filter: brightness(2.4); }
+}
+
+/* Yeni düşen kartlar: sütunun üstünden iner. */
+.el-drop { animation: el-drop 420ms cubic-bezier(.3, .9, .4, 1.2) both; }
+
+@keyframes el-drop {
+  from { transform: translateY(-118%); opacity: .25; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
 /* Tur kazancı: ızgaranın ortasında belirir. */
 .el-center-win {
   position: absolute;
@@ -613,5 +629,7 @@
 @media (prefers-reduced-motion: reduce) {
   .el-frame-live,
   .el-sym-win,
+  .el-sym-explode,
+  .el-drop,
   .el-chest-box-full { animation: none !important; }
 }

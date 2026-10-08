@@ -3,7 +3,7 @@ import EliminArt from './EliminArt';
 import { ELIMIN_SYMBOLS } from './eliminConfig';
 
 /** Tek kare kart: sembol görseli kendi karesinin içinde kalır, komşusuna taşmaz. */
-export default function EliminSymbol({ id, win }) {
+export default function EliminSymbol({ id, win, explode }) {
   const symbol = ELIMIN_SYMBOLS[id];
   if (!symbol) return null;
 
@@ -17,7 +17,7 @@ export default function EliminSymbol({ id, win }) {
         : '';
 
   return (
-    <span className={`el-sym ${symbol.scatter ? 'el-sym-scatter' : ''} ${tone} ${win ? 'el-sym-win' : ''}`}>
+    <span className={`el-sym ${symbol.scatter ? 'el-sym-scatter' : ''} ${tone} ${win ? 'el-sym-win' : ''} ${explode ? 'el-sym-explode' : ''}`}>
       <EliminArt src={symbol.art} alt={symbol.name} className="el-art" />
     </span>
   );

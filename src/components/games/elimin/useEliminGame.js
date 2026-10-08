@@ -3,6 +3,7 @@ import gameRequest from '@/lib/gameRequest';
 import { landMs } from '@/components/games/reels/reelRoll';
 import { eliminSound, unlockAudio } from './eliminSound';
 import { BET_LEVELS, CHEST_MAX, LINES } from './eliminConfig';
+import { END_MS, playCascadeSteps } from '@/components/games/reels/cascadeSteps';
 import useBetQueue from '@/hooks/useBetQueue';
 
 // Sonucun üzerine iniş: 6 sütunlu kare ızgara, ortak makara altyapısı.
@@ -34,6 +35,8 @@ export default function useEliminGame() {
   const [bigWin, setBigWin] = useState(0);
   const [spinning, setSpinning] = useState(false);
   const [stopping, setStopping] = useState(false);
+  // Patlama anı: kazanan kartlar bu sırada söner.
+  const [explode, setExplode] = useState(false);
   // Sonuç gelince makaraların ineceği ızgara ve tur anahtarı.
   const [landing, setLanding] = useState(null);
   const [spinKey, setSpinKey] = useState(0);
@@ -135,22 +138,37 @@ export default function useEliminGame() {
     setJackpotWin(0);
     setWins([]);
     setGrid(null);
+    setExplode(false);
     setMessage('');
     play('spin');
     try {
       const response = await gameRequest('elimin-game', { action: 'spin', bet });
       const data = response.data || {};
-      // Sonuç geldi: makaralar gerçek sembollerin üzerine iner, sonra ızgara sabitlenir.
-      if (data.grid) {
-        setLanding(data.grid);
+      const steps = data.steps || [];
+      // Sonuç geldi: makaralar ilk dizilimin üzerine iner, sonra zincir oynar.
+      const landed = steps[0]?.grid || data.grid || null;
+      if (landed) {
+        setLanding(landed);
         if (!skipLandingRef.current) await wait(LAND_MS);
       }
       skipLandingRef.current = false;
       setLanding(null);
       setStopping(true);
       play('landing');
-      setGrid(data.grid || null);
-      setWins(data.wins || []);
+      // Dizilim hemen görünür: makara durduğu an ekranda duran ızgara budur.
+      setGrid(landed);
+      // Adımlar sırayla oynar: küme parlar, patlar, yerine yenisi düşer.
+      await playCascadeSteps(steps, {
+        wait,
+        setGrid,
+        setWins,
+        setExplode,
+        addWin: setWin,
+      });
+      // Patlayan kartlar gitti: turun sonunda duran dizilim gösterilir.
+      if (data.grid) setGrid(data.grid);
+      setWins([]);
+      await wait(END_MS);
       applyState(data);
       setWin(data.win || 0);
       // Çevirme hakkı turunda büyük kazanç ekranı yerine tur sonundaki toplam gösterilir.
@@ -274,6 +292,7 @@ export default function useEliminGame() {
     spins,
     spinning,
     stopping,
+    explode,
     landing,
     spinKey,
     grid,

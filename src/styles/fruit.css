@@ -166,6 +166,20 @@
 }
 .fruit-overlay { background: radial-gradient(circle at 50% 40%, rgba(255, 214, 102, 0.28), rgba(18, 4, 14, 0.92) 62%); }
 
+/* Patlayan karo: kazanan sembol parlar, sonra patlar; yerine yenisi düşer. */
+.fruit-tile-explode { animation: fruit-explode 0.32s ease-out forwards; }
+@keyframes fruit-explode {
+  0% { transform: scale(1.12); opacity: 1; }
+  100% { transform: scale(0.2); opacity: 0; filter: brightness(2.4); }
+}
+/* Yeni düşen karolar: sütunun üstünden iner. */
+.fruit-drop { animation: fruit-drop 0.42s cubic-bezier(0.3, 0.9, 0.4, 1.2) both; }
+@keyframes fruit-drop {
+  from { transform: translateY(-118%); opacity: 0.25; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .fruit-strip, .fruit-cell-win, .fruit-settle, .fruit-rays, .fruit-frame, .fruit-float-win { animation: none; }
+  .fruit-strip, .fruit-cell-win, .fruit-settle, .fruit-rays, .fruit-frame, .fruit-float-win,
+  .fruit-tile-explode, .fruit-drop { animation: none; }
 }

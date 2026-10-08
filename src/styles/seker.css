@@ -169,8 +169,22 @@
   background: radial-gradient(circle at 50% 40%, rgba(255, 214, 102, 0.28), rgba(12, 18, 23, 0.93) 62%);
 }
 
+/* Patlayan şeker: kazanan şeker parlar, sonra patlar; yerine yenisi düşer. */
+.seker-tile-explode { animation: seker-explode 0.32s ease-out forwards; }
+@keyframes seker-explode {
+  0% { transform: scale(1.12); opacity: 1; }
+  100% { transform: scale(0.2); opacity: 0; filter: brightness(2.4); }
+}
+/* Yeni düşen şekerler: sütunun üstünden iner. */
+.seker-drop { animation: seker-drop 0.42s cubic-bezier(0.3, 0.9, 0.4, 1.2) both; }
+@keyframes seker-drop {
+  from { transform: translateY(-118%); opacity: 0.25; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .seker-strip, .seker-cell-win, .seker-settle, .seker-rays, .seker-frame, .seker-float-win {
+  .seker-strip, .seker-cell-win, .seker-settle, .seker-rays, .seker-frame, .seker-float-win,
+  .seker-tile-explode, .seker-drop {
     animation: none;
   }
 }
