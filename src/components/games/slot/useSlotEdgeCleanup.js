@@ -16,7 +16,10 @@ function cleanEdges(src) {
         const ctx = canvas.getContext('2d', { willReadFrequently: true });
         ctx.drawImage(image, 0, 0);
         const data = ctx.getImageData(0, 0, w, h);
-        const band = Math.max(2, Math.round(Math.min(w, h) * 0.04));
+        // Yatağın tonu: kartların dış bandı bu renge kaydırılır, böylece kart
+        // kenarı yatağa karışır ve kare sınırı görünmez.
+        const BED = [10, 9, 23];
+        const band = Math.max(2, Math.round(Math.min(w, h) * 0.035));
         for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
           const distance = Math.min(x, y, w - 1 - x, h - 1 - y);
           if (distance >= band) continue;
@@ -25,8 +28,8 @@ function cleanEdges(src) {
           const low = Math.min(rgb[p], rgb[p + 1], rgb[p + 2]);
           // Parlak sembol çizgileri ve altın çerçeveler değişmez.
           if (high >= 100 || high - low < 12) continue;
-          const amount = (1 - distance / band) * (1 - high / 100);
-          for (let c = 0; c < 3; c++) rgb[p + c] = Math.round(rgb[p + c] * (1 - amount) + low * amount);
+          const amount = (1 - distance / band) * (1 - high / 100) * 0.9;
+          for (let c = 0; c < 3; c++) rgb[p + c] = Math.round(rgb[p + c] * (1 - amount) + BED[c] * amount);
         }
         ctx.putImageData(data, 0, 0);
         canvas.toBlob(blob => blob ? resolve(URL.createObjectURL(blob)) : reject(new Error('Görsel hazırlanamadı')), 'image/png');
