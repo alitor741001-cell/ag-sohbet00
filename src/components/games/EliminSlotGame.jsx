@@ -15,7 +15,7 @@ import GameBetBar from './controls/GameBetBar';
 import GameSpinButton from './controls/GameSpinButton';
 import useEliminGame from './elimin/useEliminGame';
 import useCountUp from './sekerli/useCountUp';
-import { warmEliminTiles } from './elimin/useEliminTile';
+import { warmSymbolTiles } from '@/lib/symbolTile';
 import { ELIMIN_BACKDROP, ELIMIN_EMBLEM, ELIMIN_EMBLEM_SIZE } from './elimin/eliminAssets';
 import { DICE_MIN, ELIMIN_SYMBOLS, LINES, SYMBOL_IDS, formatCoins } from './elimin/eliminConfig';
 
@@ -69,7 +69,7 @@ export default function EliminSlotGame({ onExit, onBack }) {
 
   // Semboller oyun açılırken bir kez işlenir: makara dönmeye başladığında hepsi hazır olur.
   useEffect(() => {
-    warmEliminTiles(SYMBOL_IDS.map((id) => ELIMIN_SYMBOLS[id].art));
+    warmSymbolTiles(SYMBOL_IDS.map((id) => ELIMIN_SYMBOLS[id].art));
   }, []);
 
   // Oyun kapanırken bekleyen sayaç temizlenir.

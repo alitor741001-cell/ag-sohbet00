@@ -1,11 +1,11 @@
 import React from 'react';
 import { Image } from '@/components/ui/image';
-import useEliminTile from './useEliminTile';
+import useSymbolTile from '@/lib/symbolTile';
 import { ELIMIN_ART_SIZE } from './eliminSymbolArt';
 
 /** Sembol görseli: kare kart — zemini tek renk, kenarları temizlenmiş. */
 export default function EliminArt({ src, alt, className }) {
-  const tile = useEliminTile(src);
+  const tile = useSymbolTile(src);
   return (
     <Image
       src={tile}

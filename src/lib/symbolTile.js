@@ -1,5 +1,13 @@
 import { useEffect, useState } from 'react';
 
+/**
+ * Ortak sembol kesme motoru (ELİMİNSLOT, MEYVE ve ŞEKERLİ MEYVE).
+ *
+ * Üretilmiş kart görsellerinin arkasındaki tek renk zemin silinir; nesne şeffaf
+ * zeminde kalır ve tahtanın üstünde durur. Yalnız en büyük nesne bırakılır,
+ * nesnenin içindeki açık alanlar korunur, kenar yumuşatması kademeli alfa alır.
+ */
+
 // Kart karesi: görsel kare kırpılır, 512'ye indirilir.
 const TILE = 512;
 // Zemin tona bu mesafeden yakınsa tamamen silinir; bu mesafeden uzaksa nesne
@@ -269,8 +277,8 @@ async function process(src) {
   return URL.createObjectURL(blob);
 }
 
-/** Kare kart: sembolün arkasındaki zemin silinir, nesne tahtanın üstünde durur. */
-export function buildEliminTile(src) {
+/** Sembolün arkasındaki zemin silinir, nesne şeffaf zeminde tahtaya oturur. */
+export function buildSymbolTile(src) {
   const found = cache.get(src);
   if (found) return found;
   const task = process(src).then(
@@ -288,10 +296,10 @@ export function buildEliminTile(src) {
 }
 
 /** Oyun açılırken bütün semboller bir kez işlenir: makara dönerken hepsi hazır olur. */
-export function warmEliminTiles(sources) {
+export function warmSymbolTiles(sources) {
   sources.forEach((src) => {
-    // Hazırlık başarısız olursa kart görseli olduğu gibi gösterilir; sessizce geçilir.
-    buildEliminTile(src).catch(() => {});
+    // Hazırlık başarısız olursa sembol olduğu gibi gösterilir; sessizce geçilir.
+    buildSymbolTile(src).catch(() => {});
   });
 }
 
@@ -307,7 +315,7 @@ const readyTile = (src) => {
  * aksi halde her kare önce zeminli kaynak görselle, sonra kesilmiş hâliyle
  * çizilir ve dönüş sırasında kare zeminler görünür.
  */
-export default function useEliminTile(src) {
+export default function useSymbolTile(src) {
   const [state, setState] = useState({ src, url: readyTile(src) || src });
 
   useEffect(() => {
@@ -318,7 +326,7 @@ export default function useEliminTile(src) {
       return undefined;
     }
     let active = true;
-    buildEliminTile(src)
+    buildSymbolTile(src)
       .then((url) => {
         if (active) setState({ src, url });
       })
