@@ -21,12 +21,33 @@ export function multiplierAt(ms) {
   return Math.pow(ROCKET_BASE, ms / 1000);
 }
 
-// Çakılma noktası: 1/(1-r) dağılımı, %1 ev avantajı, 500x üst sınır.
+// Yüksek tur eşiği ve kademeleri: 1/(1-r) dağılımının kuyruğu (~%1, turların
+// 1/(1-r) ile 90x üzerine düşen kısmı) bu kademelere dağıtılır. Böylece yüksek
+// turlar aynı sıklıkta (~100 turda bir) kalır ama 500x'e kadar gerçekten tırmanır.
+export const BIG_THRESHOLD = 90;
+const BIG_LADDER = [90, 100, 120, 150, 200, 250, 300, 400, 500];
+const BIG_WEIGHTS = [17, 15, 12, 12, 9, 10, 8, 8, 9];
+const BIG_WEIGHT_TOTAL = BIG_WEIGHTS.reduce((sum, weight) => sum + weight, 0);
+
+function bigCrash() {
+  let roll = Math.random() * BIG_WEIGHT_TOTAL;
+  for (let i = 0; i < BIG_LADDER.length; i += 1) {
+    roll -= BIG_WEIGHTS[i];
+    if (roll < 0) return BIG_LADDER[i];
+  }
+  return BIG_LADDER[0];
+}
+
+// Çakılma noktası: 1/(1-r) dağılımı, %9 ev avantajı. Normal turlar 90x altında
+// kalır (oyuncu çoğunlukla düşük hedeflerle oynar, denge korunur); 90x üzerine
+// düşen turlar 90x-500x kademelerine yayılır: tur başına ~%1, yani ortalama
+// 100 turda bir yüksek tur gelir ve çarpan en yüksek 500x'e kadar çıkar.
 export function randomCrash() {
   const r = Math.random();
   if (r < 0.01) return 1;
   const c = HOUSE_EDGE / (1 - r);
-  return Math.min(MAX_R, Math.max(1.01, Math.round(c * 100) / 100));
+  if (c >= BIG_THRESHOLD) return bigCrash();
+  return Math.max(1.01, Math.min(BIG_THRESHOLD - 0.01, Math.round(c * 100) / 100));
 }
 
 export function nearestRocketBet(value) {

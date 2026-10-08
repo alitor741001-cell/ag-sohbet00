@@ -157,12 +157,18 @@ const ROULETTE_LEGEND = {
 
 // ROCKET: çarpan rengi büyüklüğü gösterir.
 const ROCKET_LEGEND = {
-  note: 'Çarpan saniyede yaklaşık 1,09 kat büyür; çakılma anında çekilmeyen bahis yanar.',
+  note: 'Çarpan saniyede yaklaşık 1,09 kat büyür; 90x üstüne çıkan yüksek turlar ortalama 100 turda bir gelir, çakılma anında çekilmeyen bahis yanar.',
   rows: [
     { badge: '1-2x', tone: 'sky', name: 'Mavi çarpan', desc: 'Uçuşun ilk saniyeleri; roket mavi okunur.' },
     { badge: '2-8x', tone: 'green', name: 'Yeşil çarpan', desc: '2x ile 8x arası.' },
     { badge: '8-25x', tone: 'yellow', name: 'Sarı çarpan', desc: '8x ile 25x arası.' },
-    { badge: '25x+', tone: 'red', name: 'Kırmızı çarpan', desc: '25x geçilince roket kırmızı okunur; 500x e kadar çıkar.' },
+    { badge: '25x+', tone: 'red', name: 'Kırmızı çarpan', desc: '25x geçilince roket kırmızı okunur; kırmızı turlar 500x e kadar tırmanır.' },
+    {
+      badge: 'YÜKSEK',
+      tone: 'gold',
+      name: 'Yüksek tur',
+      desc: 'Ortalama 100 turda bir gelir ve 90x · 100x · 120x · 150x · 200x · 250x · 300x · 400x · 500x kademelerinden birine oturur.',
+    },
     { badge: 'AUTO', tone: 'gold', name: 'Otomatik çekilme', desc: '1,10x · 1,20x · 1,50x · 2x · 5x … 500x kademelerinden biri seçilir.' },
     { badge: '500-1M', tone: 'gold', name: 'Bahis kademeleri', desc: '500 coin ile 1.000.000 coin arası.' },
   ],
@@ -284,7 +290,8 @@ export const GAME_HELP = {
     rules: [
       'Bahis kademeleri 500 coin ile 1.000.000 coin arasındadır.',
       '20 saniyelik bahis süresi bitince roket havalanır ve çarpan büyümeye başlar.',
-      'Çarpan saniyede yaklaşık 1,09 kat büyür ve 500x e kadar çıkabilir.',
+      'Çarpan saniyede yaklaşık 1,09 kat büyür ve en yüksek 500x e kadar çıkar.',
+      'Ortalama 100 turda bir yüksek tur gelir: çarpan 90x ile 500x arasındaki kademeye kadar tırmanır.',
       'ÇEKİL e bastığın andaki çarpan bahsinle çarpılıp bakiyene eklenir.',
       'Çakılma anında çekilmeyen bahisler yanar.',
     ],
