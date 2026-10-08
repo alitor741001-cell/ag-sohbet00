@@ -57,7 +57,7 @@ export default function CoinPaymentPage({ pack, onClose, onSubmitted }) {
 
       <div className="min-h-0 flex-1 overflow-y-auto px-3 pt-3 pb-4">
         <div className="mx-auto w-full max-w-md">
-          <div className="flex items-center gap-3 rounded-2xl border border-[#E8B95A]/40 bg-[#0d1424] px-3.5 py-3">
+          <div className="flex items-center gap-3 rounded-2xl border border-[#E8B95A]/55 bg-gradient-to-b from-[#16120f] to-[#050505] px-3.5 py-3 shadow-[inset_0_0_0_1px_rgba(255,236,190,0.14),inset_0_1px_0_rgba(255,246,214,0.24)]">
             <Coins className="h-7 w-7 shrink-0 text-[#E8B95A]" />
             <div className="min-w-0 flex-1">
               <p className="text-sm font-black text-white">{formatCoins(pack.coins)} Coins</p>

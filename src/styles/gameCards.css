@@ -1,0 +1,156 @@
+/* Oyun panelleri: referans tasarım — siyah parlak zemin, çift altın çerçeve.
+   MEYVE, DEDE, SLOT ve ROULETTE aynı kart dilini kullanır. */
+
+/* --- üst metrik kartı --- */
+.gd-card {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 0.14rem;
+  overflow: hidden;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(255, 215, 120, 0.55);
+  padding: 0.4rem 0.35rem 0.38rem;
+  background:
+    linear-gradient(180deg, rgba(255, 238, 196, 0.13), rgba(255, 238, 196, 0) 46%),
+    linear-gradient(180deg, #16120f 0%, #070606 62%, #030303 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 236, 190, 0.14),
+    inset 0 1px 0 rgba(255, 246, 214, 0.28),
+    inset 0 -12px 20px rgba(0, 0, 0, 0.62),
+    0 10px 22px -18px rgba(0, 0, 0, 0.95);
+}
+/* Dip ışıltı: kartın alt kenarında ince altın çizgi. */
+.gd-card::after {
+  content: '';
+  position: absolute;
+  left: 18%;
+  right: 18%;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 214, 120, 0.8), transparent);
+}
+.gd-card-head {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 0.18rem;
+}
+.gd-card-icon {
+  display: inline-flex;
+  height: 1rem;
+  width: 1rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  color: #3b2103;
+  background: radial-gradient(circle at 40% 26%, #fff5d6, #f0c25a 58%, #a97a12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 0 10px rgba(240, 194, 90, 0.35);
+}
+.gd-card-label {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 0.5rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: rgba(255, 214, 120, 0.9);
+}
+.gd-card-value {
+  text-align: center;
+  font-size: 0.82rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.05;
+  color: #fff6dd;
+  text-shadow: 0 0 12px rgba(255, 200, 90, 0.35);
+}
+.gd-card-value-muted { color: rgba(255, 246, 221, 0.55); text-shadow: none; }
+.gd-card-win .gd-card-value { color: #ffd35c; text-shadow: 0 0 14px rgba(255, 190, 60, 0.95); }
+
+/* --- coin paket kartı: bakiyenin yüklendiği yer --- */
+.gd-deal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 215, 120, 0.6);
+  padding: 0.55rem 0.5rem;
+  text-align: center;
+  background:
+    linear-gradient(180deg, rgba(255, 238, 196, 0.12), rgba(255, 238, 196, 0) 40%),
+    linear-gradient(180deg, #16120f 0%, #070606 64%, #030303 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 236, 190, 0.14),
+    inset 0 1px 0 rgba(255, 246, 214, 0.26),
+    inset 0 -14px 24px rgba(0, 0, 0, 0.62),
+    0 12px 26px -20px rgba(0, 0, 0, 0.95);
+}
+.gd-deal-well {
+  display: flex;
+  height: 68px;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.6rem;
+  border: 1px solid rgba(255, 215, 120, 0.22);
+  background: #040404;
+  box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.9);
+}
+.gd-deal-qty {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem;
+  border-radius: 0.6rem;
+  border: 1px solid rgba(255, 215, 120, 0.35);
+  background: linear-gradient(180deg, #241e19, #0d0a08);
+  padding: 0.25rem;
+}
+.gd-deal-step {
+  display: flex;
+  height: 1.5rem;
+  width: 1.5rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.4rem;
+  color: #2b1602;
+  background: radial-gradient(circle at 40% 26%, #fff5d6, #ffcc45 58%, #c48c0c);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 1px 0 #6f4705;
+  transition: transform 130ms ease, filter 130ms ease;
+}
+.gd-deal-step:active { transform: translateY(1px) scale(0.96); filter: brightness(1.08); }
+.gd-deal-step:disabled { filter: saturate(0.35) brightness(0.7); }
+/* Satın Al: siyah zemin üzerinde parlak altın düğme. */
+.gd-deal-buy {
+  display: flex;
+  height: 2.1rem;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  border-radius: 0.6rem;
+  border: 1px solid rgba(255, 250, 230, 0.85);
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  color: #3b2103;
+  background: linear-gradient(180deg, #fff6dc 2%, #ffd35c 46%, #d99a11 100%);
+  box-shadow: inset 0 2px 1px rgba(255, 255, 255, 0.9), inset 0 -6px 12px rgba(120, 70, 0, 0.35), 0 2px 0 #6f4705;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45);
+  transition: transform 130ms ease, filter 130ms ease;
+}
+.gd-deal-buy:active { transform: translateY(1px); filter: brightness(1.08); }
+
+@media (prefers-reduced-motion: reduce) {
+  .gd-deal-step, .gd-deal-buy { transition: none; }
+}

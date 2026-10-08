@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ChevronLeft, X } from 'lucide-react';
+import { Clapperboard, ChevronLeft, Coins, Crown, Star, X } from 'lucide-react';
 import '@/styles/roulette.css';
 import '@/styles/gameControls.css';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
@@ -13,6 +13,7 @@ import RouletteTable from './roulette/RouletteTable';
 import RouletteChipRow from './roulette/RouletteChipRow';
 import RouletteStartButton from './roulette/RouletteStartButton';
 import RouletteWinOverlay from './roulette/RouletteWinOverlay';
+import GameStatCards from './controls/GameStatCards';
 import { ROULETTE_LOGO } from './roulette/rouletteAssets';
 import { formatCoins, pocketName, pocketTone } from './roulette/rouletteConfig';
 
@@ -24,6 +25,13 @@ export default function RouletteGame({ onExit, onBack }) {
   const ready = game.status === 'ready';
   // Tur sıralaması ve numara geçmişi her turda yenilenir.
   const board = useRouletteBoard(game.spins);
+  // Üst metrikler: referans tasarımdaki siyah-altın kartlar.
+  const stats = [
+    { key: 'coins', label: 'COIN BAKİYEM', value: formatCoins(game.coins), icon: Star },
+    { key: 'stake', label: 'TOPLAM BAHİS', value: formatCoins(game.stake), icon: Clapperboard },
+    { key: 'win', label: 'KAZANÇ', value: formatCoins(game.payout), icon: Crown, win: game.payout > 0 },
+    { key: 'total', label: 'TOPLAM KAZANÇ', value: formatCoins(game.totalWon), icon: Coins },
+  ];
 
   // Tur sonucu: kazanç ödenmişse kutlama ekranı açılır.
   useEffect(() => {
@@ -55,6 +63,12 @@ export default function RouletteGame({ onExit, onBack }) {
           <X className="h-5 w-5" />
         </button>
       </header>
+
+      <div className="relative z-10 shrink-0 px-3 pt-1.5">
+        <div className="mx-auto w-full max-w-[27rem]">
+          <GameStatCards items={stats} />
+        </div>
+      </div>
 
       <main className="relative z-10 flex min-h-0 flex-1 flex-col items-center gap-2 overflow-y-auto px-2 py-2">
         <RoulettePodium winners={board.winners} ready={board.status === 'ready'} />

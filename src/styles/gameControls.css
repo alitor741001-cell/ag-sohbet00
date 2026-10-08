@@ -11,14 +11,16 @@
   gap: 0.55rem;
   overflow: hidden;
   border-radius: 1.4rem;
-  border: 1px solid rgba(255, 214, 120, 0.3);
+  border: 1px solid rgba(255, 215, 120, 0.55);
   padding: 0.7rem;
   background:
-    linear-gradient(180deg, rgba(255, 236, 190, 0.1), rgba(255, 236, 190, 0) 32%),
-    linear-gradient(180deg, #1a1512, #0d0a09 68%, #080606);
+    linear-gradient(180deg, rgba(255, 236, 190, 0.13), rgba(255, 236, 190, 0) 34%),
+    linear-gradient(180deg, #16120f, #070606 70%, #030303);
   box-shadow:
-    inset 0 1px 0 rgba(255, 246, 214, 0.22),
-    inset 0 -14px 26px rgba(0, 0, 0, 0.6),
+    inset 0 0 0 1px rgba(255, 236, 190, 0.14),
+    inset 0 1px 0 rgba(255, 246, 214, 0.26),
+    inset 0 -16px 30px rgba(0, 0, 0, 0.7),
+    0 0 28px -14px rgba(255, 190, 80, 0.5),
     0 -16px 36px -22px rgba(0, 0, 0, 0.95);
 }
 .gctl-deck::before {
@@ -310,17 +312,25 @@
   -webkit-backdrop-filter: blur(6px);
 }
 
-/* --- eylem düğmeleri: çevirme hakkı ve coin yükleme --- */
+/* --- eylem düğmeleri: çevirme hakkı ve coin yükleme ---
+   Siyah parlak kart + çift altın çerçeve; satın alınabilirken tamamen altına döner. */
 .gctl-action {
   display: flex;
   align-items: center;
   gap: 0.45rem;
   border-radius: 0.85rem;
-  border: 1px solid rgba(255, 216, 120, 0.45);
+  border: 1px solid rgba(255, 215, 120, 0.55);
   padding: 0.4rem 0.6rem;
   text-align: left;
-  background: linear-gradient(180deg, rgba(74, 42, 24, 0.85), rgba(18, 9, 6, 0.92));
-  box-shadow: inset 0 1px 0 rgba(255, 240, 200, 0.22), 0 10px 20px -16px rgba(0, 0, 0, 0.95);
+  color: #ffeec2;
+  background:
+    linear-gradient(180deg, rgba(255, 238, 196, 0.12), rgba(255, 238, 196, 0) 44%),
+    linear-gradient(180deg, #16120f, #070606 66%, #030303);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 236, 190, 0.14),
+    inset 0 1px 0 rgba(255, 246, 214, 0.26),
+    inset 0 -12px 20px rgba(0, 0, 0, 0.6),
+    0 10px 20px -16px rgba(0, 0, 0, 0.95);
   transition: filter 150ms ease, transform 150ms ease;
 }
 .gctl-action:active { transform: translateY(1px); filter: brightness(1.15); }

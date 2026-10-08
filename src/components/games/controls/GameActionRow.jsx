@@ -17,7 +17,7 @@ export default function GameActionRow({ coins, sessionPrice, sessionSpins, sessi
     : affordable ? `${format(sessionPrice)} COIN` : 'COIN YÜKLE';
 
   return (
-    <div className="col-span-4 grid grid-cols-2 gap-1.5">
+    <div className="grid grid-cols-2 gap-1.5">
       <button
         type="button"
         onClick={buyable ? onSession : onCoins}

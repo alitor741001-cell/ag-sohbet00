@@ -45,7 +45,7 @@ export default function BankTransferInfo({ bank, pack }) {
   }
 
   return (
-    <div className="mt-3 rounded-2xl border border-[#E8B95A]/40 bg-[#0d1424] px-3.5 py-3">
+    <div className="mt-3 rounded-2xl border border-[#E8B95A]/55 bg-gradient-to-b from-[#16120f] to-[#050505] px-3.5 py-3 shadow-[inset_0_0_0_1px_rgba(255,236,190,0.14),inset_0_1px_0_rgba(255,246,214,0.24)]">
       <p className="flex items-center gap-2 text-sm font-black text-white">
         <Landmark className="h-4 w-4 text-[#E8B95A]" /> Banka Transferi Bilgileri
       </p>
