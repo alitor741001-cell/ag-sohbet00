@@ -117,24 +117,24 @@
   to { transform: translateY(0); }
 }
 
-/* Şeker karesi: gövdе kareye ortalanır, kenarlarda eşit boşluk kalır, dışına taşmaz. */
+/* Şeker karesi: gövdе kendi karesine oturur, kenarlarda eşit boşluk kalır, kare dışına çıkamaz. */
 .seker-tile {
   position: absolute;
   inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 9%;
+  display: block;
+  overflow: hidden;
+  border-radius: 16%;
+  padding: 10%;
 }
 .seker-art {
   display: block;
   height: 100%;
   width: 100%;
-  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.6));
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.55));
 }
-/* Altın şeker: parlak altın halkayla öne çıkar. */
-.seker-tile-scatter .seker-art {
-  filter: drop-shadow(0 0 6px rgba(255, 214, 90, 0.95)) drop-shadow(0 3px 4px rgba(0, 0, 0, 0.55));
+/* Altın şeker: kendi karesinin içinde altın halkayla öne çıkar. */
+.seker-tile-scatter {
+  box-shadow: 0 0 0 2px #fff3c6, 0 0 16px rgba(255, 205, 90, 0.85);
 }
 
 .seker-settle { animation: seker-settle 0.32s ease-out both; }
@@ -142,16 +142,18 @@
   from { transform: scale(0.9); opacity: 0.65; }
   to { transform: scale(1); opacity: 1; }
 }
-/* Kazanan kümenin şekerleri parlar. */
-.seker-cell-win .seker-art { animation: seker-win 1s ease-in-out infinite; }
+/* Kazanan kümenin şekerleri kendi karesi içinde parlar; ışıltı komşu kareye taşmaz. */
+.seker-cell-win { animation: seker-win 1s ease-in-out infinite; }
 @keyframes seker-win {
   0%, 100% {
     transform: scale(1);
-    filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.85)) drop-shadow(0 3px 4px rgba(0, 0, 0, 0.6));
+    filter: brightness(1);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.5);
   }
   50% {
-    transform: scale(1.1);
-    filter: drop-shadow(0 0 14px rgba(255, 255, 255, 1)) drop-shadow(0 0 26px rgba(255, 214, 115, 0.95));
+    transform: scale(1.04);
+    filter: brightness(1.5);
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.95), 0 0 14px rgba(255, 214, 115, 0.85);
   }
 }
 
@@ -168,7 +170,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .seker-strip, .seker-cell-win .seker-art, .seker-settle, .seker-rays, .seker-frame, .seker-float-win {
+  .seker-strip, .seker-cell-win, .seker-settle, .seker-rays, .seker-frame, .seker-float-win {
     animation: none;
   }
 }
