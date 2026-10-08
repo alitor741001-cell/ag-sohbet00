@@ -228,6 +228,7 @@
   box-shadow: inset 0 0 14px rgba(0, 0, 0, 0.65);
 }
 
+/* Her kare kendi kartını taşır: nesne kartın içine oturur, kare dışına taşmaz. */
 .sl-cell {
   position: relative;
   display: flex;
@@ -235,15 +236,17 @@
   min-height: 0;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
 }
 
 .sl-cell::before {
   content: '';
   position: absolute;
-  inset: 5% 7%;
-  border-radius: 0.6rem;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.02));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  inset: 4% 6%;
+  border-radius: 22%;
+  border: 1px solid rgba(255, 214, 102, 0.3);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(38, 9, 66, 0.5) 58%, rgba(16, 3, 30, 0.72));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 5px 12px -8px #000;
 }
 
 .sl-sym {
@@ -251,14 +254,18 @@
   display: block;
   height: 100%;
   width: 100%;
-  padding: 4%;
+  /* Nesne kartın içinde kalır: kenarlara değmez, kareden taşmaz. */
+  padding: 14%;
 }
 
 .sl-art {
   position: relative;
   z-index: 1;
+  display: block;
   height: 100%;
   width: 100%;
+  max-height: 100%;
+  max-width: 100%;
   filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.55));
 }
 
@@ -351,99 +358,7 @@
   color: #3a1200;
 }
 
-/* === KALAN FREESPİNLER === */
-.sl-fs {
-  flex-shrink: 0;
-  width: 5.1rem;
-  border-radius: 1.1rem;
-  border: 1px solid rgba(255, 214, 102, 0.6);
-  background: linear-gradient(180deg, rgba(255, 90, 200, 0.94), rgba(116, 28, 160, 0.96));
-  padding: 0.4rem 0.3rem;
-  text-align: center;
-  box-shadow: 0 14px 28px -18px #000, inset 0 1px 0 rgba(255, 255, 255, 0.32);
-  animation: sl-fs-in 340ms cubic-bezier(0.2, 1.3, 0.4, 1) both;
-}
-
-.sl-fs-title {
-  font-size: 0.48rem;
-  font-weight: 900;
-  letter-spacing: 0.12em;
-  line-height: 1.25;
-  color: rgba(255, 255, 255, 0.92);
-}
-
-.sl-fs-count {
-  font-size: 2.1rem;
-  font-weight: 900;
-  line-height: 1;
-  color: #fff8d8;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.55);
-  animation: sl-count-pop 360ms cubic-bezier(0.2, 1.4, 0.4, 1);
-}
-
-.sl-fs-sub {
-  margin-top: 0.22rem;
-  font-size: 0.46rem;
-  font-weight: 900;
-  letter-spacing: 0.1em;
-  color: rgba(255, 255, 255, 0.82);
-}
-
-.sl-fs-total {
-  font-size: 0.86rem;
-  font-weight: 900;
-  font-variant-numeric: tabular-nums;
-  color: #ffe9a8;
-}
-
 /* === ALT BİLGİ VE KONTROLLER === */
-.sl-stats {
-  display: grid;
-  width: 100%;
-  max-width: 32rem;
-  flex-shrink: 0;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.35rem;
-}
-
-.sl-stat {
-  border-radius: 0.8rem;
-  border: 1px solid rgba(255, 214, 102, 0.42);
-  background: linear-gradient(180deg, rgba(54, 16, 82, 0.92), rgba(28, 7, 46, 0.94));
-  padding: 0.22rem 0.4rem;
-  text-align: center;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
-}
-
-.sl-stat-label {
-  display: block;
-  font-size: 0.5rem;
-  font-weight: 900;
-  letter-spacing: 0.18em;
-  color: rgba(255, 226, 160, 0.82);
-}
-
-.sl-stat-value {
-  display: block;
-  font-size: 0.98rem;
-  font-weight: 900;
-  font-variant-numeric: tabular-nums;
-  color: #fff;
-}
-
-.sl-stat-win .sl-stat-value {
-  color: #ffe9a8;
-}
-
-.sl-stat-live {
-  border-color: rgba(255, 210, 31, 0.9);
-  animation: sl-stat-pulse 620ms ease-in-out infinite alternate;
-}
-
-.sl-stats-free .sl-stat-bet .sl-stat-value {
-  color: #ff9ad4;
-}
-
 .sl-foot {
   position: relative;
   z-index: 10;
@@ -463,22 +378,6 @@
   font-weight: 800;
   color: #ffd35c;
   text-align: center;
-}
-
-.sl-refill {
-  flex-shrink: 0;
-  border-radius: 9999px;
-  border: 1px solid rgba(255, 214, 102, 0.7);
-  background-image: linear-gradient(180deg, #ffd21f, #ff8a1f);
-  padding: 0.3rem 0.9rem;
-  font-size: 0.7rem;
-  font-weight: 900;
-  color: #3a1200;
-  box-shadow: 0 10px 22px -14px #000;
-}
-
-.sl-refill:active {
-  transform: translateY(1px) scale(0.98);
 }
 
 /* === BÜYÜK KAZANÇ VE BONUS EKRANLARI === */
@@ -508,8 +407,7 @@
   pointer-events: none;
 }
 
-.sl-overlay-card,
-.sl-free-card {
+.sl-overlay-card {
   position: relative;
   width: min(21rem, 100%);
   border-radius: 1.5rem;
@@ -521,8 +419,7 @@
   animation: sl-card-in 460ms cubic-bezier(0.2, 1.3, 0.4, 1) both;
 }
 
-.sl-overlay-title,
-.sl-free-title {
+.sl-overlay-title {
   font-size: 1.25rem;
   font-weight: 900;
   letter-spacing: 0.06em;
@@ -576,38 +473,6 @@
   filter: brightness(1.12);
 }
 
-.sl-free-kicker {
-  font-size: 0.56rem;
-  font-weight: 900;
-  letter-spacing: 0.24em;
-  color: rgba(255, 226, 160, 0.85);
-}
-
-.sl-free-card {
-  --sl-tier: #ff5ac8;
-}
-
-.sl-free-count {
-  font-size: 3rem;
-  font-weight: 900;
-  line-height: 1.05;
-  color: #fff8d8;
-  text-shadow: 0 0 26px rgba(255, 138, 212, 0.9);
-  animation: sl-title-pop 560ms cubic-bezier(0.2, 1.4, 0.4, 1) both;
-}
-
-.sl-free-note {
-  font-size: 0.62rem;
-  font-weight: 800;
-  color: rgba(255, 226, 160, 0.82);
-}
-
-.sl-free-btn {
-  background-image: linear-gradient(180deg, #ffd21f, #ff8a1f);
-  color: #3a1200;
-  border-color: rgba(255, 255, 255, 0.5);
-}
-
 /* === ANİMASYONLAR === */
 @keyframes sl-roll {
   from { transform: translateY(var(--sl-roll)); }
@@ -653,22 +518,6 @@
   to { box-shadow: 0 24px 50px -26px #000, 0 0 46px -8px rgba(255, 210, 31, 0.9), inset 0 2px 0 rgba(255, 255, 255, 0.55); }
 }
 
-@keyframes sl-stat-pulse {
-  from { filter: brightness(1); }
-  to { filter: brightness(1.25); }
-}
-
-@keyframes sl-fs-in {
-  0% { transform: translateX(-18px) scale(0.85); opacity: 0; }
-  100% { transform: translateX(0) scale(1); opacity: 1; }
-}
-
-@keyframes sl-count-pop {
-  0% { transform: scale(0.6); }
-  60% { transform: scale(1.22); }
-  100% { transform: scale(1); }
-}
-
 @keyframes sl-fade {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -701,33 +550,6 @@
   .sl-stage {
     flex-direction: column;
     gap: 0.4rem;
-  }
-
-  .sl-fs {
-    display: flex;
-    width: 100%;
-    max-width: 20rem;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem;
-    padding: 0.28rem 0.7rem;
-    text-align: left;
-  }
-
-  .sl-fs-title {
-    flex: 1;
-  }
-
-  .sl-fs-count {
-    font-size: 1.5rem;
-  }
-
-  .sl-fs-sub {
-    margin-top: 0;
-  }
-
-  .sl-fs-total {
-    font-size: 0.8rem;
   }
 }
 

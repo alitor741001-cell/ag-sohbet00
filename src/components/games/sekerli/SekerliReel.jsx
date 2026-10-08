@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import SekerliSymbol from './SekerliSymbol';
-import { ROWS, randomSymbol } from './sekerliConfig';
+import { ROWS } from './sekerliConfig';
+import { randomSymbol } from './sekerliBoard';
 
 // Görünür alanın üstünde akan sembol sayısı ve sütun başına dönüş süresi.
 const ROLL_ROWS = 7;

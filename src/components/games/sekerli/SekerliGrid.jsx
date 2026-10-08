@@ -5,7 +5,7 @@ import SekerliReel from './SekerliReel';
 export default function SekerliGrid({ game }) {
   return (
     <div className="sl-board">
-      {game.grid.map((column, reel) => (
+      {game.board.map((column, reel) => (
         <SekerliReel
           key={reel}
           reel={reel}

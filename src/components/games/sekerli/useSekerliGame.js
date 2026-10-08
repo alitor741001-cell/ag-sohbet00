@@ -1,52 +1,53 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import {
-  BET_LEVELS,
-  CASCADE_MULT,
-  LINES,
-  REFILL_CREDITS,
-  START_CREDITS,
-  tierFor,
-} from './sekerliConfig';
-import { EMPTY_CELLS, collapseGrid, createGrid, evaluateGrid } from './sekerliEngine';
+import { base44 } from '@/api/base44Client';
+import { BET_LEVELS, LINES, REELS, ROWS, tierFor } from './sekerliConfig';
+import { EMPTY_CELLS, collapseBoard, mergeSymbols, randomSymbol, toBoard } from './sekerliBoard';
 import { sekerliSound, unlockAudio } from '@/lib/sekerliAudio';
 
 // Tur zamanlamaları: makara akışı, kazanan parlaması, patlama ve düşme.
-const SPIN_MS = 2100;
-const WIN_HOLD_MS = 850;
-const BOOM_MS = 420;
-const FALL_MS = 520;
-const FREE_DELAY_MS = 950;
+const ROLL_MS = 1900;
+const WIN_HOLD_MS = 780;
+const BOOM_MS = 400;
+const FALL_MS = 480;
 const AUTO_DELAY_MS = 700;
 const WIN_SHOW_MS = 1700;
 
+// Süs ızgarası: sunucu turu hesaplarken ekranda duran semboller.
+const fillerGrid = () =>
+  Array.from({ length: REELS }, () => Array.from({ length: ROWS }, () => randomSymbol()));
+
+const cellKeys = (cells) => new Set((cells || []).map((cell) => `${cell.reel}-${cell.row}`));
+
 /**
- * ŞEKERLİ MEYVE oyun durumu: demo kredi, makara turu, takla zinciri ve bedava çevrimler.
- * Tüm mantık istemcide çalışır; gerçek para, ödeme veya sunucu işlemi yoktur.
+ * ŞEKERLİ MEYVE oyun durumu: coin bakiyesi, bahis, tur, takla zinciri ve çevirme hakkı.
+ * Sonuç sunucudan gelir; ekran zinciri adım adım canlandırır.
  */
 export default function useSekerliGame() {
-  const [credits, setCredits] = useState(START_CREDITS);
-  const [betIndex, setBetIndex] = useState(0);
-  const [grid, setGrid] = useState(() => createGrid());
+  const [status, setStatus] = useState('loading');
+  const [coins, setCoins] = useState(0);
+  const [bet, setBet] = useState(BET_LEVELS[0]);
+  const [spins, setSpins] = useState(0);
+  const [totalWon, setTotalWon] = useState(0);
+  // "15 çevirme hakkı" kutusunun bedeli, kalan turu ve paket tur sayısı sunucudan gelir.
+  const [sessionPrice, setSessionPrice] = useState(0);
+  const [sessionSpins, setSessionSpins] = useState(0);
+  const [sessionSize, setSessionSize] = useState(15);
+  const [sessionResult, setSessionResult] = useState(null);
+  const [board, setBoard] = useState(() => toBoard(fillerGrid()));
   const [phase, setPhase] = useState('idle'); // idle | spin | win | boom | fall
   const [spinning, setSpinning] = useState(false);
   const [stopping, setStopping] = useState(false);
   const [spinKey, setSpinKey] = useState(0);
   const [winCells, setWinCells] = useState(EMPTY_CELLS);
   const [newCells, setNewCells] = useState(EMPTY_CELLS);
-  const [cascade, setCascade] = useState(0);
-  const [tumbleWin, setTumbleWin] = useState(0);
+  const [multiplier, setMultiplier] = useState(1);
   const [spinWin, setSpinWin] = useState(0);
+  const [win, setWin] = useState(0);
   const [showWin, setShowWin] = useState(false);
-  const [freeLeft, setFreeLeft] = useState(0);
-  const [freeTotal, setFreeTotal] = useState(0);
-  const [freeIntro, setFreeIntro] = useState(0);
-  const [inFree, setInFree] = useState(false);
-  const [bonus, setBonus] = useState(null);
   const [prize, setPrize] = useState(null);
   const [auto, setAuto] = useState(false);
   const [sound, setSound] = useState(true);
   const [message, setMessage] = useState('');
-  const [broke, setBroke] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const busyRef = useRef(false);
@@ -55,17 +56,17 @@ export default function useSekerliGame() {
   const acceptRef = useRef(null);
   const runRef = useRef(() => {});
   const mountedRef = useRef(true);
-  const creditsRef = useRef(credits);
-  const betRef = useRef(BET_LEVELS[betIndex]);
-  const freeLeftRef = useRef(0);
-  const freeTotalRef = useRef(0);
-  const inFreeRef = useRef(false);
+  const coinsRef = useRef(0);
+  const betRef = useRef(BET_LEVELS[0]);
+  const sessionRef = useRef(0);
   const autoRef = useRef(false);
   const soundRef = useRef(true);
+  // Çevirme hakkı boyunca biriken kazanç: tur bitene kadar sıfırlanmaz.
+  const sessionWinRef = useRef(0);
 
-  useEffect(() => { creditsRef.current = credits; }, [credits]);
-  useEffect(() => { betRef.current = BET_LEVELS[betIndex]; }, [betIndex]);
-  useEffect(() => { inFreeRef.current = inFree; }, [inFree]);
+  useEffect(() => { coinsRef.current = coins; }, [coins]);
+  useEffect(() => { betRef.current = bet; }, [bet]);
+  useEffect(() => { sessionRef.current = sessionSpins; }, [sessionSpins]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -103,188 +104,170 @@ export default function useSekerliGame() {
     timersRef.current.push(timer);
   }), []);
 
-  /** Büyük kazanç ve bonus özeti ekranı onaylanana kadar akış bekler. */
+  /** Büyük kazanç ekranı onaylanana kadar akış bekler. */
   const waitAccept = useCallback(() => new Promise((resolve) => { acceptRef.current = resolve; }), []);
 
   const continueAfterOverlay = useCallback(() => {
     setPrize(null);
-    setBonus(null);
     const resolve = acceptRef.current;
     acceptRef.current = null;
     if (resolve) resolve();
   }, []);
 
-  const run = useCallback(async (isFree) => {
-    const bet = betRef.current;
-    const totalBet = bet * LINES;
+  const applyState = useCallback((data) => {
+    if (!data) return;
+    if (typeof data.coins === 'number') setCoins(data.coins);
+    if (typeof data.bet === 'number') setBet(data.bet);
+    if (typeof data.total_won === 'number') setTotalWon(data.total_won);
+    if (typeof data.spins === 'number') setSpins(data.spins);
+    if (typeof data.session_price === 'number') setSessionPrice(data.session_price);
+    if (typeof data.session_spins === 'number') setSessionSpins(data.session_spins);
+    if (typeof data.session_size === 'number') setSessionSize(data.session_size);
+  }, []);
 
-    if (!isFree && creditsRef.current < totalBet) {
+  useEffect(() => {
+    let cancelled = false;
+    base44.functions
+      .invoke('sekerli-game', { action: 'state' })
+      .then((response) => {
+        if (cancelled) return;
+        applyState(response.data);
+        setStatus('ready');
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        setStatus('error');
+        setMessage(error?.response?.data?.error || 'Oyun yüklenemedi.');
+      });
+    return () => { cancelled = true; };
+  }, [applyState]);
+
+  const run = useCallback(async () => {
+    const currentBet = betRef.current;
+    const totalBet = currentBet * LINES;
+    // Çevirme hakkı sürerken turlar ücret almaz.
+    const inSession = sessionRef.current > 0;
+    const cost = inSession ? 0 : totalBet;
+
+    if (!inSession && coinsRef.current < cost) {
       autoRef.current = false;
       setAuto(false);
-      setBroke(true);
-      setMessage('Kredi yetmiyor. Demo kredi yükleyebilirsin.');
+      setMessage('Yetersiz coin. Coin bakiyene dokunup coin yükle.');
       return;
     }
 
     busyRef.current = true;
     setBusy(true);
     setMessage('');
-    setBroke(false);
     setPrize(null);
     setWinCells(EMPTY_CELLS);
     setNewCells(EMPTY_CELLS);
-    setCascade(0);
-    setTumbleWin(0);
+    setMultiplier(1);
     setSpinWin(0);
     setShowWin(false);
     setStopping(false);
-    if (!isFree) setCredits((value) => value - totalBet);
+    // Bahis tur başlarken bakiyeden düşer: coin gerçek zamanlı azalır.
+    if (cost > 0) setCoins((value) => Math.max(0, value - cost));
+    if (!inSession) {
+      sessionWinRef.current = 0;
+      setWin(0);
+    }
 
-    const settled = createGrid();
-    setGrid(settled);
-    setSpinKey((key) => key + 1);
     setSpinning(true);
     setPhase('spin');
+    setSpinKey((key) => key + 1);
     if (soundRef.current) {
       unlockAudio();
       sekerliSound.spin();
     }
-    await wait(SPIN_MS);
-    if (!mountedRef.current) return;
-    setSpinning(false);
-    setPhase('idle');
 
-    let working = settled;
-    let step = 0;
-    let gain = 0;
-    let pendingFree = 0;
+    try {
+      const [response] = await Promise.all([
+        base44.functions.invoke('sekerli-game', { action: 'spin', bet: currentBet }),
+        wait(ROLL_MS),
+      ]);
+      const data = response.data || {};
+      const steps = Array.isArray(data.steps) ? data.steps : [];
+      const landed = steps.length ? steps[0].grid : data.final_grid;
 
-    // Takla zinciri: her kazanç patlar, yerine yeni semboller düşer ve çarpan büyür.
-    for (;;) {
-      const result = evaluateGrid(working);
-      const units = result.lineTotal + result.scatterPay * LINES;
-      const amount = units * bet;
-      if (amount <= 0) break;
-
-      const multiplier = CASCADE_MULT[Math.min(step, CASCADE_MULT.length - 1)];
-      const stepAmount = amount * multiplier;
-      step += 1;
-      gain += stepAmount;
-      if (result.freeSpins > 0) pendingFree += result.freeSpins;
-
-      setCascade(step);
-      setTumbleWin(gain);
-      setSpinWin(gain);
-      setWinCells(result.cells);
-      setPhase('win');
-      setShowWin(true);
-      if (soundRef.current) sekerliSound.win(multiplier);
-      await wait(WIN_HOLD_MS);
-      if (!mountedRef.current) return;
-
-      const cleared = new Set([...result.cells, ...result.scatterCells]);
-      if (!cleared.size) break;
-
-      setPhase('boom');
-      if (soundRef.current) sekerliSound.pop();
-      await wait(BOOM_MS);
-      if (!mountedRef.current) return;
-
-      const collapsed = collapseGrid(working, cleared);
-      setGrid(collapsed.grid);
-      setNewCells(collapsed.added);
-      setWinCells(EMPTY_CELLS);
-      setPhase('fall');
-      await wait(FALL_MS);
-      if (!mountedRef.current) return;
-
-      working = collapsed.grid;
-      setNewCells(EMPTY_CELLS);
+      setSpinning(false);
       setPhase('idle');
-    }
+      let working = toBoard(landed);
+      if (landed) setBoard(working);
 
-    setSpinning(false);
-    setWinCells(EMPTY_CELLS);
-    setNewCells(EMPTY_CELLS);
-    setPhase('idle');
-    busyRef.current = false;
-    setBusy(false);
-
-    if (gain > 0) {
-      setCredits((value) => value + gain);
-      if (isFree) {
-        freeTotalRef.current += gain;
-        setFreeTotal(freeTotalRef.current);
-      }
-    }
-
-    const tier = tierFor(gain, totalBet);
-    if (tier && pendingFree <= 0) {
-      setPrize({ amount: gain, label: tier.label, tone: tier.tone, multiplier: gain / totalBet });
-      if (soundRef.current) sekerliSound.big();
-      await waitAccept();
-      if (!mountedRef.current) return;
-    } else if (gain > 0) {
-      const timer = window.setTimeout(() => {
-        if (mountedRef.current) setShowWin(false);
-      }, WIN_SHOW_MS);
-      timersRef.current.push(timer);
-    }
-
-    // Bedava çevrim akışı: bahis düşmeden zincir devam eder.
-    if (isFree) {
-      if (pendingFree > 0) {
-        const boosted = freeLeftRef.current + pendingFree;
-        freeLeftRef.current = boosted;
-        setFreeLeft(boosted);
-        if (soundRef.current) sekerliSound.free();
-      }
-      const left = Math.max(0, freeLeftRef.current - 1);
-      freeLeftRef.current = left;
-      setFreeLeft(left);
-      if (left > 0) {
-        await delay(FREE_DELAY_MS);
+      // Takla zinciri: her adım parlar, patlar ve yerine yeniler düşer.
+      let gain = 0;
+      for (let index = 0; index < steps.length; index += 1) {
+        const step = steps[index];
+        gain += Math.round(step.units * step.multiplier * currentBet);
+        setMultiplier(step.multiplier);
+        setSpinWin(gain);
+        setWinCells(cellKeys(step.cells));
+        setPhase('win');
+        setShowWin(true);
+        if (soundRef.current) sekerliSound.win(step.multiplier);
+        await wait(WIN_HOLD_MS);
         if (!mountedRef.current) return;
-        runRef.current(true);
-        return;
-      }
-      inFreeRef.current = false;
-      setInFree(false);
-      setShowWin(false);
-      const total = freeTotalRef.current;
-      freeTotalRef.current = 0;
-      setFreeTotal(0);
-      setBonus({ amount: total });
-      if (soundRef.current) sekerliSound.big();
-      await waitAccept();
-      if (!mountedRef.current) return;
-    } else if (pendingFree > 0) {
-      // Yıldız bonus: önce duyuru ekranı, sonra çevrimler.
-      freeTotalRef.current = 0;
-      setFreeTotal(0);
-      freeLeftRef.current = pendingFree;
-      setFreeLeft(pendingFree);
-      inFreeRef.current = true;
-      setInFree(true);
-      setFreeIntro(pendingFree);
-      if (soundRef.current) sekerliSound.free();
-      return;
-    }
 
-    // Otomatik oyun: kredi yettiği sürece turlar kendiliğinden devam eder.
-    if (autoRef.current) {
-      if (creditsRef.current >= betRef.current * LINES) {
-        await delay(AUTO_DELAY_MS);
-        if (!mountedRef.current || !autoRef.current || busyRef.current) return;
-        runRef.current(false);
-      } else {
-        autoRef.current = false;
-        setAuto(false);
-        setBroke(true);
-        setMessage('Kredi yetmiyor. Demo kredi yükleyebilirsin.');
+        const cleared = cellKeys([...(step.cells || []), ...(step.scatter_cells || [])]);
+        const nextGrid = steps[index + 1]?.grid || data.final_grid;
+        const collapsed = collapseBoard(working, cleared);
+
+        setPhase('boom');
+        if (soundRef.current) sekerliSound.pop();
+        await wait(BOOM_MS);
+        if (!mountedRef.current) return;
+
+        // Düşen karelerin sembolleri sunucudan gelir: ekran ile sonuç aynı kalır.
+        working = mergeSymbols(collapsed.board, nextGrid);
+        setBoard(working);
+        setWinCells(EMPTY_CELLS);
+        setNewCells(collapsed.added);
+        setPhase('fall');
+        await wait(FALL_MS);
+        if (!mountedRef.current) return;
+        setNewCells(EMPTY_CELLS);
+        setPhase('idle');
       }
+
+      applyState(data);
+      // Çevirme hakkı boyunca kazanç birikir; normal turda tur kazancı yazılır.
+      const won = data.win || 0;
+      sessionWinRef.current += won;
+      setWin(sessionWinRef.current);
+
+      // Çevirme hakkı sürerken ara kutlama yapılmaz; sonuç tur bitince gösterilir.
+      const tier = inSession ? null : tierFor(won, totalBet);
+      if (tier) {
+        setPrize({ amount: won, label: tier.label, tone: tier.tone, multiplier: won / totalBet });
+        if (soundRef.current) sekerliSound.big();
+        await waitAccept();
+        if (!mountedRef.current) return;
+      } else if (won > 0) {
+        const timer = window.setTimeout(() => {
+          if (mountedRef.current) setShowWin(false);
+        }, WIN_SHOW_MS);
+        timersRef.current.push(timer);
+      }
+
+      // 15 tur bittiğinde biriken kazanç kabul ekranında gösterilir.
+      if (inSession && (data.session_spins ?? 0) <= 0) setSessionResult(sessionWinRef.current);
+    } catch (error) {
+      const raw = error?.response?.data?.error;
+      autoRef.current = false;
+      setAuto(false);
+      // Tur oynanmadıysa bahis bakiyeye geri döner.
+      if (cost > 0) setCoins((value) => value + cost);
+      setMessage(raw && error?.response?.status !== 429 && !/rate|limit|sınır|yoğun/i.test(raw) ? raw : 'Çok hızlı oynuyorsun, birkaç saniye bekle.');
+    } finally {
+      stopRef.current = null;
+      setStopping(false);
+      setSpinning(false);
+      setPhase('idle');
+      busyRef.current = false;
+      setBusy(false);
     }
-  }, [delay, wait, waitAccept]);
+  }, [applyState, wait, waitAccept]);
 
   useEffect(() => { runRef.current = run; }, [run]);
 
@@ -296,9 +279,9 @@ export default function useSekerliGame() {
   }, [message]);
 
   const spin = useCallback(() => {
-    if (busyRef.current || inFreeRef.current || freeLeftRef.current > 0) return;
+    if (busyRef.current) return;
     unlockAudio();
-    runRef.current(false);
+    runRef.current();
   }, []);
 
   const stop = useCallback(() => {
@@ -307,36 +290,40 @@ export default function useSekerliGame() {
     stopRef.current?.();
   }, []);
 
-  const startFreeSpins = useCallback(() => {
-    if (freeLeftRef.current <= 0) return;
-    setFreeIntro(0);
-    runRef.current(true);
-  }, []);
+  const saveBet = useCallback(async (next) => {
+    setBet(next);
+    try {
+      const response = await base44.functions.invoke('sekerli-game', { action: 'bet', bet: next });
+      applyState(response.data);
+    } catch (error) {
+      // Bahis anlık olarak korunur.
+    }
+  }, [applyState]);
 
   const changeBet = useCallback((direction) => {
-    if (busyRef.current || inFreeRef.current) return;
+    if (busyRef.current) return;
+    const index = BET_LEVELS.indexOf(bet);
+    const nextIndex = Math.min(BET_LEVELS.length - 1, Math.max(0, (index < 0 ? 0 : index) + direction));
+    const next = BET_LEVELS[nextIndex];
+    if (next === bet) return;
     if (soundRef.current) sekerliSound.click();
-    setBetIndex((index) => Math.min(BET_LEVELS.length - 1, Math.max(0, index + direction)));
-  }, []);
+    saveBet(next);
+  }, [bet, saveBet]);
 
   const maxBet = useCallback(() => {
-    if (busyRef.current || inFreeRef.current) return;
-    let index = 0;
-    BET_LEVELS.forEach((value, position) => {
-      if (value * LINES <= creditsRef.current) index = position;
-    });
-    setBetIndex(index);
+    if (busyRef.current) return;
+    const affordable = BET_LEVELS.filter((value) => value * LINES <= coinsRef.current).pop() || BET_LEVELS[0];
+    if (affordable === bet) return;
     if (soundRef.current) sekerliSound.click();
-  }, []);
+    saveBet(affordable);
+  }, [bet, saveBet]);
 
-  const toggleAuto = useCallback(() => {
-    if (inFreeRef.current) return;
-    const next = !autoRef.current;
+  const toggleAuto = useCallback(() => setAuto((value) => {
+    const next = !value;
     autoRef.current = next;
-    setAuto(next);
     if (soundRef.current) sekerliSound.click();
-    if (next && !busyRef.current) runRef.current(false);
-  }, []);
+    return next;
+  }), []);
 
   const toggleSound = useCallback(() => {
     const next = !soundRef.current;
@@ -348,47 +335,66 @@ export default function useSekerliGame() {
     }
   }, []);
 
-  const refill = useCallback(() => {
-    setCredits((value) => value + REFILL_CREDITS);
-    setBroke(false);
-    setMessage('');
-    if (soundRef.current) sekerliSound.click();
-  }, []);
+  // Geri sayım çevirme hakkında kendiliğinden akar; AUTO açıksa turlar sürer.
+  useEffect(() => {
+    if (spinning || status !== 'ready') return undefined;
+    if (!auto && sessionSpins <= 0) return undefined;
+    const timer = window.setTimeout(() => { spin(); }, 800);
+    return () => window.clearTimeout(timer);
+  }, [auto, sessionSpins, spin, spinning, status]);
+
+  // "15 çevirme hakkı": bedel coinlerden düşülür, turlar serbest çevrilir.
+  const buySession = useCallback(async () => {
+    if (busyRef.current || status !== 'ready') return;
+    if (coinsRef.current < sessionPrice) {
+      setMessage('Yetersiz coin. Coin bakiyene dokunup coin yükle.');
+      return;
+    }
+    try {
+      const response = await base44.functions.invoke('sekerli-game', { action: 'session', bet });
+      applyState(response.data);
+      setMessage('');
+    } catch (error) {
+      setMessage(error?.response?.data?.error || 'Çevirme hakkı alınamadı.');
+    }
+  }, [applyState, bet, sessionPrice, status]);
+
+  const clearSessionResult = useCallback(() => setSessionResult(null), []);
 
   return {
-    credits,
-    bet: BET_LEVELS[betIndex],
-    grid,
+    status,
+    coins,
+    bet,
+    spins,
+    totalWon,
+    board,
     phase,
     spinning,
     stopping,
     spinKey,
     winCells,
     newCells,
-    cascade,
-    cascadeMult: cascade > 0 ? CASCADE_MULT[Math.min(cascade - 1, CASCADE_MULT.length - 1)] : 1,
-    tumbleWin,
+    multiplier,
     spinWin,
+    win,
     showWin,
-    freeLeft,
-    freeTotal,
-    freeIntro,
-    inFree,
-    bonus,
     prize,
     auto,
     sound,
     message,
-    broke,
     busy,
     spin,
     stop,
-    startFreeSpins,
     changeBet,
     maxBet,
     toggleAuto,
     toggleSound,
+    buySession,
+    clearSessionResult,
     continueAfterOverlay,
-    refill,
+    sessionPrice,
+    sessionSpins,
+    sessionSize,
+    sessionResult,
   };
 }

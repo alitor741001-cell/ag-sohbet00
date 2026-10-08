@@ -83,6 +83,10 @@
       "type": "integer",
       "default": 0
     },
+    "sekerli_session_spins": {
+      "type": "integer",
+      "default": 0
+    },
     "lines": {
       "type": "number",
       "default": 50
