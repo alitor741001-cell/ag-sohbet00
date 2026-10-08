@@ -8,3 +8,5 @@ export const ROCKET_SPACE = `${MEDIA_BASE}/a81f845ac_generated_image.png`;
 export const ROCKET_PLANET = `${MEDIA_BASE}/855a2a95e_generated_image.png`;
 // Uçan roket: siyah zemini ekran karışımıyla kaybolur, motor alevi ayrıca çizilir.
 export const ROCKET_SHIP = `${MEDIA_BASE}/99966ae72_generated_image.png`;
+// Uzakta süzülen yolcu uçağı: siyah zemini ekran karışımıyla kaybolur.
+export const ROCKET_JET = `${MEDIA_BASE}/44f8cb43a_generated_image.png`;

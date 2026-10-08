@@ -121,7 +121,54 @@
 
 /* --- roket --- */
 /* Konum her tikte güncellenir: tarayıcı roket katmanını ayrı çizer. */
-.rk-ship-wrap { will-change: left, top, transform; }
+.rk-ship-wrap { will-change: transform; }
+.rk-ship-bob { display: block; position: relative; }
+/* Uçuş boyunca gövde kendi ekseninde hafifçe yalpalar: durağan değil, canlı uçar. */
+.rk-fly { animation: rk-fly-bank 1.6s ease-in-out infinite; }
+@keyframes rk-fly-bank {
+  0%, 100% { transform: translateY(0) rotate(-1.6deg); }
+  50% { transform: translateY(-2px) rotate(1.9deg); }
+}
+
+/* --- uzak gökyüzü trafiği: X ekseni boyunca geçen uçak --- */
+.rk-jet-lane {
+  position: absolute;
+  top: 7%;
+  left: 0;
+  width: 26%;
+  max-width: 9rem;
+  will-change: transform;
+}
+.rk-jet-cross { animation: rk-jet-cross 36s linear infinite; }
+/* Konum, burun açısı ve ölçek birlikte X ilerlemesine bağlı: yaklaşırken büyür,
+   uzaklaşırken küçülür, burun hafif yukarı bakar. */
+@keyframes rk-jet-cross {
+  0% { transform: translate3d(-70vw, 60%, 0) rotate(8deg) scale(0.6); opacity: 0; }
+  7% { opacity: 0.8; }
+  50% { transform: translate3d(44vw, 0, 0) rotate(3deg) scale(1); opacity: 0.95; }
+  93% { opacity: 0.8; }
+  100% { transform: translate3d(160vw, -70%, 0) rotate(-2deg) scale(0.56); opacity: 0; }
+}
+.rk-jet {
+  position: relative;
+  display: block;
+  width: 100%;
+  mix-blend-mode: screen;
+  filter: drop-shadow(0 0 8px rgba(127, 228, 255, 0.28));
+  -webkit-mask-image: radial-gradient(72% 72% at 50% 50%, #000 74%, transparent 100%);
+  mask-image: radial-gradient(72% 72% at 50% 50%, #000 74%, transparent 100%);
+}
+/* Uçağın ardında uzayan ince iz. */
+.rk-jet-contrail {
+  position: absolute;
+  right: 92%;
+  top: 47%;
+  height: 2.5px;
+  width: 170%;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, transparent, rgba(200, 235, 255, 0.45) 68%, rgba(255, 255, 255, 0.8));
+  filter: blur(2px);
+}
 .rk-ship {
   mix-blend-mode: screen;
   filter: drop-shadow(0 12px 18px rgba(0, 0, 0, 0.75));
@@ -409,6 +456,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .rk-idle, .rk-plume-live, .rk-stars, .rk-push-pulse { animation: none; }
+  .rk-idle, .rk-fly, .rk-plume-live, .rk-stars, .rk-push-pulse { animation: none; }
   .rk-ring-live { transition: none; }
+  /* Hareket azaltma tercihinde gökyüzündeki uçak hiç görünmez. */
+  .rk-jet-lane { display: none; }
 }

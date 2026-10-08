@@ -5,8 +5,9 @@ import { ROCKET_SHIP } from '../rocketAssets';
 import { flightAngle, flightPoint } from './rocketPath';
 
 /**
- * Roketin kendisi: kavisli rota üzerinde yükselir, gövdesi uçuş yönüne döner,
- * motoru canlı bir alev püskürtür. Bahis aşamasında yerinde süzülür.
+ * Roketin kendisi: yeri ve burnunun açısı doğrudan X eksenindeki ilerlemeden gelir —
+ * rota üzerinde soldan sağa süzülür, burnu gittiği yöne döner, hızlandıkça gövdesi
+ * yalpalar, uzaklaştıkça biraz küçülür ve motoru canlı alev püskürtür.
  */
 export default function RocketTrail({ progress, phase }) {
   const ref = useRef(null);
@@ -14,29 +15,36 @@ export default function RocketTrail({ progress, phase }) {
   const width = size?.width || 0;
   const height = size?.height || 0;
 
-  const point = flightPoint(progress);
-  const angle = width && height ? flightAngle(progress, width, height) : 0;
   const flying = phase === 'running';
+  const point = flightPoint(progress);
+  // X ve Y oranları sahne ölçüsüyle piksele çevrilir: konum ekran genişliğine göre ölçeklenir.
+  const x = point.x * width;
+  const y = point.y * height;
+  const angle = width && height ? flightAngle(progress, width, height) : 0;
+  // Ufuktaki perspektif: X ilerledikçe gövde bir miktar uzaklaşır.
+  const scale = 1 - 0.16 * Math.min(1, Math.max(0, progress || 0));
 
   return (
     <div ref={ref} className="pointer-events-none absolute inset-0 overflow-hidden">
-      {phase !== 'crashed' && (
+      {phase !== 'crashed' && width > 0 && (
         <div
-          className="rk-ship-wrap absolute w-[19%] max-w-[6rem]"
+          className="rk-ship-wrap absolute left-0 top-0 w-[20%] max-w-[7rem]"
           style={{
-            left: `${point.x * 100}%`,
-            top: `${point.y * 100}%`,
-            transform: `translate(-50%, -50%) rotate(${angle.toFixed(2)}deg)`,
-            transition: flying ? 'left 60ms linear, top 60ms linear, transform 60ms linear' : 'none',
+            transform: `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) translate(-50%, -50%) rotate(${angle.toFixed(2)}deg) scale(${scale.toFixed(3)})`,
+            transition: flying ? 'transform 90ms linear' : 'transform 320ms ease-out',
           }}
         >
           <span aria-hidden="true" className={`rk-plume ${flying ? 'rk-plume-live' : ''}`} />
-          <Image
-            src={ROCKET_SHIP}
-            alt="Uçan roket"
-            fittingType="fit"
-            className={`rk-ship relative block w-full ${flying ? '' : 'rk-idle'}`}
-          />
+          <span aria-hidden="true" className={`rk-ship-bob ${flying ? 'rk-fly' : 'rk-idle'}`}>
+            <Image
+              src={ROCKET_SHIP}
+              alt="Uçan roket"
+              fittingType="fit"
+              originWidth={1024}
+              originHeight={1024}
+              className="rk-ship relative block w-full"
+            />
+          </span>
         </div>
       )}
     </div>

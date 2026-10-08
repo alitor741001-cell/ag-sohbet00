@@ -6,6 +6,7 @@ import RocketPlayers from './RocketPlayers';
 import RocketTrail from './RocketTrail';
 import RocketReadout from './RocketReadout';
 import RocketFlightPath from './RocketFlightPath';
+import RocketSkyTraffic from './RocketSkyTraffic';
 
 // Çarpan her ikiye katlandığında roket yolda belirgin şekilde ilerler.
 const travel = (mult) => 1 - 1 / (1 + Math.log(Math.max(1, mult)) / 1.5);
@@ -25,6 +26,7 @@ export default function RocketStage({ game }) {
       <span aria-hidden="true" className="rk-stars absolute inset-0" />
       <Image src={ROCKET_PLANET} alt="" className="rk-planet pointer-events-none absolute" fittingType="fill" quality={80} />
       <span aria-hidden="true" className="rk-vignette absolute inset-0" />
+      <RocketSkyTraffic />
 
       {/* Uçuş rotası ve roketin kendisi. */}
       <RocketFlightPath progress={progress} />
