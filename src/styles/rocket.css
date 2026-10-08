@@ -149,14 +149,12 @@
   93% { opacity: 0.8; }
   100% { transform: translate3d(160vw, -70%, 0) rotate(-2deg) scale(0.56); opacity: 0; }
 }
+/* Uçağın siyah zemini tarayıcıda gerçek zamanlı kesilir: karışım ve maske gerekmez. */
 .rk-jet {
   position: relative;
   display: block;
   width: 100%;
-  mix-blend-mode: screen;
   filter: drop-shadow(0 0 8px rgba(127, 228, 255, 0.28));
-  -webkit-mask-image: radial-gradient(72% 72% at 50% 50%, #000 74%, transparent 100%);
-  mask-image: radial-gradient(72% 72% at 50% 50%, #000 74%, transparent 100%);
 }
 /* Uçağın ardında uzayan ince iz. */
 .rk-jet-contrail {
@@ -169,12 +167,9 @@
   background: linear-gradient(90deg, transparent, rgba(200, 235, 255, 0.45) 68%, rgba(255, 255, 255, 0.8));
   filter: blur(2px);
 }
+/* Roketin siyah zemini tarayıcıda gerçek zamanlı kesilir: karartma maskesi gerekmez. */
 .rk-ship {
-  mix-blend-mode: screen;
-  filter: drop-shadow(0 12px 18px rgba(0, 0, 0, 0.75));
-  /* Görselin kare çerçevesi kenarlardan sönümlenir: uzayda keskin bir dikdörtgen kalmaz. */
-  -webkit-mask-image: radial-gradient(74% 74% at 50% 50%, #000 76%, transparent 100%);
-  mask-image: radial-gradient(74% 74% at 50% 50%, #000 76%, transparent 100%);
+  filter: drop-shadow(0 10px 16px rgba(0, 0, 0, 0.6));
 }
 .rk-plume {
   position: absolute;

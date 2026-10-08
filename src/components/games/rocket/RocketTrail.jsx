@@ -2,6 +2,7 @@ import React, { useRef } from 'react';
 import { useSize } from '@/hooks/use-size';
 import { Image } from '@/components/ui/image';
 import { ROCKET_SHIP } from '../rocketAssets';
+import useCutoutImage from '@/lib/cutoutImage';
 import { flightAngle, flightPoint } from './rocketPath';
 
 /**
@@ -11,6 +12,8 @@ import { flightAngle, flightPoint } from './rocketPath';
  */
 export default function RocketTrail({ progress, phase }) {
   const ref = useRef(null);
+  // Siyah zemini tarayıcıda gerçek zamanlı kesilmiş roket görseli.
+  const shipSrc = useCutoutImage(ROCKET_SHIP);
   const size = useSize(ref);
   const width = size?.width || 0;
   const height = size?.height || 0;
@@ -26,7 +29,7 @@ export default function RocketTrail({ progress, phase }) {
 
   return (
     <div ref={ref} className="pointer-events-none absolute inset-0 overflow-hidden">
-      {phase !== 'crashed' && width > 0 && (
+      {phase !== 'crashed' && width > 0 && shipSrc && (
         <div
           className="rk-ship-wrap absolute left-0 top-0 w-[20%] max-w-[7rem]"
           style={{
@@ -37,7 +40,7 @@ export default function RocketTrail({ progress, phase }) {
           <span aria-hidden="true" className={`rk-plume ${flying ? 'rk-plume-live' : ''}`} />
           <span aria-hidden="true" className={`rk-ship-bob ${flying ? 'rk-fly' : 'rk-idle'}`}>
             <Image
-              src={ROCKET_SHIP}
+              src={shipSrc}
               alt="Uçan roket"
               fittingType="fit"
               originWidth={1024}
