@@ -1,10 +1,8 @@
-/* ELİMİNSLOT ek nesneleri: tavuk (bedava tur), zar (jackpot) ve sandık (jackpot barı). */
+/* ELİMİNSLOT ek nesneleri: zar (jackpot) ve sandık (jackpot barı). */
 
 /* Ek nesnelerin rozeti: kartın altında kısa etiket. */
-.el-sym-free,
 .el-sym-dice,
 .el-sym-chest { position: absolute; }
-.el-sym-free::after,
 .el-sym-dice::after,
 .el-sym-chest::after {
   position: absolute;
@@ -18,14 +16,6 @@
   font-weight: 900;
   letter-spacing: .04em;
   white-space: nowrap;
-}
-
-/* Tavuk: ücretsiz çevirme hakkı verir. */
-.el-sym-free { filter: drop-shadow(0 0 7px rgba(255, 138, 138, .9)); }
-.el-sym-free::after {
-  content: 'BEDAVA';
-  background: linear-gradient(180deg, #ffe9a3, #e08a14);
-  color: #2a0c02;
 }
 
 /* Zar: dört tanesi jackpotu patlatır. */
@@ -52,6 +42,22 @@
   color: rgba(255, 233, 163, .9);
 }
 .el-chest-gain { font-size: .44rem; font-weight: 900; color: #ffe9a3; }
+
+/* Sandık kutusu dolduğunda beliren topla düğmesi. */
+.el-chest-claim {
+  border-radius: 9999px;
+  background-image: linear-gradient(180deg, #ffe9a3, #e08a14);
+  padding: 0 .35rem;
+  font-size: .5rem;
+  font-weight: 900;
+  letter-spacing: .04em;
+  color: #3a1400;
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .el-chest-box-full { animation: none; }
+}
 
 /* Kapatma düğmesi: Şekerli Meyve'deki pill ölçüsünde, kırmızı tonda. */
 .el-close-pill { border-color: rgba(255, 96, 96, .8); color: #ffc2c2; }

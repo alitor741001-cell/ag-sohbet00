@@ -8,12 +8,7 @@ export const ROWS = 5;
 // Toplam bahis = bahis x 20 satır.
 export const LINES = 20;
 export const BET_LEVELS = [10, 20, 50, 100, 250, 500, 1000, 2500, 5000];
-// Altın muz bonusunun verdiği bedava tur ve göstergenin üst sınırı.
-export const FREE_MAX = 10;
 export const SCATTER_ID = 'banana';
-// Tavuk: üç tanesi bedava tur verir.
-export const CHICKEN_MIN = 3;
-export const CHICKEN_FREE_SPINS = 3;
 // Zar: dört tanesi jackpotu patlatır, biriken jackpotun yarısını öder.
 export const DICE_MIN = 4;
 // Sandık: jackpot barında birikir; her sandık bahsin bu katı kadar değer ekler.
@@ -29,13 +24,11 @@ export const ELIMIN_SYMBOLS = {
   apple: { name: 'Elma', art: FRUIT_ART.apple, pays: [36, 108, 324] },
   candy: { name: 'Şeker', art: FRUIT_ART.candy, pays: [27, 72, 216] },
   cherry: { name: 'Kiraz', art: FRUIT_ART.cherry, pays: [18, 54, 162] },
-  banana: { name: 'Altın Muz', art: FRUIT_ART.banana, scatter: true, tag: 'BEDAVA TUR', pays: [54, 108, 216] },
+  banana: { name: 'Altın Muz', art: FRUIT_ART.banana, scatter: true, pays: [54, 108, 216] },
   chicken: {
     name: 'Tavuk',
     art: ELIMIN_EXTRA_ART.chicken,
-    free: true,
-    tag: 'BEDAVA TUR',
-    note: `${CHICKEN_MIN} TAVUK = ${CHICKEN_FREE_SPINS} BEDAVA TUR`,
+    note: 'NADİR NESNE',
   },
   dice: {
     name: 'Zar',

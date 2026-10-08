@@ -29,6 +29,12 @@ export default function EliminSlotGame({ onExit, onBack }) {
   const shownWin = useCountUp(game.win, 420);
   const ready = game.status === 'ready';
 
+  // Sandık barı dolduğunda sandığa basılır: tutar bakiyeye eklenir, kutlama ekranı açılır.
+  const handleCollect = async () => {
+    const amount = await game.collectChest();
+    if (amount > 0) setPrize({ amount, title: 'SANDIK DOLDU!', subtitle: 'JACKPOT BAKİYENE EKLENDİ' });
+  };
+
   // Tur sonucu: büyük kazançta kutlama ekranı, küçük kazançta kısa parıltı.
   useEffect(() => {
     if (!game.spins) return undefined;
@@ -89,27 +95,34 @@ export default function EliminSlotGame({ onExit, onBack }) {
           </div>
         </section>
 
-        <EliminJackpotBar jackpot={game.jackpot} chests={game.chests} bet={game.bet} />
+        <EliminJackpotBar
+          jackpot={game.jackpot}
+          chests={game.chests}
+          bet={game.bet}
+          busy={game.spinning}
+          onCollect={handleCollect}
+        />
 
         {/* Izgara ekranın kalan tüm alanını kaplar; kartlar kendi karesinde durur. */}
         <div className="el-board-wrap">
-          <EliminGrid
-            spinning={game.spinning}
-            stopping={game.stopping}
-            landing={game.landing}
-            spinKey={game.spinKey}
-            grid={game.grid}
-            wins={game.wins}
-          />
+          <div className="el-frame">
+            <div className="el-frame-inner">
+              <EliminGrid
+                spinning={game.spinning}
+                stopping={game.stopping}
+                landing={game.landing}
+                spinKey={game.spinKey}
+                grid={game.grid}
+                wins={game.wins}
+              />
+            </div>
+            <span className="el-frame-shine" aria-hidden="true" />
+          </div>
         </div>
 
-        {/* Tur durumu: çevirme hakkı sürüyorsa geri sayım, bedava tur varsa sayaç. */}
+        {/* Tur durumu: çevirme hakkı sürerken kalan tur sayısı görünür. */}
         <div className="flex w-full justify-center">
-          <GameTurnBadge
-            sessionSpins={game.sessionSpins}
-            freeSpins={game.freeSpins}
-            accent="border-[#ffd75c]/80 text-[#ffe9a3]"
-          />
+          <GameTurnBadge sessionSpins={game.sessionSpins} accent="border-[#ffd75c]/80 text-[#ffe9a3]" />
         </div>
 
         {/* 15 çevirme hakkı ve coin yükleme: Şekerli Meyve'yle aynı düğmeler. */}

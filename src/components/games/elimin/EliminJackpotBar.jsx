@@ -1,6 +1,6 @@
 import React from 'react';
 import { useCurrentUser } from '@/lib/useCurrentUser';
-import { CHEST_MAX, DICE_MIN, JACKPOT_PER_CHEST, formatCoins } from './eliminConfig';
+import { CHEST_MAX, JACKPOT_PER_CHEST, formatCoins } from './eliminConfig';
 
 // Sandık: jackpot şeridinin önünde duran altın kasa.
 function Chest() {
@@ -15,36 +15,47 @@ function Chest() {
 }
 
 /**
- * Jackpot şeridi: barda biriken sandıklar ve bahis kademesine göre yükselen
- * jackpot tutarı, zar kuralı ve oyuncunun rozeti.
+ * Jackpot şeridi: solda jackpot yazısı ve tutar, sağda sandık kutusu ve oyuncu rozeti.
+ * Sandık kutusu bar dolduğunda basılabilir: biriken tutar bakiyeye eklenir, bar sıfırlanır.
  */
-export default function EliminJackpotBar({ jackpot, chests = 0, bet }) {
+export default function EliminJackpotBar({ jackpot, chests = 0, bet, busy, onCollect }) {
   const { user } = useCurrentUser();
   const avatar = user?.avatar_url || user?.avatar || '';
   const initials = (user?.full_name || '?').trim().slice(0, 1).toUpperCase();
   const filled = Math.min(CHEST_MAX, Math.max(0, chests || 0));
+  const full = filled >= CHEST_MAX;
 
   return (
     <section className="el-jackpot">
       <div className="el-jackpot-main">
         <p className="el-jackpot-label">JACKPOT</p>
         <p className="el-jackpot-value">{formatCoins(jackpot)}</p>
-        <p className="el-jackpot-hint">{DICE_MIN} ZAR → YARISI SENİN</p>
+        <p className="el-jackpot-hint">{CHEST_MAX} SANDIK DOLUNCA SANDIĞA BAS</p>
       </div>
 
-      <div className="el-jackpot-chest">
-        <Chest />
-        <span className="el-chest-bar">
-          <span className="el-chest-fill" style={{ width: `${(filled / CHEST_MAX) * 100}%` }} />
+      <div className="el-jackpot-side">
+        <button
+          type="button"
+          onClick={onCollect}
+          disabled={!full || busy}
+          aria-label="Sandığı topla"
+          className={`el-chest-box ${full ? 'el-chest-box-full' : ''}`}
+        >
+          <Chest />
+          <span className="el-chest-bar">
+            <span className="el-chest-fill" style={{ width: `${(filled / CHEST_MAX) * 100}%` }} />
+          </span>
+          <span className="el-chest-text">{filled}/{CHEST_MAX} SANDIK</span>
+          {/* Bar dolduysa toplanacak tutar, dolmadıysa sandığın eklediği değer yazar. */}
+          {full
+            ? <span className="el-chest-claim">TOPLA {formatCoins(jackpot)}</span>
+            : <span className="el-chest-gain">+{formatCoins((bet || 0) * JACKPOT_PER_CHEST)}</span>}
+        </button>
+
+        <span className="el-avatar" aria-hidden="true">
+          {avatar ? <img src={avatar} alt="" className="el-avatar-img" /> : initials}
         </span>
-        <span className="el-chest-text">{filled}/{CHEST_MAX} SANDIK</span>
-        {/* Her sandığın eklediği değer: bahis kademesiyle birlikte yükselir. */}
-        <span className="el-chest-gain">+{formatCoins((bet || 0) * JACKPOT_PER_CHEST)}</span>
       </div>
-
-      <span className="el-avatar" aria-hidden="true">
-        {avatar ? <img src={avatar} alt="" className="el-avatar-img" /> : initials}
-      </span>
     </section>
   );
 }

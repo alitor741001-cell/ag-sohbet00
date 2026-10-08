@@ -2,18 +2,17 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import gameRequest from '@/lib/gameRequest';
 import { landMs } from '@/components/games/reels/reelRoll';
 import { eliminSound, unlockAudio } from './eliminSound';
-import { BET_LEVELS, LINES } from './eliminConfig';
+import { BET_LEVELS, CHEST_MAX, LINES } from './eliminConfig';
 
 // Sonucun üzerine iniş: 6 sütunlu kare ızgara, ortak makara altyapısı.
 const LAND_MS = landMs(6);
 
-/** ELİMİNSLOT durumu: bakiye, bahis, tur kazancı, bedava turlar ve jackpot. */
+/** ELİMİNSLOT durumu: bakiye, bahis, tur kazancı, çevirme hakkı ve jackpot. */
 export default function useEliminGame() {
   const [status, setStatus] = useState('loading');
   const [coins, setCoins] = useState(0);
   const [bet, setBet] = useState(100);
   const [totalWon, setTotalWon] = useState(0);
-  const [freeSpins, setFreeSpins] = useState(0);
   const [chests, setChests] = useState(0);
   const [jackpot, setJackpot] = useState(0);
   // Zar dörtlüsünden gelen jackpot kazancı: ayrı kutlama ekranı açar.
@@ -79,7 +78,6 @@ export default function useEliminGame() {
     if (!data) return;
     if (typeof data.coins === 'number') setCoins(data.coins);
     if (typeof data.total_won === 'number') setTotalWon(data.total_won);
-    if (typeof data.free_spins === 'number') setFreeSpins(data.free_spins);
     if (typeof data.chests === 'number') setChests(data.chests);
     if (typeof data.jackpot === 'number') setJackpot(data.jackpot);
     if (typeof data.session_spins === 'number') setSessionSpins(data.session_spins);
@@ -106,10 +104,9 @@ export default function useEliminGame() {
   const spin = useCallback(async () => {
     if (busyRef.current || status !== 'ready') return;
     unlockAudio();
-    // Çevirme hakkı veya bedava tur varsa tur ücret almaz.
+    // Çevirme hakkı varsa tur ücret almaz.
     const inSession = sessionSpins > 0;
-    const isFree = inSession || freeSpins > 0;
-    const cost = isFree ? 0 : bet * LINES;
+    const cost = inSession ? 0 : bet * LINES;
     if (coins < cost) {
       setAuto(false);
       setMessage('Yetersiz coin. Coin bakiyene dokunup coin yükle.');
@@ -158,8 +155,6 @@ export default function useEliminGame() {
       }
       if (data.big_win > 0 || data.jackpot_trigger) play('bigWin');
       else if (data.win > 0) play('win');
-      // Tavuk üçlüsü ve altın muz bonusu kutlama sesiyle duyurulur.
-      if (data.free_trigger || data.chicken_trigger) play('bonus');
     } catch (error) {
       const raw = error?.response?.data?.error;
       setAuto(false);
@@ -172,7 +167,7 @@ export default function useEliminGame() {
       setSpinning(false);
       busyRef.current = false;
     }
-  }, [applyState, bet, coins, freeSpins, play, sessionSpins, status, wait]);
+  }, [applyState, bet, coins, play, sessionSpins, status, wait]);
 
   const saveBet = useCallback(async (next) => {
     setBet(next);
@@ -227,6 +222,26 @@ export default function useEliminGame() {
 
   const clearSessionResult = useCallback(() => setSessionResult(null), []);
 
+  // Sandık barı dolunca sandığa basılır: biriken jackpot bakiyeye eklenir, bar sıfırlanır.
+  const collectChest = useCallback(async () => {
+    if (busyRef.current || status !== 'ready' || chests < CHEST_MAX) return 0;
+    unlockAudio();
+    busyRef.current = true;
+    setMessage('');
+    try {
+      const response = await gameRequest('elimin-game', { action: 'chest', bet });
+      applyState(response.data);
+      play('bigWin');
+      return response.data?.chest_win || 0;
+    } catch (error) {
+      const raw = error?.response?.data?.error;
+      setMessage(raw && error?.response?.status !== 429 && !/rate|limit|sınır|yoğun/i.test(raw) ? raw : 'Çok hızlı işlem yapıyorsun, birkaç saniye bekle.');
+      return 0;
+    } finally {
+      busyRef.current = false;
+    }
+  }, [applyState, bet, chests, play, status]);
+
   const toggleAuto = useCallback(() => setAuto((value) => !value), []);
   const toggleSound = useCallback(() => setSound((value) => !value), []);
 
@@ -243,7 +258,6 @@ export default function useEliminGame() {
     coins,
     bet,
     totalWon,
-    freeSpins,
     jackpot,
     jackpotWin,
     chests,
@@ -265,6 +279,7 @@ export default function useEliminGame() {
     maxBet,
     buySession,
     clearSessionResult,
+    collectChest,
     sessionSpins,
     sessionPrice,
     sessionSize,

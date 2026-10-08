@@ -4,11 +4,9 @@ import { mirrorRecord } from '../../shared/supabaseMirror.ts';
 import {
   BET_LEVELS,
   BIG_WIN_MULTIPLE,
-  FREE_SPINS,
   LINES,
   REELS,
   ROWS,
-  SCATTER_MIN,
   evaluateFruit,
   spinFruit,
 } from '../../shared/fruitEngine.ts';
@@ -23,22 +21,20 @@ import {
 } from '../../shared/gameWallet.ts';
 
 // ELİMİNSLOT: 6 sütun x 5 satır kare kart meyve slotu.
-// Motor meyve oyunuyla aynıdır; bu oyunun bedava turları, jackpot barı ve
-// toplam kazancı ayrı sayılır.
+// Motor meyve oyunuyla aynıdır; bu oyunun jackpot barı ve toplam kazancı
+// ayrı sayılır.
 
 // --- ek nesneler ---
-// Tavuk: üç tanesi üç bedava tur verir. Zar: dört tanesi jackpotu patlatır ve
-// biriken jackpotun yarısını öder. Sandık: jackpot barında birikir.
-const CHICKEN_MIN = 3;
-const CHICKEN_FREE_SPINS = 3;
+// Zar: dört tanesi jackpotu patlatır ve biriken jackpotun yarısını öder.
+// Sandık: jackpot barında birikir. Tavuk: nadir süs nesnesi.
 const DICE_MIN = 4;
 const CHEST_MAX = 10;
 // Her sandık, bahsin bu katı kadar jackpot değeri ekler.
 const JACKPOT_PER_CHEST = 100;
-// Hücre başına ek nesne olasılığı: turda ~1,05 sandık, ~0,75 tavuk, ~0,45 zar.
-const CHEST_CHANCE = 0.035;
-const CHICKEN_CHANCE = 0.025;
-const DICE_CHANCE = 0.015;
+// Hücre başına ek nesne olasılığı: turda ~0,36 sandık, ~0,30 tavuk, ~0,24 zar.
+const CHEST_CHANCE = 0.012;
+const CHICKEN_CHANCE = 0.01;
+const DICE_CHANCE = 0.008;
 
 // Izgara meyve motoruyla üretilir, sonra karelerin bir kısmı ek nesnelerle değişir.
 function spinElimin() {
@@ -69,9 +65,6 @@ function walletView(wallet: Record<string, any>) {
     bet,
     lines: LINES,
     spins: wallet.spins ?? 0,
-    // Altın muz ve tavuktan kazanılan bedava turlar bu oyuna özeldir.
-    free_spins: wallet.elimin_free_spins ?? 0,
-    free_max: FREE_SPINS,
     // Bu oyunun kendi toplam kazancı: oyunlar birbirinden ayrı sayılır.
     total_won: wallet.total_won_elimin ?? 0,
     // Jackpot barda biriken sandıklarla ve bahis kademesiyle yükselir.
@@ -116,6 +109,25 @@ export default async function (req: Request) {
       return Response.json({ ...walletView(updated), grid: null, wins: [], win: 0 });
     }
 
+    // Sandık barı dolunca sandığa basılır: biriken jackpot bakiyeye eklenir, bar sıfırlanır.
+    if (action === 'chest') {
+      const bet = clampBet(body.bet, BET_LEVELS, wallet.bet ?? DEFAULT_BET);
+      const chests = wallet.elimin_chests ?? 0;
+      if (chests < CHEST_MAX) return Response.json({ error: 'Sandık barı henüz dolmadı.' }, { status: 400 });
+      const amount = jackpotValue(chests, bet);
+      const updated = await base44.asServiceRole.entities.GameWallet.update(wallet.id, {
+        coins: (wallet.coins ?? START_COINS) + amount,
+        bet,
+        elimin_chests: 0,
+        total_won: (wallet.total_won ?? 0) + amount,
+        total_won_elimin: (wallet.total_won_elimin ?? 0) + amount,
+        last_spin_at: new Date().toISOString(),
+      });
+      // Supabase aynası: bakiye iki altyapıda birden güncel kalır.
+      waitUntil(mirrorRecord(base44, 'GameWallet', updated));
+      return Response.json({ ...walletView(updated), grid: null, wins: [], win: 0, chest_win: amount });
+    }
+
     if (action === 'bet') {
       const bet = clampBet(body.bet, BET_LEVELS, wallet.bet ?? DEFAULT_BET);
       const updated = await base44.asServiceRole.entities.GameWallet.update(wallet.id, { bet });
@@ -125,14 +137,12 @@ export default async function (req: Request) {
     if (action === 'spin') {
       const bet = clampBet(body.bet, BET_LEVELS, wallet.bet ?? DEFAULT_BET);
       const stake = bet * LINES;
-      // Çevirme hakkı veya bedava tur varsa tur ücret almaz.
+      // Çevirme hakkı varsa tur ücret almaz.
       const sessionTurns = wallet.elimin_session_spins ?? 0;
       const inSession = sessionTurns > 0;
-      const freeTurns = wallet.elimin_free_spins ?? 0;
-      const isFree = inSession || freeTurns > 0;
-      const cost = isFree ? 0 : stake;
+      const cost = inSession ? 0 : stake;
       const coins = wallet.coins ?? START_COINS;
-      if (!isFree && coins < cost) return Response.json({ error: 'Yetersiz coin.' }, { status: 400 });
+      if (coins < cost) return Response.json({ error: 'Yetersiz coin.' }, { status: 400 });
 
       const grid = spinElimin();
       const result = evaluateFruit(grid, bet);
@@ -147,13 +157,6 @@ export default async function (req: Request) {
       const jackpotWin = jackpotTrigger ? Math.floor(jackpot / 2) : 0;
       const chestsLeft = jackpotTrigger ? 0 : chests;
 
-      // 4 ve üzeri altın muz hem bonus öder hem bedava tur verir; tavuk üçlüsü
-      // ayrıca üç bedava tur ekler.
-      const freeTrigger = countOf(grid, 'banana') >= SCATTER_MIN;
-      const freeAward = countOf(grid, 'chicken') >= CHICKEN_MIN ? CHICKEN_FREE_SPINS : 0;
-      // Çevirme hakkı sürerken bedava tur harcanmaz.
-      const usedFree = !inSession && freeTurns > 0 ? 1 : 0;
-      const freeLeft = Math.max(0, freeTurns - usedFree) + (freeTrigger ? FREE_SPINS : 0) + freeAward;
       const sessionLeft = Math.max(0, sessionTurns - (inSession ? 1 : 0));
 
       const payout = total + jackpotWin;
@@ -162,7 +165,7 @@ export default async function (req: Request) {
       const updated = await base44.asServiceRole.entities.GameWallet.update(wallet.id, {
         coins: coins - cost + payout,
         bet,
-        elimin_free_spins: freeLeft,
+        elimin_free_spins: 0,
         elimin_chests: chestsLeft,
         elimin_session_spins: sessionLeft,
         spins: (wallet.spins ?? 0) + 1,
@@ -180,9 +183,6 @@ export default async function (req: Request) {
         wins: result.wins,
         win: total,
         cost,
-        free_trigger: freeTrigger,
-        free_award: freeAward,
-        chicken_trigger: freeAward > 0,
         chest_gain: chestGain,
         jackpot_trigger: jackpotTrigger,
         jackpot_win: jackpotWin,
