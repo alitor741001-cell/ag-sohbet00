@@ -289,17 +289,29 @@ export function buildEliminTile(src) {
   return task;
 }
 
-/** Hazır olana kadar görselin kendisi gösterilir. */
+/** Hazır kesilmiş görsel: işlenmişse doğrudan kullanılır, kaynak görsel bekletilmez. */
+const readyTile = (src) => {
+  const found = cache.get(src);
+  return typeof found === 'string' ? found : null;
+};
+
+/**
+ * Hazır olana kadar görselin kendisi gösterilir; ama işlenmiş görsel ilk karede
+ * kullanılır. Makara dönerken onlarca kare aynı anda kurulduğu için bu şart:
+ * aksi halde her kare önce zeminli kaynak görselle, sonra kesilmiş hâliyle
+ * çizilir ve dönüş sırasında kare zeminler görünür.
+ */
 export default function useEliminTile(src) {
-  const [state, setState] = useState({ src, url: src });
+  const [state, setState] = useState({ src, url: readyTile(src) || src });
+
   useEffect(() => {
-    const ready = cache.get(src);
-    if (typeof ready === 'string') {
-      setState({ src, url: ready });
+    const ready = readyTile(src);
+    if (ready) {
+      // Aynı görsel zaten duruyorsa yeniden çizim yapılmaz.
+      setState((current) => (current.src === src && current.url === ready ? current : { src, url: ready }));
       return undefined;
     }
     let active = true;
-    setState({ src, url: src });
     buildEliminTile(src)
       .then((url) => {
         if (active) setState({ src, url });

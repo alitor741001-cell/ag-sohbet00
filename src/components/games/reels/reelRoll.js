@@ -34,14 +34,18 @@ export default function useReelRoll({ reel, spinKey, landing, rows, symbols }) {
     return Array.from({ length: ROLL_ROWS }, () => symbols[Math.floor(Math.random() * symbols.length)]);
   }, [spinKey, symbols]);
 
-  // İniş, döngünün o anki konumundan başlar: geçişte görünür sıçrama olmaz.
+  // İniş şeridi: dolgu satırları ve altında sunucunun sonucu.
+  const total = ROLL_ROWS + rows;
+
+  // İniş, döngünün o anki konumundan başlar. Döngü bir turda ROLL_ROWS satır
+  // kayar; bu hiza iniş şeridinin kendi yüksekliğine (total satır) çevrilir,
+  // böylece geçişte makara aynı yerden devam eder ve sıçrama olmaz.
   const from = useMemo(() => {
     if (!landing || !startedRef.current) return 0;
     const phase = ((Date.now() - startedRef.current) % ROLL_LOOP_MS) / ROLL_LOOP_MS;
-    return -phase * 50;
-  }, [landing, spinKey]);
+    return -((phase * ROLL_ROWS) / total) * 100;
+  }, [landing, spinKey, total]);
 
-  const total = ROLL_ROWS + rows;
   return {
     // Bekleme şeridi: içerik iki kez yazılır, yarım boy kayınca başa döner.
     waiting: [...filler, ...filler],
