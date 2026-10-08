@@ -23,15 +23,14 @@ export const DEDE_ART = {
 
 export const DEDE_ART_SIZE = 1024;
 
-// Çarpan jetonları: referanstaki altın çerçeveli taşlar. Değer görsele gömülü değildir;
-// jetonun ortasına yazıyla bindirilir, böylece her kademe aynı tasarımı kullanır.
-// Taşın rengi kademeyi gösterir: mor düşük kademeler, mavi 50x, kırmızı 500x.
-const DEDE_ORB_PURPLE = `${MEDIA_BASE}/29afc73db_generated_image.png`;
+// Çarpan küreleri: kanatlı yeşil küre. Değer görsele gömülü değildir;
+// kürenin ortasına yazıyla bindirilir, böylece her kademe aynı tasarımı kullanır.
+const DEDE_ORB = `${MEDIA_BASE}/3ad9d677c_generated_image.png`;
 export const DEDE_ORB_ART = {
-  3: DEDE_ORB_PURPLE,
-  4: DEDE_ORB_PURPLE,
-  30: DEDE_ORB_PURPLE,
-  50: `${MEDIA_BASE}/5f1ccbc6a_generated_image.png`,
-  100: DEDE_ORB_PURPLE,
-  500: `${MEDIA_BASE}/b60997ed3_generated_image.png`,
+  3: DEDE_ORB,
+  4: DEDE_ORB,
+  30: DEDE_ORB,
+  50: DEDE_ORB,
+  100: DEDE_ORB,
+  500: DEDE_ORB,
 };
