@@ -1,13 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
 import { sekerliSound as gameSound } from '@/lib/sekerliAudio';
 
-// Çekiliş karesinin koşusu: kartların üstünde birkaç tur atar, hızlanır,
-// yavaşlar ve kazanan kartın üstünde durur.
+// Çekiliş karesi: önce sahanın ortasında (kale önünde) hızlı döner, dönüşü
+// yavaşlar, kartların üstünde akar ve bir takımın üstünde durur.
 const MAX_RUN_MS = 4200;
 const MIN_RUN_MS = 1400;
 const LOOPS = 4;
+// Ortadaki dönüş süresi ve toplam tur sayısı: son turda düz durur.
+const SPIN_MS = 1100;
+const TURNS = 5;
 
 const easeInOut = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+const easeOut = (t) => 1 - Math.pow(1 - t, 3);
 const lerp = (from, to, ratio) => from + (to - from) * ratio;
 
 /** Kartların saha içindeki merkez ve ölçülerini toplar. */
@@ -53,11 +57,16 @@ export default function useSquareRun({ containerRef, winner, active, remaining, 
     const duration = Math.min(MAX_RUN_MS, Math.max(MIN_RUN_MS, (remainingRef.current || MAX_RUN_MS) - 600));
     const centre = { left: container.clientWidth / 2, top: container.clientHeight / 2 };
     const begin = performance.now();
+    const total = SPIN_MS + duration;
     let frame = 0;
     let step = -1;
 
     const tick = (now) => {
-      const progress = Math.min(1, (now - begin) / duration);
+      const elapsed = now - begin;
+      // Dönüş hızlı başlar ve yavaşlayarak durur.
+      const rotate = easeOut(Math.min(1, elapsed / total)) * TURNS * 360;
+      // Koşu, ortadaki dönüşten sonra başlar.
+      const progress = Math.min(1, Math.max(0, (elapsed - SPIN_MS) / duration));
       const position = easeInOut(progress) * (run.length - 1);
       const index = Math.min(run.length - 2, Math.floor(position));
       const ratio = position - index;
@@ -69,7 +78,7 @@ export default function useSquareRun({ containerRef, winner, active, remaining, 
         top: lerp(from.top, to.top, ratio),
         width: lerp(from.width || to.width, to.width, ratio),
         height: lerp(from.height || to.height, to.height, ratio),
-        rotate: progress * 1080,
+        rotate,
         done: false,
       });
 
@@ -78,11 +87,11 @@ export default function useSquareRun({ containerRef, winner, active, remaining, 
         if (soundRef.current) gameSound.stop(index % 8);
       }
 
-      if (progress < 1) {
+      if (elapsed < total) {
         frame = requestAnimationFrame(tick);
         return;
       }
-      setSquare({ ...target, rotate: 1080, done: true });
+      setSquare({ ...target, rotate: TURNS * 360, done: true });
       setLanded(true);
       if (soundRef.current) gameSound.win(4);
     };

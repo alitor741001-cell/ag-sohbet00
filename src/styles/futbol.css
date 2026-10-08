@@ -38,23 +38,18 @@
 /* --- üst bant --- */
 .fut-head { display: flex; flex-direction: column; gap: .4rem; }
 .fut-head-row { display: flex; align-items: center; gap: .35rem; }
-.fut-head-side { display: flex; gap: .3rem; }
-.fut-head-side-end { margin-left: auto; }
-.fut-circle {
-  display: grid;
-  place-items: center;
-  height: 2.2rem;
-  width: 2.2rem;
-  flex-shrink: 0;
-  border-radius: 9999px;
-  border: 1px solid rgba(255,255,255,.35);
-  background: rgba(0,0,0,.5);
-  color: #fff;
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+.fut-brand {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
+  gap: .45rem;
+  border: 0;
+  background: none;
+  padding: 0;
+  text-align: left;
 }
-.fut-circle-sound { background: linear-gradient(180deg, #3b82f6, #1d4ed8); border-color: rgba(191,219,254,.85); }
-.fut-brand { display: flex; align-items: center; justify-content: center; gap: .45rem; min-width: 0; flex: 1; }
 .fut-logo {
   height: 2.3rem;
   width: 2.3rem;
@@ -64,6 +59,7 @@
 }
 .fut-brand-text { min-width: 0; }
 .fut-title {
+  display: block;
   font-size: .95rem;
   font-weight: 900;
   letter-spacing: .18em;
@@ -73,7 +69,7 @@
   -webkit-text-fill-color: transparent;
   filter: drop-shadow(0 1px 2px rgba(0,0,0,.7));
 }
-.fut-tagline { font-size: .55rem; font-weight: 800; letter-spacing: .18em; color: rgba(216,255,230,.8); }
+.fut-tagline { display: block; font-size: .55rem; font-weight: 800; letter-spacing: .18em; color: rgba(216,255,230,.8); }
 .fut-round {
   text-align: center;
   font-size: .68rem;
@@ -85,11 +81,11 @@
 
 /* --- saha: kartlar kemer biçiminde, kale ortada --- */
 .fut-pitch { position: relative; display: flex; flex-direction: column; gap: .35rem; }
-.fut-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .35rem; }
-.fut-row-a { padding: 0 11%; }
-.fut-row-b { padding: 0; }
-.fut-row-c { padding: 0 13%; }
-.fut-row-d { padding: 0 7%; }
+.fut-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; justify-items: center; align-items: center; }
+.fut-row-a { padding: 0 13%; }
+.fut-row-b { padding: 0 2%; }
+.fut-row-c { padding: 0 15%; }
+.fut-row-d { padding: 0 9%; }
 
 .fut-band {
   position: relative;
@@ -175,20 +171,29 @@
 .fut-chip-win { border-color: #fff6d0; background: rgba(60,40,4,.85); color: #ffe9a8; }
 
 /* --- takım kartları: nane ışıltılı kenar --- */
+/* Takım kartları yuvarlaktır: arma, isim ve popülerlik barı dairenin içine ortalanır. */
 .fut-card {
   position: relative;
   z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: .18rem;
-  border-radius: 1rem;
+  justify-content: center;
+  gap: .1rem;
+  width: 100%;
+  max-width: 6rem;
+  aspect-ratio: 1;
+  border-radius: 50%;
   border: 2px solid rgba(116,228,162,.7);
-  background: linear-gradient(180deg, rgba(14,44,24,.8), rgba(6,18,10,.9));
-  padding: .3rem;
+  background: radial-gradient(circle at 50% 30%, rgba(26,72,40,.92), rgba(6,18,10,.95));
+  padding: .35rem;
   box-shadow: 0 0 12px rgba(116,228,162,.22), 0 10px 20px -14px rgba(0,0,0,.95);
   transition: transform .16s, box-shadow .2s, border-color .2s;
 }
+.fut-card-big { max-width: 6rem; }
+.fut-card-mid { max-width: 5.6rem; }
+.fut-card-small { max-width: 5.2rem; }
+.fut-card-tiny { max-width: 5rem; }
 .fut-card:active { transform: scale(.98); }
 .fut-card-on {
   border-color: #dcfff0;
@@ -202,11 +207,11 @@
 .fut-card-lock { opacity: .42; filter: grayscale(.65); }
 .fut-crest-wrap { display: flex; align-items: center; justify-content: center; }
 .fut-crest { filter: drop-shadow(0 4px 8px rgba(0,0,0,.7)); }
-.fut-card-big .fut-crest { height: 3.5rem; width: 3.5rem; }
-.fut-card-mid .fut-crest { height: 2.9rem; width: 2.9rem; }
-.fut-card-small .fut-crest { height: 2.4rem; width: 2.4rem; }
-.fut-card-tiny .fut-crest { height: 2.2rem; width: 2.2rem; }
-.fut-card-foot { display: flex; align-items: center; justify-content: space-between; gap: .2rem; width: 100%; }
+.fut-card-big .fut-crest { height: 3rem; width: 3rem; }
+.fut-card-mid .fut-crest { height: 2.8rem; width: 2.8rem; }
+.fut-card-small .fut-crest { height: 2.6rem; width: 2.6rem; }
+.fut-card-tiny .fut-crest { height: 2.4rem; width: 2.4rem; }
+.fut-card-foot { display: flex; align-items: baseline; justify-content: center; gap: .3rem; width: 100%; }
 .fut-card-name {
   min-width: 0;
   overflow: hidden;
@@ -222,8 +227,8 @@
   position: relative;
   display: grid;
   place-items: center;
-  width: 100%;
-  height: .95rem;
+  width: 74%;
+  height: .78rem;
   border-radius: 9999px;
   overflow: hidden;
   border: 1px solid rgba(147,197,253,.5);
@@ -256,8 +261,21 @@
   font-weight: 900;
   font-variant-numeric: tabular-nums;
 }
-.fut-pill-mine { background: rgba(134,200,61,.92); color: #10240a; border: 1px solid rgba(255,255,255,.5); }
-.fut-pill-lock { background: rgba(0,0,0,.65); color: rgba(255,255,255,.75); border: 1px solid rgba(255,255,255,.3); }
+.fut-pill-mine {
+  position: absolute;
+  right: -.25rem;
+  bottom: -.25rem;
+  background: rgba(134,200,61,.92);
+  color: #10240a;
+  border: 1px solid rgba(255,255,255,.5);
+}
+.fut-pill-lock {
+  position: absolute;
+  bottom: .15rem;
+  background: rgba(0,0,0,.65);
+  color: rgba(255,255,255,.75);
+  border: 1px solid rgba(255,255,255,.3);
+}
 
 /* --- çekiliş karesi --- */
 .fut-square {
@@ -492,10 +510,14 @@
 }
 
 @media (min-width: 640px) {
-  .fut-card-big .fut-crest { height: 4.2rem; width: 4.2rem; }
+  .fut-card-big { max-width: 7rem; }
+  .fut-card-mid { max-width: 6.6rem; }
+  .fut-card-small { max-width: 6.2rem; }
+  .fut-card-tiny { max-width: 6rem; }
+  .fut-card-big .fut-crest { height: 3.6rem; width: 3.6rem; }
   .fut-card-mid .fut-crest { height: 3.4rem; width: 3.4rem; }
-  .fut-card-small .fut-crest { height: 2.8rem; width: 2.8rem; }
-  .fut-card-tiny .fut-crest { height: 2.6rem; width: 2.6rem; }
+  .fut-card-small .fut-crest { height: 3.1rem; width: 3.1rem; }
+  .fut-card-tiny .fut-crest { height: 2.9rem; width: 2.9rem; }
   .fut-title { font-size: 1.05rem; }
 }
 
