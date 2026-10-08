@@ -17,18 +17,20 @@ export const SLOT_ART = {
 // (Şekerli Meyve kartları gibi). Kare kart görselleri.
 export const SLOT_SYMBOL_ART_SIZE = 1024;
 
+// Referans görseller: kartlar, hayvanlar, yakut, FREE ve jackpot sembolleri.
 export const SLOT_SYMBOL_ART = {
-  ten: `${MEDIA}/5eba786d3_generated_image.png`,
-  jack: `${MEDIA}/8dfdec60b_generated_image.png`,
-  queen: `${MEDIA}/8ac686687_generated_image.png`,
+  ten: `${MEDIA}/6dd890c6d_IMG_1535.jpg`,
+  jack: `${MEDIA}/3ee8f9056_IMG_1536.jpg`,
+  queen: `${MEDIA}/54e3eb456_IMG_1540.jpg`,
+  // Papaz (K) referansı gelmedi: eski görsel korunur.
   king: `${MEDIA}/0f6311776_generated_image.png`,
-  ace: `${MEDIA}/a81e72236_generated_image.png`,
-  gem: `${MEDIA}/ebedaf5c9_generated_image.png`,
-  eagle: `${MEDIA}/6e0188e50_generated_image.png`,
-  tiger: `${MEDIA}/e02e88c96_generated_image.png`,
-  lion: `${MEDIA}/c0693bcab_generated_image.png`,
-  free: `${MEDIA}/a966a5e15_generated_image.png`,
-  jackpot: `${MEDIA}/97aadf337_generated_image.png`,
+  ace: `${MEDIA}/de3fc5d9c_IMG_1537.jpg`,
+  gem: `${MEDIA}/9457d570b_IMG_1539.jpg`,
+  eagle: `${MEDIA}/920b96084_IMG_1533.jpg`,
+  tiger: `${MEDIA}/63e519f50_IMG_1531.jpg`,
+  lion: `${MEDIA}/42fcc4e14_IMG_1532.jpg`,
+  free: `${MEDIA}/6d95d974c_IMG_1534.jpg`,
+  jackpot: `${MEDIA}/bbf968e8c_IMG_1538.jpg`,
 };
 
 // Kontrol düğmelerinin madalyonları: aslan, kanarya ve kartal.
