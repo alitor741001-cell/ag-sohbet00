@@ -94,7 +94,7 @@
   flex-direction: column;
   align-items: center;
   gap: .45rem;
-  padding: .5rem .7rem 0;
+  padding: .35rem .25rem 0;
   /* Çok kısa ekranlarda içerik kırpılmaz: taşarsa kaydırılır. */
   overflow-y: auto;
 }
@@ -255,9 +255,9 @@
   position: relative;
   width: 100%;
   /* Yükseklik yetmezse çerçeve küçülür: kısa ekranlarda da taşmaz. */
-  max-width: min(32rem, max(13rem, calc((100dvh - 26rem) * 1.2)));
+  max-width: min(44rem, max(13rem, calc((100dvh - 26rem) * 1.2)));
   border-radius: 1.7rem;
-  padding: .62rem;
+  padding: .45rem;
   background-image: repeating-linear-gradient(
     118deg,
     #ff5ac8 0 .42rem,
@@ -597,7 +597,7 @@
 
   .el-top-value { font-size: .95rem; }
 
-  .el-frame { max-width: min(26rem, max(13rem, calc((100dvh - 17rem) * 1.2))); }
+  .el-frame { max-width: min(38rem, max(13rem, calc((100dvh - 17rem) * 1.2))); }
 
   .el-foot { padding-top: .3rem; padding-bottom: max(.35rem, env(safe-area-inset-bottom)); }
 

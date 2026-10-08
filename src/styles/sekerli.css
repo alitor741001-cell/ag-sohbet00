@@ -92,7 +92,7 @@
   flex-direction: column;
   align-items: center;
   gap: 0.45rem;
-  padding: 0.5rem 0.7rem 0;
+  padding: 0.35rem 0.25rem 0;
 }
 
 .sl-stage {
@@ -173,9 +173,9 @@
   position: relative;
   width: 100%;
   /* Yükseklik yetmezse çerçeve küçülür: kısa ekranlarda da taşmaz, alt sınırı korur. */
-  max-width: min(32rem, max(14rem, calc((100dvh - 25rem) * 1.25)));
+  max-width: min(44rem, max(14rem, calc((100dvh - 25rem) * 1.25)));
   border-radius: 1.7rem;
-  padding: 0.62rem;
+  padding: 0.45rem;
   background-image: repeating-linear-gradient(
     118deg,
     #ff5ac8 0 0.42rem,
@@ -588,7 +588,7 @@
   }
 
   .sl-frame {
-    max-width: min(26rem, max(13rem, calc((100dvh - 16.5rem) * 1.25)));
+    max-width: min(38rem, max(13rem, calc((100dvh - 16.5rem) * 1.25)));
   }
 
   .sl-foot {
