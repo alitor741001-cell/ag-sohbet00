@@ -112,6 +112,49 @@
   overflow: hidden;
   border-radius: 16%;
   box-shadow: 0 0 0 1px rgba(255, 226, 150, 0.35), 0 6px 14px -8px rgba(0, 0, 0, 0.95);
+  /* İçindeki yazılar karenin ölçüsüne göre ölçeklenir. */
+  container-type: inline-size;
+}
+/* Bonus kartı: Zeus kabartmasının altında SCATTER yazar. */
+.dede-scatter-label {
+  position: absolute;
+  bottom: 7%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: clamp(0.5rem, 2.6vw, 0.8rem);
+  font-size: 17cqw;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  color: #ffd35c;
+  -webkit-text-stroke: 0.08em #4a2205;
+  paint-order: stroke fill;
+  text-shadow: 0 1px 0 #6b3a05, 0 0 12px rgba(255, 160, 40, 0.95);
+  pointer-events: none;
+}
+/* Çarpan küresi: kanatlı yeşil küre; değer kürenin tam ortasına yazılır. */
+.dede-orb {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  container-type: inline-size;
+}
+.dede-orb-value {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: clamp(0.62rem, 3.2vw, 1rem);
+  font-size: 26cqw;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: #ffe9a8;
+  -webkit-text-stroke: 0.09em #241004;
+  paint-order: stroke fill;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.5), 0 0 10px rgba(255, 214, 102, 0.85);
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
 }
 .dede-art {
   display: block;

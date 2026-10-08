@@ -80,11 +80,11 @@ const DEDE_LEGEND = {
   note: 'Değerler bahis katıdır; kazanan küme patlar, zincir tur boyunca sürer.',
   rows: [
     { art: DEDE_SYMBOLS.crown.art, name: 'Taç', desc: 'En yüksek ödemeli madalyon.', pays: [60, 180, 540] },
-    { art: DEDE_SYMBOLS.gem.art, name: 'Mücevher', pays: [40, 120, 360] },
+    { art: DEDE_SYMBOLS.gem.art, name: 'Elmas', pays: [40, 120, 360] },
     { art: DEDE_SYMBOLS.ring.art, name: 'Yüzük', pays: [30, 90, 270] },
     { art: DEDE_SYMBOLS.hour.art, name: 'Kum Saati', pays: [25, 75, 225] },
     { art: DEDE_SYMBOLS.chalice.art, name: 'Kupa', pays: [20, 60, 180] },
-    { art: DEDE_SYMBOLS.bolt.art, name: 'Şimşek', pays: [10, 30, 90] },
+    { art: DEDE_SYMBOLS.bolt.art, name: 'Yakut Yıldız', pays: [10, 30, 90] },
     {
       art: DEDE_SYMBOLS.dede.art,
       name: 'Dede',
