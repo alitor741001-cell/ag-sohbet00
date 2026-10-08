@@ -38,8 +38,9 @@ export default function SekerliReel({ reel, column, spinning, stopping, winCells
           }}
           onAnimationEnd={() => setLanded(true)}
         >
-          {[...rollStrip, ...column].map((sym, index) => (
-            <span key={`${spinKey}-${index}-${sym}`} className="sl-cell sl-cell-roll">
+          {/* Şerit: akan semboller ve altta yerine oturacak sonuç sembolleri. */}
+          {[...rollStrip, ...column.map((cell) => cell.sym)].map((sym, index) => (
+            <span key={`${spinKey}-${index}`} className="sl-cell sl-cell-roll">
               <SekerliSymbol id={sym} />
             </span>
           ))}
