@@ -23,7 +23,7 @@ export default function CrashRocketGame({ onExit, onBack }) {
   };
 
   return (
-    <div className="relative flex h-full min-h-0 w-full flex-col overflow-hidden bg-[#0a0f1d]">
+    <div className="rk-game relative flex h-full min-h-0 w-full flex-col overflow-hidden">
       <RocketHeader onBack={onBack} onExit={onExit} onLedger={openLedger} />
       <RocketStatsBar roundNo={game.round?.round_no} coins={game.coins} history={game.history} />
       <RocketStage game={game} />
@@ -32,13 +32,13 @@ export default function CrashRocketGame({ onExit, onBack }) {
       <RocketLedger open={ledgerOpen} onClose={() => setLedgerOpen(false)} data={game.ledger} />
 
       {(game.status === 'loading' || game.status === 'error') && (
-        <div className="absolute inset-0 z-30 flex items-center justify-center bg-[#0a0f1d]/80">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-white/15 border-t-[#00d4ff]" />
+        <div className="absolute inset-0 z-30 flex items-center justify-center bg-[#05070f]/85">
+          <div className="h-9 w-9 animate-spin rounded-full border-4 border-white/12 border-t-[#7fe4ff]" />
         </div>
       )}
 
       {game.message && (
-        <p className="absolute left-1/2 top-[12%] z-30 w-max max-w-[92%] -translate-x-1/2 rounded-full border border-[#ffb800]/40 bg-[#0a0f1d]/90 px-3 py-1.5 text-center text-[11px] font-bold text-[#ffd35c]">
+        <p className="absolute left-1/2 top-[12%] z-30 w-max max-w-[92%] -translate-x-1/2 rounded-full border border-[#ffb800]/45 bg-[#05070f]/92 px-3 py-1.5 text-center text-[11px] font-bold text-[#ffd35c] shadow-[0_0_18px_-4px_rgba(255,184,0,0.6)]">
           {game.message}
         </p>
       )}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Film } from 'lucide-react';
+import { Rocket } from 'lucide-react';
 import { format, formatMult } from './rocketConfig';
 import RocketBetPanel from './RocketBetPanel';
 import RocketAutoDialog from './RocketAutoDialog';
@@ -84,11 +84,12 @@ export default function RocketBetDock({ game }) {
 
   return (
     <>
-      <div className="relative flex items-stretch gap-2 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1">
+      <div className="relative flex items-stretch gap-2 border-t border-white/10 bg-[#05070f]/75 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2">
         <RocketBetPanel {...build(1, 'blue')} />
         <RocketBetPanel {...build(2, 'gold')} />
+        {/* Podların arasındaki göbek: fırlatma arması. */}
         <div className="rk-hub" aria-hidden="true">
-          <Film className="h-3.5 w-3.5 text-[#ffb800]" />
+          <Rocket className="h-4 w-4" />
         </div>
       </div>
 

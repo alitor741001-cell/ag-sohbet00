@@ -3,15 +3,15 @@ import { Coins, Ticket } from 'lucide-react';
 import { format } from './rocketConfig';
 import RocketRecent from './RocketRecent';
 
-/** Alt şerit: tur numarası, FK Coin bakiyesi ve son kazançlar. */
+/** Tur şeridi: tur numarası, coin kasası ve son çakılma çarpanları. */
 export default function RocketStatsBar({ roundNo, coins, history }) {
   return (
-    <div className="flex items-center gap-1.5 px-2 py-1.5">
-      <span className="rk-chip shrink-0 gap-1 text-[10px] font-black text-white">
+    <div className="rk-hud-strip relative z-10 flex items-center gap-1.5 px-2 py-1.5">
+      <span className="rk-chip gap-1 text-[10px] font-black text-white">
         <Ticket className="h-3 w-3 text-[#ffb800]" />
-        Tur {roundNo || 1}
+        TUR {roundNo || 1}
       </span>
-      <span className="rk-chip shrink-0 gap-1 text-[10px] font-black text-white">
+      <span className="rk-chip gap-1 text-[10px] font-black text-white">
         <Coins className="h-3 w-3 text-[#ffb800]" />
         {format(coins)}
       </span>
