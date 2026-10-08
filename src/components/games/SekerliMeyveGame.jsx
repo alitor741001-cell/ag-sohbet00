@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ChevronLeft, HelpCircle, Play, Volume2, VolumeX, X } from 'lucide-react';
 import '@/styles/sekerli.css';
 import '@/styles/gameControls.css';
@@ -12,7 +12,8 @@ import GameHelpSheet from './help/GameHelpSheet';
 import useSekerliGame from './sekerli/useSekerliGame';
 import useCountUp from './sekerli/useCountUp';
 import { LINES, formatCredits, formatMult } from './sekerli/sekerliConfig';
-import { SEKERLI_BACKDROP, SEKERLI_LOGO } from './sekerli/sekerliAssets';
+import { SEKERLI_ART, SEKERLI_BACKDROP, SEKERLI_LOGO } from './sekerli/sekerliAssets';
+import { warmSymbolTiles } from '@/lib/symbolTile';
 import GameBetBar from './controls/GameBetBar';
 import GameSpinButton from './controls/GameSpinButton';
 import GameTurnBadge from './controls/GameTurnBadge';
@@ -23,6 +24,7 @@ import GameTurnBadge from './controls/GameTurnBadge';
  */
 export default function SekerliMeyveGame({ onExit, onBack }) {
   const game = useSekerliGame();
+  useEffect(() => { warmSymbolTiles(Object.values(SEKERLI_ART)); }, []);
   const [coinOpen, setCoinOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const shownWin = useCountUp(game.spinWin, 420);

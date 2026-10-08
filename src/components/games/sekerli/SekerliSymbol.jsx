@@ -2,11 +2,13 @@ import React from 'react';
 import { Image } from '@/components/ui/image';
 import { SEKERLI_ART, SEKERLI_ART_SIZE } from './sekerliAssets';
 import { SYMBOLS } from './sekerliConfig';
+import useSymbolTile from '@/lib/symbolTile';
 
-/** Tek kart: şeker görseli kartın içinde durur, kartın dışına taşmaz. */
+/** Kart zemini temizlenmiş şeker nesnesi. */
 export default function SekerliSymbol({ id, win, boom, fall, index = 0 }) {
   const symbol = SYMBOLS[id];
   const art = SEKERLI_ART[id];
+  const tile = useSymbolTile(art);
   if (!symbol || !art) return null;
 
   const classes = [
@@ -21,7 +23,7 @@ export default function SekerliSymbol({ id, win, boom, fall, index = 0 }) {
   return (
     <span className={classes} style={{ '--sl-row': index }}>
       <Image
-        src={art}
+        src={tile}
         alt={symbol.name}
         className="sl-art"
         fittingType="fit"
