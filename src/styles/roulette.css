@@ -79,6 +79,12 @@
   min-height: 8.5rem;
   min-width: 8.5rem;
   filter: drop-shadow(0 18px 32px rgba(0, 0, 0, 0.78));
+  transition: transform 520ms cubic-bezier(0.2, 0.85, 0.3, 1);
+}
+/* Çark durduğunda kazanan cep büyütülür: üstteki halka yerinde kalır, sonra geri çekilir. */
+.rl-wheel-zoom {
+  transform: scale(1.3);
+  transform-origin: 50% 16%;
 }
 /* Kazanan cep üstteki ibrenin altına gelene kadar çark yavaşlayarak döner. */
 .rl-wheel-disc {
@@ -152,7 +158,8 @@
   border-radius: 9999px;
   pointer-events: none;
 }
-.rl-wheel-live .rl-wheel-ball-track { animation: rl-ball-orbit 1.5s linear infinite; }
+/* Top yalnızca çark dönerken yatakta tur atar; çark durunca kazanan cebin üstünde durur. */
+.rl-wheel-ball-live { animation: rl-ball-orbit 1.5s linear infinite; }
 @keyframes rl-ball-orbit { to { transform: rotate(360deg); } }
 .rl-wheel-ball {
   position: absolute;
@@ -164,6 +171,46 @@
   border-radius: 9999px;
   background: radial-gradient(circle at 35% 30%, #ffffff, #d8d2c4 62%, #9c9587);
   box-shadow: 0 0 10px rgba(255, 255, 255, 0.75);
+}
+
+/* Çark durduğunda topun düştüğü numara: kazanan cebin üstünde ışıklı rozet. */
+.rl-wheel-hit {
+  position: absolute;
+  left: 50%;
+  top: 16%;
+  z-index: 3;
+  display: flex;
+  height: 1.5rem;
+  min-width: 1.5rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  border: 2px solid #fff4d6;
+  padding: 0 0.25rem;
+  font-size: 0.72rem;
+  font-weight: 900;
+  color: #fff;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    0 0 0 3px rgba(255, 244, 214, 0.22),
+    0 0 20px rgba(240, 201, 107, 0.9);
+  animation: rl-hit-in 0.36s cubic-bezier(0.2, 0.9, 0.25, 1.2) both;
+}
+.rl-wheel-hit::before {
+  content: '';
+  position: absolute;
+  inset: -0.5rem;
+  border-radius: 9999px;
+  border: 2px solid rgba(255, 236, 180, 0.6);
+  animation: rl-hit-ring 1.3s ease-out infinite;
+}
+@keyframes rl-hit-in {
+  from { transform: translate(-50%, -50%) scale(0.35); opacity: 0; }
+  to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+@keyframes rl-hit-ring {
+  0% { transform: scale(0.72); opacity: 0.9; }
+  100% { transform: scale(1.4); opacity: 0; }
 }
 
 /* --- sonuç şeridi --- */
@@ -599,6 +646,8 @@
 @media (prefers-reduced-motion: reduce) {
   .rl-rays, .rl-roundbar-count-live, .rl-overlay { animation: none; }
   .rl-wheel-disc { transition-duration: 0.4s; }
-  .rl-wheel-live .rl-wheel-ball-track { animation: none; }
+  .rl-wheel-ball-live { animation: none; }
+  .rl-wheel { transition: none; }
+  .rl-wheel-hit, .rl-wheel-hit::before { animation: none; }
   .rl-roundbar-fill { transition: none; }
 }

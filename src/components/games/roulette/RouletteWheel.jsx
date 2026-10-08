@@ -22,8 +22,9 @@ function sectorPath(start, end) {
   return `M ${CENTER} ${CENTER} L ${x1} ${y1} A ${RADIUS} ${RADIUS} 0 0 1 ${x2} ${y2} Z`;
 }
 
-/** Çark: 37 cep saat yönünde dizilir; tur sonucunda kazanan cep üstteki ibrenin altına gelir. */
-export default function RouletteWheel({ index, spinning }) {
+/** Çark: 37 cep saat yönünde dizilir; tur sonucunda kazanan cep üstteki ibrenin altına gelir.
+ *  Çark durduğunda topun düştüğü numara ışıklı rozetle gösterilir ve cep kısa süre yakınlaştırılır. */
+export default function RouletteWheel({ index, spinning, winner, zoom, settled }) {
   const angleRef = useRef(0);
   const [angle, setAngle] = useState(0);
 
@@ -39,7 +40,7 @@ export default function RouletteWheel({ index, spinning }) {
   }, [index]);
 
   return (
-    <div className={`rl-wheel ${spinning ? 'rl-wheel-live' : ''}`}>
+    <div className={`rl-wheel ${spinning ? 'rl-wheel-live' : ''} ${zoom ? 'rl-wheel-zoom' : ''}`}>
       {/* Madeni kasa: top yatağının dışındaki altın kaplama halka. */}
       <span aria-hidden="true" className="rl-wheel-bezel" />
       <span aria-hidden="true" className="rl-wheel-pointer" />
@@ -88,10 +89,17 @@ export default function RouletteWheel({ index, spinning }) {
         </g>
         <circle cx={CENTER} cy={CENTER} r={CORE} className="rl-wheel-core" />
       </svg>
-      {/* Top, çark dönerken yatakta tur atar. */}
-      <span aria-hidden="true" className="rl-wheel-ball-track">
+      {/* Top çark dönerken yatakta tur atar; çark durunca kazanan cebin üstünde kalır. */}
+      <span
+        aria-hidden="true"
+        className={`rl-wheel-ball-track ${spinning && !settled ? 'rl-wheel-ball-live' : ''}`}
+      >
         <span className="rl-wheel-ball" />
       </span>
+      {/* Çark durunca topun geldiği numara cebin üstünde ışıklı rozetle görünür. */}
+      {winner !== null && winner !== undefined && (
+        <span className={`rl-wheel-hit rl-pocket-${pocketTone(winner)}`}>{winner}</span>
+      )}
     </div>
   );
 }

@@ -17,13 +17,24 @@ import GameStatCards from './controls/GameStatCards';
 import { ROULETTE_LOGO } from './roulette/rouletteAssets';
 import { formatCoins, pocketName, pocketTone } from './roulette/rouletteConfig';
 
+// Çark 4.4 saniyede yerine oturur: kazanan cep bundan sonra yakınlaştırılır.
+const WHEEL_STOP_MS = 4500;
+// Yakınlaştırma birkaç saniye görünür kalır, ardından çark eski haline döner.
+const WHEEL_ZOOM_MS = 2600;
+
 /** ROULETTE: tur kendi kendine döner — 20 saniye bahis, sonra çark ve yeni tur. */
 export default function RouletteGame({ onExit, onBack }) {
   const game = useRouletteGame();
   const [coinOpen, setCoinOpen] = useState(false);
   const [prize, setPrize] = useState(null);
+  // Çark durduğunda top kazanan cebe oturur ve o cep yakınlaştırılır.
+  const [settled, setSettled] = useState(false);
+  const [zoom, setZoom] = useState(false);
   const spinning = game.phase === 'spinning';
   const betting = game.phase === 'betting';
+  // Numara ve cep yalnızca çark dönerken açıklanır.
+  const landedIndex = spinning ? game.round?.index ?? null : null;
+  const landedNumber = spinning ? game.round?.number ?? null : null;
   // Tur sıralaması her turda yenilenir.
   const board = useRouletteBoard(game.round?.round_no ?? 0);
   // Üst metrikler: referans tasarımdaki siyah-altın kartlar.
@@ -33,6 +44,24 @@ export default function RouletteGame({ onExit, onBack }) {
     { key: 'win', label: 'KAZANÇ', value: formatCoins(game.payout), icon: Crown, win: game.payout > 0 },
     { key: 'total', label: 'TOPLAM KAZANÇ', value: formatCoins(game.totalWon), icon: Coins },
   ];
+
+  // Çark yerine oturunca top kazanan cebe oturur, cep büyütülür ve sonra çark geri çekilir.
+  useEffect(() => {
+    if (landedIndex === null) {
+      setSettled(false);
+      setZoom(false);
+      return undefined;
+    }
+    const settle = window.setTimeout(() => {
+      setSettled(true);
+      setZoom(true);
+    }, WHEEL_STOP_MS);
+    const back = window.setTimeout(() => setZoom(false), WHEEL_STOP_MS + WHEEL_ZOOM_MS);
+    return () => {
+      window.clearTimeout(settle);
+      window.clearTimeout(back);
+    };
+  }, [landedIndex, game.round?.round_no]);
 
   // Tur sonucu: kazanç ödenmişse kutlama ekranı açılır.
   useEffect(() => {
@@ -75,7 +104,13 @@ export default function RouletteGame({ onExit, onBack }) {
         {/* Çark solda, tur sıralaması sağında alt alta durur. */}
         <div className="rl-stage">
           <div className="rl-wheel-wrap">
-            <RouletteWheel index={spinning ? game.round?.index ?? null : null} spinning={spinning} />
+            <RouletteWheel
+              index={landedIndex}
+              spinning={spinning}
+              settled={settled}
+              winner={settled ? landedNumber : null}
+              zoom={zoom}
+            />
           </div>
           <RoulettePodium winners={board.winners} ready={board.status === 'ready'} />
         </div>
