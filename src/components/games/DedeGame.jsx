@@ -13,7 +13,7 @@ import GameBetBar from './controls/GameBetBar';
 import GameSpinButton from './controls/GameSpinButton';
 import GameTurnBadge from './controls/GameTurnBadge';
 import DedeWinOverlay from './dede/DedeWinOverlay';
-import DedeMultiplierBar from './dede/DedeMultiplierBar';
+import DedeMultiplierCircle from './dede/DedeMultiplierCircle';
 import DedeOrbMerge from './dede/DedeOrbMerge';
 import { DEDE_DEITY } from './dede/dedeAssets';
 import { DEDE_LINES, formatCoins } from './dede/dedeConfig';
@@ -142,8 +142,8 @@ export default function DedeGame({ onExit, onBack }) {
       </main>
 
       <footer className="relative z-10 flex shrink-0 flex-col items-center gap-2 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-1">
-        {/* Biriken çarpan alt tarafta sabit durur; inen küreler buraya düşer. */}
-        <DedeMultiplierBar multiplier={game.multiplier} orbs={game.orbs} />
+        {/* Biriken çarpan çemberi: inen küreler buraya düşüp birikmiş çarpanla birleşir. */}
+        <DedeMultiplierCircle multiplier={game.multiplier} orbs={game.orbs} />
         <div className="gctl-deck">
           <GameBetBar
             bet={game.bet}

@@ -252,65 +252,79 @@
   100% { transform: scale(1) rotate(0deg); opacity: 1; }
 }
 /* İnen jeton hücrenin içinde durur; şimşek kareyi kaplar. */
-/* --- biriken çarpan şeridi: alt tarafta sabit, inen küreler buraya düşer --- */
-.dede-mult-bar {
+/* --- biriken çarpan çemberi: alta sabit durur, inen küreler burada birleşir --- */
+.dede-mult-circle {
+  position: relative;
   display: flex;
-  width: 100%;
-  max-width: 26rem;
+  height: 3.5rem;
+  width: 3.5rem;
   align-items: center;
-  gap: 0.4rem;
-  border-radius: 1rem;
-  border: 1px solid rgba(255, 211, 92, 0.55);
-  padding: 0.3rem 0.6rem;
-  background: rgba(20, 5, 32, 0.65);
+  justify-content: center;
+  border-radius: 9999px;
+  border: 2px solid rgba(255, 211, 92, 0.6);
+  background: radial-gradient(circle at 50% 32%, rgba(78, 24, 102, 0.94), rgba(17, 4, 29, 0.96));
+  box-shadow: 0 0 16px rgba(255, 190, 60, 0.35), inset 0 0 14px rgba(255, 190, 60, 0.22);
+  opacity: 0.5;
+  transition: opacity 220ms ease-out, border-color 220ms ease-out, box-shadow 220ms ease-out;
 }
-.dede-mult-bar-title {
-  flex-shrink: 0;
-  font-size: 0.55rem;
+/* Çarpan birikmeye başlayınca çember parlar. */
+.dede-mult-circle[data-active='on'] {
+  opacity: 1;
+  border-color: #fff6d0;
+  box-shadow: 0 0 26px rgba(255, 205, 90, 0.8), inset 0 0 20px rgba(255, 205, 90, 0.4);
+}
+.dede-mult-circle-value {
+  font-size: 1.05rem;
   font-weight: 900;
-  letter-spacing: 0.1em;
-  color: rgba(255, 226, 145, 0.8);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: #fff6d0;
+  text-shadow: 0 0 10px rgba(255, 205, 90, 0.95), 0 2px 0 rgba(0, 0, 0, 0.5);
+  font-variant-numeric: tabular-nums;
 }
-.dede-mult-bar-orbs {
-  display: flex;
-  min-width: 0;
-  flex: 1;
-  align-items: center;
-  gap: 0.25rem;
-  overflow: hidden;
+.dede-mult-value-pop { animation: dede-mult-value-pop 0.42s cubic-bezier(0.2, 0.9, 0.3, 1.35) both; }
+@keyframes dede-mult-value-pop {
+  0% { transform: scale(0.72); }
+  60% { transform: scale(1.12); }
+  100% { transform: scale(1); }
 }
-.dede-mult-bar-orb {
-  flex-shrink: 0;
+/* Çarpan birleştiğinde çemberden dışa yayılan şok halkası. */
+.dede-mult-pop {
+  position: absolute;
+  inset: -2px;
+  border-radius: 9999px;
+  border: 2px solid rgba(255, 232, 150, 0.9);
+  animation: dede-mult-pop 0.5s ease-out both;
+}
+@keyframes dede-mult-pop {
+  0% { transform: scale(0.8); opacity: 0.95; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+/* İnen küre jetonu: yukarıdan gelir, çemberin ortasına düşüp kaybolur. */
+.dede-mult-chip {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 2;
+  pointer-events: none;
+}
+.dede-mult-chip-inner {
+  display: block;
   border-radius: 9999px;
   border: 1px solid #fff6d0;
   padding: 0.05rem 0.4rem;
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   font-weight: 900;
+  white-space: nowrap;
   color: #2a0c02;
   background: linear-gradient(180deg, #ffe9a8, #ffbe2e);
-  box-shadow: 0 0 12px rgba(255, 190, 60, 0.8);
-  animation: dede-orb-drop 0.4s cubic-bezier(0.2, 0.9, 0.3, 1.3) both;
+  box-shadow: 0 0 14px rgba(255, 190, 60, 0.85);
+  animation: dede-mult-chip-in 0.62s cubic-bezier(0.35, 0.05, 0.6, 0.95) both;
 }
-@keyframes dede-orb-drop {
-  0% { transform: translateY(-180%) scale(0.6); opacity: 0; }
-  100% { transform: translateY(0) scale(1); opacity: 1; }
-}
-.dede-mult-bar-empty {
-  font-size: 0.55rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  color: rgba(255, 226, 145, 0.45);
-}
-.dede-mult-bar-total {
-  flex-shrink: 0;
-  border-radius: 0.7rem;
-  padding: 0.1rem 0.5rem;
-  font-size: 0.95rem;
-  font-weight: 900;
-  color: #2a0c02;
-  background: linear-gradient(180deg, #ffe9a8, #ffbe2e);
-  box-shadow: 0 0 14px rgba(255, 190, 60, 0.75);
-  font-variant-numeric: tabular-nums;
+@keyframes dede-mult-chip-in {
+  0% { transform: translate(-50%, -170%) scale(0.85); opacity: 0; }
+  25% { opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(0.45); opacity: 0; }
 }
 
 
@@ -449,7 +463,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .dede-rays, .dede-frame, .dede-strip, .dede-badge-win, .dede-drop,
-  .dede-float-win, .dede-token, .dede-mult-bar-orb, .dede-strike, .dede-strike-flash, .dede-strike-bolt,
+  .dede-float-win, .dede-token, .dede-mult-chip-inner, .dede-mult-pop, .dede-mult-value-pop, .dede-strike, .dede-strike-flash, .dede-strike-bolt,
   .dede-merge-fly, .dede-merge-core, .dede-merge-ring { animation: none; }
   .dede-badge-explode, .dede-merge-pop { animation-duration: 0.01s; }
 }
