@@ -134,6 +134,7 @@ export default function FootballGame({ onExit, onBack }) {
       <FutbolWinOverlay
         open={!!game.prize}
         amount={game.prize?.amount || 0}
+        stake={game.prize?.stake || 0}
         winner={game.prize?.winner || ''}
         onAccept={game.clearPrize}
       />

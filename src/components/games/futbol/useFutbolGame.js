@@ -66,7 +66,7 @@ export default function useFutbolGame() {
     if (last?.round_no && last.round_no !== seenResultRef.current) {
       seenResultRef.current = last.round_no;
       if (last.payout > 0) {
-        setPrize({ amount: last.payout, winner: last.winner_id || '' });
+        setPrize({ amount: last.payout, stake: last.stake || 0, winner: last.winner_id || '' });
         if (soundRef.current) gameSound.big();
       }
     }

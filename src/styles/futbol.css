@@ -495,6 +495,24 @@
   color: var(--fut-gold);
   text-shadow: 0 0 20px rgba(242,206,107,.6);
 }
+.fut-overlay-mult {
+  border-radius: 9999px;
+  border: 2px solid rgba(242,206,107,.9);
+  background: linear-gradient(180deg, #ffe9a8, #b98a2c);
+  padding: .15rem .85rem;
+  font-size: 1.1rem;
+  font-weight: 900;
+  letter-spacing: .04em;
+  color: #2a1500;
+  box-shadow: 0 0 18px rgba(242,206,107,.5);
+}
+.fut-overlay-calc {
+  font-size: .8rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: rgba(216,255,230,.9);
+}
+.fut-overlay-calc b { color: var(--fut-gold); }
 .fut-overlay-label { font-size: .6rem; font-weight: 900; letter-spacing: .3em; color: rgba(216,255,230,.7); }
 .fut-overlay-btn {
   margin-top: .6rem;
