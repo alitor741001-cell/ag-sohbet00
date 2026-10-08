@@ -1,7 +1,6 @@
 // ELİMİNSLOT: 6 sütun x 5 satır kare kart meyve slotu.
 // Kartlar meyve oyununun görselleridir; ödeme tablosu sunucudaki motorla birebir.
-import { FRUIT_ART, FRUIT_ART_SIZE } from '../fruit/fruitAssets';
-import { ELIMIN_EXTRA_ART } from './eliminExtraArt';
+import { ELIMIN_ART_SIZE, ELIMIN_SYMBOL_ART } from './eliminSymbolArt';
 
 export const REELS = 6;
 export const ROWS = 5;
@@ -22,31 +21,31 @@ export const CLUSTER_MIN = 9;
 
 // pays: 9-11, 12-14 ve 15+ aynı meyve için bahis katı.
 export const ELIMIN_SYMBOLS = {
-  lollipop: { name: 'Lolipop', art: FRUIT_ART.lollipop, pays: [144, 450, 1440] },
-  plum: { name: 'Erik', art: FRUIT_ART.plum, pays: [90, 270, 900] },
-  grapes: { name: 'Üzüm', art: FRUIT_ART.grapes, pays: [72, 216, 630] },
-  melon: { name: 'Karpuz', art: FRUIT_ART.melon, pays: [54, 162, 450] },
-  apple: { name: 'Elma', art: FRUIT_ART.apple, pays: [36, 108, 324] },
-  candy: { name: 'Şeker', art: FRUIT_ART.candy, pays: [27, 72, 216] },
-  cherry: { name: 'Kiraz', art: FRUIT_ART.cherry, pays: [18, 54, 162] },
-  banana: { name: 'Altın Muz', art: FRUIT_ART.banana, scatter: true, pays: [54, 108, 216] },
+  lollipop: { name: 'Lolipop', art: ELIMIN_SYMBOL_ART.lollipop, pays: [144, 450, 1440] },
+  plum: { name: 'Yaban Mersini', art: ELIMIN_SYMBOL_ART.plum, pays: [90, 270, 900] },
+  grapes: { name: 'Üzüm', art: ELIMIN_SYMBOL_ART.grapes, pays: [72, 216, 630] },
+  melon: { name: 'Ejder Meyvesi', art: ELIMIN_SYMBOL_ART.melon, pays: [54, 162, 450] },
+  apple: { name: 'Elma', art: ELIMIN_SYMBOL_ART.apple, pays: [36, 108, 324] },
+  candy: { name: 'Portakal', art: ELIMIN_SYMBOL_ART.candy, pays: [27, 72, 216] },
+  cherry: { name: 'Çilek', art: ELIMIN_SYMBOL_ART.cherry, pays: [18, 54, 162] },
+  banana: { name: 'Altın Muz', art: ELIMIN_SYMBOL_ART.banana, scatter: true, pays: [54, 108, 216] },
   chicken: {
     name: 'Tavuk',
-    art: ELIMIN_EXTRA_ART.chicken,
+    art: ELIMIN_SYMBOL_ART.chicken,
     free: true,
     tag: 'BEDAVA TUR',
     note: `${CHICKEN_MIN} TAVUK = ${FREE_SPINS} BEDAVA TUR`,
   },
   dice: {
     name: 'Zar',
-    art: ELIMIN_EXTRA_ART.dice,
+    art: ELIMIN_SYMBOL_ART.dice,
     jackpot: true,
     tag: 'JACKPOT',
     note: `${DICE_MIN} ZAR = JACKPOTUN YARISI`,
   },
   chest: {
     name: 'Sandık',
-    art: ELIMIN_EXTRA_ART.chest,
+    art: ELIMIN_SYMBOL_ART.chest,
     chest: true,
     tag: 'SANDIK BARI',
     note: `${CHEST_MAX} SANDIK DOLUNCA TOPLA`,
@@ -54,7 +53,7 @@ export const ELIMIN_SYMBOLS = {
 };
 
 export const SYMBOL_IDS = Object.keys(ELIMIN_SYMBOLS);
-export const ART_SIZE = FRUIT_ART_SIZE;
+export const ART_SIZE = ELIMIN_ART_SIZE;
 
 // Tur başlamadan ve makaralar akarken ekranda duran süs ızgarası.
 export function randomGrid() {

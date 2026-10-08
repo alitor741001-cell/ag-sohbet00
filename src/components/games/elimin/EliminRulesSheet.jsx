@@ -1,9 +1,8 @@
 import React from 'react';
 import { X } from 'lucide-react';
-import { Image } from '@/components/ui/image';
+import EliminArt from './EliminArt';
 import useBackDismiss from '@/hooks/useBackDismiss';
 import {
-  ART_SIZE,
   CHEST_MAX,
   CHICKEN_MIN,
   CLUSTER_MIN,
@@ -59,15 +58,7 @@ export default function EliminRulesSheet({ open, onClose }) {
           {Object.entries(ELIMIN_SYMBOLS).map(([id, symbol]) => (
             <li key={id} className="el-pay-row">
               <span className="el-pay-name">
-                <Image
-                  src={symbol.art}
-                  alt={symbol.name}
-                  className="el-pay-art"
-                  fittingType="fit"
-                  originWidth={ART_SIZE}
-                  originHeight={ART_SIZE}
-                  quality={80}
-                />
+                <EliminArt src={symbol.art} alt={symbol.name} className="el-pay-art" />
                 <span>
                   {symbol.name}
                   {symbol.tag && <em className="el-pay-tag">{symbol.tag}</em>}
