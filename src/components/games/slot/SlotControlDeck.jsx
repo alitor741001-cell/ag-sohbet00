@@ -5,9 +5,11 @@ import SlotBetStepper from './SlotBetStepper';
 
 const format = (value) => new Intl.NumberFormat('tr-TR').format(Math.max(0, Math.round(value || 0)));
 
-// Yan düğmeler: MAX altın, AUTO yeşil zemin üstünde kendi simgesiyle.
+// Yan düğmeler: kubbeli, yuvasına oturan yuvarlak düğmeler.
 const SIDE_BUTTON =
-  'relative flex h-16 w-[4.5rem] shrink-0 flex-col items-center justify-center gap-1 overflow-hidden rounded-2xl text-[10px] font-black tracking-[0.12em] disabled:opacity-50';
+  'slot-button relative flex h-12 w-12 shrink-0 flex-col items-center justify-center gap-0.5 rounded-full text-[8px] font-black tracking-[0.08em] disabled:opacity-50';
+// Düğmenin oturduğu gömme yuva.
+const SOCKET = 'slot-socket flex shrink-0 items-center justify-center rounded-full';
 
 /**
  * Oyunun alt kontrol paneli: görselin kendi kontrol alanının yerini alır.
@@ -32,8 +34,8 @@ export default function SlotControlDeck({
     <div className="slot-console slot-rivets relative z-10 shrink-0 border-t-2 border-slot-gold/50 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-4 shadow-[0_-18px_40px_-22px_rgba(0,0,0,0.95)]">
       <span aria-hidden="true" className="slot-bulbs absolute inset-x-0 top-0 h-1.5 opacity-80" />
       <span aria-hidden="true" className="slot-studs absolute inset-x-10 bottom-1 h-1.5 opacity-55" />
-      {/* SPIN düğmesinin arkasında makinenin sahne ışığı. */}
-      <span aria-hidden="true" className="slot-spotlight pointer-events-none absolute -top-8 right-2 h-28 w-56 opacity-60" />
+      {/* Düğme sırasının arkasında makinenin sahne ışığı. */}
+      <span aria-hidden="true" className="slot-spotlight pointer-events-none absolute -top-10 left-1/2 h-28 w-72 -translate-x-1/2 opacity-70" />
 
       <div className="mx-auto flex w-full max-w-2xl flex-col gap-2.5">
         <div className="grid grid-cols-3 gap-2">
@@ -62,34 +64,42 @@ export default function SlotControlDeck({
           <SlotBetStepper bet={bet} disabled={spinning} onStep={onStep} />
         </div>
 
-        <div className="flex items-stretch gap-2">
-          <button type="button" onClick={onMax} disabled={!ready} aria-label="Maksimum bahis" className={`slot-max text-white ${SIDE_BUTTON}`}>
-            <TrendingUp className="h-4 w-4" strokeWidth={3} />
-            MAX
-          </button>
-          <button
-            type="button"
-            onClick={onAuto}
-            disabled={!ready}
-            aria-label="Otomatik tur"
-            className={`slot-auto text-slot ${SIDE_BUTTON} ${auto ? 'ring-2 ring-slot-green' : ''}`}
-          >
-            <Repeat className="h-4 w-4" strokeWidth={3} />
-            AUTO
-          </button>
+        <div className="flex items-center justify-center gap-2.5">
+          <span className={`${SOCKET} p-1`}>
+            <button type="button" onClick={onMax} disabled={!ready} aria-label="Maksimum bahis" className={`slot-max text-white ${SIDE_BUTTON}`}>
+              <span aria-hidden="true" className="slot-button-dome absolute inset-0 rounded-full" />
+              <TrendingUp className="relative h-4 w-4" strokeWidth={3} />
+              <span className="relative">MAX</span>
+            </button>
+          </span>
+          <span className={`${SOCKET} p-1`}>
+            <button
+              type="button"
+              onClick={onAuto}
+              disabled={!ready}
+              aria-label="Otomatik tur"
+              className={`slot-auto text-slot ${SIDE_BUTTON} ${auto ? 'ring-2 ring-slot-green' : ''}`}
+            >
+              <span aria-hidden="true" className="slot-button-dome absolute inset-0 rounded-full" />
+              <Repeat className="relative h-4 w-4" strokeWidth={3} />
+              <span className="relative">AUTO</span>
+            </button>
+          </span>
           {/* Tur sürerken aynı düğme kırmızı DURDUR düğmesine döner. */}
-          <button
-            type="button"
-            onClick={spinning ? onStop : onSpin}
-            disabled={!ready}
-            aria-label={spinning ? 'Makaraları durdur' : 'Turu başlat'}
-            className={`slot-action-ring relative flex h-16 flex-1 items-center justify-center overflow-hidden rounded-2xl text-lg font-black tracking-[0.18em] text-white disabled:opacity-50 ${
-              spinning ? 'slot-stop' : 'slot-spin'
-            }`}
-          >
-            <span aria-hidden="true" className="slot-sheen-loop pointer-events-none absolute inset-0 opacity-35" />
-            <span className="relative">{spinning ? 'STOP' : 'SPIN'}</span>
-          </button>
+          <span className={`${SOCKET} p-1.5`}>
+            <button
+              type="button"
+              onClick={spinning ? onStop : onSpin}
+              disabled={!ready}
+              aria-label={spinning ? 'Makaraları durdur' : 'Turu başlat'}
+              className={`slot-button slot-action-ring relative flex h-16 w-16 items-center justify-center rounded-full text-[11px] font-black tracking-[0.1em] text-white disabled:opacity-50 ${
+                spinning ? 'slot-stop' : 'slot-spin'
+              }`}
+            >
+              <span aria-hidden="true" className="slot-button-dome absolute inset-0 rounded-full" />
+              <span className="relative">{spinning ? 'STOP' : 'SPIN'}</span>
+            </button>
+          </span>
         </div>
       </div>
     </div>

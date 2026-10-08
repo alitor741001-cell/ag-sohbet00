@@ -337,3 +337,20 @@
     linear-gradient(112deg, rgba(255, 255, 255, 0.13) 0 16%, transparent 34% 68%, rgba(255, 255, 255, 0.06) 82%, transparent),
     radial-gradient(120% 100% at 50% 50%, transparent 55%, rgba(0, 0, 0, 0.5) 100%);
 }
+
+/* === ŞEKİLLİ DÜĞMELER VE YUVALARI === */
+/* Yuva: düğmenin gömüldüğü koyu metal yatak. */
+.slot-socket {
+  background: radial-gradient(circle at 50% 12%, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.88));
+  border: 1px solid hsl(var(--slot-gold) / 0.55);
+  box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.95), inset 0 -1px 0 rgba(255, 255, 255, 0.14), 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+/* Düğme gövdesi: basılınca yuvasına gömülür. */
+.slot-button { transition: transform 120ms ease, filter 120ms ease; }
+.slot-button:active { transform: translateY(2px) scale(0.97); }
+/* Kubbe: düğmenin üstünden vuran ışık. */
+.slot-button-dome {
+  background: radial-gradient(circle at 50% 14%, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.06) 42%, transparent 58%);
+  box-shadow: inset 0 -9px 16px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+}
