@@ -1,12 +1,24 @@
 import React from 'react';
-import { SLOT_ART } from '@/components/games/slotAssets';
-import { CELL_STYLE, SYMBOL_CELLS } from '@/components/games/slot/slotLayout';
+import { Image } from '@/components/ui/image';
+import { SLOT_SYMBOL_ART, SLOT_SYMBOL_ART_SIZE } from '@/components/games/slotAssets';
 
-/** Makara sembolü: hücresinden kırpılır ve çevresinde koyu boşluk kalacak şekilde küçültülür. */
+/**
+ * Makara sembolü: kart görseli hücresine ortalanır, çevresinde makara yatağı kalır.
+ * Kartlar Şekerli Meyve kartlarıyla aynı dilde: parlak zemin, altın çift çerçeve.
+ */
 export default function SlotSymbol({ symbol, top, height }) {
-  const cell = SYMBOL_CELLS[symbol] || SYMBOL_CELLS.ten;
-  return <span className="absolute left-0 w-full scale-90" style={{ top, height,
-    backgroundImage: `url(${SLOT_ART.shell})`, backgroundSize: CELL_STYLE.backgroundSize,
-    backgroundPosition: `${CELL_STYLE.x[cell.col]} ${CELL_STYLE.y[cell.row]}`,
-  }} />;
+  const art = SLOT_SYMBOL_ART[symbol] || SLOT_SYMBOL_ART.ten;
+  return (
+    <span className="absolute left-0 flex w-full items-center justify-center p-[5%]" style={{ top, height }}>
+      <Image
+        src={art}
+        alt=""
+        className="w-full"
+        fittingType="fit"
+        originWidth={SLOT_SYMBOL_ART_SIZE}
+        originHeight={SLOT_SYMBOL_ART_SIZE}
+        quality={88}
+      />
+    </span>
+  );
 }

@@ -1,21 +1,21 @@
 import React from 'react';
-import { SLOT_ART } from '@/components/games/slotAssets';
-import { CELL_ASPECT, CELL_STYLE, SYMBOL_CELLS } from '@/components/games/slot/slotLayout';
+import { Image } from '@/components/ui/image';
+import { SLOT_SYMBOL_ART, SLOT_SYMBOL_ART_SIZE } from '@/components/games/slotAssets';
 
-/** Küçük sembol ikonu: makara görselindeki hücreden kırpılır (tablolar için). */
+/** Küçük sembol ikonu: kazanan sembol listelerinde kart görseli kullanılır. */
 export default function SlotSymbolIcon({ symbol, size = 18 }) {
-  const cell = SYMBOL_CELLS[symbol] || SYMBOL_CELLS.ten;
+  const art = SLOT_SYMBOL_ART[symbol] || SLOT_SYMBOL_ART.ten;
   return (
-    <span
+    <Image
+      src={art}
+      alt=""
       aria-hidden="true"
       className="inline-block shrink-0"
-      style={{
-        width: size,
-        height: Math.round(size * CELL_ASPECT),
-        backgroundImage: `url(${SLOT_ART.shell})`,
-        backgroundSize: CELL_STYLE.backgroundSize,
-        backgroundPosition: `${CELL_STYLE.x[cell.col]} ${CELL_STYLE.y[cell.row]}`,
-      }}
+      style={{ width: size, height: size }}
+      fittingType="fit"
+      originWidth={SLOT_SYMBOL_ART_SIZE}
+      originHeight={SLOT_SYMBOL_ART_SIZE}
+      quality={80}
     />
   );
 }
