@@ -196,12 +196,12 @@ export default function DedeGame({ onExit, onBack }) {
         onAccept={game.clearSessionResult}
       />
 
-      {/* 4 skatter gelince 15 çevirme hakkı yeniden başlar; bedeli coinlerden düşülür. */}
+      {/* 4, 5 ya da 6 skatter gelince 15 çevirme hakkı bedelsiz verilir. */}
       <DedeWinOverlay
         open={!!game.sessionBonus}
-        amount={game.sessionBonus?.cost || 0}
+        amount={game.sessionBonus?.spins || 0}
         title="15 ÇEVRİME HAKKI"
-        subtitle="4 SKATTER · BEDELİ COINDEN DÜŞÜLDÜ"
+        subtitle="4 · 5 · 6 SKATTER · ÜCRETSİZ"
         action="BAŞLA"
         onAccept={game.clearSessionBonus}
       />

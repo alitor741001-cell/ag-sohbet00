@@ -82,16 +82,15 @@ export default async function (req) {
       // 4+ dede yalnızca bonus öder; bedava tur sistemi oyundan kaldırıldı.
       const sessionLeft = Math.max(0, sessionTurns - (isFree ? 1 : 0));
       const triggered = result.scatterCount >= SCATTER_MIN;
-      const sessionCost = sessionPrice(bet);
       const balance = coins - cost + total;
       // Çevirme hakkı sürerken gelen 4+ skatter: 15 hak bedelsiz eklenir, coin düşmez.
       const retrigger = triggered && isFree;
-      // Normal turda gelen 4+ skatter: 15 hak satın alınır, bedeli coinlerden düşülür.
-      const sessionBonus = triggered && !isFree && balance >= sessionCost;
+      // Tek tek çevirmede 4, 5 ya da 6 skatter gelince 15 çevirme hakkı bedelsiz verilir.
+      const sessionBonus = triggered && !isFree;
       const bigWin = stake > 0 && total >= stake * BIG_WIN_MULTIPLE;
 
       const updated = await base44.asServiceRole.entities.GameWallet.update(wallet.id, {
-        coins: sessionBonus ? balance - sessionCost : balance,
+        coins: balance,
         bet,
         // Kalan bedava turlar sıfırlanır: oyun artık bedava tur vermiyor.
         dede_free_spins: 0,
@@ -116,7 +115,8 @@ export default async function (req) {
         scatter_count: result.scatterCount,
         // Skatter çevirme hakkını başlattıysa ekran kutlamayı gösterir.
         session_bonus: sessionBonus,
-        session_cost: sessionBonus ? sessionCost : 0,
+        // Skatter çevirme hakkı bedelsiz verilir: düşülen coin yoktur.
+        session_cost: 0,
         // Çevirme hakkı sürerken gelen skatter: ek turlar bedelsiz eklenir.
         session_retrigger: retrigger,
         retrigger_spins: retrigger ? SESSION_SPINS : 0,

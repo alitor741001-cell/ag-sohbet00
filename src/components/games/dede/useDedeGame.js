@@ -168,8 +168,8 @@ export default function useDedeGame() {
       // Biriken çarpan tur bitince de görünür kalır: oyuncu son değeri görür.
       await wait(END_MS);
       applyState(data);
-      // 4 skatter: 15 çevirme hakkı yeniden başladı, kutlama ekranı açılır.
-      if (data.session_bonus) setSessionBonus({ cost: data.session_cost || 0 });
+      // 4, 5 ya da 6 skatter: 15 çevirme hakkı bedelsiz başladı, kutlama ekranı açılır.
+      if (data.session_bonus) setSessionBonus({ spins: data.session_spins ?? 15 });
       // Çevirme hakkı sürerken gelen skatter: ek 15 tur bedelsiz eklenir.
       if (data.session_retrigger) setRetrigger(data.retrigger_spins || 0);
       // Çevirme hakkı sürerken kazanç birikir; normal turda sıfırdan başlar.
