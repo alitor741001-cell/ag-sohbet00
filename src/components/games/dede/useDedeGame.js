@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { base44 } from '@/api/base44Client';
+import { landMs } from '@/components/games/reels/reelRoll';
 import { DEDE_BET_LEVELS, DEDE_LINES } from './dedeConfig';
 
-// Makaraların akışı, karoların yerine oturması ve kazanç adımlarının süreleri.
-const ROLL_MS = 1400;
+// Sonucun üzerine iniş, karoların yerine oturması ve kazanç adımlarının süreleri.
+const LAND_MS = landMs(6);
 const DROP_MS = 380;
 const HOLD_MS = 950;
 const EXPLODE_MS = 320;
@@ -27,6 +28,9 @@ export default function useDedeGame() {
   const [multiplier, setMultiplier] = useState(0);
   const [explode, setExplode] = useState(false);
   const [rolling, setRolling] = useState(false);
+  // Sonuç gelince makaraların ineceği dizilim ve tur anahtarı.
+  const [landing, setLanding] = useState(null);
+  const [spinKey, setSpinKey] = useState(0);
   const [win, setWin] = useState(0);
   const [bigWin, setBigWin] = useState(0);
   const [spinning, setSpinning] = useState(false);
@@ -36,6 +40,8 @@ export default function useDedeGame() {
   const stopRef = useRef(null);
   // Satın alınan 15 turda kazanan tutar: her turda artar, tur bitene kadar sıfırlanmaz.
   const sessionWinRef = useRef(0);
+  // Tur isteği sürerken DURDUR'a basılırsa iniş animasyonu atlanır.
+  const skipLandingRef = useRef(false);
 
   // Bekleme; DURDUR'a basıldığında (ya da süre dolduğunda) sona erer.
   const wait = useCallback((ms) => new Promise((resolve) => {
@@ -54,7 +60,9 @@ export default function useDedeGame() {
 
   const stop = useCallback(() => {
     if (!busyRef.current) return;
-    stopRef.current?.();
+    // İniş sürerken bekleme kesilir; istek sürerken basıldıysa iniş atlanır.
+    if (stopRef.current) stopRef.current();
+    else skipLandingRef.current = true;
   }, []);
 
   useEffect(() => () => { stopRef.current?.(); }, []);
@@ -102,6 +110,9 @@ export default function useDedeGame() {
     if (cost > 0) setCoins((value) => Math.max(0, value - cost));
     if (!inSession) sessionWinRef.current = 0;
     setRolling(true);
+    setLanding(null);
+    setSpinKey((key) => key + 1);
+    skipLandingRef.current = false;
     setSpinning(true);
     // Çevirme hakkı sürerken biriken kazanç görünür kalır.
     setWin(inSession ? sessionWinRef.current : 0);
@@ -111,12 +122,17 @@ export default function useDedeGame() {
     setMultiplier(0);
     setMessage('');
     try {
-      const [response] = await Promise.all([
-        base44.functions.invoke('dede-game', { action: 'spin', bet }),
-        wait(ROLL_MS),
-      ]);
+      const response = await base44.functions.invoke('dede-game', { action: 'spin', bet });
       const data = response.data || {};
       const steps = data.steps || [];
+      // Sonuç geldi: makaralar ilk dizilimin tam üzerine iner, sonra zincir oynar.
+      const landed = steps[0]?.grid || data.grid || null;
+      if (landed) {
+        setLanding(landed);
+        if (!skipLandingRef.current) await wait(LAND_MS);
+      }
+      skipLandingRef.current = false;
+      setLanding(null);
       setRolling(false);
       let shown = 0;
       // Adımlar sırayla oynar: karo parlar, patlar, yerine yenisi düşer.
@@ -225,6 +241,8 @@ export default function useDedeGame() {
     spins,
     spinning,
     rolling,
+    landing,
+    spinKey,
     explode,
     grid,
     wins,

@@ -1,0 +1,39 @@
+/* Ortak makara altyapısı (Şekerli Meyve): tur boyunca kesintisiz dönen şerit ve
+   sonucun tam üzerine inen iniş. Bütün oyunlar bu akışı kullanır.
+
+   --rl-visible: görünür satır sayısı · --rl-rows: şeritteki toplam satır
+   --rl-from / --rl-to: inişin başlangıç ve bitiş konumu · --rl-dur: iniş süresi */
+
+.rl-strip {
+  position: relative;
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  height: calc(100% / var(--rl-visible) * var(--rl-rows));
+  will-change: transform;
+}
+
+/* Bekleme: içerik iki kez yazıldığı için yarım boy kayınca başladığı görüntüye döner. */
+.rl-strip-loop {
+  animation: rl-loop var(--rl-loop, 180ms) linear infinite;
+}
+
+/* İniş: şerit dolgu satırlarından akıp sonuç satırlarını tam yerine getirir. */
+.rl-strip-land {
+  animation: rl-land var(--rl-dur) cubic-bezier(0.2, 0.72, 0.28, 1) both;
+}
+
+@keyframes rl-loop {
+  from { transform: translateY(0); }
+  to { transform: translateY(-50%); }
+}
+
+@keyframes rl-land {
+  from { transform: translateY(var(--rl-from, 0%)); }
+  to { transform: translateY(var(--rl-to)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rl-strip-loop { animation: none; }
+  .rl-strip-land { animation-duration: 0.01s; }
+}

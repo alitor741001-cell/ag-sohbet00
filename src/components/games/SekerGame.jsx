@@ -72,7 +72,14 @@ export default function SekerGame({ onExit, onBack }) {
         {/* Izgara ekranın kalan tüm alanını kaplar: şekerler olabildiğince büyük durur. */}
         <div className="flex min-h-0 w-full flex-1 items-center justify-center">
           <div className="seker-frame flex aspect-square max-h-full w-full max-w-[30rem] p-2 sm:p-3">
-            <SekerGrid spinning={game.spinning} stopping={game.stopping} grid={game.grid} wins={game.wins} />
+            <SekerGrid
+              spinning={game.spinning}
+              stopping={game.stopping}
+              landing={game.landing}
+              spinKey={game.spinKey}
+              grid={game.grid}
+              wins={game.wins}
+            />
           </div>
         </div>
 

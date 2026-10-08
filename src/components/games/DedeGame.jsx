@@ -86,6 +86,8 @@ export default function DedeGame({ onExit, onBack }) {
           <div className="dede-frame flex aspect-[6/5] max-h-full w-full max-w-[34rem] p-2 sm:p-3">
             <DedeReels
               rolling={game.rolling}
+              landing={game.landing}
+              spinKey={game.spinKey}
               grid={game.grid}
               wins={game.wins}
               orbs={game.orbs}

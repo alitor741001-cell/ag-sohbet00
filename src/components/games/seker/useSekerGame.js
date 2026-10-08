@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { base44 } from '@/api/base44Client';
+import { landMs } from '@/components/games/reels/reelRoll';
 import { SEKER_BET_LEVELS, SEKER_LINES } from './sekerConfig';
 
-// Izgaranın dolma süresi ve şekerlerin yerine oturma payı.
-const SPIN_MS = 4200;
-const SETTLE_MS = 700;
+// Sonucun üzerine iniş: 6 sütunlu tahta, ortak makara altyapısı.
+const LAND_MS = landMs(6);
 
 /** Şeker oyununun durumu: bakiye, bahis, tur ve serbest turlar. */
 export default function useSekerGame() {
@@ -25,12 +25,17 @@ export default function useSekerGame() {
   const [bigWin, setBigWin] = useState(0);
   const [spinning, setSpinning] = useState(false);
   const [stopping, setStopping] = useState(false);
+  // Sonuç gelince sütunların ineceği ızgara ve tur anahtarı.
+  const [landing, setLanding] = useState(null);
+  const [spinKey, setSpinKey] = useState(0);
   const [auto, setAuto] = useState(false);
   const [message, setMessage] = useState('');
   const busyRef = useRef(false);
   const stopRef = useRef(null);
   // Satın alınan 15 turda kazanan tutar: her turda artar, tur bitene kadar sıfırlanmaz.
   const sessionWinRef = useRef(0);
+  // Tur isteği sürerken STOP'a basılırsa iniş animasyonu atlanır.
+  const skipLandingRef = useRef(false);
 
   // Bekleme; STOP'a basıldığında (ya da süre dolduğunda) sona erer.
   const wait = useCallback((ms) => new Promise((resolve) => {
@@ -49,7 +54,9 @@ export default function useSekerGame() {
 
   const stop = useCallback(() => {
     if (!busyRef.current) return;
-    stopRef.current?.();
+    // İniş sürerken bekleme kesilir; istek sürerken basıldıysa iniş atlanır.
+    if (stopRef.current) stopRef.current();
+    else skipLandingRef.current = true;
   }, []);
 
   useEffect(() => () => { stopRef.current?.(); }, []);
@@ -98,6 +105,9 @@ export default function useSekerGame() {
     if (cost > 0) setCoins((value) => Math.max(0, value - cost));
     if (!inSession) sessionWinRef.current = 0;
     setStopping(false);
+    setLanding(null);
+    setSpinKey((key) => key + 1);
+    skipLandingRef.current = false;
     setSpinning(true);
     // Çevirme hakkı sürerken biriken kazanç görünür kalır.
     setWin(inSession ? sessionWinRef.current : 0);
@@ -106,16 +116,18 @@ export default function useSekerGame() {
     setGrid(null);
     setMessage('');
     try {
-      const [response] = await Promise.all([
-        base44.functions.invoke('seker-game', { action: 'spin', bet }),
-        wait(SPIN_MS - SETTLE_MS),
-      ]);
+      const response = await base44.functions.invoke('seker-game', { action: 'spin', bet });
       const data = response.data || {};
+      // Sonuç geldi: sütunlar gerçek şekerlerin üzerine iner, sonra tahta sabitlenir.
+      if (data.grid) {
+        setLanding(data.grid);
+        if (!skipLandingRef.current) await wait(LAND_MS);
+      }
+      skipLandingRef.current = false;
+      setLanding(null);
+      setStopping(true);
       setGrid(data.grid || null);
       setWins(data.wins || []);
-      setStopping(true);
-      // Şekerlerin yerine oturması; STOP'a basılırsa beklemeden sonuç gösterilir.
-      await wait(SETTLE_MS);
       applyState(data);
       // Çevirme hakkı sürerken kazanç birikir; normal turda sıfırdan başlar.
       sessionWinRef.current += data.win || 0;
@@ -200,6 +212,8 @@ export default function useSekerGame() {
     spins,
     spinning,
     stopping,
+    landing,
+    spinKey,
     grid,
     wins,
     win,

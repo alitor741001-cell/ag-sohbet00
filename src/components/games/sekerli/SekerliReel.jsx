@@ -1,54 +1,33 @@
-import React, { useMemo, useRef } from 'react';
+import React from 'react';
 import SekerliSymbol from './SekerliSymbol';
-import { ROWS } from './sekerliConfig';
-import { randomSymbol } from './sekerliBoard';
-
-// Görünür alanın üstünde akan sembol sayısı.
-const ROLL_ROWS = 7;
-// Sonucun üzerine iniş süresi: sütun başına artar, hepsi aynı anda durmaz.
-const DURATION_BASE = 980;
-const DURATION_STEP = 100;
-// Sonuç beklenirken şerit bu tempoda döner: bir tur tam yedi satır kayar.
-const ROLL_LOOP_MS = 180;
+import { ROWS, SYMBOL_IDS } from './sekerliConfig';
+import useReelRoll from '@/components/games/reels/reelRoll';
+import '@/styles/reelRoll.css';
 
 /**
- * Tek makara: sonuç gelene kadar şerit döngüde akar, sonuç gelince akış hiç
- * kesilmeden gerçek sembollerin üzerine iner. Böylece makara durduğu yerde
- * sembol değişmez: ekranda görünen dizilim turun sonucuyla aynıdır.
+ * Tek makara: tur boyunca kesintisiz döner, sonuç gelince tam sonucun üzerine iner.
+ * Akış ortak makara altyapısından gelir; bu oyun o altyapının çıkış noktasıdır.
  */
 export default function SekerliReel({ reel, column, landing, spinning, stopping, winCells, newCells, phase, spinKey }) {
-  const duration = DURATION_BASE + reel * DURATION_STEP;
-  const rows = ROLL_ROWS + ROWS;
-  const startedRef = useRef(0);
-  // Şeridin içeriği tur boyunca sabit kalır; turun başlangıcı da burada damgalanır
-  // ki iniş animasyonu döngünün gerçek konumundan devam etsin.
-  const rollStrip = useMemo(() => {
-    startedRef.current = Date.now();
-    return Array.from({ length: ROLL_ROWS }, () => randomSymbol());
-  }, [spinKey]);
-
-  // İniş, döngünün o anki konumundan başlar: geçişte görünür sıçrama olmaz.
-  const from = useMemo(() => {
-    if (!landing || !startedRef.current) return 0;
-    const phaseAt = ((Date.now() - startedRef.current) % ROLL_LOOP_MS) / ROLL_LOOP_MS;
-    return -phaseAt * 50;
-  }, [landing, spinKey]);
+  const roll = useReelRoll({ reel, spinKey, landing, rows: ROWS, symbols: SYMBOL_IDS });
+  const visibleRows = String(ROWS);
 
   if (spinning && !stopping) {
     return (
       <div className="sl-reel">
-        {landing ? (
+        {roll.landingTiles ? (
           <div
-            className="sl-strip"
+            className="rl-strip rl-strip-land sl-strip"
             style={{
-              '--sl-rows': rows,
-              '--sl-from': `${from.toFixed(4)}%`,
-              '--sl-roll': `-${((ROLL_ROWS / rows) * 100).toFixed(4)}%`,
-              '--sl-dur': `${duration}ms`,
+              '--rl-visible': visibleRows,
+              '--rl-rows': String(roll.landingRows),
+              '--rl-from': roll.from,
+              '--rl-to': roll.to,
+              '--rl-dur': `${roll.duration}ms`,
             }}
           >
             {/* Şerit: akan semboller ve altta yerine oturacak sonuç sembolleri. */}
-            {[...rollStrip, ...landing].map((sym, index) => (
+            {roll.landingTiles.map((sym, index) => (
               <span key={`${spinKey}-${index}`} className="sl-cell sl-cell-roll">
                 <SekerliSymbol id={sym} />
               </span>
@@ -56,11 +35,15 @@ export default function SekerliReel({ reel, column, landing, spinning, stopping,
           </div>
         ) : (
           <div
-            className="sl-strip sl-strip-wait"
-            style={{ '--sl-rows': ROLL_ROWS * 2, '--sl-dur': `${ROLL_LOOP_MS}ms` }}
+            className="rl-strip rl-strip-loop sl-strip"
+            style={{
+              '--rl-visible': visibleRows,
+              '--rl-rows': String(roll.waitingRows),
+              '--rl-loop': `${roll.loopMs}ms`,
+            }}
           >
-            {/* Kusursuz döngü: içerik iki kez yazılır, şerit yarım boy kayıp başa döner. */}
-            {[...rollStrip, ...rollStrip].map((sym, index) => (
+            {/* Bekleme: şerit kusursuz döngüde akar (içerik iki kez yazılır). */}
+            {roll.waiting.map((sym, index) => (
               <span key={`${spinKey}-${index}`} className="sl-cell sl-cell-roll">
                 <SekerliSymbol id={sym} />
               </span>

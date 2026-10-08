@@ -303,29 +303,14 @@
   filter: drop-shadow(0 0 7px rgba(255, 122, 217, 0.8));
 }
 
-/* Dönen şerit: sütun akar, sonuç sembolleri yerine oturur. */
+/* Dönen şerit: akış ve iniş ortak makara altyapısından gelir (styles/reelRoll.css). */
 .sl-strip {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
-  display: flex;
-  height: calc(var(--sl-rows) * 25%);
-  flex-direction: column;
-  will-change: transform;
   filter: blur(0.7px);
-  animation: sl-roll var(--sl-dur) cubic-bezier(0.2, 0.72, 0.28, 1) both;
-}
-
-/* Sonuç beklenirken şerit kusursuz döngüde akar: içerik iki kez yazıldığı için
-   yarım boy kayınca başladığı görüntüye döner, akış hiç kesilmez. */
-.sl-strip-wait {
-  animation: sl-roll-loop var(--sl-dur) linear infinite;
 }
 
 .sl-cell-roll {
-  flex-basis: calc(100% / var(--sl-rows));
-  height: calc(100% / var(--sl-rows));
+  flex: 0 0 calc(100% / var(--rl-rows));
+  height: calc(100% / var(--rl-rows));
 }
 
 .sl-cell-roll::before {
@@ -490,17 +475,7 @@
 }
 
 /* === ANİMASYONLAR === */
-/* Şerit yukarı akar: sonuç sembolleri alttan gelip tam yerine oturur. */
-@keyframes sl-roll {
-  from { transform: translateY(var(--sl-from, 0%)); }
-  to { transform: translateY(var(--sl-roll)); }
-}
-
-/* Bekleme döngüsü: bir turda tam yedi satır kayar, sonra baştan başlar. */
-@keyframes sl-roll-loop {
-  from { transform: translateY(0); }
-  to { transform: translateY(-50%); }
-}
+/* Şerit akışı ve iniş animasyonları ortak altyapıda: styles/reelRoll.css */
 
 @keyframes sl-win {
   from { transform: scale(1); filter: drop-shadow(0 0 5px rgba(255, 214, 102, 0.9)) brightness(1.05); }
