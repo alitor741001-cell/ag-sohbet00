@@ -113,6 +113,14 @@
 
 .el-main > :not(.el-stage) { flex-shrink: 0; }
 
+/* Tur rozeti için ayrılmış sabit yer: rozet belirip kaybolduğunda çerçevenin boyutu değişmez. */
+.el-turn-slot {
+  display: flex;
+  min-height: 1.6rem;
+  align-items: center;
+  justify-content: center;
+}
+
 /* === JACKPOT PANELİ: ortada tutar, sağda sandık ve oyuncu rozeti === */
 .el-top {
   position: relative;
@@ -434,8 +442,15 @@
   padding-bottom: max(.7rem, env(safe-area-inset-bottom));
 }
 
+/* Durum yazısı akıştan çıkar: belirip kaybolduğunda çerçevenin boyutu değişmez. */
 .el-note {
-  flex-shrink: 0;
+  position: absolute;
+  left: 50%;
+  bottom: 6rem;
+  z-index: 20;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: 90%;
   border-radius: 9999px;
   background: rgba(12, 3, 22, .85);
   padding: .25rem .8rem;

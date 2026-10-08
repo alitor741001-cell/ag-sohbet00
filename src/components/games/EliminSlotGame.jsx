@@ -151,11 +151,13 @@ export default function EliminSlotGame({ onExit, onBack }) {
         </div>
 
         {/* Tur durumu: çevirme hakkı ve tavuktan gelen bedava turlar görünür. */}
-        <GameTurnBadge
-          sessionSpins={game.sessionSpins}
-          freeSpins={game.freeSpins}
-          accent="border-[#ffd21f]/80 text-[#ffe9b8]"
-        />
+        <div className="el-turn-slot">
+          <GameTurnBadge
+            sessionSpins={game.sessionSpins}
+            freeSpins={game.freeSpins}
+            accent="border-[#ffd21f]/80 text-[#ffe9b8]"
+          />
+        </div>
 
         <EliminHud
           coins={game.coins}
