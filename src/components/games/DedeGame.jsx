@@ -11,7 +11,6 @@ import DedeHud from './dede/DedeHud';
 import GameHelpSheet from './help/GameHelpSheet';
 import GameBetBar from './controls/GameBetBar';
 import GameSpinButton from './controls/GameSpinButton';
-import GameTurnBadge from './controls/GameTurnBadge';
 import DedeWinOverlay from './dede/DedeWinOverlay';
 import DedeMultiplierCircle from './dede/DedeMultiplierCircle';
 import DedeOrbMerge from './dede/DedeOrbMerge';
@@ -121,8 +120,6 @@ export default function DedeGame({ onExit, onBack }) {
             </div>
           </div>
         </div>
-
-        <GameTurnBadge sessionSpins={game.sessionSpins} accent="border-[#ffd35c]/80 text-[#ffe9a8]" />
 
         <DedeHud
           coins={game.coins}
