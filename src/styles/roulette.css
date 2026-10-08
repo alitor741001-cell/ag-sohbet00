@@ -184,6 +184,7 @@
   min-width: 1.5rem;
   align-items: center;
   justify-content: center;
+  transform: translate(-50%, -50%);
   border-radius: 9999px;
   border: 2px solid #fff4d6;
   padding: 0 0.25rem;
