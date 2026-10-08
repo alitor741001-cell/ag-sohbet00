@@ -18,6 +18,7 @@ export default function DedeSymbol({ id, win, explode }) {
         alt={symbol.name}
         className="dede-art"
         fittingType="fit"
+        blurPlaceholder={false}
         originWidth={DEDE_ART_SIZE}
         originHeight={DEDE_ART_SIZE}
         quality={88}

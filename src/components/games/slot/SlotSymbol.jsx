@@ -15,6 +15,7 @@ export default function SlotSymbol({ symbol, top, height }) {
         alt=""
         className="w-full"
         fittingType="fit"
+        blurPlaceholder={false}
         originWidth={SLOT_SYMBOL_ART_SIZE}
         originHeight={SLOT_SYMBOL_ART_SIZE}
         quality={88}

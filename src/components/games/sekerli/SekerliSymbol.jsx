@@ -25,6 +25,7 @@ export default function SekerliSymbol({ id, win, boom, fall, index = 0 }) {
         alt={symbol.name}
         className="sl-art"
         fittingType="fit"
+        blurPlaceholder={false}
         originWidth={SEKERLI_ART_SIZE}
         originHeight={SEKERLI_ART_SIZE}
         quality={88}

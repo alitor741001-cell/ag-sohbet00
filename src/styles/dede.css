@@ -121,7 +121,7 @@
 }
 .dede-art img { object-fit: contain; border-radius: 16%; }
 /* Skatter: dede madalyonu altın halkayla parlar. */
-.dede-badge-dede { box-shadow: 0 0 0 2px #fff6d0, 0 0 20px rgba(255, 205, 90, 0.95); }
+.dede-badge-dede { box-shadow: 0 0 0 2px rgba(255, 214, 102, 0.95), 0 0 20px rgba(255, 205, 90, 0.95); }
 
 /* Küme kazanan karo parlar; patlama anında küçülüp kaybolur. */
 .dede-badge-win { animation: dede-win 0.9s ease-in-out infinite; }
@@ -154,8 +154,8 @@
   position: absolute;
   inset: 0;
   border-radius: 18%;
-  background: radial-gradient(circle at 50% 55%, rgba(255, 255, 255, 0.95), rgba(255, 214, 92, 0.5) 46%, rgba(255, 190, 60, 0) 74%);
-  box-shadow: 0 0 22px rgba(255, 226, 130, 0.9), inset 0 0 18px rgba(255, 255, 255, 0.7);
+  background: radial-gradient(circle at 50% 55%, rgba(255, 236, 170, 0.9), rgba(255, 214, 92, 0.5) 46%, rgba(255, 190, 60, 0) 74%);
+  box-shadow: 0 0 22px rgba(255, 226, 130, 0.9), inset 0 0 18px rgba(255, 205, 90, 0.6);
   animation: dede-strike-flash 1.25s ease-out forwards;
 }
 .dede-strike-bolt {

@@ -362,9 +362,8 @@
 /* Altın muz: bonus ödeyen sembolün parıltısı. */
 .el-sym-scatter { filter: drop-shadow(0 0 7px rgba(255, 214, 92, .85)); }
 
-/* Dönen şerit: akış ve iniş ortak makara altyapısından gelir (styles/reelRoll.css). */
-.el-strip { filter: blur(.7px); }
-
+/* Dönen şerit: akış ve iniş ortak makara altyapısından gelir (styles/reelRoll.css).
+   Şeride bulanıklık verilmez: dönerken nesneler net kalır. */
 .el-cell-roll {
   flex: 0 0 calc(100% / var(--rl-rows));
   height: calc(100% / var(--rl-rows));

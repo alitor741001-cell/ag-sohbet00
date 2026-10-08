@@ -112,7 +112,7 @@
   border-radius: 16%;
 }
 /* Skatter: altın muz kartı altın halkayla parlar. */
-.fruit-tile-scatter { box-shadow: 0 0 0 2px #ffe9b8, 0 0 20px rgba(255, 205, 90, 0.95); }
+.fruit-tile-scatter { box-shadow: 0 0 0 2px rgba(255, 214, 102, 0.95), 0 0 20px rgba(255, 205, 90, 0.95); }
 
 .fruit-settle { animation: fruit-settle 0.32s ease-out both; }
 @keyframes fruit-settle {
@@ -122,8 +122,8 @@
 /* Kazanan kümenin kartları parlar. */
 .fruit-cell-win { animation: fruit-win 1s ease-in-out infinite; }
 @keyframes fruit-win {
-  0%, 100% { transform: scale(1); box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9), 0 0 16px rgba(255, 216, 115, 0.9); }
-  50% { transform: scale(1.08); box-shadow: 0 0 0 3px #fff, 0 0 30px rgba(255, 216, 115, 1); }
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 2px rgba(255, 214, 102, 0.9), 0 0 16px rgba(255, 216, 115, 0.9); }
+  50% { transform: scale(1.08); box-shadow: 0 0 0 3px rgba(255, 214, 102, 1), 0 0 30px rgba(255, 216, 115, 1), 0 0 22px rgba(220, 38, 38, 0.7); }
 }
 
 

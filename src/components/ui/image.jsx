@@ -84,7 +84,7 @@ const ImageWrapper = React.forwardRef(({ aspectRatio, className, style, children
 ImageWrapper.displayName = "ImageWrapper"
 
 const ResponsiveImage = React.forwardRef(
-  ({ parsed, fittingType, focalPoint, quality, className, style, aspectRatio, onLoad, ...props }, parentRef) => {
+  ({ parsed, fittingType, focalPoint, quality, className, style, aspectRatio, onLoad, blurPlaceholder = true, ...props }, parentRef) => {
     const wrapperRef = React.useRef(null)
     const imgRef = React.useRef(null)
     const size = useSize(wrapperRef)
@@ -122,7 +122,7 @@ const ResponsiveImage = React.forwardRef(
             image's load time. Same crop shape and focal anchor as the main
             image — fp_ is relative to the crop box, so a square or centered
             placeholder would blur-preview a different region. */}
-        {options && !loaded && (
+        {options && blurPlaceholder && !loaded && (
           <img
             src={buildTransformUrl(parsed, {
               ...options,
@@ -171,6 +171,8 @@ ResponsiveImage.displayName = "ResponsiveImage"
  * device pixel ratio) and re-encoded to WebP; `fittingType="fill"` crops
  * server-side, optionally anchored at a focal point. Other URLs render as a
  * plain <img>. Failed loads swap to a fallback image.
+ * `blurPlaceholder={false}` skips the blurred low-res placeholder — for images
+ * that remount often (spinning reels) so they never flash blurry.
  */
 const Image = React.forwardRef(
   (
@@ -182,6 +184,7 @@ const Image = React.forwardRef(
       focalPointX,
       focalPointY,
       quality = 90,
+      blurPlaceholder = true,
       ...props
     },
     ref
@@ -234,6 +237,7 @@ const Image = React.forwardRef(
         fittingType={fittingType}
         focalPoint={focalPoint}
         quality={quality}
+        blurPlaceholder={blurPlaceholder}
         aspectRatio={aspectRatio}
         {...imageProps}
       />

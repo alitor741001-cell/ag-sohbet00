@@ -303,11 +303,8 @@
   filter: drop-shadow(0 0 7px rgba(255, 122, 217, 0.8));
 }
 
-/* Dönen şerit: akış ve iniş ortak makara altyapısından gelir (styles/reelRoll.css). */
-.sl-strip {
-  filter: blur(0.7px);
-}
-
+/* Dönen şerit: akış ve iniş ortak makara altyapısından gelir (styles/reelRoll.css).
+   Şeride bulanıklık verilmez: dönerken nesneler net kalır. */
 .sl-cell-roll {
   flex: 0 0 calc(100% / var(--rl-rows));
   height: calc(100% / var(--rl-rows));

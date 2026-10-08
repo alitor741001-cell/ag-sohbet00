@@ -23,6 +23,7 @@ export default function EliminSymbol({ id, win }) {
         alt={symbol.name}
         className="el-art"
         fittingType="fit"
+        blurPlaceholder={false}
         originWidth={ART_SIZE}
         originHeight={ART_SIZE}
         quality={88}
