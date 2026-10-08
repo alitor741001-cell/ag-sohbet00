@@ -16,7 +16,7 @@ export const CHICKEN_MIN = 3;
 export const FREE_SPINS = 3;
 // Sandık: jackpot barında birikir; bardaki her sandık bahsin bu katı kadar değer taşır.
 export const CHEST_MAX = 10;
-export const JACKPOT_PER_CHEST = 20;
+export const JACKPOT_PER_CHEST = 10;
 // Kazanç seyrek gelsin: küme 10'da başlar (sunucudaki eşikle aynı).
 export const CLUSTER_MIN = 10;
 

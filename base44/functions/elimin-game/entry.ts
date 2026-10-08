@@ -33,14 +33,14 @@ const CHEST_MAX = 10;
 const CHICKEN_MIN = 3;
 const FREE_SPINS = 3;
 // Barda biriken her sandık, bahsin bu katı kadar değer taşır.
-const JACKPOT_PER_CHEST = 20;
+const JACKPOT_PER_CHEST = 10;
 // Jackpot havuzu kaybedilen turlarla birikir, kazanan turlarda azalır; bu tabanın altına düşmez.
 const JACKPOT_BASE = 200000;
 // Kazanç seyrek gelsin: küme 10'da başlar, kademe sınırları 12 ve 15.
 const ELIMIN_CLUSTER_MIN = 10;
 const ELIMIN_CLUSTER_TIERS = [10, 12, 15];
-// Hücre başına ek nesne olasılığı: turda ~0,12 sandık, ~0,30 tavuk, ~0,24 zar.
-const CHEST_CHANCE = 0.004;
+// Hücre başına ek nesne olasılığı: sandık 15-20 turda bir (~0,06), tavuk ~0,30, zar ~0,24.
+const CHEST_CHANCE = 0.002;
 const CHICKEN_CHANCE = 0.01;
 const DICE_CHANCE = 0.008;
 
