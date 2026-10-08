@@ -1,9 +1,8 @@
 import { Check, Loader2, TriangleAlert, X } from 'lucide-react';
 
-// iPhone Face ID halkası: kameranın çevresinde dolan çember.
-// Tarama boyunca halka ve çemberin içi kırmızı, sarı, yeşil ve pembe renklerde parlar;
-// doğrulandığında yeşil, eşleşmediğinde kırmızı olur.
-// Halka tarama boyunca dolar; yüz tam görünmezse ya da eşleşmezse kırmızıya döner.
+// iPhone Face ID halkası: kameranın çevresinde duran sabit çember.
+// Çember dolmaz; tarama boyunca kırmızı, sarı, yeşil ve pembe renkler tek tek,
+// sırayla yanar. Doğrulandığında yeşil, eşleşmediğinde kırmızı olur.
 const TONE = {
   scanning: '#22c55e',
   verifying: '#22c55e',
@@ -11,30 +10,18 @@ const TONE = {
   fail: '#ef4444',
 };
 
-const RADIUS = 56;
-const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
-
-export default function FaceRing({ phase = 'scanning', rejected = false, progress = 0, color, videoRef, cameraReady, cameraError, onStart }) {
-  // Adım rengi tarama boyunca halkayı renklendirir: kırmızı, sarı, yeşil, pembe.
-  const tone = rejected ? TONE.fail : (phase === 'scanning' && color) || TONE[phase] || TONE.scanning;
-  const shown = phase === 'ok' ? 1 : progress;
+export default function FaceRing({ phase = 'scanning', rejected = false, videoRef, cameraReady, cameraError, onStart }) {
+  const tone = rejected ? TONE.fail : TONE[phase] || TONE.scanning;
   return (
     <div className="relative mx-auto mt-4 h-[228px] w-[228px]" onPointerDown={onStart}>
-      <svg className="absolute inset-0 h-full w-full -rotate-90" viewBox="0 0 120 120" aria-hidden="true">
-        <circle cx="60" cy="60" r={RADIUS} fill="none" stroke={rejected ? TONE.fail : 'rgba(255,255,255,0.09)'} strokeWidth="3.5" />
-        <circle
-          cx="60"
-          cy="60"
-          r={RADIUS}
-          fill="none"
-          stroke={tone}
-          strokeWidth="3.5"
-          strokeLinecap="round"
-          strokeDasharray={CIRCUMFERENCE}
-          strokeDashoffset={CIRCUMFERENCE * (1 - shown)}
-          style={{ transition: 'stroke-dashoffset 120ms linear, stroke 220ms ease-out', filter: `drop-shadow(0 0 6px ${tone})` }}
-        />
-      </svg>
+      {/* Dolmayan sabit halka: doğrulandığında yeşil, eşleşmediğinde kırmızı kalır. */}
+      <span
+        className="pointer-events-none absolute inset-0 rounded-full border-[3px]"
+        style={{ borderColor: tone, boxShadow: `0 0 8px ${tone}` }}
+        aria-hidden="true"
+      />
+      {/* Tarama boyunca halka kırmızı, sarı, yeşil ve pembe renklerle sırayla yanar. */}
+      {phase === 'scanning' && <span className="face-ring-colors pointer-events-none absolute inset-0 rounded-full" aria-hidden="true" />}
       <div className={`absolute inset-[11px] overflow-hidden rounded-full border border-white/10 bg-black ${phase === 'fail' ? 'face-ring-shake' : ''}`}>
         {/* Video kendi çemberine kırpılır: kapsayıcının yuvarlaklığı videoyu her tarayıcıda kesmiyor. */}
         <video
@@ -44,13 +31,6 @@ export default function FaceRing({ phase = 'scanning', rejected = false, progres
           className="h-full w-full scale-x-[-1] object-cover"
           style={{ clipPath: 'circle(50% at 50% 50%)', borderRadius: '9999px' }}
         />
-        {/* Tarama sırasında çemberin içi kırmızı-sarı-yeşil-pembe sırayla yanar. */}
-        {phase === 'scanning' && <span className="face-ring-colors pointer-events-none absolute inset-0 rounded-full" aria-hidden="true" />}
-        {phase === 'scanning' && cameraReady && (
-          <span className="pointer-events-none absolute inset-x-0 bottom-2 mx-auto w-fit rounded-full bg-black/70 px-2.5 py-0.5 text-[11px] font-black text-white">
-            {Math.round(progress * 100)}%
-          </span>
-        )}
         {!cameraReady && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/85 px-4 text-center">
             {cameraError ? (

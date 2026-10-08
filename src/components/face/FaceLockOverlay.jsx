@@ -14,8 +14,6 @@ const DONE_MS = 450;
 const FRONT_STEP = { key: 'front', label: 'Düz', hint: 'Kameraya düz bakın', ms: 3000, at: 1800 };
 const VERIFY_STEPS = [FRONT_STEP];
 const ENROLL_STEPS = VERIFY_STEPS;
-// Çemberin adım renkleri: kırmızı, sarı, yeşil, pembe.
-const RING_COLORS = ['#ef4444', '#eab308', '#22c55e', '#ec4899'];
 
 const COPY = {
   enroll: {
@@ -33,7 +31,7 @@ const COPY = {
 };
 
 const PHASE_TEXT = {
-  verifying: 'Yüzünüz karşılaştırılıyor...',
+  verifying: 'Doğrulanıyor',
   ok: 'Doğrulandı',
   fail: 'Tekrar deneniyor...',
 };
@@ -66,7 +64,6 @@ export default function FaceLockOverlay({
   const [cameraReady, setCameraReady] = useState(false);
   const [cameraError, setCameraError] = useState('');
   const [phase, setPhase] = useState('scanning');
-  const [progress, setProgress] = useState(0);
   const [stepIndex, setStepIndex] = useState(0);
   const [shots, setShots] = useState({});
   const [error, setError] = useState('');
@@ -137,11 +134,9 @@ export default function FaceLockOverlay({
     setError(message);
     shotsRef.current = {};
     setShots({});
-    setProgress(0);
     setStepIndex(0);
     if (blockOnFail && scope === 'device' && attemptsRef.current >= MAX_ATTEMPTS) return;
     retryRef.current = setTimeout(() => {
-      setProgress(0);
       setStepIndex(0);
       setPhase('scanning');
     }, RETRY_MS);
@@ -158,7 +153,6 @@ export default function FaceLockOverlay({
         ? await enrollFace(user.id, photos)
         : await verifyFace(user.id, photos, scope);
       if (result?.ok === true) {
-        setProgress(1);
         setPhase('ok');
         doneRef.current = setTimeout(() => onVerified?.(), DONE_MS);
         return;
@@ -192,7 +186,6 @@ export default function FaceLockOverlay({
     const step = steps[stepIndex];
     shotsRef.current = { ...shotsRef.current, [step.key]: file };
     setShots(shotsRef.current);
-    setProgress((stepIndex + 1) / steps.length);
     if (stepIndex + 1 === steps.length) submit();
     else setStepIndex(stepIndex + 1);
   }, [steps, stepIndex, submit]);
@@ -211,7 +204,7 @@ export default function FaceLockOverlay({
   const logout = () => base44.auth.logout('/login');
   const currentStep = steps[Math.min(stepIndex, steps.length - 1)];
   const statusText = phase === 'scanning'
-    ? `${currentStep.hint}${checking ? ' — görüntü kontrol ediliyor, hareketi koruyun...' : ''}`
+    ? `${currentStep.hint}${checking ? ' — görüntü kontrol ediliyor, aynı şekilde bakmaya devam edin...' : ''}`
     : PHASE_TEXT[phase];
 
   return (
@@ -234,13 +227,11 @@ export default function FaceLockOverlay({
             <FaceRing
               phase={phase}
               rejected={rejected && phase === 'scanning'}
-              progress={progress}
-              color={RING_COLORS[Math.min(stepIndex, steps.length - 1) % RING_COLORS.length]}
               videoRef={videoRef}
               cameraReady={cameraReady}
               cameraError={cameraError}
             />
-            <p className={`mt-3 text-[12px] font-black ${phase === 'scanning' ? 'text-premium-gold' : 'text-white/70'}`}>{statusText}</p>
+            <p className={`mt-3 text-[12px] font-black ${phase === 'scanning' || phase === 'verifying' ? 'text-premium-gold' : 'text-white/70'}`}>{statusText}</p>
             {phase !== 'ok' && (
               <div className="mt-2 flex flex-wrap items-center justify-center gap-1.5">
                 {steps.map(({ key, label }, index) => (

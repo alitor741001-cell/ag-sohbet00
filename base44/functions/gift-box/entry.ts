@@ -1,7 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import { rateLimit, safeErrorResponse } from '../../shared/security.ts';
 import { ensureGiftWallet, giftBalance } from '../../shared/giftWallet.ts';
-import { COINS_PER_DOLLAR, findByMemberId, giftBoxSummary, giftDollarsFromK, dayStartIso, giftResetAt } from '../../shared/giftBox.ts';
+import { COINS_PER_DOLLAR, findByMemberId, giftBoxSummary, giftDollarsFromK, giftResetAt } from '../../shared/giftBox.ts';
 import { loadQuotaTiers } from '../../shared/quotaLadder.ts';
 import { getUsdTry, tlFromDollars, tlRateFrom } from '../../shared/exchangeRate.ts';
 import { addLoadedCoins } from '../../shared/userLevels.ts';
@@ -143,28 +143,28 @@ export default async function (req: Request): Promise<Response> {
       coinRows(sentCoins, 'sent');
       coinRows(receivedCoins, 'received');
 
-      // Liste her gece 24:00'te (Türkiye saatiyle) sıfırlanır; elle sıfırlama anından
-      // önceki hareketler gösterilmez.
+      // Liste sunucuda kalıcı tutulur: uygulamadan çıkıp girilse de sıfırlanmaz.
+      // Yalnızca elle sıfırlama anından önceki hareketler gösterilmez.
       const resetAt = await giftResetAt(base44);
-      const dayStart = dayStartIso();
-      const floor = resetAt && resetAt > dayStart ? resetAt : dayStart;
-      const dayItems = items.filter((item: any) => String(item.created_date || '').slice(0, 19) >= floor);
+      const dayItems = resetAt
+        ? items.filter((item: any) => String(item.created_date || '').slice(0, 19) >= resetAt)
+        : items;
       dayItems.sort((a: any, b: any) => (String(a.created_date) < String(b.created_date) ? 1 : -1));
 
       return Response.json({ ok: true, items: dayItems.slice(0, per) });
     }
 
-    // Hediye gönderenler: her gece 24:00'te (Türkiye saatiyle) sıfırlanır — yalnızca bugünün gönderimleri listelenir.
+    // Hediye gönderenler de sunucuda kalıcı tutulur: gece yarısı sıfırlanmaz.
+    // Yalnızca elle sıfırlama anından önceki gönderimler listelenmez.
     if (action === 'received') {
       const resetAt = await giftResetAt(base44);
-      const dayStart = dayStartIso();
-      const floor = resetAt && resetAt > dayStart ? resetAt : dayStart;
       const records = (await base44.asServiceRole.entities.GiftSend
         .filter({ recipient_id: user.id }, '-created_date', 2000)
         .catch(() => []))
         .filter((record) => {
           const created = String(record?.created_date || '');
-          return created ? created.slice(0, 19) >= floor : false;
+          if (!created) return false;
+          return resetAt ? created.slice(0, 19) >= resetAt : true;
         });
       const grouped = new Map();
       records.forEach((record) => {

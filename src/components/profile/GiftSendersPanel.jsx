@@ -64,7 +64,7 @@ export default function GiftSendersPanel({ open, onClose }) {
         <div className="mx-auto w-full max-w-[430px]">
           <div className="mb-2.5 flex justify-center">
             <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] font-semibold text-white/45">
-              Bugünün listesi • her gece 24:00'te otomatik sıfırlanır
+              Sunucuda kalıcı liste • sıfırlanmaz
             </span>
           </div>
           {loading ? (
