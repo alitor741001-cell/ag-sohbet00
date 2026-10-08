@@ -337,10 +337,6 @@
 .slot-reel-strip {
   background: transparent;
 }
-/* Makaraların altında kalan süslemeleri kapatan yatak uzantısı. */
-.slot-reel-skirt {
-  background: #0a0917;
-}
 /* Sembol kartı: sembolün tam karesini saran altın kenar — köşeler düz, kare bütün görünür. */
 .slot-symbol-card {
   border: 2px solid hsl(var(--slot-gold) / 0.85);

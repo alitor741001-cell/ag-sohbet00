@@ -6,6 +6,7 @@ const W = REEL_WINDOW.width;
 const H = REEL_WINDOW.height;
 const CW = W / 5;
 const CH = H / 3;
+
 // Çizgi renkleri sırayla kullanılır; aynı anda birçok kazanç çizgisi okunabilir kalır.
 const COLORS = ['#ffd700', '#4ade80', '#38bdf8', '#f472b6', '#a78bfa', '#fb923c'];
 
