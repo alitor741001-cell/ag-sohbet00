@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { base44 } from '@/api/base44Client';
+import gameRequest from '@/lib/gameRequest';
 import { BET_LEVELS, LINES, MAX_BET, MIN_BET } from './slotConfig';
 
 const SPIN_DURATION_MS = 5000;
@@ -110,7 +111,7 @@ export default function useSlotGame({ roomId } = {}) {
     setMessage('');
     try {
       const [response] = await Promise.all([
-        base44.functions.invoke('slot-game', { action: 'spin', bet, room_id: roomId }),
+        gameRequest('slot-game', { action: 'spin', bet, room_id: roomId }),
         wait(SPIN_DURATION_MS - SETTLE_MS),
       ]);
       const data = response.data || {};

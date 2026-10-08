@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { base44 } from '@/api/base44Client';
+import gameRequest from '@/lib/gameRequest';
 import { BET_LEVELS, LINES, REELS, ROWS, tierFor } from './sekerliConfig';
 import { EMPTY_CELLS, collapseBoard, mergeSymbols, randomSymbol, toBoard } from './sekerliBoard';
 import { sekerliSound, unlockAudio } from '@/lib/sekerliAudio';
@@ -188,7 +189,7 @@ export default function useSekerliGame() {
     }
 
     try {
-      const response = await base44.functions.invoke('sekerli-game', { action: 'spin', bet: currentBet });
+      const response = await gameRequest('sekerli-game', { action: 'spin', bet: currentBet });
       const data = response.data || {};
       const steps = Array.isArray(data.steps) ? data.steps : [];
       const landed = steps.length ? steps[0].grid : data.final_grid;
@@ -364,7 +365,7 @@ export default function useSekerliGame() {
       return;
     }
     try {
-      const response = await base44.functions.invoke('sekerli-game', { action: 'session', bet });
+      const response = await gameRequest('sekerli-game', { action: 'session', bet });
       applyState(response.data);
       setMessage('');
     } catch (error) {

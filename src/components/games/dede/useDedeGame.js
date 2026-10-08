@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { base44 } from '@/api/base44Client';
+import gameRequest from '@/lib/gameRequest';
 import { landMs } from '@/components/games/reels/reelRoll';
 import { DEDE_BET_LEVELS, DEDE_LINES } from './dedeConfig';
 
@@ -122,7 +123,7 @@ export default function useDedeGame() {
     setMultiplier(0);
     setMessage('');
     try {
-      const response = await base44.functions.invoke('dede-game', { action: 'spin', bet });
+      const response = await gameRequest('dede-game', { action: 'spin', bet });
       const data = response.data || {};
       const steps = data.steps || [];
       // Sonuç geldi: makaralar ilk dizilimin tam üzerine iner, sonra zincir oynar.
@@ -223,7 +224,7 @@ export default function useDedeGame() {
       return;
     }
     try {
-      const response = await base44.functions.invoke('dede-game', { action: 'session', bet });
+      const response = await gameRequest('dede-game', { action: 'session', bet });
       applyState(response.data);
       setMessage('');
     } catch (error) {

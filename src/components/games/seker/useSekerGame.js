@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { base44 } from '@/api/base44Client';
+import gameRequest from '@/lib/gameRequest';
 import { landMs } from '@/components/games/reels/reelRoll';
 import { SEKER_BET_LEVELS, SEKER_LINES } from './sekerConfig';
 
@@ -116,7 +117,7 @@ export default function useSekerGame() {
     setGrid(null);
     setMessage('');
     try {
-      const response = await base44.functions.invoke('seker-game', { action: 'spin', bet });
+      const response = await gameRequest('seker-game', { action: 'spin', bet });
       const data = response.data || {};
       // Sonuç geldi: sütunlar gerçek şekerlerin üzerine iner, sonra tahta sabitlenir.
       if (data.grid) {
@@ -193,7 +194,7 @@ export default function useSekerGame() {
       return;
     }
     try {
-      const response = await base44.functions.invoke('seker-game', { action: 'session', bet });
+      const response = await gameRequest('seker-game', { action: 'session', bet });
       applyState(response.data);
       setMessage('');
     } catch (error) {

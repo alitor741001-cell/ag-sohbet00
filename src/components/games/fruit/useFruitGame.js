@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { base44 } from '@/api/base44Client';
+import gameRequest from '@/lib/gameRequest';
 import { landMs } from '@/components/games/reels/reelRoll';
 import { FRUIT_BET_LEVELS, FRUIT_LINES } from './fruitConfig';
 
@@ -116,7 +117,7 @@ export default function useFruitGame() {
     setGrid(null);
     setMessage('');
     try {
-      const response = await base44.functions.invoke('fruit-game', { action: 'spin', bet });
+      const response = await gameRequest('fruit-game', { action: 'spin', bet });
       const data = response.data || {};
       // Sonuç geldi: makaralar gerçek sembollerin üzerine iner, sonra ızgara sabitlenir.
       if (data.grid) {
@@ -193,7 +194,7 @@ export default function useFruitGame() {
       return;
     }
     try {
-      const response = await base44.functions.invoke('fruit-game', { action: 'session', bet });
+      const response = await gameRequest('fruit-game', { action: 'session', bet });
       applyState(response.data);
       setMessage('');
     } catch (error) {
