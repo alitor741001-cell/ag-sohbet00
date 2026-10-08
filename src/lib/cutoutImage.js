@@ -3,8 +3,7 @@ import { useEffect, useState } from 'react';
 // Zemin saf siyah olabileceği gibi çok koyu gri de olabilir: eşik, görselin kendi
 // kenar piksellerinden ölçülür ve zemine uyarlanır.
 const BLACK = 32; // en az bu parlaklığın altındaki pikseller zemin sayılır
-const SOFT = 64; // zemine komşu yumuşak geçiş kuşağının genişliği (0-255)
-const RING = 2; // kesilen alanın çevresinde temizlenen halka kalınlığı (piksel)
+const SOFT = 56; // zemine komşu yumuşak geçiş kuşağının genişliği (0-255)
 
 // Aynı görsel bir kez işlenir; sonuç uygulama açık kaldığı sürece saklanır.
 const cache = new Map();
@@ -12,9 +11,7 @@ const cache = new Map();
 /**
  * Siyah zeminli görseli tarayıcıda gerçek zamanlı keser ve şeffaf PNG adresi verir.
  * Yalnızca kenardan bağlantılı koyu alan zemin sayılır — gövdenin içindeki koyu
- * detaylar (roket gövdesi, uçak camı) korunur. Kenarda kalan koyu kırıntılar da
- * temizlenir ve yarı saydam kenar pikselleri gerçek rengine geri açılır, böylece
- * zemin mavi de olsa sembolün çevresinde koyu bir çerçeve kalmaz.
+ * detaylar (roket gövdesi, uçak camı) korunur.
  */
 export function cutDarkBackground(src) {
   const found = cache.get(src);
@@ -135,50 +132,21 @@ async function process(src) {
     if (y < height - 1) enqueue(index + width);
   }
 
-  // Kesilen alanın çevresinde RING piksel kalınlığında temizlik halkası:
-  // görselin kenarında kalan JPEG kırıntıları da yumuşakça silinir.
-  const near = new Uint8Array(total);
-  let frontier = [];
-  for (let index = 0; index < total; index += 1) {
-    if (cut[index]) frontier.push(index);
-  }
-  for (let step = 0; step < RING; step += 1) {
-    const next = [];
-    for (let f = 0; f < frontier.length; f += 1) {
-      const index = frontier[f];
-      const x = index % width;
-      const y = (index - x) / width;
-      for (let dy = -1; dy <= 1; dy += 1) {
-        const cy = y + dy;
-        if (cy < 0 || cy >= height) continue;
-        for (let dx = -1; dx <= 1; dx += 1) {
-          const cx = x + dx;
-          if (cx < 0 || cx >= width) continue;
-          const neighbour = cy * width + cx;
-          if (cut[neighbour] || near[neighbour]) continue;
-          near[neighbour] = 1;
-          next.push(neighbour);
-        }
-      }
-    }
-    frontier = next;
-  }
-
   for (let index = 0, p = 0; index < total; index += 1, p += 4) {
     if (cut[index]) {
       pixels[p + 3] = 0;
       continue;
     }
-    if (!near[index] || lum[index] >= edge) continue;
-    const soft = Math.min(255, Math.max(0, Math.round(((lum[index] - core) / (edge - core)) * 255)));
-    pixels[p + 3] = Math.min(pixels[p + 3], soft);
-    // Siyah zeminle karışmış kenar pikseli gerçek rengine geri açılır.
-    if (soft > 0) {
-      const scale = 255 / soft;
-      pixels[p] = Math.min(255, Math.round(pixels[p] * scale));
-      pixels[p + 1] = Math.min(255, Math.round(pixels[p + 1] * scale));
-      pixels[p + 2] = Math.min(255, Math.round(pixels[p + 2] * scale));
-    }
+    if (lum[index] >= edge) continue;
+    const x = index % width;
+    const touches =
+      (x > 0 && cut[index - 1]) ||
+      (x < width - 1 && cut[index + 1]) ||
+      (index >= width && cut[index - width]) ||
+      (index < total - width && cut[index + width]);
+    if (!touches) continue;
+    const soft = Math.round(((lum[index] - core) / (edge - core)) * 255);
+    pixels[p + 3] = Math.min(pixels[p + 3], Math.max(0, soft));
   }
 
   context.putImageData(imageData, 0, 0);
