@@ -213,15 +213,20 @@
   display: grid;
   width: 100%;
   aspect-ratio: 5 / 4;
-  grid-template-columns: repeat(5, 1fr);
-  grid-template-rows: repeat(4, 1fr);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  /* Her sütun alanın tamamını kaplar; dört hücre sütunun içinde bölünür. */
+  grid-template-rows: minmax(0, 1fr);
   gap: 0.24rem;
+  overflow: hidden;
 }
 
 .sl-reel {
   position: relative;
   display: flex;
   flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
   overflow: hidden;
   border-radius: 0.8rem;
   background: linear-gradient(180deg, rgba(76, 24, 118, 0.7), rgba(40, 11, 68, 0.82));
@@ -232,8 +237,10 @@
 .sl-cell {
   position: relative;
   display: flex;
-  flex: 1 1 0;
+  flex: 0 0 25%;
+  height: 25%;
   min-height: 0;
+  isolation: isolate;
   align-items: center;
   justify-content: center;
   overflow: hidden;
@@ -308,6 +315,11 @@
   will-change: transform;
   filter: blur(0.7px);
   animation: sl-roll var(--sl-dur) cubic-bezier(0.2, 0.72, 0.28, 1) both;
+}
+
+.sl-cell-roll {
+  flex-basis: calc(100% / var(--sl-rows));
+  height: calc(100% / var(--sl-rows));
 }
 
 .sl-cell-roll::before {
