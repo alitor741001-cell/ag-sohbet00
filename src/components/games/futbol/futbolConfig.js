@@ -15,18 +15,27 @@ export const TEAMS = [
 
 export const TEAM_MAP = TEAMS.reduce((acc, team) => ({ ...acc, [team.id]: team }), {});
 
-// Çember dizilimi: ilk kart tepeden biraz sola kayar, sıra aşağı doğru ilerler.
-// left/top: kartın merkezi (yüzde) · angle: ibrenin duracağı açı (12 yönünden saat yönü).
-export const RING_SLOTS = [
-  { left: 40.2, top: 13.3, angle: -15 },
-  { left: 17.1, top: 31.0, angle: -60 },
-  { left: 13.3, top: 59.8, angle: -105 },
-  { left: 31.0, top: 82.9, angle: -150 },
-  { left: 59.8, top: 86.7, angle: -195 },
-  { left: 82.9, top: 69.0, angle: -240 },
-  { left: 86.7, top: 40.2, angle: -285 },
-  { left: 69.0, top: 17.1, angle: -330 },
+// Çember dizilimi: iki sütun hâlinde yukarıdan aşağıya iner (BJK/GS en üstte).
+// left/top: kartın merkezi (yüzde). Saha hafif dikey elipstir, açı ona göre hesaplanır.
+const RING_RATIO = 1.1;
+
+const SLOT_POSITIONS = [
+  { left: 34, top: 13 }, // Beşiktaş — en üstte solda
+  { left: 66, top: 13 }, // Galatasaray — en üstte sağda
+  { left: 15, top: 36 }, // Fenerbahçe — BJK'nın altında
+  { left: 85, top: 36 }, // Trabzonspor — GS'nin altında
+  { left: 17, top: 63 }, // Antalyaspor — FB'nin altında
+  { left: 83, top: 63 }, // Denizlispor — TS'nin altında
+  { left: 34, top: 86 }, // Bursaspor — Antalya'nın altında
+  { left: 66, top: 86 }, // Adana Demirspor — Denizli'nin altında
 ];
+
+/** Kartın merkez açısı: ibre tam takımın üstünde durur (12 yönünden saat yönü). */
+export const RING_SLOTS = SLOT_POSITIONS.map((slot) => {
+  const dx = slot.left - 50;
+  const dy = (slot.top - 50) * RING_RATIO;
+  return { ...slot, angle: (Math.atan2(dx, -dy) * 180) / Math.PI };
+});
 
 // Kart yerleşimi sabit nesnelerle verilir: kartlar gereksiz yere yeniden çizilmez.
 export const RING_STYLES = RING_SLOTS.map((slot) => ({ left: `${slot.left}%`, top: `${slot.top}%` }));
