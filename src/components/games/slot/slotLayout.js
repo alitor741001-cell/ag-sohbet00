@@ -8,12 +8,19 @@ export const ART_HEIGHT = 1545;
 // altın çizginin üzerine kadar iner, yazıyı kapatmaz.
 export const LOGO_TOP = 0.06;
 
+// Görselde basılı oyun adı ("filmkeyfi") bu kutunun içinde kalır: kutu görselin
+// aynı bölgesinin bulanık kopyasıyla doldurulup üstüne AG yazılır.
+const TITLE = { x: 282, y: 70, w: 516, h: 176 };
+
 const frame = (x, y, w, h) => ({
   left: `${((x / ART_WIDTH) * 100).toFixed(2)}%`,
   top: `${((y / ART_HEIGHT) * 100).toFixed(2)}%`,
   width: `${((w / ART_WIDTH) * 100).toFixed(2)}%`,
   height: `${((h / ART_HEIGHT) * 100).toFixed(2)}%`,
 });
+
+// Basılı oyun adının kutusu: kapatma katmanı ve AG yazısı bu alana yerleşir.
+export const SLOT_TITLE = { ...TITLE, box: frame(TITLE.x, TITLE.y, TITLE.w, TITLE.h) };
 
 // Görselin kendi butonları — görünmez dokunma alanları.
 export const SLOT_LAYOUT = {

@@ -7,6 +7,7 @@ import { SLOT_ART } from './slotAssets';
 import { ART_HEIGHT, ART_WIDTH, LOGO_TOP, SLOT_LAYOUT } from './slot/slotLayout';
 import useSlotGame from './slot/useSlotGame';
 import SlotReels from './slot/SlotReels';
+import SlotTitle from './slot/SlotTitle';
 import SlotWinLines from './slot/SlotWinLines';
 import SlotReadout from './slot/SlotReadout';
 import SlotWinOverlay from './slot/SlotWinOverlay';
@@ -105,6 +106,9 @@ export default function SlotGame({ onExit, onBack, roomId }) {
               fittingType="fill"
               quality={92}
             />
+
+            {/* Görselde basılı oyun adı kapatılır, yerine AG yazılır. */}
+            <SlotTitle scale={scale} />
 
             {/* Tur sırasında her makaranın sembolleri değişerek aşağı doğru kayar. */}
             <SlotReels spinning={game.spinning} stopping={game.stopping} slow={game.slow} grid={game.grid} />
