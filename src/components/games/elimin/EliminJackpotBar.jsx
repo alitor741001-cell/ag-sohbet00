@@ -1,6 +1,6 @@
 import React from 'react';
 import { useCurrentUser } from '@/lib/useCurrentUser';
-import { FREE_MAX, formatCoins } from './eliminConfig';
+import { CHEST_MAX, DICE_MIN, JACKPOT_PER_CHEST, formatCoins } from './eliminConfig';
 
 // Sandık: jackpot şeridinin önünde duran altın kasa.
 function Chest() {
@@ -14,26 +14,32 @@ function Chest() {
   );
 }
 
-/** Jackpot şeridi: uygulamanın jackpotu, altın muz bonusu sayacı ve oyuncunun rozeti. */
-export default function EliminJackpotBar({ jackpot, freeSpins }) {
+/**
+ * Jackpot şeridi: barda biriken sandıklar ve bahis kademesine göre yükselen
+ * jackpot tutarı, zar kuralı ve oyuncunun rozeti.
+ */
+export default function EliminJackpotBar({ jackpot, chests = 0, bet }) {
   const { user } = useCurrentUser();
   const avatar = user?.avatar_url || user?.avatar || '';
   const initials = (user?.full_name || '?').trim().slice(0, 1).toUpperCase();
-  const filled = Math.min(FREE_MAX, Math.max(0, freeSpins || 0));
+  const filled = Math.min(CHEST_MAX, Math.max(0, chests || 0));
 
   return (
     <section className="el-jackpot">
       <div className="el-jackpot-main">
         <p className="el-jackpot-label">JACKPOT</p>
         <p className="el-jackpot-value">{formatCoins(jackpot)}</p>
+        <p className="el-jackpot-hint">{DICE_MIN} ZAR → YARISI SENİN</p>
       </div>
 
       <div className="el-jackpot-chest">
         <Chest />
         <span className="el-chest-bar">
-          <span className="el-chest-fill" style={{ width: `${(filled / FREE_MAX) * 100}%` }} />
+          <span className="el-chest-fill" style={{ width: `${(filled / CHEST_MAX) * 100}%` }} />
         </span>
-        <span className="el-chest-text">{filled}/{FREE_MAX}</span>
+        <span className="el-chest-text">{filled}/{CHEST_MAX} SANDIK</span>
+        {/* Her sandığın eklediği değer: bahis kademesiyle birlikte yükselir. */}
+        <span className="el-chest-gain">+{formatCoins((bet || 0) * JACKPOT_PER_CHEST)}</span>
       </div>
 
       <span className="el-avatar" aria-hidden="true">

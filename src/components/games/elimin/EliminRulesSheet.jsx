@@ -2,7 +2,18 @@ import React from 'react';
 import { X } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import useBackDismiss from '@/hooks/useBackDismiss';
-import { ART_SIZE, ELIMIN_SYMBOLS, FREE_MAX, LINES, formatCoins } from './eliminConfig';
+import {
+  ART_SIZE,
+  CHEST_MAX,
+  CHICKEN_FREE_SPINS,
+  CHICKEN_MIN,
+  DICE_MIN,
+  ELIMIN_SYMBOLS,
+  FREE_MAX,
+  JACKPOT_PER_CHEST,
+  LINES,
+  formatCoins,
+} from './eliminConfig';
 
 // Ödeme sütun başlıkları: küme büyüdükçe bahis katı artar.
 const HEADINGS = ['8-9', '10-11', '12+'];
@@ -27,8 +38,11 @@ export default function EliminRulesSheet({ open, onClose }) {
           <li>Aynı meyveden 8 ve üzeri gelince küme öder; yan yana olması gerekmez.</li>
           <li>Toplam bahis = bahis x {LINES} satır.</li>
           <li>4 ve üzeri altın muz bonus öder ve {FREE_MAX} bedava tur verir.</li>
+          <li>{CHICKEN_MIN} tavuk gelince ücretsiz {CHICKEN_FREE_SPINS} çevirme hakkı verir.</li>
+          <li>Sandık geldikçe jackpot barında birikir; bar {CHEST_MAX} sandıkta dolar.</li>
+          <li>Bardaki her sandık jackpota bahsin {JACKPOT_PER_CHEST} katı ekler, tutar bahis kademesiyle yükselir.</li>
+          <li>{DICE_MIN} zar gelince jackpot patlar ve biriken tutarın yarısı ödenir.</li>
           <li>Bedava turlar bahis almaz; SPIN ile elle çevrilir.</li>
-          <li>Üstteki jackpot uygulamada biriken ortak havuzdur.</li>
         </ul>
 
         <div className="el-pay-head">
@@ -51,12 +65,15 @@ export default function EliminRulesSheet({ open, onClose }) {
                 />
                 <span>
                   {symbol.name}
-                  {symbol.scatter && <em className="el-pay-tag">BEDAVA TUR</em>}
+                  {symbol.tag && <em className="el-pay-tag">{symbol.tag}</em>}
                 </span>
               </span>
-              {symbol.pays.map((pay, index) => (
-                <span key={HEADINGS[index]} className="el-pay-value">{formatCoins(pay)}</span>
-              ))}
+              {/* Meyveler bahis katı öder; ek nesneler kendi kuralını yazar. */}
+              {symbol.pays
+                ? symbol.pays.map((pay, index) => (
+                  <span key={HEADINGS[index]} className="el-pay-value">{formatCoins(pay)}</span>
+                ))
+                : <span className="el-pay-note-cell">{symbol.note}</span>}
             </li>
           ))}
         </ul>

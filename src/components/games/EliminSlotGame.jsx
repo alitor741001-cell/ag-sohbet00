@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import '@/styles/elimin.css';
+import '@/styles/eliminExtras.css';
 import { Image } from '@/components/ui/image';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
 import EliminTopBar from './elimin/EliminTopBar';
@@ -11,7 +12,7 @@ import EliminWinOverlay from './elimin/EliminWinOverlay';
 import useEliminGame from './elimin/useEliminGame';
 import useCountUp from './sekerli/useCountUp';
 import { ELIMIN_BACKDROP, ELIMIN_EMBLEM, ELIMIN_EMBLEM_SIZE } from './elimin/eliminAssets';
-import { LINES, formatCoins } from './elimin/eliminConfig';
+import { DICE_MIN, LINES, formatCoins } from './elimin/eliminConfig';
 
 const WIN_FLASH_MS = 2200;
 
@@ -28,6 +29,15 @@ export default function EliminSlotGame({ onExit, onBack }) {
   // Tur sonucu: büyük kazançta kutlama ekranı, küçük kazançta kısa parıltı.
   useEffect(() => {
     if (!game.spins) return undefined;
+    // Zar dörtlüsünde jackpot patlar: kutlama ekranı jackpotu öne çıkarır.
+    if (game.jackpotWin > 0) {
+      setPrize({
+        amount: game.jackpotWin,
+        title: 'JACKPOT PATLADI!',
+        subtitle: `${DICE_MIN} ZAR · JACKPOTUN YARISI`,
+      });
+      return undefined;
+    }
     if (game.bigWin > 0) {
       setPrize({ amount: game.bigWin });
       return undefined;
@@ -74,9 +84,12 @@ export default function EliminSlotGame({ onExit, onBack }) {
             <p className="el-wordmark">ELİMİNSLOT</p>
             <p className="el-hero-tag">MEYVE SLOTU · {LINES} SATIR</p>
           </div>
+          {game.freeSpins > 0 && (
+            <span className="el-free-chip">BEDAVA ÇEVİRME {game.freeSpins}</span>
+          )}
         </section>
 
-        <EliminJackpotBar jackpot={game.jackpot} freeSpins={game.freeSpins} />
+        <EliminJackpotBar jackpot={game.jackpot} chests={game.chests} bet={game.bet} />
 
         {/* Izgara ekranın kalan tüm alanını kaplar; kartlar kendi karesinde durur. */}
         <div className="el-board-wrap">
@@ -116,7 +129,13 @@ export default function EliminSlotGame({ onExit, onBack }) {
       {/* Coin bakiyesine dokununca uygulamanın coin mağazası açılır. */}
       <CoinPurchasePanel open={coinOpen} coins={game.coins} onBack={() => setCoinOpen(false)} />
       <EliminRulesSheet open={helpOpen} onClose={() => setHelpOpen(false)} />
-      <EliminWinOverlay open={!!prize} amount={prize?.amount || 0} onAccept={() => setPrize(null)} />
+      <EliminWinOverlay
+        open={!!prize}
+        amount={prize?.amount || 0}
+        title={prize?.title}
+        subtitle={prize?.subtitle}
+        onAccept={() => setPrize(null)}
+      />
     </div>
   );
 }

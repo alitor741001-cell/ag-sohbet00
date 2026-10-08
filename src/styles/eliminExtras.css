@@ -1,0 +1,88 @@
+/* ELİMİNSLOT ek nesneleri: tavuk (bedava tur), zar (jackpot) ve sandık (jackpot barı). */
+
+/* Ek nesnelerin rozeti: kartın altında kısa etiket. */
+.el-sym-free,
+.el-sym-dice,
+.el-sym-chest { position: absolute; }
+.el-sym-free::after,
+.el-sym-dice::after,
+.el-sym-chest::after {
+  position: absolute;
+  left: 50%;
+  bottom: 2%;
+  transform: translateX(-50%);
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, .9);
+  padding: 0 .22rem;
+  font-size: .34rem;
+  font-weight: 900;
+  letter-spacing: .04em;
+  white-space: nowrap;
+}
+
+/* Tavuk: ücretsiz çevirme hakkı verir. */
+.el-sym-free { filter: drop-shadow(0 0 7px rgba(255, 138, 138, .9)); }
+.el-sym-free::after {
+  content: 'BEDAVA';
+  background: linear-gradient(180deg, #ffe9a3, #e08a14);
+  color: #2a0c02;
+}
+
+/* Zar: dört tanesi jackpotu patlatır. */
+.el-sym-dice { filter: drop-shadow(0 0 9px rgba(255, 92, 92, .95)); }
+.el-sym-dice::after {
+  content: 'JACKPOT';
+  background: linear-gradient(180deg, #ffd0d0, #d81f2a);
+  color: #fff;
+}
+
+/* Sandık: jackpot barında birikir. */
+.el-sym-chest { filter: drop-shadow(0 0 7px rgba(255, 190, 60, .85)); }
+.el-sym-chest::after {
+  content: 'SANDIK';
+  background: linear-gradient(180deg, #ffe9a3, #e08a14);
+  color: #2a0c02;
+}
+
+/* Jackpot şeridi: zar kuralı ve sandığın eklediği değer. */
+.el-jackpot-hint {
+  font-size: .46rem;
+  font-weight: 800;
+  letter-spacing: .1em;
+  color: rgba(255, 233, 163, .9);
+}
+.el-chest-gain { font-size: .44rem; font-weight: 900; color: #ffe9a3; }
+
+/* Bedava çevirme rozeti: marka panelinde, tur ücretsizken görünür. */
+.el-free-chip {
+  flex-shrink: 0;
+  border-radius: 9999px;
+  border: 2px solid #ffd75c;
+  background: linear-gradient(180deg, #ffe9a3, #e08a14);
+  padding: .2rem .55rem;
+  font-size: .55rem;
+  font-weight: 900;
+  letter-spacing: .08em;
+  color: #2a0c02;
+  box-shadow: 0 0 12px rgba(255, 200, 60, .6);
+  animation: el-free-pulse 1.4s ease-in-out infinite alternate;
+}
+@keyframes el-free-pulse {
+  from { transform: scale(1); }
+  to { transform: scale(1.05); }
+}
+
+/* Ödeme tablosunda ek nesneler: kural metni üç değer sütununu kaplar. */
+.el-pay-note-cell {
+  grid-column: 2 / -1;
+  text-align: center;
+  font-size: .6rem;
+  font-weight: 900;
+  letter-spacing: .04em;
+  font-variant-numeric: tabular-nums;
+  color: #ffd35c;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .el-free-chip { animation: none; }
+}

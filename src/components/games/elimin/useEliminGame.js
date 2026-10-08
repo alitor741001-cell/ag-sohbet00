@@ -14,7 +14,10 @@ export default function useEliminGame() {
   const [bet, setBet] = useState(100);
   const [totalWon, setTotalWon] = useState(0);
   const [freeSpins, setFreeSpins] = useState(0);
+  const [chests, setChests] = useState(0);
   const [jackpot, setJackpot] = useState(0);
+  // Zar dörtlüsünden gelen jackpot kazancı: ayrı kutlama ekranı açar.
+  const [jackpotWin, setJackpotWin] = useState(0);
   const [spins, setSpins] = useState(0);
   const [grid, setGrid] = useState(null);
   const [wins, setWins] = useState([]);
@@ -70,6 +73,7 @@ export default function useEliminGame() {
     if (typeof data.coins === 'number') setCoins(data.coins);
     if (typeof data.total_won === 'number') setTotalWon(data.total_won);
     if (typeof data.free_spins === 'number') setFreeSpins(data.free_spins);
+    if (typeof data.chests === 'number') setChests(data.chests);
     if (typeof data.jackpot === 'number') setJackpot(data.jackpot);
     if (typeof data.bet === 'number') setBet(data.bet);
     if (typeof data.spins === 'number') setSpins(data.spins);
@@ -110,6 +114,7 @@ export default function useEliminGame() {
     setSpinning(true);
     setWin(0);
     setBigWin(0);
+    setJackpotWin(0);
     setWins([]);
     setGrid(null);
     setMessage('');
@@ -131,9 +136,11 @@ export default function useEliminGame() {
       applyState(data);
       setWin(data.win || 0);
       setBigWin(data.big_win || 0);
-      if (data.big_win > 0) play('bigWin');
+      setJackpotWin(data.jackpot_win || 0);
+      if (data.big_win > 0 || data.jackpot_trigger) play('bigWin');
       else if (data.win > 0) play('win');
-      if (data.free_trigger) play('bonus');
+      // Tavuk üçlüsü ve altın muz bonusu kutlama sesiyle duyurulur.
+      if (data.free_trigger || data.chicken_trigger) play('bonus');
     } catch (error) {
       const raw = error?.response?.data?.error;
       setAuto(false);
@@ -184,6 +191,8 @@ export default function useEliminGame() {
     totalWon,
     freeSpins,
     jackpot,
+    jackpotWin,
+    chests,
     spins,
     spinning,
     stopping,
