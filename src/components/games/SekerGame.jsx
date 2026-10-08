@@ -11,7 +11,8 @@ import GameBetBar from './controls/GameBetBar';
 import GameSpinButton from './controls/GameSpinButton';
 import GameTurnBadge from './controls/GameTurnBadge';
 import SekerWinOverlay from './seker/SekerWinOverlay';
-import { SEKER_LOGO } from './seker/sekerAssets';
+import { SEKER_COVER_HEIGHT, SEKER_COVER_WIDTH, SEKER_LOGO } from './seker/sekerAssets';
+import GameLogoIntro from './GameLogoIntro';
 import { SEKER_LINES, formatCoins } from './seker/sekerConfig';
 
 const WIN_FLASH_MS = 2400;
@@ -44,6 +45,9 @@ export default function SekerGame({ onExit, onBack }) {
   return (
     <div className="seker-sky relative flex h-full min-h-0 w-full flex-col overflow-hidden">
       <span aria-hidden="true" className="seker-rays" />
+
+      {/* Açılışta ŞEKER logosu tam ekran görünür. */}
+      <GameLogoIntro src={SEKER_LOGO} originWidth={SEKER_COVER_WIDTH} originHeight={SEKER_COVER_HEIGHT} />
 
       <header className="relative z-10 flex shrink-0 items-center gap-2 px-3 pt-[max(0.5rem,env(safe-area-inset-top))]">
         <button type="button" onClick={onBack} aria-label="Oyun listesine dön" className="gctl-pill gctl-icon">
