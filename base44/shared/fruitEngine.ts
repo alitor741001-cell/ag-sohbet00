@@ -37,7 +37,7 @@ export const SCATTER_PAYS = [54, 108, 216];
 // pays: 8-9, 10-11 ve 12+ sembol kümesi için bahis katı.
 export const SYMBOLS = [
   { id: 'lollipop', name: 'Portakal', weight: 8, pays: [144, 450, 1440] },
-  { id: 'plum', name: 'Erik', weight: 10, pays: [90, 270, 900] },
+  { id: 'plum', name: 'Yaban Mersini', weight: 10, pays: [90, 270, 900] },
   { id: 'grapes', name: 'Üzüm', weight: 12, pays: [72, 216, 630] },
   { id: 'melon', name: 'Karpuz', weight: 14, pays: [54, 162, 450] },
   { id: 'apple', name: 'Elma', weight: 16, pays: [36, 108, 324] },
