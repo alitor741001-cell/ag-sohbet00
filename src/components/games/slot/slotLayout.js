@@ -1,20 +1,15 @@
 // Oyun ekranı, 1018 x 1545 boyutundaki referans görselin kendisidir.
-// Konumlar görselin piksellerinden ölçüldü: canlı kontroller görselin kendi
-// butonlarının, canlı değerler de görselin kendi rakam alanlarının üzerine gelir.
+// Makara sembolleri görselin kendi hücrelerinden kırpılır.
 export const ART_WIDTH = 1018;
 export const ART_HEIGHT = 1545;
 
-// Görselin alt kontrol alanı (kendi tuşları ve rakam kutuları) kırpılır: o bölgenin
-// yerini panelin kendi kontrol düzeni alır, görsel bu yükseklikte biter.
+// Görselin kendi üst jackpot paneli ve alt kontrol alanı kırpılır: o bölgelerin yerini
+// panelin kendi düzeni alır. Görsel yalnızca bu iki sınırın arasında gösterilir.
+export const ART_HEAD_HEIGHT = 244;
 export const ART_VIEW_HEIGHT = 1215;
 
-// Görselin üstünde oyun başlığının başladığı yer: kazanan şeridi bu
-// altın çizginin üzerine kadar iner, yazıyı kapatmaz.
-export const LOGO_TOP = 0.06;
-
-// Görselde basılı oyun adı ("filmkeyfi") bu kutunun içinde kalır: kutu görselin
-// aynı bölgesinin bulanık kopyasıyla doldurulup üstüne AG yazılır.
-const TITLE = { x: 282, y: 70, w: 516, h: 176 };
+// Görünen yükseklik: kırpılan bölgeler çıktıktan sonra kalan oyun ekranı.
+export const ART_VISIBLE_HEIGHT = ART_VIEW_HEIGHT - ART_HEAD_HEIGHT;
 
 const frame = (x, y, w, h) => ({
   left: `${((x / ART_WIDTH) * 100).toFixed(2)}%`,
@@ -22,9 +17,6 @@ const frame = (x, y, w, h) => ({
   width: `${((w / ART_WIDTH) * 100).toFixed(2)}%`,
   height: `${((h / ART_HEIGHT) * 100).toFixed(2)}%`,
 });
-
-// Basılı oyun adının kutusu: kapatma katmanı ve AG yazısı bu alana yerleşir.
-export const SLOT_TITLE = { ...TITLE, box: frame(TITLE.x, TITLE.y, TITLE.w, TITLE.h) };
 
 // Makara alanı — tur sırasında semboller burada kayar.
 export const SLOT_LAYOUT = {
@@ -63,40 +55,3 @@ export const SYMBOL_CELLS = {
 };
 
 export const SYMBOL_IDS = Object.keys(SYMBOL_CELLS);
-
-// Havuz etiketleri: görselde yazan adların üzerine yeni adlar yazılır.
-// Şerit, görselin kendi adını tamamen kapatacak yükseklikte ve o ada göre ortalanır.
-const LABEL_HEIGHT = 44;
-const poolLabel = (x, y, w) => frame(x - w * 0.03, y - LABEL_HEIGHT - 4, w * 1.06, LABEL_HEIGHT);
-
-// Görselde yazılı ödül havuzu alanları — canlı değerler bu kutulara yazılır.
-export const SLOT_FIELDS = {
-  // Ödül havuzları: kaybedilenler o anki bahis kademesinin havuzunda birikir.
-  jackpots: [
-    frame(168, 296, 200, 48),
-    frame(402, 296, 222, 48),
-    frame(662, 296, 192, 48),
-    frame(24, 358, 158, 46),
-    frame(851, 358, 147, 46),
-  ],
-};
-
-// Havuz alanlarının görseldeki zemin renkleri (görselden örneklendi): canlı değerler
-// bu renge yazılır, böylece alanın üstüne siyah bir dikdörtgen konmuş gibi görünmez.
-export const SLOT_FIELD_SKINS = {
-  jackpots: ['#2b0117', '#180906', '#011345', '#5f0323', '#022802'],
-};
-
-// Görselde yazan havuz adlarının üzerine yazılan yeni adlar.
-export const SLOT_POOL_LABELS = [
-  { text: 'X MEGA', tone: 'text-slot-pink', box: poolLabel(24, 358, 158) },
-  { text: 'BIG', tone: 'text-slot-blue', box: poolLabel(662, 296, 192) },
-  { text: 'JACKPOT', tone: 'text-slot-gold', box: poolLabel(402, 296, 222) },
-];
-
-// Görseldeki statik "2/20" göstergesi canlı bir değere karşılık gelmiyor: kapsülün kendi
-// zeminiyle kapatılır, geriye temiz bir ilerleme çubuğu kalır.
-export const SLOT_PROGRESS_TEXT = { box: frame(466, 380, 140, 32), skin: '#140235' };
-
-// Havuz değerleri görselin kendi rakamlarıyla aynı boyutta çizilir (görsel pikseli).
-export const SLOT_TEXT_PX = { pool: 44, label: 24 };

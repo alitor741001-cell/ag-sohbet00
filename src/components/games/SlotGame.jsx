@@ -4,17 +4,14 @@ import { Image } from '@/components/ui/image';
 import { useSize } from '@/hooks/use-size';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { SLOT_ART } from './slotAssets';
-import { ART_HEIGHT, ART_VIEW_HEIGHT, ART_WIDTH, LOGO_TOP } from './slot/slotLayout';
+import { ART_HEAD_HEIGHT, ART_HEIGHT, ART_VISIBLE_HEIGHT, ART_WIDTH } from './slot/slotLayout';
 import useSlotGame from './slot/useSlotGame';
 import SlotReels from './slot/SlotReels';
-import SlotTitle from './slot/SlotTitle';
 import SlotWinLines from './slot/SlotWinLines';
-import SlotReadout from './slot/SlotReadout';
 import SlotWinOverlay from './slot/SlotWinOverlay';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
 import WinnerTicker, { TICKER_ROW_HEIGHT } from './slot/WinnerTicker';
-import SlotPoolLabels from './slot/SlotPoolLabels';
-import SlotProgressCover from './slot/SlotProgressCover';
+import SlotJackpotBar from './slot/SlotJackpotBar';
 import SlotTierAlert from './slot/SlotTierAlert';
 import FreeSpinBadge from './slot/FreeSpinBadge';
 import SlotControlDeck from './slot/SlotControlDeck';
@@ -22,9 +19,10 @@ import { tierOfBet } from './slot/slotConfig';
 
 // Görsel alanı doldururken en fazla bu oranda kırpılır; panelde siyah boşluk kalmaz.
 const MAX_CROP = 1.06;
-// Şeritte her zaman görünen en az satır sayısı.
-const MIN_TICKER_ROWS = 2;
-const MIN_TICKER_SPACE = TICKER_ROW_HEIGHT * MIN_TICKER_ROWS;
+// Kazanan şeridinde görünen satır sayısı.
+const TICKER_ROWS = 3;
+// Rozetler oyun ekranının üst kenarından bu kadar aşağıda durur.
+const BADGE_TOP = 8;
 const WIN_FLASH_MS = 2400;
 // Bu tutarın üzerindeki kazançlarda kutlama ekranı açılır.
 const PRIZE_THRESHOLD = 20000;
@@ -38,15 +36,8 @@ export default function SlotGame({ onExit, onBack, roomId }) {
   const [flash, setFlash] = useState(0);
   const [prize, setPrize] = useState(null);
   const areaRef = useRef(null);
-  const topRef = useRef(null);
   const size = useSize(areaRef);
-  // Çentik/güvenli alan yüksekliği: şerit görselin üstündeki yazıyı kapatmasın.
-  const [safeTop, setSafeTop] = useState(0);
-
-  useEffect(() => {
-    if (!topRef.current) return;
-    setSafeTop(parseFloat(window.getComputedStyle(topRef.current).paddingTop) || 0);
-  }, []);
+  const tickerHeight = TICKER_ROW_HEIGHT * TICKER_ROWS;
 
   // Her turun sonucu: büyük kazançta kutlama ekranı, küçük kazançta kısa parıltı.
   useEffect(() => {
@@ -63,25 +54,17 @@ export default function SlotGame({ onExit, onBack, roomId }) {
     return undefined;
   }, [game.spins]);
 
-  // Görsel, kendi alt kontrol alanının üstünde biter: oyun ekranı bu alanı doldurur.
+  // Görsel, kendi üst jackpot paneli ile alt kontrol alanı arasında gösterilir.
   const areaWidth = size?.width || 0;
   const areaHeight = size?.height || 0;
-  const fit = Math.min(areaWidth / ART_WIDTH, areaHeight / ART_VIEW_HEIGHT);
-  const cover = Math.max(areaWidth / ART_WIDTH, areaHeight / ART_VIEW_HEIGHT);
-  // Üstte kazanan şeridine ve çentiğe yer ayrılır: şerit görselin üstündeki yazıyı kapatmaz.
-  const reserve = Math.max(0, areaHeight - MIN_TICKER_SPACE - safeTop) / (ART_VIEW_HEIGHT - LOGO_TOP * ART_HEIGHT);
-  const scale = Math.min(cover || 0, (fit || 0) * MAX_CROP, reserve || 0);
+  const fit = Math.min(areaWidth / ART_WIDTH, areaHeight / ART_VISIBLE_HEIGHT);
+  const cover = Math.max(areaWidth / ART_WIDTH, areaHeight / ART_VISIBLE_HEIGHT);
+  const scale = Math.min(cover || 0, (fit || 0) * MAX_CROP);
   const width = ART_WIDTH * scale;
   const height = ART_HEIGHT * scale;
-  // Görselin görünen yüksekliği: alt kontrol alanı bu yüksekliğin dışında kalır.
-  const viewHeight = ART_VIEW_HEIGHT * scale;
-  const artTop = Math.max(0, areaHeight - viewHeight);
-  // Şerit, başlığın hemen üstündeki altın çizgiye kadar iner.
-  const goldLine = artTop + LOGO_TOP * height;
-  const tickerHeight = Math.max(MIN_TICKER_SPACE, Math.round(goldLine - safeTop));
-  // Yazının altındaki boş şerit: FREE rozeti ve kademe uyarısı buraya oturur.
-  const badgeTop = artTop + Math.round(height * 0.105);
-  const alertTop = badgeTop + (game.freeSpins > 0 ? 36 : 0);
+  // Görselin görünen yüksekliği ve üstten kırpılan payı.
+  const viewHeight = ART_VISIBLE_HEIGHT * scale;
+  const headOffset = ART_HEAD_HEIGHT * scale;
   const ready = game.status === 'ready';
   // Bahis kademesi: kademe atlayınca üstte kırmızı uyarı çıkar.
   const tier = tierOfBet(game.bet, game.lines);
@@ -93,11 +76,34 @@ export default function SlotGame({ onExit, onBack, roomId }) {
         <div className="absolute inset-0 bg-slot/65" />
       </div>
 
-      {/* Oyun ekranı: görselin alt kontrol alanı kırpılır, kalan kısım alta yaslanır. */}
-      <div ref={areaRef} className="relative flex min-h-0 flex-1 items-end justify-center">
+      {/* Üst: kazanan şeridi ve kendi jackpot konsolumuz. */}
+      <div className="relative z-10 shrink-0 pt-[env(safe-area-inset-top)]">
+        <WinnerTicker height={tickerHeight} />
+        <SlotJackpotBar pools={game.pools} tier={tier} />
+      </div>
+
+      <button
+        type="button"
+        onClick={onBack}
+        aria-label="Oyun listesine dön"
+        className="absolute left-2 top-[env(safe-area-inset-top)] z-20 mt-2 flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm active:scale-95"
+      >
+        <ChevronLeft className="h-5 w-5" />
+      </button>
+      <button
+        type="button"
+        onClick={onExit}
+        aria-label="Oyunu kapat"
+        className="absolute right-2 top-[env(safe-area-inset-top)] z-20 mt-2 flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm active:scale-95"
+      >
+        <X className="h-5 w-5" />
+      </button>
+
+      {/* Oyun ekranı: görselin kırpılan iki paneli arasında kalan kısım alta yaslanır. */}
+      <div ref={areaRef} className="relative flex min-h-0 flex-1 items-end justify-center overflow-hidden">
         {width > 0 && (
           <div className="relative overflow-hidden" style={{ width, height: viewHeight }}>
-            <div className="absolute inset-x-0 top-0" style={{ height }}>
+            <div className="absolute inset-x-0" style={{ height, top: -headOffset }}>
               <Image
                 src={SLOT_ART.shell}
                 alt="slot"
@@ -106,23 +112,11 @@ export default function SlotGame({ onExit, onBack, roomId }) {
                 quality={92}
               />
 
-              {/* Görselde basılı oyun adı kapatılır, yerine AG yazılır. */}
-              <SlotTitle scale={scale} />
-
               {/* Tur sırasında her makaranın sembolleri değişerek aşağı doğru kayar. */}
               <SlotReels spinning={game.spinning} stopping={game.stopping} slow={game.slow} grid={game.grid} />
 
               {/* Kazanan semboller ve aralarından geçen kazanç çizgileri — yeni tur başlayana kadar ekranda kalır. */}
               {!game.spinning && <SlotWinLines wins={game.wins} />}
-
-              {/* Görselin kendi ödül havuzu alanları: kaybedilenler bu havuzlarda birikir. */}
-              <SlotReadout pools={game.pools} scale={scale} />
-
-              {/* Görselde yazan havuz adlarının üzerine yeni adlar yazılır. */}
-              <SlotPoolLabels scale={scale} />
-
-              {/* Görseldeki statik "2/20" yazısı kapatılır: ilerleme çubuğu temiz kalır. */}
-              <SlotProgressCover />
 
               {game.status === 'loading' && (
                 <p className="absolute inset-x-0 top-[62%] -translate-y-1/2 text-center text-xs font-bold text-white/80">
@@ -147,32 +141,10 @@ export default function SlotGame({ onExit, onBack, roomId }) {
             </div>
           </div>
         )}
+
+        <FreeSpinBadge count={game.freeSpins} top={BADGE_TOP} />
+        <SlotTierAlert tier={tier} top={BADGE_TOP + (game.freeSpins > 0 ? 36 : 0)} />
       </div>
-
-      {/* Üst şerit: kazanan akışı, görselin üstünde kalan alanı tamamen kaplar; tuşlar köşelerde. */}
-      <div ref={topRef} className="absolute inset-x-0 top-0 z-20 pt-[env(safe-area-inset-top)]">
-        <WinnerTicker height={tickerHeight} />
-        <button
-          type="button"
-          onClick={onBack}
-          aria-label="Oyun listesine dön"
-          className="absolute left-2 top-[env(safe-area-inset-top)] mt-2 flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm active:scale-95"
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </button>
-        <button
-          type="button"
-          onClick={onExit}
-          aria-label="Oyunu kapat"
-          className="absolute right-2 top-[env(safe-area-inset-top)] mt-2 flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm active:scale-95"
-        >
-          <X className="h-5 w-5" />
-        </button>
-      </div>
-
-      <FreeSpinBadge count={game.freeSpins} top={badgeTop} />
-
-      <SlotTierAlert tier={tier} top={alertTop} />
 
       {/* Alt kontrol paneli: görselin kendi kontrol alanının yerini alır. */}
       <SlotControlDeck
