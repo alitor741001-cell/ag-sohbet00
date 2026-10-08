@@ -32,9 +32,8 @@ function PoolChip({ label, value, dot, tone }) {
  */
 export default function SlotJackpotBar({ pools, tier }) {
   return (
-    <div className="slot-console slot-rivets relative shrink-0 border-b-2 border-slot-gold/50 px-3 pb-3 pt-2.5">
-      <span aria-hidden="true" className="slot-bulbs absolute inset-x-0 bottom-0 h-1.5 opacity-80" />
-      <span aria-hidden="true" className="slot-studs absolute inset-x-10 top-0 h-1.5 opacity-60" />
+    <div className="slot-board relative shrink-0 border-b-2 border-slot-gold/60 px-3 pb-3 pt-2.5">
+      <span aria-hidden="true" className="slot-rivets absolute inset-x-0 top-0" />
 
       <div className="mx-auto flex w-full max-w-2xl flex-col gap-2">
         <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">

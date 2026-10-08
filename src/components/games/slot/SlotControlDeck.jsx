@@ -1,19 +1,16 @@
 import React from 'react';
-import { Coins, LayoutGrid, Plus, Repeat, TrendingUp, Trophy } from 'lucide-react';
+import { Coins, LayoutGrid, Plus, Trophy } from 'lucide-react';
 import SlotDeckStat from './SlotDeckStat';
 import SlotBetStepper from './SlotBetStepper';
+import SlotMedallionButton from './SlotMedallionButton';
+import { SLOT_BUTTON_ART } from '@/components/games/slotAssets';
 
 const format = (value) => new Intl.NumberFormat('tr-TR').format(Math.max(0, Math.round(value || 0)));
 
-// Yan düğmeler: kubbeli, yuvasına oturan yuvarlak düğmeler.
-const SIDE_BUTTON =
-  'slot-button relative flex h-12 w-12 shrink-0 flex-col items-center justify-center gap-0.5 rounded-full text-[8px] font-black tracking-[0.08em] disabled:opacity-50';
-// Düğmenin oturduğu gömme yuva.
-const SOCKET = 'slot-socket flex shrink-0 items-center justify-center rounded-full';
-
 /**
- * Oyunun alt kontrol paneli: görselin kendi kontrol alanının yerini alır.
- * Üst şeritte tur bilgileri, ortada coin kasası ve bahis kademesi, altta MAX / AUTO / SPIN durur.
+ * Oyunun alt kontrol masası: fırçalanmış çelik gövde üzerinde tur bilgileri,
+ * coin kasası, bahis kademesi ve madalyonlu düğmeler durur.
+ * Solda MAX (aslan), sağda AUTO (kanarya) ve SPIN (kartal).
  */
 export default function SlotControlDeck({
   coins,
@@ -64,41 +61,36 @@ export default function SlotControlDeck({
           <SlotBetStepper bet={bet} disabled={spinning} onStep={onStep} />
         </div>
 
-        <div className="flex items-center justify-center gap-2.5">
-          <span className={`${SOCKET} p-1`}>
-            <button type="button" onClick={onMax} disabled={!ready} aria-label="Maksimum bahis" className={`slot-max text-white ${SIDE_BUTTON}`}>
-              <span aria-hidden="true" className="slot-button-dome absolute inset-0 rounded-full" />
-              <TrendingUp className="relative h-4 w-4" strokeWidth={3} />
-              <span className="relative">MAX</span>
-            </button>
-          </span>
-          <span className={`${SOCKET} p-1`}>
-            <button
-              type="button"
+        {/* Düğme sırası: MAX solda, AUTO ve SPIN sağda. */}
+        <div className="flex items-center justify-between gap-3">
+          <SlotMedallionButton
+            art={SLOT_BUTTON_ART.lion}
+            label="MAX"
+            className="slot-max text-white"
+            disabled={!ready}
+            onClick={onMax}
+            ariaLabel="Maksimum bahis"
+          />
+          <span className="flex items-center gap-2.5">
+            <SlotMedallionButton
+              art={SLOT_BUTTON_ART.canary}
+              label="AUTO"
+              className="slot-auto text-slot"
+              active={auto}
+              disabled={!ready}
               onClick={onAuto}
+              ariaLabel="Otomatik tur"
+            />
+            {/* Tur sürerken aynı düğme kırmızı DURDUR düğmesine döner. */}
+            <SlotMedallionButton
+              art={SLOT_BUTTON_ART.eagle}
+              label={spinning ? 'STOP' : 'SPIN'}
+              size="lg"
+              className={`slot-action-ring text-white ${spinning ? 'slot-stop' : 'slot-spin'}`}
               disabled={!ready}
-              aria-label="Otomatik tur"
-              className={`slot-auto text-slot ${SIDE_BUTTON} ${auto ? 'ring-2 ring-slot-green' : ''}`}
-            >
-              <span aria-hidden="true" className="slot-button-dome absolute inset-0 rounded-full" />
-              <Repeat className="relative h-4 w-4" strokeWidth={3} />
-              <span className="relative">AUTO</span>
-            </button>
-          </span>
-          {/* Tur sürerken aynı düğme kırmızı DURDUR düğmesine döner. */}
-          <span className={`${SOCKET} p-1.5`}>
-            <button
-              type="button"
               onClick={spinning ? onStop : onSpin}
-              disabled={!ready}
-              aria-label={spinning ? 'Makaraları durdur' : 'Turu başlat'}
-              className={`slot-button slot-action-ring relative flex h-16 w-16 items-center justify-center rounded-full text-[11px] font-black tracking-[0.1em] text-white disabled:opacity-50 ${
-                spinning ? 'slot-stop' : 'slot-spin'
-              }`}
-            >
-              <span aria-hidden="true" className="slot-button-dome absolute inset-0 rounded-full" />
-              <span className="relative">{spinning ? 'STOP' : 'SPIN'}</span>
-            </button>
+              ariaLabel={spinning ? 'Makaraları durdur' : 'Turu başlat'}
+            />
           </span>
         </div>
       </div>
