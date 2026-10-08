@@ -12,7 +12,7 @@ export const FRUIT_SYMBOLS = {
   grapes: { name: 'Üzüm', art: FRUIT_ART.grapes },
   melon: { name: 'Karpuz', art: FRUIT_ART.melon },
   apple: { name: 'Elma', art: FRUIT_ART.apple },
-  candy: { name: 'Şeker', art: FRUIT_ART.candy },
+  candy: { name: 'Çilek', art: FRUIT_ART.candy },
   cherry: { name: 'Kiraz', art: FRUIT_ART.cherry },
   banana: { name: 'Altın Muz', art: FRUIT_ART.banana, scatter: true },
 };

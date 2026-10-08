@@ -41,7 +41,7 @@ export const SYMBOLS = [
   { id: 'grapes', name: 'Üzüm', weight: 12, pays: [72, 216, 630] },
   { id: 'melon', name: 'Karpuz', weight: 14, pays: [54, 162, 450] },
   { id: 'apple', name: 'Elma', weight: 16, pays: [36, 108, 324] },
-  { id: 'candy', name: 'Şeker', weight: 18, pays: [27, 72, 216] },
+  { id: 'candy', name: 'Çilek', weight: 18, pays: [27, 72, 216] },
   { id: 'cherry', name: 'Kiraz', weight: 20, pays: [18, 54, 162] },
 ];
 

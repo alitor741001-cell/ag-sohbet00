@@ -56,7 +56,7 @@ const FRUIT_LEGEND = {
     { art: FRUIT_SYMBOLS.grapes.art, name: 'Üzüm', pays: [72, 216, 630] },
     { art: FRUIT_SYMBOLS.melon.art, name: 'Karpuz', pays: [54, 162, 450] },
     { art: FRUIT_SYMBOLS.apple.art, name: 'Elma', pays: [36, 108, 324] },
-    { art: FRUIT_SYMBOLS.candy.art, name: 'Şeker', pays: [27, 72, 216] },
+    { art: FRUIT_SYMBOLS.candy.art, name: 'Çilek', pays: [27, 72, 216] },
     { art: FRUIT_SYMBOLS.cherry.art, name: 'Kiraz', pays: [18, 54, 162] },
     {
       art: FRUIT_SYMBOLS.banana.art,
