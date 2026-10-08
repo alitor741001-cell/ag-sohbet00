@@ -3,8 +3,6 @@ import { Crown } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import { formatCoins } from './rouletteConfig';
 
-// Kürsü düzeni: 1. ortada ve daha büyük, 2. solda, 3. sağda durur.
-const PODIUM_ORDER = [1, 0, 2];
 const MEDALS = ['rl-podium-gold', 'rl-podium-silver', 'rl-podium-bronze'];
 
 function PodiumSlot({ winner, rank }) {
@@ -28,20 +26,20 @@ function PodiumSlot({ winner, rank }) {
   );
 }
 
-/** Üstteki tur sıralaması: turun en çok kazanan üç oyuncusu çember içindeki profilleriyle. */
+/** Çarkın sağındaki sıralama rayı: en çok kazanan üç oyuncu alt alta durur. */
 export default function RoulettePodium({ winners, ready }) {
   return (
     <div className="rl-podium-strip">
-      <p className="rl-podium-title">TUR SIRALAMASI</p>
+      <p className="rl-podium-title">SIRALAMA</p>
       {winners.length ? (
         <div className="rl-podium-row">
-          {PODIUM_ORDER.filter((rank) => winners[rank]).map((rank) => (
+          {[0, 1, 2].filter((rank) => winners[rank]).map((rank) => (
             <PodiumSlot key={rank} rank={rank} winner={winners[rank]} />
           ))}
         </div>
       ) : (
         <p className="rl-podium-empty">
-          {ready ? 'Bu turda kazanan yok — ilk sırayı sen al.' : 'Sıralama yükleniyor...'}
+          {ready ? 'Henüz kazanan yok' : 'Yükleniyor...'}
         </p>
       )}
     </div>

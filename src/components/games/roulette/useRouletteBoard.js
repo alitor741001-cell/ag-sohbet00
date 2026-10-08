@@ -1,11 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 
-// Sıralama ve numara geçmişi son turlardan okunur.
+// Sıralama son turlardan okunur.
 const BOARD_LIMIT = 30;
-const RECENT_LIMIT = 9;
 
-/** Tur sonuçlarını izler: en çok kazanan üç oyuncu ve son çıkan numaralar. */
+/** Tur sonuçlarını izler: en çok kazanan üç oyuncu. */
 export default function useRouletteBoard(round = 0) {
   const [spins, setSpins] = useState([]);
   const [status, setStatus] = useState('loading');
@@ -20,10 +19,8 @@ export default function useRouletteBoard(round = 0) {
     }
   }, []);
 
-  // Kendi turum biter bitmez liste yenilenir.
+  // Her turda ve odadaki her sonuçta sıralama tazelenir.
   useEffect(() => { load(); }, [load, round]);
-
-  // Odadaki her tur anında yayılır: sıralama kendiliğinden güncellenir.
   useEffect(() => base44.entities.RouletteSpin.subscribe(() => { load(); }), [load]);
 
   const winners = [...spins]
@@ -31,5 +28,5 @@ export default function useRouletteBoard(round = 0) {
     .sort((a, b) => (b.payout ?? 0) - (a.payout ?? 0))
     .slice(0, 3);
 
-  return { winners, recent: spins.slice(0, RECENT_LIMIT), status };
+  return { winners, status };
 }

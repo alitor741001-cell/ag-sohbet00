@@ -23,9 +23,7 @@ const RED_NUMBERS = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 
 
 // Bir cebin açı genişliği: çark 37 eşit dilime bölünür.
 export const POCKET_STEP = 360 / WHEEL_ORDER.length;
-// Çark animasyonu ve sonucun açıklanması için bekleme süresi.
-export const SPIN_MS = 4400;
-export const REVEAL_MS = 4900;
+// Tur süreleri sunucuda yönetilir (base44/shared/rouletteRound.ts): 20 sn bahis, 10 sn çark.
 
 export const formatCoins = (value) => new Intl.NumberFormat('tr-TR').format(Math.max(0, Math.round(value || 0)));
 

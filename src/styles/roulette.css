@@ -53,10 +53,20 @@
   color: rgba(240, 201, 107, 0.72);
 }
 
-/* --- çark --- */
-.rl-wheel-wrap {
+/* --- çark ve sağındaki tur sıralaması --- */
+.rl-stage {
   display: flex;
   width: 100%;
+  max-width: 27rem;
+  min-height: 0;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+.rl-wheel-wrap {
+  display: flex;
+  min-width: 0;
   min-height: 0;
   flex: 1;
   align-items: center;
@@ -64,10 +74,10 @@
 }
 .rl-wheel {
   position: relative;
-  height: min(54vw, 30vh, 16rem);
-  width: min(54vw, 30vh, 16rem);
-  min-height: 9.5rem;
-  min-width: 9.5rem;
+  height: min(46vw, 26vh, 14rem);
+  width: min(46vw, 26vh, 14rem);
+  min-height: 8.5rem;
+  min-width: 8.5rem;
   filter: drop-shadow(0 18px 32px rgba(0, 0, 0, 0.78));
 }
 /* Kazanan cep üstteki ibrenin altına gelene kadar çark yavaşlayarak döner. */
@@ -365,27 +375,62 @@
 .rl-clear:active { transform: translateY(1px); filter: brightness(1.15); }
 .rl-clear:disabled { filter: saturate(0.4) brightness(0.8); }
 
-/* --- tur düğmesi ve sayaç --- */
-.rl-stake-hint { font-size: 0.55rem; font-weight: 900; letter-spacing: 0.14em; color: rgba(240, 201, 107, 0.75); }
-.rl-countdown {
+/* --- tur şeridi: bahis süresi geri sayar, çark dönerken yeni tura kalan saniye --- */
+.rl-roundbar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  border-radius: 0.9rem;
+  border: 1px solid rgba(240, 201, 107, 0.42);
+  padding: 0.35rem 0.6rem;
+  background: linear-gradient(180deg, rgba(58, 15, 26, 0.9), rgba(16, 4, 9, 0.94));
+  box-shadow: inset 0 1px 0 rgba(255, 226, 160, 0.18);
+}
+.rl-roundbar-count {
   display: inline-flex;
-  height: 2.15rem;
-  width: 2.15rem;
+  height: 2.3rem;
+  width: 2.3rem;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
   border-radius: 9999px;
   border: 1px solid rgba(240, 201, 107, 0.6);
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-weight: 900;
   color: #ffeeb5;
   background: radial-gradient(circle at 50% 20%, #3a1220, #1b060d 72%);
   box-shadow: inset 0 1px 0 rgba(255, 226, 160, 0.28);
   font-variant-numeric: tabular-nums;
 }
-.rl-countdown-live { animation: rl-count 1s ease-in-out infinite; }
+.rl-roundbar-count-live { animation: rl-count 1s ease-in-out infinite; }
 @keyframes rl-count {
   0%, 100% { box-shadow: inset 0 1px 0 rgba(255, 226, 160, 0.28); }
   50% { box-shadow: 0 0 18px rgba(240, 201, 107, 0.75), inset 0 1px 0 rgba(255, 226, 160, 0.4); }
+}
+.rl-roundbar-body { display: flex; min-width: 0; flex: 1; flex-direction: column; gap: 0.32rem; }
+.rl-roundbar-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.52rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  color: rgba(240, 201, 107, 0.85);
+}
+.rl-roundbar-track {
+  height: 0.3rem;
+  overflow: hidden;
+  border-radius: 9999px;
+  background: rgba(0, 0, 0, 0.5);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.7);
+}
+.rl-roundbar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #a97a12, #f0c96b 70%, #fff3cd);
+  box-shadow: 0 0 12px rgba(240, 201, 107, 0.7);
+  transition: width 140ms linear;
 }
 
 .rl-message {
@@ -394,74 +439,84 @@
   color: #ffe3a8;
 }
 
-/* --- tur sıralaması: en çok kazanan üç oyuncu, profilleri çember içinde --- */
+/* --- tur sıralaması: kazananlar çarkın sağında alt alta durur --- */
 .rl-podium-strip {
-  width: 100%;
-  max-width: 27rem;
+  display: flex;
+  width: 5.6rem;
+  flex-shrink: 0;
+  flex-direction: column;
+  gap: 0.28rem;
   border-radius: 0.9rem;
   border: 1px solid rgba(240, 201, 107, 0.34);
-  padding: 0.3rem 0.5rem 0.45rem;
+  padding: 0.35rem 0.28rem 0.4rem;
   background: linear-gradient(180deg, rgba(88, 16, 30, 0.9), rgba(26, 4, 11, 0.94));
   box-shadow: inset 0 1px 0 rgba(255, 226, 160, 0.16), 0 12px 24px -20px rgba(0, 0, 0, 0.95);
 }
 .rl-podium-title {
   text-align: center;
-  font-size: 0.5rem;
+  font-size: 0.46rem;
   font-weight: 900;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.16em;
   color: rgba(240, 201, 107, 0.78);
 }
 .rl-podium-empty {
-  padding: 0.55rem 0.25rem 0.4rem;
+  padding: 0.5rem 0.15rem;
   text-align: center;
-  font-size: 0.55rem;
+  font-size: 0.5rem;
   font-weight: 800;
+  line-height: 1.3;
   color: rgba(255, 240, 200, 0.58);
 }
 .rl-podium-row {
   display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  gap: 0.7rem;
-  margin-top: 0.1rem;
+  flex-direction: column;
+  gap: 0.28rem;
 }
 .rl-podium {
+  position: relative;
   display: flex;
-  width: 4.6rem;
   min-width: 0;
   flex-direction: column;
   align-items: center;
-  gap: 0.08rem;
+  gap: 0.05rem;
+  border-radius: 0.7rem;
+  border: 1px solid rgba(240, 201, 107, 0.22);
+  padding: 0.3rem 0.14rem 0.32rem;
+  background: linear-gradient(180deg, rgba(70, 12, 24, 0.85), rgba(18, 3, 8, 0.92));
   animation: rl-podium-in 0.3s ease-out;
 }
-@keyframes rl-podium-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+.rl-podium-first {
+  border-color: rgba(240, 201, 107, 0.62);
+  box-shadow: 0 0 16px -6px rgba(240, 201, 107, 0.85);
+}
+@keyframes rl-podium-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
 .rl-podium-medal { position: relative; display: block; }
 .rl-podium-avatar {
   display: flex;
-  height: 2.35rem;
-  width: 2.35rem;
+  height: 1.6rem;
+  width: 1.6rem;
   align-items: center;
   justify-content: center;
   overflow: hidden;
   border-radius: 9999px;
   background: radial-gradient(circle at 50% 26%, #35101b, #170307);
 }
-.rl-podium-first .rl-podium-avatar { height: 2.95rem; width: 2.95rem; }
+.rl-podium-first .rl-podium-avatar { height: 1.95rem; width: 1.95rem; }
 .rl-podium-gold .rl-podium-avatar { box-shadow: 0 0 0 2px #f0c96b, 0 0 18px rgba(240, 201, 107, 0.6); }
 .rl-podium-silver .rl-podium-avatar { box-shadow: 0 0 0 2px #d7dbe0, 0 0 12px rgba(215, 219, 224, 0.42); }
 .rl-podium-bronze .rl-podium-avatar { box-shadow: 0 0 0 2px #cd8a4a, 0 0 12px rgba(205, 138, 74, 0.42); }
-.rl-podium-initial { font-size: 0.9rem; font-weight: 900; color: #ffe9b6; }
+.rl-podium-initial { font-size: 0.68rem; font-weight: 900; color: #ffe9b6; }
 .rl-podium-rank {
   position: absolute;
-  right: -0.1rem;
-  bottom: -0.1rem;
+  right: -0.2rem;
+  top: -0.15rem;
   display: flex;
-  height: 0.95rem;
-  width: 0.95rem;
+  height: 0.82rem;
+  width: 0.82rem;
   align-items: center;
   justify-content: center;
   border-radius: 9999px;
-  font-size: 0.52rem;
+  font-size: 0.46rem;
   font-weight: 900;
   color: #2b1602;
   background: linear-gradient(180deg, #ffeeb5, #e0b44f);
@@ -470,9 +525,10 @@
 .rl-podium-crown {
   position: absolute;
   left: 50%;
-  top: -0.6rem;
-  height: 0.9rem;
-  width: 0.9rem;
+  top: -0.36rem;
+  z-index: 1;
+  height: 0.66rem;
+  width: 0.66rem;
   transform: translateX(-50%);
   color: #ffd35c;
   filter: drop-shadow(0 0 6px rgba(240, 201, 107, 0.85));
@@ -482,11 +538,11 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 0.55rem;
+  font-size: 0.46rem;
   font-weight: 800;
   color: #ffeec6;
 }
-.rl-podium-amount { font-size: 0.6rem; font-weight: 900; color: #f0c96b; font-variant-numeric: tabular-nums; }
+.rl-podium-amount { font-size: 0.5rem; font-weight: 900; color: #f0c96b; font-variant-numeric: tabular-nums; }
 @media (prefers-reduced-motion: reduce) { .rl-podium { animation: none; } }
 
 /* --- numara geçmişi: son turların çıkan numaraları --- */
@@ -541,7 +597,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .rl-rays, .rl-countdown-live, .rl-overlay { animation: none; }
+  .rl-rays, .rl-roundbar-count-live, .rl-overlay { animation: none; }
   .rl-wheel-disc { transition-duration: 0.4s; }
   .rl-wheel-live .rl-wheel-ball-track { animation: none; }
+  .rl-roundbar-fill { transition: none; }
 }

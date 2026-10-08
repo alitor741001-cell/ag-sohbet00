@@ -1,11 +1,47 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { base44 } from '@/api/base44Client';
-import { CHIP_LEVELS, REVEAL_MS } from './rouletteConfig';
+import subscribeEntity from '@/components/data/entitySubscriptions';
+import rouletteRequests from './rouletteRequests';
+import { CHIP_LEVELS } from './rouletteConfig';
 
-// Sayaç bu aralıkla iner: çark dönerken kalan saniye görünür.
-const COUNTDOWN_STEP_MS = 250;
+// Geri sayım bu aralıkla iner; tur aşaması da aynı saate göre okunur.
+const CLOCK_TICK = 100;
+// Sunucu yoklaması: sınır anlarında sık, tur ortasında seyrek.
+const POLL_EDGE_MS = 900;
+const POLL_SPIN_MS = 2500;
+const POLL_IDLE_MS = 5000;
+const POLL_HIDDEN_MS = 10000;
+const POLL_ERROR_MS = 8000;
 
-/** ROULETTE durumu: bakiye, jeton kademesi, masadaki bahisler ve tur sonucu. */
+/** Tur aşaması yerel saatle de ilerler: bahis süresi dolduğu saniyede çark döner. */
+function phaseAt(round, now) {
+  if (!round) return 'betting';
+  if (round.status === 'betting') {
+    return now >= new Date(round.phase_ends_at).getTime() ? 'spinning' : 'betting';
+  }
+  return now >= new Date(round.ends_at).getTime() ? 'next' : 'spinning';
+}
+
+/** Yayından gelen tur: numara yalnızca çark dönerken açılır. */
+function liveRound(live) {
+  if (!live || typeof live.round_no !== 'number') return null;
+  const revealed = live.status === 'spinning';
+  return {
+    round_no: live.round_no,
+    status: revealed ? 'spinning' : 'betting',
+    started_at: live.started_at,
+    phase_ends_at: live.phase_ends_at,
+    ends_at: live.ends_at,
+    number: revealed ? live.number : null,
+    index: revealed ? live.index : null,
+  };
+}
+
+const at = (value) => {
+  const time = value ? new Date(value).getTime() : NaN;
+  return Number.isFinite(time) ? time : null;
+};
+
+/** ROULETTE turu: 20 saniye bahis, sonra çark ve sonuç; tur kendi kendine döner. */
 export default function useRouletteGame() {
   const [status, setStatus] = useState('loading');
   const [coins, setCoins] = useState(0);
@@ -15,60 +51,152 @@ export default function useRouletteGame() {
   // Masadaki bahisler: blok kimliği -> o bloğa konan toplam coin.
   const [bets, setBets] = useState({});
   const [lastBets, setLastBets] = useState(null);
-  const [spinning, setSpinning] = useState(false);
-  const [countdown, setCountdown] = useState(0);
+  const [round, setRound] = useState(null);
+  const [history, setHistory] = useState([]);
   const [result, setResult] = useState(null);
   const [payout, setPayout] = useState(0);
-  const [wins, setWins] = useState([]);
   const [message, setMessage] = useState('');
-  const busyRef = useRef(false);
+  const [clock, setClock] = useState(Date.now());
 
-  const applyState = useCallback((data) => {
+  const serverNowRef = useRef(Date.now());
+  const fetchedAtRef = useRef(Date.now());
+  const roundRef = useRef(null);
+  const betsRef = useRef({});
+  // Hangi turda bahis oynandı: aynı turda ikinci istek gitmez.
+  const firedRef = useRef(0);
+  const busyRef = useRef(false);
+  const cooldownRef = useRef(0);
+
+  useEffect(() => { betsRef.current = bets; }, [bets]);
+
+  const applyWallet = useCallback((data) => {
     if (!data) return;
     if (typeof data.coins === 'number') setCoins(data.coins);
     if (typeof data.total_won === 'number') setTotalWon(data.total_won);
     if (typeof data.spins === 'number') setSpins(data.spins);
   }, []);
 
+  const applyRound = useCallback((next, now) => {
+    if (!next) return;
+    if (typeof now === 'number') {
+      // Sunucu saati yerel saatle akar: geri sayım iki ekranda aynı saniyeyi gösterir.
+      serverNowRef.current = Math.max(serverNowRef.current + (Date.now() - fetchedAtRef.current), now);
+      fetchedAtRef.current = Date.now();
+    }
+    roundRef.current = next;
+    setRound((prev) => {
+      if (prev && next.round_no < prev.round_no) return prev;
+      // Aynı turda yayın geri gitmez: numara açıldıktan sonra bahis aşamasına dönülmez.
+      if (prev && next.round_no === prev.round_no && prev.status === 'spinning' && next.status === 'betting') return prev;
+      return next;
+    });
+  }, []);
+
+  const fetchState = useCallback(async () => {
+    const data = await rouletteRequests({ action: 'state' });
+    applyWallet(data);
+    applyRound(data?.round, data?.now);
+    if (Array.isArray(data?.history)) setHistory(data.history);
+    setStatus('ready');
+  }, [applyRound, applyWallet]);
+
+  // İlk açılış: tur ve bakiye bir kez alınır.
   useEffect(() => {
     let cancelled = false;
-    base44.functions
-      .invoke('roulette-game', { action: 'state' })
-      .then((response) => {
-        if (cancelled) return;
-        applyState(response.data);
-        setStatus('ready');
-      })
-      .catch((error) => {
-        if (cancelled) return;
-        setStatus('error');
-        setMessage(error?.response?.data?.error || 'Oyun yüklenemedi.');
-      });
+    fetchState().catch((error) => {
+      if (cancelled) return;
+      setStatus('error');
+      setMessage(error?.response?.data?.error || 'Oyun yüklenemedi.');
+    });
     return () => { cancelled = true; };
-  }, [applyState]);
+  }, [fetchState]);
 
+  // Yoklama turu ilerletir: kimse bahis koymasa da çark döner ve yeni tur açılır.
+  useEffect(() => {
+    let timer;
+    let running = false;
+    let cancelled = false;
+    const loop = async () => {
+      if (running || cancelled) return;
+      running = true;
+      // Sekme arka plandayken istek yapılmaz: bütçe oyuncunun turuna kalır.
+      if (document.visibilityState === 'hidden') {
+        timer = setTimeout(loop, POLL_HIDDEN_MS);
+        running = false;
+        return;
+      }
+      // Bahis isteği sürerken yoklama yapılmaz: tur kapanışı bekletilmez.
+      if (!busyRef.current && Date.now() >= cooldownRef.current) {
+        try {
+          await fetchState();
+        } catch {
+          cooldownRef.current = Date.now() + POLL_ERROR_MS;
+        }
+      }
+      if (cancelled) return;
+      const now = serverNowRef.current + (Date.now() - fetchedAtRef.current);
+      const current = roundRef.current;
+      const phase = phaseAt(current, now);
+      const spinAt = current ? at(current.phase_ends_at) : null;
+      const wait = phase === 'next'
+        ? POLL_EDGE_MS
+        : phase === 'spinning'
+          ? POLL_SPIN_MS
+          : spinAt !== null && spinAt - now <= 4000
+            ? POLL_EDGE_MS
+            : POLL_IDLE_MS;
+      timer = setTimeout(loop, wait + Math.random() * 300);
+      running = false;
+    };
+    loop();
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [fetchState]);
+
+  // Tur, numara ve geçmiş canlı yayından gelir: odadaki herkes aynı çarkı görür.
+  useEffect(() => subscribeEntity('RouletteLive', (event) => {
+    const live = event?.data;
+    applyRound(liveRound(live));
+    if (Array.isArray(live?.history) && live.history.length) setHistory(live.history);
+  }), [applyRound]);
+
+  useEffect(() => {
+    const id = setInterval(() => setClock(Date.now()), CLOCK_TICK);
+    return () => clearInterval(id);
+  }, []);
+
+  // Uyarı ekranda kısa süre kalır, sonra kendiliğinden kaybolur.
+  useEffect(() => {
+    if (!message) return undefined;
+    const id = setTimeout(() => setMessage(''), 2600);
+    return () => clearTimeout(id);
+  }, [message]);
+
+  const serverNow = serverNowRef.current + (clock - fetchedAtRef.current);
+  const phase = phaseAt(round, serverNow);
+  const betting = phase === 'betting';
   const stake = Object.values(bets).reduce((sum, amount) => sum + amount, 0);
 
   // Jeton masaya konur: blok dokunuşu seçili kademe kadar artırır.
   const placeBet = useCallback((blockId) => {
-    if (busyRef.current) return;
-    if (stake + chip > coins) {
+    if (!betting || busyRef.current) return;
+    const total = Object.values(bets).reduce((sum, amount) => sum + amount, 0);
+    if (total + chip > coins) {
       setMessage('Yetersiz coin. Coin bakiyene dokunup coin yükle.');
       return;
     }
     setMessage('');
     setBets({ ...bets, [blockId]: (bets[blockId] || 0) + chip });
-  }, [bets, chip, coins, stake]);
+  }, [betting, bets, chip, coins]);
 
   const clearBets = useCallback(() => {
-    if (busyRef.current) return;
+    if (!betting) return;
     setBets({});
     setMessage('');
-  }, []);
+  }, [betting]);
 
   // REPEAT: bir önceki turun bahis düzeni yeniden masaya konur.
   const repeat = useCallback(() => {
-    if (busyRef.current || !lastBets) return;
+    if (!betting || !lastBets) return;
     const total = Object.values(lastBets).reduce((sum, amount) => sum + amount, 0);
     if (total > coins) {
       setMessage('Yetersiz coin. Coin bakiyene dokunup coin yükle.');
@@ -76,57 +204,49 @@ export default function useRouletteGame() {
     }
     setBets({ ...lastBets });
     setMessage('');
-  }, [coins, lastBets]);
+  }, [betting, coins, lastBets]);
 
-  const spin = useCallback(async () => {
-    if (busyRef.current || status !== 'ready') return;
-    const placed = Object.entries(bets).map(([id, amount]) => ({ id, amount }));
+  // Tur dönerken bahis kendiliğinden oynanır: masada bahsi olan herkes aynı numaraya oynar.
+  useEffect(() => {
+    if (phase !== 'spinning' || !round) return;
+    if (firedRef.current === round.round_no) return;
+    const placed = Object.entries(betsRef.current).map(([id, amount]) => ({ id, amount }));
     const total = placed.reduce((sum, bet) => sum + bet.amount, 0);
-    if (!total) {
-      setMessage('Önce masaya bahis koy.');
-      return;
-    }
-    if (total > coins) {
-      setMessage('Yetersiz coin. Coin bakiyene dokunup coin yükle.');
-      return;
-    }
-
+    // Bahsi olmayan oyuncu izler: çark yine de o turun numarasına döner.
+    if (!total) return;
+    firedRef.current = round.round_no;
     busyRef.current = true;
-    setSpinning(true);
-    setResult(null);
-    setPayout(0);
-    setWins([]);
-    setMessage('');
-    setCountdown(Math.ceil(REVEAL_MS / 1000));
+    rouletteRequests({ action: 'spin', round_no: round.round_no, bets: placed })
+      .then((data) => {
+        applyWallet(data);
+        applyRound(data?.round);
+        setResult({ number: data.number, index: data.index, payout: data.payout || 0 });
+        setPayout(data.payout || 0);
+        setLastBets(betsRef.current);
+        setBets({});
+        setMessage('');
+      })
+      .catch((error) => {
+        const raw = error?.response?.data?.error;
+        setMessage(raw && !/rate limit/i.test(raw) ? raw : 'Bağlantı yoğun, bahsin sonraki turda geçerli.');
+      })
+      .finally(() => { busyRef.current = false; });
+  }, [phase, round, applyRound, applyWallet]);
 
-    const startedAt = Date.now();
-    const ticker = window.setInterval(() => {
-      const left = Math.max(0, REVEAL_MS - (Date.now() - startedAt));
-      setCountdown(Math.ceil(left / 1000));
-    }, COUNTDOWN_STEP_MS);
-
-    try {
-      const [response] = await Promise.all([
-        base44.functions.invoke('roulette-game', { action: 'spin', bets: placed }),
-        new Promise((resolve) => window.setTimeout(resolve, REVEAL_MS)),
-      ]);
-      const data = response.data || {};
-      applyState(data);
-      setResult({ number: data.number, index: data.index });
-      setPayout(data.payout || 0);
-      setWins(data.wins || []);
-      setLastBets(bets);
-      setBets({});
-    } catch (error) {
-      const raw = error?.response?.data?.error;
-      setMessage(raw && !/rate limit/i.test(raw) ? raw : 'Çok hızlı oynuyorsun, birkaç saniye bekle.');
-    } finally {
-      window.clearInterval(ticker);
-      setCountdown(0);
-      setSpinning(false);
-      busyRef.current = false;
+  // Geri sayım ve şerit ilerlemesi turun sunucu saatinden hesaplanır.
+  let countdown = null;
+  let progress = 0;
+  if (round) {
+    const spinning = phase === 'spinning';
+    const from = at(spinning ? round.phase_ends_at : round.started_at);
+    const to = at(spinning ? round.ends_at : round.phase_ends_at);
+    if (from !== null && to !== null) {
+      const span = Math.max(1, to - from);
+      const left = Math.max(0, to - serverNow);
+      countdown = Math.ceil(left / 1000);
+      progress = Math.min(1, Math.max(0, (span - left) / span));
     }
-  }, [applyState, bets, coins, status]);
+  }
 
   return {
     status,
@@ -138,15 +258,16 @@ export default function useRouletteGame() {
     bets,
     stake,
     lastBets,
-    spinning,
+    round,
+    history,
+    phase,
     countdown,
+    progress,
     result,
     payout,
-    wins,
     message,
     placeBet,
     clearBets,
     repeat,
-    spin,
   };
 }
