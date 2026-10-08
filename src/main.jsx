@@ -4,6 +4,7 @@ import App from '@/App.jsx'
 import '@/index.css'
 import '@/styles/giftMotions.css'
 import '@/styles/accessibility.css'
+import '@/styles/slot.css'
 import initSystemTheme from '@/lib/themeMode'
 
 // Tema cihazın sistem tercihine göre canlı ayarlanır; tercih okunamazsa koyu sinema teması.
