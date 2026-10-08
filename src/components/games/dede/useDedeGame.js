@@ -27,6 +27,8 @@ export default function useDedeGame() {
   const [sessionBonus, setSessionBonus] = useState(null);
   // Açılış anı: dört skatter ekranda parlar, sonra turlar kendiliğinden başlar.
   const [intro, setIntro] = useState(false);
+  // Çevirme hakkı sürerken gelen skatter: eklenen bedelsiz tur sayısı.
+  const [retrigger, setRetrigger] = useState(0);
   const [bet, setBet] = useState(100);
   const [spins, setSpins] = useState(0);
   const [grid, setGrid] = useState(null);
@@ -168,6 +170,8 @@ export default function useDedeGame() {
       applyState(data);
       // 4 skatter: 15 çevirme hakkı yeniden başladı, kutlama ekranı açılır.
       if (data.session_bonus) setSessionBonus({ cost: data.session_cost || 0 });
+      // Çevirme hakkı sürerken gelen skatter: ek 15 tur bedelsiz eklenir.
+      if (data.session_retrigger) setRetrigger(data.retrigger_spins || 0);
       // Çevirme hakkı sürerken kazanç birikir; normal turda sıfırdan başlar.
       sessionWinRef.current += data.win || 0;
       setWin(sessionWinRef.current);
@@ -220,11 +224,11 @@ export default function useDedeGame() {
   useEffect(() => {
     if (spinning || intro || status !== 'ready') return undefined;
     // Kutlama ekranı kapanana kadar beklenir: oyuncu 15 hakkı görüp başlatır.
-    if (sessionBonus) return undefined;
+    if (sessionBonus || retrigger) return undefined;
     if (!auto && sessionSpins <= 0) return undefined;
     const timer = window.setTimeout(() => { spin(); }, 800);
     return () => window.clearTimeout(timer);
-  }, [auto, intro, sessionBonus, sessionSpins, spin, spinning, status]);
+  }, [auto, intro, retrigger, sessionBonus, sessionSpins, spin, spinning, status]);
 
   // Açılış anı: dört skatter dizilir ve parlar; çarpan ya da patlama olmaz,
   // sonra 15 ücretsiz tur kendiliğinden çevrilir.
@@ -275,6 +279,7 @@ export default function useDedeGame() {
 
   const clearSessionResult = useCallback(() => setSessionResult(null), []);
   const clearSessionBonus = useCallback(() => setSessionBonus(null), []);
+  const clearRetrigger = useCallback(() => setRetrigger(0), []);
 
   return {
     status,
@@ -303,6 +308,8 @@ export default function useDedeGame() {
     buySession,
     clearSessionResult,
     clearSessionBonus,
+    clearRetrigger,
+    retrigger,
     intro,
     sessionPrice,
     sessionSpins,

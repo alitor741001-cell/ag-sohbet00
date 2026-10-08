@@ -236,6 +236,7 @@ export const GAME_HELP = {
       'Kazanan küme patlar, yerine yeni madalyon düşer: zincir tur boyunca sürer.',
       'Zincir boyunca düşen çarpan jetonlarının toplamı tur kazancını çarpar.',
       'Dede (scatter) 4 ve üzeri gelince hem bonus öder hem 15 çevirme hakkını başlatır; hakkın bedeli coinlerden düşülür.',
+      'Çevirme hakkı sürerken yeniden 4 skatter gelirse 15 tur bedelsiz eklenir; coin düşülmez ve ek hak seyrektir.',
     ],
     legend: DEDE_LEGEND,
     facts: [

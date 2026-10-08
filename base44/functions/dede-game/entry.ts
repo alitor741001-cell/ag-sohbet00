@@ -80,11 +80,14 @@ export default async function (req) {
       const result = playDede(bet, isFree);
       const total = result.total;
       // 4+ dede yalnızca bonus öder; bedava tur sistemi oyundan kaldırıldı.
-      const sessionLeft = Math.max(0, sessionTurns - (sessionTurns > 0 ? 1 : 0));
-      // 4 ve üzeri skatter: 15 çevirme hakkı baştan açılır, bedeli coinlerden düşülür.
+      const sessionLeft = Math.max(0, sessionTurns - (isFree ? 1 : 0));
+      const triggered = result.scatterCount >= SCATTER_MIN;
       const sessionCost = sessionPrice(bet);
       const balance = coins - cost + total;
-      const sessionBonus = result.scatterCount >= SCATTER_MIN && balance >= sessionCost;
+      // Çevirme hakkı sürerken gelen 4+ skatter: 15 hak bedelsiz eklenir, coin düşmez.
+      const retrigger = triggered && isFree;
+      // Normal turda gelen 4+ skatter: 15 hak satın alınır, bedeli coinlerden düşülür.
+      const sessionBonus = triggered && !isFree && balance >= sessionCost;
       const bigWin = stake > 0 && total >= stake * BIG_WIN_MULTIPLE;
 
       const updated = await base44.asServiceRole.entities.GameWallet.update(wallet.id, {
@@ -92,7 +95,9 @@ export default async function (req) {
         bet,
         // Kalan bedava turlar sıfırlanır: oyun artık bedava tur vermiyor.
         dede_free_spins: 0,
-        dede_session_spins: sessionBonus ? SESSION_SPINS : sessionLeft,
+        dede_session_spins: retrigger
+          ? sessionLeft + SESSION_SPINS
+          : sessionBonus ? SESSION_SPINS : sessionLeft,
         spins: (wallet.spins ?? 0) + 1,
         total_won: (wallet.total_won ?? 0) + total,
         total_won_dede: (wallet.total_won_dede ?? 0) + total,
@@ -112,6 +117,9 @@ export default async function (req) {
         // Skatter çevirme hakkını başlattıysa ekran kutlamayı gösterir.
         session_bonus: sessionBonus,
         session_cost: sessionBonus ? sessionCost : 0,
+        // Çevirme hakkı sürerken gelen skatter: ek turlar bedelsiz eklenir.
+        session_retrigger: retrigger,
+        retrigger_spins: retrigger ? SESSION_SPINS : 0,
         capped: result.capped,
         big_win: bigWin ? total : 0,
       });

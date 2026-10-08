@@ -200,10 +200,20 @@ export default function DedeGame({ onExit, onBack }) {
       <DedeWinOverlay
         open={!!game.sessionBonus}
         amount={game.sessionBonus?.cost || 0}
-        title="15 ÇEVİRME HAKKI"
+        title="15 ÇEVRİME HAKKI"
         subtitle="4 SKATTER · BEDELİ COINDEN DÜŞÜLDÜ"
         action="BAŞLA"
         onAccept={game.clearSessionBonus}
+      />
+
+      {/* Çevirme hakkı sürerken gelen 4 skatter: ek 15 tur bedelsiz eklenir. */}
+      <DedeWinOverlay
+        open={game.retrigger > 0}
+        amount={game.retrigger}
+        title={`+${game.retrigger} ÇEVRİME HAKKI`}
+        subtitle="4 SKATTER · ÜCRETSİZ"
+        action="DEVAM"
+        onAccept={game.clearRetrigger}
       />
     </div>
   );

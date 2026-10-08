@@ -43,6 +43,9 @@ export const SYMBOLS = [
 
 // Skatter ağırlığı: 4+ dede ortalama her 40 turda bir gelir.
 const SCATTER_WEIGHT = 3;
+// Çevirme hakkı turlarında skatter seyrekleşir: ek 15 hak ortalama 10 hakkın birinde gelir
+// (normal turlarda 4+ skatter tur başına ~%2,7, çevirme hakkında ~%0,7).
+const FREE_SCATTER_WEIGHT = 2;
 
 // Çarpan küreleri: [değer, ağırlık]. Referans tasarımdaki 3x, 4x, 30x, 50x, 100x, 500x kademeleri.
 const ORB_VALUES = [
@@ -66,32 +69,34 @@ export function orbValue(cell) {
 }
 
 // Tek kare: çoğunlukla sembol, bazen çarpan jetonu.
-function randomCell(orbChance) {
+function randomCell(orbChance, pool) {
   if (orbChance > 0 && Math.random() < orbChance) return `orb${rollValue()}`;
-  return randomId();
+  return randomId(pool);
 }
 
-function buildPool() {
+function buildPool(scatterWeight) {
   const pool = [];
   SYMBOLS.forEach((symbol) => {
     for (let index = 0; index < symbol.weight; index += 1) pool.push(symbol.id);
   });
-  for (let index = 0; index < SCATTER_WEIGHT; index += 1) pool.push(SCATTER_ID);
+  for (let index = 0; index < scatterWeight; index += 1) pool.push(SCATTER_ID);
   return pool;
 }
 
-const POOL = buildPool();
+const POOL = buildPool(SCATTER_WEIGHT);
+// Çevirme hakkı turlarında kullanılan seyrek skatter havuzu.
+const FREE_POOL = buildPool(FREE_SCATTER_WEIGHT);
 
-function randomId() {
-  return POOL[Math.floor(Math.random() * POOL.length)];
+function randomId(pool = POOL) {
+  return pool[Math.floor(Math.random() * pool.length)];
 }
 
 // 6 sütun x 5 satır sonuç: grid[sütun][satır], satır 0 en üst.
-export function spinGrid(orbChance = 0) {
+export function spinGrid(orbChance = 0, pool = POOL) {
   const grid = [];
   for (let reel = 0; reel < REELS; reel += 1) {
     const column = [];
-    for (let row = 0; row < ROWS; row += 1) column.push(randomCell(orbChance));
+    for (let row = 0; row < ROWS; row += 1) column.push(randomCell(orbChance, pool));
     grid.push(column);
   }
   return grid;
@@ -129,11 +134,11 @@ export function evaluate(grid, bet) {
 }
 
 // Patlayan karoların yerine üstten yenileri düşer; kalanlar aşağı kayar.
-function collapse(grid, removing, orbChance) {
+function collapse(grid, removing, orbChance, pool) {
   return grid.map((column, reel) => {
     const kept = column.filter((_, row) => !removing.has(`${reel}-${row}`));
     const fresh = [];
-    for (let index = kept.length; index < ROWS; index += 1) fresh.push(randomCell(orbChance));
+    for (let index = kept.length; index < ROWS; index += 1) fresh.push(randomCell(orbChance, pool));
     return [...fresh, ...kept];
   });
 }
@@ -163,7 +168,9 @@ function gridOrbs(grid) {
 /** Bir turun tamamı: ilk ızgara, tumbler adımları ve küre çarpanları.
     Her adım ekranda gösterilmek üzere ayrı ayrı döner. */
 export function playDede(bet, isFree) {
-  let grid = spinGrid(INITIAL_ORB_CHANCE);
+  // Çevirme hakkı turlarında skatter seyrekleşir: ek 15 hakkın oranı düşük kalır.
+  const pool = isFree ? FREE_POOL : POOL;
+  let grid = spinGrid(INITIAL_ORB_CHANCE, pool);
   const scatterCells = [];
   grid.forEach((column, reel) => {
     column.forEach((symbol, row) => {
@@ -228,7 +235,7 @@ export function playDede(bet, isFree) {
     orbs.forEach((orb) => removing.add(`${orb.reel}-${orb.row}`));
     if (!removing.size) break;
 
-    grid = collapse(grid, removing, orbChance);
+    grid = collapse(grid, removing, orbChance, pool);
   }
 
   // Turun tamamı biriken çarpanla çarpılır — orijinal oyundaki gibi.
