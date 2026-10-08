@@ -15,11 +15,12 @@ function Chest() {
 }
 
 /**
- * Üst panel (Şekerli Meyve'nin üst paneliyle aynı tasarım): ortada jackpot tutarı,
- * sağda sandık kutusu ve oyuncu rozeti. Sandık kutusu bar dolduğunda basılabilir:
- * biriken tutar bakiyeye eklenir, bar sıfırlanır.
+ * Üst panel (Şekerli Meyve'nin üst paneliyle aynı tasarım): ortada jackpot havuzu,
+ * sağda sandık kutusu ve oyuncu rozeti. Havuz kaybedilen turlarla birikir, kazanan
+ * turlarda ve jackpot patladığında azalır. Sandık kutusu bar dolduğunda basılabilir:
+ * barda biriken tutar bakiyeye eklenir, bar sıfırlanır.
  */
-export default function EliminJackpotBar({ jackpot, chests = 0, bet, busy, onCollect }) {
+export default function EliminJackpotBar({ jackpot, chests = 0, chestValue = 0, bet, busy, onCollect }) {
   const { user } = useCurrentUser();
   const avatar = user?.avatar_url || user?.avatar || '';
   const initials = (user?.full_name || '?').trim().slice(0, 1).toUpperCase();
@@ -50,7 +51,7 @@ export default function EliminJackpotBar({ jackpot, chests = 0, bet, busy, onCol
           <span className="el-chest-text">{filled}/{CHEST_MAX}</span>
           {/* Bar dolduysa toplanacak tutar, dolmadıysa sandığın eklediği değer yazar. */}
           {full
-            ? <span className="el-chest-claim">TOPLA {formatCoins(jackpot)}</span>
+            ? <span className="el-chest-claim">TOPLA {formatCoins(chestValue)}</span>
             : <span className="el-chest-gain">+{formatCoins((bet || 0) * JACKPOT_PER_CHEST)}</span>}
         </button>
 

@@ -25,14 +25,22 @@ import {
 // ayrı sayılır.
 
 // --- ek nesneler ---
-// Zar: dört tanesi jackpotu patlatır ve biriken jackpotun yarısını öder.
-// Sandık: jackpot barında birikir. Tavuk: nadir süs nesnesi.
+// Zar: dört tanesi jackpot havuzunu patlatır ve havuzun yarısını öder.
+// Sandık: jackpot barında birikir, bar dolunca kendi birikimini öder.
+// Tavuk: üç tanesi üç bedava tur verir.
 const DICE_MIN = 4;
 const CHEST_MAX = 10;
-// Her sandık, bahsin bu katı kadar jackpot değeri ekler.
-const JACKPOT_PER_CHEST = 100;
-// Hücre başına ek nesne olasılığı: turda ~0,36 sandık, ~0,30 tavuk, ~0,24 zar.
-const CHEST_CHANCE = 0.012;
+const CHICKEN_MIN = 3;
+const FREE_SPINS = 3;
+// Barda biriken her sandık, bahsin bu katı kadar değer taşır.
+const JACKPOT_PER_CHEST = 20;
+// Jackpot havuzu kaybedilen turlarla birikir, kazanan turlarda azalır; bu tabanın altına düşmez.
+const JACKPOT_BASE = 200000;
+// Kazanç seyrek gelsin: küme 10'da başlar, kademe sınırları 12 ve 15.
+const ELIMIN_CLUSTER_MIN = 10;
+const ELIMIN_CLUSTER_TIERS = [10, 12, 15];
+// Hücre başına ek nesne olasılığı: turda ~0,12 sandık, ~0,30 tavuk, ~0,24 zar.
+const CHEST_CHANCE = 0.004;
 const CHICKEN_CHANCE = 0.01;
 const DICE_CHANCE = 0.008;
 
@@ -53,8 +61,11 @@ function spinElimin() {
 const countOf = (grid: string[][], id: string) =>
   grid.flat().filter((symbol) => symbol === id).length;
 
-// Jackpot tutarı: barda biriken sandık sayısı x bahis x kademe.
-const jackpotValue = (chests: number, bet: number) => Math.max(0, chests) * bet * JACKPOT_PER_CHEST;
+// Sandık birikimi: barda kaç sandık varsa bahsin o kadar katı.
+const chestValue = (chests: number, bet: number) => Math.max(0, chests) * bet * JACKPOT_PER_CHEST;
+
+// Jackpot havuzu: sandıktan ayrıdır; kaybedilen turlar biriktirir, kazanan turlar azaltır.
+const jackpotOf = (wallet: Record<string, any>) => Math.max(JACKPOT_BASE, wallet.elimin_jackpot ?? JACKPOT_BASE);
 
 // Oyun ekranının gördüğü bakiye, bahis, bedava tur ve jackpot bilgisi.
 function walletView(wallet: Record<string, any>) {
@@ -67,9 +78,13 @@ function walletView(wallet: Record<string, any>) {
     spins: wallet.spins ?? 0,
     // Bu oyunun kendi toplam kazancı: oyunlar birbirinden ayrı sayılır.
     total_won: wallet.total_won_elimin ?? 0,
-    // Jackpot barda biriken sandıklarla ve bahis kademesiyle yükselir.
+    // Sandık barı ve bar dolunca ödenecek birikim.
     chests,
-    jackpot: jackpotValue(chests, bet),
+    chest_value: chestValue(chests, bet),
+    // Jackpot havuzu sandıktan ayrıdır: kaybedilenler birikir, kazançlar düşürür.
+    jackpot: jackpotOf(wallet),
+    // Üç tavuktan gelen bedava turlar.
+    free_spins: wallet.elimin_free_spins ?? 0,
     // Satın alınan "15 çevirme hakkı" turu.
     session_spins: wallet.elimin_session_spins ?? 0,
     session_price: sessionPrice(bet),
@@ -109,12 +124,12 @@ export default async function (req: Request) {
       return Response.json({ ...walletView(updated), grid: null, wins: [], win: 0 });
     }
 
-    // Sandık barı dolunca sandığa basılır: biriken jackpot bakiyeye eklenir, bar sıfırlanır.
+    // Sandık barı dolunca sandığa basılır: barda biriken tutar bakiyeye eklenir, bar sıfırlanır.
     if (action === 'chest') {
       const bet = clampBet(body.bet, BET_LEVELS, wallet.bet ?? DEFAULT_BET);
       const chests = wallet.elimin_chests ?? 0;
       if (chests < CHEST_MAX) return Response.json({ error: 'Sandık barı henüz dolmadı.' }, { status: 400 });
-      const amount = jackpotValue(chests, bet);
+      const amount = chestValue(chests, bet);
       const updated = await base44.asServiceRole.entities.GameWallet.update(wallet.id, {
         coins: (wallet.coins ?? START_COINS) + amount,
         bet,
@@ -137,36 +152,46 @@ export default async function (req: Request) {
     if (action === 'spin') {
       const bet = clampBet(body.bet, BET_LEVELS, wallet.bet ?? DEFAULT_BET);
       const stake = bet * LINES;
-      // Çevirme hakkı varsa tur ücret almaz.
+      // Bedava tur ve satın alınan çevirme hakkı turları ücret almaz.
+      const freeTurns = wallet.elimin_free_spins ?? 0;
       const sessionTurns = wallet.elimin_session_spins ?? 0;
       const inSession = sessionTurns > 0;
-      const cost = inSession ? 0 : stake;
+      const isFree = freeTurns > 0 || inSession;
+      const cost = isFree ? 0 : stake;
       const coins = wallet.coins ?? START_COINS;
       if (coins < cost) return Response.json({ error: 'Yetersiz coin.' }, { status: 400 });
 
       const grid = spinElimin();
-      const result = evaluateFruit(grid, bet);
+      // Küme eşiği bu oyunda daha yüksektir: kazanç daha seyrek gelir.
+      const result = evaluateFruit(grid, bet, { clusterMin: ELIMIN_CLUSTER_MIN, tiers: ELIMIN_CLUSTER_TIERS });
       const total = result.total;
 
       // Sandıklar barda birikir, on sandıkta durur.
       const chestGain = countOf(grid, 'chest');
       const chests = Math.min(CHEST_MAX, (wallet.elimin_chests ?? 0) + chestGain);
-      // Zar dörtlüsü jackpotu patlatır: biriken tutarın yarısı ödenir, bar sıfırlanır.
-      const jackpot = jackpotValue(chests, bet);
+
+      // Zar dörtlüsü jackpot havuzunu patlatır: havuzun yarısı ödenir.
+      const pool = jackpotOf(wallet);
       const jackpotTrigger = countOf(grid, 'dice') >= DICE_MIN;
-      const jackpotWin = jackpotTrigger ? Math.floor(jackpot / 2) : 0;
-      const chestsLeft = jackpotTrigger ? 0 : chests;
+      const jackpotWin = jackpotTrigger ? Math.floor(pool / 2) : 0;
+
+      // Üç tavuk üç bedava tur verir; bedava turlar sırayla çevrilir.
+      const freeTrigger = countOf(grid, 'chicken') >= CHICKEN_MIN;
+      const freeLeft = Math.max(0, freeTurns - (inSession ? 0 : isFree ? 1 : 0)) + (freeTrigger ? FREE_SPINS : 0);
 
       const sessionLeft = Math.max(0, sessionTurns - (inSession ? 1 : 0));
 
       const payout = total + jackpotWin;
+      // Jackpot havuzu: kaybedilen tur birikir, kazanan tur düşürür.
+      const jackpot = Math.max(JACKPOT_BASE, pool + cost - payout);
       const bigWin = stake > 0 && total >= stake * BIG_WIN_MULTIPLE;
 
       const updated = await base44.asServiceRole.entities.GameWallet.update(wallet.id, {
         coins: coins - cost + payout,
         bet,
-        elimin_free_spins: 0,
-        elimin_chests: chestsLeft,
+        elimin_free_spins: freeLeft,
+        elimin_chests: chests,
+        elimin_jackpot: jackpot,
         elimin_session_spins: sessionLeft,
         spins: (wallet.spins ?? 0) + 1,
         total_won: (wallet.total_won ?? 0) + payout,
@@ -184,9 +209,10 @@ export default async function (req: Request) {
         win: total,
         cost,
         chest_gain: chestGain,
+        free_trigger: freeTrigger,
+        free_gain: freeTrigger ? FREE_SPINS : 0,
         jackpot_trigger: jackpotTrigger,
         jackpot_win: jackpotWin,
-        jackpot_paid: jackpot,
         big_win: bigWin ? total : 0,
       });
     }

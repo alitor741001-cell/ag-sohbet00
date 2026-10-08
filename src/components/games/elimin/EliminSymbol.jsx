@@ -7,8 +7,14 @@ export default function EliminSymbol({ id, win }) {
   const symbol = ELIMIN_SYMBOLS[id];
   if (!symbol) return null;
 
-  // Ek nesnelerin kendi parıltısı ve rozeti vardır: zar ve sandık.
-  const tone = symbol.jackpot ? 'el-sym-dice' : symbol.chest ? 'el-sym-chest' : '';
+  // Ek nesnelerin kendi parıltısı ve rozeti vardır: zar, sandık ve tavuk.
+  const tone = symbol.jackpot
+    ? 'el-sym-dice'
+    : symbol.chest
+      ? 'el-sym-chest'
+      : symbol.free
+        ? 'el-sym-chicken'
+        : '';
 
   return (
     <span className={`el-sym ${symbol.scatter ? 'el-sym-scatter' : ''} ${tone} ${win ? 'el-sym-win' : ''}`}>

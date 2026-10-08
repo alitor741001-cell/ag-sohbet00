@@ -5,15 +5,22 @@ import useBackDismiss from '@/hooks/useBackDismiss';
 import {
   ART_SIZE,
   CHEST_MAX,
+  CHICKEN_MIN,
+  CLUSTER_MIN,
   DICE_MIN,
   ELIMIN_SYMBOLS,
+  FREE_SPINS,
   JACKPOT_PER_CHEST,
   LINES,
   formatCoins,
 } from './eliminConfig';
 
 // Ödeme sütun başlıkları: küme büyüdükçe bahis katı artar.
-const HEADINGS = ['8-9', '10-11', '12+'];
+const HEADINGS = [
+  `${CLUSTER_MIN}-${CLUSTER_MIN + 1}`,
+  `${CLUSTER_MIN + 2}-${CLUSTER_MIN + 4}`,
+  `${CLUSTER_MIN + 5}+`,
+];
 
 /** Nasıl oynanır: küme kuralı, altın muz bonusu ve ödeme tablosu. */
 export default function EliminRulesSheet({ open, onClose }) {
@@ -32,14 +39,15 @@ export default function EliminRulesSheet({ open, onClose }) {
         </header>
 
         <ul className="el-rules">
-          <li>Aynı meyveden 8 ve üzeri gelince küme öder; yan yana olması gerekmez.</li>
+          <li>Aynı meyveden {CLUSTER_MIN} ve üzeri gelince küme öder; yan yana olması gerekmez.</li>
           <li>Toplam bahis = bahis x {LINES} satır.</li>
           <li>4 ve üzeri altın muz bonus öder.</li>
-          <li>Sandık geldikçe jackpot barında birikir; bar {CHEST_MAX} sandıkta dolar.</li>
-          <li>Bardaki her sandık jackpota bahsin {JACKPOT_PER_CHEST} katı ekler, tutar bahis kademesiyle yükselir.</li>
-          <li>Bar dolunca sandığa bas: biriken jackpot bakiyene eklenir, bar sıfırlanır.</li>
-          <li>{DICE_MIN} zar gelince jackpot patlar ve biriken tutarın yarısı ödenir.</li>
-          <li>Çevirme hakkı turları bahis almaz; SPIN ile elle çevrilir.</li>
+          <li>{CHICKEN_MIN} tavuk gelince {FREE_SPINS} bedava tur kazanılır; turlar sırayla çevrilir.</li>
+          <li>Sandık geldikçe sandık barında birikir; bar {CHEST_MAX} sandıkta dolar.</li>
+          <li>Bardaki her sandık bahsin {JACKPOT_PER_CHEST} katı kadar birikir; bar dolunca sandığa basıp topla.</li>
+          <li>Jackpot havuzu kaybedilen turlarda birikir, kazanan turlarda azalır.</li>
+          <li>{DICE_MIN} zar gelince jackpot patlar ve havuzun yarısı ödenir.</li>
+          <li>Çevirme hakkı ve bedava tur turları bahis almaz.</li>
         </ul>
 
         <div className="el-pay-head">
@@ -75,7 +83,7 @@ export default function EliminRulesSheet({ open, onClose }) {
           ))}
         </ul>
 
-        <p className="el-pay-note">Değerler bahis katıdır: 100 bahis 8-9 lolipop = 14.400 coin.</p>
+        <p className="el-pay-note">Değerler bahis katıdır: 100 bahis 10-11 lolipop = 8.640 coin.</p>
       </div>
     </div>
   );

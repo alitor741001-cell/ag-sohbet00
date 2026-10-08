@@ -113,6 +113,7 @@ export default function EliminSlotGame({ onExit, onBack }) {
         <EliminJackpotBar
           jackpot={game.jackpot}
           chests={game.chests}
+          chestValue={game.chestValue}
           bet={game.bet}
           busy={game.spinning}
           onCollect={handleCollect}
@@ -136,8 +137,12 @@ export default function EliminSlotGame({ onExit, onBack }) {
           </div>
         </div>
 
-        {/* Tur durumu: çevirme hakkı sürerken kalan tur sayısı görünür. */}
-        <GameTurnBadge sessionSpins={game.sessionSpins} accent="border-[#ffd21f]/80 text-[#ffe9b8]" />
+        {/* Tur durumu: çevirme hakkı ve tavuktan gelen bedava turlar görünür. */}
+        <GameTurnBadge
+          sessionSpins={game.sessionSpins}
+          freeSpins={game.freeSpins}
+          accent="border-[#ffd21f]/80 text-[#ffe9b8]"
+        />
 
         <EliminHud
           coins={game.coins}

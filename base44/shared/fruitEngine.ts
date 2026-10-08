@@ -19,6 +19,9 @@ export const BIG_WIN_MULTIPLE = 10;
 // Küme ödemesi: ekranda en az bu kadar aynı sembol olunca öder.
 export const CLUSTER_MIN = 8;
 
+// Ödeme kademesi sınırları: küme büyüdükçe tablodaki bir üst sütun ödenir.
+export const CLUSTER_TIERS = [CLUSTER_MIN, CLUSTER_MIN + 2, CLUSTER_MIN + 4];
+
 // Altın muz: 4 ve üzeri gelince hem bonus öder hem bedava tur verir.
 export const SCATTER_ID = 'banana';
 export const SCATTER_MIN = 4;
@@ -64,14 +67,17 @@ export function spinFruit() {
   return grid;
 }
 
-function clusterTier(count, pays) {
-  if (count >= 12) return pays[2];
-  if (count >= 10) return pays[1];
+function clusterTier(count, pays, tiers) {
+  if (count >= tiers[2]) return pays[2];
+  if (count >= tiers[1]) return pays[1];
   return pays[0];
 }
 
 // Ekrandaki bütün eşleşmeler: kümeler ve skatter.
-export function evaluateFruit(grid, bet) {
+// options.clusterMin / options.tiers: oyun kendi zorluk ayarını geçebilir.
+export function evaluateFruit(grid, bet, options: Record<string, any> = {}) {
+  const clusterMin = options.clusterMin ?? CLUSTER_MIN;
+  const tiers = options.tiers ?? CLUSTER_TIERS;
   const wins = [];
   const counts = {};
   const cells = {};
@@ -87,8 +93,8 @@ export function evaluateFruit(grid, bet) {
 
   SYMBOLS.forEach((definition) => {
     const count = counts[definition.id] || 0;
-    if (count < CLUSTER_MIN) return;
-    const amount = Math.round(clusterTier(count, definition.pays) * bet * PAYOUT_RATE);
+    if (count < clusterMin) return;
+    const amount = Math.round(clusterTier(count, definition.pays, tiers) * bet * PAYOUT_RATE);
     total += amount;
     wins.push({ symbol: definition.id, count, amount, cells: cells[definition.id], scatter: false });
   });

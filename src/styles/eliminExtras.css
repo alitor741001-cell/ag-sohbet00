@@ -2,9 +2,11 @@
 
 /* Ek nesnelerin rozeti: kartın altında kısa etiket. */
 .el-sym-dice,
-.el-sym-chest { position: absolute; }
+.el-sym-chest,
+.el-sym-chicken { position: absolute; }
 .el-sym-dice::after,
-.el-sym-chest::after {
+.el-sym-chest::after,
+.el-sym-chicken::after {
   position: absolute;
   left: 50%;
   bottom: 2%;
@@ -32,6 +34,14 @@
   content: 'SANDIK';
   background: linear-gradient(180deg, #ffe9a3, #e08a14);
   color: #2a0c02;
+}
+
+/* Tavuk: üç tanesi bedava tur verir. */
+.el-sym-chicken { filter: drop-shadow(0 0 8px rgba(140, 255, 190, .9)); }
+.el-sym-chicken::after {
+  content: 'FREE';
+  background: linear-gradient(180deg, #d6ffe7, #12a45a);
+  color: #05230f;
 }
 
 /* Sandık kutusundaki değer ve toplama rozeti. */

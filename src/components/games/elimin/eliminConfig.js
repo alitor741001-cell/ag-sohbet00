@@ -9,11 +9,16 @@ export const ROWS = 5;
 export const LINES = 20;
 export const BET_LEVELS = [10, 20, 50, 100, 250, 500, 1000, 2500, 5000];
 export const SCATTER_ID = 'banana';
-// Zar: dört tanesi jackpotu patlatır, biriken jackpotun yarısını öder.
+// Zar: dört tanesi jackpot havuzunu patlatır, havuzun yarısını öder.
 export const DICE_MIN = 4;
-// Sandık: jackpot barında birikir; her sandık bahsin bu katı kadar değer ekler.
+// Tavuk: üç tanesi üç bedava tur verir.
+export const CHICKEN_MIN = 3;
+export const FREE_SPINS = 3;
+// Sandık: jackpot barında birikir; bardaki her sandık bahsin bu katı kadar değer taşır.
 export const CHEST_MAX = 10;
-export const JACKPOT_PER_CHEST = 100;
+export const JACKPOT_PER_CHEST = 20;
+// Kazanç seyrek gelsin: küme 10'da başlar (sunucudaki eşikle aynı).
+export const CLUSTER_MIN = 10;
 
 // pays: 8-9, 10-11 ve 12+ aynı meyve için bahis katı.
 export const ELIMIN_SYMBOLS = {
@@ -28,7 +33,9 @@ export const ELIMIN_SYMBOLS = {
   chicken: {
     name: 'Tavuk',
     art: ELIMIN_EXTRA_ART.chicken,
-    note: 'NADİR NESNE',
+    free: true,
+    tag: 'BEDAVA TUR',
+    note: `${CHICKEN_MIN} TAVUK = ${FREE_SPINS} BEDAVA TUR`,
   },
   dice: {
     name: 'Zar',
@@ -41,8 +48,8 @@ export const ELIMIN_SYMBOLS = {
     name: 'Sandık',
     art: ELIMIN_EXTRA_ART.chest,
     chest: true,
-    tag: 'JACKPOT BARI',
-    note: 'JACKPOT BARINDA BİRİKİR',
+    tag: 'SANDIK BARI',
+    note: `${CHEST_MAX} SANDIK DOLUNCA TOPLA`,
   },
 };
 

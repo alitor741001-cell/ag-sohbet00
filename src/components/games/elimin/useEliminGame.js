@@ -14,6 +14,10 @@ export default function useEliminGame() {
   const [bet, setBet] = useState(100);
   const [totalWon, setTotalWon] = useState(0);
   const [chests, setChests] = useState(0);
+  // Sandık barı dolduğunda ödenecek birikim: jackpot havuzundan ayrıdır.
+  const [chestValue, setChestValue] = useState(0);
+  // Tavuk üçlüsünden gelen bedava turlar.
+  const [freeSpins, setFreeSpins] = useState(0);
   const [jackpot, setJackpot] = useState(0);
   // Zar dörtlüsünden gelen jackpot kazancı: ayrı kutlama ekranı açar.
   const [jackpotWin, setJackpotWin] = useState(0);
@@ -79,6 +83,8 @@ export default function useEliminGame() {
     if (typeof data.coins === 'number') setCoins(data.coins);
     if (typeof data.total_won === 'number') setTotalWon(data.total_won);
     if (typeof data.chests === 'number') setChests(data.chests);
+    if (typeof data.chest_value === 'number') setChestValue(data.chest_value);
+    if (typeof data.free_spins === 'number') setFreeSpins(data.free_spins);
     if (typeof data.jackpot === 'number') setJackpot(data.jackpot);
     if (typeof data.session_spins === 'number') setSessionSpins(data.session_spins);
     if (typeof data.session_price === 'number') setSessionPrice(data.session_price);
@@ -104,9 +110,10 @@ export default function useEliminGame() {
   const spin = useCallback(async () => {
     if (busyRef.current || status !== 'ready') return;
     unlockAudio();
-    // Çevirme hakkı varsa tur ücret almaz.
+    // Bedava turlar ve çevirme hakkı turları ücret almaz.
     const inSession = sessionSpins > 0;
-    const cost = inSession ? 0 : bet * LINES;
+    const isFree = freeSpins > 0 || inSession;
+    const cost = isFree ? 0 : bet * LINES;
     if (coins < cost) {
       setAuto(false);
       setMessage('Yetersiz coin. Coin bakiyene dokunup coin yükle.');
@@ -148,12 +155,14 @@ export default function useEliminGame() {
       // Çevirme hakkı turunda büyük kazanç ekranı yerine tur sonundaki toplam gösterilir.
       setBigWin(inSession ? 0 : (data.big_win || 0));
       setJackpotWin(data.jackpot_win || 0);
+      // Üç tavuk gelince bedava turlar eklenir ve sırayla çevrilir.
+      if (data.free_trigger) setMessage(`TAVUK İKRAMİYESİ · ${data.free_gain || 3} BEDAVA TUR`);
       // Tur kazançları çevirme hakkı boyunca toplanır.
       if (inSession) {
         sessionWinRef.current += (data.win || 0) + (data.jackpot_win || 0);
         if ((data.session_spins ?? 0) <= 0) setSessionResult(sessionWinRef.current);
       }
-      if (data.big_win > 0 || data.jackpot_trigger) play('bigWin');
+      if (data.big_win > 0 || data.jackpot_trigger || data.free_trigger) play('bigWin');
       else if (data.win > 0) play('win');
     } catch (error) {
       const raw = error?.response?.data?.error;
@@ -167,7 +176,7 @@ export default function useEliminGame() {
       setSpinning(false);
       busyRef.current = false;
     }
-  }, [applyState, bet, coins, play, sessionSpins, status, wait]);
+  }, [applyState, bet, coins, freeSpins, play, sessionSpins, status, wait]);
 
   const saveBet = useCallback(async (next) => {
     setBet(next);
@@ -248,10 +257,10 @@ export default function useEliminGame() {
   // Otomatik tur: AUTO açıkken veya çevirme hakkı sürerken kendiliğinden devam eder.
   useEffect(() => {
     if (spinning || status !== 'ready') return undefined;
-    if (!auto && sessionSpins <= 0) return undefined;
+    if (!auto && sessionSpins <= 0 && freeSpins <= 0) return undefined;
     const timer = window.setTimeout(() => { spin(); }, 800);
     return () => window.clearTimeout(timer);
-  }, [auto, sessionSpins, spin, spinning, status]);
+  }, [auto, freeSpins, sessionSpins, spin, spinning, status]);
 
   return {
     status,
@@ -261,6 +270,8 @@ export default function useEliminGame() {
     jackpot,
     jackpotWin,
     chests,
+    chestValue,
+    freeSpins,
     spins,
     spinning,
     stopping,
