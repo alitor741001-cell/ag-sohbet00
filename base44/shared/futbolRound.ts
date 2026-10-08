@@ -4,7 +4,8 @@
 // "0.95 / çarpan" olduğu için her seçimin beklenen getirisi aynıdır: kasa payı sabit.
 
 export const BET_MS = 20000;   // seçim süresi
-export const DRAW_MS = 8000;   // çekiliş animasyonu
+export const DRAW_MS = 8000;   // çekiliş animasyonu (ibre süresi)
+export const RESULT_MS = 3000; // kazanan ekranda kalır, sonra yeni tur açılır
 const ROUND_BASE = 886000;     // tur numarası referanstaki gibi büyük başlar
 const HISTORY_KEEP = 40;
 export const HISTORY_SHOW = 12;
@@ -107,7 +108,10 @@ export async function ensureRound(base44: any) {
     });
   }
 
-  // Çekiliş bitti: tur geçmişe işlenir ve yeni tur açılır.
+  // Çekiliş bitti: kazanan birkaç saniye daha ekranda kalır.
+  if (due + RESULT_MS > Date.now()) return record;
+
+  // Süre doldu: tur geçmişe işlenir ve yeni tur açılır.
   const history = [
     ...(record.history || []),
     { round_no: record.round_no, winner_id: record.winner_id },

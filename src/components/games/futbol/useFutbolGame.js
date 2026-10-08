@@ -5,6 +5,8 @@ import { sekerliSound as gameSound, unlockAudio } from '@/lib/sekerliAudio';
 // Tur durumu üç saniyede bir tazelenir; geri sayım yerel saatle akar.
 const POLL_MS = 3000;
 const CLOCK_MS = 250;
+// Çekiliş bittikten sonra kazanan bu kadar ekranda kalır (sunucudaki RESULT_MS ile aynı).
+const HOLD_MS = 3000;
 
 /**
  * ALTIN GOL oyun durumu. Tur ortaktır: bütün oyuncular aynı turu oynar, tek bir
@@ -106,6 +108,20 @@ export default function useFutbolGame() {
     const timer = window.setInterval(render, CLOCK_MS);
     return () => window.clearInterval(timer);
   }, [phaseEnd]);
+
+  // Faz süresi dolduğu an tur ilerletilir: seçim bitince ibre beklemeden döner,
+  // çekiliş bitince kazanan üç saniye daha ekranda kalır ve yeni tur ondan sonra açılır.
+  const phase = round?.status || '';
+  const over = !!phase && left <= 0;
+  useEffect(() => {
+    if (!over || (phase !== 'betting' && phase !== 'drawing')) return undefined;
+    const timer = window.setTimeout(() => {
+      send({ action: 'state' })
+        .then((data) => { if (mountedRef.current) applyView(data); })
+        .catch(() => null);
+    }, phase === 'drawing' ? HOLD_MS + 250 : 0);
+    return () => window.clearTimeout(timer);
+  }, [over, phase, send, applyView]);
 
   const invoke = useCallback(async (payload) => {
     try {
