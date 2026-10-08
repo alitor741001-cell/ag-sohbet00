@@ -21,6 +21,8 @@ const frame = (x, y, w, h) => ({
 // Makara alanı — görselin makara panelinin tamamını kapatır, semboller burada kayar.
 export const SLOT_LAYOUT = {
   reelWindow: frame(25, 435, 968, 670),
+  // Makaraların altını üstteki kabin kenarı gibi kapatan alt kapak.
+  reelSill: frame(25, 1105, 968, ART_VIEW_HEIGHT - 1105),
 };
 
 // Makara ızgarası: 5 sütun x 3 satır sembol hücresi.
