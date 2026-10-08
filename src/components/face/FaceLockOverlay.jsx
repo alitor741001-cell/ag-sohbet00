@@ -22,31 +22,43 @@ const BLINK_STEPS = [
   { key: 'eyes_closed', label: 'Kapat', hint: 'Gözlerinizi kapatın ve kısa süre kapalı tutun', ms: 3000, at: 2100 },
   { key: 'eyes_open', label: 'Aç', hint: 'Gözlerinizi açın', ms: 2200, at: 1000 },
 ];
-// Kayıtta referans yüz için düz bakan fotoğraf alınır.
-const FRONT_STEP = { key: 'front', label: 'Ön', hint: 'Kameraya düz bakın', ms: 3000, at: 1800 };
-const VERIFY_STEPS = [...HEAD_STEPS, ...BLINK_STEPS];
-const ENROLL_STEPS = [FRONT_STEP, ...VERIFY_STEPS];
+// Ağız aç/kapa: dudaklar açıkken ve kapalıyken birer kare alınır.
+const MOUTH_STEPS = [
+  { key: 'mouth_open', label: 'Ağız aç', hint: 'Ağzınızı açın ve kısa süre açık tutun', ms: 3000, at: 2100 },
+  { key: 'mouth_closed', label: 'Ağız kapa', hint: 'Ağzınızı kapatın', ms: 2200, at: 1000 },
+];
+// İlk adım her zaman düz bakış: doğrulama düz duruşla başlar.
+const FRONT_STEP = { key: 'front', label: 'Düz', hint: 'Kameraya düz bakın', ms: 3000, at: 1800 };
+// Sıra: düz bakış, dört kafa yönü, göz kırpma, ağız aç/kapa. Bu adımlardan biri
+// yapılmazsa doğrulama tamamlanmaz.
+const VERIFY_STEPS = [FRONT_STEP, ...HEAD_STEPS, ...BLINK_STEPS, ...MOUTH_STEPS];
+const ENROLL_STEPS = VERIFY_STEPS;
+// Çemberin adımlarla dönen renkleri: kırmızı, sarı, yeşil, pembe.
+const RING_COLORS = ['#ef4444', '#eab308', '#22c55e', '#ec4899'];
 const STEP_NAMES = {
+  front: 'düz bakma',
   up: 'yukarı bakma',
   down: 'aşağı bakma',
   right: 'sağa bakma',
   left: 'sola bakma',
   eyes_closed: 'gözlerinizi kapatma',
   eyes_open: 'gözlerinizi açma',
+  mouth_open: 'ağzınızı açma',
+  mouth_closed: 'ağzınızı kapatma',
 };
 
 const COPY = {
   enroll: {
     title: 'Yüz kaydı oluştur',
-    hint: 'Hesabınıza bir kez yüz kaydı alınır. Ekrandaki yönergelerle kafanızı çevirin ve gözlerinizi kırpın.',
+    hint: 'Hesabınıza bir kez yüz kaydı alınır. Kameraya düz bakın, yönergelerle kafanızı çevirin, gözlerinizi kırpın ve ağzınızı açıp kapatın.',
   },
   device: {
     title: 'Yüz doğrulaması',
-    hint: 'Hesabınıza bu cihazdan ilk kez giriş yapılıyor. Ekrandaki yönergelerle kafanızı çevirin ve gözlerinizi kırpın.',
+    hint: 'Hesabınıza bu cihazdan ilk kez giriş yapılıyor. Kameraya düz bakın, yönergelerle kafanızı çevirin, gözlerinizi kırpın ve ağzınızı açıp kapatın.',
   },
   balance: {
     title: 'Bakiye doğrulaması',
-    hint: 'Elmas ve bakiye bölümü yüz doğrulamasıyla korunur. Ekrandaki yönergelerle kafanızı çevirin ve gözlerinizi kırpın.',
+    hint: 'Elmas ve bakiye bölümü yüz doğrulamasıyla korunur. Kameraya düz bakın, yönergelerle kafanızı çevirin, gözlerinizi kırpın ve ağzınızı açıp kapatın.',
   },
 };
 
@@ -261,6 +273,7 @@ export default function FaceLockOverlay({
               phase={phase}
               rejected={rejected && phase === 'scanning'}
               progress={progress}
+              color={RING_COLORS[Math.min(stepIndex, steps.length - 1) % RING_COLORS.length]}
               videoRef={videoRef}
               cameraReady={cameraReady}
               cameraError={cameraError}

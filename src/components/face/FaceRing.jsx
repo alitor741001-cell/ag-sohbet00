@@ -1,8 +1,9 @@
 import { Check, Loader2, TriangleAlert, X } from 'lucide-react';
 
 // iPhone Face ID halkası: kameranın çevresinde dolan çember.
-// Tarama altın, doğrulandı yeşil, eşleşmedi kırmızı.
-// Halka tarama boyunca yeşil dolar; yüz tam görünmezse ya da eşleşmezse kırmızıya döner.
+// Tarama boyunca halka ve çemberin içi kırmızı, sarı, yeşil ve pembe renklerde parlar;
+// doğrulandığında yeşil, eşleşmediğinde kırmızı olur.
+// Halka tarama boyunca dolar; yüz tam görünmezse ya da eşleşmezse kırmızıya döner.
 const TONE = {
   scanning: '#22c55e',
   verifying: '#22c55e',
@@ -13,8 +14,9 @@ const TONE = {
 const RADIUS = 56;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
-export default function FaceRing({ phase = 'scanning', rejected = false, progress = 0, videoRef, cameraReady, cameraError, onStart }) {
-  const tone = rejected ? TONE.fail : TONE[phase] || TONE.scanning;
+export default function FaceRing({ phase = 'scanning', rejected = false, progress = 0, color, videoRef, cameraReady, cameraError, onStart }) {
+  // Adım rengi tarama boyunca halkayı renklendirir: kırmızı, sarı, yeşil, pembe.
+  const tone = rejected ? TONE.fail : (phase === 'scanning' && color) || TONE[phase] || TONE.scanning;
   const shown = phase === 'ok' ? 1 : progress;
   return (
     <div className="relative mx-auto mt-4 h-[228px] w-[228px]" onPointerDown={onStart}>
@@ -42,6 +44,8 @@ export default function FaceRing({ phase = 'scanning', rejected = false, progres
           className="h-full w-full scale-x-[-1] object-cover"
           style={{ clipPath: 'circle(50% at 50% 50%)', borderRadius: '9999px' }}
         />
+        {/* Tarama sırasında çemberin içi kırmızı-sarı-yeşil-pembe sırayla yanar. */}
+        {phase === 'scanning' && <span className="face-ring-colors pointer-events-none absolute inset-0 rounded-full" aria-hidden="true" />}
         {phase === 'scanning' && cameraReady && (
           <span className="pointer-events-none absolute inset-x-0 bottom-2 mx-auto w-fit rounded-full bg-black/70 px-2.5 py-0.5 text-[11px] font-black text-white">
             {Math.round(progress * 100)}%

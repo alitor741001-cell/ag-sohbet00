@@ -8,8 +8,8 @@ import { base44 } from '@/api/base44Client';
  * karşılaştırma anında geçici imzalı bağlantı üretir.
  */
 const DEVICE_PREFIX = 'filmkeyfi_device_';
-// Canlılık adımları: sunucu bu sırayla bekler — dört kafa yönü ve göz kırpma.
-const SHOT_KEYS = ['up', 'down', 'right', 'left', 'eyes_closed', 'eyes_open'];
+// Canlılık adımları: sunucu bu sırayla bekler — dört kafa yönü, göz kırpma ve ağız aç/kapa.
+const SHOT_KEYS = ['up', 'down', 'right', 'left', 'eyes_closed', 'eyes_open', 'mouth_open', 'mouth_closed'];
 
 export function deviceId(userId) {
   const key = DEVICE_PREFIX + (userId || 'misafir');
