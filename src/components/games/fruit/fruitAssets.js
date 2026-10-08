@@ -8,7 +8,8 @@ export const FRUIT_COVER_HEIGHT = 1024;
 
 // Sembol kartları: her meyve kendi kartında, ortada ve bol kenar boşluklu.
 export const FRUIT_ART = {
-  lollipop: `${MEDIA_BASE}/92259cc9f_generated_image.png`,
+  // Lolipop kartının yerini alan portakal sembolü (referans görselden üretildi).
+  lollipop: `${MEDIA_BASE}/e1a05bbe7_generated_image.png`,
   plum: `${MEDIA_BASE}/fcf725055_generated_image.png`,
   grapes: `${MEDIA_BASE}/14b11f475_generated_image.png`,
   melon: `${MEDIA_BASE}/f8c19f24e_generated_image.png`,

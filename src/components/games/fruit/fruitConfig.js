@@ -7,7 +7,7 @@ export const FRUIT_BET_LEVELS = [10, 20, 50, 100, 250, 500, 1000, 2500, 5000];
 export const FRUIT_CLUSTER_MIN = 8;
 
 export const FRUIT_SYMBOLS = {
-  lollipop: { name: 'Lolipop', art: FRUIT_ART.lollipop },
+  lollipop: { name: 'Portakal', art: FRUIT_ART.lollipop },
   plum: { name: 'Yaban Mersini', art: FRUIT_ART.plum },
   grapes: { name: 'Üzüm', art: FRUIT_ART.grapes },
   melon: { name: 'Karpuz', art: FRUIT_ART.melon },

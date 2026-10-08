@@ -51,7 +51,7 @@ const FRUIT_LEGEND = {
   headings: ['8-9', '10-11', '12+'],
   note: 'Değerler bahis katıdır; küme ekranın her yerinde sayılır, yan yana olması gerekmez.',
   rows: [
-    { art: FRUIT_SYMBOLS.lollipop.art, name: 'Lolipop', desc: 'En yüksek ödemeli meyve.', pays: [144, 450, 1440] },
+    { art: FRUIT_SYMBOLS.lollipop.art, name: 'Portakal', desc: 'En yüksek ödemeli meyve.', pays: [144, 450, 1440] },
     { art: FRUIT_SYMBOLS.plum.art, name: 'Yaban Mersini', pays: [90, 270, 900] },
     { art: FRUIT_SYMBOLS.grapes.art, name: 'Üzüm', pays: [72, 216, 630] },
     { art: FRUIT_SYMBOLS.melon.art, name: 'Karpuz', pays: [54, 162, 450] },
