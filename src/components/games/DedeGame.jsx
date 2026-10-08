@@ -14,6 +14,7 @@ import GameSpinButton from './controls/GameSpinButton';
 import GameTurnBadge from './controls/GameTurnBadge';
 import DedeWinOverlay from './dede/DedeWinOverlay';
 import DedeMultiplierBar from './dede/DedeMultiplierBar';
+import DedeOrbMerge from './dede/DedeOrbMerge';
 import { DEDE_DEITY } from './dede/dedeAssets';
 import { DEDE_LINES, formatCoins } from './dede/dedeConfig';
 
@@ -100,15 +101,24 @@ export default function DedeGame({ onExit, onBack }) {
         {/* Izgara ekranın kalan tüm alanını kaplar: madalyonlar olabildiğince büyük durur. */}
         <div className="flex min-h-0 w-full flex-1 items-center justify-center">
           <div className="dede-frame flex aspect-[6/5] max-h-full w-full max-w-[34rem] p-2 sm:p-3">
-            <DedeReels
-              rolling={game.rolling}
-              landing={game.landing}
-              spinKey={game.spinKey}
-              grid={game.grid}
-              wins={game.wins}
-              orbs={game.orbs}
-              explode={game.explode}
-            />
+            <div className="relative flex min-h-0 w-full">
+              <DedeReels
+                rolling={game.rolling}
+                landing={game.landing}
+                spinKey={game.spinKey}
+                grid={game.grid}
+                wins={game.wins}
+                orbs={game.orbs}
+                explode={game.explode}
+              />
+              {/* İnen çarpan küreleri ızgaranın ortasında birleşip patlar. */}
+              <DedeOrbMerge
+                orbs={game.orbs}
+                multiplier={game.multiplier}
+                grid={game.grid}
+                explode={game.explode}
+              />
+            </div>
           </div>
         </div>
 
