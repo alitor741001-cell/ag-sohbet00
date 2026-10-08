@@ -1,9 +1,10 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Gamepad2, Play, X } from 'lucide-react';
 import { Image } from '@/components/ui/image';
-import { GAMES, ROCKET_ID } from './gameCatalog';
+import { FRUIT_ID, GAMES, ROCKET_ID } from './gameCatalog';
 import SlotGame from './SlotGame';
 import CrashRocketGame from './CrashRocketGame';
+import FruitGame from './FruitGame';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { broadcasterState } from '@/lib/broadcaster';
 import useBackDismiss from '@/hooks/useBackDismiss';
@@ -124,6 +125,8 @@ export default function GamePanel({ open, onClose, roomId, initialGame = null })
           <div className={`game-layer bg-slot ${phase === 'opening' ? 'game-zoom-in' : phase === 'closing' ? 'game-zoom-out' : ''}`}>
             {selected === ROCKET_ID ? (
               <CrashRocketGame onExit={onClose} onBack={closeGame} />
+            ) : selected === FRUIT_ID ? (
+              <FruitGame onExit={onClose} onBack={closeGame} />
             ) : (
               <SlotGame onExit={onClose} onBack={closeGame} roomId={roomId} />
             )}

@@ -1,12 +1,9 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import { LINES, BET_LEVELS, BIG_WIN_MULTIPLE, spinReels, evaluateGrid } from '../../shared/slotEngine.ts';
+import { DEFAULT_BET, START_COINS, clampBet, loadWallet, nearestBet } from '../../shared/gameWallet.ts';
 
-const START_COINS = 100000;
-// Yönetici bakiyesi: 500 bin coin. Sınırsız (∞) mod yok.
-const ADMIN_COINS = 500000;
 // Bu tutar ve üzeri kazançlar büyük kazanç tablosuna girer.
 const BIG_WIN_TABLE_MIN = 20000;
-const DEFAULT_BET = 100;
 // Jackpot: ekranda 5 jackpot sembolü geldiğinde bahsin 120 katı ödenir.
 const JACKPOT_SYMBOLS = 5;
 const JACKPOT_MULTIPLE = 120;
@@ -38,10 +35,6 @@ function poolValues(wallet) {
 function jackpotTotal(pools) {
   return POOL_KEYS.reduce((sum, key) => sum + pools[key], 0);
 }
-// Bakiye gerçek: bahis bakiyeden düşer, kazanç eklenir; "sınırsız" mod yoktur.
-// Eski sürümden kalan devasa bakiyeler bu sınırın üzerindeyse normale çekilir.
-const LEGACY_MAX_COINS = 1000000000;
-
 function walletView(wallet, isAdmin = false) {
   const pools = poolValues(wallet);
   const jackpot = jackpotTotal(pools);
@@ -49,7 +42,7 @@ function walletView(wallet, isAdmin = false) {
     coins: wallet.coins ?? START_COINS,
     unlimited: false,
     no_limit: false,
-    bet: nearestBet(wallet.bet ?? DEFAULT_BET),
+    bet: nearestBet(wallet.bet ?? DEFAULT_BET, BET_LEVELS),
     lines: LINES,
     spins: wallet.spins ?? 0,
     grand: jackpot,
@@ -58,46 +51,7 @@ function walletView(wallet, isAdmin = false) {
   };
 }
 
-// Bahis yalnızca tanımlı kademelerden biri olabilir: en yakın kademeye oturtulur.
-function nearestBet(value) {
-  const numeric = Math.round(Number(value));
-  if (!Number.isFinite(numeric) || numeric <= 0) return DEFAULT_BET;
-  return BET_LEVELS.reduce((best, level) => (
-    Math.abs(level - numeric) < Math.abs(best - numeric) ? level : best
-  ), BET_LEVELS[0]);
-}
-
-function clampBet(value, fallback) {
-  const numeric = Math.round(Number(value));
-  if (!Number.isFinite(numeric) || numeric <= 0) return fallback;
-  return nearestBet(numeric);
-}
-
-async function loadWallet(base44, user) {
-  const found = await base44.asServiceRole.entities.GameWallet.filter({ user_id: user.id }, '-created_date', 1);
-  const isAdmin = user.role === 'admin';
-  // Bakiye gerçek: harcadıkça azalır, kazandıkça çoğalır; otomatik tamamlama yok.
-  if (found[0]) {
-    // Eski "sınırsız" bakiyeler tek seferde normale çekilir: yönetici 500 bin.
-    if ((found[0].coins ?? 0) > LEGACY_MAX_COINS) {
-      return base44.asServiceRole.entities.GameWallet.update(found[0].id, {
-        coins: isAdmin ? ADMIN_COINS : START_COINS,
-      });
-    }
-    return found[0];
-  }
-  return base44.asServiceRole.entities.GameWallet.create({
-    user_id: user.id,
-    user_name: user.full_name || '',
-    coins: isAdmin ? ADMIN_COINS : START_COINS,
-    admin_granted: isAdmin,
-    bet: DEFAULT_BET,
-    lines: LINES,
-    spins: 0,
-    grand: 0,
-    total_won: 0,
-  });
-}
+// Bahis kademesi ve cüzdan yükleme paylaşılan modülden gelir: shared/gameWallet.ts
 
 // Büyük ödülü oda sohbetine duyurur (tutar sunucuda hesaplanır).
 async function announceBigWin(base44, user, roomId, amount, name) {
@@ -194,13 +148,13 @@ export default async function (req) {
     }
 
     if (action === 'bet') {
-      const bet = clampBet(body.bet, wallet.bet ?? DEFAULT_BET);
+      const bet = clampBet(body.bet, BET_LEVELS, wallet.bet ?? DEFAULT_BET);
       const updated = await base44.asServiceRole.entities.GameWallet.update(wallet.id, { bet });
       return Response.json({ ...walletView(updated, isAdmin), grid: null, wins: [], win: 0 });
     }
 
     if (action === 'spin') {
-      const bet = clampBet(body.bet, wallet.bet ?? DEFAULT_BET);
+      const bet = clampBet(body.bet, BET_LEVELS, wallet.bet ?? DEFAULT_BET);
       const stake = bet * LINES;
       // Ücretsiz çevirme hakkı varsa tur bedava oynanır.
       const isFree = (wallet.free_spins ?? 0) > 0;
