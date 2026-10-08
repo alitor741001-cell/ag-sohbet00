@@ -80,41 +80,49 @@
 }
 
 /* --- saha: kartlar kemer biçiminde, kale ortada --- */
-.fut-pitch { position: relative; display: flex; flex-direction: column; gap: .35rem; }
-.fut-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; justify-items: center; align-items: center; }
-.fut-row-a { padding: 0 13%; }
-.fut-row-b { padding: 0 2%; }
-.fut-row-c { padding: 0 15%; }
-.fut-row-d { padding: 0 9%; }
-
-.fut-band {
+.fut-pitch { position: relative; }
+/* Çember saha: sekiz takım yörüngenin üstünde dizilir, ibre göbeğin ortasından döner. */
+.fut-ring {
   position: relative;
+  width: min(100%, 25rem);
+  margin: 0 auto;
+  aspect-ratio: 1 / 1;
+}
+.fut-track {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  height: 76%;
+  width: 76%;
+  translate: -50% -50%;
+  border-radius: 50%;
+  border: 2px dashed rgba(116,228,162,.45);
+  box-shadow: inset 0 0 46px rgba(116,228,162,.12);
+}
+
+/* Göbek: geri sayım çemberin ortasında durur. */
+.fut-hub {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  z-index: 3;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: center;
   gap: .3rem;
-  min-height: 5.4rem;
-  padding-top: .2rem;
+  width: 56%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 50%, rgba(3,14,7,.94), rgba(3,14,7,.6) 60%, transparent 74%);
+  padding: 6%;
+  text-align: center;
 }
-/* Kale: bandın üstüne uzanan file ve direkler. */
-.fut-net {
-  position: absolute;
-  left: 50%;
-  bottom: 1.4rem;
-  transform: translateX(-50%);
-  width: 62%;
-  height: 8.4rem;
-  z-index: 0;
-  opacity: .55;
-  border: 3px solid rgba(255,255,255,.7);
-  border-bottom: none;
-  border-radius: 10px 10px 0 0;
-  background-image:
-    repeating-linear-gradient(90deg, rgba(255,255,255,.3) 0 1px, transparent 1px 10px),
-    repeating-linear-gradient(0deg, rgba(255,255,255,.3) 0 1px, transparent 1px 10px);
-  clip-path: polygon(4% 0, 96% 0, 100% 100%, 0 100%);
-}
+.fut-hub .fut-select { gap: .3rem; }
+.fut-hub .fut-select-pill { padding: .3rem .7rem; font-size: .68rem; }
+.fut-hub .fut-select-clock { font-size: .78rem; }
+.fut-hub .fut-progress { width: 100%; }
 
 .fut-select { display: flex; flex-direction: column; align-items: center; gap: .25rem; z-index: 2; }
 .fut-select-pill {
@@ -173,15 +181,15 @@
 /* --- takım kartları: nane ışıltılı kenar --- */
 /* Takım kartları yuvarlaktır: arma, isim ve popülerlik barı dairenin içine ortalanır. */
 .fut-card {
-  position: relative;
+  position: absolute;
+  translate: -50% -50%;
   z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: .1rem;
-  width: 100%;
-  max-width: 6rem;
+  width: 5.6rem;
   aspect-ratio: 1;
   border-radius: 50%;
   border: 2px solid rgba(116,228,162,.7);
@@ -190,10 +198,10 @@
   box-shadow: 0 0 12px rgba(116,228,162,.22), 0 10px 20px -14px rgba(0,0,0,.95);
   transition: transform .16s, box-shadow .2s, border-color .2s;
 }
-.fut-card-big { max-width: 6rem; }
-.fut-card-mid { max-width: 5.6rem; }
-.fut-card-small { max-width: 5.2rem; }
-.fut-card-tiny { max-width: 5rem; }
+.fut-card-big { width: 5.4rem; }
+.fut-card-mid { width: 5.1rem; }
+.fut-card-small { width: 4.8rem; }
+.fut-card-tiny { width: 4.6rem; }
 .fut-card:active { transform: scale(.98); }
 .fut-card-on {
   border-color: #dcfff0;
@@ -207,10 +215,10 @@
 .fut-card-lock { opacity: .42; filter: grayscale(.65); }
 .fut-crest-wrap { display: flex; align-items: center; justify-content: center; }
 .fut-crest { filter: drop-shadow(0 4px 8px rgba(0,0,0,.7)); }
-.fut-card-big .fut-crest { height: 3rem; width: 3rem; }
-.fut-card-mid .fut-crest { height: 2.8rem; width: 2.8rem; }
-.fut-card-small .fut-crest { height: 2.6rem; width: 2.6rem; }
-.fut-card-tiny .fut-crest { height: 2.4rem; width: 2.4rem; }
+.fut-card-big .fut-crest { height: 2.8rem; width: 2.8rem; }
+.fut-card-mid .fut-crest { height: 2.6rem; width: 2.6rem; }
+.fut-card-small .fut-crest { height: 2.4rem; width: 2.4rem; }
+.fut-card-tiny .fut-crest { height: 2.3rem; width: 2.3rem; }
 .fut-card-foot { display: flex; align-items: baseline; justify-content: center; gap: .3rem; width: 100%; }
 .fut-card-name {
   min-width: 0;
@@ -277,22 +285,40 @@
   border: 1px solid rgba(255,255,255,.3);
 }
 
-/* --- çekiliş karesi --- */
-.fut-square {
+/* --- çekiliş ibresi: göbeğin ortasından döner, ucunda ışıklı top durur --- */
+.fut-needle {
   position: absolute;
-  z-index: 6;
-  border-radius: 18%;
-  border: 3px solid var(--fut-mint);
-  background: rgba(116,228,162,.14);
-  box-shadow: 0 0 20px rgba(116,228,162,.9), inset 0 0 16px rgba(116,228,162,.45);
+  left: 50%;
+  bottom: 50%;
+  z-index: 4;
+  width: .28rem;
+  height: 38%;
+  border-radius: 9999px;
+  transform-origin: 50% 100%;
+  background: linear-gradient(180deg, #fff, rgba(214,255,230,.6) 46%, rgba(116,228,162,0));
+  box-shadow: 0 0 14px rgba(116,228,162,.75);
   pointer-events: none;
-  will-change: left, top, width, height, transform;
+  will-change: transform;
 }
-.fut-square-done {
-  border-color: #fff6d0;
-  background: rgba(242,206,107,.18);
-  box-shadow: 0 0 30px rgba(242,206,107,.95), inset 0 0 20px rgba(242,206,107,.5);
-  animation: fut-square-pulse .55s ease-in-out infinite alternate;
+.fut-needle::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: -.45rem;
+  translate: -50% 0;
+  height: .85rem;
+  width: .85rem;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 40% 32%, #fff, #74e4a2 62%, #1f7a48);
+  box-shadow: 0 0 16px rgba(116,228,162,.95);
+}
+.fut-needle-done {
+  background: linear-gradient(180deg, #fff6d0, rgba(255,233,168,.55) 46%, rgba(242,206,107,0));
+  box-shadow: 0 0 18px rgba(242,206,107,.85);
+}
+.fut-needle-done::after {
+  background: radial-gradient(circle at 40% 32%, #fffdf2, #f2ce6b 62%, #8a6414);
+  box-shadow: 0 0 18px rgba(242,206,107,.95);
 }
 
 /* --- açıklama satırı --- */
@@ -504,25 +530,20 @@
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
 }
-@keyframes fut-square-pulse {
-  from { opacity: .75; }
-  to { opacity: 1; }
-}
 
 @media (min-width: 640px) {
-  .fut-card-big { max-width: 7rem; }
-  .fut-card-mid { max-width: 6.6rem; }
-  .fut-card-small { max-width: 6.2rem; }
-  .fut-card-tiny { max-width: 6rem; }
-  .fut-card-big .fut-crest { height: 3.6rem; width: 3.6rem; }
-  .fut-card-mid .fut-crest { height: 3.4rem; width: 3.4rem; }
-  .fut-card-small .fut-crest { height: 3.1rem; width: 3.1rem; }
+  .fut-card-big { width: 6.4rem; }
+  .fut-card-mid { width: 6.1rem; }
+  .fut-card-small { width: 5.8rem; }
+  .fut-card-tiny { width: 5.6rem; }
+  .fut-card-big .fut-crest { height: 3.3rem; width: 3.3rem; }
+  .fut-card-mid .fut-crest { height: 3.1rem; width: 3.1rem; }
+  .fut-card-small .fut-crest { height: 3rem; width: 3rem; }
   .fut-card-tiny .fut-crest { height: 2.9rem; width: 2.9rem; }
   .fut-title { font-size: 1.05rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .fut-overlay-card, .fut-sheet-body { animation: none; }
-  .fut-square-done { animation: none; }
   .fut-progress-fill { transition: none; }
 }

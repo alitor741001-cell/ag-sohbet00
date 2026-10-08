@@ -5,7 +5,7 @@ import { FUTBOL_CREST_SIZE } from './futbolAssets';
 import { compactCoins } from './futbolConfig';
 
 /** Takım kartı: arma, altta çarpan, mavi popülerlik barı ve kendi bahsim. */
-function FutbolTeamCard({ team, stats, selected, landed, share, onSelect }) {
+function FutbolTeamCard({ team, stats, selected, landed, share, onSelect, style }) {
   const open = stats?.open !== false;
   const pot = stats?.pot ?? 0;
   const mine = stats?.mine ?? 0;
@@ -18,6 +18,7 @@ function FutbolTeamCard({ team, stats, selected, landed, share, onSelect }) {
       data-team-card={team.id}
       onClick={() => onSelect(team)}
       aria-pressed={selected}
+      style={style}
       className={`fut-card fut-card-${team.size} ${selected ? 'fut-card-on' : ''} ${landed ? 'fut-card-win' : ''} ${open ? '' : 'fut-card-lock'}`}
     >
       <span className="fut-crest-wrap">
