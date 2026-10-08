@@ -2,11 +2,11 @@ import React, { useEffect, useMemo, useRef } from 'react';
 import DedeSymbol from './DedeSymbol';
 import DedeOrb from './DedeOrb';
 import DedeStrike from './DedeStrike';
-import { randomGrid } from './dedeConfig';
+import { orbValueOf, randomGrid } from './dedeConfig';
 
 /**
  * 6 sütun x 5 satır ızgara. Tur sırasında sütunlar akar; kazanan karolar parlar,
- * patlar ve yerlerine üstten yenileri düşer. Çarpan küreleri karelerin üstüne iner.
+ * patlar ve yerlerine üstten yenileri düşer. Çarpan jetonları da bir kareyi kaplar.
  */
 export default function DedeReels({ rolling, grid, wins, orbs, explode }) {
   // Tur başlamadan ekranda duran süs ızgarası ve akan şeridin sonsuz döngüsü.
@@ -49,6 +49,14 @@ export default function DedeReels({ rolling, grid, wins, orbs, explode }) {
     return set;
   }, [wins]);
 
+  // Yıldırım: kazanan nesnelerin üstüne; çarpan jetonu indiğinde ise hem jetonun
+  // hem de onunla birlikte gelen nesnelerin üstüne düşer.
+  const strikeCells = useMemo(() => {
+    const set = new Set(winCells);
+    if ((orbs || []).length) drops.forEach((key) => set.add(key));
+    return set;
+  }, [winCells, drops, orbs]);
+
   return (
     <div className="relative flex h-full w-full items-stretch gap-[3px] sm:gap-1.5">
       {visible.map((column, reel) => (
@@ -62,50 +70,27 @@ export default function DedeReels({ rolling, grid, wins, orbs, explode }) {
               ))}
             </div>
           ) : (
-            column.map((id, row) => (
-              <span key={row} className={`dede-cell ${drops.has(`${reel}-${row}`) ? 'dede-drop' : ''}`}>
-                <DedeSymbol
-                  id={id}
-                  win={winCells.has(`${reel}-${row}`)}
-                  explode={!!explode && explodeCells.has(`${reel}-${row}`)}
-                />
-                {/* Kazanan nesnelerin üstüne de şimşek düşer. */}
-                {winCells.has(`${reel}-${row}`) && <DedeStrike className="dede-strike-cell" />}
-              </span>
-            ))
+            column.map((id, row) => {
+              const key = `${reel}-${row}`;
+              const orb = orbValueOf(id);
+              return (
+                <span key={row} className={`dede-cell ${drops.has(key) ? 'dede-drop' : ''}`}>
+                  {orb ? (
+                    <DedeOrb value={orb} />
+                  ) : (
+                    <DedeSymbol
+                      id={id}
+                      win={winCells.has(key)}
+                      explode={!!explode && explodeCells.has(key)}
+                    />
+                  )}
+                  {strikeCells.has(key) && <DedeStrike className="dede-strike-cell" />}
+                </span>
+              );
+            })
           )}
         </div>
       ))}
-
-      {/* Çarpan küreleri: madalyonlar hücrelerin ortasına iner, altındaki nesneye şimşek düşer. */}
-      {(orbs || []).map((orb) => (
-        <React.Fragment key={`${orb.reel}-${orb.row}-${orb.value}`}>
-          <span
-            className="dede-strike dede-strike-over"
-            style={{
-              left: `${(orb.reel / 6) * 100}%`,
-              top: `${(orb.row / 5) * 100}%`,
-              width: `${100 / 6}%`,
-              height: `${100 / 5}%`,
-            }}
-          >
-            <DedeStrike />
-          </span>
-          <span
-            className="dede-orb-slot"
-            style={{
-              left: `${((orb.reel + 0.5) / 6) * 100}%`,
-              top: `${((orb.row + 0.5) / 5) * 100}%`,
-              width: `${(100 / 6) * 0.92}%`,
-              height: `${(100 / 5) * 0.92}%`,
-            }}
-          >
-            <DedeOrb value={orb.value} />
-          </span>
-        </React.Fragment>
-      ))}
-
-
     </div>
   );
 }

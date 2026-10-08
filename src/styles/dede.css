@@ -193,12 +193,7 @@
 }
 
 /* --- çarpan küreleri: kanatlı altın madalyon --- */
-.dede-orb-slot {
-  position: absolute;
-  z-index: 5;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-}
+/* Çarpan jetonları da sembol gibi bir kareyi kaplar; üstte ayrı katman yok. */
 /* İnen çarpan jetonu: hazır madalyon görseli hücrenin ortasına pop yaparak iner. */
 .dede-token {
   position: relative;
@@ -213,8 +208,7 @@
   62% { transform: scale(1.16) rotate(4deg); opacity: 1; }
   100% { transform: scale(1) rotate(0deg); opacity: 1; }
 }
-/* Madalyon görseli her şeyi taşır: ek kanat ya da yazı katmanı yok. */
-.dede-strike-over { z-index: 7; }
+/* İnen jeton hücrenin içinde durur; şimşek kareyi kaplar. */
 /* --- biriken çarpan şeridi: alt tarafta sabit, inen küreler buraya düşer --- */
 .dede-mult-bar {
   display: flex;
@@ -316,6 +310,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .dede-rays, .dede-frame, .dede-strip, .dede-badge-win, .dede-drop,
-  .dede-float-win, .dede-orb, .dede-mult-bar-orb, .dede-strike, .dede-strike-flash, .dede-strike-bolt { animation: none; }
+  .dede-float-win, .dede-token, .dede-mult-bar-orb, .dede-strike, .dede-strike-flash, .dede-strike-bolt { animation: none; }
   .dede-badge-explode { animation-duration: 0.01s; }
 }

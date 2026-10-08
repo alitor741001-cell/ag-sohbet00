@@ -57,10 +57,22 @@ const ORB_VALUES = [
   [500, 2],
 ];
 
-// Küre inme şansı: ilk ızgarada, tumblerda ve bedava turlarda (hediye ya da satın alınan).
-const INITIAL_ORB_CHANCE = 0.16;
-const TUMBLE_ORB_CHANCE = 0.34;
-const FREE_ORB_CHANCE = 0.5;
+// Jeton bir kareyi sembol gibi kaplar: kare başına inme şansı (ilk ızgara, tumbler, bedava tur).
+const INITIAL_ORB_CHANCE = 0.05;
+const TUMBLE_ORB_CHANCE = 0.07;
+const FREE_ORB_CHANCE = 0.09;
+
+// Kare kimliğinden jeton değeri: 'orb30' -> 30; jeton değilse 0.
+export function orbValue(cell) {
+  const match = /^orb(\d+)$/.exec(cell || '');
+  return match ? Number(match[1]) : 0;
+}
+
+// Tek kare: çoğunlukla sembol, bazen çarpan jetonu.
+function randomCell(orbChance) {
+  if (orbChance > 0 && Math.random() < orbChance) return `orb${rollValue()}`;
+  return randomId();
+}
 
 function buildPool() {
   const pool = [];
@@ -78,11 +90,11 @@ function randomId() {
 }
 
 // 6 sütun x 5 satır sonuç: grid[sütun][satır], satır 0 en üst.
-export function spinGrid() {
+export function spinGrid(orbChance = 0) {
   const grid = [];
   for (let reel = 0; reel < REELS; reel += 1) {
     const column = [];
-    for (let row = 0; row < ROWS; row += 1) column.push(randomId());
+    for (let row = 0; row < ROWS; row += 1) column.push(randomCell(orbChance));
     grid.push(column);
   }
   return grid;
@@ -120,11 +132,11 @@ export function evaluate(grid, bet) {
 }
 
 // Patlayan karoların yerine üstten yenileri düşer; kalanlar aşağı kayar.
-function collapse(grid, winning) {
+function collapse(grid, removing, orbChance) {
   return grid.map((column, reel) => {
-    const kept = column.filter((_, row) => !winning.has(`${reel}-${row}`));
+    const kept = column.filter((_, row) => !removing.has(`${reel}-${row}`));
     const fresh = [];
-    for (let index = kept.length; index < ROWS; index += 1) fresh.push(randomId());
+    for (let index = kept.length; index < ROWS; index += 1) fresh.push(randomCell(orbChance));
     return [...fresh, ...kept];
   });
 }
@@ -139,33 +151,22 @@ function rollValue() {
   return ORB_VALUES[0][0];
 }
 
-// Küreler rastgele hücrelere iner; aynı hücreye iki küre inmez.
-function rollOrbs(chance, maxCount) {
+// Izgaradaki çarpan jetonları: bu adımda karelerde duran jetonların listesi.
+function gridOrbs(grid) {
   const orbs = [];
-  if (Math.random() > chance) return orbs;
-  const count = 1 + Math.floor(Math.random() * maxCount);
-  const used = new Set();
-  for (let index = 0; index < count; index += 1) {
-    let reel = Math.floor(Math.random() * REELS);
-    let row = Math.floor(Math.random() * ROWS);
-    let guard = 0;
-    while (used.has(`${reel}-${row}`) && guard < 30) {
-      reel = Math.floor(Math.random() * REELS);
-      row = Math.floor(Math.random() * ROWS);
-      guard += 1;
-    }
-    const key = `${reel}-${row}`;
-    if (used.has(key)) continue;
-    used.add(key);
-    orbs.push({ reel, row, value: rollValue() });
-  }
+  grid.forEach((column, reel) => {
+    column.forEach((cell, row) => {
+      const value = orbValue(cell);
+      if (value) orbs.push({ reel, row, value });
+    });
+  });
   return orbs;
 }
 
 /** Bir turun tamamı: ilk ızgara, tumbler adımları ve küre çarpanları.
     Her adım ekranda gösterilmek üzere ayrı ayrı döner. */
 export function playDede(bet, isFree) {
-  let grid = spinGrid();
+  let grid = spinGrid(INITIAL_ORB_CHANCE);
   const scatterCells = [];
   grid.forEach((column, reel) => {
     column.forEach((symbol, row) => {
@@ -183,7 +184,7 @@ export function playDede(bet, isFree) {
   // Biriken çarpan: inen her küre değerini buraya ekler ve tur boyunca büyür.
   let accumulated = 0;
   let capped = false;
-  let orbs = rollOrbs(INITIAL_ORB_CHANCE, 2);
+  const orbChance = isFree ? FREE_ORB_CHANCE : TUMBLE_ORB_CHANCE;
 
   for (let step = 0; step < DROP_MAX; step += 1) {
     const result = evaluate(grid, bet);
@@ -200,9 +201,11 @@ export function playDede(bet, isFree) {
       });
       stepTotal += scatterWin;
     }
+    // Izgaradaki çarpan jetonları: kazanç turunda toplanır ve birikime eklenir.
+    const orbs = gridOrbs(grid);
     if (!wins.length) break;
 
-    // İnen küreler birikir: her inişte biriken çarpana eklenir, tur boyunca büyür.
+    // İnen jetonlar birikir: her inişte biriken çarpana eklenir, tur boyunca büyür.
     const orbSum = orbs.reduce((sum, orb) => sum + orb.value, 0);
     if (orbSum > 0) accumulated += orbSum;
     raw += stepTotal;
@@ -219,15 +222,16 @@ export function playDede(bet, isFree) {
     }
 
     // Skatter karoları patlamaz: dede yerinde kalır.
-    const winning = new Set();
+    const removing = new Set();
     wins.forEach((win) => {
       if (win.scatter) return;
-      win.cells.forEach((cell) => winning.add(`${cell.reel}-${cell.row}`));
+      win.cells.forEach((cell) => removing.add(`${cell.reel}-${cell.row}`));
     });
-    if (!winning.size) break;
+    // Toplanan çarpan jetonları da yerinden kalkar: aynı jeton iki kez sayılmaz.
+    orbs.forEach((orb) => removing.add(`${orb.reel}-${orb.row}`));
+    if (!removing.size) break;
 
-    grid = collapse(grid, winning);
-    orbs = rollOrbs(isFree ? FREE_ORB_CHANCE : TUMBLE_ORB_CHANCE, 3);
+    grid = collapse(grid, removing, orbChance);
   }
 
   // Turun tamamı biriken çarpanla çarpılır — orijinal oyundaki gibi.

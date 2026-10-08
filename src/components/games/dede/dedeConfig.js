@@ -19,6 +19,12 @@ export const DEDE_SYMBOLS = {
 
 export const DEDE_IDS = Object.keys(DEDE_SYMBOLS);
 
+// Kare kimliği çarpan jetonu mu? Örn. 'orb30' -> 30, sembolse null.
+export const orbValueOf = (id) => {
+  const match = /^orb(\d+)$/.exec(id || '');
+  return match ? Number(match[1]) : null;
+};
+
 // Tur başlamadan ve makaralar akarken ekranda duran süs ızgarası.
 export function randomGrid() {
   return Array.from({ length: 6 }, () =>
