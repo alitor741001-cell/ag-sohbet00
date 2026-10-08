@@ -4,7 +4,6 @@ import '@/styles/fruit.css';
 import '@/styles/gameControls.css';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
 import useFruitGame from './fruit/useFruitGame';
-import { warmSymbolTiles } from '@/lib/symbolTile';
 import FruitReels from './fruit/FruitReels';
 import FruitHud from './fruit/FruitHud';
 import GameBetBar from './controls/GameBetBar';
@@ -12,7 +11,7 @@ import GameSpinButton from './controls/GameSpinButton';
 import GameHelpSheet from './help/GameHelpSheet';
 import GameTurnBadge from './controls/GameTurnBadge';
 import FruitWinOverlay from './fruit/FruitWinOverlay';
-import { FRUIT_LINES, FRUIT_SYMBOLS, formatCoins } from './fruit/fruitConfig';
+import { FRUIT_LINES, formatCoins } from './fruit/fruitConfig';
 
 const WIN_FLASH_MS = 2400;
 
@@ -44,11 +43,6 @@ export default function FruitGame({ onExit, onBack }) {
     }
     return undefined;
   }, [game.spins]);
-
-  // Semboller oyun açılırken bir kez işlenir: makaralar dönmeye başladığında hepsi hazır olur.
-  useEffect(() => {
-    warmSymbolTiles(Object.values(FRUIT_SYMBOLS).map((symbol) => symbol.art));
-  }, []);
 
   // Oyun kapanırken bekleyen sayaç temizlenir.
   useEffect(() => () => window.clearTimeout(flashTimer.current), []);

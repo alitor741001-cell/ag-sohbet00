@@ -1,8 +1,9 @@
 import React from 'react';
-import FruitArt from './FruitArt';
+import { Image } from '@/components/ui/image';
+import { FRUIT_ART_SIZE } from './fruitAssets';
 import { FRUIT_SYMBOLS } from './fruitConfig';
 
-/** Tek sembol: nesne kendi karesine oturur, arkasında kart ya da kutu yoktur. */
+/** Tek kart: gerçek meyve görseli kartın içinde durur, kartın dışına taşmaz. */
 export default function FruitSymbol({ id, win, scatter, explode }) {
   const symbol = FRUIT_SYMBOLS[id];
   if (!symbol) return null;
@@ -12,7 +13,16 @@ export default function FruitSymbol({ id, win, scatter, explode }) {
         explode ? 'fruit-tile-explode' : ''
       }`}
     >
-      <FruitArt src={symbol.art} alt={symbol.name} className="fruit-art" />
+      <Image
+        src={symbol.art}
+        alt={symbol.name}
+        className="fruit-art"
+        fittingType="fit"
+        blurPlaceholder={false}
+        originWidth={FRUIT_ART_SIZE}
+        originHeight={FRUIT_ART_SIZE}
+        quality={88}
+      />
     </span>
   );
 }

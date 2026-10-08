@@ -1,9 +1,9 @@
 import React from 'react';
-import SekerliArt from './SekerliArt';
-import { SEKERLI_ART } from './sekerliAssets';
+import { Image } from '@/components/ui/image';
+import { SEKERLI_ART, SEKERLI_ART_SIZE } from './sekerliAssets';
 import { SYMBOLS } from './sekerliConfig';
 
-/** Tek sembol: nesne kendi karesine oturur, arkasında kart ya da kutu yoktur. */
+/** Tek kart: şeker görseli kartın içinde durur, kartın dışına taşmaz. */
 export default function SekerliSymbol({ id, win, boom, fall, index = 0 }) {
   const symbol = SYMBOLS[id];
   const art = SEKERLI_ART[id];
@@ -20,7 +20,16 @@ export default function SekerliSymbol({ id, win, boom, fall, index = 0 }) {
 
   return (
     <span className={classes} style={{ '--sl-row': index }}>
-      <SekerliArt src={art} alt={symbol.name} className="sl-art" />
+      <Image
+        src={art}
+        alt={symbol.name}
+        className="sl-art"
+        fittingType="fit"
+        blurPlaceholder={false}
+        originWidth={SEKERLI_ART_SIZE}
+        originHeight={SEKERLI_ART_SIZE}
+        quality={88}
+      />
     </span>
   );
 }

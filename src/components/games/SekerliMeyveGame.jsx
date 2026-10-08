@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { ChevronLeft, HelpCircle, Play, Volume2, VolumeX, X } from 'lucide-react';
 import '@/styles/sekerli.css';
 import '@/styles/gameControls.css';
@@ -12,8 +12,7 @@ import GameHelpSheet from './help/GameHelpSheet';
 import useSekerliGame from './sekerli/useSekerliGame';
 import useCountUp from './sekerli/useCountUp';
 import { LINES, formatCredits, formatMult } from './sekerli/sekerliConfig';
-import { SEKERLI_ART, SEKERLI_BACKDROP, SEKERLI_LOGO } from './sekerli/sekerliAssets';
-import { warmSymbolTiles } from '@/lib/symbolTile';
+import { SEKERLI_BACKDROP, SEKERLI_LOGO } from './sekerli/sekerliAssets';
 import GameBetBar from './controls/GameBetBar';
 import GameSpinButton from './controls/GameSpinButton';
 import GameTurnBadge from './controls/GameTurnBadge';
@@ -28,11 +27,6 @@ export default function SekerliMeyveGame({ onExit, onBack }) {
   const [helpOpen, setHelpOpen] = useState(false);
   const shownWin = useCountUp(game.spinWin, 420);
   const ready = game.status === 'ready';
-
-  // Semboller oyun açılırken bir kez işlenir: makaralar dönmeye başladığında hepsi hazır olur.
-  useEffect(() => {
-    warmSymbolTiles(Object.values(SEKERLI_ART));
-  }, []);
 
   return (
     <div className="sl-sky">

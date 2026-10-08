@@ -243,7 +243,7 @@
   box-shadow: inset 0 0 14px rgba(0, 0, 0, 0.65);
 }
 
-/* Hücre: nesne doğrudan tahtanın üstünde durur, arkasında kare kutu yoktur. */
+/* Her kare kendi zeminini taşır: sembolün arkasındaki arka plan durur. */
 .sl-cell {
   position: relative;
   display: flex;
@@ -256,21 +256,38 @@
   overflow: hidden;
 }
 
-/* Sembol: nesne kendi karesine mutlak oturur; arkasında kart ya da kutu yoktur.
-   Gölge nesnenin siluetini takip eder, kare kenarı görünmez. */
+/* Sembol kartı: kart kendi karesine oturur, arkasındaki zemin görünür kalır.
+   Dıştaki süs bandı kırpılır: kartın kenarında yalnız temiz görüntü kalır. */
+.sl-cell::before {
+  content: '';
+  position: absolute;
+  inset: 4% 6%;
+  border-radius: 22%;
+  border: 1px solid rgba(255, 214, 102, 0.3);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(38, 9, 66, 0.5) 58%, rgba(16, 3, 30, 0.72));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 5px 12px -8px #000;
+}
+
 .sl-sym {
   position: absolute;
   inset: 4%;
   z-index: 1;
   display: block;
-  filter: drop-shadow(0 4px 7px rgba(0, 0, 0, 0.6));
+  overflow: hidden;
+  border-radius: 16%;
+  box-shadow: 0 0 0 1px rgba(255, 226, 150, 0.4), 0 6px 14px -8px rgba(0, 0, 0, 0.95);
 }
 
 .sl-art {
   display: block;
   height: 100%;
   width: 100%;
+  transform: scale(1.1);
+}
+
+.sl-art img {
   object-fit: contain;
+  border-radius: 16%;
 }
 
 /* Kazanan sembolün arkasındaki ışık halkası. */
@@ -302,6 +319,10 @@
 .sl-cell-roll {
   flex: 0 0 calc(100% / var(--rl-rows));
   height: calc(100% / var(--rl-rows));
+}
+
+.sl-cell-roll::before {
+  display: none;
 }
 
 
