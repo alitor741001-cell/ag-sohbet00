@@ -8,8 +8,8 @@ import { base44 } from '@/api/base44Client';
  * karşılaştırma anında geçici imzalı bağlantı üretir.
  */
 const DEVICE_PREFIX = 'filmkeyfi_device_';
-// Canlılık adımları: sunucu bu sırayla bekler — dört kafa yönü, göz kırpma ve ağız aç/kapa.
-const SHOT_KEYS = ['up', 'down', 'right', 'left', 'eyes_closed', 'eyes_open', 'mouth_open', 'mouth_closed'];
+// Canlılık adımları: sunucu bu sırayla bekler — ağız açık ve ağız kapalı iki kare.
+const SHOT_KEYS = ['mouth_open', 'mouth_closed'];
 
 export function deviceId(userId) {
   const key = DEVICE_PREFIX + (userId || 'misafir');
@@ -55,10 +55,10 @@ export async function enrollFace(userId, photos) {
 }
 
 export async function verifyFace(userId, photos, scope = 'device') {
-  const pose_uris = await uploadShots(photos);
-  // Kimlik denetimi canlılık kareleriyle yapılır; ilk adım ana fotoğraftır.
+  const [pose_uris, face_uri] = await Promise.all([uploadShots(photos), uploadSelfie(photos.front)]);
+  // Kimlik denetimi canlılık kareleriyle yapılır; ana fotoğraf düz bakış karesidir.
   const res = await base44.functions.invoke('face-verify', {
-    action: 'verify', device_id: deviceId(userId), face_uri: pose_uris.up, pose_uris, scope,
+    action: 'verify', device_id: deviceId(userId), face_uri, pose_uris, scope,
   });
   return res?.data || {};
 }
