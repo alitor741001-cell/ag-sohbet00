@@ -16,10 +16,10 @@ export default function FruitBetBar({ bet, lines, disabled, onStep, onMax }) {
         <Minus className="h-4 w-4" strokeWidth={3} />
       </button>
 
-      <div className="flex min-w-0 flex-1 flex-col items-center rounded-2xl border border-white/90 bg-white/70 px-2 py-1">
+      <div className="flex min-w-0 flex-1 flex-col items-center rounded-2xl border border-[#f0c46a]/60 bg-black/45 px-2 py-1">
         <span className="fruit-chip-label">BAHİS KADEMESİ · {lines}X</span>
         <span className="fruit-bubble-text text-sm">{formatCoins(bet)}</span>
-        <span className="text-[9px] font-bold text-[#6b2a6d]/85">TOPLAM {formatCoins(bet * lines)}</span>
+        <span className="text-[9px] font-bold text-[#ffe9b8]/80">TOPLAM {formatCoins(bet * lines)}</span>
       </div>
 
       <button
@@ -37,7 +37,7 @@ export default function FruitBetBar({ bet, lines, disabled, onStep, onMax }) {
         onClick={onMax}
         disabled={disabled}
         aria-label="En yüksek bahis"
-        className="fruit-auto active:brightness-105"
+        className="fruit-auto active:brightness-110"
       >
         MAX
       </button>

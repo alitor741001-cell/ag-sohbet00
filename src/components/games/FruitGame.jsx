@@ -12,7 +12,7 @@ import { FRUIT_LINES, formatCoins } from './fruit/fruitConfig';
 
 const WIN_FLASH_MS = 2400;
 
-/** MEYVE: şeker diyarında 6x5 meyve oyunu. Semboller ekranın her yerinde öder. */
+/** MEYVE: altın çerçeveli premium meyve oyunu. Semboller ekranın her yerinde öder. */
 export default function FruitGame({ onExit, onBack }) {
   const game = useFruitGame();
   const [coinOpen, setCoinOpen] = useState(false);
@@ -37,10 +37,7 @@ export default function FruitGame({ onExit, onBack }) {
 
   return (
     <div className="fruit-sky relative flex h-full min-h-0 w-full flex-col overflow-hidden">
-      {/* Şeker diyarı bulutları. */}
-      <span aria-hidden="true" className="fruit-cloud left-[-2rem] top-[3%]" />
-      <span aria-hidden="true" className="fruit-cloud right-[-2.5rem] top-[18%] h-8 w-14" />
-      <span aria-hidden="true" className="fruit-cloud left-[8%] bottom-[6%] h-8 w-16" />
+      <span aria-hidden="true" className="fruit-rays" />
 
       <header className="relative z-10 flex shrink-0 items-center gap-2 px-3 pt-[max(0.5rem,env(safe-area-inset-top))]">
         <button type="button" onClick={onBack} aria-label="Oyun listesine dön" className="fruit-icon-btn">
@@ -48,25 +45,30 @@ export default function FruitGame({ onExit, onBack }) {
         </button>
         <div className="min-w-0 flex-1 text-center">
           <p className="fruit-bubble-text text-lg">MEYVE</p>
-          <p className="text-[9px] font-black tracking-[0.14em] text-[#6b2a6d]/85">
+          <p className="text-[9px] font-black tracking-[0.14em] text-[#ffe0a8]/75">
             SEMBOLLER EKRANIN HER YERİNDE ÖDER
           </p>
         </div>
-        <button type="button" onClick={onExit} aria-label="Oyunu kapat" className="fruit-icon-btn ring-1 ring-white/60">
+        <button
+          type="button"
+          onClick={onExit}
+          aria-label="Oyunu kapat"
+          className="fruit-icon-btn ring-1 ring-[#f0c46a]/50"
+        >
           <X className="h-5 w-5" />
         </button>
       </header>
 
       <main className="relative z-10 flex min-h-0 flex-1 flex-col items-center gap-2 px-2 py-2">
-        {/* Izgara ekranın kalan tüm alanını kaplar: meyveler olabildiğince büyük durur. */}
+        {/* Izgara ekranın kalan tüm alanını kaplar: kartlar olabildiğince büyük durur. */}
         <div className="flex min-h-0 w-full flex-1 items-center justify-center">
-          <div className="fruit-frame flex aspect-[6/5] max-h-full w-full max-w-[34rem] rounded-[26px] bg-white/15 p-2 sm:p-3">
+          <div className="fruit-frame flex aspect-[6/5] max-h-full w-full max-w-[34rem] p-2 sm:p-3">
             <FruitReels spinning={game.spinning} stopping={game.stopping} grid={game.grid} wins={game.wins} />
           </div>
         </div>
 
         {game.freeSpins > 0 && (
-          <p className="flex items-center gap-1.5 rounded-full border border-white/90 bg-white/75 px-3 py-1 text-[10px] font-black tracking-[0.12em] text-[#6b2a6d]">
+          <p className="flex items-center gap-1.5 rounded-full border border-[#f0c46a]/80 bg-black/45 px-3 py-1 text-[10px] font-black tracking-[0.12em] text-[#ffe9b8]">
             <Gift className="h-3.5 w-3.5" /> SERBEST TUR: {game.freeSpins}
           </p>
         )}
@@ -80,9 +82,7 @@ export default function FruitGame({ onExit, onBack }) {
           onCoins={() => setCoinOpen(true)}
         />
 
-        {game.status === 'loading' && (
-          <p className="text-[11px] font-bold text-[#6b2a6d]">Oyun yükleniyor...</p>
-        )}
+        {game.status === 'loading' && <p className="text-[11px] font-bold text-[#ffe9b8]">Oyun yükleniyor...</p>}
       </main>
 
       <footer className="relative z-10 flex shrink-0 flex-col items-center gap-2 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-1">
@@ -106,14 +106,14 @@ export default function FruitGame({ onExit, onBack }) {
       {flash > 0 && !prize && (
         <p
           key={flash}
-          className="fruit-float-win pointer-events-none absolute left-1/2 top-[46%] z-20 rounded-full border border-white/90 bg-[#2e1430]/85 px-4 py-1.5 font-mono text-base font-black text-[#ffd873]"
+          className="fruit-float-win pointer-events-none absolute left-1/2 top-[46%] z-20 rounded-full border border-[#ffe9b8]/80 bg-black/75 px-4 py-1.5 font-mono text-base font-black text-[#ffd35c]"
         >
           KAZANÇ {formatCoins(flash)}
         </p>
       )}
 
       {game.message && !coinOpen && !prize && (
-        <p className="absolute left-1/2 top-[62%] z-20 w-max max-w-[90%] -translate-x-1/2 rounded-full bg-[#2e1430]/85 px-3 py-1.5 text-center text-[11px] font-bold text-[#ffd873]">
+        <p className="absolute left-1/2 top-[62%] z-20 w-max max-w-[90%] -translate-x-1/2 rounded-full bg-black/75 px-3 py-1.5 text-center text-[11px] font-bold text-[#ffd35c]">
           {game.message}
         </p>
       )}

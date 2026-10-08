@@ -27,10 +27,7 @@ export default function FruitReels({ spinning, stopping, grid, wins }) {
   return (
     <div className="flex h-full w-full items-stretch gap-[3px] sm:gap-1.5">
       {visible.map((column, reel) => (
-        <div
-          key={reel}
-          className="fruit-column min-w-0 flex-1 rounded-xl bg-white/30 p-[2px] sm:rounded-2xl sm:p-1"
-        >
+        <div key={reel} className="fruit-column min-w-0 flex-1 p-[2px] sm:p-1">
           {moving ? (
             <div className="fruit-strip" style={{ animationDuration: `${420 + reel * 60}ms` }}>
               {strips[reel].map((id, index) => (

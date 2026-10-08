@@ -23,9 +23,9 @@ export default function FruitHud({ coins, bet, lines, win, totalWon, onCoins }) 
         type="button"
         onClick={onCoins}
         aria-label="Coin yükle"
-        className="col-span-4 flex items-center justify-center gap-1.5 rounded-2xl border border-white/90 bg-white/70 py-1.5 text-[10px] font-black tracking-[0.14em] text-[#6b2a6d] active:brightness-105"
+        className="col-span-4 flex items-center justify-center gap-1.5 rounded-2xl border border-[#f0c46a]/60 bg-black/45 py-1.5 text-[10px] font-black tracking-[0.14em] text-[#ffe9b8] active:brightness-110"
       >
-        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-b from-[#9beaff] to-[#2f9fd9] text-white">
+        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-b from-[#ffe9a8] to-[#c08a12] text-[#2a0c02]">
           <Plus className="h-3.5 w-3.5" strokeWidth={3} />
         </span>
         COIN YÜKLE
