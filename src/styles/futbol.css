@@ -120,44 +120,43 @@
   text-align: center;
 }
 .fut-hub .fut-select { gap: .3rem; }
-.fut-hub .fut-select-pill { padding: .3rem .7rem; font-size: .68rem; }
-.fut-hub .fut-select-clock { font-size: .78rem; }
-.fut-hub .fut-progress { width: 78%; }
+.fut-hub .fut-dial { height: 3.9rem; width: 3.9rem; }
+.fut-hub .fut-dial-clock { font-size: .9rem; }
 
+/* --- seçim zamanı: geri sayım küçük yuvarlak çemberin içinde --- */
 .fut-select { display: flex; flex-direction: column; align-items: center; gap: .25rem; z-index: 2; }
-.fut-select-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: .5rem;
-  border-radius: 9999px;
-  border: 2px solid rgba(255,255,255,.9);
-  background: linear-gradient(180deg, #e8f7cf, #b6e08a);
-  padding: .38rem 1rem;
-  font-size: .76rem;
+.fut-dial {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 4.3rem;
+  width: 4.3rem;
+  border-radius: 50%;
+  background: conic-gradient(#74e4a2 var(--fut-arc, 360deg), rgba(255,255,255,.14) 0);
+  box-shadow: 0 0 16px rgba(116,228,162,.35), 0 8px 18px -12px rgba(0,0,0,.95);
+}
+.fut-dial::after {
+  content: '';
+  position: absolute;
+  inset: .3rem;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.16);
+  background: radial-gradient(circle at 50% 34%, #10281a, #04120a);
+}
+.fut-dial-draw {
+  background: conic-gradient(#f2ce6b var(--fut-arc, 360deg), rgba(255,255,255,.14) 0);
+  box-shadow: 0 0 18px rgba(242,206,107,.45), 0 8px 18px -12px rgba(0,0,0,.95);
+}
+.fut-dial-clock {
+  position: relative;
+  z-index: 1;
+  font-size: .98rem;
   font-weight: 900;
-  letter-spacing: .12em;
-  color: #14320c;
-  box-shadow: 0 8px 18px -10px rgba(0,0,0,.9), 0 0 20px rgba(116,228,162,.45);
+  font-variant-numeric: tabular-nums;
+  color: #e9fff3;
 }
-.fut-select-draw { background: linear-gradient(180deg, #fff3c9, var(--fut-gold)); border-color: #fff6d0; }
-.fut-select-clock { font-variant-numeric: tabular-nums; font-size: .84rem; color: #1d4a12; }
-.fut-select-draw .fut-select-clock { color: #7c2d12; }
-.fut-progress {
-  width: min(100%, 17rem);
-  height: 5px;
-  border-radius: 9999px;
-  background: rgba(0,0,0,.6);
-  overflow: hidden;
-  border: 1px solid rgba(255,255,255,.2);
-}
-.fut-progress-fill {
-  display: block;
-  height: 100%;
-  border-radius: 9999px;
-  background: linear-gradient(90deg, #c3ee8c, var(--fut-lime));
-  transition: width .25s linear;
-}
-.fut-progress-fill-draw { background: linear-gradient(90deg, #fff3c9, var(--fut-gold)); }
+.fut-dial-draw .fut-dial-clock { color: #ffe9a8; }
+.fut-dial-label { font-size: .56rem; font-weight: 900; letter-spacing: .14em; color: rgba(255,255,255,.82); }
 .fut-clear {
   font-size: .62rem;
   font-weight: 900;
@@ -320,18 +319,6 @@
   background: radial-gradient(circle at 40% 32%, #fffdf2, #f2ce6b 62%, #8a6414);
   box-shadow: 0 0 18px rgba(242,206,107,.95);
 }
-
-/* --- açıklama satırı --- */
-.fut-legend {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: .3rem .7rem;
-  font-size: .6rem;
-  font-weight: 700;
-  color: rgba(216,255,230,.85);
-}
-.fut-legend-item { display: inline-flex; align-items: center; gap: .2rem; }
 
 /* --- bahis paneli --- */
 .fut-dock { display: flex; flex-direction: column; gap: .4rem; }
@@ -545,5 +532,4 @@
 
 @media (prefers-reduced-motion: reduce) {
   .fut-overlay-card, .fut-sheet-body { animation: none; }
-  .fut-progress-fill { transition: none; }
 }

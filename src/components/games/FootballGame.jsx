@@ -7,7 +7,6 @@ import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
 import GameStatCards from '@/components/games/controls/GameStatCards';
 import FutbolHeader from './futbol/FutbolHeader';
 import FutbolPitch from './futbol/FutbolPitch';
-import FutbolLegend from './futbol/FutbolLegend';
 import FutbolStakeDock from './futbol/FutbolStakeDock';
 import FutbolResults from './futbol/FutbolResults';
 import FutbolMenu from './futbol/FutbolMenu';
@@ -16,8 +15,8 @@ import useFutbolGame from './futbol/useFutbolGame';
 import { FUTBOL_BACKDROP } from './futbol/futbolAssets';
 import { TEAMS, formatClock, formatCoins } from './futbol/futbolConfig';
 
-// Seçim süresi: çubuğun dolması için tur uzunluğuyla aynı olmalı (sunucu 45 saniye verir).
-const BET_MS = 45000;
+// Seçim süresi: çemberin dolması için tur uzunluğuyla aynı olmalı (sunucu 20 saniye verir).
+const BET_MS = 20000;
 const DRAW_MS = 8000;
 
 /**
@@ -107,7 +106,7 @@ export default function FootballGame({ onExit, onBack }) {
           onLanded={handleLanded}
         />
 
-        <FutbolLegend />
+        <FutbolResults history={game.history} />
 
         <FutbolStakeDock
           selected={game.selected}
@@ -116,8 +115,6 @@ export default function FootballGame({ onExit, onBack }) {
           onStake={game.addStake}
           onFollow={game.toggleFollow}
         />
-
-        <FutbolResults history={game.history} />
 
         {game.status === 'loading' && <p className="fut-message">Oyun yükleniyor...</p>}
         {game.status === 'error' && <p className="fut-message">Bağlantı kurulamadı, tekrar deniyorum...</p>}

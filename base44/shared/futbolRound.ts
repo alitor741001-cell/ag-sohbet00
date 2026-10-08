@@ -3,7 +3,7 @@
 // kazanan çekilir. Kazanan, kartların çarpanlarına göre ağırlıklı seçilir ve ağırlık
 // "0.95 / çarpan" olduğu için her seçimin beklenen getirisi aynıdır: kasa payı sabit.
 
-export const BET_MS = 45000;   // seçim süresi
+export const BET_MS = 20000;   // seçim süresi
 export const DRAW_MS = 8000;   // çekiliş animasyonu
 const ROUND_BASE = 886000;     // tur numarası referanstaki gibi büyük başlar
 const HISTORY_KEEP = 40;

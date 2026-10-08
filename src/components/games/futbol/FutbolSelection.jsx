@@ -1,22 +1,19 @@
 import React from 'react';
 
-/** "Seçim Zamanı" şeridi: geri sayım, kalan süre çubuğu ve seçimleri temizleme. */
+/** Seçim göstergesi: geri sayım küçük yuvarlak çemberin içinde akar. */
 export default function FutbolSelection({ status, clock, ratio, hasPicks, onClear }) {
   const drawing = status === 'drawing';
+  const arc = Math.max(0, Math.min(1, ratio || 0)) * 360;
 
   return (
     <div className="fut-select">
-      <span className={`fut-select-pill ${drawing ? 'fut-select-draw' : ''}`}>
-        {drawing ? 'ÇEKİLİŞ' : 'SEÇİM ZAMANI'}
-        <b className="fut-select-clock">{clock}</b>
+      <span
+        className={`fut-dial ${drawing ? 'fut-dial-draw' : ''}`}
+        style={{ '--fut-arc': `${arc.toFixed(1)}deg` }}
+      >
+        <b className="fut-dial-clock">{clock}</b>
       </span>
-
-      <span className="fut-progress" aria-hidden="true">
-        <span
-          className={`fut-progress-fill ${drawing ? 'fut-progress-fill-draw' : ''}`}
-          style={{ width: `${Math.max(0, Math.min(100, ratio * 100))}%` }}
-        />
-      </span>
+      <span className="fut-dial-label">{drawing ? 'ÇEKİLİŞ' : 'SEÇİM ZAMANI'}</span>
 
       {hasPicks && !drawing && (
         <button type="button" onClick={onClear} className="fut-clear">SEÇİMLERİ TEMİZLE</button>
