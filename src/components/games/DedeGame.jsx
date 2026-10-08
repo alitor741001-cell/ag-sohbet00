@@ -10,6 +10,7 @@ import DedeReels from './dede/DedeReels';
 import DedeHud from './dede/DedeHud';
 import GameBetBar from './controls/GameBetBar';
 import GameSpinButton from './controls/GameSpinButton';
+import GameTurnBadge from './controls/GameTurnBadge';
 import DedeWinOverlay from './dede/DedeWinOverlay';
 import DedeMultiplierBar from './dede/DedeMultiplierBar';
 import { DEDE_DEITY } from './dede/dedeAssets';
@@ -30,6 +31,8 @@ export default function DedeGame({ onExit, onBack }) {
   // Tur sonucu: büyük kazançta kutlama ekranı, küçük kazançta kısa parıltı.
   useEffect(() => {
     if (!game.spins) return undefined;
+    // Çevirme hakkı sürerken ara kutlama yapılmaz; sonuç tur bitince gösterilir.
+    if (game.sessionSpins > 0) return undefined;
     if (game.bigWin > 0) {
       setPrize({ amount: game.bigWin });
       return undefined;
@@ -91,6 +94,12 @@ export default function DedeGame({ onExit, onBack }) {
           </div>
         </div>
 
+        <GameTurnBadge
+          sessionSpins={game.sessionSpins}
+          freeSpins={game.freeSpins}
+          accent="border-[#ffd35c]/80 text-[#ffe9a8]"
+        />
+
         <DedeHud
           coins={game.coins}
           bet={game.bet}
@@ -102,7 +111,7 @@ export default function DedeGame({ onExit, onBack }) {
           onSession={game.buySession}
           sessionPrice={game.sessionPrice}
           sessionSpins={game.sessionSpins}
-          freeSpins={game.freeSpins}
+          sessionSize={game.sessionSize}
         />
 
         {game.status === 'loading' && <p className="text-[11px] font-bold text-[#ffe9a8]">Oyun yükleniyor...</p>}
@@ -130,7 +139,13 @@ export default function DedeGame({ onExit, onBack }) {
         />
       </footer>
 
-      {flash > 0 && !prize && (
+      {game.freeTrigger && !prize && game.sessionResult === null && (
+        <p className="dede-float-win pointer-events-none absolute left-1/2 top-[36%] z-20 flex w-max items-center gap-1.5 rounded-full border border-[#ffe9a8] bg-black/75 px-4 py-1.5 text-sm font-black text-[#ffd35c]">
+          <Zap className="h-4 w-4" /> {game.freeTrigger}
+        </p>
+      )}
+
+      {flash > 0 && !prize && game.sessionResult === null && (
         <p
           key={flash}
           className="dede-float-win pointer-events-none absolute left-1/2 top-[48%] z-20 w-max rounded-full border border-[#ffe9a8]/80 bg-black/75 px-4 py-1.5 font-mono text-base font-black text-[#ffd35c]"
@@ -149,6 +164,16 @@ export default function DedeGame({ onExit, onBack }) {
       <CoinPurchasePanel open={coinOpen} coins={game.coins} onBack={() => setCoinOpen(false)} />
 
       <DedeWinOverlay open={!!prize} amount={prize?.amount || 0} onAccept={() => setPrize(null)} />
+
+      {/* 15 çevirme hakkı bittiğinde biriken toplam kazanç onaya sunulur. */}
+      <DedeWinOverlay
+        open={game.sessionResult !== null}
+        amount={game.sessionResult || 0}
+        title="15 ÇEVİRME HAKKI BİTTİ"
+        subtitle="TOPLAM KAZANÇ"
+        action="KABUL ET"
+        onAccept={game.clearSessionResult}
+      />
     </div>
   );
 }

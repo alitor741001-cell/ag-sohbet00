@@ -4,16 +4,16 @@ import '@/styles/gameControls.css';
 
 /** Eylem sırası: solda bahis kademesine göre bedeli düşülen çevirme hakkı, sağda coin yükleme.
     Bakiye yetmiyorsa sol düğme doğrudan coin yüklemeye yönlendirir. */
-export default function GameActionRow({ coins, sessionPrice, sessionSpins, freeSpins, busy, onSession, onCoins, format }) {
-  const active = (freeSpins ?? 0) > 0;
+export default function GameActionRow({ coins, sessionPrice, sessionSpins, sessionSize, busy, onSession, onCoins, format }) {
+  const active = (sessionSpins ?? 0) > 0;
   const affordable = (coins ?? 0) >= (sessionPrice ?? 0);
   const buyable = affordable && !active;
 
   const title = active
-    ? `ÇEVRİLİYOR · ${freeSpins}`
-    : affordable ? `${sessionSpins} ÇEVİRME HAKKI` : 'YETERSİZ COIN';
+    ? `ÇEVRİLİYOR · ${sessionSpins}`
+    : affordable ? `${sessionSize} ÇEVRİME HAKKI` : 'YETERSİZ COIN';
   const sub = active
-    ? `${freeSpins} TUR KALDI`
+    ? `${sessionSpins} TUR KALDI`
     : affordable ? `${format(sessionPrice)} COIN` : 'COIN YÜKLE';
 
   return (

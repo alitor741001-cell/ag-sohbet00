@@ -8,6 +8,7 @@ const DROP_MS = 380;
 const HOLD_MS = 950;
 const EXPLODE_MS = 320;
 const END_MS = 650;
+const TRIGGER_MS = 3200;
 
 /** DEDE oyununun durumu: bakiye, bahis, tumbler adımları ve çarpan küreleri. */
 export default function useDedeGame() {
@@ -15,9 +16,11 @@ export default function useDedeGame() {
   const [coins, setCoins] = useState(0);
   const [totalWon, setTotalWon] = useState(0);
   const [freeSpins, setFreeSpins] = useState(0);
-  // "15 çevirme hakkı" kutusunun bedeli ve tur sayısı sunucudan gelir.
+  // "15 çevirme hakkı" kutusunun bedeli, kalan turu ve paket tur sayısı sunucudan gelir.
   const [sessionPrice, setSessionPrice] = useState(0);
-  const [sessionSpins, setSessionSpins] = useState(15);
+  const [sessionSpins, setSessionSpins] = useState(0);
+  const [sessionSize, setSessionSize] = useState(15);
+  const [sessionResult, setSessionResult] = useState(null);
   const [bet, setBet] = useState(100);
   const [spins, setSpins] = useState(0);
   const [grid, setGrid] = useState(null);
@@ -29,10 +32,14 @@ export default function useDedeGame() {
   const [win, setWin] = useState(0);
   const [bigWin, setBigWin] = useState(0);
   const [spinning, setSpinning] = useState(false);
+  // Skatterden kazanılan bedava turların duyurusu (elle oynanır).
+  const [freeTrigger, setFreeTrigger] = useState('');
   const [auto, setAuto] = useState(false);
   const [message, setMessage] = useState('');
   const busyRef = useRef(false);
   const stopRef = useRef(null);
+  // Satın alınan 15 turda kazanan tutar: her turda artar, tur bitene kadar sıfırlanmaz.
+  const sessionWinRef = useRef(0);
 
   // Bekleme; DURDUR'a basıldığında (ya da süre dolduğunda) sona erer.
   const wait = useCallback((ms) => new Promise((resolve) => {
@@ -56,6 +63,13 @@ export default function useDedeGame() {
 
   useEffect(() => () => { stopRef.current?.(); }, []);
 
+  // Bedava tur duyurusu kısa süre görünür.
+  useEffect(() => {
+    if (!freeTrigger) return undefined;
+    const timer = window.setTimeout(() => setFreeTrigger(''), TRIGGER_MS);
+    return () => window.clearTimeout(timer);
+  }, [freeTrigger]);
+
   const applyState = useCallback((data) => {
     if (!data) return;
     if (typeof data.coins === 'number') setCoins(data.coins);
@@ -65,6 +79,7 @@ export default function useDedeGame() {
     if (typeof data.spins === 'number') setSpins(data.spins);
     if (typeof data.session_price === 'number') setSessionPrice(data.session_price);
     if (typeof data.session_spins === 'number') setSessionSpins(data.session_spins);
+    if (typeof data.session_size === 'number') setSessionSize(data.session_size);
   }, []);
 
   useEffect(() => {
@@ -86,21 +101,25 @@ export default function useDedeGame() {
 
   const spin = useCallback(async () => {
     if (busyRef.current || status !== 'ready') return;
-    // Satın alınan çevirme hakkı varsa tur tekrar ücret almaz.
-    const cost = freeSpins > 0 ? 0 : bet * DEDE_LINES;
+    // Satın alınan çevirme hakkı ve bedava turlar tur ücreti almaz.
+    const inSession = sessionSpins > 0;
+    const cost = inSession || freeSpins > 0 ? 0 : bet * DEDE_LINES;
     if (coins < cost) {
       setAuto(false);
       setMessage('Yetersiz coin. Coin bakiyene dokunup coin yükle.');
       return;
     }
     busyRef.current = true;
+    if (!inSession) sessionWinRef.current = 0;
     setRolling(true);
     setSpinning(true);
-    setWin(0);
+    // Çevirme hakkı sürerken biriken kazanç görünür kalır.
+    setWin(inSession ? sessionWinRef.current : 0);
     setBigWin(0);
     setWins([]);
     setOrbs([]);
     setMultiplier(0);
+    setFreeTrigger('');
     setMessage('');
     try {
       const [response] = await Promise.all([
@@ -123,7 +142,7 @@ export default function useDedeGame() {
         setOrbs(step.orbs || []);
         setMultiplier(step.multiplier || 0);
         shown += step.amount || 0;
-        setWin(shown);
+        setWin(sessionWinRef.current + shown);
         await wait(HOLD_MS);
         setExplode(true);
         await wait(EXPLODE_MS);
@@ -135,8 +154,14 @@ export default function useDedeGame() {
       // Biriken çarpan tur bitince de görünür kalır: oyuncu son değeri görür.
       await wait(END_MS);
       applyState(data);
-      setWin(data.win || 0);
-      setBigWin(data.big_win || 0);
+      // Çevirme hakkı sürerken kazanç birikir; normal turda sıfırdan başlar.
+      sessionWinRef.current += data.win || 0;
+      setWin(sessionWinRef.current);
+      setBigWin(inSession ? 0 : data.big_win || 0);
+      if (data.free_trigger) setFreeTrigger('BEDAVA TUR KAZANDIN!');
+      else if (data.retrigger) setFreeTrigger(`+${data.retrigger} BEDAVA TUR!`);
+      // 15 tur bittiğinde biriken kazanç kabul ekranında gösterilir.
+      if (inSession && (data.session_spins ?? 0) <= 0) setSessionResult(sessionWinRef.current);
     } catch (error) {
       const raw = error?.response?.data?.error;
       setAuto(false);
@@ -147,7 +172,7 @@ export default function useDedeGame() {
       setSpinning(false);
       busyRef.current = false;
     }
-  }, [applyState, bet, coins, freeSpins, status, wait]);
+  }, [applyState, bet, coins, freeSpins, sessionSpins, status, wait]);
 
   const saveBet = useCallback(async (next) => {
     setBet(next);
@@ -177,13 +202,13 @@ export default function useDedeGame() {
 
   const toggleAuto = useCallback(() => setAuto((value) => !value), []);
 
-  // Otomatik oyun ve satın alınan çevirme hakkı akışı; hak bitince kendiliğinden durur.
+  // Geri sayım yalnızca satın alınan çevirme hakkında akar; bedava turlar elle oynanır.
   useEffect(() => {
     if (spinning || status !== 'ready') return undefined;
-    if (!auto && freeSpins <= 0) return undefined;
+    if (!auto && sessionSpins <= 0) return undefined;
     const timer = window.setTimeout(() => { spin(); }, 800);
     return () => window.clearTimeout(timer);
-  }, [auto, freeSpins, spin, spinning, status]);
+  }, [auto, sessionSpins, spin, spinning, status]);
 
   // "15 çevirme hakkı": bedel coinlerden düşülür, turlar kendiliğinden çevrilir.
   const buySession = useCallback(async () => {
@@ -200,6 +225,8 @@ export default function useDedeGame() {
       setMessage(error?.response?.data?.error || 'Çevirme hakkı alınamadı.');
     }
   }, [applyState, bet, coins, sessionPrice, status]);
+
+  const clearSessionResult = useCallback(() => setSessionResult(null), []);
 
   return {
     status,
@@ -225,7 +252,10 @@ export default function useDedeGame() {
     maxBet,
     toggleAuto,
     buySession,
+    clearSessionResult,
     sessionPrice,
     sessionSpins,
+    sessionSize,
+    sessionResult,
   };
 }

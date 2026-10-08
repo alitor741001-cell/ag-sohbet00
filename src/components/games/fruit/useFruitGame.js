@@ -12,9 +12,11 @@ export default function useFruitGame() {
   const [coins, setCoins] = useState(0);
   const [totalWon, setTotalWon] = useState(0);
   const [freeSpins, setFreeSpins] = useState(0);
-  // "15 çevirme hakkı" kutusunun bedeli ve tur sayısı sunucudan gelir.
+  // "15 çevirme hakkı" kutusunun bedeli, kalan turu ve paket tur sayısı sunucudan gelir.
   const [sessionPrice, setSessionPrice] = useState(0);
-  const [sessionSpins, setSessionSpins] = useState(15);
+  const [sessionSpins, setSessionSpins] = useState(0);
+  const [sessionSize, setSessionSize] = useState(15);
+  const [sessionResult, setSessionResult] = useState(null);
   const [bet, setBet] = useState(100);
   const [spins, setSpins] = useState(0);
   const [grid, setGrid] = useState(null);
@@ -27,6 +29,8 @@ export default function useFruitGame() {
   const [message, setMessage] = useState('');
   const busyRef = useRef(false);
   const stopRef = useRef(null);
+  // Satın alınan 15 turda kazanan tutar: her turda artar, tur bitene kadar sıfırlanmaz.
+  const sessionWinRef = useRef(0);
 
   // Bekleme; STOP'a basıldığında (ya da süre dolduğunda) sona erer.
   const wait = useCallback((ms) => new Promise((resolve) => {
@@ -59,6 +63,7 @@ export default function useFruitGame() {
     if (typeof data.spins === 'number') setSpins(data.spins);
     if (typeof data.session_price === 'number') setSessionPrice(data.session_price);
     if (typeof data.session_spins === 'number') setSessionSpins(data.session_spins);
+    if (typeof data.session_size === 'number') setSessionSize(data.session_size);
   }, []);
 
   useEffect(() => {
@@ -80,17 +85,20 @@ export default function useFruitGame() {
 
   const spin = useCallback(async () => {
     if (busyRef.current || status !== 'ready') return;
-    // Satın alınan çevirme hakkı varsa tur tekrar ücret almaz.
-    const cost = freeSpins > 0 ? 0 : bet * FRUIT_LINES;
+    // Satın alınan çevirme hakkı ve bedava turlar tur ücreti almaz.
+    const inSession = sessionSpins > 0;
+    const cost = inSession || freeSpins > 0 ? 0 : bet * FRUIT_LINES;
     if (coins < cost) {
       setAuto(false);
       setMessage('Yetersiz coin. Coin bakiyene dokunup coin yükle.');
       return;
     }
     busyRef.current = true;
+    if (!inSession) sessionWinRef.current = 0;
     setStopping(false);
     setSpinning(true);
-    setWin(0);
+    // Çevirme hakkı sürerken biriken kazanç görünür kalır.
+    setWin(inSession ? sessionWinRef.current : 0);
     setBigWin(0);
     setWins([]);
     setGrid(null);
@@ -107,8 +115,12 @@ export default function useFruitGame() {
       // Karoların yerine oturması; STOP'a basılırsa beklemeden sonuç gösterilir.
       await wait(SETTLE_MS);
       applyState(data);
-      setWin(data.win || 0);
-      setBigWin(data.big_win || 0);
+      // Çevirme hakkı sürerken kazanç birikir; normal turda sıfırdan başlar.
+      sessionWinRef.current += data.win || 0;
+      setWin(sessionWinRef.current);
+      setBigWin(inSession ? 0 : data.big_win || 0);
+      // 15 tur bittiğinde biriken kazanç kabul ekranında gösterilir.
+      if (inSession && (data.session_spins ?? 0) <= 0) setSessionResult(sessionWinRef.current);
     } catch (error) {
       const raw = error?.response?.data?.error;
       setAuto(false);
@@ -119,7 +131,7 @@ export default function useFruitGame() {
       setSpinning(false);
       busyRef.current = false;
     }
-  }, [applyState, bet, coins, freeSpins, status, wait]);
+  }, [applyState, bet, coins, freeSpins, sessionSpins, status, wait]);
 
   const saveBet = useCallback(async (next) => {
     setBet(next);
@@ -149,13 +161,13 @@ export default function useFruitGame() {
 
   const toggleAuto = useCallback(() => setAuto((value) => !value), []);
 
-  // Otomatik oyun ve satın alınan çevirme hakkı akışı; hak bitince kendiliğinden durur.
+  // Geri sayım yalnızca satın alınan çevirme hakkında akar; bedava turlar elle oynanır.
   useEffect(() => {
     if (spinning || status !== 'ready') return undefined;
-    if (!auto && freeSpins <= 0) return undefined;
+    if (!auto && sessionSpins <= 0) return undefined;
     const timer = window.setTimeout(() => { spin(); }, 800);
     return () => window.clearTimeout(timer);
-  }, [auto, freeSpins, spin, spinning, status]);
+  }, [auto, sessionSpins, spin, spinning, status]);
 
   // "15 çevirme hakkı": bedel coinlerden düşülür, turlar kendiliğinden çevrilir.
   const buySession = useCallback(async () => {
@@ -172,6 +184,8 @@ export default function useFruitGame() {
       setMessage(error?.response?.data?.error || 'Çevirme hakkı alınamadı.');
     }
   }, [applyState, bet, coins, sessionPrice, status]);
+
+  const clearSessionResult = useCallback(() => setSessionResult(null), []);
 
   return {
     status,
@@ -194,7 +208,10 @@ export default function useFruitGame() {
     maxBet,
     toggleAuto,
     buySession,
+    clearSessionResult,
     sessionPrice,
     sessionSpins,
+    sessionSize,
+    sessionResult,
   };
 }

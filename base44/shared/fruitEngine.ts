@@ -19,9 +19,10 @@ export const BIG_WIN_MULTIPLE = 10;
 // Küme ödemesi: ekranda en az bu kadar aynı sembol olunca öder.
 export const CLUSTER_MIN = 8;
 
-// Altın muz: küme dışında kalan skatter sembolü; 4+ gelince ayrıca öder.
+// Altın muz: 4 ve üzeri gelince hem bonus öder hem bedava tur verir.
 export const SCATTER_ID = 'banana';
 export const SCATTER_MIN = 4;
+export const FREE_SPINS = 10;
 // Skatter ödemesi: 4, 5 ve 6+ muz için bahis katı.
 export const SCATTER_PAYS = [54, 108, 216];
 

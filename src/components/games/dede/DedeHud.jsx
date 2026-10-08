@@ -3,7 +3,7 @@ import GameActionRow from '../controls/GameActionRow';
 import { formatCoins } from './dedeConfig';
 
 /** Bilgi şeridi: coin bakiyem, toplam bahis, tur kazancı, toplam kazanç ve eylem düğmeleri. */
-export default function DedeHud({ coins, bet, lines, win, totalWon, busy, onCoins, onSession, sessionPrice, sessionSpins, freeSpins }) {
+export default function DedeHud({ coins, bet, lines, win, totalWon, busy, onCoins, onSession, sessionPrice, sessionSpins, sessionSize }) {
   const items = [
     { key: 'coins', label: 'COIN BAKİYEM', value: formatCoins(coins) },
     { key: 'stake', label: 'TOPLAM BAHİS', value: formatCoins(bet * lines) },
@@ -24,7 +24,7 @@ export default function DedeHud({ coins, bet, lines, win, totalWon, busy, onCoin
         coins={coins}
         sessionPrice={sessionPrice}
         sessionSpins={sessionSpins}
-        freeSpins={freeSpins}
+        sessionSize={sessionSize}
         busy={busy}
         onSession={onSession}
         onCoins={onCoins}

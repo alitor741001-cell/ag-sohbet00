@@ -67,6 +67,14 @@
       "type": "integer",
       "default": 0
     },
+    "session_spins": {
+      "type": "integer",
+      "default": 0
+    },
+    "dede_session_spins": {
+      "type": "integer",
+      "default": 0
+    },
     "lines": {
       "type": "number",
       "default": 50

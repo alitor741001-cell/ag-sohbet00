@@ -8,6 +8,7 @@ import FruitReels from './fruit/FruitReels';
 import FruitHud from './fruit/FruitHud';
 import GameBetBar from './controls/GameBetBar';
 import GameSpinButton from './controls/GameSpinButton';
+import GameTurnBadge from './controls/GameTurnBadge';
 import FruitWinOverlay from './fruit/FruitWinOverlay';
 import { FRUIT_LINES, formatCoins } from './fruit/fruitConfig';
 
@@ -24,6 +25,8 @@ export default function FruitGame({ onExit, onBack }) {
   // Tur sonucu: büyük kazançta kutlama ekranı, küçük kazançta kısa parıltı.
   useEffect(() => {
     if (!game.spins) return undefined;
+    // Çevirme hakkı sürerken ara kutlama yapılmaz; sonuç tur bitince gösterilir.
+    if (game.sessionSpins > 0) return undefined;
     if (game.bigWin > 0) {
       setPrize({ amount: game.bigWin });
       return undefined;
@@ -68,6 +71,12 @@ export default function FruitGame({ onExit, onBack }) {
           </div>
         </div>
 
+        <GameTurnBadge
+          sessionSpins={game.sessionSpins}
+          freeSpins={game.freeSpins}
+          accent="border-[#f0c46a]/80 text-[#ffe9b8]"
+        />
+
         <FruitHud
           coins={game.coins}
           bet={game.bet}
@@ -79,7 +88,7 @@ export default function FruitGame({ onExit, onBack }) {
           onSession={game.buySession}
           sessionPrice={game.sessionPrice}
           sessionSpins={game.sessionSpins}
-          freeSpins={game.freeSpins}
+          sessionSize={game.sessionSize}
         />
 
         {game.status === 'loading' && <p className="text-[11px] font-bold text-[#ffe9b8]">Oyun yükleniyor...</p>}
@@ -105,7 +114,7 @@ export default function FruitGame({ onExit, onBack }) {
         />
       </footer>
 
-      {flash > 0 && !prize && (
+      {flash > 0 && !prize && game.sessionResult === null && (
         <p
           key={flash}
           className="fruit-float-win pointer-events-none absolute left-1/2 top-[46%] z-20 rounded-full border border-[#ffe9b8]/80 bg-black/75 px-4 py-1.5 font-mono text-base font-black text-[#ffd35c]"
@@ -124,6 +133,16 @@ export default function FruitGame({ onExit, onBack }) {
       <CoinPurchasePanel open={coinOpen} coins={game.coins} onBack={() => setCoinOpen(false)} />
 
       <FruitWinOverlay open={!!prize} amount={prize?.amount || 0} onAccept={() => setPrize(null)} />
+
+      {/* 15 çevirme hakkı bittiğinde biriken toplam kazanç onaya sunulur. */}
+      <FruitWinOverlay
+        open={game.sessionResult !== null}
+        amount={game.sessionResult || 0}
+        title="15 ÇEVİRME HAKKI BİTTİ"
+        subtitle="TOPLAM KAZANÇ"
+        action="KABUL ET"
+        onAccept={game.clearSessionResult}
+      />
     </div>
   );
 }
