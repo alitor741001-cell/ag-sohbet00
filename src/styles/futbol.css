@@ -32,7 +32,7 @@
   min-height: 0;
   flex: 1;
   overflow-y: auto;
-  padding: .5rem .7rem max(.8rem, env(safe-area-inset-bottom));
+  padding: max(.5rem, env(safe-area-inset-top)) .7rem max(.8rem, env(safe-area-inset-bottom));
 }
 
 /* --- üst bant --- */
@@ -80,11 +80,19 @@
 }
 
 /* --- saha: kartlar kemer biçiminde, kale ortada --- */
-.fut-pitch { position: relative; }
+/* Çember, artan yüksekliği paylaşan esnek alanda ortalanır: altta boşluk kalmaz. */
+.fut-pitch {
+  position: relative;
+  display: flex;
+  flex: 1 0 auto;
+  align-items: center;
+  justify-content: center;
+}
 /* Çember saha: sekiz takım yörüngenin üstünde dizilir, ibre göbeğin ortasından döner. */
 .fut-ring {
   position: relative;
-  width: min(100%, 25rem);
+  /* Çember, ekranda kalan yüksekliğe göre büyür: alt tarafta boşluk kalmaz. */
+  width: min(100%, 32rem, calc((100dvh - 24rem) / 1.1));
   margin: 0 auto;
   aspect-ratio: 1 / 1.1;
 }
