@@ -1,7 +1,9 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import { MAX_STAKE, sanitizeBets, settle } from '../../shared/rouletteEngine.ts';
 import { START_COINS, loadWallet } from '../../shared/gameWallet.ts';
-import { ensureRound, liveHistory, roundForSpin, roundView } from '../../shared/rouletteRound.ts';
+import { ensureRound, liveHistory, mirrorRoundView, roundForSpin, roundView } from '../../shared/rouletteRound.ts';
+import { mirrorRecord } from '../../shared/supabaseMirror.ts';
+import { waitUntil } from 'base44:runtime';
 
 // Oyun ekranının gördüğü bakiye bilgisi.
 function walletView(wallet) {
@@ -13,9 +15,11 @@ function walletView(wallet) {
 }
 
 export default async function (req) {
+  // Yoğunluk anındaki yedek okuma için istemci ve kullanıcı dışarıda tutulur.
+  let base44 = null;
+  let user = null;
   try {
-    const base44 = createClientFromRequest(req);
-    let user = null;
+    base44 = createClientFromRequest(req);
     try {
       user = await base44.auth.me();
     } catch (error) {
@@ -73,7 +77,7 @@ export default async function (req) {
 
       // Tur, canlı sıralama ve numara geçmişi için kaydedilir.
       // Tur zaten ödendiği için kayıt hatası turu bozmaz.
-      await base44.asServiceRole.entities.RouletteSpin.create({
+      const recorded = await base44.asServiceRole.entities.RouletteSpin.create({
         round_no: round.round_no,
         user_id: user.id,
         user_name: user.username || user.full_name || 'Kullanıcı',
@@ -81,7 +85,10 @@ export default async function (req) {
         number: round.number,
         stake,
         payout: result.payout,
-      }).catch(() => {});
+      }).catch(() => null);
+      // Supabase aynası: bakiye ve tur kaydı iki altyapıda birden güncel kalır.
+      waitUntil(mirrorRecord(base44, 'GameWallet', updated));
+      if (recorded) waitUntil(mirrorRecord(base44, 'RouletteSpin', recorded));
 
       return Response.json({
         ...walletView(updated),
@@ -104,6 +111,13 @@ export default async function (req) {
       history: await liveHistory(base44),
     });
   } catch (error) {
+    const limited = error?.status === 429 || error?.response?.status === 429 || /rate|limit/i.test(error?.message || '');
+    // Base44 kaydı yoğunlukta sınırlanırsa oyun durmaz: tur, numara geçmişi ve
+    // bakiye Supabase aynasındaki son hâliyle sunulur, ekran akmaya devam eder.
+    if (limited && base44 && user) {
+      const mirrored = await mirrorRoundView(base44, user).catch(() => null);
+      if (mirrored) return Response.json(mirrored);
+    }
     return Response.json({ error: error.message }, { status: 500 });
   }
 }

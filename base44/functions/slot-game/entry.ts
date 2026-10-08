@@ -1,4 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
+import { waitUntil } from 'base44:runtime';
+import { mirrorRecord } from '../../shared/supabaseMirror.ts';
 import { LINES, BET_LEVELS, BIG_WIN_MULTIPLE, spinReels, evaluateGrid } from '../../shared/slotEngine.ts';
 import { DEFAULT_BET, START_COINS, clampBet, loadWallet, nearestBet } from '../../shared/gameWallet.ts';
 
@@ -207,6 +209,9 @@ export default async function (req) {
         total_won: (wallet.total_won ?? 0) + total,
         last_spin_at: new Date().toISOString(),
       });
+
+      // Supabase aynası: bakiye ve havuzlar iki altyapıda birden güncel kalır.
+      waitUntil(mirrorRecord(base44, 'GameWallet', updated));
 
       // Tur, kazanç geçmişine işlenir.
       await base44.asServiceRole.entities.GameSpin.create({

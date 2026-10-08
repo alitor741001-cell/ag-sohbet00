@@ -11,23 +11,26 @@ import {
   ROCKET_AUTO_LEVELS,
 } from './rocketConfig';
 
-// Tur durumu canlı yayından gelir. Uçuş sırasında hafif bir tik çalışır: çakılma
-// anı tam zamanında yakalanır, ekrandaki çarpan gerçek patlama noktasını geçmez.
-// Tik aralığı istek yükünü şişirmez: çakılma anı yarım saniyede yakalanır.
-const TICK_MS = 500;
+// Tur durumu canlı yayından gelir: çakılma anı yayınla birlikte anında ekrana düşer.
+// Uçuş sırasında hafif bir tik çalışır ve çakılmayı sunucuda tetikler; tik artık
+// saniyede iki kez değil ~1,2 saniyede bir çalışır — istek bütçesi yoğunluk sınırına
+// takılmaz, görsel uçuş yerel saatle aktığı için ekranda donma olmaz.
+const TICK_MS = 1200;
 // Uçuşta ağır durum tazelemesi seyrek yapılır (bahis listesi ve cüzdan için).
-const STATE_EVERY_MS = 4000;
+const STATE_EVERY_MS = 8000;
 // Çakılma sonrası yeni tur yoklanır (tur arası bekleme kadar sonra).
-const POLL_CRASHED = 2200;
+const POLL_CRASHED = 3000;
 const POLL_BETTING = 9000;
 // Hata sonrası yenilemeler kısa süre bekler; butonlar beklemez.
 const POLL_COOLDOWN = 6000;
 // Uçuş sırasında bekleme kısa tutulur: çakılma anı ve gerçek çarpan yakalanır.
-const POLL_COOLDOWN_FLIGHT = 1500;
+const POLL_COOLDOWN_FLIGHT = 1200;
 // Ekrandaki çarpan son sunucu onayından en fazla bu kadar ileri gidebilir: yoklama
 // geciktiğinde ekran, turun çoktan çakılmış olabileceği bir çarpanı göstermez.
-const FLIGHT_LEAD_MS = 2000;
-const CLOCK_TICK = 50;
+// Pay tik aralığından biraz uzundur: uçuş tazeleme beklerken donup kalmaz,
+// gösterilen çarpan da gerçek patlama noktasından kopmaz.
+const FLIGHT_LEAD_MS = 1600;
+const CLOCK_TICK = 100;
 // Otomatik hedef ok tuşlarına hızlı basmak tek istek üretir.
 const AUTO_SAVE_MS = 600;
 
@@ -143,8 +146,9 @@ export default function useRocketGame() {
       needsRecoveryRef.current = false;
     } catch {
       needsRecoveryRef.current = true;
-      // Yoğunluk hatasında mevcut durum korunur, yoklama bir süre bekler.
-      cooldownRef.current = Date.now() + POLL_COOLDOWN;
+      // Yoğunluk hatasında mevcut durum korunur. Uçuş sürerken bekleme kısa tutulur:
+      // uzun bir mola çarpanı dondurur, oyun takılmış gibi görünür.
+      cooldownRef.current = Date.now() + (phaseRef.current === 'running' ? POLL_COOLDOWN_FLIGHT : POLL_COOLDOWN);
       if (!hasDataRef.current) setStatus('error');
     }
   }, [applyResult]);
@@ -352,7 +356,8 @@ export default function useRocketGame() {
         const status = e?.response?.status;
         if (!e?.response || status === 429 || status >= 500) {
           needsRecoveryRef.current = true;
-          cooldownRef.current = Date.now() + POLL_COOLDOWN;
+          // Uçuş sürerken bekleme kısa tutulur: çarpan donup kalmaz.
+          cooldownRef.current = Date.now() + (phaseRef.current === 'running' ? POLL_COOLDOWN_FLIGHT : POLL_COOLDOWN);
         }
         // Kural reddi oyuncuya söylenir. Bahis çekme/iptal ise yoğunlukta arka
         // planda tekrar dener: oyuncuya yoğunluk uyarısı gösterilmez, sonuç

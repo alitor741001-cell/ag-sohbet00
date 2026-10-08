@@ -28,7 +28,7 @@ const NUMERIC_COLUMNS = new Set([
   'broadcaster_dollars', 'agency_dollars', 'bet', 'auto_at', 'cashout_at', 'payout', 'round_no', 'slot',
   'free_spins', 'lines', 'spins', 'total_won', 'grand', 'loaded_coins', 'gift_sent_k', 'gift_received_k',
   'diamond_month', 'unread_user1', 'unread_user2', 'xp', 'message_count', 'sort_order', 'seat_index',
-  'crash_at', 'rocket_bet', 'rocket_bet_2',
+  'crash_at', 'rocket_bet', 'rocket_bet_2', 'stake', 'roulette_bet',
 ]);
 
 const BOOLEAN_COLUMNS = new Set([
@@ -53,6 +53,8 @@ export const LIVE_COLLECTIONS = [
   { entity: 'Notification', table: 'notifications', columns: ['user_id', 'title', 'body', 'type', 'read', 'link', 'ref_id'], live: 'since' },
   { entity: 'Friendship', table: 'friendships', columns: ['requester_id', 'requester_name', 'recipient_id', 'recipient_name', 'status', 'typing_user_id', 'members', 'blocked_by'], live: 'since' },
   { entity: 'RocketLive', table: 'rocket_live', columns: ['key', 'round_no', 'status', 'crash_at', 'phase_ends_at'], live: 'full' },
+  // Rulet canlı turu: oyun iki altyapıda birden güncel durur (Base44 + Supabase).
+  { entity: 'RouletteLive', table: 'roulette_live', columns: ['key', 'round_no', 'status', 'phase_ends_at'], live: 'full' },
   { entity: 'User', table: 'app_users', columns: ['full_name', 'email', 'username', 'member_id', 'avatar', 'role', 'gender', 'title', 'display_role', 'vip_level', 'membership_status', 'hidden_user', 'loaded_coins', 'gift_sent_k', 'gift_received_k', 'is_banned', 'is_suspended', 'agency_code', 'agency_name', 'owned_agency_id', 'diamond_month', 'profile_frame', 'special_frame_id', 'last_login'], live: 'full' },
   // Görüntülü arama durumu canlı koleksiyona alındı: arama kayıtları aynada taze kalır.
 ];
@@ -84,6 +86,8 @@ export const ALL_COLLECTIONS = [
   { entity: 'PaymentMethod', table: 'payment_methods', columns: ['user_id'] },
   { entity: 'GameWallet', table: 'game_wallets', columns: ['user_id', 'user_name', 'coins', 'bet', 'rocket_bet', 'rocket_bet_2', 'grand', 'free_spins', 'lines', 'spins', 'total_won'] },
   { entity: 'GameSpin', table: 'game_spins', columns: ['user_id'] },
+  { entity: 'RouletteRound', table: 'roulette_rounds', columns: ['round_no', 'status', 'number'] },
+  { entity: 'RouletteSpin', table: 'roulette_spins', columns: ['round_no', 'user_id', 'user_name', 'number', 'stake', 'payout'] },
   { entity: 'RocketRound', table: 'rocket_rounds', columns: ['round_no', 'status'] },
   { entity: 'RocketBet', table: 'rocket_bets', columns: ['round_id', 'round_no', 'user_id', 'user_name', 'slot', 'bet', 'auto_at', 'status', 'cashout_at', 'payout'] },
   { entity: 'Agency', table: 'agencies', columns: ['agency_id', 'name', 'owner_id', 'owner_name', 'member_count', 'total_diamonds', 'month_diamonds', 'total_earnings', 'status', 'active'] },
@@ -220,6 +224,22 @@ export async function readProfileSummary(base44, userId) {
   if (!userId) return null;
   const rows = await readRows(base44, 'profile_summaries', `select=wallet,vip_count,synced_at&user_id=eq.${encodeURIComponent(userId)}&limit=1`);
   return Array.isArray(rows) && rows[0] ? rows[0] : null;
+}
+
+/**
+ * Aynadan tek kaydın kendi hâlini okur: kaynak geçici olarak erişilemezse
+ * (yoğunluk/sınır hatası) oyun ekranı aynadaki son hâlle akmaya devam eder.
+ */
+export async function mirrorPayload(base44, table, query) {
+  const rows = await readRows(base44, table, query);
+  const payload = Array.isArray(rows) && rows[0] ? rows[0].payload : null;
+  return payload && typeof payload === 'object' ? payload : null;
+}
+
+/** Oyuncunun cüzdanını aynadan okur: Base44 okunamadığında bakiye görünürü boş kalmaz. */
+export async function walletFromMirror(base44, userId) {
+  if (!userId) return null;
+  return mirrorPayload(base44, 'game_wallets', `select=payload&user_id=eq.${encodeURIComponent(userId)}&limit=1`);
 }
 
 /** Bu turda tazelenmeyen satırları siler: kaynağından silinen veri aynada da kalmaz. */

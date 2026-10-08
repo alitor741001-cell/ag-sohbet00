@@ -23,7 +23,11 @@ export default function useBigWins() {
 
   useEffect(() => {
     load();
-    const timer = window.setInterval(load, REFRESH_MS);
+    const timer = window.setInterval(() => {
+      // Sekme arka plandayken istek yapılmaz: bütçe oyuncunun turuna kalır.
+      if (document.visibilityState === 'hidden') return;
+      load();
+    }, REFRESH_MS);
     return () => window.clearInterval(timer);
   }, [load]);
 

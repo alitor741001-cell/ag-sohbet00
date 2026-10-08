@@ -7,10 +7,10 @@ import { CHIP_LEVELS } from './rouletteConfig';
 const CLOCK_TICK = 100;
 // Sunucu yoklaması: sınır anlarında sık, tur ortasında seyrek.
 const POLL_EDGE_MS = 900;
-const POLL_SPIN_MS = 2500;
-const POLL_IDLE_MS = 5000;
+const POLL_SPIN_MS = 6000;
+const POLL_IDLE_MS = 12000;
 const POLL_HIDDEN_MS = 10000;
-const POLL_ERROR_MS = 8000;
+const POLL_ERROR_MS = 4000;
 
 /** Tur aşaması yerel saatle de ilerler: bahis süresi dolduğu saniyede çark döner. */
 function phaseAt(round, now) {
@@ -138,13 +138,18 @@ export default function useRouletteGame() {
       const current = roundRef.current;
       const phase = phaseAt(current, now);
       const spinAt = current ? at(current.phase_ends_at) : null;
-      const wait = phase === 'next'
-        ? POLL_EDGE_MS
-        : phase === 'spinning'
-          ? POLL_SPIN_MS
-          : spinAt !== null && spinAt - now <= 4000
-            ? POLL_EDGE_MS
-            : POLL_IDLE_MS;
+      const endAt = current ? at(current.ends_at) : null;
+      // Tur ortasında seyrek yoklanır — istek bütçesi oyuncunun turuna kalır.
+      const cadence = phase === 'spinning'
+        ? POLL_SPIN_MS
+        : spinAt !== null && spinAt - now <= 4000
+          ? POLL_EDGE_MS
+          : POLL_IDLE_MS;
+      // Bekleme hiçbir zaman bir sonraki tur sınırını geçmez: seyrek yoklama
+      // turun dönüşünü geciktirmez, çark tam zamanında döner.
+      const edgeAt = phase === 'spinning' ? endAt : spinAt;
+      const untilEdge = edgeAt !== null ? Math.max(400, edgeAt - now + 250) : cadence;
+      const wait = Math.min(cadence, untilEdge);
       timer = setTimeout(loop, wait + Math.random() * 300);
       running = false;
     };
@@ -231,7 +236,7 @@ export default function useRouletteGame() {
       })
       .catch((error) => {
         const raw = error?.response?.data?.error;
-        setMessage(raw && !/rate limit/i.test(raw) ? raw : 'Bağlantı yoğun, bahsin sonraki turda geçerli.');
+        setMessage(raw && error?.response?.status !== 429 && !/rate|limit|sınır|yoğun/i.test(raw) ? raw : 'Bağlantı yoğun, bahsin sonraki turda geçerli.');
       })
       .finally(() => { busyRef.current = false; });
   }, [phase, round, applyRound, applyWallet]);

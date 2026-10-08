@@ -131,7 +131,7 @@ export default function useSlotGame({ roomId } = {}) {
       setAutoFree(false);
       // Tur oynanmadıysa bahis bakiyeye geri döner.
       if (cost > 0 && !noLimit) setCoins((value) => value + cost);
-      setMessage(raw && !/rate limit/i.test(raw) ? raw : 'Çok hızlı oynuyorsun, birkaç saniye bekle.');
+      setMessage(raw && error?.response?.status !== 429 && !/rate|limit|sınır|yoğun/i.test(raw) ? raw : 'Çok hızlı oynuyorsun, birkaç saniye bekle.');
     } finally {
       stopRef.current = null;
       setStopping(false);

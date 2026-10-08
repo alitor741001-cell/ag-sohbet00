@@ -21,9 +21,10 @@ export default function rocketRequests(payload) {
           } catch (error) {
             if (error?.response?.status === 429) {
               const seconds = Number(error.response.headers?.['retry-after']);
-              // Bekleme kısa tutulur: uzun bir blok oyunu ekranda donmuş gösterir.
+              // Mola kısa ve sınırlıdır: yalnızca tazeleme istekleri bekler,
+              // bahis/çekilme ile uçuş tik'i akmaya devam eder.
               deferRocketRequests(Number.isFinite(seconds) && seconds > 0
-                ? Math.min(10000, seconds * 1000) : 5000 + Math.random() * 3000);
+                ? Math.min(3000, seconds * 1000) : 1500 + Math.random() * 1000);
             }
             throw error;
           }

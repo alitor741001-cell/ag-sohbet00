@@ -1,3 +1,5 @@
+import { walletFromMirror } from './supabaseMirror.ts';
+
 // Oyun cüzdanı: slot ve meyve oyunları aynı bakiyeyi paylaşır.
 // Bahis kademeleri oyuna özel olduğu için kademe listesi parametre olarak geçilir.
 
@@ -65,4 +67,19 @@ export async function loadWallet(base44, user) {
     grand: 0,
     total_won: 0,
   });
+}
+
+/**
+ * Oyun ekranının gördüğü bakiye: Base44 kaydı geçici olarak erişilemezse
+ * Supabase aynasındaki son hâl okunur — ekran hata yerine bakiyeyle açılır.
+ * Bahis ve kazanç yazımları bu görünümü kullanmaz: para her zaman gerçek kayda işler.
+ */
+export async function loadWalletView(base44, user) {
+  try {
+    return await loadWallet(base44, user);
+  } catch (error) {
+    const mirrored = await walletFromMirror(base44, user?.id);
+    if (mirrored) return mirrored;
+    throw error;
+  }
 }

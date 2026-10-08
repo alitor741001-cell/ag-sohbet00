@@ -1,4 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
+import { waitUntil } from 'base44:runtime';
+import { mirrorRecord } from '../../shared/supabaseMirror.ts';
 import {
   BET_LEVELS,
   BIG_WIN_MULTIPLE,
@@ -105,6 +107,9 @@ export default async function (req) {
         total_won: (wallet.total_won ?? 0) + total,
         last_spin_at: new Date().toISOString(),
       });
+
+      // Supabase aynası: bakiye iki altyapıda birden güncel kalır.
+      waitUntil(mirrorRecord(base44, 'GameWallet', updated));
 
       return Response.json({
         ...walletView(updated),
