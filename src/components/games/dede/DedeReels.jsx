@@ -81,7 +81,7 @@ export default function DedeReels({ rolling, grid, wins, orbs, explode }) {
       {(orbs || []).map((orb) => (
         <React.Fragment key={`${orb.reel}-${orb.row}-${orb.value}`}>
           <span
-            className="dede-strike"
+            className="dede-strike dede-strike-over"
             style={{
               left: `${(orb.reel / 6) * 100}%`,
               top: `${(orb.row / 5) * 100}%`,
@@ -93,7 +93,12 @@ export default function DedeReels({ rolling, grid, wins, orbs, explode }) {
           </span>
           <span
             className="dede-orb-slot"
-            style={{ left: `${((orb.reel + 0.5) / 6) * 100}%`, top: `${((orb.row + 0.5) / 5) * 100}%` }}
+            style={{
+              left: `${((orb.reel + 0.5) / 6) * 100}%`,
+              top: `${((orb.row + 0.5) / 5) * 100}%`,
+              width: `${(100 / 6) * 0.92}%`,
+              height: `${(100 / 5) * 0.92}%`,
+            }}
           >
             <DedeOrb value={orb.value} />
           </span>

@@ -49,17 +49,12 @@ const SCATTER_WEIGHT = 3;
 
 // Çarpan küreleri: [değer, ağırlık]. Referans tasarımdaki 3x, 4x, 30x, 50x, 100x, 500x kademeleri.
 const ORB_VALUES = [
-  [3, 460],
-  [4, 320],
-  [5, 210],
-  [8, 110],
-  [10, 78],
-  [15, 42],
-  [25, 24],
-  [30, 16],
-  [50, 9],
-  [100, 3],
-  [500, 1],
+  [3, 900],
+  [4, 640],
+  [30, 60],
+  [50, 24],
+  [100, 7],
+  [500, 2],
 ];
 
 // Küre inme şansı: ilk ızgarada, tumblerda ve bedava turlarda (hediye ya da satın alınan).

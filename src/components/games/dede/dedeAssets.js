@@ -21,3 +21,13 @@ export const DEDE_ART = {
 };
 
 export const DEDE_ART_SIZE = 1024;
+
+// Çarpan madalyonları: kanatlı altın jeton, ortadaki küre değere göre renklenir.
+export const DEDE_ORB_ART = {
+  3: `${MEDIA_BASE}/a16db5abf_generated_image.png`,
+  4: `${MEDIA_BASE}/d32a1121f_generated_image.png`,
+  30: `${MEDIA_BASE}/9a8dfb86a_generated_image.png`,
+  50: `${MEDIA_BASE}/8226bbd4f_generated_image.png`,
+  100: `${MEDIA_BASE}/d4cb36352_generated_image.png`,
+  500: `${MEDIA_BASE}/e5d60a0da_generated_image.png`,
+};

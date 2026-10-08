@@ -1,19 +1,20 @@
 import React from 'react';
-import DedeWings from './DedeWings';
+import { Image } from '@/components/ui/image';
+import { DEDE_ART_SIZE, DEDE_ORB_ART } from './dedeAssets';
 
-/** Çarpan değerinin rengi: küçük değerler yeşil, orta değerler mor, büyük değerler altın. */
-const orbTier = (value) => {
-  if (value >= 100) return 'gold';
-  if (value >= 10) return 'mid';
-  return 'small';
-};
-
-/** Çarpan küresi: kanatlı altın madalyon, içinde çarpan değeri. */
+/** Çarpan madalyonu: referans tasarımdaki kanatlı altın jeton, ortada değerin yazdığı küre. */
 export default function DedeOrb({ value }) {
+  const art = DEDE_ORB_ART[value];
+  if (!art) return null;
   return (
-    <span className={`dede-orb dede-orb-${orbTier(value)}`}>
-      <DedeWings />
-      <span className="dede-orb-face">{value}x</span>
-    </span>
+    <Image
+      src={art}
+      alt={`${value}x çarpan`}
+      className="dede-token"
+      fittingType="fit"
+      originWidth={DEDE_ART_SIZE}
+      originHeight={DEDE_ART_SIZE}
+      quality={88}
+    />
   );
 }
