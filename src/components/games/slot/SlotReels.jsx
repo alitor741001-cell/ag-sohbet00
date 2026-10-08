@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import { cutDarkBackground } from '@/lib/cutoutImage';
+import { SLOT_SYMBOL_ART } from '@/components/games/slotAssets';
 import { SLOT_LAYOUT, SYMBOL_IDS } from '@/components/games/slot/slotLayout';
 import SlotSymbol from '@/components/games/slot/SlotSymbol';
 import SlotReelColumn from '@/components/games/slot/SlotReelColumn';
@@ -13,6 +15,11 @@ export default function SlotReels({ spinning, stopping, slow, grid }) {
   useEffect(() => {
     setStrips(spinning ? Array.from({ length: 5 }, randomRun) : []);
   }, [spinning]);
+
+  // Sembol zeminleri ekran açılırken bir kez kesilir: ilk turda boş hücre görünmez.
+  useEffect(() => {
+    Object.values(SLOT_SYMBOL_ART).forEach((url) => { cutDarkBackground(url).catch(() => {}); });
+  }, []);
   if (!spinning && !grid) return null;
   return <div aria-hidden="true" className="pointer-events-none absolute overflow-hidden" style={SLOT_LAYOUT.reelWindow}>
     <span className="slot-reel-bed absolute inset-0" />
