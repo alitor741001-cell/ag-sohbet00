@@ -8,7 +8,7 @@ import FruitHud from './fruit/FruitHud';
 import FruitBetBar from './fruit/FruitBetBar';
 import FruitSpinButton from './fruit/FruitSpinButton';
 import FruitWinOverlay from './fruit/FruitWinOverlay';
-import { FRUIT_FREE_GRANT, FRUIT_LINES, formatCoins } from './fruit/fruitConfig';
+import { FRUIT_LINES, formatCoins } from './fruit/fruitConfig';
 
 const WIN_FLASH_MS = 2400;
 
@@ -80,9 +80,10 @@ export default function FruitGame({ onExit, onBack }) {
           win={game.win}
           totalWon={game.totalWon}
           onCoins={() => setCoinOpen(true)}
-          onFree={game.claimFree}
+          onSession={game.buySession}
+          sessionPrice={game.sessionPrice}
+          sessionSpins={game.sessionSpins}
           freeSpins={game.freeSpins}
-          freeGrant={FRUIT_FREE_GRANT}
         />
 
         {game.status === 'loading' && <p className="text-[11px] font-bold text-[#ffe9b8]">Oyun yükleniyor...</p>}

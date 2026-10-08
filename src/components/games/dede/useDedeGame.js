@@ -16,6 +16,9 @@ export default function useDedeGame() {
   const [coins, setCoins] = useState(0);
   const [totalWon, setTotalWon] = useState(0);
   const [freeSpins, setFreeSpins] = useState(0);
+  // "15 çevirme hakkı" kutusunun bedeli ve tur sayısı sunucudan gelir.
+  const [sessionPrice, setSessionPrice] = useState(0);
+  const [sessionSpins, setSessionSpins] = useState(15);
   const [bet, setBet] = useState(100);
   const [spins, setSpins] = useState(0);
   const [grid, setGrid] = useState(null);
@@ -71,6 +74,8 @@ export default function useDedeGame() {
     if (typeof data.free_spins === 'number') setFreeSpins(data.free_spins);
     if (typeof data.bet === 'number') setBet(data.bet);
     if (typeof data.spins === 'number') setSpins(data.spins);
+    if (typeof data.session_price === 'number') setSessionPrice(data.session_price);
+    if (typeof data.session_spins === 'number') setSessionSpins(data.session_spins);
   }, []);
 
   useEffect(() => {
@@ -199,18 +204,22 @@ export default function useDedeGame() {
     setFreeRun(false);
   }, [freeRun, freeSpins, spinning]);
 
-  // "15 ücretsiz spin" düğmesi: hediye yalnızca bedava tur yokken alınır.
-  const claimFree = useCallback(async () => {
+  // "15 çevirme hakkı": bedel coinlerden düşülür, turlar kendiliğinden çevrilir.
+  const buySession = useCallback(async () => {
     if (busyRef.current || status !== 'ready') return;
+    if (coins < sessionPrice) {
+      setMessage('Yetersiz coin. Coin bakiyene dokunup coin yükle.');
+      return;
+    }
     try {
-      const response = await base44.functions.invoke('dede-game', { action: 'free' });
+      const response = await base44.functions.invoke('dede-game', { action: 'session', bet });
       applyState(response.data);
       setMessage('');
       if ((response.data?.free_spins ?? 0) > 0) setFreeRun(true);
     } catch (error) {
-      setMessage('Ücretsiz turlar şu an alınamadı.');
+      setMessage(error?.response?.data?.error || 'Çevirme hakkı alınamadı.');
     }
-  }, [applyState, status]);
+  }, [applyState, bet, coins, sessionPrice, status]);
 
   return {
     status,
@@ -236,6 +245,8 @@ export default function useDedeGame() {
     changeBet,
     maxBet,
     toggleAuto,
-    claimFree,
+    buySession,
+    sessionPrice,
+    sessionSpins,
   };
 }

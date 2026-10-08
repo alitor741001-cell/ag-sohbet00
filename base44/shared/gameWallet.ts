@@ -5,8 +5,25 @@ export const START_COINS = 100000;
 // Yönetici bakiyesi: 500 bin coin.
 export const ADMIN_COINS = 500000;
 export const DEFAULT_BET = 100;
-// "15 ücretsiz spin" düğmesinin verdiği bedava tur sayısı.
-export const FREE_GRANT = 15;
+
+// "15 çevirme hakkı": bahis kademesine göre bedel baştan coinlerden düşülür,
+// turlar tek tek ücret almaz ve kendiliğinden çevrilir.
+export const SESSION_SPINS = 15;
+const SESSION_PRICE: Record<number, number> = {
+  10: 5000,
+  20: 10000,
+  50: 25000,
+  100: 50000,
+  250: 150000,
+  500: 300000,
+  1000: 750000,
+  2500: 1000000,
+  5000: 1500000,
+};
+
+export function sessionPrice(bet: number): number {
+  return SESSION_PRICE[bet] ?? Math.round(bet * 1000);
+}
 // Eski sürümden kalan devasa bakiyeler bu sınırın üzerindeyse normale çekilir.
 const LEGACY_MAX_COINS = 1000000000;
 

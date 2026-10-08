@@ -7,7 +7,7 @@ import { randomGrid } from './dedeConfig';
  * 6 sütun x 5 satır ızgara. Tur sırasında sütunlar akar; kazanan karolar parlar,
  * patlar ve yerlerine üstten yenileri düşer. Çarpan küreleri karelerin üstüne iner.
  */
-export default function DedeReels({ rolling, grid, wins, orbs, multiplier, explode }) {
+export default function DedeReels({ rolling, grid, wins, orbs, explode }) {
   // Tur başlamadan ekranda duran süs ızgarası ve akan şeridin sonsuz döngüsü.
   const fallback = useMemo(() => randomGrid(), []);
   const rollGrid = useMemo(() => randomGrid(), [rolling]);
@@ -85,13 +85,7 @@ export default function DedeReels({ rolling, grid, wins, orbs, multiplier, explo
         </span>
       ))}
 
-      {/* Biriken çarpan sağ alt köşede durur; her küre inişinde değer birleşerek büyür. */}
-      {multiplier > 1 && (
-        <span key={multiplier} className="dede-mult-accum">
-          <span className="dede-mult-accum-label">BİRİKEN ÇARPAN</span>
-          <span className="dede-mult-accum-value">×{multiplier}</span>
-        </span>
-      )}
+
     </div>
   );
 }

@@ -1,6 +1,14 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import { BET_LEVELS, BIG_WIN_MULTIPLE, FREE_SPINS, LINES, playDede } from '../../shared/dedeEngine.ts';
-import { DEFAULT_BET, FREE_GRANT, START_COINS, clampBet, loadWallet, nearestBet } from '../../shared/gameWallet.ts';
+import {
+  DEFAULT_BET,
+  SESSION_SPINS,
+  START_COINS,
+  clampBet,
+  loadWallet,
+  nearestBet,
+  sessionPrice,
+} from '../../shared/gameWallet.ts';
 
 // Oyun ekranının gördüğü bakiye ve bahis bilgisi.
 function walletView(wallet) {
@@ -11,6 +19,9 @@ function walletView(wallet) {
     spins: wallet.spins ?? 0,
     free_spins: wallet.dede_free_spins ?? 0,
     total_won: wallet.total_won ?? 0,
+    // Sol taraftaki "15 çevirme hakkı" kutusunun güncel coin bedeli.
+    session_price: sessionPrice(nearestBet(wallet.bet ?? DEFAULT_BET, BET_LEVELS)),
+    session_spins: SESSION_SPINS,
   };
 }
 
@@ -29,12 +40,20 @@ export default async function (req) {
     const action = body.action || 'state';
     const wallet = await loadWallet(base44, user);
 
-    // Hediye: bedava tur yokken 15 ücretsiz tur verilir; üst üste biriktirilemez.
-    if (action === 'free') {
+    // 15 çevirme hakkı: bedel bahis kademesine göre düşülür, turlar serbest çevrilir.
+    if (action === 'session') {
+      const bet = clampBet(body.bet, BET_LEVELS, wallet.bet ?? DEFAULT_BET);
+      const price = sessionPrice(bet);
       if ((wallet.dede_free_spins ?? 0) > 0) {
-        return Response.json({ ...walletView(wallet), grid: null, steps: [], win: 0 });
+        return Response.json({ error: 'Devam eden çevirme hakkın var.' }, { status: 400 });
       }
-      const updated = await base44.asServiceRole.entities.GameWallet.update(wallet.id, { dede_free_spins: FREE_GRANT });
+      const coins = wallet.coins ?? START_COINS;
+      if (coins < price) return Response.json({ error: 'Yetersiz coin.' }, { status: 400 });
+      const updated = await base44.asServiceRole.entities.GameWallet.update(wallet.id, {
+        coins: coins - price,
+        bet,
+        dede_free_spins: SESSION_SPINS,
+      });
       return Response.json({ ...walletView(updated), grid: null, steps: [], win: 0 });
     }
 

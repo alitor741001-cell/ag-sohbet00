@@ -2,14 +2,15 @@ import React from 'react';
 import { Gift, Plus } from 'lucide-react';
 import { formatCoins } from './fruitConfig';
 
-/** Bilgi şeridi: coin bakiyem, toplam bahis, tur kazancı, toplam kazanç ve hediye turlar. */
-export default function FruitHud({ coins, bet, lines, win, totalWon, onCoins, onFree, freeSpins, freeGrant }) {
+/** Bilgi şeridi: coin bakiyem, toplam bahis, tur kazancı, toplam kazanç ve çevirme hakkı. */
+export default function FruitHud({ coins, bet, lines, win, totalWon, onCoins, onSession, sessionPrice, sessionSpins, freeSpins }) {
   const items = [
     { key: 'coins', label: 'COIN BAKİYEM', value: formatCoins(coins) },
     { key: 'stake', label: 'TOPLAM BAHİS', value: formatCoins(bet * lines) },
     { key: 'win', label: 'KAZANÇ', value: formatCoins(win), win: win > 0 },
     { key: 'total', label: 'TOPLAM', value: formatCoins(totalWon) },
   ];
+  const active = (freeSpins ?? 0) > 0;
 
   return (
     <div className="grid w-full max-w-[26rem] grid-cols-4 gap-1.5">
@@ -21,6 +22,21 @@ export default function FruitHud({ coins, bet, lines, win, totalWon, onCoins, on
       ))}
 
       <div className="col-span-4 grid grid-cols-2 gap-1.5">
+        {/* Sol taraf: bedeli coinlerden düşülen 15 çevirme hakkı; turlar kendiliğinden çevrilir. */}
+        <button
+          type="button"
+          onClick={onSession}
+          disabled={active}
+          aria-label="Çevirme hakkı al"
+          className="flex flex-col items-center justify-center rounded-2xl border border-[#f0c46a]/70 bg-gradient-to-b from-[#3a0e22] to-[#1c0512] px-1 py-1 active:brightness-110 disabled:opacity-55"
+        >
+          <span className="flex items-center gap-1 text-[9px] font-black tracking-[0.06em] text-[#ffe9b8]">
+            <Gift className="h-3.5 w-3.5" />
+            {active ? `ÇEVRİLİYOR · ${freeSpins}` : `${sessionSpins} ÇEVİRME HAKKI`}
+          </span>
+          <span className="text-[10px] font-black text-[#ffd35c]">{formatCoins(sessionPrice)} COIN</span>
+        </button>
+
         <button
           type="button"
           onClick={onCoins}
@@ -31,18 +47,6 @@ export default function FruitHud({ coins, bet, lines, win, totalWon, onCoins, on
             <Plus className="h-3.5 w-3.5" strokeWidth={3} />
           </span>
           COIN YÜKLE
-        </button>
-
-        {/* Hediye: 15 ücretsiz tur verir, turlar kendiliğinden çevrilir. */}
-        <button
-          type="button"
-          onClick={onFree}
-          disabled={freeSpins > 0}
-          aria-label="Ücretsiz turları al"
-          className="flex items-center justify-center gap-1.5 rounded-2xl border border-[#f0c46a]/60 bg-black/45 py-1.5 text-[9px] font-black tracking-[0.1em] text-[#ffe9b8] active:brightness-110 disabled:opacity-50"
-        >
-          <Gift className="h-4 w-4" />
-          {freeSpins > 0 ? `BEDAVA TUR: ${freeSpins}` : `${freeGrant} ÜCRETSİZ SPİN`}
         </button>
       </div>
     </div>

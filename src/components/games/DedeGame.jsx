@@ -10,8 +10,9 @@ import DedeHud from './dede/DedeHud';
 import DedeBetBar from './dede/DedeBetBar';
 import DedeSpinButton from './dede/DedeSpinButton';
 import DedeWinOverlay from './dede/DedeWinOverlay';
+import DedeMultiplierBar from './dede/DedeMultiplierBar';
 import { DEDE_DEITY } from './dede/dedeAssets';
-import { DEDE_FREE_GRANT, DEDE_LINES, formatCoins } from './dede/dedeConfig';
+import { DEDE_LINES, formatCoins } from './dede/dedeConfig';
 
 const WIN_FLASH_MS = 2400;
 
@@ -84,7 +85,6 @@ export default function DedeGame({ onExit, onBack }) {
               grid={game.grid}
               wins={game.wins}
               orbs={game.orbs}
-              multiplier={game.multiplier}
               explode={game.explode}
             />
           </div>
@@ -103,15 +103,18 @@ export default function DedeGame({ onExit, onBack }) {
           win={game.win}
           totalWon={game.totalWon}
           onCoins={() => setCoinOpen(true)}
-          onFree={game.claimFree}
+          onSession={game.buySession}
+          sessionPrice={game.sessionPrice}
+          sessionSpins={game.sessionSpins}
           freeSpins={game.freeSpins}
-          freeGrant={DEDE_FREE_GRANT}
         />
 
         {game.status === 'loading' && <p className="text-[11px] font-bold text-[#ffe9a8]">Oyun yükleniyor...</p>}
       </main>
 
       <footer className="relative z-10 flex shrink-0 flex-col items-center gap-2 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-1">
+        {/* Biriken çarpan alt tarafta sabit durur; inen küreler buraya düşer. */}
+        <DedeMultiplierBar multiplier={game.multiplier} orbs={game.orbs} />
         <DedeBetBar
           bet={game.bet}
           lines={DEDE_LINES}
