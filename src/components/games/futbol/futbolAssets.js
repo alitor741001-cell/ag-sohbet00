@@ -6,20 +6,27 @@ export const FUTBOL_COVER = FUTBOL_LOGO;
 export const FUTBOL_COVER_WIDTH = 1024;
 export const FUTBOL_COVER_HEIGHT = 1024;
 
-// Stadyum zemini ve altın kupa.
+// Stadyum zemini.
 export const FUTBOL_BACKDROP = `${MEDIA}/5771d81cb_generated_image.png`;
-export const FUTBOL_TROPHY = `${MEDIA}/e9a1b5b88_generated_image.png`;
 
-// Takım armaları: özgün kalkan tasarımları (gerçek kulüp amblemi kullanılmaz).
+// Takım armaları: kulüp renklerinde, kendi çizdiğimiz kalkan tasarımları.
 export const FUTBOL_CREST_SIZE = 1024;
 
 export const FUTBOL_CRESTS = {
-  kartal: `${MEDIA}/de74a9f15_generated_image.png`,
-  yildiz: `${MEDIA}/a7244c970_generated_image.png`,
-  anka: `${MEDIA}/05eca484f_generated_image.png`,
-  efes: `${MEDIA}/3cf89a54a_generated_image.png`,
-  firtina: `${MEDIA}/a1e2c61a8_generated_image.png`,
-  gunes: `${MEDIA}/8f4ab5403_generated_image.png`,
-  yesil: `${MEDIA}/1d5e153db_generated_image.png`,
-  marti: `${MEDIA}/6675fe8b7_generated_image.png`,
+  // Beşiktaş — siyah beyaz kartal
+  kartal: `${MEDIA}/cfeb74611_generated_image.png`,
+  // Galatasaray — kırmızı sarı aslan
+  yildiz: `${MEDIA}/0a6752a3a_generated_image.png`,
+  // Fenerbahçe — lacivert sarı yıldız
+  anka: `${MEDIA}/9b06957da_generated_image.png`,
+  // Trabzonspor — bordo mavi çubuklu kalkan
+  efes: `${MEDIA}/4578426a8_generated_image.png`,
+  // Antalyaspor — kırmızı beyaz akrep
+  firtina: `${MEDIA}/9844cb727_generated_image.png`,
+  // Denizlispor — yeşil beyaz horoz
+  gunes: `${MEDIA}/a40afd108_generated_image.png`,
+  // Bursaspor — yeşil beyaz timsah
+  yesil: `${MEDIA}/4d5dd707f_generated_image.png`,
+  // Adana Demirspor — lacivert açık mavi şimşek
+  marti: `${MEDIA}/d06434bf1_generated_image.png`,
 };

@@ -1,32 +1,25 @@
 import React from 'react';
-import { Flame, User, Users } from 'lucide-react';
+import { User, Users } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import { FUTBOL_CREST_SIZE } from './futbolAssets';
 import { compactCoins } from './futbolConfig';
 
-/** Takım kartı: arma, çarpan, popülerlik ve bahis rozetleri. */
-export default function FutbolTeamCard({ team, stats, selected, hot, onSelect }) {
+/** Takım kartı: arma, altta çarpan, mavi popülerlik barı ve kendi bahsim. */
+function FutbolTeamCard({ team, stats, selected, landed, share, onSelect }) {
   const open = stats?.open !== false;
   const pot = stats?.pot ?? 0;
   const mine = stats?.mine ?? 0;
+  const ratio = Math.max(0, Math.min(1, share || 0));
+  const width = pot > 0 ? Math.max(ratio * 100, 8) : 0;
 
   return (
     <button
       type="button"
+      data-team-card={team.id}
       onClick={() => onSelect(team)}
       aria-pressed={selected}
-      className={`fut-card fut-card-${team.size} ${selected ? 'fut-card-on' : ''} ${open ? '' : 'fut-card-lock'}`}
+      className={`fut-card fut-card-${team.size} ${selected ? 'fut-card-on' : ''} ${landed ? 'fut-card-win' : ''} ${open ? '' : 'fut-card-lock'}`}
     >
-      <span className="fut-card-top">
-        <span className="fut-x">x{team.x}</span>
-        {hot && pot > 0 && (
-          <span className="fut-hot" title="Popülerlik">
-            <span aria-hidden="true">⚽</span>
-            <Flame className="h-3 w-3" />
-          </span>
-        )}
-      </span>
-
       <span className="fut-crest-wrap">
         <Image
           src={team.crest}
@@ -39,23 +32,29 @@ export default function FutbolTeamCard({ team, stats, selected, hot, onSelect })
         />
       </span>
 
-      <span className="fut-card-name">{team.short}</span>
-
-      <span className="fut-stats">
-        {pot > 0 && (
-          <span className="fut-pill fut-pill-all" title="Tüm kullanıcıların coin miktarı">
-            <Users className="h-3 w-3" />
-            {compactCoins(pot)}
-          </span>
-        )}
-        {mine > 0 && (
-          <span className="fut-pill fut-pill-mine" title="Seçimlerim">
-            <User className="h-3 w-3" />
-            {compactCoins(mine)}
-          </span>
-        )}
-        {!open && <span className="fut-pill fut-pill-lock">KAPALI</span>}
+      <span className="fut-card-foot">
+        <span className="fut-card-name">{team.short}</span>
+        <span className="fut-x">x{team.x}</span>
       </span>
+
+      <span className="fut-bar" title={`Tüm kullanıcıların coin miktarı: ${compactCoins(pot)}`}>
+        <span className="fut-bar-fill" style={{ width: `${width}%` }} />
+        <span className="fut-bar-text">
+          <Users className="h-3 w-3" />
+          {compactCoins(pot)}
+        </span>
+      </span>
+
+      {mine > 0 && (
+        <span className="fut-pill fut-pill-mine">
+          <User className="h-3 w-3" />
+          {compactCoins(mine)}
+        </span>
+      )}
+      {!open && <span className="fut-pill fut-pill-lock">KAPALI</span>}
     </button>
   );
 }
+
+// Çekiliş karesi akarken kartlar yeniden çizilmez.
+export default React.memo(FutbolTeamCard);
