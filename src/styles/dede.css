@@ -55,9 +55,9 @@
 /* Oyun çerçevesi: kalın altın kenar, içeride koyu mor zemin. */
 .dede-frame {
   position: relative;
-  border: 3px solid #f6cf63;
-  border-radius: 22px;
-  background: linear-gradient(180deg, rgba(63, 20, 92, 0.94), rgba(26, 6, 40, 0.96));
+  border: 4px solid #ffdc7a;
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(72, 22, 104, 0.94), rgba(20, 5, 32, 0.97));
   animation: dede-frame-pulse 3.6s ease-in-out infinite;
 }
 @keyframes dede-frame-pulse {
@@ -81,6 +81,7 @@
   overflow: hidden;
 }
 .dede-cell {
+  position: relative;
   display: flex;
   flex: 1 1 0;
   align-items: center;
@@ -102,35 +103,25 @@
   to { transform: translateY(0); }
 }
 
-/* --- sembol karoları: renkli madalyonlar --- */
+/* --- sembol kartları: orijinal altın madalyon çizimleri --- */
+/* Kart kendi karesine mutlak olarak oturur: hangi cihazda olursa olsun kare dışına çıkamaz. */
 .dede-badge {
-  position: relative;
-  display: flex;
+  position: absolute;
+  inset: 0;
+  display: block;
+  overflow: hidden;
+  border-radius: 16%;
+  box-shadow: 0 0 0 1px rgba(255, 226, 150, 0.35), 0 6px 14px -8px rgba(0, 0, 0, 0.95);
+}
+.dede-art {
+  display: block;
   width: 100%;
-  aspect-ratio: 1;
-  max-height: 100%;
-  align-items: center;
-  justify-content: center;
-  border-radius: 9999px;
-  box-shadow: inset 0 0 0 2px rgba(255, 226, 145, 0.95), inset 0 0 0 3px rgba(96, 54, 6, 0.6),
-    0 4px 10px -5px rgba(0, 0, 0, 0.95);
+  height: 100%;
+  border-radius: 16%;
 }
-.dede-glyph {
-  font-size: clamp(1.05rem, 8vw, 2.35rem);
-  line-height: 1;
-  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.6));
-}
-.dede-badge-crown { background: radial-gradient(circle at 42% 28%, #ff9a9a, #c81f2c 62%, #78101c); }
-.dede-badge-gem { background: radial-gradient(circle at 42% 28%, #d7a6ff, #7c2fd0 60%, #3d1068); }
-.dede-badge-ring { background: radial-gradient(circle at 42% 28%, #ffa6e0, #d0249b 60%, #6a0f4c); }
-.dede-badge-hour { background: radial-gradient(circle at 42% 28%, #a8f0a8, #2c9e46 60%, #12582a); }
-.dede-badge-chalice { background: radial-gradient(circle at 42% 28%, #a6d4ff, #1f6fd0 60%, #0d3a75); }
-.dede-badge-bolt { background: radial-gradient(circle at 42% 28%, #ffe6a0, #dfa012 60%, #865904); }
-.dede-badge-dede {
-  background: radial-gradient(circle at 42% 28%, #fff3c4, #e0a63c 58%, #8a5810);
-  box-shadow: inset 0 0 0 2px #fff, inset 0 0 0 3px rgba(96, 54, 6, 0.5), 0 0 16px rgba(255, 214, 102, 0.9);
-}
-.dede-badge-dede .dede-glyph { font-size: clamp(1.2rem, 9vw, 2.7rem); }
+.dede-art img { object-fit: contain; border-radius: 16%; }
+/* Skatter: dede madalyonu altın halkayla parlar. */
+.dede-badge-dede { box-shadow: 0 0 0 2px #fff6d0, 0 0 20px rgba(255, 205, 90, 0.95); }
 
 /* Küme kazanan karo parlar; patlama anında küçülüp kaybolur. */
 .dede-badge-win { animation: dede-win 0.9s ease-in-out infinite; }
@@ -194,26 +185,42 @@
   box-shadow: 0 0 16px rgba(255, 190, 60, 0.75), inset 0 -7px 14px rgba(0, 0, 0, 0.45);
   text-shadow: 0 2px 0 rgba(0, 0, 0, 0.6);
 }
-/* Ekrandaki kürelerin toplamı: bir sonraki kazanç bu çarpanla çarpılır. */
-.dede-mult-banner {
+/* Biriken çarpan: ızgaranın sağ alt köşesinde durur ve her küre inişinde büyür. */
+.dede-mult-accum {
   position: absolute;
-  left: 50%;
-  top: -0.7rem;
-  z-index: 6;
-  transform: translateX(-50%);
-  border-radius: 9999px;
+  right: 0.4rem;
+  bottom: 0.4rem;
+  z-index: 7;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.05rem;
+  border-radius: 0.9rem;
   border: 1px solid #fff6d0;
-  padding: 0.15rem 0.6rem;
-  font-size: 0.68rem;
-  font-weight: 900;
-  letter-spacing: 0.1em;
+  padding: 0.25rem 0.7rem;
   color: #2a0c02;
   background: linear-gradient(180deg, #ffe9a8, #ffbe2e);
-  box-shadow: 0 0 18px rgba(255, 190, 60, 0.9);
-  animation: dede-pop 0.4s ease-out both;
+  box-shadow: 0 0 22px rgba(255, 190, 60, 0.95), 0 8px 18px -12px rgba(0, 0, 0, 0.95);
   pointer-events: none;
+  animation: dede-accum-pop 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.3) both;
 }
-@keyframes dede-pop { from { transform: translateX(-50%) scale(0.7); opacity: 0.3; } to { transform: translateX(-50%) scale(1); opacity: 1; } }
+.dede-mult-accum-label {
+  font-size: 0.5rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  opacity: 0.8;
+}
+.dede-mult-accum-value {
+  font-size: 1.05rem;
+  font-weight: 900;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+@keyframes dede-accum-pop {
+  0% { transform: scale(0.7); }
+  60% { transform: scale(1.14); }
+  100% { transform: scale(1); }
+}
 
 /* --- tur ve panel düğmeleri --- */
 .dede-round {
@@ -328,6 +335,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .dede-rays, .dede-frame, .dede-strip, .dede-badge-win, .dede-drop, .dede-ring,
-  .dede-spin-btn-live, .dede-float-win, .dede-orb, .dede-mult-banner { animation: none; }
+  .dede-spin-btn-live, .dede-float-win, .dede-orb, .dede-mult-accum { animation: none; }
   .dede-badge-explode { animation-duration: 0.01s; }
 }

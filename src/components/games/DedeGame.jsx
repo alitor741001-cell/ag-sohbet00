@@ -11,7 +11,7 @@ import DedeBetBar from './dede/DedeBetBar';
 import DedeSpinButton from './dede/DedeSpinButton';
 import DedeWinOverlay from './dede/DedeWinOverlay';
 import { DEDE_DEITY } from './dede/dedeAssets';
-import { DEDE_LINES, formatCoins } from './dede/dedeConfig';
+import { DEDE_FREE_GRANT, DEDE_LINES, formatCoins } from './dede/dedeConfig';
 
 const WIN_FLASH_MS = 2400;
 
@@ -103,6 +103,9 @@ export default function DedeGame({ onExit, onBack }) {
           win={game.win}
           totalWon={game.totalWon}
           onCoins={() => setCoinOpen(true)}
+          onFree={game.claimFree}
+          freeSpins={game.freeSpins}
+          freeGrant={DEDE_FREE_GRANT}
         />
 
         {game.status === 'loading' && <p className="text-[11px] font-bold text-[#ffe9a8]">Oyun yükleniyor...</p>}

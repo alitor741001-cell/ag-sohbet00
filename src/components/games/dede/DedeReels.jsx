@@ -51,7 +51,7 @@ export default function DedeReels({ rolling, grid, wins, orbs, multiplier, explo
   return (
     <div className="relative flex h-full w-full items-stretch gap-[3px] sm:gap-1.5">
       {visible.map((column, reel) => (
-        <div key={reel} className="dede-column min-w-0 flex-1 rounded-lg bg-black/25 p-[2px] sm:p-1">
+        <div key={reel} className="dede-column min-w-0 flex-1 p-[2px] sm:p-1">
           {rolling ? (
             <div className="dede-strip" style={{ animationDuration: `${170 + reel * 25}ms` }}>
               {strips[reel].map((id, index) => (
@@ -85,7 +85,13 @@ export default function DedeReels({ rolling, grid, wins, orbs, multiplier, explo
         </span>
       ))}
 
-      {multiplier > 1 && <span className="dede-mult-banner">ÇARPAN ×{multiplier}</span>}
+      {/* Biriken çarpan sağ alt köşede durur; her küre inişinde değer birleşerek büyür. */}
+      {multiplier > 1 && (
+        <span key={multiplier} className="dede-mult-accum">
+          <span className="dede-mult-accum-label">BİRİKEN ÇARPAN</span>
+          <span className="dede-mult-accum-value">×{multiplier}</span>
+        </span>
+      )}
     </div>
   );
 }

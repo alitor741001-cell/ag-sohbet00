@@ -1,6 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import { BET_LEVELS, BIG_WIN_MULTIPLE, FREE_SPINS, LINES, playDede } from '../../shared/dedeEngine.ts';
-import { DEFAULT_BET, START_COINS, clampBet, loadWallet, nearestBet } from '../../shared/gameWallet.ts';
+import { DEFAULT_BET, FREE_GRANT, START_COINS, clampBet, loadWallet, nearestBet } from '../../shared/gameWallet.ts';
 
 // Oyun ekranının gördüğü bakiye ve bahis bilgisi.
 function walletView(wallet) {
@@ -28,6 +28,15 @@ export default async function (req) {
     const body = await req.json().catch(() => ({}));
     const action = body.action || 'state';
     const wallet = await loadWallet(base44, user);
+
+    // Hediye: bedava tur yokken 15 ücretsiz tur verilir; üst üste biriktirilemez.
+    if (action === 'free') {
+      if ((wallet.dede_free_spins ?? 0) > 0) {
+        return Response.json({ ...walletView(wallet), grid: null, steps: [], win: 0 });
+      }
+      const updated = await base44.asServiceRole.entities.GameWallet.update(wallet.id, { dede_free_spins: FREE_GRANT });
+      return Response.json({ ...walletView(updated), grid: null, steps: [], win: 0 });
+    }
 
     if (action === 'bet') {
       const bet = clampBet(body.bet, BET_LEVELS, wallet.bet ?? DEFAULT_BET);

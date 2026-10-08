@@ -5,6 +5,8 @@ export const START_COINS = 100000;
 // Yönetici bakiyesi: 500 bin coin.
 export const ADMIN_COINS = 500000;
 export const DEFAULT_BET = 100;
+// "15 ücretsiz spin" düğmesinin verdiği bedava tur sayısı.
+export const FREE_GRANT = 15;
 // Eski sürümden kalan devasa bakiyeler bu sınırın üzerindeyse normale çekilir.
 const LEGACY_MAX_COINS = 1000000000;
 

@@ -183,7 +183,9 @@ export function playDede(bet, isFree) {
 
   const ceiling = bet * MAX_WIN_MULTIPLE;
   const steps = [];
-  let total = 0;
+  let raw = 0;
+  // Biriken çarpan: inen her küre değerini buraya ekler ve tur boyunca büyür.
+  let accumulated = 0;
   let capped = false;
   let orbs = rollOrbs(INITIAL_ORB_CHANCE, 2);
 
@@ -204,22 +206,21 @@ export function playDede(bet, isFree) {
     }
     if (!wins.length) break;
 
-    // Ekrandaki kürelerin toplamı bu adımın kazancına uygulanır; sonra patlarlar.
-    const multiplier = orbs.reduce((sum, orb) => sum + orb.value, 0) || 1;
-    let amount = Math.round(stepTotal * multiplier);
-    if (total + amount > ceiling) {
-      amount = Math.max(0, ceiling - total);
-      capped = true;
-    }
-    total += amount;
+    // İnen küreler birikir: her inişte biriken çarpana eklenir, tur boyunca büyür.
+    const orbSum = orbs.reduce((sum, orb) => sum + orb.value, 0);
+    if (orbSum > 0) accumulated += orbSum;
+    raw += stepTotal;
     steps.push({
       grid: grid.map((column) => [...column]),
       wins,
       orbs: orbs.map((orb) => ({ ...orb })),
-      multiplier,
-      amount,
+      multiplier: accumulated || 1,
+      amount: stepTotal,
     });
-    if (capped) break;
+    if (raw >= ceiling) {
+      capped = true;
+      break;
+    }
 
     // Skatter karoları patlamaz: dede yerinde kalır.
     const winning = new Set();
@@ -231,6 +232,14 @@ export function playDede(bet, isFree) {
 
     grid = collapse(grid, winning);
     orbs = rollOrbs(isFree ? FREE_ORB_CHANCE : TUMBLE_ORB_CHANCE, 3);
+  }
+
+  // Turun tamamı biriken çarpanla çarpılır — orijinal oyundaki gibi.
+  const factor = accumulated > 1 ? accumulated : 1;
+  let total = Math.round(raw * factor);
+  if (total > ceiling) {
+    total = ceiling;
+    capped = true;
   }
 
   // Bedava turda 3+ dede turu uzatır.

@@ -10,6 +10,7 @@ import {
 } from '../../shared/fruitEngine.ts';
 import {
   DEFAULT_BET,
+  FREE_GRANT,
   START_COINS,
   clampBet,
   loadWallet,
@@ -43,6 +44,15 @@ export default async function (req) {
     const body = await req.json().catch(() => ({}));
     const action = body.action || 'state';
     const wallet = await loadWallet(base44, user);
+
+    // Hediye: bedava tur yokken 15 ücretsiz tur verilir; üst üste biriktirilemez.
+    if (action === 'free') {
+      if ((wallet.free_spins ?? 0) > 0) {
+        return Response.json({ ...walletView(wallet), grid: null, wins: [], win: 0 });
+      }
+      const updated = await base44.asServiceRole.entities.GameWallet.update(wallet.id, { free_spins: FREE_GRANT });
+      return Response.json({ ...walletView(updated), grid: null, wins: [], win: 0 });
+    }
 
     if (action === 'bet') {
       const bet = clampBet(body.bet, BET_LEVELS, wallet.bet ?? DEFAULT_BET);

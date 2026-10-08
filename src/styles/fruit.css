@@ -68,6 +68,7 @@
   overflow: hidden;
 }
 .fruit-cell {
+  position: relative;
   display: flex;
   flex: 1 1 0;
   align-items: center;
@@ -90,11 +91,11 @@
 }
 
 /* Tek tek kartlar: görsel kartı tamamen kaplar, kartın dışına hiçbir şey taşmaz. */
+/* Kart kendi karesine mutlak olarak oturur: hangi cihazda olursa olsun kare dışına çıkamaz. */
 .fruit-tile {
-  position: relative;
+  position: absolute;
+  inset: 0;
   display: block;
-  width: 100%;
-  height: 100%;
   overflow: hidden;
   border-radius: 16%;
   box-shadow: 0 0 0 1px rgba(255, 226, 150, 0.35), 0 6px 14px -8px rgba(0, 0, 0, 0.95);

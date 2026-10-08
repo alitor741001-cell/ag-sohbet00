@@ -13,7 +13,7 @@ export default function FruitSymbol({ id, win, scatter }) {
         src={symbol.art}
         alt={symbol.name}
         className="fruit-art"
-        fittingType="fill"
+        fittingType="fit"
         originWidth={FRUIT_ART_SIZE}
         originHeight={FRUIT_ART_SIZE}
         quality={88}

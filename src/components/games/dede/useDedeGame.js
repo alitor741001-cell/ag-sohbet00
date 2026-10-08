@@ -30,6 +30,8 @@ export default function useDedeGame() {
   const [spinning, setSpinning] = useState(false);
   const [auto, setAuto] = useState(false);
   const [message, setMessage] = useState('');
+  // Ücretsiz tur hediye edildiğinde turlar kendiliğinden çevrilir.
+  const [freeRun, setFreeRun] = useState(false);
   const busyRef = useRef(false);
   const stopRef = useRef(null);
 
@@ -137,7 +139,7 @@ export default function useDedeGame() {
       if (data.grid) setGrid(data.grid);
       setWins([]);
       setOrbs([]);
-      setMultiplier(0);
+      // Biriken çarpan tur bitince de görünür kalır: oyuncu son değeri görür.
       await wait(END_MS);
       applyState(data);
       setWin(data.win || 0);
@@ -184,11 +186,31 @@ export default function useDedeGame() {
 
   const toggleAuto = useCallback(() => setAuto((value) => !value), []);
 
+  // Otomatik oyun ve ücretsiz tur akışı; hak bitince kendiliğinden durur.
   useEffect(() => {
-    if (!auto || spinning || status !== 'ready') return undefined;
+    if (spinning || status !== 'ready') return undefined;
+    if (!auto && !(freeRun && freeSpins > 0)) return undefined;
     const timer = window.setTimeout(() => { spin(); }, 800);
     return () => window.clearTimeout(timer);
-  }, [auto, spin, spinning, status]);
+  }, [auto, freeRun, freeSpins, spin, spinning, status]);
+
+  useEffect(() => {
+    if (!freeRun || spinning || freeSpins > 0) return;
+    setFreeRun(false);
+  }, [freeRun, freeSpins, spinning]);
+
+  // "15 ücretsiz spin" düğmesi: hediye yalnızca bedava tur yokken alınır.
+  const claimFree = useCallback(async () => {
+    if (busyRef.current || status !== 'ready') return;
+    try {
+      const response = await base44.functions.invoke('dede-game', { action: 'free' });
+      applyState(response.data);
+      setMessage('');
+      if ((response.data?.free_spins ?? 0) > 0) setFreeRun(true);
+    } catch (error) {
+      setMessage('Ücretsiz turlar şu an alınamadı.');
+    }
+  }, [applyState, status]);
 
   return {
     status,
@@ -214,5 +236,6 @@ export default function useDedeGame() {
     changeBet,
     maxBet,
     toggleAuto,
+    claimFree,
   };
 }
