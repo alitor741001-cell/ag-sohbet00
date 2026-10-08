@@ -35,7 +35,6 @@ import { clearMinimizedRoom, getMinimizedRoom, isRoomMinimized, setMinimizedRoom
 import VoicePrivateChatSheet from '@/components/voice/VoicePrivateChatSheet';
 import useRoomMusic from '@/hooks/useRoomMusic';
 import RoomMusicLayer from '@/components/voice/RoomMusicLayer';
-import { withBoardStep } from '@/lib/numberBoard';
 import { takeRoomPrefetch } from '@/lib/roomPrefetch';
 import useRoomSwipeNav from '@/hooks/useRoomSwipeNav';
 import useVerticalSwipe from '@/hooks/useVerticalSwipe';

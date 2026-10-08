@@ -6,8 +6,6 @@
 export const START_COINS = 100000;
 export const ADMIN_COINS = 500000;
 export const K_UNIT = 1000;
-// Eski "sınırsız" bakiyeler tek seferde normale çekilir.
-const LEGACY_MAX_COINS = 100000000;
 
 /** K değerinin coin karşılığı — 1K altındaki hediyeler de doğru hesaplanır (0,05K = 50 coin). */
 export const coinsForK = (kValue: any) => Math.max(0, Math.round((Number(kValue) || 0) * K_UNIT));
