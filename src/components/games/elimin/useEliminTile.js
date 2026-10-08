@@ -2,24 +2,18 @@ import { useEffect, useState } from 'react';
 
 // Kart karesi: görsel kare kırpılır, 512'ye indirilir.
 const TILE = 512;
-// Sınır yumuşatma: bu mesafenin altındaki pikseller tamamen şeffaf, üstündekiler tamamen opak.
-const CLEAR = 26 * 26;
-const SOLID = 70 * 70;
-// Zemin taraması: komşu farkı bu eşiğin altındaysa akış sürer — zeminin yumuşak
-// ışık halkası da silinir, nesnenin kenarında akış durur. Zemine uzaklık üst
-// sınırı aşılırsa piksel zemin sayılmaz: nesnenin beyaz/krem yerleri korunur.
-const STEP = 20 * 20;
-const FLOOR = 72 * 72;
-// Zemin sınırında kalan ışık halkası bu kalınlıkta temizlenir.
-const HALO = 2;
-// Nesne kenara değmesin: kırpma payı ve leke eşiği.
+// Zemin tona bu mesafeden yakınsa tamamen silinir; bu mesafeden uzaksa nesne
+// sayılır. Arasındaki pikseller kenar yumuşatmasıdır: alfa kademeli verilir.
+const CLEAR = 42 * 42;
+const SOLID = 96 * 96;
+// Nesne kenara değmesin: kırpma payı.
 const INSET = 0.9;
-const SPECK = 30;
+// En büyük nesne bu orandan küçükse zemin silinmez: sembol boş kalmasın.
+const MIN_SUBJECT = 0.06;
 
-const MASK = new Uint8Array(TILE * TILE);
-const EDGE = new Uint8Array(TILE * TILE);
-const SOLID_PIXELS = new Uint8Array(TILE * TILE);
+const SUBJECT = new Uint8Array(TILE * TILE);
 const VISITED = new Uint8Array(TILE * TILE);
+const HOLE = new Uint8Array(TILE * TILE);
 const STACK = new Int32Array(TILE * TILE);
 
 const cache = new Map();
@@ -63,14 +57,6 @@ function backgroundTone(pixels) {
   });
 }
 
-/** İki pikselin renk farkı. */
-function colorGap(pixels, a, b) {
-  const red = pixels[a] - pixels[b];
-  const green = pixels[a + 1] - pixels[b + 1];
-  const blue = pixels[a + 2] - pixels[b + 2];
-  return red * red + green * green + blue * blue;
-}
-
 /** Pikselin zemin tonuna uzaklığı. */
 function floorGap(pixels, p, tone) {
   const red = pixels[p] - tone[0];
@@ -80,143 +66,153 @@ function floorGap(pixels, p, tone) {
 }
 
 /**
- * Zemini karenin dışından içeri doğru tarar. Yumuşak geçişler (ışık halkası,
- * ızgara çizgisi) boyunca ilerler, nesnenin kenarında komşu farkı büyüdüğü
- * için durur; böylece nesnenin kendi içindeki benzer renkler korunur.
+ * Zemin, tona olan uzaklığına göre işaretlenir; bağlantı aranmaz. Görsellerin
+ * içindeki çerçeve çizgileri dıştan içe taramayı kesiyor ve arkasında kare bir
+ * zemin bırakıyordu. Burada zemin her yerde tona bakılarak atılır.
  */
-function markBackground(pixels, tone) {
-  MASK.fill(0);
+function markFloor(pixels, tone) {
+  const total = TILE * TILE;
+  for (let index = 0; index < total; index += 1) {
+    SUBJECT[index] = floorGap(pixels, index * 4, tone) > CLEAR ? 1 : 0;
+  }
+}
+
+/**
+ * Yalnızca en büyük nesne bırakılır. Çerçeve çizgileri ve toz nesneden ayrı
+ * bileşenlerdir; böylece nesneyle birlikte onlar da atılır.
+ */
+function keepSubject() {
+  const total = TILE * TILE;
+  VISITED.fill(0);
+  let seed = -1;
+  let biggest = 0;
+
+  for (let start = 0; start < total; start += 1) {
+    if (!SUBJECT[start] || VISITED[start]) continue;
+    let size = 0;
+    let head = 0;
+    let tail = 1;
+    VISITED[start] = 1;
+    STACK[0] = start;
+    while (head < tail) {
+      const index = STACK[head];
+      head += 1;
+      size += 1;
+      const x = index % TILE;
+      const y = (index - x) / TILE;
+      const push = (next) => {
+        if (VISITED[next] || !SUBJECT[next]) return;
+        VISITED[next] = 1;
+        STACK[tail] = next;
+        tail += 1;
+      };
+      if (x > 0) push(index - 1);
+      if (x < TILE - 1) push(index + 1);
+      if (y > 0) push(index - TILE);
+      if (y < TILE - 1) push(index + TILE);
+    }
+    if (size > biggest) {
+      biggest = size;
+      seed = start;
+    }
+  }
+
+  // Nesne bulunamadıysa zemin silinmez: boş kare yerine görsel olduğu gibi kalır.
+  if (seed < 0 || biggest < total * MIN_SUBJECT) return false;
+
+  // VISITED adayları tutuyor: ikinci tarama yalnızca en büyük bileşeni işaretler.
+  SUBJECT.fill(0);
+  let head = 0;
+  let tail = 1;
+  STACK[0] = seed;
+  SUBJECT[seed] = 1;
+  while (head < tail) {
+    const index = STACK[head];
+    head += 1;
+    const x = index % TILE;
+    const y = (index - x) / TILE;
+    const push = (next) => {
+      if (SUBJECT[next] || !VISITED[next]) return;
+      SUBJECT[next] = 1;
+      STACK[tail] = next;
+      tail += 1;
+    };
+    if (x > 0) push(index - 1);
+    if (x < TILE - 1) push(index + 1);
+    if (y > 0) push(index - TILE);
+    if (y < TILE - 1) push(index + TILE);
+  }
+  return true;
+}
+
+/**
+ * Delik doldurma: nesnenin içinde kalan açık alanlar (beyaz yüz, ışık) geri
+ * getirilir. Şeffaf alan kenardan taranır; ulaşılamayan şeffaf piksel içeridedir.
+ */
+function fillHoles() {
+  const total = TILE * TILE;
+  VISITED.fill(0);
+  let head = 0;
   let tail = 0;
   const seed = (index) => {
-    if (MASK[index]) return;
-    MASK[index] = 1;
+    if (VISITED[index] || SUBJECT[index]) return;
+    VISITED[index] = 1;
     STACK[tail] = index;
     tail += 1;
   };
-
-  // Karenin en dış halkası her zaman zemin sayılır: kırpma artıkları kalmaz.
   for (let i = 0; i < TILE; i += 1) {
     seed(i);
     seed((TILE - 1) * TILE + i);
     seed(i * TILE);
     seed(i * TILE + TILE - 1);
   }
-
-  let head = 0;
   while (head < tail) {
     const index = STACK[head];
     head += 1;
     const x = index % TILE;
     const y = (index - x) / TILE;
-    const p = index * 4;
-    const neighbours = [
-      x > 0 ? index - 1 : -1,
-      x < TILE - 1 ? index + 1 : -1,
-      y > 0 ? index - TILE : -1,
-      y < TILE - 1 ? index + TILE : -1,
-    ];
-    for (const next of neighbours) {
-      if (next < 0 || MASK[next]) continue;
-      const q = next * 4;
-      if (colorGap(pixels, q, p) > STEP) continue;
-      if (floorGap(pixels, q, tone) > FLOOR) continue;
-      MASK[next] = 1;
+    const push = (next) => {
+      if (VISITED[next] || SUBJECT[next]) return;
+      VISITED[next] = 1;
       STACK[tail] = next;
       tail += 1;
-    }
+    };
+    if (x > 0) push(index - 1);
+    if (x < TILE - 1) push(index + 1);
+    if (y > 0) push(index - TILE);
+    if (y < TILE - 1) push(index + TILE);
   }
-}
 
-/** Zeminin hemen çevresindeki şerit: nesnenin kirli saçılması burada temizlenir. */
-function markHalo() {
-  EDGE.fill(0);
-  for (let y = 0; y < TILE; y += 1) {
-    for (let x = 0; x < TILE; x += 1) {
-      const index = y * TILE + x;
-      if (MASK[index]) continue;
-      let touching = false;
-      for (let dy = -HALO; dy <= HALO && !touching; dy += 1) {
-        const ny = y + dy;
-        if (ny < 0 || ny >= TILE) continue;
-        for (let dx = -HALO; dx <= HALO; dx += 1) {
-          const nx = x + dx;
-          if (nx < 0 || nx >= TILE) continue;
-          if (MASK[ny * TILE + nx]) {
-            touching = true;
-            break;
-          }
-        }
-      }
-      if (touching) EDGE[index] = 1;
-    }
+  HOLE.fill(0);
+  for (let index = 0; index < total; index += 1) {
+    if (SUBJECT[index] || VISITED[index]) continue;
+    SUBJECT[index] = 1;
+    HOLE[index] = 1;
   }
 }
 
 /**
- * Zemin tamamen silinir; sınırda kalan ışık halkası yumuşak geçişle
- * şeffaflaştırılır ve zeminden sızan renk nesnenin renginden ayıklanır.
+ * Zemin tamamen silinir; nesnenin kenar yumuşatması kademeli alfa alır ve kenara
+ * sızmış zemin rengi nesnenin renginden ayıklanır.
  */
 function wipeBackground(pixels, tone) {
-  for (let index = 0; index < TILE * TILE; index += 1) {
+  const total = TILE * TILE;
+  for (let index = 0; index < total; index += 1) {
     const p = index * 4;
-    if (MASK[index]) {
+    if (!SUBJECT[index]) {
       pixels[p + 3] = 0;
       continue;
     }
-    if (!EDGE[index]) continue;
+    // İçeride kalan açık alanlar olduğu gibi korunur.
+    if (HOLE[index]) continue;
 
     const gap = floorGap(pixels, p, tone);
-    const amount = gap <= CLEAR ? 0 : gap >= SOLID ? 1 : (gap - CLEAR) / (SOLID - CLEAR);
-    if (amount <= 0) {
-      pixels[p + 3] = 0;
-      continue;
-    }
+    const amount = gap >= SOLID ? 1 : (gap - CLEAR) / (SOLID - CLEAR);
     for (let channel = 0; channel < 3; channel += 1) {
       const value = (pixels[p + channel] - (1 - amount) * tone[channel]) / amount;
       pixels[p + channel] = value < 0 ? 0 : value > 255 ? 255 : Math.round(value);
     }
     pixels[p + 3] = Math.round(amount * 255);
-  }
-}
-
-/** Zemin silindikten sonra kalan küçük parçacıklar (toz, çizgi artığı) atılır. */
-function removeSpecks(pixels) {
-  const total = TILE * TILE;
-  SOLID_PIXELS.fill(0);
-  VISITED.fill(0);
-  for (let index = 0; index < total; index += 1) {
-    SOLID_PIXELS[index] = pixels[index * 4 + 3] > 128 ? 1 : 0;
-  }
-
-  for (let start = 0; start < total; start += 1) {
-    if (!SOLID_PIXELS[start] || VISITED[start]) continue;
-    const members = [start];
-    let speck = true;
-    let head = 0;
-    let tail = 1;
-    STACK[0] = start;
-    VISITED[start] = 1;
-    while (head < tail) {
-      const index = STACK[head];
-      head += 1;
-      const x = index % TILE;
-      const y = (index - x) / TILE;
-      const neighbours = [
-        x > 0 ? index - 1 : -1,
-        x < TILE - 1 ? index + 1 : -1,
-        y > 0 ? index - TILE : -1,
-        y < TILE - 1 ? index + TILE : -1,
-      ];
-      for (const next of neighbours) {
-        if (next < 0 || VISITED[next] || !SOLID_PIXELS[next]) continue;
-        VISITED[next] = 1;
-        STACK[tail] = next;
-        tail += 1;
-        if (members.length > SPECK) speck = false;
-        else members.push(next);
-      }
-    }
-    if (speck) members.forEach((index) => { pixels[index * 4 + 3] = 0; });
   }
 }
 
@@ -259,11 +255,13 @@ async function process(src) {
   const imageData = context.getImageData(0, 0, TILE, TILE);
   const pixels = imageData.data;
   const tone = backgroundTone(pixels);
-  markBackground(pixels, tone);
-  markHalo();
-  wipeBackground(pixels, tone);
-  removeSpecks(pixels);
-  sharpenSubject(pixels);
+  markFloor(pixels, tone);
+  // Nesne bulunamazsa görsel olduğu gibi bırakılır.
+  if (keepSubject()) {
+    fillHoles();
+    wipeBackground(pixels, tone);
+    sharpenSubject(pixels);
+  }
 
   context.putImageData(imageData, 0, 0);
   const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
@@ -287,6 +285,14 @@ export function buildEliminTile(src) {
   );
   cache.set(src, task);
   return task;
+}
+
+/** Oyun açılırken bütün semboller bir kez işlenir: makara dönerken hepsi hazır olur. */
+export function warmEliminTiles(sources) {
+  sources.forEach((src) => {
+    // Hazırlık başarısız olursa kart görseli olduğu gibi gösterilir; sessizce geçilir.
+    buildEliminTile(src).catch(() => {});
+  });
 }
 
 /** Hazır kesilmiş görsel: işlenmişse doğrudan kullanılır, kaynak görsel bekletilmez. */
