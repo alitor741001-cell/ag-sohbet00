@@ -3,6 +3,7 @@ import { Image } from '@/components/ui/image';
 
 // Boy kademeleri: küçük yan düğmeler ve büyük tur düğmesi.
 const SIZES = {
+  xs: { socket: 'p-0.5', button: 'h-10 w-10 gap-0', medal: 'h-5 w-5', text: 'text-[8px]' },
   sm: { socket: 'p-1', button: 'h-14 w-14 gap-0.5', medal: 'h-7 w-7', text: 'text-[8px]' },
   lg: { socket: 'p-1.5', button: 'h-[4.75rem] w-[4.75rem] gap-1', medal: 'h-9 w-9', text: 'text-[10px]' },
 };

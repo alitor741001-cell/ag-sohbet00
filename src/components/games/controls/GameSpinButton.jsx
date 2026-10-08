@@ -1,42 +1,39 @@
 import React from 'react';
-import { Square } from 'lucide-react';
 import '@/styles/gameControls.css';
+import '@/styles/slot.css';
+import SlotMedallionButton from '../slot/SlotMedallionButton';
+import { SLOT_BUTTON_ART } from '@/components/games/slotAssets';
 
-/** Alt sıra: solda AUTO anahtarı, sağda kubbeli altın tur madalyonu; tur boyunca ışık halkası döner.
+/** Slot masasındaki düğme takımı: kanarya AUTO, sağda kartal SPIN — tur sürerken STOP'a döner.
     `extra`: tur madalyonunun soluna yerleşen isteğe bağlı alan (DEDE'de biriken çarpan çemberi). */
-export default function GameSpinButton({ spinning, disabled, auto, icon, onSpin, onStop, onAuto, extra }) {
+export default function GameSpinButton({ spinning, disabled, auto, onSpin, onStop, onAuto, extra }) {
+  // Tur sürerken düğme kapanmaz: aynı düğme DURDUR'a döner.
   const off = disabled && !spinning;
-  const Icon = spinning ? Square : icon;
 
   return (
     <div className="flex shrink-0 items-center gap-1.5">
-      <button
-        type="button"
+      <SlotMedallionButton
+        art={SLOT_BUTTON_ART.canary}
+        label="AUTO"
+        size="xs"
+        className="slot-auto text-slot"
+        active={auto}
+        disabled={disabled}
         onClick={onAuto}
-        aria-label={auto ? 'Otomatik tur açık' : 'Otomatik tur'}
-        className={`gctl-auto ${auto ? 'gctl-auto-on' : ''}`}
-      >
-        <span aria-hidden="true" className="gctl-auto-lamp" />
-        <span className="gctl-auto-label">AUTO</span>
-      </button>
+        ariaLabel={auto ? 'Otomatik tur açık' : 'Otomatik tur'}
+      />
 
-      <div className="flex items-center gap-2">
-        {extra}
-        <span className="gctl-spin-socket">
-          <button
-            type="button"
-            onClick={spinning ? onStop : onSpin}
-            disabled={off}
-            aria-label={spinning ? 'Turu durdur' : 'Turu başlat'}
-            className={`gctl-spin ${spinning ? 'gctl-spin-stop gctl-spin-live' : ''}`}
-          >
-            <span aria-hidden="true" className="gctl-spin-dome" />
-            {spinning && <span className="gctl-spin-ring" aria-hidden="true" />}
-            <Icon className="relative h-5 w-5" strokeWidth={2.6} />
-            <span className="gctl-spin-label">{spinning ? 'DURDUR' : 'SPIN'}</span>
-          </button>
-        </span>
-      </div>
+      {extra}
+
+      <SlotMedallionButton
+        art={SLOT_BUTTON_ART.eagle}
+        label={spinning ? 'STOP' : 'SPIN'}
+        size="sm"
+        className={`slot-action-ring text-white ${spinning ? 'slot-stop' : 'slot-spin'}`}
+        disabled={off}
+        onClick={spinning ? onStop : onSpin}
+        ariaLabel={spinning ? 'Makaraları durdur' : 'Turu başlat'}
+      />
     </div>
   );
 }
