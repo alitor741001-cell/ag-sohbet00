@@ -18,7 +18,7 @@ export const DEDE_ART = {
   hour: `${MEDIA_BASE}/e133f6756_generated_image.png`,
   chalice: `${MEDIA_BASE}/9dddaf2c3_generated_image.png`,
   bolt: `${MEDIA_BASE}/a7ed41d1e_generated_image.png`,
-  dede: `${MEDIA_BASE}/cac50147b_generated_image.png`,
+  dede: `${MEDIA_BASE}/eb0a5a12d_generated_image.png`,
 };
 
 export const DEDE_ART_SIZE = 1024;

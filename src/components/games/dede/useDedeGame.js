@@ -21,6 +21,8 @@ export default function useDedeGame() {
   const [sessionSpins, setSessionSpins] = useState(0);
   const [sessionSize, setSessionSize] = useState(15);
   const [sessionResult, setSessionResult] = useState(null);
+  // Skatterın başlattığı çevirme hakkı kutlaması: kapanmadan turlar başlamaz.
+  const [sessionBonus, setSessionBonus] = useState(null);
   const [bet, setBet] = useState(100);
   const [spins, setSpins] = useState(0);
   const [grid, setGrid] = useState(null);
@@ -160,6 +162,8 @@ export default function useDedeGame() {
       // Biriken çarpan tur bitince de görünür kalır: oyuncu son değeri görür.
       await wait(END_MS);
       applyState(data);
+      // 4 skatter: 15 çevirme hakkı yeniden başladı, kutlama ekranı açılır.
+      if (data.session_bonus) setSessionBonus({ cost: data.session_cost || 0 });
       // Çevirme hakkı sürerken kazanç birikir; normal turda sıfırdan başlar.
       sessionWinRef.current += data.win || 0;
       setWin(sessionWinRef.current);
@@ -211,10 +215,12 @@ export default function useDedeGame() {
   // Geri sayım yalnızca satın alınan çevirme hakkında akar; bedava turlar elle oynanır.
   useEffect(() => {
     if (spinning || status !== 'ready') return undefined;
+    // Kutlama ekranı kapanana kadar beklenir: oyuncu 15 hakkı görüp başlatır.
+    if (sessionBonus) return undefined;
     if (!auto && sessionSpins <= 0) return undefined;
     const timer = window.setTimeout(() => { spin(); }, 800);
     return () => window.clearTimeout(timer);
-  }, [auto, sessionSpins, spin, spinning, status]);
+  }, [auto, sessionBonus, sessionSpins, spin, spinning, status]);
 
   // "15 çevirme hakkı": bedel coinlerden düşülür, turlar kendiliğinden çevrilir.
   const buySession = useCallback(async () => {
@@ -233,6 +239,7 @@ export default function useDedeGame() {
   }, [applyState, bet, coins, sessionPrice, status]);
 
   const clearSessionResult = useCallback(() => setSessionResult(null), []);
+  const clearSessionBonus = useCallback(() => setSessionBonus(null), []);
 
   return {
     status,
@@ -260,9 +267,11 @@ export default function useDedeGame() {
     toggleAuto,
     buySession,
     clearSessionResult,
+    clearSessionBonus,
     sessionPrice,
     sessionSpins,
     sessionSize,
     sessionResult,
+    sessionBonus,
   };
 }

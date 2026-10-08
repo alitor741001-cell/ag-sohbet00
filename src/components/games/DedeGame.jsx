@@ -76,7 +76,7 @@ export default function DedeGame({ onExit, onBack }) {
         <div className="min-w-0 flex-1 text-center">
           <p className="dede-title text-lg">DEDE</p>
           <p className="text-[9px] font-black tracking-[0.14em] text-[#ffe9a8]/80">
-            ÇARPAN KÜRELERİ · 4+ DEDE BONUS ÖDER
+            ÇARPAN KÜRELERİ · 4+ SCATTER 15 ÇEVİRME HAKKI
           </p>
         </div>
         <button
@@ -194,6 +194,16 @@ export default function DedeGame({ onExit, onBack }) {
         subtitle="TOPLAM KAZANÇ"
         action="KABUL ET"
         onAccept={game.clearSessionResult}
+      />
+
+      {/* 4 skatter gelince 15 çevirme hakkı yeniden başlar; bedeli coinlerden düşülür. */}
+      <DedeWinOverlay
+        open={!!game.sessionBonus}
+        amount={game.sessionBonus?.cost || 0}
+        title="15 ÇEVİRME HAKKI"
+        subtitle="4 SKATTER · BEDELİ COINDEN DÜŞÜLDÜ"
+        action="BAŞLA"
+        onAccept={game.clearSessionBonus}
       />
     </div>
   );

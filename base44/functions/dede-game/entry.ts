@@ -1,7 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import { waitUntil } from 'base44:runtime';
 import { mirrorRecord } from '../../shared/supabaseMirror.ts';
-import { BET_LEVELS, BIG_WIN_MULTIPLE, LINES, playDede } from '../../shared/dedeEngine.ts';
+import { BET_LEVELS, BIG_WIN_MULTIPLE, LINES, SCATTER_MIN, playDede } from '../../shared/dedeEngine.ts';
 import {
   DEFAULT_BET,
   SESSION_SPINS,
@@ -81,14 +81,18 @@ export default async function (req) {
       const total = result.total;
       // 4+ dede yalnızca bonus öder; bedava tur sistemi oyundan kaldırıldı.
       const sessionLeft = Math.max(0, sessionTurns - (sessionTurns > 0 ? 1 : 0));
+      // 4 ve üzeri skatter: 15 çevirme hakkı baştan açılır, bedeli coinlerden düşülür.
+      const sessionCost = sessionPrice(bet);
+      const balance = coins - cost + total;
+      const sessionBonus = result.scatterCount >= SCATTER_MIN && balance >= sessionCost;
       const bigWin = stake > 0 && total >= stake * BIG_WIN_MULTIPLE;
 
       const updated = await base44.asServiceRole.entities.GameWallet.update(wallet.id, {
-        coins: coins - cost + total,
+        coins: sessionBonus ? balance - sessionCost : balance,
         bet,
         // Kalan bedava turlar sıfırlanır: oyun artık bedava tur vermiyor.
         dede_free_spins: 0,
-        dede_session_spins: sessionLeft,
+        dede_session_spins: sessionBonus ? SESSION_SPINS : sessionLeft,
         spins: (wallet.spins ?? 0) + 1,
         total_won: (wallet.total_won ?? 0) + total,
         total_won_dede: (wallet.total_won_dede ?? 0) + total,
@@ -105,6 +109,9 @@ export default async function (req) {
         win: total,
         cost,
         scatter_count: result.scatterCount,
+        // Skatter çevirme hakkını başlattıysa ekran kutlamayı gösterir.
+        session_bonus: sessionBonus,
+        session_cost: sessionBonus ? sessionCost : 0,
         capped: result.capped,
         big_win: bigWin ? total : 0,
       });

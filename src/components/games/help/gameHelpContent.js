@@ -89,7 +89,7 @@ const DEDE_LEGEND = {
       art: DEDE_SYMBOLS.dede.art,
       name: 'Dede',
       tag: 'BONUS',
-      desc: '4 ve üzeri gelince bonus öder.',
+      desc: '4 ve üzeri gelince bonus öder ve 15 çevirme hakkını başlatır.',
     },
     ...ORB_LEGEND,
   ],
@@ -235,7 +235,7 @@ export const GAME_HELP = {
       'Aynı madalyondan 8 ve üzeri gelince küme öder; yan yana olması gerekmez.',
       'Kazanan küme patlar, yerine yeni madalyon düşer: zincir tur boyunca sürer.',
       'Zincir boyunca düşen çarpan jetonlarının toplamı tur kazancını çarpar.',
-      'Dede sembolünden 4 ve üzeri gelince bonus öder.',
+      'Dede (scatter) 4 ve üzeri gelince hem bonus öder hem 15 çevirme hakkını başlatır; hakkın bedeli coinlerden düşülür.',
     ],
     legend: DEDE_LEGEND,
     facts: [
