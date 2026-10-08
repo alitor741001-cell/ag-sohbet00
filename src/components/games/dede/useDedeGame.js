@@ -85,6 +85,8 @@ export default function useDedeGame() {
     if (typeof data.session_price === 'number') setSessionPrice(data.session_price);
     if (typeof data.session_spins === 'number') setSessionSpins(data.session_spins);
     if (typeof data.session_size === 'number') setSessionSize(data.session_size);
+    // Biriken çarpan sunucudan gelir: tur bittiğinde de çemberde görünür kalır.
+    if (typeof data.multiplier === 'number') setMultiplier(data.multiplier);
   }, []);
 
   useEffect(() => {
@@ -128,7 +130,8 @@ export default function useDedeGame() {
     setBigWin(0);
     setWins([]);
     setOrbs([]);
-    setMultiplier(0);
+    // Çevirme hakkı sürerken biriken çarpan ekranda kalır; tek çevirmede sıfırdan başlar.
+    setMultiplier((value) => (inSession ? value : 0));
     setMessage('');
     try {
       const response = await gameRequest('dede-game', { action: 'spin', bet });

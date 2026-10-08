@@ -171,8 +171,9 @@ function gridOrbs(grid) {
 }
 
 /** Bir turun tamamı: ilk ızgara, tumbler adımları ve küre çarpanları.
-    Her adım ekranda gösterilmek üzere ayrı ayrı döner. */
-export function playDede(bet, isFree) {
+    Her adım ekranda gösterilmek üzere ayrı ayrı döner.
+    `carried`: önceki turdan devrolan birikmiş çarpan; 15 çevirme hakkı boyunca korunur. */
+export function playDede(bet, isFree, carried = 0) {
   // Çevirme hakkı turlarında skatter seyrekleşir: ek 15 hakkın oranı düşük kalır.
   const pool = isFree ? FREE_POOL : POOL;
   let grid = spinGrid(INITIAL_ORB_CHANCE, pool);
@@ -190,8 +191,8 @@ export function playDede(bet, isFree) {
   const ceiling = bet * MAX_WIN_MULTIPLE;
   const steps = [];
   let raw = 0;
-  // Biriken çarpan: inen her küre değerini buraya ekler ve tur boyunca büyür.
-  let accumulated = 0;
+  // Biriken çarpan: önceki turlardan devrolan değerle başlar, inen her küre değerini ekler.
+  let accumulated = Math.max(0, Math.round(carried) || 0);
   let capped = false;
   const orbChance = isFree ? FREE_ORB_CHANCE : TUMBLE_ORB_CHANCE;
 
@@ -251,5 +252,5 @@ export function playDede(bet, isFree) {
     capped = true;
   }
 
-  return { steps, grid, total, capped, scatterCount, scatterTrigger };
+  return { steps, grid, total, capped, scatterCount, scatterTrigger, accumulated };
 }

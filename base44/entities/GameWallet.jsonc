@@ -95,6 +95,10 @@
       "type": "integer",
       "default": 0
     },
+    "dede_multiplier": {
+      "type": "number",
+      "default": 0
+    },
     "seker_session_spins": {
       "type": "integer",
       "default": 0

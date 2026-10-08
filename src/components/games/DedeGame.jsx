@@ -142,8 +142,6 @@ export default function DedeGame({ onExit, onBack }) {
       </main>
 
       <footer className="relative z-10 flex shrink-0 flex-col items-center gap-2 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-1">
-        {/* Biriken çarpan çemberi: inen küreler buraya düşüp birikmiş çarpanla birleşir. */}
-        <DedeMultiplierCircle multiplier={game.multiplier} orbs={game.orbs} />
         <div className="gctl-deck">
           <GameBetBar
             bet={game.bet}
@@ -161,6 +159,8 @@ export default function DedeGame({ onExit, onBack }) {
             onSpin={game.spin}
             onStop={game.stop}
             onAuto={game.toggleAuto}
+            /* Biriken çarpan çemberi: inen küreler burada birikmiş çarpanla birleşir. */
+            extra={<DedeMultiplierCircle multiplier={game.multiplier} orbs={game.orbs} />}
           />
         </div>
       </footer>

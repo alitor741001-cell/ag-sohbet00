@@ -21,6 +21,8 @@ function walletView(wallet) {
     spins: wallet.spins ?? 0,
     // Satın alınan "15 çevirme hakkı" tur sayısı.
     session_spins: wallet.dede_session_spins ?? 0,
+    // Biriken çarpan: 15 tur boyunca saklanır, tur bitince de çemberde görünür kalır.
+    multiplier: Math.max(0, Math.round(wallet.dede_multiplier ?? 0)),
     // Bu oyunun kendi toplam kazancı: oyunlar birbirinden ayrı sayılır.
     total_won: wallet.total_won_dede ?? 0,
     // Sol taraftaki "çevirme hakkı" kutusunun güncel coin bedeli ve tur sayısı.
@@ -57,6 +59,8 @@ export default async function (req) {
         coins: coins - price,
         bet,
         dede_session_spins: SESSION_SPINS,
+        // Yeni 15 tur sıfırdan başlar: biriken çarpan temizlenir.
+        dede_multiplier: 0,
       });
       return Response.json({ ...walletView(updated), grid: null, steps: [], win: 0 });
     }
@@ -77,7 +81,9 @@ export default async function (req) {
       const coins = wallet.coins ?? START_COINS;
       if (!isFree && coins < cost) return Response.json({ error: 'Yetersiz coin.' }, { status: 400 });
 
-      const result = playDede(bet, isFree);
+      // Birikmiş çarpan yalnızca 15 çevirme hakkı boyunca devrolur.
+      const carried = isFree ? Math.max(0, Math.round(wallet.dede_multiplier ?? 0)) : 0;
+      const result = playDede(bet, isFree, carried);
       const total = result.total;
       // 4+ dede yalnızca bonus öder; bedava tur sistemi oyundan kaldırıldı.
       const sessionLeft = Math.max(0, sessionTurns - (isFree ? 1 : 0));
@@ -97,6 +103,8 @@ export default async function (req) {
         dede_session_spins: retrigger
           ? sessionLeft + SESSION_SPINS
           : sessionBonus ? SESSION_SPINS : sessionLeft,
+        // Biriken çarpan 15 tur boyunca saklanır; yeni turda birikmiş değerle birleşir.
+        dede_multiplier: sessionBonus || (isFree && sessionLeft <= 0) ? 0 : result.accumulated,
         spins: (wallet.spins ?? 0) + 1,
         total_won: (wallet.total_won ?? 0) + total,
         total_won_dede: (wallet.total_won_dede ?? 0) + total,
