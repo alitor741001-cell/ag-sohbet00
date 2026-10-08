@@ -1,9 +1,9 @@
 import React from 'react';
-import { SLOT_LAYOUT } from '@/components/games/slot/slotLayout';
+import { REEL_WINDOW, SLOT_LAYOUT } from '@/components/games/slot/slotLayout';
 
 // Kazanç çizgisi katmanı, makara penceresinin kendi koordinatlarında çizilir.
-const W = 968;
-const H = 670;
+const W = REEL_WINDOW.width;
+const H = REEL_WINDOW.height;
 const CW = W / 5;
 const CH = H / 3;
 // Çizgi renkleri sırayla kullanılır; aynı anda birçok kazanç çizgisi okunabilir kalır.
