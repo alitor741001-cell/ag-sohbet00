@@ -8,14 +8,12 @@ const DROP_MS = 380;
 const HOLD_MS = 950;
 const EXPLODE_MS = 320;
 const END_MS = 650;
-const TRIGGER_MS = 3200;
 
 /** DEDE oyununun durumu: bakiye, bahis, tumbler adımları ve çarpan küreleri. */
 export default function useDedeGame() {
   const [status, setStatus] = useState('loading');
   const [coins, setCoins] = useState(0);
   const [totalWon, setTotalWon] = useState(0);
-  const [freeSpins, setFreeSpins] = useState(0);
   // "15 çevirme hakkı" kutusunun bedeli, kalan turu ve paket tur sayısı sunucudan gelir.
   const [sessionPrice, setSessionPrice] = useState(0);
   const [sessionSpins, setSessionSpins] = useState(0);
@@ -32,8 +30,6 @@ export default function useDedeGame() {
   const [win, setWin] = useState(0);
   const [bigWin, setBigWin] = useState(0);
   const [spinning, setSpinning] = useState(false);
-  // Skatterden kazanılan bedava turların duyurusu (elle oynanır).
-  const [freeTrigger, setFreeTrigger] = useState('');
   const [auto, setAuto] = useState(false);
   const [message, setMessage] = useState('');
   const busyRef = useRef(false);
@@ -63,18 +59,10 @@ export default function useDedeGame() {
 
   useEffect(() => () => { stopRef.current?.(); }, []);
 
-  // Bedava tur duyurusu kısa süre görünür.
-  useEffect(() => {
-    if (!freeTrigger) return undefined;
-    const timer = window.setTimeout(() => setFreeTrigger(''), TRIGGER_MS);
-    return () => window.clearTimeout(timer);
-  }, [freeTrigger]);
-
   const applyState = useCallback((data) => {
     if (!data) return;
     if (typeof data.coins === 'number') setCoins(data.coins);
     if (typeof data.total_won === 'number') setTotalWon(data.total_won);
-    if (typeof data.free_spins === 'number') setFreeSpins(data.free_spins);
     if (typeof data.bet === 'number') setBet(data.bet);
     if (typeof data.spins === 'number') setSpins(data.spins);
     if (typeof data.session_price === 'number') setSessionPrice(data.session_price);
@@ -101,9 +89,9 @@ export default function useDedeGame() {
 
   const spin = useCallback(async () => {
     if (busyRef.current || status !== 'ready') return;
-    // Satın alınan çevirme hakkı ve bedava turlar tur ücreti almaz.
+    // Satın alınan çevirme hakkı tur ücreti almaz.
     const inSession = sessionSpins > 0;
-    const cost = inSession || freeSpins > 0 ? 0 : bet * DEDE_LINES;
+    const cost = inSession ? 0 : bet * DEDE_LINES;
     if (coins < cost) {
       setAuto(false);
       setMessage('Yetersiz coin. Coin bakiyene dokunup coin yükle.');
@@ -119,7 +107,6 @@ export default function useDedeGame() {
     setWins([]);
     setOrbs([]);
     setMultiplier(0);
-    setFreeTrigger('');
     setMessage('');
     try {
       const [response] = await Promise.all([
@@ -158,8 +145,6 @@ export default function useDedeGame() {
       sessionWinRef.current += data.win || 0;
       setWin(sessionWinRef.current);
       setBigWin(inSession ? 0 : data.big_win || 0);
-      if (data.free_trigger) setFreeTrigger('BEDAVA TUR KAZANDIN!');
-      else if (data.retrigger) setFreeTrigger(`+${data.retrigger} BEDAVA TUR!`);
       // 15 tur bittiğinde biriken kazanç kabul ekranında gösterilir.
       if (inSession && (data.session_spins ?? 0) <= 0) setSessionResult(sessionWinRef.current);
     } catch (error) {
@@ -172,7 +157,7 @@ export default function useDedeGame() {
       setSpinning(false);
       busyRef.current = false;
     }
-  }, [applyState, bet, coins, freeSpins, sessionSpins, status, wait]);
+  }, [applyState, bet, coins, sessionSpins, status, wait]);
 
   const saveBet = useCallback(async (next) => {
     setBet(next);
@@ -232,7 +217,6 @@ export default function useDedeGame() {
     status,
     coins,
     totalWon,
-    freeSpins,
     bet,
     spins,
     spinning,

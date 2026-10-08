@@ -25,12 +25,9 @@ export const CLUSTER_MIN = 8;
 // Bir turdaki en fazla tumbler adımı.
 export const DROP_MAX = 8;
 
-// Dede: 4 ve üzeri gelince hem bonus öder hem bedava tur verir.
+// Dede: 4 ve üzeri gelince bonus öder.
 export const SCATTER_ID = 'dede';
 export const SCATTER_MIN = 4;
-export const FREE_SPINS = 15;
-export const FREE_RETRIGGER_MIN = 3;
-export const FREE_RETRIGGER = 5;
 // Skatter ödemesi: 4, 5 ve 6+ dede için bahis katı.
 export const SCATTER_PAYS = [60, 150, 600];
 
@@ -57,7 +54,7 @@ const ORB_VALUES = [
   [500, 2],
 ];
 
-// Jeton bir kareyi sembol gibi kaplar: kare başına inme şansı (ilk ızgara, tumbler, bedava tur).
+// Jeton bir kareyi sembol gibi kaplar: kare başına inme şansı (ilk ızgara, tumbler, satın alınan tur).
 const INITIAL_ORB_CHANCE = 0.05;
 const TUMBLE_ORB_CHANCE = 0.07;
 const FREE_ORB_CHANCE = 0.09;
@@ -174,9 +171,9 @@ export function playDede(bet, isFree) {
     });
   });
   const scatterCount = scatterCells.length;
-  const freeTrigger = scatterCount >= SCATTER_MIN;
-  const scatterTier = freeTrigger ? Math.min(scatterCount, SCATTER_MIN + 2) - SCATTER_MIN : 0;
-  const scatterWin = freeTrigger ? Math.round(SCATTER_PAYS[scatterTier] * bet * PAYOUT_RATE) : 0;
+  const scatterTrigger = scatterCount >= SCATTER_MIN;
+  const scatterTier = scatterTrigger ? Math.min(scatterCount, SCATTER_MIN + 2) - SCATTER_MIN : 0;
+  const scatterWin = scatterTrigger ? Math.round(SCATTER_PAYS[scatterTier] * bet * PAYOUT_RATE) : 0;
 
   const ceiling = bet * MAX_WIN_MULTIPLE;
   const steps = [];
@@ -242,8 +239,5 @@ export function playDede(bet, isFree) {
     capped = true;
   }
 
-  // Bedava turda 3+ dede turu uzatır.
-  const retrigger = isFree && scatterCount >= FREE_RETRIGGER_MIN ? FREE_RETRIGGER : 0;
-
-  return { steps, grid, total, capped, scatterCount, freeTrigger, retrigger };
+  return { steps, grid, total, capped, scatterCount, scatterTrigger };
 }

@@ -2,33 +2,37 @@ import React from 'react';
 import { Square } from 'lucide-react';
 import '@/styles/gameControls.css';
 
-/** Ana tur düğmesi: tur boyunca çevresinde ışık halkası döner, düğme DURDUR'a döner. */
+/** Alt sıra: solda AUTO anahtarı, sağda kubbeli altın tur madalyonu; tur boyunca ışık halkası döner. */
 export default function GameSpinButton({ spinning, disabled, auto, icon, onSpin, onStop, onAuto }) {
   const off = disabled && !spinning;
   const Icon = spinning ? Square : icon;
 
   return (
-    <div className="flex w-full max-w-[27rem] flex-col items-center gap-2">
-      <button
-        type="button"
-        onClick={spinning ? onStop : onSpin}
-        disabled={off}
-        aria-label={spinning ? 'Turu durdur' : 'Turu başlat'}
-        className={`gctl-spin ${spinning ? 'gctl-spin-stop gctl-spin-live' : ''}`}
-      >
-        {spinning && <span className="gctl-spin-ring" aria-hidden="true" />}
-        <Icon className="h-6 w-6" strokeWidth={2.6} />
-        <span className="gctl-spin-label">{spinning ? 'DURDUR' : 'SPIN'}</span>
-      </button>
-
+    <div className="flex w-full items-center justify-between gap-3">
       <button
         type="button"
         onClick={onAuto}
         aria-label="Otomatik tur"
-        className={`gctl-pill ${auto ? 'gctl-pill-on' : ''}`}
+        className={`gctl-auto ${auto ? 'gctl-auto-on' : ''}`}
       >
-        {auto ? 'AUTOPLAY AÇIK' : 'AUTOPLAY'}
+        <span aria-hidden="true" className="gctl-auto-lamp" />
+        <span className="gctl-auto-label">{auto ? 'AUTO AÇIK' : 'AUTO'}</span>
       </button>
+
+      <span className="gctl-spin-socket">
+        <button
+          type="button"
+          onClick={spinning ? onStop : onSpin}
+          disabled={off}
+          aria-label={spinning ? 'Turu durdur' : 'Turu başlat'}
+          className={`gctl-spin ${spinning ? 'gctl-spin-stop gctl-spin-live' : ''}`}
+        >
+          <span aria-hidden="true" className="gctl-spin-dome" />
+          {spinning && <span className="gctl-spin-ring" aria-hidden="true" />}
+          <Icon className="relative h-7 w-7" strokeWidth={2.6} />
+          <span className="gctl-spin-label">{spinning ? 'DURDUR' : 'SPIN'}</span>
+        </button>
+      </span>
     </div>
   );
 }

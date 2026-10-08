@@ -1,6 +1,204 @@
-/* Oyun kontrol düğmeleri: MEYVE ve DEDE aynı altın kabartma düğme setini kullanır. */
+/* Oyun kontrol masası: MEYVE ve DEDE aynı takımı kullanır.
+   Koyu grafit gövde, ince altın çizgi, tek tur madalyonu — slot panelinin daha yalın hâli. */
 
-/* --- ana tur düğmesi: fildişi-altın kabartma, alt kenarda koyu gölge --- */
+/* --- masa gövdesi --- */
+.gctl-deck {
+  position: relative;
+  display: flex;
+  width: 100%;
+  max-width: 27rem;
+  flex-direction: column;
+  gap: 0.55rem;
+  overflow: hidden;
+  border-radius: 1.4rem;
+  border: 1px solid rgba(255, 214, 120, 0.3);
+  padding: 0.7rem;
+  background:
+    linear-gradient(180deg, rgba(255, 236, 190, 0.1), rgba(255, 236, 190, 0) 32%),
+    linear-gradient(180deg, #1a1512, #0d0a09 68%, #080606);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 246, 214, 0.22),
+    inset 0 -14px 26px rgba(0, 0, 0, 0.6),
+    0 -16px 36px -22px rgba(0, 0, 0, 0.95);
+}
+.gctl-deck::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 12%;
+  right: 12%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 226, 150, 0.7), transparent);
+}
+.gctl-deck::after {
+  content: '';
+  position: absolute;
+  top: -3.5rem;
+  left: 50%;
+  height: 6rem;
+  width: 15rem;
+  transform: translateX(-50%);
+  background: radial-gradient(closest-side, rgba(255, 214, 120, 0.14), transparent 72%);
+  pointer-events: none;
+}
+
+/* --- bahis kademesi: tek metal kapsül --- */
+.gctl-stepper {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35rem;
+  overflow: hidden;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 214, 120, 0.32);
+  padding: 0.3rem 0.35rem;
+  background:
+    linear-gradient(180deg, rgba(255, 236, 190, 0.13), rgba(255, 236, 190, 0) 48%),
+    linear-gradient(180deg, #262019, #120d0a 64%, #0a0706);
+  box-shadow: inset 0 1px 0 rgba(255, 246, 214, 0.28), inset 0 -9px 16px rgba(0, 0, 0, 0.55);
+}
+/* Yüzeyde gezinen ışık: metal canlı durur. */
+.gctl-stepper::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 32%;
+  background: linear-gradient(100deg, rgba(255, 255, 255, 0), rgba(255, 246, 214, 0.15) 50%, rgba(255, 255, 255, 0));
+  animation: gctl-sheen 5.2s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes gctl-sheen {
+  0%, 58% { transform: translateX(-150%); }
+  88%, 100% { transform: translateX(330%); }
+}
+
+.gctl-step {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  height: 2.3rem;
+  width: 2.3rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  color: #2b1602;
+  background: radial-gradient(circle at 50% 22%, #fff6d8, #ffcc45 52%, #c48c0c 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -3px 7px rgba(120, 70, 0, 0.45),
+    0 2px 0 #6f4705;
+  transition: transform 130ms ease, filter 130ms ease;
+}
+.gctl-step:active { transform: translateY(1px) scale(0.96); filter: brightness(1.08); }
+.gctl-step:disabled { filter: saturate(0.35) brightness(0.7); }
+
+.gctl-stepper-readout {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.05;
+}
+.gctl-stepper-label { font-size: 0.5rem; font-weight: 900; letter-spacing: 0.16em; color: rgba(255, 226, 160, 0.72); }
+.gctl-stepper-value {
+  font-size: 1rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  color: #fff3cf;
+  text-shadow: 0 1px 0 #5c3503, 0 0 14px rgba(255, 190, 80, 0.55);
+}
+.gctl-stepper-sub { font-size: 0.5rem; font-weight: 700; color: rgba(255, 226, 160, 0.62); }
+
+/* --- MAX: kabartmalı altın kapsül --- */
+.gctl-max {
+  position: relative;
+  display: inline-flex;
+  height: 2.9rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 250, 230, 0.85);
+  padding: 0 1.05rem;
+  font-size: 0.6rem;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  color: #2b1602;
+  background: linear-gradient(180deg, #fff6dc 2%, #ffd35c 42%, #d99a11 100%);
+  box-shadow:
+    inset 0 2px 1px rgba(255, 255, 255, 0.9),
+    inset 0 -6px 12px rgba(120, 70, 0, 0.4),
+    0 2px 0 #6f4705,
+    0 14px 26px -18px rgba(0, 0, 0, 0.95);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45);
+  transition: transform 130ms ease, filter 130ms ease;
+}
+.gctl-max:active { transform: translateY(1px); filter: brightness(1.08); }
+.gctl-max:disabled { filter: saturate(0.4) brightness(0.75); }
+
+/* --- AUTO: metal anahtar, yanında lamba --- */
+.gctl-auto {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 214, 120, 0.3);
+  padding: 0.6rem 0.85rem;
+  font-size: 0.58rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  color: rgba(255, 236, 190, 0.82);
+  background: linear-gradient(180deg, #241e19, #100b09);
+  box-shadow: inset 0 1px 0 rgba(255, 246, 214, 0.22), 0 10px 20px -16px rgba(0, 0, 0, 0.95);
+  transition: transform 130ms ease, filter 130ms ease, color 130ms ease;
+}
+.gctl-auto:active { transform: translateY(1px); filter: brightness(1.14); }
+.gctl-auto:disabled { filter: saturate(0.4) brightness(0.75); }
+.gctl-auto-lamp {
+  height: 0.5rem;
+  width: 0.5rem;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 40% 30%, #6b5f52, #2a241f);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.25);
+}
+.gctl-auto-on {
+  color: #2b1602;
+  border-color: rgba(255, 250, 230, 0.85);
+  background: linear-gradient(180deg, #fff3cd, #ffcc45 52%, #d99a11);
+}
+.gctl-auto-on .gctl-auto-lamp {
+  background: radial-gradient(circle at 40% 30%, #d6ffe4, #16c76a 60%, #06703a);
+  box-shadow: 0 0 10px rgba(34, 197, 94, 0.85);
+  animation: gctl-lamp 1.6s ease-in-out infinite;
+}
+@keyframes gctl-lamp {
+  0%, 100% { opacity: 0.72; }
+  50% { opacity: 1; }
+}
+
+/* --- tur madalyonu: metal yuva içinde kubbeli altın disk --- */
+.gctl-spin-socket {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 214, 120, 0.34);
+  padding: 0.32rem;
+  background: linear-gradient(180deg, rgba(255, 236, 190, 0.16), rgba(0, 0, 0, 0.55));
+  box-shadow: inset 0 1px 0 rgba(255, 246, 214, 0.34), inset 0 -10px 20px rgba(0, 0, 0, 0.6);
+}
 .gctl-spin {
   position: relative;
   display: flex;
@@ -8,8 +206,8 @@
   align-items: center;
   justify-content: center;
   gap: 0.05rem;
-  height: 5.75rem;
-  width: 5.75rem;
+  height: 5.3rem;
+  width: 5.3rem;
   border-radius: 9999px;
   color: #3b2103;
   background:
@@ -20,13 +218,20 @@
     inset 0 2px 1px rgba(255, 255, 255, 0.95),
     inset 0 -7px 14px rgba(112, 62, 0, 0.5),
     0 2px 0 #6f4705,
-    0 16px 30px -14px rgba(0, 0, 0, 0.95);
+    0 18px 32px -16px rgba(0, 0, 0, 0.95);
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
   transition: transform 130ms ease, filter 130ms ease;
 }
 .gctl-spin:active { transform: translateY(1px) scale(0.97); }
 .gctl-spin:disabled { filter: saturate(0.4) brightness(0.8); }
-.gctl-spin-label { font-size: 0.6rem; font-weight: 900; letter-spacing: 0.2em; }
+.gctl-spin-dome {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 8%, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 56%);
+}
+.gctl-spin-label { position: relative; font-size: 0.6rem; font-weight: 900; letter-spacing: 0.2em; }
 
 /* Durdurma: aynı kabartma, kırmızı gövde. */
 .gctl-spin-stop {
@@ -39,14 +244,14 @@
     inset 0 2px 1px rgba(255, 255, 255, 0.8),
     inset 0 -7px 14px rgba(90, 0, 10, 0.5),
     0 2px 0 #620512,
-    0 16px 30px -14px rgba(0, 0, 0, 0.95);
+    0 18px 32px -16px rgba(0, 0, 0, 0.95);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
 }
 
 /* Tur boyunca düğmenin çevresinde dönen ışık halkası. */
 .gctl-spin-ring {
   position: absolute;
-  inset: -0.62rem;
+  inset: -0.68rem;
   border-radius: 9999px;
   pointer-events: none;
   background: conic-gradient(
@@ -68,7 +273,7 @@
   50% { transform: scale(1.04); filter: brightness(1.16); }
 }
 
-/* --- ikincil düğmeler: MAX, AUTOPLAY, bahis +/- , başlık ikonları --- */
+/* --- başlık ikonları --- */
 .gctl-pill {
   display: inline-flex;
   align-items: center;
@@ -104,30 +309,6 @@
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
 }
-
-/* --- bahis göstergesi: kademe, güncel bahis ve toplam --- */
-.gctl-readout {
-  display: flex;
-  min-width: 0;
-  flex: 1;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  border-radius: 0.85rem;
-  border: 1px solid rgba(255, 216, 120, 0.45);
-  padding: 0.3rem 0.5rem;
-  background: linear-gradient(180deg, rgba(60, 32, 20, 0.82), rgba(16, 8, 5, 0.92));
-  box-shadow: inset 0 1px 0 rgba(255, 240, 200, 0.2), 0 10px 20px -16px rgba(0, 0, 0, 0.95);
-}
-.gctl-readout-label { font-size: 0.5625rem; font-weight: 900; letter-spacing: 0.1em; color: rgba(255, 226, 160, 0.75); }
-.gctl-readout-value {
-  font-size: 0.95rem;
-  font-weight: 900;
-  color: #ffe9b0;
-  font-variant-numeric: tabular-nums;
-  text-shadow: 0 1px 0 #6b3d05, 0 0 14px rgba(255, 190, 80, 0.55);
-}
-.gctl-readout-sub { font-size: 0.5625rem; font-weight: 700; color: rgba(255, 226, 160, 0.7); }
 
 /* --- eylem düğmeleri: çevirme hakkı ve coin yükleme --- */
 .gctl-action {
@@ -171,5 +352,5 @@
 .gctl-action-gold .gctl-coin { background: radial-gradient(circle at 40% 28%, #fffdf2, #ffb512 60%, #7a4a02); }
 
 @media (prefers-reduced-motion: reduce) {
-  .gctl-spin-ring, .gctl-spin-live { animation: none; }
+  .gctl-stepper::after, .gctl-auto-on .gctl-auto-lamp, .gctl-spin-ring, .gctl-spin-live { animation: none; }
 }

@@ -94,11 +94,7 @@ export default function DedeGame({ onExit, onBack }) {
           </div>
         </div>
 
-        <GameTurnBadge
-          sessionSpins={game.sessionSpins}
-          freeSpins={game.freeSpins}
-          accent="border-[#ffd35c]/80 text-[#ffe9a8]"
-        />
+        <GameTurnBadge sessionSpins={game.sessionSpins} accent="border-[#ffd35c]/80 text-[#ffe9a8]" />
 
         <DedeHud
           coins={game.coins}
@@ -120,30 +116,26 @@ export default function DedeGame({ onExit, onBack }) {
       <footer className="relative z-10 flex shrink-0 flex-col items-center gap-2 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-1">
         {/* Biriken çarpan alt tarafta sabit durur; inen küreler buraya düşer. */}
         <DedeMultiplierBar multiplier={game.multiplier} orbs={game.orbs} />
-        <GameBetBar
-          bet={game.bet}
-          lines={DEDE_LINES}
-          disabled={game.spinning}
-          onStep={game.changeBet}
-          onMax={game.maxBet}
-          format={formatCoins}
-        />
-        <GameSpinButton
-          spinning={game.spinning}
-          disabled={!ready}
-          auto={game.auto}
-          icon={Zap}
-          onSpin={game.spin}
-          onStop={game.stop}
-          onAuto={game.toggleAuto}
-        />
+        <div className="gctl-deck">
+          <GameBetBar
+            bet={game.bet}
+            lines={DEDE_LINES}
+            disabled={game.spinning}
+            onStep={game.changeBet}
+            onMax={game.maxBet}
+            format={formatCoins}
+          />
+          <GameSpinButton
+            spinning={game.spinning}
+            disabled={!ready}
+            auto={game.auto}
+            icon={Zap}
+            onSpin={game.spin}
+            onStop={game.stop}
+            onAuto={game.toggleAuto}
+          />
+        </div>
       </footer>
-
-      {game.freeTrigger && !prize && game.sessionResult === null && (
-        <p className="dede-float-win pointer-events-none absolute left-1/2 top-[36%] z-20 flex w-max items-center gap-1.5 rounded-full border border-[#ffe9a8] bg-black/75 px-4 py-1.5 text-sm font-black text-[#ffd35c]">
-          <Zap className="h-4 w-4" /> {game.freeTrigger}
-        </p>
-      )}
 
       {flash > 0 && !prize && game.sessionResult === null && (
         <p
