@@ -1,5 +1,7 @@
 import React from 'react';
-import { ArrowLeft, Rocket, Wallet, X } from 'lucide-react';
+import { ArrowLeft, Wallet, X } from 'lucide-react';
+import { Image } from '@/components/ui/image';
+import { ROCKET_LOGO } from '@/components/games/rocketAssets';
 
 /** Üst şerit: geri tuşu, oyun arması, oyun defteri ve kapatma tuşu. */
 export default function RocketHeader({ onBack, onExit, onLedger }) {
@@ -10,11 +12,16 @@ export default function RocketHeader({ onBack, onExit, onLedger }) {
       </button>
 
       <div className="flex min-w-0 flex-1 items-center justify-center gap-2">
-        <span className="rk-emblem" aria-hidden="true">
-          <Rocket className="h-3.5 w-3.5" />
-        </span>
+        <Image
+          src={ROCKET_LOGO}
+          alt=""
+          aria-hidden="true"
+          className="rk-emblem"
+          fittingType="fill"
+          quality={80}
+        />
         <span className="flex min-w-0 flex-col items-start leading-none">
-          <span className="rk-title truncate">CRASH ROCKET</span>
+          <span className="rk-title truncate">ROCKET</span>
           <span className="rk-title-sub">GERÇEK UÇUŞ KONSOLU</span>
         </span>
       </div>

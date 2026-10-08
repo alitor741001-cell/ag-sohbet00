@@ -1,7 +1,12 @@
 const MEDIA = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62';
 
-// Panelde listelenen oyunun kart görseli.
-export const GAME_COVER = `${MEDIA}/212ea5780_IMG_1316.jpeg`;
+// SLOT logosu: oyun merkezi kartını ve oyunun kimliğini taşıyan altın makara amblemi.
+export const SLOT_LOGO = `${MEDIA}/1265c253c_generated_image.png`;
+
+// Panelde listelenen oyunun kart görseli (logo).
+export const GAME_COVER = SLOT_LOGO;
+export const GAME_COVER_WIDTH = 1024;
+export const GAME_COVER_HEIGHT = 1024;
 
 // Oyun ekranının tamamı: referans görsel (1018 x 1545).
 export const SLOT_ART = {

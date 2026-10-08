@@ -20,18 +20,16 @@
   background: linear-gradient(180deg, rgba(6, 10, 20, 0.94), rgba(6, 10, 20, 0.5));
   border-bottom: 1px solid rgba(255, 184, 0, 0.22);
 }
+/* Oyun arması: yeni ROCKET logosu altın halka içinde yuvarlak durur. */
 .rk-emblem {
-  display: flex;
-  height: 1.6rem;
-  width: 1.6rem;
+  display: block;
+  height: 2.4rem;
+  width: 2.4rem;
   flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
+  overflow: hidden;
   border-radius: 9999px;
-  color: var(--rk-gold-soft);
-  background: radial-gradient(circle at 50% 30%, rgba(255, 211, 92, 0.34), rgba(255, 184, 0, 0.06));
-  border: 1px solid rgba(255, 184, 0, 0.5);
-  box-shadow: 0 0 10px rgba(255, 184, 0, 0.28);
+  border: 1px solid rgba(255, 184, 0, 0.55);
+  box-shadow: 0 0 0 1px rgba(255, 224, 150, 0.35), 0 0 14px rgba(255, 184, 0, 0.35);
 }
 .rk-title {
   font-size: 0.85rem;

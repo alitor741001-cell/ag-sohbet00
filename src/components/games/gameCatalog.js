@@ -1,5 +1,5 @@
-import { GAME_COVER } from './slotAssets';
-import { ROCKET_COVER } from './rocketAssets';
+import { GAME_COVER, GAME_COVER_WIDTH, GAME_COVER_HEIGHT } from './slotAssets';
+import { ROCKET_COVER, ROCKET_COVER_WIDTH, ROCKET_COVER_HEIGHT } from './rocketAssets';
 import { FRUIT_COVER, FRUIT_COVER_HEIGHT, FRUIT_COVER_WIDTH } from './fruit/fruitAssets';
 import { DEDE_COVER, DEDE_COVER_HEIGHT, DEDE_COVER_WIDTH } from './dede/dedeAssets';
 import { ROULETTE_COVER, ROULETTE_COVER_HEIGHT, ROULETTE_COVER_WIDTH } from './roulette/rouletteAssets';
@@ -18,6 +18,6 @@ export const GAMES = [
   { id: DEDE_ID, title: 'DEDE', cover: DEDE_COVER, originWidth: DEDE_COVER_WIDTH, originHeight: DEDE_COVER_HEIGHT },
   { id: FRUIT_ID, title: 'MEYVE', cover: FRUIT_COVER, originWidth: FRUIT_COVER_WIDTH, originHeight: FRUIT_COVER_HEIGHT },
   { id: SEKER_ID, title: 'ŞEKER', cover: SEKER_COVER, originWidth: SEKER_COVER_WIDTH, originHeight: SEKER_COVER_HEIGHT },
-  { id: SLOT_ID, title: 'SLOT FRENZY', cover: GAME_COVER, originWidth: 1058, originHeight: 1008 },
-  { id: ROCKET_ID, title: 'CRASH ROCKET', cover: ROCKET_COVER, originWidth: 1135, originHeight: 928 },
+  { id: SLOT_ID, title: 'SLOT', cover: GAME_COVER, originWidth: GAME_COVER_WIDTH, originHeight: GAME_COVER_HEIGHT },
+  { id: ROCKET_ID, title: 'ROCKET', cover: ROCKET_COVER, originWidth: ROCKET_COVER_WIDTH, originHeight: ROCKET_COVER_HEIGHT },
 ];
