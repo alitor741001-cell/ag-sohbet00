@@ -255,7 +255,7 @@
   position: relative;
   width: 100%;
   /* Yükseklik yetmezse çerçeve küçülür: kısa ekranlarda da taşmaz. */
-  max-width: min(44rem, max(13rem, calc((100dvh - 26rem) * 1.045)));
+  max-width: min(44rem, max(13rem, calc((100dvh - 26rem) * 1.2)));
   border-radius: 1.7rem;
   padding: .45rem;
   background-image: repeating-linear-gradient(
@@ -292,7 +292,7 @@
 .el-board {
   display: grid;
   width: 100%;
-  aspect-ratio: 6 / 5.75;
+  aspect-ratio: 6 / 5;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   /* Her sütun alanın tamamını kaplar; beş hücre sütunun içinde bölünür. */
   grid-template-rows: minmax(0, 1fr);
@@ -581,7 +581,7 @@
 
   .el-tagline { display: none; }
 
-  .el-frame { max-width: calc((100dvh - 24rem) * 1.045); }
+  .el-frame { max-width: calc((100dvh - 24rem) * 1.2); }
 }
 
 @media (orientation: landscape) and (max-height: 640px) {
@@ -597,7 +597,7 @@
 
   .el-top-value { font-size: .95rem; }
 
-  .el-frame { max-width: min(38rem, max(13rem, calc((100dvh - 17rem) * 1.045))); }
+  .el-frame { max-width: min(38rem, max(13rem, calc((100dvh - 17rem) * 1.2))); }
 
   .el-foot { padding-top: .3rem; padding-bottom: max(.35rem, env(safe-area-inset-bottom)); }
 
