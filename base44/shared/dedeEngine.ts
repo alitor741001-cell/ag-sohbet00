@@ -46,10 +46,11 @@ const SCATTER_WEIGHT = 2;
 // Çevirme hakkı turlarında aynı seyrek oran korunur: ek 15 hak ortalama 10 hakkın birinde gelir.
 const FREE_SCATTER_WEIGHT = 2;
 
-// Çarpan küreleri: [değer, ağırlık]. Referans tasarımdaki 3x, 4x, 30x, 50x, 100x, 500x kademeleri.
+// Çarpan jetonları: [değer, ağırlık]. Referans tasarımdaki 3x, 4x, 20x, 30x, 50x, 100x, 500x kademeleri.
 const ORB_VALUES = [
   [3, 900],
   [4, 640],
+  [20, 120],
   [30, 60],
   [50, 24],
   [100, 7],
