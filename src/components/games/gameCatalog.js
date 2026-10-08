@@ -19,14 +19,15 @@ export const FUTBOL_ID = 'altin-gol';
 export const ELIMIN_ID = 'elimin-slot';
 
 // Oyun merkezi kartları: kapak görseli durur, dokununca oyun açılır.
+// fullLogo: kart tek sütuna yayılır, logo kırpılmadan büyük gösterilir.
 export const GAMES = [
-  { id: ELIMIN_ID, title: 'ELİMİNSLOT', cover: ELIMIN_COVER, originWidth: ELIMIN_COVER_WIDTH, originHeight: ELIMIN_COVER_HEIGHT },
+  { id: ELIMIN_ID, title: 'ELİMİNSLOT', cover: ELIMIN_COVER, originWidth: ELIMIN_COVER_WIDTH, originHeight: ELIMIN_COVER_HEIGHT, fullLogo: true },
   { id: FUTBOL_ID, title: 'ALTIN GOL', cover: FUTBOL_COVER, originWidth: FUTBOL_COVER_WIDTH, originHeight: FUTBOL_COVER_HEIGHT },
   { id: SEKERLI_MEYVE_ID, title: 'ŞEKERLİ MEYVE', cover: SEKERLI_COVER, originWidth: SEKERLI_COVER_WIDTH, originHeight: SEKERLI_COVER_HEIGHT },
   { id: ROULETTE_ID, title: 'ROULETTE', cover: ROULETTE_COVER, originWidth: ROULETTE_COVER_WIDTH, originHeight: ROULETTE_COVER_HEIGHT },
   { id: DEDE_ID, title: 'DEDE', cover: DEDE_COVER, originWidth: DEDE_COVER_WIDTH, originHeight: DEDE_COVER_HEIGHT },
   { id: FRUIT_ID, title: 'MEYVE', cover: FRUIT_COVER, originWidth: FRUIT_COVER_WIDTH, originHeight: FRUIT_COVER_HEIGHT },
-  { id: SEKER_ID, title: 'ŞEKER', cover: SEKER_COVER, originWidth: SEKER_COVER_WIDTH, originHeight: SEKER_COVER_HEIGHT },
+  { id: SEKER_ID, title: 'ŞEKER', cover: SEKER_COVER, originWidth: SEKER_COVER_WIDTH, originHeight: SEKER_COVER_HEIGHT, fullLogo: true },
   { id: SLOT_ID, title: 'SLOT', cover: GAME_COVER, originWidth: GAME_COVER_WIDTH, originHeight: GAME_COVER_HEIGHT },
   { id: ROCKET_ID, title: 'ROCKET', cover: ROCKET_COVER, originWidth: ROCKET_COVER_WIDTH, originHeight: ROCKET_COVER_HEIGHT },
 ];

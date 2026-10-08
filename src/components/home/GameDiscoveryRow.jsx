@@ -5,19 +5,21 @@ import { GAMES } from '@/components/games/gameCatalog';
 /** Ana sayfadaki Oyunlar sekmesi: altın çerçeveli premium oyun kartları, oda kurmadan oynanır. */
 export default function GameDiscoveryRow({ onPick }) {
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="grid grid-flow-row-dense grid-cols-2 gap-3">
       {GAMES.map((game) => (
         <button
           key={game.id}
           type="button"
           onClick={() => onPick(game.id)}
-          className="group relative block w-full overflow-hidden rounded-2xl border border-premium-gold/35 shadow-[0_0_24px_-12px_rgba(198,40,40,0.95)] active:scale-[0.99]"
+          className={`group relative block w-full overflow-hidden rounded-2xl border border-premium-gold/35 shadow-[0_0_24px_-12px_rgba(198,40,40,0.95)] active:scale-[0.99] ${
+            game.fullLogo ? 'col-span-2 bg-black/40' : ''
+          }`}
         >
           <Image
             src={game.cover}
             alt={game.title}
-            className="aspect-[4/3] w-full"
-            fittingType="fill"
+            className={game.fullLogo ? 'aspect-[3/2] w-full' : 'aspect-[4/3] w-full'}
+            fittingType={game.fullLogo ? 'fit' : 'fill'}
             originWidth={game.originWidth}
             originHeight={game.originHeight}
             quality={92}

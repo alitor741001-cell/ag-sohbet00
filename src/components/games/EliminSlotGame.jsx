@@ -15,8 +15,7 @@ import GameBetBar from './controls/GameBetBar';
 import GameSpinButton from './controls/GameSpinButton';
 import useEliminGame from './elimin/useEliminGame';
 import useCountUp from './sekerli/useCountUp';
-import { ELIMIN_BACKDROP, ELIMIN_COVER, ELIMIN_COVER_HEIGHT, ELIMIN_COVER_WIDTH, ELIMIN_EMBLEM, ELIMIN_EMBLEM_SIZE } from './elimin/eliminAssets';
-import GameLogoIntro from './GameLogoIntro';
+import { ELIMIN_BACKDROP, ELIMIN_EMBLEM, ELIMIN_EMBLEM_SIZE } from './elimin/eliminAssets';
 import { DICE_MIN, LINES, formatCoins } from './elimin/eliminConfig';
 
 const WIN_FLASH_MS = 2200;
@@ -70,9 +69,6 @@ export default function EliminSlotGame({ onExit, onBack }) {
         <Image src={ELIMIN_BACKDROP} alt="" className="h-full w-full" fittingType="fill" quality={70} />
       </div>
       <span className="el-aurora" aria-hidden="true" />
-
-      {/* Açılışta ELİMİNSLOT logosu tam ekran görünür. */}
-      <GameLogoIntro src={ELIMIN_COVER} originWidth={ELIMIN_COVER_WIDTH} originHeight={ELIMIN_COVER_HEIGHT} />
 
       <header className="el-head">
         <button type="button" onClick={onBack} aria-label="Oyun listesine dön" className="gctl-pill gctl-icon">

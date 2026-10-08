@@ -98,19 +98,21 @@ export default function GamePanel({ open, onClose, roomId, initialGame = null })
 
             {/* Panelde sadece oyunun logosu durur: dokununca oyun açılır.
                 Kartlar alt alta değil, eşit genişlikte yan yana durur. */}
-            <div className="grid min-h-0 flex-1 grid-cols-2 content-center gap-3 overflow-y-auto p-3">
+            <div className="grid min-h-0 flex-1 grid-flow-row-dense grid-cols-2 content-center gap-3 overflow-y-auto p-3">
               {GAMES.map((game) => (
                 <button
                   key={game.id}
                   type="button"
                   onClick={() => openGame(game.id)}
-                  className="group relative block w-full overflow-hidden rounded-2xl border border-slot-gold/40 active:scale-[0.99]"
+                  className={`group relative block w-full overflow-hidden rounded-2xl border active:scale-[0.99] ${
+                    game.fullLogo ? 'col-span-2 border-slot-gold/60 bg-black/40' : 'border-slot-gold/40'
+                  }`}
                 >
                   <Image
                     src={game.cover}
                     alt={game.title}
-                    className="h-[clamp(6.5rem,18dvh,9rem)] w-full"
-                    fittingType="fill"
+                    className={game.fullLogo ? 'h-[clamp(10rem,26dvh,14rem)] w-full' : 'h-[clamp(6.5rem,18dvh,9rem)] w-full'}
+                    fittingType={game.fullLogo ? 'fit' : 'fill'}
                     originWidth={game.originWidth}
                     originHeight={game.originHeight}
                     quality={92}
