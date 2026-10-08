@@ -37,7 +37,7 @@ const aggregate = (records: any[]) => {
     if (!senderId || score <= 0) return;
     const current = map.get(senderId) || { user_id: senderId, name: record.sender_name || 'Kullanıcı', score: 0, gifts: 0 };
     current.score += score;
-    current.gifts += 1;
+    current.gifts += Math.max(1, Number(record.quantity) || 1);
     if (record.sender_name) current.name = record.sender_name;
     map.set(senderId, current);
   });
@@ -46,8 +46,11 @@ const aggregate = (records: any[]) => {
 
 /** Listenin başındaki kişilerin güncel profili (isim + fotoğraf) eklenir. */
 const withProfiles = async (base44: any, entries: any[]) => {
-  return Promise.all(entries.slice(0, TOP_COUNT).map(async (entry) => {
-    const profile = await base44.asServiceRole.entities.User.get(entry.user_id).catch(() => null);
+  const top = entries.slice(0, TOP_COUNT);
+  const people = top.length ? await base44.asServiceRole.entities.User.filter({ id: { $in: top.map(p => p.user_id) } }, '-created_date', TOP_COUNT) : [];
+  const profiles = new Map(people.map(p => [p.id, p]));
+  return Promise.all(top.map(async (entry) => {
+    const profile = profiles.get(entry.user_id);
     // Gizli kullanıcı listede de maskeli profil ve takma adla görünür.
     const hidden = isHiddenUser(profile);
     return {
@@ -63,13 +66,14 @@ const sumScore = (entries: any[]) => entries.reduce((sum, entry) => sum + entry.
 
 /** Odanın hediye sıralaması: son 24 saat ve tüm zamanlar listeleri + toplam değerler. */
 export async function giftBoard(base44: any, roomId: string) {
-  const [allRecords, resetAt, dayResetAt] = await Promise.all([
-    base44.asServiceRole.entities.GiftSend
-      .filter({ room_id: roomId }, '-created_date', MAX_RECORDS)
-      .catch(() => []),
-    resetAtFor(base44, RESET_KEY),
-    resetAtFor(base44, DAY_RESET_KEY),
-  ]);
+  const [resetAt, dayResetAt] = await Promise.all([resetAtFor(base44, RESET_KEY), resetAtFor(base44, DAY_RESET_KEY)]);
+  const allRecords = [];
+  const query = { room_id: roomId, ...(resetAt ? { created_date: { $gte: resetAt } } : {}) };
+  for (let skip = 0; ; skip += 500) {
+    const batch = await base44.asServiceRole.entities.GiftSend.filter(query, 'created_date', 500, skip);
+    allRecords.push(...batch);
+    if (batch.length < 500) break;
+  }
 
   // Sıfırlama anından önceki hediyeler tamamen dışarıda kalır: toplam ve 24 saatlik birlikte sıfırlanır.
   const records = resetAt

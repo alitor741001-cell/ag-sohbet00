@@ -55,6 +55,8 @@ export const LIVE_COLLECTIONS = [
   { entity: 'RocketLive', table: 'rocket_live', columns: ['key', 'round_no', 'status', 'crash_at', 'phase_ends_at'], live: 'full' },
   // Rulet canlı turu: oyun iki altyapıda birden güncel durur (Base44 + Supabase).
   { entity: 'RouletteLive', table: 'roulette_live', columns: ['key', 'round_no', 'status', 'phase_ends_at'], live: 'full' },
+  { entity: 'GiftSend', table: 'gift_sends', columns: ['room_id', 'sender_id', 'sender_name', 'recipient_id', 'recipient_name', 'gift_id', 'gift_name', 'k_value', 'total_k', 'mode', 'status'], live: 'since' },
+  { entity: 'GameWallet', table: 'game_wallets', columns: ['user_id', 'user_name', 'coins', 'bet', 'rocket_bet', 'rocket_bet_2', 'grand', 'free_spins', 'lines', 'spins', 'total_won'], live: 'since' },
   { entity: 'User', table: 'app_users', columns: ['full_name', 'email', 'username', 'member_id', 'avatar', 'role', 'gender', 'title', 'display_role', 'vip_level', 'membership_status', 'hidden_user', 'loaded_coins', 'gift_sent_k', 'gift_received_k', 'is_banned', 'is_suspended', 'agency_code', 'agency_name', 'owned_agency_id', 'diamond_month', 'profile_frame', 'special_frame_id', 'last_login'], live: 'full' },
   // Görüntülü arama durumu canlı koleksiyona alındı: arama kayıtları aynada taze kalır.
 ];
@@ -76,7 +78,7 @@ export const ALL_COLLECTIONS = [
   { entity: 'SupportMessage', table: 'support_messages', columns: ['ticket_id', 'user_id'] },
   { entity: 'Gift', table: 'gifts', columns: ['name', 'emoji', 'image_url', 'k_value', 'category', 'sort_order', 'active'] },
   { entity: 'GiftTier', table: 'gift_tiers', columns: ['name', 'min_k', 'active'] },
-  { entity: 'GiftSend', table: 'gift_sends', columns: ['room_id', 'sender_id', 'sender_name', 'recipient_id', 'recipient_name', 'gift_id', 'gift_name', 'k_value', 'total_k', 'mode', 'status'] },
+
   { entity: 'BigGiftAlert', table: 'big_gift_alerts', columns: ['room_id', 'sender_id', 'recipient_id', 'gift_name', 'score'] },
   { entity: 'GiftTransfer', table: 'gift_transfers', columns: ['kind', 'status', 'sender_id', 'recipient_id', 'dollars', 'tl_amount', 'coins'] },
   { entity: 'CoinRequest', table: 'coin_requests', columns: ['user_id', 'user_name', 'coins', 'price', 'status', 'package_name'] },
@@ -84,7 +86,7 @@ export const ALL_COLLECTIONS = [
   { entity: 'VipItem', table: 'vip_items', columns: ['owner_id', 'level', 'days', 'status', 'sender_id', 'recipient_id'] },
   { entity: 'Payment', table: 'payments', columns: ['user_id', 'amount', 'status'] },
   { entity: 'PaymentMethod', table: 'payment_methods', columns: ['user_id'] },
-  { entity: 'GameWallet', table: 'game_wallets', columns: ['user_id', 'user_name', 'coins', 'bet', 'rocket_bet', 'rocket_bet_2', 'grand', 'free_spins', 'lines', 'spins', 'total_won'] },
+
   { entity: 'GameSpin', table: 'game_spins', columns: ['user_id'] },
   { entity: 'RouletteRound', table: 'roulette_rounds', columns: ['round_no', 'status', 'number'] },
   { entity: 'RouletteSpin', table: 'roulette_spins', columns: ['round_no', 'user_id', 'user_name', 'number', 'stake', 'payout'] },
@@ -152,6 +154,16 @@ function toRow(record, columns) {
   // Oda satırlarında kişi sayısı katılımcı listesinden hesaplanır.
   if (columns.includes('participant_count')) row.participant_count = (record.participants || []).length;
   return row;
+}
+
+export async function giftLock(base44, keys, token, release = false) {
+  const auth = await supabaseAuth(base44);
+  const response = await fetch(`${auth.base}/rpc/${release ? 'release_gift_lock' : 'acquire_gift_lock'}`, {
+    method: 'POST', headers: { apikey: auth.key, Authorization: `Bearer ${auth.key}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(release ? { token } : { keys, token }), signal: AbortSignal.timeout(10000),
+  });
+  if (!response.ok) throw new Error('Hediye sırası sunucusuna ulaşılamadı.');
+  return release ? true : await response.json();
 }
 
 export async function upsertRows(base44, table, rows) {

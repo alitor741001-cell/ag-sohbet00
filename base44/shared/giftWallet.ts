@@ -31,9 +31,6 @@ export async function ensureGiftWallet(base44: any, user: any) {
   const found = await base44.asServiceRole.entities.GameWallet.filter({ user_id: user.id }, '-created_date', 1);
   const isAdmin = user?.role === 'admin';
   if (found[0]) {
-    if ((Number(found[0].coins) || 0) > LEGACY_MAX_COINS) {
-      return base44.asServiceRole.entities.GameWallet.update(found[0].id, { coins: isAdmin ? ADMIN_COINS : START_COINS });
-    }
     return found[0];
   }
   return base44.asServiceRole.entities.GameWallet.create({

@@ -2,6 +2,10 @@
   "name": "RoomMessage",
   "type": "object",
   "properties": {
+    "request_id": {
+      "type": "string",
+      "default": ""
+    },
     "room_id": {
       "type": "string"
     },

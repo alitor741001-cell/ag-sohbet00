@@ -6,6 +6,7 @@ import { useCurrentUser } from '@/lib/useCurrentUser';
 import { Image } from '@/components/ui/image';
 import ProfileWalletCards from '@/components/profile/ProfileWalletCards';
 import useWalletCoinsLive from '@/hooks/useWalletCoinsLive';
+import useGiftSummaryLive from '@/hooks/useGiftSummaryLive';
 import { giftBoxLocked } from '@/lib/giftAccess';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -41,7 +42,8 @@ export default function ProfileMenuContent({ onClose, onOpenPanel }) {
   }, [loadWallet]);
 
   // Cüzdan değiştiğinde coin bakiyesi menüde anında güncellenir.
-  useWalletCoinsLive(user?.id, loadWallet);
+  useWalletCoinsLive(user?.id, (coins) => setWallet(prev => ({ ...prev, coins })));
+  useGiftSummaryLive(user?.id, loadWallet);
 
   if (!user) return null;
 

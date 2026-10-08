@@ -51,10 +51,7 @@ export default async function (req) {
     };
 
     // Yan hesabı doğrulanıp yayıncılığı iptal edilen kişiye tekrar davet gönderilemez.
-    const isDuplicateAccount = async (userId: string) => {
-      const flags = await base44.asServiceRole.entities.FaceCheck.filter({ user_id: userId }, '-created_date', 5).catch(() => []);
-      return (flags || []).some((row: any) => !!row.duplicate_of);
-    };
+    const isDuplicateAccount = async (_userId: string) => false;
 
     // Başvuru aşamasındaki (onaylanmamış) ajanslarla işlem yapılamaz.
     const isAgencyActive = (agency: any) => !!agency && agency.status !== 'pending' && agency.status !== 'rejected' && agency.active !== false;

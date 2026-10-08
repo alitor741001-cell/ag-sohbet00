@@ -2,6 +2,14 @@
   "name": "GiftSend",
   "type": "object",
   "properties": {
+    "request_id": {
+      "type": "string",
+      "default": ""
+    },
+    "quantity": {
+      "type": "integer",
+      "default": 1
+    },
     "room_id": {
       "type": "string",
       "default": ""

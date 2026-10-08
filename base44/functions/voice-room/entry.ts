@@ -1,4 +1,7 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
+import { waitUntil } from 'base44:runtime';
+import { deliverGift, mirrorGiftDelivery } from '../../shared/giftDelivery.ts';
+import { giftAftercare } from '../../shared/giftAftercare.ts';
 import { rateLimit, safeErrorResponse } from '../../shared/security.ts';
 import { isModerator } from '../../shared/roles.ts';
 import { upsertNotification } from '../../shared/upsertNotification.ts';
@@ -338,160 +341,30 @@ export default async function (req: Request): Promise<Response> {
       const kValue = Math.max(0, Number(giftRecord.k_value) || 0);
       const totalK = kValue * recipients.length * quantity;
       const cost = coinsForK(kValue) * recipients.length * quantity;
-      const wallet = await ensureGiftWallet(base44, { id: user.id, role: me?.role || user.role, full_name: user.full_name });
-      const balance = Math.max(0, Number(wallet.coins) || 0);
-      if (cost > balance) {
-        return Response.json({
-          error: `Yetersiz K bakiyesi. Gereken ${formatK(totalK)}, bakiyen ${formatK(Math.floor(balance / 1000))}.`,
-          needed_k: totalK,
-          available_k: Math.floor(balance / 1000),
-        }, { status: 400 });
-      }
-      const spent = await base44.asServiceRole.entities.GameWallet.update(wallet.id, { coins: balance - cost });
-
-      // Sayı tahtası: hediyenin K karşılığı yalnızca alıcıya eklenir.
-      // Tahta kapalıyken gelen hediye tahtayı açar; o an tüm sayaçlar 1'den başlar.
-      // Tahta kapalıyken gelen hediye tahtayı açar; diğer kişilerin sayıları korunur.
-      let numberScores = Array.isArray(room.number_scores) ? room.number_scores : [];
-      recipients.forEach((recipient) => {
-        numberScores = withStep(numberScores, recipient.user_id, coinsForK(kValue) * quantity);
+      const requestId = String(body.request_id || crypto.randomUUID());
+      if (!/^[a-zA-Z0-9-]{16,80}$/.test(requestId)) return Response.json({ error: 'Geçersiz gönderim kimliği.' }, { status: 400 });
+      const delivery = await deliverGift(base44, {
+        roomId: room_id, user: { ...user, role: me?.role || user.role }, gift: giftRecord,
+        recipients, quantity, name: shownName, avatar: shownAvatar, hidden: hiddenUser, requestId,
       });
-      // Tahta açılırken süre sayacı da başlar: koltukların altında "Devam Ediyor" ilerler.
-      const boardStartedAt = room.board_started_at || new Date().toISOString();
-      await base44.asServiceRole.entities.Room.update(room_id, { number_board: true, number_scores: numberScores, board_started_at: boardStartedAt });
-
-      const giftEmoji = giftRecord.emoji || '🎁';
-      // Hızlı yol: yalnızca hediye satırları yazılır. Ekran cevabı, hediyeyi herkesin
-      // görmesi için gereken en kısa işi bekler; ağır işler "gift-finalize" adımına bırakılır.
-      const messages = await Promise.all(recipients.map((recipient) => base44.asServiceRole.entities.RoomMessage.create({
-        room_id, user_id: hiddenUser ? '' : user.id, user_name: shownName, user_avatar: shownAvatar,
-        text: `${shownName}, ${recipient.name} kişisine ${giftRecord.name}${quantity > 1 ? ` X${quantity}` : ''} gönderdi!`,
-        type: 'gift', gift: giftRecord.id, gift_to_id: recipient.user_id, gift_to_name: recipient.name,
-        gift_emoji: giftEmoji, gift_k: kValue * quantity,
-      })));
-
-      // Gönderim cevabı burada biter: hediye kayıtları, seviye/kota senkronu ve büyük hediye
-      // duyurusu istemcinin hemen ardından çağırdığı "gift-finalize" adımında yapılır.
+      if (delivery.busy) return Response.json({ error: 'Gönderim sırada.', retry_after_ms: 700 }, { status: 429 });
+      if (delivery.insufficient) return Response.json({ error: 'Yetersiz K bakiyesi.', needed_k: totalK, available_k: delivery.coins / 1000 }, { status: 400 });
+      waitUntil(mirrorGiftDelivery(base44, delivery));
+      if (delivery.first) waitUntil(giftAftercare(base44, { user, room: delivery.room, gift: giftRecord, recipients, quantity, name: shownName, avatar: shownAvatar, hidden: hiddenUser, me }).catch(error => console.error('Hediye seviye/kota eşitlemesi:', error)));
       return Response.json({
-        ok: true,
-        gift: { id: giftRecord.id, name: giftRecord.name, emoji: giftEmoji, image_url: giftRecord.image_url || '', k_value: kValue },
+        ok: true, gift: { id: giftRecord.id, name: giftRecord.name, emoji: giftRecord.emoji || '🎁', image_url: giftRecord.image_url || '', k_value: giftRecord.k_value },
         recipients, count: recipients.length, quantity, total_k: totalK,
-        coins: Math.max(0, Number(spent.coins) || 0),
-        messages, number_board: true, number_scores: numberScores,
+        coins: Math.max(0, Number(delivery.wallet.coins) || 0),
+        messages: delivery.messages, number_board: true, number_scores: delivery.room.number_scores,
+        board_started_at: delivery.room.board_started_at, room_updated_at: delivery.room.updated_date,
       });
     }
 
     // Hediye sonrası ağır işler: hediye kayıtları, seviye/kota senkronu ve büyük hediye duyurusu.
     // Gönderim ekranını bekletmemek için gönderen tarafı bu adımı ayrı çağırır.
     if (action === 'gift-finalize') {
-      if (!isParticipant && !canMod) return Response.json({ error: 'Önce odaya katılmalısın.' }, { status: 403 });
-      const claimed = Array.isArray(body.message_ids)
-        ? body.message_ids.filter((value: any) => typeof value === 'string' && value).slice(0, 30)
-        : [];
-      const wantedGiftId = typeof gift_id === 'string' && gift_id ? gift_id : (typeof gift === 'string' ? gift : '');
-      if (!claimed.length || !wantedGiftId) return Response.json({ error: 'Hediye kaydı bulunamadı.' }, { status: 400 });
-
-      // Doğrulama: satırlar gerçekten bu kişinin bu odada gönderdiği hediye satırları olmalı.
-      const rows = await Promise.all(claimed.slice(0, 10).map((mid: string) => base44.asServiceRole.entities.RoomMessage.get(mid).catch(() => null)));
-      const own = rows.filter((row: any) => row
-        && row.room_id === room_id
-        && row.type === 'gift'
-        && row.gift === wantedGiftId
-        && (row.user_id === user.id || (hiddenUser && row.user_id === '')));
-      if (!own.length) return Response.json({ error: 'Hediye kaydı doğrulanamadı.' }, { status: 403 });
-
-      const rlFinal = await rateLimit(base44, 'voice-gift-fin:' + user.id, user.id, 3000, 60000);
-      if (!rlFinal.allowed) return Response.json({ ok: true, skipped: true });
-
-      const giftRecord = await base44.asServiceRole.entities.Gift.get(wantedGiftId).catch(() => null);
-      if (!giftRecord) return Response.json({ error: 'Hediye bulunamadı.' }, { status: 404 });
-
-      // Adet ve alıcılar doğrulanan satırlardan okunur — istemciden gelen sayıya güvenilmez.
-      const kValue = Math.max(0, Number(giftRecord.k_value) || 0);
-      const perRecipientK = Math.max(0, Number(own[0].gift_k) || 0);
-      const quantity = kValue > 0 ? Math.max(1, Math.min(10, Math.round(perRecipientK / kValue))) : 1;
-      const recipients = [...new Map(own.map((row: any) => [row.gift_to_id, row.gift_to_name || 'Kullanıcı'])).entries()]
-        .filter(([recipientId]) => !!recipientId)
-        .map(([recipientId, name]) => ({ user_id: recipientId as string, name: name as string }));
-      if (!recipients.length) return Response.json({ error: 'Alıcı bulunamadı.' }, { status: 400 });
-
-      const mode = recipients.length > 1 ? 'bulk' : 'single';
-      const giftEmoji = giftRecord.emoji || '🎁';
-      const records: any[] = [];
-      recipients.forEach((recipient) => {
-        for (let repeat = 0; repeat < quantity; repeat += 1) {
-          records.push({
-            room_id,
-            sender_id: user.id, sender_name: shownName,
-            recipient_id: recipient.user_id, recipient_name: recipient.name,
-            gift_id: giftRecord.id, gift_name: giftRecord.name, gift_emoji: giftEmoji,
-            gift_image_url: giftRecord.image_url || '',
-            k_value: kValue, total_k: kValue * recipients.length, recipient_count: recipients.length, mode, status: 'success',
-          });
-        }
-      });
-      await base44.asServiceRole.entities.GiftSend.bulkCreate(records).catch(() => {});
-
-      // Hediye seviyeleri: gönderen ve alanların K toplamları işlenir.
-      const progression = await addGiftTotals(base44, {
-        senderId: user.id,
-        recipientIds: recipients.map((recipient) => recipient.user_id),
-        kPerRecipient: kValue * quantity,
-      }).catch(() => null);
-
-      // Yayıncı kotası: hediye alan yayıncıların tamamlanan kotaları işlenir.
-      await Promise.all([...new Set(recipients.map((recipient) => recipient.user_id))].slice(0, 10)
-        .map((recipientId) => syncQuotaRewards(base44, recipientId).catch(() => {})));
-
-      // Oda LVL'i hediye atışıyla yükselir; hediye alanların seviyesi de duyurulur.
-      try {
-        const levelMessages: any[] = [];
-        if (progression?.sender) {
-          const synced = await syncGiftRoomLevel(base44, { userId: user.id, userName: shownName, level: progression.sender.after });
-          if (synced?.leveledUp) {
-            levelMessages.push({
-              room_id, user_id: hiddenUser ? '' : user.id, user_name: shownName,
-              user_avatar: hiddenUser ? HIDDEN_AVATAR_URL : shownAvatar,
-              text: `${shownName} ${synced.level} lvl atladı`, type: 'system',
-            });
-          }
-        }
-        for (const person of progression?.recipients || []) {
-          if (person.after <= person.before) continue;
-          levelMessages.push({
-            room_id, user_id: person.user_id, user_name: person.name, user_avatar: '',
-            text: `${person.name} ${person.after} hediye lvl atladı`, type: 'system',
-          });
-        }
-        if (levelMessages.length) await base44.asServiceRole.entities.RoomMessage.bulkCreate(levelMessages);
-      } catch {}
-
-      // Büyük hediye (1 milyon ve üzeri): tüm sesli odaların ekranına duyuru düşer.
-      if (coinsForK(kValue) * quantity >= BIG_GIFT_SCORE) {
-        const primary = recipients[0];
-        const recipientUser = await base44.asServiceRole.entities.User.get(primary.user_id).catch(() => null);
-        await base44.asServiceRole.entities.BigGiftAlert.create({
-          room_id,
-          room_name: room.name || '',
-          sender_id: user.id,
-          sender_name: shownName,
-          sender_avatar: shownAvatar,
-          sender_frame: hiddenUser ? '' : (me?.profile_frame || ''),
-          sender_frame_scale: Number(me?.profile_frame_scale) || 100,
-          recipient_id: primary.user_id,
-          recipient_name: primary.name,
-          recipient_avatar: recipientUser?.avatar || '',
-          recipient_frame: recipientUser?.profile_frame || '',
-          recipient_frame_scale: Number(recipientUser?.profile_frame_scale) || 100,
-          gift_id: giftRecord.id,
-          gift_name: giftRecord.name,
-          gift_emoji: giftEmoji,
-          gift_image_url: giftRecord.image_url || '',
-          score: coinsForK(kValue) * quantity,
-        }).catch(() => {});
-      }
-
-      return Response.json({ ok: true, finalized: true, count: recipients.length, quantity });
+      // Eski istemcilerle uyum: ana gönderim hediyeyi zaten kalıcı kaydeder.
+      return Response.json({ ok: true, finalized: true });
     }
 
     // Oda müziği: şarkı seçimi oda sahibi/yöneticilerde, çalma herkesin kendi cihazında.

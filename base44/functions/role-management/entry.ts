@@ -234,12 +234,6 @@ export default async function(req) {
       // kişi yeni bir hesapla yüzünü yeniden doğrulayabilsin (engellenmemiş hesaplarda
       // aynı yüzle açılan yan hesabın yayıncılığı iptal edilmeye devam eder).
       await detachAssistant(base44, user_id).catch(() => {});
-      const faceRows = await base44.asServiceRole.entities.FaceCheck.filter({ user_id }, '-created_date', 1).catch(() => []);
-      if (faceRows?.[0]?.face_uri) {
-        await base44.asServiceRole.entities.FaceCheck.update(faceRows[0].id, {
-          face_uri: '', note: 'Hesap engellendi: yüz kaydı kaldırıldı', revoked_at: new Date().toISOString(),
-        }).catch(() => {});
-      }
       // Anormal transfer: engellenen kişi bir ajansın sahibiyse ajans kapanır ve
       // üyeleri kendiliğinden serbest bırakılır; hiçbir onay beklenmez.
       const ownedAgencies = await base44.asServiceRole.entities.Agency

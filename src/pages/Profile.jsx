@@ -5,7 +5,7 @@ import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
 import { findProtectedName } from '@/lib/protectedNames';
-import { faceStatus } from '@/lib/faceCheck';
+
 import ProfileTopBar from '@/components/profile/ProfileTopBar';
 import ProfileHeader from '@/components/profile/ProfileHeader';
 import ProfileWalletCards from '@/components/profile/ProfileWalletCards';
@@ -13,13 +13,14 @@ import { giftBoxLocked } from '@/lib/giftAccess';
 import ProfileNeonRow from '@/components/profile/ProfileNeonRow';
 import ProfileDetailsSection from '@/components/profile/ProfileDetailsSection';
 import ProfileSettings from '@/components/profile/ProfileSettings';
-import FaceLockOverlay from '@/components/face/FaceLockOverlay';
+
 import DeleteAccountSection from '@/components/profile/DeleteAccountSection';
 import GiftBoxPanel from '@/components/profile/GiftBoxPanel';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
 import CoinActivityPanel from '@/components/profile/CoinActivityPanel';
 import VipBagPanel from '@/components/profile/VipBagPanel';
 import useWalletCoinsLive from '@/hooks/useWalletCoinsLive';
+import useGiftSummaryLive from '@/hooks/useGiftSummaryLive';
 
 const EMPTY_FORM = { username: '', full_name: '', phone: '', avatar: '', birth_date: '' };
 
@@ -34,9 +35,7 @@ export default function Profile() {
   const [wallet, setWallet] = useState(null);
   const [vipCount, setVipCount] = useState(0);
   const [giftBoxOpen, setGiftBoxOpen] = useState(false);
-  // Elmaslar/bakiye bölümü yüz doğrulamasıyla korunur.
-  const [balanceLocked, setBalanceLocked] = useState(false);
-  const [balanceEnroll, setBalanceEnroll] = useState(false);
+
   const [activityOpen, setActivityOpen] = useState(false);
   const [vipBagOpen, setVipBagOpen] = useState(false);
   const [coinShopOpen, setCoinShopOpen] = useState(false);
@@ -69,7 +68,6 @@ export default function Profile() {
   const loadSummary = () => {
     base44.functions.invoke('profile-summary', {})
       .then((response) => {
-        setWallet(response.data);
         setVipCount(response.data?.vip_count ?? 0);
       })
       .catch(() => {});
@@ -83,7 +81,8 @@ export default function Profile() {
 
   // Cüzdan canlıdır: oyun kazancı, hesaba gelen coin ve hediye harcaması bakiyeye
   // anında işler — kart 5 saniyelik yenilemeyi beklemez.
-  useWalletCoinsLive(user?.id, (coins) => setWallet((prev) => (prev ? { ...prev, coins } : prev)));
+  useWalletCoinsLive(user?.id, (coins) => setWallet((prev) => ({ ...prev, coins })));
+  useGiftSummaryLive(user?.id, loadWallet);
 
   // Sayfa kendini 5 saniyede bir sessizce tazeler: bakiye canlı değerden okunur, böylece
   // hediye/oyun harcamaları ekranda eski tutarla kalmaz — yükleme göstergesi çıkmaz.
@@ -140,11 +139,7 @@ export default function Profile() {
       toast({ title: 'Elmas ve bakiye bölümü yayıncılara açıktır', description: 'Yayıncı olduğunuzda elmas ve bakiye bölümünü kullanabilirsiniz.', variant: 'destructive' });
       return;
     }
-    const status = await faceStatus(user?.id).catch(() => null);
-    // Daha önce yüzü doğrulanan cihazda tekrar sorulmaz.
-    if (!status || !status.enabled || status.balance || status.trusted) { setGiftBoxOpen(true); return; }
-    setBalanceEnroll(!status.enrolled);
-    setBalanceLocked(true);
+    setGiftBoxOpen(true);
   };
 
   if (!user) return <div className="dark min-h-screen p-6 text-white">Yükleniyor...</div>;
@@ -203,15 +198,6 @@ export default function Profile() {
         </div>
       </div>
 
-      <FaceLockOverlay
-        open={balanceLocked}
-        user={user}
-        mode={balanceEnroll ? 'enroll' : 'verify'}
-        scope="balance"
-        canCancel
-        onCancel={() => setBalanceLocked(false)}
-        onVerified={() => { setBalanceLocked(false); setGiftBoxOpen(true); }}
-      />
       {/* Kutu kapanınca bakiye canlı değerden tazelenir: kart eski tutarı göstermez. */}
       <GiftBoxPanel open={giftBoxOpen} onClose={() => { setGiftBoxOpen(false); loadWallet(); }} />
       <CoinActivityPanel open={activityOpen} onClose={() => setActivityOpen(false)} />

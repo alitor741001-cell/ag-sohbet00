@@ -93,7 +93,7 @@ export async function addGiftTotals(base44: any, { senderId, recipientIds, kPerR
         before: giftLevel(record.gift_sent_k),
         after: giftLevel(sentK),
       };
-      await base44.asServiceRole.entities.User.update(record.id, { gift_sent_k: sentK }).catch(() => {});
+      await base44.asServiceRole.entities.User.updateMany({ id: record.id }, { $inc: { gift_sent_k: k * ids.length } });
     }
   }
   const recipients = [];
@@ -107,7 +107,7 @@ export async function addGiftTotals(base44: any, { senderId, recipientIds, kPerR
       before: giftLevel(person.gift_received_k),
       after: giftLevel(receivedK),
     });
-    await base44.asServiceRole.entities.User.update(person.id, { gift_received_k: receivedK }).catch(() => {});
+    await base44.asServiceRole.entities.User.updateMany({ id: person.id }, { $inc: { gift_received_k: k } });
   }
   return { sender, recipients };
 }

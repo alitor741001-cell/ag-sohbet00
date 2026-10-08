@@ -1,5 +1,6 @@
 /** Hediye tahtası için veri katmanı: katalog, K seviyeleri ve seçim renkleri. */
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import useWalletCoinsLive from '@/hooks/useWalletCoinsLive';
 import { base44 } from '@/api/base44Client';
 import { tierForK, toneColor, toneGlow } from '@/lib/giftTone';
 
@@ -36,22 +37,26 @@ export function useGiftCost(gift, tiers, recipientCount) {
 }
 
 /** Gönderenin K bakiyesi (coin) — sesli odanın hediye durumundan okunur. */
-export function useGiftBalance(roomId, enabled) {
-  const [coins, setCoins] = useState(null);
-
+export function useGiftBalance(roomId, enabled, userId, sendingRef) {
+  const [coins, updateCoins] = useState(null);
+  const revision = useRef(0);
+  const setCoins = useCallback((value) => { revision.current++; updateCoins(value); }, []);
   const refresh = useCallback(() => {
-    if (!roomId) return Promise.resolve(null);
-    return base44.functions.invoke('voice-room', { room_id: roomId, action: 'gift-state' })
-      .then((response) => {
-        const value = Math.max(0, Number(response.data?.coins) || 0);
-        setCoins(value);
-        return value;
-      })
-      // Bakiye okunamazsa son bilinen değer korunur; gönderim kararını sunucu verir.
-      .catch(() => null);
-  }, [roomId]);
-
-  useEffect(() => { if (enabled) refresh(); }, [enabled, refresh]);
-
+    if (!roomId || sendingRef?.current) return Promise.resolve(null);
+    const version = revision.current;
+    return base44.functions.invoke('voice-room', { room_id: roomId, action: 'gift-state' }).then(({ data }) => {
+      const value = Math.max(0, Number(data?.coins) || 0);
+      if (version === revision.current && !sendingRef?.current) setCoins(value);
+      return value;
+    }).catch(() => null);
+  }, [roomId, setCoins, sendingRef]);
+  useWalletCoinsLive(userId, (value) => { if (!sendingRef?.current) setCoins(value); });
+  useEffect(() => { refresh(); }, [enabled, refresh]);
+  useEffect(() => {
+    const visible = () => { if (document.visibilityState === 'visible') refresh(); };
+    document.addEventListener('visibilitychange', visible);
+    const timer = setInterval(visible, 8000);
+    return () => { clearInterval(timer); document.removeEventListener('visibilitychange', visible); };
+  }, [refresh]);
   return { coins, setCoins, refresh };
 }

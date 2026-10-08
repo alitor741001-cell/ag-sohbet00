@@ -184,7 +184,7 @@ export default async function (req: Request): Promise<Response> {
         }
         const entry = grouped.get(key);
         const kValue = Math.max(0, Number(record.k_value) || 0);
-        entry.count += 1;
+        entry.count += Math.max(1, Number(record.quantity) || 1);
         entry.total_k = Math.round((entry.total_k + kValue) * 100) / 100;
         entry.items.push({
           id: record.id,

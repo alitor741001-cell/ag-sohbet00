@@ -92,13 +92,13 @@ export async function giftResetAt(base44: any) {
 
 /** Kişinin aldığı hediyelerin K toplamı, bu ayın elması ve dolar değeri. */
 export async function receivedGiftTotals(base44: any, userId: string, resetAt = '') {
-  const [records, tiers] = await Promise.all([
-    base44.asServiceRole.entities.GiftSend
-      .filter({ recipient_id: userId }, '-created_date', MAX_RECORDS)
-      .catch(() => []),
-    // Kazanç, kota tablosundaki kademe tutarlarından hesaplanır.
-    loadQuotaTiers(base44),
-  ]);
+  const tiers = await loadQuotaTiers(base44);
+  const records = [];
+  for (let skip = 0; ; skip += 500) {
+    const batch = await base44.asServiceRole.entities.GiftSend.filter({ recipient_id: userId }, 'created_date', 500, skip);
+    records.push(...batch);
+    if (batch.length < 500) break;
+  }
   const monthStart = monthStartIso();
   // Elmas; ay başı ile elle sıfırlama anından hangisi yeniyse ondan sonrasını sayar.
   const start = resetAt && resetAt > monthStart ? resetAt : monthStart;

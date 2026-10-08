@@ -7,6 +7,7 @@ import { Image } from '@/components/ui/image';
 import { formatCoins } from '@/lib/giftTone';
 import { formatScore } from '@/components/voice/scoreTier';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
+import useGiftSummaryLive from '@/hooks/useGiftSummaryLive';
 
 const MIN_DOLLARS = 1;
 const COINS_PER_DOLLAR = 9000;
@@ -54,6 +55,8 @@ export default function GiftBoxPanel({ open, onClose }) {
     setConvertReq(null);
     load();
   }, [open, load]);
+
+  useGiftSummaryLive(user?.id, load, open);
 
   // Kimlik numarası yazıldıkça kişinin profili ve ismi altında görünür.
   useEffect(() => {

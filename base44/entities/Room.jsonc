@@ -164,6 +164,13 @@
       },
       "default": []
     },
+    "gift_requests": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
     "board_started_at": {
       "type": "string",
       "default": ""

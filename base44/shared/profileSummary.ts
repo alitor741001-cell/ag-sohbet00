@@ -30,25 +30,7 @@ async function compute(base44: any, account: any) {
  * taze değer yanıttan sonra arka planda hazırlanır. Ayna erişilemezse kaynaktan hesaplanır.
  */
 export async function profileSummary(base44: any, account: any) {
-  const cached = await readProfileSummary(base44, account.id);
-  if (cached?.wallet) {
-    const age = Date.now() - Date.parse(cached.synced_at || 0);
-    if (!(age < STALE_MS)) {
-      waitUntil(
-        compute(base44, account)
-          .then((next) => writeProfileSummary(base44, account.id, next))
-          .catch(() => {}),
-      );
-    }
-    const stored = cached.vip_count;
-    // Cüzdan tazeyken VIP sayısı henüz yazılmamışsa yalnızca sayı okunur.
-    if (stored === null || stored === undefined) {
-      const vipCount = await countVip(base44, account.id);
-      waitUntil(writeProfileSummary(base44, account.id, { vip_count: vipCount }));
-      return { wallet: cached.wallet, vip_count: vipCount };
-    }
-    return { wallet: cached.wallet, vip_count: Number(stored) || 0 };
-  }
+  // Parasal değerler aynadaki eski özetten değil, her zaman ana kayıttan okunur.
   const computed = await compute(base44, account);
   await writeProfileSummary(base44, account.id, computed);
   return computed;

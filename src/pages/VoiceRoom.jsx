@@ -52,6 +52,7 @@ import useBigGiftAlerts from '@/hooks/useBigGiftAlerts';
 import useBigGiftNotice from '@/hooks/useBigGiftNotice';
 import BigGiftStage from '@/components/voice/BigGiftStage';
 import { useGiftBalance, useGiftCatalog } from '@/hooks/useGiftCatalog';
+import { publishWalletCoins } from '@/hooks/useWalletCoinsLive';
 import { K_UNIT, formatCoins, tierForK, toneColor } from '@/lib/giftTone';
 
 export default function VoiceRoom() {
@@ -114,7 +115,9 @@ export default function VoiceRoom() {
 
   // Hediye Tahtası: katalog, K seviyeleri, bakiye ve gelen hediye animasyonları.
   const { gifts, tiers } = useGiftCatalog();
-  const { coins, setCoins, refresh: refreshCoins } = useGiftBalance(id, giftOpen);
+  const giftQueueRef = useRef([]);
+  const giftFlushingRef = useRef(false);
+  const { coins, setCoins, refresh: refreshCoins } = useGiftBalance(id, giftOpen, user?.id, giftFlushingRef);
   const giftMap = useMemo(() => new Map(gifts.map((item) => [item.id, item])), [gifts]);
   const resolveGift = useCallback((giftKey) => giftMap.get(giftKey) || null, [giftMap]);
   const { alert: giftAlert, push: pushGiftAlert, markSeen: markGiftSeen, markOwnSend } = useGiftAlerts(messages, resolveGift, user?.id);
@@ -132,12 +135,7 @@ export default function VoiceRoom() {
   const giftFlashRef = useRef(null);
   const giftBoardRef = useRef(0);
   const giftRefreshTimerRef = useRef(null);
-  // Hediye gönderim kuyruğu: istekler tek tek işlenir, kuyruk boşalınca tahta sunucudan eşitlenir.
-  const giftQueueRef = useRef([]);
-  const giftFlushingRef = useRef(false);
-  // Tamamlama (ağır işler) kuyruğu ve gönderim bitince yapılan tek seferlik eşitleme.
-  const giftFinalizeRef = useRef([]);
-  const giftFinalizeRunningRef = useRef(false);
+  const giftBoardRequestRef = useRef(0);
   const giftSyncTimerRef = useRef(0);
 
   const seats = useMemo(() => (Array.isArray(room?.seats) ? room.seats : []), [room?.seats]);
@@ -282,20 +280,21 @@ export default function VoiceRoom() {
   const syncRoom = useCallback(async () => {
     const response = await base44.functions.invoke('room-presence', { action: 'get', room_id: id }).catch(() => null);
     const record = response?.data?.room;
-    if (record) setRoom(record);
+    if (record) setRoom(prev => prev?.updated_date && record.updated_date && prev.updated_date > record.updated_date ? prev : record);
     return record;
   }, [id]);
 
   // Hediye kutusu: odada biriken hediyeler (son 24 saat + tüm zamanlar).
   const loadGiftBoard = useCallback(async () => {
+    const version = ++giftBoardRequestRef.current;
     setGiftBoardLoading(true);
     try {
       const response = await base44.functions.invoke('voice-room', { room_id: id, action: 'gift-board' });
-      setGiftBoard(response.data);
+      if (version === giftBoardRequestRef.current) setGiftBoard(response.data);
     } catch {
       // Sıralama alınamazsa kutu son bilinen değerle kalır.
     } finally {
-      setGiftBoardLoading(false);
+      if (version === giftBoardRequestRef.current) setGiftBoardLoading(false);
     }
   }, [id]);
 
@@ -440,7 +439,7 @@ export default function VoiceRoom() {
           const next = { ...prev, ...(event.data || {}) };
           // Gönderim sırasında gelen oda kopyası sayı tahtasının eski halini taşıyabilir:
           // iyimser değer korunur, tahta kuyruk boşalınca sunucudan kesin haliyle eşitlenir.
-          if (giftFlushingRef.current) next.number_scores = prev.number_scores;
+          if (prev.updated_date && event.data?.updated_date && prev.updated_date > event.data.updated_date) return prev;
           return next;
         });
       }
@@ -847,28 +846,6 @@ export default function VoiceRoom() {
     setSelectedIds((prev) => (prev.includes(userId) ? prev.filter((value) => value !== userId) : [...prev, userId]));
   }, []);
 
-  // Tamamlama adımları tek sırada işlenir: art arda gönderimde aynı anda onlarca ağır istek
-  // (hediye kaydı, kota ve seviye senkronu) birikip gönderimi yavaşlatmaz.
-  const fireGiftFinalize = (job) => base44.functions.invoke('voice-room', {
-    room_id: id, action: 'gift-finalize', gift_id: job.giftId, message_ids: job.messageIds,
-  }).catch(() => {});
-
-  const runGiftFinalize = async () => {
-    if (giftFinalizeRunningRef.current) return;
-    giftFinalizeRunningRef.current = true;
-    try {
-      while (giftFinalizeRef.current.length) await fireGiftFinalize(giftFinalizeRef.current.shift());
-    } finally {
-      giftFinalizeRunningRef.current = false;
-    }
-  };
-
-  const queueGiftFinalize = (giftId, messageIds) => {
-    if (!giftId || !messageIds?.length) return;
-    giftFinalizeRef.current.push({ giftId, messageIds });
-    runGiftFinalize();
-  };
-
   // Kuyruk boşaldıktan sonra kısa bir sessizlik beklenir: art arda gönderimde her dokunuş için
   // ayrı tahta/bakiye eşitlemesi yapılmaz, gönderim bitince tek seferde yapılır.
   const scheduleGiftSync = () => {
@@ -884,39 +861,30 @@ export default function VoiceRoom() {
   // Sayfadan çıkılırken bekleyen tamamlamalar bırakılmaz: kalan istekler arka planda yollanır,
   // alıcının elmas ve kota kaydı eksik kalmaz.
   useEffect(() => () => {
-    const pending = giftFinalizeRef.current;
-    giftFinalizeRef.current = [];
-    pending.forEach((job) => fireGiftFinalize(job));
+
     window.clearTimeout(giftSyncTimerRef.current);
   }, []);
 
   // Tek gönderim: bakiye düşer, alıcı başına kayıt ve sohbet satırı oluşur.
-  const sendGiftOnce = async (gift, ids, quantity = 1) => {
+  const sendGiftOnce = async (gift, ids, quantity = 1, requestId) => {
     // Sahne tek kez oynasın: hediye satırının canlı yayın kopyası bu gönderim için yok sayılır.
     markOwnSend();
     const response = await base44.functions.invoke('voice-room', {
-      room_id: id, action: 'gift-send', gift_id: gift.id, target_ids: ids, quantity,
+      room_id: id, action: 'gift-send', gift_id: gift.id, target_ids: ids, quantity, request_id: requestId,
     });
     const data = response.data;
     // Kuyrukta bekleyen gönderim yoksa bakiye sunucudan gelen gerçek değerle eşitlenir;
     // bekleyen gönderim varsa anlık düşen değer korunur (kuyruk boşalınca gerçek değer okunur).
-    if (typeof data.coins === 'number' && !giftQueueRef.current.length) setCoins(data.coins);
-    // Ağır işler cevabı beklemez: hediye kayıtları, seviye/kota senkronu ve büyük hediye
-    // duyurusu hemen ardından arka planda tamamlanır.
-    queueGiftFinalize(gift.id, (data.messages || []).map((message) => message.id));
+    if (typeof data.coins === 'number') {
+      const reserved = giftQueueRef.current.reduce((sum, job) => sum + Number(job.gift.k_value) * 1000 * job.quantity * job.ids.length, 0);
+      setCoins(Math.max(0, data.coins - reserved));
+      publishWalletCoins(user?.id, data.coins);
+    }
+    setRoom(prev => !prev || (prev.updated_date && data.room_updated_at && prev.updated_date > data.room_updated_at) ? prev : { ...prev, number_scores: data.number_scores, number_board: true, board_started_at: data.board_started_at, updated_date: data.room_updated_at });
     markGiftSeen((data.messages || []).map((message) => message.id));
     const recipientIds = (data.recipients || []).map((item) => item.user_id);
     // Gönderdiğim hediye kutu toplamına anında yansır, ardından sunucu toplamıyla doğrulanır.
-    const sentScore = Math.round((Number(data.total_k) || 0) * 1000);
-    if (sentScore > 0) {
-      setGiftBoard((prev) => (prev ? {
-        ...prev,
-        all: { ...prev.all, total: (Number(prev.all?.total) || 0) + sentScore },
-        day: { ...prev.day, total: (Number(prev.day?.total) || 0) + sentScore },
-      } : prev));
-    }
-    // Kutu toplamı yerelde anında artar; sunucu toplamı en fazla 3 saniye sonra doğrular.
-    giftBoardRef.current = Date.now();
+    loadGiftBoard();
     flashGifted(recipientIds, data.gift?.emoji);
     pushGiftAlert({
       key: `send-${Date.now()}`,
@@ -940,11 +908,7 @@ export default function VoiceRoom() {
     if (step <= 0 || !job.ids?.length) return;
     const cost = step * job.ids.length;
     setCoins((prev) => (prev === null || prev === undefined ? prev : prev + cost));
-    setRoom((prev) => {
-      if (!prev) return prev;
-      const next = job.ids.reduce((list, value) => withBoardStep(list, value, -step), Array.isArray(prev.number_scores) ? prev.number_scores : []);
-      return { ...prev, number_scores: next };
-    });
+
   };
 
   // Kuyruğu boşaltır: istekler tek tek gider, geçici hatalarda kısa beklemeyle yeniden denenir.
@@ -959,9 +923,10 @@ export default function VoiceRoom() {
         const job = giftQueueRef.current.shift();
         let done = false;
         let rejected = false;
-        for (let attempt = 0; attempt < 3 && !done; attempt += 1) {
+        for (let attempt = 0; attempt < 8 && !done; attempt += 1) {
           try {
-            await sendGiftOnce(job.gift, job.ids, job.quantity);
+            await sendGiftOnce(job.gift, job.ids, job.quantity, job.requestId);
+            lastError = null;
             done = true;
           } catch (error) {
             lastError = error;
@@ -969,6 +934,7 @@ export default function VoiceRoom() {
             // Kesin cevap (bakiyede para yok, geçersiz hediye): kalan gönderimler bekletilmez.
             if (status >= 400 && status < 500 && status !== 429) {
               rejected = true;
+              giftQueueRef.current.forEach(revertGiftStep);
               giftQueueRef.current = [];
               const data = error?.response?.data || {};
               // Bakiye yetmediyse kullanıcı doğrudan coin yükleme ekranına alınır.
@@ -978,7 +944,7 @@ export default function VoiceRoom() {
               }
               break;
             }
-            await new Promise((resolve) => window.setTimeout(resolve, 500));
+            await new Promise((resolve) => window.setTimeout(resolve, Math.min(5000, Number(error?.response?.data?.retry_after_ms) || 700 * (attempt + 1))));
           }
         }
         // Sunucu bu gönderimi işlemediyse yereldeki adım geri alınır: bakiyeden düşmeyen
@@ -1003,13 +969,9 @@ export default function VoiceRoom() {
       // Coin bakiyesi anında düşer: ekranda eski değer kalmaz.
       const cost = step * ids.length;
       setCoins((prev) => (prev === null || prev === undefined ? prev : Math.max(0, prev - cost)));
-      setRoom((prev) => {
-        if (!prev) return prev;
-        const next = ids.reduce((list, value) => withBoardStep(list, value, step), Array.isArray(prev.number_scores) ? prev.number_scores : []);
-        return { ...prev, number_board: true, number_scores: next };
-      });
+
     }
-    giftQueueRef.current.push({ gift, ids, quantity });
+    giftQueueRef.current.push({ gift, ids, quantity, requestId: crypto.randomUUID() });
     return flushGiftQueue();
   };
 

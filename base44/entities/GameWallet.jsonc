@@ -12,6 +12,13 @@
       "type": "number",
       "default": 100000
     },
+    "gift_requests": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
     "bet": {
       "type": "number",
       "default": 100
