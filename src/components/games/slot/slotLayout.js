@@ -61,8 +61,9 @@ export const SYMBOL_CELLS = {
 export const SYMBOL_IDS = Object.keys(SYMBOL_CELLS);
 
 // Havuz etiketleri: görselde yazan adların üzerine yeni adlar yazılır.
-const LABEL_HEIGHT = 34;
-const poolLabel = (x, y, w, h) => frame(x - w * 0.025, y - LABEL_HEIGHT - 2, w * 1.05, LABEL_HEIGHT);
+// Şerit, görselin kendi adını tamamen kapatacak yükseklikte ve o ada göre ortalanır.
+const LABEL_HEIGHT = 44;
+const poolLabel = (x, y, w) => frame(x - w * 0.03, y - LABEL_HEIGHT - 4, w * 1.06, LABEL_HEIGHT);
 
 // Görselde yazılı olan rakam alanları — canlı değerler bu kutulara yazılır.
 export const SLOT_FIELDS = {
@@ -70,8 +71,8 @@ export const SLOT_FIELDS = {
   totalBet: frame(296, 1268, 144, 54),
   win: frame(585, 1268, 150, 54),
   bet: frame(330, 1370, 104, 56),
-  // Bakiye alanı: altındaki altın şeride değmemesi için biraz daha kısa tutulur.
-  balance: frame(90, 1460, 170, 46),
+  // Bakiye alanı: görselin kendi rakamlarının tam ortasına oturur, alttaki altın şeride değmez.
+  balance: frame(84, 1462, 170, 38),
   // Ödül havuzları: kaybedilenler o anki bahis kademesinin havuzunda birikir.
   jackpots: [
     frame(168, 296, 200, 48),
@@ -95,7 +96,14 @@ export const SLOT_FIELD_SKINS = {
 
 // Görselde yazan havuz adlarının üzerine yazılan yeni adlar.
 export const SLOT_POOL_LABELS = [
-  { text: 'X MEGA', tone: 'text-slot-pink', box: poolLabel(24, 358, 158, 46), skin: '#610216' },
-  { text: 'BIG', tone: 'text-slot-blue', box: poolLabel(662, 296, 192, 48), skin: '#111331' },
-  { text: 'JACKPOT', tone: 'text-slot-gold', box: poolLabel(402, 296, 222, 48), skin: '#251615' },
+  { text: 'X MEGA', tone: 'text-slot-pink', box: poolLabel(24, 358, 158) },
+  { text: 'BIG', tone: 'text-slot-blue', box: poolLabel(662, 296, 192) },
+  { text: 'JACKPOT', tone: 'text-slot-gold', box: poolLabel(402, 296, 222) },
 ];
+
+// Görseldeki statik "2/20" göstergesi canlı bir değere karşılık gelmiyor: kapsülün kendi
+// zeminiyle kapatılır, geriye temiz bir ilerleme çubuğu kalır.
+export const SLOT_PROGRESS_TEXT = { box: frame(466, 380, 140, 32), skin: '#140235' };
+
+// Canlı değerler görselin kendi rakamlarıyla aynı boyutta çizilir (görsel pikseli).
+export const SLOT_TEXT_PX = { value: 40, pool: 44, label: 24 };

@@ -14,6 +14,7 @@ import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
 import WinnerTicker, { TICKER_ROW_HEIGHT } from './slot/WinnerTicker';
 import SlotStopButton from './slot/SlotStopButton';
 import SlotPoolLabels from './slot/SlotPoolLabels';
+import SlotProgressCover from './slot/SlotProgressCover';
 import SlotTierAlert from './slot/SlotTierAlert';
 import FreeSpinBadge from './slot/FreeSpinBadge';
 import { tierOfBet } from './slot/slotConfig';
@@ -111,10 +112,13 @@ export default function SlotGame({ onExit, onBack, roomId }) {
             {!game.spinning && <SlotWinLines wins={game.wins} />}
 
             {/* Görselin kendi rakam alanları: bakiye, WIN, BET, LINES, TOTAL BET ve üst ödüller */}
-            <SlotReadout coins={game.coins} win={game.win} bet={game.bet} lines={game.lines} pools={game.pools} />
+            <SlotReadout coins={game.coins} win={game.win} bet={game.bet} lines={game.lines} pools={game.pools} scale={scale} />
 
             {/* Görselde yazan havuz adlarının üzerine yeni adlar yazılır. */}
-            <SlotPoolLabels />
+            <SlotPoolLabels scale={scale} />
+
+            {/* Görseldeki statik "2/20" yazısı kapatılır: ilerleme çubuğu temiz kalır. */}
+            <SlotProgressCover />
 
             {/* Görselin kendi butonları — görünmez dokunma alanları */}
             <button
