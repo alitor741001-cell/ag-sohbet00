@@ -36,10 +36,9 @@ export default function ZarTable({ bets, zoneTotals, disabled, revealed, outcome
               {bets[zone.id] ? <span className="zar-zone-chip">{formatCoins(bets[zone.id])}</span> : null}
             </button>
           ))}
+          {/* Kase Küçük ve Büyük alanlarının tam arasında durur. */}
+          {overlay}
         </div>
-
-        {/* Masanın ortasındaki katman: zar kasesi ve sonuç şeridi. */}
-        {overlay}
       </div>
     </div>
   );

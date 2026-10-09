@@ -1,5 +1,5 @@
 import React from 'react';
-import ZarDie from './ZarDie';
+import ZarCupDie from '@/components/games/zar/ZarCupDie';
 
 /** Parlak siyah plastik kase: kalın gövde ve üstünde şeffaf cam kubbe. Zarlar kase
     içinde çuhada durur; çalkalanırken camdan görünür, kase kalkınca tek tek açılırlar. */
@@ -15,7 +15,7 @@ export default function ZarShaker({ dice, phase }) {
       </span>
       <span className="zar-cup-dice">
         {values.map((value, index) => (
-          <ZarDie key={index} value={value} tone="white" size="md" />
+          <ZarCupDie key={index} value={value} />
         ))}
       </span>
       <span aria-hidden="true" className="zar-cup-glass" />
