@@ -358,6 +358,21 @@
   line-height: 1.25;
   color: rgba(255, 255, 255, 0.86);
 }
+/* El puanı: sistem her taşta hesaplar, sıra kimde olursa olsun yazılı kalır. */
+.okey-score-chip {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(6, 14, 9, 0.8);
+  padding: 0.28rem 0.6rem;
+  font-size: 0.55rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.9);
+}
+.okey-score-chip[data-ready="1"] { border-color: rgba(125, 245, 168, 0.8); color: #7df5a8; }
 .okey-btn {
   display: flex;
   flex-shrink: 0;

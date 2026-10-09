@@ -115,8 +115,6 @@ export default function useOkeyGame() {
     draw: () => request({ action: 'draw', table_id: tableId }),
     discard: (tile) => request({ action: 'discard', table_id: tableId, tile }),
     finish: () => request({ action: 'finish', table_id: tableId }),
-    // Sistem eli yeniden hesaplar: 101 puanı bulan el bitirebilir.
-    calculate: () => request({ action: 'state', table_id: tableId }),
     leave: async () => {
       if (tableId) await request({ action: 'leave', table_id: tableId });
       setTable(null);
