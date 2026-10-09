@@ -1,6 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import ZarDie from './ZarDie';
-import { DICE_TEAMS, sumTone } from './zarConfig';
+import { sumTone } from './zarConfig';
+
+const DICE_ORDER = [1, 2, 3];
 
 /** Referans tasarımdaki "YENİ" paneli: atılan her zar geçmişe eklenir ve akış aşağı doğru iner. */
 export default function ZarHistory({ entries }) {
@@ -23,8 +25,8 @@ export default function ZarHistory({ entries }) {
         {[...rows].reverse().map((entry) => (
           <span key={entry.round_no} className={`zar-history-row zar-history-row-${sumTone(entry.sum)}`}>
             <span className="zar-history-pair">
-              {DICE_TEAMS.map((team, index) => (
-                <ZarDie key={team} value={entry[`d${index + 1}`] || 1} team={team} size="mini" />
+              {DICE_ORDER.map((no) => (
+                <ZarDie key={no} value={entry[`d${no}`] || 1} tone="white" size="mini" />
               ))}
             </span>
             <span className="zar-history-sum">{entry.sum}</span>

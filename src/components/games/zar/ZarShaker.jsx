@@ -2,8 +2,8 @@ import React from 'react';
 import ZarDie from './ZarDie';
 import { DICE_TEAMS } from './zarConfig';
 
-/** Kara kase: çalkalanırken kapalıdır ve zarlar içinde görünmez,
-    son iki saniyede kase yukarı kayar ve zarlar çuhada açılır. */
+/** Kara plastik kase: kalın gövde ve üstünde şeffaf cam kubbe. Zarlar kase içinde
+    çuhada durur; çalkalanırken camdan görünür, kase kalkınca tek tek açılırlar. */
 export default function ZarShaker({ dice, phase }) {
   const shaking = phase === 'shaking';
   const revealed = shaking && Array.isArray(dice);
@@ -12,7 +12,6 @@ export default function ZarShaker({ dice, phase }) {
   return (
     <div className={`zar-shaker${shaking ? ' zar-shaker-live' : ''}${revealed ? ' zar-shaker-open' : ''}`}>
       <span aria-hidden="true" className="zar-cup">
-        <span className="zar-cup-shine" />
         <span className="zar-cup-rim" />
       </span>
       <span className="zar-cup-dice">
@@ -20,6 +19,7 @@ export default function ZarShaker({ dice, phase }) {
           <ZarDie key={index} value={value} team={DICE_TEAMS[index]} size="md" />
         ))}
       </span>
+      <span aria-hidden="true" className="zar-cup-glass" />
       <span aria-hidden="true" className="zar-cup-shadow" />
     </div>
   );
