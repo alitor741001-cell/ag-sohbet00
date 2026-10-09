@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import OkeyModeIcon from './OkeyModeIcon';
 import OkeyTile from './OkeyTile';
 import { isWild, rowSplit } from './okeyConfig';
 import { planHand } from './okeyGroups';
@@ -117,11 +116,6 @@ export default function OkeyRack({ hand, okey, mode, onMode, canDiscard, onDisca
 
   return (
     <div className="okey-rack-wrap">
-      <button type="button" className="okey-side" data-on={mode === 'seri' ? '1' : '0'} onClick={() => onMode('seri')}>
-        <OkeyModeIcon variant="seri" />
-        <span className="okey-side-text">SERİ DİZ</span>
-      </button>
-
       <div className={`okey-rack${canDiscard ? ' okey-rack-ready' : ''}`}>
         {rows.map((row, rowIndex) => (
           <div className="okey-row" key={rowIndex}>
@@ -147,11 +141,6 @@ export default function OkeyRack({ hand, okey, mode, onMode, canDiscard, onDisca
           </div>
         ))}
       </div>
-
-      <button type="button" className="okey-side" data-on={mode === 'cift' ? '1' : '0'} onClick={() => onMode('cift')}>
-        <OkeyModeIcon variant="cift" />
-        <span className="okey-side-text">ÇİFT DİZ</span>
-      </button>
 
       {/* Parmak altındaki taş: oyun panelinin dışına çizilir, böylece kırpılmaz. */}
       {ghost

@@ -2,7 +2,7 @@
 
 .okey-shell {
   /* Üç satırlık tahta: 7'li satırlar ekrana sığsın diye taş biraz küçüktür. */
-  --okey-tile: clamp(24px, 8.6vw, 44px);
+  --okey-tile: clamp(22px, 7.6vw, 40px);
   position: relative;
   display: flex;
   height: 100%;
@@ -401,13 +401,13 @@
 .okey-btn-red { border-color: rgba(255, 150, 150, 0.6); background: linear-gradient(180deg, #d04040, #8f1f1f); color: #fff3f3; }
 
 /* === TAHTA (EL) === */
-/* Dizilim tuşları tahtanın iki yanına bitişik oturur: arada boşluk kalmaz. */
+/* Tahta ekranın tam genişliğini kullanır: dizilim tuşları artık işlem şeridinde. */
 .okey-rack-wrap {
   display: flex;
   flex-shrink: 0;
   align-items: stretch;
   gap: 0;
-  padding: 0.35rem 0.3rem max(0.45rem, env(safe-area-inset-bottom));
+  padding: 0.35rem 0.25rem max(0.45rem, env(safe-area-inset-bottom));
 }
 /* Cilalı ahşap tahta: damar çizgileri ve üst kenarda parlaklık. */
 .okey-rack {
@@ -427,44 +427,23 @@
 /* Sıra bendeyken tahta hafifçe parlar: taş sürüklenip ortaya atılabilir. */
 .okey-rack-ready { box-shadow: inset 0 2px 0 rgba(255, 228, 172, 0.55), 0 0 20px -4px rgba(255, 212, 100, 0.65), 0 10px 20px -14px #000; }
 .okey-row { display: flex; min-height: calc(var(--okey-tile) * 1.39); align-items: center; justify-content: center; gap: 0.15rem; }
-/* Dizilim tuşu: üstte kart ikonu, altında dikey yazılı etiket — ahşap tahtanın yanına yaslanır. */
-.okey-side {
-  display: flex;
-  flex-shrink: 0;
-  width: 2.4rem;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.32rem;
-  border-radius: 12px;
-  border: 1px solid #17191b;
-  background: linear-gradient(180deg, #3b3e41 0%, #2d3032 55%, #212325 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), inset 0 -8px 14px rgba(0, 0, 0, 0.35), 0 8px 16px -12px #000;
-  padding: 0.45rem 0.15rem;
-  color: #fff;
+/* Dizilim tuşları: SERİ DİZ / ÇİFT DİZ — kart ikonlu, işlem şeridinde yan yana. */
+.okey-modes { display: flex; flex-shrink: 0; gap: 0.3rem; }
+.okey-mode-btn[data-on="1"] {
+  border-color: rgba(255, 214, 106, 0.85);
+  background: linear-gradient(180deg, rgba(232, 194, 92, 0.32), rgba(184, 134, 42, 0.22));
+  color: #ffe9a8;
 }
-.okey-side-text {
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
-  font-size: 0.56rem;
-  font-weight: 900;
-  letter-spacing: 0.16em;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.65);
-}
-.okey-side-icon {
-  height: 1.45rem;
-  width: 1.45rem;
+.okey-mode-icon {
+  height: 1rem;
+  width: 1rem;
   fill: none;
   stroke: currentColor;
-  stroke-width: 1.3;
+  stroke-width: 1.4;
   stroke-linejoin: round;
   stroke-linecap: round;
 }
-.okey-side-icon text { fill: currentColor; stroke: none; font-size: 7.5px; font-weight: 900; }
-.okey-side[data-on="1"] {
-  border-color: rgba(255, 214, 106, 0.8);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 0 16px -3px rgba(255, 200, 60, 0.8), 0 8px 16px -12px #000;
-}
+.okey-mode-icon text { fill: currentColor; stroke: none; font-size: 8px; font-weight: 900; }
 
 /* === LOBİ === */
 .okey-lobby { display: flex; min-height: 0; flex: 1; flex-direction: column; gap: 0.6rem; overflow-y: auto; padding: 0.5rem; }
@@ -594,13 +573,11 @@
 
 /* Yatay ekran: masa kısalır, tahtalar küçülür. */
 @media (orientation: landscape) and (max-height: 620px) {
-  .okey-shell { --okey-tile: clamp(20px, 4.2vh, 34px); }
+  .okey-shell { --okey-tile: clamp(18px, 3.8vh, 31px); }
   .okey-seat-name { max-width: 4.4rem; }
   .okey-seat-card { min-width: 4.2rem; padding: 0.16rem 0.35rem; }
   .okey-avatar { height: 2.2rem; width: 2.2rem; }
   .okey-seat-top { top: 0.15rem; }
   .okey-seat-bottom { bottom: 0.15rem; }
-  .okey-side { width: 2rem; }
-  .okey-side-text { font-size: 0.46rem; letter-spacing: 0.1em; }
-  .okey-side-icon { height: 1.15rem; width: 1.15rem; }
+  .okey-mode-btn { padding: 0.28rem 0.5rem; font-size: 0.56rem; }
 }

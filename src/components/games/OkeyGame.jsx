@@ -4,6 +4,7 @@ import '@/styles/okey.css';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
 import OkeyFelt from './okey/OkeyFelt';
 import OkeyLobby from './okey/OkeyLobby';
+import OkeyModeButtons from './okey/OkeyModeButtons';
 import OkeyPlayerProfile from './okey/OkeyPlayerProfile';
 import OkeyRack from './okey/OkeyRack';
 import OkeyResultOverlay from './okey/OkeyResultOverlay';
@@ -92,6 +93,8 @@ export default function OkeyGame({ onExit, onBack }) {
         <div className="okey-strip">
           <p className="okey-strip-text">{statusText}</p>
           <div className="flex shrink-0 flex-wrap items-center gap-1.5">
+            {/* Dizilim tuşları: AYRIL/BİTİR ile aynı şeritte durur. */}
+            <OkeyModeButtons mode={mode} onMode={changeMode} />
             {/* El puanı: sıra kimde olursa olsun görünür kalır, her taşta yeniden hesaplanır. */}
             <span className="okey-score-chip" data-ready={game.canFinish ? '1' : '0'}>
               {arrange === 'cift' ? 'ÇİFT' : 'SERİ'} · {myScore} PUAN
