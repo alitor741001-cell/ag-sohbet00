@@ -1,0 +1,97 @@
+{
+  "name": "ZarLive",
+  "type": "object",
+  "properties": {
+    "key": {
+      "type": "string",
+      "default": "live"
+    },
+    "round_no": {
+      "type": "integer",
+      "default": 0
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "betting",
+        "shaking"
+      ],
+      "default": "betting"
+    },
+    "started_at": {
+      "type": "string"
+    },
+    "phase_ends_at": {
+      "type": "string"
+    },
+    "ends_at": {
+      "type": "string"
+    },
+    "d1": {
+      "type": "integer",
+      "default": 0
+    },
+    "d2": {
+      "type": "integer",
+      "default": 0
+    },
+    "d3": {
+      "type": "integer",
+      "default": 0
+    },
+    "sum": {
+      "type": "integer",
+      "default": 0
+    },
+    "outcome": {
+      "type": "string",
+      "default": ""
+    },
+    "history": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "round_no": {
+            "type": "integer"
+          },
+          "d1": {
+            "type": "integer"
+          },
+          "d2": {
+            "type": "integer"
+          },
+          "d3": {
+            "type": "integer"
+          },
+          "sum": {
+            "type": "integer"
+          }
+        }
+      },
+      "default": []
+    }
+  },
+  "required": [
+    "round_no",
+    "status"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

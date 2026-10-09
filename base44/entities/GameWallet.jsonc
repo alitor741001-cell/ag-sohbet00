@@ -162,6 +162,10 @@
       "type": "number",
       "default": 0
     },
+    "total_won_zar": {
+      "type": "number",
+      "default": 0
+    },
     "futbol_mode": {
       "type": "string",
       "enum": [

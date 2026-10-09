@@ -190,6 +190,17 @@ const FUTBOL_LEGEND = {
   ],
 };
 
+// ZAR: üç zarlı masa; bloklar ve jeton kademeleri.
+const ZAR_LEGEND = {
+  note: 'Üç zar atılır: toplam 3 ile 18 arasında gelir.',
+  rows: [
+    { badge: 'x2', tone: 'gold', name: 'KÜÇÜK (4-10)', desc: 'Zar toplamı 4 ile 10 arasında gelirse bahsin 2 katı ödenir.' },
+    { badge: 'x2', tone: 'gold', name: 'BÜYÜK (11-17)', desc: 'Zar toplamı 11 ile 17 arasında gelirse bahsin 2 katı ödenir.' },
+    { badge: 'x35', tone: 'red', name: 'KAPLAN (3 · 18)', desc: 'Üç zar da bir (3) ya da üç zar da altı (18) gelirse bahsin 35 katı ödenir.' },
+    { badge: '10', tone: 'green', name: 'Jeton kademeleri', desc: '10 · 100 · 1K · 10K jetonlarla bahis konur.' },
+  ],
+};
+
 export const GAME_HELP = {
   slot: {
     title: 'SLOT',
@@ -330,6 +341,27 @@ export const GAME_HELP = {
     tagline: 'TAKIM ÇARKI',
     legend: FUTBOL_LEGEND,
     note: 'Kazanan takım sekiz kart arasından her turda yeniden çekilir.',
+  },
+
+  zar: {
+    title: 'ZAR',
+    tagline: 'ÜÇ ZAR · KÜÇÜK & BÜYÜK',
+    rules: [
+      'Turlar kendiliğinden başlar: 20 saniye bahis, 9 saniye kase çalkalama.',
+      'Üç zar sunucuda atılır ve bahis süresi bitene kadar kase içinde gizli kalır.',
+      'KÜÇÜK: zar toplamı 4-10 arasında gelirse bahsin 2 katı ödenir.',
+      'BÜYÜK: zar toplamı 11-17 arasında gelirse bahsin 2 katı ödenir.',
+      'KAPLAN: üç zar da bir (3) ya da üç zar da altı (18) gelirse bahsin 35 katı ödenir.',
+      'Jeton kademeleri 10 · 100 · 1K · 10K.',
+    ],
+    legend: ZAR_LEGEND,
+    facts: [
+      'Zar toplamı 3 ya da 18 gelirse KÜÇÜK ve BÜYÜK bahislerinin ikisi de kaybeder, yalnızca KAPLAN kazanır.',
+      'Bahis, bahis süresi bittiğinde kendiliğinden oynanır: masada jeton varsa tur oynanmış sayılır.',
+      'Soldaki YENİ paneli son turlarda atılan zarları listeler.',
+      'Altta turun en çok kazanan dört oyuncusu TOP1-TOP4 olarak sıralanır.',
+    ],
+    note: 'Zarlar kara kasenin içinde çalkalanır ve sonra masaya açılır; tur bitince yeni tur kendiliğinden başlar.',
   },
 };
 

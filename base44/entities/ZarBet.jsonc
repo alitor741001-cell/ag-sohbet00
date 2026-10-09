@@ -1,0 +1,87 @@
+{
+  "name": "ZarBet",
+  "type": "object",
+  "properties": {
+    "round_no": {
+      "type": "integer",
+      "default": 0
+    },
+    "user_id": {
+      "type": "string"
+    },
+    "user_name": {
+      "type": "string",
+      "default": ""
+    },
+    "user_avatar": {
+      "type": "string",
+      "default": ""
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "kucuk",
+        "buyuk",
+        "kaplan"
+      ],
+      "default": "kucuk"
+    },
+    "stake": {
+      "type": "number",
+      "default": 0
+    },
+    "payout": {
+      "type": "number",
+      "default": 0
+    },
+    "d1": {
+      "type": "integer",
+      "default": 0
+    },
+    "d2": {
+      "type": "integer",
+      "default": 0
+    },
+    "d3": {
+      "type": "integer",
+      "default": 0
+    },
+    "sum": {
+      "type": "integer",
+      "default": 0
+    },
+    "outcome": {
+      "type": "string",
+      "enum": [
+        "kucuk",
+        "buyuk",
+        "kaplan",
+        ""
+      ],
+      "default": ""
+    }
+  },
+  "required": [
+    "round_no",
+    "user_id",
+    "kind"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

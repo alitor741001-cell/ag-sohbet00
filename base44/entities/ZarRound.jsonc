@@ -1,0 +1,83 @@
+{
+  "name": "ZarRound",
+  "type": "object",
+  "properties": {
+    "round_no": {
+      "type": "integer",
+      "default": 0
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "betting",
+        "shaking",
+        "closed"
+      ],
+      "default": "betting"
+    },
+    "d1": {
+      "type": "integer",
+      "default": 0
+    },
+    "d2": {
+      "type": "integer",
+      "default": 0
+    },
+    "d3": {
+      "type": "integer",
+      "default": 0
+    },
+    "sum": {
+      "type": "integer",
+      "default": 0
+    },
+    "outcome": {
+      "type": "string",
+      "enum": [
+        "kucuk",
+        "buyuk",
+        "kaplan",
+        ""
+      ],
+      "default": ""
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "phase_ends_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "ends_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "round_no",
+    "status"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
