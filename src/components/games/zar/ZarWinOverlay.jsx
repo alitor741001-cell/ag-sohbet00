@@ -1,6 +1,6 @@
 import React from 'react';
 import { Sparkles } from 'lucide-react';
-import { formatCoins, outcomeName } from './zarConfig';
+import { DICE_TEAMS, formatCoins, outcomeName } from './zarConfig';
 import ZarDie from './ZarDie';
 import '@/styles/zar.css';
 
@@ -15,7 +15,7 @@ export default function ZarWinOverlay({ open, amount, dice, sum, outcome, onAcce
       </p>
       {Array.isArray(dice) && (
         <span className="zar-overlay-dice">
-          {dice.map((value, index) => <ZarDie key={index} value={value} size="sm" />)}
+          {dice.map((value, index) => <ZarDie key={index} value={value} team={DICE_TEAMS[index]} size="sm" />)}
         </span>
       )}
       {sum ? <span className="zar-overlay-sum">{sum} · {outcomeName(outcome)}</span> : null}

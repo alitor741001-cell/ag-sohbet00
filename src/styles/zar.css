@@ -61,6 +61,8 @@
 
 /* Kara kase: yarım küre gövde, altın kenar. */
 .zar-cup {
+  /* Kase açılırken yukarı kayma mesafesi: yatay ekranda kısalır. */
+  --zar-cup-lift: -3.4rem;
   position: absolute;
   left: 50%;
   bottom: 1.5rem;
@@ -111,7 +113,7 @@
   filter: blur(4px);
 }
 
-/* Zarlar kase ağzında durur: çalkalanırken içeride döner. */
+/* Zarlar kase ağzında durur: çalkalanırken kase kapalıyken içeride dönerler. */
 .zar-cup-dice {
   position: relative;
   z-index: 2;
@@ -119,93 +121,195 @@
   align-items: flex-end;
   gap: 0.3rem;
   margin-bottom: 0.35rem;
+  transition: transform 420ms cubic-bezier(0.22, 0.9, 0.3, 1);
 }
 
-/* Çalkalama anında kase yukarı kayar: zarlar görünür kalır. */
+/* Çalkalama boyunca zarlar kase ağzının içinde durur. */
+.zar-shaker-live .zar-cup-dice {
+  transform: translateY(-0.3rem) scale(0.94);
+}
+
+/* Kase titrer: zarlar kapalı kase içinde dönüyor izlenimi verir. */
+.zar-shaker-live {
+  animation: zar-shaker-wobble 0.46s ease-in-out infinite;
+}
+
+@keyframes zar-shaker-wobble {
+  0%, 100% { transform: translateY(0) rotate(-1.1deg); }
+  50% { transform: translateY(-0.16rem) rotate(1.1deg); }
+}
+
+/* Son iki saniyede kase yukarı kayar: zarlar çuhada açılır. */
 .zar-shaker-open .zar-cup {
-  transform: translate(-50%, -3.4rem) scale(0.94);
-  opacity: 0.92;
+  animation: zar-cup-lift 0.65s cubic-bezier(0.22, 0.9, 0.3, 1) 6.1s forwards;
+}
+
+@keyframes zar-cup-lift {
+  from { transform: translate(-50%, 0) scale(1); opacity: 1; }
+  to { transform: translate(-50%, var(--zar-cup-lift)) scale(0.94); opacity: 0.9; }
 }
 
 .zar-shaker-open .zar-cup-dice {
   margin-bottom: 0.1rem;
 }
 
-/* === ZAR === */
+/* === TAKIM ZARLARI === */
+/* Gövde kulüp renginde, üst yüzde arma şeridi, ön yüzde değeri gösteren parlak noktalar. */
 .zar-die {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 18%;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: linear-gradient(168deg, #35353f 0%, #131317 52%, #04040a 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 3px 0 rgba(0, 0, 0, 0.55), 0 7px 12px -7px rgba(0, 0, 0, 0.95);
+}
+
+/* Cam parlaklığı: üst köşeden geçen ışık. */
+.zar-die::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(122deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.07) 32%, rgba(255, 255, 255, 0) 54%);
+  pointer-events: none;
+}
+
+.zar-die-band {
+  display: flex;
+  height: 30%;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #ffffff 0%, #dfe2e8 58%, #a3a8b3 100%);
+}
+
+.zar-die-band svg {
+  height: 86%;
+  width: auto;
+}
+
+.zar-die-face {
   display: grid;
+  flex: 1;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(3, 1fr);
   place-items: center;
-  border-radius: 16%;
-  border: 1px solid #cbbfa4;
-  background: linear-gradient(178deg, #ffffff 0%, #f6f2e6 62%, #e6dfcd 100%);
-  box-shadow: inset 0 1px 0 #fff, 0 2px 0 #b3a179, 0 5px 9px -5px rgba(0, 0, 0, 0.8);
-  padding: 12%;
+  padding: 11%;
 }
 
-.zar-die-md {
-  height: clamp(2.3rem, 12vw, 3.1rem);
-  width: clamp(2.3rem, 12vw, 3.1rem);
+/* Kulüp renkleri: siyah-beyaz, lacivert-sarı, sarı-kırmızı. */
+.zar-die-fb {
+  background: linear-gradient(168deg, #29427f 0%, #0e2158 52%, #050f2f 100%);
 }
 
-.zar-die-sm {
-  height: clamp(1.7rem, 8.5vw, 2.2rem);
-  width: clamp(1.7rem, 8.5vw, 2.2rem);
+.zar-die-gs {
+  background: linear-gradient(168deg, #8d1626 0%, #560b16 52%, #2a040a 100%);
 }
 
-.zar-die-mini {
-  height: 0.78rem;
-  width: 0.78rem;
-  border-radius: 22%;
-  padding: 14%;
-  box-shadow: none;
+.zar-die-fb .zar-die-band,
+.zar-die-gs .zar-die-band {
+  background: linear-gradient(180deg, #ffe873 0%, #f4c40a 56%, #b58703 100%);
 }
 
 .zar-pip {
   height: 100%;
   width: 100%;
   border-radius: 9999px;
-  background: #101014;
-  box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.25);
+  background: radial-gradient(circle at 34% 28%, #ffffff, #dfe2e8 62%, #a6abb6 100%);
+  box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.4), 0 0 2px rgba(0, 0, 0, 0.45);
+}
+
+.zar-die-fb .zar-pip,
+.zar-die-gs .zar-pip {
+  background: radial-gradient(circle at 34% 28%, #fff8d6, #ecc95e 55%, #a97d18 100%);
 }
 
 .zar-pip-off {
   visibility: hidden;
 }
 
+.zar-die-md {
+  height: clamp(2.5rem, 13vw, 3.4rem);
+  width: clamp(2.5rem, 13vw, 3.4rem);
+}
+
+.zar-die-sm {
+  height: clamp(1.8rem, 9vw, 2.3rem);
+  width: clamp(1.8rem, 9vw, 2.3rem);
+}
+
+/* YENİ panelindeki küçük zarlar: arma sığmaz, takım rengi üst şeritten belli olur. */
+.zar-die-mini {
+  height: 0.95rem;
+  width: 0.95rem;
+  border-radius: 26%;
+  border-top-width: 2px;
+  border-top-color: #f4c40a;
+}
+
+.zar-die-mini.zar-die-bjk {
+  border-top-color: #f2f3f6;
+}
+
+.zar-die-mini .zar-die-band {
+  display: none;
+}
+
+.zar-die-mini .zar-die-face {
+  padding: 13%;
+}
+
 .zar-die-mini .zar-pip {
   box-shadow: none;
 }
 
-/* Kapalıyken zar yüzü okunmaz: sonuç bahis bitince açılır. */
+/* Kapalıyken zar yüzü okunmaz: sonuç kase açılınca görünür. */
 .zar-die-dim .zar-pip {
   visibility: hidden;
 }
 
-.zar-die-rattle {
-  animation: zar-rattle 0.34s linear infinite;
+/* Çalkalama boyunca zarlar içeride döner, sonda yüzü yukarı bakacak şekilde durur. */
+.zar-die-spin {
+  animation: zar-tumble-a 9s cubic-bezier(0.4, 0.16, 0.5, 0.9) both;
 }
 
-.zar-die-rattle:nth-child(2) {
-  animation-duration: 0.29s;
-  animation-direction: reverse;
+.zar-die-spin:nth-child(2) {
+  animation-name: zar-tumble-b;
 }
 
-.zar-die-rattle:nth-child(3) {
-  animation-duration: 0.38s;
+.zar-die-spin:nth-child(3) {
+  animation-name: zar-tumble-c;
 }
 
-@keyframes zar-rattle {
-  0% { transform: translateY(0) rotate(-16deg); }
-  25% { transform: translate(-3px, -0.42rem) rotate(14deg); }
-  50% { transform: translate(3px, -0.2rem) rotate(-9deg); }
-  75% { transform: translate(-2px, -0.5rem) rotate(17deg); }
-  100% { transform: translateY(0) rotate(-16deg); }
+@keyframes zar-tumble-a {
+  0% { transform: perspective(320px) rotateZ(0deg) rotateX(-16deg) rotateY(14deg); }
+  68% { transform: perspective(320px) rotateZ(-3240deg) rotateX(18deg) rotateY(-16deg) translateY(-0.18rem); }
+  84% { transform: perspective(320px) rotateZ(-3420deg) rotateX(-10deg) rotateY(8deg) translateY(-0.34rem); }
+  94% { transform: perspective(320px) rotateZ(-3540deg) rotateX(5deg) rotateY(-4deg) translateY(-0.1rem); }
+  100% { transform: perspective(320px) rotateZ(-3600deg) rotateX(0deg) rotateY(0deg) translateY(0); }
+}
+
+@keyframes zar-tumble-b {
+  0% { transform: perspective(320px) rotateZ(0deg) rotateX(14deg) rotateY(-12deg); }
+  68% { transform: perspective(320px) rotateZ(-2520deg) rotateX(-18deg) rotateY(16deg) translateY(-0.26rem); }
+  84% { transform: perspective(320px) rotateZ(-2700deg) rotateX(10deg) rotateY(-6deg) translateY(-0.3rem); }
+  94% { transform: perspective(320px) rotateZ(-2820deg) rotateX(-4deg) rotateY(3deg) translateY(-0.08rem); }
+  100% { transform: perspective(320px) rotateZ(-2880deg) rotateX(0deg) rotateY(0deg) translateY(0); }
+}
+
+@keyframes zar-tumble-c {
+  0% { transform: perspective(320px) rotateZ(0deg) rotateX(-10deg) rotateY(16deg); }
+  68% { transform: perspective(320px) rotateZ(-3960deg) rotateX(16deg) rotateY(-14deg) translateY(-0.12rem); }
+  84% { transform: perspective(320px) rotateZ(-4130deg) rotateX(-12deg) rotateY(9deg) translateY(-0.36rem); }
+  94% { transform: perspective(320px) rotateZ(-4260deg) rotateX(6deg) rotateY(-5deg) translateY(-0.12rem); }
+  100% { transform: perspective(320px) rotateZ(-4320deg) rotateX(0deg) rotateY(0deg) translateY(0); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .zar-die-rattle { animation-duration: 1.2s; }
+  .zar-shaker-live { animation: none; }
+  .zar-die-spin { animation: none; }
 }
 
 /* === SONUÇ ŞERİDİ === */
@@ -351,7 +455,7 @@
 /* === YENİ PANELİ === */
 .zar-history {
   display: flex;
-  width: clamp(2.5rem, 15vw, 3.4rem);
+  width: clamp(3rem, 18vw, 4.2rem);
   flex-shrink: 0;
   flex-direction: column;
   align-items: center;
@@ -395,11 +499,16 @@
 .zar-history-row {
   display: flex;
   align-items: center;
-  gap: 0.12rem;
+  gap: 0.16rem;
   border-radius: 9999px;
   background: rgba(255, 255, 255, 0.06);
-  padding: 0.14rem 0.2rem;
+  padding: 0.18rem 0.2rem;
 }
+
+/* Satırın zemini turun düştüğü alanı belli eder: küçük, büyük, kaplan. */
+.zar-history-row-kucuk { background: rgba(63, 185, 130, 0.18); }
+.zar-history-row-buyuk { background: rgba(96, 140, 255, 0.18); }
+.zar-history-row-kaplan { background: rgba(244, 196, 0, 0.24); box-shadow: inset 0 0 0 1px rgba(244, 196, 0, 0.5); }
 
 .zar-history-empty {
   font-size: 0.46rem;
@@ -755,12 +864,12 @@
   }
 
   .zar-die-md {
-    height: clamp(1.8rem, 7vh, 2.3rem);
-    width: clamp(1.8rem, 7vh, 2.3rem);
+    height: clamp(2rem, 8vh, 2.6rem);
+    width: clamp(2rem, 8vh, 2.6rem);
   }
 
-  .zar-shaker-open .zar-cup {
-    transform: translate(-50%, -2.6rem) scale(0.94);
+  .zar-cup {
+    --zar-cup-lift: -2.6rem;
   }
 
   .zar-chip {

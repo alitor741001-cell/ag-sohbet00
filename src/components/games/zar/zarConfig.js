@@ -5,6 +5,9 @@ export const CHIP_LABELS = { 10: '10', 100: '100', 1000: '1K', 10000: '10K' };
 // Jeton kademelerinin rengi referans görseldeki gibi ayrışır.
 export const CHIP_TONES = { 10: 'green', 100: 'blue', 1000: 'pink', 10000: 'gold' };
 
+// Üç zar üç kulübü temsil eder: 1. zar siyah-beyaz, 2. lacivert-sarı, 3. sarı-kırmızı arma.
+export const DICE_TEAMS = ['bjk', 'fb', 'gs'];
+
 // Bahis alanları: kaplan üstte tek blok, küçük ve büyük altta iki blok.
 export const ZONES = [
   { id: 'kaplan', label: 'KAPLAN', range: '3 · 18', mult: 35, tone: 'kaplan' },

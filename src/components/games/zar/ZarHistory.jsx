@@ -1,9 +1,12 @@
 import React from 'react';
 import ZarDie from './ZarDie';
+import { DICE_TEAMS, sumTone } from './zarConfig';
 
-/** Referans tasarımdaki "YENİ" paneli: son turların atılan zarları alt alta durur. */
+const ROWS = 5;
+
+/** Referans tasarımdaki "YENİ" paneli: son turlarda çıkan zarlar takım renkleriyle alt alta durur. */
 export default function ZarHistory({ entries }) {
-  const rows = Array.isArray(entries) ? entries.slice(0, 6) : [];
+  const rows = Array.isArray(entries) ? entries.slice(0, ROWS) : [];
 
   return (
     <aside className="zar-history" aria-label="Son atılan zarlar">
@@ -13,10 +16,10 @@ export default function ZarHistory({ entries }) {
       </p>
       <div className="zar-history-list">
         {rows.map((entry) => (
-          <span key={entry.round_no} className="zar-history-row">
-            <ZarDie value={entry.d1 || 1} size="mini" />
-            <ZarDie value={entry.d2 || 1} size="mini" />
-            <ZarDie value={entry.d3 || 1} size="mini" />
+          <span key={entry.round_no} className={`zar-history-row zar-history-row-${sumTone(entry.sum)}`}>
+            {DICE_TEAMS.map((team, index) => (
+              <ZarDie key={team} value={entry[`d${index + 1}`] || 1} team={team} size="mini" />
+            ))}
           </span>
         ))}
       </div>
