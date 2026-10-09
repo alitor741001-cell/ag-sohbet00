@@ -1,10 +1,109 @@
-import { useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import OkeyTile from './OkeyTile';
 import { arrangeTiles, isWild, rowSplit } from './okeyConfig';
 
-/** Alt tahta: iki sıra taş ve yanlarda seri/çifte dizme düğmeleri. */
-export default function OkeyRack({ hand, okey, mode, onMode, canDiscard, onDiscard, busy }) {
-  const rows = useMemo(() => rowSplit(arrangeTiles(hand, mode)), [hand, mode]);
+// Bu kadar hareketten sonrası sürükleme sayılır; altındaki dokunuş taşı ortaya atmaktır.
+const DRAG_THRESHOLD = 6;
+
+/** Alt tahta: taşlar parmakla sürüklenip dizilir, çuha üzerine bırakılırsa ortaya atılır. */
+export default function OkeyRack({ hand, okey, mode, onMode, canDiscard, onDiscard, busy, onDropTarget }) {
+  // Elle dizilim: sürüklendikçe bu sıra kullanılır, elden çıkan taş sıradan düşer.
+  const [order, setOrder] = useState([]);
+  const [ghost, setGhost] = useState(null);
+  const drag = useRef(null);
+
+  useEffect(() => {
+    setOrder((prev) => {
+      const rest = [...hand];
+      const kept = prev.filter((tile) => {
+        const at = rest.indexOf(tile);
+        if (at < 0) return false;
+        rest.splice(at, 1);
+        return true;
+      });
+      return [...kept, ...rest];
+    });
+  }, [hand]);
+
+  const display = useMemo(
+    () => (mode === 'manual' && order.length === hand.length ? order : arrangeTiles(hand, mode)),
+    [mode, order, hand],
+  );
+  const rows = rowSplit(display);
+  const rowBase = [0, rows[0].length];
+  const activeFrom = ghost ? drag.current?.from : null;
+
+  /** Görünen sırayı elle dizilime çevirir. */
+  const activate = () => {
+    const info = drag.current;
+    if (!info || info.active) return;
+    info.active = true;
+    info.from = info.index;
+    info.list = [...display];
+    if (mode !== 'manual') onMode('manual');
+    setOrder([...info.list]);
+  };
+
+  /** Sürüklenen taşı hedef sıraya taşır. */
+  const moveTo = useCallback((target) => {
+    const info = drag.current;
+    if (!info || Number.isNaN(target) || target === info.from) return;
+    const list = info.list;
+    list.splice(target, 0, list.splice(info.from, 1)[0]);
+    info.from = target;
+    setOrder([...list]);
+  }, []);
+
+  const onPointerDown = (event, tile, index) => {
+    if (drag.current) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    drag.current = {
+      id: event.pointerId,
+      tile,
+      index,
+      from: index,
+      list: null,
+      active: false,
+      overFelt: false,
+      startX: event.clientX,
+      startY: event.clientY,
+      offsetX: event.clientX - rect.left,
+      offsetY: event.clientY - rect.top,
+    };
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    } catch (error) {
+      // Pointer capture desteklenmezse sürükleme yine devam eder.
+    }
+  };
+
+  const onPointerMove = (event) => {
+    const info = drag.current;
+    if (!info || info.id !== event.pointerId) return;
+    if (!info.active && Math.hypot(event.clientX - info.startX, event.clientY - info.startY) < DRAG_THRESHOLD) return;
+    activate();
+    const under = document.elementFromPoint(event.clientX, event.clientY);
+    const slot = under?.closest?.('[data-okey-slot]');
+    const overFelt = !!under?.closest?.('.okey-felt');
+    if (slot) moveTo(Number(slot.getAttribute('data-okey-slot')));
+    if (info.overFelt !== overFelt) {
+      info.overFelt = overFelt;
+      onDropTarget?.(overFelt);
+    }
+    setGhost({ tile: info.tile, x: event.clientX - info.offsetX, y: event.clientY - info.offsetY });
+  };
+
+  const finish = (event, allowDrop) => {
+    const info = drag.current;
+    if (!info || (event && info.id !== event.pointerId)) return;
+    drag.current = null;
+    setGhost(null);
+    if (info.overFelt) onDropTarget?.(false);
+    if (!allowDrop || !canDiscard || busy) return;
+    // Kısa dokunuş ya da çuhaya bırakma: taş ortaya gider.
+    if (!info.active || info.overFelt) onDiscard(info.tile);
+  };
 
   return (
     <div className="okey-rack-wrap">
@@ -12,21 +111,28 @@ export default function OkeyRack({ hand, okey, mode, onMode, canDiscard, onDisca
         SERİ DİZ
       </button>
 
-      <div className="okey-rack">
+      <div className={`okey-rack${canDiscard ? ' okey-rack-ready' : ''}`}>
         {rows.map((row, rowIndex) => (
           <div className="okey-row" key={rowIndex}>
-            {row.map((tile, tileIndex) => (
-              <button
-                key={`${tile}-${rowIndex}-${tileIndex}`}
-                type="button"
-                className="okey-tile-btn"
-                disabled={!canDiscard || busy}
-                onClick={() => canDiscard && onDiscard(tile)}
-                aria-label={`${tile} taşını ortaya at`}
-              >
-                <OkeyTile tile={tile} wild={isWild(tile, okey)} />
-              </button>
-            ))}
+            {row.map((tile, tileIndex) => {
+              const flat = rowBase[rowIndex] + tileIndex;
+              return (
+                <button
+                  key={`${rowIndex}-${tileIndex}`}
+                  type="button"
+                  className={`okey-tile-btn${activeFrom === flat ? ' okey-tile-dragging' : ''}`}
+                  data-okey-slot={flat}
+                  onPointerDown={(event) => onPointerDown(event, tile, flat)}
+                  onPointerMove={onPointerMove}
+                  onPointerUp={(event) => finish(event, true)}
+                  onPointerCancel={(event) => finish(event, false)}
+                  onLostPointerCapture={(event) => finish(event, false)}
+                  aria-label={`${tile} taşı`}
+                >
+                  <OkeyTile tile={tile} wild={isWild(tile, okey)} />
+                </button>
+              );
+            })}
           </div>
         ))}
       </div>
@@ -34,6 +140,16 @@ export default function OkeyRack({ hand, okey, mode, onMode, canDiscard, onDisca
       <button type="button" className="okey-side" data-on={mode === 'cift' ? '1' : '0'} onClick={() => onMode('cift')}>
         ÇİFTE DİZ
       </button>
+
+      {/* Parmak altındaki taş: oyun panelinin dışına çizilir, böylece kırpılmaz. */}
+      {ghost
+        ? createPortal(
+            <span className="okey-drag-ghost" style={{ left: `${ghost.x}px`, top: `${ghost.y}px` }} aria-hidden="true">
+              <OkeyTile tile={ghost.tile} wild={isWild(ghost.tile, okey)} />
+            </span>,
+            document.body,
+          )
+        : null}
     </div>
   );
 }

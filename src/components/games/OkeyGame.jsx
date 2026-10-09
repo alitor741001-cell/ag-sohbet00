@@ -13,8 +13,10 @@ import useOkeyGame from './okey/useOkeyGame';
 export default function OkeyGame({ onExit, onBack }) {
   const game = useOkeyGame();
   const [coinOpen, setCoinOpen] = useState(false);
-  // Tahta dizilimi: seri (renk sırası) ya da çift (sayı sırası).
+  // Tahta dizilimi: seri (renk sırası), çift (sayı sırası) ya da elle (parmakla sürüklenen).
   const [mode, setMode] = useState('seri');
+  // Taş çuhaya sürüklenirken masada "ortaya at" uyarısı görünür.
+  const [dropActive, setDropActive] = useState(false);
 
   const { table, seat, coins, busy } = game;
   const playing = table?.status === 'playing';
@@ -22,6 +24,7 @@ export default function OkeyGame({ onExit, onBack }) {
   const myTurn = playing && Number(table?.turn) === seat;
   const phase = table?.phase;
   const canDiscard = myTurn && phase === 'discard';
+  const canDraw = myTurn && phase === 'draw' && !busy;
   const turnName = table?.seats?.[table?.turn]?.name || 'Oyuncu';
   const filled = (table?.seats || []).filter((entry) => entry.user_id).length;
 
@@ -30,7 +33,7 @@ export default function OkeyGame({ onExit, onBack }) {
     : playing
       ? myTurn
         ? phase === 'draw'
-          ? 'Sıra sende: ortadan bir taş çek.'
+          ? 'Sıra sende: ortadaki desteye dokunup taş çek.'
           : game.canFinish
             ? 'Elin bitiyor: BİTİR ile potu al ya da bir taş at.'
             : 'Sıra sende: elinden bir taş at.'
@@ -47,20 +50,22 @@ export default function OkeyGame({ onExit, onBack }) {
         onExit={onExit}
       />
 
-      {table ? <OkeyFelt table={table} mySeat={seat} /> : <div className="okey-felt" />}
+      {table ? (
+        <OkeyFelt
+          table={table}
+          mySeat={seat}
+          canDraw={canDraw}
+          onDraw={game.actions.draw}
+          dropActive={dropActive}
+        />
+      ) : (
+        <div className="okey-felt" />
+      )}
 
       {table && playing ? (
         <div className="okey-strip">
           <p className="okey-strip-text">{statusText}</p>
           <div className="flex shrink-0 flex-wrap items-center gap-1.5">
-            <button
-              type="button"
-              className="okey-btn okey-btn-gold"
-              disabled={busy || !myTurn || phase !== 'draw'}
-              onClick={game.actions.draw}
-            >
-              ORTADAN ÇEK
-            </button>
             <button
               type="button"
               className="okey-btn okey-btn-green"
@@ -96,6 +101,7 @@ export default function OkeyGame({ onExit, onBack }) {
             canDiscard={canDiscard}
             onDiscard={game.actions.discard}
             busy={busy}
+            onDropTarget={setDropActive}
           />
         )
       ) : (

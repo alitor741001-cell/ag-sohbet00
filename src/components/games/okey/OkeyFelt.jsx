@@ -4,8 +4,8 @@ import OkeyTile from './OkeyTile';
 import { OKEY_LOGO } from './okeyAssets';
 import { discardSpot, isWild, slotOf } from './okeyConfig';
 
-/** Yeşil çuha masa: dört oyuncu, ortada deste, gösterge ve atılan taşlar. */
-export default function OkeyFelt({ table, mySeat }) {
+/** Yeşil çuha masa: dört oyuncu, ortada deste (dokununca çekilir) ve atılan taşlar. */
+export default function OkeyFelt({ table, mySeat, canDraw, onDraw, dropActive }) {
   const seats = table?.seats || [];
   const discards = (table?.discards || []).slice(-9);
   const turn = Number(table?.turn) || 0;
@@ -13,7 +13,7 @@ export default function OkeyFelt({ table, mySeat }) {
   const seat = mySeat < 0 ? 0 : mySeat;
 
   return (
-    <div className="okey-felt">
+    <div className="okey-felt" data-drop={dropActive ? '1' : '0'}>
       <span className="okey-turn-ring" data-active={playing ? '1' : '0'} />
       <Image src={OKEY_LOGO} alt="" aria-hidden="true" className="okey-felt-mark" fittingType="fit" />
 
@@ -45,17 +45,27 @@ export default function OkeyFelt({ table, mySeat }) {
         ))}
       </div>
 
-      {/* Orta: kapalı deste ve kalan taş sayısı. */}
+      {/* Orta: kapalı deste ve kalan taş sayısı. Sıram geldiğinde üstüne basınca taş çekilir. */}
       <div className="okey-center">
-        <div className="okey-pile">
+        <button
+          type="button"
+          className="okey-pile"
+          data-ready={canDraw ? '1' : '0'}
+          disabled={!canDraw}
+          onClick={onDraw}
+          aria-label="Ortadan taş çek"
+        >
           {[0, 1, 2].map((layer) => (
             <span key={layer} className="okey-pile-card" data-i={layer}>
               <OkeyTile down />
             </span>
           ))}
           <span className="okey-pile-count">{table?.stack_count || 0}</span>
-        </div>
+          {canDraw ? <span className="okey-pile-hint">DOKUN · ÇEK</span> : null}
+        </button>
       </div>
+
+      {dropActive ? <span className="okey-drop-hint">ORTAYA AT</span> : null}
     </div>
   );
 }
