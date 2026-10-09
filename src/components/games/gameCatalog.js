@@ -7,6 +7,7 @@ import { SEKER_COVER, SEKER_COVER_HEIGHT, SEKER_COVER_WIDTH } from './seker/seke
 import { SEKERLI_COVER, SEKERLI_COVER_HEIGHT, SEKERLI_COVER_WIDTH } from './sekerli/sekerliAssets';
 import { FUTBOL_COVER, FUTBOL_COVER_HEIGHT, FUTBOL_COVER_WIDTH } from './futbol/futbolAssets';
 import { ELIMIN_COVER, ELIMIN_COVER_HEIGHT, ELIMIN_COVER_WIDTH } from './elimin/eliminAssets';
+import { OKEY_COVER, OKEY_COVER_HEIGHT, OKEY_COVER_WIDTH } from './okey/okeyAssets';
 
 export const SEKERLI_MEYVE_ID = 'sekerli-meyve';
 export const SLOT_ID = 'slot-frenzy';
@@ -17,9 +18,11 @@ export const DEDE_ID = 'dede-olympus';
 export const ROULETTE_ID = 'roulette';
 export const FUTBOL_ID = 'altin-gol';
 export const ELIMIN_ID = 'elimin-slot';
+export const OKEY_ID = 'okey-101';
 
 // Oyun merkezi kartları: kapak görseli durur, dokununca oyun açılır.
 export const GAMES = [
+  { id: OKEY_ID, title: '101 OKEY', cover: OKEY_COVER, originWidth: OKEY_COVER_WIDTH, originHeight: OKEY_COVER_HEIGHT },
   { id: ELIMIN_ID, title: 'ELİMİNSLOT', cover: ELIMIN_COVER, originWidth: ELIMIN_COVER_WIDTH, originHeight: ELIMIN_COVER_HEIGHT },
   { id: FUTBOL_ID, title: 'ALTIN GOL', cover: FUTBOL_COVER, originWidth: FUTBOL_COVER_WIDTH, originHeight: FUTBOL_COVER_HEIGHT },
   { id: SEKERLI_MEYVE_ID, title: 'ŞEKERLİ MEYVE', cover: SEKERLI_COVER, originWidth: SEKERLI_COVER_WIDTH, originHeight: SEKERLI_COVER_HEIGHT },
