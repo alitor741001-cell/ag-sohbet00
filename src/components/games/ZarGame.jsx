@@ -10,6 +10,7 @@ import { ZAR_LOGO } from './zar/zarAssets';
 import { SHAKE_HIDE_MS, formatCoins, outcomeName } from './zar/zarConfig';
 import useZarGame from './zar/useZarGame';
 import useZarBoard from './zar/useZarBoard';
+import useZarBets from './zar/useZarBets';
 import ZarChipRow from './zar/ZarChipRow';
 import ZarHistory from './zar/ZarHistory';
 import ZarPodium from './zar/ZarPodium';
@@ -50,6 +51,8 @@ export default function ZarGame({ onExit, onBack }) {
   // kazananlar ekranda kalır ve her turda tazelenir.
   const settledRound = game.history?.[0]?.round_no ?? game.round?.round_no ?? 0;
   const board = useZarBoard(settledRound);
+  // Turun jetonları: masaya yatıranların tutarları bahis alanlarında görünür.
+  const chips = useZarBets(game.round?.round_no || 0);
 
   const stats = [
     { key: 'coins', label: 'COIN BAKİYEM', value: formatCoins(game.available), icon: Star },
@@ -105,6 +108,7 @@ export default function ZarGame({ onExit, onBack }) {
           <ZarTable
             bets={game.bets}
             zoneTotals={board.zoneTotals}
+            chips={chips}
             disabled={!betting}
             revealed={revealed}
             outcome={outcome}

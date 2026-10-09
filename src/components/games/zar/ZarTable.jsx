@@ -1,11 +1,16 @@
 import React from 'react';
 import { formatCoins, ZONES } from './zarConfig';
+import ZarZoneChips from './ZarZoneChips';
 
 /** Oval çuha masa: kalın ahşap çerçeve, ince yeşil çizgilerle ayrılmış üç bahis alanı.
-    Her alanın üstünde masadaki bütün oyuncuların o alana koyduğu toplam durur. */
-export default function ZarTable({ bets, zoneTotals, disabled, revealed, outcome, onPlace, overlay }) {
+    Her alanın üstünde masadaki bütün oyuncuların o alana koyduğu toplam durur;
+    altında o alana jeton yatıran oyuncuların tutarları görünür. */
+export default function ZarTable({ bets, zoneTotals, chips, disabled, revealed, outcome, onPlace, overlay }) {
   const kaplan = ZONES[0];
   const lowers = ZONES.filter((zone) => zone.id !== 'kaplan');
+
+  // Kendi bekleyen bahsi ve masaya konan jetonlar alanın altında listelenir.
+  const chipRow = (zone) => <ZarZoneChips own={bets[zone.id]} entries={chips?.[zone.id]} />;
 
   const zoneProps = (zone) => ({
     type: 'button',
@@ -24,7 +29,7 @@ export default function ZarTable({ bets, zoneTotals, disabled, revealed, outcome
           <span className="zar-zone-mult">X{kaplan.mult}</span>
           <span className="zar-zone-label">{kaplan.label}</span>
           <span className="zar-zone-range">{kaplan.range}</span>
-          {bets[kaplan.id] ? <span className="zar-zone-chip">{formatCoins(bets[kaplan.id])}</span> : null}
+          {chipRow(kaplan)}
         </button>
 
         <div className="zar-zone-row">
@@ -33,7 +38,7 @@ export default function ZarTable({ bets, zoneTotals, disabled, revealed, outcome
               <span className="zar-zone-total">{formatCoins(zoneTotals[zone.id])}</span>
               <span className="zar-zone-mult">{zone.range} X{zone.mult}</span>
               <span className="zar-zone-label">{zone.label}</span>
-              {bets[zone.id] ? <span className="zar-zone-chip">{formatCoins(bets[zone.id])}</span> : null}
+              {chipRow(zone)}
             </button>
           ))}
         </div>

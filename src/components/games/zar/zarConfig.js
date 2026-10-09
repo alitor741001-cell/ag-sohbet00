@@ -32,6 +32,27 @@ export const outcomeName = (outcome) => (outcome === 'kaplan' ? 'KAPLAN' : outco
 
 export const formatCoins = (value) => new Intl.NumberFormat('tr-TR').format(Math.max(0, Math.round(value || 0)));
 
+/** Jeton üstündeki kısa tutar: 100 → "100", 1.000 → "1K", 10.000 → "10K". */
+export const formatChipAmount = (value) => {
+  const amount = Math.max(0, Math.round(value || 0));
+  const short = (unit) => {
+    const size = amount / unit;
+    return `${Number.isInteger(size) ? size : size.toFixed(1)}${unit === 1000000 ? 'M' : 'K'}`;
+  };
+  if (amount >= 1000000) return short(1000000);
+  if (amount >= 1000) return short(1000);
+  return `${amount}`;
+};
+
+/** Jeton rengi tutara göre değişir: 10 yeşil, 100 mavi, bin pembe, on bin ve üstü altın. */
+export const chipTone = (value) => {
+  const amount = value || 0;
+  if (amount >= 10000) return 'gold';
+  if (amount >= 1000) return 'pink';
+  if (amount >= 100) return 'blue';
+  return 'green';
+};
+
 // Zar yüzü: 3x3 ızgarada açık kalan noktalar (1-6).
 const PIPS = {
   1: [4],

@@ -6,9 +6,11 @@ import { DICE_TEAMS } from './zarConfig';
     kapalıyken görünmez; kase hızlı ve dairesel çalkalanır, sonra dikey olarak
     hızla kalkar ve zarlar çuhada tek tek açılır. */
 export default function ZarShaker({ dice, phase, revealed }) {
-  const shaking = phase === 'shaking' && !revealed;
-  const opened = phase === 'shaking' && revealed;
-  const values = opened && Array.isArray(dice) ? dice : [1, 1, 1];
+  // Kase ancak turun zarları bilindiğinde açılır: açılan zarlar sonuçla aynıdır.
+  const known = Array.isArray(dice);
+  const opened = phase === 'shaking' && revealed && known;
+  const shaking = phase === 'shaking' && !opened;
+  const values = known ? dice : [1, 1, 1];
 
   return (
     <div className={`zar-shaker${shaking ? ' zar-shaker-live' : ''}${opened ? ' zar-shaker-open' : ''}`}>

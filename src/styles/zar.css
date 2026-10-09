@@ -462,19 +462,57 @@
   color: rgba(255, 255, 255, 0.55);
 }
 
-/* Masaya konan kendi jetonu bloğun üstünde durur. */
-.zar-zone-chip {
+/* Masaya konan jetonlar: her alanın altında, üstünde tutar yazan küçük pullar durur. */
+.zar-zone-chips {
   position: absolute;
-  right: 0.35rem;
-  top: 0.35rem;
+  left: 0.2rem;
+  right: 0.2rem;
+  bottom: 0.24rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.14rem;
+  pointer-events: none;
+}
+
+.zar-mini-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.14rem;
   border-radius: 9999px;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  background: linear-gradient(180deg, #35ac67, #1a6c40);
-  padding: 0 0.4rem;
-  font-size: 0.55rem;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  background: linear-gradient(180deg, #6fd07a, #2f8f43);
+  padding: 0 0.26rem;
+  font-size: 0.5rem;
   font-weight: 900;
-  color: #f2fff7;
-  box-shadow: 0 3px 8px -4px #000;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.65);
+  box-shadow: 0 2px 6px -3px #000;
+}
+
+/* Jetonun içindeki baş harf: hangi oyuncunun yatırdığı okunur. */
+.zar-mini-chip i {
+  display: flex;
+  height: 0.62rem;
+  width: 0.62rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: rgba(0, 0, 0, 0.3);
+  font-size: 0.4rem;
+  font-style: normal;
+}
+
+.zar-mini-chip-green { background: linear-gradient(180deg, #6fd07a, #2f8f43); }
+.zar-mini-chip-blue { background: linear-gradient(180deg, #6cb6f7, #1f6fc0); }
+.zar-mini-chip-pink { background: linear-gradient(180deg, #f27bb0, #b62a6d); }
+.zar-mini-chip-gold { background: linear-gradient(180deg, #f4d67c, #a9741d); }
+
+/* Kendi bekleyen bahsim: altın halkayla ayrılır. */
+.zar-mini-chip-self {
+  box-shadow: 0 0 0 1.5px rgba(244, 214, 124, 0.9), 0 2px 6px -3px #000;
 }
 
 .zar-zone-bet {
@@ -1118,3 +1156,7 @@
     height: 2.6rem;
   }
 }
+
+/* Alanların altında jetonlar için yer kalır: yazılar pulların üstünde durur. */
+.zar-zone-kaplan,
+.zar-zone-row .zar-zone { padding-bottom: 1.15rem; }
