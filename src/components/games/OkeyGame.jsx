@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { handTotalScore } from './okey/okeyConfig';
+import { arrangedScore } from './okey/okeyConfig';
 import '@/styles/okey.css';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
 import OkeyFelt from './okey/OkeyFelt';
@@ -17,6 +17,8 @@ export default function OkeyGame({ onExit, onBack }) {
   const [coinOpen, setCoinOpen] = useState(false);
   // Tahta dizilimi: seri (renk sırası), çift (sayı sırası) ya da elle (parmakla sürüklenen).
   const [mode, setMode] = useState('seri');
+  // Son seçilen dizilim: elle dizilişte de puan bu dizilime göre hesaplanır.
+  const [arrange, setArrange] = useState('seri');
   // Taş çuhaya sürüklenirken masada "ortaya at" uyarısı görünür.
   const [dropActive, setDropActive] = useState(false);
   // Masadaki bir oyuncuya dokununca açılan kart: özel sohbetteki profil kartının aynısı.
@@ -31,15 +33,25 @@ export default function OkeyGame({ onExit, onBack }) {
   const canDraw = myTurn && phase === 'draw' && !busy;
   const turnName = table?.seats?.[table?.turn]?.name || 'Oyuncu';
   const filled = (table?.seats || []).filter((entry) => entry.user_id).length;
-  // Toplam taş puanı: eldeki tüm taşların puanı. SERİ ya da ÇİFT dizilimine basıldığında
-  // ve el her değiştiğinde kendiliğinden yeniden hesaplanır.
-  const myScore = useMemo(() => handTotalScore(game.hand), [game.hand, mode]);
+  // Dizili taşların puanı: SERİ DİZ basınca seriler, ÇİFTE DİZ basınca çiftler hesaplanır;
+  // hiçbir gruba girmeyen tek taşlar sayılmaz.
+  const myScore = useMemo(
+    () => arrangedScore(game.hand, arrange, table?.okey),
+    [game.hand, arrange, table?.okey],
+  );
 
   // Her yeni elde tahta yeniden dizilir: 21 (başlayanda 22) taş "seri" düzenine göre sıralanır.
   const roundNo = Number(table?.round_no) || 0;
   useEffect(() => {
     setMode('seri');
+    setArrange('seri');
   }, [roundNo]);
+
+  // Dizilim düğmeleri: SERİ/ÇİFT'e basıldığı an puan o dizilime göre yeniden hesaplanır.
+  const changeMode = (next) => {
+    setMode(next);
+    if (next !== 'manual') setArrange(next);
+  };
 
   const statusText = waiting
     ? `2, 3 ya da 4 oyuncuyla başlayabilirsin (${filled}/4). 4 oyuncu dolunca oyun kendiliğinden başlar.`
@@ -48,8 +60,8 @@ export default function OkeyGame({ onExit, onBack }) {
         ? phase === 'draw'
           ? 'Sıra sende: ortadaki desteye dokunup taş çek.'
           : game.canFinish
-            ? `Elin ${myScore} puan — 101 tamam. BİTİR ile bitir ya da bir taş at.`
-            : `Sıra sende: elinden bir taş at. Elin ${myScore} puan.`
+            ? 'Elin bitmeye hazır — BİTİR ile bitir ya da bir taş at.'
+            : `Sıra sende: elinden bir taş at. Dizili taşların ${myScore} puan.`
         : `${turnName} oynuyor...`
       : table?.last_action || 'El kapandı.';
 
@@ -82,7 +94,7 @@ export default function OkeyGame({ onExit, onBack }) {
           <div className="flex shrink-0 flex-wrap items-center gap-1.5">
             {/* El puanı: sıra kimde olursa olsun görünür kalır, her taşta yeniden hesaplanır. */}
             <span className="okey-score-chip" data-ready={game.canFinish ? '1' : '0'}>
-              ELİM · {myScore} PUAN
+              {arrange === 'cift' ? 'ÇİFT' : 'SERİ'} · {myScore} PUAN
             </span>
             <button
               type="button"
@@ -116,7 +128,7 @@ export default function OkeyGame({ onExit, onBack }) {
             hand={game.hand}
             okey={table.okey}
             mode={mode}
-            onMode={setMode}
+            onMode={changeMode}
             canDiscard={canDiscard}
             onDiscard={game.actions.discard}
             busy={busy}

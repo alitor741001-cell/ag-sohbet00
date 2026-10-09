@@ -21,11 +21,67 @@ export const tilePoint = (tile) => {
 };
 
 /**
- * Toplam taş puanı: eldeki tüm taşların puanı. SERİ DİZ / ÇİFTE DİZ basıldığında ve
- * el her değiştiğinde kendiliğinden yeniden hesaplanır.
+ * Dizili taşların puanı: SERİ DİZ'de serileri, ÇİFTE DİZ'de çiftleri oluşturan taşlar
+ * sayılır. Hiçbir gruba girmeyen tek taşlar puanlanmaz.
  */
-export const handTotalScore = (tiles) =>
-  (Array.isArray(tiles) ? tiles : []).reduce((total, tile) => total + tilePoint(tile), 0);
+export const arrangedScore = (tiles, mode, okey) =>
+  mode === 'cift' ? ciftScore(tiles || [], okey) : seriScore(tiles || [], okey);
+
+/** SERİ: aynı renkte ardışık en az 3 sayı. Eksik sayılar joker/okey ile kapatılır. */
+function seriScore(tiles, okey) {
+  const naturals = tiles.filter((tile) => !isWild(tile, okey));
+  let wilds = tiles.length - naturals.length;
+  let total = 0;
+  for (const color of ['R', 'S', 'M', 'Y']) {
+    // Aynı sayıdan iki taş aynı seriye girmez: renk başına sayılar tekilleştirilir.
+    const numbers = [...new Set(naturals.filter((tile) => tileColor(tile) === color).map(numberOf))].sort((a, b) => a - b);
+    let run = [];
+    let gaps = 0;
+    // Seriyi kapat: 3 sayı uzunluğunda olmalı. Eksik sayı jokerle kapatılır, iki taşlık
+    // bir dizinin ucuna en fazla bir joker eklenir; tek taş seri sayılmaz.
+    const flush = () => {
+      const need = Math.max(0, 3 - run.length - gaps);
+      if (need <= 1 && gaps + need <= wilds) {
+        wilds -= gaps + need;
+        total += run.reduce((sum, n) => sum + tilePoint(`${color}${n}`), 0);
+      }
+      run = [];
+      gaps = 0;
+    };
+    numbers.forEach((n) => {
+      const gap = run.length ? n - run[run.length - 1] : 1;
+      if (gap > 2) flush();
+      if (run.length) gaps += gap - 1;
+      run.push(n);
+    });
+    flush();
+  }
+  return total;
+}
+
+/** ÇİFT: aynı sayıdan en az 2 taş — farklı renklerden; ikiz taşlar da çift sayılır. */
+function ciftScore(tiles, okey) {
+  const naturals = tiles.filter((tile) => !isWild(tile, okey));
+  let total = 0;
+  for (let n = 1; n <= 13; n += 1) {
+    const counts = { R: 0, S: 0, M: 0, Y: 0 };
+    naturals.forEach((tile) => {
+      if (numberOf(tile) === n) counts[tileColor(tile)] += 1;
+    });
+    const point = tilePoint(`R${n}`);
+    for (;;) {
+      const colors = ['R', 'S', 'M', 'Y'].filter((color) => counts[color] > 0);
+      if (colors.length >= 2) {
+        colors.forEach((color) => { counts[color] -= 1; });
+        total += point * colors.length;
+      } else if (colors.length === 1 && counts[colors[0]] >= 2) {
+        counts[colors[0]] -= 2;
+        total += point * 2;
+      } else break;
+    }
+  }
+  return total;
+}
 
 /** Oturduğum yere göre koltuğun masa kenarı. */
 export const slotOf = (seatIndex, mySeat) => SLOT_BY_OFFSET[(((seatIndex - mySeat) % 4) + 4) % 4];
