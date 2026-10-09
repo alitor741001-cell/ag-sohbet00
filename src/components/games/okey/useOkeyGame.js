@@ -7,8 +7,9 @@ import gameRequest from '@/lib/gameRequest';
 // Elde olmayan değişiklikleri (sıra, süre aşımı, bitirme) yakalamak için yoklama aralığı.
 const POLL_MS = 4000;
 
-/** 101 OKEY istemcisi: lobi, masa durumu, kendi eli ve tur işlemleri. */
-export default function useOkeyGame() {
+/** OKEY istemcisi: lobi, masa durumu, kendi eli ve tur işlemleri.
+    Sürüm (101 OKEY / klasik OKEY) yalnızca lobi ve masa eşleşmesini belirler. */
+export default function useOkeyGame(variant = 'okey101') {
   const { user } = useCurrentUser();
   const [coins, setCoins] = useState(0);
   const [lobby, setLobby] = useState({ tables: [], my_table_id: '' });
@@ -63,14 +64,14 @@ export default function useOkeyGame() {
 
   const openLobby = useCallback(async () => {
     setLobbyLoading(true);
-    const data = await request({ action: 'lobby' });
+    const data = await request({ action: 'lobby', variant });
     if (data) {
       setLobby({ tables: data.tables || [], my_table_id: data.my_table_id || '' });
       if (data.my_table_id) await request({ action: 'state', table_id: data.my_table_id });
       else { setTableId(''); }
     }
     setLobbyLoading(false);
-  }, [request]);
+  }, [request, variant]);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -107,7 +108,7 @@ export default function useOkeyGame() {
 
   const actions = {
     quickPlay: async (bet) => {
-      const data = await request({ action: 'quick_join', bet });
+      const data = await request({ action: 'quick_join', bet, variant });
       if (data?.table) setLobby((prev) => ({ ...prev, my_table_id: data.table.id }));
     },
     joinTable: (id) => request({ action: 'join', table_id: id }),

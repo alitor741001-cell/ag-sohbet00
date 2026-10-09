@@ -630,6 +630,10 @@
   color: #ffe9a8;
 }
 
+/* Klasik OKEY: 14 taşlık el — taşlar daha büyük durur, ıstaka ferah kalır. */
+.okey-shell[data-variant="okey"] { --okey-tile: clamp(24px, 8.5vw, 46px); }
+.okey-shell[data-variant="okey"] .okey-rack { --okey-tile: min(52px, 11cqw); }
+
 /* Yatay ekran: masa kısalır, tahtalar küçülür. */
 @media (orientation: landscape) and (max-height: 620px) {
   .okey-shell { --okey-tile: clamp(18px, 3.8vh, 31px); }

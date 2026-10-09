@@ -3,7 +3,7 @@ import { ChevronLeft, Coins, ShoppingBag, Timer, Trophy, X } from 'lucide-react'
 import { clockOf, formatBet } from './okeyConfig';
 
 /** Üst çubuk: pot, bakiye, tur süresi, mağaza ve kapatma. */
-export default function OkeyTopBar({ table, coins, onStore, onBack, onExit }) {
+export default function OkeyTopBar({ variant = 'okey101', table, coins, onStore, onBack, onExit }) {
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -18,7 +18,7 @@ export default function OkeyTopBar({ table, coins, onStore, onBack, onExit }) {
           <ChevronLeft className="h-4 w-4" />
         </button>
         <span className="okey-title">
-          <span className="okey-title-name">101 OKEY</span>
+          <span className="okey-title-name">{variant === 'okey' ? 'OKEY' : '101 OKEY'}</span>
           <span className="okey-title-sub">MASA {table?.code || '----'} · BAHİSLİ · TEKLİ</span>
         </span>
         <button type="button" onClick={onExit} aria-label="Oyunu kapat" className="okey-round">

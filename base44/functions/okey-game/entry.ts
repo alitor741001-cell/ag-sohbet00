@@ -12,18 +12,26 @@ import {
   autoDiscard,
   bestPlanScore,
   canFinish,
+  canFinishClassic,
   dealOkey,
   discardForFinish,
+  finishWithClassic,
   handScore,
   isWild,
   removeOne,
+  tilesPerPlayer,
 } from '../../shared/okeyEngine.ts';
 
-// 101 OKEY: dört kişilik bahisli masa.
+// OKEY: dört kişilik bahisli masa. İki sürüm aynı masayı paylaşır:
+//   101 OKEY → 21 taş, grupların puanı 101'i bulunca biter.
+//   OKEY (klasik) → 14 taş, bir taş çıkarılınca kalan elin tamamı gruplanınca biter.
 // Bahisler oyun başında cüzdandan düşülür, bitiren oyuncu dört bahsi birden alır.
 // Eller ve deste gizli kayıtta (OkeySecret) tutulur; herkes yalnızca kendi elini görür.
 const SEATS = 4;
 const MAX_DISCARDS = 24;
+const VARIANTS = ['okey101', 'okey'];
+const variantOf = (table: any) => (table?.variant === 'okey' ? 'okey' : 'okey101');
+const perPlayerOf = (table: any) => tilesPerPlayer(variantOf(table));
 // Elle başlatmak için gereken en az oyuncu: 2 veya 3 oyuncuyla da oynanır.
 const MIN_PLAYERS = 2;
 // Yarım saat dolmayan boş masa temizlenir.
@@ -95,6 +103,7 @@ function tableView(table: any) {
   return {
     id: table.id,
     code: table.code || '',
+    variant: variantOf(table),
     base_bet: Number(table.base_bet) || OKEY_BETS[0],
     status: table.status || 'waiting',
     pot: Number(table.pot) || 0,
@@ -136,7 +145,21 @@ async function answer(service: any, table: any, user: any, coins: number) {
   const index = seatIndex(seats, user.id);
   const secret = index >= 0 ? await secretOf(service, table.id) : null;
   const hand = handsOf(secret).find((entry: any) => entry.user_id === user.id)?.tiles || [];
-  // Sistem eli her turda hesaplar: grupların puanı 101'i bulan oyuncu bitirebilir.
+  const per = perPlayerOf(table);
+  if (variantOf(table) === 'okey') {
+    // Klasik OKEY: taş çekmiş el, bir taşı çıkarınca tümüyle gruplanıyorsa biter.
+    const finishing = hand.length === per + 1 ? finishWithClassic(hand, table.okey) : null;
+    return Response.json({
+      table: tableView(table),
+      hand,
+      seat: index,
+      can_finish: !!finishing,
+      finish_score: 0,
+      hand_score: handScore(hand),
+      coins,
+    });
+  }
+  // 101 OKEY: grupların puanı 101'i bulan oyuncu bitirebilir.
   // İşe yaramayan taşlar bitirmeye engel değildir.
   const plan = bestPlanScore(hand, table.okey);
   return Response.json({
@@ -197,10 +220,10 @@ async function maybeStart(base44: any, service: any, table: any) {
 
 /** Dağıtım: bahisler cüzdandan düşülür, eller gizli kayda yazılır. */
 async function startGame(base44: any, service: any, table: any, seats: any[], token: string) {
-  // Dağıtım oyuncu sayısına göre hesaplanır: oturan oyunculara 21 taş,
-  // kalan taşların tümü ortaya konur (4 oyuncuda 21, 3 oyuncuda 42, 2 oyuncuda 63).
+  // Dağıtım sürüme göre yapılır: 101 OKEY'de 21, klasik OKEY'de 14 taş; kalan taşlar ortaya konur.
   const players = seats.map((seat, index) => ({ index, seat })).filter((entry) => entry.seat.user_id);
-  const deal = dealOkey(players.length);
+  const per = perPlayerOf(table);
+  const deal = dealOkey(players.length, per);
   const pot = potOf(seats);
   await Promise.allSettled(
     seats
@@ -227,7 +250,7 @@ async function startGame(base44: any, service: any, table: any, seats: any[], to
   });
   const turnPool = seats.map((seat, index) => (seat.user_id && !seat.left ? index : -1)).filter((index) => index >= 0);
   const turn = turnPool.length ? turnPool[Math.floor(Math.random() * turnPool.length)] : 0;
-  // İlk oynayan oyuncu desteden bir taş fazla alır: eline 22 taş olur, ilk hamlesi taş atmaktır.
+  // İlk oynayan oyuncu desteden bir taş fazla alır: ilk hamlesi taş atmaktır.
   const stack = [...deal.stack];
   if (turnPool.length && stack.length) {
     hands[turn] = { ...hands[turn], tiles: [...hands[turn].tiles, stack.pop() as string] };
@@ -243,6 +266,7 @@ async function startGame(base44: any, service: any, table: any, seats: any[], to
     pot,
     // Boş koltuklar taş almaz: masa 2-3 oyuncuyla da oynanabilir.
     seats: seats.map((seat, index) => ({ ...seat, tiles: seat.user_id ? hands[index].tiles.length : 0 })),
+    variant: variantOf(table),
     gosterge: deal.gosterge,
     okey: deal.okey,
     stack_count: stack.length,
@@ -250,7 +274,7 @@ async function startGame(base44: any, service: any, table: any, seats: any[], to
     discard_seats: [],
     final_scores: [],
     turn,
-    // İlk oyuncu 22 taşla başlar: taş çekmez, doğrudan taş atar.
+    // İlk oyuncu bir taş fazlayla başlar: taş çekmez, doğrudan taş atar.
     phase: 'discard',
     deadline: isoIn(DISCARD_MS),
     turn_token: token,
@@ -258,7 +282,7 @@ async function startGame(base44: any, service: any, table: any, seats: any[], to
     winner_name: '',
     win_amount: 0,
     round_no: (Number(table.round_no) || 0) + 1,
-    last_action: `${seats[turn]?.name || 'İlk oyuncu'} 22 taşla başlıyor`,
+    last_action: `${seats[turn]?.name || 'İlk oyuncu'} ${per + 1} taşla başlıyor`,
   });
   return updated;
 }
@@ -401,7 +425,7 @@ async function passTurn(base44: any, service: any, table: any, secret: any, seat
   }
   const seats = seatsOf(live);
   const hand = handsOf(record).find((entry: any) => entry.user_id === seats[seat].user_id)?.tiles || [];
-  if (hand.length !== TILES_PER_PLAYER + 1) {
+  if (hand.length !== perPlayerOf(live) + 1) {
     // El atılacak durumda değilse taş atılmaz; yalnızca sıra ilerler.
     return service.OkeyTable.update(live.id, {
       turn: nextSeat(seats, seat),
@@ -468,13 +492,17 @@ export default async function (req: Request) {
 
     // Lobide bekleyen ve oynanan masalar listelenir.
     if (action === 'lobby') {
-      const waiting = await service.OkeyTable.filter({ status: 'waiting' }, '-updated_date', 40);
+      // Lobi sürüme göre ayrılır: 101 OKEY ve klasik OKEY masaları karışmaz.
+      const wantVariant = VARIANTS.indexOf(body.variant) >= 0 ? body.variant : 'okey101';
+      const waiting = (await service.OkeyTable.filter({ status: 'waiting' }, '-updated_date', 40))
+        .filter((table: any) => variantOf(table) === wantVariant);
       const stale = waiting.filter(
         (table: any) => Date.now() - Date.parse(table.updated_date || 0) > STALE_MS && !seatsOf(table).some((seat: any) => seat.user_id),
       );
       if (stale.length) await Promise.allSettled(stale.map((table: any) => service.OkeyTable.delete(table.id)));
       const living = waiting.filter((table: any) => stale.indexOf(table) < 0);
-      const playing = await service.OkeyTable.filter({ status: 'playing' }, '-updated_date', 12);
+      const playing = (await service.OkeyTable.filter({ status: 'playing' }, '-updated_date', 12))
+        .filter((table: any) => variantOf(table) === wantVariant);
       const tables = [...living, ...playing].map(tableView);
       const mine = tables.find((table: any) => (table.seats || []).some((seat: any) => seat.user_id === user.id && !seat.left));
       return Response.json({ coins, bets: OKEY_BETS, tables, my_table_id: mine?.id || '' });
@@ -482,9 +510,11 @@ export default async function (req: Request) {
 
     // Hızlı oyna: seçilen bahiste boş yeri olan rastgele bir masaya oturur, yoksa masa açar.
     if (action === 'quick_join') {
+      const wantVariant = VARIANTS.indexOf(body.variant) >= 0 ? body.variant : 'okey101';
       const bet = nearestBet(Number(body.bet), OKEY_BETS);
       if (coins < bet) return Response.json({ error: 'Yetersiz coin.' }, { status: 400 });
-      const waiting = await service.OkeyTable.filter({ status: 'waiting' }, '-updated_date', 40);
+      const waiting = (await service.OkeyTable.filter({ status: 'waiting' }, '-updated_date', 40))
+        .filter((table: any) => variantOf(table) === wantVariant);
       const candidates = waiting.filter((table: any) => {
         const seats = seatsOf(table);
         return Number(table.base_bet) === bet && freeSeat(seats) >= 0 && seatIndex(seats, user.id) < 0;
@@ -493,6 +523,7 @@ export default async function (req: Request) {
       const table = picked || (await service.OkeyTable.create({
         code: `${Math.floor(1000 + Math.random() * 9000)}`,
         base_bet: bet,
+        variant: wantVariant,
         status: 'waiting',
         seats: emptySeats(),
         pot: 0,
@@ -628,16 +659,20 @@ export default async function (req: Request) {
       if (!tile || hand.indexOf(tile) < 0) return Response.json({ error: 'Bu taş elinde yok.' }, { status: 400 });
       if (isWild(tile, table.okey)) return Response.json({ error: 'Okey atılmaz.' }, { status: 400 });
       const updated = await discardStep(base44, service, table, secret, index, tile, '');
-      // Taşı ortaya attığı anda kalan eli 101'i tamamlıyorsa el biter; kazanan potu alır.
+      // Taşı ortaya attığı anda kalan el bitiyorsa el biter; kazanan potu alır.
       const rest = removeOne(hand, tile);
-      if (canFinish(rest, table.okey) && handScore(rest) >= TARGET_SCORE) {
+      const won = variantOf(table) === 'okey'
+        ? canFinishClassic(rest, table.okey)
+        : canFinish(rest, table.okey) && handScore(rest) >= TARGET_SCORE;
+      if (won) {
         const finished = await payWinner(base44, service, updated, seatsOf(updated), seatsOf(updated)[index]);
         return answer(service, finished, user, coins);
       }
       return answer(service, updated, user, coins);
     }
 
-    // Bitirme: grupların puanı 101'i bulduysa el bitirilir; işe yaramayan taşlar engel değildir.
+    // Bitirme: 101 OKEY'de grupların puanı 101'i bulduysa, klasik OKEY'de bir taş çıkarılınca
+    // kalan el tümüyle gruplanıyorsa el biter.
     if (action === 'finish') {
       const table = await service.OkeyTable.get(body.table_id).catch(() => null);
       if (!table) return Response.json({ error: 'Masa bulunamadı.' }, { status: 404 });
@@ -648,6 +683,26 @@ export default async function (req: Request) {
       }
       const secret = await secretOf(service, table.id);
       const hand = handsOf(secret).find((entry: any) => entry.user_id === user.id)?.tiles || [];
+      const per = perPlayerOf(table);
+      const finishByDiscard = async (tile: string) => {
+        const updated = await discardStep(base44, service, table, secret, index, tile, '');
+        const finished = await payWinner(base44, service, updated, seatsOf(updated), seatsOf(updated)[index]);
+        return answer(service, finished, user, coins);
+      };
+      // Klasik OKEY: taş çekmiş el, bir taşı çıkarınca tümüyle gruplanıyorsa biter.
+      if (variantOf(table) === 'okey') {
+        if (hand.length !== per + 1 || table.phase !== 'discard') {
+          return Response.json({ error: 'Bitirmek için önce ortadan taş çekmelisin.' }, { status: 400 });
+        }
+        const finishing = finishWithClassic(hand, table.okey);
+        if (!finishing) {
+          return Response.json(
+            { error: 'El bitmiyor: bir taş çıkardığında kalan taşların tümü seri/per/çift olmalı.' },
+            { status: 400 },
+          );
+        }
+        return finishByDiscard(finishing.tile);
+      }
       const plan = bestPlanScore(hand, table.okey);
       if (plan.score < TARGET_SCORE) {
         return Response.json(
@@ -656,16 +711,13 @@ export default async function (req: Request) {
         );
       }
       // Eli hazır olan oyuncu taş atmadan bitirir.
-      if (hand.length <= TILES_PER_PLAYER) {
+      if (hand.length <= per) {
         const finished = await payWinner(base44, service, table, seats, seats[index]);
         return answer(service, finished, user, coins);
       }
       if (table.phase !== 'discard') return Response.json({ error: 'Sıra sende değil.' }, { status: 400 });
       // Fazladan taş varsa önce işe yaramayan taş atılır, ardından el bitirilir.
-      const tile = discardForFinish(hand, table.okey);
-      const updated = await discardStep(base44, service, table, secret, index, tile, '');
-      const finished = await payWinner(base44, service, updated, seatsOf(updated), seatsOf(updated)[index]);
-      return answer(service, finished, user, coins);
+      return finishByDiscard(discardForFinish(hand, table.okey));
     }
 
     // Durum: masa, kendi eli ve kalan süre. Zaman aşımı burada uygulanır.

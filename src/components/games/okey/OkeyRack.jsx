@@ -21,7 +21,7 @@ function breakPositions(tiles, breakTiles) {
 }
 
 /** Alt tahta: taşlar parmakla sürüklenip dizilir, çuha üzerine bırakılırsa ortaya atılır. */
-export default function OkeyRack({ hand, drawnTile, okey, mode, sortKey, canDiscard, onDiscard, busy, onDropTarget }) {
+export default function OkeyRack({ variant = 'okey101', hand, drawnTile, okey, mode, sortKey, canDiscard, onDiscard, busy, onDropTarget }) {
   // Elle dizilim: sürüklendikçe bu sıra kullanılır, elden çıkan taş sıradan düşer.
   const [order, setOrder] = useState([]);
   // Taş elle taşınsa bile seçili dizilim (SERİ/ÇİFT) korunur: sıra, düğmeye basılana dek bozulmaz.
@@ -146,7 +146,7 @@ export default function OkeyRack({ hand, drawnTile, okey, mode, sortKey, canDisc
   return (
     <div className="okey-rack-wrap">
       <div className={`okey-rack${canDiscard ? ' okey-rack-ready' : ''}`}>
-        <OkeyBoardBrand />
+        <OkeyBoardBrand variant={variant} />
         {rows.map((row, rowIndex) => (
           <div className="okey-row" key={rowIndex}>
             {row.map((tile, tileIndex) => {

@@ -8,6 +8,8 @@ export const JOKER = 'J';
 // 101 Okey dağıtımı: her oyuncuya 21 taş. İlk eli başlayan oyuncu desteden bir taş
 // çektiği için eline 22 taş olur; 4 oyuncuda ortada tam 21 taş kalır (106 - 84 - 1).
 export const TILES_PER_PLAYER = 21;
+// Klasik OKEY: her oyuncuya 14 taş dağıtılır; ilk oyuncu 15 taşla başlar.
+export const TILES_CLASSIC = 14;
 export const OKEY_MAX_SEATS = 4;
 export const OKEY_BETS = [1000, 5000, 25000, 100000];
 export const OKEY_START_COINS = 100000;
@@ -51,16 +53,20 @@ export function okeyOf(gosterge: string): string {
   return `${colorOf(gosterge)}${n === 13 ? 1 : n + 1}`;
 }
 
+/** Sürüme göre el başına taş sayısı: 101 OKEY 21, klasik OKEY 14. */
+export const tilesPerPlayer = (variant: string) => (variant === 'okey' ? TILES_CLASSIC : TILES_PER_PLAYER);
+
 /**
- * Dağıtım: 106 taş, oyuncu sayısına göre hesaplanır. Her oyuncuya 21 taş ve bir gösterge
- * ayrılır; kalan taşların tümü ortaya konur — 4 oyuncuda 21, 3 oyuncuda 42, 2 oyuncuda 63.
+ * Dağıtım: 106 taş, oyuncu sayısına göre hesaplanır. Her oyuncuya el başına düşen taş
+ * (101 OKEY'de 21, klasik OKEY'de 14) ve bir gösterge ayrılır; kalan taşlar ortaya konur.
  * Oynanmayan koltukların taşları da ortaya döner, hiç taş ziyan olmaz.
  */
-export function dealOkey(playerCount: number = OKEY_MAX_SEATS) {
+export function dealOkey(playerCount: number = OKEY_MAX_SEATS, perPlayer: number = TILES_PER_PLAYER) {
   const seated = Math.min(Math.max(Math.floor(playerCount) || 0, 1), OKEY_MAX_SEATS);
+  const count = Math.max(1, Math.floor(perPlayer) || TILES_PER_PLAYER);
   const deck = shuffle(okeyDeck());
   const hands: string[][] = [[], [], [], []];
-  for (let round = 0; round < TILES_PER_PLAYER; round += 1) {
+  for (let round = 0; round < count; round += 1) {
     for (let seat = 0; seat < seated; seat += 1) hands[seat].push(deck.pop() as string);
   }
   const gosterge = deck.pop() as string;
@@ -182,6 +188,31 @@ export function finishWith(tiles: string[], okey: string): { tile: string; score
     if (!canFinish(rest, okey)) continue;
     const score = handScore(rest);
     if (score < TARGET_SCORE) continue;
+    if (!best || score > best.score) best = { tile, score };
+  }
+  return best;
+}
+
+/**
+ * Klasik OKEY bitişi: elin tamamı geçerli gruplara ayrılmalı — seri, per (aynı sayıdan farklı
+ * renkler) ya da ikiz çift. Seri bitişinde en az bir seri şarttır; çift bitişinde elin tamamı
+ * ikiz olur. Joker ve okey eksik yeri kapatır.
+ */
+export function canFinishClassic(tiles: string[], okey: string): boolean {
+  if (planCift(tiles, okey).leftovers.length === 0) return true;
+  return canFinish(tiles, okey);
+}
+
+/** Klasik OKEY bitirici atış: atılacak taş çıkarılınca kalan el tümüyle gruplanıyorsa o taş döner. */
+export function finishWithClassic(tiles: string[], okey: string): { tile: string; score: number } | null {
+  const seen = new Set<string>();
+  let best: { tile: string; score: number } | null = null;
+  for (const tile of tiles) {
+    if (isWild(tile, okey) || seen.has(tile)) continue;
+    seen.add(tile);
+    const rest = removeOne(tiles, tile);
+    if (!canFinishClassic(rest, okey)) continue;
+    const score = handScore(rest);
     if (!best || score > best.score) best = { tile, score };
   }
   return best;

@@ -133,3 +133,10 @@ export function planHand(hand, mode, okey) {
     total: plan.groups.flat().reduce((sum, tile) => sum + tilePoint(tile), 0),
   };
 }
+
+/** Gruplara girmeyen taşların sayısı: klasik okeyde bitişe engel olan "fazla" taşlar. */
+export function leftoverCount(hand, mode, okey) {
+  const tiles = Array.isArray(hand) ? hand : [];
+  const plan = mode === 'cift' ? planCift(tiles, okey) : planSeri(tiles, okey);
+  return plan.leftovers.length;
+}

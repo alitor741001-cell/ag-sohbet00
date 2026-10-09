@@ -1,14 +1,14 @@
 import { Image } from '@/components/ui/image';
 import OkeySeatProfile from './OkeySeatProfile';
 import OkeyTile from './OkeyTile';
-import { OKEY_LOGO } from './okeyAssets';
+import { OKEY_CLASSIC_LOGO, OKEY_LOGO } from './okeyAssets';
 import { isWild, slotOf } from './okeyConfig';
 
 // Bir oyuncunun köşesindeki yığında gösterilen en fazla taş: yığın masayı kaplamasın.
 const MAX_PILE_TILES = 8;
 
 /** Yeşil çuha masa: dört oyuncu, ortada gösterge ile deste ve her oyuncunun sağında atık taş yığını. */
-export default function OkeyFelt({ table, mySeat, canDraw, onDraw, dropActive, onOpenProfile }) {
+export default function OkeyFelt({ variant = 'okey101', table, mySeat, canDraw, onDraw, dropActive, onOpenProfile }) {
   const seats = table?.seats || [];
   const seat = mySeat < 0 ? 0 : mySeat;
   const turn = Number(table?.turn) || 0;
@@ -24,7 +24,13 @@ export default function OkeyFelt({ table, mySeat, canDraw, onDraw, dropActive, o
   return (
     <div className="okey-felt" data-drop={dropActive ? '1' : '0'}>
       <span className="okey-turn-ring" data-active={playing ? '1' : '0'} />
-      <Image src={OKEY_LOGO} alt="" aria-hidden="true" className="okey-felt-mark" fittingType="fit" />
+      <Image
+        src={variant === 'okey' ? OKEY_CLASSIC_LOGO : OKEY_LOGO}
+        alt=""
+        aria-hidden="true"
+        className="okey-felt-mark"
+        fittingType="fit"
+      />
 
       {seats.map((entry, index) => (
         <OkeySeatProfile

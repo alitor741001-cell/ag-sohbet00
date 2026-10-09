@@ -10,6 +10,14 @@
       "type": "number",
       "default": 1000
     },
+    "variant": {
+      "type": "string",
+      "enum": [
+        "okey101",
+        "okey"
+      ],
+      "default": "okey101"
+    },
     "status": {
       "type": "string",
       "enum": [

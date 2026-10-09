@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { planHand } from './okey/okeyGroups';
+import { leftoverCount, planHand } from './okey/okeyGroups';
 import '@/styles/okey.css';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
 import OkeyFelt from './okey/OkeyFelt';
@@ -12,9 +12,11 @@ import OkeyTopBar from './okey/OkeyTopBar';
 import OkeyWaitRoom from './okey/OkeyWaitRoom';
 import useOkeyGame from './okey/useOkeyGame';
 
-/** 101 OKEY: bahisli, dört kişilik okey masası. */
-export default function OkeyGame({ onExit, onBack }) {
-  const game = useOkeyGame();
+/** OKEY: bahisli, dört kişilik okey masası.
+    variant 'okey101' → 21 taş, 101 puan; variant 'okey' → 14 taş, klasik bitiş. */
+export default function OkeyGame({ variant = 'okey101', onExit, onBack }) {
+  const game = useOkeyGame(variant);
+  const classic = variant === 'okey';
   const [coinOpen, setCoinOpen] = useState(false);
   // Tahta dizilimi: seri (renk sırası), çift (sayı sırası) ya da elle (parmakla sürüklenen).
   const [mode, setMode] = useState('seri');
@@ -44,6 +46,12 @@ export default function OkeyGame({ onExit, onBack }) {
     () => planHand(game.hand, arrange, table?.okey).total,
     [game.hand, arrange, table?.okey],
   );
+  // Klasik sürümde puan yok: elin bitişe kalan "fazla" taşları yazılır.
+  const loose = useMemo(
+    () => (classic ? leftoverCount(game.hand, arrange, table?.okey) : 0),
+    [classic, game.hand, arrange, table?.okey],
+  );
+  const chipReady = classic ? game.canFinish : myScore >= 101;
 
   // Her yeni elde tahta yeniden dizilir: 21 (başlayanda 22) taş "seri" düzenine göre sıralanır.
   const roundNo = Number(table?.round_no) || 0;
@@ -65,16 +73,21 @@ export default function OkeyGame({ onExit, onBack }) {
     : playing
       ? myTurn
         ? game.canFinish
-          ? 'Elin 101 puanı buldu — BİTİR ile eli bitir.'
+          ? classic
+            ? 'Elin hazır — BİTİR ile eli bitir.'
+            : 'Elin 101 puanı buldu — BİTİR ile eli bitir.'
           : phase === 'draw'
             ? 'Sıra sende: ortadaki desteye dokunup taş çek.'
-            : `Sıra sende: elinden bir taş at. Grupların ${myScore} puan.`
+            : classic
+              ? 'Sıra sende: elinden bir taş at.'
+              : `Sıra sende: elinden bir taş at. Grupların ${myScore} puan.`
         : `${turnName} oynuyor...`
       : table?.last_action || 'El kapandı.';
 
   return (
-    <div className="okey-shell">
+    <div className="okey-shell" data-variant={variant}>
       <OkeyTopBar
+        variant={variant}
         table={table}
         coins={coins}
         onStore={() => setCoinOpen(true)}
@@ -84,6 +97,7 @@ export default function OkeyGame({ onExit, onBack }) {
 
       {table ? (
         <OkeyFelt
+          variant={variant}
           table={table}
           mySeat={seat}
           canDraw={canDraw}
@@ -101,9 +115,11 @@ export default function OkeyGame({ onExit, onBack }) {
           <div className="flex shrink-0 flex-wrap items-center gap-1.5">
             {/* Dizilim tuşları: AYRIL/BİTİR ile aynı şeritte durur. */}
             <OkeyModeButtons mode={mode} onMode={changeMode} />
-            {/* El puanı: sıra kimde olursa olsun görünür kalır, her taşta yeniden hesaplanır. */}
-            <span className="okey-score-chip" data-ready={myScore >= 101 ? '1' : '0'}>
-              {arrange === 'cift' ? 'ÇİFT' : 'SERİ'} · {myScore} PUAN
+            {/* 101 OKEY'de el puanı, klasikte bitişe kalan fazla taş sayısı yazılır. */}
+            <span className="okey-score-chip" data-ready={chipReady ? '1' : '0'}>
+              {classic
+                ? (loose ? `${loose} TAŞ FAZLA` : 'EL HAZIR')
+                : `${arrange === 'cift' ? 'ÇİFT' : 'SERİ'} · ${myScore} PUAN`}
             </span>
             <button
               type="button"
@@ -134,6 +150,7 @@ export default function OkeyGame({ onExit, onBack }) {
           />
         ) : (
           <OkeyRack
+            variant={variant}
             hand={game.hand}
             drawnTile={canDiscard ? game.drawnTile : ''}
             okey={table.okey}
@@ -147,6 +164,7 @@ export default function OkeyGame({ onExit, onBack }) {
         )
       ) : (
         <OkeyLobby
+          variant={variant}
           coins={coins}
           lobby={game.lobby}
           loading={game.lobbyLoading}

@@ -1,25 +1,33 @@
 import { useState } from 'react';
 import { Coins, Loader2, Play, ShoppingBag } from 'lucide-react';
 import { Image } from '@/components/ui/image';
-import { OKEY_COVER } from './okeyAssets';
+import { OKEY_CLASSIC_COVER, OKEY_COVER } from './okeyAssets';
 import { OKEY_BETS, formatBet } from './okeyConfig';
 
 /** Lobi: bahis seç, hızlı oyna ya da açık bir masaya otur. */
-export default function OkeyLobby({ coins, lobby, loading, busy, error, onQuick, onJoin, onStore }) {
+export default function OkeyLobby({ variant = 'okey101', coins, lobby, loading, busy, error, onQuick, onJoin, onStore }) {
   const [bet, setBet] = useState(OKEY_BETS[0]);
   const myTable = lobby.my_table_id;
+  const classic = variant === 'okey';
 
   return (
     <div className="okey-lobby">
       <div className="okey-lobby-hero">
         <span className="okey-lobby-logo">
-          <Image src={OKEY_COVER} alt="" className="h-full w-full" fittingType="fill" quality={85} />
+          <Image
+            src={classic ? OKEY_CLASSIC_COVER : OKEY_COVER}
+            alt=""
+            className="h-full w-full"
+            fittingType="fill"
+            quality={85}
+          />
         </span>
         <span>
-          <p className="okey-lobby-title">101 OKEY</p>
+          <p className="okey-lobby-title">{classic ? 'OKEY' : '101 OKEY'}</p>
           <p className="okey-lobby-text">
-            Dört kişilik bahisli masa. Ortadan taş çek, elinden taş at; kalan taşların seri/per/çift dizilirse
-            BİTİR ve üç oyuncunun bahsini birden al.
+            {classic
+              ? 'Dört kişilik bahisli klasik masa. 14 taşla oynanır: ortadan taş çek, elinden taş at; bir taş çıkarınca kalan taşların tümü seri/per/çift olursa BİTİR ve üç oyuncunun bahsini birden al.'
+              : 'Dört kişilik bahisli masa. Ortadan taş çek, elinden taş at; kalan taşların seri/per/çift dizilirse BİTİR ve üç oyuncunun bahsini birden al.'}
           </p>
         </span>
       </div>
