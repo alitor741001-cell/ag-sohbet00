@@ -194,25 +194,7 @@
 .okey-seat-left .okey-seat-card, .okey-seat-right .okey-seat-card { text-align: center; }
 .okey-seat-empty { opacity: 0.55; }
 
-/* Gösterge ve okey: sol üst köşede. */
-.okey-indicator {
-  position: absolute;
-  left: 0.35rem;
-  top: 0.35rem;
-  z-index: 4;
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-  border-radius: 10px;
-  border: 1px solid rgba(233, 192, 84, 0.34);
-  background: rgba(6, 14, 9, 0.82);
-  padding: 0.22rem 0.4rem;
-}
-.okey-indicator-label { display: flex; flex-direction: column; gap: 0.05rem; }
-.okey-indicator-text { font-size: 0.44rem; font-weight: 800; letter-spacing: 0.08em; color: rgba(255, 255, 255, 0.55); }
-.okey-indicator-okey { font-size: 0.55rem; font-weight: 900; color: #ffd76a; }
-
-/* Orta alan: deste ve atılan taşlar. */
+/* Orta alan: gösterge, deste ve atılan taşlar. */
 .okey-center {
   position: absolute;
   left: 50%;
@@ -224,8 +206,24 @@
   gap: 0.35rem;
   z-index: 2;
 }
+/* Ortadan çekilen gösterge taşı ve yanında okeyi: destenin arkasında durur. */
+.okey-open {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-end;
+  gap: 0.3rem;
+  border: 0;
+  background: none;
+  padding: 0;
+}
+.okey-open-item { display: flex; flex-direction: column-reverse; align-items: center; gap: 0.1rem; }
+.okey-open-label { font-size: 0.42rem; font-weight: 900; letter-spacing: 0.06em; color: rgba(255, 255, 255, 0.6); }
 .okey-pile {
   position: relative;
+  /* Kapalı üst taş göstergenin önüne gelir: altındaki taş görünür. */
+  z-index: 2;
+  margin-top: -0.8rem;
   display: flex;
   border: 0;
   background: none;
@@ -255,10 +253,6 @@
   box-shadow: 0 0 0 2px rgba(255, 214, 106, 0.85), 0 0 22px 4px rgba(255, 200, 60, 0.55);
 }
 .okey-pile-hint {
-  position: absolute;
-  top: -1rem;
-  left: 50%;
-  transform: translateX(-50%);
   white-space: nowrap;
   font-size: 0.46rem;
   font-weight: 900;
@@ -284,8 +278,20 @@
   font-weight: 900;
   color: #2b1c00;
 }
-.okey-discards { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
-.okey-drop { position: absolute; transform: translate(-50%, -50%) rotate(var(--okey-rot)); opacity: 0.96; }
+/* Atılan taşlar: her oyuncunun kendi sağındaki köşede üst üste birikir.
+   Koltuk kenarları köşelere denk gelir: alt sağ alt, sol alt sol, üst sol üst, sağ üst sağ. */
+.okey-pile-stack { position: absolute; z-index: 2; height: calc(var(--okey-tile) * 1.12); width: calc(var(--okey-tile) * 0.84); }
+.okey-pile-stack-bottom { right: 11%; bottom: 11%; }
+.okey-pile-stack-left { left: 11%; bottom: 11%; }
+.okey-pile-stack-top { left: 11%; top: 11%; }
+.okey-pile-stack-right { right: 11%; top: 11%; }
+.okey-pile-tile {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  transform-origin: 50% 100%;
+  transform: translateY(calc(var(--pile-i) * -3px)) rotate(calc(var(--pile-i) * 1.6deg));
+}
 
 /* === TAŞ === */
 .okey-tile {

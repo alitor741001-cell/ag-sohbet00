@@ -32,13 +32,6 @@ export function rowSplit(tiles) {
   return rows.length ? rows : [[]];
 }
 
-/** Atılan taşların masadaki dağınık yerleşimi (sabit, zıplamaz). */
-export function discardSpot(index) {
-  const left = 26 + ((index * 37) % 48);
-  const top = 32 + ((index * 53) % 34);
-  return { left: `${left}%`, top: `${top}%`, '--okey-rot': `${((index * 47) % 44) - 22}deg` };
-}
-
 export const formatBet = (value) => formatCoins(value);
 
 /** Kalan tur süresini dakika:saniye olarak yazar. */

@@ -2,30 +2,29 @@ import { Image } from '@/components/ui/image';
 import OkeySeatProfile from './OkeySeatProfile';
 import OkeyTile from './OkeyTile';
 import { OKEY_LOGO } from './okeyAssets';
-import { discardSpot, isWild, slotOf } from './okeyConfig';
+import { isWild, slotOf } from './okeyConfig';
 
-/** Yeşil çuha masa: dört oyuncu, ortada deste (dokununca çekilir) ve atılan taşlar. */
+// Bir oyuncunun köşesindeki yığında gösterilen en fazla taş: yığın masayı kaplamasın.
+const MAX_PILE_TILES = 8;
+
+/** Yeşil çuha masa: dört oyuncu, ortada gösterge ile deste ve her oyuncunun sağında atık taş yığını. */
 export default function OkeyFelt({ table, mySeat, canDraw, onDraw, dropActive, onOpenProfile }) {
   const seats = table?.seats || [];
-  const discards = (table?.discards || []).slice(-9);
+  const seat = mySeat < 0 ? 0 : mySeat;
   const turn = Number(table?.turn) || 0;
   const playing = table?.status === 'playing';
-  const seat = mySeat < 0 ? 0 : mySeat;
+  const discardSeats = table?.discard_seats || [];
+
+  // Atılan taş atan koltukla eşleşir: her oyuncunun taşları kendi köşesindeki yığında birikir.
+  const pileOf = (index) => (table?.discards || [])
+    .map((tile, at) => ({ tile, seat: discardSeats[at] }))
+    .filter((entry) => entry.seat === index)
+    .slice(-MAX_PILE_TILES);
 
   return (
     <div className="okey-felt" data-drop={dropActive ? '1' : '0'}>
       <span className="okey-turn-ring" data-active={playing ? '1' : '0'} />
       <Image src={OKEY_LOGO} alt="" aria-hidden="true" className="okey-felt-mark" fittingType="fit" />
-
-      {/* Gösterge ve okey: masanın sol üst köşesinde herkes görür. */}
-      <div className="okey-indicator">
-        <span className="okey-indicator-label">
-          <span className="okey-indicator-text">GÖSTERGE</span>
-          <span className="okey-indicator-okey">OKEY · {table?.okey || '—'}</span>
-        </span>
-        {table?.gosterge ? <OkeyTile tile={table.gosterge} size="xs" /> : null}
-        {table?.okey && table.okey !== 'J' ? <OkeyTile tile={table.okey} size="xs" wild /> : null}
-      </div>
 
       {seats.map((entry, index) => (
         <OkeySeatProfile
@@ -37,17 +36,37 @@ export default function OkeyFelt({ table, mySeat, canDraw, onDraw, dropActive, o
         />
       ))}
 
-      {/* Ortaya atılan taşlar dağınık durur. */}
-      <div className="okey-discards">
-        {discards.map((tile, index) => (
-          <span key={`${tile}-${index}`} className="okey-drop" style={discardSpot(index)}>
-            <OkeyTile tile={tile} size="sm" wild={isWild(tile, table?.okey)} />
-          </span>
-        ))}
-      </div>
+      {/* Atılan taşlar: her oyuncunun sağındaki köşede üst üste yığılır. */}
+      {seats.map((entry, index) => {
+        if (!entry.user_id) return null;
+        const pile = pileOf(index);
+        if (!pile.length) return null;
+        return (
+          <div key={`pile-${index}`} className={`okey-pile-stack okey-pile-stack-${slotOf(index, seat)}`}>
+            {pile.map((item, at) => (
+              <span key={`${item.tile}-${at}`} className="okey-pile-tile" style={{ '--pile-i': at }}>
+                <OkeyTile tile={item.tile} size="sm" wild={isWild(item.tile, table?.okey)} />
+              </span>
+            ))}
+          </div>
+        );
+      })}
 
-      {/* Orta: kapalı deste ve kalan taş sayısı. Sıram geldiğinde üstüne basınca taş çekilir. */}
+      {/* Orta: ortadan çekilen gösterge taşı ve yanında okeyi; önünde altındaki kapalı taşlar. */}
       <div className="okey-center">
+        {canDraw ? <span className="okey-pile-hint">DOKUN · ÇEK</span> : null}
+
+        <button type="button" className="okey-open" disabled={!canDraw} onClick={onDraw} aria-label="Ortadan taş çek">
+          <span className="okey-open-item">
+            {table?.gosterge ? <OkeyTile tile={table.gosterge} /> : null}
+            <span className="okey-open-label">GÖSTERGE</span>
+          </span>
+          <span className="okey-open-item">
+            {table?.okey && table.okey !== 'J' ? <OkeyTile tile={table.okey} wild /> : null}
+            <span className="okey-open-label">OKEY</span>
+          </span>
+        </button>
+
         <button
           type="button"
           className="okey-pile"
@@ -62,7 +81,6 @@ export default function OkeyFelt({ table, mySeat, canDraw, onDraw, dropActive, o
             </span>
           ))}
           <span className="okey-pile-count">{table?.stack_count || 0}</span>
-          {canDraw ? <span className="okey-pile-hint">DOKUN · ÇEK</span> : null}
         </button>
       </div>
 

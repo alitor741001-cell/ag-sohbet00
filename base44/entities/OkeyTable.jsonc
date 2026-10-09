@@ -103,6 +103,13 @@
       },
       "default": []
     },
+    "discard_seats": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      },
+      "default": []
+    },
     "winner_id": {
       "type": "string",
       "default": ""

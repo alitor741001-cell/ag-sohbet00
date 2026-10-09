@@ -93,6 +93,7 @@ function tableView(table: any) {
     okey: table.okey || '',
     stack_count: Number(table.stack_count) || 0,
     discards: Array.isArray(table.discards) ? table.discards : [],
+    discard_seats: Array.isArray(table.discard_seats) ? table.discard_seats : [],
     seats: seatsOf(table).map((seat) => ({
       seat: seat.seat,
       user_id: seat.user_id || '',
@@ -224,6 +225,7 @@ async function startGame(base44: any, service: any, table: any, seats: any[], to
     okey: deal.okey,
     stack_count: stack.length,
     discards: [],
+    discard_seats: [],
     turn,
     // İlk oyuncu 22 taşla başlar: taş çekmez, doğrudan taş atar.
     phase: 'discard',
@@ -268,9 +270,17 @@ async function discardStep(base44: any, service: any, table: any, secret: any, s
   );
   const mine = hands.find((entry: any) => entry.seat === seat)?.tiles || [];
   await service.OkeySecret.update(secret.id, { hands });
+  // Atılan taş, atan koltukla birlikte tutulur: her oyuncunun yığını kendi köşesinde gösterilir.
+  const tiles = Array.isArray(table.discards) ? [...table.discards] : [];
+  const tileSeats = Array.isArray(table.discard_seats) ? [...table.discard_seats] : [];
+  // Koltuk kaydı olmayan eski masalarda hizayı korumak için bilinmeyen koltuk -1 yazılır.
+  while (tileSeats.length < tiles.length) tileSeats.unshift(-1);
+  tiles.push(tile);
+  tileSeats.push(seat);
   const updated = await service.OkeyTable.update(table.id, {
     seats: seats.map((entry, index) => (index === seat ? { ...entry, tiles: mine.length } : entry)),
-    discards: [...(Array.isArray(table.discards) ? table.discards : []), tile].slice(-MAX_DISCARDS),
+    discards: tiles.slice(-MAX_DISCARDS),
+    discard_seats: tileSeats.slice(-MAX_DISCARDS),
     turn: nextSeat(seats, seat),
     phase: 'draw',
     deadline: isoIn(DRAW_MS),
