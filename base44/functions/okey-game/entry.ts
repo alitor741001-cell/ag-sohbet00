@@ -623,6 +623,12 @@ export default async function (req: Request) {
       if (!tile || hand.indexOf(tile) < 0) return Response.json({ error: 'Bu taş elinde yok.' }, { status: 400 });
       if (isWild(tile, table.okey)) return Response.json({ error: 'Okey atılmaz.' }, { status: 400 });
       const updated = await discardStep(base44, service, table, secret, index, tile, '');
+      // Taşı ortaya attığı anda kalan eli 101'i tamamlıyorsa el biter; kazanan potu alır.
+      const rest = removeOne(hand, tile);
+      if (canFinish(rest, table.okey) && handScore(rest) >= TARGET_SCORE) {
+        const finished = await payWinner(base44, service, updated, seatsOf(updated), seatsOf(updated)[index]);
+        return answer(service, finished, user, coins);
+      }
       return answer(service, updated, user, coins);
     }
 
@@ -637,14 +643,14 @@ export default async function (req: Request) {
       }
       const secret = await secretOf(service, table.id);
       const hand = handsOf(secret).find((entry: any) => entry.user_id === user.id)?.tiles || [];
-      const tile = findDiscard(hand, table.okey);
-      if (!tile) {
+      const finishing = finishWith(hand, table.okey);
+      if (!finishing) {
         return Response.json(
-          { error: 'El bitmiyor: attıktan sonra kalan taşların tümü seri/per/çift olmalı ve en az bir seri içermeli.' },
+          { error: 'El bitmiyor: attıktan sonra kalan taşların tümü seri/per/çift olmalı ve toplamı en az 101 puan etmeli.' },
           { status: 400 },
         );
       }
-      const updated = await discardStep(base44, service, table, secret, index, tile, '');
+      const updated = await discardStep(base44, service, table, secret, index, finishing.tile, '');
       const finished = await payWinner(base44, service, updated, seatsOf(updated), seatsOf(updated)[index]);
       return answer(service, finished, user, coins);
     }

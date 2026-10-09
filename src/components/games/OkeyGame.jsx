@@ -20,6 +20,8 @@ export default function OkeyGame({ onExit, onBack }) {
   const [dropActive, setDropActive] = useState(false);
   // Masadaki bir oyuncuya dokununca açılan kart: özel sohbetteki profil kartının aynısı.
   const [profileSeat, setProfileSeat] = useState(null);
+  // HESAPLA sonucu: el 101 puanı bulduğunda bitirmeyi söyler.
+  const [calcNote, setCalcNote] = useState('');
 
   const { table, seat, coins, busy } = game;
   const playing = table?.status === 'playing';
@@ -37,6 +39,11 @@ export default function OkeyGame({ onExit, onBack }) {
     setMode('seri');
   }, [roundNo]);
 
+  // Sıra ya da el değişince hesap notu temizlenir.
+  useEffect(() => {
+    setCalcNote('');
+  }, [table?.turn, table?.phase, roundNo]);
+
   const statusText = waiting
     ? `2, 3 ya da 4 oyuncuyla başlayabilirsin (${filled}/4). 4 oyuncu dolunca oyun kendiliğinden başlar.`
     : playing
@@ -44,10 +51,21 @@ export default function OkeyGame({ onExit, onBack }) {
         ? phase === 'draw'
           ? 'Sıra sende: ortadaki desteye dokunup taş çek.'
           : game.canFinish
-            ? 'Elin bitiyor: BİTİR ile potu al ya da bir taş at.'
-            : 'Sıra sende: elinden bir taş at.'
+            ? `Elin ${game.finishScore} puan — 101 tamam. BİTİR ile bitir ya da bir taş at.`
+            : `Sıra sende: elinden bir taş at. Elin ${game.handScore} puan.`
         : `${turnName} oynuyor...`
       : table?.last_action || 'El kapandı.';
+
+  // HESAPLA: sistem eli yeniden hesaplar; 101 olmuşsa bitirmeyi söyler.
+  const calculate = async () => {
+    const data = await game.actions.calculate();
+    if (!data || data.error) return;
+    setCalcNote(
+      data.can_finish
+        ? `Hesap: elin ${data.finish_score} puan — 101 tamam, BİTİR ile bitirebilirsin.`
+        : `Hesap: elin ${data.hand_score} puan. Bitirmek için 101 gerekli.`,
+    );
+  };
 
   return (
     <div className="okey-shell">
@@ -74,8 +92,11 @@ export default function OkeyGame({ onExit, onBack }) {
 
       {table && playing ? (
         <div className="okey-strip">
-          <p className="okey-strip-text">{statusText}</p>
+          <p className="okey-strip-text">{calcNote || statusText}</p>
           <div className="flex shrink-0 flex-wrap items-center gap-1.5">
+            <button type="button" className="okey-btn" disabled={busy} onClick={calculate}>
+              HESAPLA
+            </button>
             <button
               type="button"
               className="okey-btn okey-btn-green"

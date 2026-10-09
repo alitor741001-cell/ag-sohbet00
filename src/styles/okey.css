@@ -503,6 +503,30 @@
 .okey-result-amount { margin-top: 0.25rem; font-size: 1.5rem; font-weight: 900; color: #7df5a8; }
 .okey-result-text { margin-top: 0.35rem; font-size: 0.66rem; font-weight: 700; color: rgba(255, 255, 255, 0.75); }
 .okey-result-actions { margin-top: 0.8rem; display: flex; justify-content: center; gap: 0.45rem; }
+/* El sonu hesabı: her oyuncunun elinde kalan taş puanı. */
+.okey-result-scores {
+  margin-top: 0.7rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  padding-top: 0.55rem;
+}
+.okey-result-scores-title { font-size: 0.48rem; font-weight: 900; letter-spacing: 0.1em; color: rgba(255, 255, 255, 0.55); }
+.okey-result-score {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 0.22rem 0.55rem;
+  font-size: 0.6rem;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.85);
+}
+.okey-result-score[data-winner="1"] { background: rgba(255, 214, 106, 0.16); color: #ffdf8e; }
+.okey-result-score-value { font-weight: 900; }
 
 .okey-toast {
   position: absolute;

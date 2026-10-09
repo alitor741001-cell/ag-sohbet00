@@ -18,6 +18,8 @@ export default function useOkeyGame() {
   const [hand, setHand] = useState([]);
   const [seat, setSeat] = useState(-1);
   const [canFinish, setCanFinish] = useState(false);
+  const [handScore, setHandScore] = useState(0);
+  const [finishScore, setFinishScore] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const tableRef = useRef(null);
@@ -35,6 +37,8 @@ export default function useOkeyGame() {
     if (Array.isArray(data.hand)) setHand(data.hand);
     if (typeof data.seat === 'number') setSeat(data.seat);
     setCanFinish(!!data.can_finish);
+    setHandScore(Number(data.hand_score) || 0);
+    setFinishScore(Number(data.finish_score) || 0);
   }, []);
 
   const request = useCallback(
@@ -111,6 +115,8 @@ export default function useOkeyGame() {
     draw: () => request({ action: 'draw', table_id: tableId }),
     discard: (tile) => request({ action: 'discard', table_id: tableId, tile }),
     finish: () => request({ action: 'finish', table_id: tableId }),
+    // Sistem eli yeniden hesaplar: 101 puanı bulan el bitirebilir.
+    calculate: () => request({ action: 'state', table_id: tableId }),
     leave: async () => {
       if (tableId) await request({ action: 'leave', table_id: tableId });
       setTable(null);
@@ -118,9 +124,11 @@ export default function useOkeyGame() {
       setHand([]);
       setSeat(-1);
       setCanFinish(false);
+      setHandScore(0);
+      setFinishScore(0);
       await openLobby();
     },
   };
 
-  return { user, coins, lobby, lobbyLoading, table, hand, seat, canFinish, busy, error, setError, refresh, openLobby, actions };
+  return { user, coins, lobby, lobbyLoading, table, hand, seat, canFinish, handScore, finishScore, busy, error, setError, refresh, openLobby, actions };
 }
