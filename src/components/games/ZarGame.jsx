@@ -33,8 +33,10 @@ export default function ZarGame({ onExit, onBack }) {
   const dice = shaking ? game.round?.dice ?? null : null;
   const sum = shaking ? game.round?.sum ?? null : null;
   const outcome = shaking ? game.round?.outcome ?? null : null;
-  // Tur sıralaması ve alan toplamları her turda yenilenir.
-  const board = useZarBoard(game.round?.round_no ?? 0);
+  // Sıralama son sonuçlanan turdan okunur: yeni bahis turu açıldığında da
+  // kazananlar ekranda kalır ve her turda tazelenir.
+  const settledRound = game.history?.[0]?.round_no ?? game.round?.round_no ?? 0;
+  const board = useZarBoard(settledRound);
 
   const stats = [
     { key: 'coins', label: 'COIN BAKİYEM', value: formatCoins(game.available), icon: Star },

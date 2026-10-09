@@ -221,8 +221,8 @@
 
 /* YENİ panelindeki küçük zarlar. */
 .zar-die-mini {
-  height: 1.05rem;
-  width: 1.05rem;
+  height: 0.95rem;
+  width: 0.95rem;
   border-radius: 26%;
   padding: 8%;
 }
@@ -256,9 +256,9 @@
 .zar-felt-body {
   display: flex;
   width: 100%;
-  max-width: 30rem;
+  max-width: 26rem;
   align-items: stretch;
-  gap: 0.45rem;
+  gap: 0.4rem;
 }
 
 .zar-felt {
@@ -267,10 +267,10 @@
   min-width: 0;
   flex: 1;
   flex-direction: column;
-  gap: 0.5rem;
-  border-radius: 26px;
-  border: 7px solid #b98a5e;
-  padding: 0.6rem;
+  gap: 0.4rem;
+  border-radius: 22px;
+  border: 5px solid #b98a5e;
+  padding: 0.5rem;
   background:
     radial-gradient(90% 70% at 50% 36%, #2fae78 0%, #1f8b5c 52%, #146344 100%);
   box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.45), inset 0 0 0 2px rgba(244, 214, 124, 0.35), 0 16px 34px -22px #000;
@@ -297,7 +297,7 @@
   border-radius: 15px;
   border: 1px solid rgba(244, 214, 124, 0.45);
   background: linear-gradient(180deg, rgba(58, 28, 30, 0.94), rgba(28, 13, 15, 0.97));
-  padding: 0.45rem 0.6rem;
+  padding: 0.38rem 0.5rem;
   color: #fff;
   box-shadow: 0 8px 18px -14px #000;
   transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
@@ -326,7 +326,7 @@
 }
 
 .zar-zone-label {
-  font-size: 1.02rem;
+  font-size: 0.92rem;
   font-weight: 900;
   letter-spacing: 0.06em;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
@@ -365,8 +365,8 @@
 }
 
 .zar-zone-kaplan {
-  padding-top: 0.55rem;
-  padding-bottom: 0.55rem;
+  padding-top: 0.45rem;
+  padding-bottom: 0.45rem;
 }
 
 .zar-zone-row {
@@ -378,7 +378,7 @@
 /* === YENİ PANELİ === */
 .zar-history {
   display: flex;
-  width: clamp(3.2rem, 19vw, 4.4rem);
+  width: clamp(2.7rem, 15vw, 3.6rem);
   flex-shrink: 0;
   flex-direction: column;
   align-items: center;
@@ -386,7 +386,7 @@
   border-radius: 9999px;
   border: 1px solid rgba(244, 214, 124, 0.45);
   background: linear-gradient(180deg, rgba(30, 15, 17, 0.96), rgba(12, 7, 8, 0.98));
-  padding: 0.4rem 0.2rem;
+  padding: 0.32rem 0.15rem;
   box-shadow: 0 10px 22px -16px #000;
 }
 
@@ -417,7 +417,7 @@
   flex: 1;
   flex-direction: column;
   align-items: center;
-  gap: 0.3rem;
+  gap: 0.24rem;
   overflow-y: auto;
   overscroll-behavior: contain;
 }
@@ -428,9 +428,9 @@
   flex-direction: column;
   align-items: center;
   gap: 0.1rem;
-  border-radius: 12px;
+  border-radius: 10px;
   background: rgba(255, 255, 255, 0.06);
-  padding: 0.2rem 0.22rem;
+  padding: 0.16rem 0.18rem;
 }
 
 .zar-history-pair {
@@ -440,7 +440,7 @@
 }
 
 .zar-history-sum {
-  font-size: 0.52rem;
+  font-size: 0.48rem;
   font-weight: 900;
   font-variant-numeric: tabular-nums;
   color: rgba(255, 255, 255, 0.86);
@@ -463,7 +463,7 @@
 .zar-podium {
   display: grid;
   width: 100%;
-  max-width: 30rem;
+  max-width: 26rem;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.35rem;
 }
@@ -798,7 +798,10 @@
 /* === GENİŞ EKRAN VE YATAY === */
 @media (min-width: 768px) {
   .zar-felt-body,
-  .zar-podium,
+  .zar-podium {
+    max-width: 29rem;
+  }
+
   .zar-deck {
     max-width: 34rem;
   }
