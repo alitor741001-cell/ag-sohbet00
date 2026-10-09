@@ -1,0 +1,7 @@
+# Gizli değerler asla depoya girmez: .env yalnızca yerel geliştirme içindir.
+.env
+.env.*
+!.env.example
+node_modules
+npm-debug.log*
+*.log
