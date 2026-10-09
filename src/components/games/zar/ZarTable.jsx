@@ -3,8 +3,8 @@ import { formatCoins, ZONES } from './zarConfig';
 import ZarZoneChips from './ZarZoneChips';
 
 /** Oval çuha masa: kalın ahşap çerçeve, ince yeşil çizgilerle ayrılmış üç bahis alanı.
-    Her alanın üstünde masadaki bütün oyuncuların o alana koyduğu toplam durur;
-    altında o alana jeton yatıran oyuncuların tutarları görünür. */
+    Her alanın üstünde masadaki bütün oyuncuların o alana koyduğu canlı toplam durur;
+    altında o alana yatırılan tutarlar profilsiz olarak görünür. */
 export default function ZarTable({ bets, zoneTotals, chips, disabled, revealed, outcome, onPlace, overlay }) {
   const kaplan = ZONES[0];
   const lowers = ZONES.filter((zone) => zone.id !== 'kaplan');
