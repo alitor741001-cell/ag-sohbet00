@@ -1,0 +1,11 @@
+{
+  "name": "ag-backend-asama1",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Bonto sunucusu için Aşama 1 API: /health ve salt okunur /v1 test uçları. Canlı veriye bağlanmaz.",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  }
+}

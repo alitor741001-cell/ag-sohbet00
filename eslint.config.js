@@ -5,6 +5,21 @@ import pluginReactHooks from "eslint-plugin-react-hooks";
 import pluginUnusedImports from "eslint-plugin-unused-imports";
 
 export default [
+  // Bağımsız sunucu paketleri: Base44 uygulamasına dâhil değildir, Node ortamında çalışır.
+  {
+    files: ["src/bonto-api/**/*.{js,cjs}"],
+    ...pluginJs.configs.recommended,
+    languageOptions: {
+      globals: globals.node,
+      parserOptions: {
+        ecmaVersion: 2022,
+        sourceType: "commonjs",
+      },
+    },
+    rules: {
+      "no-unused-vars": "off",
+    },
+  },
   {
     files: [
       "src/components/**/*.{js,mjs,cjs,jsx}",
