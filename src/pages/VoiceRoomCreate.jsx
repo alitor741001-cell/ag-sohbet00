@@ -66,7 +66,7 @@ export default function VoiceRoomCreate() {
   }
 
   return (
-    <div className="dark mx-auto min-h-screen w-full max-w-2xl px-3 py-5 text-white sm:px-6 sm:py-7">
+    <div className="dark mx-auto min-h-screen w-full max-w-2xl md:max-w-3xl px-3 py-5 text-white sm:px-6 sm:py-7">
       <button
         type="button"
         onClick={() => navigate('/oda-kur')}

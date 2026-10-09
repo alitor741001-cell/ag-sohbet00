@@ -64,7 +64,9 @@ export default function BottomNav() {
         <div className="absolute -bottom-4 right-1/4 w-24 h-24 rounded-full blur-3xl opacity-25 animate-pulse" style={{ background: 'radial-gradient(circle, #f2ce6b, transparent 70%)', animationDelay: '1.5s' }} />
       </div>
 
-      <div className="relative flex h-16 items-center">
+      {/* Sekmeler tablet ve geniş ekranlarda ortada toplanır: menü ekrana yayılmaz,
+          telefonda ise tam genişlik korunur. */}
+      <div className="relative mx-auto flex h-16 w-full max-w-[36rem] items-center">
         {items.map((item, index) => {
           if (item.dock === 'support') {
             return (

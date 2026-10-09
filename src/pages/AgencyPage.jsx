@@ -12,7 +12,7 @@ export default function AgencyPage() {
   if (!user) return <div className="dark min-h-screen bg-black p-6 text-white">Yükleniyor...</div>;
 
   return (
-    <div className="dark mx-auto min-h-screen max-w-3xl bg-black px-4 py-5 text-white sm:px-6">
+    <div className="dark mx-auto min-h-screen max-w-3xl xl:max-w-4xl bg-black px-4 py-5 text-white sm:px-6">
       <header className="mb-5 flex items-center gap-3">
         <button
           type="button"

@@ -85,7 +85,7 @@ export default function CreateRoom() {
         <div className="absolute bottom-10 left-1/4 h-64 w-64 rounded-full bg-premium-gold-deep/10 blur-3xl" />
       </div>
 
-      <div className="relative mx-auto w-full max-w-md px-3 py-6 text-white sm:px-5">
+      <div className="relative mx-auto w-full max-w-md md:max-w-lg px-3 py-6 text-white sm:px-5">
       {/* Tek düğme: ev işareti. Bilgiler kayıtlıysa basıldığı anda oda açılır. */}
       <div className="relative overflow-hidden rounded-2xl p-5 text-center" style={{ background: 'linear-gradient(135deg, rgba(220,38,38,0.16), rgba(242,206,107,0.08))', border: '1px solid rgba(242,206,107,0.28)' }}>
         <div className="absolute -right-6 -bottom-6 w-28 h-28 rounded-full blur-2xl opacity-30" style={{ background: 'radial-gradient(circle, #dc2626, transparent 70%)' }} />

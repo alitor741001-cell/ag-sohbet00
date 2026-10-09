@@ -95,7 +95,7 @@ export default function UserProfile({ userId, roomIdOverride, onBack, onMessage,
 
   return (
     <div className={`dark bg-black text-white ${embedded ? 'fixed inset-0 z-[100] overflow-y-auto overscroll-contain pt-[env(safe-area-inset-top)]' : ''}`}>
-    <div className="w-full min-w-0 px-4 sm:px-6 py-6 pb-[calc(2rem+env(safe-area-inset-bottom))] max-w-2xl mx-auto">
+    <div className="w-full min-w-0 px-4 sm:px-6 py-6 pb-[calc(2rem+env(safe-area-inset-bottom))] max-w-2xl md:max-w-3xl xl:max-w-4xl mx-auto">
       <button onClick={() => onBack ? onBack() : navigate(-1)} className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground mb-4"><ArrowLeft className="w-4 h-4" /> Geri</button>
       {err ? <p className="text-center text-destructive py-10">{err}</p> : profile && (
         <div className="bg-card border border-border rounded-2xl p-6 flex flex-col items-center text-center">

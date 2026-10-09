@@ -152,7 +152,7 @@ export default function Profile() {
   return (
     <div className="dark min-h-screen pb-6 text-white">
       <ProfileTopBar />
-      <div className="mx-auto w-full max-w-2xl">
+      <div className="mx-auto w-full max-w-2xl md:max-w-3xl xl:max-w-4xl">
         <ProfileHeader user={user} avatar={form.avatar} onAvatar={onAvatar} onUpdated={reload} uploading={uploading} />
 
         <div className="space-y-2 px-4 pt-3">
