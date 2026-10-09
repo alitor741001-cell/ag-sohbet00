@@ -33,6 +33,8 @@ export function useMafyaCountdown(endsAt) {
     Roller ve gece notları yalnızca oyuncunun kendisine gelir. */
 export default function useMafyaGame() {
   const [state, setState] = useState(EMPTY);
+  // İstek sürerken düğmeler kilitli kalır.
+  const [pending, setPending] = useState(false);
   const roomIdRef = useRef('');
 
   const applyState = useCallback((data) => {
@@ -59,6 +61,7 @@ export default function useMafyaGame() {
 
   const act = useCallback(async (payload) => {
     setState((prev) => ({ ...prev, error: '' }));
+    setPending(true);
     try {
       const data = await mafyaRequests(payload);
       if (data?.left) {
@@ -72,6 +75,8 @@ export default function useMafyaGame() {
     } catch (error) {
       setState((prev) => ({ ...prev, error: error?.response?.data?.error || 'İşlem tamamlanamadı.' }));
       return null;
+    } finally {
+      setPending(false);
     }
   }, [applyState, syncRoom]);
 
@@ -106,5 +111,5 @@ export default function useMafyaGame() {
 
   const clearError = useCallback(() => setState((prev) => ({ ...prev, error: '' })), []);
 
-  return { ...state, act, syncRoom, clearError };
+  return { ...state, busy: pending, act, syncRoom, clearError };
 }
