@@ -20,6 +20,8 @@ export default function OkeyGame({ onExit, onBack }) {
   const [mode, setMode] = useState('seri');
   // Son seçilen dizilim: elle dizilişte de puan bu dizilime göre hesaplanır.
   const [arrange, setArrange] = useState('seri');
+  // Dizilim tuşuna her basışta artar: tahta yeniden dizilir, taşların elle sırası bırakılır.
+  const [sortKey, setSortKey] = useState(0);
   // Taş çuhaya sürüklenirken masada "ortaya at" uyarısı görünür.
   const [dropActive, setDropActive] = useState(false);
   // Masadaki bir oyuncuya dokununca açılan kart: özel sohbetteki profil kartının aynısı.
@@ -46,12 +48,14 @@ export default function OkeyGame({ onExit, onBack }) {
   useEffect(() => {
     setMode('seri');
     setArrange('seri');
+    setSortKey((value) => value + 1);
   }, [roundNo]);
 
-  // Dizilim düğmeleri: SERİ/ÇİFT'e basıldığı an puan o dizilime göre yeniden hesaplanır.
+  // Dizilim düğmeleri: SERİ/ÇİFT'e basıldığı an tahta yeniden dizilir ve puan o dizilime göre hesaplanır.
   const changeMode = (next) => {
     setMode(next);
-    if (next !== 'manual') setArrange(next);
+    setArrange(next);
+    setSortKey((value) => value + 1);
   };
 
   const statusText = waiting
@@ -132,7 +136,7 @@ export default function OkeyGame({ onExit, onBack }) {
             drawnTile={canDiscard ? game.drawnTile : ''}
             okey={table.okey}
             mode={mode}
-            onMode={changeMode}
+            sortKey={sortKey}
             canDiscard={canDiscard}
             onDiscard={game.actions.discard}
             busy={busy}

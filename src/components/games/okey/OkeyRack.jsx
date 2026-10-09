@@ -9,11 +9,18 @@ import { planHand } from './okeyGroups';
 const DRAG_THRESHOLD = 6;
 
 /** Alt tahta: taşlar parmakla sürüklenip dizilir, çuha üzerine bırakılırsa ortaya atılır. */
-export default function OkeyRack({ hand, drawnTile, okey, mode, onMode, canDiscard, onDiscard, busy, onDropTarget }) {
+export default function OkeyRack({ hand, drawnTile, okey, mode, sortKey, canDiscard, onDiscard, busy, onDropTarget }) {
   // Elle dizilim: sürüklendikçe bu sıra kullanılır, elden çıkan taş sıradan düşer.
   const [order, setOrder] = useState([]);
+  // Taş elle taşınsa bile seçili dizilim (SERİ/ÇİFT) korunur: sıra, düğmeye basılana dek bozulmaz.
+  const [manualOrder, setManualOrder] = useState(false);
   const [ghost, setGhost] = useState(null);
   const drag = useRef(null);
+
+  // Dizilim düğmesine basılınca ya da yeni el başlayınca tahta yeniden dizilir.
+  useEffect(() => {
+    setManualOrder(false);
+  }, [sortKey]);
 
   useEffect(() => {
     setOrder((prev) => {
@@ -29,8 +36,9 @@ export default function OkeyRack({ hand, drawnTile, okey, mode, onMode, canDisca
   }, [hand]);
 
   // Gruplar hâlinde dizilim: geçerli gruplar bitişik durur, kullanılamayan taşlar sona ayrılır.
+  const manual = manualOrder && order.length === hand.length;
   const layout = useMemo(() => {
-    if (mode === 'manual' && order.length === hand.length) return { tiles: order, breaks: [] };
+    if (manual) return { tiles: order, breaks: [] };
     const remaining = [...hand];
     const drawnIndex = drawnTile ? remaining.indexOf(drawnTile) : -1;
     if (drawnIndex >= 0) remaining.splice(drawnIndex, 1);
@@ -38,7 +46,7 @@ export default function OkeyRack({ hand, drawnTile, okey, mode, onMode, canDisca
     return drawnIndex < 0 ? plan : {
       ...plan, tiles: [...plan.tiles, drawnTile], breaks: [...plan.breaks, plan.tiles.length],
     };
-  }, [mode, order, hand, okey, drawnTile]);
+  }, [manual, order, hand, okey, mode, drawnTile]);
   const breaks = useMemo(() => new Set(layout.breaks), [layout]);
   const rows = rowSplit(layout.tiles);
   // Satırların tahtadaki başlangıç sırası: sürükleme hedefi bu sırayla eşleşir.
@@ -55,7 +63,7 @@ export default function OkeyRack({ hand, drawnTile, okey, mode, onMode, canDisca
     info.active = true;
     info.from = info.index;
     info.list = [...layout.tiles];
-    if (mode !== 'manual') onMode('manual');
+    setManualOrder(true);
     setOrder([...info.list]);
   };
 
@@ -131,7 +139,7 @@ export default function OkeyRack({ hand, drawnTile, okey, mode, onMode, canDisca
                 <button
                   key={`${rowIndex}-${tileIndex}`}
                   type="button"
-                  className={`okey-tile-btn${breaks.has(flat) && tileIndex > 0 ? ' okey-tile-break' : ''}${drawnTile && tile === drawnTile && flat === layout.tiles.lastIndexOf(drawnTile) ? ' okey-tile-drawn' : ''}${activeFrom === flat ? ' okey-tile-dragging' : ''}`}
+                  className={`okey-tile-btn${breaks.has(flat) && tileIndex > 0 ? ' okey-tile-break' : ''}${drawnTile && tile === drawnTile && flat === layout.tiles.lastIndexOf(drawnTile) ? ' okey-tile-drawn' : ''}${drawnTile && tile === drawnTile && !manual ? ' okey-tile-drawn-end' : ''}${activeFrom === flat ? ' okey-tile-dragging' : ''}`}
                   data-okey-slot={flat}
                   onPointerDown={(event) => onPointerDown(event, tile, flat)}
                   onPointerMove={onPointerMove}

@@ -471,7 +471,7 @@
 }
 .okey-row + .okey-row { border-top: 2px solid #ffe4a1; }
 .okey-rack .okey-tile-break { margin-left: auto; }
-.okey-rack .okey-tile-drawn { margin-left: auto; }
+.okey-rack .okey-tile-drawn-end { margin-left: auto; }
 .okey-tile-drawn .okey-tile { outline: 2px solid #ffd76a; outline-offset: 1px; box-shadow: 0 0 10px #ffd76a; }
 .okey-row .okey-tile { border-radius: 3px; }
 .okey-row .okey-tile-btn { position: relative; z-index: 3; }
