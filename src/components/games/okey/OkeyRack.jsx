@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import OkeyBoardBrand from './OkeyBoardBrand';
 import OkeyTile from './OkeyTile';
 import { isWild, rowSplit } from './okeyConfig';
 import { planHand } from './okeyGroups';
@@ -117,6 +118,7 @@ export default function OkeyRack({ hand, okey, mode, onMode, canDiscard, onDisca
   return (
     <div className="okey-rack-wrap">
       <div className={`okey-rack${canDiscard ? ' okey-rack-ready' : ''}`}>
+        <OkeyBoardBrand />
         {rows.map((row, rowIndex) => (
           <div className="okey-row" key={rowIndex}>
             {row.map((tile, tileIndex) => {

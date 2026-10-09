@@ -23,11 +23,13 @@ export const tilePoint = (tile) => {
 /** Oturduğum yere göre koltuğun masa kenarı. */
 export const slotOf = (seatIndex, mySeat) => SLOT_BY_OFFSET[(((seatIndex - mySeat) % 4) + 4) % 4];
 
-/** Tahta dizilimi: satır başına en fazla 7 taş — 21 taş 7+7+7, 22 taş 7+7+8. */
+/** Tahta dizilimi: ıstakoz iki katlıdır — 21 taş 11+10, 22 taş 11+11. */
 export function rowSplit(tiles) {
+  if (!tiles.length) return [[]];
+  const per = Math.ceil(tiles.length / 2);
   const rows = [];
-  for (let start = 0; start < tiles.length; start += 7) rows.push(tiles.slice(start, start + 7));
-  return rows.length ? rows : [[]];
+  for (let start = 0; start < tiles.length; start += per) rows.push(tiles.slice(start, start + per));
+  return rows;
 }
 
 export const formatBet = (value) => formatCoins(value);
