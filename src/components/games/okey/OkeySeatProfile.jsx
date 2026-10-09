@@ -1,8 +1,8 @@
 import XpAvatar from '@/components/xp/XpAvatar';
 import { formatBet } from './okeyConfig';
 
-/** Masa kenarındaki oyuncu kartı: avatar, seviye, isim ve bahsi. */
-export default function OkeySeatProfile({ seat, slot, active }) {
+/** Masa kenarındaki oyuncu kartı: avatar, seviye, isim ve bahsi. Dokununca profil kartı açılır. */
+export default function OkeySeatProfile({ seat, slot, active, onOpen }) {
   if (!seat?.user_id) {
     return (
       <div className={`okey-seat okey-seat-${slot} okey-seat-empty`}>
@@ -16,7 +16,12 @@ export default function OkeySeatProfile({ seat, slot, active }) {
   }
   const tone = slot === 'left' ? 'magenta' : slot === 'right' ? 'blue' : 'dark';
   return (
-    <div className={`okey-seat okey-seat-${slot}`}>
+    <button
+      type="button"
+      className={`okey-seat okey-seat-${slot}`}
+      onClick={() => onOpen?.(seat)}
+      aria-label={`${seat.name || 'Oyuncu'} profilini aç`}
+    >
       <span className="okey-avatar">
         <XpAvatar avatar={seat.avatar} name={seat.name} className="h-full w-full" />
         {Number(seat.level) > 0 && <span className="okey-level">{seat.level}</span>}
@@ -26,6 +31,6 @@ export default function OkeySeatProfile({ seat, slot, active }) {
         <span className="okey-seat-coins">{formatBet(seat.stake)} coin</span>
         <span className="okey-seat-tiles">{seat.left ? 'ayrıldı' : `${seat.tiles || 0} taş`}</span>
       </span>
-    </div>
+    </button>
   );
 }

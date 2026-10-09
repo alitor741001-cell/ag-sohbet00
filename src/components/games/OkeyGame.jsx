@@ -3,6 +3,7 @@ import '@/styles/okey.css';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
 import OkeyFelt from './okey/OkeyFelt';
 import OkeyLobby from './okey/OkeyLobby';
+import OkeyPlayerProfile from './okey/OkeyPlayerProfile';
 import OkeyRack from './okey/OkeyRack';
 import OkeyResultOverlay from './okey/OkeyResultOverlay';
 import OkeyTopBar from './okey/OkeyTopBar';
@@ -17,6 +18,8 @@ export default function OkeyGame({ onExit, onBack }) {
   const [mode, setMode] = useState('seri');
   // Taş çuhaya sürüklenirken masada "ortaya at" uyarısı görünür.
   const [dropActive, setDropActive] = useState(false);
+  // Masadaki bir oyuncuya dokununca açılan kart: özel sohbetteki profil kartının aynısı.
+  const [profileSeat, setProfileSeat] = useState(null);
 
   const { table, seat, coins, busy } = game;
   const playing = table?.status === 'playing';
@@ -57,6 +60,7 @@ export default function OkeyGame({ onExit, onBack }) {
           canDraw={canDraw}
           onDraw={game.actions.draw}
           dropActive={dropActive}
+          onOpenProfile={setProfileSeat}
         />
       ) : (
         <div className="okey-felt" />
@@ -91,6 +95,7 @@ export default function OkeyGame({ onExit, onBack }) {
             onStake={game.actions.setStake}
             onStart={game.actions.start}
             onLeave={game.actions.leave}
+            onOpenProfile={setProfileSeat}
           />
         ) : (
           <OkeyRack
@@ -120,6 +125,8 @@ export default function OkeyGame({ onExit, onBack }) {
       {game.error && table ? <p className="okey-toast">{game.error}</p> : null}
 
       {table ? <OkeyResultOverlay table={table} mySeat={seat} onLeave={game.actions.leave} /> : null}
+
+      {profileSeat ? <OkeyPlayerProfile player={profileSeat} onClose={() => setProfileSeat(null)} /> : null}
 
       <CoinPurchasePanel open={coinOpen} coins={coins} onBack={() => setCoinOpen(false)} />
     </div>

@@ -5,7 +5,7 @@ import { OKEY_LOGO } from './okeyAssets';
 import { discardSpot, isWild, slotOf } from './okeyConfig';
 
 /** Yeşil çuha masa: dört oyuncu, ortada deste (dokununca çekilir) ve atılan taşlar. */
-export default function OkeyFelt({ table, mySeat, canDraw, onDraw, dropActive }) {
+export default function OkeyFelt({ table, mySeat, canDraw, onDraw, dropActive, onOpenProfile }) {
   const seats = table?.seats || [];
   const discards = (table?.discards || []).slice(-9);
   const turn = Number(table?.turn) || 0;
@@ -33,6 +33,7 @@ export default function OkeyFelt({ table, mySeat, canDraw, onDraw, dropActive })
           seat={entry}
           slot={slotOf(index, seat)}
           active={playing && turn === index && !!entry.user_id}
+          onOpen={onOpenProfile}
         />
       ))}
 

@@ -2,7 +2,7 @@ import { Play } from 'lucide-react';
 import { OKEY_MIN_PLAYERS, formatBet } from './okeyConfig';
 
 /** Bekleme odası: bahsi artır, 2-3 oyuncuyla başlat ya da ayrıl. */
-export default function OkeyWaitRoom({ table, mySeat, coins, busy, onStake, onStart, onLeave }) {
+export default function OkeyWaitRoom({ table, mySeat, coins, busy, onStake, onStart, onLeave, onOpenProfile }) {
   const base = Number(table?.base_bet) || 0;
   const seats = table?.seats || [];
   const mine = seats[mySeat] || null;
@@ -38,14 +38,26 @@ export default function OkeyWaitRoom({ table, mySeat, coins, busy, onStake, onSt
           <p className="okey-section-title">
             MASA {table?.code} · {filled}/4 OYUNCU
           </p>
-          {seats.map((seat, index) => (
-            <p key={index} className="okey-seat-line">
+          {/* Oturan oyuncuya dokununca profil kartı açılır; boş yer dokunulamaz. */}
+          {seats.map((seat, index) => (seat.user_id ? (
+            <button
+              key={index}
+              type="button"
+              className="okey-seat-line w-full"
+              onClick={() => onOpenProfile?.(seat)}
+              aria-label={`${seat.name} profilini aç`}
+            >
               <span className="okey-seat-line-name">
-                {index + 1}. {seat.user_id ? seat.name : 'boş yer'}
+                {index + 1}. {seat.name}
               </span>
-              <span className="okey-chip-value">{seat.user_id ? `${formatBet(seat.stake)} coin` : '—'}</span>
+              <span className="okey-chip-value">{formatBet(seat.stake)} coin</span>
+            </button>
+          ) : (
+            <p key={index} className="okey-seat-line">
+              <span className="okey-seat-line-name">{index + 1}. boş yer</span>
+              <span className="okey-chip-value">—</span>
             </p>
-          ))}
+          )))}
 
           <button
             type="button"
