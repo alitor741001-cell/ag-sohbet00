@@ -8,7 +8,6 @@ import {
   DRAW_MS,
   OKEY_BETS,
   TARGET_SCORE,
-  TILES_PER_PLAYER,
   autoDiscard,
   bestPlanScore,
   canFinish,
