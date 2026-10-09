@@ -417,15 +417,15 @@
   min-width: 0;
   flex: 1;
   flex-direction: column;
-  gap: 2.1rem;
-  border-radius: 12px;
+  gap: 0;
+  border-radius: 3px;
   border: 2px solid #7c4d13;
   background:
     linear-gradient(180deg, rgba(255, 246, 222, 0.4), rgba(255, 246, 222, 0) 26%),
     repeating-linear-gradient(91deg, rgba(255, 232, 184, 0.24) 0 2px, rgba(146, 94, 34, 0.14) 2px 5px, rgba(255, 232, 184, 0) 5px 12px),
     linear-gradient(180deg, #d9a862 0%, #cd9450 42%, #c58c4a 78%, #b88647 100%);
   box-shadow: inset 0 2px 0 rgba(255, 240, 205, 0.8), inset 0 -6px 14px rgba(96, 56, 12, 0.42), 0 10px 20px -14px #000;
-  padding: 0.5rem 0.6rem;
+  padding: 0 0.3rem;
 }
 /* Marka yazısı tahtaya işlenmiş gibi: ahşabın içine gömülü koyu harfler. */
 .okey-brand {
@@ -457,7 +457,26 @@
 /* Sıra bendeyken tahta hafifçe parlar: taş sürüklenip ortaya atılabilir. */
 .okey-rack-ready { box-shadow: inset 0 2px 0 rgba(255, 228, 172, 0.55), 0 0 20px -4px rgba(255, 212, 100, 0.65), 0 10px 20px -14px #000; }
 /* Taşlar tahtanın iki ucuna kadar yayılır: sağda ve solda boşluk kalmaz. */
-.okey-row { display: flex; min-height: calc(var(--okey-tile) * 1.39); align-items: center; justify-content: space-between; gap: 0.15rem; }
+.okey-rack-wrap { container-type: inline-size; }
+.okey-rack { --okey-tile: min(40px, 7.5cqw); }
+.okey-row {
+  position: relative;
+  display: flex;
+  min-height: calc(var(--okey-tile) * 1.48);
+  align-items: flex-end;
+  gap: 1px;
+  padding: 0.12rem 0 0.18rem;
+  background: linear-gradient(180deg, #e8af2b, #c68a13 38%, #9b5e0e 92%, #f6df9a 94%, #8f570c);
+  box-shadow: inset 0 1px 0 #ffe9a9, inset 0 -2px 0 #653c0b;
+}
+.okey-row + .okey-row { border-top: 2px solid #ffe4a1; }
+.okey-rack .okey-tile-break { margin-left: auto; }
+.okey-rack .okey-tile-drawn { margin-left: auto; }
+.okey-tile-drawn .okey-tile { outline: 2px solid #ffd76a; outline-offset: 1px; box-shadow: 0 0 10px #ffd76a; }
+.okey-row .okey-tile { border-radius: 3px; }
+.okey-row .okey-tile-btn { position: relative; z-index: 3; }
+.okey-brand { z-index: 2; inset: 0; transform: none; justify-content: space-around; }
+.okey-brand-main, .okey-brand-sub { font-size: 0.85rem; opacity: 0.55; }
 /* Dizilim tuşları: SERİ DİZ / ÇİFT DİZ — kart ikonlu, işlem şeridinde yan yana. */
 .okey-modes { display: flex; flex-shrink: 0; gap: 0.3rem; }
 .okey-mode-btn[data-on="1"] {

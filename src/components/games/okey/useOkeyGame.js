@@ -16,6 +16,7 @@ export default function useOkeyGame() {
   const [tableId, setTableId] = useState('');
   const [table, setTable] = useState(null);
   const [hand, setHand] = useState([]);
+  const [drawnTile, setDrawnTile] = useState('');
   const [seat, setSeat] = useState(-1);
   const [canFinish, setCanFinish] = useState(false);
   const [handScore, setHandScore] = useState(0);
@@ -112,14 +113,31 @@ export default function useOkeyGame() {
     joinTable: (id) => request({ action: 'join', table_id: id }),
     setStake: (stake) => request({ action: 'stake', table_id: tableId, stake }),
     start: () => request({ action: 'start', table_id: tableId }),
-    draw: () => request({ action: 'draw', table_id: tableId }),
-    discard: (tile) => request({ action: 'discard', table_id: tableId, tile }),
+    draw: async () => {
+      const before = [...hand];
+      const data = await request({ action: 'draw', table_id: tableId });
+      if (!data?.error && Array.isArray(data?.hand)) {
+        const added = data.hand.filter((tile) => {
+          const index = before.indexOf(tile);
+          if (index < 0) return true;
+          before.splice(index, 1);
+          return false;
+        });
+        setDrawnTile(added[0] || '');
+      }
+    },
+    discard: async (tile) => {
+      const data = await request({ action: 'discard', table_id: tableId, tile });
+      if (data && !data.error) setDrawnTile('');
+      return data;
+    },
     finish: () => request({ action: 'finish', table_id: tableId }),
     leave: async () => {
       if (tableId) await request({ action: 'leave', table_id: tableId });
       setTable(null);
       tableRef.current = null;
       setHand([]);
+      setDrawnTile('');
       setSeat(-1);
       setCanFinish(false);
       setHandScore(0);
@@ -128,5 +146,5 @@ export default function useOkeyGame() {
     },
   };
 
-  return { user, coins, lobby, lobbyLoading, table, hand, seat, canFinish, handScore, finishScore, busy, error, setError, refresh, openLobby, actions };
+  return { user, coins, lobby, lobbyLoading, table, hand, drawnTile, seat, canFinish, handScore, finishScore, busy, error, setError, refresh, openLobby, actions };
 }

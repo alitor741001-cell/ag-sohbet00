@@ -129,6 +129,7 @@ export default function OkeyGame({ onExit, onBack }) {
         ) : (
           <OkeyRack
             hand={game.hand}
+            drawnTile={canDiscard ? game.drawnTile : ''}
             okey={table.okey}
             mode={mode}
             onMode={changeMode}

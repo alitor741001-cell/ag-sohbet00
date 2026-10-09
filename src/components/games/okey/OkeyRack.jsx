@@ -9,7 +9,7 @@ import { planHand } from './okeyGroups';
 const DRAG_THRESHOLD = 6;
 
 /** Alt tahta: taşlar parmakla sürüklenip dizilir, çuha üzerine bırakılırsa ortaya atılır. */
-export default function OkeyRack({ hand, okey, mode, onMode, canDiscard, onDiscard, busy, onDropTarget }) {
+export default function OkeyRack({ hand, drawnTile, okey, mode, onMode, canDiscard, onDiscard, busy, onDropTarget }) {
   // Elle dizilim: sürüklendikçe bu sıra kullanılır, elden çıkan taş sıradan düşer.
   const [order, setOrder] = useState([]);
   const [ghost, setGhost] = useState(null);
@@ -29,12 +29,16 @@ export default function OkeyRack({ hand, okey, mode, onMode, canDiscard, onDisca
   }, [hand]);
 
   // Gruplar hâlinde dizilim: geçerli gruplar bitişik durur, kullanılamayan taşlar sona ayrılır.
-  const layout = useMemo(
-    () => (mode === 'manual' && order.length === hand.length
-      ? { tiles: order, breaks: [] }
-      : planHand(hand, mode, okey)),
-    [mode, order, hand, okey],
-  );
+  const layout = useMemo(() => {
+    if (mode === 'manual' && order.length === hand.length) return { tiles: order, breaks: [] };
+    const remaining = [...hand];
+    const drawnIndex = drawnTile ? remaining.indexOf(drawnTile) : -1;
+    if (drawnIndex >= 0) remaining.splice(drawnIndex, 1);
+    const plan = planHand(remaining, mode, okey);
+    return drawnIndex < 0 ? plan : {
+      ...plan, tiles: [...plan.tiles, drawnTile], breaks: [...plan.breaks, plan.tiles.length],
+    };
+  }, [mode, order, hand, okey, drawnTile]);
   const breaks = useMemo(() => new Set(layout.breaks), [layout]);
   const rows = rowSplit(layout.tiles);
   // Satırların tahtadaki başlangıç sırası: sürükleme hedefi bu sırayla eşleşir.
@@ -127,7 +131,7 @@ export default function OkeyRack({ hand, okey, mode, onMode, canDiscard, onDisca
                 <button
                   key={`${rowIndex}-${tileIndex}`}
                   type="button"
-                  className={`okey-tile-btn${breaks.has(flat) && flat > 0 ? ' okey-tile-break' : ''}${activeFrom === flat ? ' okey-tile-dragging' : ''}`}
+                  className={`okey-tile-btn${breaks.has(flat) && tileIndex > 0 ? ' okey-tile-break' : ''}${drawnTile && tile === drawnTile && flat === layout.tiles.lastIndexOf(drawnTile) ? ' okey-tile-drawn' : ''}${activeFrom === flat ? ' okey-tile-dragging' : ''}`}
                   data-okey-slot={flat}
                   onPointerDown={(event) => onPointerDown(event, tile, flat)}
                   onPointerMove={onPointerMove}
