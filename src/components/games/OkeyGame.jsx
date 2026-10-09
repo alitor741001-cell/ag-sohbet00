@@ -102,7 +102,7 @@ export default function OkeyGame({ onExit, onBack }) {
             {/* Dizilim tuşları: AYRIL/BİTİR ile aynı şeritte durur. */}
             <OkeyModeButtons mode={mode} onMode={changeMode} />
             {/* El puanı: sıra kimde olursa olsun görünür kalır, her taşta yeniden hesaplanır. */}
-            <span className="okey-score-chip" data-ready={game.canFinish ? '1' : '0'}>
+            <span className="okey-score-chip" data-ready={myScore >= 101 ? '1' : '0'}>
               {arrange === 'cift' ? 'ÇİFT' : 'SERİ'} · {myScore} PUAN
             </span>
             <button

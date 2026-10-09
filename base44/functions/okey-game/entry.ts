@@ -10,9 +10,10 @@ import {
   TARGET_SCORE,
   TILES_PER_PLAYER,
   autoDiscard,
+  bestPlanScore,
   canFinish,
   dealOkey,
-  finishWith,
+  discardForFinish,
   handScore,
   isWild,
   removeOne,
@@ -135,18 +136,16 @@ async function answer(service: any, table: any, user: any, coins: number) {
   const index = seatIndex(seats, user.id);
   const secret = index >= 0 ? await secretOf(service, table.id) : null;
   const hand = handsOf(secret).find((entry: any) => entry.user_id === user.id)?.tiles || [];
-  // Sistem eli her turda hesaplar: kalan taşları 101 puanı bulan oyuncu bitirebilir.
-  const finishing = hand.length === TILES_PER_PLAYER + 1 ? finishWith(hand, table.okey) : null;
-  // Eli tümüyle gruplanmış ve 101 puanı bulan oyuncu taş atmadan da bitirebilir.
-  const ready = !finishing && hand.length === TILES_PER_PLAYER && canFinish(hand, table.okey)
-    && handScore(hand) >= TARGET_SCORE;
+  // Sistem eli her turda hesaplar: grupların puanı 101'i bulan oyuncu bitirebilir.
+  // İşe yaramayan taşlar bitirmeye engel değildir.
+  const plan = bestPlanScore(hand, table.okey);
   return Response.json({
     table: tableView(table),
     hand,
     seat: index,
-    can_finish: !!finishing || ready,
-    finish_score: finishing ? finishing.score : (ready ? handScore(hand) : 0),
-    hand_score: handScore(hand),
+    can_finish: plan.score >= TARGET_SCORE,
+    finish_score: plan.score,
+    hand_score: plan.score,
     coins,
   });
 }
@@ -638,7 +637,7 @@ export default async function (req: Request) {
       return answer(service, updated, user, coins);
     }
 
-    // Bitirme: elinde fazladan taş varken atacağın taş kalan tüm taşları geçerli kılıyorsa pot kazanılır.
+    // Bitirme: grupların puanı 101'i bulduysa el bitirilir; işe yaramayan taşlar engel değildir.
     if (action === 'finish') {
       const table = await service.OkeyTable.get(body.table_id).catch(() => null);
       if (!table) return Response.json({ error: 'Masa bulunamadı.' }, { status: 404 });
@@ -649,20 +648,22 @@ export default async function (req: Request) {
       }
       const secret = await secretOf(service, table.id);
       const hand = handsOf(secret).find((entry: any) => entry.user_id === user.id)?.tiles || [];
-      // Eli tümüyle gruplanmış ve 101 puanı bulan oyuncu taş atmadan bitirir.
-      if (hand.length === TILES_PER_PLAYER && canFinish(hand, table.okey) && handScore(hand) >= TARGET_SCORE) {
+      const plan = bestPlanScore(hand, table.okey);
+      if (plan.score < TARGET_SCORE) {
+        return Response.json(
+          { error: `El bitmiyor: grupların toplamı en az ${TARGET_SCORE} puan olmalı.` },
+          { status: 400 },
+        );
+      }
+      // Eli hazır olan oyuncu taş atmadan bitirir.
+      if (hand.length <= TILES_PER_PLAYER) {
         const finished = await payWinner(base44, service, table, seats, seats[index]);
         return answer(service, finished, user, coins);
       }
       if (table.phase !== 'discard') return Response.json({ error: 'Sıra sende değil.' }, { status: 400 });
-      const finishing = finishWith(hand, table.okey);
-      if (!finishing) {
-        return Response.json(
-          { error: 'El bitmiyor: attıktan sonra kalan taşların tümü seri/per/çift olmalı ve toplamı en az 101 puan etmeli.' },
-          { status: 400 },
-        );
-      }
-      const updated = await discardStep(base44, service, table, secret, index, finishing.tile, '');
+      // Fazladan taş varsa önce işe yaramayan taş atılır, ardından el bitirilir.
+      const tile = discardForFinish(hand, table.okey);
+      const updated = await discardStep(base44, service, table, secret, index, tile, '');
       const finished = await payWinner(base44, service, updated, seatsOf(updated), seatsOf(updated)[index]);
       return answer(service, finished, user, coins);
     }

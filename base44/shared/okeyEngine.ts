@@ -187,6 +187,130 @@ export function finishWith(tiles: string[], okey: string): { tile: string; score
   return best;
 }
 
+// === DİZİLİM PUANI ===
+// İstemcideki dizilim motoruyla aynı ölçü: yalnızca gruplara giren taşlar sayılır,
+// işe yaramayan taşlar puana katılmaz ve bitirmeye engel değildir.
+const OKEY_COLOR_ORDER: Record<string, number> = { R: 0, S: 1, M: 2, Y: 3 };
+const MIN_SERI = 3;
+const MAX_WILDS = 2;
+
+const colorOrderOf = (tile: string) => OKEY_COLOR_ORDER[colorOf(tile)] ?? 9;
+const orderKey = (tile: string) => colorOrderOf(tile) * 100 + numberOf(tile);
+
+/** SERİ: aynı renkte ardışık diziler ve aynı sayıdan farklı renk grupları. */
+function planSeri(tiles: string[], okey: string) {
+  const naturals = tiles.filter((tile) => !isWild(tile, okey));
+  const wilds = tiles.filter((tile) => isWild(tile, okey));
+  const groups: string[][] = [];
+  const take = (tile: string) => {
+    const at = naturals.indexOf(tile);
+    if (at >= 0) naturals.splice(at, 1);
+  };
+
+  // Renk içi seriler: aradaki eksik sayılar jokerle kapatılır.
+  for (const color of OKEY_COLORS) {
+    const numbers = [...new Set(naturals.filter((tile) => colorOf(tile) === color).map(numberOf))]
+      .sort((a, b) => a - b);
+    let index = 0;
+    while (index < numbers.length) {
+      const run = [numbers[index]];
+      let gaps = 0;
+      let cursor = index;
+      while (cursor + 1 < numbers.length) {
+        const gap = numbers[cursor + 1] - numbers[cursor] - 1;
+        if (gap > 1 || gaps + gap > MAX_WILDS || gaps + gap > wilds.length) break;
+        gaps += gap;
+        run.push(numbers[cursor + 1]);
+        cursor += 1;
+      }
+      const need = Math.max(0, MIN_SERI - run.length - gaps);
+      const valid = run.length >= 2 && run.length + gaps >= MIN_SERI && gaps + need <= MAX_WILDS && gaps + need <= wilds.length;
+      if (!valid) {
+        index += 1;
+        continue;
+      }
+      const group: string[] = [];
+      run.forEach((n, i) => {
+        if (i) for (let g = 0; g < n - run[i - 1] - 1 && wilds.length; g += 1) group.push(wilds.shift() as string);
+        group.push(`${color}${n}`);
+      });
+      while (group.length < MIN_SERI && wilds.length) group.push(wilds.shift() as string);
+      run.forEach((n) => take(`${color}${n}`));
+      groups.push(group);
+      index = cursor + 1;
+    }
+  }
+
+  // Sayı grupları: aynı sayıdan 3 (ya da 4) farklı renk; büyük sayılar önce değerlendirilir.
+  for (let n = 13; n >= 1; n -= 1) {
+    for (;;) {
+      const mine = naturals.filter((tile) => numberOf(tile) === n);
+      const colors = OKEY_COLORS.filter((color) => mine.some((tile) => colorOf(tile) === color));
+      if (colors.length >= MIN_SERI) {
+        const picks = colors.map((color) => mine.find((tile) => colorOf(tile) === color) as string);
+        picks.forEach(take);
+        groups.push(picks);
+      } else if (colors.length === 2 && wilds.length) {
+        const picks = colors.map((color) => mine.find((tile) => colorOf(tile) === color) as string);
+        picks.forEach(take);
+        groups.push([...picks, wilds.shift() as string]);
+      } else break;
+    }
+  }
+
+  return { groups, leftovers: [...naturals, ...wilds] };
+}
+
+/** ÇİFT: aynı renk ve aynı sayıdan iki taş; eşi olmayan tek taşı joker tamamlar. */
+function planCift(tiles: string[], okey: string) {
+  const naturals = tiles.filter((tile) => !isWild(tile, okey));
+  const wilds = tiles.filter((tile) => isWild(tile, okey));
+  const counts = new Map<string, number>();
+  naturals.forEach((tile) => counts.set(tile, (counts.get(tile) || 0) + 1));
+
+  const groups: string[][] = [];
+  const singles: string[] = [];
+  [...counts.keys()]
+    .sort((a, b) => numberOf(a) - numberOf(b) || colorOrderOf(a) - colorOrderOf(b))
+    .forEach((tile) => {
+      const count = counts.get(tile) as number;
+      for (let i = 0; i < Math.floor(count / 2); i += 1) groups.push([tile, tile]);
+      if (count % 2) singles.push(tile);
+    });
+
+  const leftovers: string[] = [];
+  singles
+    .sort((a, b) => tilePoint(b) - tilePoint(a) || orderKey(a) - orderKey(b))
+    .forEach((tile) => {
+      if (wilds.length) groups.push([tile, wilds.shift() as string]);
+      else leftovers.push(tile);
+    });
+
+  return { groups, leftovers: [...leftovers, ...wilds] };
+}
+
+/** Dizilim puanı: gruplara giren taşların toplamı ve işe yaramayan taşlar. */
+function planScore(tiles: string[], okey: string, mode: string) {
+  const plan = mode === 'cift' ? planCift(tiles, okey) : planSeri(tiles, okey);
+  const score = plan.groups.flat().reduce((sum, tile) => sum + tilePoint(tile), 0);
+  return { score, leftovers: plan.leftovers };
+}
+
+/** İki dizilimden yükseği: oyuncunun gördüğü puan bunun en iyisidir. */
+export function bestPlanScore(tiles: string[], okey: string) {
+  const seri = planScore(tiles, okey, 'seri');
+  const cift = planScore(tiles, okey, 'cift');
+  return cift.score > seri.score ? cift : seri;
+}
+
+/** Bitirirken atılacak taş: işe yaramayan taş önce gider, yoksa en düşük puanlı taş atılır. */
+export function discardForFinish(tiles: string[], okey: string): string {
+  const loose = bestPlanScore(tiles, okey).leftovers.filter((tile) => !isWild(tile, okey));
+  const pool = (loose.length ? loose : tiles.filter((tile) => !isWild(tile, okey))).slice();
+  pool.sort((a, b) => tilePoint(a) - tilePoint(b));
+  return pool[0] || tiles[0];
+}
+
 /** Süresi dolan oyuncu için otomatik atış: joker dışında bir taş seçilir. */
 export function autoDiscard(tiles: string[], okey: string): string {
   const plain = tiles.filter((tile) => !isWild(tile, okey));
