@@ -3,7 +3,7 @@ import { formatCoins, ZONES } from './zarConfig';
 
 /** Çuha masa: üstte kaplan bloğu, altta küçük ve büyük blokları.
     Her bloğun üstünde masadaki bütün oyuncuların o alana koyduğu toplam durur. */
-export default function ZarTable({ bets, zoneTotals, disabled, revealed, outcome, onPlace }) {
+export default function ZarTable({ bets, zoneTotals, disabled, revealed, outcome, onPlace, overlay }) {
   const kaplan = ZONES[0];
   const lowers = ZONES.filter((zone) => zone.id !== 'kaplan');
 
@@ -36,6 +36,9 @@ export default function ZarTable({ bets, zoneTotals, disabled, revealed, outcome
           </button>
         ))}
       </div>
+
+      {/* Masanın ortasındaki katman: zar kasesi ve sonuç şeridi. */}
+      {overlay}
     </div>
   );
 }

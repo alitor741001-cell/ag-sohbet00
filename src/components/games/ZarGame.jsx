@@ -86,16 +86,6 @@ export default function ZarGame({ onExit, onBack }) {
       </div>
 
       <main className="relative z-10 flex min-h-0 flex-1 flex-col items-center gap-2 overflow-y-auto px-2 py-2">
-        <div className="zar-shaker-row">
-          <ZarShaker dice={dice} phase={game.phase} />
-          {/* Zar sonucu: açılan zarların toplamı ve düştüğü alan. */}
-          <p className={`zar-sum${sum ? ' zar-sum-live' : ''}`}>
-            {sum
-              ? `TOPLAM ${sum} · ${outcomeName(outcome)}`
-              : 'ZARLAR KASEDE'}
-          </p>
-        </div>
-
         <div className="zar-felt-body">
           <ZarHistory entries={game.history} />
           <ZarTable
@@ -105,6 +95,18 @@ export default function ZarGame({ onExit, onBack }) {
             revealed={shaking}
             outcome={outcome}
             onPlace={game.placeBet}
+            /* Kase masanın ortasında durur; cam olduğu için zarlar içinde dönerken görünür. */
+            overlay={(
+              <div className="zar-felt-dice">
+                <ZarShaker dice={dice} phase={game.phase} />
+                {/* Zar sonucu: açılan zarların toplamı ve düştüğü alan. */}
+                <p className={`zar-sum${sum ? ' zar-sum-live' : ''}`}>
+                  {sum
+                    ? `TOPLAM ${sum} · ${outcomeName(outcome)}`
+                    : 'ZARLAR KASEDE'}
+                </p>
+              </div>
+            )}
           />
         </div>
 
