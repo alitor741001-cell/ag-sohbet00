@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import '@/styles/okey.css';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
 import OkeyFelt from './okey/OkeyFelt';
@@ -30,6 +30,12 @@ export default function OkeyGame({ onExit, onBack }) {
   const canDraw = myTurn && phase === 'draw' && !busy;
   const turnName = table?.seats?.[table?.turn]?.name || 'Oyuncu';
   const filled = (table?.seats || []).filter((entry) => entry.user_id).length;
+
+  // Her yeni elde tahta yeniden dizilir: 21 (başlayanda 22) taş "seri" düzenine göre sıralanır.
+  const roundNo = Number(table?.round_no) || 0;
+  useEffect(() => {
+    setMode('seri');
+  }, [roundNo]);
 
   const statusText = waiting
     ? `2, 3 ya da 4 oyuncuyla başlayabilirsin (${filled}/4). 4 oyuncu dolunca oyun kendiliğinden başlar.`

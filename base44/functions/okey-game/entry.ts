@@ -88,6 +88,7 @@ function tableView(table: any) {
     turn: Number(table.turn) || 0,
     phase: table.phase || '',
     deadline: table.deadline || '',
+    round_no: Number(table.round_no) || 0,
     gosterge: table.gosterge || '',
     okey: table.okey || '',
     stack_count: Number(table.stack_count) || 0,
@@ -201,32 +202,38 @@ async function startGame(base44: any, service: any, table: any, seats: any[], to
     user_id: seat.user_id,
     tiles: deal.hands[index] || [],
   }));
+  const turnPool = seats.map((seat, index) => (seat.user_id && !seat.left ? index : -1)).filter((index) => index >= 0);
+  const turn = turnPool.length ? turnPool[Math.floor(Math.random() * turnPool.length)] : 0;
+  // İlk oynayan oyuncu desteden bir taş fazla alır: eline 22 taş olur, ilk hamlesi taş atmaktır.
+  const stack = [...deal.stack];
+  if (turnPool.length && stack.length) {
+    hands[turn] = { ...hands[turn], tiles: [...hands[turn].tiles, stack.pop() as string] };
+  }
   await service.OkeySecret.create({
     table_id: table.id,
     okey: deal.okey,
-    stack: deal.stack,
+    stack,
     hands,
   });
-  const turnPool = seats.map((seat, index) => (seat.user_id && !seat.left ? index : -1)).filter((index) => index >= 0);
-  const turn = turnPool.length ? turnPool[Math.floor(Math.random() * turnPool.length)] : 0;
   const updated = await service.OkeyTable.update(table.id, {
     status: 'playing',
     pot,
     // Boş koltuklar taş almaz: masa 2-3 oyuncuyla da oynanabilir.
-    seats: seats.map((seat, index) => ({ ...seat, tiles: seat.user_id ? (deal.hands[index] || []).length : 0 })),
+    seats: seats.map((seat, index) => ({ ...seat, tiles: seat.user_id ? hands[index].tiles.length : 0 })),
     gosterge: deal.gosterge,
     okey: deal.okey,
-    stack_count: deal.stack.length,
+    stack_count: stack.length,
     discards: [],
     turn,
-    phase: 'draw',
-    deadline: isoIn(DRAW_MS),
+    // İlk oyuncu 22 taşla başlar: taş çekmez, doğrudan taş atar.
+    phase: 'discard',
+    deadline: isoIn(DISCARD_MS),
     turn_token: token,
     winner_id: '',
     winner_name: '',
     win_amount: 0,
     round_no: (Number(table.round_no) || 0) + 1,
-    last_action: 'Taşlar dağıtıldı',
+    last_action: `${seats[turn]?.name || 'İlk oyuncu'} 22 taşla başlıyor`,
   });
   return updated;
 }
@@ -341,6 +348,41 @@ async function refundTable(base44: any, service: any, table: any, seats: any[]) 
   });
 }
 
+/**
+ * Süresi dolan turu kapatır: sıra beklemeden sonraki oyuncuya geçer.
+ * Oyuncu taş çekmediyse önce taş çekilir, sonra eli otomatik atılır — böylece kimse beklemez.
+ */
+async function passTurn(base44: any, service: any, table: any, secret: any, seat: number) {
+  let live = table;
+  let record = secret;
+  if (live.phase === 'draw') {
+    live = await drawStep(base44, service, live, record, seat, '');
+    if (live.status !== 'playing') return live;
+    record = await secretOf(service, live.id);
+  }
+  const seats = seatsOf(live);
+  const hand = handsOf(record).find((entry: any) => entry.user_id === seats[seat].user_id)?.tiles || [];
+  if (hand.length !== TILES_PER_PLAYER + 1) {
+    // El atılacak durumda değilse taş atılmaz; yalnızca sıra ilerler.
+    return service.OkeyTable.update(live.id, {
+      turn: nextSeat(seats, seat),
+      phase: 'draw',
+      deadline: isoIn(DRAW_MS),
+      turn_token: newToken(),
+      last_action: `${seats[seat].name} oynamadı — sıra geçti`,
+    });
+  }
+  return discardStep(
+    base44,
+    service,
+    live,
+    record,
+    seat,
+    autoDiscard(hand, live.okey),
+    `${seats[seat].name} oynamadı — taş otomatik atıldı`,
+  );
+}
+
 /** Süresi dolan turu yürütür: yalnızca kilidi alan istemci uygular. */
 async function expireTurn(base44: any, service: any, table: any) {
   if (table.status !== 'playing') return table;
@@ -365,12 +407,7 @@ async function expireTurn(base44: any, service: any, table: any) {
   );
   const fresh = await service.OkeyTable.get(table.id);
   if (fresh.turn_token !== token) return fresh;
-  const secret = await secretOf(service, fresh.id);
-  const hand = handsOf(secret).find((entry: any) => entry.user_id === seats[seat].user_id)?.tiles || [];
-  if (fresh.phase === 'discard' && hand.length > TILES_PER_PLAYER) {
-    return discardStep(base44, service, fresh, secret, seat, autoDiscard(hand, fresh.okey), 'Süre doldu — taş otomatik atıldı');
-  }
-  return drawStep(base44, service, fresh, secret, seat, 'Süre doldu — taş ortadan çekildi');
+  return passTurn(base44, service, fresh, await secretOf(service, fresh.id), seat);
 }
 
 export default async function (req: Request) {
