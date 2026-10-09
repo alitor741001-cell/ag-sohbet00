@@ -28,13 +28,13 @@ const NUMERIC_COLUMNS = new Set([
   'broadcaster_dollars', 'agency_dollars', 'bet', 'auto_at', 'cashout_at', 'payout', 'round_no', 'slot',
   'free_spins', 'lines', 'spins', 'total_won', 'grand', 'loaded_coins', 'gift_sent_k', 'gift_received_k',
   'diamond_month', 'unread_user1', 'unread_user2', 'xp', 'message_count', 'sort_order', 'seat_index',
-  'crash_at', 'rocket_bet', 'rocket_bet_2', 'stake', 'roulette_bet',
+  'crash_at', 'rocket_bet', 'rocket_bet_2', 'stake', 'roulette_bet', 'sum', 'pot', 'picks_count',
 ]);
 
 const BOOLEAN_COLUMNS = new Set([
   'hidden', 'is_playing', 'voice_mode', 'voice_enabled', 'is_personal', 'chat_enabled',
   'online', 'read', 'active', 'muted', 'speaking', 'locked', 'is_banned', 'is_suspended', 'hidden_user',
-  'number_board',
+  'number_board', 'settled',
 ]);
 
 const ROOM_COLUMNS = ['name', 'owner_id', 'owner_name', 'room_type', 'status', 'hidden', 'room_number', 'movie_id', 'movie_title', 'is_playing', 'voice_mode', 'voice_enabled', 'participant_count', 'is_personal', 'max_users', 'seat_count', 'personal_room_code', 'chat_enabled', 'current_time', 'last_sync', 'number_board', 'board_started_at', 'number_scores'];
@@ -55,6 +55,9 @@ export const LIVE_COLLECTIONS = [
   { entity: 'RocketLive', table: 'rocket_live', columns: ['key', 'round_no', 'status', 'crash_at', 'phase_ends_at'], live: 'full' },
   // Rulet canlı turu: oyun iki altyapıda birden güncel durur (Base44 + Supabase).
   { entity: 'RouletteLive', table: 'roulette_live', columns: ['key', 'round_no', 'status', 'phase_ends_at'], live: 'full' },
+  // Zar canlı turu: kase ve zarlar iki altyapıda birden güncel durur.
+  { entity: 'ZarLive', table: 'zar_live', columns: ['key', 'round_no', 'status', 'phase_ends_at', 'd1', 'd2', 'd3', 'sum', 'outcome'], live: 'full' },
+  { entity: 'FootballLive', table: 'football_live', columns: ['key', 'round_no', 'status', 'phase_ends_at', 'picks_count', 'winner_id'], live: 'full' },
   { entity: 'GiftSend', table: 'gift_sends', columns: ['room_id', 'sender_id', 'sender_name', 'recipient_id', 'recipient_name', 'gift_id', 'gift_name', 'k_value', 'total_k', 'mode', 'status'], live: 'since' },
   { entity: 'GameWallet', table: 'game_wallets', columns: ['user_id', 'user_name', 'coins', 'bet', 'rocket_bet', 'rocket_bet_2', 'grand', 'free_spins', 'lines', 'spins', 'total_won'], live: 'since' },
   { entity: 'User', table: 'app_users', columns: ['full_name', 'email', 'username', 'member_id', 'avatar', 'role', 'gender', 'title', 'display_role', 'vip_level', 'membership_status', 'hidden_user', 'loaded_coins', 'gift_sent_k', 'gift_received_k', 'is_banned', 'is_suspended', 'agency_code', 'agency_name', 'owned_agency_id', 'diamond_month', 'profile_frame', 'special_frame_id', 'last_login'], live: 'full' },
@@ -90,6 +93,10 @@ export const ALL_COLLECTIONS = [
   { entity: 'GameSpin', table: 'game_spins', columns: ['user_id'] },
   { entity: 'RouletteRound', table: 'roulette_rounds', columns: ['round_no', 'status', 'number'] },
   { entity: 'RouletteSpin', table: 'roulette_spins', columns: ['round_no', 'user_id', 'user_name', 'number', 'stake', 'payout'] },
+  { entity: 'ZarRound', table: 'zar_rounds', columns: ['round_no', 'status', 'sum', 'outcome'] },
+  { entity: 'ZarBet', table: 'zar_bets', columns: ['round_no', 'user_id', 'user_name', 'kind', 'stake', 'payout', 'sum', 'outcome'] },
+  { entity: 'FootballPick', table: 'football_picks', columns: ['round_no', 'user_id', 'user_name', 'team_id', 'stake', 'payout', 'settled'] },
+  { entity: 'OkeyTable', table: 'okey_tables', columns: ['code', 'variant', 'status', 'pot', 'round_no', 'winner_id'] },
   { entity: 'RocketRound', table: 'rocket_rounds', columns: ['round_no', 'status'] },
   { entity: 'RocketBet', table: 'rocket_bets', columns: ['round_id', 'round_no', 'user_id', 'user_name', 'slot', 'bet', 'auto_at', 'status', 'cashout_at', 'payout'] },
   { entity: 'Agency', table: 'agencies', columns: ['agency_id', 'name', 'owner_id', 'owner_name', 'member_count', 'total_diamonds', 'month_diamonds', 'total_earnings', 'status', 'active'] },

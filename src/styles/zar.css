@@ -9,7 +9,10 @@
 
 .zar-sky-glow {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   pointer-events: none;
   background: radial-gradient(70% 45% at 50% 62%, rgba(46, 190, 120, 0.18), transparent 68%);
 }
@@ -271,7 +274,10 @@
 .zar-die::after {
   content: '';
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   border-radius: inherit;
   background: linear-gradient(122deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.07) 32%, rgba(255, 255, 255, 0) 54%);
   pointer-events: none;
@@ -1075,7 +1081,7 @@
   box-shadow: inset 0 -5px 6px #030305, inset 3px -2px 5px rgba(255,255,255,.32), 0 7px 8px -5px #000;
 }
 .zar-felt-dice .zar-cup::before {
-  content: ''; position: absolute; inset: 8% 7% 20%; border-radius: 50%;
+  content: ''; position: absolute; top: 8%; right: 7%; bottom: 20%; left: 7%; border-radius: 50%;
   background: linear-gradient(100deg, transparent 58%, rgba(255,255,255,.35) 64%, rgba(255,255,255,.16) 76%, transparent 80%);
 }
 .zar-felt-dice .zar-cup-rim {
@@ -1160,3 +1166,83 @@
 /* Alanların altında jetonlar için yer kalır: yazılar pulların üstünde durur. */
 .zar-zone-kaplan,
 .zar-zone-row .zar-zone { padding-bottom: 1.15rem; }
+
+/* Başlık ve alt bar çentikli ekranlarda güvenli alanı korur: max() bilmeyen
+   eski tarayıcılarda sabit dolgu geçerli olur. */
+.zar-sky > header {
+  padding-top: 0.5rem;
+  padding-top: max(0.5rem, env(safe-area-inset-top));
+}
+
+.zar-sky > footer {
+  padding-bottom: 0.75rem;
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}
+
+/* === EKRAN BOYUTU VE ESKİ CİHAZ UYUMLULUĞU === */
+/* Kısa ekranlarda masa, kase ve şerit birlikte küçülür: kaydırmadan oynanır. */
+@media (max-height: 730px) {
+  .zar-zone-kaplan { min-height: 4.6rem; }
+  .zar-zone-row { min-height: 7.6rem; }
+  .zar-felt-court { min-height: 5.4rem; }
+  .zar-felt-dice .zar-shaker { height: 5rem; }
+  .zar-felt-dice .zar-cup,
+  .zar-felt-dice .zar-cup-glass { height: 3.2rem; }
+  .zar-top-avatar { width: 1.9rem; height: 1.9rem; }
+}
+
+@media (max-height: 620px) {
+  .zar-zone-kaplan { min-height: 3.9rem; }
+  .zar-zone-row { min-height: 6.4rem; }
+  .zar-felt-court { min-height: 4.4rem; }
+  .zar-felt-dice .zar-shaker { height: 4.2rem; }
+  .zar-felt-dice .zar-cup,
+  .zar-felt-dice .zar-cup-glass { height: 2.6rem; }
+  .zar-felt-dice .zar-cup-dice { bottom: 1.2rem; height: 2.8rem; }
+  .zar-top-avatar { width: 1.7rem; height: 1.7rem; }
+  .zar-zone-label { font-size: 0.78rem; }
+}
+
+@media (max-height: 540px) {
+  .zar-zone-kaplan { min-height: 3.4rem; }
+  .zar-zone-row { min-height: 5.6rem; }
+  .zar-felt-court { min-height: 3.8rem; }
+  .zar-felt-dice .zar-shaker { height: 3.6rem; }
+  .zar-felt-dice .zar-cup,
+  .zar-felt-dice .zar-cup-glass { height: 2.2rem; }
+  .zar-felt-dice .zar-cup-dice { bottom: 1rem; height: 2.4rem; }
+  .zar-felt-dice .zar-cube { width: 1.45rem; height: 1.6rem; }
+  .zar-felt-dice .zar-cube > .zar-die { width: 1.45rem; height: 1.45rem; }
+}
+
+/* Dar ekranlar (320-360 px): jetonlar ve şerit yazıları küçülür, taşma olmaz. */
+@media (max-width: 360px) {
+  .zar-mini-chip { font-size: 0.44rem; padding: 0 0.2rem; }
+  .zar-mini-chip i { height: 0.55rem; width: 0.55rem; font-size: 0.36rem; }
+  .zar-podium { gap: 0.24rem; }
+  .zar-top-name { font-size: 0.48rem; }
+  .zar-top-amount { font-size: 0.46rem; }
+  .zar-chip { height: 2.5rem; }
+}
+
+/* clamp() bilmeyen eski iOS ve Android tarayıcılarında (iOS 13.4 ve
+   Android Chrome 79 öncesi) bütün ölçüler ekran genişliğine göre verilir:
+   masa ve zarlar bu cihazlarda da görünür kalır. */
+@supports not (width: clamp(1rem, 1vw, 1rem)) {
+  .zar-shaker { height: 24vw; }
+  .zar-cup, .zar-cup-glass { width: 40vw; height: 22vw; }
+  .zar-cup-shadow { width: 32vw; }
+  .zar-die-md { width: 13vw; height: 13vw; }
+  .zar-die-sm { width: 9vw; height: 9vw; }
+  .zar-history { width: 14.5vw; }
+  .zar-history-stack .zar-die-mini { width: 5vw; height: 5vw; }
+  .zar-history-sheet { width: 44vw; }
+  .zar-top-avatar { width: 10vw; height: 10vw; }
+  .zar-chip { height: 14vw; }
+  .zar-felt-court { min-height: 30vw; }
+  .zar-felt-dice { width: 33vw; }
+  .zar-felt-dice .zar-shaker { height: 18vw; }
+  .zar-felt-dice .zar-cup, .zar-felt-dice .zar-cup-glass { width: 38vw; height: 17vw; }
+  .zar-felt-dice .zar-cup-shadow { width: 25vw; }
+  .zar-felt-dice .zar-die-md { width: 8vw; height: 8vw; }
+}

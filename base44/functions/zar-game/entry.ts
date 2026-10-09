@@ -1,7 +1,9 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
+import { waitUntil } from 'base44:runtime';
 import { MAX_STAKE, sanitizeBets, settle } from '../../shared/zarEngine.ts';
 import { START_COINS, loadWallet } from '../../shared/gameWallet.ts';
-import { ensureRound, liveHistory, roundForBet, roundView, walletView } from '../../shared/zarRound.ts';
+import { ensureRound, liveHistory, mirrorRoundView, roundForBet, roundView, walletView } from '../../shared/zarRound.ts';
+import { mirrorRecord } from '../../shared/supabaseMirror.ts';
 
 export default async function (req) {
   try {
@@ -83,7 +85,10 @@ export default async function (req) {
           outcome: round.outcome,
         };
       });
-      await base44.asServiceRole.entities.ZarBet.bulkCreate(rows).catch(() => null);
+      const created = await base44.asServiceRole.entities.ZarBet.bulkCreate(rows).catch(() => null);
+      // Bakiye ve masa bahisleri aynaya da yazılır: iki altyapı aynı oyunu taşır.
+      waitUntil(mirrorRecord(base44, 'GameWallet', updated).catch(() => null));
+      if (created) waitUntil(mirrorRecord(base44, 'ZarBet', created).catch(() => null));
 
       return Response.json({
         ...walletView(updated),
@@ -97,15 +102,22 @@ export default async function (req) {
       });
     }
 
-    // state: tur, bakiye ve yayındaki zar geçmişi.
-    const round = await ensureRound(base44);
-    const wallet = await loadWallet(base44, user);
-    return Response.json({
-      ...walletView(wallet),
-      now: Date.now(),
-      round: roundView(round),
-      history: await liveHistory(base44),
-    });
+    // state: tur, bakiye ve yayındaki zar geçmişi. Kaynak geçici olarak yanıt
+    // vermezse oyun aynadaki son hâlle akar: masa boş kalmaz.
+    try {
+      const round = await ensureRound(base44);
+      const wallet = await loadWallet(base44, user);
+      return Response.json({
+        ...walletView(wallet),
+        now: Date.now(),
+        round: roundView(round),
+        history: await liveHistory(base44),
+      });
+    } catch (error) {
+      const mirrored = await mirrorRoundView(base44, user).catch(() => null);
+      if (mirrored) return Response.json(mirrored);
+      throw error;
+    }
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

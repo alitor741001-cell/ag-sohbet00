@@ -1,8 +1,10 @@
 // ZAR tur makinesi: tur sunucuda ilerler, atılan zarlar tur boyunca herkese
 // aynı anda yayınlanır. Zarlar bahis aşamasında gizli kalır (hile önlemi).
 
+import { waitUntil } from 'base44:runtime';
 import { outcomeOf, rollDice } from './zarEngine.ts';
 import { START_COINS } from './gameWallet.ts';
+import { mirrorPayload, mirrorRecord, walletFromMirror } from './supabaseMirror.ts';
 
 // Tur düzeni: 20 saniye bahis, 9 saniye kase içinde çalkalama ve sonuç.
 export const BETTING_MS = 20000;
@@ -90,6 +92,9 @@ async function publishLive(base44, round, history) {
     ? await base44.asServiceRole.entities.ZarLive.update(found[0].id, payload)
     : await base44.asServiceRole.entities.ZarLive.create({ ...payload, history: history || [] });
   if (Array.isArray(history)) historyCache = { rows: history, at: Date.now() };
+  // Tur aynaya da yazılır: oyun Base44 ve Supabase'te aynı anda güncel kalır.
+  waitUntil(mirrorRecord(base44, 'ZarLive', written).catch(() => null));
+  waitUntil(mirrorRecord(base44, 'ZarRound', round).catch(() => null));
   return written;
 }
 
@@ -104,6 +109,36 @@ export async function liveHistory(base44) {
   const rows = await base44.asServiceRole.entities.ZarLive.filter({ key: 'live' }, '-created_date', 1);
   historyCache = { rows: rows[0]?.history || [], at: Date.now() };
   return historyCache.rows;
+}
+
+/**
+ * Base44 kaydı geçici olarak yanıt vermezse oyun durmaz: tur, zarlar ve bakiye
+ * Supabase aynasındaki son hâliyle sunulur. Yalnızca okuma yolunda devreye girer;
+ * bahis ve ödeme her zaman gerçek kayda işler.
+ */
+export async function mirrorRoundView(base44, user) {
+  const live = await mirrorPayload(base44, 'zar_live', 'select=payload&key=eq.live&limit=1');
+  if (!live || typeof live.round_no !== 'number') return null;
+  const wallet = await walletFromMirror(base44, user?.id);
+  const revealed = live.status === 'shaking';
+  return {
+    coins: wallet?.coins ?? START_COINS,
+    rounds: wallet?.spins ?? 0,
+    total_won: wallet?.total_won_zar ?? 0,
+    now: Date.now(),
+    round: {
+      round_no: live.round_no,
+      status: revealed ? 'shaking' : 'betting',
+      started_at: live.started_at,
+      phase_ends_at: live.phase_ends_at,
+      ends_at: live.ends_at,
+      dice: revealed ? [live.d1, live.d2, live.d3] : null,
+      sum: revealed ? live.sum : null,
+      outcome: revealed ? live.outcome : null,
+    },
+    history: Array.isArray(live.history) ? live.history : [],
+    mirrored: true,
+  };
 }
 
 /**
