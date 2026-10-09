@@ -92,7 +92,7 @@
 .fut-ring {
   position: relative;
   /* Çember, ekranda kalan yüksekliğe göre büyür: alt tarafta boşluk kalmaz. */
-  width: min(100%, 32rem, calc((100dvh - 24rem) / 1.1));
+  width: min(100%, 40rem, calc((100dvh - 24rem) / 1.1));
   margin: 0 auto;
   aspect-ratio: 1 / 1.1;
 }

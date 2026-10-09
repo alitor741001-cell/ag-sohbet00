@@ -105,7 +105,7 @@ export default function RouletteGame({ onExit, onBack }) {
       </header>
 
       <div className="relative z-10 shrink-0 px-3 pt-1.5">
-        <div className="mx-auto w-full max-w-[27rem]">
+        <div className="mx-auto w-full max-w-[27rem] sm:max-w-[32rem]">
           <GameStatCards items={stats} />
         </div>
       </div>

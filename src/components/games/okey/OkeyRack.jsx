@@ -100,6 +100,8 @@ export default function OkeyRack({ variant = 'okey101', hand, drawnTile, okey, m
       id: event.pointerId,
       tile,
       index,
+      // Taşın ekrandaki gerçek ölçüsü: sürüklenen kopya da aynı boyutta görünür.
+      tileSize: `${Math.round(rect.width)}px`,
       from: index,
       list: null,
       active: false,
@@ -129,7 +131,7 @@ export default function OkeyRack({ variant = 'okey101', hand, drawnTile, okey, m
       info.overFelt = overFelt;
       onDropTarget?.(overFelt);
     }
-    setGhost({ tile: info.tile, x: event.clientX - info.offsetX, y: event.clientY - info.offsetY });
+    setGhost({ tile: info.tile, x: event.clientX - info.offsetX, y: event.clientY - info.offsetY, tileSize: info.tileSize });
   };
 
   const finish = (event, allowDrop) => {
@@ -175,7 +177,11 @@ export default function OkeyRack({ variant = 'okey101', hand, drawnTile, okey, m
       {/* Parmak altındaki taş: oyun panelinin dışına çizilir, böylece kırpılmaz. */}
       {ghost
         ? createPortal(
-            <span className="okey-drag-ghost" style={{ left: `${ghost.x}px`, top: `${ghost.y}px` }} aria-hidden="true">
+            <span
+              className="okey-drag-ghost"
+              style={{ left: `${ghost.x}px`, top: `${ghost.y}px`, ...(ghost.tileSize ? { '--okey-tile': ghost.tileSize } : {}) }}
+              aria-hidden="true"
+            >
               <OkeyTile tile={ghost.tile} wild={isWild(ghost.tile, okey)} />
             </span>,
             document.body,

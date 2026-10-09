@@ -2,7 +2,8 @@
 
 .okey-shell {
   /* Üç satırlık tahta: 7'li satırlar ekrana sığsın diye taş biraz küçüktür. */
-  --okey-tile: clamp(20px, 7.2vw, 40px);
+  /* Masa taşları ekranla birlikte büyür: tablet ve geniş ekranlarda da iri kalır. */
+  --okey-tile: clamp(20px, 7.2vw, 54px);
   position: relative;
   display: flex;
   height: 100%;
@@ -143,13 +144,14 @@
 .okey-seat-bottom { left: 50%; bottom: 0.3rem; transform: translateX(-50%); flex-direction: column-reverse; }
 .okey-seat-left { left: 0.3rem; top: 40%; transform: translateY(-50%); }
 .okey-seat-right { right: 0.3rem; top: 40%; transform: translateY(-50%); flex-direction: row-reverse; }
-.okey-seat-left .okey-seat-card, .okey-seat-right .okey-seat-card { min-width: 4.6rem; }
+.okey-seat-left .okey-seat-card, .okey-seat-right .okey-seat-card { min-width: clamp(4.6rem, 11vw, 6.4rem); }
 
 .okey-avatar {
   position: relative;
   display: block;
-  height: 2.7rem;
-  width: 2.7rem;
+  /* Profil taşları da ekranla büyür: tablet ve geniş ekranlarda masa orantılı kalır. */
+  height: clamp(2.7rem, 6.5vw, 4rem);
+  width: clamp(2.7rem, 6.5vw, 4rem);
   flex-shrink: 0;
   border-radius: 9999px;
   border: 2px solid rgba(245, 214, 122, 0.85);
@@ -180,7 +182,7 @@
   border-radius: 11px;
   border: 1px solid rgba(255, 255, 255, 0.16);
   padding: 0.22rem 0.45rem;
-  min-width: 5.1rem;
+  min-width: clamp(5.1rem, 12vw, 7rem);
   box-shadow: 0 8px 18px -14px #000;
   transition: transform 200ms ease;
 }
@@ -188,7 +190,7 @@
 .okey-seat-card[data-tone="blue"] { background: linear-gradient(160deg, #1a64c2, #0b3161); }
 .okey-seat-card[data-tone="dark"] { background: linear-gradient(160deg, #33333c, #15151a); }
 .okey-seat-card[data-active="1"] { transform: scale(1.05); box-shadow: 0 0 0 2px rgba(255, 222, 120, 0.85), 0 0 18px -4px rgba(255, 200, 60, 0.7); }
-.okey-seat-name { font-size: 0.6rem; font-weight: 900; line-height: 1.1; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6); max-width: 5.6rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.okey-seat-name { font-size: 0.6rem; font-weight: 900; line-height: 1.1; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6); max-width: clamp(5.6rem, 13vw, 8rem); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .okey-seat-coins { font-size: 0.56rem; font-weight: 900; color: #ffe9a8; }
 .okey-seat-tiles { font-size: 0.5rem; font-weight: 800; color: rgba(255, 255, 255, 0.66); }
 .okey-seat-left .okey-seat-card, .okey-seat-right .okey-seat-card { text-align: center; }
@@ -337,6 +339,9 @@
 .okey-tile-break { margin-left: 0.5rem; }
 .okey-drag-ghost {
   position: fixed;
+  /* Parmak altındaki taş ıstakanın dışına çizilir: ölçü kendi üzerinde de tanımlı olmalı,
+     yoksa taş küçük kalır. Sürükleme anında gerçek ölçü buraya yazılır. */
+  --okey-tile: clamp(20px, 7.2vw, 54px);
   /* Oyun panelinin (z-185) üzerinde kalmalı. */
   z-index: 300;
   pointer-events: none;
@@ -467,7 +472,10 @@
 .okey-rack-ready { box-shadow: inset 0 2px 0 rgba(255, 228, 172, 0.55), 0 0 20px -4px rgba(255, 212, 100, 0.65), 0 10px 20px -14px #000; }
 /* Taşlar tahtanın iki ucuna kadar yayılır: sağda ve solda boşluk kalmaz. */
 .okey-rack-wrap { container-type: inline-size; }
-.okey-rack { --okey-tile: min(40px, 7.5cqw); }
+/* Taş ölçüsü ıstakanın kendi genişliğine oranlanır (11 taşlık satır): her cihazda
+   ıstaka aynı oranda doluyor, sabit piksel sınırı taşları küçük bırakmaz.
+   Yükseklik sınırı yalnızca yatay/geniş ekranlarda devreye girer. */
+.okey-rack { --okey-tile: min(7.5cqw, 11.5vh); }
 .okey-row {
   position: relative;
   display: flex;
@@ -631,8 +639,9 @@
 }
 
 /* Klasik OKEY: 14 taşlık el — taşlar daha büyük durur, ıstaka ferah kalır. */
-.okey-shell[data-variant="okey"] { --okey-tile: clamp(24px, 8.5vw, 46px); }
-.okey-shell[data-variant="okey"] .okey-rack { --okey-tile: min(52px, 11cqw); }
+.okey-shell[data-variant="okey"] { --okey-tile: clamp(24px, 8.5vw, 60px); }
+/* Klasik OKEY'de el 14-15 taş: satırda en çok 8 taş olur, taşlar daha iri durur. */
+.okey-shell[data-variant="okey"] .okey-rack { --okey-tile: min(11cqw, 12.5vh); }
 
 /* Yatay ekran: masa kısalır, tahtalar küçülür. */
 @media (orientation: landscape) and (max-height: 620px) {
