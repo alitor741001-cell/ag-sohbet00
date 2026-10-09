@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Gamepad2, Play, X } from 'lucide-react';
 import { Image } from '@/components/ui/image';
-import { DEDE_ID, ELIMIN_ID, FRUIT_ID, FUTBOL_ID, GAMES, OKEY_CLASSIC_ID, OKEY_ID, ROCKET_ID, ROULETTE_ID, SEKERLI_MEYVE_ID, SEKER_ID, ZAR_ID } from './gameCatalog';
+import { DEDE_ID, ELIMIN_ID, FRUIT_ID, FUTBOL_ID, GAMES, MAFYA_ID, OKEY_CLASSIC_ID, OKEY_ID, ROCKET_ID, ROULETTE_ID, SEKERLI_MEYVE_ID, SEKER_ID, ZAR_ID } from './gameCatalog';
 import FootballGame from './FootballGame';
 import OkeyGame from './OkeyGame';
 import SekerliMeyveGame from './SekerliMeyveGame';
@@ -13,6 +13,7 @@ import DedeGame from './DedeGame';
 import RouletteGame from './RouletteGame';
 import ZarGame from './ZarGame';
 import SekerGame from './SekerGame';
+import MafyaGame from './MafyaGame';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { broadcasterState } from '@/lib/broadcaster';
 import useBackDismiss from '@/hooks/useBackDismiss';
@@ -154,6 +155,8 @@ export default function GamePanel({ open, onClose, roomId, initialGame = null })
               <ZarGame onExit={onClose} onBack={closeGame} />
             ) : selected === SEKER_ID ? (
               <SekerGame onExit={onClose} onBack={closeGame} />
+            ) : selected === MAFYA_ID ? (
+              <MafyaGame onExit={onClose} onBack={closeGame} />
             ) : (
               <SlotGame onExit={onClose} onBack={closeGame} roomId={roomId} />
             )}

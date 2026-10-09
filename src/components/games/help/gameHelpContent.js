@@ -363,6 +363,27 @@ export const GAME_HELP = {
     ],
     note: 'Zarlar kara kasenin içinde çalkalanır ve sonra masaya açılır; tur bitince yeni tur kendiliğinden başlar.',
   },
+  mafya: {
+    title: 'ÇEYREK MAFYA',
+    tagline: 'KİM DOST KİM DÜŞMAN? ÇEYREKTE BELLİ OLUR!',
+    rules: [
+      '4-8 oyuncu bir odaya girer; oda dolduğunda ya da oda sahibi başlatınca oyun açılır.',
+      'Her oyuncuya gizli bir rol dağıtılır ve rolünü yalnızca kendisi görür.',
+      'GECE: Mafya bir kişiyi vurur, doktor bir kişiyi korur, polis sorgular, komiser (tek kullanım) rolü tam öğrenir, gözcü ziyaretçileri görür, şeytan bir kişinin gücünü bloke eder, terörist bomba yerleştirir; vatandaşın gücü yoktur.',
+      'GÜNDÜZ: konuşulur ve şüpheliler tartışılır; ardından herkes oy verir.',
+      'En çok oyu alan oyuncu gönderilir; oylar eşitse o tur kimse gönderilmez.',
+      'Karanlık taraf şehri yakalarsa karanlık taraf, bütün karanlık roller biterse şehir kazanır.',
+      'Son 4 oyuncu kaldığında ekrana SON 4 gerilim ekranı gelir.',
+    ],
+    facts: [
+      'Rol dağılımı oyuncu sayısına göre ayarlanır: karanlık taraf her zaman azınlıktadır.',
+      'Ölüler oyunu izler ve tartışmayı okur, ancak yazamaz ve oy veremez.',
+      'Gece aksiyonları gizlidir; kim kimi vurdu, kim kimi sorguladı yalnızca o oyuncuya bildirilir.',
+      'Aşama süresi dolduğunda ya da herkes işini bitirdiğinde oyun kendiliğinden ilerler.',
+      'Oyun bitince bütün roller ve kazanan taraf açıklanır; oda sahibi yeni tur başlatabilir.',
+    ],
+    note: 'Konuşma gündüz ve oylama aşamalarında açıktır; gece sessizliğinde yalnızca rolünün aksiyonunu seçersin.',
+  },
 };
 
 export const helpFor = (game) => GAME_HELP[game] || null;
