@@ -26,7 +26,7 @@ export default function OkeyGame({ onExit, onBack }) {
   const filled = (table?.seats || []).filter((entry) => entry.user_id).length;
 
   const statusText = waiting
-    ? `Masa dolunca oyun başlar (${filled}/4). Bahsini artırabilirsin.`
+    ? `2, 3 ya da 4 oyuncuyla başlayabilirsin (${filled}/4). 4 oyuncu dolunca oyun kendiliğinden başlar.`
     : playing
       ? myTurn
         ? phase === 'draw'
@@ -84,6 +84,7 @@ export default function OkeyGame({ onExit, onBack }) {
             coins={coins}
             busy={busy}
             onStake={game.actions.setStake}
+            onStart={game.actions.start}
             onLeave={game.actions.leave}
           />
         ) : (

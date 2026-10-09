@@ -2,6 +2,8 @@ import { formatCoins } from '@/lib/giftTone';
 
 // 101 OKEY ekran sabitleri: koltuk düzeni, taş gösterimi ve bahis kademeleri.
 export const OKEY_BETS = [1000, 5000, 25000, 100000];
+// Elle başlatmak için gereken en az oyuncu.
+export const OKEY_MIN_PLAYERS = 2;
 // Koltuk sırası görünümü: 0 alt (ben), 1 sol, 2 üst, 3 sağ.
 export const SLOT_BY_OFFSET = ['bottom', 'left', 'top', 'right'];
 export const COLOR_ORDER = { R: 0, S: 1, M: 2, Y: 3, J: 4 };

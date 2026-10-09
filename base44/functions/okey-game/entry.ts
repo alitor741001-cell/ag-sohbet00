@@ -20,6 +20,8 @@ import {
 // Eller ve deste gizli kayıtta (OkeySecret) tutulur; herkes yalnızca kendi elini görür.
 const SEATS = 4;
 const MAX_DISCARDS = 24;
+// Elle başlatmak için gereken en az oyuncu: 2 veya 3 oyuncuyla da oynanır.
+const MIN_PLAYERS = 2;
 // Yarım saat dolmayan boş masa temizlenir.
 const STALE_MS = 30 * 60 * 1000;
 
@@ -205,11 +207,13 @@ async function startGame(base44: any, service: any, table: any, seats: any[], to
     stack: deal.stack,
     hands,
   });
-  const turn = Math.floor(Math.random() * SEATS);
+  const turnPool = seats.map((seat, index) => (seat.user_id && !seat.left ? index : -1)).filter((index) => index >= 0);
+  const turn = turnPool.length ? turnPool[Math.floor(Math.random() * turnPool.length)] : 0;
   const updated = await service.OkeyTable.update(table.id, {
     status: 'playing',
     pot,
-    seats: seats.map((seat, index) => ({ ...seat, tiles: (deal.hands[index] || []).length })),
+    // Boş koltuklar taş almaz: masa 2-3 oyuncuyla da oynanabilir.
+    seats: seats.map((seat, index) => ({ ...seat, tiles: seat.user_id ? (deal.hands[index] || []).length : 0 })),
     gosterge: deal.gosterge,
     okey: deal.okey,
     stack_count: deal.stack.length,
@@ -464,6 +468,31 @@ export default async function (req: Request) {
         last_action: `${seats[index].name} bahsini ${stake} coine çıkardı`,
       });
       return answer(service, updated, user, coins);
+    }
+
+    // Başlat: 4 oyuncu beklemeden, 2 veya 3 oyuncuyla da el başlatılabilir.
+    if (action === 'start') {
+      const table = await service.OkeyTable.get(body.table_id).catch(() => null);
+      if (!table) return Response.json({ error: 'Masa bulunamadı.' }, { status: 404 });
+      if (table.status !== 'waiting') return Response.json({ error: 'Oyun zaten başladı.' }, { status: 400 });
+      const seats = seatsOf(table);
+      const index = seatIndex(seats, user.id);
+      if (index < 0) return Response.json({ error: 'Bu masada değilsin.' }, { status: 400 });
+      const filled = seats.filter((seat) => seat.user_id).length;
+      if (filled < MIN_PLAYERS) {
+        return Response.json({ error: `Başlamak için en az ${MIN_PLAYERS} oyuncu gerekli.` }, { status: 400 });
+      }
+      if (coins < (Number(seats[index].stake) || 0)) return Response.json({ error: 'Yetersiz coin.' }, { status: 400 });
+      // Kilit: iki oyuncu aynı anda basarsa oyun yalnızca bir kez başlar.
+      const token = newToken();
+      await service.OkeyTable.updateMany(
+        { id: table.id, status: 'waiting', turn_token: table.turn_token || '' },
+        { $set: { turn_token: token } },
+      );
+      const fresh = await service.OkeyTable.get(table.id);
+      if (fresh.turn_token !== token || fresh.status !== 'waiting') return answer(service, fresh, user, coins);
+      const started = await startGame(base44, service, fresh, seatsOf(fresh), token);
+      return answer(service, started, user, coins);
     }
 
     if (action === 'leave') {

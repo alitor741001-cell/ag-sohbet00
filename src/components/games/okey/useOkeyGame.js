@@ -107,6 +107,7 @@ export default function useOkeyGame() {
     },
     joinTable: (id) => request({ action: 'join', table_id: id }),
     setStake: (stake) => request({ action: 'stake', table_id: tableId, stake }),
+    start: () => request({ action: 'start', table_id: tableId }),
     draw: () => request({ action: 'draw', table_id: tableId }),
     discard: (tile) => request({ action: 'discard', table_id: tableId, tile }),
     finish: () => request({ action: 'finish', table_id: tableId }),
