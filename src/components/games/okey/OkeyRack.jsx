@@ -8,12 +8,26 @@ import { planHand } from './okeyGroups';
 // Bu kadar hareketten sonrası sürükleme sayılır; altındaki dokunuş taşı ortaya atmaktır.
 const DRAG_THRESHOLD = 6;
 
+/** Elle dizilişte grup sınırları taşlara bağlı kalır: taş kaydırılsa da gruplar ayrı durur. */
+function breakPositions(tiles, breakTiles) {
+  const pool = [...breakTiles];
+  return tiles.reduce((acc, tile, index) => {
+    const at = pool.indexOf(tile);
+    if (at < 0) return acc;
+    pool.splice(at, 1);
+    if (index > 0) acc.push(index);
+    return acc;
+  }, []);
+}
+
 /** Alt tahta: taşlar parmakla sürüklenip dizilir, çuha üzerine bırakılırsa ortaya atılır. */
 export default function OkeyRack({ hand, drawnTile, okey, mode, sortKey, canDiscard, onDiscard, busy, onDropTarget }) {
   // Elle dizilim: sürüklendikçe bu sıra kullanılır, elden çıkan taş sıradan düşer.
   const [order, setOrder] = useState([]);
   // Taş elle taşınsa bile seçili dizilim (SERİ/ÇİFT) korunur: sıra, düğmeye basılana dek bozulmaz.
   const [manualOrder, setManualOrder] = useState(false);
+  // Elle dizilişe geçerken grupların başladığı taşlar: aralıklar bu taşlarla birlikte taşınır.
+  const [breakTiles, setBreakTiles] = useState([]);
   const [ghost, setGhost] = useState(null);
   const drag = useRef(null);
 
@@ -38,7 +52,7 @@ export default function OkeyRack({ hand, drawnTile, okey, mode, sortKey, canDisc
   // Gruplar hâlinde dizilim: geçerli gruplar bitişik durur, kullanılamayan taşlar sona ayrılır.
   const manual = manualOrder && order.length === hand.length;
   const layout = useMemo(() => {
-    if (manual) return { tiles: order, breaks: [] };
+    if (manual) return { tiles: order, breaks: breakPositions(order, breakTiles) };
     const remaining = [...hand];
     const drawnIndex = drawnTile ? remaining.indexOf(drawnTile) : -1;
     if (drawnIndex >= 0) remaining.splice(drawnIndex, 1);
@@ -46,7 +60,7 @@ export default function OkeyRack({ hand, drawnTile, okey, mode, sortKey, canDisc
     return drawnIndex < 0 ? plan : {
       ...plan, tiles: [...plan.tiles, drawnTile], breaks: [...plan.breaks, plan.tiles.length],
     };
-  }, [manual, order, hand, okey, mode, drawnTile]);
+  }, [manual, order, breakTiles, hand, okey, mode, drawnTile]);
   const breaks = useMemo(() => new Set(layout.breaks), [layout]);
   const rows = rowSplit(layout.tiles);
   // Satırların tahtadaki başlangıç sırası: sürükleme hedefi bu sırayla eşleşir.
@@ -63,6 +77,8 @@ export default function OkeyRack({ hand, drawnTile, okey, mode, sortKey, canDisc
     info.active = true;
     info.from = info.index;
     info.list = [...layout.tiles];
+    // Grupların başladığı taşlar saklanır: elle dizilişte aralıklar korunur.
+    setBreakTiles(layout.breaks.map((at) => layout.tiles[at]));
     setManualOrder(true);
     setOrder([...info.list]);
   };
