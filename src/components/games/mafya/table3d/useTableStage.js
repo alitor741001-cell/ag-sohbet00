@@ -1,14 +1,19 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { buildStage } from './buildStage';
-import { HEAD_HEIGHT, HEAD_SIZE, focusAzimuth } from './seatRing';
+import { HEAD_HEIGHT, HEAD_SIZE, focusAzimuth, seatRadius } from './seatRing';
 
-const CAM_DISTANCE = 6.15;
-const CAM_HEIGHT = 3.05;
-const LOOK_HEIGHT = 0.92;
+const FOV = 34;
+const TAN_HALF = Math.tan((FOV * Math.PI) / 360);
+const LOOK_HEIGHT = 0.8;
+const ELEVATION = 0.68; // masaya yukarıdan bakış: koltuklar birbirine girmez
+const MIN_DISTANCE = 4.6;
+const MAX_DISTANCE = 14;
 const AUTO_SPIN = 0.055;
 const IDLE_MS = 6000;
 const DRAG_SENSITIVITY = 0.0058;
+const MIN_SCALE = 0.74;
+const MAX_SCALE = 1.16;
 
 const shortestDelta = (from, to) => {
   let delta = (to - from) % (Math.PI * 2);
@@ -18,7 +23,7 @@ const shortestDelta = (from, to) => {
 };
 
 /** 3D sahneyi kurar, kamerayı yörüngede tutar ve her gerçek yüzü kendi koltuğuna yansıtır.
-    Yüzler DOM'da durur; konumları ve boyutları koltuk başından ekrana yansıtılarak bulunur. */
+    Kamera uzaklığı ekrana göre kendini ayarlar: bütün koltuklar her ekranda görünür kalır. */
 export default function useTableStage({ hostRef, faceRefs, capacity, frontIndex, stateRef, onFail }) {
   const failRef = useRef(onFail);
   failRef.current = onFail;
@@ -36,6 +41,7 @@ export default function useTableStage({ hostRef, faceRefs, capacity, frontIndex,
     }
 
     const { scene, camera, seats } = buildStage({ capacity, frontIndex });
+    const radius = seatRadius(capacity);
     const canvas = renderer.domElement;
     canvas.className = 'mf-stage-canvas';
     renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
@@ -45,14 +51,68 @@ export default function useTableStage({ hostRef, faceRefs, capacity, frontIndex,
     let width = 0;
     let height = 0;
     let refSize = 72;
+    let distance = MIN_DISTANCE;
     let azimuth = 0;
     let dragging = null;
     let idleUntil = 0;
     let frame = 0;
     let last = 0;
+
     const lookAt = new THREE.Vector3(0, LOOK_HEIGHT, 0);
-    const base = new THREE.Vector3();
-    const top = new THREE.Vector3();
+    const center = new THREE.Vector3(0, HEAD_HEIGHT, 0);
+    const first = new THREE.Vector3();
+    const second = new THREE.Vector3();
+    const scratch = new THREE.Vector3();
+
+    /** Dünya noktasını ekran pikseline çevirir (z: derinlik). */
+    const toScreen = (point, out) => {
+      out.copy(point).project(camera);
+      out.set((out.x * 0.5 + 0.5) * width, (-out.y * 0.5 + 0.5) * height, out.z);
+      return out;
+    };
+
+    /** Bir noktadaki yüzün ekrandaki çapı (piksel). */
+    const faceSizeAt = (point) => {
+      toScreen(point, scratch);
+      const top = scratch.y;
+      scratch.set(point.x, point.y + HEAD_SIZE, point.z);
+      toScreen(scratch, scratch);
+      return Math.abs(scratch.y - top);
+    };
+
+    const placeCamera = (range) => {
+      camera.position.set(Math.sin(azimuth) * range, LOOK_HEIGHT + range * Math.tan(ELEVATION), Math.cos(azimuth) * range);
+      camera.lookAt(lookAt);
+      camera.updateMatrixWorld();
+    };
+
+    /** Masayı çerçeveye sığdıran, sonra yüzler birbirine girmeyecek kadar uzaklaştıran mesafe. */
+    const tuneDistance = () => {
+      const halfWidth = radius + 0.32;
+      const halfHeight = radius * Math.sin(ELEVATION) + 0.8 * Math.cos(ELEVATION);
+      const fit = Math.max(
+        (halfWidth * 1.1) / (TAN_HALF * camera.aspect),
+        (halfHeight * 1.2) / TAN_HALF
+      );
+      let range = Math.min(MAX_DISTANCE, Math.max(MIN_DISTANCE, fit));
+      for (let step = 0; step < 24 && range < MAX_DISTANCE; step += 1) {
+        placeCamera(range);
+        const face = faceSizeAt(center);
+        let spacing = Infinity;
+        for (let i = 0; i < seats.length; i += 1) {
+          toScreen(seats[i].head, first);
+          const x = first.x;
+          const y = first.y;
+          for (let j = i + 1; j < seats.length; j += 1) {
+            toScreen(seats[j].head, second);
+            spacing = Math.min(spacing, Math.hypot(x - second.x, y - second.y));
+          }
+        }
+        if (spacing >= face * 1.35) return range;
+        range += 0.25;
+      }
+      return range;
+    };
 
     const measure = () => {
       width = host.clientWidth;
@@ -61,11 +121,10 @@ export default function useTableStage({ hostRef, faceRefs, capacity, frontIndex,
       renderer.setSize(width, height, false);
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
+      distance = tuneDistance();
+      placeCamera(distance);
       // Orta mesafedeki bir yüzün ekran boyu: yüzler bu ölçüye göre ölçeklenir.
-      base.set(0, HEAD_HEIGHT, 0).project(camera);
-      const center = base.y;
-      base.set(0, HEAD_HEIGHT + HEAD_SIZE, 0).project(camera);
-      refSize = Math.max(26, Math.abs(base.y - center) * height * 0.5);
+      refSize = Math.max(24, faceSizeAt(center));
       host.style.setProperty('--mf-face', `${refSize.toFixed(1)}px`);
     };
 
@@ -81,7 +140,7 @@ export default function useTableStage({ hostRef, faceRefs, capacity, frontIndex,
       seat.suit.color.setHex(dead ? 0x14131a : seat.suit.userData.tone);
       seat.skin.color.setHex(dead ? 0x2a2320 : seat.skin.userData.tone);
       seat.figure.rotation.x = dead ? 0.72 : 0;
-      seat.figure.position.y = dead ? -0.05 : 0;
+      seat.figure.position.y = dead ? -0.04 : 0;
     };
 
     const tick = (time) => {
@@ -99,8 +158,7 @@ export default function useTableStage({ hostRef, faceRefs, capacity, frontIndex,
           azimuth += dt * AUTO_SPIN;
         }
       }
-      camera.position.set(Math.sin(azimuth) * CAM_DISTANCE, CAM_HEIGHT, Math.cos(azimuth) * CAM_DISTANCE);
-      camera.lookAt(lookAt);
+      placeCamera(distance);
 
       if (width && height) {
         for (let index = 0; index < seats.length; index += 1) {
@@ -112,20 +170,17 @@ export default function useTableStage({ hostRef, faceRefs, capacity, frontIndex,
             node.style.visibility = 'hidden';
             continue;
           }
-          const anchor = seats[index].head;
-          base.copy(anchor).project(camera);
-          if (base.z < -1 || base.z > 1) {
+          toScreen(seats[index].head, first);
+          if (first.z < -1 || first.z > 1) {
             node.style.visibility = 'hidden';
             continue;
           }
-          const headY = base.y;
-          top.set(anchor.x, anchor.y + HEAD_SIZE, anchor.z).project(camera);
-          const size = Math.abs(top.y - headY) * height * 0.5;
-          const scale = Math.min(1.16, Math.max(0.74, size / refSize));
-          const x = (base.x * 0.5 + 0.5) * width;
-          const y = (-headY * 0.5 + 0.5) * height;
+          const size = faceSizeAt(seats[index].head);
+          const scale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, size / refSize));
+          const x = first.x;
+          const y = first.y;
           node.style.visibility = 'visible';
-          node.style.zIndex = String(Math.max(1, Math.round((1 - base.z) * 500)));
+          node.style.zIndex = String(Math.max(1, Math.round((1 - first.z) * 500)));
           node.style.transform = `translate3d(calc(${x.toFixed(1)}px - 50%), calc(${y.toFixed(1)}px - 50%), 0) scale(${scale.toFixed(3)})`;
         }
       }

@@ -6,13 +6,14 @@ import MafyaNightPanel from './MafyaNightPanel';
 import MafyaResultOverlay from './MafyaResultOverlay';
 import MafyaRoleIcon from './MafyaRoleIcon';
 import MafyaRoomHeader from './MafyaRoomHeader';
-import MafyaSeatGrid from './MafyaSeatGrid';
+import MafyaTable3D from './table3d/MafyaTable3D';
 import MafyaVotePanel from './MafyaVotePanel';
 import { MAFYA_MIN_PLAYERS, ROLE_MAP, roleOf, sideLabel } from './mafyaConfig';
 
 const FINAL_MS = 6000;
 
-/** Oda ekranı: bekleme, rol gösterme, gece, gündüz, oylama ve sonuç aşamalarını yönetir. */
+/** Oda ekranı: oyuncular 3D masada gerçek yüzleriyle oturur.
+    Hedef, listeden değil doğrudan masadaki kişiye dokunarak seçilir. */
 export default function MafyaRoomView({ game }) {
   const { room, me, chat, busy, act } = game;
   const [revealOpen, setRevealOpen] = useState(false);
@@ -48,10 +49,49 @@ export default function MafyaRoomView({ game }) {
     act({ action: 'leave', room_id: room.id });
   };
 
+  // Masada seçim yalnızca sırası gelen oyuncu için açıktır.
+  const pickable = me
+    ? (status === 'night'
+      ? me.alive && me.has_action && !me.ready
+      : status === 'vote'
+        ? me.alive && !me.voted
+        : false)
+    : false;
+
+  const pickedId = status === 'night' ? me?.my_action || '' : '';
+
+  const hint = status === 'night'
+    ? (me?.has_action
+      ? (me.my_action ? 'SEÇİMİN KAYDEDİLDİ' : 'HEDEFİNE MASADA DOKUN')
+      : 'GECE SESSİZLİĞİ')
+    : status === 'vote'
+      ? (me?.voted ? 'OYUN KAYDEDİLDİ' : 'KİMİ GÖNDERELİM? KİŞİYE DOKUN')
+      : status === 'day'
+        ? 'GÜNDÜZ · TARTIŞMA SÜRÜYOR'
+        : status === 'waiting'
+          ? 'OYUNCULAR MASADA'
+          : '';
+
+  const pick = (userId) => {
+    if (status === 'night') act({ action: 'night', room_id: room.id, target_id: userId });
+    else if (status === 'vote') act({ action: 'vote', room_id: room.id, target_id: userId });
+  };
+
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <MafyaRoomHeader room={room} onLeave={leave} />
-      <MafyaSeatGrid players={players} meId={me?.user_id} hostId={room.host_id} showVotes={status === 'vote'} />
+
+      <MafyaTable3D
+        players={players}
+        capacity={room.capacity || 8}
+        meId={me?.user_id}
+        hostId={room.host_id}
+        canPick={pickable}
+        selectedId={pickedId}
+        selfSelectable={me?.role === 'doktor'}
+        hint={hint}
+        onPick={pick}
+      />
 
       {status === 'waiting' ? (
         <div className="mf-panel">
@@ -78,23 +118,8 @@ export default function MafyaRoomView({ game }) {
 
       {status !== 'waiting' && status !== 'finished' ? (
         <>
-          {status === 'night' ? (
-            <MafyaNightPanel
-              room={room}
-              me={me}
-              busy={busy}
-              onAct={(targetId) => act({ action: 'night', room_id: room.id, target_id: targetId })}
-              onSkip={() => act({ action: 'night', room_id: room.id })}
-            />
-          ) : null}
-          {status === 'vote' ? (
-            <MafyaVotePanel
-              room={room}
-              me={me}
-              busy={busy}
-              onVote={(targetId) => act({ action: 'vote', room_id: room.id, target_id: targetId })}
-            />
-          ) : null}
+          {status === 'night' ? <MafyaNightPanel me={me} busy={busy} onSkip={() => act({ action: 'night', room_id: room.id })} /> : null}
+          {status === 'vote' ? <MafyaVotePanel room={room} me={me} /> : null}
           <MafyaDayPanel chat={chat} me={me} busy={busy} onSend={(text) => act({ action: 'chat', room_id: room.id, text })} />
           {me && !me.alive ? (
             <p className="mf-panel-text text-center">Öldün: artık izleyicisin, tartışmayı takip edebilirsin.</p>

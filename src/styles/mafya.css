@@ -958,3 +958,234 @@
   .mf-role-name { font-size: 0.64rem; }
   .mf-targets { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* === 3D MASA: GERÇEK YÜZLER SANDALYELERDE OTURUR === */
+/* Sahne: masa, sandalyeler ve oturan figürler 3D; yüzler gerçek profil fotoğrafı.
+   Fotoğraf, koltuğun başından ekrana yansıtılarak yerleştirilir: kamera dönerken
+   kişi de masada döner gibi görünür. */
+.mf-stage {
+  position: relative;
+  flex-shrink: 0;
+  width: 100%;
+  height: clamp(12.5rem, 46vh, 21rem);
+  margin-top: 0.5rem;
+  overflow: hidden;
+  border-radius: 1.1rem;
+  border: 1px solid rgba(212, 175, 55, 0.24);
+  background: radial-gradient(120% 100% at 50% 6%, #241017 0%, #120a10 56%, #07050a 100%);
+  box-shadow: inset 0 0 42px rgba(0, 0, 0, 0.78);
+}
+
+.mf-stage-canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+
+.mf-stage-glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(56% 42% at 50% 62%, rgba(212, 175, 55, 0.14), transparent 72%);
+}
+
+.mf-stage-hint {
+  position: absolute;
+  left: 50%;
+  top: 0.5rem;
+  z-index: 3;
+  transform: translateX(-50%);
+  border-radius: 9999px;
+  border: 1px solid rgba(212, 175, 55, 0.5);
+  background: rgba(8, 6, 10, 0.8);
+  padding: 0.2rem 0.7rem;
+  font-size: 0.58rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+  color: #ffe9a8;
+  pointer-events: none;
+}
+
+.mf-stage-chips {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Oyuncunun masadaki yeri: yüz, ad ve durum rozeti birlikte ölçeklenir. */
+.mf-chair {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  width: calc(var(--mf-face, 4.4rem) * 1.5);
+  flex-direction: column;
+  align-items: center;
+  visibility: hidden;
+  transform-origin: 50% calc(var(--mf-face, 4.4rem) * 0.5);
+  will-change: transform;
+}
+
+.mf-chair-hit {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(var(--mf-face, 4.4rem) * 0.06);
+  border: 0;
+  background: none;
+  padding: 0;
+  pointer-events: auto;
+}
+
+.mf-chair-hit:disabled {
+  pointer-events: none;
+}
+
+.mf-chair-face {
+  position: relative;
+  display: block;
+  width: var(--mf-face, 4.4rem);
+  height: var(--mf-face, 4.4rem);
+  overflow: hidden;
+  border-radius: 9999px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.04));
+  box-shadow: 0 8px 16px -9px #000;
+}
+
+.mf-chair-face > * {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.mf-chair-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mf-chair-initial {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(var(--mf-face, 4.4rem) * 0.4);
+  font-weight: 900;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.mf-chair-name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.6rem;
+  font-size: calc(var(--mf-face, 4.4rem) * 0.2);
+  font-weight: 900;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+}
+
+.mf-chair-tag {
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(10, 8, 12, 0.82);
+  padding: 0 0.4em;
+  font-size: 0.48rem;
+  font-size: calc(var(--mf-face, 4.4rem) * 0.14);
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.mf-chair-tag[data-tone='gold'] { border-color: rgba(244, 214, 124, 0.85); color: #f4d67c; }
+.mf-chair-tag[data-tone='green'] { border-color: rgba(125, 245, 168, 0.75); color: #7df5a8; }
+.mf-chair-tag[data-tone='red'] { border-color: rgba(255, 120, 120, 0.75); color: #ff9b9b; }
+
+.mf-chair-me .mf-chair-face {
+  border-color: rgba(212, 175, 55, 0.9);
+  box-shadow: 0 0 16px -2px rgba(212, 175, 55, 0.8);
+}
+
+.mf-chair-you {
+  position: absolute;
+  right: -4%;
+  bottom: -6%;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, #ffe9a8, #d4af37);
+  padding: 0 0.42em;
+  font-size: calc(var(--mf-face, 4.4rem) * 0.11);
+  font-weight: 900;
+  color: #2b1c00;
+}
+
+.mf-chair-on .mf-chair-face {
+  border-color: #f4d67c;
+  box-shadow: 0 0 0 3px rgba(244, 214, 124, 0.8), 0 0 24px 5px rgba(244, 214, 124, 0.5);
+}
+
+.mf-chair-dead .mf-chair-photo { filter: grayscale(1) brightness(0.45); }
+.mf-chair-dead .mf-chair-face { border-color: rgba(255, 255, 255, 0.16); }
+.mf-chair-dead .mf-chair-name { color: rgba(255, 255, 255, 0.5); }
+
+.mf-chair-veil {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(8, 4, 6, 0.5);
+  color: #ff6b6b;
+}
+
+/* Seçilebilen kişiler nefes alır: masada kimin hedef olduğu belli olur. */
+.mf-chair-pick .mf-chair-face { animation: mf-chair-call 1.7s ease-in-out infinite; }
+
+@keyframes mf-chair-call {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(244, 214, 124, 0.5), 0 0 10px rgba(244, 214, 124, 0.35); }
+  50% { box-shadow: 0 0 0 4px rgba(244, 214, 124, 0.9), 0 0 26px 6px rgba(244, 214, 124, 0.55); }
+}
+
+/* WebGL olmayan eski cihazlar: yüzler masaya yayılır, seçim yine fotoğraftan yapılır. */
+.mf-stage-flat {
+  height: auto;
+  min-height: 0;
+  padding: 0.5rem 0.55rem 0.7rem;
+  --mf-face: 3.6rem;
+}
+
+.mf-stage-flat .mf-stage-canvas { display: none; }
+
+.mf-stage-flat .mf-stage-chips {
+  position: static;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.mf-stage-flat .mf-chair {
+  position: static;
+  width: auto;
+  visibility: visible !important;
+  transform: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mf-chair-pick .mf-chair-face { animation: none; }
+}
+
+/* Kısa yatay ekranda masa yüksekliği büyür; oda altındaki paneller kaydırılarak okunur. */
+@media (orientation: landscape) and (max-height: 620px) {
+  .mf-stage { height: clamp(11rem, 62vh, 17rem); }
+  .mf-body-fixed { overflow-y: auto; }
+}

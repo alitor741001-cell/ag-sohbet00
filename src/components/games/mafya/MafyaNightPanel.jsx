@@ -1,12 +1,10 @@
 import React from 'react';
-import { Image } from '@/components/ui/image';
+import { Moon } from 'lucide-react';
 import { ROLE_MAP } from './mafyaConfig';
 
-/** Gece paneli: rolünün aksiyonu hedefe dokunarak seçilir; istihbarat notları altta listelenir. */
-export default function MafyaNightPanel({ room, me, busy, onAct, onSkip }) {
+/** Gece paneli: hedef masada seçilir. Burada rol bilgisi, istihbarat ve "geceyi geç" durur. */
+export default function MafyaNightPanel({ me, busy, onSkip }) {
   const info = ROLE_MAP[me.role] || null;
-  const alive = (room.players || []).filter((player) => player.alive !== false);
-  const targets = alive.filter((player) => me.role === 'doktor' || player.user_id !== me.user_id);
 
   return (
     <div className="mf-panel">
@@ -16,30 +14,11 @@ export default function MafyaNightPanel({ room, me, busy, onAct, onSkip }) {
       </p>
 
       {info?.action ? (
-        <>
-          <p className="mf-panel-text">{info.duty} Hedefine dokun.</p>
-          <div className="mf-targets">
-            {targets.map((player) => (
-              <button
-                key={player.user_id}
-                type="button"
-                disabled={busy}
-                className={`mf-target${me.my_action === player.user_id ? ' mf-target-on' : ''}`}
-                onClick={() => onAct(player.user_id)}
-              >
-                <span className="mf-seat-avatar">
-                  {player.avatar ? (
-                    <Image src={player.avatar} alt="" className="h-full w-full" fittingType="fill" quality={70} />
-                  ) : (
-                    <span className="mf-seat-initial">{(player.name || 'O').slice(0, 1).toUpperCase()}</span>
-                  )}
-                </span>
-                <span className="mf-target-name">{player.name}</span>
-              </button>
-            ))}
-          </div>
-          {me.my_action ? <p className="mf-panel-text">Aksiyonun kaydedildi. Diğer oyuncular bekleniyor.</p> : null}
-        </>
+        <p className="mf-panel-text">
+          <Moon className="mr-1 inline h-3.5 w-3.5" aria-hidden="true" />
+          {info.duty} Masada hedefine dokun; seçimin gizli kalır.
+          {me.my_action ? ' Seçimin kaydedildi, diğer oyuncular bekleniyor.' : ''}
+        </p>
       ) : (
         <>
           <p className="mf-panel-text">
