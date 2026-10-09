@@ -399,6 +399,15 @@
 .okey-btn-gold { border-color: rgba(255, 214, 106, 0.7); background: linear-gradient(180deg, #e8c25c, #b8862a); color: #2b1c00; }
 .okey-btn-green { border-color: rgba(140, 240, 180, 0.65); background: linear-gradient(180deg, #35ac67, #1a6c40); color: #eafff2; }
 .okey-btn-red { border-color: rgba(255, 150, 150, 0.6); background: linear-gradient(180deg, #d04040, #8f1f1f); color: #fff3f3; }
+/* 101 puanı bulan el: BİTİR yeşil yanar. */
+.okey-btn-ready { animation: okey-ready-glow 1.4s ease-in-out infinite; }
+@keyframes okey-ready-glow {
+  0%, 100% { box-shadow: 0 0 12px -3px rgba(125, 245, 168, 0.65); }
+  50% { box-shadow: 0 0 0 3px rgba(125, 245, 168, 0.35), 0 0 22px 2px rgba(125, 245, 168, 0.9); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .okey-btn-ready { animation: none; box-shadow: 0 0 16px -2px rgba(125, 245, 168, 0.85); }
+}
 
 /* === TAHTA (EL) === */
 /* Tahta ekranın tam genişliğini kullanır: dizilim tuşları artık işlem şeridinde. */

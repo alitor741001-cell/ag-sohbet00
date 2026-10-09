@@ -34,6 +34,8 @@ export default function OkeyGame({ onExit, onBack }) {
   const phase = table?.phase;
   const canDiscard = myTurn && phase === 'discard';
   const canDraw = myTurn && phase === 'draw' && !busy;
+  // 101 puanı bulan el: BİTİR yeşil yanar ve basınca el kendiliğinden biter.
+  const canFinishNow = myTurn && game.canFinish;
   const turnName = table?.seats?.[table?.turn]?.name || 'Oyuncu';
   const filled = (table?.seats || []).filter((entry) => entry.user_id).length;
   // Grupların puanı: SERİ DİZ'de seriler ve sayı grupları, ÇİFTE DİZ'de ikiz taşlar sayılır;
@@ -62,10 +64,10 @@ export default function OkeyGame({ onExit, onBack }) {
     ? `2, 3 ya da 4 oyuncuyla başlayabilirsin (${filled}/4). 4 oyuncu dolunca oyun kendiliğinden başlar.`
     : playing
       ? myTurn
-        ? phase === 'draw'
-          ? 'Sıra sende: ortadaki desteye dokunup taş çek.'
-          : game.canFinish
-            ? 'Elin bitmeye hazır — BİTİR ile bitir ya da bir taş at.'
+        ? game.canFinish
+          ? 'Elin 101 puanı buldu — BİTİR ile eli bitir.'
+          : phase === 'draw'
+            ? 'Sıra sende: ortadaki desteye dokunup taş çek.'
             : `Sıra sende: elinden bir taş at. Grupların ${myScore} puan.`
         : `${turnName} oynuyor...`
       : table?.last_action || 'El kapandı.';
@@ -105,8 +107,8 @@ export default function OkeyGame({ onExit, onBack }) {
             </span>
             <button
               type="button"
-              className="okey-btn okey-btn-green"
-              disabled={busy || !canDiscard || !game.canFinish}
+              className={`okey-btn okey-btn-green${canFinishNow ? ' okey-btn-ready' : ''}`}
+              disabled={busy || !canFinishNow}
               onClick={game.actions.finish}
             >
               BİTİR

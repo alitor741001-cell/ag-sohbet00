@@ -137,12 +137,15 @@ async function answer(service: any, table: any, user: any, coins: number) {
   const hand = handsOf(secret).find((entry: any) => entry.user_id === user.id)?.tiles || [];
   // Sistem eli her turda hesaplar: kalan taşları 101 puanı bulan oyuncu bitirebilir.
   const finishing = hand.length === TILES_PER_PLAYER + 1 ? finishWith(hand, table.okey) : null;
+  // Eli tümüyle gruplanmış ve 101 puanı bulan oyuncu taş atmadan da bitirebilir.
+  const ready = !finishing && hand.length === TILES_PER_PLAYER && canFinish(hand, table.okey)
+    && handScore(hand) >= TARGET_SCORE;
   return Response.json({
     table: tableView(table),
     hand,
     seat: index,
-    can_finish: !!finishing,
-    finish_score: finishing ? finishing.score : 0,
+    can_finish: !!finishing || ready,
+    finish_score: finishing ? finishing.score : (ready ? handScore(hand) : 0),
     hand_score: handScore(hand),
     coins,
   });
@@ -641,11 +644,17 @@ export default async function (req: Request) {
       if (!table) return Response.json({ error: 'Masa bulunamadı.' }, { status: 404 });
       const seats = seatsOf(table);
       const index = seatIndex(seats, user.id);
-      if (table.status !== 'playing' || index < 0 || Number(table.turn) !== index || table.phase !== 'discard') {
+      if (table.status !== 'playing' || index < 0 || Number(table.turn) !== index) {
         return Response.json({ error: 'Sıra sende değil.' }, { status: 400 });
       }
       const secret = await secretOf(service, table.id);
       const hand = handsOf(secret).find((entry: any) => entry.user_id === user.id)?.tiles || [];
+      // Eli tümüyle gruplanmış ve 101 puanı bulan oyuncu taş atmadan bitirir.
+      if (hand.length === TILES_PER_PLAYER && canFinish(hand, table.okey) && handScore(hand) >= TARGET_SCORE) {
+        const finished = await payWinner(base44, service, table, seats, seats[index]);
+        return answer(service, finished, user, coins);
+      }
+      if (table.phase !== 'discard') return Response.json({ error: 'Sıra sende değil.' }, { status: 400 });
       const finishing = finishWith(hand, table.okey);
       if (!finishing) {
         return Response.json(
