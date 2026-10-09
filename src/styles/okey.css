@@ -326,6 +326,9 @@
 .okey-tile-btn { display: flex; flex-shrink: 0; border: 0; background: none; padding: 0; transition: transform 150ms ease; }
 .okey-tile-btn { touch-action: none; -webkit-touch-callout: none; }
 .okey-tile-dragging { opacity: 0.28; }
+/* Her grubun başı hafif boşlukla ayrılır: gruplar birbirine karışmaz, kullanılamayan
+   taşlar ayrı bölümde durur. */
+.okey-tile-break { margin-left: 0.5rem; }
 .okey-drag-ghost {
   position: fixed;
   /* Oyun panelinin (z-185) üzerinde kalmalı. */

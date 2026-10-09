@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { arrangedScore } from './okey/okeyConfig';
+import { planHand } from './okey/okeyGroups';
 import '@/styles/okey.css';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
 import OkeyFelt from './okey/OkeyFelt';
@@ -33,10 +33,10 @@ export default function OkeyGame({ onExit, onBack }) {
   const canDraw = myTurn && phase === 'draw' && !busy;
   const turnName = table?.seats?.[table?.turn]?.name || 'Oyuncu';
   const filled = (table?.seats || []).filter((entry) => entry.user_id).length;
-  // Dizili taşların puanı: SERİ DİZ basınca seriler, ÇİFTE DİZ basınca çiftler hesaplanır;
-  // hiçbir gruba girmeyen tek taşlar sayılmaz.
+  // Grupların puanı: SERİ DİZ'de seriler ve sayı grupları, ÇİFTE DİZ'de ikiz taşlar sayılır;
+  // hiçbir gruba girmeyen taşlar puanlanmaz ve tahtanın sonunda ayrı durur.
   const myScore = useMemo(
-    () => arrangedScore(game.hand, arrange, table?.okey),
+    () => planHand(game.hand, arrange, table?.okey).total,
     [game.hand, arrange, table?.okey],
   );
 
@@ -61,7 +61,7 @@ export default function OkeyGame({ onExit, onBack }) {
           ? 'Sıra sende: ortadaki desteye dokunup taş çek.'
           : game.canFinish
             ? 'Elin bitmeye hazır — BİTİR ile bitir ya da bir taş at.'
-            : `Sıra sende: elinden bir taş at. Dizili taşların ${myScore} puan.`
+            : `Sıra sende: elinden bir taş at. Grupların ${myScore} puan.`
         : `${turnName} oynuyor...`
       : table?.last_action || 'El kapandı.';
 
