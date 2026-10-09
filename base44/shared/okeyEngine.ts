@@ -81,16 +81,18 @@ export const removeAll = (list: string[], tiles: string[]) =>
  * Eldeki doğal taşlar geçerli gruplara ayrılabiliyor mu?
  * En küçük taşın bulunduğu grubu sırayla dener: seri (3-13 aynı renk sıralı),
  * per (aynı taştan iki tane) ve çift (aynı sayı, farklı renkler, 3-4 taş).
- * Eksikler joker/okey ile tamamlanır. Seri şartı aranmaz: per ve çiftlerden kurulu
- * bir el de 101 puanı bulduğunda açılır ve bitirebilir.
+ * Eksikler joker/okey ile tamamlanır. El yalnızca per ve çiftlerden kuruluysa
+ * açılmaz: bitirmek için gruplar içinde en az bir seri şarttır.
  */
-function solve(naturals: string[], wilds: number, memo: Map<string, boolean>): boolean {
+function solve(naturals: string[], wilds: number, seriUsed: boolean, memo: Map<string, boolean>): boolean {
   if (!naturals.length) {
-    // Kalan taşların tümü joker: tek joker grup kurmaz,
-    // iki joker bir per, üç ve fazlası bir seri olur.
-    return wilds !== 1;
+    // Kalan taşların tümü joker: iki joker bir per, üç ve fazlası bir seri kurar.
+    if (wilds === 0) return seriUsed;
+    if (wilds === 1) return false;
+    if (wilds === 2) return seriUsed;
+    return true;
   }
-  const key = `${naturals.join(',')}|${wilds}`;
+  const key = `${naturals.join(',')}|${wilds}|${seriUsed ? 1 : 0}`;
   const cached = memo.get(key);
   if (cached !== undefined) return cached;
   if (memo.size > MAX_SEARCH) return false;
@@ -114,15 +116,15 @@ function solve(naturals: string[], wilds: number, memo: Map<string, boolean>): b
         else need += 1;
       }
       if (need > wilds) continue;
-      if (solve(removeAll(naturals, use), wilds - need, memo)) ok = true;
+      if (solve(removeAll(naturals, use), wilds - need, true, memo)) ok = true;
     }
   }
 
   // PER: aynı taştan iki tane, ya da bir taş + joker.
   if (!ok) {
     const twins = naturals.filter((tile) => tile === first).length;
-    if (twins >= 2) ok = solve(removeAll(naturals, [first, first]), wilds, memo);
-    else if (wilds >= 1) ok = solve(removeAll(naturals, [first]), wilds - 1, memo);
+    if (twins >= 2) ok = solve(removeAll(naturals, [first, first]), wilds, seriUsed, memo);
+    else if (wilds >= 1) ok = solve(removeAll(naturals, [first]), wilds - 1, seriUsed, memo);
   }
 
   // ÇİFT: aynı sayı, farklı renkler (3-4 taş); eksik renkler jokerle tamamlanır.
@@ -136,7 +138,7 @@ function solve(naturals: string[], wilds: number, memo: Map<string, boolean>): b
       const naturalCount = 1 + picks.length;
       const minNeed = Math.max(0, 3 - naturalCount);
       for (let need = minNeed; need + naturalCount <= 4 && need <= wilds && !ok; need += 1) {
-        ok = solve(removeAll(naturals, [first, ...picks]), wilds - need, memo);
+        ok = solve(removeAll(naturals, [first, ...picks]), wilds - need, seriUsed, memo);
       }
     }
   }
@@ -149,7 +151,7 @@ function solve(naturals: string[], wilds: number, memo: Map<string, boolean>): b
 export function canFinish(tiles: string[], okey: string): boolean {
   const wilds = tiles.filter((tile) => isWild(tile, okey)).length;
   const naturals = tiles.filter((tile) => !isWild(tile, okey)).sort();
-  return solve(naturals, wilds, new Map());
+  return solve(naturals, wilds, false, new Map());
 }
 
 // 101 OKEY: bitiren elin kalan taşları geçerli gruplara ayrılmalı ve en az 101 puan etmeli.
