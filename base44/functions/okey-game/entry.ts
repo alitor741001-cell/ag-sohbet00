@@ -195,7 +195,10 @@ async function maybeStart(base44: any, service: any, table: any) {
 
 /** Dağıtım: bahisler cüzdandan düşülür, eller gizli kayda yazılır. */
 async function startGame(base44: any, service: any, table: any, seats: any[], token: string) {
-  const deal = dealOkey();
+  // Dağıtım oyuncu sayısına göre hesaplanır: oturan oyunculara 21 taş,
+  // kalan taşların tümü ortaya konur (4 oyuncuda 21, 3 oyuncuda 42, 2 oyuncuda 63).
+  const players = seats.map((seat, index) => ({ index, seat })).filter((entry) => entry.seat.user_id);
+  const deal = dealOkey(players.length);
   const pot = potOf(seats);
   await Promise.allSettled(
     seats
@@ -215,11 +218,11 @@ async function startGame(base44: any, service: any, table: any, seats: any[], to
         return null;
       }),
   );
-  const hands = seats.map((seat, index) => ({
-    seat: index,
-    user_id: seat.user_id,
-    tiles: deal.hands[index] || [],
-  }));
+  // Eller oturan koltuklara sırayla verilir; boş koltukların taşı ortaya kalır.
+  const hands = seats.map((seat, index) => {
+    const at = players.findIndex((entry) => entry.index === index);
+    return { seat: index, user_id: seat.user_id, tiles: at >= 0 ? deal.hands[at] : [] };
+  });
   const turnPool = seats.map((seat, index) => (seat.user_id && !seat.left ? index : -1)).filter((index) => index >= 0);
   const turn = turnPool.length ? turnPool[Math.floor(Math.random() * turnPool.length)] : 0;
   // İlk oynayan oyuncu desteden bir taş fazla alır: eline 22 taş olur, ilk hamlesi taş atmaktır.

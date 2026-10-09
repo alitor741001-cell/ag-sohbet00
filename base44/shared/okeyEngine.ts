@@ -51,12 +51,17 @@ export function okeyOf(gosterge: string): string {
   return `${colorOf(gosterge)}${n === 13 ? 1 : n + 1}`;
 }
 
-/** Dağıtım: 21 taş x 4 oyuncu, bir gösterge ve ortada kalan 21 taş. */
-export function dealOkey() {
+/**
+ * Dağıtım: 106 taş, oyuncu sayısına göre hesaplanır. Her oyuncuya 21 taş ve bir gösterge
+ * ayrılır; kalan taşların tümü ortaya konur — 4 oyuncuda 21, 3 oyuncuda 42, 2 oyuncuda 63.
+ * Oynanmayan koltukların taşları da ortaya döner, hiç taş ziyan olmaz.
+ */
+export function dealOkey(playerCount: number = OKEY_MAX_SEATS) {
+  const seated = Math.min(Math.max(Math.floor(playerCount) || 0, 1), OKEY_MAX_SEATS);
   const deck = shuffle(okeyDeck());
   const hands: string[][] = [[], [], [], []];
   for (let round = 0; round < TILES_PER_PLAYER; round += 1) {
-    for (let seat = 0; seat < OKEY_MAX_SEATS; seat += 1) hands[seat].push(deck.pop() as string);
+    for (let seat = 0; seat < seated; seat += 1) hands[seat].push(deck.pop() as string);
   }
   const gosterge = deck.pop() as string;
   return { hands, gosterge, okey: okeyOf(gosterge), stack: deck };
