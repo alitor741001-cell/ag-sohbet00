@@ -113,7 +113,7 @@
   filter: blur(4px);
 }
 
-/* Zarlar kase ağzında durur: çalkalanırken kase kapalıyken içeride dönerler. */
+/* Zarlar kase içinde durur: kase kapalıyken görünmezler, yalnızca kase çalkalanır. */
 .zar-cup-dice {
   position: relative;
   z-index: 2;
@@ -121,12 +121,8 @@
   align-items: flex-end;
   gap: 0.3rem;
   margin-bottom: 0.35rem;
-  transition: transform 420ms cubic-bezier(0.22, 0.9, 0.3, 1);
-}
-
-/* Çalkalama boyunca zarlar kase ağzının içinde durur. */
-.zar-shaker-live .zar-cup-dice {
-  transform: translateY(-0.3rem) scale(0.94);
+  visibility: hidden;
+  opacity: 0;
 }
 
 /* Kase titrer: zarlar kapalı kase içinde dönüyor izlenimi verir. */
@@ -149,19 +145,30 @@
   to { transform: translate(-50%, var(--zar-cup-lift)) scale(0.94); opacity: 0.9; }
 }
 
+/* Kase yukarı kayarken zarlar çuhada belirir. */
 .zar-shaker-open .zar-cup-dice {
   margin-bottom: 0.1rem;
+  animation: zar-dice-appear 0.45s cubic-bezier(0.22, 0.9, 0.3, 1) 6.2s forwards;
+}
+
+@keyframes zar-dice-appear {
+  from { visibility: hidden; opacity: 0; transform: translateY(-0.4rem) scale(0.9); }
+  to { visibility: visible; opacity: 1; transform: translateY(0) scale(1); }
 }
 
 /* === TAKIM ZARLARI === */
-/* Gövde kulüp renginde, üst yüzde arma şeridi, ön yüzde değeri gösteren parlak noktalar. */
+/* Zar gövdesi kulüp renginde; üst kenarda takımın açık rengi, yüzde parlak noktalar. */
 .zar-die {
   position: relative;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  place-items: center;
   overflow: hidden;
-  border-radius: 18%;
   border: 1px solid rgba(255, 255, 255, 0.22);
+  border-top: 2px solid #f4c40a;
+  border-radius: 18%;
+  padding: 12%;
   background: linear-gradient(168deg, #35353f 0%, #131317 52%, #04040a 100%);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 3px 0 rgba(0, 0, 0, 0.55), 0 7px 12px -7px rgba(0, 0, 0, 0.95);
 }
@@ -176,30 +183,11 @@
   pointer-events: none;
 }
 
-.zar-die-band {
-  display: flex;
-  height: 30%;
-  width: 100%;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(180deg, #ffffff 0%, #dfe2e8 58%, #a3a8b3 100%);
-}
-
-.zar-die-band svg {
-  height: 86%;
-  width: auto;
-}
-
-.zar-die-face {
-  display: grid;
-  flex: 1;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(3, 1fr);
-  place-items: center;
-  padding: 11%;
-}
-
 /* Kulüp renkleri: siyah-beyaz, lacivert-sarı, sarı-kırmızı. */
+.zar-die-bjk {
+  border-top-color: #f3f4f7;
+}
+
 .zar-die-fb {
   background: linear-gradient(168deg, #29427f 0%, #0e2158 52%, #050f2f 100%);
 }
@@ -208,11 +196,7 @@
   background: linear-gradient(168deg, #8d1626 0%, #560b16 52%, #2a040a 100%);
 }
 
-.zar-die-fb .zar-die-band,
-.zar-die-gs .zar-die-band {
-  background: linear-gradient(180deg, #ffe873 0%, #f4c40a 56%, #b58703 100%);
-}
-
+/* Noktalar: siyah zarda beyaz, lacivert ve bordoda altın işlemeli. */
 .zar-pip {
   height: 100%;
   width: 100%;
@@ -240,24 +224,11 @@
   width: clamp(1.8rem, 9vw, 2.3rem);
 }
 
-/* YENİ panelindeki küçük zarlar: arma sığmaz, takım rengi üst şeritten belli olur. */
+/* YENİ panelindeki küçük zarlar. */
 .zar-die-mini {
   height: 0.95rem;
   width: 0.95rem;
   border-radius: 26%;
-  border-top-width: 2px;
-  border-top-color: #f4c40a;
-}
-
-.zar-die-mini.zar-die-bjk {
-  border-top-color: #f2f3f6;
-}
-
-.zar-die-mini .zar-die-band {
-  display: none;
-}
-
-.zar-die-mini .zar-die-face {
   padding: 13%;
 }
 
@@ -265,51 +236,8 @@
   box-shadow: none;
 }
 
-/* Kapalıyken zar yüzü okunmaz: sonuç kase açılınca görünür. */
-.zar-die-dim .zar-pip {
-  visibility: hidden;
-}
-
-/* Çalkalama boyunca zarlar içeride döner, sonda yüzü yukarı bakacak şekilde durur. */
-.zar-die-spin {
-  animation: zar-tumble-a 9s cubic-bezier(0.4, 0.16, 0.5, 0.9) both;
-}
-
-.zar-die-spin:nth-child(2) {
-  animation-name: zar-tumble-b;
-}
-
-.zar-die-spin:nth-child(3) {
-  animation-name: zar-tumble-c;
-}
-
-@keyframes zar-tumble-a {
-  0% { transform: perspective(320px) rotateZ(0deg) rotateX(-16deg) rotateY(14deg); }
-  68% { transform: perspective(320px) rotateZ(-3240deg) rotateX(18deg) rotateY(-16deg) translateY(-0.18rem); }
-  84% { transform: perspective(320px) rotateZ(-3420deg) rotateX(-10deg) rotateY(8deg) translateY(-0.34rem); }
-  94% { transform: perspective(320px) rotateZ(-3540deg) rotateX(5deg) rotateY(-4deg) translateY(-0.1rem); }
-  100% { transform: perspective(320px) rotateZ(-3600deg) rotateX(0deg) rotateY(0deg) translateY(0); }
-}
-
-@keyframes zar-tumble-b {
-  0% { transform: perspective(320px) rotateZ(0deg) rotateX(14deg) rotateY(-12deg); }
-  68% { transform: perspective(320px) rotateZ(-2520deg) rotateX(-18deg) rotateY(16deg) translateY(-0.26rem); }
-  84% { transform: perspective(320px) rotateZ(-2700deg) rotateX(10deg) rotateY(-6deg) translateY(-0.3rem); }
-  94% { transform: perspective(320px) rotateZ(-2820deg) rotateX(-4deg) rotateY(3deg) translateY(-0.08rem); }
-  100% { transform: perspective(320px) rotateZ(-2880deg) rotateX(0deg) rotateY(0deg) translateY(0); }
-}
-
-@keyframes zar-tumble-c {
-  0% { transform: perspective(320px) rotateZ(0deg) rotateX(-10deg) rotateY(16deg); }
-  68% { transform: perspective(320px) rotateZ(-3960deg) rotateX(16deg) rotateY(-14deg) translateY(-0.12rem); }
-  84% { transform: perspective(320px) rotateZ(-4130deg) rotateX(-12deg) rotateY(9deg) translateY(-0.36rem); }
-  94% { transform: perspective(320px) rotateZ(-4260deg) rotateX(6deg) rotateY(-5deg) translateY(-0.12rem); }
-  100% { transform: perspective(320px) rotateZ(-4320deg) rotateX(0deg) rotateY(0deg) translateY(0); }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .zar-shaker-live { animation: none; }
-  .zar-die-spin { animation: none; }
 }
 
 /* === SONUÇ ŞERİDİ === */

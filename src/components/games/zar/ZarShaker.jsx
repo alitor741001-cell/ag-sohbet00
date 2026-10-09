@@ -2,12 +2,11 @@ import React from 'react';
 import ZarDie from './ZarDie';
 import { DICE_TEAMS } from './zarConfig';
 
-/** Kara kase: bahis aşamasında kapalı durur, çalkalanırken zarlar kase içinde döner,
+/** Kara kase: çalkalanırken kapalıdır ve zarlar içinde görünmez,
     son iki saniyede kase yukarı kayar ve zarlar çuhada açılır. */
 export default function ZarShaker({ dice, phase }) {
   const shaking = phase === 'shaking';
   const revealed = shaking && Array.isArray(dice);
-  // Kapalıyken zarların yüzü gizlenir: sonuç yalnızca çalkalama anında açılır.
   const values = revealed ? dice : [1, 1, 1];
 
   return (
@@ -18,7 +17,7 @@ export default function ZarShaker({ dice, phase }) {
       </span>
       <span className="zar-cup-dice">
         {values.map((value, index) => (
-          <ZarDie key={index} value={value} team={DICE_TEAMS[index]} size="md" spin={shaking} dim={!revealed} />
+          <ZarDie key={index} value={value} team={DICE_TEAMS[index]} size="md" />
         ))}
       </span>
       <span aria-hidden="true" className="zar-cup-shadow" />
