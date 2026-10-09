@@ -110,6 +110,26 @@
       },
       "default": []
     },
+    "final_scores": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "seat": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string",
+            "default": ""
+          },
+          "score": {
+            "type": "number",
+            "default": 0
+          }
+        }
+      },
+      "default": []
+    },
     "winner_id": {
       "type": "string",
       "default": ""

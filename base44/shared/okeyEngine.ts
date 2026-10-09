@@ -148,15 +148,37 @@ export function canFinish(tiles: string[], okey: string): boolean {
   return solve(naturals, wilds, false, new Map());
 }
 
-/** Fazladan taşlı elde atılabilecek taş: kalan taşların tümü geçerliyse o taş bitirir. Okey atılmaz. */
-export function findDiscard(tiles: string[], okey: string): string | null {
+// 101 OKEY: bitiren elin kalan taşları geçerli gruplara ayrılmalı ve en az 101 puan etmeli.
+export const TARGET_SCORE = 101;
+
+/** Taş puanı: 1 → 1, 2-9 → sayı değeri, 10/11/12/13 → 10 puan. */
+export function tilePoint(tile: string): number {
+  const n = numberOf(tile);
+  if (!n) return 0;
+  return n <= 9 ? n : 10;
+}
+
+/** Eldeki taşların toplam puanı. */
+export const handScore = (tiles: string[]) =>
+  tiles.reduce((total, tile) => total + tilePoint(tile), 0);
+
+/**
+ * Bitirici atış: atılacak taş çıkarıldığında kalan el geçerli gruplara ayrılıyor ve
+ * en az 101 puan ediyorsa o taş ile kalan elin puanı döner. Okey/joker atılmaz.
+ */
+export function finishWith(tiles: string[], okey: string): { tile: string; score: number } | null {
   const seen = new Set<string>();
+  let best: { tile: string; score: number } | null = null;
   for (const tile of tiles) {
     if (isWild(tile, okey) || seen.has(tile)) continue;
     seen.add(tile);
-    if (canFinish(removeOne(tiles, tile), okey)) return tile;
+    const rest = removeOne(tiles, tile);
+    if (!canFinish(rest, okey)) continue;
+    const score = handScore(rest);
+    if (score < TARGET_SCORE) continue;
+    if (!best || score > best.score) best = { tile, score };
   }
-  return null;
+  return best;
 }
 
 /** Süresi dolan oyuncu için otomatik atış: joker dışında bir taş seçilir. */

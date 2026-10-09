@@ -7,10 +7,13 @@ import {
   DISCARD_MS,
   DRAW_MS,
   OKEY_BETS,
+  TARGET_SCORE,
   TILES_PER_PLAYER,
   autoDiscard,
+  canFinish,
   dealOkey,
-  findDiscard,
+  finishWith,
+  handScore,
   isWild,
   removeOne,
 } from '../../shared/okeyEngine.ts';
@@ -52,6 +55,15 @@ function seatsOf(table: any) {
 }
 
 const handsOf = (secret: any) => (Array.isArray(secret?.hands) ? secret.hands : []);
+
+/** El sonu: her oyuncunun elinde kalan taşların puanı. */
+function scoredHands(seats: any[], hands: any[]) {
+  return seats.map((seat, index) => ({
+    seat: index,
+    name: seat.name || '',
+    score: seat.user_id ? handScore(hands.find((entry: any) => entry.seat === index)?.tiles || []) : 0,
+  }));
+}
 const freeSeat = (seats: any[]) => seats.findIndex((seat) => !seat.user_id);
 const seatIndex = (seats: any[], userId: string) => seats.findIndex((seat) => seat.user_id === userId);
 const potOf = (seats: any[]) => seats.reduce((total, seat) => total + (Number(seat.stake) || 0), 0);
@@ -94,6 +106,7 @@ function tableView(table: any) {
     stack_count: Number(table.stack_count) || 0,
     discards: Array.isArray(table.discards) ? table.discards : [],
     discard_seats: Array.isArray(table.discard_seats) ? table.discard_seats : [],
+    final_scores: Array.isArray(table.final_scores) ? table.final_scores : [],
     seats: seatsOf(table).map((seat) => ({
       seat: seat.seat,
       user_id: seat.user_id || '',
@@ -122,11 +135,15 @@ async function answer(service: any, table: any, user: any, coins: number) {
   const index = seatIndex(seats, user.id);
   const secret = index >= 0 ? await secretOf(service, table.id) : null;
   const hand = handsOf(secret).find((entry: any) => entry.user_id === user.id)?.tiles || [];
+  // Sistem eli her turda hesaplar: kalan taşları 101 puanı bulan oyuncu bitirebilir.
+  const finishing = hand.length === TILES_PER_PLAYER + 1 ? finishWith(hand, table.okey) : null;
   return Response.json({
     table: tableView(table),
     hand,
     seat: index,
-    can_finish: hand.length === TILES_PER_PLAYER + 1 && !!findDiscard(hand, table.okey),
+    can_finish: !!finishing,
+    finish_score: finishing ? finishing.score : 0,
+    hand_score: handScore(hand),
     coins,
   });
 }
@@ -226,6 +243,7 @@ async function startGame(base44: any, service: any, table: any, seats: any[], to
     stack_count: stack.length,
     discards: [],
     discard_seats: [],
+    final_scores: [],
     turn,
     // İlk oyuncu 22 taşla başlar: taş çekmez, doğrudan taş atar.
     phase: 'discard',
@@ -294,6 +312,8 @@ async function discardStep(base44: any, service: any, table: any, secret: any, s
 /** Kazanan potun tamamını alır; masa kapanır, eller silinir. */
 async function payWinner(base44: any, service: any, table: any, seats: any[], winner: any) {
   const pot = Number(table.pot) || 0;
+  // Eller silinmeden önce her oyuncunun kalan taş puanı hesaplanır.
+  const finalScores = scoredHands(seats, handsOf(await secretOf(service, table.id)));
   if (winner?.user_id && pot > 0) {
     const wallet = await loadWallet(base44, {
       id: winner.user_id,
@@ -314,6 +334,7 @@ async function payWinner(base44: any, service: any, table: any, seats: any[], wi
     status: 'finished',
     pot: 0,
     win_amount: pot,
+    final_scores: finalScores,
     winner_id: winner?.user_id || '',
     winner_name: winner?.name || '',
     phase: '',
@@ -325,6 +346,8 @@ async function payWinner(base44: any, service: any, table: any, seats: any[], wi
 
 /** Deste bittiğinde kimse bitiremediyse bahisler iade edilir. */
 async function refundTable(base44: any, service: any, table: any, seats: any[]) {
+  // Deste bitti: kalan ellerin puanı da el sonu için hesaplanır.
+  const finalScores = scoredHands(seats, handsOf(await secretOf(service, table.id)));
   await Promise.allSettled(
     seats
       .filter((seat) => seat.user_id)
@@ -349,6 +372,7 @@ async function refundTable(base44: any, service: any, table: any, seats: any[]) 
     status: 'finished',
     pot: 0,
     win_amount: 0,
+    final_scores: finalScores,
     winner_id: '',
     winner_name: '',
     phase: '',
