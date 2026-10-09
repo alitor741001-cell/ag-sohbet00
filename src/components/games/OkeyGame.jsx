@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { handTotalScore } from './okey/okeyConfig';
 import '@/styles/okey.css';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
 import OkeyFelt from './okey/OkeyFelt';
@@ -30,8 +31,9 @@ export default function OkeyGame({ onExit, onBack }) {
   const canDraw = myTurn && phase === 'draw' && !busy;
   const turnName = table?.seats?.[table?.turn]?.name || 'Oyuncu';
   const filled = (table?.seats || []).filter((entry) => entry.user_id).length;
-  // El puanı: sistem her turda otomatik hesaplar; 101 olduğunda bitirme puanı gösterilir.
-  const myScore = game.canFinish ? game.finishScore : game.handScore;
+  // Toplam taş puanı: eldeki tüm taşların puanı. SERİ ya da ÇİFT dizilimine basıldığında
+  // ve el her değiştiğinde kendiliğinden yeniden hesaplanır.
+  const myScore = useMemo(() => handTotalScore(game.hand), [game.hand, mode]);
 
   // Her yeni elde tahta yeniden dizilir: 21 (başlayanda 22) taş "seri" düzenine göre sıralanır.
   const roundNo = Number(table?.round_no) || 0;

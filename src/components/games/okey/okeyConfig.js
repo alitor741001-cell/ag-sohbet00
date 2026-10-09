@@ -13,6 +13,20 @@ export const tileLabel = (tile) => (tile === 'J' ? '★' : String(Number(String(
 export const tileColor = (tile) => (tile === 'J' ? 'J' : String(tile).charAt(0));
 export const isWild = (tile, okey) => tile === 'J' || (!!okey && tile === okey);
 
+/** Taş puanı: 1 → 1, 2-9 → sayı, 10/11/12/13 → 10 puan, joker → 0. */
+export const tilePoint = (tile) => {
+  if (tile === 'J') return 0;
+  const n = Number(String(tile).slice(1)) || 0;
+  return n > 9 ? 10 : n;
+};
+
+/**
+ * Toplam taş puanı: eldeki tüm taşların puanı. SERİ DİZ / ÇİFTE DİZ basıldığında ve
+ * el her değiştiğinde kendiliğinden yeniden hesaplanır.
+ */
+export const handTotalScore = (tiles) =>
+  (Array.isArray(tiles) ? tiles : []).reduce((total, tile) => total + tilePoint(tile), 0);
+
 /** Oturduğum yere göre koltuğun masa kenarı. */
 export const slotOf = (seatIndex, mySeat) => SLOT_BY_OFFSET[(((seatIndex - mySeat) % 4) + 4) % 4];
 
