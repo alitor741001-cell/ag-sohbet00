@@ -294,6 +294,7 @@
 }
 
 /* === TAŞ === */
+/* Referanstaki taş: beyaz gövde, üstte sayı, altta rengin küçük şekli. */
 .okey-tile {
   position: relative;
   display: flex;
@@ -301,25 +302,30 @@
   aspect-ratio: 0.72;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  border-radius: 5px;
-  border: 1px solid #b3a179;
-  background: linear-gradient(178deg, #fffdf6 0%, #f2e9d6 62%, #ded1b4 100%);
-  box-shadow: 0 2px 0 #b3a179, 0 4px 7px -4px rgba(0, 0, 0, 0.7);
+  justify-content: space-between;
+  border-radius: 6px;
+  border: 1px solid #b9a67c;
+  background: linear-gradient(178deg, #ffffff 0%, #fbf7ec 58%, #efe5d1 100%);
+  box-shadow: inset 0 1px 0 #fff, 0 2px 0 #b3a179, 0 4px 7px -4px rgba(0, 0, 0, 0.7);
+  padding: calc(var(--okey-tile) * 0.13) 0 calc(var(--okey-tile) * 0.1);
   color: #1a1a1a;
 }
-.okey-tile-num { font-size: calc(var(--okey-tile) * 0.46); font-weight: 900; line-height: 1; letter-spacing: -0.02em; }
-.okey-tile-shape { margin-top: 0.1rem; height: calc(var(--okey-tile) * 0.14); width: calc(var(--okey-tile) * 0.3); background: currentColor; opacity: 0.9; }
+.okey-tile-num { font-size: calc(var(--okey-tile) * 0.44); font-weight: 900; line-height: 1; letter-spacing: -0.02em; }
+/* Şekil çizgiyle çizilir; rengi taşın kendi renginden gelir. */
+.okey-tile-shape {
+  height: calc(var(--okey-tile) * 0.26);
+  width: calc(var(--okey-tile) * 0.26);
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.3;
+  stroke-linejoin: round;
+  opacity: 0.95;
+}
 .okey-tile-c-R { color: #d21f26; }
 .okey-tile-c-S { color: #17181c; }
 .okey-tile-c-M { color: #1657c8; }
 .okey-tile-c-Y { color: #d99400; }
 .okey-tile-c-J { color: #8a5cf6; }
-.okey-tile-c-R .okey-tile-shape { clip-path: polygon(50% 0, 100% 100%, 0 100%); }
-.okey-tile-c-S .okey-tile-shape { border-radius: 9999px; }
-.okey-tile-c-M .okey-tile-shape { border-radius: 2px; }
-.okey-tile-c-Y .okey-tile-shape { border-radius: 9999px; height: calc(var(--okey-tile) * 0.13); }
-.okey-tile-c-J .okey-tile-shape { clip-path: polygon(50% 0, 62% 38%, 100% 38%, 70% 60%, 82% 100%, 50% 76%, 18% 100%, 30% 60%, 0 38%, 38% 38%); width: calc(var(--okey-tile) * 0.34); }
 .okey-tile-wild { box-shadow: 0 0 0 2px #ffd76a, 0 2px 0 #b3a179, 0 4px 10px -4px rgba(0, 0, 0, 0.7); }
 .okey-tile-down { background: linear-gradient(178deg, #d5a95c, #a3762c 60%, #7c561d); border-color: #6b4c19; box-shadow: 0 2px 0 #6b4c19, 0 4px 8px -4px rgba(0, 0, 0, 0.75); }
 /* Tahta taşları düğme olarak durur: atılacak taş seçilir. */
@@ -395,47 +401,70 @@
 .okey-btn-red { border-color: rgba(255, 150, 150, 0.6); background: linear-gradient(180deg, #d04040, #8f1f1f); color: #fff3f3; }
 
 /* === TAHTA (EL) === */
+/* Dizilim tuşları tahtanın iki yanına bitişik oturur: arada boşluk kalmaz. */
 .okey-rack-wrap {
   display: flex;
   flex-shrink: 0;
   align-items: stretch;
-  gap: 0.3rem;
-  padding: 0.35rem 0.45rem max(0.45rem, env(safe-area-inset-bottom));
+  gap: 0;
+  padding: 0.35rem 0.3rem max(0.45rem, env(safe-area-inset-bottom));
 }
+/* Cilalı ahşap tahta: damar çizgileri ve üst kenarda parlaklık. */
 .okey-rack {
   display: flex;
   min-width: 0;
   flex: 1;
   flex-direction: column;
   gap: 0.2rem;
-  border-radius: 14px 14px 8px 8px;
+  border-radius: 12px;
   border: 2px solid #6d4210;
-  background: linear-gradient(180deg, #d28a25, #a8651a 70%, #8c5113);
-  box-shadow: inset 0 2px 0 rgba(255, 205, 130, 0.5), 0 10px 20px -14px #000;
+  background:
+    repeating-linear-gradient(93deg, rgba(255, 228, 172, 0.16) 0 2px, rgba(116, 68, 20, 0.16) 2px 5px, rgba(255, 228, 172, 0) 5px 11px),
+    linear-gradient(180deg, #c68e42 0%, #b8813a 42%, #a67535 74%, #8c5113 100%);
+  box-shadow: inset 0 2px 0 rgba(255, 228, 172, 0.55), inset 0 -4px 10px rgba(66, 36, 8, 0.5), 0 10px 20px -14px #000;
   padding: 0.35rem 0.3rem;
 }
 /* Sıra bendeyken tahta hafifçe parlar: taş sürüklenip ortaya atılabilir. */
-.okey-rack-ready { box-shadow: inset 0 2px 0 rgba(255, 205, 130, 0.5), 0 0 20px -4px rgba(255, 212, 100, 0.65), 0 10px 20px -14px #000; }
+.okey-rack-ready { box-shadow: inset 0 2px 0 rgba(255, 228, 172, 0.55), 0 0 20px -4px rgba(255, 212, 100, 0.65), 0 10px 20px -14px #000; }
 .okey-row { display: flex; min-height: calc(var(--okey-tile) * 1.39); align-items: center; justify-content: center; gap: 0.15rem; }
+/* Dizilim tuşu: üstte kart ikonu, altında dikey yazılı etiket — ahşap tahtanın yanına yaslanır. */
 .okey-side {
   display: flex;
   flex-shrink: 0;
-  width: 1.6rem;
+  width: 2.4rem;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.24);
-  background: rgba(10, 10, 12, 0.85);
-  font-size: 0.5rem;
-  font-weight: 900;
-  letter-spacing: 0.12em;
-  color: #ffe9a8;
+  gap: 0.32rem;
+  border-radius: 12px;
+  border: 1px solid #17191b;
+  background: linear-gradient(180deg, #3b3e41 0%, #2d3032 55%, #212325 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), inset 0 -8px 14px rgba(0, 0, 0, 0.35), 0 8px 16px -12px #000;
+  padding: 0.45rem 0.15rem;
+  color: #fff;
+}
+.okey-side-text {
   writing-mode: vertical-rl;
   text-orientation: mixed;
-  padding: 0.35rem 0.1rem;
+  font-size: 0.56rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.65);
 }
-.okey-side[data-on="1"] { border-color: rgba(255, 214, 106, 0.85); background: rgba(60, 40, 6, 0.9); }
+.okey-side-icon {
+  height: 1.45rem;
+  width: 1.45rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.3;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.okey-side-icon text { fill: currentColor; stroke: none; font-size: 7.5px; font-weight: 900; }
+.okey-side[data-on="1"] {
+  border-color: rgba(255, 214, 106, 0.8);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 0 16px -3px rgba(255, 200, 60, 0.8), 0 8px 16px -12px #000;
+}
 
 /* === LOBİ === */
 .okey-lobby { display: flex; min-height: 0; flex: 1; flex-direction: column; gap: 0.6rem; overflow-y: auto; padding: 0.5rem; }
@@ -571,5 +600,7 @@
   .okey-avatar { height: 2.2rem; width: 2.2rem; }
   .okey-seat-top { top: 0.15rem; }
   .okey-seat-bottom { bottom: 0.15rem; }
-  .okey-side { font-size: 0.44rem; }
+  .okey-side { width: 2rem; }
+  .okey-side-text { font-size: 0.46rem; letter-spacing: 0.1em; }
+  .okey-side-icon { height: 1.15rem; width: 1.15rem; }
 }
