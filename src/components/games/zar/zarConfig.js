@@ -19,6 +19,8 @@ export const ZONE_LABEL = { kaplan: 'KAPLAN', kucuk: 'KÜÇÜK', buyuk: 'BÜYÜK
 export const ZONE_MULT = { kaplan: 35, kucuk: 2, buyuk: 2 };
 
 // Tur süreleri sunucuda yönetilir (base44/shared/zarRound.ts): 20 sn bahis, 9 sn zar.
+// Kase bu sürenin başında kapalı çalkalanır; sonra dikey olarak kalkıp zarları açar.
+export const SHAKE_HIDE_MS = 3000;
 
 /** Zar toplamının düştüğü alan: 3 ve 18 kaplan, 4-10 küçük, 11-17 büyük. */
 export const sumTone = (sum) => {

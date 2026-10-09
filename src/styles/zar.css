@@ -199,70 +199,55 @@
   width: clamp(4.8rem, 25vw, 7rem);
 }
 
-/* Çalkalama: zarlar kase içinde yerinden oynamadan döner, camdan görünür. */
-.zar-shaker-live .zar-cup-dice {
+/* Çalkalama: zarlar kase içinde kalır, dışarıdan görünmez. */
+.zar-shaker-open .zar-cup-dice {
   visibility: visible;
   opacity: 1;
-  animation: zar-cup-rattle 0.5s ease-in-out 12 forwards;
 }
 
-.zar-shaker-live .zar-cup-dice .zar-die {
-  animation:
-    zar-die-tumble 0.62s linear 10 forwards,
-    zar-die-settle 0.4s cubic-bezier(0.22, 0.9, 0.3, 1) 6.1s both;
+.zar-shaker-open .zar-cup-dice .zar-die {
+  animation: zar-die-settle 0.45s cubic-bezier(0.22, 0.9, 0.3, 1) both;
 }
 
 /* Zarlar tek tek açılır: her zar biraz sonra yerine oturur. */
-.zar-shaker-live .zar-cup-dice .zar-die:nth-child(2) {
-  animation-delay: 0.06s, 6.22s;
+.zar-shaker-open .zar-cup-dice .zar-cube:nth-child(2) .zar-die {
+  animation-delay: 0.08s;
 }
 
-.zar-shaker-live .zar-cup-dice .zar-die:nth-child(3) {
-  animation-delay: 0.12s, 6.34s;
+.zar-shaker-open .zar-cup-dice .zar-cube:nth-child(3) .zar-die {
+  animation-delay: 0.16s;
 }
 
-@keyframes zar-cup-rattle {
-  0% { transform: translateX(-0.1rem); }
-  50% { transform: translateX(0.1rem); }
-  100% { transform: translateX(0); }
-}
-
-/* Zar kendi yerinde döner ve dönerken biraz küçülür: kasenin kenarından taşmaz. */
-@keyframes zar-die-tumble {
-  0% { transform: rotate(0deg) scale(0.78); }
-  25% { transform: rotate(90deg) scale(0.78); }
-  50% { transform: rotate(180deg) scale(0.78); }
-  75% { transform: rotate(270deg) scale(0.78); }
-  100% { transform: rotate(360deg) scale(1); }
-}
-
-/* Kase kalkınca zar yerinde açılır. */
+/* Kase kalkınca zar çuhadaki yerine oturur: kısa bir sıçrama, sonra durur.
+   Her zar kendi açısında durur (--zar-die-turn), küp görünümü korunur. */
 @keyframes zar-die-settle {
-  from { transform: scale(0.86); }
-  60% { transform: scale(1.08); }
-  to { transform: scale(1); }
+  from { transform: scaleY(0.72) rotate(var(--zar-die-turn, 45deg)) scale(0.84); }
+  60% { transform: scaleY(0.72) rotate(var(--zar-die-turn, 45deg)) scale(1.08); }
+  to { transform: scaleY(0.72) rotate(var(--zar-die-turn, 45deg)) scale(1); }
 }
 
-/* Kase titrer: zarlar kase içinde dönüyor izlenimi verir. Titreme kase kalkmadan biter. */
+/* Kase hızlı ve dairesel çalkalanır: zarlar içeride takırdar, dışarıdan görünmez. */
 .zar-shaker-live {
-  animation: zar-shaker-wobble 0.46s ease-in-out 13 forwards;
+  animation: zar-shaker-wobble 0.34s linear infinite;
 }
 
 @keyframes zar-shaker-wobble {
-  0% { transform: translateY(0) rotate(-1.1deg); }
-  50% { transform: translateY(-0.16rem) rotate(1.1deg); }
-  100% { transform: translateY(0) rotate(0deg); }
+  0% { transform: translate(0.09rem, 0) rotate(-3.5deg); }
+  25% { transform: translate(0, -0.11rem) rotate(0deg); }
+  50% { transform: translate(-0.09rem, 0) rotate(3.5deg); }
+  75% { transform: translate(0, 0.11rem) rotate(0deg); }
+  100% { transform: translate(0.09rem, 0) rotate(-3.5deg); }
 }
 
-/* Kase camıyla birlikte yukarı kalkar: zarlar çuhada tek tek açılır. */
+/* Kase camıyla birlikte dikey olarak hızla yukarı kalkar: zarlar çuhada açılır. */
 .zar-shaker-open .zar-cup,
 .zar-shaker-open .zar-cup-glass {
-  animation: zar-cup-lift 0.65s cubic-bezier(0.22, 0.9, 0.3, 1) 6.1s forwards;
+  animation: zar-cup-lift 0.42s cubic-bezier(0.2, 0.9, 0.25, 1) forwards;
 }
 
 @keyframes zar-cup-lift {
   from { transform: translate(-50%, 0) scale(1); opacity: 1; }
-  to { transform: translate(-50%, var(--zar-cup-lift)) scale(0.94); opacity: 0.9; }
+  to { transform: translate(-50%, var(--zar-cup-lift)) scale(1); opacity: 0.88; }
 }
 
 /* === TAKIM ZARLARI === */
@@ -356,9 +341,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .zar-shaker-live,
-  .zar-shaker-live .zar-cup-dice,
-  .zar-shaker-live .zar-cup-dice .zar-die {
+  .zar-shaker-live {
     animation: none;
   }
 }
@@ -1072,8 +1055,13 @@
 }
 .zar-felt-dice .zar-cup-dice {
   position: absolute; bottom: 1.6rem; width: 74%; height: 3.4rem;
-  margin: 0; display: block; visibility: visible; opacity: 1;
+  margin: 0; display: block;
 }
+/* Kase kalkınca zarlar çuhada görünür ve hafif dağınık durur: her zarın açısı farklıdır. */
+.zar-felt-dice .zar-shaker-open .zar-cup-dice { visibility: visible; opacity: 1; }
+.zar-felt-dice .zar-cube:nth-child(1) { --zar-die-turn: 43deg; }
+.zar-felt-dice .zar-cube:nth-child(2) { --zar-die-turn: 48deg; }
+.zar-felt-dice .zar-cube:nth-child(3) { --zar-die-turn: 41deg; }
 .zar-cube { position: absolute; width: 1.75rem; height: 1.9rem; }
 .zar-cube:nth-child(1) { left: calc(50% - 0.875rem); top: 0; }
 .zar-cube:nth-child(2) { left: 0; bottom: 0; }
@@ -1091,10 +1079,12 @@
 .zar-cube-fb .zar-cube-side { background-image: linear-gradient(90deg, #0e2158, #f4c40a); }
 .zar-cube-gs .zar-cube-side { background-image: linear-gradient(90deg, #7d1220, #f4c40a); }
 .zar-cube-side i { width: .22rem; height: .28rem; border-radius: 50%; background: #5c484b; }
-.zar-shaker-live .zar-cube { animation: zar-cube-roll .62s linear 10; }
-@keyframes zar-cube-roll { 0% { transform: rotate(0) scale(.85); } 50% { transform: rotate(180deg) scale(.8); } 100% { transform: rotate(360deg) scale(1); } }
 .zar-felt-dice .zar-sum { font-size: .5rem; padding: .2rem .35rem; white-space: nowrap; }
-@media (prefers-reduced-motion: reduce) { .zar-shaker-live .zar-cube { animation: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .zar-shaker-open .zar-cup,
+  .zar-shaker-open .zar-cup-glass,
+  .zar-shaker-open .zar-cup-dice .zar-die { animation: none; }
+}
 
 /* === GENİŞ EKRAN VE YATAY === */
 @media (min-width: 768px) {

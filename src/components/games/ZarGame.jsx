@@ -7,7 +7,7 @@ import { Image } from '@/components/ui/image';
 import GameStatCards from '@/components/games/controls/GameStatCards';
 import GameHelpSheet from '@/components/games/help/GameHelpSheet';
 import { ZAR_LOGO } from './zar/zarAssets';
-import { formatCoins, outcomeName } from './zar/zarConfig';
+import { SHAKE_HIDE_MS, formatCoins, outcomeName } from './zar/zarConfig';
 import useZarGame from './zar/useZarGame';
 import useZarBoard from './zar/useZarBoard';
 import ZarChipRow from './zar/ZarChipRow';
@@ -29,10 +29,21 @@ export default function ZarGame({ onExit, onBack }) {
 
   const betting = game.phase === 'betting';
   const shaking = game.phase === 'shaking';
-  // Zarlar ve toplam yalnızca çalkalama anında açıklanır.
-  const dice = shaking ? game.round?.dice ?? null : null;
-  const sum = shaking ? game.round?.sum ?? null : null;
-  const outcome = shaking ? game.round?.outcome ?? null : null;
+  // Kase önce kapalı çalkalanır; zarlar kase kalktıktan sonra açıklanır.
+  const [revealed, setRevealed] = useState(false);
+  useEffect(() => {
+    if (!shaking) {
+      setRevealed(false);
+      return undefined;
+    }
+    setRevealed(false);
+    const timer = setTimeout(() => setRevealed(true), SHAKE_HIDE_MS);
+    return () => clearTimeout(timer);
+  }, [shaking, game.round?.round_no]);
+  // Zarlar ve toplam yalnızca kase kalktıktan sonra açıklanır.
+  const dice = revealed ? game.round?.dice ?? null : null;
+  const sum = revealed ? game.round?.sum ?? null : null;
+  const outcome = revealed ? game.round?.outcome ?? null : null;
   // YENİ paneli zarlar açıkken doğrudan onları gösterir: geçmiş listesi önceki turlara iner.
   const liveRound = dice ? { round_no: game.round?.round_no, d1: dice[0], d2: dice[1], d3: dice[2], sum } : null;
   // Sıralama son sonuçlanan turdan okunur: yeni bahis turu açıldığında da
@@ -48,10 +59,11 @@ export default function ZarGame({ onExit, onBack }) {
   ];
 
   // Tur sonucu: kazanç ödenmişse kutlama ekranı açılır.
+  // Kutlama ekranı da kase kalkıp zarlar açıldıktan sonra belirir.
   useEffect(() => {
-    if (!game.result || !game.result.payout) return;
+    if (!game.result || !game.result.payout || !revealed) return;
     setPrize({ amount: game.result.payout, dice: game.result.dice, sum: game.result.sum, outcome: game.result.outcome });
-  }, [game.result]);
+  }, [game.result, revealed]);
 
   return (
     <div className="zar-sky relative flex h-full min-h-0 w-full flex-col overflow-hidden">
@@ -94,13 +106,13 @@ export default function ZarGame({ onExit, onBack }) {
             bets={game.bets}
             zoneTotals={board.zoneTotals}
             disabled={!betting}
-            revealed={shaking}
+            revealed={revealed}
             outcome={outcome}
             onPlace={game.placeBet}
-            /* Kase masanın ortasında durur; cam olduğu için zarlar içinde dönerken görünür. */
+            /* Kase masanın ortasında durur: zarlar kase kalkmadan görünmez. */
             overlay={(
               <div className="zar-felt-dice">
-                <ZarShaker dice={dice} phase={game.phase} />
+                <ZarShaker dice={dice} phase={game.phase} revealed={revealed} />
                 {/* Zar sonucu: açılan zarların toplamı ve düştüğü alan. */}
                 <p className={`zar-sum${sum ? ' zar-sum-live' : ''}`}>
                   {sum
