@@ -1,0 +1,149 @@
+{
+  "name": "OkeyTable",
+  "type": "object",
+  "properties": {
+    "code": {
+      "type": "string",
+      "default": ""
+    },
+    "base_bet": {
+      "type": "number",
+      "default": 1000
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "waiting",
+        "playing",
+        "finished"
+      ],
+      "default": "waiting"
+    },
+    "seats": {
+      "type": "array",
+      "default": [],
+      "items": {
+        "type": "object",
+        "properties": {
+          "seat": {
+            "type": "integer"
+          },
+          "user_id": {
+            "type": "string",
+            "default": ""
+          },
+          "name": {
+            "type": "string",
+            "default": ""
+          },
+          "avatar": {
+            "type": "string",
+            "default": ""
+          },
+          "level": {
+            "type": "integer",
+            "default": 0
+          },
+          "stake": {
+            "type": "number",
+            "default": 0
+          },
+          "tiles": {
+            "type": "integer",
+            "default": 0
+          },
+          "left": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      }
+    },
+    "pot": {
+      "type": "number",
+      "default": 0
+    },
+    "turn": {
+      "type": "integer",
+      "default": 0
+    },
+    "phase": {
+      "type": "string",
+      "enum": [
+        "",
+        "draw",
+        "discard"
+      ],
+      "default": ""
+    },
+    "deadline": {
+      "type": "string",
+      "default": ""
+    },
+    "turn_token": {
+      "type": "string",
+      "default": ""
+    },
+    "gosterge": {
+      "type": "string",
+      "default": ""
+    },
+    "okey": {
+      "type": "string",
+      "default": ""
+    },
+    "stack_count": {
+      "type": "integer",
+      "default": 0
+    },
+    "discards": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "winner_id": {
+      "type": "string",
+      "default": ""
+    },
+    "winner_name": {
+      "type": "string",
+      "default": ""
+    },
+    "win_amount": {
+      "type": "number",
+      "default": 0
+    },
+    "round_no": {
+      "type": "integer",
+      "default": 0
+    },
+    "last_action": {
+      "type": "string",
+      "default": ""
+    }
+  },
+  "required": [
+    "code",
+    "base_bet"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
