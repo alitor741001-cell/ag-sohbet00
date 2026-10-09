@@ -176,6 +176,10 @@
     -webkit-user-select: none;
     user-select: none;
     -webkit-tap-highlight-color: transparent;
+    /* Eski iOS ve Android sürümlerinde çift dokunuş bekleyen yakınlaştırma olmaz:
+       butonlar ilk dokunuşta tepki verir. Kendi dokunuş kuralı olan öğeler
+       (örneğin okey taşı sürükleme) bu kuralı kendi stilleriyle geçersiz kılar. */
+    touch-action: manipulation;
   }
 
   ::-webkit-scrollbar { width: 8px; height: 8px; }

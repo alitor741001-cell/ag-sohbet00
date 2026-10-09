@@ -156,7 +156,7 @@ export default function Friends() {
   }
 
   return (
-    <div className="dark mx-auto min-h-[calc(100dvh-8rem)] w-full min-w-0 max-w-5xl bg-background text-white">
+    <div className="dark mx-auto min-h-[calc(100vh-8rem)] supports-[height:100dvh]:min-h-[calc(100dvh-8rem)] w-full min-w-0 max-w-5xl bg-background text-white">
       {/* Aşağı çekerek tazeleme: arkadaşlar, istekler ve sohbetler yeniden okunur. */}
       <PullToRefresh onRefresh={() => { reloadFriends(); reloadConversations(); }}>
       <header className="px-4 py-5">

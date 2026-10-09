@@ -3,6 +3,7 @@ import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
 import { upsertMessage, sortMessages } from '@/lib/realtimeMessages';
+import { makeId } from '@/lib/uid';
 
 /**
  * Sohbet mesajları hook'u — belirli bir conversationId için mesajları yükler ve realtime dinler.
@@ -103,11 +104,8 @@ export default function useChatMessages(conversationId) {
   const send = useCallback(async (content) => {
     if (!conversationId || !userId || !content.trim() || sendingRef.current) return;
     sendingRef.current = true;
-    // Eski iOS/Android sürümlerinde crypto.randomUUID bulunmaz: geçici kimlik yerine
-    // zaman damgası ve rastgele sayıdan üretilir, sohbet orada da çalışır.
-    const tempId = 'temp-' + (typeof crypto !== 'undefined' && crypto.randomUUID
-      ? crypto.randomUUID()
-      : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`);
+    // Geçici mesaj kimliği: eski cihazlarda da çalışan ortak üreticiden alınır.
+    const tempId = makeId('temp-');
     const optimistic = {
       id: tempId, conversation_id: conversationId,
       sender_id: userId, sender_name: user?.username || user?.full_name || 'Kullanıcı',

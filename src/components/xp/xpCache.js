@@ -25,7 +25,8 @@ export async function loadXpConfig() {
 export function applyUserXp(queryClient, row) {
   if (!row?.user_id) return;
   queryClient.setQueriesData({ queryKey: userXpKey }, (current) => {
-    if (!current || !Object.hasOwn(current, row.user_id)) return current;
+    // Object.hasOwn eski iOS ve Android sürümlerinde yoktur: klasik yöntemle kontrol edilir.
+    if (!current || !Object.prototype.hasOwnProperty.call(current, row.user_id)) return current;
     return { ...current, [row.user_id]: { ...(current[row.user_id] || {}), ...row } };
   });
 }

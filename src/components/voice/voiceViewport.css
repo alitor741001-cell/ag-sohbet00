@@ -3,6 +3,9 @@
 :root {
   /* Eski iOS sürümlerinde dvh yoktur: önce ekran yüksekliği, destekleyende dvh. */
   --voice-dm-height: 56vh;
+  /* Ölçü henüz ölçülmemişse (ilk kare, eski cihazlar) yedek olarak ekran yüksekliği
+     kullanılır: alan hiçbir durumda tanımsız kalmaz. */
+  --visual-viewport-height: 100vh;
 }
 @supports (height: 100dvh) {
   :root { --voice-dm-height: 56dvh; }
@@ -17,7 +20,9 @@
 }
 .voice-viewport[data-keyboard="open"] .voice-chat-flow { max-height: calc(var(--visual-viewport-height) * 0.28); }
 .voice-viewport .voice-chat-composer { margin-bottom: 0; }
-.voice-viewport .voice-chat-dock:has(.voice-chat-composer) { padding-bottom: env(safe-area-inset-bottom, 0px); }
+/* Yazma alanı cihazın alt güvenli alanının üstünde durur. Kural doğrudan çubuğa yazılır:
+   :has() bilmeyen eski iOS ve Android sürümlerinde de aynı boşluk korunur. */
+.voice-viewport .voice-chat-dock { padding-bottom: env(safe-area-inset-bottom, 0px); }
 .voice-viewport[data-keyboard="open"] .voice-chat-dock { padding-bottom: 0; }
 .voice-viewport[data-keyboard="open"] .room-direct-selected { padding-bottom: 0; }
 .voice-viewport[data-keyboard="open"] .room-direct-composer {

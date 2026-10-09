@@ -17,9 +17,10 @@ export default function RoomInfoCard({ room, onOpen, viewerCount = 0, onOpenView
     <div className="flex w-full items-center justify-between gap-2">
       <div className="flex h-[clamp(48px,11vw,58px)] w-[calc(100%-140px)] min-w-0 shrink-0 min-[375px]:w-[54%] items-center gap-1.5 rounded-xl border border-slot-text/10 bg-slot-text/20 p-1.5 backdrop-blur-md">
         <button type="button" onClick={onOpen} aria-label="Oda profilini aç" className="flex h-11 w-9 shrink-0 items-center justify-center min-[390px]:w-10">
-          <span className="flex aspect-square w-full items-center justify-center overflow-hidden rounded-lg bg-slot-text/10">
+          {/* Kare kutu: kare oranı desteklemeyen eski sürümlerde media-box-square yüksekliği verir. */}
+          <span className="media-box-square relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-lg bg-slot-text/10">
             {profile.avatar
-              ? <Image src={profile.avatar} alt={ownerName} className="aspect-square w-full" fittingType="fill" draggable={false} />
+              ? <Image src={profile.avatar} alt={ownerName} className="absolute inset-0 h-full w-full" fittingType="fill" draggable={false} />
               : <span className="text-base font-bold text-slot-text">{ownerName.trim().charAt(0)}</span>}
           </span>
         </button>

@@ -5,6 +5,7 @@ import { base44 } from '@/api/base44Client';
 import subscribeEntity from '@/components/data/entitySubscriptions';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { broadcasterState } from '@/lib/broadcaster';
+import { makeId } from '@/lib/uid';
 import { useVoiceChat } from '@/hooks/useVoiceChat';
 import VoiceViewport from '@/components/voice/VoiceViewport';
 import useRoomLevels from '@/hooks/useRoomLevels';
@@ -970,7 +971,7 @@ export default function VoiceRoom() {
       setCoins((prev) => (prev === null || prev === undefined ? prev : Math.max(0, prev - cost)));
 
     }
-    giftQueueRef.current.push({ gift, ids, quantity, requestId: crypto.randomUUID() });
+    giftQueueRef.current.push({ gift, ids, quantity, requestId: makeId() });
     return flushGiftQueue();
   };
 

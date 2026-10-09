@@ -37,7 +37,7 @@ function RoomDiscoveryCard({ room, owner, kind, filmTitle, friendInside }) {
       onPointerLeave={locked ? undefined : () => prefetchRoomCancel(room.id)}
       onClick={(event) => { if (locked) event.preventDefault(); }}
       aria-disabled={locked || undefined}
-      className="relative flex aspect-square flex-col overflow-hidden rounded-2xl border border-premium-gold/30 bg-anthracite-raised shadow-[0_0_24px_-12px_rgba(198,40,40,0.95)] transition-transform active:scale-[0.98]"
+      className="media-box-square relative flex aspect-square flex-col overflow-hidden rounded-2xl border border-premium-gold/30 bg-anthracite-raised shadow-[0_0_24px_-12px_rgba(198,40,40,0.95)] transition-transform active:scale-[0.98]"
     >
       {/* Kapak kartı tamamen kaplar: kart kare kalır, bilgiler kapak üstünde durur. */}
       {cover ? (

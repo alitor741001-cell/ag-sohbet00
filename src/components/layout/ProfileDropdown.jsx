@@ -52,7 +52,7 @@ export default function ProfileDropdown() {
 
       {open && (
         <div className="absolute right-0 top-full mt-2 w-72 rounded-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-150"
-          style={{ background: 'rgba(18,18,21,0.98)', border: '1px solid rgba(174,184,196,0.15)', backdropFilter: 'blur(16px)', boxShadow: '0 20px 60px -15px rgba(0,0,0,0.8)' }}>
+          style={{ background: 'rgba(18,18,21,0.98)', border: '1px solid rgba(174,184,196,0.15)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', boxShadow: '0 20px 60px -15px rgba(0,0,0,0.8)' }}>
           {/* Purple gradient accent */}
           <div className="absolute top-0 right-0 w-32 h-32 rounded-full opacity-20 pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.6), transparent 70%)' }} />
           <ProfileMenuContent onClose={() => setOpen(false)} onOpenPanel={openPanel} />

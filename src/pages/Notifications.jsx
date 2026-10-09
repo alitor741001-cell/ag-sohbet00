@@ -63,7 +63,7 @@ export default function Notifications() {
   };
 
   return (
-    <div className="dark mx-auto min-h-[calc(100dvh-8rem)] w-full min-w-0 max-w-5xl bg-background text-white">
+    <div className="dark mx-auto min-h-[calc(100vh-8rem)] supports-[height:100dvh]:min-h-[calc(100dvh-8rem)] w-full min-w-0 max-w-5xl bg-background text-white">
       {/* Aşağı çekerek tazeleme: bildirimler ve bekleyen davetler yeniden okunur. */}
       <PullToRefresh onRefresh={() => { load(); loadInvites(); }}>
       <header className="sticky top-0 z-10 flex items-center gap-2 border-b border-white/10 bg-background px-3 py-2.5">
