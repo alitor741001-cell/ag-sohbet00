@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ChevronRight } from 'lucide-react';
 import ZarDie from './ZarDie';
-import { sumTone } from './zarConfig';
+import { DICE_TEAMS, sumTone } from './zarConfig';
 
 const DICE_ORDER = [1, 2, 3];
 const diceOf = (entry) => DICE_ORDER.map((no) => entry?.[`d${no}`] || 1);
@@ -29,7 +29,7 @@ export default function ZarHistory({ entries, live }) {
         <span className="zar-history-total">{latest ? latest.sum : '—'}</span>
         <span className="zar-history-stack">
           {diceOf(latest).map((value, index) => (
-            <ZarDie key={index} value={value} tone="white" size="mini" />
+            <ZarDie key={index} value={value} team={DICE_TEAMS[index]} size="mini" />
           ))}
         </span>
       </div>
@@ -52,7 +52,7 @@ export default function ZarHistory({ entries, live }) {
               <span key={row.round_no} className={`zar-history-row zar-history-row-${sumTone(row.sum)}`}>
                 <span className="zar-history-row-dice">
                   {diceOf(row).map((value, index) => (
-                    <ZarDie key={index} value={value} tone="white" size="mini" />
+                    <ZarDie key={index} value={value} team={DICE_TEAMS[index]} size="mini" />
                   ))}
                 </span>
                 <span className="zar-history-sum">{row.sum}</span>
