@@ -25,10 +25,11 @@ export function arrangeTiles(tiles, mode) {
   return list.sort((a, b) => COLOR_ORDER[tileColor(a)] - COLOR_ORDER[tileColor(b)] || numberOf(a) - numberOf(b));
 }
 
-/** İki satırlık tahta dizilimi: 14 taş 7+7, 15 taş 8+7. */
+/** Tahta dizilimi: satır başına en fazla 7 taş — 21 taş 7+7+7, 22 taş 7+7+8. */
 export function rowSplit(tiles) {
-  const half = Math.ceil(tiles.length / 2);
-  return [tiles.slice(0, half), tiles.slice(half)];
+  const rows = [];
+  for (let start = 0; start < tiles.length; start += 7) rows.push(tiles.slice(start, start + 7));
+  return rows.length ? rows : [[]];
 }
 
 /** Atılan taşların masadaki dağınık yerleşimi (sabit, zıplamaz). */

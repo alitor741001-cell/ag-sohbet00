@@ -555,7 +555,7 @@ export default async function (req: Request) {
       return answer(service, updated, user, coins);
     }
 
-    // Bitirme: kalan 14 taş geçerliyse taş atılır ve pot kazanılır.
+    // Bitirme: elinde fazladan taş varken atacağın taş kalan tüm taşları geçerli kılıyorsa pot kazanılır.
     if (action === 'finish') {
       const table = await service.OkeyTable.get(body.table_id).catch(() => null);
       if (!table) return Response.json({ error: 'Masa bulunamadı.' }, { status: 404 });
@@ -569,7 +569,7 @@ export default async function (req: Request) {
       const tile = findDiscard(hand, table.okey);
       if (!tile) {
         return Response.json(
-          { error: 'El bitmiyor: kalan 14 taşın tümü seri/per/çift olmalı ve en az bir seri içermeli.' },
+          { error: 'El bitmiyor: attıktan sonra kalan taşların tümü seri/per/çift olmalı ve en az bir seri içermeli.' },
           { status: 400 },
         );
       }

@@ -5,7 +5,9 @@
 
 export const OKEY_COLORS = ['R', 'S', 'M', 'Y'];
 export const JOKER = 'J';
-export const TILES_PER_PLAYER = 14;
+// 101 Okey dağıtımı: her oyuncuya 21 taş. İlk eli başlayan oyuncu desteden bir taş
+// çektiği için eline 22 taş olur; 4 oyuncuda ortada tam 21 taş kalır (106 - 84 - 1).
+export const TILES_PER_PLAYER = 21;
 export const OKEY_MAX_SEATS = 4;
 export const OKEY_BETS = [1000, 5000, 25000, 100000];
 export const OKEY_START_COINS = 100000;
@@ -49,7 +51,7 @@ export function okeyOf(gosterge: string): string {
   return `${colorOf(gosterge)}${n === 13 ? 1 : n + 1}`;
 }
 
-/** Dağıtım: 14 taş x 4 oyuncu, bir gösterge ve ortada kalan deste. */
+/** Dağıtım: 21 taş x 4 oyuncu, bir gösterge ve ortada kalan 21 taş. */
 export function dealOkey() {
   const deck = shuffle(okeyDeck());
   const hands: string[][] = [[], [], [], []];
@@ -139,14 +141,14 @@ function solve(naturals: string[], wilds: number, seriUsed: boolean, memo: Map<s
   return ok;
 }
 
-/** Verilen taşlar (14 veya 15) baştan sona geçerli gruplara ayrılabiliyor mu? */
+/** Verilen taşlar (bitirme anında 21, el fazladan taşlıyken 22) geçerli gruplara ayrılabiliyor mu? */
 export function canFinish(tiles: string[], okey: string): boolean {
   const wilds = tiles.filter((tile) => isWild(tile, okey)).length;
   const naturals = tiles.filter((tile) => !isWild(tile, okey)).sort();
   return solve(naturals, wilds, false, new Map());
 }
 
-/** 15 taşlı elde atılabilecek taş: kalan 14 taş geçerliyse o taş bitirir. Okey atılmaz. */
+/** Fazladan taşlı elde atılabilecek taş: kalan taşların tümü geçerliyse o taş bitirir. Okey atılmaz. */
 export function findDiscard(tiles: string[], okey: string): string | null {
   const seen = new Set<string>();
   for (const tile of tiles) {

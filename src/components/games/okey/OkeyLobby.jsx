@@ -18,7 +18,7 @@ export default function OkeyLobby({ coins, lobby, loading, busy, error, onQuick,
         <span>
           <p className="okey-lobby-title">101 OKEY</p>
           <p className="okey-lobby-text">
-            Dört kişilik bahisli masa. Ortadan taş çek, elinden taş at; kalan 14 taşın seri/per/çift dizilirse
+            Dört kişilik bahisli masa. Ortadan taş çek, elinden taş at; kalan taşların seri/per/çift dizilirse
             BİTİR ve üç oyuncunun bahsini birden al.
           </p>
         </span>

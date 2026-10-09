@@ -1,7 +1,8 @@
 /* 101 OKEY: yeşil çuha masa, ahşap tahta, ortada deste ve atılan taşlar. */
 
 .okey-shell {
-  --okey-tile: clamp(26px, 9.2vw, 44px);
+  /* Üç satırlık tahta: 7'li satırlar ekrana sığsın diye taş biraz küçüktür. */
+  --okey-tile: clamp(24px, 8.6vw, 44px);
   position: relative;
   display: flex;
   height: 100%;
@@ -516,7 +517,7 @@
 
 /* Yatay ekran: masa kısalır, tahtalar küçülür. */
 @media (orientation: landscape) and (max-height: 620px) {
-  .okey-shell { --okey-tile: clamp(22px, 4.6vh, 38px); }
+  .okey-shell { --okey-tile: clamp(20px, 4.2vh, 34px); }
   .okey-seat-name { max-width: 4.4rem; }
   .okey-seat-card { min-width: 4.2rem; padding: 0.16rem 0.35rem; }
   .okey-avatar { height: 2.2rem; width: 2.2rem; }

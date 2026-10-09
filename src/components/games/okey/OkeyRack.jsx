@@ -31,7 +31,11 @@ export default function OkeyRack({ hand, okey, mode, onMode, canDiscard, onDisca
     [mode, order, hand],
   );
   const rows = rowSplit(display);
-  const rowBase = [0, rows[0].length];
+  // Satırların tahtadaki başlangıç sırası: sürükleme hedefi bu sırayla eşleşir.
+  const rowBase = rows.reduce(
+    (acc, row, index) => [...acc, index ? acc[index - 1] + rows[index - 1].length : 0],
+    [],
+  );
   const activeFrom = ghost ? drag.current?.from : null;
 
   /** Görünen sırayı elle dizilime çevirir. */
