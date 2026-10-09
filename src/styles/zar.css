@@ -144,8 +144,8 @@
 .zar-felt-dice .zar-cup {
   --zar-cup-lift: -2.6rem;
   bottom: 1.05rem;
-  width: clamp(6.4rem, 34vw, 9rem);
-  height: clamp(3.2rem, 16vw, 4.6rem);
+  width: clamp(6.6rem, 36vw, 9.4rem);
+  height: clamp(3.4rem, 17vw, 4.8rem);
 }
 
 .zar-felt-dice .zar-cup-shadow {
@@ -164,8 +164,26 @@
     zar-dice-drop 0.5s cubic-bezier(0.22, 0.9, 0.3, 1) 6.1s forwards;
 }
 
+/* Zarlar kase içinde küçülür: dönerken kasenin kenarından dışarı taşmazlar,
+   kase kalkınca çuhadaki boyutlarına dönerler. */
 .zar-shaker-live .zar-cup-dice .zar-die {
-  animation: zar-die-tumble 0.62s linear 10 forwards;
+  height: clamp(1.5rem, 6.5vw, 1.85rem);
+  width: clamp(1.5rem, 6.5vw, 1.85rem);
+  animation:
+    zar-die-tumble 0.62s linear 10 forwards,
+    zar-die-grow 0.4s ease-out 6.1s forwards,
+    zar-die-settle 0.45s cubic-bezier(0.22, 0.9, 0.3, 1) 6.1s both;
+}
+
+@keyframes zar-die-grow {
+  from {
+    height: clamp(1.5rem, 6.5vw, 1.85rem);
+    width: clamp(1.5rem, 6.5vw, 1.85rem);
+  }
+  to {
+    height: clamp(1.9rem, 9vw, 2.3rem);
+    width: clamp(1.9rem, 9vw, 2.3rem);
+  }
 }
 
 @keyframes zar-cup-rattle {
@@ -206,11 +224,6 @@
 @keyframes zar-cup-lift {
   from { transform: translate(-50%, 0) scale(1); opacity: 1; }
   to { transform: translate(-50%, var(--zar-cup-lift)) scale(0.94); opacity: 0.9; }
-}
-
-/* Kase yukarı kayarken zarların dönüşü biter, çuhada dururlar. */
-.zar-shaker-open .zar-cup-dice .zar-die {
-  animation: zar-die-settle 0.45s cubic-bezier(0.22, 0.9, 0.3, 1) 6.1s both;
 }
 
 @keyframes zar-die-settle {
@@ -303,6 +316,11 @@
 
   /* Hareket azaltılmışsa zarlar kasede dönmez, çuhaya oturmuş durur. */
   .zar-shaker-live .zar-cup-dice { margin-bottom: 0.1rem; }
+
+  .zar-shaker-live .zar-cup-dice .zar-die {
+    height: clamp(1.9rem, 9vw, 2.3rem);
+    width: clamp(1.9rem, 9vw, 2.3rem);
+  }
 }
 
 /* === SONUÇ ŞERİDİ === */
