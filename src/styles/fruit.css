@@ -47,6 +47,11 @@
   background: linear-gradient(180deg, rgba(84, 18, 46, 0.92), rgba(36, 6, 22, 0.95));
   animation: fruit-frame-pulse 3.8s ease-in-out infinite;
 }
+
+/* Kare oranını (aspect-ratio) bilmeyen eski sürümlerde tahta ekrandan ölçülür. */
+@supports not (aspect-ratio: 1) {
+  .fruit-frame { height: min(100%, 100vw); }
+}
 @keyframes fruit-frame-pulse {
   0%, 100% {
     box-shadow: 0 0 0 2px rgba(255, 246, 214, 0.45), 0 0 16px rgba(240, 196, 106, 0.45),

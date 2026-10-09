@@ -15,6 +15,10 @@ export function useSize(ref) {
     const rect = element.getBoundingClientRect()
     setSize({ width: rect.width, height: rect.height })
 
+    // ResizeObserver'ı bilmeyen eski sürümlerde ilk ölçüm yeterlidir: görsel görünür kalır,
+    // yalnızca pencere yeniden boyutlandığında kendiliğinden ölçeklenmez.
+    if (typeof ResizeObserver === 'undefined') return;
+
     const observer = new ResizeObserver(([entry]) => {
       const { width, height } = entry.contentRect
       setSize({ width, height })

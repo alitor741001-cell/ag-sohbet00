@@ -20,7 +20,8 @@
   position: relative;
   width: 100%;
   max-width: 34rem;
-  max-height: 86dvh;
+  /* Eski iOS sürümlerinde dvh yoktur: kutu ekran yüksekliğiyle sınırlanır ve kayar. */
+  max-height: 86vh;
   overflow-y: auto;
   border: 2px solid rgba(232, 185, 90, 0.55);
   border-bottom: none;
@@ -234,4 +235,8 @@
   font-weight: 700;
   line-height: 1.4;
   color: rgba(255, 226, 160, 0.8);
+}
+
+@supports (height: 100dvh) {
+  .gh-body { max-height: 86dvh; }
 }

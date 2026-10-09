@@ -592,6 +592,7 @@
   justify-content: center;
   background: rgba(4, 8, 6, 0.82);
   backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
   padding: 1rem;
 }
 .okey-result-card {

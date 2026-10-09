@@ -92,7 +92,9 @@
 .fut-ring {
   position: relative;
   /* Çember, ekranda kalan yüksekliğe göre büyür: alt tarafta boşluk kalmaz. */
-  width: min(100%, 40rem, calc((100dvh - 24rem) / 1.1));
+  /* Eski iOS sürümlerinde yeni nesil ekran yüksekliği birimi (dvh) yoktur: çember
+     görünür ekran yüksekliğinden hesaplanır, altta boşluk kalmaz. */
+  width: min(100%, 40rem, calc((100vh - 24rem) / 1.1));
   margin: 0 auto;
   aspect-ratio: 1 / 1.1;
 }
@@ -102,7 +104,7 @@
   top: 50%;
   height: 73%;
   width: 70%;
-  translate: -50% -50%;
+  transform: translate(-50%, -50%);
   border-radius: 50%;
   border: 2px dashed rgba(116,228,162,.45);
   box-shadow: inset 0 0 46px rgba(116,228,162,.12);
@@ -113,7 +115,7 @@
   position: absolute;
   left: 50%;
   top: 50%;
-  translate: -50% -50%;
+  transform: translate(-50%, -50%);
   z-index: 3;
   display: flex;
   flex-direction: column;
@@ -189,7 +191,7 @@
 /* Takım kartları yuvarlaktır: arma, isim ve popülerlik barı dairenin içine ortalanır. */
 .fut-card {
   position: absolute;
-  translate: -50% -50%;
+  transform: translate(-50%, -50%);
   z-index: 1;
   display: flex;
   flex-direction: column;
@@ -209,7 +211,7 @@
 .fut-card-mid { width: 5.1rem; }
 .fut-card-small { width: 4.8rem; }
 .fut-card-tiny { width: 4.6rem; }
-.fut-card:active { transform: scale(.98); }
+.fut-card:active { transform: translate(-50%, -50%) scale(.98); }
 .fut-card-on {
   border-color: #dcfff0;
   box-shadow: 0 0 22px rgba(116,228,162,.9), inset 0 0 14px rgba(116,228,162,.25);
@@ -217,7 +219,7 @@
 .fut-card-win {
   border-color: #fff6d0;
   box-shadow: 0 0 28px rgba(242,206,107,.95), inset 0 0 16px rgba(242,206,107,.3);
-  transform: scale(1.04);
+  transform: translate(-50%, -50%) scale(1.04);
 }
 .fut-card-lock { opacity: .42; filter: grayscale(.65); }
 .fut-crest-wrap { display: flex; align-items: center; justify-content: center; }
@@ -312,7 +314,7 @@
   position: absolute;
   left: 50%;
   top: -.45rem;
-  translate: -50% 0;
+  transform: translate(-50%, 0);
   height: .85rem;
   width: .85rem;
   border-radius: 9999px;
@@ -558,4 +560,21 @@
 
 @media (prefers-reduced-motion: reduce) {
   .fut-overlay-card, .fut-sheet-body { animation: none; }
+}
+
+/* Adres çubuğu dahil edilmeyen gerçek ekran yüksekliği desteklenen cihazlarda kullanılır. */
+@supports (height: 100dvh) {
+  .fut-ring { width: min(100%, 40rem, calc((100dvh - 24rem) / 1.1)); }
+}
+
+/* Kare oranını (aspect-ratio) bilmeyen eski sürümlerde çember ve takım kartları
+   daire biçimlerini korur: ölçüler genişliklerinden hesaplanır. */
+@supports not (aspect-ratio: 1) {
+  .fut-ring { height: calc(min(100%, 40rem, calc((100vh - 24rem) / 1.1)) * 1.1); }
+  .fut-hub { height: 50%; }
+  .fut-card { height: 5.6rem; }
+  .fut-card-big { height: 5.4rem; }
+  .fut-card-mid { height: 5.1rem; }
+  .fut-card-small { height: 4.8rem; }
+  .fut-card-tiny { height: 4.6rem; }
 }

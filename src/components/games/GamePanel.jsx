@@ -78,7 +78,8 @@ export default function GamePanel({ open, onClose, roomId, initialGame = null })
         className={
           full
             ? 'relative flex h-full w-full flex-col overflow-hidden bg-slot text-slot-text'
-            : 'animate-sheet-up relative flex h-[60dvh] w-full flex-col overflow-hidden rounded-t-[26px] bg-gradient-to-b from-[#2C1512] to-[#150A0A] text-slot-text ring-1 ring-[#F2CE6B]/40'
+            /* Yükseklik önce eski cihazlar için vh, destekleyenlerde dvh ile ölçülür. */
+            : 'animate-sheet-up relative flex h-[60vh] supports-[height:100dvh]:h-[60dvh] w-full flex-col overflow-hidden rounded-t-[26px] bg-gradient-to-b from-[#2C1512] to-[#150A0A] text-slot-text ring-1 ring-[#F2CE6B]/40'
         }
       >
         {(!selected || transitioning) && (
@@ -110,7 +111,7 @@ export default function GamePanel({ open, onClose, roomId, initialGame = null })
                   <Image
                     src={game.cover}
                     alt={game.title}
-                    className="aspect-square w-full"
+                    className="aspect-square media-box-square w-full"
                     fittingType="fit"
                     originWidth={game.originWidth}
                     originHeight={game.originHeight}

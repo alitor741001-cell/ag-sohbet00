@@ -103,7 +103,11 @@ export default function useChatMessages(conversationId) {
   const send = useCallback(async (content) => {
     if (!conversationId || !userId || !content.trim() || sendingRef.current) return;
     sendingRef.current = true;
-    const tempId = 'temp-' + crypto.randomUUID();
+    // Eski iOS/Android sürümlerinde crypto.randomUUID bulunmaz: geçici kimlik yerine
+    // zaman damgası ve rastgele sayıdan üretilir, sohbet orada da çalışır.
+    const tempId = 'temp-' + (typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`);
     const optimistic = {
       id: tempId, conversation_id: conversationId,
       sender_id: userId, sender_name: user?.username || user?.full_name || 'Kullanıcı',

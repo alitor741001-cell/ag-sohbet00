@@ -267,7 +267,9 @@
   position: relative;
   display: flex;
   flex: none;
-  width: min(100%, 100cqh);
+  /* Eski iOS ve Android sürümlerinde kap yüksekliği birimi (cqh) bulunmaz:
+     çerçeve ekran yüksekliğine göre ölçülür, ızgara yine tahtayı doldurur. */
+  width: min(100%, 100vh);
   max-width: 46rem;
   aspect-ratio: 1;
   max-height: 100%;
@@ -647,4 +649,17 @@
   .el-sym-explode,
   .el-drop,
   .el-chest-box-full { animation: none !important; }
+}
+
+/* Kap yüksekliği birimi desteklenen cihazlarda çerçeve, alanın kendi yüksekliğine göre
+   ölçülür: ekran ne kadar kısaysa tahta o kadar küçülür. */
+@supports (container-type: size) {
+  .el-frame { width: min(100%, 100cqh); }
+}
+
+/* Kare oranını (aspect-ratio) bilmeyen eski sürümlerde tahta ve sembol kutuları
+   ekrandan hesaplanan ölçüyle kareye en yakın biçimde kalır. */
+@supports not (aspect-ratio: 1) {
+  .el-frame { height: min(100%, 100vw); }
+  .el-sym { height: 92%; }
 }

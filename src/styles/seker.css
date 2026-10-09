@@ -61,6 +61,12 @@
   background: linear-gradient(180deg, rgba(52, 64, 74, 0.95), rgba(20, 27, 33, 0.96));
   animation: seker-frame-pulse 3.8s ease-in-out infinite;
 }
+
+/* Kare oranını (aspect-ratio) bilmeyen eski sürümlerde tahta ekrandan ölçülür
+   (ızgara 1'e 1.15 oranında durur). */
+@supports not (aspect-ratio: 1) {
+  .seker-frame { height: min(100%, 115vw); }
+}
 @keyframes seker-frame-pulse {
   0%, 100% {
     box-shadow: 0 0 0 2px rgba(255, 246, 214, 0.45), 0 0 16px rgba(240, 196, 106, 0.45),

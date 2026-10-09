@@ -8,7 +8,7 @@ export default function VoiceViewerSheet({ open, onClose, participants = [], sea
   return (
     <div className="fixed inset-0 z-[250] flex flex-col justify-end">
       <button type="button" aria-label="Kapat" className="absolute inset-0 bg-black/70 backdrop-blur-[2px]" onClick={onClose} />
-      <div className="animate-sheet-up relative flex h-[50dvh] w-full flex-col overflow-hidden rounded-t-[26px] bg-gradient-to-b from-[#2E2622] to-[#1D1815] ring-1 ring-[#D9C496]/30">
+      <div className="animate-sheet-up relative flex h-[50vh] supports-[height:100dvh]:h-[50dvh] w-full flex-col overflow-hidden rounded-t-[26px] bg-gradient-to-b from-[#2E2622] to-[#1D1815] ring-1 ring-[#D9C496]/30">
         <div className="flex shrink-0 items-center justify-between gap-2 px-4 pb-2 pt-4">
           <p className="text-sm font-bold text-[#F2CE6B]">Odadakiler ({participants.length})</p>
           <button type="button" onClick={onClose} aria-label="Kapat" className="rounded-full p-1.5 text-[#D9C496] transition-colors hover:bg-white/10">

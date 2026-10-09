@@ -1077,3 +1077,9 @@ input, textarea, select, button { font-family: inherit; }
 @media (min-width: 1440px) {
   html { font-size: 18px; }
 }
+
+/* Kare oranı (aspect-ratio) desteklemeyen eski iOS ve Android sürümlerinde, kapağı kare
+   gösteren kutular yüksekliklerini genişliklerinden alır: görsel kaybolmaz, kare boşluk korunur. */
+@supports not (aspect-ratio: 1) {
+  .media-box-square { padding-bottom: 100%; }
+}

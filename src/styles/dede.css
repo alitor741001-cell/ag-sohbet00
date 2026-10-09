@@ -383,6 +383,13 @@
   animation: dede-merge-fly 0.52s cubic-bezier(0.4, 0.05, 0.6, 0.95) both;
 }
 .dede-merge-fly .dede-token { animation: none; filter: drop-shadow(0 0 12px rgba(255, 205, 90, 0.9)); }
+
+/* Kare oranını (aspect-ratio) bilmeyen eski sürümlerde tahta ve inen jeton
+   ekrandan hesaplanan ölçüyle kareye yakın kalır. */
+@supports not (aspect-ratio: 1) {
+  .dede-frame { height: min(100%, 100vw); }
+  .dede-merge-fly { height: 13%; }
+}
 @keyframes dede-merge-fly {
   0% { left: var(--merge-x); top: var(--merge-y); opacity: 0; transform: translate(-50%, -50%) scale(0.6) rotate(-10deg); }
   22% { opacity: 1; transform: translate(-50%, -50%) scale(1.08) rotate(4deg); }

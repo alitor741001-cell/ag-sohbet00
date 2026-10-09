@@ -16,7 +16,7 @@ export default function GameDiscoveryRow({ onPick }) {
           <Image
             src={game.cover}
             alt={game.title}
-            className="aspect-square w-full"
+            className="aspect-square media-box-square w-full"
             fittingType="fit"
             originWidth={game.originWidth}
             originHeight={game.originHeight}

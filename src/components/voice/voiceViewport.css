@@ -1,11 +1,17 @@
 /* Özel sohbet yarım panelinin yüksekliği: panel ile odaya ayrılan alan aynı ölçüyü kullanır,
    böylece panelin üst kenarı ile sahnenin alt sınırı tam olarak çakışır. */
 :root {
-  --voice-dm-height: 56dvh;
+  /* Eski iOS sürümlerinde dvh yoktur: önce ekran yüksekliği, destekleyende dvh. */
+  --voice-dm-height: 56vh;
+}
+@supports (height: 100dvh) {
+  :root { --voice-dm-height: 56dvh; }
 }
 
 .voice-viewport {
   top: var(--viewport-offset, 0px);
+  /* dvh desteklenmeyen eski sürümlerde de alan ekranı kaplar. */
+  height: 100vh;
   height: var(--visual-viewport-height, 100dvh);
   overscroll-behavior: none;
 }
