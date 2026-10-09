@@ -6,7 +6,7 @@ import { formatCoins } from './zarConfig';
 // Referans tasarımdaki TOP1-TOP4 şeridi: her sıranın kendi çerçeve rengi vardır.
 const TONES = ['gold', 'silver', 'bronze', 'dark'];
 
-/** En çok kazanan dört oyuncu: tur sonuçları geldikçe tazelenir. */
+/** En çok kazanan dört oyuncu: profilleri (fotoğraf ve isim) her turda tazelenir. */
 export default function ZarPodium({ winners, ready }) {
   return (
     <div className="zar-podium" aria-label="Turun en çok kazananları">
@@ -24,6 +24,7 @@ export default function ZarPodium({ winners, ready }) {
               )}
             </span>
             <span className="zar-top-rank">TOP{rank + 1}</span>
+            <span className="zar-top-name">{name || '—'}</span>
             <span className="zar-top-amount">{winner ? formatCoins(winner.payout) : ready ? '–' : '…'}</span>
           </span>
         );

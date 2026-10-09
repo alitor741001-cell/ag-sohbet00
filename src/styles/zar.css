@@ -166,9 +166,9 @@
   place-items: center;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.22);
-  border-top: 2px solid #f4c40a;
   border-radius: 18%;
-  padding: 12%;
+  /* Noktalar büyük durur: yüzün neredeyse tamamı kullanılır. */
+  padding: 6%;
   background: linear-gradient(168deg, #35353f 0%, #131317 52%, #04040a 100%);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 3px 0 rgba(0, 0, 0, 0.55), 0 7px 12px -7px rgba(0, 0, 0, 0.95);
 }
@@ -183,31 +183,26 @@
   pointer-events: none;
 }
 
-/* Kulüp renkleri: siyah-beyaz, lacivert-sarı, sarı-kırmızı. */
+/* Kulüp renkleri yarı yarıya: zar iki takım rengine bölünür. */
 .zar-die-bjk {
-  border-top-color: #f3f4f7;
+  background: linear-gradient(135deg, #14141a 0%, #14141a 50%, #f2f4f8 50%, #f2f4f8 100%);
 }
 
 .zar-die-fb {
-  background: linear-gradient(168deg, #29427f 0%, #0e2158 52%, #050f2f 100%);
+  background: linear-gradient(135deg, #0e2158 0%, #0e2158 50%, #f4c40a 50%, #f4c40a 100%);
 }
 
 .zar-die-gs {
-  background: linear-gradient(168deg, #8d1626 0%, #560b16 52%, #2a040a 100%);
+  background: linear-gradient(135deg, #7d1220 0%, #7d1220 50%, #f4c40a 50%, #f4c40a 100%);
 }
 
-/* Noktalar: siyah zarda beyaz, lacivert ve bordoda altın işlemeli. */
+/* Noktalar: koyu çekirdek ve beyaz halka — iki renkli yüzün her yarısında okunur. */
 .zar-pip {
   height: 100%;
   width: 100%;
   border-radius: 9999px;
-  background: radial-gradient(circle at 34% 28%, #ffffff, #dfe2e8 62%, #a6abb6 100%);
-  box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.4), 0 0 2px rgba(0, 0, 0, 0.45);
-}
-
-.zar-die-fb .zar-pip,
-.zar-die-gs .zar-pip {
-  background: radial-gradient(circle at 34% 28%, #fff8d6, #ecc95e 55%, #a97d18 100%);
+  background: radial-gradient(circle at 36% 30%, #3a3a45, #0b0b12 72%);
+  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.92), 0 0 3px rgba(0, 0, 0, 0.5);
 }
 
 .zar-pip-off {
@@ -226,14 +221,14 @@
 
 /* YENİ panelindeki küçük zarlar. */
 .zar-die-mini {
-  height: 0.95rem;
-  width: 0.95rem;
+  height: 1.05rem;
+  width: 1.05rem;
   border-radius: 26%;
-  padding: 13%;
+  padding: 8%;
 }
 
 .zar-die-mini .zar-pip {
-  box-shadow: none;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.9);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -383,7 +378,7 @@
 /* === YENİ PANELİ === */
 .zar-history {
   display: flex;
-  width: clamp(3rem, 18vw, 4.2rem);
+  width: clamp(3.2rem, 19vw, 4.4rem);
   flex-shrink: 0;
   flex-direction: column;
   align-items: center;
@@ -414,23 +409,41 @@
   color: #f4d67c;
 }
 
+/* Yeni turlar alta eklenir ve akış aşağı doğru kayar. */
 .zar-history-list {
   display: flex;
   min-height: 0;
+  width: 100%;
   flex: 1;
   flex-direction: column;
   align-items: center;
-  gap: 0.28rem;
-  overflow: hidden;
+  gap: 0.3rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .zar-history-row {
   display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 0.2rem 0.22rem;
+}
+
+.zar-history-pair {
+  display: flex;
   align-items: center;
   gap: 0.16rem;
-  border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.06);
-  padding: 0.18rem 0.2rem;
+}
+
+.zar-history-sum {
+  font-size: 0.52rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  color: rgba(255, 255, 255, 0.86);
 }
 
 /* Satırın zemini turun düştüğü alanı belli eder: küçük, büyük, kaplan. */
@@ -469,8 +482,8 @@
 .zar-top-avatar {
   position: relative;
   display: flex;
-  height: clamp(1.9rem, 9vw, 2.4rem);
-  width: clamp(1.9rem, 9vw, 2.4rem);
+  height: clamp(2.2rem, 11vw, 2.9rem);
+  width: clamp(2.2rem, 11vw, 2.9rem);
   align-items: center;
   justify-content: center;
   overflow: hidden;
@@ -504,6 +517,17 @@
   font-weight: 900;
   letter-spacing: 0.08em;
   color: rgba(255, 255, 255, 0.72);
+}
+
+/* Kazananın ismi: uzun isimler tek satırda kısalır, profil okunur kalır. */
+.zar-top-name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.54rem;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .zar-top-amount {
