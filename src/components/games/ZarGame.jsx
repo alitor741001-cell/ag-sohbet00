@@ -33,6 +33,8 @@ export default function ZarGame({ onExit, onBack }) {
   const dice = shaking ? game.round?.dice ?? null : null;
   const sum = shaking ? game.round?.sum ?? null : null;
   const outcome = shaking ? game.round?.outcome ?? null : null;
+  // YENİ paneli zarlar açıkken doğrudan onları gösterir: geçmiş listesi önceki turlara iner.
+  const liveRound = dice ? { round_no: game.round?.round_no, d1: dice[0], d2: dice[1], d3: dice[2], sum } : null;
   // Sıralama son sonuçlanan turdan okunur: yeni bahis turu açıldığında da
   // kazananlar ekranda kalır ve her turda tazelenir.
   const settledRound = game.history?.[0]?.round_no ?? game.round?.round_no ?? 0;
@@ -87,7 +89,7 @@ export default function ZarGame({ onExit, onBack }) {
 
       <main className="relative z-10 flex min-h-0 flex-1 flex-col items-center gap-2 overflow-y-auto px-2 py-2">
         <div className="zar-felt-body">
-          <ZarHistory entries={game.history} />
+          <ZarHistory entries={game.history} live={liveRound} />
           <ZarTable
             bets={game.bets}
             zoneTotals={board.zoneTotals}
