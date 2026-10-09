@@ -350,6 +350,13 @@
 }
 .okey-tile-sm { width: calc(var(--okey-tile) * 0.78); }
 .okey-tile-xs { width: calc(var(--okey-tile) * 0.6); }
+/* Dikey dikdörtgen oranını (aspect-ratio) desteklemeyen eski sürümlerde taşın boyu
+   genişliğinden hesaplanır: taşlar orada da ince ve dikey kalır. */
+@supports not (aspect-ratio: 1) {
+  .okey-tile { height: calc(var(--okey-tile) * 1.39); }
+  .okey-tile-sm { height: calc(var(--okey-tile) * 1.08); }
+  .okey-tile-xs { height: calc(var(--okey-tile) * 0.83); }
+}
 
 /* === İŞLEM ŞERİDİ === */
 .okey-strip {
@@ -475,7 +482,12 @@
 /* Taş ölçüsü ıstakanın kendi genişliğine oranlanır (11 taşlık satır): her cihazda
    ıstaka aynı oranda doluyor, sabit piksel sınırı taşları küçük bırakmaz.
    Yükseklik sınırı yalnızca yatay/geniş ekranlarda devreye girer. */
-.okey-rack { --okey-tile: min(7.5cqw, 11.5vh); }
+/* Kap ölçüsü birimi (cqw) desteklenmeyen eski iOS ve Android sürümlerinde ölçü ekran
+   genişliğinden (vw) alınır: taşlar orada da tek tek, eşit genişlikte durur. */
+.okey-rack { --okey-tile: min(7.5vw, 11.5vh); }
+@supports (container-type: inline-size) {
+  .okey-rack { --okey-tile: min(7.5cqw, 11.5vh); }
+}
 .okey-row {
   position: relative;
   display: flex;
@@ -641,7 +653,10 @@
 /* Klasik OKEY: 14 taşlık el — taşlar daha büyük durur, ıstaka ferah kalır. */
 .okey-shell[data-variant="okey"] { --okey-tile: clamp(24px, 8.5vw, 60px); }
 /* Klasik OKEY'de el 14-15 taş: satırda en çok 8 taş olur, taşlar daha iri durur. */
-.okey-shell[data-variant="okey"] .okey-rack { --okey-tile: min(11cqw, 12.5vh); }
+.okey-shell[data-variant="okey"] .okey-rack { --okey-tile: min(11vw, 12.5vh); }
+@supports (container-type: inline-size) {
+  .okey-shell[data-variant="okey"] .okey-rack { --okey-tile: min(11cqw, 12.5vh); }
+}
 
 /* Yatay ekran: masa kısalır, tahtalar küçülür. */
 @media (orientation: landscape) and (max-height: 620px) {
