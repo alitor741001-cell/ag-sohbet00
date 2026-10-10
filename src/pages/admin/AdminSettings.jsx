@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useToast } from '@/components/ui/use-toast';
 import { Wrench, UserPlus } from 'lucide-react';
+import BontoBridgeCard from '@/components/admin/BontoBridgeCard';
 
 function Toggle({ on, onChange, disabled }) {
   return (
@@ -74,6 +75,9 @@ export default function AdminSettings() {
             <Toggle on={cfg.registration_open} disabled={saving} onChange={(v) => save('registration_open', v)} />
           </div>
         </div>
+
+        {/* Bonto köprüsü: yalnızca okuma — canlı sunucu hazırlığını gösterir */}
+        <BontoBridgeCard />
 
       </div>
     </div>
