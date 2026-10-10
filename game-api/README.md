@@ -228,7 +228,7 @@ tamamlanmadan finansal işlem yapılmaması kuralının koddaki karşılığıd�
 - Mevcut oyunların isteklerini bu API'ye yönlendirmek **yapılmadı**; uygulama ve oyunlar değişmedi.
 - Veritabanı tabloları/kolonları değiştirilmedi, yeni tablo oluşturulmadı.
 - Coin bakiyesi ve para çekme akışları eklenmedi.
-- Oyun motorları (zar, okey, mafya, rulet...) bu API'ye taşınmadı; `/v1` altında yalnızca salt okunur uçlar var.
+- Oyun motorları (zar, okey, rulet...) bu API'ye taşınmadı; `/v1` altında yalnızca salt okunur uçlar var.
 
 Sıradaki adımlar önerisi: (1) ayna şemaya göre `ROOMS_*` değişkenlerini netleştirip oda uçlarını doğrulamak,
 (2) Base44 arka ucunda servis tokenı üretip yalnızca bir "canary" oyunu bu API'ye bağlamak,

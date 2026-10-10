@@ -20,7 +20,7 @@ dağıtım yapılmadı, veritabanına dokunulmadı, canlı trafik Bonto'ya yönl
 | Oda yaşam döngüsü | `room-presence` (46 çağrı) 22 işlem: get/join/leave/kick/ban/unban, şifre, isim, anons, kategori, gizle, ses aç/kapat, mod ver/al, oda sil |
 | Canlı ses (LiveKit) | `livekitToken`: katılımcı/sahip/admin doğrulaması + `voice_enabled` şartı, 2 saatlik token, oda adı `filmkeyfi-<roomId>` |
 | Oda şifresi | `create-room`: şifre `RoomSecret` içinde tuzlu SHA-256, oda kaydında yalnızca `'protected'` |
-| Oyunlar | **12 oyun, 12 arka uç fonksiyonu**: slot, meyve, dede, şeker, şekerli meyve, elimin, rocket, rulet, futbol, 101 okey, okey klasik, zar, mafya (istemci ekranı + sunucu fonksiyonu eşleşiyor) |
+| Oyunlar | **12 oyun, 12 arka uç fonksiyonu**: slot, meyve, dede, şeker, şekerli meyve, elimin, rocket, rulet, futbol, 101 okey, okey klasik, zar (istemci ekranı + sunucu fonksiyonu eşleşiyor) |
 | Coin | `GameWallet` tek kaynak; yalnızca `asServiceRole` yazar (RLS: create/update admin), istemci bakiyeyi doğrudan değiştiremez; `loadWallet` sunucuda |
 | Tur bazlı tekrar koruması | Rulet/Zar: aynı `round_no` + `user_id` için kayıt varsa işlem tekrar çalışmaz, ilk sonuç döner |
 
@@ -73,7 +73,6 @@ dağıtım yapılmadı, veritabanına dokunulmadı, canlı trafik Bonto'ya yönl
 | Rocket (486) | Evet | **Hayır** | Havuz/yörünge durumu Bonto'da yok | Aşama 3D-3 (en karmaşık) |
 | Futbol (233) | Evet | **Hayır** | Aynı | Aşama 3D-3 |
 | 101 Okey (731) / Okey klasik | Evet | **Hayır** | Taş dağıtımı, sıra, `OkeySecret`; çok kiracılı oda | Aşama 3D-4 (en büyük) |
-| Mafya (536) | Evet | **Hayır** | Rol dağıtımı, gece/gündüz, oylama; `MafyaSecret` | Aşama 3D-4 |
 | Coin bakiyesi okuma | Evet (`GameWallet`, sunucu) | **Hayır** | Bonto'da cüzdan tablosu yok | Ayna okuma; yazma açılmaz |
 | Coin düşme / kazanç | Evet — sunucu tarafı, RLS ile istemciye kapalı | **Hayır** | Atomik koşullu düşme (`bakiyeDus` hazır), hareket kaydı (`hareketYaz` hazır) | Aşama 3D-0: cüzdan yazımını tek transaction'a al |
 | Tekrar işlem koruması | **Kısmi** — tur bazlı; `request_id` hiçbir oyun fonksiyonunda yok | **Hayır** | `api-idempotency.js` bağlanmalı | Her oyun yazımı `request_id` ile |
@@ -99,7 +98,7 @@ dağıtım yapılmadı, veritabanına dokunulmadı, canlı trafik Bonto'ya yönl
 | **B** | Bonto'da `request_id` idempotency + denetim kaydı altyapısı (dosyalar hazır) | Aynı istek iki kez: tek kayıt |
 | **C** | Kullanıcı tokenı doğrulaması devrede | `test-token-ayrim.js` 21/21 + canlıda `Bearer` 401→200 kontrolü |
 | **D** | Sesli oda durum aynası (katılım, koltuk, mod, yasak) — **ses LiveKit'te kalır** | Base44 davranışı birebir aynı |
-| **E** | Oyunlar tek tek: 3D-0 cüzdan/transaction → 3D-1 basit slot grubu → 3D-2 tur bazlı (rulet, zar) → 3D-3 rocket/futbol → 3D-4 okey/mafya | Her oyun için ayrı karşılaştırma testi |
+| **E** | Oyunlar tek tek: 3D-0 cüzdan/transaction → 3D-1 basit slot grubu → 3D-2 tur bazlı (rulet, zar) → 3D-3 rocket/futbol → 3D-4 okey | Her oyun için ayrı karşılaştırma testi |
 
 **Kural:** hiçbir aşamada Base44 trafiği yönlendirilmez; Bonto yalnızca **yansı** olarak yazılır/okunur. Yazma açılışı en son ve tek oyunla denenir.
 

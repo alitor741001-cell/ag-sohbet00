@@ -257,7 +257,7 @@ CREATE INDEX IF NOT EXISTS jeton_talepleri_idx ON jeton_talepleri (durum, olustu
 -- ---------------------------------------------------------------- oyun
 CREATE TABLE IF NOT EXISTS oyun_turlari (
   id             uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  slug           text NOT NULL,                 -- slot | fruit | dede | seker | sekerli | elimin | rocket | roulette | futbol | okey | zar | mafya
+  slug           text NOT NULL,                 -- slot | fruit | dede | seker | sekerli | elimin | rocket | roulette | futbol | okey | zar
   tur_no         bigint NOT NULL,
   durum          text NOT NULL DEFAULT 'betting',
   sonuc          jsonb,

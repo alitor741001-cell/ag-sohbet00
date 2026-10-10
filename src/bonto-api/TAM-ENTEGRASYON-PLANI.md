@@ -59,7 +59,7 @@ sanılmamalı. Bunların dışında hiçbir yerde geçmeyen **iki yetim fonksiyo
 | 7. Arkadaşlar, takip, çevrimiçi, bildirimler, geçmiş | Çalışıyor (`friend-service`, `Friendship`, `FriendshipProgression`, `UserPresence`, `Notification`) | **Yok** | Uç yok | Düşük-orta | Sözleşme (Aşama D sonrası) | Rozet/okunmamış sayı eşleşmesi |
 | 8. Sesli odalar + LiveKit | Çalışıyor (`voice-room` 25 işlem, `room-presence` 22 işlem, `livekitToken`) | **Yok — ve olmamalı** | Bonto'da yalnızca durum aynası; ses taşınmaz | **Yüksek risk:** sesi taşımak mevcut çalışan odayı bozar | Durum aynası tasarımı; LiveKit'e dokunulmaz | Oda akışı bozulmadı testi (katıl/otur/ayrıl) |
 | 9. Admin paneli ve kullanıcı yönetimi | Çalışıyor (9 panel sayfası, `role-management`, `admin-notify`, `SecurityLog`, `AdminLog`) | **Yok** | Her yetkinin sunucu doğrulaması + denetim kaydı | **Kritik:** üyelik/cinsiyet istemciden yazılıyor | Admin yetkilerini `api-yetki.js` politikalarına bağla | Yetkisiz istek → 403; her admin işlemi denetim kaydı üretir |
-| 10. Oyunlar (12) | Çalışıyor: zar, mafya, okey(2), futbol, rulet, slot, meyve, rocket, şeker, şekerli, dede, elimin | **Yok** | `request_id`, oyun hız sınırı, denetim kaydı | Orta-yüksek: sonuç sunucuda ✔; tekrar koruması kısmi | En son aşama; 3D-0 sonrası tek tek | Tur tekrarı → ödeme bir kez; bakiye farkı sıfır |
+| 10. Oyunlar (12) | Çalışıyor: zar, okey(2), futbol, rulet, slot, meyve, rocket, şeker, şekerli, dede, elimin | **Yok** | `request_id`, oyun hız sınırı, denetim kaydı | Orta-yüksek: sonuç sunucuda ✔; tekrar koruması kısmi | En son aşama; 3D-0 sonrası tek tek | Tur tekrarı → ödeme bir kez; bakiye farkı sıfır |
 | 11. Ödemeler, paketler, abonelik, IBAN | **Kısmi:** `coin-request` + `coin-admin` + `Payment`/`PaymentMethod` + banka havalesi ekranı. **Shopier kodu yok**, **PayTR kodu yok** (Shopier anahtarları gizli değişkenlerde duruyor ama hiçbir kod kullanmıyor) | **Yok** | Sağlayıcı entegrasyonu, webhook, mutabakat | **Yüksek (para):** çalışan sağlayıcı yok; onay tamamen elle | Sağlayıcı kararı netleşmeden başlanmaz | Talep → onay → bakiye; çift onay engeli |
 | 12. Ajans sistemi | Çalışıyor (`agency-service`, 7 sayfa, kota/komisyon, `QuotaTier`, `QuotaReward`) | **Yok** | Uç yok | Orta: kazanç yazımı `service` principal ile | Salt okunur rapor aynası | Kota/komisyon hesap karşılaştırması |
 | 13. XP, seviye, VIP, çerçeve, görevler | Çalışıyor (XP, `UserXp`, `XpSettings`, `VipItem`, `SpecialFrame`). **Günlük ödül/görev modülü Base44'te de yok** | **Yok** | Görev/günlük ödül sistemi hiç yok | Düşük | Yalnızca mevcut XP/VIP aynalanır | Seviye/çerçeve eşleşmesi |
@@ -84,7 +84,7 @@ sanılmamalı. Bunların dışında hiçbir yerde geçmeyen **iki yetim fonksiyo
 | **3** | Sohbet: oda + özel mesaj, okundu, tekilleştirme | Mesaj akışı Base44 ile birebir |
 | **4** | Sesli odalar: yalnızca durum aynası (ses LiveKit'te kalır) | Oda akışı bozulmadı |
 | **5** | Admin: sunucu tarafı yetki + denetim kaydı | Yetkisiz istek 403; her işlem kayıtlı |
-| **6** | Oyunlar: 3D-0 cüzdan → basit slotlar → tur bazlı → rocket/futbol → okey/mafya | Oyun başına ayrı karşılaştırma testi |
+| **6** | Oyunlar: 3D-0 cüzdan → basit slotlar → tur bazlı → rocket/futbol → okey | Oyun başına ayrı karşılaştırma testi |
 | **7** | Ödemeler (sağlayıcı kararı sonrası), ajans, diğer modüller | Mutabakat testi |
 | **8** | Performans: gereksiz istek/sorgu ve yetim kod incelemesi | Ölçüm öncesi/sonrası karşılaştırma |
 

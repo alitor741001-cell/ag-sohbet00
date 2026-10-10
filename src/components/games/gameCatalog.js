@@ -16,7 +16,6 @@ import {
   OKEY_COVER_WIDTH,
 } from './okey/okeyAssets';
 import { ZAR_COVER, ZAR_COVER_HEIGHT, ZAR_COVER_WIDTH } from './zar/zarAssets';
-import { MAFYA_COVER, MAFYA_COVER_HEIGHT, MAFYA_COVER_WIDTH } from './mafya/mafyaAssets';
 
 export const SEKERLI_MEYVE_ID = 'sekerli-meyve';
 export const SLOT_ID = 'slot-frenzy';
@@ -32,12 +31,9 @@ export const OKEY_ID = 'okey-101';
 export const OKEY_CLASSIC_ID = 'okey';
 // ZAR: üç zarlı bahis masası (küçük, büyük, kaplan).
 export const ZAR_ID = 'zar';
-// ÇEYREK MAFYA: 4-8 kişilik sosyal çıkarım oyunu (gece aksiyonu, gündüz oylaması).
-export const MAFYA_ID = 'mafya';
 
 // Oyun merkezi kartları: kapak görseli durur, dokununca oyun açılır.
 export const GAMES = [
-  { id: MAFYA_ID, title: 'ÇEYREK MAFYA', cover: MAFYA_COVER, originWidth: MAFYA_COVER_WIDTH, originHeight: MAFYA_COVER_HEIGHT },
   { id: OKEY_ID, title: '101 OKEY', cover: OKEY_COVER, originWidth: OKEY_COVER_WIDTH, originHeight: OKEY_COVER_HEIGHT },
   { id: OKEY_CLASSIC_ID, title: 'OKEY', cover: OKEY_CLASSIC_COVER, originWidth: OKEY_CLASSIC_COVER_WIDTH, originHeight: OKEY_CLASSIC_COVER_HEIGHT },
   { id: ZAR_ID, title: 'ZAR', cover: ZAR_COVER, originWidth: ZAR_COVER_WIDTH, originHeight: ZAR_COVER_HEIGHT },

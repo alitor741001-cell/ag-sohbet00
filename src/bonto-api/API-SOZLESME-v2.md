@@ -97,7 +97,7 @@ yalnızca ürün/talep seçer. Negatif bakiye imkânsız (koşullu düşme).
 | `POST /v1/games/:slug/room/join` | user | ✅ | Oyun odasına oturma |
 
 Kurallar: her oyunun mevcut işleyişi aynen korunur (slot, fruit, dede, şeker,
-şekerli, elimin, roket, rulet, futbol, okey, zar, mafya). Tur sonucu sunucu
+şekerli, elimin, roket, rulet, futbol, okey, zar). Tur sonucu sunucu
 tarafında üretilir, tek kez yazılır, `seq`/`tur_no` ile sıralanır.
 
 ## Seviye, rozet, çerçeve
