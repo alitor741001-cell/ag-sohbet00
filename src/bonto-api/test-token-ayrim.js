@@ -10,12 +10,26 @@
  */
 
 const crypto = require('node:crypto');
-const token = require('./api-kullanici-token');
-const yetki = require('./api-yetki');
 
 // Test anahtarları: gerçek gizli değerler DEĞİLDİR, yalnızca bu dosyada geçerlidir.
 const ANAHTAR = 'test-kullanici-tokeni-anahtari-0123456789';
 const SERVIS_ANAHTARI = 'test-servis-anahtari-9876543210abcdef';
+const STATIK_ANAHTAR = 'test-statik-anahtar-0123456789abcdef';
+
+// Kimlik modülleri bu değerleri açılışta ortam değişkeninden okur; bu yüzden
+// require'dan ÖNCE yazılır. Yalnızca bu test süreci içinde geçerlidir.
+process.env.API_SERVICE_KEY = SERVIS_ANAHTARI;
+process.env.USER_TOKEN_SECRET = ANAHTAR;
+process.env.STATIC_TEST_KEY = STATIK_ANAHTAR;
+process.env.AUTH_MODE = 'both';
+
+const token = require('./api-kullanici-token');
+const yetki = require('./api-yetki');
+const guvenlik = require('./api-guvenlik');
+
+/** Sahte istek nesnesi: yalnızca başlık taşır. */
+const istek = (basliklar) => ({ headers: basliklar });
+
 const AYAR = {
   userTokenSecret: ANAHTAR,
   serviceKey: SERVIS_ANAHTARI,
@@ -76,6 +90,16 @@ function testleriCalistir() {
     ['kullanıcı tokenı yönetici ucunda reddedilmeli', yetki.yetkiKontrol({ principal: gecerli.principal, policy: 'admin.kullanici.rol' }).kod === 'YETKI_YOK'],
     ['tanımsız politika kapalı devre olmalı', yetki.yetkiKontrol({ principal: gecerli.principal, policy: 'yok.boyle.bir.uc' }).ok === false],
     ['kilitli modül özellik kapalıyken 503 vermeli', yetki.yetkiKontrol({ principal: gecerli.principal, policy: 'hediye.gonder', ozellikAcik: false }).kod === 'SERVIS_HATASI'],
+    ['Bearer kullanıcı tokenı user kimliği vermeli', guvenlik.authenticate(istek({ authorization: `Bearer ${uretilen.token}` })).principal.kind === 'user'],
+    ['Bearer kullanıcı kimliği token konusuyla aynı olmalı', guvenlik.authenticate(istek({ authorization: `Bearer ${uretilen.token}` })).principal.userId === 'ornek-kullanici'],
+    ['Bearer servis tokenı service kimliği vermeli', guvenlik.authenticate(istek({ authorization: `Bearer ${guvenlik.signServiceToken({ userId: 'ornek-servis' })}` })).principal.kind === 'service'],
+    ['servis anahtarıyla imzalı token kimlik vermemeli', guvenlik.authenticate(istek({ authorization: `Bearer ${yap(temel, SERVIS_ANAHTARI)}` })).ok === false],
+    ['statik test anahtarı test kimliği vermeli', guvenlik.authenticate(istek({ 'x-api-key': STATIK_ANAHTAR })).principal.kind === 'static-test-key'],
+    ['yanlış statik anahtar reddedilmeli', guvenlik.authenticate(istek({ 'x-api-key': 'yanlis-anahtar-0123456789abcdefghij' })).ok === false],
+    ['başlıksız istek reddedilmeli', guvenlik.authenticate(istek({})).ok === false],
+    ['/v1/ben politikası kullanıcı kimliğini kabul etmeli', yetki.yetkiKontrol({ principal: gecerli.principal, policy: 'kullanici.ben.oku' }).ok === true],
+    ['/v1/ben politikası test kimliğini reddetmeli', yetki.yetkiKontrol({ principal: { kind: 'static-test-key', userId: null, role: 'test' }, policy: 'kullanici.ben.oku' }).kod === 'YETKI_TURU'],
+    ['admin rolü yönetici ucuna girebilmeli', yetki.yetkiKontrol({ principal: { kind: 'user', userId: 'y1', role: 'admin' }, policy: 'admin.kullanici.rol' }).ok === true],
   ];
 
   const kalan = sonuclar.filter(([, gecti]) => !gecti);

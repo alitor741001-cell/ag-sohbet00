@@ -50,6 +50,8 @@ const settings = Object.freeze({
   authMode: (readText('AUTH_MODE') || 'both').toLowerCase(), // service | static | both
   serviceKey: readText('API_SERVICE_KEY'),
   staticTestKey: readText('STATIC_TEST_KEY'),
+  // Kullanıcı kimliği tokenlarının imza anahtarı (Base44 USER_TOKEN_SECRET ile aynı değer).
+  userTokenSecret: readText('USER_TOKEN_SECRET'),
   tokenAudience: readText('TOKEN_AUDIENCE') || 'ag-backend-api',
   tokenIssuer: readText('TOKEN_ISSUER') || 'base44-app',
   minKeyLength: MIN_KEY_LENGTH,
@@ -95,6 +97,21 @@ const staticKeyUsable = allowStaticKey &&
   typeof settings.staticTestKey === 'string' &&
   settings.staticTestKey.length >= MIN_KEY_LENGTH;
 
+// Kullanıcı tokenı anahtarı YALNIZCA kendi başına geçerlidir: servis anahtarıyla aynı
+// olursa iki türün ayrımı anlamsızlaşır, o yüzden o durumda doğrulama kapalıdır.
+const userTokenUsable =
+  typeof settings.userTokenSecret === 'string' &&
+  settings.userTokenSecret.length >= MIN_KEY_LENGTH &&
+  settings.userTokenSecret !== settings.serviceKey;
+
+/** api-kullanici-token modülünün beklediği ayar nesnesi. */
+const userTokenAyar = Object.freeze({
+  userTokenSecret: settings.userTokenSecret,
+  serviceKey: settings.serviceKey,
+  tokenIssuer: settings.tokenIssuer,
+  tokenAudience: settings.tokenAudience,
+});
+
 const authConfigured = serviceKeyUsable || staticKeyUsable;
 
 const warnings = [];
@@ -111,6 +128,11 @@ if (!authConfigured) {
 if (settings.corsOrigins.length === 0) {
   warnings.push('CORS_ORIGINS boş: tarayıcıdan yalnızca aynı adres (same-origin) çağrı yapılabilir.');
 }
+if (!userTokenUsable) {
+  warnings.push(
+    'USER_TOKEN_SECRET tanımlı değil, çok kısa veya servis anahtarıyla aynı: /v1/ben ve /v1/test/kimlik uçları 401 döner.'
+  );
+}
 for (const warning of warnings) {
   console.warn(`[${settings.serviceName}] UYARI: ${warning}`);
 }
@@ -122,6 +144,8 @@ module.exports = {
   authConfigured,
   serviceKeyUsable,
   staticKeyUsable,
+  userTokenUsable,
+  userTokenAyar,
   GATED_FEATURES,
   MIN_KEY_LENGTH,
   warnings,

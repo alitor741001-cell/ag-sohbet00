@@ -75,6 +75,10 @@ const POLITIKALAR = Object.freeze({
 
   'servis.ayna': { principal: 'service', yazma: true, denetim: 'zorunlu' },
   'test.okuma': { principal: 'test', yazma: false },
+
+  // Aşama 1 kimlik uçları: yalnızca kullanıcı kimliğiyle okunur, yazma yok.
+  'kullanici.ben.oku': { principal: 'user', roller: [ROLLER.KULLANICI, ROLLER.YAYINCI, ROLLER.YONETICI], yazma: false },
+  'test.kimlik.oku': { principal: 'user', roller: [ROLLER.KULLANICI, ROLLER.YAYINCI, ROLLER.YONETICI], yazma: false },
 });
 
 const SESSIZ_RED = { ok: false, kod: 'YETKI_TURU', mesaj: 'Bu uç nokta için geçersiz kimlik türü.' };

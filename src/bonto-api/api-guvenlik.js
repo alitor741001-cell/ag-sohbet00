@@ -14,7 +14,10 @@ const {
   authConfigured,
   serviceKeyUsable,
   staticKeyUsable,
+  userTokenUsable,
+  userTokenAyar,
 } = require('./api-ayar');
+const { kullaniciTokeniDogrula } = require('./api-kullanici-token');
 
 const MAX_TOKEN_LENGTH = 4096;
 const REQUEST_ID_PATTERN = /^[\w-]{8,64}$/;
@@ -38,6 +41,7 @@ function signServiceToken({ userId, role = 'user', ttlSeconds = 900, key = setti
   const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url');
   const payload = Buffer.from(
     JSON.stringify({
+      typ: 'service',
       sub: String(userId),
       role,
       iss: settings.tokenIssuer,
@@ -71,6 +75,9 @@ function verifyServiceToken(token) {
   }
 
   if (!header || header.alg !== 'HS256') return { ok: false, reason: 'algoritma' };
+  // Tür ayrımı iki yönlüdür: kullanıcı tokenı (typ=user) servis kimliği kazanamaz —
+  // servis anahtarıyla imzalı olsa bile servis ucu olarak kabul edilmez.
+  if (payload.typ === 'user') return { ok: false, reason: 'token_turu' };
 
   const expected = crypto
     .createHmac('sha256', settings.serviceKey)
@@ -118,18 +125,29 @@ function authenticate(req) {
   const match = /^Bearer\s+(.+)$/i.exec(header);
 
   if (match) {
-    if (!serviceKeyUsable) {
-      return { ok: false, status: 401, code: 'UNAUTHORIZED', message: 'Servis anahtarı yapılandırılmadı.' };
+    const belirtec = match[1].trim();
+
+    // 1) Kullanıcı tokenı (typ=user). Yalnızca kendi imza anahtarıyla doğrulanır;
+    //    servis tokenı buradan geçemez, kullanıcı tokenı da servis yetkisi kazanmaz.
+    if (userTokenUsable) {
+      const kullanici = kullaniciTokeniDogrula(belirtec, { ayar: userTokenAyar });
+      if (kullanici.ok) return { ok: true, principal: kullanici.principal };
     }
-    const result = verifyServiceToken(match[1].trim());
-    if (result.ok) return result;
-    return {
-      ok: false,
-      status: 401,
-      code: 'UNAUTHORIZED',
-      message: 'Token doğrulanamadı.',
-      details: { reason: result.reason },
-    };
+
+    // 2) Servis tokenı (Base44 arka ucu).
+    if (serviceKeyUsable) {
+      const result = verifyServiceToken(belirtec);
+      if (result.ok) return result;
+      return {
+        ok: false,
+        status: 401,
+        code: 'UNAUTHORIZED',
+        message: 'Token doğrulanamadı.',
+        details: { reason: result.reason },
+      };
+    }
+
+    return { ok: false, status: 401, code: 'UNAUTHORIZED', message: 'Token doğrulanamadı.' };
   }
 
   const staticKey = req.headers['x-api-key'];

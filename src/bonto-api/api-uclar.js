@@ -11,7 +11,13 @@
  * Yakalanan istekte true, yakalanmayanda false döner.
  */
 
-const { settings, featureFlags, blockedRequests, authConfigured } = require('./api-ayar');
+const {
+  settings,
+  featureFlags,
+  blockedRequests,
+  authConfigured,
+  userTokenUsable,
+} = require('./api-ayar');
 const {
   applyCors,
   authenticate,
@@ -22,7 +28,17 @@ const {
   sendError,
   sendJson,
 } = require('./api-guvenlik');
+const { yetkiKontrol } = require('./api-yetki');
 const { TEST_SAYFASI } = require('./api-test-sayfasi');
+
+/** Politika kapısı: tanımsız politika ve kimlik türü uyuşmazlığı kapalı devre reddedilir. */
+const kimlikKapisi = (req, res, policy) => {
+  const karar = yetkiKontrol({ principal: req.apiPrincipal, policy });
+  if (karar.ok) return true;
+  const durum = karar.kod === 'SERVIS_HATASI' ? 503 : karar.kod === 'YETKI_YOK' ? 403 : 401;
+  sendError(req, res, durum, karar.kod, karar.mesaj);
+  return false;
+};
 
 const ORNEK_ODALAR = [
   {
@@ -147,6 +163,7 @@ const ROUTES = [
         checks: {
           process: 'up',
           auth: authConfigured ? 'configured' : 'missing_key',
+          userToken: userTokenUsable ? 'configured' : 'missing_key',
           database: 'not_configured',
           liveData: 'disabled',
         },
@@ -168,14 +185,21 @@ const ROUTES = [
         phase: 1,
         liveDataConnected: false,
         auth: {
-          accepted: ['Authorization: Bearer <HS256 servis tokenı>', 'X-API-Key: <statik test anahtarı>'],
+          accepted: [
+            'Authorization: Bearer <HS256 kullanıcı tokenı, typ=user>',
+            'Authorization: Bearer <HS256 servis tokenı>',
+            'X-API-Key: <statik test anahtarı>',
+          ],
           audience: settings.tokenAudience,
           issuer: settings.tokenIssuer,
+          userTokenVerification: userTokenUsable ? 'acik' : 'kapali',
         },
         endpoints: [
           { method: 'GET', path: '/health', auth: false, aciklama: 'Servis ayakta mı.' },
           { method: 'GET', path: '/health/ready', auth: false, aciklama: 'Kimlik doğrulama ve bağımlılık durumu.' },
           { method: 'GET', path: '/v1/sozlesme', auth: true, aciklama: 'Bu sözleşmenin özetI.' },
+          { method: 'GET', path: '/v1/ben', auth: true, aciklama: 'Kullanıcı kimliği (yalnızca typ=user tokenı).' },
+          { method: 'GET', path: '/v1/test/kimlik', auth: true, aciklama: 'Kimlik ve tür ayrımı testi.' },
           { method: 'GET', path: '/v1/ping', auth: true, aciklama: 'Kimlik doğrulama denemesi.' },
           { method: 'GET', path: '/v1/echo', auth: true, aciklama: 'İstek doğrulama denemesi (mesaj, adet).' },
           { method: 'GET', path: '/v1/test/odalar', auth: true, aciklama: 'Statik oda listesi örneği.' },
@@ -195,6 +219,57 @@ const ROUTES = [
         requestId: req.apiRequestId,
         serverTime: new Date().toISOString(),
         principal: req.apiPrincipal,
+      });
+    },
+  },
+  {
+    method: 'GET',
+    path: '/v1/ben',
+    auth: true,
+    handler: (req, res) => {
+      if (!kimlikKapisi(req, res, 'kullanici.ben.oku')) return;
+      const principal = req.apiPrincipal;
+      sendJson(req, res, 200, {
+        ok: true,
+        asama: 1,
+        kullanici: { id: principal.userId, rol: principal.role },
+        jeton: {
+          tur: 'user',
+          jti: principal.tokenId || null,
+          gecerlilikSonu: principal.expiresAt || null,
+        },
+        canliVeri: false,
+      });
+    },
+  },
+  {
+    method: 'GET',
+    path: '/v1/test/kimlik',
+    auth: true,
+    handler: (req, res) => {
+      if (!kimlikKapisi(req, res, 'test.kimlik.oku')) return;
+      const principal = req.apiPrincipal;
+      const servisUcu = yetkiKontrol({ principal, policy: 'servis.ayna' });
+      const yoneticiUcu = yetkiKontrol({ principal, policy: 'admin.kullanici.rol' });
+      const testler = [
+        { ad: 'kullanıcı tokenı kabul edildi', gecti: principal.kind === 'user' },
+        { ad: 'kullanıcı kimliği taşınıyor', gecti: Boolean(principal.userId) },
+        { ad: 'servis uçlarına erişim kapalı', gecti: servisUcu.ok === false },
+        {
+          ad: 'yönetici uçlarına erişim yalnızca admin rolüyle',
+          gecti: principal.role === 'admin' ? yoneticiUcu.ok === true : yoneticiUcu.ok === false,
+        },
+      ];
+      sendJson(req, res, 200, {
+        ok: true,
+        asama: 1,
+        kabulEdilenKimlik: principal.kind,
+        kullaniciId: principal.userId,
+        rol: principal.role,
+        testler,
+        gecen: testler.filter((test) => test.gecti).length,
+        toplam: testler.length,
+        canliVeri: false,
       });
     },
   },

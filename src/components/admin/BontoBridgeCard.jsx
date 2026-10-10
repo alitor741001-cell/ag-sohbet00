@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Radar, RefreshCw, CheckCircle2, XCircle, Lock, Unlock } from 'lucide-react';
 
-/** Bonto'daki modül bayraklarının okunabilir adları. */
+/** Bonto'daki modül bayraklarının okunabilir adları (iki sunucu sürümünün adları da karşılanır). */
 const MODUL_ADLARI = {
   liveRooms: 'Sesli odalar',
+  liveMessages: 'Mesajlar',
   messages: 'Mesajlar',
+  shadowRead: 'Gölge okuma',
   gifts: 'Hediyeler',
   coins: 'Jeton / bakiye',
   games: 'Oyunlar',
@@ -88,8 +90,9 @@ export default function BontoBridgeCard() {
         <div className="space-y-1">
           <p className="text-xs font-semibold text-muted-foreground">Bonto'daki modül durumu</p>
           <div className="grid grid-cols-2 gap-1 text-xs">
-            {Object.entries(MODUL_ADLARI).map(([anahtar, ad]) => {
+            {Object.keys(bayraklar).filter((anahtar) => anahtar !== 'ignoredFlagRequests').map((anahtar) => {
               const acik = Boolean(bayraklar[anahtar]);
+              const ad = MODUL_ADLARI[anahtar] || anahtar;
               return (
                 <div key={anahtar} className="flex items-center gap-1.5">
                   {acik
