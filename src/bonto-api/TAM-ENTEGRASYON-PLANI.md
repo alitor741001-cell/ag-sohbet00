@@ -20,9 +20,17 @@ Bütün ifadeler koddan ve ölçümlerden gelir; tahmin yoktur. Ölçülemeyen y
 | İstemciden çağrılan fonksiyon | 35 (en çok: `room-presence` 46, `dm-service` 20, `voice-room` 14, `friend-service` 11) |
 | Canlı Bonto uçları | `/health`, `/health/ready`, `/v1/ping`, `/v1/test/odalar`, `/api/rooms` (hepsi 200) |
 
-**Kritik ölçüm:** Canlı `ag-sohbet.bonto.run` yanıt şekilleri depodaki Aşama 1 koduyla
-**örtüşmüyor**; `/v1/sozlesme` **404**. Yani canlıda başka/eskı bir kod tabanı çalışıyor
-ve **Bonto'da uygulama verisi taşıyan tek bir uç yok**.
+**Kritik ölçüm (güncel):** Canlı `ag-sohbet.bonto.run`, kullanıcının kendi yazdığı API'dir
+(doğrulandı). Bugünkü durum:
+
+- `/health` → `{"status":"ok","message":"API çalışıyor"}`
+- `/health/ready` → `apiReady: true`, **beş özellik bayrağı da kapalı** (`liveRooms`, `messages`, `gifts`, `coins`, `games`)
+- `/api/rooms` → `rooms: []` + *"oda veritabanı henüz bağlanmadı"* → **veritabanı bağlantısı yok**
+- `/v1/sozlesme` → **404** (depodaki Aşama 1 uçları canlıda yok; iki kod tabanı ayrı)
+
+Sonuç: **canlıda uygulama verisi taşıyan tek bir uç ve tek bir tablo yok**; çift yazma riski
+bulunmuyor. Bonto hedef veritabanı **PostgreSQL (Supabase)**; depodaki `sema-v1.sql` (35 tablo)
+PostgreSQL 13+ için yazılmış tasarımdır — hedefle uyumlu ama **henüz uygulanmadı**.
 
 **Görev–fonksiyon eşleşmesi (doğrulandı):** `cleanup-rooms` (2 görev), `cleanup-admin-logs`,
 `cleanup-frames`, `supabase-sync-full` zamanlanmış görevlerden çağrılır — "kullanılmıyor"
@@ -92,10 +100,22 @@ sanılmamalı. Bunların dışında hiçbir yerde geçmeyen **iki yetim fonksiyo
 - Supabase yapılandırmasını değiştirmek.
 - Yetim görünen fonksiyonları doğrulamadan silmek.
 
-## 6. Doğrulanmamış / açık sorular
+## 6. Karara bağlananlar / açık kalanlar
 
-1. Canlı `ag-sohbet.bonto.run` hangi kod tabanını çalıştırıyor? Depodaki Aşama 1 dosyaları orada mı? (`/v1/sozlesme` 404 olduğu için örtüşmüyor.)
-2. Bonto'da veritabanı var mı; türü ve sürümü ne?
-3. Ödeme sağlayıcısı hangisi olacak (Shopier anahtarları mevcut ama kod yok; PayTR kodu hiç yok)?
-4. `face-verify` ve `zarrefcheck` kaldırılabilir mi, başka bir yerden çağrılıyor mu?
-5. Bonto hedefi: tam motor mu, yalnızca bakiye + kayıt mı? (Güvenli seçenek: ikincisi.)
+**Karara bağlandı**
+
+1. **Bonto hedefi: tam motor.** Bütün modüller Bonto'da tam olarak çalışacak şekilde planlanır.
+   Tek istisna: **ses taşıma LiveKit'te kalır** — Bonto oda durumunu taşır, sesi taşımaz (teknik sınır).
+2. **Bonto veritabanı: PostgreSQL (Supabase).** `sema-v1.sql` bu hedefle uyumlu; uygulanmadı.
+3. **Canlı Bonto kodu: kullanıcının kendi API'si.** Depodaki Aşama 1 dosyaları canlıda yok;
+   bayraklar kapalı, veritabanı bağlı değil.
+
+**Açık kalan**
+
+4. Bonto API'si hangi Supabase projesine bağlanacak — Base44 aynasının yazdığı proje ile **aynı mı**,
+   ayrı mı? (Aynıysa ayna verisi Bonto için hazır referans olur.)
+5. Ödeme sağlayıcısı (Aşama 7'de gerekli): Shopier anahtarları gizli değişkenlerde duruyor ama
+   **hiçbir kod kullanmıyor**; PayTR kodu hiç yok; bölgede Stripe mevcut.
+6. `face-verify` ve `zarrefcheck` kaldırılabilir mi, başka bir yerden çağrılıyor mu?
+
+**Aşama 1 sözleşmesi ayrı dosyada:** `ASAMA-1-KIMLIK-SOZLESMESI.md`.
