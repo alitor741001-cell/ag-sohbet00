@@ -23,8 +23,11 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import { secrets } from 'base44:runtime';
 
 const TOKEN_OMRU_SN = 600;
-const ISSUER = 'base44-ag-sohbet';
-const AUDIENCE = 'bonto-api';
+// Bu iki değer Bonto'daki api-ayar.js varsayılanlarıyla BİREBİR aynıdır
+// (TOKEN_ISSUER / TOKEN_AUDIENCE). Bonto'da ortam değişkeniyle override edilirse
+// değerler bu sabitlerle eşleşmezse token reddedilir (bkz. BONTO-DAGITIM.md §3).
+const ISSUER = 'base44-app';
+const AUDIENCE = 'ag-backend-api';
 
 const base64urlBytes = (bytes) =>
   btoa(String.fromCharCode(...new Uint8Array(bytes)))

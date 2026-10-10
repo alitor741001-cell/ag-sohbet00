@@ -12,6 +12,8 @@ Bonto ortam değişkenlerine eklenmesi **sizin tarafınızda** yapılacaktır.
 | `api-yetki.js` | Rol politikaları, sahiplik, tutar doğrulaması, denetim kaydı | Yeni dosya |
 | `api-idempotency.js` | `(principal, işlem, request_id)` tek işlem garantisi + SQL ifadeleri | Yeni dosya |
 | `sema-v1.sql` | Tablo/indeks/şema sürümü tasarımı | **Çalıştırılmaz** (bkz. §6) |
+| `test-token-ayrim.js` | Çevrimdışı güvenlik testi (21 kontrol; ağa çıkmaz) | Yeni dosya |
+| `TOKEN-TUR-TEST-PLANI.md` | Tür ayrımı ve servis yetkisi test planı | – |
 | `BONTO-DAGITIM.md` | Bu belge | – |
 | `index.js`, `api-uclar.js`, `api-guvenlik.js`, `api-ayar.js`, `api-test-sayfasi.js` | Aşama 1 dosyaları | **DEĞİŞTİRİLMEZ** |
 
@@ -28,7 +30,7 @@ Bonto ortam değişkenlerine eklenmesi **sizin tarafınızda** yapılacaktır.
 | `USER_TOKEN_SECRET` | **YENİ — zorunlu** | Base44 gizli değişkenlerine eklendi. Aynı değer Bonto ortamına da eklenmeli. En az 32 karakter. |
 | `API_SERVICE_KEY` | Mevcut | Servis uçları için; kullanıcı tokenı ile **karıştırılmaz**. |
 | `STATIC_TEST_KEY` | Mevcut | Yalnızca `/v1/test/*`. |
-| `TOKEN_ISSUER` / `TOKEN_AUDIENCE` | Mevcut | Base44 üreticisi `base44-ag-sohbet` / `bonto-api` değerlerini kullanır; Bonto tarafında **birebir aynı** olmalı. |
+| `TOKEN_ISSUER` / `TOKEN_AUDIENCE` | Mevcut (isteğe bağlı) | `api-ayar.js` varsayılanları: `base44-app` / `ag-backend-api`. Base44 üretici fonksiyonu bu değerlerle imzalar. Bonto'da ortam değişkeniyle override edilmişse değerler **birebir aynı** olmalı; aksi halde token `veren` / `hedef_kitle` sebebiyle reddedilir. Canlı sunucudan okunamadı — bkz. §9. |
 
 Ayrılık kuralı (zorunlu): `USER_TOKEN_SECRET` ≠ `API_SERVICE_KEY`. İki değer aynı olursa
 `api-kullanici-token.js` doğrulamayı kapalı tutar (`sebep: anahtar_ayrisimi_yok`) ve
@@ -117,3 +119,27 @@ Bu bilgiler gelmeden SQL çalıştırılmaz, veritabanı varsayımı yapılmaz.
 - `index.js` içindeki yönlendirmeyi değiştirmek (yapılmadı).
 - `sema-v1.sql` çalıştırmak (yapılmadı).
 - LiveKit ve ses akışına dokunmak (yapılmadı).
+
+## 9. Canlı sunucuyla ilgili DOĞRULANAN bulgu (kritik)
+
+Canlı `ag-sohbet.bonto.run` üzerinde ölçülen yanıt şekilleri, bu paketteki Aşama 1
+dosyalarının üreteceği yanıtlarla **örtüşmüyor**:
+
+| Yol | Canlı durum | Canlı alanlar | Depodaki Aşama 1 beklentisi |
+| --- | --- | --- | --- |
+| `/health` | 200 | `status`, `message` | `ok`, `service`, `version`, `contractVersion`, `phase`, `dependencies`, `features` |
+| `/health/ready` | 200 | `ok`, `apiReady`, `features` | `ready`, `apiReady`, `checks`, `notes`, `timestamp` |
+| `/v1/ping` | 200 | `ok`, `message` | `ok`, `pong`, `requestId`, `serverTime`, `principal` |
+| `/v1/sozlesme` | **404** | – | 200 (sözleşme özeti) |
+| `/v1/test/odalar` | 200 | `ok`, `canliVeri`, `odalar` | `ornek`, `kaynak`, `canliVeri`, `adet`, `odalar` |
+| `/api/rooms` | 200 | `success`, `rooms`, `message` | 404 (`/api/*` Aşama 1 kapsamı dışında) |
+
+Sonuç: **canlı sunucu bu paketteki kodu çalıştırmıyor** — daha eski ya da ayrı
+yönetilen bir sürüm çalışıyor. Bu nedenle:
+
+1. `TOKEN_ISSUER` / `TOKEN_AUDIENCE` değerleri **canlıdan okunamadı** (`/v1/sozlesme` yok);
+   yalnızca bu depodaki `api-ayar.js` varsayılanları biliniyor: `base44-app` / `ag-backend-api`.
+2. Paketi kopyalamadan önce canlıdaki sürümün hangi kod olduğu doğrulanmalı ve mevcut
+   uçların bozulmayacağı teyit edilmelidir.
+3. Paketin canlıya **kurulduğu iddia edilemez**; kurulum sizin tarafınızda yapıldıktan
+   sonra §5 adımlarıyla doğrulanır.
