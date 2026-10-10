@@ -63,10 +63,12 @@ herkes her kullanıcı adına token üretebilir.
 
 - **Önerilen**: kullanıcı tokenı için ayrı bir `USER_TOKEN_SECRET` (en az 32 rastgele bayt).
   Bu değer hem Base44 gizli değişkenlerine hem Bonto ortam değişkenlerine **aynı** konur.
-- **Bugünkü durum**: Base44 üretici fonksiyonu (`bontoUserToken`) servis anahtarıyla
-  imzalar; Bonto tarafındaki doğrulama modülü `USER_TOKEN_SECRET` tanımlıysa onu,
-  değilse servis anahtarını kullanır. Ayrı anahtar kararı verilirse değer hem Base44
-  gizli değişkenlerine hem Bonto ortam değişkenlerine eklenir.
+- **Karar verildi (Aşama 3)**: `USER_TOKEN_SECRET` ayrı anahtar olarak tanımlandı.
+  Base44 üretici fonksiyonu (`bontoUserToken`) yalnızca bu anahtarla imzalar; Bonto
+  doğrulama modülü de yalnızca bu anahtarı kabul eder. İki değer aynı olursa doğrulama
+  kapalı kalır (`anahtarlarAyrilmis`). Anahtar yoksa token üretimi durur (503) ve anahtar
+  değeri hiçbir koşulda yanıta, günlüğe veya istemciye yazılmaz. Dağıtım adımları:
+  `BONTO-DAGITIM.md`.
 - **Karar sizde**: ayrı anahtar kullanılacak mı, yoksa tek anahtarla mı devam edilecek?
   Bu bilgi gelmeden canlı yazma açılmaz.
 
@@ -237,7 +239,7 @@ tutarlılığı ve sıfır çift kayıt.
 
 ## 10. Açık kararlar ve gereken bilgiler
 
-1. **İmzalama anahtarı**: ayrı `USER_TOKEN_SECRET` mı, servis anahtarı mı?
+1. **İmzalama anahtarı** — çözüldü (Aşama 3): yalnızca ayrı `USER_TOKEN_SECRET` kullanılıyor.
 2. **Veritabanı**: Bonto'da hangi veritabanı var (PostgreSQL sürümü)? `sema-v1.sql` uyarlanmalı.
 3. **Yayın katmanı**: Redis var mı, kaç süreç/konteyner çalışıyor?
 4. **Roller**: Bonto'da hangi roller zorunlu (yayıncı, ajans sahibi, asistan, oda yöneticisi)?

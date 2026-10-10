@@ -12,8 +12,9 @@
  *   • alg yalnızca HS256; 'none' ve diğer algoritmalar reddedilir.
  *   • Token türü ZORUNLU: kullanıcı tokenı 'user', servis tokenı 'service'.
  *     Tür uyuşmazlığı reddedilir (kullanıcı tokenı servis yetkisi kazanamaz).
- *   • İmza anahtarı: ayar.userTokenSecret → yoksa ayar.serviceKey'e düşer.
- *     Canlı yazma açılmadan önce AYRI anahtara geçilmelidir (ASAMA-2-MIMARI.md §2.3).
+ *   • İmza anahtarı YALNIZCA ayar.userTokenSecret'tır (Bonto'da USER_TOKEN_SECRET ortam
+ *     değişkeni). Servis anahtarına düşme YOKTUR; iki değer aynıysa doğrulama kapalıdır.
+ *     Böylece kullanıcı tokenı servis yetkisi kazanamaz (bkz. BONTO-DAGITIM.md).
  *   • İstemciden gelen rol/bakiye claim'i iş mantığında kullanılmaz; rol yalnızca
  *     Base44 kaydından okunup imzalanır.
  */
@@ -28,19 +29,27 @@ const EN_UZUN_OMUR_SN = 3600;
 
 const base64urlCoz = (deger) => Buffer.from(deger, 'base64url');
 
-const tokenAnahtari = (ayar) =>
-  (ayar && ayar.userTokenSecret) || (ayar && ayar.serviceKey) || '';
+const tokenAnahtari = (ayar) => (ayar && ayar.userTokenSecret) || '';
 
-/** Ayrı kullanıcı tokenı anahtarı tanımlı mı (raporlama için). */
-const ayriAnahtarTanimli = (ayar) => Boolean(ayar && ayar.userTokenSecret);
+/**
+ * İki anahtarın ayrı olduğunu doğrular. Kullanıcı tokenı anahtarı ile servis anahtarı
+ * aynı olursa tür ayrımı anlamsızlaşır; bu yüzden o durumda doğrulama kapanır.
+ */
+function anahtarlarAyrilmis(ayar) {
+  if (!ayar || !ayar.userTokenSecret) return false;
+  if (!ayar.serviceKey) return true; // servis anahtarı bu süreçte yok: çakışma olasılığı yok
+  return ayar.userTokenSecret !== ayar.serviceKey;
+}
 
 /**
  * Kullanıcı tokenı üretir. Yalnızca Base44 arka ucu çağırır.
  * @returns {{ token: string, exp: number, jti: string }}
  */
 function kullaniciTokeniUret({ userId, role = 'user', ttlSeconds = VARSAYILAN_OMUR_SN, ayar, jti }) {
+  if (!anahtarlarAyrilmis(ayar)) {
+    throw new Error('kullanıcı tokenı anahtarı tanımlı değil veya servis anahtarıyla aynı');
+  }
   const anahtar = tokenAnahtari(ayar);
-  if (!anahtar) throw new Error('kullanıcı tokenı imzalama anahtarı tanımlı değil');
   if (!KIMLIK_DESENI.test(String(userId || ''))) throw new Error('geçersiz kullanıcı kimliği');
   if (!ayar || !ayar.tokenIssuer || !ayar.tokenAudience) throw new Error('iss/aud ayarı eksik');
 
@@ -76,8 +85,8 @@ function kullaniciTokeniUret({ userId, role = 'user', ttlSeconds = VARSAYILAN_OM
  */
 function kullaniciTokeniDogrula(token, secenekler = {}) {
   const { ayar, iptalListesi } = secenekler;
+  if (!anahtarlarAyrilmis(ayar)) return { ok: false, sebep: 'anahtar_ayrisimi_yok' };
   const anahtar = tokenAnahtari(ayar);
-  if (!anahtar) return { ok: false, sebep: 'anahtar_yok' };
   if (typeof token !== 'string' || token.length < 20 || token.length > MAX_TOKEN_UZUNLUK) {
     return { ok: false, sebep: 'uzunluk' };
   }
@@ -144,7 +153,7 @@ function bearerTokeni(headerDegeri) {
 }
 
 module.exports = {
-  ayriAnahtarTanimli,
+  anahtarlarAyrilmis,
   bearerTokeni,
   kullaniciTokeniDogrula,
   kullaniciTokeniUret,
