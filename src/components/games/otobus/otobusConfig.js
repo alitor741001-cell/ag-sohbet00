@@ -3,11 +3,11 @@
 export const OTOBUS_BET_PRESETS = [500, 2500, 25000, 250000];
 export const OTOBUS_AUTO_PRESETS = [0, 1.5, 2, 5, 10];
 
-// Kamera: otobüs ekranda sabit durur, savana arkasından sola akar. Kayma yolun
+// Kamera: otobüs yolda ilerler, savana da arkasından sola akar. Kayma yolun
 // başında yumuşak, çarpan büyüdükçe belirginleşir ve sınırlı kalır — manzara
 // hiçbir an ekranın dışına taşmaz.
-const PAN_START = 5;
-const PAN_SPAN = 13;
+const PAN_START = 4;
+const PAN_SPAN = 22;
 
 /** Yolculuk ilerlemesi (0-1): çarpan büyüdükçe otobüs hızlanır. */
 export function rideProgress(mult) {

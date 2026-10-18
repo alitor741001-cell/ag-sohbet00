@@ -37,7 +37,10 @@ export default function OtobusStage({ game }) {
 
       <span aria-hidden="true" className="ob-streaks" style={{ '--ob-heat': progress }} />
 
-      <div className="ob-buswrap" style={{ '--ob-heat': progress }}>
+      <div
+        className={`ob-buswrap${phase === 'running' || crashed ? ' ob-buswrap-run' : ''}${crashed ? ' ob-buswrap-stop' : ''}`}
+        style={{ '--ob-heat': progress }}
+      >
         <span aria-hidden="true" className="ob-flame" />
         {bus && <img src={bus} alt="" className="ob-bus" />}
       </div>
