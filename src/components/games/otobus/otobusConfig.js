@@ -19,3 +19,13 @@ export function rideProgress(mult) {
 export function panPercent(progress) {
   return PAN_START + Math.max(0, Math.min(1, progress || 0)) * PAN_SPAN;
 }
+
+// Otobüsün yoldaki yeri: tur bahis beklerken solda durur, çarpan büyüdükçe düz
+// yolda sağa ilerler. Yolculuk sonunda bile ekranın içinde kalır.
+const CRUISE_START = 7;
+const CRUISE_SPAN = 46;
+
+/** Otobüsün yatay konumu (yüzde): ilerleyişi doğrudan çarpana bağlıdır. */
+export function cruisePercent(progress) {
+  return CRUISE_START + Math.max(0, Math.min(1, progress || 0)) * CRUISE_SPAN;
+}

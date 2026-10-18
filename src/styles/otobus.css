@@ -151,22 +151,36 @@
   from { background-position-x: 0; }
   to { background-position-x: -220px; }
 }
-/* Otobüs normal şekilde yol alır: sağdan çıkıp soldan geri girer, tur boyunca
-   aynı hızda akar. Bahis beklerken evinde durur; çakılma anında ise olduğu
-   yerde donar (animasyon duraklatılır, geri sıçramaz). */
+/* Düz yol: ufkun altında uzanan tek şerit — otobüs bu şeritte ilerler. */
+.ob-road {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 30%;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(58, 38, 18, 0) 0%, rgba(58, 38, 18, 0.55) 24%, #3a2612 60%, #241708 100%);
+}
+/* Yolun uzak kenarı: dümdüz ince bir çizgi, zeminin düz olduğunu gösterir. */
+.ob-road::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(255, 214, 150, 0.06), rgba(255, 214, 150, 0.32), rgba(255, 214, 150, 0.06));
+}
+/* Otobüs düz yolda ilerler: yatay konumu doğrudan çarpanın ilerleyişine bağlıdır
+   (--ob-cruise). X büyüdükçe sağa doğru akar, çakıldığı anda olduğu yerde durur. */
 .ob-buswrap {
   position: absolute;
-  left: 24%;
+  left: var(--ob-cruise, 7%);
   bottom: 9%;
   width: 46%;
   height: 42%;
   max-width: 420px;
-}
-.ob-buswrap-run { animation: ob-drive 8.4s linear infinite; }
-.ob-buswrap-stop { animation-play-state: paused; }
-@keyframes ob-drive {
-  0% { left: -46%; }
-  100% { left: 100%; }
+  transition: left 620ms linear;
 }
 .ob-bus {
   width: 100%;
@@ -280,7 +294,8 @@
   100% { opacity: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .ob-buswrap-run, .ob-bus, .ob-flame, .ob-streaks, .ob-stage-crash { animation: none; }
+  .ob-bus, .ob-flame, .ob-streaks, .ob-stage-crash { animation: none; }
+  .ob-buswrap { transition: none; }
 }
 
 /* --------------------------------------------------------------- bahis paneli */

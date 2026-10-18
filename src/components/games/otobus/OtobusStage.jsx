@@ -4,7 +4,7 @@ import { Image } from '@/components/ui/image';
 import useCutoutImage from '@/lib/cutoutImage';
 import { formatMult } from '../rocket/rocketConfig';
 import { OTOBUS_BUS, OTOBUS_SCENE } from './otobusAssets';
-import { panPercent, rideProgress } from './otobusConfig';
+import { cruisePercent, panPercent, rideProgress } from './otobusConfig';
 
 function stateLabel(phase, countdown) {
   if (phase === 'betting') return countdown === null ? 'BAHİS AÇIK' : `BAHİS · ${countdown} SN`;
@@ -35,11 +35,13 @@ export default function OtobusStage({ game }) {
         />
       </div>
 
+      <span aria-hidden="true" className="ob-road" />
+
       <span aria-hidden="true" className="ob-streaks" style={{ '--ob-heat': progress }} />
 
       <div
-        className={`ob-buswrap${phase === 'running' || crashed ? ' ob-buswrap-run' : ''}${crashed ? ' ob-buswrap-stop' : ''}`}
-        style={{ '--ob-heat': progress }}
+        className="ob-buswrap"
+        style={{ '--ob-heat': progress, '--ob-cruise': `${cruisePercent(progress)}%` }}
       >
         <span aria-hidden="true" className="ob-flame" />
         {bus && <img src={bus} alt="" className="ob-bus" />}
