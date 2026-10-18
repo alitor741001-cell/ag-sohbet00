@@ -404,6 +404,17 @@ export default function useRocketGame() {
     setBetAmt(betAmtRef.current);
   }, []);
 
+  // Hazır kademe düğmeleri: miktar en yakın geçerli kademeye oturur ve sunucuya
+  // yalnızca bahis konulurken yazılır — ok tuşları gibi anında tepki verir.
+  const setBetAmount = useCallback((slot, value) => {
+    const target = ROCKET_BET_LEVELS.reduce(
+      (best, level) => (Math.abs(level - value) < Math.abs(best - value) ? level : best),
+      ROCKET_BET_LEVELS[0]
+    );
+    betAmtRef.current = { ...betAmtRef.current, [slot]: target };
+    setBetAmt(betAmtRef.current);
+  }, []);
+
   // Otomatik hedef sunucuya kısa bir gecikmeyle yazılır: ok tuşları anında tepki verir.
   const persistAuto = useCallback((slot, value, delay = AUTO_SAVE_MS) => {
     clearTimeout(autoSaveRef.current[slot]);
@@ -526,6 +537,7 @@ export default function useRocketGame() {
     placeBet,
     cashout,
     changeBet,
+    setBetAmount,
     changeAuto,
     setAutoTarget,
   };

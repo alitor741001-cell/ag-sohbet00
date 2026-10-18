@@ -1,12 +1,13 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Gamepad2, Play, X } from 'lucide-react';
 import { Image } from '@/components/ui/image';
-import { DEDE_ID, ELIMIN_ID, FRUIT_ID, FUTBOL_ID, GAMES, OKEY_CLASSIC_ID, OKEY_ID, ROCKET_ID, ROULETTE_ID, SEKERLI_MEYVE_ID, SEKER_ID, ZAR_ID } from './gameCatalog';
+import { DEDE_ID, ELIMIN_ID, FRUIT_ID, FUTBOL_ID, GAMES, OKEY_CLASSIC_ID, OKEY_ID, OTOBUS_ID, ROCKET_ID, ROULETTE_ID, SEKERLI_MEYVE_ID, SEKER_ID, ZAR_ID } from './gameCatalog';
 import FootballGame from './FootballGame';
 import OkeyGame from './OkeyGame';
 import SekerliMeyveGame from './SekerliMeyveGame';
 import SlotGame from './SlotGame';
 import CrashRocketGame from './CrashRocketGame';
+import OtobusRoketGame from './OtobusRoketGame';
 import FruitGame from './FruitGame';
 import EliminSlotGame from './EliminSlotGame';
 import DedeGame from './DedeGame';
@@ -154,6 +155,8 @@ export default function GamePanel({ open, onClose, roomId, initialGame = null })
               <ZarGame onExit={onClose} onBack={closeGame} />
             ) : selected === SEKER_ID ? (
               <SekerGame onExit={onClose} onBack={closeGame} />
+            ) : selected === OTOBUS_ID ? (
+              <OtobusRoketGame onExit={onClose} onBack={closeGame} />
             ) : (
               <SlotGame onExit={onClose} onBack={closeGame} roomId={roomId} />
             )}
