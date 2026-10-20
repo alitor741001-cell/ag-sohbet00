@@ -296,7 +296,7 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
       }}
       style={{ touchAction: isOwner ? 'manipulation' : 'none' }}
     >
-      <div ref={hostRef} className="h-full w-full" />
+      <div ref={hostRef} className="film-yt-frame h-full w-full" />
 
       {!ready && !error && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">

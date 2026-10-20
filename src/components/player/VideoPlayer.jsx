@@ -165,7 +165,7 @@ export default function VideoPlayer({ src, title, onTimeUpdate, onPlayPause, onS
     <div ref={containerRef} className="relative w-full h-full bg-black overflow-hidden group select-none"
       onMouseMove={showCtrl} onClick={showCtrl} onPointerDown={resumeAudio}
       style={{ touchAction: isOwner ? 'manipulation' : 'none' }}>
-      <video key={src} ref={videoRef} crossOrigin="anonymous" src={src} className="w-full h-full object-contain"
+      <video key={src} ref={videoRef} crossOrigin="anonymous" src={src} className="film-screen w-full h-full object-contain"
         onLoadedMetadata={onLoaded} onTimeUpdate={onTime} onPlay={handlePlay} onPause={handlePause}
         onWaiting={() => setBuffering(true)} onPlaying={() => setBuffering(false)} onEnded={onEnded}
         preload="metadata" playsInline controls={false} disablePictureInPicture={!isOwner} />

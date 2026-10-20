@@ -938,6 +938,23 @@ h1, h2, h3, p, a, button, label {
 
 
 
+/* Film modu (yatay): ekranda siyah şerit kalmaz — film kenardan kenara kaplar.
+   Dikeyde film kırpılmaz; yan çevrildiğinde ekranın tamamı doludur. */
+@media (orientation: landscape) {
+  .film-screen { object-fit: cover; }
+  /* YouTube oynatıcısı kendi çerçevesinde siyah şerit bırakır: çerçeve 16:9
+     oranında büyütülüp ortalanır, taşan kenarlar kırpılır. */
+  .film-yt-frame {
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: max(100%, 177.78vh) !important;
+    height: max(100%, 56.25vw) !important;
+    transform: translate(-50%, -50%);
+    overflow: hidden;
+  }
+}
+
 /* Kırmızı-gri etkileşim ışığı */
 button, nav a, a[role="button"] {
   transition-property: color, background-color, border-color, box-shadow, filter, transform;
