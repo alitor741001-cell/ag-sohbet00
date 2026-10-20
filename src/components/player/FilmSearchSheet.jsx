@@ -63,7 +63,7 @@ export default function FilmSearchSheet({ open, onClose, canMod, onPlay, onPaste
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[85] flex flex-col bg-[hsl(var(--card))] pl-[max(env(safe-area-inset-left),0px)] pr-[max(env(safe-area-inset-right),0px)] pt-[max(env(safe-area-inset-top),0.75rem)] pb-[max(env(safe-area-inset-bottom),0.5rem)]">
+    <div className="fixed inset-0 z-[85] flex flex-col bg-black pl-[max(env(safe-area-inset-left),0px)] pr-[max(env(safe-area-inset-right),0px)] pt-[max(env(safe-area-inset-top),0.75rem)] pb-[max(env(safe-area-inset-bottom),0.5rem)]">
       <div className="flex items-center justify-between px-4">
         <h3 className="flex items-center gap-2 text-base font-bold text-white">
           <Search className="h-4 w-4 text-red-500" /> Filmler
@@ -78,7 +78,7 @@ export default function FilmSearchSheet({ open, onClose, canMod, onPlay, onPaste
         </button>
       </div>
 
-      <p className="mt-1 px-4 text-[11px] text-muted-foreground">
+      <p className="mt-1 px-4 text-[11px] text-white/60">
         {canMod
           ? 'Film adını yaz ya da kategori seç: seçtiğin film odada tam ekran açılır.'
           : 'Oda sahibi film seçip açtığında film odada herkes için oynar.'}
@@ -92,7 +92,7 @@ export default function FilmSearchSheet({ open, onClose, canMod, onPlay, onPaste
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Film adı yaz (ör. Cehennem Melekleri 2)"
             autoComplete="off"
-            className="w-full rounded-xl border border-white/10 bg-[hsl(var(--secondary))] py-2.5 pl-9 pr-3 text-sm text-white outline-none placeholder:text-gray-500 focus:ring-2 focus:ring-red-500/40"
+            className="w-full rounded-xl border border-white/10 bg-white/10 py-2.5 pl-9 pr-3 text-sm text-white outline-none placeholder:text-gray-400 focus:ring-2 focus:ring-red-500/40"
           />
         </div>
         <button
@@ -113,7 +113,7 @@ export default function FilmSearchSheet({ open, onClose, canMod, onPlay, onPaste
             type="button"
             onClick={() => runSearch(entry.label, entry.query)}
             className={`shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-semibold transition active:scale-95 ${
-              category === entry.label ? 'border-red-500/70 bg-red-600/80 text-white' : 'border-white/15 bg-white/5 text-white/70'
+              category === entry.label ? 'border-red-500/70 bg-red-600/80 text-white' : 'border-white/25 bg-white/10 text-white'
             }`}
           >
             {entry.label}
@@ -124,7 +124,7 @@ export default function FilmSearchSheet({ open, onClose, canMod, onPlay, onPaste
       {error && <p className="mt-2 px-4 text-[11px] text-red-400">{error}</p>}
 
       <div className="mt-3 min-h-0 flex-1 space-y-2 overflow-y-auto px-4">
-        {loading && <p className="text-[11px] text-muted-foreground">Filmler getiriliyor…</p>}
+        {loading && <p className="text-[11px] text-white/60">Filmler getiriliyor…</p>}
 
         {results.map((item) => (
           <FilmSearchResultRow
@@ -136,13 +136,13 @@ export default function FilmSearchSheet({ open, onClose, canMod, onPlay, onPaste
         ))}
 
         {!loading && searched && results.length === 0 && !error && (
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-[11px] text-white/60">
             Film bulunamadı. Adını tam yazıp tekrar dene (ör. “Cehennem Melekleri 2 Türkçe dublaj”).
           </p>
         )}
 
         {!loading && !searched && (
-          <p className="text-[11px] text-muted-foreground">Film adını yaz ya da yukarıdan bir kategori seç: tüm filmler burada listelenir.</p>
+          <p className="text-[11px] text-white/60">Film adını yaz ya da yukarıdan bir kategori seç: tüm filmler burada listelenir.</p>
         )}
 
         {!canMod && results.length > 0 && (
