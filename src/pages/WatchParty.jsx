@@ -17,6 +17,7 @@ import RoomGiftStage from '@/components/voice/RoomGiftStage';
 import RoomExitOverlay from '@/components/voice/RoomExitOverlay';
 import { clearMinimizedRoom, getMinimizedRoom, isRoomMinimized, setMinimizedRoom } from '@/lib/minimizedRoom';
 import { clearChatEntry } from '@/lib/roomChatEntry';
+import { clearChatMessages } from '@/lib/roomChatCache';
 import { clearMinimizedFilm, getMinimizedFilm, setMinimizedFilm } from '@/lib/minimizedFilm';
 
 
@@ -89,7 +90,9 @@ export default function WatchParty() {
   // Dokunuşun başlangıç noktası: yalnızca kontrol düğmelerinin dışında başlayan hareketler kaydedilir.
   const touchStart = useRef(null);
   const seenRoomMessagesRef = useRef(new Set());
-  const voice = useVoiceChat({ roomId: id, user, participants: room?.participants, voiceEnabled: !!room?.voice_enabled && voiceReady });
+  // Film odasında mikrofon kendiliğinden açılmaz: film sesi mikrofona kaçıp odada
+  // yankı yapmasın diye konuşmak isteyen kişi mikrofonu elle açar.
+  const voice = useVoiceChat({ roomId: id, user, participants: room?.participants, voiceEnabled: !!room?.voice_enabled && voiceReady, micEnabled: false });
   const { messages: directUnread } = useSocialBadges(user?.id);
 
   const [roomNameEdit, setRoomNameEdit] = useState('');
@@ -407,7 +410,7 @@ export default function WatchParty() {
 
   // Odadan çıkınca sohbet giriş anı sıfırlanır: yeniden girildiğinde eski sohbet
   // görünmez, sohbet paneli sıfırdan akar.
-  useEffect(() => () => clearChatEntry(id, user?.id), [id, user?.id]);
+  useEffect(() => () => { clearChatEntry(id, user?.id); clearChatMessages(id); }, [id, user?.id]);
 
   const assignMod = async (uid) => {
     if (!isOwner && !isMod) return;

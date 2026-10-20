@@ -14,6 +14,7 @@ import { isHiddenName } from '@/lib/hiddenUser';
 import { parseLevelUpNotice } from '@/lib/levelUpNotice';
 import { mergeMessages, upsertMessage } from '@/lib/realtimeMessages';
 import { chatEntryAt } from '@/lib/roomChatEntry';
+import { clearChatMessages, readChatMessages, writeChatMessages } from '@/lib/roomChatCache';
 import { parseRoleMetadata, parseFrameMetadata } from '@/lib/roles';
 import RoomChatMessage from '@/components/player/RoomChatMessage';
 import RoomCheatNotice from '@/components/player/RoomCheatNotice';
@@ -37,12 +38,16 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
   const { toast } = useToast();
   // Cheat temizleme işaretçisi: oda için ortak zaman damgası; bu andan eski bildirimler gizlenir.
   const [cheatClearedAt, setCheatClearedAt] = useState(null);
-  const [messages, setMessages] = useState([]);
+  // Sohbet kaybolmasın: liste oda bazında bellekte tutulur, panel yeniden açıldığında
+  // kaldığı yerden gelir; sohbet elle temizlendiğinde bu kopya da bırakılır.
+  const cached = useRef(readChatMessages(roomId));
+  const [messages, setMessages] = useState(cached.current);
+  const clearedRef = useRef(0);
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
   const sendingRef = useRef(false);
   const [showEmoji, setShowEmoji] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(cached.current.length === 0);
 
   const [uploading, setUploading] = useState(false);
 
@@ -93,7 +98,14 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
   const load = () => {
     base44.entities.RoomMessage.filter({ room_id: roomId }, '-created_date', 200)
       .then((r) => {
-        setCheatClearedAt((current) => r.reduce((max, m) => Math.max(max, cheatMarkerTime(m)), current || 0));
+        const markerAt = r.reduce((max, m) => Math.max(max, cheatMarkerTime(m)), 0);
+        // Cheat temizlendiğinde odadaki eski mesajlar silinir: bellekteki kopya da düşer.
+        if (markerAt && markerAt > clearedRef.current) {
+          clearedRef.current = markerAt;
+          clearChatMessages(roomId);
+          setMessages([]);
+        }
+        setCheatClearedAt((current) => Math.max(current || 0, markerAt));
         const visible = r.filter((m) => !isHiddenMarker(m) && new Date(m.created_date || 0).getTime() >= entryAt.current);
         setMessages((current) => mergeMessages(current, visible));
         setLoading(false); setTimeout(scrollToBottom, 100);
@@ -107,7 +119,12 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
       if (ev.data?.room_id !== roomId) return;
       if (ev.type === 'delete') { setMessages((prev) => prev.filter((message) => message.id !== ev.id)); return; }
       const markerAt = cheatMarkerTime(ev.data);
-      if (markerAt) { setCheatClearedAt((current) => Math.max(current || 0, markerAt)); return; }
+      if (markerAt) {
+        // Temizleme işaretçisi: odadaki eski mesajlar ve bellekteki kopya birlikte düşer.
+        if (markerAt > clearedRef.current) { clearedRef.current = markerAt; clearChatMessages(roomId); setMessages([]); }
+        setCheatClearedAt((current) => Math.max(current || 0, markerAt));
+        return;
+      }
       if (isHiddenMarker(ev.data)) return;
       if (isCheatClearNotice(ev.data)) {
         // Sohbeti temizleyen kişi herkeste aynı anda temizler: bu andan eski mesajlar kalkar.
@@ -122,6 +139,9 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
     const poll = setInterval(() => { if (document.visibilityState !== 'hidden') load(); }, 60000);
     return () => { unsub(); window.removeEventListener('online', reconnect); clearInterval(poll); };
   }, [roomId]);
+
+  // Her değişimde bellekteki kopya tazelenir: panel kapatılıp açıldığında aynı liste gelir.
+  useEffect(() => { writeChatMessages(roomId, messages); }, [roomId, messages]);
 
   const send = async (e) => {
     e?.preventDefault();

@@ -1,7 +1,8 @@
 // Mikrofon kanalı bir kez açılır ve sekme açık kaldığı sürece yeniden kullanılır.
 // Böylece film odası ↔ sesli sohbet geçişlerinde tarayıcı tekrar izin sormaz.
 const RELEASE_MS = 30000;
-const CONSTRAINTS = { echoCancellation: true, noiseSuppression: true, autoGainControl: true };
+// Yankı önleme tek kanal yakalamada daha iyi çalışır: film sesi ve konuşma mikrofona kaçmaz.
+const CONSTRAINTS = { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: { ideal: 1 } };
 
 let sharedTrack = null;
 let acquiring = null;

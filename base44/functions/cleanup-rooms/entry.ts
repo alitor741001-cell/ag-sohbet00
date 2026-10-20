@@ -60,8 +60,7 @@ export default async function(req) {
           await base44.asServiceRole.entities.Room.update(room.id, {
             status: 'closed', is_playing: false, participants: [], recent_participants: []
           }).catch(() => {});
-          // Kapanan odanın sohbeti kimseye görünmez: mesajları silinir.
-          await base44.asServiceRole.entities.RoomMessage.deleteMany({ room_id: room.id }).catch(() => {});
+          // Kişisel odanın sohbeti silinmez: sahibi döndüğünde mesajlar yerinde durur.
           closedCount++;
         }
         continue;

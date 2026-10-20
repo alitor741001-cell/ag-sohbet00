@@ -67,6 +67,8 @@ export default function MinimizedRoomBubble() {
     if (didDrag()) return;
     const path = room.path || `/sesli-oda/${room.id}`;
     clearMinimizedRoom();
+    // Küçük oynatıcı hemen susar: odaya dönünce film tek yerden, tek ses olarak sürer.
+    clearMinimizedFilm(room.id);
     navigate(path);
   };
 
