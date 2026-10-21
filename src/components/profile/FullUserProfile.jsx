@@ -10,6 +10,7 @@ import { formatDate } from '@/components/profile/genderPalette';
 import { agencyApi } from '@/lib/agency';
 import FollowButton from '@/components/profile/social/FollowButton';
 import CrystalProfileCard from '@/components/profile/crystal/CrystalProfileCard';
+import ImageProfileCard from '@/components/profile/crystal/ImageProfileCard';
 import CrystalCircleButton from '@/components/profile/crystal/CrystalCircleButton';
 import { crystalSkin } from '@/components/profile/crystal/crystalTheme';
 import { AccountStatusMark, ACCOUNT_MARKS, ACCOUNT_STATES, getAccountState } from '@/components/friends/AccountStatusAvatar';
@@ -306,7 +307,28 @@ export default function FullUserProfile({
         }}
       >
         {header}
-        {statusContent || (
+        {statusContent || (roomActions ? (
+          <ImageProfileCard
+            name={shownName}
+            avatar={banned ? ACCOUNT_STATES.banned.image : shownAvatar}
+            likes={likes}
+            nLevel={profile?.n_level || 0}
+            vipLevel={profile?.vip_level || 0}
+            joinDate={formatDate(profile?.created_date)}
+            followNode={showSocial ? <FollowButton variant="circle" userId={userId} tone={tone} /> : null}
+            actions={{
+              mic: toggleMic,
+              stand: () => { if (room?.canControl(userId)) { room.standUp(userId); onClose?.(); } else toast({ title: 'Yetki gerekli', variant: 'destructive' }); },
+              profile: () => { onClose?.(); navigate(`/kullanici/${userId}`); },
+              lock: () => toggleSeatLock(targetSeat >= 0 ? targetSeat : mySeat, targetSeat >= 0 ? userId : user?.id),
+              gift: sendGift,
+              gift2: sendGift,
+              mention,
+              mention2: mention,
+              chat: openChat,
+            }}
+          />
+        ) : (
           <CrystalProfileCard
             name={shownName}
             avatar={banned ? ACCOUNT_STATES.banned.image : shownAvatar}
@@ -332,7 +354,7 @@ export default function FullUserProfile({
             infoRows={info}
             hidden={hidden}
           />
-        )}
+        ))}
       </div>
     </div>
   );
