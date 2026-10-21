@@ -32,6 +32,8 @@ export default function CreateRoom() {
   const [background, setBackground] = useState(ROOM_BACKGROUNDS[0].key);
   const [seatCount, setSeatCount] = useState(8);
   const [uploading, setUploading] = useState(false);
+  // Seçilen fotoğraf yükleme bitmeden gösterilir: kapak anında değişir.
+  const [localCover, setLocalCover] = useState('');
   const [saving, setSaving] = useState(false);
   const prefilled = useRef(false);
 
@@ -54,6 +56,9 @@ export default function CreateRoom() {
     const file = event.target.files?.[0];
     event.target.value = '';
     if (!file) return;
+    // Yerel önizleme: fotoğraf seçildiği anda kartta görünür.
+    const preview = URL.createObjectURL(file);
+    setLocalCover(preview);
     setUploading(true);
     try {
       const { file_url } = await base44.integrations.Core.UploadPublicFile({ file });
@@ -62,6 +67,8 @@ export default function CreateRoom() {
       toast({ title: 'Görsel yüklenemedi', description: error.message, variant: 'destructive' });
     } finally {
       setUploading(false);
+      URL.revokeObjectURL(preview);
+      setLocalCover('');
     }
   };
 
@@ -118,11 +125,16 @@ export default function CreateRoom() {
         {/* Kapak görseli: dokununca galeriden seçilir. */}
         <label
           className="relative flex h-40 w-full cursor-pointer items-center justify-center overflow-hidden rounded-3xl border border-white/10"
-          style={{ background: cover ? '#161616' : 'linear-gradient(135deg,#2a2833,#17161d)' }}
+          style={{ background: localCover || cover ? '#161616' : 'linear-gradient(135deg,#2a2833,#17161d)' }}
         >
-          {cover ? (
-            <Image src={cover} alt="Oda kapağı" fittingType="fill" className="absolute inset-0 h-full w-full" />
+          {(localCover || cover) ? (
+            <Image src={localCover || cover} alt="Oda kapağı" fittingType="fill" className="absolute inset-0 h-full w-full" />
           ) : null}
+          {uploading && (
+            <span className="absolute inset-0 flex items-center justify-center bg-black/40">
+              <Loader2 className="h-6 w-6 animate-spin" />
+            </span>
+          )}
           <span className="relative flex h-14 w-14 items-center justify-center rounded-full bg-white/12 backdrop-blur">
             {uploading ? <Loader2 className="h-6 w-6 animate-spin" /> : <ImagePlus className="h-6 w-6" />}
           </span>

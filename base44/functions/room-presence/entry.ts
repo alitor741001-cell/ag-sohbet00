@@ -483,6 +483,16 @@ export default async function(req) {
       return Response.json({ ok: true, category });
     }
 
+    // Oda görünümü: kapak görseli ve tema oda sahibi/yöneticisi tarafından değiştirilir.
+    if (action === 'set-look') {
+      if (!canModRoom) return Response.json({ error: 'yetkisiz' }, { status: 403 });
+      const patch = {};
+      if ('background' in (body || {})) patch.background = String(body.background || '').slice(0, 40);
+      if ('cover_url' in (body || {})) patch.cover_url = String(body.cover_url || '').slice(0, 500);
+      if (Object.keys(patch).length) await base44.asServiceRole.entities.Room.update(room_id, patch);
+      return Response.json({ ok: true, ...patch });
+    }
+
     if (action === 'assign-mod' || action === 'remove-mod') {
       if (!isOwner && !isMod) return Response.json({ error: 'yetkisiz' }, { status: 403 });
       if (!target_id) return Response.json({ error: 'kullanıcı gerekli' }, { status: 400 });

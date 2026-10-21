@@ -10,11 +10,7 @@ export default function RoomBackground({ value, cover }) {
       {tone?.image ? (
         <Image src={tone.image} alt="" fittingType="fill" className="absolute inset-0 h-full w-full object-cover" />
       ) : null}
-      {/* Metin ve koltuklar okunur kalsın diye üstten alta yumuşak karartma. */}
-      <div
-        className="absolute inset-0"
-        style={{ background: 'linear-gradient(180deg, rgba(3,7,20,0.18) 0%, rgba(3,7,20,0.08) 38%, rgba(3,7,20,0.62) 100%)' }}
-      />
+      {/* Tema görseli ekranın en altına kadar kesintisiz iner: altta koyu şerit kalmaz. */}
       {cover ? <div className="absolute inset-0 bg-cover bg-center opacity-25" style={{ backgroundImage: `url(${cover})` }} /> : null}
     </div>
   );

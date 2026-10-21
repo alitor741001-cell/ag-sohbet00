@@ -29,6 +29,9 @@ export default async function(req) {
       seat_count: 'seat_count' in raw ? Number(raw.seat_count) || 0 : null,
       // Sesli oda isteği: oda film odası yerine sesli sohbet odası olarak açılır.
       voice: 'voice' in raw ? raw.voice !== false : null,
+      // Kapak görseli ve tema: kurulumda seçilenler odaya işlenir (gönderilmezse dokunulmaz).
+      background: 'background' in raw ? String(raw.background || '').slice(0, 40) : null,
+      cover_url: 'cover_url' in raw ? String(raw.cover_url || '').slice(0, 500) : null,
     } : null;
     // Kişisel odada kapasite sorulmaz: herkes girebilir, pratikte sınırsız.
     const PERSONAL_MAX_USERS = 250;
@@ -108,8 +111,8 @@ export default async function(req) {
       }
       if (settings) {
         if (settings.name) patch.name = settings.name;
-        if (settings.background) patch.background = String(settings.background).slice(0, 40);
-        if (typeof settings.cover_url === 'string') patch.cover_url = settings.cover_url.slice(0, 500);
+        if (settings.background !== null) patch.background = settings.background;
+        if (settings.cover_url !== null) patch.cover_url = settings.cover_url;
         if (settings.chat_enabled !== null) patch.chat_enabled = settings.chat_enabled;
         if (settings.password !== null) await applyPassword(existing[0].id, patch);
         // Koltuk düzeni yalnızca oda hiç kurulmamışsa yazılır: içeride yapılan değişiklik korunur.
