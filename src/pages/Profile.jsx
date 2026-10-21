@@ -14,7 +14,6 @@ import ProfileStatBar from '@/components/profile/fantasy/ProfileStatBar';
 import ProfileTwinCards from '@/components/profile/fantasy/ProfileTwinCards';
 import ProfileIconGrid from '@/components/profile/fantasy/ProfileIconGrid';
 import ProfileBottomNav from '@/components/profile/fantasy/ProfileBottomNav';
-import LevelDialog from '@/components/profile/fantasy/LevelDialog';
 import { giftBoxLocked } from '@/lib/giftAccess';
 import ProfileNeonRow from '@/components/profile/ProfileNeonRow';
 import ProfileDetailsSection from '@/components/profile/ProfileDetailsSection';
@@ -41,7 +40,6 @@ export default function Profile() {
   const [wallet, setWallet] = useState(null);
   const [vipCount, setVipCount] = useState(0);
   const [giftBoxOpen, setGiftBoxOpen] = useState(false);
-  const [levelOpen, setLevelOpen] = useState(false);
   const [privacyOpen, setPrivacyOpen] = useState(false);
   // Takip ve ziyaretçi sayaçları ile açılan liste: takip edilenler, takipçiler, ziyaretçiler.
   const [social, setSocial] = useState({ following: 0, followers: 0, visitors: 0 });
@@ -217,7 +215,7 @@ export default function Profile() {
           <ProfileTwinCards
             vipCount={vipCount}
             coins={wallet?.coins ?? null}
-            onVip={() => setVipBagOpen(true)}
+            onVip={() => navigate('/vip')}
             onWallet={() => setActivityOpen(true)}
           />
           <ProfileIconGrid
@@ -225,7 +223,7 @@ export default function Profile() {
             onSelect={(key) => {
               if (key === 'shop') setCoinShopOpen(true);
               else if (key === 'bag') setVipBagOpen(true);
-              else if (key === 'level') setLevelOpen(true);
+              else if (key === 'level') navigate('/seviye');
               else if (key === 'agency') navigate('/ajans');
               else if (key === 'cp') navigate('/arkadaslar');
             }}
@@ -278,7 +276,6 @@ export default function Profile() {
         coins={wallet?.coins ?? null}
         onBack={() => { setCoinShopOpen(false); loadWallet(); }}
       />
-      <LevelDialog open={levelOpen} onClose={() => setLevelOpen(false)} userId={user.id} />
 
       <SocialListDialog open={!!socialList} kind={socialList} onClose={() => { setSocialList(null); loadSocial(); }} />
 

@@ -1,0 +1,162 @@
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, Heart } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
+import { Image } from '@/components/ui/image';
+import { useCurrentUser } from '@/lib/useCurrentUser';
+import useXp from '@/hooks/useXp';
+import { formatXp } from '@/lib/xp';
+
+const TIERS = [
+  { range: '1-9', value: 1, tone: '#c98d6b', text: '#3a1c08' },
+  { range: '10-19', value: 10, tone: '#9be3b4', text: '#0d2a18' },
+  { range: '20-29', value: 20, tone: '#9fd6f5', text: '#0a2334' },
+  { range: '30-39', value: 30, tone: '#f4d03f', text: '#3a2a02' },
+  { range: '40-49', value: 40, tone: '#8ee08a', text: '#123211' },
+  { range: '50-59', value: 50, tone: '#c9b8ff', text: '#231a45' },
+];
+
+const STEP = 30000;
+const levelFromScore = (score) => Math.max(1, Math.floor(Math.max(0, Number(score) || 0) / STEP) + 1);
+const tierFor = (level) => TIERS[Math.min(TIERS.length - 1, Math.floor((level - 1) / 10))];
+
+const TAB_ON = { color: '#ffd76a', borderBottom: '2px solid #ffd76a' };
+
+/** Seviye sayfası: Zenginlik ve Cazibe sekmeleri, seviye ilerlemesi ve sembol tablosu. */
+export default function LevelPage() {
+  const navigate = useNavigate();
+  const { user } = useCurrentUser();
+  const xp = useXp([user?.id])[user?.id];
+  const [tab, setTab] = useState('wealth');
+  const [charm, setCharm] = useState(0);
+
+  // Cazibe puanı hediye özetinden gelir; bölüm kapalıysa sıfır kalır.
+  useEffect(() => {
+    base44.functions.invoke('gift-box', { action: 'summary' })
+      .then((response) => setCharm(Number(response.data?.month_score) || 0))
+      .catch(() => {});
+  }, []);
+
+  const isWealth = tab === 'wealth';
+  const score = isWealth ? (xp?.xp ?? 0) : charm;
+  const level = isWealth ? (Number(xp?.frame?.level) || levelFromScore(score)) : levelFromScore(score);
+  const percent = isWealth ? (xp?.percent ?? 0) : Math.round(((score % STEP) / STEP) * 100);
+  const remaining = isWealth ? (xp?.remaining ?? STEP) : STEP - (score % STEP);
+  const tier = tierFor(level);
+  const avatar = user?.avatar;
+  const label = user?.username || user?.full_name || 'Profilim';
+
+  const goBack = () => {
+    if (window.history.length > 1) navigate(-1);
+    else navigate('/profil');
+  };
+
+  return (
+    <div
+      className="dark min-h-screen text-white"
+      style={{ background: 'radial-gradient(130% 70% at 50% 0%, #2a1148 0%, #150a26 46%, #070311 100%)' }}
+    >
+      <header className="sticky top-0 z-10 flex items-center gap-2 bg-[#0d0618]/90 px-3 py-3 backdrop-blur">
+        <button
+          type="button"
+          onClick={goBack}
+          aria-label="Geri"
+          className="flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/5 active:scale-95"
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </button>
+        <div className="flex flex-1 items-center justify-center gap-6">
+          {[
+            { key: 'wealth', label: 'Zenginlik' },
+            { key: 'charm', label: 'Cazibe' },
+          ].map((item) => {
+            const active = tab === item.key;
+            return (
+              <button
+                key={item.key}
+                type="button"
+                onClick={() => setTab(item.key)}
+                className="pb-1 text-sm font-black transition"
+                style={active ? TAB_ON : { color: 'rgba(255,255,255,0.5)' }}
+              >
+                {item.label}
+              </button>
+            );
+          })}
+        </div>
+        <span className="h-9 w-9" />
+      </header>
+
+      <div className="mx-auto w-full max-w-md px-4 py-5 md:max-w-lg">
+        <div className="flex flex-col items-center">
+          <div className="h-20 w-20 overflow-hidden rounded-full border-2" style={{ borderColor: tier.tone }}>
+            {avatar ? (
+              <Image src={avatar} alt={label} fittingType="fill" className="h-full w-full" />
+            ) : (
+              <span className="flex h-full w-full items-center justify-center bg-[#1b1130] text-xl font-black text-white/70">
+                {label[0]?.toUpperCase()}
+              </span>
+            )}
+          </div>
+          <div className="mt-3 flex items-center gap-2">
+            <span className="text-2xl font-black">Lv{level}</span>
+            <span
+              className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-black"
+              style={{ background: tier.tone, color: tier.text }}
+            >
+              <Heart className="h-3 w-3" /> {tier.value}
+            </span>
+          </div>
+        </div>
+
+        {/* İlerleme çizgisi: başlangıç seviyesi solda, tamamlanma yüzdesi sağda. */}
+        <div className="mt-6 px-1">
+          <div className="relative h-[3px] rounded-full bg-white/15">
+            <div
+              className="absolute inset-y-0 left-0 rounded-full"
+              style={{ width: `${Math.max(percent, 3)}%`, background: 'linear-gradient(90deg,#8b5cf6,#ffd76a)' }}
+            />
+            <span className="absolute -left-1 -top-[5px] h-3.5 w-3.5 rounded-full border-2 border-[#ffd76a] bg-[#150a26]" />
+          </div>
+          <div className="mt-2 flex items-center justify-between text-[10.5px] font-black text-white/60">
+            <span>LV{level}</span>
+            <span className="tabular-nums">{percent}%</span>
+          </div>
+        </div>
+
+        <p className="mt-3 text-center text-[11.5px] font-semibold text-white/70">
+          Bir sonraki seviye için {formatXp(remaining)} deneyim puanına ihtiyacınız..
+        </p>
+
+        <div className="mt-5 rounded-2xl border p-4" style={{ borderColor: 'rgba(255,215,106,0.3)', background: 'rgba(46,26,71,0.55)' }}>
+          <h2 className="text-sm font-black text-white">Seviye Açıklaması</h2>
+          <p className="mt-1.5 text-[11.5px] font-medium leading-5 text-white/70">
+            {isWealth
+              ? 'Her zenginlik seviyesinin kendine özgü renk simgesi vardır. Hediye göndererek, hediye değeri kadar zenginlik deneyim puanı kazanabilir ve zenginlik seviyenizi yükseltebilirsiniz.'
+              : 'Her cazibe seviyesinin kendine özgü renk simgesi vardır. Hediye alarak cazibe deneyim puanı kazanabilir ve cazibe seviyenizi yükseltebilirsiniz.'}
+          </p>
+        </div>
+
+        <div className="mt-3 overflow-hidden rounded-2xl border" style={{ borderColor: 'rgba(255,215,106,0.3)', background: 'rgba(46,26,71,0.55)' }}>
+          <div className="grid grid-cols-2 border-b border-white/10 text-[11.5px] font-black text-white/85">
+            <span className="px-4 py-2.5 text-center">Seviye</span>
+            <span className="border-l border-white/10 px-4 py-2.5 text-center">Sembol</span>
+          </div>
+          {TIERS.map((item) => (
+            <div key={item.range} className="grid grid-cols-2 border-b border-white/5 text-[11.5px] font-semibold text-white/70 last:border-b-0">
+              <span className="flex items-center justify-center px-4 py-2.5 tabular-nums">{item.range}</span>
+              <span className="flex items-center justify-center border-l border-white/10 px-4 py-2.5">
+                <span
+                  className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[10.5px] font-black"
+                  style={{ background: item.tone, color: item.text }}
+                >
+                  <Heart className="h-3 w-3" /> {item.value}
+                </span>
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}

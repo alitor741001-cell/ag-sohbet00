@@ -30,6 +30,9 @@ const Notifications = lazy(() => import('@/pages/Notifications'));
 const OpenRooms = lazy(() => import('@/pages/OpenRooms'));
 const MaintenanceMode = lazy(() => import('@/pages/MaintenanceMode'));
 const UserProfile = lazy(() => import('@/pages/UserProfile'));
+const Search = lazy(() => import('@/pages/Search'));
+const VipLevels = lazy(() => import('@/pages/VipLevels'));
+const LevelPage = lazy(() => import('@/pages/LevelPage'));
 const Login = lazy(() => import('@/pages/Login'));
 const Register = lazy(() => import('@/pages/Register'));
 const ForgotPassword = lazy(() => import('@/pages/ForgotPassword'));
@@ -100,6 +103,9 @@ const AuthenticatedApp = () => {
           <Route path="/odalar" element={<Navigate to="/" replace />} />
           <Route path="/oda/:id" element={<WatchParty />} />
           <Route path="/oda-kur" element={<CreateRoom />} />
+          <Route path="/arama" element={<Search />} />
+          <Route path="/vip" element={<VipLevels />} />
+          <Route path="/seviye" element={<LevelPage />} />
           <Route path="/sesli-oda-kur" element={<VoiceRoomCreate />} />
           <Route path="/sesli-oda/:id" element={<VoiceRoom />} />
           <Route path="/listem" element={<Navigate to="/" replace />} />

@@ -1,5 +1,5 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Film, Loader2, Users } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import subscribeEntity from '@/components/data/entitySubscriptions';
@@ -9,7 +9,6 @@ import RoomDiscoveryCard from '@/components/home/RoomDiscoveryCard';
 import HomeTopBar from '@/components/home/fantasy/HomeTopBar';
 import PullToRefresh from '@/components/home/PullToRefresh';
 import GameDiscoveryRow from '@/components/home/GameDiscoveryRow';
-import FriendSearchSheet from '@/components/home/FriendSearchSheet';
 import RoomHistory from '@/components/home/RoomHistory';
 import useFriends from '@/hooks/useFriends';
 import useMessageProfiles from '@/hooks/useMessageProfiles';
@@ -42,7 +41,7 @@ export default function RoomDiscovery({ shortcuts = null }) {
   const [tab, setTab] = useState('friends');
   // Üst şerit iki görünüm arasında geçiş yapar: canlı odalar (Sıcak) ve girilen odaların geçmişi.
   const [view, setView] = useState('hot');
-  const [searchOpen, setSearchOpen] = useState(false);
+  const navigate = useNavigate();
   const [historyVersion, setHistoryVersion] = useState(0);
   // Oyunlar görünümü adresten açılır: alt menüdeki Oyunlar düğmesi ?oyunlar=1 getirir.
   const [searchParams] = useSearchParams();
@@ -285,16 +284,15 @@ export default function RoomDiscovery({ shortcuts = null }) {
   if (view === 'history') {
     return (
       <PullToRefresh onRefresh={refreshList}>
-        <HomeTopBar view="history" onView={setView} onSearch={() => setSearchOpen(true)} />
+        <HomeTopBar view="history" onView={setView} onSearch={() => navigate('/arama')} />
         <RoomHistory version={historyVersion} onChange={() => setHistoryVersion((value) => value + 1)} />
-        <FriendSearchSheet open={searchOpen} onClose={() => setSearchOpen(false)} />
       </PullToRefresh>
     );
   }
 
   return (
     <PullToRefresh onRefresh={refreshList}>
-      <HomeTopBar view={view} onView={setView} onSearch={() => setSearchOpen(true)} />
+      <HomeTopBar view={view} onView={setView} onSearch={() => navigate('/arama')} />
       <div className="mb-3 flex items-center gap-1.5 rounded-2xl border border-[#e8c47c]/25 bg-[#071736]/70 p-1 backdrop-blur">
         <button
           type="button"
@@ -366,8 +364,6 @@ export default function RoomDiscovery({ shortcuts = null }) {
           </div>
         </>
       )}
-
-      <FriendSearchSheet open={searchOpen} onClose={() => setSearchOpen(false)} />
 
       {/* Seçilen oyun tam ekran açılır: oda kurmaya gerek yok. */}
       {gameOpen && gamesEnabled && (

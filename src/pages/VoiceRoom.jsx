@@ -8,6 +8,7 @@ import { broadcasterState } from '@/lib/broadcaster';
 import { makeId } from '@/lib/uid';
 import { useVoiceChat } from '@/hooks/useVoiceChat';
 import VoiceViewport from '@/components/voice/VoiceViewport';
+import RoomBackground from '@/components/voice/RoomBackground';
 import useRoomLevels from '@/hooks/useRoomLevels';
 import { useToast } from '@/components/ui/use-toast';
 import VoiceStage from '@/components/voice/VoiceStage';
@@ -1085,7 +1086,8 @@ export default function VoiceRoom() {
       style={dmHalfOpen ? { paddingBottom: 'var(--voice-dm-height)' } : undefined}
       onKeyboardChange={handleKeyboardChange}
     >
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-gradient-to-b from-primary/25 to-transparent" />
+      <RoomBackground value={room?.background} cover={room?.cover_url} />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-gradient-to-b from-black/30 to-transparent" />
 
       <header className="relative shrink-0 px-4 pb-2 pt-[max(0.75rem,env(safe-area-inset-top))]">
         <div className="flex min-w-0 flex-col items-start">
