@@ -15,6 +15,19 @@ export const ringPoints = (count, r, offset = 0) =>
     return { deg, x, y };
   });
 
+/** Köşeli gövde yolu: kenar sayısı ve yarıçap. */
+export const polygonPath = (sides, r, rotation = 0) => {
+  const points = Array.from({ length: sides }, (_, i) => polar(r, rotation + (360 / sides) * i));
+  return `${points.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(2)} ${y.toFixed(2)}`).join(' ')} Z`;
+};
+
+/** Dişli / tırtıklı gövde yolu: iç ve dış yarıçap dönüşümlü. */
+export const gearPath = (teeth, outer, inner, rotation = 0) => {
+  const points = Array.from({ length: teeth * 2 }, (_, i) =>
+    polar(i % 2 === 0 ? outer : inner, rotation + (180 / teeth) * i));
+  return `${points.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(2)} ${y.toFixed(2)}`).join(' ')} Z`;
+};
+
 // Metaller: [gölge, parlak, ana ton, kenar]
 const METALS = {
   altin: ['hsl(38 60% 31%)', 'hsl(46 100% 93%)', 'hsl(42 78% 63%)', 'hsl(38 62% 42%)'],
@@ -35,22 +48,34 @@ const gemPalette = (hue) => [
   `hsl(${hue} 76% 19%)`,
 ];
 
-/** 30 koltuk, 30 ayrı taş tonu: her koltuk kendi rengini taşır. */
+/** 30 koltuk, 30 ayrı taş tonu. */
 const HUES = [
   174, 150, 352, 220, 276, 336, 44, 200, 34, 22,
   168, 258, 96, 186, 208, 246, 300, 320, 0, 12,
   26, 40, 56, 84, 120, 158, 178, 232, 268, 312,
 ];
 
+// Gövde siluetleri: yuvarlak, sekizgen, on iki kenar, altıgen, tırtık, dişli.
+const SHAPES = ['circle', 'octa', 'dodeca', 'hex', 'scallop', 'gear'];
+const ORNAMENTS = ['beads', 'studs', 'stars', 'rope'];
+const STONES = ['round', 'square', 'marquise', 'star'];
 const METAL_ORDER = ['altin', 'beyaz', 'gul', 'bronz', 'platin', 'bakir', 'sampanya', 'gumus'];
-const ORNAMENT_ORDER = ['beads', 'studs', 'stars', 'rope'];
 
-/** 30 tasarım: taş tonu, metal ve süsleme düzeni tekrar etmez. */
-export const RING_DESIGNS = HUES.map((hue, i) => ({
-  id: `seat-${i + 1}`,
-  gold: METALS[METAL_ORDER[i % METAL_ORDER.length]],
-  gem: gemPalette(hue),
-  ornament: ORNAMENT_ORDER[i % ORNAMENT_ORDER.length],
-  // Filigran yapraklar üç tasarımda bir sadeleşir: halkalar birbirinin kopyası görünmez.
-  leaves: i % 3 !== 2,
-}));
+/**
+ * 30 tasarım: silüet her koltuğa dönüşümlü, süsleme altı koltukta bir,
+ * taş kesimi ve metal ise hiçbir ikili tekrar etmeyecek şekilde kaydırılır.
+ */
+export const RING_DESIGNS = HUES.map((hue, i) => {
+  const lap = Math.floor(i / SHAPES.length);
+  const turn = Math.floor(i / 24);
+  const shape = SHAPES[i % SHAPES.length];
+  return {
+    id: `seat-${i + 1}`,
+    gold: METALS[METAL_ORDER[(i + turn) % METAL_ORDER.length]],
+    gem: gemPalette(hue),
+    shape,
+    ornament: ORNAMENTS[lap % ORNAMENTS.length],
+    stone: STONES[(i + turn) % STONES.length],
+    leaves: shape !== 'gear' && shape !== 'scallop',
+  };
+});

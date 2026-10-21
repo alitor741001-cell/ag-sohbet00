@@ -1,11 +1,11 @@
 import React, { useId } from 'react';
 import SeatRingOrnament from '@/components/voice/SeatRingOrnament';
-import { RING_DESIGNS, polar, ringPoints } from '@/components/voice/seatRingDesigns';
+import { RING_DESIGNS, gearPath, polar, polygonPath, ringPoints } from '@/components/voice/seatRingDesigns';
 
 /**
  * Koltuk çemberi — her koltuğa kendi mücevher çerçevesi.
- * Halka, içeriğin tam ortasına kilitlenir (yüzde 50 + translate) ve %12.5 dışa
- * taşar; böylece profil dairesiyle her boyutta tam hizalı kalır.
+ * Gövde silueti (yuvarlak, sekizgen, on iki kenar, altıgen, tırtık, dişli) ve
+ * taş kesimi koltuğa göre değişir. Halka, profil dairesinin tam ortasına kilitlenir.
  */
 
 const LEAF_ANGLES = Array.from({ length: 14 }, (_, i) => (360 / 14) * i + 360 / 28);
@@ -13,6 +13,18 @@ const GEMS = [0, 90, 180, 270];
 const PEARLS = ringPoints(20, 83.2);
 const [HX1, HY1] = polar(88.4, -54);
 const [HX2, HY2] = polar(88.4, 50);
+
+/** Tasarımın siluetini verilen yarıçapta yol olarak üretir. */
+const shapePath = (shape, r) => {
+  switch (shape) {
+    case 'octa': return polygonPath(8, r, 22.5);
+    case 'dodeca': return polygonPath(12, r, 15);
+    case 'hex': return polygonPath(6, r, 30);
+    case 'scallop': return gearPath(26, r, r * 0.955, 7);
+    case 'gear': return gearPath(18, r, r * 0.9, 5);
+    default: return polygonPath(72, r);
+  }
+};
 
 export default function VoiceSeatRing({ children, className = '', glow, variant = 0 }) {
   const uid = useId().replace(/[^a-zA-Z0-9]/g, '');
@@ -23,6 +35,7 @@ export default function VoiceSeatRing({ children, className = '', glow, variant 
   const design = RING_DESIGNS[Math.abs(variant) % RING_DESIGNS.length];
   const [g0, g1, g2, g3] = design.gold;
   const [m0, m1, m2, m3] = design.gem;
+  const notched = ['circle', 'octa', 'dodeca', 'hex'].includes(design.shape);
 
   return (
     <span
@@ -64,10 +77,10 @@ export default function VoiceSeatRing({ children, className = '', glow, variant 
           </radialGradient>
         </defs>
 
-        {/* mine bant gövdesi */}
-        <circle cx="100" cy="100" r="89.4" fill="none" stroke="#08131f" strokeWidth="19" />
-        <circle cx="100" cy="100" r="89.4" fill="none" stroke={m3} strokeWidth="15" opacity="0.85" />
-        <circle cx="100" cy="100" r="89.4" fill="none" stroke={`url(#${goldSoftId})`} strokeWidth="1" opacity="0.55" />
+        {/* mine bant gövdesi — siluet koltuğa göre değişir */}
+        <path d={shapePath(design.shape, 89.4)} fill="none" stroke="#08131f" strokeWidth="19" strokeLinejoin="round" />
+        <path d={shapePath(design.shape, 89.4)} fill="none" stroke={m3} strokeWidth="15" strokeLinejoin="round" opacity="0.85" />
+        <path d={shapePath(design.shape, 89.4)} fill="none" stroke={`url(#${goldSoftId})`} strokeWidth="1" strokeLinejoin="round" opacity="0.55" />
 
         {/* filigran yapraklar */}
         {design.leaves &&
@@ -83,14 +96,13 @@ export default function VoiceSeatRing({ children, className = '', glow, variant 
             />
           ))}
 
-        {/* iç inci dizisi ve gravür çizgisi */}
+        {/* iç inci dizisi */}
         {PEARLS.map(({ deg, x, y }) => (
           <circle key={`pearl-${deg}`} cx={x} cy={y} r="1.1" fill={g1} opacity="0.75" />
         ))}
-        <circle cx="100" cy="100" r="82.4" fill="none" stroke={g1} strokeWidth="0.9" opacity="0.3" />
 
         {/* süsele özel taş dizisi */}
-        <SeatRingOrnament ornament={design.ornament} goldId={goldId} gemId={gemId} />
+        <SeatRingOrnament ornament={design.ornament} stone={design.stone} goldId={goldId} gemId={gemId} />
 
         {/* dört büyük fasetli taş */}
         {GEMS.map((deg) => {
@@ -105,15 +117,23 @@ export default function VoiceSeatRing({ children, className = '', glow, variant 
         })}
 
         {/* üst kenarda cam parıltısı */}
-        <path d={`M${HX1} ${HY1} A88.4 88.4 0 0 1 ${HX2} ${HY2}`} stroke="#ffffff" strokeOpacity="0.22" strokeWidth="3" strokeLinecap="round" fill="none" />
+        <path d={`M${HX1} ${HY1} A88.4 88.4 0 0 1 ${HX2} ${HY2}`} stroke="#ffffff" strokeOpacity="0.22" strokeWidth="3" strokeLinecap="round" fill="none" opacity={notched ? 1 : 0} />
 
-        {/* çerçeve: çentikli dış kuşak */}
-        <circle cx="100" cy="100" r="98.4" fill="none" stroke={`url(#${goldId})`} strokeWidth="2.6" strokeDasharray="7 3.6" strokeLinecap="round" />
-        <circle cx="100" cy="100" r="96.4" fill="none" stroke={g1} strokeWidth="0.8" opacity="0.5" />
+        {/* çerçeve: dış kuşak */}
+        <path
+          d={shapePath(design.shape, 98.4)}
+          fill="none"
+          stroke={`url(#${goldId})`}
+          strokeWidth="2.6"
+          strokeLinejoin="round"
+          strokeLinecap="round"
+          strokeDasharray={notched ? '7 3.6' : undefined}
+        />
+        <path d={shapePath(design.shape, 96.4)} fill="none" stroke={g1} strokeWidth="0.8" strokeLinejoin="round" opacity="0.5" />
 
         {/* iç taç çizgisi */}
-        <circle cx="100" cy="100" r="80.6" fill="none" stroke={`url(#${goldId})`} strokeWidth="3.2" />
-        <circle cx="100" cy="100" r="78.8" fill="none" stroke="rgba(4,10,20,0.7)" strokeWidth="1.4" />
+        <path d={shapePath(design.shape, 80.6)} fill="none" stroke={`url(#${goldId})`} strokeWidth="3.2" strokeLinejoin="round" />
+        <path d={shapePath(design.shape, 78.8)} fill="none" stroke="rgba(4,10,20,0.7)" strokeWidth="1.4" strokeLinejoin="round" />
       </svg>
 
       <span
