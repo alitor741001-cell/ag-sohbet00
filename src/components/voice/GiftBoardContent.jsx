@@ -82,7 +82,7 @@ export default function GiftBoardContent({
                 aria-pressed={active}
                 className={`flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1.5 text-[12px] transition ${
                   active
-                    ? 'border-white/80 bg-white/[0.14] font-black text-white shadow-[0_0_12px_rgba(255,255,255,0.35)]'
+                    ? 'border-[#ffcc00] bg-white/[0.08] font-black text-white shadow-[0_0_12px_rgba(255,204,0,0.35)]'
                     : 'border-white/10 bg-white/[0.05] font-semibold text-white/60'
                 }`}
               >
@@ -99,7 +99,7 @@ export default function GiftBoardContent({
         {shown.length === 0 ? (
           <p className="rounded-xl bg-white/5 px-3 py-3 text-center text-xs text-white/50">Bu kategoride hediye yok.</p>
         ) : (
-          <div className="grid grid-cols-4 gap-1.5 pb-1">
+          <div className="grid grid-cols-4 gap-x-1 gap-y-2 pb-2">
             {shown.map((item) => (
               <GiftCard key={item.id} gift={item} selected={giftId === item.id} onSelect={onSelectGift} onPreview={setPreview} />
             ))}
