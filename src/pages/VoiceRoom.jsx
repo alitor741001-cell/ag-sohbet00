@@ -882,6 +882,7 @@ export default function VoiceRoom() {
       setSelectedIds([targetId]);
       openGifts();
     },
+    message: (targetId) => { if (targetId) setDmUserId(targetId); },
   }), [seats, participants, canMod, user?.id, seated, voice, invokeVoice, toast, openGifts]);
 
   // Her koltuk, sohbet satırı ve izleyici aynı profile kartını açar; oda işlemleri karta taşınır.

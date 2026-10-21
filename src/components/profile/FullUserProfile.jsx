@@ -198,6 +198,7 @@ export default function FullUserProfile({
 
   const openChat = () => {
     if (isSelf) return;
+    if (room?.message) { room.message(userId); onClose?.(); return; }
     onMessage?.(userId);
     onClose?.();
   };

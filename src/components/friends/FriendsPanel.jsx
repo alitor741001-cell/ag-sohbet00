@@ -5,15 +5,15 @@ import useMessageProfiles from '@/hooks/useMessageProfiles';
 import FriendRequests from '@/components/friends/FriendRequests';
 import FriendRow from '@/components/friends/FriendRow';
 import { getAccountState } from '@/components/friends/AccountStatusAvatar';
-import FullUserProfile from '@/components/profile/FullUserProfile';
+import { useUserProfile } from '@/lib/profileCard';
 import { findLiveRoom } from '@/lib/liveRoom';
 import CrystalCard from '@/components/profile/fantasy/CrystalCard';
 
 /** Profilden açılan arkadaş listesi: kristal kart içinde arkadaşlar ve istekler. */
 export default function FriendsPanel({ relations, userId, invoke, onChat, isOnline, getRoomId, rooms }) {
   const [menuFor, setMenuFor] = useState(null);
-  // Profil kartı: arkadaşa dokununca özel sohbetteki kartın aynısı açılır.
-  const [cardUser, setCardUser] = useState(null);
+  // Profil kartı merkezden açılır: arkadaşa dokununca uygulamanın tek kartı gelir.
+  const { openUserProfile } = useUserProfile();
   const navigate = useNavigate();
   const friends = relations.filter((r) => r.status === 'accepted');
   const friendIds = friends.map((r) => (r.requester_id === userId ? r.recipient_id : r.requester_id));
@@ -52,13 +52,7 @@ export default function FriendsPanel({ relations, userId, invoke, onChat, isOnli
           const profile = profiles[friendId];
           const liveRoom = findLiveRoom(rooms, friendId, getRoomId ? getRoomId(friendId) : '');
           const accountState = getAccountState(profile, name);
-          const openCard = () => setCardUser({
-            id: friendId,
-            name,
-            avatar: profile?.avatar || avatar,
-            frame: profile?.profile_frame,
-            frameScale: profile?.profile_frame_scale,
-          });
+          const openCard = () => openUserProfile(friendId);
           return (
             <FriendRow
               key={r.id}
@@ -81,22 +75,6 @@ export default function FriendsPanel({ relations, userId, invoke, onChat, isOnli
           );
         })}
       </CrystalCard>
-
-      {cardUser && (
-        <FullUserProfile
-          userId={cardUser.id}
-          name={cardUser.name}
-          avatar={cardUser.avatar}
-          frame={cardUser.frame}
-          frameScale={cardUser.frameScale}
-          onClose={() => setCardUser(null)}
-          onMessage={() => {
-            const relation = relations.find((r) => (r.requester_id === userId ? r.recipient_id : r.requester_id) === cardUser.id);
-            setCardUser(null);
-            if (relation) onChat(relation);
-          }}
-        />
-      )}
     </div>
   );
 }

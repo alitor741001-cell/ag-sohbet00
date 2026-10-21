@@ -5,12 +5,14 @@ import { base44 } from '@/api/base44Client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Image } from '@/components/ui/image';
 import { useToast } from '@/components/ui/use-toast';
+import { useUserProfile } from '@/lib/profileCard';
 
 const isVoice = (room) => room?.room_type === 'voice' || room?.voice_mode === true;
 
 /** Üye numarasıyla kişi arama: sonuç karta dönüşür, yayındaysa odaya git düğmesi çıkar. */
 export default function FriendSearchSheet({ open, onClose }) {
   const navigate = useNavigate();
+  const { openUserProfile } = useUserProfile();
   const { toast } = useToast();
   const [memberId, setMemberId] = useState('');
   const [person, setPerson] = useState(null);
@@ -97,7 +99,7 @@ export default function FriendSearchSheet({ open, onClose }) {
             )}
             <button
               type="button"
-              onClick={() => { navigate(`/kullanici/${person.id}`); close(); }}
+              onClick={() => { close(); openUserProfile(person.id); }}
               className="flex min-w-0 flex-1 items-center gap-3 text-left"
             >
               {person.avatar ? (

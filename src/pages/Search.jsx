@@ -4,12 +4,14 @@ import { ArrowLeft, ChevronRight, Loader2, Radio, Search as SearchIcon } from 'l
 import { base44 } from '@/api/base44Client';
 import { Image } from '@/components/ui/image';
 import { useToast } from '@/components/ui/use-toast';
+import { useUserProfile } from '@/lib/profileCard';
 
 const isVoice = (room) => room?.room_type === 'voice' || room?.voice_mode === true;
 
 /** Üye arama sayfası: tam ekran açılır, geri tuşuyla ana sayfaya dönülür. */
 export default function Search() {
   const navigate = useNavigate();
+  const { openUserProfile } = useUserProfile();
   const { toast } = useToast();
   const [memberId, setMemberId] = useState('');
   const [person, setPerson] = useState(null);
@@ -111,7 +113,7 @@ export default function Search() {
             )}
             <button
               type="button"
-              onClick={() => navigate(`/kullanici/${person.id}`)}
+              onClick={() => openUserProfile(person.id)}
               className="flex min-w-0 flex-1 items-center gap-3 text-left"
             >
               {person.avatar ? (
