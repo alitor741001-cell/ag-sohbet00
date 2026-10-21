@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef } from 'react';
-import { Gamepad2, Gift, MessageCircle, Mic, MicOff, Settings, Smile, Volume2, VolumeX } from 'lucide-react';
+import { Gamepad2, Gift, MessageCircle, Mic, MicOff, Settings, Volume2, VolumeX } from 'lucide-react';
 
 // Ana sayfanın alt menüsüyle aynı dil: koyu zemin, ince beyaz ikonlar ve
 // ortada yükselen altın hediye düğmesi. Yalnızca durum bildiren ikonlar renk alır.
@@ -63,18 +63,15 @@ export default function VoiceControlBar({ micActive, deafened, gamesOpen, gamesE
       ref={barRef}
       className="voice-control-bar relative flex shrink-0 items-center justify-between gap-0.5 px-2 pb-[max(0.35rem,calc(env(safe-area-inset-bottom)*0.5))] pt-2"
     >
-      {/* Sohbet: hap biçiminde geniş düğme — solda yazı, sağda daire içinde gülen yüz. */}
+      {/* Sohbet: hap biçiminde geniş düğme — yalnızca yazı. */}
       <button
         type="button"
         onClick={onToggleChat}
         aria-label="Sohbet"
-        className="flex min-w-0 flex-1 items-center justify-between gap-1.5 rounded-full py-1 pl-3.5 pr-1 text-white transition-transform active:scale-[0.98]"
+        className="flex min-w-0 flex-1 items-center justify-center rounded-full px-3 py-2 text-white transition-transform active:scale-[0.98]"
         style={{ backgroundColor: '#262626' }}
       >
         <span className="truncate text-[12px] font-semibold">Sohbet</span>
-        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: '#1A1A1A' }}>
-          <Smile className="h-4 w-4 text-white" strokeWidth={1.7} />
-        </span>
       </button>
       <BarButton onClick={onToggleMic} label="Mikrofon" tone={micActive ? 'active' : 'plain'}>
         {micActive ? <Mic className={ICON} strokeWidth={1.6} /> : <MicOff className={ICON} strokeWidth={1.6} />}
