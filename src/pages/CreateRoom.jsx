@@ -7,6 +7,7 @@ import { readRoomPreset, saveRoomPreset } from '@/lib/roomPreset';
 import { useToast } from '@/components/ui/use-toast';
 import { Image } from '@/components/ui/image';
 import SeatCountPicker from '@/components/voice/SeatCountPicker';
+import RoomAutoOpen from '@/components/home/RoomAutoOpen';
 import { ROOM_BACKGROUNDS, ROOM_TYPES, backgroundCss } from '@/lib/roomBackgrounds';
 
 const LABEL = 'mb-2 flex items-center gap-1.5 text-sm font-bold text-white';
@@ -21,6 +22,9 @@ export default function CreateRoom() {
   const { user, setUser } = useCurrentUser();
   const { toast } = useToast();
   const preset = readRoomPreset(user, 'voice');
+  // Düzenleme istenmediyse ve bilgiler kayıtlıysa form hiç gösterilmez: oda doğrudan açılır.
+  const editing = new URLSearchParams(window.location.search).get('duzenle') === '1';
+  const [formRequested, setFormRequested] = useState(false);
 
   const [name, setName] = useState('');
   const [cover, setCover] = useState('');
@@ -86,6 +90,11 @@ export default function CreateRoom() {
   };
 
   const visible = type === 'all' ? ROOM_BACKGROUNDS : ROOM_BACKGROUNDS.filter((item) => item.type === type);
+
+  // Bilgiler bir kez girildiyse oda beklemeden açılır; açılamazsa forma düşülür.
+  if (preset && !editing && !formRequested) {
+    return <RoomAutoOpen preset={preset} onFailed={() => setFormRequested(true)} />;
+  }
 
   return (
     <div

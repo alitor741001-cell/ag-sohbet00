@@ -56,7 +56,8 @@
     --sidebar-accent-foreground: 240 10% 15%;
     --sidebar-border: 240 10% 88%;
     --sidebar-ring: 265 83% 58%;
-    --catalog-surface: 0 5% 7%;
+    /* Koyu yüzeyin temeli gece mavisi: siyah şerit görünmez, tema ekranı kaplar. */
+    --catalog-surface: 218 62% 6%;
     /* PREMIUM: altın sarısı + kırmızı + koyu antrasit */
     --premium-gold: 45 63% 52%;
     --premium-gold-light: 44 90% 61%;
@@ -130,7 +131,8 @@
     --sidebar-accent-foreground: 0 0% 98%;
     --sidebar-border: 0 4% 18%;
     --sidebar-ring: 0 84% 60%;
-    --catalog-surface: 0 5% 7%;
+    /* Koyu yüzeyin temeli gece mavisi: siyah şerit görünmez, tema ekranı kaplar. */
+    --catalog-surface: 218 62% 6%;
     /* PREMIUM: altın sarısı + kırmızı + koyu antrasit */
     --premium-gold: 45 63% 52%;
     --premium-gold-light: 44 90% 61%;
@@ -800,6 +802,14 @@ html, body, #root {
   /* Tema ne olursa olsun uygulamanın temeli koyu kalır: güvenli alanda, aşırı
      kaydırmada ve açılış anında üstte beyaz bir şerit görünmez. */
   background-color: hsl(var(--catalog-surface));
+}
+
+/* Durum çubuğu, güvenli alanlar ve oda çerçevesinin dışında kalan her piksel tema
+   gradyanıyla boyanır: Android'de ve iOS'ta siyah şerit görünmez. */
+html, body {
+  background-image: radial-gradient(120% 75% at 50% 0%, #103062 0%, #081a3a 44%, #04081a 100%);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
 body {

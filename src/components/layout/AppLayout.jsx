@@ -21,6 +21,10 @@ import { isMultiDeviceExempt } from '@/lib/sessionPolicy';
 // Yüz doğrulaması uygulamaya girişte sorulmaz: yalnızca elmaslar/bakiye bölümünde istenir.
 import useSupabaseMirror from '@/hooks/useSupabaseMirror';
 
+// Koyu yüzeyler tek bir gece mavisi gradyanıyla boyanır: durum çubuğu, güvenli alan ve
+// kaydırma kenarlarında siyah şerit kalmaz, ana sayfanın zemini ekranın tamamını kaplar.
+const DARK_SURFACE_GRADIENT = 'radial-gradient(120% 75% at 50% 0%, #103062 0%, #081a3a 44%, #04081a 100%)';
+
 export default function AppLayout() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
@@ -193,7 +197,7 @@ export default function AppLayout() {
     return <MessageRealtimeProvider userId={user?.id}><div className="min-h-screen bg-catalog"><RoutePreloader /><RoleCelebrationOverlay /><Suspense fallback={null}><Outlet /></Suspense></div></MessageRealtimeProvider>;
   }
   return (
-    <MessageRealtimeProvider userId={user?.id}><div className={`min-h-screen w-full min-w-0 overflow-x-clip ${isDarkSurface ? 'bg-catalog' : 'bg-background'}`}>
+    <MessageRealtimeProvider userId={user?.id}><div className={`min-h-screen w-full min-w-0 overflow-x-clip ${isDarkSurface ? '' : 'bg-background'}`} style={isDarkSurface ? { background: DARK_SURFACE_GRADIENT } : undefined}>
       <RoutePreloader />
       <RoleCelebrationOverlay />
       <Navbar />
