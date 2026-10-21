@@ -1,36 +1,43 @@
 import { useLayoutEffect, useRef } from 'react';
 import { Gamepad2, Gift, MessageCircle, MessageSquare, Mic, MicOff, Settings, Volume2, VolumeX } from 'lucide-react';
 
-const TONES = {
-  // Sade düğmede arka plan yok: ikonlar siyah zemine gömülmez, doğrudan görünür.
-  // Yalnızca durum bildiren düğmeler (mikrofon, hoparlör, hediye) renkli kalır.
-  gray: 'text-white',
-  red: 'bg-red-600 text-white',
-  active: 'bg-primary text-primary-foreground',
-  gift: 'bg-gradient-to-br from-pink-500 to-amber-400 text-white',
-};
+// Ana sayfanın alt menüsüyle aynı dil: koyu zemin, ince beyaz ikonlar ve
+// ortada yükselen altın hediye düğmesi. Yalnızca durum bildiren ikonlar renk alır.
+const ICON = 'h-[22px] w-[22px]';
 
-// Düğme boyutu ekranla ölçeklenir: dar telefonlarda da çubuk ekrana sığar,
-// dokunma alanı 40px'in altına inmez, geniş ekranlarda gereksiz büyümez.
-const SIZES = {
-  md: 'h-[clamp(40px,12vw,48px)] w-[clamp(40px,12vw,48px)]',
-  lg: 'h-[clamp(44px,14vw,56px)] w-[clamp(44px,14vw,56px)]',
-};
-
-function RoundButton({ onClick, label, tone = 'gray', active, size = 'lg', children }) {
+function BarButton({ onClick, label, children, tone = 'plain', lifted = false }) {
+  const base = 'flex shrink-0 items-center justify-center rounded-full transition-transform active:scale-90';
+  if (tone === 'gift') {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        aria-label={label}
+        className={`${base} h-[clamp(50px,15vw,58px)] w-[clamp(50px,15vw,58px)] text-white ${lifted ? '-translate-y-2' : ''}`}
+        style={{
+          background: 'radial-gradient(circle at 50% 28%, #ffe89a 0%, #e0b73f 42%, #a8801f 78%, #7d5c12 100%)',
+          boxShadow: '0 0 18px 2px rgba(224,183,63,0.55), inset 0 1px 0 rgba(255,255,255,0.7)',
+          border: '1px solid rgba(255,236,168,0.85)',
+        }}
+      >
+        {children}
+      </button>
+    );
+  }
+  const tint = tone === 'active' ? 'text-[#ffe89a]' : tone === 'off' ? 'text-white/45' : 'text-white';
   return (
     <button
       type="button"
       onClick={onClick}
       aria-label={label}
-      className={`flex ${SIZES[size] || SIZES.lg} shrink-0 items-center justify-center rounded-full transition-transform active:scale-95 ${TONES[tone] || TONES.gray} ${active ? 'ring-2 ring-white/30' : ''}`}
+      className={`${base} h-11 w-11 ${tint} ${lifted ? '-translate-y-2' : ''}`}
     >
       {children}
     </button>
   );
 }
 
-/** Alt kontrol çubuğu: sohbet, mikrofon, hoparlör, oyun merkezi ve özel sohbet. */
+/** Alt kontrol çubuğu: sohbet, mikrofon, hoparlör, hediye, özel sohbet, oyun merkezi ve ayarlar. */
 export default function VoiceControlBar({ micActive, deafened, gamesOpen, gamesEnabled = true, giftOpen, settingsOpen, keyboardOpen, onToggleMic, onToggleSpeaker, onOpenGames, onOpenGifts, onOpenSettings, onOpenPrivateChat, onToggleChat }) {
   const barRef = useRef(null);
 
@@ -52,35 +59,38 @@ export default function VoiceControlBar({ micActive, deafened, gamesOpen, gamesE
   }, []);
 
   return (
-    // Zemin ikonların arkasındadır; çubuğun tamamı görünür ekranın içinde tutulur.
-    <div ref={barRef} className="voice-control-bar flex shrink-0 items-center justify-between gap-1 bg-catalog px-3 pt-2">
-      {/* Sohbet düğmesi sabittir: açıkken ikonu ve rengi değişmez, hep aynı görünür. */}
-      <RoundButton onClick={onToggleChat} label="Sohbet">
-        <MessageSquare className="h-6 w-6" />
-      </RoundButton>
-      <div className="flex min-w-0 items-center gap-1.5">
-        <RoundButton size="md" tone={micActive ? 'active' : 'gray'} active={micActive} onClick={onToggleMic} label="Mikrofon">
-          {micActive ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
-        </RoundButton>
-        <RoundButton size="md" tone={deafened ? 'red' : 'gray'} onClick={onToggleSpeaker} label="Hoparlör">
-          {deafened ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
-        </RoundButton>
-        <RoundButton size="md" tone="gift" active={giftOpen} onClick={onOpenGifts} label="Hediye gönder">
-          <Gift className="h-5 w-5" />
-        </RoundButton>
-        <RoundButton size="md" onClick={onOpenPrivateChat} label="Özel sohbet">
-          <MessageCircle className="h-5 w-5" />
-        </RoundButton>
-        {/* Oyun merkezi yalnızca yayıncı/ajans üyesi hesaplarda görünür. */}
-        {gamesEnabled && (
-          <RoundButton size="md" tone={gamesOpen ? 'active' : 'gray'} active={gamesOpen} onClick={onOpenGames} label="Oyun merkezi">
-            <Gamepad2 className="h-5 w-5" />
-          </RoundButton>
-        )}
-      </div>
-      <RoundButton size="md" tone={settingsOpen ? 'active' : 'gray'} active={settingsOpen} onClick={onOpenSettings} label="Oda ayarları">
-        <Settings className="h-5 w-5" />
-      </RoundButton>
+    <div
+      ref={barRef}
+      className="voice-control-bar flex shrink-0 items-center justify-between gap-0.5 px-2 pb-[max(0.35rem,env(safe-area-inset-bottom))] pt-2"
+      style={{ background: 'linear-gradient(180deg, #17171b 0%, #0d0d10 100%)', borderTop: '1px solid rgba(255,255,255,0.08)' }}
+    >
+      <BarButton onClick={onToggleChat} label="Sohbet">
+        <MessageSquare className={ICON} strokeWidth={1.6} />
+      </BarButton>
+      <BarButton onClick={onToggleMic} label="Mikrofon" tone={micActive ? 'active' : 'plain'}>
+        {micActive ? <Mic className={ICON} strokeWidth={1.6} /> : <MicOff className={ICON} strokeWidth={1.6} />}
+      </BarButton>
+      <BarButton onClick={onToggleSpeaker} label="Hoparlör" tone={deafened ? 'off' : 'plain'}>
+        {deafened ? <VolumeX className={ICON} strokeWidth={1.6} /> : <Volume2 className={ICON} strokeWidth={1.6} />}
+      </BarButton>
+
+      <BarButton onClick={onOpenGifts} label="Hediye gönder" tone="gift" lifted>
+        <Gift className="h-6 w-6" strokeWidth={1.6} />
+      </BarButton>
+
+      <BarButton onClick={onOpenPrivateChat} label="Özel sohbet">
+        <MessageCircle className={ICON} strokeWidth={1.6} />
+      </BarButton>
+      {gamesEnabled ? (
+        <BarButton onClick={onOpenGames} label="Oyun merkezi" tone={gamesOpen ? 'active' : 'plain'}>
+          <Gamepad2 className={ICON} strokeWidth={1.6} />
+        </BarButton>
+      ) : (
+        <span className="h-11 w-11 shrink-0" />
+      )}
+      <BarButton onClick={onOpenSettings} label="Oda ayarları" tone={settingsOpen ? 'active' : 'plain'}>
+        <Settings className={ICON} strokeWidth={1.6} />
+      </BarButton>
     </div>
   );
 }

@@ -14,7 +14,7 @@ export const ROOM_BACKGROUNDS = [
     label: 'Aşk Bahçesi',
     type: 'cift',
     accent: '#ff8fb3',
-    image: `${IMG}/19ae7acb1_generated_image.png`,
+    image: `${IMG}/4ab783815_generated_image.png`,
     background: 'radial-gradient(120% 80% at 50% 0%, #7a1f45 0%, #3d0f2b 48%, #140513 100%)',
   },
   {
@@ -88,6 +88,30 @@ export const ROOM_BACKGROUNDS = [
     accent: '#f0c469',
     image: `${IMG}/5b092d93e_generated_image.png`,
     background: 'radial-gradient(110% 80% at 50% 0%, #6b4a12 0%, #2c1c08 50%, #0b0603 100%)',
+  },
+  {
+    key: 'romantik-oda',
+    label: 'Romantik Oda',
+    type: 'cift',
+    accent: '#ffb0c8',
+    image: `${IMG}/2e04a0834_generated_image.png`,
+    background: 'radial-gradient(110% 80% at 50% 0%, #8a2b5a 0%, #3a0f2c 52%, #12040e 100%)',
+  },
+  {
+    key: 'ates-firtinasi',
+    label: 'Ateş Fırtınası',
+    type: 'sohbet',
+    accent: '#ff9b3d',
+    image: `${IMG}/35361d0d2_generated_image.png`,
+    background: 'radial-gradient(110% 80% at 50% 100%, #ff6a10 0%, #7a1c06 45%, #150402 100%)',
+  },
+  {
+    key: 'gece-surusu',
+    label: 'Gece Sürüşü',
+    type: 'sohbet',
+    accent: '#8f7bff',
+    image: `${IMG}/09e023872_generated_image.png`,
+    background: 'radial-gradient(110% 80% at 30% 10%, #4b2bd6 0%, #1a0f45 50%, #05020f 100%)',
   },
 ];
 

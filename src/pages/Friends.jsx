@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { MessageCircle, UsersRound, Shield, UserPlus, Search, SlidersHorizontal } from 'lucide-react';
-import { useSearchParams } from 'react-router-dom';
+import { ArrowLeft, MessageCircle, Shield, UserPlus, Search, SlidersHorizontal } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import subscribeEntity from '@/components/data/entitySubscriptions';
 import ConversationList from '@/components/friends/ConversationList';
@@ -19,6 +19,7 @@ export default function Friends() {
   const { conversations, loading: convosLoading, optimisticHide, reload: reloadConversations } = useConversations();
   const { isOnline, getLastSeen } = useFriendPresence(user);
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [adminLoading, setAdminLoading] = useState(false);
   const [rooms, setRooms] = useState([]);
   useEffect(() => {
@@ -155,6 +156,32 @@ export default function Friends() {
     return <div className="mx-auto w-full min-w-0 max-w-5xl sm:p-4"><ChatPanel key={selected?.id} conversation={selected} userId={user.id} onBack={() => switchView('chats')} online={isOnline(friendId)} getLastSeen={getLastSeen} rooms={rooms} getRoomId={getRoomId} /></div>;
   }
 
+  // Arkadaş listesi profilden gelindiğinde tam ekran açılır: kendi geri butonu vardır.
+  if (view === 'friends') {
+    return (
+      <div
+        className="dark min-h-[100dvh] w-full text-white"
+        style={{ background: 'radial-gradient(120% 80% at 50% 0%, #3a1146 0%, #1b0a2a 46%, #0a0410 100%)' }}
+      >
+        <header className="sticky top-0 z-20 flex items-center gap-2 border-b border-[#f2ce6b]/25 bg-[#140619]/85 px-3 py-3 backdrop-blur-md">
+          <button
+            type="button"
+            onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/profil'))}
+            aria-label="Geri"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-black/40 active:scale-95"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </button>
+          <h1 className="flex-1 text-center text-base font-extrabold text-[#f2ce6b]">Arkadaşlarım</h1>
+          <span className="h-9 w-9" />
+        </header>
+        <div className="p-4">
+          <FriendsPanel relations={relations} userId={user.id} invoke={invoke} onChat={openChat} isOnline={isOnline} getRoomId={getRoomId} rooms={rooms} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="dark mx-auto min-h-[calc(100vh-8rem)] supports-[height:100dvh]:min-h-[calc(100dvh-8rem)] w-full min-w-0 max-w-5xl bg-background text-white">
       {/* Aşağı çekerek tazeleme: arkadaşlar, istekler ve sohbetler yeniden okunur. */}
@@ -162,25 +189,18 @@ export default function Friends() {
       <header className="px-4 py-5">
         <h1 className="text-2xl font-extrabold">Arkadaşlar</h1>
         <p className="text-sm text-gray-400 mt-1">Sohbet ve arkadaşlarını yönet.</p>
-        <div className="mt-4 flex gap-2 p-1 rounded-xl border border-[#f2ce6b]/25 bg-[hsl(var(--secondary))]">
-          <button onClick={() => switchView('chats')} className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold transition-all ${view === 'chats' ? 'text-white' : 'text-gray-400'}`} style={view === 'chats' ? { background: 'linear-gradient(135deg, #b91c1c, #dc2626 52%, #f2ce6b)' } : {}}>
+        <div className="mt-4 flex items-center gap-2">
+          <div className="flex flex-1 items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-bold text-white" style={{ background: 'linear-gradient(135deg, #b91c1c, #dc2626 52%, #f2ce6b)' }}>
             <MessageCircle className="w-4 h-4" /> Mesajlar
             {totalUnread > 0 && <span className="min-w-5 h-5 px-1 rounded-full bg-[#f2ce6b] text-black text-[10px] flex items-center justify-center">{totalUnread}</span>}
-          </button>
-          <button onClick={() => switchView('friends')} className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold transition-all ${view === 'friends' ? 'text-white' : 'text-gray-400'}`} style={view === 'friends' ? { background: 'linear-gradient(135deg, #b91c1c, #dc2626 52%, #f2ce6b)' } : {}}>
-            <UsersRound className="w-4 h-4" /> Arkadaşlarım
-            {incomingRequests > 0 && <span className="min-w-5 h-5 px-1 rounded-full bg-[#f2ce6b] text-black text-[10px] flex items-center justify-center">{incomingRequests}</span>}
-          </button>
+          </div>
           {/* Sistem bildirim butonu: tüm bildirimler buraya düşer, dokununca tam ekran açılır.
               Yönetici hesabında gösterilmez — bildirimler yönetim panelinden takip edilir. */}
           {!isModerator(user) && <NotificationBell />}
         </div>
       </header>
 
-      {view === 'friends' ? (
-        <div className="p-4"><FriendsPanel relations={relations} userId={user.id} invoke={invoke} onChat={openChat} isOnline={isOnline} getRoomId={getRoomId} rooms={rooms} /></div>
-      ) : (
-        <>
+      <>
           {!isModerator(user) && (
             <button onClick={startAdminChat} disabled={adminLoading} className="w-full flex items-center gap-3 px-4 py-3 bg-[hsl(var(--secondary))] border-b border-white/5 text-left active:bg-[#1c1c24]">
               <span className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg, #b91c1c, #dc2626 52%, #f2ce6b)' }}><Shield className="w-4 h-4 text-white" /></span>
@@ -211,7 +231,6 @@ export default function Friends() {
             </div>
           )}
         </>
-      )}
       </PullToRefresh>
     </div>
   );

@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Armchair, BadgeCheck, Briefcase, CircleDashed, Crown, Flag, HelpCircle, IdCard, MessageSquare, Mic, UserSquare } from 'lucide-react';
+import { ArrowLeft, Armchair, BadgeCheck, Briefcase, Check, CircleDashed, Crown, Flag, HelpCircle, IdCard, Lock, MessageSquare, Mic, UserSquare, X } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import VipBagPanel from '@/components/profile/VipBagPanel';
+import useVipCosmetics from '@/hooks/useVipCosmetics';
 
 const DRAGON = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/2014bedbf_generated_image.png';
 
@@ -29,6 +30,9 @@ export default function VipLevels() {
   const [level, setLevel] = useState(current);
   const [bagOpen, setBagOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
+  // Ürünler VIP seviyesiyle birlikte kendiliğinden açılır; kişi tek tek kaldırabilir.
+  const { items: cosmetics, level: myLevel, busy, toggle } = useVipCosmetics(true);
+  const owned = myLevel >= 5;
 
   const goBack = () => {
     if (window.history.length > 1) navigate(-1);
@@ -119,25 +123,44 @@ export default function VipLevels() {
           </div>
 
           <div className="grid grid-cols-3 gap-2.5">
-            {FEATURES.map(({ key, label, Icon }) => (
-              <div
-                key={key}
-                className="flex flex-col items-center gap-1.5 rounded-xl px-1 py-2.5"
-                style={{
-                  background: 'linear-gradient(180deg, rgba(255,252,244,0.75), rgba(224,207,182,0.55))',
-                  border: '1px solid #a8927a',
-                  boxShadow: 'inset 0 0 12px rgba(168,146,122,0.35)',
-                }}
-              >
-                <span
-                  className="flex h-11 w-11 items-center justify-center rounded-full"
-                  style={{ background: 'radial-gradient(circle at 50% 30%, #3a1d06, #160a02 78%)', border: '1px solid #c5a574' }}
+            {FEATURES.map(({ key, label, Icon }) => {
+              const item = cosmetics.find((cosmetic) => cosmetic.kind === key);
+              const unlocked = owned && !!item && level <= myLevel;
+              const active = unlocked && item.active;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  disabled={!unlocked || busy === key}
+                  onClick={() => unlocked && toggle(key, !item.active)}
+                  className="relative flex flex-col items-center gap-1.5 rounded-xl px-1 py-2.5 active:scale-[0.97] disabled:active:scale-100"
+                  style={{
+                    background: unlocked
+                      ? 'linear-gradient(180deg, rgba(255,252,244,0.9), rgba(224,207,182,0.7))'
+                      : 'linear-gradient(180deg, rgba(190,175,155,0.55), rgba(160,144,124,0.45))',
+                    border: `1px solid ${active ? '#c9a227' : '#a8927a'}`,
+                    boxShadow: active ? 'inset 0 0 14px rgba(201,162,39,0.45)' : 'inset 0 0 12px rgba(168,146,122,0.3)',
+                    opacity: unlocked ? 1 : 0.72,
+                  }}
                 >
-                  <Icon className="h-5 w-5" style={{ color: '#f4d03f' }} />
-                </span>
-                <span className="text-center text-[9.5px] font-bold leading-tight" style={{ color: '#3d2c18' }}>{label}</span>
-              </div>
-            ))}
+                  <span
+                    className="flex h-11 w-11 items-center justify-center rounded-full"
+                    style={{ background: 'radial-gradient(circle at 50% 30%, #3a1d06, #160a02 78%)', border: '1px solid #c5a574' }}
+                  >
+                    <Icon className="h-5 w-5" style={{ color: unlocked ? '#f4d03f' : '#8b7a63' }} />
+                  </span>
+                  <span className="text-center text-[9.5px] font-bold leading-tight" style={{ color: '#3d2c18' }}>{label}</span>
+                  <span
+                    className="flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[8.5px] font-black"
+                    style={unlocked
+                      ? (active ? { background: '#1f6b3a', color: '#d7ffe4' } : { background: '#6b2a2a', color: '#ffdcdc' })
+                      : { background: 'rgba(58,29,6,0.18)', color: '#5a4732' }}
+                  >
+                    {!unlocked ? <><Lock className="h-2.5 w-2.5" /> VIP{Math.max(5, level)}</> : active ? <><Check className="h-2.5 w-2.5" /> Aktif</> : <><X className="h-2.5 w-2.5" /> Kapalı</>}
+                  </span>
+                </button>
+              );
+            })}
           </div>
 
           <button
@@ -151,8 +174,10 @@ export default function VipLevels() {
         </div>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-10 bg-black py-2.5 text-center text-[12px] font-black tracking-wide text-white">
-        Yakında
+      <div className="fixed inset-x-0 bottom-0 z-10 bg-black/95 px-4 py-2.5 text-center text-[11.5px] font-black tracking-wide text-white">
+        {owned
+          ? `VIP${myLevel} aktif · ${cosmetics.filter((item) => item.active).length}/${cosmetics.length} ürün açık`
+          : 'VIP5 ile rozet, çerçeve, mikrofon dalgası ve oda koltuğu açılır'}
       </div>
 
       <VipBagPanel open={bagOpen} onClose={() => setBagOpen(false)} />
