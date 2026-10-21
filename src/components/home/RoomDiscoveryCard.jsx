@@ -91,7 +91,7 @@ function RoomDiscoveryCard({ room, owner, kind, filmTitle, friendInside, rank = 
       ))}
 
       {/* Görsel alanı: kartın üst bölümü. */}
-      <div className="relative w-full overflow-hidden" style={{ aspectRatio: '1 / 1' }}>
+      <div className="relative w-full overflow-hidden" style={{ aspectRatio: '3 / 2' }}>
         {cover ? (
           <Image src={cover} className="absolute inset-0 h-full w-full" fittingType="fill" alt="" />
         ) : (
@@ -176,11 +176,11 @@ function RoomDiscoveryCard({ room, owner, kind, filmTitle, friendInside, rank = 
               {(ownerName || '?')[0]}
             </span>
           )}
-          <span className="truncate text-[10px] font-extrabold text-white">{room.name}</span>
+          <span className="truncate text-[11.5px] font-extrabold text-white">{room.name}</span>
           {room.password && <Lock className="h-2.5 w-2.5 shrink-0 text-[#e8c47c]" />}
         </span>
         <span className="flex items-center gap-1">
-          <span className="truncate text-[8.5px] font-semibold text-white/65">{statusLine}</span>
+          <span className="truncate text-[9.5px] font-semibold text-white/65">{statusLine}</span>
           <span className="ml-auto shrink-0 rounded-full border border-[#6cd4d6]/50 px-1 text-[8px] font-black text-[#7ff0e6]">
             {isVoice ? 'Sesli' : 'Film'}
           </span>

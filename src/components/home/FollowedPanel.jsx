@@ -42,9 +42,9 @@ export default function FollowedPanel({ mode = 'following', rooms = [], owners =
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-3 gap-2 sm:grid-cols-4" aria-hidden="true">
-          {Array.from({ length: 4 }).map((_, index) => (
-            <div key={index} className="animate-pulse rounded-[16px] bg-[#10141d]" style={{ aspectRatio: '1 / 1' }} />
+        <div className="grid grid-cols-2 gap-2.5" aria-hidden="true">
+          {Array.from({ length: 2 }).map((_, index) => (
+            <div key={index} className="animate-pulse rounded-[16px] bg-[#10141d]" style={{ aspectRatio: '3 / 2' }} />
           ))}
         </div>
       ) : groupSize === 0 ? (
@@ -68,7 +68,7 @@ export default function FollowedPanel({ mode = 'following', rooms = [], owners =
           <p className="mt-1 text-[11px] font-semibold text-white/45">Yayına başladıklarında odaları burada listelenir.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-2.5">
           {streams.map((room, index) => {
             const kind = isVoiceRoom(room) ? 'voice' : 'film';
             return (
