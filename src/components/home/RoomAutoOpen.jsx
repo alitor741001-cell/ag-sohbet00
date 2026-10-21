@@ -10,32 +10,41 @@ import { ROOM_BACKGROUNDS } from '@/lib/roomBackgrounds';
  */
 export default function RoomAutoOpen({ preset, onFailed }) {
   const navigate = useNavigate();
-  const started = useRef(false);
+  // Ekran yeniden çizilse de istek iptal olmaz: geri çağrılar ref üzerinden okunur.
+  const latest = useRef({ preset, onFailed });
+  latest.current = { preset, onFailed };
 
   useEffect(() => {
-    if (started.current) return;
-    started.current = true;
-    let alive = true;
+    let cancelled = false;
+    // Sunucu yanıt vermezse ekran kilitli kalmaz: forma düşülür.
+    const fallback = setTimeout(() => {
+      if (!cancelled) latest.current.onFailed?.();
+    }, 12000);
+
     (async () => {
       try {
+        const { preset: saved } = latest.current;
         const res = await base44.functions.invoke('personal-room', {
           settings: {
-            name: preset.name,
-            seat_count: Number(preset.seat_count) || 8,
-            background: preset.background || ROOM_BACKGROUNDS[0].key,
-            cover_url: preset.cover_url || '',
+            name: saved.name,
+            seat_count: Number(saved.seat_count) || 8,
+            background: saved.background || ROOM_BACKGROUNDS[0].key,
+            cover_url: saved.cover_url || '',
             voice: true,
           },
         });
         const id = res.data?.id;
         if (!id) throw new Error('oda oluşturulamadı');
-        if (alive) navigate(`/sesli-oda/${id}`, { replace: true });
+        clearTimeout(fallback);
+        if (!cancelled) navigate(`/sesli-oda/${id}`, { replace: true });
       } catch {
-        if (alive) onFailed?.();
+        clearTimeout(fallback);
+        if (!cancelled) latest.current.onFailed?.();
       }
     })();
-    return () => { alive = false; };
-  }, [preset, navigate, onFailed]);
+
+    return () => { cancelled = true; clearTimeout(fallback); };
+  }, [navigate]);
 
   return (
     <div

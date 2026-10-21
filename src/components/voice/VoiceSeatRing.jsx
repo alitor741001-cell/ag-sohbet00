@@ -1,22 +1,24 @@
 import React, { useId } from 'react';
 import SeatRingOrnament from '@/components/voice/SeatRingOrnament';
-import { RING_DESIGNS, polar } from '@/components/voice/seatRingDesigns';
+import { RING_DESIGNS, polar, ringPoints } from '@/components/voice/seatRingDesigns';
 
 /**
- * Koltuk çemberi — her koltuğa ayrı mücevher çerçevesi.
+ * Koltuk çemberi — her koltuğa kendi mücevher çerçevesi.
  * Halka, içeriğin tam ortasına kilitlenir (yüzde 50 + translate) ve %12.5 dışa
  * taşar; böylece profil dairesiyle her boyutta tam hizalı kalır.
  */
 
 const LEAF_ANGLES = Array.from({ length: 14 }, (_, i) => (360 / 14) * i + 360 / 28);
 const GEMS = [0, 90, 180, 270];
+const PEARLS = ringPoints(20, 83.2);
+const [HX1, HY1] = polar(88.4, -54);
+const [HX2, HY2] = polar(88.4, 50);
 
 export default function VoiceSeatRing({ children, className = '', glow, variant = 0 }) {
   const uid = useId().replace(/[^a-zA-Z0-9]/g, '');
   const goldId = `g${uid}`;
   const goldSoftId = `gs${uid}`;
   const gemId = `m${uid}`;
-  const glowId = `gl${uid}`;
 
   const design = RING_DESIGNS[Math.abs(variant) % RING_DESIGNS.length];
   const [g0, g1, g2, g3] = design.gold;
@@ -60,13 +62,7 @@ export default function VoiceSeatRing({ children, className = '', glow, variant 
             <stop offset="70%" stopColor={m2} />
             <stop offset="100%" stopColor={m3} />
           </radialGradient>
-          <filter id={glowId} x="-30%" y="-30%" width="160%" height="160%">
-            <feGaussianBlur stdDeviation="4.5" />
-          </filter>
         </defs>
-
-        {/* dış ışıma */}
-        <circle cx="100" cy="100" r="96" fill="none" stroke={m1} strokeWidth="7" opacity="0.4" filter={`url(#${glowId})`} />
 
         {/* mine bant gövdesi */}
         <circle cx="100" cy="100" r="89.4" fill="none" stroke="#08131f" strokeWidth="19" />
@@ -74,7 +70,7 @@ export default function VoiceSeatRing({ children, className = '', glow, variant 
         <circle cx="100" cy="100" r="89.4" fill="none" stroke={`url(#${goldSoftId})`} strokeWidth="1" opacity="0.55" />
 
         {/* filigran yapraklar */}
-        {design.ornament !== 'rope' &&
+        {design.leaves &&
           LEAF_ANGLES.map((deg) => (
             <path
               key={`leaf-${deg}`}
@@ -87,8 +83,11 @@ export default function VoiceSeatRing({ children, className = '', glow, variant 
             />
           ))}
 
-        {/* ince gravür çizgisi */}
-        <circle cx="100" cy="100" r="82.2" fill="none" stroke={g1} strokeWidth="0.9" opacity="0.3" />
+        {/* iç inci dizisi ve gravür çizgisi */}
+        {PEARLS.map(({ deg, x, y }) => (
+          <circle key={`pearl-${deg}`} cx={x} cy={y} r="1.1" fill={g1} opacity="0.75" />
+        ))}
+        <circle cx="100" cy="100" r="82.4" fill="none" stroke={g1} strokeWidth="0.9" opacity="0.3" />
 
         {/* süsele özel taş dizisi */}
         <SeatRingOrnament ornament={design.ornament} goldId={goldId} gemId={gemId} />
@@ -104,6 +103,9 @@ export default function VoiceSeatRing({ children, className = '', glow, variant 
             </g>
           );
         })}
+
+        {/* üst kenarda cam parıltısı */}
+        <path d={`M${HX1} ${HY1} A88.4 88.4 0 0 1 ${HX2} ${HY2}`} stroke="#ffffff" strokeOpacity="0.22" strokeWidth="3" strokeLinecap="round" fill="none" />
 
         {/* çerçeve: çentikli dış kuşak */}
         <circle cx="100" cy="100" r="98.4" fill="none" stroke={`url(#${goldId})`} strokeWidth="2.6" strokeDasharray="7 3.6" strokeLinecap="round" />

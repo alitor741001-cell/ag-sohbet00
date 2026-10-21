@@ -36,7 +36,7 @@ export default async function(req) {
     // Kişisel odada kapasite sorulmaz: herkes girebilir, pratikte sınırsız.
     const PERSONAL_MAX_USERS = 250;
     // Kurulumda seçilen sesli bölüm (mikrofon koltukları) odaya işlenir; oda içinden değiştirilebilir.
-    const SEAT_OPTIONS = [1, 2, 5, 8, 9, 12, 15, 20, 24];
+    const SEAT_OPTIONS = [1, 2, 5, 8, 9, 12, 15, 20, 24, 30];
     const requestedSeats = Number(settings?.seat_count) || 0;
     const voiceSeats = SEAT_OPTIONS.includes(requestedSeats) ? requestedSeats : 0;
     const buildSeats = (count) => Array.from({ length: count }, (_, index) => ({ index, locked: false, muted: false }));
