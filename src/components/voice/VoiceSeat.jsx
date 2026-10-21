@@ -42,11 +42,13 @@ function VoiceSeat({ seat, index, size = 'md', musicPlaying, speaking, gender, i
                 <SeatEmblem index={index} />
               </span>
             </VoiceSeatRing>
-            {/* Katılma/kilit işareti köşede durur: koltuktaki gerçek görsel kapanmaz. */}
-            <span className="absolute -bottom-0.5 -right-0.5 z-10 flex h-4 w-4 items-center justify-center rounded-full border border-[#f2d79c]/55 bg-[#0a1526]">
-              {seat?.locked
-                ? <Lock className="h-2.5 w-2.5 text-[#f2d79c]" />
-                : <Plus className="h-2.5 w-2.5 text-[#f2d79c]" strokeWidth={3} />}
+            {/* Kilit / artı işareti boş koltuğun tam ortasında durur. */}
+            <span className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
+              <span className="flex h-5 w-5 items-center justify-center rounded-full border border-[#f2d79c]/70 bg-[#0a1526]/85 shadow-[0_2px_8px_rgba(0,0,0,0.65)]">
+                {seat?.locked
+                  ? <Lock className="h-3 w-3 text-[#f2d79c]" />
+                  : <Plus className="h-3 w-3 text-[#f2d79c]" strokeWidth={3} />}
+              </span>
             </span>
             {/* Mikrofonu kendi elimle kapattığımda görünen sade rozet; mikrofonu açınca kaybolur. */}
             {micMuted && (

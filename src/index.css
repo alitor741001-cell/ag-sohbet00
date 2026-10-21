@@ -454,6 +454,25 @@
     100% { transform: translateY(-15px) scale(0.3); opacity: 0; }
   }
 
+  /* === ZENGİNLİK (ALEV TEMALI) PANEL === */
+  @keyframes wealth-flame-border {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 200% 50%; }
+  }
+  @keyframes wealth-flame-glow {
+    0%, 100% { opacity: 0.75; }
+    50% { opacity: 1; }
+  }
+  @keyframes wealth-fire-sway {
+    0%, 100% { transform: translateX(-1.5%) scaleY(1); }
+    50% { transform: translateX(1.5%) scaleY(1.08); }
+  }
+  @keyframes wealth-flame-rise {
+    0% { transform: translateY(4px) scale(0.8); opacity: 0; }
+    25% { opacity: 0.95; }
+    100% { transform: translateY(-42px) scale(0.35); opacity: 0; }
+  }
+
   /* === CELEBRATION OVERLAY === */
   @keyframes celebration-overlay-in {
     from { opacity: 0; }

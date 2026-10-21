@@ -43,7 +43,7 @@ export default function GiftBoardRow({ rank, entry, profile }) {
   const name = entry.name || 'Kullanıcı';
 
   return (
-    <div className="flex items-center gap-2.5 border-b border-sky-300/15 py-2.5 last:border-b-0">
+    <div className="flex items-center gap-2.5 border-b border-orange-300/15 py-2.5 last:border-b-0">
       <span className="relative flex h-7 w-7 shrink-0 items-center justify-center">
         {tone ? (
           <>
@@ -66,7 +66,7 @@ export default function GiftBoardRow({ rank, entry, profile }) {
           ? { backgroundImage: tone.frame, boxShadow: `0 0 12px ${tone.glow}` }
           : { backgroundImage: 'linear-gradient(145deg,rgba(255,255,255,0.28),rgba(255,255,255,0.06))' }}
       >
-        <span className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-[#0f1b3d] ring-1 ring-white/10">
+        <span className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-[#2a0d0a] ring-1 ring-white/10">
           {entry.avatar ? (
             <Image src={entry.avatar} alt={name} className="h-full w-full" fittingType="fill" draggable={false} />
           ) : (
@@ -85,8 +85,8 @@ export default function GiftBoardRow({ rank, entry, profile }) {
       </div>
 
       <span className="flex shrink-0 items-center gap-1">
-        <Coins className="h-3.5 w-3.5" style={{ color: tone ? '#fbbf24' : '#93c5fd' }} />
-        <span className="text-[13px] font-black tabular-nums" style={{ color: tone ? '#fde68a' : '#e2e8f0' }}>
+        <Coins className="h-3.5 w-3.5" style={{ color: '#fbbf24' }} />
+        <span className="text-[13px] font-black tabular-nums" style={{ color: '#fde68a' }}>
           {compactScore(entry.score)}
         </span>
       </span>
