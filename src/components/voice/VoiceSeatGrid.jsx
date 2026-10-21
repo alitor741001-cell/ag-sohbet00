@@ -23,7 +23,7 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
   const featureTop = seats.length === 9;
   // Kalabalık düzen (15/20 koltuk): koltuklar daraltılmaz, geniş kalır.
   const dense = seats.length >= 15;
-  // 30 mikrofon (altı satır): tüm koltuklar tek ekrana sığar, sahne kaydırılmaz.
+  // 30 mikrofon (dört satır): satırlar yana taşarsa ızgara sağa-sola kaydırılır, aşağı kaydırılmaz.
   const many = seats.length >= 20;
   const widestRow = Math.max(1, ...rows.map((row) => row.length));
   const width = measured?.width || 360;
@@ -61,11 +61,13 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
   // sığmayan satırlar sahne içinde kaydırılarak görünür.
   // 9'lu düzende de koltuk boyu genişlikten gelir: koltuklar referanstaki gibi büyük ve
   // satır kenarlara yanaşık kalır, sığmayan içerik sahne içinde kaydırılır.
-  // 20 ve üzeri düzende (30 mikrofon) alt sınır yoktur: altı satır da sahneye sığsın diye
-  // koltuk yükseklikten gelen en küçük bedene kadar inebilir, ızgara kaydırılmaz.
+  // 30 mikrofon düzeninde koltuk boyu yükseklikten gelir; dar ekranda 'sm' ile sınırlanır.
+  // Satır ekrandan yalnızca biraz taşar, ızgara sağa-sola kaydırılarak alt sıralar
+  // aşağı kaydırmadan görünür.
+  const manySize = SIZES[Math.min(SIZES.indexOf(heightSize), SIZES.indexOf(narrow ? 'sm' : 'md'))];
   const denseFloor = 'md';
   const size = dense
-    ? (many ? fitSize : SIZES[Math.min(SIZES.indexOf(widthSize), Math.max(SIZES.indexOf(heightSize), SIZES.indexOf(denseFloor)))])
+    ? (many ? manySize : SIZES[Math.min(SIZES.indexOf(widthSize), Math.max(SIZES.indexOf(heightSize), SIZES.indexOf(denseFloor)))])
     : featureTop
       ? widthSize
       : fitSize;
@@ -73,41 +75,42 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
   const topSize = SIZES[Math.min(SIZES.indexOf(size) + 1, SIZES.length - 1)];
 
   return (
-    <div ref={wrapRef} className="flex w-full flex-col items-center" style={{ rowGap }}>
-      {rows.map((row, rowIndex) => (
-        <div key={rowIndex} className="flex flex-col items-center gap-1">
-          <div className="flex items-start justify-center" style={{ columnGap: gap }}>
-          {row.map((index) => {
-            const seat = seats[index];
-            const occupied = !!seat?.user_id;
-            const seatSize = featureTop && row.length === 1 ? topSize : size;
-            return (
-              <div key={index} className="flex flex-col items-center">
-                <VoiceSeat
-                  index={index}
-                  seat={seat}
-                  musicPlaying={occupied && seat.user_id === musicOwnerId}
-                  size={seatSize}
-                  isSelf={occupied && seat.user_id === userId}
-                  isOwner={occupied && seat.user_id === ownerId}
-                  isMod={occupied && moderators.includes(seat.user_id)}
-                  speaking={occupied && (seat.user_id === userId ? localSpeaking : speakingIds.includes(seat.user_id))}
-                  gender={occupied ? seatProfiles[seat.user_id]?.gender : ''}
-                  onSelect={onSeatClick}
-                  accent={accent}
-                  gifted={occupied ? gifted[seat.user_id] : undefined}
-                  micMuted={!occupied && !!seat?.muted}
-                />
-                {boardActive && (
-                  <VoiceSeatScore value={occupied ? scores[seat.user_id] || 0 : 0} size={seatSize} />
-                )}
-
-              </div>
-            );
-          })}
+    <div ref={wrapRef} className={`w-full ${many ? 'no-scrollbar overflow-x-auto overflow-y-hidden' : ''}`}>
+      <div className={`flex flex-col items-center ${many ? 'w-max min-w-full' : 'w-full'}`} style={{ rowGap }}>
+        {rows.map((row, rowIndex) => (
+          <div key={rowIndex} className="flex flex-col items-center gap-1">
+            <div className="flex items-start justify-center" style={{ columnGap: gap }}>
+              {row.map((index) => {
+                const seat = seats[index];
+                const occupied = !!seat?.user_id;
+                const seatSize = featureTop && row.length === 1 ? topSize : size;
+                return (
+                  <div key={index} className="flex flex-col items-center">
+                    <VoiceSeat
+                      index={index}
+                      seat={seat}
+                      musicPlaying={occupied && seat.user_id === musicOwnerId}
+                      size={seatSize}
+                      isSelf={occupied && seat.user_id === userId}
+                      isOwner={occupied && seat.user_id === ownerId}
+                      isMod={occupied && moderators.includes(seat.user_id)}
+                      speaking={occupied && (seat.user_id === userId ? localSpeaking : speakingIds.includes(seat.user_id))}
+                      gender={occupied ? seatProfiles[seat.user_id]?.gender : ''}
+                      onSelect={onSeatClick}
+                      accent={accent}
+                      gifted={occupied ? gifted[seat.user_id] : undefined}
+                      micMuted={!occupied && !!seat?.muted}
+                    />
+                    {boardActive && (
+                      <VoiceSeatScore value={occupied ? scores[seat.user_id] || 0 : 0} size={seatSize} />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }
