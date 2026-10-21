@@ -1,0 +1,59 @@
+/* Hediye klipi: gerçek görüntü kareleri video gibi akar. */
+
+/* Ana kare her zaman görünür, yavaşça yaklaşır. */
+.gift-clip-hero {
+  animation: gift-clip-hero 5.2s ease-in-out infinite;
+  will-change: transform;
+}
+@keyframes gift-clip-hero {
+  0%, 100% { transform: scale(1.04); }
+  50% { transform: scale(1.16); }
+}
+
+/* İkinci kare ortada devreye girer, sonra ana kareye döner. */
+.gift-clip-shot {
+  opacity: 0;
+  animation: gift-clip-shot 5.2s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+@keyframes gift-clip-shot {
+  0%, 4% { opacity: 0; transform: scale(1.05); }
+  12% { opacity: 1; }
+  44% { opacity: 1; transform: scale(1.15); }
+  52% { opacity: 0; transform: scale(1.17); }
+  100% { opacity: 0; transform: scale(1.05); }
+}
+
+/* Kısa ışık parlaması: sahne ilk açıldığında çizgi film değil, kamera açılışı gibi. */
+.gift-clip-flash {
+  background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.85), transparent 62%);
+  animation: gift-clip-flash 1s ease-out forwards;
+}
+@keyframes gift-clip-flash {
+  0% { opacity: 0.85; }
+  100% { opacity: 0; }
+}
+
+/* Objektif üstünde gezinen ışık şeridi. */
+.gift-clip-sweep {
+  background: linear-gradient(112deg, transparent 34%, rgba(255, 255, 255, 0.22) 48%, transparent 62%);
+  background-size: 260% 260%;
+  animation: gift-clip-sweep 4.6s ease-in-out infinite;
+}
+@keyframes gift-clip-sweep {
+  0% { background-position: 130% 0; }
+  70%, 100% { background-position: -50% 0; }
+}
+
+/* Hafif film grenli doku. */
+.gift-clip-grain {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+  animation: gift-clip-grain 0.9s steps(3) infinite;
+}
+@keyframes gift-clip-grain {
+  0% { transform: translate3d(0, 0, 0); }
+  33% { transform: translate3d(-2%, 1.5%, 0); }
+  66% { transform: translate3d(1.5%, -1%, 0); }
+  100% { transform: translate3d(0, 0, 0); }
+}
