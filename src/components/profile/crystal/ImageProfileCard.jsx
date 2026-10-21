@@ -1,18 +1,19 @@
-import { Lock } from 'lucide-react';
+import { Gift } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 
 const CARD_URL = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/bb6785261_IMG_0067.jpg';
 
-// Görsel üzerindeki dokunma alanları (yüzde: sol, üst, genişlik, yükseklik).
+// Görselin üzerindeki dokunma alanları (yüzde: sol, üst, genişlik, yükseklik).
 const ZONES = [
+  ['mic', 10, 55, 25.5, 8.5], ['stand', 37, 55, 26, 8.5], ['lock', 64.5, 55, 25.5, 8.5],
   ['follow', 8, 88, 16, 10], ['chat', 31, 88, 16, 10], ['mention', 54, 88, 16, 10], ['gift', 76, 88, 16, 10],
 ];
 
-const TOP = [
-  ['mic', 10, 55, 25.5, 8.5], ['stand', 37, 55, 26, 8.5],
-];
+export default function ImageProfileCard({ name, avatar, likes, nLevel, vipLevel, joinDate, actions, followNode, self }) {
+  const zones = self
+    ? ZONES.filter(([key]) => key === 'mic' || key === 'stand' || key === 'lock')
+    : ZONES.filter(([key]) => !(key === 'follow' && followNode));
 
-export default function ImageProfileCard({ name, avatar, likes, nLevel, vipLevel, joinDate, actions, followNode }) {
   return (
     <div className="relative w-full select-none" style={{ aspectRatio: '682 / 1024' }}>
       <img src={CARD_URL} alt="" className="absolute inset-0 h-full w-full rounded-2xl object-cover" draggable={false} />
@@ -27,39 +28,36 @@ export default function ImageProfileCard({ name, avatar, likes, nLevel, vipLevel
         <span className="truncate px-1 font-serif text-[clamp(18px,7vw,30px)] tracking-wide text-[#e6eeff] [text-shadow:0_0_10px_#4d8bff]">{name}</span>
       </div>
 
-      <span className="absolute flex items-center justify-center rounded bg-[#1d4fd8] text-[clamp(11px,3.6vw,16px)] font-black text-white" style={{ left: '27%', top: '40.8%', width: '8%', height: '3.6%' }}>{likes}</span>
-      <span className="absolute flex items-center justify-center rounded bg-[#151512] text-[clamp(11px,3.6vw,16px)] font-black text-[#f2ce6b]" style={{ left: '48.5%', top: '40.8%', width: '11%', height: '3.6%' }}>N{nLevel}</span>
-      <span className="absolute flex items-center justify-center rounded bg-[#3a1786] text-[clamp(11px,3.6vw,16px)] font-black text-white" style={{ left: '72%', top: '40.8%', width: '10.5%', height: '3.6%' }}>VIP{vipLevel}</span>
-      <span className="absolute flex items-center justify-end rounded bg-[#0a1a45] pr-1 text-[clamp(11px,3.6vw,16px)] font-black text-white" style={{ left: '62%', top: '49.6%', width: '24%', height: '3.4%' }}>{joinDate || '-'}</span>
+      {/* Seviye şeridi: görseldeki sabit değerlerin üzerine gerçek veriler yazılır */}
+      <div className="absolute flex items-center justify-around rounded-full bg-[#0a1638] font-black" style={{ left: '6%', top: '39.4%', width: '88%', height: '6.4%', fontSize: 'clamp(11px,3.4vw,15px)' }}>
+        <span className="text-[#8fb8ff]">♥ {likes}</span>
+        <span className="text-[#f2ce6b]">N{nLevel}</span>
+        <span className="text-[#c3a6ff]">VIP{vipLevel}</span>
+      </div>
+      <div className="absolute flex items-center justify-center rounded-full bg-[#0a1638]" style={{ left: '10%', top: '48.4%', width: '80%', height: '5.4%' }}>
+        <span className="font-bold text-[#cfe0ff]" style={{ fontSize: 'clamp(10px,3vw,13px)' }}>{joinDate || '-'}</span>
+      </div>
 
-      {/* Kaldırılan yazı satırlarının üzerini kapatır */}
-      <div className="absolute rounded-2xl bg-[#0a1638]" style={{ left: '5%', top: '64%', width: '90%', height: '23%' }} />
+      {self && (
+        <>
+          <div className="absolute rounded-2xl bg-[#0a1638]" style={{ left: '5%', top: '86.5%', width: '90%', height: '13%' }} />
+          <button
+            type="button"
+            onClick={actions.gift}
+            aria-label="Hediye gönder"
+            className="absolute flex items-center justify-center rounded-full border border-[#f5c76b]/70 bg-[#2a1b46]/80 text-[#ffd98a] active:scale-95"
+            style={{ left: '41%', top: '88%', width: '18%', aspectRatio: '1' }}
+          >
+            <Gift className="h-1/2 w-1/2" />
+          </button>
+        </>
+      )}
 
-      {TOP.map(([key, l, t, w, h]) => (
-        <button
-          key={key}
-          type="button"
-          aria-label={key}
-          onClick={actions[key]}
-          className="absolute rounded-xl active:bg-white/15"
-          style={{ left: `${l}%`, top: `${t}%`, width: `${w}%`, height: `${h}%` }}
-        />
-      ))}
-
-      <button
-        type="button"
-        onClick={actions.lock}
-        className="absolute flex items-center justify-center gap-1 rounded-xl border border-[#4f7fd4]/70 bg-[#12234f] font-bold text-[#dfe9ff] active:bg-[#1a2f66]"
-        style={{ left: '64.5%', top: '55%', width: '25.5%', height: '8.5%', fontSize: 'clamp(9px,2.6vw,12px)' }}
-      >
-        <Lock className="h-3 w-3 shrink-0" /> Koltuğu Kilitle
-      </button>
-
-      {followNode && (
+      {!self && followNode && (
         <div className="absolute overflow-hidden opacity-0 [&>*]:h-full [&>*]:w-full" style={{ left: '8%', top: '88%', width: '16%', height: '10%' }}>{followNode}</div>
       )}
 
-      {ZONES.filter(([key]) => !(key === 'follow' && followNode)).map(([key, l, t, w, h]) => (
+      {zones.map(([key, l, t, w, h]) => (
         <button
           key={key}
           type="button"
