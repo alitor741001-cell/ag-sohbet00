@@ -2,7 +2,7 @@ import { MicOff, X } from 'lucide-react';
 import ProfileFrame from '@/components/ProfileFrame';
 
 /** İzleyici listesi: ekranın dibinden yarıya kadar yukarı kayarak açılan kart. */
-export default function VoiceViewerSheet({ open, onClose, participants = [], seats = [], userId, ownerId, moderators = [], onSelect }) {
+export default function VoiceViewerSheet({ open, onClose, participants = [], seats = [], userId, ownerId, moderators = [] }) {
   if (!open) return null;
 
   return (
@@ -26,27 +26,12 @@ export default function VoiceViewerSheet({ open, onClose, participants = [], sea
                   const isOwner = person.user_id === ownerId;
                   const isMod = !isOwner && moderators.includes(person.user_id);
                   return (
-                    <button
+                    <div
                       key={person.user_id}
-                      type="button"
-                      onClick={() => { onClose(); onSelect?.(person.user_id); }}
-                      className="flex w-full items-center gap-2.5 rounded-xl px-2 py-1.5 text-left transition-colors hover:bg-white/5"
+                      className="flex w-full items-center gap-2.5 rounded-xl px-2 py-1.5 text-left"
                     >
-                      <ProfileFrame frame={seat?.frame} avatar={person.avatar} name={person.name} size="xs" frameScale={seat?.frame_scale} />
-                      <span className="min-w-0 flex-1">
-                        <span className="flex items-center gap-1.5">
-                          <span className="truncate text-sm font-bold text-[#F2CE6B]">
-                            {person.name || 'Kullanıcı'}{person.user_id === userId ? ' (Sen)' : ''}
-                          </span>
-                          {isOwner && <span className="shrink-0 rounded bg-red-500/15 px-1.5 text-[9px] font-black text-[#FF8A8A]">KURUCU</span>}
-                          {isMod && <span className="shrink-0 rounded bg-amber-500/15 px-1.5 text-[9px] font-black text-amber-400">YÖNETİCİ</span>}
-                          {person.muted && <MicOff className="h-3.5 w-3.5 shrink-0 text-[#C6A45F]/70" />}
-                        </span>
-                        <span className="block truncate text-[11px] text-[#C6A45F]">
-                          {seat ? `${seatIndex + 1}. koltuk` : 'İzleyici'}
-                        </span>
-                      </span>
-                    </button>
+...
+                    </div>
                   );
                 })}
               </div>

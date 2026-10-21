@@ -31,12 +31,8 @@ export default function RoomProfileSheet({ open, onClose, room, user, moderators
 
   return (
     <VoiceSheet open={open} onClose={onClose} halfHeight title="Oda Profili">
-      {/* Profilim: dokununca kendi profil kartı açılır. */}
-      <button
-        type="button"
-        onClick={() => onOpenProfile?.(user?.id)}
-        className="flex w-full items-center gap-2.5 rounded-2xl border border-white/10 bg-white/[0.06] p-2 text-left transition-transform active:scale-[0.99]"
-      >
+      {/* Profilim: yalnızca bilgi satırı, kart açmaz. */}
+      <div className="flex w-full items-center gap-2.5 rounded-2xl border border-white/10 bg-white/[0.06] p-2 text-left">
         <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/15 bg-white/10">
           {user?.avatar
             ? <Image src={user.avatar} alt="" className="h-full w-full" fittingType="fill" draggable={false} />
@@ -46,7 +42,7 @@ export default function RoomProfileSheet({ open, onClose, room, user, moderators
           <span className="block text-[11px] font-bold uppercase tracking-wide text-white/50">Profilim</span>
           <span className="block truncate text-sm font-bold text-white">{user?.full_name || 'Profilim'}</span>
         </span>
-      </button>
+      </div>
 
       {canMod && !editing && (
         <button

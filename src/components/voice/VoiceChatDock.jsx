@@ -16,7 +16,7 @@ import useMessageProfiles from '@/hooks/useMessageProfiles';
  * klavye iner, akış görünür kalır. Klavye açıkken oda alt bloğu (bu akış + kontrol çubuğu) tek
  * parça hâlinde klavyenin üstüne kayar; oda yerleşimi yeniden akışa girmez.
  */
-export default function VoiceChatDock({ messages = [], onSend, open, onCloseComposer, composerOpen, keyboardOpen = false, chatLocked, currentUserId, ownerId, moderators = [], onOpenProfile, bigGiftNotice, onOpenBigGiftRoom, hiddenUsers = {}, mention = null }) {
+export default function VoiceChatDock({ messages = [], onSend, open, onCloseComposer, composerOpen, keyboardOpen = false, chatLocked, currentUserId, ownerId, moderators = [], bigGiftNotice, onOpenBigGiftRoom, hiddenUsers = {}, mention = null }) {
   const [text, setText] = useState('');
   const [emojiOpen, setEmojiOpen] = useState(false);
   const inputRef = useRef(null);
@@ -126,8 +126,7 @@ export default function VoiceChatDock({ messages = [], onSend, open, onCloseComp
                     </p>
                   );
                 }
-                // Katılma/ayrılma satırına dokununca kişinin tam profil kartı açılır.
-                return <button key={message.id} type="button" onClick={() => onOpenProfile?.(message.user_id)} className="break-words px-2 text-center text-[11px] font-semibold italic text-amber-300 [overflow-wrap:anywhere] [text-shadow:0_0_10px_rgba(251,191,36,0.45)]">{plainText(message.text)}</button>;
+                return <p key={message.id} className="break-words px-2 text-center text-[11px] font-semibold italic text-amber-300 [overflow-wrap:anywhere] [text-shadow:0_0_10px_rgba(251,191,36,0.45)]">{plainText(message.text)}</p>;
               }
               return (
                 <VoiceChatMessage
@@ -137,7 +136,6 @@ export default function VoiceChatDock({ messages = [], onSend, open, onCloseComp
                   ownerId={ownerId}
                   moderators={moderators}
                   currentUserId={currentUserId}
-                  onOpenProfile={onOpenProfile}
                 />
               );
             })}
