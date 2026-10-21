@@ -270,9 +270,10 @@ export default function RoomDiscovery({ shortcuts = null }) {
   };
 
   // Arkadaşının bulunduğu odalar her zaman en üstte görünür.
+  // Sıralama izleyici sayısına göre: en kalabalık oda ilk sırada, izleyici azaldıkça aşağı iner.
   const list = useMemo(
-    () => [...hotRooms].sort((a, b) => Number(hasFriendInside(b)) - Number(hasFriendInside(a))),
-    [hotRooms, friendRoomIds]
+    () => [...hotRooms].sort((a, b) => (b.participants?.length || 0) - (a.participants?.length || 0)),
+    [hotRooms]
   );
   const items = list;
 
