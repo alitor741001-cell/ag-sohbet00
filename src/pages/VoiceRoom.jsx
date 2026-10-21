@@ -37,6 +37,7 @@ import VoicePrivateChatSheet from '@/components/voice/VoicePrivateChatSheet';
 import useRoomMusic from '@/hooks/useRoomMusic';
 import RoomMusicLayer from '@/components/voice/RoomMusicLayer';
 import { takeRoomPrefetch } from '@/lib/roomPrefetch';
+import { rememberRoom } from '@/lib/visitedRooms';
 import useRoomSwipeNav from '@/hooks/useRoomSwipeNav';
 import useVerticalSwipe from '@/hooks/useVerticalSwipe';
 import useOfflineExit from '@/hooks/useOfflineExit';
@@ -66,6 +67,8 @@ export default function VoiceRoom() {
 
   const [room, setRoom] = useState(null);
   const [loading, setLoading] = useState(true);
+  // Odaya girilen yer cihazda tutulur: ana sayfadaki Geçmiş Odalar buradan beslenir.
+  useEffect(() => { rememberRoom(room); }, [room?.id]);
   const [joined, setJoined] = useState(false);
   const [needsPassword, setNeedsPassword] = useState(false);
   const [password, setPassword] = useState('');

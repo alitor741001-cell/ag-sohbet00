@@ -10,6 +10,7 @@ import RoleBadge from '@/components/RoleBadge';
 import ProfileFrame from '@/components/ProfileFrame';
 import { getRoleInfo } from '@/lib/roles';
 import ProfileRoomActions from '@/components/profile/ProfileRoomActions';
+import FollowButton from '@/components/profile/social/FollowButton';
 import useXp from '@/hooks/useXp';
 import XpAvatar from '@/components/xp/XpAvatar';
 import XpStatsCard from '@/components/xp/XpStatsCard';
@@ -51,6 +52,12 @@ export default function UserProfile({ userId, roomIdOverride, onBack, onMessage,
     load();
     const off = subscribeEntity('Friendship', () => load());
     return () => { active = false; off(); };
+  }, [id, me?.id]);
+
+  // Profil açıldığında ziyaret kaydı düşülür: sahibi kimlerin baktığını görebilir.
+  useEffect(() => {
+    if (!me?.id || me.id === id) return;
+    base44.functions.invoke('social-service', { action: 'visit', profile_id: id }).catch(() => {});
   }, [id, me?.id]);
 
   const addFriend = async () => {
@@ -129,6 +136,11 @@ export default function UserProfile({ userId, roomIdOverride, onBack, onMessage,
           {!isSelf && !accountState && relation?.status === 'pending' && <p className="mt-5 text-sm font-semibold text-amber-400">Arkadaşlık isteği bekliyor</p>}
           {!isSelf && !accountState && relation?.status === 'accepted' && <div className="mt-5 flex flex-col items-center gap-3"><p className="text-sm font-semibold text-green-400">Arkadaşsınız</p><button onClick={startChat} className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2 rounded-lg text-sm font-semibold"><MessageCircle className="w-4 h-4" /> Mesaj Yaz</button></div>}
           {!isSelf && !accountState && relation?.status !== 'accepted' && <button onClick={startChat} className="mt-3 rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground">Mesaj Yaz</button>}
+          {!isSelf && !accountState && (
+            <div className="mt-4 w-full max-w-xs">
+              <FollowButton userId={id} />
+            </div>
+          )}
           {!accountState && <ProfileRoomActions userId={id} me={me} roomId={roomId} />}
           {isSelf && <Link to="/profil" className="mt-5 bg-primary text-primary-foreground px-5 py-2 rounded-lg text-sm font-semibold">Profili Düzenle</Link>}
         </div>

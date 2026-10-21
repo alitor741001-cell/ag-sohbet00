@@ -43,6 +43,7 @@ import { isHiddenName } from '@/lib/hiddenUser';
 import XpAvatar from '@/components/xp/XpAvatar';
 import FullUserProfile from '@/components/profile/FullUserProfile';
 import RoomOwnerBadge from '@/components/player/RoomOwnerBadge';
+import { rememberRoom } from '@/lib/visitedRooms';
 
 
 export default function WatchParty() {
@@ -58,6 +59,8 @@ export default function WatchParty() {
   const [directOpen, setDirectOpen] = useState(false);
   const [directTarget, setDirectTarget] = useState(null);
   const [showViewers, setShowViewers] = useState(false);
+  // Odaya girilen yer cihazda tutulur: ana sayfadaki Geçmiş Odalar buradan beslenir.
+  useEffect(() => { rememberRoom(room); }, [room?.id]);
   const [exitOpen, setExitOpen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
@@ -639,7 +642,6 @@ export default function WatchParty() {
         {!chatOpen && !directOpen && <div className="absolute top-[max(env(safe-area-inset-top),0.75rem)] left-3 z-[55] flex items-center gap-2">
           <button onClick={() => setExitOpen(true)} aria-label="Odayı kapat" className="flex items-center justify-center w-9 h-9 rounded-full bg-red-600 text-white active:scale-95 transition"><LogOut className="w-5 h-5" /></button>
           {room?.is_personal && room?.personal_room_code ? <span className="bg-black/60 backdrop-blur-md text-white text-xs font-bold px-2.5 py-1.5 rounded-full border border-white/10 whitespace-nowrap">Kod: {room.personal_room_code}</span> : null}
-          {room?.room_number ? <span className="bg-black/60 backdrop-blur-md text-white text-xs font-bold px-2.5 py-1.5 rounded-full border border-white/10 whitespace-nowrap">Oda No: {room.room_number}</span> : null}
         </div>}
         {!chatOpen && <button onClick={() => { setShowViewers(!showViewers); setShowSettings(false); }} className={`absolute top-[max(env(safe-area-inset-top),0.75rem)] right-3 z-[55] flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-white border border-white/10 backdrop-blur-md transition active:scale-95 ${showViewers ? 'bg-primary/80' : 'bg-black/60'}`}><Eye className="w-4 h-4" /><span>{visibleParticipants.length}</span></button>}
         {!showViewers && (() => {

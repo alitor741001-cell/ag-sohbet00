@@ -8,7 +8,7 @@ import { findProtectedName } from '@/lib/protectedNames';
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import useFriends from '@/hooks/useFriends';
-import BlockedUsers from '@/components/profile/BlockedUsers';
+import SocialListDialog from '@/components/profile/social/SocialListDialog';
 import ProfileHeroCard from '@/components/profile/fantasy/ProfileHeroCard';
 import ProfileStatBar from '@/components/profile/fantasy/ProfileStatBar';
 import ProfileTwinCards from '@/components/profile/fantasy/ProfileTwinCards';
@@ -42,8 +42,10 @@ export default function Profile() {
   const [vipCount, setVipCount] = useState(0);
   const [giftBoxOpen, setGiftBoxOpen] = useState(false);
   const [levelOpen, setLevelOpen] = useState(false);
-  const [blockedOpen, setBlockedOpen] = useState(false);
   const [privacyOpen, setPrivacyOpen] = useState(false);
+  // Takip ve ziyaretçi sayaçları ile açılan liste: takip edilenler, takipçiler, ziyaretçiler.
+  const [social, setSocial] = useState({ following: 0, followers: 0, visitors: 0 });
+  const [socialList, setSocialList] = useState(null);
 
   const [activityOpen, setActivityOpen] = useState(false);
   const [vipBagOpen, setVipBagOpen] = useState(false);
@@ -82,10 +84,21 @@ export default function Profile() {
       .catch(() => {});
   };
 
+  const loadSocial = () => {
+    base44.functions.invoke('social-service', { action: 'stats' })
+      .then((response) => setSocial({
+        following: response.data?.following ?? 0,
+        followers: response.data?.followers ?? 0,
+        visitors: response.data?.visitors ?? 0,
+      }))
+      .catch(() => {});
+  };
+
   useEffect(() => {
     // Ayna hızlı açılış sağlar; bakiye hemen canlı değerle doğrulanır.
     loadSummary();
     loadWallet();
+    loadSocial();
   }, []);
 
   // Cüzdan canlıdır: oyun kazancı, hesaba gelen coin ve hediye harcaması bakiyeye
@@ -194,7 +207,13 @@ export default function Profile() {
         />
 
         <div className="space-y-3 px-4 pt-4">
-          <ProfileStatBar friends={friendCount} />
+          <ProfileStatBar
+            friends={friendCount}
+            following={social.following}
+            followers={social.followers}
+            visitors={social.visitors}
+            onSelect={(key) => (key === 'friends' ? navigate('/arkadaslar') : setSocialList(key))}
+          />
           <ProfileTwinCards
             vipCount={vipCount}
             coins={wallet?.coins ?? null}
@@ -244,7 +263,6 @@ export default function Profile() {
         <ProfileBottomNav
           onSelect={(key) => {
             if (key === 'invite') copyInviteLink();
-            else if (key === 'blocked') setBlockedOpen(true);
             else if (key === 'privacy') setPrivacyOpen(true);
             else if (key === 'settings') openSettingsSection();
           }}
@@ -262,14 +280,7 @@ export default function Profile() {
       />
       <LevelDialog open={levelOpen} onClose={() => setLevelOpen(false)} userId={user.id} />
 
-      <Dialog open={blockedOpen} onOpenChange={(value) => !value && setBlockedOpen(false)}>
-        <DialogContent className="max-w-lg border-[#7dd3fc]/30 bg-[linear-gradient(180deg,#0B2A52,#05122A)] text-white">
-          <DialogHeader>
-            <DialogTitle className="text-[#a5e4ff]">Engellenen Hesaplar</DialogTitle>
-          </DialogHeader>
-          <BlockedUsers />
-        </DialogContent>
-      </Dialog>
+      <SocialListDialog open={!!socialList} kind={socialList} onClose={() => { setSocialList(null); loadSocial(); }} />
 
       <Dialog open={privacyOpen} onOpenChange={(value) => !value && setPrivacyOpen(false)}>
         <DialogContent className="max-w-lg border-[#7dd3fc]/30 bg-[linear-gradient(180deg,#0B2A52,#05122A)] text-white">

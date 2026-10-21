@@ -4,6 +4,7 @@ import { BarChart3, Cake, Check, EyeOff, Film, Gamepad2, Lock, MessageSquare, Mi
 import { Image } from '@/components/ui/image';
 import { youtubeIdFromMovieId } from '@/lib/youtubeTitle';
 import { prefetchRoomCancel, prefetchRoomSoon } from '@/lib/roomPrefetch';
+import { rememberRoom } from '@/lib/visitedRooms';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 
 /** Oda kategorisi kartın sağ üstünde kendi ikonuyla gösterilir. */
@@ -35,7 +36,10 @@ function RoomDiscoveryCard({ room, owner, kind, filmTitle, friendInside }) {
       onPointerMove={locked ? undefined : () => prefetchRoomCancel(room.id)}
       onPointerUp={locked ? undefined : () => prefetchRoomCancel(room.id)}
       onPointerLeave={locked ? undefined : () => prefetchRoomCancel(room.id)}
-      onClick={(event) => { if (locked) event.preventDefault(); }}
+      onClick={(event) => {
+        if (locked) { event.preventDefault(); return; }
+        rememberRoom(room);
+      }}
       aria-disabled={locked || undefined}
       className="media-box-square relative flex aspect-square flex-col overflow-hidden rounded-[20px] bg-[#07162f] transition-transform active:scale-[0.98]"
       style={{

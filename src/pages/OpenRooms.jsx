@@ -127,7 +127,6 @@ export default function OpenRooms() {
           <div className="flex flex-wrap gap-1.5 mt-2">
             {isPersonal && <span className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300"><Lock className="w-2.5 h-2.5" /> Kişisel Oda</span>}
             {isPersonal && r.personal_room_code && <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-mono font-bold">Kod: {r.personal_room_code}</span>}
-            {!isPersonal && r.room_number ? <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-gray-400 font-bold">Oda No: {r.room_number}</span> : null}
             <span className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-gray-400"><Users className="w-2.5 h-2.5" /> {r.participants?.length || 0}/{r.max_users}</span>
             {r.password && <span className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400"><Lock className="w-2.5 h-2.5" /> Kilitli</span>}
           </div>

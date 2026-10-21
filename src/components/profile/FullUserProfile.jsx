@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Ban, Building2, ChevronRight, Loader2, MessageSquare, Mic2, MicOff, Settings, UserPlus } from 'lucide-react';
+import { ArrowLeft, Building2, ChevronRight, Loader2, MessageSquare, Mic2, MicOff, Settings, UserPlus } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import subscribeEntity from '@/components/data/entitySubscriptions';
 import { useToast } from '@/components/ui/use-toast';
@@ -11,6 +11,7 @@ import { agencyApi } from '@/lib/agency';
 import ProfileHeroBlock from '@/components/profile/ProfileHeroBlock';
 import ProfileStatsRow from '@/components/profile/ProfileStatsRow';
 import ProfileIdentityBlock from '@/components/profile/ProfileIdentityBlock';
+import FollowButton from '@/components/profile/social/FollowButton';
 import { AccountStatusMark, ACCOUNT_MARKS, ACCOUNT_STATES, getAccountState } from '@/components/friends/AccountStatusAvatar';
 import { broadcasterState } from '@/lib/broadcaster';
 import useBackDismiss from '@/hooks/useBackDismiss';
@@ -60,6 +61,13 @@ export default function FullUserProfile({
         .catch(() => {});
     }
     return () => { alive = false; off(); };
+  }, [open, userId, hidden, user?.id]);
+
+  // Profil açıldığında ziyaret kaydı düşülür: sahibi kimlerin baktığını görebilir.
+  useEffect(() => {
+    if (!open || !userId || hidden) return;
+    if (!user?.id || userId === user.id) return;
+    base44.functions.invoke('social-service', { action: 'visit', profile_id: userId }).catch(() => {});
   }, [open, userId, hidden, user?.id]);
 
   if (!open || !userId) return null;
@@ -119,17 +127,6 @@ export default function FullUserProfile({
       toast({ title: 'Arkadaşlık isteği gönderildi' });
     } catch (error) {
       toast({ title: 'İşlem başarısız', description: error.response?.data?.error || error.message, variant: 'destructive' });
-    }
-  };
-
-  const blockUser = async () => {
-    try {
-      const blocked = [...new Set([...(user?.blocked_users || []), userId])];
-      await base44.auth.updateMe({ blocked_users: blocked });
-      toast({ title: 'Kullanıcı engellendi' });
-      onClose?.();
-    } catch (error) {
-      toast({ title: 'Engellenemedi', description: error.message, variant: 'destructive' });
     }
   };
 
@@ -252,6 +249,7 @@ export default function FullUserProfile({
 
             {showSocial && (
               <div className="mt-5 space-y-3">
+                <FollowButton userId={userId} accent={palette.accent} />
                 {relation !== 'friend' && (
                   <button
                     type="button"
@@ -302,7 +300,7 @@ export default function FullUserProfile({
               </div>
             )}
 
-            {(footer.length > 0 || showSocial) && (
+            {footer.length > 0 && (
               <div className="mt-5 overflow-hidden rounded-2xl border" style={{ borderColor: palette.soft, background: 'rgba(0,0,0,0.45)' }}>
                 {footer.map((item) => (
                   <button
@@ -317,18 +315,6 @@ export default function FullUserProfile({
                     <ChevronRight className="h-4 w-4 text-white/40" />
                   </button>
                 ))}
-                {showSocial && !hideBlock && (
-                  <button
-                    type="button"
-                    onClick={blockUser}
-                    className="flex w-full items-center gap-3 px-4 py-3.5 text-left text-sm font-bold"
-                    style={{ color: palette.danger }}
-                  >
-                    <Ban className="h-4 w-4" strokeWidth={2} />
-                    <span className="flex-1">Engelle</span>
-                    <ChevronRight className="h-4 w-4 text-white/40" />
-                  </button>
-                )}
               </div>
             )}
 

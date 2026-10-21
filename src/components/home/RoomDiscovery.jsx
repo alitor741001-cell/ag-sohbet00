@@ -9,6 +9,8 @@ import RoomDiscoveryCard from '@/components/home/RoomDiscoveryCard';
 import HomeTopBar from '@/components/home/fantasy/HomeTopBar';
 import PullToRefresh from '@/components/home/PullToRefresh';
 import GameDiscoveryRow from '@/components/home/GameDiscoveryRow';
+import FriendSearchSheet from '@/components/home/FriendSearchSheet';
+import RoomHistory from '@/components/home/RoomHistory';
 import useFriends from '@/hooks/useFriends';
 import useMessageProfiles from '@/hooks/useMessageProfiles';
 import { readRoomList, writeRoomList } from '@/lib/roomListCache';
@@ -38,6 +40,10 @@ export default function RoomDiscovery({ shortcuts = null }) {
   const [titles, setTitles] = useState({});
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState('friends');
+  // Üst şerit iki görünüm arasında geçiş yapar: canlı odalar (Sıcak) ve girilen odaların geçmişi.
+  const [view, setView] = useState('hot');
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [historyVersion, setHistoryVersion] = useState(0);
   // Oyunlar görünümü adresten açılır: alt menüdeki Oyunlar düğmesi ?oyunlar=1 getirir.
   const [searchParams] = useSearchParams();
   const gamesParam = searchParams.get('oyunlar') === '1';
@@ -275,9 +281,20 @@ export default function RoomDiscovery({ shortcuts = null }) {
   }, [tab, friendRooms, otherRooms, friendRoomIds]);
   const items = list;
 
+  // Geçmiş Odalar görünümü: cihazda tutulan oda geçmişi ayrı ekranda listelenir.
+  if (view === 'history') {
+    return (
+      <PullToRefresh onRefresh={refreshList}>
+        <HomeTopBar view="history" onView={setView} onSearch={() => setSearchOpen(true)} />
+        <RoomHistory version={historyVersion} onChange={() => setHistoryVersion((value) => value + 1)} />
+        <FriendSearchSheet open={searchOpen} onClose={() => setSearchOpen(false)} />
+      </PullToRefresh>
+    );
+  }
+
   return (
     <PullToRefresh onRefresh={refreshList}>
-      <HomeTopBar />
+      <HomeTopBar view={view} onView={setView} onSearch={() => setSearchOpen(true)} />
       <div className="mb-3 flex items-center gap-1.5 rounded-2xl border border-[#e8c47c]/25 bg-[#071736]/70 p-1 backdrop-blur">
         <button
           type="button"
@@ -349,6 +366,8 @@ export default function RoomDiscovery({ shortcuts = null }) {
           </div>
         </>
       )}
+
+      <FriendSearchSheet open={searchOpen} onClose={() => setSearchOpen(false)} />
 
       {/* Seçilen oyun tam ekran açılır: oda kurmaya gerek yok. */}
       {gameOpen && gamesEnabled && (

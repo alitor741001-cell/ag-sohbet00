@@ -24,7 +24,7 @@ export default function ProfileTwinCards({ vipCount = 0, coins, onVip, onWallet 
 
       <button type="button" onClick={onWallet} className="flex items-center justify-between gap-2 rounded-xl px-3 py-2 text-left active:scale-[0.98]" style={CARD}>
         <span className="flex min-w-0 flex-col">
-          <span className="font-serif text-xl leading-none lowercase" style={GOLD_TEXT}>wallet</span>
+          <span className="font-serif text-[15px] leading-none" style={GOLD_TEXT}>Hediye Geçmişi</span>
           <span className="mt-1 truncate text-[10px] font-semibold tabular-nums text-white/70">
             {coins === null || coins === undefined ? '— coin' : `${formatCoins(coins)} coin`}
           </span>
