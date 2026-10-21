@@ -18,10 +18,10 @@ export default function CompactRoomActions({ tiles = [], palette }) {
           onClick={item.onClick}
           title={item.label}
           aria-label={item.label}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-white/85 active:scale-95 disabled:opacity-30"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border text-white/85 active:scale-95 disabled:opacity-30"
           style={{ borderColor: palette.soft }}
         >
-          <item.icon className="h-4 w-4" strokeWidth={1.8} />
+          <item.icon className="h-[19px] w-[19px]" strokeWidth={1.8} />
         </button>
       ))}
     </div>

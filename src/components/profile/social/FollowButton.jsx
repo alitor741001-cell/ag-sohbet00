@@ -52,14 +52,14 @@ export default function FollowButton({ userId, accent = '#6fe6dc', variant = 'fu
         onClick={toggle}
         disabled={busy}
         aria-pressed={state.following}
-        className="flex min-w-0 flex-1 basis-[calc(25%-0.35rem)] flex-col items-center gap-1 rounded-xl border px-0.5 py-1.5 text-[9px] font-black leading-tight text-white active:scale-95 disabled:opacity-60"
+        className="flex min-w-0 flex-1 basis-[calc(25%-0.35rem)] flex-col items-center gap-1.5 rounded-2xl border px-1 py-2.5 text-[10px] font-black leading-tight text-white active:scale-95 disabled:opacity-60"
         style={{
           borderColor: accent,
           background: state.following ? 'rgba(0,0,0,0.45)' : 'rgba(111,230,220,0.16)',
           boxShadow: state.following ? 'none' : `0 0 16px -6px ${accent}`,
         }}
       >
-        {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : state.following ? <UserCheck className="h-4 w-4" /> : <UserPlus className="h-4 w-4" />}
+        {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : state.following ? <UserCheck className="h-5 w-5" /> : <UserPlus className="h-5 w-5" />}
         <span className="max-w-full text-center">{state.following ? 'Takip Ediliyor' : 'Takip Et'}</span>
       </button>
     );
