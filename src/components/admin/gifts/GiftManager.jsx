@@ -7,7 +7,7 @@ import { formatK, tierForK, toneColor } from '@/lib/giftTone';
 import { MODEL_KIND_LABEL } from '@/lib/gift3d';
 
 const EMPTY = {
-  name: '', emoji: '🎁', image_url: '', k_value: 10, category: 'Klasik', sort_order: 0, active: true,
+  name: '', emoji: '🎁', image_url: '', k_value: 10, category: 'Normal', sort_order: 0, active: true,
   model_url: '', animation_url: '', model_kind: 'auto',
 };
 

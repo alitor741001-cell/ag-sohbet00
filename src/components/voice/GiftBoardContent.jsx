@@ -1,10 +1,19 @@
 import { useMemo, useState } from 'react';
+import { Crown, Gem, Heart, Star } from 'lucide-react';
 import GiftCard from '@/components/voice/GiftCard';
 import GiftRecipientRow from '@/components/voice/GiftRecipientRow';
 import GiftLevelTicker from '@/components/voice/GiftLevelTicker';
 import GiftBoardFooter from '@/components/voice/GiftBoardFooter';
 import Gift3DPreview from '@/components/voice/Gift3DPreview';
 import { K_UNIT, formatCoins, tierForK, toneColor } from '@/lib/giftTone';
+
+// Kategori sırası ve simgeleri; listede olmayan kategoriler sona eklenir.
+const CATEGORY_ORDER = ['Tümü', 'Normal', 'Romantik', 'Premium', 'Efsanevi'];
+const CATEGORY_ICON = { Tümü: Star, Normal: Heart, Romantik: Heart, Premium: Crown, Efsanevi: Gem };
+const categoryRank = (name) => {
+  const index = CATEGORY_ORDER.indexOf(name);
+  return index === -1 ? CATEGORY_ORDER.length : index;
+};
 
 /** Hediye Tahtası içeriği: kategori sekmeleri, hediye ızgarası, alıcılar ve alt gönderim çubuğu. */
 export default function GiftBoardContent({
@@ -14,7 +23,10 @@ export default function GiftBoardContent({
   const [category, setCategory] = useState('Tümü');
   const [preview, setPreview] = useState(null);
 
-  const categories = useMemo(() => ['Tümü', ...new Set(gifts.map((gift) => gift.category || 'Diğer'))], [gifts]);
+  const categories = useMemo(
+    () => ['Tümü', ...new Set(gifts.map((gift) => gift.category || 'Diğer'))].sort((a, b) => categoryRank(a) - categoryRank(b)),
+    [gifts]
+  );
   const shown = useMemo(
     () => (category === 'Tümü' ? gifts : gifts.filter((gift) => (gift.category || 'Diğer') === category)),
     [gifts, category]
@@ -58,18 +70,27 @@ export default function GiftBoardContent({
             <span className="text-[11px] font-black text-white">{(user?.full_name || '?').trim().charAt(0).toUpperCase()}</span>
           )}
         </span>
-        <div className="no-scrollbar flex min-w-0 flex-1 gap-4 overflow-x-auto">
-          {categories.map((item) => (
-            <button
-              key={item}
-              type="button"
-              onClick={() => setCategory(item)}
-              className={`relative shrink-0 pb-2 text-[13px] transition-colors ${category === item ? 'font-black text-white' : 'font-semibold text-white/45'}`}
-            >
-              {item}
-              {category === item && <span className="absolute inset-x-0.5 bottom-0 h-[2px] rounded-full bg-[#45d6c8]" />}
-            </button>
-          ))}
+        <div className="no-scrollbar flex min-w-0 flex-1 gap-1.5 overflow-x-auto pb-1">
+          {categories.map((item) => {
+            const Icon = CATEGORY_ICON[item];
+            const active = category === item;
+            return (
+              <button
+                key={item}
+                type="button"
+                onClick={() => setCategory(item)}
+                aria-pressed={active}
+                className={`flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1.5 text-[12px] transition ${
+                  active
+                    ? 'border-white/80 bg-white/[0.14] font-black text-white shadow-[0_0_12px_rgba(255,255,255,0.35)]'
+                    : 'border-white/10 bg-white/[0.05] font-semibold text-white/60'
+                }`}
+              >
+                {Icon && <Icon className="h-3.5 w-3.5" fill={item === 'Normal' ? 'currentColor' : 'none'} />}
+                {item}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -78,7 +99,7 @@ export default function GiftBoardContent({
         {shown.length === 0 ? (
           <p className="rounded-xl bg-white/5 px-3 py-3 text-center text-xs text-white/50">Bu kategoride hediye yok.</p>
         ) : (
-          <div className="grid grid-cols-3 gap-2 pb-1">
+          <div className="grid grid-cols-4 gap-1.5 pb-1">
             {shown.map((item) => (
               <GiftCard key={item.id} gift={item} selected={giftId === item.id} onSelect={onSelectGift} onPreview={setPreview} />
             ))}
