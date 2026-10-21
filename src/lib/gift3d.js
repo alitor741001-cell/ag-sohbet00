@@ -16,6 +16,7 @@ const RULES = [
   [/kutu|box/i, 'giftbox'],
   [/çikolata|chocolate/i, 'chocolate'],
   [/mektup|letter/i, 'letter'],
+  [/sonsuz aşk|sonsuz ask/i, 'love'],
   [/pasta|cake/i, 'cake'],
   [/yıldız|star/i, 'star'],
   [/kupa|trophy/i, 'trophy'],
@@ -27,6 +28,9 @@ const RULES = [
   [/saat|watch/i, 'watch'],
   [/külçe|ingot/i, 'ingot'],
   [/asa|wand/i, 'wand'],
+  [/panter|panther/i, 'panther'],
+  [/ejderha|dragon/i, 'dragon'],
+  [/gökkuşağı|gokkusagi|rainbow/i, 'rainbow'],
 ];
 
 /** Hediye için 3D model türü (ör. heart, rocket). */

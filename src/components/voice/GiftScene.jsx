@@ -3,7 +3,8 @@ import ProfileFrame from '@/components/ProfileFrame';
 import VoiceSeatScore from '@/components/voice/VoiceSeatScore';
 import Gift3DStage from '@/components/voice/three/Gift3DStage';
 import GiftClipStage from '@/components/voice/GiftClipStage';
-import { giftClipFor } from '@/lib/giftClips';
+import GiftVideoStage from '@/components/voice/GiftVideoStage';
+import { giftClipFor, giftVideoFor } from '@/lib/giftClips';
 
 /**
  * Hediye gönderildiğinde odadaki herkes için gerçek görüntülü sinematik klip oynar.
@@ -15,6 +16,7 @@ export default function GiftScene({ alert, tiers = [], gifts = [] }) {
 
   const record = gifts.find((item) => item.id === alert.giftId) || null;
   const color = toneColor(tierForK(tiers, alert.kValue || 0));
+  const video = giftVideoFor(record);
   const clip = giftClipFor({ name: alert.giftName, model_kind: record?.model_kind || 'auto' });
   const repeat = Number(alert.repeat) || 1;
   const people = Number(alert.count) || 1;
@@ -25,7 +27,9 @@ export default function GiftScene({ alert, tiers = [], gifts = [] }) {
 
   return (
     <div className="pointer-events-none absolute inset-0 z-[200] overflow-hidden bg-black">
-      {clip ? (
+      {video ? (
+        <GiftVideoStage src={video} poster={clip?.[0]} color={color} />
+      ) : clip ? (
         <GiftClipStage frames={clip} color={color} />
       ) : (
         <>
