@@ -3,6 +3,10 @@ import { Loader2, UserCheck, UserPlus } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useToast } from '@/components/ui/use-toast';
 import { useCurrentUser } from '@/lib/useCurrentUser';
+import CompactActionTile from '@/components/profile/compact/CompactActionTile';
+
+// Kristal düğme yalnızca palet alanlarını kullanır.
+const FOLLOW_TILE_PALETTE = {};
 
 /** Takip Et / Takipten Çık: sayaçla birlikte, profil açılan her yerde aynı görünür.
  *  variant="tile" kompakt profil kartının alt işlem şeridinde küçük kare düğme olarak gösterir. */
@@ -47,21 +51,14 @@ export default function FollowButton({ userId, accent = '#6fe6dc', variant = 'fu
 
   if (variant === 'tile') {
     return (
-      <button
-        type="button"
+      <CompactActionTile
+        icon={state.following ? UserCheck : UserPlus}
+        label={state.following ? 'Takip Ediliyor' : 'Takip Et'}
+        active={state.following}
+        loading={busy}
         onClick={toggle}
-        disabled={busy}
-        aria-pressed={state.following}
-        className="flex min-w-0 flex-1 basis-[calc(25%-0.35rem)] flex-col items-center gap-1.5 rounded-2xl border px-1 py-2.5 text-[10px] font-black leading-tight text-white active:scale-95 disabled:opacity-60"
-        style={{
-          borderColor: accent,
-          background: state.following ? 'rgba(0,0,0,0.45)' : 'rgba(111,230,220,0.16)',
-          boxShadow: state.following ? 'none' : `0 0 16px -6px ${accent}`,
-        }}
-      >
-        {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : state.following ? <UserCheck className="h-5 w-5" /> : <UserPlus className="h-5 w-5" />}
-        <span className="max-w-full text-center">{state.following ? 'Takip Ediliyor' : 'Takip Et'}</span>
-      </button>
+        palette={{ ...FOLLOW_TILE_PALETTE, glow: accent, accent }}
+      />
     );
   }
 

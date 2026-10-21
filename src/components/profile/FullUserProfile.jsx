@@ -381,7 +381,7 @@ export default function FullUserProfile({
       <CompactRoomActions tiles={tiles} palette={palette} />
 
       {/* Alt işlem şeridi: takip, arkadaşlık, bahset, sohbet, hediye ve oda işlemleri */}
-      <div className="mt-2 flex flex-wrap items-stretch gap-1.5">
+      <div className="mt-2 grid grid-cols-4 gap-1.5">
         {showSocial && <FollowButton variant="tile" userId={userId} accent={palette.accent} />}
         {showSocial && relation !== 'friend' && (
           <CompactActionTile
@@ -415,6 +415,7 @@ export default function FullUserProfile({
             palette={palette}
             label={item.label}
             danger={item.danger}
+            tone={item.key === 'gift' ? 'rose' : 'ice'}
             onClick={item.onClick}
           />
         ))}

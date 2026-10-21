@@ -16,12 +16,22 @@ export default function CompactProfileHero({
   return (
     <div className="flex flex-col items-center">
       <div className="relative">
+        {/* Buz kristali çerçeve: dış ışıma, katmanlı halkalar ve yanlarda kristal kanat uçları. */}
+        <span aria-hidden className="pointer-events-none absolute -inset-2 rounded-full" style={{ boxShadow: '0 0 32px -6px rgba(120,196,246,0.9)' }} />
+        <span aria-hidden className="pointer-events-none absolute -left-[9px] top-1/2 h-2 w-2 -translate-y-1/2 rotate-45 rounded-[2px] border border-[#cfeaff]/70 bg-[#1b3f63]" />
+        <span aria-hidden className="pointer-events-none absolute -right-[9px] top-1/2 h-2 w-2 -translate-y-1/2 rotate-45 rounded-[2px] border border-[#cfeaff]/70 bg-[#1b3f63]" />
+        <span aria-hidden className="pointer-events-none absolute left-1/2 -top-[7px] h-2 w-2 -translate-x-1/2 rotate-45 rounded-[2px] border border-[#eaf9ff]/80 bg-[#2a5c86]" />
         <div
-          className="rounded-full p-[2.5px]"
-          style={{ background: `linear-gradient(180deg, ${palette.accent2}, ${palette.accent} 62%, ${palette.accent2})`, boxShadow: `0 0 26px -6px ${palette.glow}` }}
+          className="relative rounded-full p-[3px]"
+          style={{
+            background: 'linear-gradient(158deg, #f2fbff 0%, #a8d8f5 26%, #3576b8 58%, #d9f2ff 82%, #6aa9e0 100%)',
+            boxShadow: '0 0 22px -4px rgba(120,196,246,0.85)',
+          }}
         >
-          <div className="rounded-full bg-black/70 p-[3px]">
-            <ProfileFrame avatar={avatar} name={name} size="xl" />
+          <div className="rounded-full p-[2px]" style={{ background: 'linear-gradient(180deg, #0b1f33, #050c16)' }}>
+            <div className="rounded-full p-[2px]" style={{ background: `linear-gradient(180deg, ${palette.accent2}, ${palette.accent})` }}>
+              <ProfileFrame avatar={avatar} name={name} size="xl" />
+            </div>
           </div>
         </div>
         <span
@@ -53,9 +63,15 @@ export default function CompactProfileHero({
 
       {/* Cinsiyet + yaş ve varsa ajans/yayıncı etiketleri tek satırda. */}
       <div className="mt-1 flex flex-wrap items-center justify-center gap-1">
+        {/* Cinsiyet + yaş: referanstaki pembe-altın rozet dili. */}
         <span
-          className="flex items-center gap-1 rounded-full border px-2 py-[2px] text-[10px] font-bold"
-          style={{ borderColor: palette.accent, color: palette.accent, background: 'rgba(0,0,0,0.5)' }}
+          className="flex items-center gap-1 rounded-full border px-[7px] py-[2px] text-[10px] font-black"
+          style={{
+            borderColor: '#e5c05a',
+            color: '#fff0f6',
+            background: 'linear-gradient(160deg, #f7a8c8, #d15b8d)',
+            boxShadow: '0 0 12px -4px rgba(244,143,177,0.9)',
+          }}
         >
           {palette.symbol} {age === null || age === undefined ? genderLabel : age}
         </span>
@@ -87,33 +103,41 @@ export default function CompactProfileHero({
         </span>
       </div>
 
-      {/* Rozetler: seviye, N, hediye alış. */}
-      <div className="mt-2 flex flex-wrap items-center justify-center gap-1">
-        {level > 0 && (
-          <span
-            className="flex items-center gap-1 rounded-full border px-2 py-[1px] text-[10px] font-black tabular-nums"
-            style={{ borderColor: palette.accent2, color: palette.accent2, background: 'rgba(0,0,0,0.5)', boxShadow: `0 0 12px -4px ${palette.glow}` }}
-          >
-            <Star className="h-3 w-3" fill="currentColor" /> LVL {level}
-          </span>
-        )}
-        {nLevel > 0 && (
-          <span
-            className="flex items-center gap-1 rounded-full border px-2 py-[1px] text-[10px] font-black tabular-nums"
-            style={{ borderColor: '#cfd8dc', color: '#fff', background: '#4b664d' }}
-          >
-            <Shield className="h-3 w-3" fill="currentColor" /> N{nLevel}
-          </span>
-        )}
-        {receivedLevel > 0 && (
-          <span
-            className="flex items-center gap-1 rounded-full border px-2 py-[1px] text-[10px] font-black tabular-nums text-white"
-            style={{ borderColor: palette.accent, background: receivedColor(receivedTier) }}
-          >
-            <Heart className="h-3 w-3" fill="currentColor" /> {receivedLevel}
-          </span>
-        )}
-      </div>
+      {/* Rozetler: referanstaki gibi etiketli, buz mavisi çerçeveli kutu. */}
+      {(level > 0 || nLevel > 0 || receivedLevel > 0) && (
+        <div
+          className="mt-2 flex w-full items-center gap-1.5 rounded-xl border px-2 py-1"
+          style={{ borderColor: 'rgba(127,182,221,0.45)', background: 'rgba(13,43,69,0.62)' }}
+        >
+          <span className="shrink-0 text-[9px] font-bold text-[#9fc7e6]">Rozetler:</span>
+          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1">
+            {level > 0 && (
+              <span
+                className="flex items-center gap-1 rounded-full border px-2 py-[1px] text-[10px] font-black tabular-nums"
+                style={{ borderColor: palette.accent2, color: palette.accent2, background: 'rgba(0,0,0,0.5)', boxShadow: `0 0 12px -4px ${palette.glow}` }}
+              >
+                <Star className="h-3 w-3" fill="currentColor" /> LVL {level}
+              </span>
+            )}
+            {nLevel > 0 && (
+              <span
+                className="flex items-center gap-1 rounded-full border px-2 py-[1px] text-[10px] font-black tabular-nums"
+                style={{ borderColor: '#cfd8dc', color: '#fff', background: '#4b664d' }}
+              >
+                <Shield className="h-3 w-3" fill="currentColor" /> N{nLevel}
+              </span>
+            )}
+            {receivedLevel > 0 && (
+              <span
+                className="flex items-center gap-1 rounded-full border px-2 py-[1px] text-[10px] font-black tabular-nums text-white"
+                style={{ borderColor: palette.accent, background: receivedColor(receivedTier) }}
+              >
+                <Heart className="h-3 w-3" fill="currentColor" /> {receivedLevel}
+              </span>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
