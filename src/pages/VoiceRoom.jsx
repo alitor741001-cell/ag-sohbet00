@@ -848,7 +848,7 @@ export default function VoiceRoom() {
   // Hediye tahtası açıkken profiller çoklu seçilir — kişi kendini de seçebilir.
   const roomProfileActions = useVoiceRoomProfileActions({
     seats, participants, canMod, userId: user?.id, seated, voice, invokeVoice, toast, toggleMuteFor,
-    openGifts, setSelectedIds, setMentionTarget, setChatOpen, setComposerOpen, setDmUserId,
+    openGifts, setSelectedIds, setMentionTarget, setChatOpen, setComposerOpen, setDmUserId, kickFromRoom,
   });
 
   // Koltuk, sohbet satırı ve izleyici listesi aynı merkezi profil kartını açar.

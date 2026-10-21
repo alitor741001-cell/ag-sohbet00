@@ -16,6 +16,7 @@ import { AccountStatusMark, ACCOUNT_MARKS, ACCOUNT_STATES, getAccountState } fro
 import { broadcasterState } from '@/lib/broadcaster';
 import { useRoomProfileActions } from '@/lib/roomProfileActions';
 import useBackDismiss from '@/hooks/useBackDismiss';
+import VoiceFantasyCard from '@/components/profile/VoiceFantasyCard';
 
 /**
  * Uygulamadaki tek profil kartı: kadın kartı pembe/altın, erkek kartı mavi/altın tonundadır.
@@ -327,6 +328,13 @@ export default function FullUserProfile({
         </div>
       )}
     </>
+  );
+
+  if (room?.kind === 'voice') return (
+    <VoiceFantasyCard profile={profile} hidden={hidden} name={shownName} avatar={banned ? ACCOUNT_STATES.banned.image : shownAvatar}
+      role={roleLabel} palette={palette} room={room} userId={userId} isSelf={isSelf} onClose={onClose} onMessage={onMessage}
+      statusContent={statusContent} memberId={memberId} genderLabel={genderLabel} age={age} badge={badge}
+      joinDate={formatDate(profile?.created_date)} copied={copied} onCopyId={copyId} />
   );
 
   return (

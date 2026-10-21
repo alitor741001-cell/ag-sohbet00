@@ -6,9 +6,12 @@ import { useMemo } from 'react';
  */
 export default function useVoiceRoomProfileActions({
   seats, participants, canMod, userId, seated, voice, invokeVoice, toast, toggleMuteFor,
-  openGifts, setSelectedIds, setMentionTarget, setChatOpen, setComposerOpen, setDmUserId,
+  openGifts, setSelectedIds, setMentionTarget, setChatOpen, setComposerOpen, setDmUserId, kickFromRoom,
 }) {
   return useMemo(() => ({
+    kind: 'voice',
+    canModerate: canMod,
+    kick: kickFromRoom,
     seatFor: (targetId) => (targetId ? seats.findIndex((seat) => seat?.user_id === targetId) : -1),
     isLocked: (index) => !!seats[index]?.locked,
     lockSeat: (index, locked) => invokeVoice({ action: 'seat-lock', seat_index: index, locked }),
@@ -43,5 +46,5 @@ export default function useVoiceRoomProfileActions({
       openGifts();
     },
     message: (targetId) => { if (targetId) setDmUserId(targetId); },
-  }), [seats, participants, canMod, userId, seated, voice, invokeVoice, toast, toggleMuteFor, openGifts, setSelectedIds, setMentionTarget, setChatOpen, setComposerOpen, setDmUserId]);
+  }), [seats, participants, canMod, userId, seated, voice, invokeVoice, toast, toggleMuteFor, openGifts, setSelectedIds, setMentionTarget, setChatOpen, setComposerOpen, setDmUserId, kickFromRoom]);
 }

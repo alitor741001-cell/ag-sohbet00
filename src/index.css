@@ -2,6 +2,25 @@
 @tailwind components;
 @tailwind utilities;
 
+:root, .dark {
+  --fantasy-gold: 42 80% 74%;
+  --fantasy-text: 40 50% 96%;
+  --fantasy-princess: 330 85% 72%;
+  --fantasy-dragon: 202 95% 72%;
+  --fantasy-rose-surface: 315 46% 10%;
+  --fantasy-blue-surface: 221 65% 10%;
+  --fantasy-veil: 225 65% 4%;
+}
+.voice-fantasy-card { --fantasy-hue: var(--fantasy-dragon); --fantasy-surface: var(--fantasy-blue-surface); --fantasy-accent-color: hsl(var(--fantasy-hue)); background: radial-gradient(ellipse at top, hsl(var(--fantasy-hue) / .15), transparent 70%), hsl(var(--fantasy-surface)); }
+.voice-fantasy-card[data-fantasy="princess"] { --fantasy-hue: var(--fantasy-princess); --fantasy-surface: var(--fantasy-rose-surface); }
+.voice-fantasy-card[data-fantasy="masked"] { --fantasy-hue: var(--fantasy-gold); }
+.voice-fantasy-hero { background: hsl(var(--fantasy-surface)); }
+.voice-fantasy-shade { background: linear-gradient(to bottom, transparent, hsl(var(--fantasy-surface) / .35) 50%, hsl(var(--fantasy-surface))); }
+.voice-fantasy-backdrop { background: hsl(var(--fantasy-veil) / .65); }
+.voice-fantasy-button { border: 1px solid hsl(var(--fantasy-hue) / .35); background: linear-gradient(145deg, hsl(var(--fantasy-hue) / .14), hsl(var(--fantasy-veil) / .7)); box-shadow: inset 0 1px 0 hsl(var(--fantasy-gold) / .1); }
+.voice-fantasy-button:active { border-color: hsl(var(--destructive)); box-shadow: 0 0 16px hsl(var(--destructive) / .4); }
+.voice-fantasy-gift { color: hsl(var(--fantasy-gold)); border-color: hsl(var(--fantasy-gold) / .6); background: linear-gradient(135deg, hsl(var(--fantasy-princess) / .23), hsl(var(--fantasy-gold) / .12)); }
+
 @layer base {
   :root {
     /* AYDINLIK TEMA */
