@@ -9,7 +9,7 @@ import { HIDDEN_AVATAR_URL } from '@/lib/hiddenUser';
 import { formatDate } from '@/components/profile/genderPalette';
 import { agencyApi } from '@/lib/agency';
 import FollowButton from '@/components/profile/social/FollowButton';
-import CrystalProfileCard from '@/components/profile/crystal/CrystalProfileCard';
+
 import ReferenceProfileCard from '@/components/profile/crystal/ReferenceProfileCard';
 import CrystalCircleButton from '@/components/profile/crystal/CrystalCircleButton';
 import { crystalSkin } from '@/components/profile/crystal/crystalTheme';
@@ -207,32 +207,7 @@ export default function FullUserProfile({
     onClose?.();
   };
 
-  const header = (
-    <header className="flex items-center justify-between">
-      <button
-        type="button"
-        onClick={onClose}
-        className="flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-bold text-white"
-        style={{ borderColor: skin.edge, background: 'rgba(0,0,0,0.45)' }}
-      >
-        <ArrowLeft className="h-4 w-4" /> Geri
-      </button>
-      <div className="flex items-center gap-2">
-        {muted && <MicOff className="h-4 w-4" style={{ color: skin.glow }} />}
-        {isSelf && !hideSettings && (
-          <button
-            type="button"
-            onClick={() => { onClose?.(); navigate('/profil?tab=settings'); }}
-            aria-label="Profil ayarları"
-            className="flex h-9 w-9 items-center justify-center rounded-full border text-white"
-            style={{ borderColor: skin.edge, background: 'rgba(0,0,0,0.45)' }}
-          >
-            <Settings className="h-4 w-4" />
-          </button>
-        )}
-      </div>
-    </header>
-  );
+
 
   // Yükleniyor ve hesap durumu ekranları kartın yerini alır.
   const statusContent = loading ? (
@@ -248,30 +223,7 @@ export default function FullUserProfile({
   ) : null;
 
 
-  // Üç kutu: Mik aç · Koltuğu kilitle (tıklanan kişinin koltuğu) · Koltuğu kilitle (kendi koltuğum).
-  const seatLockIcon = (index) => (index >= 0 && room?.isLocked(index) ? Unlock : Lock);
-  const seatLockLabel = (index) => (index >= 0 && room?.isLocked(index) ? 'Kilidi aç' : 'Koltuğu kilitle');
-  const rectItems = [
-    { key: 'mic', icon: micMuted ? MicOff : Mic, label: micMuted ? 'Mik aç' : 'Mik kapat', onClick: toggleMic },
-    { key: 'lock-target', icon: seatLockIcon(targetSeat), label: seatLockLabel(targetSeat), onClick: () => toggleSeatLock(targetSeat, userId) },
-    { key: 'lock-self', icon: seatLockIcon(mySeat), label: seatLockLabel(mySeat), onClick: () => toggleSeatLock(mySeat, user?.id) },
-  ];
-
-  // İki geniş bar: Hediye gönder · Bahset.
-  const wideItems = [
-    { key: 'gift', icon: Gift, label: 'Hediye gönder', onClick: sendGift },
-    { key: 'mention', icon: AtSign, label: 'Bahset', onClick: mention },
-  ];
-
-  // Dört yuvarlak: Bahset · Takip Ediliyor · Sohbet · Hediye.
-  const circleNodes = [
-    <CrystalCircleButton key="mention" icon={AtSign} label="Bahset" tone={tone} onClick={mention} />,
-    showSocial ? <FollowButton key="follow" variant="circle" userId={userId} tone={tone} /> : null,
-    !isSelf ? <CrystalCircleButton key="chat" icon={MessageSquare} label="Sohbet" tone={tone} onClick={openChat} /> : null,
-    <CrystalCircleButton key="gift" icon={Gift} label="Hediye" tone={tone} onClick={sendGift} />,
-  ].filter(Boolean);
-
-  // Referansın dışındaki ikincil işlemler ayrı satırda kalır (arkadaş ekle, davet, özel kutular).
+  // Mevcut ikincil işlemler oda dışındaki kartta korunur.
   const extraNodes = [
     showSocial && relation !== 'friend' ? (
       <CrystalCircleButton
@@ -301,73 +253,29 @@ export default function FullUserProfile({
     <div className={`fixed inset-0 z-[300] flex items-end justify-center ${roomActions ? '' : 'sm:items-center'}`}>
       <button type="button" aria-label="Kapat" onClick={onClose} className="absolute inset-0 w-full bg-black/65" />
       <div
-        className={`animate-sheet-up relative flex w-full flex-col overflow-y-auto overscroll-contain rounded-t-[26px] pb-[max(0.6rem,env(safe-area-inset-bottom))] sm:mb-6 sm:rounded-[26px] ${roomActions ? 'max-w-[min(560px,100%)] px-0 pt-0' : 'max-w-[400px] border-t-2 px-3 pt-2 shadow-[0_-8px_30px_rgba(0,0,0,0.75)] sm:border-2'}`}
-        style={roomActions ? { maxHeight: 'calc(var(--app-height, 100dvh) - 4px)' } : {
-          background: skin.bg,
-          borderColor: skin.edge,
-          maxHeight: 'calc(var(--app-height, 100dvh) - 4px)',
-          boxShadow: `0 -8px 30px rgba(0,0,0,0.75), inset 0 0 40px -20px ${skin.glow}`,
-        }}
+        className="animate-sheet-up relative flex w-full max-w-[480px] flex-col overflow-y-auto overscroll-contain pb-[env(safe-area-inset-bottom)]"
+        style={{ maxHeight: 'calc(var(--app-height, 100dvh) - 4px)' }}
       >
-        {!roomActions && header}
-        {statusContent || (roomActions ? (
-          <ReferenceProfileCard
-            name={shownName}
-            avatar={banned ? ACCOUNT_STATES.banned.image : shownAvatar}
-            likes={likes}
-            nLevel={profile?.n_level || 0}
-            vipLevel={profile?.vip_level || 0}
-            giftSentLevel={profile?.gift_sent_level || 0}
-            giftReceivedLevel={profile?.gift_received_level || 0}
-            memberId={memberId}
-            age={age}
-            gender={profile?.gender}
-            agency={profile?.agency_name}
-            slogan={profile?.slogan}
-            roleLabel={roleLabel}
-            onClose={onClose}
-            onShare={copyId}
-            self={isSelf}
-            followNode={showSocial ? <FollowButton variant="circle" userId={userId} tone={tone} /> : null}
-            actions={{
-              mic: toggleMic,
-              stand: () => { if (room?.canControl(userId)) { room.standUp(userId); onClose?.(); } else toast({ title: 'Yetki gerekli', variant: 'destructive' }); },
-              profile: () => { onClose?.(); navigate(`/kullanici/${userId}`); },
-              lock: () => toggleSeatLock(targetSeat >= 0 ? targetSeat : mySeat, targetSeat >= 0 ? userId : user?.id),
-              gift: sendGift,
-              gift2: sendGift,
-              mention,
-              mention2: mention,
-              chat: openChat,
-            }}
-          />
-        ) : (
-          <CrystalProfileCard
-            name={shownName}
-            avatar={banned ? ACCOUNT_STATES.banned.image : shownAvatar}
-            tone={tone}
-            vipLevel={profile?.vip_level || 0}
-            genderSymbol={genderSymbol}
-            statusLabel={banned ? ACCOUNT_MARKS.banned : ''}
-            roleLabel={roleLabel}
-            likes={likes}
-            nLevel={profile?.n_level || 0}
-            joinDate={formatDate(profile?.created_date)}
-            memberId={memberId}
-            copied={copied}
-            onCopyId={copyId}
-            country={hidden ? '' : badge.country}
-            flag={badge.flag}
-            rectItems={rectItems}
-            wideItems={wideItems}
-            circleNodes={circleNodes}
-            extraNodes={extraNodes}
-            slogan={profile?.slogan || 'HER ZAMAN DAHA GÜÇLÜ'}
-            signature={profile?.signature || profile?.status_message || 'Sen Özelsin'}
-            infoRows={info}
-            hidden={hidden}
-          />
-        ))}
+        {statusContent || <ReferenceProfileCard
+          name={shownName}
+          avatar={banned ? ACCOUNT_STATES.banned.image : shownAvatar}
+          nLevel={profile?.n_level || 0}
+          vipLevel={profile?.vip_level || 0}
+          giftSentLevel={profile?.gift_sent_level || 0}
+          giftReceivedLevel={profile?.gift_received_level || 0}
+          memberId={memberId}
+          age={age}
+          gender={profile?.gender}
+          agency={profile?.agency_name}
+          country={hidden ? '' : badge.country}
+          flag={hidden ? '' : badge.flag}
+          onClose={onClose}
+          onCopyId={copyId}
+          self={isSelf}
+          followNode={showSocial ? <FollowButton variant="reference" userId={userId} /> : null}
+          actions={{ gift: sendGift, mention, chat: openChat }}
+        />}
+        {!roomActions && !statusContent && extraNodes.length > 0 && <div className="flex flex-wrap justify-center gap-3 py-2">{extraNodes}</div>}
       </div>
     </div>
   );
