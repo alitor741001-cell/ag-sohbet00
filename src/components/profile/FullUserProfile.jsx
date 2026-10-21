@@ -11,6 +11,7 @@ import { agencyApi } from '@/lib/agency';
 import ProfileHeroBlock from '@/components/profile/ProfileHeroBlock';
 import ProfileStatsRow from '@/components/profile/ProfileStatsRow';
 import ProfileIdentityBlock from '@/components/profile/ProfileIdentityBlock';
+import VoiceImageCard from '@/components/profile/voice/VoiceImageCard';
 import FollowButton from '@/components/profile/social/FollowButton';
 import { AccountStatusMark, ACCOUNT_MARKS, ACCOUNT_STATES, getAccountState } from '@/components/friends/AccountStatusAvatar';
 import { broadcasterState } from '@/lib/broadcaster';
@@ -35,6 +36,13 @@ export default function FullUserProfile({
   const [relation, setRelation] = useState('');
   const [copied, setCopied] = useState(false);
   const [inviteSent, setInviteSent] = useState(false);
+  const [following, setFollowing] = useState(false);
+
+  useEffect(() => {
+    if (!open || !roomActions || !userId || hidden || userId === user?.id) return;
+    base44.functions.invoke('social-service', { action: 'state', user_id: userId })
+      .then((res) => setFollowing(!!res.data?.following)).catch(() => {});
+  }, [open, roomActions, userId, hidden, user?.id]);
 
   // Profil kartı birleşik geri yığınında: geri tuşu önce kartı kapatır.
   useBackDismiss(open, onClose);
@@ -435,6 +443,45 @@ export default function FullUserProfile({
       )}
     </>
   );
+
+  // Sesli odadan açılan kart: görsel kart, ekranın alt yarısından (7. koltuk hizasına kadar) açılır.
+  if (roomActions) {
+    const toggleFollow = async () => {
+      const res = await base44.functions.invoke('social-service', { action: following ? 'unfollow' : 'follow', user_id: userId });
+      setFollowing(!!res.data?.following);
+    };
+    return (
+      <div className="fixed inset-0 z-[300] flex items-end justify-center">
+        <button type="button" aria-label="Kapat" onClick={onClose} className="absolute inset-0 w-full bg-black/55" />
+        <div className="animate-sheet-up relative max-h-[58vh] w-full max-w-[460px] overflow-y-auto overscroll-contain rounded-t-[22px] bg-black pb-[env(safe-area-inset-bottom)]">
+          {statusContent || (
+            <VoiceImageCard
+              tone={profile?.gender === 'erkek' ? 'blue' : 'pink'}
+              name={shownName}
+              avatar={banned ? ACCOUNT_STATES.banned.image : shownAvatar}
+              genderSymbol={hidden ? '?' : profile?.gender === 'erkek' ? '♂' : '♀'}
+              roleLabel={roleLabel}
+              receivedLevel={profile?.gift_received_level || 0}
+              nLevel={profile?.n_level || 0}
+              vipLevel={profile?.vip_level || 0}
+              joinDate={formatDate(profile?.created_date)}
+              micMuted={micMuted}
+              seatLocked={targetSeat >= 0 && room.isLocked(targetSeat)}
+              isSelf={isSelf}
+              following={following}
+              onMic={toggleMic}
+              onLock={() => toggleSeatLock(targetSeat, userId)}
+              onStand={() => { room.standUp(userId); onClose?.(); }}
+              onFollow={toggleFollow}
+              onChat={openChat}
+              onMention={mention}
+              onGift={sendGift}
+            />
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-[300] overflow-y-auto overscroll-contain" style={{ background: palette.bg }}>
