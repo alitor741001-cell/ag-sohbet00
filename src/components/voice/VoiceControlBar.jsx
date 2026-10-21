@@ -61,20 +61,8 @@ export default function VoiceControlBar({ micActive, deafened, gamesOpen, gamesE
   return (
     <div
       ref={barRef}
-      className="voice-control-bar relative flex shrink-0 items-center justify-between gap-0.5 px-2 pb-[max(0.3rem,calc(env(safe-area-inset-bottom)*0.45))] pt-2"
-      style={{ background: 'linear-gradient(180deg, #0d1a2e 0%, #132645 46%, #0b1930 100%)', borderTop: '1px solid rgba(140,150,192,0.28)' }}
+      className="voice-control-bar relative flex shrink-0 items-center justify-between gap-0.5 bg-gradient-to-t from-[#050b16]/85 via-[#050b16]/30 to-transparent px-2 pb-[max(0.35rem,calc(env(safe-area-inset-bottom)*0.5))] pt-4"
     >
-      {/* Ana menüdeki dalga hattı burada da devam eder: iki çubuk aynı dili konuşur. */}
-      <svg aria-hidden="true" viewBox="0 0 400 10" preserveAspectRatio="none" className="pointer-events-none absolute inset-x-0 -top-px h-2 w-full">
-        <defs>
-          <linearGradient id="voiceBarWave" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor="#7098a8" stopOpacity="0.2" />
-            <stop offset="45%" stopColor="#869fb3" stopOpacity="0.95" />
-            <stop offset="100%" stopColor="#a596bb" stopOpacity="0.7" />
-          </linearGradient>
-        </defs>
-        <path d="M0 7 C 48 0, 92 10, 150 5 S 268 0, 330 6 S 382 10, 400 4" fill="none" stroke="url(#voiceBarWave)" strokeWidth="1.6" />
-      </svg>
       <BarButton onClick={onToggleChat} label="Sohbet">
         <MessageSquare className={ICON} strokeWidth={1.6} />
       </BarButton>

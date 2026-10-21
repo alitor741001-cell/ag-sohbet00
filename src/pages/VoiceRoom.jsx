@@ -1100,7 +1100,6 @@ export default function VoiceRoom() {
       onKeyboardChange={handleKeyboardChange}
     >
       <RoomBackground value={room?.background} cover={room?.cover_url} />
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-gradient-to-b from-black/30 to-transparent" />
 
       <header className="relative shrink-0 px-4 pb-2 pt-[max(0.75rem,env(safe-area-inset-top))]">
         <div className="flex min-w-0 flex-col items-start">

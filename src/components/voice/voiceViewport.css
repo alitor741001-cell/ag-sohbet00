@@ -34,23 +34,9 @@
 .voice-viewport[data-keyboard="open"] .room-direct-composer {
   padding-bottom: 0.5rem;
 }
-/* Butonlar cihazın alt güvenli alanının üzerinde durur ama ekranın dibine yakın oturur. */
-.voice-control-bar { padding-bottom: max(0.25rem, calc(env(safe-area-inset-bottom, 0px) * 0.5)); }
-
-/* Kontrol çubuğunun altında kalan güvenli alan şeridi de çubuğun lacivert zeminiyle
-   boyanır: ekranın en altında siyah bir bant kalmaz. Sabit konumlu katman çerçevenin
-   kırpmasından etkilenmez, bu yüzden şerit ne kadar yüksek olursa olsun kapanır. */
-.voice-controls-anchor { position: relative; }
-.voice-controls-anchor::after {
-  content: '';
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 56px;
-  z-index: -1;
-  pointer-events: none;
-  background: #0b1930;
+/* Butonlar ekranın dibine yakın, arka plan görselin üzerinde serbest durur. */
+.voice-control-bar {
+  padding-bottom: max(0.35rem, calc(env(safe-area-inset-bottom, 0px) * 0.5));
 }
 
 @media (max-width: 767px) {

@@ -13,7 +13,7 @@ export default function RoomBackground({ value, cover }) {
       {/* Metin ve koltuklar okunur kalsın diye üstten alta yumuşak karartma. */}
       <div
         className="absolute inset-0"
-        style={{ background: 'linear-gradient(180deg, rgba(3,7,20,0.45) 0%, rgba(3,7,20,0.12) 38%, rgba(3,7,20,0.7) 100%)' }}
+        style={{ background: 'linear-gradient(180deg, rgba(3,7,20,0.18) 0%, rgba(3,7,20,0.08) 38%, rgba(3,7,20,0.62) 100%)' }}
       />
       {cover ? <div className="absolute inset-0 bg-cover bg-center opacity-25" style={{ backgroundImage: `url(${cover})` }} /> : null}
     </div>
