@@ -61,7 +61,7 @@ export default function VoiceControlBar({ micActive, deafened, gamesOpen, gamesE
   return (
     <div
       ref={barRef}
-      className="voice-control-bar relative flex shrink-0 items-center justify-between gap-0.5 bg-gradient-to-t from-[#050b16]/85 via-[#050b16]/30 to-transparent px-2 pb-[max(0.35rem,calc(env(safe-area-inset-bottom)*0.5))] pt-4"
+      className="voice-control-bar relative flex shrink-0 items-center justify-between gap-0.5 px-2 pb-[max(0.35rem,calc(env(safe-area-inset-bottom)*0.5))] pt-4"
     >
       <BarButton onClick={onToggleChat} label="Sohbet">
         <MessageSquare className={ICON} strokeWidth={1.6} />
