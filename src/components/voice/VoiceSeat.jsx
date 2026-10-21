@@ -4,7 +4,7 @@ import shallowEqual from '@/components/data/shallowEqual';
 import VoiceSeatPortrait from '@/components/voice/VoiceSeatPortrait';
 import VoiceSeatRing from '@/components/voice/VoiceSeatRing';
 import { isHiddenName } from '@/lib/hiddenUser';
-import { seatRingDesign } from '@/components/voice/seatRingDesigns';
+import SeatPatternFace from '@/components/voice/SeatPatternFace';
 
 // Her koltuk aynı boyutta sabit bir portre alanı kullanır: profil boyutu değişse de
 // ızgara kaymaz, çerçeveler komşu koltuğa taşmaz.
@@ -32,23 +32,21 @@ function VoiceSeat({ seat, index, size = 'md', musicPlaying, speaking, gender, i
   const speakingGender = gender === 'erkek' ? 'erkek' : 'kadin';
 
   if (!seat?.user_id) {
-    // Boş koltuk da kendi taş rengiyle boyanır: 30 koltuk bir bakışta ayrışır.
-    const emptyDesign = seatRingDesign(index);
     return (
       <button type="button" onClick={handleClick} className="flex flex-col items-center gap-1 active:scale-95 transition-transform" aria-label={`${index + 1}. koltuk`}>
         <span className={`flex ${cell} shrink-0 items-center justify-center`}>
           <span className={`relative flex ${emptyCircle} items-center justify-center`}>
-            <VoiceSeatRing className="h-full w-full" variant={index} glow={`0 4px 12px -6px rgba(0,0,0,0.9), 0 0 12px -3px ${emptyDesign.gem[1]}`}>
+            <VoiceSeatRing className="h-full w-full" variant={index} mono glow="0 4px 12px -6px rgba(0,0,0,0.9)">
               <span
-                className="flex h-full w-full items-center justify-center"
-                style={{
-                  background: `radial-gradient(circle at 34% 26%, ${emptyDesign.gem[0]} 0%, ${emptyDesign.gem[1]} 34%, ${emptyDesign.gem[2]} 72%, ${emptyDesign.gem[3]} 100%)`,
-                  boxShadow: 'inset 0 2px 7px rgba(0,0,0,0.42)',
-                }}
+                className="relative flex h-full w-full items-center justify-center overflow-hidden"
+                style={{ background: 'radial-gradient(circle at 34% 26%, #17304c 0%, #0a1526 74%)' }}
               >
-                {seat?.locked
-                  ? <Lock className={iconSize} style={{ color: '#08131f' }} />
-                  : <Plus className={iconSize} style={{ color: '#08131f' }} strokeWidth={3} />}
+                <SeatPatternFace index={index} />
+                <span className="relative z-10 flex items-center justify-center drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">
+                  {seat?.locked
+                    ? <Lock className={iconSize} style={{ color: '#f2d79c' }} />
+                    : <Plus className={iconSize} style={{ color: '#f2d79c' }} strokeWidth={3} />}
+                </span>
               </span>
             </VoiceSeatRing>
             {/* Mikrofonu kendi elimle kapattığımda görünen sade rozet; mikrofonu açınca kaybolur. */}

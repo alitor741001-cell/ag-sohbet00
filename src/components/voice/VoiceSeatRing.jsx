@@ -1,6 +1,6 @@
 import React, { useId } from 'react';
 import SeatRingOrnament from '@/components/voice/SeatRingOrnament';
-import { RING_DESIGNS, gearPath, polar, polygonPath, ringPoints } from '@/components/voice/seatRingDesigns';
+import { NEUTRAL_GEMS, RING_DESIGNS, gearPath, polar, polygonPath, ringPoints } from '@/components/voice/seatRingDesigns';
 
 /**
  * Koltuk çemberi — her koltuğa kendi mücevher çerçevesi.
@@ -26,7 +26,7 @@ const shapePath = (shape, r) => {
   }
 };
 
-export default function VoiceSeatRing({ children, className = '', glow, variant = 0 }) {
+export default function VoiceSeatRing({ children, className = '', glow, variant = 0, mono = false }) {
   const uid = useId().replace(/[^a-zA-Z0-9]/g, '');
   const goldId = `g${uid}`;
   const goldSoftId = `gs${uid}`;
@@ -35,7 +35,8 @@ export default function VoiceSeatRing({ children, className = '', glow, variant 
 
   const design = RING_DESIGNS[Math.abs(variant) % RING_DESIGNS.length];
   const [g0, g1, g2, g3] = design.gold;
-  const [m0, m1, m2, m3] = design.gem;
+  // Boş koltuklarda renk yerine metalik ton kullanılır.
+  const [m0, m1, m2, m3] = mono ? NEUTRAL_GEMS[Math.abs(variant) % NEUTRAL_GEMS.length] : design.gem;
   const notched = ['circle', 'octa', 'dodeca', 'hex'].includes(design.shape);
 
   return (

@@ -48,6 +48,13 @@ const gemPalette = (hue) => [
   `hsl(${hue} 76% 19%)`,
 ];
 
+/** Boş koltuklar için renksiz metalik taş tonları: altın, gümüş, inci. */
+export const NEUTRAL_GEMS = [
+  ['hsl(44 62% 96%)', 'hsl(44 56% 78%)', 'hsl(42 40% 48%)', 'hsl(38 34% 20%)'],
+  ['hsl(210 22% 97%)', 'hsl(212 20% 84%)', 'hsl(214 14% 56%)', 'hsl(216 18% 24%)'],
+  ['hsl(160 8% 95%)', 'hsl(160 7% 81%)', 'hsl(162 6% 52%)', 'hsl(164 8% 21%)'],
+];
+
 /** 30 koltuk, 30 ayrı taş tonu: komşu koltuklar renk olarak birbirine uzak. */
 const HUES = Array.from({ length: 30 }, (_, i) => (i * 137) % 360);
 
