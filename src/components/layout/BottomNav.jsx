@@ -26,6 +26,8 @@ export default function BottomNav() {
   const navigate = useNavigate();
   const { user } = useCurrentUser();
   const { messages, requests } = useSocialBadges(user?.id);
+  // Sesli odada kendi kontrol çubuğu vardır: ana menü odanın altında şerit olarak görünmez.
+  const inVoiceRoom = /^\/sesli-oda\//.test(location.pathname);
   // Destek düğmesinde özel sohbetlerdeki gibi okunmamış yanıt sayısı görünür.
   const supportBadge = useSupportBadge(user?.id);
   // Klavye açılınca alt menü klavyenin üstüne kayar: en altta sabit kalır, arada kaybolmaz.
@@ -33,6 +35,8 @@ export default function BottomNav() {
   const baseItems = membershipActive(user) ? fullItems : limitedItems;
   // Canlı destek düğmesi herkeste profil sekmesinin hemen solunda durur.
   const items = [...baseItems.slice(0, -1), { dock: 'support' }, ...baseItems.slice(-1)];
+
+  if (inVoiceRoom) return null;
 
   // Aynı sekmeye tekrar basıldığında kök görünüme dönülür: iç içe adres parametreleri
   // (ör. /arkadaslar?chat=…, /profil?tab=…) temizlenir ve sayfa başına kaydırılır.
