@@ -20,7 +20,7 @@ export default function VoiceFantasyActions({ room, userId, name, isSelf, hidden
     ...(seat >= 0 && room.canControl(userId) ? [{ key: 'mic', label: muted ? 'Mik Aç' : 'Mik Kapat', icon: muted ? MicOff : Mic, action: () => room.toggleMic(userId) }] : []),
     ...(seat >= 0 && room.canModerate ? [{ key: 'lock', label: locked ? 'Kilidi Aç' : 'Koltuğu Kilitle', icon: locked ? LockKeyholeOpen : LockKeyhole, action: () => room.lockSeat(seat, !locked) }] : []),
     ...(room.canModerate && !isSelf ? [{ key: 'kick', label: 'Odadan At', icon: LogOut, action: () => room.kick(userId), danger: true }] : []),
-    { key: 'gift', label: 'Hediye Gönder', icon: Gift, action: () => room.gift(userId) },
+    ...(seat >= 0 && room.canControl(userId) ? [{ key: 'stand', label: isSelf ? 'Koltuktan İn' : 'Koltuktan İndir', icon: LogOut, action: () => room.standUp(userId) }] : []),
     ...(!isSelf && !hidden ? [
       { key: 'mention', label: 'Bahset', icon: AtSign, action: () => room.mention(name) },
       { key: 'message', label: 'Özel Mesaj', icon: MessageSquare, action: () => room.message ? room.message(userId) : onMessage?.(userId) },
@@ -35,6 +35,11 @@ export default function VoiceFantasyActions({ room, userId, name, isSelf, hidden
             {busy === key ? <Loader2 className="h-4 w-4 animate-spin" /> : <Icon className="h-4 w-4" />}<span>{label}</span>
           </button>
         ))}
+      </div>
+      <div className="flex justify-center pt-2">
+        <button type="button" disabled={!!busy} onClick={() => perform('gift', () => room.gift(userId))} className="voice-fantasy-button voice-fantasy-gift flex min-h-12 items-center justify-center gap-2 rounded-xl px-6 py-2 text-[11px] font-bold disabled:opacity-50">
+          {busy === 'gift' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Gift className="h-4 w-4" />} Hediye Gönder
+        </button>
       </div>
     </div>
   );
