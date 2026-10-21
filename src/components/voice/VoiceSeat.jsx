@@ -35,7 +35,7 @@ function VoiceSeat({ seat, index, size = 'md', musicPlaying, speaking, gender, i
       <button type="button" onClick={handleClick} className="flex flex-col items-center gap-1 active:scale-95 transition-transform" aria-label={`${index + 1}. koltuk`}>
         <span className={`flex ${cell} shrink-0 items-center justify-center`}>
           <span className={`relative flex ${emptyCircle} items-center justify-center`}>
-            <VoiceSeatRing className="h-full w-full" glow="0 4px 12px -6px rgba(0,0,0,0.9)">
+            <VoiceSeatRing className="h-full w-full" variant={index} glow="0 4px 12px -6px rgba(0,0,0,0.9)">
               <span className="flex h-full w-full items-center justify-center" style={{ background: 'radial-gradient(circle at 32% 24%, rgba(108,212,214,0.28) 0%, rgba(10,20,34,0.96) 70%)' }}>
                 {seat?.locked ? <Lock className={`${iconSize} text-[#ffe6a8]`} /> : <Plus className={`${iconSize} text-[#e8c47c]`} />}
               </span>
@@ -70,7 +70,7 @@ function VoiceSeat({ seat, index, size = 'md', musicPlaying, speaking, gender, i
         {/* Konuşma ses dalgası: çemberin dışına pembe/mavi halkalar olarak taşar. */}
         {speaking && <span data-gender={speakingGender} aria-hidden="true" className={`voice-speaking-wave pointer-events-none absolute ${ring} z-[5] rounded-full`} />}
         {halo && <span className="pointer-events-none absolute inset-0 z-[6] rounded-full" style={{ boxShadow: halo }} />}
-        <VoiceSeatPortrait seat={seat} className={face} />
+        <VoiceSeatPortrait seat={seat} className={face} variant={index} />
         {seat.muted && (
           <span className={`absolute left-1/2 top-1/2 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 ${badge}`}>
             <MicOff className="h-3 w-3 text-white" />
