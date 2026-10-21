@@ -1359,7 +1359,7 @@ export default function VoiceRoom() {
         sendDisabled={!selectedGift || !selectedIds.length}
       />
 
-      <GiftScene key={overlayAlert?.key} alert={giftEffects && !bigGift ? overlayAlert : null} tiers={tiers} />
+      <GiftScene key={overlayAlert?.key} alert={giftEffects && !bigGift ? overlayAlert : null} tiers={tiers} gifts={gifts} />
       {giftEffects && <BigGiftStage alert={bigGift} />}
 
       <GiftEffectsSheet

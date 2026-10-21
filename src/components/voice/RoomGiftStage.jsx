@@ -31,5 +31,5 @@ export default function RoomGiftStage({ roomId }) {
   }, [roomId]);
 
   const { alert } = useGiftAlerts(messages, resolveGift);
-  return <GiftScene key={alert?.key} alert={alert} tiers={tiers} />;
+  return <GiftScene key={alert?.key} alert={alert} tiers={tiers} gifts={gifts} />;
 }

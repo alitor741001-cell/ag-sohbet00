@@ -1,54 +1,44 @@
 import { formatK, tierForK, toneColor } from '@/lib/giftTone';
-import { giftScene } from '@/lib/giftScene';
 import ProfileFrame from '@/components/ProfileFrame';
 import VoiceSeatScore from '@/components/voice/VoiceSeatScore';
-import SceneRocket from '@/components/voice/scenes/SceneRocket';
-import SceneBoat from '@/components/voice/scenes/SceneBoat';
-import ScenePlane from '@/components/voice/scenes/ScenePlane';
-import SceneBalloon from '@/components/voice/scenes/SceneBalloon';
-import SceneCar from '@/components/voice/scenes/SceneCar';
-import SceneFireworks from '@/components/voice/scenes/SceneFireworks';
-import SceneHeart from '@/components/voice/scenes/SceneHeart';
-import SceneRose from '@/components/voice/scenes/SceneRose';
-import SceneGalaxy from '@/components/voice/scenes/SceneGalaxy';
-import SceneCastle from '@/components/voice/scenes/SceneCastle';
-import '@/styles/giftScenes.css';
-
-const SCENES = {
-  rocket: SceneRocket,
-  boat: SceneBoat,
-  plane: ScenePlane,
-  balloon: SceneBalloon,
-  car: SceneCar,
-  fireworks: SceneFireworks,
-  heart: SceneHeart,
-  rose: SceneRose,
-  galaxy: SceneGalaxy,
-  castle: SceneCastle,
-};
+import Gift3DStage from '@/components/voice/three/Gift3DStage';
 
 /**
- * Hediye gönderildiğinde odadaki herkes için hediye başına özel bir sahne oynar:
- * roket uçar, gemi suda yüzer, uçak süzülür, balon yükselir, araba geçer ya da havai fişek patlar.
- * Hediye görseli aracın içinde/üstünde durur; altta hediye adı ve gönderen → alan bilgisi yazar.
+ * Hediye gönderildiğinde odadaki herkes için gerçek 3D hediye animasyonu oynar:
+ * hediye kendi modeliyle ekrana gelir, döner ve ışıltılar yükselir.
+ * Altta hediye adı ve gönderen → alan bilgisi yazar.
  */
-export default function GiftScene({ alert, tiers = [] }) {
+export default function GiftScene({ alert, tiers = [], gifts = [] }) {
   if (!alert) return null;
 
-  const Scene = SCENES[giftScene({ id: alert.giftId, name: alert.giftName, emoji: alert.emoji })] || SceneRocket;
+  const record = gifts.find((item) => item.id === alert.giftId) || null;
   const color = toneColor(tierForK(tiers, alert.kValue || 0));
   const repeat = Number(alert.repeat) || 1;
   const people = Number(alert.count) || 1;
   const bulk = people > 1;
   const meta = bulk
-    ? `${people} kişiye${alert.totalK ? ` • ${formatK(alert.totalK)}` : ''}`
+    ? `${people} kişiye${alert.totalK ? ` · ${formatK(alert.totalK)}` : ''}`
     : `${alert.senderName ? `${alert.senderName} → ` : ''}${alert.recipientName || 'Oda'}`;
 
   return (
-    <div className="gift-scene-stage pointer-events-none absolute inset-0 z-[200] overflow-hidden" style={{ '--scene-tone': color }}>
-      <Scene gift={{ imageUrl: alert.imageUrl, emoji: alert.emoji, name: alert.giftName }} />
+    <div className="pointer-events-none absolute inset-0 z-[200] overflow-hidden">
+      {/* Sahne zemini: hediyenin renginde yumuşak bir aydınlanma. */}
+      <div
+        className="absolute inset-0"
+        style={{ background: `radial-gradient(circle at 50% 46%, ${color}38, rgba(0,0,0,0.62) 58%, rgba(0,0,0,0.85))` }}
+      />
 
-      <div className="gift-scene-caption">
+      <Gift3DStage
+        gift={{
+          name: alert.giftName,
+          model_url: record?.model_url || '',
+          model_kind: record?.model_kind || 'auto',
+        }}
+        color={color}
+        className="absolute inset-0"
+      />
+
+      <div className="absolute inset-x-0 bottom-[16%] flex flex-col items-center gap-1.5">
         <div
           className="flex items-center gap-2 rounded-2xl border bg-black/70 px-3 py-1.5 backdrop-blur-md"
           style={{ borderColor: color, boxShadow: `0 0 20px ${color}88` }}

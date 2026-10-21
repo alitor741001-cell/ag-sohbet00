@@ -5,7 +5,8 @@ import { giftMotion } from '@/lib/giftMotion';
 
 /** Hediye tahtasındaki tek hediye: büyük görsel, ad ve altın coin fiyatı. Seçili hediye turkuaz çerçevelidir. */
 export default function GiftCard({ gift, selected, onSelect, onPreview }) {
-  const { motion, tone } = giftMotion(gift);
+  // Katalogda hediyeler sabit durur; yalnızca kendi rengindeki ışıltı gösterilir.
+  const { tone } = giftMotion(gift);
 
   return (
     <div
@@ -28,13 +29,13 @@ export default function GiftCard({ gift, selected, onSelect, onPreview }) {
             <Image
               src={gift.image_url}
               alt={gift.name}
-              className={`${motion} h-14 w-14 drop-shadow-[0_4px_10px_rgba(0,0,0,0.55)]`}
+              className="h-14 w-14 drop-shadow-[0_4px_10px_rgba(0,0,0,0.55)]"
               fittingType="fit"
               originWidth={192}
               originHeight={192}
             />
           ) : (
-            <span className={`${motion} text-[34px] leading-none`}>{gift.emoji || '🎁'}</span>
+            <span className="text-[34px] leading-none">{gift.emoji || '🎁'}</span>
           )}
         </span>
         <span className="w-full truncate text-center text-[10.5px] font-bold leading-tight text-white">{gift.name}</span>
