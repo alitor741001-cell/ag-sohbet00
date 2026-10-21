@@ -14,8 +14,8 @@ const LAYOUTS = {
   12: [2, 5, 5],
   15: [5, 5, 5],
   20: [5, 5, 5, 5],
-  // 30 mikrofon: 15'li düzen gibi beşli satırlar aşağı doğru iner.
-  30: [5, 5, 5, 5, 5, 5],
+  // 30 mikrofon: her sırada 6 koltuk — beş sıra halinde aşağı iner.
+  30: [6, 6, 6, 6, 6],
 };
 
 /** Koltuk sayısını satır başına koltuk adetlerine böler. */

@@ -811,10 +811,14 @@ html, body, #root {
    gradyanıyla boyanır: Android'de ve iOS'ta siyah şerit görünmez.
    background-attachment iOS'ta güvenilir değildir; onun yerine sabit konumlu
    bir katman kullanılır ve düzen yüksekliğini hiç etkilemez. */
+/* Sesli odadayken gövdenin kendi zemini de temayla boyanır: çerçevenin altında kalan
+   her pikselde (sistem çubuğu, klavye sonrası alan, kısa kalan görünüm) tema görünür. */
 html, body {
   background-color: #0a1c3c;
-  background-image: linear-gradient(180deg, #103062 0%, #0a1c3c 52%, #0b1930 100%);
-  background-repeat: no-repeat;
+  background-image: var(--room-theme-image, none), var(--room-theme-tint, linear-gradient(180deg, #103062 0%, #0a1c3c 52%, #0b1930 100%));
+  background-size: cover, cover;
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
 }
 
 /* Sesli odadayken oda teması bu katmana da yazılır: çerçevenin altında kalan her piksel

@@ -194,7 +194,8 @@ export default function AppLayout() {
   }, [user?.id]);
 
   if (isRoom) {
-    return <MessageRealtimeProvider userId={user?.id}><div className="min-h-screen bg-catalog"><RoutePreloader /><RoleCelebrationOverlay /><Suspense fallback={null}><Outlet /></Suspense></div></MessageRealtimeProvider>;
+    // Oda zeminini artık tema boyuyor: buradaki lacivert katman kapatıldı, alt şerit kalmaz.
+    return <MessageRealtimeProvider userId={user?.id}><div className="min-h-screen bg-transparent"><RoutePreloader /><RoleCelebrationOverlay /><Suspense fallback={null}><Outlet /></Suspense></div></MessageRealtimeProvider>;
   }
   return (
     <MessageRealtimeProvider userId={user?.id}><div className={`min-h-screen w-full min-w-0 overflow-x-clip ${isDarkSurface ? '' : 'bg-background'}`} style={isDarkSurface ? { background: DARK_SURFACE_GRADIENT } : undefined}>

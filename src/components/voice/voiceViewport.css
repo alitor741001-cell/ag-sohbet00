@@ -150,15 +150,24 @@
    klavye oturma düzeninin üstüne biner. Yazma alanı taşıyan sohbet bloğu klavyenin hemen
    üstüne taşınır, böylece yazarken koltuklar yerinden oynamaz. */
 @media (max-width: 767px) {
+  /* Klavye açılınca çerçeve büyümez: yalnızca klavyenin üstünde kalan görünür alan kadar
+     yüksek kalır. Önceden klavye yüksekliği ekleniyordu, bu da odayı ekrandan büyütüp
+     yerleşimi kaydırıyordu. */
   .voice-viewport[data-keyboard="open"] {
-    height: calc(var(--visual-viewport-height, 100dvh) + var(--keyboard-height, 0px));
+    height: var(--visual-viewport-height, 100dvh);
   }
 
   .voice-viewport[data-keyboard="open"] .voice-chat-dock {
     position: absolute;
     left: 0;
     right: 0;
-    bottom: var(--keyboard-height, 0px);
+    bottom: 0;
     z-index: 30;
+  }
+
+  /* Yazma alanı 16 pikselin altına inmez: iOS klavye açılışında sayfayı kendi büyütmez. */
+  .voice-viewport input,
+  .voice-viewport textarea {
+    font-size: 16px;
   }
 }
