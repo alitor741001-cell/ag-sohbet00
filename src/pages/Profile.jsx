@@ -16,6 +16,7 @@ import ProfileMenuCard from '@/components/profile/fantasy/ProfileMenuCard';
 import { giftBoxLocked } from '@/lib/giftAccess';
 import ProfileDetailsSection from '@/components/profile/ProfileDetailsSection';
 import ProfileSettings from '@/components/profile/ProfileSettings';
+import PrivacyPolicyBody from '@/components/profile/PrivacyPolicyBody';
 
 import DeleteAccountSection from '@/components/profile/DeleteAccountSection';
 import GiftBoxPanel from '@/components/profile/GiftBoxPanel';
@@ -260,15 +261,13 @@ export default function Profile() {
       <SocialListDialog open={!!socialList} kind={socialList} onClose={() => { setSocialList(null); loadSocial(); }} />
 
       <Dialog open={privacyOpen} onOpenChange={(value) => !value && setPrivacyOpen(false)}>
-        <DialogContent className="max-w-lg border-[#7dd3fc]/30 bg-[linear-gradient(180deg,#0B2A52,#05122A)] text-white">
-          <DialogHeader>
+        <DialogContent className="max-h-[88vh] max-w-2xl gap-0 border-[#7dd3fc]/30 bg-[linear-gradient(180deg,#0B2A52,#05122A)] p-0 text-white">
+          <DialogHeader className="border-b border-[#7dd3fc]/20 px-5 pb-3 pt-5 text-left">
             <DialogTitle className="text-[#a5e4ff]">Gizlilik Politikası</DialogTitle>
+            <p className="mt-1 text-[11px] font-normal text-white/55">Son güncelleme: 21 Ekim 2026</p>
           </DialogHeader>
-          <div className="space-y-3 text-sm leading-6 text-white/80">
-            <p>Profil bilgileriniz, sohbetleriniz ve cüzdan hareketleriniz yalnızca uygulama içindeki özelliklerin çalışması için saklanır.</p>
-            <p>Profil fotoğrafınız ve kapak görselleriniz diğer üyeler tarafından görülebilir; telefon numaranız ve e-posta adresiniz profilinizde gösterilmez.</p>
-            <p>Engellediğiniz hesaplar sizi göremez ve size mesaj gönderemez. Hesabınızı profildeki “Eklentiler” bölümünün en altındaki “Hesabımı Sil” ile kalıcı olarak silebilirsiniz.</p>
-            <p>Gizlilikle ilgili talepleriniz için Destek bölümünden bize yazabilirsiniz.</p>
+          <div className="max-h-[68vh] overflow-y-auto overscroll-contain px-5 pb-8 pt-4">
+            <PrivacyPolicyBody />
           </div>
         </DialogContent>
       </Dialog>
