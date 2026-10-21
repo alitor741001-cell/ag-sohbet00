@@ -23,14 +23,16 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
   const featureTop = seats.length === 9;
   // Kalabalık düzen (15/20 koltuk): koltuklar daraltılmaz, geniş kalır.
   const dense = seats.length >= 15;
+  // 30 mikrofon (altı satır): tüm koltuklar tek ekrana sığar, sahne kaydırılmaz.
+  const many = seats.length >= 20;
   const widestRow = Math.max(1, ...rows.map((row) => row.length));
   const width = measured?.width || 360;
   const narrow = width < 640;
-  const baseGap = featureTop ? (narrow ? 6 : 14) : narrow ? 12 : 20;
+  const baseGap = featureTop ? (narrow ? 6 : 14) : narrow ? (many ? 8 : 12) : 20;
   // Alçak ekranda satır araları daralır: en küçük koltukta bile tüm satırlar ve
   // altlarındaki sayı şeritleri sahneye sığar.
   const rowsNeeded = (rows.length || 1) * (boardActive ? 83 : 62) + 12 * Math.max(0, rows.length - 1);
-  const rowGap = featureTop ? (narrow ? 8 : 14) : narrow ? (maxHeight && maxHeight < rowsNeeded ? 6 : 12) : 20;
+  const rowGap = featureTop ? (narrow ? 8 : 14) : narrow ? (many ? 5 : maxHeight && maxHeight < rowsNeeded ? 6 : 12) : 20;
   const available = width - 4;
   const perSeat = (available - baseGap * (widestRow - 1)) / widestRow;
   // 9'lu düzende koltuk bir beden büyük çizilir: 'xl' sınırı da açıktır.
@@ -44,7 +46,7 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
   // gereken yer düşülür, kalan yükseklik koltuk boyutunu belirler. Böylece koltuk sayısı
   // artırıldığında alttaki sıraların rakamları görünmez olmaz.
   const SIZES = ['xs', 'sm', 'md', 'lg', 'xl'];
-  const columnExtra = boardActive ? (featureTop ? 33 : 41) : featureTop ? 16 : 20;
+  const columnExtra = boardActive ? (featureTop ? 33 : many ? 36 : 41) : featureTop ? 16 : 20;
   // Üstteki büyük çerçeve fazladan yer kaplar: kalan satırlar ona göre ölçülür.
   const rowUnits = rows.length + (featureTop ? 0.2 : 0);
   const perRow = maxHeight
@@ -59,10 +61,11 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
   // sığmayan satırlar sahne içinde kaydırılarak görünür.
   // 9'lu düzende de koltuk boyu genişlikten gelir: koltuklar referanstaki gibi büyük ve
   // satır kenarlara yanaşık kalır, sığmayan içerik sahne içinde kaydırılır.
-  // 20 ve üzeri düzende (30 mikrofon) alt sınır bir beden küçülür: altı satır da sahneye sığar.
-  const denseFloor = seats.length >= 20 ? 'sm' : 'md';
+  // 20 ve üzeri düzende (30 mikrofon) alt sınır yoktur: altı satır da sahneye sığsın diye
+  // koltuk yükseklikten gelen en küçük bedene kadar inebilir, ızgara kaydırılmaz.
+  const denseFloor = 'md';
   const size = dense
-    ? SIZES[Math.min(SIZES.indexOf(widthSize), Math.max(SIZES.indexOf(heightSize), SIZES.indexOf(denseFloor)))]
+    ? (many ? fitSize : SIZES[Math.min(SIZES.indexOf(widthSize), Math.max(SIZES.indexOf(heightSize), SIZES.indexOf(denseFloor)))])
     : featureTop
       ? widthSize
       : fitSize;

@@ -20,11 +20,16 @@ export default function VoiceStage({ scrollRef, handlers, room, hiddenAnnounce, 
   const gridMeasured = useSize(gridBoxRef);
   const areaMeasured = useSize(areaRef);
   // Kalabalık düzende (15/20 koltuk) satırlar sahneye sığmazsa sahne kendi içinde kayar.
-  const dense = (grid.seats?.length || 0) >= 15;
+  const total = grid.seats?.length || 0;
+  const dense = total >= 15;
+  // 30 mikrofon: koltuklar küçülerek ekrana sığar, sahne kaymaz — düzen sabit durur.
+  const many = total >= 20;
   // 9'lu düzende koltuklar sahnenin iki kenarına yanaşır: yan boşluk kısalır.
-  const nine = (grid.seats?.length || 0) === 9;
-  // 9'lu düzen koltukları küçültülmez: sığmayan içerik sahne içinde kaydırılarak gösterilir.
-  const scrollable = dense || nine;
+  const nine = total === 9;
+  // Sahne yalnızca içerik gerçekten sığmadığında kaydırılır; sığdığında kaydırma yoktur,
+  // böylece koltuklar aşağı yukarı oynamaz.
+  const fitsStage = (gridMeasured?.height || 0) <= (areaMeasured?.height || 0) + 1;
+  const scrollable = nine || (dense && !many) || !fitsStage;
 
   // Koltukların altında kalan boşluk sohbet alanına bildirilir: mesajlar tam koltukların alt
   // hizasından başlar. Koltukların boyutu ve yeri değişmez — yalnızca sohbet yukarı taşar.
