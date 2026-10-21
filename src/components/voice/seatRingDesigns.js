@@ -57,6 +57,9 @@ const ORNAMENTS = ['beads', 'studs', 'stars', 'rope'];
 const STONES = ['round', 'square', 'marquise', 'star'];
 const METAL_ORDER = ['altin', 'beyaz', 'gul', 'bronz', 'platin', 'bakir', 'sampanya', 'gumus'];
 
+/** Koltuğa düşen tasarım. */
+export const seatRingDesign = (variant = 0) => RING_DESIGNS[Math.abs(variant) % RING_DESIGNS.length];
+
 /**
  * 30 tasarım: silüet her koltuğa dönüşümlü, süsleme altı koltukta bir,
  * taş kesimi ve metal ise hiçbir ikili tekrar etmeyecek şekilde kaydırılır.
