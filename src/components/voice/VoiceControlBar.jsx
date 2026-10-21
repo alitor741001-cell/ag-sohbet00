@@ -13,7 +13,7 @@ function BarButton({ onClick, label, children, tone = 'plain', lifted = false })
         type="button"
         onClick={onClick}
         aria-label={label}
-        className={`${base} h-[clamp(50px,15vw,58px)] w-[clamp(50px,15vw,58px)] text-white ${lifted ? '-translate-y-2' : ''}`}
+        className={`${base} h-[clamp(42px,12vw,48px)] w-[clamp(42px,12vw,48px)] text-white ${lifted ? '-translate-y-1' : ''}`}
         style={{
           background: 'radial-gradient(circle at 50% 28%, #fff3c4 0%, #e8c65a 38%, #d4af37 62%, #8a6a1c 100%)',
           boxShadow: '0 0 20px 3px rgba(212,175,55,0.6), 0 0 0 2px rgba(10,18,30,0.9), inset 0 1px 0 rgba(255,255,255,0.8)',
@@ -61,7 +61,7 @@ export default function VoiceControlBar({ micActive, deafened, gamesOpen, gamesE
   return (
     <div
       ref={barRef}
-      className="voice-control-bar relative flex shrink-0 items-center justify-between gap-0.5 px-2 pb-[max(0.35rem,calc(env(safe-area-inset-bottom)*0.5))] pt-4"
+      className="voice-control-bar relative flex shrink-0 items-center justify-between gap-0.5 px-2 pb-[max(0.35rem,calc(env(safe-area-inset-bottom)*0.5))] pt-2"
     >
       <BarButton onClick={onToggleChat} label="Sohbet">
         <MessageSquare className={ICON} strokeWidth={1.6} />
@@ -74,7 +74,7 @@ export default function VoiceControlBar({ micActive, deafened, gamesOpen, gamesE
       </BarButton>
 
       <BarButton onClick={onOpenGifts} label="Hediye gönder" tone="gift" lifted>
-        <Gift className="h-6 w-6" strokeWidth={1.6} />
+        <Gift className="h-5 w-5" strokeWidth={1.6} />
       </BarButton>
 
       <BarButton onClick={onOpenPrivateChat} label="Özel sohbet">

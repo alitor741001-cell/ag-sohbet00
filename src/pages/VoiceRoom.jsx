@@ -1155,7 +1155,7 @@ export default function VoiceRoom() {
         }}
       />
 
-      <div className="voice-chat-dock min-h-0 shrink-0">
+      <div className={`voice-chat-dock min-h-0 shrink-0 ${composerOpen ? 'is-composing' : ''}`}>
       <VoiceChatDock
         messages={messages}
         chatLocked={chatLocked}

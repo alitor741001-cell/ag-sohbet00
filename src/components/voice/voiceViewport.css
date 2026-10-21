@@ -63,9 +63,11 @@
 }
 .voice-viewport[data-keyboard="open"] .voice-chat-flow { max-height: calc(var(--visual-viewport-height) * 0.28); }
 .voice-viewport .voice-chat-composer { margin-bottom: 0; }
-/* Yazma alanı cihazın alt güvenli alanının üstünde durur. Kural doğrudan çubuğa yazılır:
-   :has() bilmeyen eski iOS ve Android sürümlerinde de aynı boşluk korunur. */
-.voice-viewport .voice-chat-dock { padding-bottom: env(safe-area-inset-bottom, 0px); }
+/* Mesaj akışı doğrudan butonların üstüne yaslanır: yazma alanı kapalıyken sohbet bloğunda
+   alt dolgu kalmaz (önceden güvenli alan kadar boşluk mesajları yukarıda bırakıyordu).
+   Yazma alanı açıkken aynı boşluk klavyenin üstünde korunur. */
+.voice-viewport .voice-chat-dock { padding-bottom: 0; }
+.voice-viewport .voice-chat-dock.is-composing { padding-bottom: env(safe-area-inset-bottom, 0px); }
 .voice-viewport[data-keyboard="open"] .voice-chat-dock { padding-bottom: 0; }
 .voice-viewport[data-keyboard="open"] .room-direct-selected { padding-bottom: 0; }
 .voice-viewport[data-keyboard="open"] .room-direct-composer {
