@@ -48,12 +48,8 @@ const gemPalette = (hue) => [
   `hsl(${hue} 76% 19%)`,
 ];
 
-/** 30 koltuk, 30 ayrı taş tonu. */
-const HUES = [
-  174, 150, 352, 220, 276, 336, 44, 200, 34, 22,
-  168, 258, 96, 186, 208, 246, 300, 320, 0, 12,
-  26, 40, 56, 84, 120, 158, 178, 232, 268, 312,
-];
+/** 30 koltuk, 30 ayrı taş tonu: komşu koltuklar renk olarak birbirine uzak. */
+const HUES = Array.from({ length: 30 }, (_, i) => (i * 137) % 360);
 
 // Gövde siluetleri: yuvarlak, sekizgen, on iki kenar, altıgen, tırtık, dişli.
 const SHAPES = ['circle', 'octa', 'dodeca', 'hex', 'scallop', 'gear'];

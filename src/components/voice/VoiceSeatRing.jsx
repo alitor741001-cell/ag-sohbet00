@@ -31,6 +31,7 @@ export default function VoiceSeatRing({ children, className = '', glow, variant 
   const goldId = `g${uid}`;
   const goldSoftId = `gs${uid}`;
   const gemId = `m${uid}`;
+  const bandId = `b${uid}`;
 
   const design = RING_DESIGNS[Math.abs(variant) % RING_DESIGNS.length];
   const [g0, g1, g2, g3] = design.gold;
@@ -69,6 +70,13 @@ export default function VoiceSeatRing({ children, className = '', glow, variant 
             <stop offset="50%" stopColor={g2} stopOpacity="0.8" />
             <stop offset="100%" stopColor={g0} stopOpacity="0.95" />
           </linearGradient>
+          <linearGradient id={bandId} x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor={g2} />
+            <stop offset="16%" stopColor={m1} />
+            <stop offset="46%" stopColor={m2} />
+            <stop offset="78%" stopColor={m3} />
+            <stop offset="100%" stopColor={g0} />
+          </linearGradient>
           <radialGradient id={gemId} cx="35%" cy="28%" r="78%">
             <stop offset="0%" stopColor={m0} />
             <stop offset="32%" stopColor={m1} />
@@ -78,9 +86,9 @@ export default function VoiceSeatRing({ children, className = '', glow, variant 
         </defs>
 
         {/* mine bant gövdesi — siluet koltuğa göre değişir */}
-        <path d={shapePath(design.shape, 89.4)} fill="none" stroke="#08131f" strokeWidth="19" strokeLinejoin="round" />
-        <path d={shapePath(design.shape, 89.4)} fill="none" stroke={m3} strokeWidth="15" strokeLinejoin="round" opacity="0.85" />
-        <path d={shapePath(design.shape, 89.4)} fill="none" stroke={`url(#${goldSoftId})`} strokeWidth="1" strokeLinejoin="round" opacity="0.55" />
+        <path d={shapePath(design.shape, 89.4)} fill="none" stroke="#08131f" strokeWidth="20" strokeLinejoin="round" />
+        <path d={shapePath(design.shape, 89.4)} fill="none" stroke={`url(#${bandId})`} strokeWidth="16.5" strokeLinejoin="round" />
+        <path d={shapePath(design.shape, 89.4)} fill="none" stroke={g1} strokeWidth="0.9" strokeLinejoin="round" opacity="0.7" />
 
         {/* filigran yapraklar */}
         {design.leaves &&
@@ -89,8 +97,9 @@ export default function VoiceSeatRing({ children, className = '', glow, variant 
               key={`leaf-${deg}`}
               d="M0 -7 C4 -3.8 4 3.8 0 7 C-4 3.8 -4 -3.8 0 -7 Z"
               transform={`translate(${polar(86, deg).join(' ')}) rotate(${deg})`}
-              fill={m3}
-              stroke={`url(#${goldSoftId})`}
+              fill={`url(#${goldId})`}
+              stroke={m1}
+              strokeOpacity="0.55"
               strokeWidth="1.1"
               opacity="0.95"
             />
