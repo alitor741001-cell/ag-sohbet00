@@ -7,7 +7,7 @@ import CrystalCircleButton from '@/components/profile/crystal/CrystalCircleButto
 
 /** Takip Et / Takipten Çık: sayaçla birlikte, profil açılan her yerde aynı görünür.
  *  variant="circle" sesli odadaki kartın yuvarlak düğme şeridinde gösterir. */
-export default function FollowButton({ userId, accent = '#6fe6dc', variant = 'full', tone = 'blue', onChange }) {
+export default function FollowButton({ userId, accent = '#6fe6dc', variant = 'full', tone = 'blue', compact = false, onChange }) {
   const { user } = useCurrentUser();
   const { toast } = useToast();
   const [state, setState] = useState({ following: false, followers: 0 });
@@ -65,17 +65,17 @@ export default function FollowButton({ userId, accent = '#6fe6dc', variant = 'fu
         type="button"
         onClick={toggle}
         disabled={busy}
-        className="flex flex-1 items-center justify-center gap-2 rounded-2xl border-2 px-4 py-3 text-sm font-black text-white disabled:opacity-60"
+        className={`flex flex-1 items-center justify-center border-2 font-black text-white disabled:opacity-60 ${compact ? 'gap-1 rounded-xl px-2 py-2 text-[11px]' : 'gap-2 rounded-2xl px-4 py-3 text-sm'}`}
         style={{
           borderColor: accent,
           background: state.following ? 'rgba(0,0,0,0.45)' : 'rgba(111,230,220,0.14)',
           boxShadow: `0 0 20px -8px ${accent}`,
         }}
       >
-        {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : state.following ? <UserCheck className="h-4 w-4" /> : <UserPlus className="h-4 w-4" />}
+        {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : state.following ? <UserCheck className={compact ? 'h-3.5 w-3.5' : 'h-4 w-4'} /> : <UserPlus className={compact ? 'h-3.5 w-3.5' : 'h-4 w-4'} />}
         {state.following ? 'Takipten Çık' : 'Takip Et'}
       </button>
-      <span className="shrink-0 rounded-2xl border border-white/15 px-3 py-3 text-[11px] font-bold text-white/70">
+      <span className={`shrink-0 border border-white/15 font-bold text-white/70 ${compact ? 'rounded-xl px-2 py-2 text-[10px]' : 'rounded-2xl px-3 py-3 text-[11px]'}`}>
         {state.followers} takipçi
       </span>
     </div>

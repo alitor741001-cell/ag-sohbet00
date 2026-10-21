@@ -142,10 +142,10 @@ export default function FullUserProfile({
       <button
         type="button"
         onClick={onClose}
-        className="flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-bold text-white"
+        className="flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-bold text-white"
         style={{ borderColor: palette.soft, background: 'rgba(0,0,0,0.45)' }}
       >
-        <ArrowLeft className="h-4 w-4" /> Geri
+        <ArrowLeft className="h-3.5 w-3.5" /> Geri
       </button>
       <div className="flex items-center gap-2">
         {muted && <MicOff className="h-4 w-4" style={{ color: palette.accent }} />}
@@ -154,7 +154,7 @@ export default function FullUserProfile({
             type="button"
             onClick={() => { onClose?.(); navigate('/profil?tab=settings'); }}
             aria-label="Profil ayarları"
-            className="flex h-9 w-9 items-center justify-center rounded-full border text-white"
+            className="flex h-7 w-7 items-center justify-center rounded-full border text-white"
             style={{ borderColor: palette.soft, background: 'rgba(0,0,0,0.45)' }}
           >
             <Settings className="h-4 w-4" />
@@ -166,7 +166,7 @@ export default function FullUserProfile({
 
   // Yükleniyor ve hesap durumu ekranları kartın yerini alır.
   const statusContent = loading ? (
-    <div className="flex flex-1 items-center justify-center py-24">
+    <div className="flex flex-1 items-center justify-center py-12">
       <Loader2 className="h-6 w-6 animate-spin" style={{ color: palette.accent }} />
     </div>
   ) : accountState && !banned ? (
@@ -179,7 +179,7 @@ export default function FullUserProfile({
 
   const content = statusContent || (
     <>
-      <div className="mt-4">
+      <div>
         <ProfileHeroBlock
           name={shownName}
           avatar={banned ? ACCOUNT_STATES.banned.image : shownAvatar}
@@ -191,26 +191,26 @@ export default function FullUserProfile({
       </div>
 
       {!hidden && (profile?.broadcaster_status === 'active' || profile?.agency_name || ownerAgency) && (
-        <div className="mt-2.5 flex flex-wrap items-center justify-center gap-2">
+        <div className="flex flex-wrap items-center gap-1.5">
           {profile?.broadcaster_status === 'active' && (
-            <span className="flex items-center gap-1 rounded-full border border-[#F5C542]/50 bg-[#F5C542]/10 px-3 py-1 text-[11px] font-black text-[#F5C542]">
+            <span className="flex items-center gap-1 rounded-full border border-[#F5C542]/50 bg-[#F5C542]/10 px-2 py-0.5 text-[9px] font-black text-[#F5C542]">
               <Mic2 className="h-3 w-3" /> 🎤 YAYINCI
             </span>
           )}
           {profile?.agency_role === 'assistant' && (
             <span
-              className="flex items-center gap-1 rounded-full border px-3 py-1 text-[11px] font-black"
+              className="flex items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] font-black"
               style={{ borderColor: palette.accent, background: palette.soft, color: palette.accent }}
             >
               🤝 ASİSTAN
             </span>
           )}
           {ownerAgency ? (
-            <span className="flex items-center gap-1 rounded-full border border-[#F5C542]/60 bg-[#F5C542]/10 px-3 py-1 text-[11px] font-black text-[#F5C542]">
+            <span className="flex items-center gap-1 rounded-full border border-[#F5C542]/60 bg-[#F5C542]/10 px-2 py-0.5 text-[9px] font-black text-[#F5C542]">
               🏢 AJANS SAHİBİ{ownerAgency.name ? ` • ${ownerAgency.name}` : ''}{ownerAgency.code ? ` (${ownerAgency.code})` : ''}
             </span>
           ) : profile?.agency_name ? (
-            <span className="rounded-full border border-white/15 bg-black/40 px-3 py-1 text-[11px] font-semibold text-white/70">Ajans: {profile.agency_name}</span>
+            <span className="rounded-full border border-white/15 bg-black/40 px-2 py-0.5 text-[9px] font-semibold text-white/70">Ajans: {profile.agency_name}</span>
           ) : null}
         </div>
       )}
@@ -225,7 +225,7 @@ export default function FullUserProfile({
       />
 
       {hidden ? (
-        <p className="mt-5 rounded-2xl border px-4 py-3 text-center text-[11px] leading-snug text-white/70" style={{ borderColor: palette.soft, background: 'rgba(0,0,0,0.5)' }}>
+        <p className="rounded-2xl border px-3 py-2 text-center text-[10px] leading-snug text-white/70" style={{ borderColor: palette.soft, background: 'rgba(0,0,0,0.5)' }}>
           Kullanıcı, özel Gizli Kullanıcı modunu etkinleştirdi. Kimlik bilgileri gizli kalır.
         </p>
       ) : (
@@ -243,7 +243,7 @@ export default function FullUserProfile({
       )}
 
       {!hidden && info.length > 0 && (
-        <div className="mt-4 space-y-1.5 rounded-2xl border px-4 py-3 text-[12px]" style={{ borderColor: palette.soft, background: 'rgba(0,0,0,0.45)' }}>
+        <div className="space-y-1 rounded-2xl border px-3 py-2 text-[11px]" style={{ borderColor: palette.soft, background: 'rgba(0,0,0,0.45)' }}>
           {info.map((row) => (
             <div key={row.label} className="flex items-start justify-between gap-3">
               <span className="shrink-0 text-white/55">{row.label}</span>
@@ -254,52 +254,55 @@ export default function FullUserProfile({
       )}
 
       {showSocial && (
-        <div className="mt-4 space-y-3">
-          <FollowButton userId={userId} accent={palette.accent} />
-          {relation !== 'friend' && (
+        <div className="space-y-1.5">
+          <FollowButton userId={userId} accent={palette.accent} compact />
+          <div className="flex items-stretch gap-1.5">
+            {relation !== 'friend' && (
+              <button
+                type="button"
+                onClick={addFriend}
+                disabled={relation === 'pending'}
+                className="flex min-w-0 flex-1 items-center justify-center gap-1 rounded-xl border-2 px-2 py-2 text-[11px] font-black text-white disabled:opacity-60"
+                style={{ borderColor: palette.accent, background: palette.soft, boxShadow: `0 0 16px -8px ${palette.glow}` }}
+              >
+                <UserPlus className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate">{relation === 'pending' ? 'İstek Gönderildi' : 'Arkadaş Ekle'}</span>
+              </button>
+            )}
             <button
               type="button"
-              onClick={addFriend}
-              disabled={relation === 'pending'}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 px-4 py-3.5 text-base font-black text-white disabled:opacity-60"
-              style={{ borderColor: palette.accent, background: palette.soft, boxShadow: `0 0 22px -6px ${palette.glow}` }}
+              onClick={openChat}
+              className="flex min-w-0 flex-1 items-center justify-center gap-1 rounded-xl border-2 px-2 py-2 text-[11px] font-black text-white"
+              style={{ borderColor: palette.accent2, background: 'rgba(0,0,0,0.5)', boxShadow: `0 0 16px -8px ${palette.glow}` }}
             >
-              <UserPlus className="h-5 w-5" /> {relation === 'pending' ? 'İstek Gönderildi' : 'Arkadaş Ekle'}
+              <MessageSquare className="h-3.5 w-3.5 shrink-0" /> Mesaj Yaz
             </button>
-          )}
-          <button
-            type="button"
-            onClick={openChat}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 px-4 py-3.5 text-base font-black text-white"
-            style={{ borderColor: palette.accent2, background: 'rgba(0,0,0,0.5)', boxShadow: `0 0 22px -8px ${palette.glow}` }}
-          >
-            <MessageSquare className="h-5 w-5" /> Mesaj Yaz
-          </button>
+          </div>
           {canInvite && (
             <button
               type="button"
               onClick={inviteBroadcaster}
               disabled={inviteSent}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 px-4 py-3.5 text-base font-black text-white disabled:opacity-60"
-              style={{ borderColor: '#F5C542', background: 'rgba(245,197,66,0.14)', boxShadow: '0 0 22px -8px rgba(245,197,66,0.95)' }}
+              className="flex w-full items-center justify-center gap-1.5 rounded-xl border-2 px-2 py-1.5 text-[11px] font-black text-white disabled:opacity-60"
+              style={{ borderColor: '#F5C542', background: 'rgba(245,197,66,0.14)' }}
             >
-              <Mic2 className="h-5 w-5" /> {inviteSent ? 'Davet Gönderildi' : 'Yayıncı Olarak Davet Et'}
+              <Mic2 className="h-3.5 w-3.5" /> {inviteSent ? 'Davet Gönderildi' : 'Yayıncı Olarak Davet Et'}
             </button>
           )}
         </div>
       )}
 
       {tiles.length > 0 && (
-        <div className="mt-4 grid grid-cols-3 gap-x-2 gap-y-3 rounded-2xl border px-3 py-4" style={{ borderColor: palette.soft, background: 'rgba(0,0,0,0.45)' }}>
+        <div className="flex flex-wrap items-stretch gap-1 rounded-2xl border px-1.5 py-1.5" style={{ borderColor: palette.soft, background: 'rgba(0,0,0,0.45)' }}>
           {tiles.map((item) => (
             <button
               key={item.key}
               type="button"
               disabled={item.disabled}
               onClick={item.onClick}
-              className="flex min-w-0 flex-col items-center gap-1.5 rounded-xl px-1 py-1 text-[11px] font-semibold text-white/85 active:scale-95 disabled:opacity-35"
+              className="flex min-w-0 flex-1 basis-0 flex-col items-center gap-0.5 rounded-lg px-1 py-1 text-[9px] font-semibold text-white/85 active:scale-95 disabled:opacity-35"
             >
-              <item.icon className="h-6 w-6" strokeWidth={1.75} />
+              <item.icon className="h-[18px] w-[18px]" strokeWidth={1.75} />
               <span className="max-w-full text-center leading-tight">{item.label}</span>
             </button>
           ))}
@@ -307,18 +310,18 @@ export default function FullUserProfile({
       )}
 
       {footer.length > 0 && (
-        <div className="mt-4 overflow-hidden rounded-2xl border" style={{ borderColor: palette.soft, background: 'rgba(0,0,0,0.45)' }}>
+        <div className="grid grid-cols-2 gap-1">
           {footer.map((item) => (
             <button
               key={item.key}
               type="button"
               onClick={item.onClick}
-              className="flex w-full items-center gap-3 border-b px-4 py-3.5 text-left text-sm font-bold"
-              style={{ borderColor: palette.soft, color: item.danger ? palette.danger : '#fff' }}
+              className="flex min-w-0 items-center gap-1.5 rounded-xl border px-2 py-1.5 text-left text-[11px] font-bold"
+              style={{ borderColor: palette.soft, background: 'rgba(0,0,0,0.45)', color: item.danger ? palette.danger : '#fff' }}
             >
-              <item.icon className="h-4 w-4" strokeWidth={2} />
-              <span className="flex-1">{item.label}</span>
-              <ChevronRight className="h-4 w-4 text-white/40" />
+              <item.icon className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
+              <span className="min-w-0 flex-1 truncate">{item.label}</span>
+              <ChevronRight className="h-3 w-3 shrink-0 text-white/40" />
             </button>
           ))}
         </div>
@@ -327,10 +330,10 @@ export default function FullUserProfile({
   );
 
   return (
-    <div className="fixed inset-0 z-[300] overflow-y-auto overscroll-contain" style={{ background: palette.bg }}>
-      <div className="relative mx-auto flex min-h-full w-full max-w-[520px] flex-col px-4 pb-8 pt-[max(0.75rem,env(safe-area-inset-top))]">
+    <div className="fixed inset-0 z-[300] overflow-hidden" style={{ background: palette.bg }}>
+      <div className="relative mx-auto flex h-full w-full max-w-[520px] flex-col px-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-[max(0.5rem,env(safe-area-inset-top))]">
         {header}
-        {content}
+        <div className="mt-2 flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain">{content}</div>
       </div>
     </div>
   );

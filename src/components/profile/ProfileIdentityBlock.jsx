@@ -1,55 +1,57 @@
 import { Cake, CalendarDays, Check, Copy, MapPin } from 'lucide-react';
 
-/** Kimlik şeridi: cinsiyet + yaş, ülke, kopyalanabilir üye numarası ve kayıt tarihi. */
+/** Kompakt kimlik şeridi: cinsiyet + yaş, ülke, kopyalanabilir kimlik ve kayıt tarihi iki sütunda. */
 export default function ProfileIdentityBlock({ palette, genderLabel, age, country, flag, memberId, joinDate, copied, onCopyId }) {
+  const chip = 'flex items-center justify-between gap-1 rounded-xl border px-2 py-1 text-[10px] font-bold';
+
   return (
-    <div className="mt-5 space-y-3">
+    <div className="grid grid-cols-2 gap-1.5">
       <div
-        className="flex items-center justify-between rounded-2xl border-2 px-4 py-2.5"
-        style={{ borderColor: palette.accent, background: 'rgba(0,0,0,0.45)', boxShadow: `0 0 18px -4px ${palette.glow}` }}
+        className={chip}
+        style={{ borderColor: palette.accent, background: 'rgba(0,0,0,0.45)', boxShadow: `0 0 14px -6px ${palette.glow}` }}
       >
-        <span className="flex items-center gap-2 text-sm font-bold" style={{ color: palette.accent }}>
-          <span className="text-base">{palette.symbol}</span>
+        <span className="flex items-center gap-1 truncate" style={{ color: palette.accent }}>
+          <span className="text-[11px]">{palette.symbol}</span>
           {genderLabel}
         </span>
-        <span className="flex items-center gap-2 text-sm font-bold text-white">
-          <Cake className="h-4 w-4" style={{ color: palette.accent2 }} />
-          {age === null ? 'Belirtilmedi' : `${age} Yaş`}
+        <span className="flex shrink-0 items-center gap-1 text-white">
+          <Cake className="h-3 w-3" style={{ color: palette.accent2 }} />
+          {age === null ? '—' : `${age}`}
         </span>
       </div>
 
       {country && (
-        <div className="flex items-center justify-between rounded-2xl border px-4 py-2.5" style={{ borderColor: palette.soft, background: 'rgba(0,0,0,0.5)' }}>
-          <span className="flex items-center gap-2 text-xs font-semibold text-white/70">
-            <MapPin className="h-4 w-4" style={{ color: palette.accent2 }} />
+        <div className={chip} style={{ borderColor: palette.soft, background: 'rgba(0,0,0,0.5)' }}>
+          <span className="flex items-center gap-1 text-white/60">
+            <MapPin className="h-3 w-3" style={{ color: palette.accent2 }} />
             Ülke
           </span>
-          <span className="flex items-center gap-1.5 text-sm font-bold text-white">
-            <span className="text-base">{flag}</span> {country}
+          <span className="flex shrink-0 items-center gap-1 truncate text-white">
+            <span className="text-[11px]">{flag}</span> {country}
           </span>
         </div>
       )}
 
-      <div className="flex items-center justify-between rounded-2xl border px-4 py-2.5" style={{ borderColor: palette.soft, background: 'rgba(0,0,0,0.5)' }}>
-        <span className="font-mono text-base font-bold text-white"># {memberId || '-'}</span>
+      <div className={`${chip} ${country ? '' : 'col-span-2'}`} style={{ borderColor: palette.soft, background: 'rgba(0,0,0,0.5)' }}>
+        <span className="truncate font-mono text-[11px] text-white"># {memberId || '-'}</span>
         <button
           type="button"
           onClick={onCopyId}
           disabled={!memberId}
           aria-label="Kimliği kopyala"
-          className="flex h-8 w-8 items-center justify-center rounded-full border disabled:opacity-40"
+          className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border disabled:opacity-40"
           style={{ borderColor: palette.accent, color: palette.accent }}
         >
-          {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+          {copied ? <Check className="h-2.5 w-2.5" /> : <Copy className="h-2.5 w-2.5" />}
         </button>
       </div>
 
-      <div className="flex items-center justify-between rounded-2xl border px-4 py-2.5" style={{ borderColor: palette.soft, background: 'rgba(0,0,0,0.5)' }}>
-        <span className="flex items-center gap-2 text-xs font-semibold text-white/70">
-          <CalendarDays className="h-4 w-4" style={{ color: palette.accent2 }} />
-          Kayıt Tarihi
+      <div className={chip} style={{ borderColor: palette.soft, background: 'rgba(0,0,0,0.5)' }}>
+        <span className="flex items-center gap-1 truncate text-white/60">
+          <CalendarDays className="h-3 w-3" style={{ color: palette.accent2 }} />
+          Kayıt
         </span>
-        <span className="text-sm font-bold text-white">{joinDate}</span>
+        <span className="shrink-0 text-white">{joinDate}</span>
       </div>
     </div>
   );
