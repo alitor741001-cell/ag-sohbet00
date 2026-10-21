@@ -853,7 +853,9 @@ export default function VoiceRoom() {
 
   // Koltuk, sohbet satırı ve izleyici listesi aynı merkezi profil kartını açar.
   const openRoomProfile = useLatestCallback((targetId) => {
-    if (targetId) openUserProfile(targetId, { roomActions: roomProfileActions });
+    if (!targetId) return;
+    const person = participants.find((item) => item.user_id === targetId) || seats.find((item) => item.user_id === targetId);
+    openUserProfile(targetId, { roomActions: roomProfileActions, name: person?.name, avatar: person?.avatar, hidden: !!person?.hidden || isHiddenName(person?.name) });
   });
 
   const toggleGiftPerson = useCallback((userId) => {
@@ -1229,6 +1231,7 @@ export default function VoiceRoom() {
         onClose={() => setGiftBoardOpen(false)}
         board={giftBoard}
         loading={giftBoardLoading}
+        onSelect={openRoomProfile}
       />
 
       <VoiceSeatSheet

@@ -8,7 +8,7 @@ import { useCurrentUser } from '@/lib/useCurrentUser';
 import { HIDDEN_AVATAR_URL } from '@/lib/hiddenUser';
 import { ROOM_BLUE, ageFromBirthDate, formatDate, genderPalette } from '@/components/profile/genderPalette';
 import { agencyApi } from '@/lib/agency';
-import ProfileHeroBlock from '@/components/profile/ProfileHeroBlock';
+import FantasyProfileShell from '@/components/profile/FantasyProfileShell';
 import ProfileStatsRow from '@/components/profile/ProfileStatsRow';
 import ProfileIdentityBlock from '@/components/profile/ProfileIdentityBlock';
 import FollowButton from '@/components/profile/social/FollowButton';
@@ -180,17 +180,6 @@ export default function FullUserProfile({
 
   const content = statusContent || (
     <>
-      <div>
-        <ProfileHeroBlock
-          name={shownName}
-          avatar={banned ? ACCOUNT_STATES.banned.image : shownAvatar}
-          palette={palette}
-          hidden={hidden}
-          statusLabel={banned ? ACCOUNT_MARKS.banned : ''}
-          roleLabel={roleLabel}
-        />
-      </div>
-
       {!hidden && (profile?.broadcaster_status === 'active' || profile?.agency_name || ownerAgency) && (
         <div className="flex flex-wrap items-center gap-1.5">
           {profile?.broadcaster_status === 'active' && (
@@ -338,11 +327,12 @@ export default function FullUserProfile({
   );
 
   return (
-    <div className="fixed inset-0 z-[300] overflow-hidden" style={{ background: palette.bg }}>
-      <div className="relative mx-auto flex h-full w-full max-w-[520px] flex-col px-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-[max(0.5rem,env(safe-area-inset-top))]">
+    <FantasyProfileShell female={profile?.gender === 'kadın'} hidden={hidden} name={shownName}
+      avatar={banned ? ACCOUNT_STATES.banned.image : shownAvatar} role={roleLabel} onClose={onClose}>
+      <div className="space-y-3 px-4 pt-1">
         {header}
-        <div className="mt-2 flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain">{content}</div>
+        <div className="flex flex-col gap-3">{content}</div>
       </div>
-    </div>
+    </FantasyProfileShell>
   );
 }

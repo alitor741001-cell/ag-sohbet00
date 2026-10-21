@@ -15,7 +15,7 @@ const TABS = [
 const FLAME_EDGE = 'linear-gradient(90deg,#7f1d1d 0%,#ea580c 16%,#fbbf24 32%,#f97316 50%,#dc2626 68%,#f59e0b 84%,#7f1d1d 100%)';
 
 /** Zenginlik sıralaması: günlük, haftalık ve toplam hediye gönderim listeleri (alev temalı). */
-export default function GiftBoardSheet({ open, onClose, board, loading }) {
+export default function GiftBoardSheet({ open, onClose, board, loading, onSelect }) {
   const [tab, setTab] = useState('all');
   useBackDismiss(open, onClose);
 
@@ -111,6 +111,7 @@ export default function GiftBoardSheet({ open, onClose, board, loading }) {
                     rank={index + 1}
                     entry={entry}
                     profile={profiles[entry.user_id]}
+                    onSelect={(id) => { onClose(); onSelect?.(id); }}
                   />
                 ))
               ) : (

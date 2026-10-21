@@ -37,13 +37,13 @@ const compactScore = (value) => {
 };
 
 /** Zenginlik listesi satırı: sıra, profil çerçevesi, isim/rozetler ve toplam hediye. */
-export default function GiftBoardRow({ rank, entry, profile }) {
+export default function GiftBoardRow({ rank, entry, profile, onSelect }) {
   const tone = RANK_TONES[rank];
   const hidden = entry.hidden || isHiddenName(entry.name);
   const name = entry.name || 'Kullanıcı';
 
   return (
-    <div className="flex items-center gap-2.5 border-b border-orange-300/15 py-2.5 last:border-b-0">
+    <button type="button" onClick={() => onSelect?.(entry.user_id)} aria-label={`${name} profilini aç`} className="flex w-full items-center gap-2.5 border-b border-orange-300/15 py-2.5 text-left last:border-b-0">
       <span className="relative flex h-7 w-7 shrink-0 items-center justify-center">
         {tone ? (
           <>
@@ -90,6 +90,6 @@ export default function GiftBoardRow({ rank, entry, profile }) {
           {compactScore(entry.score)}
         </span>
       </span>
-    </div>
+    </button>
   );
 }

@@ -1,5 +1,5 @@
-import { MicOff, X } from 'lucide-react';
-import ProfileFrame from '@/components/ProfileFrame';
+import { X } from 'lucide-react';
+import VoiceViewerRow from '@/components/voice/VoiceViewerRow';
 
 /** İzleyici listesi: ekranın dibinden yarıya kadar yukarı kayarak açılan kart. */
 export default function VoiceViewerSheet({ open, onClose, participants = [], seats = [], userId, ownerId, moderators = [], onSelect }) {
@@ -26,13 +26,8 @@ export default function VoiceViewerSheet({ open, onClose, participants = [], sea
                   const isOwner = person.user_id === ownerId;
                   const isMod = !isOwner && moderators.includes(person.user_id);
                   return (
-                    <div
-                      key={person.user_id}
-                      onClick={() => { onClose(); onSelect?.(person.user_id); }}
-                      className="flex w-full cursor-pointer items-center gap-2.5 rounded-xl px-2 py-1.5 text-left hover:bg-white/5"
-                    >
-...
-                    </div>
+                    <VoiceViewerRow key={person.user_id} person={person} seat={seat} isOwner={isOwner} isMod={isMod}
+                      isSelf={person.user_id === userId} onSelect={(id) => { onClose(); onSelect?.(id); }} />
                   );
                 })}
               </div>
