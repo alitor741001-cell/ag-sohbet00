@@ -4,7 +4,6 @@ import { base44 } from '@/api/base44Client';
 import { useToast } from '@/components/ui/use-toast';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import CrystalCircleButton from '@/components/profile/crystal/CrystalCircleButton';
-import ReferenceActionButton from '@/components/profile/crystal/ReferenceActionButton';
 
 /** Takip Et / Takipten Çık: sayaçla birlikte, profil açılan her yerde aynı görünür.
  *  variant="circle" sesli odadaki kartın yuvarlak düğme şeridinde gösterir. */
@@ -46,10 +45,6 @@ export default function FollowButton({ userId, accent = '#6fe6dc', variant = 'fu
       setBusy(false);
     }
   };
-
-  if (variant === 'reference') {
-    return <ReferenceActionButton icon={state.following ? UserCheck : UserPlus} label={state.following ? 'Takip Ediliyor' : 'Takip Et'} active={state.following} loading={busy} onClick={toggle} />;
-  }
 
   if (variant === 'circle') {
     return (
