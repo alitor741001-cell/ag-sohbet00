@@ -81,17 +81,30 @@
   align-items: center;
   gap: 0.3rem;
   border-radius: 1rem;
-  border: 1px solid rgba(255, 215, 120, 0.6);
-  padding: 0.55rem 0.5rem;
+  border: 1px solid rgba(232, 185, 90, 0.5);
+  padding: 0.6rem 0.5rem;
   text-align: center;
+  transition: transform 160ms ease, box-shadow 160ms ease;
   background:
-    linear-gradient(180deg, rgba(255, 238, 196, 0.12), rgba(255, 238, 196, 0) 40%),
-    linear-gradient(180deg, #16120f 0%, #070606 64%, #030303 100%);
+    radial-gradient(120% 70% at 50% 0%, rgba(232, 185, 90, 0.2), rgba(232, 185, 90, 0) 62%),
+    linear-gradient(180deg, #101b2e 0%, #0a1220 58%, #060a12 100%);
   box-shadow:
     inset 0 0 0 1px rgba(255, 236, 190, 0.14),
     inset 0 1px 0 rgba(255, 246, 214, 0.26),
     inset 0 -14px 24px rgba(0, 0, 0, 0.62),
     0 12px 26px -20px rgba(0, 0, 0, 0.95);
+}
+@media (hover: hover) {
+  /* Kart üzerine gelince altın ışık hafifçe yükselir. */
+  .gd-deal:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 236, 190, 0.2),
+      inset 0 1px 0 rgba(255, 246, 214, 0.3),
+      inset 0 -14px 24px rgba(0, 0, 0, 0.6),
+      0 18px 34px -20px rgba(0, 0, 0, 0.95),
+      0 0 22px -6px rgba(232, 185, 90, 0.4);
+  }
 }
 .gd-deal-well {
   display: flex;
@@ -100,9 +113,9 @@
   align-items: center;
   justify-content: center;
   border-radius: 0.6rem;
-  border: 1px solid rgba(255, 215, 120, 0.22);
-  background: #040404;
-  box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.9);
+  border: 1px solid rgba(232, 185, 90, 0.3);
+  background: radial-gradient(circle at 50% 35%, #132238 0%, #08111d 60%, #050a12 100%);
+  box-shadow: inset 0 4px 14px rgba(0, 0, 0, 0.85), inset 0 -1px 0 rgba(232, 185, 90, 0.16);
 }
 .gd-deal-qty {
   display: flex;

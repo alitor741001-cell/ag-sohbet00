@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ChevronLeft, Coins, Loader2 } from 'lucide-react';
+import { ChevronLeft, Coins, Loader2, Sparkles } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { formatCoins } from '@/lib/giftTone';
 import CoinShopHero from '@/components/voice/coinShop/CoinShopHero';
@@ -79,6 +79,13 @@ export default function CoinPurchasePanel({ open, coins, onBack }) {
           <CoinPendingNotice request={pending} />
 
           {error && <p className="mt-3 rounded-xl bg-red-500/15 px-3 py-2 text-center text-[11px] font-bold text-red-300">{error}</p>}
+
+          {/* Paket rafı başlığı: mağaza holü ile kartlar arasında altın ayraç. */}
+          <div className="mt-4 flex items-center gap-2 px-1">
+            <Sparkles className="h-4 w-4 shrink-0 text-[#E8B95A]" />
+            <p className="shrink-0 text-[13px] font-black tracking-wide text-white">Coin Paketleri</p>
+            <span className="h-px flex-1" style={{ background: 'linear-gradient(90deg, rgba(232,185,90,0.6), rgba(232,185,90,0))' }} />
+          </div>
 
           {loading ? (
             <div className="flex justify-center py-12">
