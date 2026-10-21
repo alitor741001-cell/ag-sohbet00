@@ -39,9 +39,9 @@ export default function LevelPage() {
 
   const isWealth = tab === 'wealth';
   const score = isWealth ? (xp?.xp ?? 0) : charm;
-  const level = isWealth ? (Number(xp?.frame?.level) || levelFromScore(score)) : levelFromScore(score);
-  const percent = isWealth ? (xp?.percent ?? 0) : Math.round(((score % STEP) / STEP) * 100);
-  const remaining = isWealth ? (xp?.remaining ?? STEP) : STEP - (score % STEP);
+  const level = levelFromScore(score);
+  const percent = Math.min(100, Math.round(((score % STEP) / STEP) * 100));
+  const remaining = STEP - (score % STEP);
   const tier = tierFor(level);
   const avatar = user?.avatar;
   const label = user?.username || user?.full_name || 'Profilim';

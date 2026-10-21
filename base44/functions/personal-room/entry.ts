@@ -108,6 +108,8 @@ export default async function(req) {
       }
       if (settings) {
         if (settings.name) patch.name = settings.name;
+        if (settings.background) patch.background = String(settings.background).slice(0, 40);
+        if (typeof settings.cover_url === 'string') patch.cover_url = settings.cover_url.slice(0, 500);
         if (settings.chat_enabled !== null) patch.chat_enabled = settings.chat_enabled;
         if (settings.password !== null) await applyPassword(existing[0].id, patch);
         // Koltuk düzeni yalnızca oda hiç kurulmamışsa yazılır: içeride yapılan değişiklik korunur.
@@ -138,6 +140,8 @@ export default async function(req) {
       owner_id: user.id,
       owner_name,
       is_personal: true,
+      background: settings?.background ? String(settings.background).slice(0, 40) : '',
+      cover_url: typeof settings?.cover_url === 'string' ? settings.cover_url.slice(0, 500) : '',
       room_number: 0,
       personal_room_code: personalRoomCode,
       max_users: PERSONAL_MAX_USERS,

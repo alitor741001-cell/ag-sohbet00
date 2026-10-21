@@ -76,6 +76,14 @@
       "type": "integer",
       "default": 0
     },
+    "background": {
+      "type": "string",
+      "default": ""
+    },
+    "cover_url": {
+      "type": "string",
+      "default": ""
+    },
     "seats": {
       "type": "array",
       "items": {
