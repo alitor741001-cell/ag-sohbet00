@@ -5,12 +5,9 @@ import { useToast } from '@/components/ui/use-toast';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import CompactActionTile from '@/components/profile/compact/CompactActionTile';
 
-// Kristal düğme yalnızca palet alanlarını kullanır.
-const FOLLOW_TILE_PALETTE = {};
-
 /** Takip Et / Takipten Çık: sayaçla birlikte, profil açılan her yerde aynı görünür.
  *  variant="tile" kompakt profil kartının alt işlem şeridinde küçük kare düğme olarak gösterir. */
-export default function FollowButton({ userId, accent = '#6fe6dc', variant = 'full', onChange }) {
+export default function FollowButton({ userId, accent = '#6fe6dc', variant = 'full', tone = 'pink', onChange }) {
   const { user } = useCurrentUser();
   const { toast } = useToast();
   const [state, setState] = useState({ following: false, followers: 0 });
@@ -56,8 +53,8 @@ export default function FollowButton({ userId, accent = '#6fe6dc', variant = 'fu
         label={state.following ? 'Takip Ediliyor' : 'Takip Et'}
         active={state.following}
         loading={busy}
+        tone={tone}
         onClick={toggle}
-        palette={{ ...FOLLOW_TILE_PALETTE, glow: accent, accent }}
       />
     );
   }

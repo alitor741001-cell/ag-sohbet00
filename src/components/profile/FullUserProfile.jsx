@@ -331,18 +331,81 @@ export default function FullUserProfile({
     </>
   );
 
-  // Sesli odadaki kompakt kart: tüm detaylar kaydırmadan tek ekrana sığar.
+  // Kompakt kart referans görselin düzenini kullanır: kadın pembe, erkek mavi.
+  const compactSkin = profile?.gender === 'erkek' ? 'blue' : 'pink';
   const compactTags = hidden ? [] : [
-    profile?.broadcaster_status === 'active' ? '🎤 YAYINCI' : '',
-    profile?.agency_role === 'assistant' ? '🤝 ASİSTAN' : '',
-    ownerAgency
-      ? `🏢 ${ownerAgency.name || 'AJANS'}${ownerAgency.code ? ` · ${ownerAgency.code}` : ''}`
-      : (profile?.agency_name ? `Ajans: ${profile.agency_name}` : ''),
+    profile?.broadcaster_status === 'active' ? 'YAYINCI' : '',
+    profile?.agency_role === 'assistant' ? 'ASİSTAN' : '',
   ].filter(Boolean);
+  const compactAgency = hidden ? null : (
+    ownerAgency?.name
+      ? { name: ownerAgency.name, code: ownerAgency.code || '' }
+      : (profile?.agency_name ? { name: profile.agency_name, code: profile.agency_code || '' } : null)
+  );
 
   // Hediye düğmesi referanstaki dörtlü şeridin dördüncü gözünde durur.
   const giftItem = footer.find((item) => item.key === 'gift');
   const otherFooterItems = footer.filter((item) => item.key !== 'gift');
+
+  // Referanstaki dört ana düğme: takip, sohbet, bahsetme, hediye.
+  const primaryTiles = [
+    showSocial ? <FollowButton key="follow" variant="tile" userId={userId} tone={compactSkin} /> : null,
+    !isSelf ? (
+      <CompactActionTile
+        key="chat"
+        icon={MessageSquare}
+        label="Sohbet"
+        tone={compactSkin}
+        onClick={() => { onMessage?.(userId); onClose?.(); }}
+      />
+    ) : null,
+    !isSelf && !!onMention ? (
+      <CompactActionTile
+        key="mention"
+        icon={AtSign}
+        label="Bahsetme"
+        tone={compactSkin}
+        onClick={() => { onMention(shownName); onClose?.(); }}
+      />
+    ) : null,
+    giftItem ? (
+      <CompactActionTile key="gift" icon={giftItem.icon} label="Hediye" tone={compactSkin} onClick={giftItem.onClick} />
+    ) : null,
+  ].filter(Boolean);
+
+  // Dörtlü şeride sığmayan ek işlemler alt satırda küçük düğmeler olarak durur.
+  const extraTiles = [
+    showSocial && relation !== 'friend' ? (
+      <CompactActionTile
+        key="friend"
+        icon={UserPlus}
+        label={relation === 'pending' ? 'İstek Gönderildi' : 'Arkadaş Ekle'}
+        tone={compactSkin}
+        disabled={relation === 'pending'}
+        onClick={addFriend}
+      />
+    ) : null,
+    ...otherFooterItems.map((item) => (
+      <CompactActionTile
+        key={item.key}
+        icon={item.icon}
+        label={item.label}
+        tone={compactSkin}
+        danger={item.danger}
+        onClick={item.onClick}
+      />
+    )),
+    canInvite ? (
+      <CompactActionTile
+        key="invite"
+        icon={Mic2}
+        label={inviteSent ? 'Davet Gönderildi' : 'Yayıncı Davet'}
+        tone={compactSkin}
+        disabled={inviteSent}
+        onClick={inviteBroadcaster}
+      />
+    ) : null,
+  ].filter(Boolean);
 
   const compactContent = statusContent || (
     <>
@@ -363,11 +426,13 @@ export default function FullUserProfile({
         level={level >= 1000 ? 0 : level}
         vipLevel={profile?.vip_level || 0}
         receivedLevel={profile?.gift_received_level || 0}
+        agency={compactAgency}
+        tone={compactSkin}
         tags={compactTags}
       />
 
       <CompactBadgeBoard
-        palette={palette}
+        tone={compactSkin}
         level={level >= 1000 ? 0 : level}
         nLevel={profile?.n_level || 0}
         receivedLevel={profile?.gift_received_level || 0}
@@ -397,67 +462,24 @@ export default function FullUserProfile({
       <CompactLovePanel
         avatar={banned ? ACCOUNT_STATES.banned.image : shownAvatar}
         name={shownName}
-        receivedLevel={hidden ? 0 : (profile?.gift_received_level || 0)}
         onGift={giftItem?.onClick}
+        tone={compactSkin}
       />
 
-      {/* Referanstaki dörtlü kristal şerit: takip, sohbet, bahsetme, hediye. */}
-      <div className="mt-2 grid grid-cols-4 gap-1.5">
-        {showSocial && <FollowButton variant="tile" userId={userId} accent={palette.accent} />}
-        {!isSelf && (
-          <CompactActionTile
-            icon={MessageSquare}
-            palette={palette}
-            label="Sohbet"
-            onClick={() => { onMessage?.(userId); onClose?.(); }}
-          />
-        )}
-        {!isSelf && !!onMention && (
-          <CompactActionTile
-            icon={AtSign}
-            palette={palette}
-            label="Bahsetme"
-            onClick={() => { onMention(shownName); onClose?.(); }}
-          />
-        )}
-        {giftItem && (
-          <CompactActionTile
-            icon={giftItem.icon}
-            palette={palette}
-            label="Hediye"
-            tone="rose"
-            onClick={giftItem.onClick}
-          />
-        )}
-        {showSocial && relation !== 'friend' && (
-          <CompactActionTile
-            icon={UserPlus}
-            palette={palette}
-            label={relation === 'pending' ? 'İstek Gönderildi' : 'Arkadaş Ekle'}
-            disabled={relation === 'pending'}
-            onClick={addFriend}
-          />
-        )}
-        {otherFooterItems.map((item) => (
-          <CompactActionTile
-            key={item.key}
-            icon={item.icon}
-            palette={palette}
-            label={item.label}
-            danger={item.danger}
-            onClick={item.onClick}
-          />
-        ))}
-        {canInvite && (
-          <CompactActionTile
-            icon={Mic2}
-            palette={palette}
-            label={inviteSent ? 'Davet Gönderildi' : 'Yayıncı Davet'}
-            disabled={inviteSent}
-            onClick={inviteBroadcaster}
-          />
-        )}
+      <div
+        className="mt-2 grid gap-1.5"
+        style={{ gridTemplateColumns: `repeat(${Math.min(4, Math.max(1, primaryTiles.length))}, minmax(0, 1fr))` }}
+      >
+        {primaryTiles}
       </div>
+
+      {extraTiles.length > 0 && (
+        <div className="mt-1.5 flex flex-wrap items-start justify-center gap-1.5">
+          {extraTiles.map((node) => (
+            <div key={node.key} className="w-[52px]">{node}</div>
+          ))}
+        </div>
+      )}
 
       <CompactRoomActions tiles={tiles} palette={palette} />
     </>
@@ -469,8 +491,12 @@ export default function FullUserProfile({
       <div className="fixed inset-0 z-[300] flex items-end justify-center sm:items-center">
         <button type="button" aria-label="Kapat" onClick={onClose} className="absolute inset-0 w-full bg-black/65" />
         <div
-          className="animate-sheet-up relative flex w-full max-w-[430px] flex-col overflow-hidden rounded-t-[26px] border-t-2 px-3 pb-[max(0.6rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-8px_30px_rgba(0,0,0,0.55)] sm:mb-6 sm:rounded-[26px] sm:border-2"
-          style={{ background: palette.bg, borderColor: palette.soft, maxHeight: 'calc(var(--app-height, 100dvh) - 4px)' }}
+          className="animate-sheet-up relative flex w-full max-w-[414px] flex-col overflow-hidden rounded-t-[26px] border-t-2 px-3 pb-[max(0.6rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-8px_30px_rgba(0,0,0,0.7)] sm:mb-6 sm:rounded-[26px] sm:border-2"
+          style={{
+            background: 'radial-gradient(circle at 50% 0%, rgba(255,255,255,0.07), transparent 62%), #121317',
+            borderColor: compactSkin === 'blue' ? 'rgba(127,182,221,0.6)' : 'rgba(255,150,195,0.6)',
+            maxHeight: 'calc(var(--app-height, 100dvh) - 4px)',
+          }}
         >
           {header}
           {compactContent}
