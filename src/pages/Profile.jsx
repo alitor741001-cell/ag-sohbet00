@@ -6,9 +6,15 @@ import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
 import { findProtectedName } from '@/lib/protectedNames';
 
-import ProfileTopBar from '@/components/profile/ProfileTopBar';
-import ProfileHeader from '@/components/profile/ProfileHeader';
-import ProfileWalletCards from '@/components/profile/ProfileWalletCards';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import useFriends from '@/hooks/useFriends';
+import BlockedUsers from '@/components/profile/BlockedUsers';
+import ProfileHeroCard from '@/components/profile/fantasy/ProfileHeroCard';
+import ProfileStatBar from '@/components/profile/fantasy/ProfileStatBar';
+import ProfileTwinCards from '@/components/profile/fantasy/ProfileTwinCards';
+import ProfileIconGrid from '@/components/profile/fantasy/ProfileIconGrid';
+import ProfileBottomNav from '@/components/profile/fantasy/ProfileBottomNav';
+import LevelDialog from '@/components/profile/fantasy/LevelDialog';
 import { giftBoxLocked } from '@/lib/giftAccess';
 import ProfileNeonRow from '@/components/profile/ProfileNeonRow';
 import ProfileDetailsSection from '@/components/profile/ProfileDetailsSection';
@@ -35,6 +41,9 @@ export default function Profile() {
   const [wallet, setWallet] = useState(null);
   const [vipCount, setVipCount] = useState(0);
   const [giftBoxOpen, setGiftBoxOpen] = useState(false);
+  const [levelOpen, setLevelOpen] = useState(false);
+  const [blockedOpen, setBlockedOpen] = useState(false);
+  const [privacyOpen, setPrivacyOpen] = useState(false);
 
   const [activityOpen, setActivityOpen] = useState(false);
   const [vipBagOpen, setVipBagOpen] = useState(false);
@@ -83,6 +92,22 @@ export default function Profile() {
   // anında işler — kart 5 saniyelik yenilemeyi beklemez.
   useWalletCoinsLive(user?.id, (coins) => setWallet((prev) => ({ ...prev, coins })));
   useGiftSummaryLive(user?.id, loadWallet);
+
+  // Arkadaş sayısı ortak arkadaşlık deposundan gelir; diğer sayaçlar için ayrı özellik yok.
+  const { relations } = useFriends();
+  const friendCount = relations.filter((relation) => relation.status === 'accepted').length;
+
+  const copyInviteLink = () => {
+    const link = `${window.location.origin}/register`;
+    navigator.clipboard.writeText(link)
+      .then(() => toast({ title: 'Davet bağlantısı kopyalandı', description: link }))
+      .catch(() => toast({ title: 'Bağlantı kopyalanamadı', variant: 'destructive' }));
+  };
+
+  const openSettingsSection = () => {
+    setOpenKey('settings');
+    requestAnimationFrame(() => document.getElementById('eklentiler')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+  };
 
   // Sayfa kendini 5 saniyede bir sessizce tazeler: bakiye canlı değerden okunur, böylece
   // hediye/oyun harcamaları ekranda eski tutarla kalmaz — yükleme göstergesi çıkmaz.
@@ -150,22 +175,41 @@ export default function Profile() {
   // Paket/abonelik sistemi kaldırıldı: üyelik süresi artık erişimi etkilemez.
 
   return (
-    <div className="dark min-h-screen pb-6 text-white">
-      <ProfileTopBar />
+    <div
+      className="dark min-h-screen pb-6 text-white"
+      style={{ background: 'radial-gradient(140% 80% at 50% 0%, #0E2A5A 0%, #071731 46%, #03081A 100%)' }}
+    >
       <div className="mx-auto w-full max-w-2xl md:max-w-3xl xl:max-w-4xl">
-        <ProfileHeader user={user} avatar={form.avatar} onAvatar={onAvatar} onUpdated={reload} uploading={uploading} />
+        <ProfileHeroCard
+          user={user}
+          avatar={form.avatar}
+          onAvatar={onAvatar}
+          uploading={uploading}
+          onEdit={() => toggle('info')}
+          coins={wallet?.coins ?? null}
+          gems={elmasLocked ? null : (wallet?.month_score ?? null)}
+          vipLevel={Number(user.vip_level) || 0}
+          onOpenCoins={() => setActivityOpen(true)}
+          onOpenGems={openGiftBox}
+        />
 
-        <div className="space-y-2 px-4 pt-3">
-          <ProfileWalletCards
-            coins={wallet?.coins ?? null}
-            giftScore={wallet?.month_score ?? null}
+        <div className="space-y-3 px-4 pt-4">
+          <ProfileStatBar friends={friendCount} />
+          <ProfileTwinCards
             vipCount={vipCount}
-            locked={elmasLocked}
-            onOpenCoins={() => setActivityOpen(true)}
-            onOpenGiftBox={openGiftBox}
-            onOpenVipBag={() => setVipBagOpen(true)}
-            onOpenCoinShop={() => setCoinShopOpen(true)}
-            onOpenAgency={isAdmin ? undefined : () => navigate('/ajans')}
+            coins={wallet?.coins ?? null}
+            onVip={() => setVipBagOpen(true)}
+            onWallet={() => setActivityOpen(true)}
+          />
+          <ProfileIconGrid
+            vipCount={vipCount}
+            onSelect={(key) => {
+              if (key === 'shop') setCoinShopOpen(true);
+              else if (key === 'bag') setVipBagOpen(true);
+              else if (key === 'level') setLevelOpen(true);
+              else if (key === 'agency') navigate('/ajans');
+              else if (key === 'cp') navigate('/arkadaslar');
+            }}
           />
 
           {isAdmin && (
@@ -196,6 +240,15 @@ export default function Profile() {
           <ProfileNeonRow icon={LogOut} tone="red" title="Çıkış Yap" subtitle="Hesabınızdan güvenli çıkış yapın" onClick={() => base44.auth.logout('/login')} />
           <DeleteAccountSection />
         </div>
+
+        <ProfileBottomNav
+          onSelect={(key) => {
+            if (key === 'invite') copyInviteLink();
+            else if (key === 'blocked') setBlockedOpen(true);
+            else if (key === 'privacy') setPrivacyOpen(true);
+            else if (key === 'settings') openSettingsSection();
+          }}
+        />
       </div>
 
       {/* Kutu kapanınca bakiye canlı değerden tazelenir: kart eski tutarı göstermez. */}
@@ -207,6 +260,30 @@ export default function Profile() {
         coins={wallet?.coins ?? null}
         onBack={() => { setCoinShopOpen(false); loadWallet(); }}
       />
+      <LevelDialog open={levelOpen} onClose={() => setLevelOpen(false)} userId={user.id} />
+
+      <Dialog open={blockedOpen} onOpenChange={(value) => !value && setBlockedOpen(false)}>
+        <DialogContent className="max-w-lg border-[#7dd3fc]/30 bg-[linear-gradient(180deg,#0B2A52,#05122A)] text-white">
+          <DialogHeader>
+            <DialogTitle className="text-[#a5e4ff]">Engellenen Hesaplar</DialogTitle>
+          </DialogHeader>
+          <BlockedUsers />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={privacyOpen} onOpenChange={(value) => !value && setPrivacyOpen(false)}>
+        <DialogContent className="max-w-lg border-[#7dd3fc]/30 bg-[linear-gradient(180deg,#0B2A52,#05122A)] text-white">
+          <DialogHeader>
+            <DialogTitle className="text-[#a5e4ff]">Gizlilik Politikası</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 text-sm leading-6 text-white/80">
+            <p>Profil bilgileriniz, sohbetleriniz ve cüzdan hareketleriniz yalnızca uygulama içindeki özelliklerin çalışması için saklanır.</p>
+            <p>Profil fotoğrafınız ve kapak görselleriniz diğer üyeler tarafından görülebilir; telefon numaranız ve e-posta adresiniz profilinizde gösterilmez.</p>
+            <p>Engellediğiniz hesaplar sizi göremez ve size mesaj gönderemez. Hesabınızı profildeki “Hesabı Sil” bölümünden kalıcı olarak silebilirsiniz.</p>
+            <p>Gizlilikle ilgili talepleriniz için Destek bölümünden bize yazabilirsiniz.</p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
