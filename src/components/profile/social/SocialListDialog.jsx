@@ -1,8 +1,18 @@
 import { useEffect, useState } from 'react';
 import { useUserProfile } from '@/lib/profileCard';
-import { ArrowLeft, Eye, HeartHandshake, Loader2, UserCheck } from 'lucide-react';
+import { ArrowLeft, Clock, Eye, HeartHandshake, Loader2, UserCheck } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Image } from '@/components/ui/image';
+
+/** Ziyaret zamanı: 22.10.2026 · 02:14 */
+const formatVisit = (iso) => {
+  if (!iso) return '';
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleString('tr-TR', {
+    day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
+  });
+};
 
 const TITLES = {
   following: { label: 'Takip Edilenler', Icon: UserCheck },
@@ -78,6 +88,11 @@ export default function SocialListDialog({ open, kind, onClose }) {
                   <span className="block text-[10.5px] font-semibold text-white/45">
                     {person.member_id ? `Üye No: ${person.member_id}` : 'Üye'}
                   </span>
+                  {kind === 'visitors' && formatVisit(person.visited_at) && (
+                    <span className="mt-0.5 flex items-center gap-1 text-[10px] font-semibold text-[#f2ce6b]/80">
+                      <Clock className="h-3 w-3 shrink-0" /> {formatVisit(person.visited_at)}
+                    </span>
+                  )}
                 </span>
               </button>
             ))}
