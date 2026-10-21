@@ -13,6 +13,9 @@
 
 .voice-viewport {
   top: var(--viewport-offset, 0px);
+  /* Zemin lacivert: ölçüler ne olursa olsun görünen her piksel tema tonunda kalır. */
+  background-color: #0b1930;
+  background-image: linear-gradient(180deg, #0a1a33 0%, #071428 58%, #0b1930 100%);
   /* dvh desteklenmeyen eski sürümlerde de alan ekranı kaplar. */
   height: 100vh;
   /* Görünür alan ölçüsü (visualViewport) ekranın en altına ulaşmadığında çerçeve kısa
@@ -33,6 +36,22 @@
 }
 /* Butonlar cihazın alt güvenli alanının üzerinde durur ama ekranın dibine yakın oturur. */
 .voice-control-bar { padding-bottom: max(0.25rem, calc(env(safe-area-inset-bottom, 0px) * 0.5)); }
+
+/* Kontrol çubuğunun altında kalan güvenli alan şeridi de çubuğun lacivert zeminiyle
+   boyanır: ekranın en altında siyah bir bant kalmaz. Sabit konumlu katman çerçevenin
+   kırpmasından etkilenmez, bu yüzden şerit ne kadar yüksek olursa olsun kapanır. */
+.voice-controls-anchor { position: relative; }
+.voice-controls-anchor::after {
+  content: '';
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 56px;
+  z-index: -1;
+  pointer-events: none;
+  background: #0b1930;
+}
 
 @media (max-width: 767px) {
   /* Sohbet alanı sabit yükseklikte durur: yeni mesaj gelmesi ya da yazma alanının açılıp

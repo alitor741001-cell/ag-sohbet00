@@ -61,7 +61,7 @@ export default function VoiceControlBar({ micActive, deafened, gamesOpen, gamesE
   return (
     <div
       ref={barRef}
-      className="voice-control-bar relative flex shrink-0 items-center justify-between gap-0.5 px-2 pb-[max(0.35rem,env(safe-area-inset-bottom))] pt-2"
+      className="voice-control-bar relative flex shrink-0 items-center justify-between gap-0.5 px-2 pb-[max(0.3rem,calc(env(safe-area-inset-bottom)*0.45))] pt-2"
       style={{ background: 'linear-gradient(180deg, #0d1a2e 0%, #132645 46%, #0b1930 100%)', borderTop: '1px solid rgba(140,150,192,0.28)' }}
     >
       {/* Ana menüdeki dalga hattı burada da devam eder: iki çubuk aynı dili konuşur. */}
