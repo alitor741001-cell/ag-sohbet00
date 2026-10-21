@@ -160,7 +160,7 @@ export default function Friends() {
   if (view === 'friends') {
     return (
       <div
-        className="dark min-h-[100dvh] w-full text-white"
+        className="dark min-h-[var(--app-height)] w-full text-white"
         style={{ background: 'radial-gradient(140% 80% at 50% 0%, #0E2A5A 0%, #071731 46%, #03081A 100%)' }}
       >
         <header className="sticky top-0 z-20 flex items-center gap-2 px-3 py-3" style={{ background: 'rgba(6,20,44,0.94)', borderBottom: '1px solid rgba(125,211,252,0.25)' }}>

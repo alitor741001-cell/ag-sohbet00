@@ -793,11 +793,20 @@
   }
 }
 
+/* Cihazın gerçek görünür yüksekliği. Ölçü açılışta ve her döndürmede JavaScript ile
+   piksel olarak yazılır; dvh/svh birimini desteklemeyen eski iOS ve Android
+   sürümlerinde de uygulama cihazın kendi ekran boyutunu kaplar. */
+:root { --app-height: 100vh; }
+@supports (height: 100svh) {
+  :root { --app-height: 100svh; }
+}
+
 /* Tüm cihazlar için ortak responsive güvenlik katmanı */
 html, body, #root {
   width: 100%;
   min-width: 0;
   min-height: 100%;
+  min-height: var(--app-height);
   overflow-x: clip;
   /* Tema ne olursa olsun uygulamanın temeli koyu kalır: güvenli alanda, aşırı
      kaydırmada ve açılış anında üstte beyaz bir şerit görünmez. */
@@ -830,7 +839,7 @@ html::after {
   left: 0;
   right: 0;
   top: -80px;
-  height: calc(100vh + 260px);
+  height: calc(var(--app-height) + 260px);
   z-index: -1;
   pointer-events: none;
   background-color: #0a1c3c;
@@ -839,21 +848,12 @@ html::after {
   background-position: center, center;
   background-repeat: no-repeat, no-repeat;
 }
-@supports (height: 100lvh) {
-  /* En büyük görünüm ölçüsü: adres çubuğu açıkken bile ekranın dibi boyanır. */
-  html::after { height: calc(100lvh + 260px); }
-}
+
 
 body {
-  min-height: 100dvh;
+  min-height: var(--app-height);
   padding-left: env(safe-area-inset-left);
   padding-right: env(safe-area-inset-right);
-}
-
-@supports (height: 100lvh) {
-  /* Kök kutular en büyük görünüm ölçüsünü kaplar: tema görseli tuvalin dibine kadar
-     boyanır, ekranın altında düz lacivert şerit kalmaz. */
-  html, body { min-height: 100lvh; }
 }
 
 img, video, canvas, iframe, svg {
@@ -885,7 +885,7 @@ h1, h2, h3, p, a, button, label {
 
 @media (orientation: landscape) and (max-height: 560px) {
   body {
-    min-height: 100dvh;
+    min-height: var(--app-height);
   }
 }
 
@@ -1128,13 +1128,12 @@ html {
 /* Form alanları sistem yazı tipini izler — iOS ve Android'de aynı görünür. */
 input, textarea, select, button { font-family: inherit; }
 
-/* Adres çubuğu açılıp kapanınca içerik kırpılmaz: tam ekran yükseklikleri dvh'e uyarlanır.
-   Eski tarayıcılarda dvh bulunmazsa kural devreye girmez, vh ile çalışmaya devam eder. */
-@supports (height: 100dvh) {
-  .min-h-screen { min-height: 100dvh; }
-  .h-screen { height: 100dvh; }
-  .max-h-screen { max-height: 100dvh; }
-}
+/* Adres çubuğu açılıp kapanınca içerik kırpılmaz: tam ekran yükseklikleri cihazın
+   gerçek görünür alanından (--app-height) gelir. Eski iOS/Android sürümlerinde
+   dvh birimi bulunmadığı için ölçü doğrudan piksel olarak yazılır. */
+.min-h-screen { min-height: var(--app-height); }
+.h-screen { height: var(--app-height); }
+.max-h-screen { max-height: var(--app-height); }
 
 /* === TABLET VE MASAÜSTÜ: ARAYÜZ EKRANLA BİRLİKTE BÜYÜR === */
 /* Uygulama telefon için tasarlandı. Ekran büyüdükçe düğmeler, yazılar ve boşluklar
