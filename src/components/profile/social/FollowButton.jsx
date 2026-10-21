@@ -3,11 +3,11 @@ import { Loader2, UserCheck, UserPlus } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useToast } from '@/components/ui/use-toast';
 import { useCurrentUser } from '@/lib/useCurrentUser';
-import CompactActionTile from '@/components/profile/compact/CompactActionTile';
+import CrystalCircleButton from '@/components/profile/crystal/CrystalCircleButton';
 
 /** Takip Et / Takipten Çık: sayaçla birlikte, profil açılan her yerde aynı görünür.
- *  variant="tile" kompakt profil kartının alt işlem şeridinde küçük kare düğme olarak gösterir. */
-export default function FollowButton({ userId, accent = '#6fe6dc', variant = 'full', tone = 'pink', onChange }) {
+ *  variant="circle" sesli odadaki kartın yuvarlak düğme şeridinde gösterir. */
+export default function FollowButton({ userId, accent = '#6fe6dc', variant = 'full', tone = 'blue', onChange }) {
   const { user } = useCurrentUser();
   const { toast } = useToast();
   const [state, setState] = useState({ following: false, followers: 0 });
@@ -46,9 +46,9 @@ export default function FollowButton({ userId, accent = '#6fe6dc', variant = 'fu
     }
   };
 
-  if (variant === 'tile') {
+  if (variant === 'circle') {
     return (
-      <CompactActionTile
+      <CrystalCircleButton
         icon={state.following ? UserCheck : UserPlus}
         label={state.following ? 'Takip Ediliyor' : 'Takip Et'}
         active={state.following}

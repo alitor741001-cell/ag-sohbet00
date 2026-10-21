@@ -12,11 +12,9 @@ import ProfileHeroBlock from '@/components/profile/ProfileHeroBlock';
 import ProfileStatsRow from '@/components/profile/ProfileStatsRow';
 import ProfileIdentityBlock from '@/components/profile/ProfileIdentityBlock';
 import FollowButton from '@/components/profile/social/FollowButton';
-import CompactProfileHero from '@/components/profile/compact/CompactProfileHero';
-import CompactBadgeBoard from '@/components/profile/compact/CompactBadgeBoard';
-import CompactLovePanel from '@/components/profile/compact/CompactLovePanel';
-import CompactActionTile from '@/components/profile/compact/CompactActionTile';
-import CompactRoomActions from '@/components/profile/compact/CompactRoomActions';
+import CrystalProfileCard from '@/components/profile/crystal/CrystalProfileCard';
+import CrystalCircleButton from '@/components/profile/crystal/CrystalCircleButton';
+import { crystalSkin } from '@/components/profile/crystal/crystalTheme';
 import { AccountStatusMark, ACCOUNT_MARKS, ACCOUNT_STATES, getAccountState } from '@/components/friends/AccountStatusAvatar';
 import { broadcasterState } from '@/lib/broadcaster';
 import useBackDismiss from '@/hooks/useBackDismiss';
@@ -39,8 +37,6 @@ export default function FullUserProfile({
   const [relation, setRelation] = useState('');
   const [copied, setCopied] = useState(false);
   const [inviteSent, setInviteSent] = useState(false);
-  // Kompakt kartta rozet kutusunun oku ekstra bilgileri açar.
-  const [compactMore, setCompactMore] = useState(false);
 
   // Profil kartı birleşik geri yığınında: geri tuşu önce kartı kapatır.
   useBackDismiss(open, onClose);
@@ -331,27 +327,44 @@ export default function FullUserProfile({
     </>
   );
 
-  // Kompakt kart referans görselin düzenini kullanır: kadın pembe, erkek mavi.
+  // Sesli odadaki kart referans görselin düzenini birebir kullanır:
+  // erkek → referanstaki lacivert/altın, kadın → aynı düzenin pembe/altın hâli.
   const compactSkin = profile?.gender === 'erkek' ? 'blue' : 'pink';
-  const compactTags = hidden ? [] : [
-    profile?.broadcaster_status === 'active' ? 'YAYINCI' : '',
-    profile?.agency_role === 'assistant' ? 'ASİSTAN' : '',
-  ].filter(Boolean);
-  const compactAgency = hidden ? null : (
-    ownerAgency?.name
-      ? { name: ownerAgency.name, code: ownerAgency.code || '' }
-      : (profile?.agency_name ? { name: profile.agency_name, code: profile.agency_code || '' } : null)
-  );
+  const skin = crystalSkin(compactSkin);
+  const compactVip = profile?.vip_level || 0;
+  const compactGenderSymbol = hidden
+    ? '?'
+    : (profile?.gender === 'erkek' ? '♂' : profile?.gender === 'kadın' ? '♀' : '·');
 
   // Hediye düğmesi referanstaki dörtlü şeridin dördüncü gözünde durur.
   const giftItem = footer.find((item) => item.key === 'gift');
   const otherFooterItems = footer.filter((item) => item.key !== 'gift');
 
-  // Referanstaki dört ana düğme: takip, sohbet, bahsetme, hediye.
-  const primaryTiles = [
-    showSocial ? <FollowButton key="follow" variant="tile" userId={userId} tone={compactSkin} /> : null,
+  // Referanstaki dikdörtgen düğme sırası: mik, koltuk kilidi ve kalan oda işlemleri.
+  // "Profili gör" kaldırıldı; yerini koltuk kilidi aldı.
+  const roomTiles = tiles.filter((item) => item.key !== 'view-self' && item.key !== 'chat');
+  const orderedTiles = [
+    ...roomTiles.filter((item) => item.key === 'mic'),
+    ...roomTiles.filter((item) => item.key === 'lock'),
+    ...roomTiles.filter((item) => item.key !== 'mic' && item.key !== 'lock'),
+  ];
+  const rectItems = orderedTiles.slice(0, 3);
+  const leftoverTiles = orderedTiles.slice(3);
+
+  // Referanstaki yuvarlak düğme sırası: Bahset, Takip, Sohbet, Hediye.
+  const circleNodes = [
+    !isSelf && !!onMention ? (
+      <CrystalCircleButton
+        key="mention"
+        icon={AtSign}
+        label="Bahset"
+        tone={compactSkin}
+        onClick={() => { onMention(shownName); onClose?.(); }}
+      />
+    ) : null,
+    showSocial ? <FollowButton key="follow" variant="circle" userId={userId} tone={compactSkin} /> : null,
     !isSelf ? (
-      <CompactActionTile
+      <CrystalCircleButton
         key="chat"
         icon={MessageSquare}
         label="Sohbet"
@@ -359,24 +372,11 @@ export default function FullUserProfile({
         onClick={() => { onMessage?.(userId); onClose?.(); }}
       />
     ) : null,
-    !isSelf && !!onMention ? (
-      <CompactActionTile
-        key="mention"
-        icon={AtSign}
-        label="Bahsetme"
-        tone={compactSkin}
-        onClick={() => { onMention(shownName); onClose?.(); }}
-      />
-    ) : null,
     giftItem ? (
-      <CompactActionTile key="gift" icon={giftItem.icon} label="Hediye" tone={compactSkin} onClick={giftItem.onClick} />
+      <CrystalCircleButton key="gift" icon={giftItem.icon} label="Hediye" tone={compactSkin} onClick={giftItem.onClick} />
     ) : null,
-  ].filter(Boolean);
-
-  // Dörtlü şeride sığmayan ek işlemler alt satırda küçük düğmeler olarak durur.
-  const extraTiles = [
     showSocial && relation !== 'friend' ? (
-      <CompactActionTile
+      <CrystalCircleButton
         key="friend"
         icon={UserPlus}
         label={relation === 'pending' ? 'İstek Gönderildi' : 'Arkadaş Ekle'}
@@ -385,8 +385,18 @@ export default function FullUserProfile({
         onClick={addFriend}
       />
     ) : null,
+    ...leftoverTiles.map((item) => (
+      <CrystalCircleButton
+        key={item.key}
+        icon={item.icon}
+        label={item.label}
+        tone={compactSkin}
+        disabled={item.disabled}
+        onClick={item.onClick}
+      />
+    )),
     ...otherFooterItems.map((item) => (
-      <CompactActionTile
+      <CrystalCircleButton
         key={item.key}
         icon={item.icon}
         label={item.label}
@@ -396,7 +406,7 @@ export default function FullUserProfile({
       />
     )),
     canInvite ? (
-      <CompactActionTile
+      <CrystalCircleButton
         key="invite"
         icon={Mic2}
         label={inviteSent ? 'Davet Gönderildi' : 'Yayıncı Davet'}
@@ -408,81 +418,26 @@ export default function FullUserProfile({
   ].filter(Boolean);
 
   const compactContent = statusContent || (
-    <>
-      <CompactProfileHero
-        name={shownName}
-        avatar={banned ? ACCOUNT_STATES.banned.image : shownAvatar}
-        palette={palette}
-        hidden={hidden}
-        statusLabel={banned ? ACCOUNT_MARKS.banned : ''}
-        roleLabel={hidden ? '' : (profile?.title || profile?.display_role || '')}
-        genderLabel={genderLabel}
-        age={age}
-        country={hidden ? '' : badge.country}
-        flag={badge.flag}
-        memberId={memberId}
-        copied={copied}
-        onCopyId={copyId}
-        level={level >= 1000 ? 0 : level}
-        vipLevel={profile?.vip_level || 0}
-        receivedLevel={profile?.gift_received_level || 0}
-        agency={compactAgency}
-        tone={compactSkin}
-        tags={compactTags}
-      />
-
-      <CompactBadgeBoard
-        tone={compactSkin}
-        level={level >= 1000 ? 0 : level}
-        nLevel={profile?.n_level || 0}
-        receivedLevel={profile?.gift_received_level || 0}
-        receivedTier={profile?.gift_received_tier}
-        expanded={compactMore}
-        onToggle={() => setCompactMore((current) => !current)}
-      />
-
-      {hidden && (
-        <p className="mt-2 rounded-xl border px-2 py-1.5 text-center text-[10px] leading-snug text-white/65" style={{ borderColor: palette.soft, background: 'rgba(0,0,0,0.5)' }}>
-          Gizli Kullanıcı modu etkin: kimlik bilgileri gizli kalır.
-        </p>
-      )}
-
-      {/* Rozet okuna basınca açılan ek bilgiler. */}
-      {compactMore && !hidden && info.length > 0 && (
-        <div className="mt-2 space-y-0.5 rounded-xl border px-2 py-1.5 text-[10px]" style={{ borderColor: palette.soft, background: 'rgba(0,0,0,0.42)' }}>
-          {info.map((row) => (
-            <div key={row.label} className="flex items-start justify-between gap-2">
-              <span className="shrink-0 text-white/55">{row.label}</span>
-              <span className="min-w-0 break-words text-right font-semibold text-white">{row.value}</span>
-            </div>
-          ))}
-        </div>
-      )}
-
-      <CompactLovePanel
-        avatar={banned ? ACCOUNT_STATES.banned.image : shownAvatar}
-        name={shownName}
-        onGift={giftItem?.onClick}
-        tone={compactSkin}
-      />
-
-      <div
-        className="mt-2 grid gap-1.5"
-        style={{ gridTemplateColumns: `repeat(${Math.min(4, Math.max(1, primaryTiles.length))}, minmax(0, 1fr))` }}
-      >
-        {primaryTiles}
-      </div>
-
-      {extraTiles.length > 0 && (
-        <div className="mt-1.5 flex flex-wrap items-start justify-center gap-1.5">
-          {extraTiles.map((node) => (
-            <div key={node.key} className="w-[52px]">{node}</div>
-          ))}
-        </div>
-      )}
-
-      <CompactRoomActions tiles={tiles} palette={palette} />
-    </>
+    <CrystalProfileCard
+      name={shownName}
+      avatar={banned ? ACCOUNT_STATES.banned.image : shownAvatar}
+      tone={compactSkin}
+      vipLevel={compactVip}
+      genderSymbol={compactGenderSymbol}
+      statusLabel={banned ? ACCOUNT_MARKS.banned : ''}
+      roleLabel={hidden ? '' : (profile?.title || profile?.display_role || '')}
+      receivedLevel={profile?.gift_received_level || 0}
+      nLevel={profile?.n_level || 0}
+      joinDate={formatDate(profile?.created_date)}
+      memberId={memberId}
+      copied={copied}
+      onCopyId={copyId}
+      country={hidden ? '' : badge.country}
+      flag={badge.flag}
+      rectItems={rectItems}
+      circleNodes={circleNodes}
+      hidden={hidden}
+    />
   );
 
   // Kompakt düzen (sesli oda): kart ekranda sabit durur, içerik kaydırılmaz.
@@ -491,11 +446,12 @@ export default function FullUserProfile({
       <div className="fixed inset-0 z-[300] flex items-end justify-center sm:items-center">
         <button type="button" aria-label="Kapat" onClick={onClose} className="absolute inset-0 w-full bg-black/65" />
         <div
-          className="animate-sheet-up relative flex w-full max-w-[414px] flex-col overflow-hidden rounded-t-[26px] border-t-2 px-3 pb-[max(0.6rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-8px_30px_rgba(0,0,0,0.7)] sm:mb-6 sm:rounded-[26px] sm:border-2"
+          className="animate-sheet-up relative flex w-full max-w-[400px] flex-col overflow-hidden rounded-t-[26px] border-t-2 px-3 pb-[max(0.6rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-8px_30px_rgba(0,0,0,0.75)] sm:mb-6 sm:rounded-[26px] sm:border-2"
           style={{
-            background: 'radial-gradient(circle at 50% 0%, rgba(255,255,255,0.07), transparent 62%), #121317',
-            borderColor: compactSkin === 'blue' ? 'rgba(127,182,221,0.6)' : 'rgba(255,150,195,0.6)',
+            background: skin.bg,
+            borderColor: skin.edge,
             maxHeight: 'calc(var(--app-height, 100dvh) - 4px)',
+            boxShadow: `0 -8px 30px rgba(0,0,0,0.75), inset 0 0 40px -20px ${skin.glow}`,
           }}
         >
           {header}
