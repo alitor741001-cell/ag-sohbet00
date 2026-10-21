@@ -43,12 +43,13 @@ export default function CoinShopHero() {
             Coin Mağazası
           </p>
           <p className="mt-2 text-[10px] font-black uppercase tracking-[0.16em] text-white/70">Daha fazlası için coins yükle</p>
+          <span className="mt-2.5 block h-px w-24" style={{ background: 'linear-gradient(90deg, rgba(232,185,90,0.85), rgba(232,185,90,0))' }} />
           <p className="mt-2 inline-flex items-center gap-1.5 text-[13px] font-black italic text-[#f4e1a1]">
             <Crown className="h-3.5 w-3.5" /> Keyfin Hiç Bitmesin!
           </p>
         </div>
 
-        <span className="relative h-28 w-28 shrink-0">
+        <span className="relative h-32 w-32 shrink-0">
           <span className="absolute inset-2 rounded-full bg-[#E8B95A]/35 blur-2xl" />
           <Image src={CHEST_IMAGE_URL} alt="Altın sandık" className="relative h-full w-full" fittingType="fill" draggable={false} />
         </span>
