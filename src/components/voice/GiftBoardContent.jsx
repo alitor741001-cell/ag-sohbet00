@@ -4,7 +4,6 @@ import GiftCard from '@/components/voice/GiftCard';
 import GiftRecipientRow from '@/components/voice/GiftRecipientRow';
 import GiftLevelTicker from '@/components/voice/GiftLevelTicker';
 import GiftBoardFooter from '@/components/voice/GiftBoardFooter';
-import Gift3DPreview from '@/components/voice/Gift3DPreview';
 import { K_UNIT, formatCoins, tierForK, toneColor } from '@/lib/giftTone';
 
 // Kategori sırası ve simgeleri; listede olmayan kategoriler sona eklenir.
@@ -21,7 +20,6 @@ export default function GiftBoardContent({
   onSelectGift, onTogglePerson, onSelectAll, onClear, onOpenCoins, onClose, onSend, sendDisabled,
 }) {
   const [category, setCategory] = useState('Tümü');
-  const [preview, setPreview] = useState(null);
 
   const categories = useMemo(
     () => ['Tümü', ...new Set(gifts.map((gift) => gift.category || 'Diğer'))].sort((a, b) => categoryRank(a) - categoryRank(b)),
@@ -101,7 +99,7 @@ export default function GiftBoardContent({
         ) : (
           <div className="grid grid-cols-4 gap-x-1 gap-y-2 pb-2">
             {shown.map((item) => (
-              <GiftCard key={item.id} gift={item} selected={giftId === item.id} onSelect={onSelectGift} onPreview={setPreview} />
+              <GiftCard key={item.id} gift={item} selected={giftId === item.id} onSelect={onSelectGift} />
             ))}
           </div>
         )}
@@ -120,8 +118,6 @@ export default function GiftBoardContent({
         onSend={onSend}
         sendDisabled={sendDisabled}
       />
-
-      <Gift3DPreview gift={preview} onClose={() => setPreview(null)} />
     </div>
   );
 }

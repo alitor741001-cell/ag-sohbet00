@@ -16,15 +16,24 @@
    ekranın dibinde siyah şerit kalmaz. Sayfa düzenine yer eklemez. */
 .room-bg-layer {
   position: fixed;
-  inset: 0;
+  /* Katman ekranın dört yanından taşar: çentik, alt güvenli alan ve tarayıcı
+     araç çubuğu boşluklarında da tema görseli devam eder, lacivert şerit kalmaz. */
+  top: -80px;
+  right: 0;
+  bottom: -180px;
+  left: 0;
   pointer-events: none;
   overflow: hidden;
 }
 .voice-viewport {
   top: var(--viewport-offset, 0px);
-  /* Zemin lacivert: ölçüler ne olursa olsun görünen her piksel tema tonunda kalır. */
+  /* Zemin temanın kendisidir: butonların altındaki dolgu ve alt güvenli alan dahil
+     görünen her piksel tema görseliyle boyanır; seçim yoksa gece mavisi kalır. */
   background-color: #0b1930;
-  background-image: linear-gradient(180deg, #0a1a33 0%, #071428 58%, #0b1930 100%);
+  background-image: var(--room-theme-image, none), var(--room-theme-tint, linear-gradient(180deg, #0a1a33 0%, #071428 58%, #0b1930 100%));
+  background-size: cover, cover;
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
   /* dvh desteklenmeyen eski sürümlerde de alan ekranı kaplar. */
   height: 100vh;
   /* Görünür alan ölçüsü (visualViewport) ekranın en altına ulaşmadığında çerçeve kısa

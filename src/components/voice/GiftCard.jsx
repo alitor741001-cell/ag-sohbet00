@@ -1,4 +1,3 @@
-import { useRef } from 'react';
 import { Coins } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import { K_UNIT, formatCoins } from '@/lib/giftTone';
@@ -7,31 +6,16 @@ import { giftMotion } from '@/lib/giftMotion';
 /**
  * Katalogdaki tek hediye: kare kutu, çerçeve ve etiket yok — hediye görseli siyah zeminde
  * serbest durur; altında adı ve altın coin fiyatı yazar.
- * Görsele uzun basıldığında 3D önizleme açılır (seçim değişmez).
+ * Uzun basışta hiçbir şey açılmaz; dokunuş yalnızca hediyeyi seçer.
  */
-export default function GiftCard({ gift, selected, onSelect, onPreview }) {
+export default function GiftCard({ gift, selected, onSelect }) {
   // Hediye sabit durur; yalnızca kendi rengindeki yumuşak ışık gösterilir.
   const { tone } = giftMotion(gift);
-  const timer = useRef(null);
-
-  const startPreview = () => {
-    if (!onPreview) return;
-    timer.current = setTimeout(() => onPreview(gift), 480);
-  };
-
-  const cancelPreview = () => {
-    if (timer.current) clearTimeout(timer.current);
-    timer.current = null;
-  };
 
   return (
     <button
       type="button"
       onClick={() => onSelect(gift.id)}
-      onPointerDown={startPreview}
-      onPointerUp={cancelPreview}
-      onPointerLeave={cancelPreview}
-      onPointerCancel={cancelPreview}
       onContextMenu={(event) => event.preventDefault()}
       aria-pressed={selected}
       className="relative flex w-full flex-col items-center gap-0.5 py-1 active:scale-95"

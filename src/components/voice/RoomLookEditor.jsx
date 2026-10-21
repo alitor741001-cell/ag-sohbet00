@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { ImagePlus, Loader2, Trash2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Image } from '@/components/ui/image';
-import VoiceRoomThemePanel from '@/components/voice/VoiceRoomThemePanel';
 
 /**
- * Oda panelinden oda görünümü: kapak fotoğrafı ve tema.
+ * Oda panelinden oda görünümü: yalnızca kapak fotoğrafı.
+ * Tema seçimi bu panelde gösterilmez; temalar menüdeki Tema bölümünden seçilir.
  * Değişiklik anında odadaki herkesin ekranına yansır.
  */
 export default function RoomLookEditor({ background, cover, onSave }) {
@@ -62,8 +62,6 @@ export default function RoomLookEditor({ background, cover, onSave }) {
           )}
         </div>
       </div>
-
-      <VoiceRoomThemePanel value={background} onPick={(key) => onSave?.({ background: key })} />
     </div>
   );
 }

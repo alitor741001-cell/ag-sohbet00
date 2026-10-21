@@ -39,7 +39,7 @@ export default async function(req) {
     const mu = Math.min(Math.max(Number(max_users) || 10, 2), 50);
 
     // Sesli oda koltuk kapasitesi
-    const SEAT_OPTIONS = [1, 2, 5, 8, 9, 12, 15, 20, 24];
+    const SEAT_OPTIONS = [1, 2, 5, 8, 9, 12, 15, 20, 24, 30];
     const requestedSeats = Number(seat_count) || 0;
     const voiceSeats = SEAT_OPTIONS.includes(requestedSeats) ? requestedSeats : 8;
 

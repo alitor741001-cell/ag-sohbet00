@@ -33,8 +33,14 @@ function VoiceSeat({ seat, index, size = 'md', musicPlaying, speaking, gender, i
     return (
       <button type="button" onClick={handleClick} className="flex flex-col items-center gap-1 active:scale-95 transition-transform" aria-label={`${index + 1}. koltuk`}>
         <span className={`flex ${cell} shrink-0 items-center justify-center`}>
-          <span className={`relative flex ${emptyCircle} items-center justify-center rounded-full border border-white/20 bg-black/45`}>
-            {seat?.locked ? <Lock className={`${iconSize} text-white`} /> : <Plus className={`${iconSize} text-white`} />}
+          <span
+            className={`relative flex ${emptyCircle} items-center justify-center rounded-full`}
+            style={{
+              background: 'radial-gradient(circle at 32% 24%, rgba(108,212,214,0.24) 0%, rgba(10,20,34,0.94) 68%)',
+              boxShadow: 'inset 0 0 0 1.5px rgba(232,196,124,0.45), inset 0 1px 0 rgba(255,255,255,0.2), 0 3px 10px -5px rgba(0,0,0,0.9)',
+            }}
+          >
+            {seat?.locked ? <Lock className={`${iconSize} text-[#ffe6a8]`} /> : <Plus className={`${iconSize} text-[#e8c47c]`} />}
             {/* Mikrofonu kendi elimle kapattığımda görünen sade rozet; mikrofonu açınca kaybolur. */}
             {micMuted && (
               <span aria-label="Mikrofon kapalı" className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full border border-white/25 bg-black/80">

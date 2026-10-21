@@ -59,8 +59,10 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
   // sığmayan satırlar sahne içinde kaydırılarak görünür.
   // 9'lu düzende de koltuk boyu genişlikten gelir: koltuklar referanstaki gibi büyük ve
   // satır kenarlara yanaşık kalır, sığmayan içerik sahne içinde kaydırılır.
+  // 20 ve üzeri düzende (30 mikrofon) alt sınır bir beden küçülür: altı satır da sahneye sığar.
+  const denseFloor = seats.length >= 20 ? 'sm' : 'md';
   const size = dense
-    ? SIZES[Math.min(SIZES.indexOf(widthSize), Math.max(SIZES.indexOf(heightSize), SIZES.indexOf('md')))]
+    ? SIZES[Math.min(SIZES.indexOf(widthSize), Math.max(SIZES.indexOf(heightSize), SIZES.indexOf(denseFloor)))]
     : featureTop
       ? widthSize
       : fitSize;
