@@ -14,9 +14,8 @@ const LAYOUTS = {
   12: [2, 5, 5],
   15: [5, 5, 5],
   20: [5, 5, 5, 5],
-  // 24 mikrofon: her sırada 8 koltuk — üç eşit sıra iner, rakamlar 1'den 24'e sırayla
-  // okunur. Satırlar yana taşarsa sahne aşağı kaydırılmaz, ızgara sağa-sola kaydırılır.
-  24: [8, 8, 8],
+  // 24 mikrofon: 4 sıra, her sırada 6 koltuk — rakamlar 1'den 24'e sırayla okunur.
+  24: [6, 6, 6, 6],
   // Eski 30 koltuklu odalar aynı düzeni korusun.
   30: [8, 8, 8, 6],
 };
