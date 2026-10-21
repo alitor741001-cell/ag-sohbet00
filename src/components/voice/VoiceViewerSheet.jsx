@@ -2,7 +2,7 @@ import { MicOff, X } from 'lucide-react';
 import ProfileFrame from '@/components/ProfileFrame';
 
 /** İzleyici listesi: ekranın dibinden yarıya kadar yukarı kayarak açılan kart. */
-export default function VoiceViewerSheet({ open, onClose, participants = [], seats = [], userId, ownerId, moderators = [] }) {
+export default function VoiceViewerSheet({ open, onClose, participants = [], seats = [], userId, ownerId, moderators = [], onSelect }) {
   if (!open) return null;
 
   return (
@@ -28,7 +28,8 @@ export default function VoiceViewerSheet({ open, onClose, participants = [], sea
                   return (
                     <div
                       key={person.user_id}
-                      className="flex w-full items-center gap-2.5 rounded-xl px-2 py-1.5 text-left"
+                      onClick={() => { onClose(); onSelect?.(person.user_id); }}
+                      className="flex w-full cursor-pointer items-center gap-2.5 rounded-xl px-2 py-1.5 text-left hover:bg-white/5"
                     >
 ...
                     </div>

@@ -23,6 +23,8 @@ import VoiceRoomMenu from '@/components/voice/VoiceRoomMenu';
 import VoiceSeatSheet from '@/components/voice/VoiceSeatSheet';
 import InviteSheet from '@/components/voice/InviteSheet';
 import useLatestCallback from '@/hooks/useLatestCallback';
+import { useUserProfile } from '@/lib/profileCard';
+import useVoiceRoomProfileActions from '@/hooks/useVoiceRoomProfileActions';
 import useRoomActionGate from '@/hooks/useRoomActionGate';
 import useVoiceRoomAction from '@/hooks/useVoiceRoomAction';
 import RoomLogSheet from '@/components/voice/RoomLogSheet';
@@ -61,6 +63,7 @@ export default function VoiceRoom() {
   // Oyun merkezi yalnızca yayıncı/ajans üyesi hesaplara açıktır.
   const gamesEnabled = broadcasterState(user).games;
   const { toast } = useToast();
+  const { openUserProfile } = useUserProfile();
   const { begin: beginAction, end: endAction } = useRoomActionGate(id);
 
   const [room, setRoom] = useState(null);
@@ -548,6 +551,7 @@ export default function VoiceRoom() {
     const seat = seats[index];
     if (seat?.user_id) {
       if (giftOpen) toggleGiftPerson(seat.user_id);
+      else openRoomProfile(seat.user_id);
       return;
     }
     setSeatIndex(index);
@@ -842,6 +846,16 @@ export default function VoiceRoom() {
   const closeGifts = useCallback(() => setGiftOpen(false), []);
 
   // Hediye tahtası açıkken profiller çoklu seçilir — kişi kendini de seçebilir.
+  const roomProfileActions = useVoiceRoomProfileActions({
+    seats, participants, canMod, userId: user?.id, seated, voice, invokeVoice, toast, toggleMuteFor,
+    openGifts, setSelectedIds, setMentionTarget, setChatOpen, setComposerOpen, setDmUserId,
+  });
+
+  // Koltuk, sohbet satırı ve izleyici listesi aynı merkezi profil kartını açar.
+  const openRoomProfile = useLatestCallback((targetId) => {
+    if (targetId) openUserProfile(targetId, { roomActions: roomProfileActions });
+  });
+
   const toggleGiftPerson = useCallback((userId) => {
     if (!userId) return;
     setSelectedIds((prev) => (prev.includes(userId) ? prev.filter((value) => value !== userId) : [...prev, userId]));
@@ -1099,6 +1113,7 @@ export default function VoiceRoom() {
         ownerId={room?.owner_id}
         moderators={moderators}
         hiddenUsers={hiddenUsersByName}
+        onOpenProfile={openRoomProfile}
         mention={mentionTarget}
         bigGiftNotice={bigGiftNotice}
         onOpenBigGiftRoom={() => {
@@ -1247,6 +1262,7 @@ export default function VoiceRoom() {
         userId={user?.id}
         ownerId={room?.owner_id}
         moderators={moderators}
+        onSelect={openRoomProfile}
       />
 
       <VoiceSeatInvitePrompt

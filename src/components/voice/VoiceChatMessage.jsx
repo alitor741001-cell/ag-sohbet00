@@ -7,7 +7,7 @@ import { plainText } from '@/components/voice/voiceText';
 import { HIDDEN_AVATAR_URL, isHiddenName } from '@/lib/hiddenUser';
 
 /** Sohbet satırı: üye no, rol ve durum rozetleri + renkli isim + mesaj. */
-function VoiceChatMessage({ message, profile, ownerId, moderators = [], currentUserId }) {
+function VoiceChatMessage({ message, profile, ownerId, moderators = [], currentUserId, onOpenProfile }) {
   const role = getRoleInfo(profile || message);
   const isOwner = message.user_id === ownerId;
   const isMod = !isOwner && (moderators.includes(message.user_id) || isModerator(profile));
@@ -18,7 +18,7 @@ function VoiceChatMessage({ message, profile, ownerId, moderators = [], currentU
 
   return (
     <article className="flex min-w-0 items-start gap-2 text-sm leading-relaxed [overflow-wrap:anywhere] [text-shadow:0_1px_4px_rgba(0,0,0,0.9)]">
-      <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/25 bg-white/10">
+      <span onClick={() => onOpenProfile?.(message.user_id)} className="mt-0.5 flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full border border-white/25 bg-white/10">
         {hidden || profile?.avatar
           ? <Image src={hidden ? HIDDEN_AVATAR_URL : profile.avatar} alt="" referrerPolicy="no-referrer" draggable={false} fittingType="fill" className="h-full w-full" />
           : <span className="text-[11px] font-bold text-white/80">{name.trim().charAt(0) || '?'}</span>}
@@ -26,7 +26,7 @@ function VoiceChatMessage({ message, profile, ownerId, moderators = [], currentU
 
       <div className="min-w-0 flex-1">
         <div className="flex min-w-0 flex-wrap items-center gap-x-1 gap-y-0.5">
-          <span className="min-w-0 max-w-full break-words text-left text-xs font-bold [overflow-wrap:anywhere]">
+          <span onClick={() => onOpenProfile?.(message.user_id)} className="min-w-0 max-w-full cursor-pointer break-words text-left text-xs font-bold [overflow-wrap:anywhere]">
             {hidden ? (
               <span className="hidden-user-name">{name}</span>
             ) : (

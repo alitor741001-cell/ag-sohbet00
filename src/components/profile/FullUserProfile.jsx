@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Armchair, ArrowLeft, AtSign, Gift, Loader2, Lock, MessageSquare, Mic, MicOff, Settings, Unlock, UserRound } from 'lucide-react';
+import { ArrowLeft, AtSign, Gift, Loader2, Lock, MessageSquare, Mic, MicOff, Settings, Unlock } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import subscribeEntity from '@/components/data/entitySubscriptions';
 import { useToast } from '@/components/ui/use-toast';
@@ -155,7 +155,7 @@ export default function FullUserProfile({
   const toggleSeatLock = (index, who) => {
     if (!room) { needRoom('Koltuk kilidi'); return; }
     if (index < 0) {
-      toast({ title: 'Kilitlenecek koltuk yok', description: who === isSelf ? 'Önce bir koltuğa otur.' : `${shownName} şu anda bir koltukta oturmuyor.` });
+      toast({ title: 'Kilitlenecek koltuk yok', description: who === user?.id ? 'Önce bir koltuğa otur.' : `${shownName} şu anda bir koltukta oturmuyor.` });
       return;
     }
     if (!room.canControl(who)) {
@@ -243,46 +243,27 @@ export default function FullUserProfile({
     </div>
   ) : null;
 
-  const lockSeatIndex = targetSeat >= 0 ? targetSeat : mySeat;
 
-  const standUp = () => {
-    if (!room) { needRoom('Ayağa kalkmak'); return; }
-    if (targetSeat < 0) {
-      toast({ title: 'Koltukta oturmuyor', description: `${shownName} şu anda bir koltukta değil.` });
-      return;
-    }
-    room.standUp(userId);
-  };
-
-  const openProfilePage = () => {
-    onClose?.();
-    navigate(`/kullanici/${userId}`);
-  };
-
-  // Referanstaki üç kutu: Mik aç · Ayağa kalk · Profili gör.
+  // Üç kutu: Mik aç · Koltuğu kilitle (tıklanan kişinin koltuğu) · Koltuğu kilitle (kendi koltuğum).
+  const seatLockIcon = (index) => (index >= 0 && room?.isLocked(index) ? Unlock : Lock);
+  const seatLockLabel = (index) => (index >= 0 && room?.isLocked(index) ? 'Kilidi aç' : 'Koltuğu kilitle');
   const rectItems = [
     { key: 'mic', icon: micMuted ? MicOff : Mic, label: micMuted ? 'Mik aç' : 'Mik kapat', onClick: toggleMic },
-    { key: 'stand', icon: Armchair, label: 'Ayağa kalk', onClick: standUp },
-    { key: 'profile', icon: UserRound, label: 'Profili gör', onClick: openProfilePage },
+    { key: 'lock-target', icon: seatLockIcon(targetSeat), label: seatLockLabel(targetSeat), onClick: () => toggleSeatLock(targetSeat, userId) },
+    { key: 'lock-self', icon: seatLockIcon(mySeat), label: seatLockLabel(mySeat), onClick: () => toggleSeatLock(mySeat, user?.id) },
   ];
 
-  // Referanstaki üç geniş bar: Koltuğu kilitle · Hediye gönder · Bahset.
+  // İki geniş bar: Hediye gönder · Bahset.
   const wideItems = [
-    {
-      key: 'lock',
-      icon: lockSeatIndex >= 0 && room?.isLocked(lockSeatIndex) ? Unlock : Lock,
-      label: 'Koltuğu kilitle',
-      onClick: () => toggleSeatLock(lockSeatIndex, lockSeatIndex === mySeat ? user?.id : userId),
-    },
     { key: 'gift', icon: Gift, label: 'Hediye gönder', onClick: sendGift },
     { key: 'mention', icon: AtSign, label: 'Bahset', onClick: mention },
   ];
 
-  // Referanstaki dört yuvarlak: Takip Ediliyor · Sohbet · Bahsetme · Hediye.
+  // Dört yuvarlak: Bahset · Takip Ediliyor · Sohbet · Hediye.
   const circleNodes = [
+    <CrystalCircleButton key="mention" icon={AtSign} label="Bahset" tone={tone} onClick={mention} />,
     showSocial ? <FollowButton key="follow" variant="circle" userId={userId} tone={tone} /> : null,
     !isSelf ? <CrystalCircleButton key="chat" icon={MessageSquare} label="Sohbet" tone={tone} onClick={openChat} /> : null,
-    <CrystalCircleButton key="mention" icon={AtSign} label="Bahsetme" tone={tone} onClick={mention} />,
     <CrystalCircleButton key="gift" icon={Gift} label="Hediye" tone={tone} onClick={sendGift} />,
   ].filter(Boolean);
 

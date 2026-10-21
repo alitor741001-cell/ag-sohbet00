@@ -19,8 +19,6 @@ export default function CrystalProfileCard({
 }) {
   return (
     <div className="flex flex-col">
-      <CrystalSloganRow tone={tone} slogan={slogan} signature={signature} />
-
       <div className="pt-[22px]">
         <CrystalAvatar
           avatar={avatar}
@@ -30,6 +28,8 @@ export default function CrystalProfileCard({
           tone={tone}
         />
       </div>
+
+      <CrystalSloganRow tone={tone} slogan={slogan} signature={signature} />
 
       {statusLabel && <p className="mt-1 text-center text-[9px] font-black tracking-[0.28em] text-destructive">{statusLabel}</p>}
 
