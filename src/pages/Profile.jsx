@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { LogOut, Puzzle, Shield, User } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
@@ -13,9 +12,8 @@ import ProfileHeroCard from '@/components/profile/fantasy/ProfileHeroCard';
 import ProfileStatBar from '@/components/profile/fantasy/ProfileStatBar';
 import ProfileTwinCards from '@/components/profile/fantasy/ProfileTwinCards';
 import ProfileIconGrid from '@/components/profile/fantasy/ProfileIconGrid';
-import ProfileBottomNav from '@/components/profile/fantasy/ProfileBottomNav';
+import ProfileMenuCard from '@/components/profile/fantasy/ProfileMenuCard';
 import { giftBoxLocked } from '@/lib/giftAccess';
-import ProfileNeonRow from '@/components/profile/ProfileNeonRow';
 import ProfileDetailsSection from '@/components/profile/ProfileDetailsSection';
 import ProfileSettings from '@/components/profile/ProfileSettings';
 
@@ -108,18 +106,6 @@ export default function Profile() {
   const { relations } = useFriends();
   const friendCount = relations.filter((relation) => relation.status === 'accepted').length;
 
-  const copyInviteLink = () => {
-    const link = `${window.location.origin}/register`;
-    navigator.clipboard.writeText(link)
-      .then(() => toast({ title: 'Davet bağlantısı kopyalandı', description: link }))
-      .catch(() => toast({ title: 'Bağlantı kopyalanamadı', variant: 'destructive' }));
-  };
-
-  const openSettingsSection = () => {
-    setOpenKey('settings');
-    requestAnimationFrame(() => document.getElementById('eklentiler')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
-  };
-
   // Sayfa kendini 5 saniyede bir sessizce tazeler: bakiye canlı değerden okunur, böylece
   // hediye/oyun harcamaları ekranda eski tutarla kalmaz — yükleme göstergesi çıkmaz.
   useEffect(() => {
@@ -197,10 +183,8 @@ export default function Profile() {
           onAvatar={onAvatar}
           uploading={uploading}
           onEdit={() => toggle('info')}
-          coins={wallet?.coins ?? null}
           gems={elmasLocked ? null : (wallet?.month_score ?? null)}
           vipLevel={Number(user.vip_level) || 0}
-          onOpenCoins={() => setActivityOpen(true)}
           onOpenGems={openGiftBox}
         />
 
@@ -210,7 +194,7 @@ export default function Profile() {
             following={social.following}
             followers={social.followers}
             visitors={social.visitors}
-            onSelect={(key) => (key === 'friends' ? navigate('/arkadaslar') : setSocialList(key))}
+            onSelect={(key) => (key === 'friends' ? navigate('/arkadaslar?view=friends') : setSocialList(key))}
           />
           <ProfileTwinCards
             vipCount={vipCount}
@@ -225,15 +209,19 @@ export default function Profile() {
               else if (key === 'bag') setVipBagOpen(true);
               else if (key === 'level') navigate('/seviye');
               else if (key === 'agency') navigate('/ajans');
-              else if (key === 'cp') navigate('/arkadaslar');
             }}
           />
 
-          {isAdmin && (
-            <ProfileNeonRow icon={Shield} tone="purple" title="Yönetim Paneli" subtitle="Admin kontrol paneli" onClick={() => navigate('/admin')} />
-          )}
+          <ProfileMenuCard
+            isAdmin={isAdmin}
+            onInfo={() => toggle('info')}
+            onSettings={() => toggle('settings')}
+            onLogout={() => base44.auth.logout('/login')}
+            onAdmin={() => navigate('/admin')}
+          >
+            <DeleteAccountSection />
+          </ProfileMenuCard>
 
-          <ProfileNeonRow icon={User} title="Kişisel Bilgiler" subtitle="Kullanıcı adı, kimlik no ve hesap bilgileri" open={openKey === 'info'} onClick={() => toggle('info')} />
           {openKey === 'info' && (
             <ProfileDetailsSection
               user={user}
@@ -247,24 +235,16 @@ export default function Profile() {
             />
           )}
 
-          <ProfileNeonRow icon={Puzzle} tone="gold" title="Eklentiler" subtitle="Ek özellikleri buradan yönetebilirsiniz." open={openKey === 'settings'} onClick={() => toggle('settings')} />
           {openKey === 'settings' && (
-            <div id="eklentiler" className="scroll-mt-24 pt-1">
+            <div id="eklentiler" className="scroll-mt-24">
               <ProfileSettings user={user} onUpdated={reload} />
             </div>
           )}
 
-          <ProfileNeonRow icon={LogOut} tone="red" title="Çıkış Yap" subtitle="Hesabınızdan güvenli çıkış yapın" onClick={() => base44.auth.logout('/login')} />
-          <DeleteAccountSection />
+          <button type="button" onClick={() => setPrivacyOpen(true)} className="mx-auto block py-3 text-[11px] font-semibold underline" style={{ color: 'rgba(165,228,255,0.7)' }}>
+            Gizlilik Politikası
+          </button>
         </div>
-
-        <ProfileBottomNav
-          onSelect={(key) => {
-            if (key === 'invite') copyInviteLink();
-            else if (key === 'privacy') setPrivacyOpen(true);
-            else if (key === 'settings') openSettingsSection();
-          }}
-        />
       </div>
 
       {/* Kutu kapanınca bakiye canlı değerden tazelenir: kart eski tutarı göstermez. */}

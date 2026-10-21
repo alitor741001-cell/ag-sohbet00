@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Armchair, Eraser, Eye, EyeOff, Film, Hash, Lock, MessageSquareOff, Music, Play, ScrollText, Share2, Square, Unlock } from 'lucide-react';
+import { Armchair, Eraser, Eye, EyeOff, Film, Hash, Lock, MessageSquareOff, Music, Palette, Play, ScrollText, Share2, Square, Unlock } from 'lucide-react';
 import BoardToggleRow from '@/components/voice/BoardToggleRow';
+import VoiceRoomThemePanel from '@/components/voice/VoiceRoomThemePanel';
 import SeatCountPicker from '@/components/voice/SeatCountPicker';
 import VoiceMenuTile from '@/components/voice/VoiceMenuTile';
 import VoiceSheet from '@/components/voice/VoiceSheet';
@@ -13,7 +14,7 @@ const Panel = ({ children, hint }) => (
 );
 
 /** "…" menüsü: yuvarlak ikon ızgarası — kilit, gizlilik, koltuk, sayaç, sohbet temizleme, sohbet yasağı ve kayıt defteri. */
-export default function VoiceRoomMenu({ open, onClose, room, isOwner, isAdmin, canMod, onSeatCount, onSetPassword, onToggleHidden, onShare, boardActive, onToggleBoard, onBoardSettings, onClearChat, onToggleChatBan, onOpenLog, onExitVoiceMode, musicPlaying, onOpenMusic }) {
+export default function VoiceRoomMenu({ open, onClose, room, isOwner, isAdmin, canMod, onSeatCount, onSetPassword, onToggleHidden, onShare, boardActive, onToggleBoard, onBoardSettings, onClearChat, onToggleChatBan, onOpenLog, onExitVoiceMode, musicPlaying, onOpenMusic, theme, onTheme }) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [panel, setPanel] = useState(null);
@@ -46,6 +47,8 @@ export default function VoiceRoomMenu({ open, onClose, room, isOwner, isAdmin, c
       onClick: () => { if (locked) { onSetPassword(''); setPanel(null); } else { toggle('lock'); } },
     },
     { key: 'hidden', icon: room?.hidden ? EyeOff : Eye, label: room?.hidden ? 'Gizli' : 'Gizle', active: !!room?.hidden, tone: 'purple', onClick: onToggleHidden },
+    // Tema: oda zemini görsel temalarla değiştirilir, seçim odadaki herkese yansır.
+    { key: 'theme', icon: Palette, label: 'Tema', active: panel === 'theme', tone: 'gold', onClick: () => toggle('theme') },
     { key: 'seats', icon: Armchair, label: 'Koltuk', active: panel === 'seats', tone: 'blue', onClick: () => toggle('seats') },
     // Sayaç düğmesi ayarları açar; tekrar basınca kapanır.
     { key: 'board', icon: Hash, label: 'Sayaç', active: !!boardActive || panel === 'board', tone: 'green', onClick: () => toggle('board') },
@@ -156,6 +159,8 @@ export default function VoiceRoomMenu({ open, onClose, room, isOwner, isAdmin, c
           </button>
         </Panel>
       )}
+
+      {canMod && panel === 'theme' && <VoiceRoomThemePanel value={theme} onPick={(key) => onTheme?.(key)} />}
 
       {canMod && (
         <p className="mt-3 rounded-xl border border-[#FFD700]/30 bg-black/70 px-3 py-2 text-[11px] font-semibold text-white/60">

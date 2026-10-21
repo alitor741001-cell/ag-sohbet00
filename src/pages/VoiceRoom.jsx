@@ -723,6 +723,19 @@ export default function VoiceRoom() {
     if (ok) toast({ title: resetSeat || resetRoom ? 'Sayaç ayarı kaydedildi' : 'Sayaç sıfırlama kapatıldı' });
   };
 
+  // Oda teması: seçim anında zemin değişir, oda kaydına yazılarak odadaki herkese yansır.
+  const changeTheme = async (key) => {
+    const previous = room?.background || '';
+    patchRoom({ background: key });
+    try {
+      await base44.entities.Room.update(id, { background: key });
+      toast({ title: 'Oda teması değişti' });
+    } catch (error) {
+      patchRoom({ background: previous });
+      toast({ title: 'Tema değiştirilemedi', description: error?.response?.data?.error || error.message, variant: 'destructive' });
+    }
+  };
+
   const toggleChatBan = async () => {
     const ok = await invokeVoice({ action: 'chat-ban', banned: !chatBanned });
     if (ok) {
@@ -1213,6 +1226,8 @@ export default function VoiceRoom() {
         onToggleChatBan={toggleChatBan}
         onOpenLog={() => setLogOpen(true)}
         onExitVoiceMode={canMod ? exitVoiceMode : null}
+        theme={room?.background}
+        onTheme={changeTheme}
       />
 
       <RoomLogSheet

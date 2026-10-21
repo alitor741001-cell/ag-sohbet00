@@ -5,13 +5,12 @@ import useXp from '@/hooks/useXp';
 import { useToast } from '@/components/ui/use-toast';
 import { isRedNameVip } from '@/lib/userLevels';
 import { formatCoins } from '@/lib/giftTone';
-import { MENU_ICONS } from '@/components/profile/fantasy/icons';
 
 const RING = 'conic-gradient(from 140deg, #e0f2fe, #7dd3fc, #f8fafc, #38bdf8, #dbeafe, #60a5fa, #e0f2fe)';
 const PANEL = 'rgba(10, 32, 66, 0.72)';
 
 /** Profil başlığı: kristal çerçeveli avatar, isim, kimlik no ve rozet şeridi. */
-export default function ProfileHeroCard({ user, avatar, onAvatar, onEdit, uploading, coins, gems, vipLevel = 0, onOpenCoins, onOpenGems }) {
+export default function ProfileHeroCard({ user, avatar, onAvatar, onEdit, uploading, gems, vipLevel = 0, onOpenGems }) {
   const [picking, setPicking] = useState(false);
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
@@ -85,13 +84,10 @@ export default function ProfileHeroCard({ user, avatar, onAvatar, onEdit, upload
             <span className="flex h-6 items-center gap-1 rounded-md px-1.5 text-[10px] font-black text-white" style={{ background: 'rgba(37,99,235,0.55)', border: '1px solid rgba(125,211,252,0.6)' }}>
               <Shield className="h-3 w-3 text-[#bae6fd]" fill="currentColor" /> VIP{vipLevel || 0}
             </span>
-            <button type="button" onClick={onOpenCoins} className="flex h-6 items-center gap-1 rounded-md px-1.5 text-[11px] font-black tabular-nums text-white active:scale-95" style={{ background: PANEL, border: '1px solid rgba(242,206,107,0.5)' }}>
-              <img src={MENU_ICONS.wallet} alt="" className="h-3.5 w-3.5 object-contain" style={{ mixBlendMode: 'screen' }} />
-              {coins === null || coins === undefined ? '—' : formatCoins(coins)}
-            </button>
-            <button type="button" onClick={onOpenGems} className="flex h-6 items-center gap-1 rounded-md px-1.5 text-[11px] font-black tabular-nums text-white active:scale-95" style={{ background: PANEL, border: '1px solid rgba(242,206,107,0.35)' }}>
-              <span className="text-[#7dd3fc]">◆</span>
-              {gems === null || gems === undefined ? '—' : formatCoins(gems)}
+            <button type="button" onClick={onOpenGems} className="flex h-6 items-center gap-1 rounded-md px-1.5 tabular-nums text-white active:scale-95" style={{ background: PANEL, border: '1px solid rgba(125,211,252,0.45)' }}>
+              <span className="text-[10px] text-[#7dd3fc]">◆</span>
+              <span className="text-[9px] font-black tracking-[0.08em] text-[#a5e4ff]">ELMASLAR</span>
+              <span className="text-[11px] font-black">{gems === null || gems === undefined ? '—' : formatCoins(gems)}</span>
             </button>
           </div>
         </div>

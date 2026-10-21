@@ -178,7 +178,8 @@ export default function CreateRoom() {
                     className={`relative flex h-24 w-full items-end justify-center overflow-hidden rounded-2xl ${active ? 'ring-2 ring-[#3b8bff]' : 'ring-1 ring-white/10'}`}
                     style={{ background: item.background }}
                   >
-                    <span className="w-full bg-black/35 px-1 py-1 text-center text-[9.5px] font-bold text-white">{item.label}</span>
+                    <Image src={item.image} alt={item.label} fittingType="fill" className="absolute inset-0 h-full w-full" />
+                    <span className="relative w-full bg-black/35 px-1 py-1 text-center text-[9.5px] font-bold text-white">{item.label}</span>
                     {active && (
                       <span className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-[#3b8bff]">
                         <Check className="h-3 w-3 text-white" />

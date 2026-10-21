@@ -293,6 +293,7 @@ export default function RoomDiscovery({ shortcuts = null }) {
   return (
     <PullToRefresh onRefresh={refreshList}>
       <HomeTopBar view={view} onView={setView} onSearch={() => navigate('/arama')} />
+      {tab !== 'games' && (
       <div className="mb-3 flex items-center gap-1.5 rounded-2xl border border-[#e8c47c]/25 bg-[#071736]/70 p-1 backdrop-blur">
         <button
           type="button"
@@ -317,6 +318,7 @@ export default function RoomDiscovery({ shortcuts = null }) {
           <Users className="h-4 w-4 shrink-0" /> <span className="truncate">Arkadaşlar</span>
         </button>
       </div>
+      )}
 
       {shortcuts}
 

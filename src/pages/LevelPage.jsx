@@ -16,8 +16,19 @@ const TIERS = [
   { range: '50-59', value: 50, tone: '#c9b8ff', text: '#231a45' },
 ];
 
-const STEP = 30000;
-const levelFromScore = (score) => Math.max(1, Math.floor(Math.max(0, Number(score) || 0) / STEP) + 1);
+// Seviye artışı kademelidir: her yeni seviye bir öncekinden daha fazla deneyim puanı ister.
+const BASE_STEP = 20000;
+const STEP_GROWTH = 5000;
+const needFor = (level) => BASE_STEP + (level - 1) * STEP_GROWTH;
+const levelInfo = (score) => {
+  let level = 1;
+  let into = Math.max(0, Number(score) || 0);
+  while (level < 200 && into >= needFor(level)) {
+    into -= needFor(level);
+    level += 1;
+  }
+  return { level, into, need: needFor(level) };
+};
 const tierFor = (level) => TIERS[Math.min(TIERS.length - 1, Math.floor((level - 1) / 10))];
 
 const TAB_ON = { color: '#ffd76a', borderBottom: '2px solid #ffd76a' };
@@ -39,9 +50,9 @@ export default function LevelPage() {
 
   const isWealth = tab === 'wealth';
   const score = isWealth ? (xp?.xp ?? 0) : charm;
-  const level = levelFromScore(score);
-  const percent = Math.min(100, Math.round(((score % STEP) / STEP) * 100));
-  const remaining = STEP - (score % STEP);
+  const { level, into, need } = levelInfo(score);
+  const percent = Math.min(100, Math.round((into / need) * 100));
+  const remaining = Math.max(0, need - into);
   const tier = tierFor(level);
   const avatar = user?.avatar;
   const label = user?.username || user?.full_name || 'Profilim';
@@ -120,12 +131,16 @@ export default function LevelPage() {
           </div>
           <div className="mt-2 flex items-center justify-between text-[10.5px] font-black text-white/60">
             <span>LV{level}</span>
+            <span className="tabular-nums">{formatXp(into)} / {formatXp(need)}</span>
             <span className="tabular-nums">{percent}%</span>
           </div>
         </div>
 
         <p className="mt-3 text-center text-[11.5px] font-semibold text-white/70">
-          Bir sonraki seviye için {formatXp(remaining)} deneyim puanına ihtiyacınız..
+          LV{level + 1} seviyesine geçmek için {formatXp(remaining)} deneyim puanı gerekiyor.
+        </p>
+        <p className="mt-1 text-center text-[10.5px] font-semibold text-white/40">
+          Her seviye artışında gereken puan {formatXp(STEP_GROWTH)} kadar yükselir.
         </p>
 
         <div className="mt-5 rounded-2xl border p-4" style={{ borderColor: 'rgba(255,215,106,0.3)', background: 'rgba(46,26,71,0.55)' }}>

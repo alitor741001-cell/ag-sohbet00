@@ -6,7 +6,6 @@ const ITEMS = [
   { key: 'bag', label: 'Çanta' },
   { key: 'level', label: 'Seviye' },
   { key: 'agency', label: 'Ajans' },
-  { key: 'cp', label: 'CP' },
 ];
 
 const ORB = {
