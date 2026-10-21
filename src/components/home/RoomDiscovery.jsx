@@ -350,7 +350,7 @@ export default function RoomDiscovery({ shortcuts = null }) {
             <span className="ml-auto text-[10px] font-bold text-white/40">{items.length} oda</span>
           </div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {items.map((room) => {
+          {items.map((room, index) => {
             const kind = isVoiceRoom(room) ? 'voice' : 'film';
             return (
               <RoomDiscoveryCard
@@ -360,6 +360,7 @@ export default function RoomDiscovery({ shortcuts = null }) {
                 kind={kind}
                 filmTitle={kind === 'film' ? filmTitleFor(room) : ''}
                 friendInside={hasFriendInside(room)}
+                rank={index < 3 ? index + 1 : 0}
               />
             );
           })}
