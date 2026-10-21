@@ -92,15 +92,25 @@ export async function giftBoard(base44: any, roomId: string) {
     return !!created && created >= dayFloor;
   });
 
+  // Haftalık liste: bugün dahil son 7 gün (Türkiye saatiyle gün başından itibaren).
+  const weekFloor = dayStartIso(new Date(Date.now() - 6 * 24 * 60 * 60 * 1000));
+  const weekly = records.filter((record) => {
+    const created = String(record?.created_date || '').slice(0, 19);
+    return !!created && created >= weekFloor;
+  });
+
   const dayAgg = aggregate(recent);
+  const weekAgg = aggregate(weekly);
   const allAgg = aggregate(records);
-  const [dayEntries, allEntries] = await Promise.all([
+  const [dayEntries, weekEntries, allEntries] = await Promise.all([
     withProfiles(base44, dayAgg),
+    withProfiles(base44, weekAgg),
     withProfiles(base44, allAgg),
   ]);
 
   return {
     day: { total: sumScore(dayAgg), entries: dayEntries },
+    week: { total: sumScore(weekAgg), entries: weekEntries },
     all: { total: sumScore(allAgg), entries: allEntries },
   };
 }
