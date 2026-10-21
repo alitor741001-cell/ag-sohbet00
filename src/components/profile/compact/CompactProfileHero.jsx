@@ -1,69 +1,38 @@
-import { CalendarDays, Check, Copy, Heart, Shield, Star } from 'lucide-react';
-import ProfileFrame from '@/components/ProfileFrame';
-import { receivedColor, vipStyle } from '@/lib/userLevels';
+import { Check, Coins, Copy, Heart } from 'lucide-react';
+import CompactCrystalAvatar from '@/components/profile/compact/CompactCrystalAvatar';
+import { vipStyle } from '@/lib/userLevels';
 
 /**
- * Sesli odada açılan kompakt profil kartının üst bloğu: yuvarlak fotoğraf, VIP etiketi,
- * isim, cinsiyet/yaş, kimlik satırı ve rozetler — hepsi kaydırmadan tek ekrana sığacak boyutta.
+ * Kompakt kartın kimlik bölümü: iki koltuk boyunda kristal fotoğraf, elmaslarla çevrili
+ * isim, pembe cinsiyet rozeti, ajans etiketi, kimlik satırı ve VIP/kalp sayacı.
  */
 export default function CompactProfileHero({
   name, avatar, palette, hidden = false, statusLabel = '', roleLabel = '',
-  genderLabel, age, country, flag, memberId, joinDate, copied, onCopyId,
-  level = 0, nLevel = 0, vipLevel = 0, receivedLevel = 0, receivedTier, tags = [],
+  genderLabel, age, country, flag, memberId, copied, onCopyId,
+  level = 0, vipLevel = 0, receivedLevel = 0, tags = [],
 }) {
   const vip = vipLevel > 0 ? vipStyle(vipLevel) : null;
 
   return (
     <div className="flex flex-col items-center">
-      <div className="relative">
-        {/* Buz kristali çerçeve: dış ışıma, katmanlı halkalar ve yanlarda kristal kanat uçları. */}
-        <span aria-hidden className="pointer-events-none absolute -inset-2 rounded-full" style={{ boxShadow: '0 0 32px -6px rgba(120,196,246,0.9)' }} />
-        <span aria-hidden className="pointer-events-none absolute -left-[9px] top-1/2 h-2 w-2 -translate-y-1/2 rotate-45 rounded-[2px] border border-[#cfeaff]/70 bg-[#1b3f63]" />
-        <span aria-hidden className="pointer-events-none absolute -right-[9px] top-1/2 h-2 w-2 -translate-y-1/2 rotate-45 rounded-[2px] border border-[#cfeaff]/70 bg-[#1b3f63]" />
-        <span aria-hidden className="pointer-events-none absolute left-1/2 -top-[7px] h-2 w-2 -translate-x-1/2 rotate-45 rounded-[2px] border border-[#eaf9ff]/80 bg-[#2a5c86]" />
-        <div
-          className="relative rounded-full p-[3px]"
-          style={{
-            background: 'linear-gradient(158deg, #f2fbff 0%, #a8d8f5 26%, #3576b8 58%, #d9f2ff 82%, #6aa9e0 100%)',
-            boxShadow: '0 0 22px -4px rgba(120,196,246,0.85)',
-          }}
+      <CompactCrystalAvatar avatar={avatar} name={name} vipLevel={hidden ? 0 : vipLevel} />
+
+      {statusLabel && <p className="mt-2 text-[10px] font-black tracking-[0.3em] text-destructive">{statusLabel}</p>}
+
+      <div className="mt-2 flex w-full items-center justify-center gap-2">
+        <span aria-hidden className="h-2 w-2 shrink-0 rotate-45 border border-[#bfe9ff]/80 bg-[#2a5c86]" />
+        <p
+          className="max-w-[70%] break-words text-center text-[22px] font-black leading-tight text-white"
+          style={{ fontFamily: 'Georgia, "Times New Roman", serif', textShadow: `0 0 12px ${palette.glow}` }}
         >
-          <div className="rounded-full p-[2px]" style={{ background: 'linear-gradient(180deg, #0b1f33, #050c16)' }}>
-            <div className="rounded-full p-[2px]" style={{ background: `linear-gradient(180deg, ${palette.accent2}, ${palette.accent})` }}>
-              <ProfileFrame avatar={avatar} name={name} size="xl" />
-            </div>
-          </div>
-        </div>
-        <span
-          className="absolute -bottom-1 left-1/2 z-[3] flex h-6 w-6 -translate-x-1/2 items-center justify-center rounded-full border-2 text-[12px] font-black"
-          style={{ borderColor: palette.accent2, background: '#07040a', color: palette.accent, boxShadow: `0 0 12px ${palette.glow}` }}
-        >
-          {hidden ? '?' : palette.symbol}
-        </span>
+          {name}
+        </p>
+        <span aria-hidden className="h-2 w-2 shrink-0 rotate-45 border border-[#bfe9ff]/80 bg-[#2a5c86]" />
       </div>
-
-      {vip && (
-        <span
-          className="mt-1.5 rounded-full border-2 px-2 py-[1px] text-[9px] font-black tracking-wider"
-          style={{ borderColor: vip.border, background: vip.background, color: vip.color }}
-        >
-          VIP{vipLevel}
-        </span>
-      )}
-
-      {statusLabel && <p className="mt-1 text-[10px] font-black tracking-[0.3em] text-destructive">{statusLabel}</p>}
-
-      <p
-        className="mt-1.5 max-w-full break-words px-2 text-center text-[22px] font-black leading-tight"
-        style={{ fontFamily: 'Georgia, "Times New Roman", serif', textShadow: `0 0 10px ${palette.glow}, 0 0 26px ${palette.glow}` }}
-      >
-        {name}
-      </p>
       {roleLabel && <p className="mt-0.5 max-w-full truncate text-[10px] font-bold" style={{ color: palette.accent2 }}>{roleLabel}</p>}
 
-      {/* Cinsiyet + yaş ve varsa ajans/yayıncı etiketleri tek satırda. */}
-      <div className="mt-1 flex flex-wrap items-center justify-center gap-1">
-        {/* Cinsiyet + yaş: referanstaki pembe-altın rozet dili. */}
+      {/* Cinsiyet + yaş, ajans ve yayıncı etiketleri. */}
+      <div className="mt-1.5 flex flex-wrap items-center justify-center gap-1">
         <span
           className="flex items-center gap-1 rounded-full border px-[7px] py-[2px] text-[10px] font-black"
           style={{
@@ -76,12 +45,18 @@ export default function CompactProfileHero({
           {palette.symbol} {age === null || age === undefined ? genderLabel : age}
         </span>
         {tags.map((tag) => (
-          <span key={tag} className="rounded-full border border-[#F5C542]/50 bg-[#F5C542]/10 px-2 py-[2px] text-[9.5px] font-black text-[#F5C542]">{tag}</span>
+          <span
+            key={tag}
+            className="rounded-full border px-2 py-[2px] text-[9.5px] font-black text-white"
+            style={{ borderColor: 'rgba(168,216,245,0.7)', background: 'rgba(35,86,133,0.85)' }}
+          >
+            {tag}
+          </span>
         ))}
       </div>
 
-      {/* Kimlik satırı: kopyalanabilir ID, ülke ve kayıt tarihi. */}
-      <div className="mt-1.5 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[10px] font-semibold text-white/70">
+      {/* Kimlik ve ülke satırı. */}
+      <div className="mt-1.5 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[10px] font-semibold text-white/75">
         <span className="flex items-center gap-1">
           <span className="font-mono text-[11px] font-bold text-white">ID:{memberId || '-'}</span>
           <button
@@ -95,49 +70,26 @@ export default function CompactProfileHero({
             {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
           </button>
         </span>
-        {country && (
-          <span className="flex items-center gap-1"><span className="text-[12px]">{flag}</span>{country}</span>
-        )}
-        <span className="flex items-center gap-1">
-          <CalendarDays className="h-3 w-3" style={{ color: palette.accent2 }} />{joinDate}
-        </span>
+        {country && <span className="flex items-center gap-1"><span className="text-[12px]">{flag}</span>{country}</span>}
       </div>
 
-      {/* Rozetler: referanstaki gibi etiketli, buz mavisi çerçeveli kutu. */}
-      {(level > 0 || nLevel > 0 || receivedLevel > 0) && (
-        <div
-          className="mt-2 flex w-full items-center gap-1.5 rounded-xl border px-2 py-1"
-          style={{ borderColor: 'rgba(127,182,221,0.45)', background: 'rgba(13,43,69,0.62)' }}
-        >
-          <span className="shrink-0 text-[9px] font-bold text-[#9fc7e6]">Rozetler:</span>
-          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1">
-            {level > 0 && (
-              <span
-                className="flex items-center gap-1 rounded-full border px-2 py-[1px] text-[10px] font-black tabular-nums"
-                style={{ borderColor: palette.accent2, color: palette.accent2, background: 'rgba(0,0,0,0.5)', boxShadow: `0 0 12px -4px ${palette.glow}` }}
-              >
-                <Star className="h-3 w-3" fill="currentColor" /> LVL {level}
-              </span>
-            )}
-            {nLevel > 0 && (
-              <span
-                className="flex items-center gap-1 rounded-full border px-2 py-[1px] text-[10px] font-black tabular-nums"
-                style={{ borderColor: '#cfd8dc', color: '#fff', background: '#4b664d' }}
-              >
-                <Shield className="h-3 w-3" fill="currentColor" /> N{nLevel}
-              </span>
-            )}
-            {receivedLevel > 0 && (
-              <span
-                className="flex items-center gap-1 rounded-full border px-2 py-[1px] text-[10px] font-black tabular-nums text-white"
-                style={{ borderColor: palette.accent, background: receivedColor(receivedTier) }}
-              >
-                <Heart className="h-3 w-3" fill="currentColor" /> {receivedLevel}
-              </span>
-            )}
-          </div>
-        </div>
-      )}
+      {/* VIP ve hediye sayacı: referanstaki altın para / kalp satırı. */}
+      <div className="mt-1.5 flex items-center justify-center gap-1.5">
+        {vip && !hidden && (
+          <span
+            className="rounded-md border px-1.5 py-[1px] text-[9px] font-black tracking-wide"
+            style={{ borderColor: vip.border, background: vip.background, color: vip.color }}
+          >
+            VIP{vipLevel}
+          </span>
+        )}
+        <span className="flex items-center gap-1 rounded-md border px-1.5 py-[1px] text-[10px] font-black tabular-nums text-white" style={{ borderColor: 'rgba(212,175,55,0.6)', background: 'rgba(0,0,0,0.45)' }}>
+          <Coins className="h-3 w-3" style={{ color: '#f4d03f' }} /> {level}
+        </span>
+        <span className="flex items-center gap-1 rounded-md border px-1.5 py-[1px] text-[10px] font-black tabular-nums text-white" style={{ borderColor: 'rgba(240,107,168,0.7)', background: 'rgba(0,0,0,0.45)' }}>
+          <Heart className="h-3 w-3" fill="#f06ba8" style={{ color: '#f06ba8' }} /> {receivedLevel}
+        </span>
+      </div>
     </div>
   );
 }

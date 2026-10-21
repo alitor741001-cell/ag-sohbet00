@@ -13,6 +13,8 @@ import ProfileStatsRow from '@/components/profile/ProfileStatsRow';
 import ProfileIdentityBlock from '@/components/profile/ProfileIdentityBlock';
 import FollowButton from '@/components/profile/social/FollowButton';
 import CompactProfileHero from '@/components/profile/compact/CompactProfileHero';
+import CompactBadgeBoard from '@/components/profile/compact/CompactBadgeBoard';
+import CompactLovePanel from '@/components/profile/compact/CompactLovePanel';
 import CompactActionTile from '@/components/profile/compact/CompactActionTile';
 import CompactRoomActions from '@/components/profile/compact/CompactRoomActions';
 import { AccountStatusMark, ACCOUNT_MARKS, ACCOUNT_STATES, getAccountState } from '@/components/friends/AccountStatusAvatar';
@@ -37,6 +39,8 @@ export default function FullUserProfile({
   const [relation, setRelation] = useState('');
   const [copied, setCopied] = useState(false);
   const [inviteSent, setInviteSent] = useState(false);
+  // Kompakt kartta rozet kutusunun oku ekstra bilgileri açar.
+  const [compactMore, setCompactMore] = useState(false);
 
   // Profil kartı birleşik geri yığınında: geri tuşu önce kartı kapatır.
   useBackDismiss(open, onClose);
@@ -336,6 +340,10 @@ export default function FullUserProfile({
       : (profile?.agency_name ? `Ajans: ${profile.agency_name}` : ''),
   ].filter(Boolean);
 
+  // Hediye düğmesi referanstaki dörtlü şeridin dördüncü gözünde durur.
+  const giftItem = footer.find((item) => item.key === 'gift');
+  const otherFooterItems = footer.filter((item) => item.key !== 'gift');
+
   const compactContent = statusContent || (
     <>
       <CompactProfileHero
@@ -350,15 +358,22 @@ export default function FullUserProfile({
         country={hidden ? '' : badge.country}
         flag={badge.flag}
         memberId={memberId}
-        joinDate={formatDate(profile?.created_date)}
         copied={copied}
         onCopyId={copyId}
         level={level >= 1000 ? 0 : level}
-        nLevel={profile?.n_level || 0}
         vipLevel={profile?.vip_level || 0}
         receivedLevel={profile?.gift_received_level || 0}
-        receivedTier={profile?.gift_received_tier}
         tags={compactTags}
+      />
+
+      <CompactBadgeBoard
+        palette={palette}
+        level={level >= 1000 ? 0 : level}
+        nLevel={profile?.n_level || 0}
+        receivedLevel={profile?.gift_received_level || 0}
+        receivedTier={profile?.gift_received_tier}
+        expanded={compactMore}
+        onToggle={() => setCompactMore((current) => !current)}
       />
 
       {hidden && (
@@ -367,7 +382,8 @@ export default function FullUserProfile({
         </p>
       )}
 
-      {!hidden && info.length > 0 && (
+      {/* Rozet okuna basınca açılan ek bilgiler. */}
+      {compactMore && !hidden && info.length > 0 && (
         <div className="mt-2 space-y-0.5 rounded-xl border px-2 py-1.5 text-[10px]" style={{ borderColor: palette.soft, background: 'rgba(0,0,0,0.42)' }}>
           {info.map((row) => (
             <div key={row.label} className="flex items-start justify-between gap-2">
@@ -378,11 +394,41 @@ export default function FullUserProfile({
         </div>
       )}
 
-      <CompactRoomActions tiles={tiles} palette={palette} />
+      <CompactLovePanel
+        avatar={banned ? ACCOUNT_STATES.banned.image : shownAvatar}
+        name={shownName}
+        receivedLevel={hidden ? 0 : (profile?.gift_received_level || 0)}
+        onGift={giftItem?.onClick}
+      />
 
-      {/* Alt işlem şeridi: takip, arkadaşlık, bahset, sohbet, hediye ve oda işlemleri */}
+      {/* Referanstaki dörtlü kristal şerit: takip, sohbet, bahsetme, hediye. */}
       <div className="mt-2 grid grid-cols-4 gap-1.5">
         {showSocial && <FollowButton variant="tile" userId={userId} accent={palette.accent} />}
+        {!isSelf && (
+          <CompactActionTile
+            icon={MessageSquare}
+            palette={palette}
+            label="Sohbet"
+            onClick={() => { onMessage?.(userId); onClose?.(); }}
+          />
+        )}
+        {!isSelf && !!onMention && (
+          <CompactActionTile
+            icon={AtSign}
+            palette={palette}
+            label="Bahsetme"
+            onClick={() => { onMention(shownName); onClose?.(); }}
+          />
+        )}
+        {giftItem && (
+          <CompactActionTile
+            icon={giftItem.icon}
+            palette={palette}
+            label="Hediye"
+            tone="rose"
+            onClick={giftItem.onClick}
+          />
+        )}
         {showSocial && relation !== 'friend' && (
           <CompactActionTile
             icon={UserPlus}
@@ -392,30 +438,13 @@ export default function FullUserProfile({
             onClick={addFriend}
           />
         )}
-        {!isSelf && !!onMention && (
-          <CompactActionTile
-            icon={AtSign}
-            palette={palette}
-            label="Bahset"
-            onClick={() => { onMention(shownName); onClose?.(); }}
-          />
-        )}
-        {!isSelf && (
-          <CompactActionTile
-            icon={MessageSquare}
-            palette={palette}
-            label="Sohbet"
-            onClick={() => { onMessage?.(userId); onClose?.(); }}
-          />
-        )}
-        {footer.map((item) => (
+        {otherFooterItems.map((item) => (
           <CompactActionTile
             key={item.key}
             icon={item.icon}
             palette={palette}
             label={item.label}
             danger={item.danger}
-            tone={item.key === 'gift' ? 'rose' : 'ice'}
             onClick={item.onClick}
           />
         ))}
@@ -429,6 +458,8 @@ export default function FullUserProfile({
           />
         )}
       </div>
+
+      <CompactRoomActions tiles={tiles} palette={palette} />
     </>
   );
 
