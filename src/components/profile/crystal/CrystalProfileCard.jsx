@@ -12,7 +12,7 @@ import CrystalRectButton from '@/components/profile/crystal/CrystalRectButton';
 export default function CrystalProfileCard({
   name, avatar, tone = 'blue', vipLevel = 0, genderSymbol = '♂', statusLabel = '', roleLabel = '',
   receivedLevel = 0, nLevel = 0, joinDate = '', memberId = '', copied = false, onCopyId,
-  country = '', flag = '', rectItems = [], circleNodes = [], hidden = false,
+  country = '', flag = '', rectItems = [], circleNodes = [], infoRows = [], hidden = false,
 }) {
   return (
     <div className="flex flex-col">
@@ -46,6 +46,17 @@ export default function CrystalProfileCard({
           flag={flag}
           tone={tone}
         />
+      )}
+
+      {!hidden && infoRows.length > 0 && (
+        <div className="mt-1.5 space-y-0.5 rounded-xl border px-2.5 py-1.5 text-[9px]" style={{ borderColor: 'rgba(212,175,55,0.35)', background: 'rgba(2,6,15,0.7)' }}>
+          {infoRows.map((row) => (
+            <div key={row.label} className="flex items-start justify-between gap-2">
+              <span className="shrink-0 text-white/50">{row.label}</span>
+              <span className="min-w-0 break-words text-right font-semibold text-white">{row.value}</span>
+            </div>
+          ))}
+        </div>
       )}
 
       {rectItems.length > 0 && (
