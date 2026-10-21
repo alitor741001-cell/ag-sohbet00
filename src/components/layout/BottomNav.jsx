@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Gem, Home, MessageCircle, User } from 'lucide-react';
+import { Gamepad2, Home, MessageCircle, User } from 'lucide-react';
 import { useCurrentUser, membershipActive } from '@/lib/useCurrentUser';
 import useSocialBadges from '@/hooks/useSocialBadges';
 import useSupportBadge from '@/hooks/useSupportBadge';
@@ -11,7 +11,7 @@ import { TAB_PATHS } from '@/lib/tabPaths';
 const fullItems = [
   { label: 'Ana Sayfa', path: '/', icon: Home },
   { label: 'Sohbet', path: '/arkadaslar?view=chats', activePath: '/arkadaslar', icon: MessageCircle },
-  { label: 'Oda Kur', path: '/oda-kur', icon: Gem },
+  { label: 'Oyunlar', path: '/?oyunlar=1', icon: Gamepad2 },
   { label: 'Profil', path: '/profil', icon: User },
 ];
 
@@ -85,7 +85,7 @@ export default function BottomNav() {
           const { label, path, activePath, icon: Icon } = item;
           const matchPath = activePath || path;
           const active = location.pathname === matchPath || (matchPath !== '/' && location.pathname.startsWith(matchPath));
-          const isCenter = path === '/oda-kur' && baseItems === fullItems;
+          const isCenter = path === '/?oyunlar=1' && baseItems === fullItems;
           if (isCenter) {
             return (
               <button key={path} type="button" aria-label={label} onClick={() => handleNav({ path })} className="flex-1 flex flex-col items-center justify-center gap-1 relative min-h-11">

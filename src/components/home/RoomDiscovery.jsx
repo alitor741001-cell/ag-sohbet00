@@ -1,13 +1,12 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Film, Gamepad2, Loader2, Search, Users } from 'lucide-react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { Film, Loader2, Users } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import subscribeEntity from '@/components/data/entitySubscriptions';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { broadcasterState } from '@/lib/broadcaster';
 import RoomDiscoveryCard from '@/components/home/RoomDiscoveryCard';
 import HomeTopBar from '@/components/home/fantasy/HomeTopBar';
-import HomeEventBanner from '@/components/home/fantasy/HomeEventBanner';
 import PullToRefresh from '@/components/home/PullToRefresh';
 import GameDiscoveryRow from '@/components/home/GameDiscoveryRow';
 import useFriends from '@/hooks/useFriends';
@@ -27,13 +26,6 @@ const roomListSignature = (items) =>
 /** Odada kimse yoksa kart hiç listelenmez; içeri giren olunca kart kendiliğinden gelir. */
 const hasPeopleInside = (room) => (room?.participants || []).some((person) => person?.user_id);
 
-/** Arama karşılaştırması: "TR555596" ile "555596" aynı üye kimliği sayılır. */
-const normalizeId = (value) =>
-  String(value || '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, '')
-    .replace(/^tr(?=\d)/, '');
-
 /**
  * Ana sayfa keşfet bölümü: en üstte arkadaş şeridi, altında koltuklu odalar ve
  * film odaları sekmeleri, oda numarası / üye kimliği araması ve oda kartları.
@@ -46,16 +38,20 @@ export default function RoomDiscovery({ shortcuts = null }) {
   const [titles, setTitles] = useState({});
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState('friends');
-  const [query, setQuery] = useState('');
+  // Oyunlar görünümü adresten açılır: alt menüdeki Oyunlar düğmesi ?oyunlar=1 getirir.
+  const [searchParams] = useSearchParams();
+  const gamesParam = searchParams.get('oyunlar') === '1';
   // Açık oyun: ana sayfadan seçilen oyun tam ekran oynanır.
   const [gameOpen, setGameOpen] = useState(null);
   // Oyunlar yalnızca yayıncı/ajans üyesi hesaplara açıktır; ülke etiketiyle aynı kaynaktan çözülür.
   const gamesEnabled = broadcasterState(user).games;
 
-  // Ayrıcalık kalkarsa oyun sekmesi kendiliğinden kapanır.
+  // Adresteki oyun isteği sekmeyi açar; adres temizlenince ya da ayrıcalık kalkınca
+  // oda listesine dönülür.
   useEffect(() => {
-    if (!gamesEnabled && tab === 'games') setTab('friends');
-  }, [gamesEnabled, tab]);
+    if (gamesParam && gamesEnabled) setTab('games');
+    else if (!gamesParam && tab === 'games') setTab('friends');
+  }, [gamesParam, gamesEnabled, tab]);
 
   // Gizlendiğini bildiğimiz odalar kimliğiyle işaretlenir: canlı güncelleme gelse
   // de ana sayfaya geri dönmez (olay yalnızca değişen alanları taşıyabilir).
@@ -277,44 +273,11 @@ export default function RoomDiscovery({ shortcuts = null }) {
     const tabRooms = tab === 'friends' ? friendRooms : otherRooms;
     return [...tabRooms].sort((a, b) => Number(hasFriendInside(b)) - Number(hasFriendInside(a)));
   }, [tab, friendRooms, otherRooms, friendRoomIds]);
-  const searching = query.trim().length > 0;
-
-  // Arama açıkken iki sekme birlikte taranır: oda numarası veya üye kimliğiyle oda bulunur.
-  const searched = useMemo(() => {
-    const term = query.trim();
-    if (!term) return list;
-    const lowered = term.toLowerCase();
-    const digits = term.replace(/[^0-9]/g, '');
-    const memberTerm = normalizeId(term);
-    // Sesli+Film sekmesinde aranan boş oda da listelenmez; Arkadaşlar sekmesinde arama aynı kalır.
-    const pool = tab === 'friends' ? uniqueRooms : uniqueRooms.filter(hasPeopleInside);
-    return pool.filter((room) => {
-      const owner = owners[room.owner_id] || {};
-      if (digits && String(room.room_number) === digits) return true;
-      const ownerMember = normalizeId(owner.member_id);
-      if (memberTerm && ownerMember && (ownerMember === memberTerm || ownerMember.includes(memberTerm))) return true;
-      if (String(room.name || '').toLowerCase().includes(lowered)) return true;
-      return `${owner.username || ''} ${owner.full_name || ''} ${room.owner_name || ''}`.toLowerCase().includes(lowered);
-    });
-  }, [query, list, uniqueRooms, owners, tab]);
-
-  const items = searching ? searched : list;
-
-  // Üst şeritteki arama düğmesi arama kutusuna götürür: oyun sekmesinde kutu
-  // kapalı olduğu için önce oda listesine dönülür.
-  const focusSearch = useCallback(() => {
-    setTab((current) => (current === 'games' ? 'friends' : current));
-    window.setTimeout(() => {
-      const input = document.getElementById('room-search');
-      if (!input) return;
-      input.scrollIntoView({ block: 'center', behavior: 'smooth' });
-      input.focus();
-    }, 60);
-  }, []);
+  const items = list;
 
   return (
     <PullToRefresh onRefresh={refreshList}>
-      <HomeTopBar onSearch={focusSearch} />
+      <HomeTopBar />
       <div className="mb-3 flex items-center gap-1.5 rounded-2xl border border-[#e8c47c]/25 bg-[#071736]/70 p-1 backdrop-blur">
         <button
           type="button"
@@ -338,35 +301,7 @@ export default function RoomDiscovery({ shortcuts = null }) {
         >
           <Users className="h-4 w-4 shrink-0" /> <span className="truncate">Arkadaşlar</span>
         </button>
-        {gamesEnabled && (
-        <button
-          type="button"
-          onClick={() => setTab('games')}
-          className={`flex min-w-0 flex-1 items-center justify-center gap-1 rounded-xl py-2 text-[10.5px] font-extrabold transition ${
-            tab === 'games'
-              ? 'border border-[#ffe6a8]/70 bg-gradient-to-r from-[#d8fffb] via-[#6fe6dc] to-[#9ad7ff] text-[#062033] shadow-[0_0_20px_-5px_rgba(127,240,230,0.95)]'
-              : 'border border-transparent text-white/60'
-          }`}
-        >
-          <Gamepad2 className="h-4 w-4 shrink-0" /> <span className="truncate">Oyunlar</span>
-        </button>
-        )}
       </div>
-
-      {tab !== 'games' && (
-      <div className="relative mb-3">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-premium-gold/80" />
-        <input
-          id="room-search"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Oda numarası veya üye kimliği ara…"
-          autoComplete="off"
-          enterKeyHint="search"
-          className="w-full rounded-2xl border border-[#e8c47c]/30 bg-[#071736]/80 py-2.5 pl-9 pr-3 text-[13px] font-medium text-white outline-none backdrop-blur transition placeholder:text-white/40 focus:border-[#7ff0e6]/70 focus:shadow-[0_0_20px_-6px_rgba(127,240,230,0.9)]"
-        />
-      </div>
-      )}
 
       {shortcuts}
 
@@ -377,30 +312,23 @@ export default function RoomDiscovery({ shortcuts = null }) {
           <Loader2 className="h-6 w-6 animate-spin text-premium-gold/70" />
         </div>
       ) : items.length === 0 ? (
-        searching ? (
-          <div className="premium-panel rounded-2xl px-4 py-8 text-center">
-            <p className="text-sm font-bold text-premium-gold">Eşleşen oda yok.</p>
-            <p className="mt-1 text-xs text-white/45">Oda numarasını veya üye kimliğini kontrol et.</p>
-          </div>
-        ) : (
-          <div className="premium-panel rounded-2xl px-4 py-8 text-center">
-            <p className="text-sm font-bold text-white">
-              {tab === 'friends' ? 'Şu an arkadaşlarının açık odası yok.' : 'Şu an açık oda yok.'}
-            </p>
-            <Link
-              to={tab === 'friends' ? '/arkadaslar' : '/oda-kur'}
-              className="mt-2 inline-block rounded-lg border border-premium-gold/50 px-3 py-1.5 text-xs font-black text-premium-gold"
-            >
-              {tab === 'friends' ? 'Arkadaş ekle →' : 'İlk odayı sen aç →'}
-            </Link>
-          </div>
-        )
+        <div className="premium-panel rounded-2xl px-4 py-8 text-center">
+          <p className="text-sm font-bold text-white">
+            {tab === 'friends' ? 'Şu an arkadaşlarının açık odası yok.' : 'Şu an açık oda yok.'}
+          </p>
+          <Link
+            to={tab === 'friends' ? '/arkadaslar' : '/oda-kur'}
+            className="mt-2 inline-block rounded-lg border border-premium-gold/50 px-3 py-1.5 text-xs font-black text-premium-gold"
+          >
+            {tab === 'friends' ? 'Arkadaş ekle →' : 'İlk odayı sen aç →'}
+          </Link>
+        </div>
       ) : (
         <>
           <div className="mb-2 flex items-center gap-2">
             <span className="h-3 w-1 rounded-full" style={{ background: 'linear-gradient(180deg,#ffe6a8,#7ff0e6)' }} />
             <h2 className="text-[10.5px] font-black tracking-[0.18em] text-[#ffe6a8]">
-              {searching ? 'ARAMA SONUCU' : tab === 'friends' ? 'ARKADAŞLARININ ODALARI' : 'CANLI SESLİ + FİLM ODALARI'}
+              {tab === 'friends' ? 'ARKADAŞLARININ ODALARI' : 'CANLI SESLİ + FİLM ODALARI'}
             </h2>
             <span className="ml-auto text-[10px] font-bold text-white/40">{items.length} oda</span>
           </div>
@@ -419,7 +347,6 @@ export default function RoomDiscovery({ shortcuts = null }) {
             );
           })}
           </div>
-          <HomeEventBanner />
         </>
       )}
 
