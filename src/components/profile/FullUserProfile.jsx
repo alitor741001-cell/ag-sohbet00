@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, AtSign, Gift, Loader2, Lock, MessageSquare, Mic, MicOff, Settings, Unlock } from 'lucide-react';
+import { Armchair, ArrowLeft, AtSign, Gift, Loader2, Lock, MessageSquare, Mic, MicOff, Settings, Unlock, UserRound } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import subscribeEntity from '@/components/data/entitySubscriptions';
 import { useToast } from '@/components/ui/use-toast';
@@ -243,25 +243,51 @@ export default function FullUserProfile({
     </div>
   ) : null;
 
-  // Referanstaki sıra: Mik aç, Koltuğu kilitle (karşı taraf), Koltuğu kilitle (kendi koltuğum).
+  const lockSeatIndex = targetSeat >= 0 ? targetSeat : mySeat;
+
+  const standUp = () => {
+    if (!room) { needRoom('Ayağa kalkmak'); return; }
+    if (targetSeat < 0) {
+      toast({ title: 'Koltukta oturmuyor', description: `${shownName} şu anda bir koltukta değil.` });
+      return;
+    }
+    room.standUp(userId);
+  };
+
+  const openProfilePage = () => {
+    onClose?.();
+    navigate(`/kullanici/${userId}`);
+  };
+
+  // Referanstaki üç kutu: Mik aç · Ayağa kalk · Profili gör.
   const rectItems = [
     { key: 'mic', icon: micMuted ? MicOff : Mic, label: micMuted ? 'Mik aç' : 'Mik kapat', onClick: toggleMic },
-    { key: 'lock-target', icon: targetSeat >= 0 && room?.isLocked(targetSeat) ? Unlock : Lock, label: 'Koltuğu kilitle', onClick: () => toggleSeatLock(targetSeat, userId) },
-    { key: 'lock-self', icon: mySeat >= 0 && room?.isLocked(mySeat) ? Unlock : Lock, label: 'Koltuğu kilitle', onClick: () => toggleSeatLock(mySeat, user?.id) },
-    ...tiles.map(({ key, ...item }) => ({ key, ...item })),
+    { key: 'stand', icon: Armchair, label: 'Ayağa kalk', onClick: standUp },
+    { key: 'profile', icon: UserRound, label: 'Profili gör', onClick: openProfilePage },
   ];
 
+  // Referanstaki üç geniş bar: Koltuğu kilitle · Hediye gönder · Bahset.
   const wideItems = [
+    {
+      key: 'lock',
+      icon: lockSeatIndex >= 0 && room?.isLocked(lockSeatIndex) ? Unlock : Lock,
+      label: 'Koltuğu kilitle',
+      onClick: () => toggleSeatLock(lockSeatIndex, lockSeatIndex === mySeat ? user?.id : userId),
+    },
     { key: 'gift', icon: Gift, label: 'Hediye gönder', onClick: sendGift },
     { key: 'mention', icon: AtSign, label: 'Bahset', onClick: mention },
   ];
 
-  // Alt şerit: Bahset, Takip Ediliyor, Sohbet, Hediye.
+  // Referanstaki dört yuvarlak: Takip Ediliyor · Sohbet · Bahsetme · Hediye.
   const circleNodes = [
-    <CrystalCircleButton key="mention" icon={AtSign} label="Bahset" tone={tone} onClick={mention} />,
     showSocial ? <FollowButton key="follow" variant="circle" userId={userId} tone={tone} /> : null,
     !isSelf ? <CrystalCircleButton key="chat" icon={MessageSquare} label="Sohbet" tone={tone} onClick={openChat} /> : null,
+    <CrystalCircleButton key="mention" icon={AtSign} label="Bahsetme" tone={tone} onClick={mention} />,
     <CrystalCircleButton key="gift" icon={Gift} label="Hediye" tone={tone} onClick={sendGift} />,
+  ].filter(Boolean);
+
+  // Referansın dışındaki ikincil işlemler ayrı satırda kalır (arkadaş ekle, davet, özel kutular).
+  const extraNodes = [
     showSocial && relation !== 'friend' ? (
       <CrystalCircleButton
         key="friend"
@@ -272,7 +298,6 @@ export default function FullUserProfile({
         onClick={addFriend}
       />
     ) : null,
-    ...footer.map(({ key, ...item }) => <CrystalCircleButton key={key} {...item} tone={tone} />),
     canInvite ? (
       <CrystalCircleButton
         key="invite"
@@ -283,6 +308,8 @@ export default function FullUserProfile({
         onClick={inviteBroadcaster}
       />
     ) : null,
+    ...tiles.map(({ key, ...item }) => <CrystalCircleButton key={key} {...item} tone={tone} />),
+    ...footer.map(({ key, ...item }) => <CrystalCircleButton key={key} {...item} tone={tone} />),
   ].filter(Boolean);
 
   return (
@@ -318,6 +345,9 @@ export default function FullUserProfile({
             rectItems={rectItems}
             wideItems={wideItems}
             circleNodes={circleNodes}
+            extraNodes={extraNodes}
+            slogan={profile?.slogan || 'HER ZAMAN DAHA GÜÇLÜ'}
+            signature={profile?.signature || profile?.status_message || 'Sen Özelsin'}
             infoRows={info}
             hidden={hidden}
           />

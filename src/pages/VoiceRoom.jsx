@@ -859,6 +859,11 @@ export default function VoiceRoom() {
     selfMicMuted: !!voice.muted,
     mutedOf: (targetId) => !!participants.find((person) => person?.user_id === targetId)?.muted,
     canControl: (targetId) => canMod || targetId === user?.id,
+    standUp: (targetId) => {
+      if (!targetId || targetId === user?.id) { invokeVoice({ action: 'seat-leave' }); return; }
+      if (!canMod) return;
+      invokeVoice({ action: 'seat-kick', target_id: targetId });
+    },
     toggleMic: (targetId) => {
       if (!targetId || targetId === user?.id) {
         if (!seated) {

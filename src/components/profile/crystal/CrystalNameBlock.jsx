@@ -1,46 +1,33 @@
-import { Crown, Heart } from 'lucide-react';
-import CrystalCrown from '@/components/profile/crystal/CrystalCrown';
-import { crystalSkin } from '@/components/profile/crystal/crystalTheme';
+import { crystalSkin, GOLD_LINE } from '@/components/profile/crystal/crystalTheme';
+
+function Diamond({ tone = 'blue', flip = false }) {
+  const c = crystalSkin(tone);
+  return (
+    <span
+      className="relative inline-flex h-[11px] w-[11px] shrink-0 rotate-45 items-center justify-center rounded-[2px]"
+      style={{ background: GOLD_LINE, boxShadow: `0 0 10px -1px ${c.glow}, inset 0 0 4px rgba(255,255,255,0.7)` }}
+    >
+      <span
+        className="h-[5px] w-[5px] rounded-[1px]"
+        style={{ background: flip ? c.blue : '#0a2b57', boxShadow: `0 0 6px ${c.blue}` }}
+      />
+    </span>
+  );
+}
 
 /**
- * Referanstaki kimlik bölümü: solda taç + kalp ile "HER ZAMAN DAHA GÜÇLÜ",
- * sağda el yazısı "Sen Özelsin", altta küçük isim ve taçlarla çevrili
- * büyük, parlak rol başlığı (ADMIN).
+ * Referansın kimlik bölümü: ortada büyük, parlak rol başlığı (ADMIN) ve iki yanında
+ * altın-mavi elmas süslemeleri; üstünde kullanıcının adı.
  */
-export default function CrystalNameBlock({
-  name, roleLabel = '', tone = 'blue', slogan = 'HER ZAMAN DAHA GÜÇLÜ', signature = 'Sen Özelsin',
-}) {
+export default function CrystalNameBlock({ name, roleLabel = '', tone = 'blue' }) {
   const c = crystalSkin(tone);
 
   return (
-    <div className="mt-1.5">
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-[3px]">
-          <Crown className="h-[11px] w-[11px] shrink-0" style={{ color: '#f5cf3f' }} fill="#f5cf3f" fillOpacity={0.3} strokeWidth={2.2} />
-          <Heart className="h-[9px] w-[9px] shrink-0" style={{ color: '#f5cf3f' }} fill="#f5cf3f" strokeWidth={2} />
-          <span
-            className="text-[7px] font-black uppercase leading-[1.15] tracking-[0.08em]"
-            style={{ color: '#f5cf3f', textShadow: '0 1px 3px rgba(0,0,0,0.75)' }}
-          >
-            {slogan}
-          </span>
-        </div>
-
-        <div className="flex flex-col items-center">
-          <Crown className="h-[9px] w-[9px]" style={{ color: c.gold }} fill={c.gold} fillOpacity={0.35} strokeWidth={2.2} />
-          <span
-            className="italic leading-none"
-            style={{ fontFamily: 'cursive', fontSize: 11, color: c.gold, textShadow: `0 0 10px ${c.glow}` }}
-          >
-            {signature}
-          </span>
-        </div>
-      </div>
-
+    <div className="mt-[5px]">
       <p
-        className="mt-[3px] truncate text-center text-[13px] font-black uppercase leading-none tracking-[0.06em]"
+        className="truncate text-center text-[12px] font-black uppercase leading-none tracking-[0.08em]"
         style={{
-          background: 'linear-gradient(180deg, #f4fbff 0%, #b6e4ff 34%, #57aff2 68%, #1d5ea8 100%)',
+          background: 'linear-gradient(180deg, #f4fbff 0%, #b6e4ff 36%, #64b8f6 70%, #1d5ea8 100%)',
           WebkitBackgroundClip: 'text',
           backgroundClip: 'text',
           color: 'transparent',
@@ -50,19 +37,19 @@ export default function CrystalNameBlock({
         {name}
       </p>
 
-      <div className="mt-[2px] flex items-center justify-center gap-2">
-        <CrystalCrown size={15} className="shrink-0" />
+      <div className="mt-[3px] flex items-center justify-center gap-[7px]">
+        <Diamond tone={tone} />
         <span
-          className="max-w-[210px] truncate text-center text-[24px] font-black uppercase leading-none tracking-[0.04em]"
+          className="max-w-[210px] truncate text-center text-[25px] font-black uppercase leading-none tracking-[0.04em]"
           style={{
             fontFamily: 'Georgia, "Times New Roman", serif',
             color: '#ffffff',
-            textShadow: `0 0 10px ${c.glow}, 0 0 24px ${c.glow}, 0 2px 5px rgba(0,0,0,0.9)`,
+            textShadow: `0 0 10px ${c.glow}, 0 0 26px ${c.glow}, 0 2px 5px rgba(0,0,0,0.9)`,
           }}
         >
           {roleLabel || 'ÜYE'}
         </span>
-        <CrystalCrown size={15} className="shrink-0" />
+        <Diamond tone={tone} flip />
       </div>
     </div>
   );

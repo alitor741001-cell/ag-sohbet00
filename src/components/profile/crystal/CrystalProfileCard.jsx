@@ -1,3 +1,4 @@
+import CrystalSloganRow from '@/components/profile/crystal/CrystalSloganRow';
 import CrystalAvatar from '@/components/profile/crystal/CrystalAvatar';
 import CrystalNameBlock from '@/components/profile/crystal/CrystalNameBlock';
 import CrystalStatPills from '@/components/profile/crystal/CrystalStatPills';
@@ -6,18 +7,21 @@ import CrystalRectButton from '@/components/profile/crystal/CrystalRectButton';
 import CrystalWideButton from '@/components/profile/crystal/CrystalWideButton';
 
 /**
- * Sesli odadaki profil kartının gövdesi: referans görseldeki sıra birebir korunur →
- * kanatlı fotoğraf + taçlar + VIP kalkanı, isim bandı, üç kapsül, bilgi barları,
- * üç dikdörtgen işlem ve dört yuvarlak işlem.
+ * Profil kartının gövdesi: referans görseldeki sıra birebir korunur →
+ * üstte slogan + el yazısı imza, kanatlı fotoğraf + taçlar + VIP, büyük rol başlığı,
+ * üç kapsül, kayıt tarihi barı, üç işlem kutusu, üç geniş bar ve dört yuvarlak düğme.
  */
 export default function CrystalProfileCard({
   name, avatar, tone = 'blue', vipLevel = 0, genderSymbol = '♂', statusLabel = '', roleLabel = '',
   likes = 0, nLevel = 0, joinDate = '', memberId = '', copied = false, onCopyId,
-  country = '', flag = '', rectItems = [], wideItems = [], circleNodes = [], infoRows = [], hidden = false,
+  country = '', flag = '', rectItems = [], wideItems = [], circleNodes = [], extraNodes = [],
+  infoRows = [], hidden = false, slogan = 'HER ZAMAN DAHA GÜÇLÜ', signature = 'Sen Özelsin',
 }) {
   return (
     <div className="flex flex-col">
-      <div className="pt-[24px]">
+      <CrystalSloganRow tone={tone} slogan={slogan} signature={signature} />
+
+      <div className="pt-[22px]">
         <CrystalAvatar
           avatar={avatar}
           name={name}
@@ -31,7 +35,7 @@ export default function CrystalProfileCard({
 
       <CrystalNameBlock name={name} roleLabel={roleLabel} tone={tone} />
 
-      <CrystalStatPills likes={hidden ? 0 : likes} nLevel={nLevel} vipLevel={hidden ? 0 : vipLevel} tone={tone} />
+      <CrystalStatPills likes={hidden ? 0 : likes} nLevel={nLevel} vipLevel={hidden ? 0 : vipLevel} />
 
       {hidden ? (
         <p className="mt-2 rounded-full border px-3 py-1.5 text-center text-[9px] leading-snug text-white/65" style={{ borderColor: 'rgba(212,175,55,0.4)', background: 'rgba(2,6,15,0.7)' }}>
@@ -80,8 +84,14 @@ export default function CrystalProfileCard({
       )}
 
       {circleNodes.length > 0 && (
-        <div className="mt-2 flex flex-wrap items-start justify-center gap-1">
+        <div className="mt-2.5 flex items-start justify-between gap-1">
           {circleNodes}
+        </div>
+      )}
+
+      {extraNodes.length > 0 && (
+        <div className="mt-2 flex flex-wrap items-start justify-center gap-1 border-t pt-2" style={{ borderColor: 'rgba(212,175,55,0.3)' }}>
+          {extraNodes}
         </div>
       )}
     </div>
