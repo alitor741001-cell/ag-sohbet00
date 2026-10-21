@@ -16,7 +16,7 @@ import useMessageProfiles from '@/hooks/useMessageProfiles';
  * klavye iner, akış görünür kalır. Klavye açıkken oda alt bloğu (bu akış + kontrol çubuğu) tek
  * parça hâlinde klavyenin üstüne kayar; oda yerleşimi yeniden akışa girmez.
  */
-export default function VoiceChatDock({ messages = [], onSend, open, onCloseComposer, composerOpen, keyboardOpen = false, chatLocked, currentUserId, ownerId, moderators = [], onOpenProfile, bigGiftNotice, onOpenBigGiftRoom, hiddenUsers = {} }) {
+export default function VoiceChatDock({ messages = [], onSend, open, onCloseComposer, composerOpen, keyboardOpen = false, chatLocked, currentUserId, ownerId, moderators = [], onOpenProfile, bigGiftNotice, onOpenBigGiftRoom, hiddenUsers = {}, mention = null }) {
   const [text, setText] = useState('');
   const [emojiOpen, setEmojiOpen] = useState(false);
   const inputRef = useRef(null);
@@ -40,6 +40,16 @@ export default function VoiceChatDock({ messages = [], onSend, open, onCloseComp
     // Sohbet kapanınca emoji paneli de kapanır: alan her açılışta temiz görünür.
     else setEmojiOpen(false);
   }, [composerOpen]);
+
+  // "Bahset": profil kartındaki düğme kişiyi yazma alanına @isim olarak ekler.
+  useEffect(() => {
+    if (!mention?.name) return;
+    setText((prev) => {
+      const tag = `@${mention.name} `;
+      if (prev.includes(tag)) return prev;
+      return prev && !prev.endsWith(' ') ? `${prev} ${tag}` : `${prev}${tag}`;
+    });
+  }, [mention?.at, mention?.name]);
 
   // Klavye açıldıktan sonra kendiliğinden kapanırsa (bir panel açılınca, geri hareketiyle ya da
   // klavye indirilince) yazma alanı da kapanır: ekranda boş bir yazma çubuğu takılı kalmaz.

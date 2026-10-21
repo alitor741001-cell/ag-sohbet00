@@ -4,8 +4,9 @@ import { base44 } from '@/api/base44Client';
 import { useToast } from '@/components/ui/use-toast';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 
-/** Takip Et / Takipten Çık: sayaçla birlikte, profil açılan her yerde aynı görünür. */
-export default function FollowButton({ userId, accent = '#6fe6dc', onChange }) {
+/** Takip Et / Takipten Çık: sayaçla birlikte, profil açılan her yerde aynı görünür.
+ *  variant="tile" kompakt profil kartının alt işlem şeridinde küçük kare düğme olarak gösterir. */
+export default function FollowButton({ userId, accent = '#6fe6dc', variant = 'full', onChange }) {
   const { user } = useCurrentUser();
   const { toast } = useToast();
   const [state, setState] = useState({ following: false, followers: 0 });
@@ -43,6 +44,26 @@ export default function FollowButton({ userId, accent = '#6fe6dc', onChange }) {
       setBusy(false);
     }
   };
+
+  if (variant === 'tile') {
+    return (
+      <button
+        type="button"
+        onClick={toggle}
+        disabled={busy}
+        aria-pressed={state.following}
+        className="flex min-w-0 flex-1 basis-[calc(25%-0.35rem)] flex-col items-center gap-1 rounded-xl border px-0.5 py-1.5 text-[9px] font-black leading-tight text-white active:scale-95 disabled:opacity-60"
+        style={{
+          borderColor: accent,
+          background: state.following ? 'rgba(0,0,0,0.45)' : 'rgba(111,230,220,0.16)',
+          boxShadow: state.following ? 'none' : `0 0 16px -6px ${accent}`,
+        }}
+      >
+        {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : state.following ? <UserCheck className="h-4 w-4" /> : <UserPlus className="h-4 w-4" />}
+        <span className="max-w-full text-center">{state.following ? 'Takip Ediliyor' : 'Takip Et'}</span>
+      </button>
+    );
+  }
 
   return (
     <div className="flex w-full items-center gap-2">

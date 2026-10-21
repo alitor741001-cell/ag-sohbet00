@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Building2, ChevronRight, Loader2, MessageSquare, Mic2, MicOff, Settings, UserPlus } from 'lucide-react';
+import { ArrowLeft, AtSign, Building2, ChevronRight, Loader2, MessageSquare, Mic2, MicOff, Settings, UserPlus } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import subscribeEntity from '@/components/data/entitySubscriptions';
 import { useToast } from '@/components/ui/use-toast';
@@ -12,6 +12,9 @@ import ProfileHeroBlock from '@/components/profile/ProfileHeroBlock';
 import ProfileStatsRow from '@/components/profile/ProfileStatsRow';
 import ProfileIdentityBlock from '@/components/profile/ProfileIdentityBlock';
 import FollowButton from '@/components/profile/social/FollowButton';
+import CompactProfileHero from '@/components/profile/compact/CompactProfileHero';
+import CompactActionTile from '@/components/profile/compact/CompactActionTile';
+import CompactRoomActions from '@/components/profile/compact/CompactRoomActions';
 import { AccountStatusMark, ACCOUNT_MARKS, ACCOUNT_STATES, getAccountState } from '@/components/friends/AccountStatusAvatar';
 import { broadcasterState } from '@/lib/broadcaster';
 import useBackDismiss from '@/hooks/useBackDismiss';
@@ -23,9 +26,9 @@ import useBackDismiss from '@/hooks/useBackDismiss';
  */
 export default function FullUserProfile({
   open = true, userId, name, avatar, frame, frameScale,
-  hidden = false, muted = false, level = 0, roomId, self = false, sheet = false,
+  hidden = false, muted = false, level = 0, roomId, self = false, sheet = false, compact = false,
   theme = '', hideSettings = false, hideBlock = false,
-  onClose, onMessage, tiles = [], footer = [], info = [],
+  onClose, onMessage, onMention, tiles = [], footer = [], info = [],
 }) {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -157,7 +160,8 @@ export default function FullUserProfile({
     </header>
   );
 
-  const content = loading ? (
+  // Yükleniyor ve hesap durumu ekranları iki düzende de aynı görünür.
+  const statusContent = loading ? (
           <div className="flex flex-1 items-center justify-center py-24">
             <Loader2 className="h-6 w-6 animate-spin" style={{ color: palette.accent }} />
           </div>
@@ -167,7 +171,9 @@ export default function FullUserProfile({
             <h2 className="mt-4 text-lg font-black text-white">{accountState.name}</h2>
             <p className="mx-auto mt-2 max-w-[300px] text-xs leading-snug text-white/70">{accountState.message}</p>
           </div>
-        ) : (
+        ) : null;
+
+  const content = statusContent || (
           <>
             <div className="mt-4">
               <ProfileHeroBlock
@@ -320,6 +326,126 @@ export default function FullUserProfile({
 
     </>
   );
+
+  // Sesli odadaki kompakt kart: tüm detaylar kaydırmadan tek ekrana sığar.
+  const compactTags = hidden ? [] : [
+    profile?.broadcaster_status === 'active' ? '🎤 YAYINCI' : '',
+    profile?.agency_role === 'assistant' ? '🤝 ASİSTAN' : '',
+    ownerAgency
+      ? `🏢 ${ownerAgency.name || 'AJANS'}${ownerAgency.code ? ` · ${ownerAgency.code}` : ''}`
+      : (profile?.agency_name ? `Ajans: ${profile.agency_name}` : ''),
+  ].filter(Boolean);
+
+  const compactContent = statusContent || (
+    <>
+      <CompactProfileHero
+        name={shownName}
+        avatar={banned ? ACCOUNT_STATES.banned.image : shownAvatar}
+        palette={palette}
+        hidden={hidden}
+        statusLabel={banned ? ACCOUNT_MARKS.banned : ''}
+        roleLabel={hidden ? '' : (profile?.title || profile?.display_role || '')}
+        genderLabel={genderLabel}
+        age={age}
+        country={hidden ? '' : badge.country}
+        flag={badge.flag}
+        memberId={memberId}
+        joinDate={formatDate(profile?.created_date)}
+        copied={copied}
+        onCopyId={copyId}
+        level={level >= 1000 ? 0 : level}
+        nLevel={profile?.n_level || 0}
+        vipLevel={profile?.vip_level || 0}
+        receivedLevel={profile?.gift_received_level || 0}
+        receivedTier={profile?.gift_received_tier}
+        tags={compactTags}
+      />
+
+      {hidden && (
+        <p className="mt-2 rounded-xl border px-2 py-1.5 text-center text-[10px] leading-snug text-white/65" style={{ borderColor: palette.soft, background: 'rgba(0,0,0,0.5)' }}>
+          Gizli Kullanıcı modu etkin: kimlik bilgileri gizli kalır.
+        </p>
+      )}
+
+      {!hidden && info.length > 0 && (
+        <div className="mt-2 space-y-0.5 rounded-xl border px-2 py-1.5 text-[10px]" style={{ borderColor: palette.soft, background: 'rgba(0,0,0,0.42)' }}>
+          {info.map((row) => (
+            <div key={row.label} className="flex items-start justify-between gap-2">
+              <span className="shrink-0 text-white/55">{row.label}</span>
+              <span className="min-w-0 break-words text-right font-semibold text-white">{row.value}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <CompactRoomActions tiles={tiles} palette={palette} />
+
+      {/* Alt işlem şeridi: takip, arkadaşlık, bahset, sohbet, hediye ve oda işlemleri */}
+      <div className="mt-2 flex flex-wrap items-stretch gap-1.5">
+        {showSocial && <FollowButton variant="tile" userId={userId} accent={palette.accent} />}
+        {showSocial && relation !== 'friend' && (
+          <CompactActionTile
+            icon={UserPlus}
+            palette={palette}
+            label={relation === 'pending' ? 'İstek Gönderildi' : 'Arkadaş Ekle'}
+            disabled={relation === 'pending'}
+            onClick={addFriend}
+          />
+        )}
+        {!isSelf && !!onMention && (
+          <CompactActionTile
+            icon={AtSign}
+            palette={palette}
+            label="Bahset"
+            onClick={() => { onMention(shownName); onClose?.(); }}
+          />
+        )}
+        {!isSelf && (
+          <CompactActionTile
+            icon={MessageSquare}
+            palette={palette}
+            label="Sohbet"
+            onClick={() => { onMessage?.(userId); onClose?.(); }}
+          />
+        )}
+        {footer.map((item) => (
+          <CompactActionTile
+            key={item.key}
+            icon={item.icon}
+            palette={palette}
+            label={item.label}
+            danger={item.danger}
+            onClick={item.onClick}
+          />
+        ))}
+        {canInvite && (
+          <CompactActionTile
+            icon={Mic2}
+            palette={palette}
+            label={inviteSent ? 'Davet Gönderildi' : 'Yayıncı Davet'}
+            disabled={inviteSent}
+            onClick={inviteBroadcaster}
+          />
+        )}
+      </div>
+    </>
+  );
+
+  // Kompakt düzen (sesli oda): kart ekranda sabit durur, içerik kaydırılmaz.
+  if (compact) {
+    return (
+      <div className="fixed inset-0 z-[300] flex items-end justify-center sm:items-center">
+        <button type="button" aria-label="Kapat" onClick={onClose} className="absolute inset-0 w-full bg-black/65" />
+        <div
+          className="animate-sheet-up relative flex w-full max-w-[430px] flex-col overflow-hidden rounded-t-[26px] border-t-2 px-3 pb-[max(0.6rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-8px_30px_rgba(0,0,0,0.55)] sm:mb-6 sm:rounded-[26px] sm:border-2"
+          style={{ background: palette.bg, borderColor: palette.soft, maxHeight: 'calc(var(--app-height, 100dvh) - 4px)' }}
+        >
+          {header}
+          {compactContent}
+        </div>
+      </div>
+    );
+  }
 
   // Yarı yükseklik modu: kart alttan yukarı kayarak açılır ve ekranın yarısını kaplar.
   if (sheet) {

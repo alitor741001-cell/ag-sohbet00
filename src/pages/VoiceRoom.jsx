@@ -89,6 +89,8 @@ export default function VoiceRoom() {
   const [shareOpen, setShareOpen] = useState(false);
   const [seatIndex, setSeatIndex] = useState(null);
   const [profileUserId, setProfileUserId] = useState(null);
+  // Profil kartındaki "Bahset" isteği: yazma alanına @isim eklenir.
+  const [mentionTarget, setMentionTarget] = useState(null);
   const [dmUserId, setDmUserId] = useState(null);
   const [dmOpen, setDmOpen] = useState(false);
   // Özel sohbet paneli tam ekrana geçti mi? Yarım panelken oda panelin üstüne sığar.
@@ -543,6 +545,15 @@ export default function VoiceRoom() {
   // Profil kartı açıcı — sohbet satırı ve izleyici listesinden kullanılır.
   // Gizli kullanıcıda da açılır; kimlik yerine maskeli profil gösterilir.
   const openProfile = useLatestCallback((userId) => { if (userId) setProfileUserId(userId); });
+
+  // "Bahset": profil kartı kapanır, yazma alanı açılır ve kişi @isim olarak eklenir.
+  const mentionUser = useLatestCallback((name) => {
+    const tag = String(name || '').trim();
+    if (!tag) return;
+    setMentionTarget({ name: tag, at: Date.now() });
+    setChatOpen(true);
+    setComposerOpen(true);
+  });
 
   // Anonsta gösterilecek takma ad — gerçek isim hiçbir yerde kullanılmaz.
   const hiddenAnnounceName = useMemo(() => {
@@ -1168,6 +1179,7 @@ export default function VoiceRoom() {
         ownerId={room?.owner_id}
         moderators={moderators}
         onOpenProfile={openProfile}
+        mention={mentionTarget}
         hiddenUsers={hiddenUsersByName}
         bigGiftNotice={bigGiftNotice}
         onOpenBigGiftRoom={() => {
@@ -1305,7 +1317,7 @@ export default function VoiceRoom() {
       {/* Koltuk, sohbet ve izleyici listesinden açılan kart: özel sohbetteki kartın aynısı. */}
       <FullUserProfile
         open={!!profileTarget}
-        sheet
+        compact
         hideSettings
         hideBlock={canMod}
         onClose={() => setProfileUserId(null)}
@@ -1322,6 +1334,7 @@ export default function VoiceRoom() {
         tiles={profileTiles}
         footer={profileFooter}
         onMessage={(target) => setDmUserId(target)}
+        onMention={mentionUser}
       />
 
       <RoomExitOverlay
