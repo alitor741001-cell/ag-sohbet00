@@ -25,6 +25,25 @@
   pointer-events: none;
   overflow: hidden;
 }
+/* Oda teması ekranın TAMAMINI kaplar: bu katman doğrudan body'ye taşınır (portal),
+   oda çerçevesinin overflow kırpmasından ve sabit konumlu çerçevenin dışında kalmasından
+   etkilenmez. Dört yandan taşar; alt güvenli alan, durum çubuğu ve klavye sonrası boşlukta
+   lacivert şerit kalmaz, tema sağ-sol-aşağı-yukarı kesintisiz devam eder. */
+.room-theme-layer {
+  position: fixed;
+  top: -80px;
+  right: -80px;
+  bottom: -200px;
+  left: -80px;
+  z-index: 1;
+  pointer-events: none;
+  background-color: #0a1c3c;
+  background-image: var(--room-theme-image, none), var(--room-theme-tint, linear-gradient(180deg, #103062 0%, #0a1c3c 52%, #0b1930 100%));
+  background-size: cover, cover;
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
+}
+
 .voice-viewport {
   top: var(--viewport-offset, 0px);
   /* Zemin temanın kendisidir: butonların altındaki dolgu ve alt güvenli alan dahil

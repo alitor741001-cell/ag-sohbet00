@@ -850,6 +850,12 @@ body {
   padding-right: env(safe-area-inset-right);
 }
 
+@supports (height: 100lvh) {
+  /* Kök kutular en büyük görünüm ölçüsünü kaplar: tema görseli tuvalin dibine kadar
+     boyanır, ekranın altında düz lacivert şerit kalmaz. */
+  html, body { min-height: 100lvh; }
+}
+
 img, video, canvas, iframe, svg {
   max-width: 100%;
 }

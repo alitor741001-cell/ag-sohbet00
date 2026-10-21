@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Image } from '@/components/ui/image';
 import { backgroundCss, backgroundOf } from '@/lib/roomBackgrounds';
 
@@ -31,13 +32,18 @@ export default function RoomBackground({ value, cover }) {
   }, [value, tone?.image]);
 
   return (
-    <div ref={ref} className="room-bg-layer" aria-hidden="true">
-      <div className="absolute inset-0" style={{ background: backgroundCss(value) }} />
-      {tone?.image ? (
-        <Image src={tone.image} alt="" fittingType="fill" className="absolute inset-0 h-full w-full object-cover" />
-      ) : null}
-      {/* Tema görseli ekranın en altına kadar kesintisiz iner: altta koyu şerit kalmaz. */}
-      {cover ? <div className="absolute inset-0 bg-cover bg-center opacity-25" style={{ backgroundImage: `url(${cover})` }} /> : null}
-    </div>
+    <>
+      {/* Tam ekran tema katmanı: oda çerçevesinin kırpmasından ve konumundan bağımsız olarak
+          ekranın her pikselini (durum çubuğu, alt güvenli alan, klavye sonrası boşluk) boyar. */}
+      {createPortal(<div className="room-theme-layer" aria-hidden="true" />, document.body)}
+      <div ref={ref} className="room-bg-layer" aria-hidden="true">
+        <div className="absolute inset-0" style={{ background: backgroundCss(value) }} />
+        {tone?.image ? (
+          <Image src={tone.image} alt="" fittingType="fill" className="absolute inset-0 h-full w-full object-cover" />
+        ) : null}
+        {/* Tema görseli ekranın en altına kadar kesintisiz iner: altta koyu şerit kalmaz. */}
+        {cover ? <div className="absolute inset-0 bg-cover bg-center opacity-25" style={{ backgroundImage: `url(${cover})` }} /> : null}
+      </div>
+    </>
   );
 }
