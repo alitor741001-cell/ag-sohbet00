@@ -1,6 +1,6 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Film, Loader2, Users } from 'lucide-react';
+import { Film, Users } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import subscribeEntity from '@/components/data/entitySubscriptions';
 import { useCurrentUser } from '@/lib/useCurrentUser';
@@ -325,8 +325,12 @@ export default function RoomDiscovery({ shortcuts = null }) {
       {tab === 'games' ? (
         <GameDiscoveryRow onPick={setGameOpen} />
       ) : loading ? (
-        <div className="flex justify-center py-10">
-          <Loader2 className="h-6 w-6 animate-spin text-premium-gold/70" />
+        /* Yükleme alanı kart listesinin yerini baştan ayırır: liste gelince sayfa yüksekliği
+           değişmez, açılışta alt menü yukarı kayıp geri inmez. */
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3" aria-hidden="true">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <div key={index} className="animate-pulse rounded-[16px] bg-[#10141d]" style={{ aspectRatio: '4 / 5' }} />
+          ))}
         </div>
       ) : items.length === 0 ? (
         <div className="premium-panel rounded-2xl px-4 py-8 text-center">
