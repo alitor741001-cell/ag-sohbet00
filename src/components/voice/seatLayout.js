@@ -1,5 +1,5 @@
 // Sesli oda koltuk düzeni — sabit kapasiteler (tekli koltuk dahil).
-export const SEAT_OPTIONS = [1, 2, 5, 8, 9, 12, 15, 30];
+export const SEAT_OPTIONS = [1, 2, 5, 8, 9, 12, 15, 24];
 
 // Satır düzeni referans görsellerle aynı: az koltukta satır başına 4, çok koltukta 5;
 // artan koltuklar en üstteki ortalanmış satıra yazılır (5 → 1+4, 8 → 4+4, 12 → 2+5+5).
@@ -14,8 +14,10 @@ const LAYOUTS = {
   12: [2, 5, 5],
   15: [5, 5, 5],
   20: [5, 5, 5, 5],
-  // 30 mikrofon: her sırada 8 koltuk — dört sıra halinde iner, satırlar yana taşarsa
-  // sahne aşağı kaydırılmaz, ızgara sağa-sola kaydırılarak diğer koltuklar görünür.
+  // 24 mikrofon: her sırada 8 koltuk — üç eşit sıra iner, rakamlar 1'den 24'e sırayla
+  // okunur. Satırlar yana taşarsa sahne aşağı kaydırılmaz, ızgara sağa-sola kaydırılır.
+  24: [8, 8, 8],
+  // Eski 30 koltuklu odalar aynı düzeni korusun.
   30: [8, 8, 8, 6],
 };
 

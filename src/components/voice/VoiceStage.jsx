@@ -19,6 +19,12 @@ export default function VoiceStage({ scrollRef, handlers, room, hiddenAnnounce, 
   const measured = useSize(boxRef);
   const gridMeasured = useSize(gridBoxRef);
   const areaMeasured = useSize(areaRef);
+  // Klavye açıldığında sahne kısalır; koltuk boyutu bu kısalıktan etkilenmesin diye
+  // son "klavye kapalı" yükseklik sabit tutulur (24/30 koltuk düzeni).
+  const steadyHeight = useRef(0);
+  const keyboardOpen = areaRef.current?.closest?.('.voice-viewport')?.dataset.keyboard === 'open';
+  if (!keyboardOpen && areaMeasured?.height) steadyHeight.current = areaMeasured.height;
+  const gridMaxHeight = keyboardOpen && steadyHeight.current ? steadyHeight.current : areaMeasured?.height;
   // Kalabalık düzende (15/20 koltuk) satırlar sahneye sığmazsa sahne kendi içinde kayar.
   const total = grid.seats?.length || 0;
   const dense = total >= 15;
@@ -69,7 +75,7 @@ export default function VoiceStage({ scrollRef, handlers, room, hiddenAnnounce, 
               böylece alttaki koltukların rakam şeritleri kırpılmaz. */}
           <div ref={areaRef} className="flex w-full min-h-0 flex-1 flex-col items-center">
             <div ref={gridBoxRef} className="flex w-full flex-col items-center">
-              <VoiceSeatGrid {...grid} maxHeight={areaMeasured?.height} />
+              <VoiceSeatGrid {...grid} maxHeight={gridMaxHeight} />
             </div>
           </div>
           <HiddenUserMarquee active={hiddenAnnounce.active} name={hiddenAnnounce.name} />
