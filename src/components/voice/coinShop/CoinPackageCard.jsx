@@ -1,20 +1,33 @@
 import { Minus, Plus, ShoppingCart } from 'lucide-react';
 import { Image } from '@/components/ui/image';
-import { COIN_STACK_IMAGE_URL, stackSize } from '@/components/voice/coinShop/coinShopAssets';
+import { coinTier, stackSize } from '@/components/voice/coinShop/coinShopAssets';
 import { formatCoins } from '@/lib/giftTone';
 import '@/styles/gameCards.css';
 
 const formatTl = (value) => `${Math.max(0, Number(value) || 0).toLocaleString('tr-TR')} ₺`;
 
-/** Tek coin paketi kartı: siyah parlak zemin, çift altın çerçeve; miktar, adet seçimi ve Satın Al. */
+/** Tek coin paketi kartı: lacivert-altın fantastik kart; hazine görseli, miktar, adet seçimi ve Satın Al. */
 export default function CoinPackageCard({ pack, qty = 1, onQty, onBuy }) {
   const total = (Number(pack.price) || 0) * qty;
+  const tier = coinTier(pack.coins);
   return (
     <div className="gd-deal">
-      <p className="text-[13px] font-black leading-none tabular-nums text-[#ffd35c]">{formatCoins(pack.coins)}</p>
+      <span className="gd-deal-tier">{tier.label}</span>
+      <p
+        className="mt-1 text-[13px] font-black leading-none tabular-nums"
+        style={{
+          backgroundImage: 'linear-gradient(180deg, #fff6dc 0%, #ffd35c 55%, #c99a35 100%)',
+          WebkitBackgroundClip: 'text',
+          backgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+        }}
+      >
+        {formatCoins(pack.coins)}
+      </p>
       <p className="mt-0.5 text-[9px] font-black uppercase tracking-[0.16em] text-[#ffd35c]/70">Coins</p>
       <span className="gd-deal-well">
-        <Image src={COIN_STACK_IMAGE_URL} alt="Altın coin yığını" className={stackSize(pack.coins)} fittingType="fill" draggable={false} />
+        <span className="gd-deal-aura" />
+        <Image src={tier.url} alt={`${tier.label} görseli`} className={`relative ${stackSize(pack.coins)}`} fittingType="fill" draggable={false} />
       </span>
       {/* Adet seçimi: aynı paketten birden fazla alınabilir (örn. 6 × 50.000 Coins). */}
       <div className="gd-deal-qty">

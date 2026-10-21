@@ -81,6 +81,8 @@
   align-items: center;
   gap: 0.3rem;
   border-radius: 1rem;
+  position: relative;
+  overflow: hidden;
   border: 1px solid rgba(232, 185, 90, 0.5);
   padding: 0.6rem 0.5rem;
   text-align: center;
@@ -94,6 +96,15 @@
     inset 0 -14px 24px rgba(0, 0, 0, 0.62),
     0 12px 26px -20px rgba(0, 0, 0, 0.95);
 }
+/* Üst kenarda ince altın ışık çizgisi: kartı mühür gibi çerçeveler. */
+.gd-deal::after {
+  content: '';
+  position: absolute;
+  inset: 0 16% auto;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(232, 185, 90, 0), rgba(255, 246, 214, 0.85), rgba(232, 185, 90, 0));
+  pointer-events: none;
+}
 @media (hover: hover) {
   /* Kart üzerine gelince altın ışık hafifçe yükselir. */
   .gd-deal:hover {
@@ -106,16 +117,41 @@
       0 0 22px -6px rgba(232, 185, 90, 0.4);
   }
 }
+/* Kademe etiketi: kese / sandık / efsane hazine. */
+.gd-deal-tier {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.1rem 0.45rem;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #ffeaa7;
+  background: linear-gradient(180deg, rgba(232, 185, 90, 0.24), rgba(232, 185, 90, 0.06));
+  border: 1px solid rgba(232, 185, 90, 0.45);
+  box-shadow: inset 0 1px 0 rgba(255, 246, 214, 0.25);
+}
 .gd-deal-well {
+  position: relative;
   display: flex;
-  height: 68px;
+  height: 76px;
   width: 100%;
+  overflow: hidden;
   align-items: center;
   justify-content: center;
-  border-radius: 0.6rem;
+  border-radius: 0.7rem;
   border: 1px solid rgba(232, 185, 90, 0.3);
   background: radial-gradient(circle at 50% 35%, #132238 0%, #08111d 60%, #050a12 100%);
   box-shadow: inset 0 4px 14px rgba(0, 0, 0, 0.85), inset 0 -1px 0 rgba(232, 185, 90, 0.16);
+}
+/* Hazine görselinin arkasındaki altın ışık halesi. */
+.gd-deal-aura {
+  position: absolute;
+  inset: 16% 20%;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(232, 185, 90, 0.6), rgba(232, 185, 90, 0) 70%);
+  filter: blur(12px);
 }
 .gd-deal-qty {
   display: flex;
