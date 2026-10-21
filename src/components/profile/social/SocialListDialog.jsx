@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useUserProfile } from '@/lib/profileCard';
 import { ArrowLeft, Eye, HeartHandshake, Loader2, UserCheck } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Image } from '@/components/ui/image';
@@ -13,6 +13,7 @@ const TITLES = {
 /** Takip ve ziyaretçi listeleri: tam ekran açılır, geri butonuyla profile dönülür. */
 export default function SocialListDialog({ open, kind, onClose }) {
   const [items, setItems] = useState([]);
+  const { openUserProfile } = useUserProfile();
   const [loading, setLoading] = useState(false);
   const meta = TITLES[kind] || TITLES.visitors;
 
@@ -59,11 +60,11 @@ export default function SocialListDialog({ open, kind, onClose }) {
         ) : (
           <div className="mx-auto w-full max-w-[430px] space-y-1.5">
             {items.map((person) => (
-              <Link
+              <button
+                type="button"
                 key={person.id}
-                to={`/kullanici/${person.id}`}
-                onClick={() => onClose?.()}
-                className="flex items-center gap-3 rounded-xl border border-[#f2ce6b]/25 bg-white/[0.04] p-2.5 active:scale-[0.99]"
+                onClick={() => { onClose?.(); openUserProfile(person.id); }}
+                className="flex w-full text-left items-center gap-3 rounded-xl border border-[#f2ce6b]/25 bg-white/[0.04] p-2.5 active:scale-[0.99]"
               >
                 {person.avatar ? (
                   <Image src={person.avatar} className="h-10 w-10 shrink-0 overflow-hidden rounded-full border border-[#f2ce6b]/40" fittingType="fill" alt="" />
@@ -78,7 +79,7 @@ export default function SocialListDialog({ open, kind, onClose }) {
                     {person.member_id ? `Üye No: ${person.member_id}` : 'Üye'}
                   </span>
                 </span>
-              </Link>
+              </button>
             ))}
           </div>
         )}
