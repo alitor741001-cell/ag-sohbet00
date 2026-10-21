@@ -16,6 +16,7 @@ import AppLayout from '@/components/layout/AppLayout';
 import useDeferredMount from '@/hooks/useDeferredMount';
 import XpProvider from '@/components/xp/XpProvider';
 import { FrameCatalogProvider } from '@/lib/FrameCatalogContext';
+import { UserProfileProvider } from '@/lib/profileCard';
 import { Navigate } from 'react-router-dom';
 
 const Home = lazy(() => import('@/pages/Home'));
@@ -173,7 +174,9 @@ function App() {
         <XpProvider>
             <Router>
               <ScrollToTop />
-              <AuthenticatedApp />
+              <UserProfileProvider>
+                <AuthenticatedApp />
+              </UserProfileProvider>
               {/* Küçültülmüş oda balonu ana pakete dahil değil: açılış hızlı kalır. */}
               {deferredReady && (
                 <Suspense fallback={null}>

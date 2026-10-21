@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, AtSign, Loader2, MessageSquare, Mic2, MicOff, Settings, UserPlus } from 'lucide-react';
+import { ArrowLeft, AtSign, Gift, Loader2, Lock, MessageSquare, Mic, MicOff, Settings, Unlock } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import subscribeEntity from '@/components/data/entitySubscriptions';
 import { useToast } from '@/components/ui/use-toast';
@@ -14,22 +14,27 @@ import CrystalCircleButton from '@/components/profile/crystal/CrystalCircleButto
 import { crystalSkin } from '@/components/profile/crystal/crystalTheme';
 import { AccountStatusMark, ACCOUNT_MARKS, ACCOUNT_STATES, getAccountState } from '@/components/friends/AccountStatusAvatar';
 import { broadcasterState } from '@/lib/broadcaster';
+import { useRoomProfileActions } from '@/lib/roomProfileActions';
 import useBackDismiss from '@/hooks/useBackDismiss';
 
 /**
- * Uygulamadaki tek profil kartı: sesli oda, film odası, sohbetler, arkadaşlar ve
- * yönetim ekranları aynı kristal kartı kullanır. Renkler kişinin cinsiyetine göre
- * değişir: kadın → pembe/altın, erkek → lacivert/altın.
+ * Uygulamadaki tek profil kartı: referans görseldeki kristal düzeni birebir izler →
+ * kanatlı fotoğraf + taç + VIP, slogan ve el yazısı, büyük rol başlığı, üç rozet,
+ * kayıt tarihi, üç işlem kutusu, iki geniş bar (hediye / bahset) ve dört yuvarlak düğme.
+ * Oda işlemleri sesli odadan gelen bağlamla gerçek koltuk ve mikrofon durumuna bağlanır.
  */
 export default function FullUserProfile({
   open = true, userId, name, avatar, hidden = false, muted = false, self = false,
-  hideSettings = false, onClose, onMessage, onMention, tiles = [], footer = [], info = [],
+  hideSettings = false, onClose, onMessage, onMention, tiles = [], footer = [], info = [], roomActions = null,
 }) {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useCurrentUser();
+  const roomContext = useRoomProfileActions();
+  const room = roomActions || roomContext;
   const [profile, setProfile] = useState(null);
   const [relation, setRelation] = useState('');
+  const [likes, setLikes] = useState(0);
   const [copied, setCopied] = useState(false);
   const [inviteSent, setInviteSent] = useState(false);
 
@@ -39,15 +44,20 @@ export default function FullUserProfile({
   const isSelf = self || userId === user?.id;
 
   useEffect(() => {
-    if (!open || !userId || hidden) { setProfile(null); setRelation(''); return; }
+    if (!open || !userId || hidden) { setProfile(null); setRelation(''); setLikes(0); return; }
     let alive = true;
     setProfile(null);
     setRelation('');
+    setLikes(0);
     // Profil, açıkken tazelenebilsin diye fonksiyona alındı: ban anında görsel değişir.
     const load = () => base44.functions.invoke('user-profile', { user_id: userId })
       .then((response) => { if (alive) setProfile(response?.data || {}); })
       .catch((error) => { if (alive) setProfile(error?.response?.status === 404 ? { account_status: 'deleted' } : {}); });
     load();
+    // Beğeni sayısı: kullanıcıyı takip edenlerin sayısı (sosyal servis).
+    base44.functions.invoke('social-service', { action: 'state', user_id: userId })
+      .then((response) => { if (alive) setLikes(response?.data?.followers || 0); })
+      .catch(() => {});
     // Kart açıkken ban / ban kaldırma anında işler: kayıt değişince profil yeniden okunur.
     const off = subscribeEntity('User', (event) => { if ((event.data?.id || event.id) === userId) load(); });
     if (user?.id && userId !== user.id) {
@@ -74,7 +84,6 @@ export default function FullUserProfile({
   const skin = crystalSkin(tone);
   const loading = !hidden && !profile;
   // Engellenen hesapta bilgiler görünür kalır: yalnızca profil resmi ban görseline döner.
-  // Silinen hesapta gösterilecek bilgi kalmadığı için kart durum ekranına geçer.
   const accountState = hidden ? null : getAccountState(profile);
   const banned = accountState?.status === 'banned';
   const shownName = hidden ? (name || 'Gizli Kullanıcı') : (profile?.username || profile?.full_name || name || 'Kullanıcı');
@@ -83,8 +92,10 @@ export default function FullUserProfile({
   const badge = broadcasterState(profile);
   const showSocial = !isSelf && !hidden && !accountState;
   const genderSymbol = hidden ? '?' : (profile?.gender === 'erkek' ? '♂' : profile?.gender === 'kadın' ? '♀' : '·');
+  const roleLabel = hidden
+    ? ''
+    : (profile?.custom_role?.name || profile?.title || profile?.display_role || (profile?.role === 'admin' ? 'ADMIN' : 'ÜYE'));
   // Ajans sahibi, kendi ajansında olmayan bir kullanıcıyı yayıncı olarak davet edebilir.
-  // Yayıncı daveti yalnızca arkadaş olduğun kullanıcılara gönderilebilir.
   const canInvite = showSocial && relation === 'friend'
     && (user?.agency_role === 'owner' || user?.agency_role === 'assistant') && !!user?.agency_record_id
     && !!profile && profile.agency_record_id !== user?.agency_record_id;
@@ -118,6 +129,77 @@ export default function FullUserProfile({
     } catch (error) {
       toast({ title: 'İşlem başarısız', description: error.response?.data?.error || error.message, variant: 'destructive' });
     }
+  };
+
+  /* ---------- Oda işlemleri: mikrofon ve iki koltuk kilidi ---------- */
+  const targetSeat = room ? room.seatFor(userId) : -1;
+  const mySeat = room ? room.seatFor(user?.id) : -1;
+  const targetMuted = room ? room.mutedOf(userId) : !!muted;
+  const micMuted = isSelf ? (room ? room.selfMicMuted : !!muted) : targetMuted;
+
+  const needRoom = (what) => toast({
+    title: `${what} için sesli odada olmalısın`,
+    description: 'Bir sesli odaya katıldığında bu işlemler o odanın koltuğuna bağlanır.',
+  });
+
+  const toggleMic = () => {
+    if (!room) { needRoom('Mikrofon'); return; }
+    if (isSelf) { room.toggleMic(); return; }
+    if (!room.canControl(userId)) {
+      toast({ title: 'Yetki gerekli', description: 'Başkasının mikrofonunu yalnızca oda sahibi ve yöneticiler kullanabilir.', variant: 'destructive' });
+      return;
+    }
+    room.toggleMic(userId);
+  };
+
+  const toggleSeatLock = (index, who) => {
+    if (!room) { needRoom('Koltuk kilidi'); return; }
+    if (index < 0) {
+      toast({ title: 'Kilitlenecek koltuk yok', description: who === isSelf ? 'Önce bir koltuğa otur.' : `${shownName} şu anda bir koltukta oturmuyor.` });
+      return;
+    }
+    if (!room.canControl(who)) {
+      toast({ title: 'Yetki gerekli', description: 'Koltuk kilidini yalnızca oda sahibi ve yöneticiler kullanabilir.', variant: 'destructive' });
+      return;
+    }
+    room.lockSeat(index, !room.isLocked(index));
+  };
+
+  /* ---------- Hediye ve bahsetme ---------- */
+  const sendGift = () => {
+    if (!room) {
+      toast({ title: 'Hediye göndermek için sesli odada olmalısın', description: 'Hediye penceresi katıldığın sesli odada bu karttan açılır.' });
+      return;
+    }
+    room.gift(userId);
+    onClose?.();
+  };
+
+  const mention = () => {
+    if (room) {
+      room.mention(shownName);
+      onClose?.();
+      return;
+    }
+    // Oda dışında bahsetme, kişiyle olan sohbet açılarak yapılır.
+    if (!isSelf && onMessage) {
+      onMessage(userId);
+      onClose?.();
+      toast({ title: 'Sohbet açıldı', description: `${shownName} kişisinden sohbette bahsedebilirsin.` });
+      return;
+    }
+    if (!isSelf && onMention) {
+      onMention(shownName);
+      onClose?.();
+      return;
+    }
+    toast({ title: 'Bahsetmek için bir sohbet alanı gerekli', description: 'Kişiyle sohbeti açıp oradan bahsedebilirsin.' });
+  };
+
+  const openChat = () => {
+    if (isSelf) return;
+    onMessage?.(userId);
+    onClose?.();
   };
 
   const header = (
@@ -160,79 +242,40 @@ export default function FullUserProfile({
     </div>
   ) : null;
 
-  // Hediye düğmesi referanstaki dörtlü şeridin dördüncü gözünde durur.
-  const giftItem = footer.find((item) => item.key === 'gift');
-  const otherFooterItems = footer.filter((item) => item.key !== 'gift');
-
-  // Referanstaki dikdörtgen düğme sırası: mik, koltuk kilidi, profili gör ve kalan oda işlemleri.
-  const roomTiles = tiles.filter((item) => item.key !== 'chat');
-  const orderedTiles = [
-    ...roomTiles.filter((item) => item.key === 'mic'),
-    ...roomTiles.filter((item) => item.key === 'lock'),
-    ...roomTiles.filter((item) => item.key === 'view-self'),
-    ...roomTiles.filter((item) => item.key !== 'mic' && item.key !== 'lock' && item.key !== 'view-self'),
+  // Referanstaki sıra: Mik aç, Koltuğu kilitle (karşı taraf), Koltuğu kilitle (kendi koltuğum).
+  const rectItems = [
+    { key: 'mic', icon: micMuted ? MicOff : Mic, label: micMuted ? 'Mik aç' : 'Mik kapat', onClick: toggleMic },
+    { key: 'lock-target', icon: targetSeat >= 0 && room?.isLocked(targetSeat) ? Unlock : Lock, label: 'Koltuğu kilitle', onClick: () => toggleSeatLock(targetSeat, userId) },
+    { key: 'lock-self', icon: mySeat >= 0 && room?.isLocked(mySeat) ? Unlock : Lock, label: 'Koltuğu kilitle', onClick: () => toggleSeatLock(mySeat, user?.id) },
+    ...tiles.map(({ key, ...item }) => ({ key, ...item })),
   ];
-  const rectItems = orderedTiles.slice(0, 3);
-  const leftoverTiles = orderedTiles.slice(3);
 
-  // Referanstaki yuvarlak düğme sırası: Bahset, Takip, Sohbet, Hediye.
+  const wideItems = [
+    { key: 'gift', icon: Gift, label: 'Hediye gönder', onClick: sendGift },
+    { key: 'mention', icon: AtSign, label: 'Bahset', onClick: mention },
+  ];
+
+  // Alt şerit: Bahset, Takip Ediliyor, Sohbet, Hediye.
   const circleNodes = [
-    !isSelf && !!onMention ? (
-      <CrystalCircleButton
-        key="mention"
-        icon={MessageSquare}
-        label="Bahset"
-        tone={tone}
-        onClick={() => { onMention(shownName); onClose?.(); }}
-      />
-    ) : null,
+    <CrystalCircleButton key="mention" icon={AtSign} label="Bahset" tone={tone} onClick={mention} />,
     showSocial ? <FollowButton key="follow" variant="circle" userId={userId} tone={tone} /> : null,
-    !isSelf ? (
-      <CrystalCircleButton
-        key="chat"
-        icon={AtSign}
-        label="Sohbet"
-        tone={tone}
-        onClick={() => { onMessage?.(userId); onClose?.(); }}
-      />
-    ) : null,
-    giftItem ? (
-      <CrystalCircleButton key="gift" icon={giftItem.icon} label="Hediye" tone={tone} onClick={giftItem.onClick} />
-    ) : null,
+    !isSelf ? <CrystalCircleButton key="chat" icon={MessageSquare} label="Sohbet" tone={tone} onClick={openChat} /> : null,
+    <CrystalCircleButton key="gift" icon={Gift} label="Hediye" tone={tone} onClick={sendGift} />,
     showSocial && relation !== 'friend' ? (
       <CrystalCircleButton
         key="friend"
-        icon={UserPlus}
+        icon={Mic}
         label={relation === 'pending' ? 'İstek Gönderildi' : 'Arkadaş Ekle'}
         tone={tone}
         disabled={relation === 'pending'}
         onClick={addFriend}
       />
     ) : null,
-    ...leftoverTiles.map((item) => (
-      <CrystalCircleButton
-        key={item.key}
-        icon={item.icon}
-        label={item.label}
-        tone={tone}
-        disabled={item.disabled}
-        onClick={item.onClick}
-      />
-    )),
-    ...otherFooterItems.map((item) => (
-      <CrystalCircleButton
-        key={item.key}
-        icon={item.icon}
-        label={item.label}
-        tone={tone}
-        danger={item.danger}
-        onClick={item.onClick}
-      />
-    )),
+    ...footer.map(({ key, ...item }) => <CrystalCircleButton key={key} {...item} tone={tone} />),
     canInvite ? (
       <CrystalCircleButton
         key="invite"
-        icon={Mic2}
+        icon={Mic}
         label={inviteSent ? 'Davet Gönderildi' : 'Yayıncı Davet'}
         tone={tone}
         disabled={inviteSent}
@@ -245,7 +288,7 @@ export default function FullUserProfile({
     <div className="fixed inset-0 z-[300] flex items-end justify-center sm:items-center">
       <button type="button" aria-label="Kapat" onClick={onClose} className="absolute inset-0 w-full bg-black/65" />
       <div
-        className="animate-sheet-up relative flex w-full max-w-[400px] flex-col overflow-hidden rounded-t-[26px] border-t-2 px-3 pb-[max(0.6rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-8px_30px_rgba(0,0,0,0.75)] sm:mb-6 sm:rounded-[26px] sm:border-2"
+        className="animate-sheet-up relative flex w-full max-w-[400px] flex-col overflow-y-auto overscroll-contain rounded-t-[26px] border-t-2 px-3 pb-[max(0.6rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-8px_30px_rgba(0,0,0,0.75)] sm:mb-6 sm:rounded-[26px] sm:border-2"
         style={{
           background: skin.bg,
           borderColor: skin.edge,
@@ -262,8 +305,8 @@ export default function FullUserProfile({
             vipLevel={profile?.vip_level || 0}
             genderSymbol={genderSymbol}
             statusLabel={banned ? ACCOUNT_MARKS.banned : ''}
-            roleLabel={hidden ? '' : (profile?.title || profile?.display_role || '')}
-            receivedLevel={profile?.gift_received_level || 0}
+            roleLabel={roleLabel}
+            likes={likes}
             nLevel={profile?.n_level || 0}
             joinDate={formatDate(profile?.created_date)}
             memberId={memberId}
@@ -272,6 +315,7 @@ export default function FullUserProfile({
             country={hidden ? '' : badge.country}
             flag={badge.flag}
             rectItems={rectItems}
+            wideItems={wideItems}
             circleNodes={circleNodes}
             infoRows={info}
             hidden={hidden}

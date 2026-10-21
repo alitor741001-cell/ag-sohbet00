@@ -3,6 +3,7 @@ import CrystalNameBlock from '@/components/profile/crystal/CrystalNameBlock';
 import CrystalStatPills from '@/components/profile/crystal/CrystalStatPills';
 import CrystalInfoBars from '@/components/profile/crystal/CrystalInfoBars';
 import CrystalRectButton from '@/components/profile/crystal/CrystalRectButton';
+import CrystalWideButton from '@/components/profile/crystal/CrystalWideButton';
 
 /**
  * Sesli odadaki profil kartının gövdesi: referans görseldeki sıra birebir korunur →
@@ -11,8 +12,8 @@ import CrystalRectButton from '@/components/profile/crystal/CrystalRectButton';
  */
 export default function CrystalProfileCard({
   name, avatar, tone = 'blue', vipLevel = 0, genderSymbol = '♂', statusLabel = '', roleLabel = '',
-  receivedLevel = 0, nLevel = 0, joinDate = '', memberId = '', copied = false, onCopyId,
-  country = '', flag = '', rectItems = [], circleNodes = [], infoRows = [], hidden = false,
+  likes = 0, nLevel = 0, joinDate = '', memberId = '', copied = false, onCopyId,
+  country = '', flag = '', rectItems = [], wideItems = [], circleNodes = [], infoRows = [], hidden = false,
 }) {
   return (
     <div className="flex flex-col">
@@ -30,7 +31,7 @@ export default function CrystalProfileCard({
 
       <CrystalNameBlock name={name} roleLabel={roleLabel} tone={tone} />
 
-      <CrystalStatPills receivedLevel={receivedLevel} nLevel={nLevel} vipLevel={hidden ? 0 : vipLevel} tone={tone} />
+      <CrystalStatPills likes={hidden ? 0 : likes} nLevel={nLevel} vipLevel={hidden ? 0 : vipLevel} tone={tone} />
 
       {hidden ? (
         <p className="mt-2 rounded-full border px-3 py-1.5 text-center text-[9px] leading-snug text-white/65" style={{ borderColor: 'rgba(212,175,55,0.4)', background: 'rgba(2,6,15,0.7)' }}>
@@ -66,6 +67,14 @@ export default function CrystalProfileCard({
         >
           {rectItems.map(({ key, ...item }) => (
             <CrystalRectButton key={key} {...item} tone={tone} />
+          ))}
+        </div>
+      )}
+
+      {wideItems.length > 0 && (
+        <div className="mt-2 space-y-1.5">
+          {wideItems.map(({ key, ...item }) => (
+            <CrystalWideButton key={key} {...item} tone={tone} />
           ))}
         </div>
       )}

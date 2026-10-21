@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import subscribeEntity from '@/components/data/entitySubscriptions';
 import { useCurrentUser } from '@/lib/useCurrentUser';
+import { useUserProfile } from '@/lib/profileCard';
 import { broadcasterState } from '@/lib/broadcaster';
 import { makeId } from '@/lib/uid';
 import { useVoiceChat } from '@/hooks/useVoiceChat';
@@ -58,6 +59,7 @@ export default function VoiceRoom() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useCurrentUser();
+  const { openUserProfile } = useUserProfile();
   // Oyun merkezi yalnızca yayıncı/ajans üyesi hesaplara açıktır.
   const gamesEnabled = broadcasterState(user).games;
   const { toast } = useToast();
@@ -92,6 +94,8 @@ export default function VoiceRoom() {
   const [exitOpen, setExitOpen] = useState(false);
   const [gamesOpen, setGamesOpen] = useState(false);
   const [giftOpen, setGiftOpen] = useState(false);
+  // Profil kartındaki "Bahset" isteği: yazma alanına @isim eklenir.
+  const [mentionTarget, setMentionTarget] = useState(null);
   // Coin yetmediğinde hediye kutusu açılıp doğrudan coin yükleme ekranı gösterilir (sayaç sinyali).
   const [coinsRequest, setCoinsRequest] = useState(0);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -541,11 +545,12 @@ export default function VoiceRoom() {
     return person?.name || '';
   }, [seats, participants]);
 
-  // Dolu koltukta kart açılmaz (yalnızca hediye seçimi), boş koltuk beyaz koltuk menüsünü açar.
+  // Dolu koltuk profil kartını, boş koltuk beyaz koltuk menüsünü açar.
   const handleSeatPress = useLatestCallback((index) => {
     const seat = seats[index];
     if (seat?.user_id) {
-      if (giftOpen) toggleGiftPerson(seat.user_id);
+      if (giftOpen) { toggleGiftPerson(seat.user_id); return; }
+      openRoomProfile(seat.user_id);
       return;
     }
     setSeatIndex(index);
@@ -845,6 +850,46 @@ export default function VoiceRoom() {
     setSelectedIds((prev) => (prev.includes(userId) ? prev.filter((value) => value !== userId) : [...prev, userId]));
   }, []);
 
+  // Profil kartındaki oda işlemleri: mikrofon ve iki koltuk kilidi bu odanın gerçek
+  // koltuk durumuna bağlanır, hediye ve bahsetme oda akışını kullanır.
+  const roomProfileActions = useMemo(() => ({
+    seatFor: (targetId) => (targetId ? seats.findIndex((seat) => seat?.user_id === targetId) : -1),
+    isLocked: (index) => !!seats[index]?.locked,
+    lockSeat: (index, locked) => invokeVoice({ action: 'seat-lock', seat_index: index, locked }),
+    selfMicMuted: !!voice.muted,
+    mutedOf: (targetId) => !!participants.find((person) => person?.user_id === targetId)?.muted,
+    canControl: (targetId) => canMod || targetId === user?.id,
+    toggleMic: (targetId) => {
+      if (!targetId || targetId === user?.id) {
+        if (!seated) {
+          toast({ title: 'Konuşmak için bir koltuğa otur', description: 'Yukarıdaki boş bir koltuğa dokun.' });
+          return;
+        }
+        voice.toggleMute();
+        return;
+      }
+      toggleMuteFor(targetId);
+    },
+    mention: (targetName) => {
+      const tag = String(targetName || '').trim();
+      if (!tag) return;
+      setMentionTarget({ name: tag, at: Date.now() });
+      setChatOpen(true);
+      setComposerOpen(true);
+    },
+    gift: (targetId) => {
+      if (!targetId) return;
+      setSelectedIds([targetId]);
+      openGifts();
+    },
+  }), [seats, participants, canMod, user?.id, seated, voice, invokeVoice, toast, openGifts]);
+
+  // Her koltuk, sohbet satırı ve izleyici aynı profile kartını açar; oda işlemleri karta taşınır.
+  const openRoomProfile = useLatestCallback((targetId) => {
+    if (!targetId) return;
+    openUserProfile(targetId, { roomActions: roomProfileActions });
+  });
+
   // Kuyruk boşaldıktan sonra kısa bir sessizlik beklenir: art arda gönderimde her dokunuş için
   // ayrı tahta/bakiye eşitlemesi yapılmaz, gönderim bitince tek seferde yapılır.
   const scheduleGiftSync = () => {
@@ -1097,6 +1142,8 @@ export default function VoiceRoom() {
         ownerId={room?.owner_id}
         moderators={moderators}
         hiddenUsers={hiddenUsersByName}
+        onOpenProfile={openRoomProfile}
+        mention={mentionTarget}
         bigGiftNotice={bigGiftNotice}
         onOpenBigGiftRoom={() => {
           const target = bigGiftNotice?.room_id;
@@ -1244,6 +1291,7 @@ export default function VoiceRoom() {
         userId={user?.id}
         ownerId={room?.owner_id}
         moderators={moderators}
+        onSelect={openRoomProfile}
       />
 
       <VoiceSeatInvitePrompt
