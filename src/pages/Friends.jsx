@@ -161,18 +161,18 @@ export default function Friends() {
     return (
       <div
         className="dark min-h-[100dvh] w-full text-white"
-        style={{ background: 'radial-gradient(120% 80% at 50% 0%, #3a1146 0%, #1b0a2a 46%, #0a0410 100%)' }}
+        style={{ background: 'radial-gradient(140% 80% at 50% 0%, #0E2A5A 0%, #071731 46%, #03081A 100%)' }}
       >
-        <header className="sticky top-0 z-20 flex items-center gap-2 border-b border-[#f2ce6b]/25 bg-[#140619]/85 px-3 py-3 backdrop-blur-md">
+        <header className="sticky top-0 z-20 flex items-center gap-2 px-3 py-3" style={{ background: 'rgba(6,20,44,0.94)', borderBottom: '1px solid rgba(125,211,252,0.25)' }}>
           <button
             type="button"
             onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/profil'))}
             aria-label="Geri"
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-black/40 active:scale-95"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-[#7dd3fc]/30 bg-[#0b2a52] text-[#a5e4ff] active:scale-95"
           >
             <ArrowLeft className="h-4 w-4" />
           </button>
-          <h1 className="flex-1 text-center text-base font-extrabold text-[#f2ce6b]">Arkadaşlarım</h1>
+          <h1 className="flex-1 text-center text-base font-extrabold text-[#a5e4ff]">Arkadaşlarım</h1>
           <span className="h-9 w-9" />
         </header>
         <div className="p-4">

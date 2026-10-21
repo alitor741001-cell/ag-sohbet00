@@ -218,9 +218,7 @@ export default function Profile() {
             onSettings={() => toggle('settings')}
             onLogout={() => base44.auth.logout('/login')}
             onAdmin={() => navigate('/admin')}
-          >
-            <DeleteAccountSection />
-          </ProfileMenuCard>
+          />
 
           {openKey === 'info' && (
             <ProfileDetailsSection
@@ -236,8 +234,10 @@ export default function Profile() {
           )}
 
           {openKey === 'settings' && (
-            <div id="eklentiler" className="scroll-mt-24">
+            <div id="eklentiler" className="scroll-mt-24 space-y-3">
               <ProfileSettings user={user} onUpdated={reload} />
+              {/* Hesabı Sil: Eklentiler bölümünün en altında durur. */}
+              <DeleteAccountSection />
             </div>
           )}
 
@@ -267,7 +267,7 @@ export default function Profile() {
           <div className="space-y-3 text-sm leading-6 text-white/80">
             <p>Profil bilgileriniz, sohbetleriniz ve cüzdan hareketleriniz yalnızca uygulama içindeki özelliklerin çalışması için saklanır.</p>
             <p>Profil fotoğrafınız ve kapak görselleriniz diğer üyeler tarafından görülebilir; telefon numaranız ve e-posta adresiniz profilinizde gösterilmez.</p>
-            <p>Engellediğiniz hesaplar sizi göremez ve size mesaj gönderemez. Hesabınızı profildeki “Hesabı Sil” bölümünden kalıcı olarak silebilirsiniz.</p>
+            <p>Engellediğiniz hesaplar sizi göremez ve size mesaj gönderemez. Hesabınızı profildeki “Eklentiler” bölümünün en altındaki “Hesabımı Sil” ile kalıcı olarak silebilirsiniz.</p>
             <p>Gizlilikle ilgili talepleriniz için Destek bölümünden bize yazabilirsiniz.</p>
           </div>
         </DialogContent>

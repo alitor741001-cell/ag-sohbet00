@@ -1,63 +1,102 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MoreVertical, MessageCircle, UserMinus, Ban, DoorOpen } from 'lucide-react';
-import ProfileFrame from '@/components/ProfileFrame';
-import XpAvatar from '@/components/xp/XpAvatar';
+import { Users } from 'lucide-react';
 import useMessageProfiles from '@/hooks/useMessageProfiles';
 import FriendRequests from '@/components/friends/FriendRequests';
+import FriendRow from '@/components/friends/FriendRow';
 import { getAccountState } from '@/components/friends/AccountStatusAvatar';
 import FullUserProfile from '@/components/profile/FullUserProfile';
-import LiveBadge from '@/components/friends/LiveBadge';
 import { findLiveRoom } from '@/lib/liveRoom';
+import CrystalCard from '@/components/profile/fantasy/CrystalCard';
 
+/** Profilden açılan arkadaş listesi: kristal kart içinde arkadaşlar ve istekler. */
 export default function FriendsPanel({ relations, userId, invoke, onChat, isOnline, getRoomId, rooms }) {
   const [menuFor, setMenuFor] = useState(null);
   // Profil kartı: arkadaşa dokununca özel sohbetteki kartın aynısı açılır.
   const [cardUser, setCardUser] = useState(null);
   const navigate = useNavigate();
   const friends = relations.filter((r) => r.status === 'accepted');
-  const friendIds = friends.map((r) => r.requester_id === userId ? r.recipient_id : r.requester_id);
+  const friendIds = friends.map((r) => (r.requester_id === userId ? r.recipient_id : r.requester_id));
   const profiles = useMessageProfiles(friendIds);
   const action = async (type, relation) => { await invoke({ action: type, friendship_id: relation.id }); setMenuFor(null); };
 
-  return <div className="space-y-4"><FriendRequests relations={relations} userId={userId} invoke={invoke} /><section className="bg-card border border-border rounded-xl overflow-hidden"><h2 className="font-bold p-4 border-b border-border">Arkadaşlarım</h2>
-    {!friends.length ? <p className="p-6 text-sm text-center text-muted-foreground">Henüz arkadaşınız yok.</p> : friends.map((r) => {
-      const friendId = r.requester_id === userId ? r.recipient_id : r.requester_id;
-      const name = r.requester_id === userId ? r.recipient_name : r.requester_name;
-      const avatar = r.requester_id === userId ? r.recipient_avatar : r.requester_avatar;
-      const member = r.requester_id === userId ? r.recipient_member_id : r.requester_member_id;
-      const online = isOnline(friendId);
-      const friendRoom = findLiveRoom(rooms, friendId, getRoomId ? getRoomId(friendId) : '');
-      const profile = profiles[friendId];
-      const accountState = getAccountState(profile, name);
-      return <div key={r.id} className="border-b last:border-0 border-border p-3">
-        <div className="flex items-center gap-3">
-          <button onClick={() => setCardUser({ id: friendId, name, avatar: profile?.avatar || avatar, frame: profile?.profile_frame, frameScale: profile?.profile_frame_scale })} className="flex items-center gap-3 flex-1 min-w-0 text-left">
-            <div className="relative shrink-0">{profile?.profile_frame ? <ProfileFrame frame={profile.profile_frame} avatar={profile.avatar || avatar} name={name} size="sm" /> : <XpAvatar avatar={profile?.avatar || avatar} name={name} userId={friendId} size="sm" />}{friendRoom && <LiveBadge />}{!accountState && !friendRoom && <span className={`absolute right-0 bottom-0 w-3 h-3 rounded-full border-2 border-card ${online ? 'bg-green-500' : 'bg-muted-foreground'}`} />}</div>
-            <div className="flex-1 min-w-0"><p className="font-semibold truncate">{name}</p><p className="text-xs truncate text-muted-foreground">{friendRoom ? <span className="font-semibold text-[#f97316]">Yayında</span> : online ? <span className="text-green-500">Çevrim içi</span> : 'Çevrim dışı'}{member ? ` · ${member}` : ''}</p></div>
-          </button>
-          <button onClick={() => onChat(r)} className="shrink-0 flex items-center gap-1 bg-primary text-primary-foreground rounded-lg px-2.5 py-1.5 text-xs font-semibold"><MessageCircle className="w-3.5 h-3.5" /> Sohbet</button>
-          <button onClick={() => setMenuFor(menuFor === r.id ? null : r.id)} className="shrink-0 p-1.5 rounded-full hover:bg-secondary"><MoreVertical className="w-4 h-4 text-muted-foreground" /></button>
+  return (
+    <div className="space-y-3">
+      <FriendRequests relations={relations} userId={userId} invoke={invoke} />
+
+      <CrystalCard>
+        <div className="flex items-center gap-3 border-b border-[#7dd3fc]/20 px-4 py-3">
+          <span
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
+            style={{ background: 'rgba(56,189,248,0.14)', border: '1px solid rgba(125,211,252,0.35)' }}
+          >
+            <Users className="h-4 w-4 text-[#a5e4ff]" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-[13px] font-black text-white">Arkadaşlarım</p>
+            <p className="text-[10.5px] font-semibold text-[#a5e4ff]/60">{friends.length} arkadaş</p>
+          </div>
         </div>
-        {friendRoom?.isPublic && <button onClick={() => navigate(friendRoom.link)} className="mt-2 w-full flex items-center justify-center gap-1.5 bg-primary/10 text-primary border border-primary/20 rounded-lg py-1.5 text-xs font-semibold"><DoorOpen className="w-3.5 h-3.5" /> Katıl</button>}
-        {menuFor === r.id && <div className="mt-2 flex gap-2"><button onClick={() => action('unfriend', r)} className="flex-1 flex items-center justify-center gap-1 bg-secondary rounded-lg py-1.5 text-xs font-semibold"><UserMinus className="w-3.5 h-3.5" /> Sil</button><button onClick={() => action('block', r)} className="flex-1 flex items-center justify-center gap-1 bg-destructive/15 text-destructive rounded-lg py-1.5 text-xs font-semibold"><Ban className="w-3.5 h-3.5" /> Engelle</button></div>}
-      </div>;
-    })}
-  </section>
-    {cardUser && (
-      <FullUserProfile
-        userId={cardUser.id}
-        name={cardUser.name}
-        avatar={cardUser.avatar}
-        frame={cardUser.frame}
-        frameScale={cardUser.frameScale}
-        onClose={() => setCardUser(null)}
-        onMessage={() => {
-          const relation = relations.find((r) => (r.requester_id === userId ? r.recipient_id : r.requester_id) === cardUser.id);
-          setCardUser(null);
-          if (relation) onChat(relation);
-        }}
-      />
-    )}
-  </div>;
+
+        {!friends.length ? (
+          <div className="px-4 py-10 text-center">
+            <Users className="mx-auto h-8 w-8 text-[#7dd3fc]/35" />
+            <p className="mt-2 text-sm font-bold text-white/75">Henüz arkadaşın yok</p>
+            <p className="mt-1 text-[11px] font-semibold text-white/40">Arama bölümünden üye numarasıyla arkadaş ekleyebilirsin.</p>
+          </div>
+        ) : friends.map((r) => {
+          const friendId = r.requester_id === userId ? r.recipient_id : r.requester_id;
+          const name = r.requester_id === userId ? r.recipient_name : r.requester_name;
+          const avatar = r.requester_id === userId ? r.recipient_avatar : r.requester_avatar;
+          const member = r.requester_id === userId ? r.recipient_member_id : r.requester_member_id;
+          const profile = profiles[friendId];
+          const liveRoom = findLiveRoom(rooms, friendId, getRoomId ? getRoomId(friendId) : '');
+          const accountState = getAccountState(profile, name);
+          const openCard = () => setCardUser({
+            id: friendId,
+            name,
+            avatar: profile?.avatar || avatar,
+            frame: profile?.profile_frame,
+            frameScale: profile?.profile_frame_scale,
+          });
+          return (
+            <FriendRow
+              key={r.id}
+              name={name}
+              member={member}
+              avatar={profile?.avatar || avatar}
+              friendId={friendId}
+              frame={profile?.profile_frame}
+              online={isOnline(friendId)}
+              liveRoom={liveRoom}
+              showStatusDot={!accountState && !liveRoom}
+              menuOpen={menuFor === r.id}
+              onToggleMenu={() => setMenuFor(menuFor === r.id ? null : r.id)}
+              onOpenCard={openCard}
+              onChat={() => onChat(r)}
+              onUnfriend={() => action('unfriend', r)}
+              onBlock={() => action('block', r)}
+              onJoin={() => liveRoom?.isPublic && navigate(liveRoom.link)}
+            />
+          );
+        })}
+      </CrystalCard>
+
+      {cardUser && (
+        <FullUserProfile
+          userId={cardUser.id}
+          name={cardUser.name}
+          avatar={cardUser.avatar}
+          frame={cardUser.frame}
+          frameScale={cardUser.frameScale}
+          onClose={() => setCardUser(null)}
+          onMessage={() => {
+            const relation = relations.find((r) => (r.requester_id === userId ? r.recipient_id : r.requester_id) === cardUser.id);
+            setCardUser(null);
+            if (relation) onChat(relation);
+          }}
+        />
+      )}
+    </div>
+  );
 }
