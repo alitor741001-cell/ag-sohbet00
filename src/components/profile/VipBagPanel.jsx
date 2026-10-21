@@ -4,6 +4,8 @@ import { base44 } from '@/api/base44Client';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import ProfileFrame from '@/components/ProfileFrame';
 import UserStatusBadges from '@/components/status/UserStatusBadges';
+import VipCosmeticsBag from '@/components/profile/VipCosmeticsBag';
+import useVipCosmetics from '@/hooks/useVipCosmetics';
 import { vipStyle } from '@/lib/userLevels';
 
 /**
@@ -12,6 +14,7 @@ import { vipStyle } from '@/lib/userLevels';
  * kimlik numarasıyla bir arkadaşına gönderir — gönderilen VIP alıcıda anında aktif olur.
  */
 export default function VipBagPanel({ open, onClose, onChanged }) {
+  const { items: cosmetics, level: cosmeticLevel, busy: cosmeticBusy, toggle: toggleCosmetic } = useVipCosmetics(open);
   const [items, setItems] = useState([]);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -158,6 +161,8 @@ export default function VipBagPanel({ open, onClose, onChanged }) {
             Coin yüklemesinden gelen VIP'ler burada bekler. İstersen kendin kullan, istersen kimlik numarasıyla bir
             arkadaşına gönder — gönderdiğin VIP alıcıda anında aktif olur.
           </p>
+
+          <VipCosmeticsBag items={cosmetics} level={cosmeticLevel} busy={cosmeticBusy} onToggle={toggleCosmetic} />
 
           {loading && !items.length ? (
             <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-sky-400" /></div>
