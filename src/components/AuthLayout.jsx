@@ -1,10 +1,14 @@
 import React from "react";
+import BrandMark from "@/components/auth/BrandMark";
 
-/** Giriş/şifre ekranlarının ortak yerleşimi: marka görseli basılmaz, doğrudan forma odaklanılır. */
+/** Şifre ekranlarının ortak yerleşimi: üstte Ag Sohbet amblemi, ortada form. */
 export default function AuthLayout({ icon: Icon, title, subtitle, footer, children }) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-md">
+        <div className="flex justify-center">
+          <BrandMark />
+        </div>
         <div className="text-center mb-10">
           <h1 className="text-3xl font-bold tracking-tight text-foreground">{title}</h1>
           {subtitle && <p className="text-muted-foreground mt-2">{subtitle}</p>}
