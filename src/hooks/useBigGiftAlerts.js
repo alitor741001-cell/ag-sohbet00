@@ -3,7 +3,7 @@ import { base44 } from '@/api/base44Client';
 import subscribeEntity from '@/components/data/entitySubscriptions';
 
 // Duyuru ekranda bu kadar kalır (CSS big-gift-life süresiyle aynı).
-const VISIBLE_MS = 7000;
+const VISIBLE_MS = 5000;
 // Gerçek zamanlı yayın gecikirse yoklama aynı duyuruyu yakalar.
 // Yedek yoklama seyrek çalışır (sekme arkadayken hiç çalışmaz) — istek yükünü düşürür.
 const POLL_MS = 30000;
@@ -24,7 +24,7 @@ export default function useBigGiftAlerts() {
     if (!record?.id || seenRef.current.has(record.id)) return;
     if (record.created_date && Date.now() - new Date(record.created_date).getTime() > FRESH_MS) return;
     seenRef.current.add(record.id);
-    setQueue((prev) => [...prev, record].slice(-MAX_QUEUE));
+    setQueue((prev) => prev.length ? [prev[0], ...[...prev.slice(1), record].slice(-(MAX_QUEUE - 1))] : [record]);
   }, []);
 
   useEffect(() => {
@@ -44,7 +44,7 @@ export default function useBigGiftAlerts() {
     if (!queue.length) return undefined;
     const timer = window.setTimeout(() => setQueue((prev) => prev.slice(1)), VISIBLE_MS);
     return () => window.clearTimeout(timer);
-  }, [queue]);
+  }, [queue[0]?.id]);
 
   return queue[0] || null;
 }

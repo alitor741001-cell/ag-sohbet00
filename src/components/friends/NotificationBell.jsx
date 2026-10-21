@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Bell } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import subscribeEntity from '@/components/data/entitySubscriptions';
@@ -10,12 +10,13 @@ import { useCurrentUser } from '@/lib/useCurrentUser';
 export default function NotificationBell() {
   const { user } = useCurrentUser();
   const navigate = useNavigate();
+  const location = useLocation();
   const [unread, setUnread] = useState(0);
 
   useEffect(() => {
     if (!user) return;
-    const load = () => base44.entities.Notification.filter({ user_id: user.id }, '-created_date', 50)
-      .then((rows) => setUnread(rows.filter((n) => !n.read).length))
+    const load = () => base44.entities.Notification.count({ user_id: user.id, read: false })
+      .then(setUnread)
       .catch(() => {});
     load();
     const unsub = subscribeEntity('Notification', () => load());
@@ -25,8 +26,8 @@ export default function NotificationBell() {
   }, [user?.id]);
 
   return (
-    <button onClick={() => navigate('/bildirimler')} aria-label="Sistem bildirimleri"
-      className="flex shrink-0 items-center justify-center gap-1.5 rounded-xl border border-white/5 bg-white/5 px-2 active:scale-95">
+    <button onClick={() => navigate('/bildirimler', { state: { returnTo: location.pathname + location.search } })} aria-label="Sistem bildirimleri"
+      className="flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-xl border border-slot-blue/60 bg-slot-blue/30 px-3 text-slot-text active:scale-95">
       <span className="whitespace-nowrap text-[10px] font-semibold leading-none text-white">Sistem Bildirimi</span>
       <span className="relative flex shrink-0 items-center justify-center">
         <Bell className="h-4 w-4 text-white" />

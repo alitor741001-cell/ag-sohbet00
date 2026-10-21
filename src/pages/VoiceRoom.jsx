@@ -1319,7 +1319,7 @@ export default function VoiceRoom() {
       />
 
       <GiftScene key={overlayAlert?.key} alert={giftEffects && !bigGift ? overlayAlert : null} tiers={tiers} gifts={gifts} />
-      {giftEffects && <BigGiftStage alert={bigGift} />}
+      {giftEffects && <BigGiftStage alert={bigGift} gifts={gifts} />}
 
       <GiftEffectsSheet
         open={settingsOpen}

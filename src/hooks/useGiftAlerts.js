@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-const VISIBLE_MS = 2600;
+const VISIBLE_MS = 5000;
 // Aynı anda çok hediye gelse bile animasyonlar sırayla gösterilir; kuyruk kısa tutulur.
 const MAX_QUEUE = 3;
 // Gönderdiğim hediyenin canlı yayın kopyası bu süre boyunca yok sayılır: sahne iki kez oynamaz.
@@ -18,7 +18,7 @@ export default function useGiftAlerts(messages, resolveGift, selfId) {
     const last = prev[prev.length - 1];
     const sameGift = !!last && !!last.giftId && last.giftId === alert.giftId
       && last.senderName === alert.senderName && last.recipientName === alert.recipientName;
-    if (!sameGift) return [...prev, alert].slice(-MAX_QUEUE);
+    if (!sameGift) return prev.length ? [prev[0], ...[...prev.slice(1), alert].slice(-(MAX_QUEUE - 1))] : [alert];
     return [...prev.slice(0, -1), {
       ...last,
       key: alert.key,
@@ -77,7 +77,7 @@ export default function useGiftAlerts(messages, resolveGift, selfId) {
     if (!queue.length) return undefined;
     const timer = window.setTimeout(() => setQueue((prev) => prev.slice(1)), VISIBLE_MS);
     return () => window.clearTimeout(timer);
-  }, [queue]);
+  }, [queue[0]?.key]);
 
   return { alert: queue[0] || null, push, markSeen, markOwnSend, reset };
 }

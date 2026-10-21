@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import subscribeEntity from '@/components/data/entitySubscriptions';
 import { useCurrentUser } from '@/lib/useCurrentUser';
@@ -25,6 +25,10 @@ const formatWhen = (iso) => {
 export default function Notifications() {
   const { user } = useCurrentUser();
   const navigate = useNavigate();
+  const location = useLocation();
+  const goBack = () => location.state?.returnTo && window.history.state?.idx > 0
+    ? navigate(-1)
+    : navigate('/arkadaslar?view=chats', { replace: true });
   const { toast } = useToast();
   const [items, setItems] = useState([]);
   const [inviteIds, setInviteIds] = useState([]);
@@ -67,7 +71,7 @@ export default function Notifications() {
       {/* Aşağı çekerek tazeleme: bildirimler ve bekleyen davetler yeniden okunur. */}
       <PullToRefresh onRefresh={() => { load(); loadInvites(); }}>
       <header className="sticky top-0 z-10 flex items-center gap-2 border-b border-white/10 bg-background px-3 py-2.5">
-        <button onClick={() => navigate('/arkadaslar')} aria-label="Geri" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/5 active:scale-95">
+        <button onClick={goBack} aria-label="Geri" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/5 active:scale-95">
           <ArrowLeft className="h-4 w-4 text-white" />
         </button>
         <h1 className="flex-1 text-base font-extrabold">Bildirimler</h1>

@@ -1,13 +1,22 @@
 import { Image } from '@/components/ui/image';
 import BigGiftPair from '@/components/voice/BigGiftPair';
+import GiftVideoStage from '@/components/voice/GiftVideoStage';
+import { giftVideoFor } from '@/lib/giftClips';
 
 /**
  * Büyük hediye duyurusu (1M ve üzeri) — bütün sesli odaların ekranında görünür.
  * Üstte gönderen ve alan profil/isimleri yan yana, altında hareketli hediye görseli durur.
  * Hediye görselinin kendi siyah zemini blend ile kaybolur; kutu arkası hediye gibi kalmaz.
  */
-export default function BigGiftStage({ alert }) {
+export default function BigGiftStage({ alert, gifts = [] }) {
   if (!alert) return null;
+  const video = giftVideoFor(gifts.find((gift) => gift.id === alert.gift_id));
+  if (video) return (
+    <div key={alert.id} className="pointer-events-none absolute inset-0 z-[210]">
+      <GiftVideoStage src={video} />
+      <div className="absolute inset-x-0 bottom-[16%] px-5"><BigGiftPair alert={alert} /><p className="mt-2 text-center text-sm font-bold text-fantasy-gold">{alert.gift_name}</p></div>
+    </div>
+  );
 
   return (
     <div className="pointer-events-none absolute inset-0 z-[210] flex items-center justify-center px-5">

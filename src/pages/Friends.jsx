@@ -7,7 +7,7 @@ import ConversationList from '@/components/friends/ConversationList';
 import FriendsPanel from '@/components/friends/FriendsPanel';
 import ChatPanel from '@/components/friends/ChatPanel';
 import NotificationBell from '@/components/friends/NotificationBell';
-import RoomFriendRequests from '@/components/friends/RoomFriendRequests';
+import FriendRequestsButton from '@/components/friends/FriendRequestsButton';
 import useFriends from '@/hooks/useFriends';
 import useConversations from '@/hooks/useConversations';
 import useFriendPresence from '@/hooks/useFriendPresence';
@@ -190,8 +190,11 @@ export default function Friends() {
       {/* Aşağı çekerek tazeleme: arkadaşlar, istekler ve sohbetler yeniden okunur. */}
       <PullToRefresh onRefresh={() => { reloadFriends(); reloadConversations(); }}>
       <header className="px-4 py-5">
-        <h1 className="text-2xl font-extrabold">Arkadaşlar</h1>
-        <p className="text-sm text-gray-400 mt-1">Sohbet ve arkadaşlarını yönet.</p>
+        <div className="flex items-start justify-between gap-3">
+          <div><h1 className="text-2xl font-extrabold">Arkadaşlar</h1>
+          <p className="text-sm text-gray-400 mt-1">Sohbet ve arkadaşlarını yönet.</p></div>
+          <FriendRequestsButton relations={relations} userId={user.id} invoke={invoke} />
+        </div>
         <div className="mt-4 flex items-center gap-2">
           <div className="flex flex-1 items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-bold text-white" style={{ background: 'linear-gradient(135deg, #b91c1c, #dc2626 52%, #f2ce6b)' }}>
             <MessageCircle className="w-4 h-4" /> Mesajlar
@@ -213,10 +216,7 @@ export default function Friends() {
               </div>
             </button>
           )}
-          {/* Arkadaşlık istekleri doğrudan özel sohbet ekranında yönetilir. */}
-          <div className="px-3 pt-2">
-            <RoomFriendRequests relations={relations} userId={user.id} invoke={invoke} />
-          </div>
+
           {conversations.length > 0 ? (
             <ConversationList conversations={conversations} userId={user.id} onOpen={openConversation} onHide={hide} isOnline={isOnline} getLastSeen={getLastSeen} rooms={rooms} getRoomId={getRoomId} />
           ) : (

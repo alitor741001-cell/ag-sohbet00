@@ -16,7 +16,9 @@ export default function GiftVideoStage({ src, poster = '', color = '#facc15' }) 
   return (
     <div className="absolute inset-0 overflow-hidden bg-black">
       <video
+        key={src}
         ref={videoRef}
+        aria-label="Hediye animasyonu videosu"
         src={src}
         poster={poster || undefined}
         autoPlay
