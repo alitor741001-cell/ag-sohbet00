@@ -10,7 +10,7 @@ import { formatDate } from '@/components/profile/genderPalette';
 import { agencyApi } from '@/lib/agency';
 import FollowButton from '@/components/profile/social/FollowButton';
 import CrystalProfileCard from '@/components/profile/crystal/CrystalProfileCard';
-import ImageProfileCard from '@/components/profile/crystal/ImageProfileCard';
+import ReferenceProfileCard from '@/components/profile/crystal/ReferenceProfileCard';
 import CrystalCircleButton from '@/components/profile/crystal/CrystalCircleButton';
 import { crystalSkin } from '@/components/profile/crystal/crystalTheme';
 import { AccountStatusMark, ACCOUNT_MARKS, ACCOUNT_STATES, getAccountState } from '@/components/friends/AccountStatusAvatar';
@@ -93,6 +93,9 @@ export default function FullUserProfile({
   const badge = broadcasterState(profile);
   const showSocial = !isSelf && !hidden && !accountState;
   const genderSymbol = hidden ? '?' : (profile?.gender === 'erkek' ? '♂' : profile?.gender === 'kadın' ? '♀' : '·');
+  const age = !hidden && profile?.birth_date
+    ? Math.max(0, Math.floor((Date.now() - new Date(profile.birth_date).getTime()) / 31557600000))
+    : 0;
   const roleLabel = hidden
     ? ''
     : (profile?.custom_role?.name || profile?.title || profile?.display_role || (profile?.role === 'admin' ? 'ADMIN' : 'ÜYE'));
@@ -298,7 +301,7 @@ export default function FullUserProfile({
     <div className={`fixed inset-0 z-[300] flex items-end justify-center ${roomActions ? '' : 'sm:items-center'}`}>
       <button type="button" aria-label="Kapat" onClick={onClose} className="absolute inset-0 w-full bg-black/65" />
       <div
-        className={`animate-sheet-up relative flex w-full flex-col overflow-y-auto overscroll-contain rounded-t-[26px] pb-[max(0.6rem,env(safe-area-inset-bottom))] sm:mb-6 sm:rounded-[26px] ${roomActions ? 'max-w-[min(680px,100%)] px-2 pt-0' : 'max-w-[400px] border-t-2 px-3 pt-2 shadow-[0_-8px_30px_rgba(0,0,0,0.75)] sm:border-2'}`}
+        className={`animate-sheet-up relative flex w-full flex-col overflow-y-auto overscroll-contain rounded-t-[26px] pb-[max(0.6rem,env(safe-area-inset-bottom))] sm:mb-6 sm:rounded-[26px] ${roomActions ? 'max-w-[min(560px,100%)] px-0 pt-0' : 'max-w-[400px] border-t-2 px-3 pt-2 shadow-[0_-8px_30px_rgba(0,0,0,0.75)] sm:border-2'}`}
         style={roomActions ? { maxHeight: 'calc(var(--app-height, 100dvh) - 4px)' } : {
           background: skin.bg,
           borderColor: skin.edge,
@@ -308,13 +311,22 @@ export default function FullUserProfile({
       >
         {!roomActions && header}
         {statusContent || (roomActions ? (
-          <ImageProfileCard
+          <ReferenceProfileCard
             name={shownName}
             avatar={banned ? ACCOUNT_STATES.banned.image : shownAvatar}
             likes={likes}
             nLevel={profile?.n_level || 0}
             vipLevel={profile?.vip_level || 0}
-            joinDate={formatDate(profile?.created_date)}
+            giftSentLevel={profile?.gift_sent_level || 0}
+            giftReceivedLevel={profile?.gift_received_level || 0}
+            memberId={memberId}
+            age={age}
+            gender={profile?.gender}
+            agency={profile?.agency_name}
+            slogan={profile?.slogan}
+            roleLabel={roleLabel}
+            onClose={onClose}
+            onShare={copyId}
             self={isSelf}
             followNode={showSocial ? <FollowButton variant="circle" userId={userId} tone={tone} /> : null}
             actions={{
