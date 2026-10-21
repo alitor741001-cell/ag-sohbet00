@@ -23,11 +23,22 @@ export default async function(req) {
     }
 
     if (action === 'search') {
-      const memberId = String(body.member_id || '').trim();
-      if (!/^\d{8}$/.test(memberId)) return Response.json({ error: '8 haneli üye numarası girin' }, { status: 400 });
-      const matches = await base44.asServiceRole.entities.User.filter({ member_id: memberId }, '-created_date', 2);
-      const target = matches.find((item) => item.id !== user.id);
+      const memberId = String(body.member_id || '').replace(/\D/g, '');
+      if (memberId.length < 6) return Response.json({ error: 'Üye numarası en az 6 haneli olmalı' }, { status: 400 });
+      // Yoğun saatlerde liste kotası dolabiliyor: sorgu kısa bir beklemeden sonra bir kez yinelenir.
+      const searchMembers = () => base44.asServiceRole.entities.User.filter({ member_id: memberId }, '-created_date', 2);
+      let matches = [];
+      try {
+        matches = await searchMembers();
+      } catch (error) {
+        if (!/rate limit/i.test(error?.message || '')) throw error;
+        await new Promise((resolve) => setTimeout(resolve, 1200));
+        matches = await searchMembers();
+      }
+      const target = matches.find((item) => String(item.member_id || '') === memberId);
       if (!target) return Response.json({ user: null });
+      // Kişi kendi numarasını ararsa da kart görünsün: "bulunamadı" yanıltmasın.
+      if (target.id === user.id) return Response.json({ user: cleanUser(target) });
       const blocked = await base44.asServiceRole.entities.Friendship.filter({
         $or: [
           { requester_id: user.id, recipient_id: target.id, status: 'blocked' },

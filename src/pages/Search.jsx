@@ -23,8 +23,8 @@ export default function Search() {
 
   const search = async () => {
     const value = memberId.replace(/[^0-9]/g, '');
-    if (value.length !== 8) {
-      toast({ title: '8 haneli üye numarası girin', variant: 'destructive' });
+    if (value.length < 6) {
+      toast({ title: 'Üye numarasını eksiksiz girin', variant: 'destructive' });
       return;
     }
     setSearching(true);
@@ -46,7 +46,12 @@ export default function Search() {
       );
       if (room) setLiveRoom(room);
     } catch (error) {
-      toast({ title: 'Arama başarısız', description: error.response?.data?.error || error.message, variant: 'destructive' });
+      const detail = error.response?.data?.error || error.message;
+      toast({
+        title: 'Arama başarısız',
+        description: /rate limit/i.test(detail || '') ? 'Yoğunluk var, birkaç saniye sonra tekrar deneyin.' : detail,
+        variant: 'destructive',
+      });
     } finally {
       setSearching(false);
     }

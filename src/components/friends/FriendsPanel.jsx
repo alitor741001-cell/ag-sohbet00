@@ -4,7 +4,6 @@ import { MoreVertical, MessageCircle, UserMinus, Ban, DoorOpen } from 'lucide-re
 import ProfileFrame from '@/components/ProfileFrame';
 import XpAvatar from '@/components/xp/XpAvatar';
 import useMessageProfiles from '@/hooks/useMessageProfiles';
-import FriendSearch from '@/components/friends/FriendSearch';
 import FriendRequests from '@/components/friends/FriendRequests';
 import { getAccountState } from '@/components/friends/AccountStatusAvatar';
 import FullUserProfile from '@/components/profile/FullUserProfile';
@@ -21,7 +20,7 @@ export default function FriendsPanel({ relations, userId, invoke, onChat, isOnli
   const profiles = useMessageProfiles(friendIds);
   const action = async (type, relation) => { await invoke({ action: type, friendship_id: relation.id }); setMenuFor(null); };
 
-  return <div className="space-y-4"><FriendSearch invoke={invoke} /><FriendRequests relations={relations} userId={userId} invoke={invoke} /><section className="bg-card border border-border rounded-xl overflow-hidden"><h2 className="font-bold p-4 border-b border-border">Arkadaşlarım</h2>
+  return <div className="space-y-4"><FriendRequests relations={relations} userId={userId} invoke={invoke} /><section className="bg-card border border-border rounded-xl overflow-hidden"><h2 className="font-bold p-4 border-b border-border">Arkadaşlarım</h2>
     {!friends.length ? <p className="p-6 text-sm text-center text-muted-foreground">Henüz arkadaşınız yok.</p> : friends.map((r) => {
       const friendId = r.requester_id === userId ? r.recipient_id : r.requester_id;
       const name = r.requester_id === userId ? r.recipient_name : r.requester_name;
