@@ -804,12 +804,33 @@ html, body, #root {
   background-color: hsl(var(--catalog-surface));
 }
 
-/* Durum çubuğu, güvenli alanlar ve oda çerçevesinin dışında kalan her piksel tema
-   gradyanıyla boyanır: Android'de ve iOS'ta siyah şerit görünmez. */
+/* Kök katman saydam kalır: alttaki tema gradyanı her pikselde görünür. */
+#root { background-color: transparent; }
+
+/* Durum çubuğu, güvenli alanlar ve sayfanın dışında kalan her piksel tema
+   gradyanıyla boyanır: Android'de ve iOS'ta siyah şerit görünmez.
+   background-attachment iOS'ta güvenilir değildir; onun yerine sabit konumlu
+   bir katman kullanılır ve düzen yüksekliğini hiç etkilemez. */
 html, body {
+  background-color: #0a1c3c;
   background-image: linear-gradient(180deg, #103062 0%, #0a1c3c 52%, #0b1930 100%);
   background-repeat: no-repeat;
-  background-attachment: fixed;
+}
+
+html::after {
+  content: '';
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 100vh;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(180deg, #103062 0%, #0a1c3c 52%, #0b1930 100%);
+}
+@supports (height: 100lvh) {
+  /* En büyük görünüm ölçüsü: adres çubuğu açıkken bile ekranın dibi boyanır. */
+  html::after { height: 100lvh; }
 }
 
 body {

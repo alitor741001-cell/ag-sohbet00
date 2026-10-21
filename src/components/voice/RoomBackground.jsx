@@ -5,7 +5,7 @@ import { backgroundCss, backgroundOf } from '@/lib/roomBackgrounds';
 export default function RoomBackground({ value, cover }) {
   const tone = backgroundOf(value);
   return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+    <div className="room-bg-layer" aria-hidden="true">
       <div className="absolute inset-0" style={{ background: backgroundCss(value) }} />
       {tone?.image ? (
         <Image src={tone.image} alt="" fittingType="fill" className="absolute inset-0 h-full w-full object-cover" />

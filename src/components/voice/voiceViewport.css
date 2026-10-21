@@ -11,6 +11,22 @@
   :root { --voice-dm-height: 56dvh; }
 }
 
+/* Oda zemini ekranın tamamını kaplar: sabit konumlu katman en büyük görünüm
+   ölçüsüne (100lvh) yayılır, böylece alt güvenli alanda da görsel devam eder ve
+   ekranın dibinde siyah şerit kalmaz. Sayfa düzenine yer eklemez. */
+.room-bg-layer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 100vh;
+  pointer-events: none;
+  overflow: hidden;
+}
+@supports (height: 100lvh) {
+  .room-bg-layer { height: 100lvh; }
+}
+
 .voice-viewport {
   top: var(--viewport-offset, 0px);
   /* Zemin lacivert: ölçüler ne olursa olsun görünen her piksel tema tonunda kalır. */

@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { Castle, Search } from 'lucide-react';
 
 const ICON_BTN =
-  'flex h-9 w-9 items-center justify-center rounded-full border border-[#e8c47c]/45 bg-[#0b2144]/75 text-[#f0d79b] shadow-[inset_0_0_12px_rgba(79,216,207,0.22)] backdrop-blur transition active:scale-95';
+  'flex h-9 w-9 items-center justify-center rounded-full border border-[#e8c47c]/45 bg-[#0b2144]/75 text-[#f0d79b] shadow-[inset_0_0_12px_rgba(79,216,207,0.22)] transition active:scale-95';
 
 const ACTIVE_CHIP = {
   background: 'linear-gradient(135deg,#d8fffb 0%,#6fe6dc 48%,#9ad7ff 100%)',
@@ -27,7 +27,7 @@ export default function HomeTopBar({ view = 'hot', onView, onSearch }) {
             className={`rounded-full px-3.5 py-1.5 text-[11px] font-black tracking-[0.04em] transition active:scale-95 ${
               active
                 ? ''
-                : 'border border-[#e8c47c]/35 bg-[#071736]/70 text-white/60 backdrop-blur'
+                : 'border border-[#e8c47c]/35 bg-[#071736]/70 text-white/60'
             }`}
             style={active ? ACTIVE_CHIP : undefined}
           >
