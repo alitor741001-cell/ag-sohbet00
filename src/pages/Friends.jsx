@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, MessageCircle, Shield, UserPlus, Search, SlidersHorizontal } from 'lucide-react';
+import { ArrowLeft, MessageCircle, Shield } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import subscribeEntity from '@/components/data/entitySubscriptions';
@@ -7,6 +7,7 @@ import ConversationList from '@/components/friends/ConversationList';
 import FriendsPanel from '@/components/friends/FriendsPanel';
 import ChatPanel from '@/components/friends/ChatPanel';
 import NotificationBell from '@/components/friends/NotificationBell';
+import RoomFriendRequests from '@/components/friends/RoomFriendRequests';
 import useFriends from '@/hooks/useFriends';
 import useConversations from '@/hooks/useConversations';
 import useFriendPresence from '@/hooks/useFriendPresence';
@@ -83,7 +84,6 @@ export default function Friends() {
     return target === 'chats' ? target : 'friends';
   });
   const [selected, setSelected] = useState(null);
-  const [search, setSearch] = useState('');
 
   // Adres çubuğu görünümün tek kaynağıdır: alt menüden sekmeye basıldığında, sohbetten
   // geri dönüldüğünde ya da geri tuşuyla gelindiğinde görünüm adresteki değere kurulur.
@@ -213,13 +213,12 @@ export default function Friends() {
               </div>
             </button>
           )}
-          <div className="px-4 py-3 relative">
-            <Search className="absolute left-7 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Kişi ara..." className="w-full pl-9 pr-10 py-2.5 rounded-xl bg-[hsl(var(--secondary))] border border-[#f2ce6b]/20 text-sm text-white placeholder:text-gray-500 outline-none focus:border-[#f2ce6b]/60" />
-            <SlidersHorizontal className="absolute right-7 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+          {/* Arkadaşlık istekleri doğrudan özel sohbet ekranında yönetilir. */}
+          <div className="px-3 pt-2">
+            <RoomFriendRequests relations={relations} userId={user.id} invoke={invoke} />
           </div>
           {conversations.length > 0 ? (
-            <ConversationList conversations={conversations.filter((c) => { const name = c.user1_id === user.id ? c.user2_name : c.user1_name; return !search.trim() || name?.toLowerCase().includes(search.toLowerCase()); })} userId={user.id} onOpen={openConversation} onHide={hide} isOnline={isOnline} getLastSeen={getLastSeen} rooms={rooms} getRoomId={getRoomId} />
+            <ConversationList conversations={conversations} userId={user.id} onOpen={openConversation} onHide={hide} isOnline={isOnline} getLastSeen={getLastSeen} rooms={rooms} getRoomId={getRoomId} />
           ) : (
             <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
               <div className="relative w-20 h-20 rounded-full bg-[hsl(var(--secondary))] flex items-center justify-center mb-5">
@@ -227,10 +226,7 @@ export default function Friends() {
                 <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-[#f2ce6b] flex items-center justify-center text-[10px] font-bold text-black">!</span>
               </div>
               <h2 className="text-lg font-bold text-white mb-2">Henüz sohbetin yok</h2>
-              <p className="text-sm text-gray-400 mb-6 max-w-xs">Mesajlaşmak için arkadaşlarınla sohbet başlatabilirsin.</p>
-              <button onClick={() => switchView('friends')} className="flex items-center gap-2 px-6 py-3 rounded-full text-sm font-bold text-white" style={{ background: 'linear-gradient(135deg, #b91c1c, #dc2626 52%, #f2ce6b)' }}>
-                <UserPlus className="w-4 h-4" /> Arkadaşlarını Davet Et
-              </button>
+              <p className="text-sm text-gray-400 max-w-xs">Mesajlaşmak için arkadaşlarınla sohbet başlatabilirsin.</p>
             </div>
           )}
         </>
