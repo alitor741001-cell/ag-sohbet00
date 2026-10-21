@@ -16,7 +16,7 @@ export default function HomeTopBar({ view = 'hot', onView, onSearch }) {
     <div className="mb-3 flex items-center gap-1.5">
       {[
         { key: 'hot', label: 'Sıcak' },
-        { key: 'history', label: 'Geçmiş Odalar' },
+        { key: 'history', label: 'Takip' },
       ].map((item) => {
         const active = view === item.key;
         return (

@@ -12,7 +12,7 @@ const timeLabel = (value) => {
   return date.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit' });
 };
 
-/** Geçmiş Odalar: kullanıcının daha önce girdiği odalar, en yeni önce. */
+/** Son Ziyaretçiler: son bir haftada girilen odalar, en yeni önce. */
 export default function RoomHistory({ version = 0, onChange }) {
   const items = useMemo(() => readVisitedRooms(), [version]);
 
@@ -21,7 +21,7 @@ export default function RoomHistory({ version = 0, onChange }) {
       <div className="premium-panel rounded-2xl px-4 py-10 text-center">
         <History className="mx-auto mb-2 h-6 w-6 text-premium-gold/70" />
         <p className="text-sm font-bold text-white">Henüz bir odaya girmedin.</p>
-        <p className="mt-1 text-[11px] font-semibold text-white/45">Girdiğin odalar burada listelenir.</p>
+        <p className="mt-1 text-[11px] font-semibold text-white/45">Son bir haftada girdiğin odalar burada listelenir.</p>
       </div>
     );
   }
@@ -30,7 +30,7 @@ export default function RoomHistory({ version = 0, onChange }) {
     <div>
       <div className="mb-2 flex items-center gap-2">
         <span className="h-3 w-1 rounded-full" style={{ background: 'linear-gradient(180deg,#ffe6a8,#7ff0e6)' }} />
-        <h2 className="text-[10.5px] font-black tracking-[0.18em] text-[#ffe6a8]">GİRDİĞİN ODALAR</h2>
+        <h2 className="text-[10.5px] font-black tracking-[0.18em] text-[#ffe6a8]">SON GİRDİĞİN ODALAR</h2>
         <button
           type="button"
           onClick={() => { clearVisitedRooms(); onChange?.(); }}

@@ -9,7 +9,7 @@ import RoomDiscoveryCard from '@/components/home/RoomDiscoveryCard';
 import HomeTopBar from '@/components/home/fantasy/HomeTopBar';
 import PullToRefresh from '@/components/home/PullToRefresh';
 import GameDiscoveryRow from '@/components/home/GameDiscoveryRow';
-import RoomHistory from '@/components/home/RoomHistory';
+import FollowPanel from '@/components/home/FollowPanel';
 import useFriends from '@/hooks/useFriends';
 import useMessageProfiles from '@/hooks/useMessageProfiles';
 import { readRoomList, writeRoomList } from '@/lib/roomListCache';
@@ -280,12 +280,19 @@ export default function RoomDiscovery({ shortcuts = null }) {
   }, [tab, friendRooms, otherRooms, friendRoomIds]);
   const items = list;
 
-  // Geçmiş Odalar görünümü: cihazda tutulan oda geçmişi ayrı ekranda listelenir.
+  // Takip görünümü: takip edilenlerin yayınları, arkadaşlar ve son ziyaret edilen odalar.
   if (view === 'history') {
     return (
       <PullToRefresh onRefresh={refreshList}>
         <HomeTopBar view="history" onView={setView} onSearch={() => navigate('/arama')} />
-        <RoomHistory version={historyVersion} onChange={() => setHistoryVersion((value) => value + 1)} />
+        <FollowPanel
+          rooms={uniqueRooms}
+          owners={owners}
+          friends={friendsWithProfiles}
+          filmTitleFor={filmTitleFor}
+          historyVersion={historyVersion}
+          onHistoryChange={() => setHistoryVersion((value) => value + 1)}
+        />
       </PullToRefresh>
     );
   }
