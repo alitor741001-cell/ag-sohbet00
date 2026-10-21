@@ -298,15 +298,15 @@ export default function FullUserProfile({
     <div className="fixed inset-0 z-[300] flex items-end justify-center sm:items-center">
       <button type="button" aria-label="Kapat" onClick={onClose} className="absolute inset-0 w-full bg-black/65" />
       <div
-        className="animate-sheet-up relative flex w-full max-w-[400px] flex-col overflow-y-auto overscroll-contain rounded-t-[26px] border-t-2 px-3 pb-[max(0.6rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-8px_30px_rgba(0,0,0,0.75)] sm:mb-6 sm:rounded-[26px] sm:border-2"
-        style={{
+        className={`animate-sheet-up relative flex w-full max-w-[400px] flex-col overflow-y-auto overscroll-contain rounded-t-[26px] px-3 pb-[max(0.6rem,env(safe-area-inset-bottom))] sm:mb-6 sm:rounded-[26px] ${roomActions ? 'pt-0' : 'border-t-2 pt-2 shadow-[0_-8px_30px_rgba(0,0,0,0.75)] sm:border-2'}`}
+        style={roomActions ? { maxHeight: 'calc(var(--app-height, 100dvh) - 4px)' } : {
           background: skin.bg,
           borderColor: skin.edge,
           maxHeight: 'calc(var(--app-height, 100dvh) - 4px)',
           boxShadow: `0 -8px 30px rgba(0,0,0,0.75), inset 0 0 40px -20px ${skin.glow}`,
         }}
       >
-        {header}
+        {!roomActions && header}
         {statusContent || (roomActions ? (
           <ImageProfileCard
             name={shownName}
