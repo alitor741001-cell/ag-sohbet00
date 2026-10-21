@@ -340,13 +340,13 @@ export default function FullUserProfile({
   const giftItem = footer.find((item) => item.key === 'gift');
   const otherFooterItems = footer.filter((item) => item.key !== 'gift');
 
-  // Referanstaki dikdörtgen düğme sırası: mik, koltuk kilidi ve kalan oda işlemleri.
-  // "Profili gör" kaldırıldı; yerini koltuk kilidi aldı.
-  const roomTiles = tiles.filter((item) => item.key !== 'view-self' && item.key !== 'chat');
+  // Referanstaki dikdörtgen düğme sırası: mik, koltuk kilidi, profili gör ve kalan oda işlemleri.
+  const roomTiles = tiles.filter((item) => item.key !== 'chat');
   const orderedTiles = [
     ...roomTiles.filter((item) => item.key === 'mic'),
     ...roomTiles.filter((item) => item.key === 'lock'),
-    ...roomTiles.filter((item) => item.key !== 'mic' && item.key !== 'lock'),
+    ...roomTiles.filter((item) => item.key === 'view-self'),
+    ...roomTiles.filter((item) => item.key !== 'mic' && item.key !== 'lock' && item.key !== 'view-self'),
   ];
   const rectItems = orderedTiles.slice(0, 3);
   const leftoverTiles = orderedTiles.slice(3);
@@ -356,7 +356,7 @@ export default function FullUserProfile({
     !isSelf && !!onMention ? (
       <CrystalCircleButton
         key="mention"
-        icon={AtSign}
+        icon={MessageSquare}
         label="Bahset"
         tone={compactSkin}
         onClick={() => { onMention(shownName); onClose?.(); }}
@@ -366,7 +366,7 @@ export default function FullUserProfile({
     !isSelf ? (
       <CrystalCircleButton
         key="chat"
-        icon={MessageSquare}
+        icon={AtSign}
         label="Sohbet"
         tone={compactSkin}
         onClick={() => { onMessage?.(userId); onClose?.(); }}

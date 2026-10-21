@@ -1,38 +1,54 @@
 import { Crown, Heart } from 'lucide-react';
+import CrystalCrown from '@/components/profile/crystal/CrystalCrown';
 import { crystalSkin } from '@/components/profile/crystal/crystalTheme';
 
-/** Referanstaki isim bandı: solda "HER ZAMAN DAHA GÜÇLÜ", ortada serif isim, sağda "Sen Özelsin". */
-export default function CrystalNameBlock({ name, roleLabel = '', tone = 'blue' }) {
+/**
+ * Referanstaki isim bölümü: solda altın taç + kalp ile "HER ZAMAN DAHA GÜÇLÜ",
+ * sağda taç üstünde el yazısı "Sen Özelsin", altta taçlarla çevrili mavi gradyan isim.
+ */
+export default function CrystalNameBlock({ name, roleLabel = '', tone = 'blue', slogan = 'HER ZAMAN DAHA GÜÇLÜ', signature = 'Sen Özelsin' }) {
   const c = crystalSkin(tone);
 
   return (
-    <div className="mt-1">
-      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-1">
-        <div className="flex items-start gap-1">
-          <Crown className="mt-[1px] h-[11px] w-[11px] shrink-0" style={{ color: c.gold }} strokeWidth={2.2} />
-          <span className="text-[7.5px] font-black leading-[1.2] tracking-[0.06em]" style={{ color: c.gold }}>
-            HER ZAMAN<br />DAHA GÜÇLÜ
+    <div className="mt-1.5">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-[3px]">
+          <Crown className="h-[11px] w-[11px] shrink-0" style={{ color: '#f5cf3f' }} fill="#f5cf3f" fillOpacity={0.3} strokeWidth={2.2} />
+          <Heart className="h-[9px] w-[9px] shrink-0" style={{ color: '#f5cf3f' }} fill="#f5cf3f" strokeWidth={2} />
+          <span
+            className="text-[7px] font-black uppercase leading-[1.15] tracking-[0.08em]"
+            style={{ color: '#f5cf3f', textShadow: '0 1px 3px rgba(0,0,0,0.75)' }}
+          >
+            {slogan}
           </span>
         </div>
 
-        <div className="flex min-w-0 items-center justify-center gap-1.5 px-1">
-          <span aria-hidden className="h-[7px] w-[7px] shrink-0 rotate-45 rounded-[1px]" style={{ background: c.wing[1], boxShadow: `0 0 8px ${c.glow}` }} />
-          <p
-            className="max-w-[168px] truncate font-serif text-[23px] font-black uppercase leading-none tracking-[0.04em] text-white"
-            style={{ textShadow: `0 0 16px ${c.glow}, 0 1px 2px rgba(0,0,0,0.8)` }}
+        <div className="flex flex-col items-center">
+          <Crown className="h-[9px] w-[9px]" style={{ color: c.gold }} fill={c.gold} fillOpacity={0.35} strokeWidth={2.2} />
+          <span
+            className="italic leading-none"
+            style={{ fontFamily: 'cursive', fontSize: 11, color: '#ffffff', textShadow: `0 0 10px ${c.glow}` }}
           >
-            {name}
-          </p>
-          <span aria-hidden className="h-[7px] w-[7px] shrink-0 rotate-45 rounded-[1px]" style={{ background: c.wing[1], boxShadow: `0 0 8px ${c.glow}` }} />
+            {signature}
+          </span>
         </div>
+      </div>
 
-        <div className="flex flex-col items-end gap-[1px]">
-          <div className="flex items-center gap-1">
-            <Crown className="h-[11px] w-[11px]" style={{ color: c.gold }} strokeWidth={2.2} />
-            <span className="italic" style={{ fontFamily: 'cursive', fontSize: 12, color: '#ffffff', textShadow: `0 0 10px ${c.glow}` }}>Sen Özelsin</span>
-          </div>
-          <Heart className="mr-1 h-[9px] w-[9px]" fill={c.heart} style={{ color: c.heart }} />
-        </div>
+      <div className="mt-[3px] flex items-center justify-center gap-1.5">
+        <CrystalCrown size={17} className="shrink-0" />
+        <p
+          className="max-w-[190px] truncate text-center text-[25px] font-black uppercase leading-none tracking-[0.03em]"
+          style={{
+            background: 'linear-gradient(180deg, #f4fbff 0%, #b6e4ff 30%, #57aff2 62%, #1d5ea8 100%)',
+            WebkitBackgroundClip: 'text',
+            backgroundClip: 'text',
+            color: 'transparent',
+            filter: `drop-shadow(0 0 10px ${c.glow})`,
+          }}
+        >
+          {name}
+        </p>
+        <CrystalCrown size={17} className="shrink-0" />
       </div>
 
       {roleLabel && (
