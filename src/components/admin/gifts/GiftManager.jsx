@@ -4,8 +4,12 @@ import { base44 } from '@/api/base44Client';
 import { useToast } from '@/components/ui/use-toast';
 import { Image } from '@/components/ui/image';
 import { formatK, tierForK, toneColor } from '@/lib/giftTone';
+import { MODEL_KIND_LABEL } from '@/lib/gift3d';
 
-const EMPTY = { name: '', emoji: '🎁', image_url: '', k_value: 10, category: 'Klasik', sort_order: 0, active: true };
+const EMPTY = {
+  name: '', emoji: '🎁', image_url: '', k_value: 10, category: 'Klasik', sort_order: 0, active: true,
+  model_url: '', animation_url: '', model_kind: 'auto',
+};
 
 const inputClass = 'w-full rounded-lg border border-border bg-secondary/60 px-3 py-2 text-sm outline-none';
 
@@ -52,6 +56,7 @@ export default function GiftManager() {
       name: gift.name || '', emoji: gift.emoji || '🎁', image_url: gift.image_url || '',
       k_value: Number(gift.k_value) || 0, category: gift.category || 'Klasik',
       sort_order: Number(gift.sort_order) || 0, active: gift.active !== false,
+      model_url: gift.model_url || '', animation_url: gift.animation_url || '', model_kind: gift.model_kind || 'auto',
     });
   };
 
@@ -65,6 +70,22 @@ export default function GiftManager() {
       toast({ title: 'Görsel yüklendi' });
     } catch (error) {
       toast({ title: 'Görsel yüklenemedi', description: error.message, variant: 'destructive' });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // Gerçek 3D model dosyası (GLB/GLTF): herkese açık depoya yüklenir, oda içindeki
+  // 3D önizleme ve hediye efekti doğrudan bu dosyayı oynatır.
+  const uploadModel = async (file) => {
+    if (!file) return;
+    setUploading(true);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadPublicFile({ file });
+      set({ model_url: file_url });
+      toast({ title: '3D model yüklendi' });
+    } catch (error) {
+      toast({ title: 'Model yüklenemedi', description: error.message, variant: 'destructive' });
     } finally {
       setUploading(false);
     }
@@ -112,6 +133,30 @@ export default function GiftManager() {
           )}
         </div>
         {form.image_url && <Image src={form.image_url} alt="Önizleme" className="h-16 w-16 rounded-lg" fittingType="fit" originWidth={128} originHeight={128} />}
+
+        {/* 3D: gerçek model dosyası yüklenirse oynatılır; yüklenmezse temsili 3D geometri gösterilir. */}
+        <div className="rounded-xl border border-border/70 bg-secondary/30 p-2">
+          <p className="mb-1.5 px-1 text-[11px] font-bold text-muted-foreground">3D MODEL</p>
+          <select value={form.model_kind || 'auto'} onChange={(e) => set({ model_kind: e.target.value })} className={inputClass}>
+            <option value="auto">Otomatik (hediye adından)</option>
+            {Object.entries(MODEL_KIND_LABEL).map(([kind, label]) => (
+              <option key={kind} value={kind}>{label}</option>
+            ))}
+          </select>
+          <div className="mt-2 flex items-center gap-2">
+            <label className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border border-border bg-secondary/60 px-3 py-2 text-xs font-semibold">
+              <Upload className="h-4 w-4" /> {uploading ? 'Yükleniyor…' : 'GLB / GLTF yükle'}
+              <input type="file" accept=".glb,.gltf,model/gltf-binary,model/gltf+json" className="hidden" onChange={(e) => uploadModel(e.target.files?.[0])} />
+            </label>
+            {form.model_url && (
+              <button type="button" onClick={() => set({ model_url: '' })} aria-label="Modeli kaldır" className="flex h-11 w-11 items-center justify-center rounded-lg bg-secondary text-xs font-semibold">
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+          <input value={form.model_url} onChange={(e) => set({ model_url: e.target.value })} placeholder="Model dosyası (GLB/GLTF) bağlantısı" className={`${inputClass} mt-2`} />
+          <input value={form.animation_url} onChange={(e) => set({ animation_url: e.target.value })} placeholder="Animasyon dosyası (video/lottie) bağlantısı" className={`${inputClass} mt-2`} />
+        </div>
 
         <label className="flex items-center justify-between rounded-lg bg-secondary/60 px-3 py-2 text-sm">
           <span>Aktif</span>

@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { Coins, RotateCw, ZoomIn, X } from 'lucide-react';
 import Gift3DViewer from '@/components/voice/three/Gift3DViewer';
 import { K_UNIT, formatCoins } from '@/lib/giftTone';
@@ -9,7 +10,8 @@ export default function Gift3DPreview({ gift, onClose }) {
   const real = hasRealModel(gift);
   const kind = giftModelKind(gift);
 
-  return (
+  // Panel içindeki kırpmadan etkilenmemesi için doğrudan sayfaya basılır.
+  return createPortal(
     <div className="fixed inset-0 z-[320] flex flex-col bg-black/95 backdrop-blur-sm">
       <div className="flex items-start justify-between gap-3 border-b border-white/10 px-4 pb-3 pt-[max(env(safe-area-inset-top),1rem)]">
         <div className="min-w-0">
@@ -47,6 +49,7 @@ export default function Gift3DPreview({ gift, onClose }) {
             : 'Bu hediye için GLB/GLTF dosyası yüklenmedi. Görünen şekil tarayıcıda gerçek zamanlı üretilen temsili 3D geometridir — gerçek model dosyası değil, ürün görseli de değil. Gerçek model eklemek için admin panelinde hediye kaydının “model dosyası (GLB/GLTF)” alanı doldurulur.'}
         </p>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

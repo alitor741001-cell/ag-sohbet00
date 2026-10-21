@@ -19,7 +19,13 @@ export default function Gift3DViewer({ gift, autoRotate = true, className = '' }
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 200);
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    let renderer;
+    try {
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    } catch (error) {
+      // Cihaz WebGL desteklemiyorsa önizleme sessizce boş kalır, katalog çalışmaya devam eder.
+      return undefined;
+    }
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.domElement.className = 'block h-full w-full touch-none';
