@@ -817,20 +817,27 @@ html, body {
   background-repeat: no-repeat;
 }
 
+/* Sesli odadayken oda teması bu katmana da yazılır: çerçevenin altında kalan her piksel
+   (sistem çubuğu, alt güvenli alan, kısa kalan görünüm) lacivert değil temanın kendisidir.
+   Katman oda zeminindeki katmanla aynı taşma ölçüsünü kullanır: dikiş görünmez. */
 html::after {
   content: '';
   position: fixed;
   left: 0;
   right: 0;
-  top: 0;
-  height: 100vh;
+  top: -80px;
+  height: calc(100vh + 260px);
   z-index: -1;
   pointer-events: none;
-  background: linear-gradient(180deg, #103062 0%, #0a1c3c 52%, #0b1930 100%);
+  background-color: #0a1c3c;
+  background-image: var(--room-theme-image, none), var(--room-theme-tint, linear-gradient(180deg, #103062 0%, #0a1c3c 52%, #0b1930 100%));
+  background-size: cover, cover;
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
 }
 @supports (height: 100lvh) {
   /* En büyük görünüm ölçüsü: adres çubuğu açıkken bile ekranın dibi boyanır. */
-  html::after { height: 100lvh; }
+  html::after { height: calc(100lvh + 260px); }
 }
 
 body {

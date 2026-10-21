@@ -12,11 +12,21 @@ export default function RoomBackground({ value, cover }) {
   useEffect(() => {
     const frame = ref.current?.closest('.voice-viewport');
     if (!frame) return undefined;
-    frame.style.setProperty('--room-theme-tint', backgroundCss(value));
-    frame.style.setProperty('--room-theme-image', tone?.image ? `url("${tone.image}")` : 'none');
+    // Sayfanın en arkasındaki sabit katman da temayla boyanır: oda çerçevesi ekranın en altına
+    // ulaşmadığı telefonlarda altta lacivert şerit kalmaz, tema ekranı komple kaplar.
+    const root = document.documentElement;
+    const targets = [frame, root];
+    const tint = backgroundCss(value);
+    const image = tone?.image ? `url("${tone.image}")` : 'none';
+    targets.forEach((node) => {
+      node.style.setProperty('--room-theme-tint', tint);
+      node.style.setProperty('--room-theme-image', image);
+    });
     return () => {
-      frame.style.removeProperty('--room-theme-tint');
-      frame.style.removeProperty('--room-theme-image');
+      targets.forEach((node) => {
+        node.style.removeProperty('--room-theme-tint');
+        node.style.removeProperty('--room-theme-image');
+      });
     };
   }, [value, tone?.image]);
 
