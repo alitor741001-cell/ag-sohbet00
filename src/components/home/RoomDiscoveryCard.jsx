@@ -37,8 +37,27 @@ function RoomDiscoveryCard({ room, owner, kind, filmTitle, friendInside }) {
       onPointerLeave={locked ? undefined : () => prefetchRoomCancel(room.id)}
       onClick={(event) => { if (locked) event.preventDefault(); }}
       aria-disabled={locked || undefined}
-      className="media-box-square relative flex aspect-square flex-col overflow-hidden rounded-2xl border border-premium-gold/30 bg-anthracite-raised shadow-[0_0_24px_-12px_rgba(198,40,40,0.95)] transition-transform active:scale-[0.98]"
+      className="media-box-square relative flex aspect-square flex-col overflow-hidden rounded-[20px] bg-[#07162f] transition-transform active:scale-[0.98]"
+      style={{
+        boxShadow:
+          '0 0 0 1.5px rgba(232,196,124,0.85), 0 0 0 3.5px rgba(8,22,44,0.95), 0 0 22px -6px rgba(79,216,207,0.5), 0 14px 26px -18px rgba(0,0,0,0.95)',
+      }}
     >
+      {/* Kristal iç çerçeve ve köşe taşları: altın çerçeveyi fantastik hale getirir. */}
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 z-20 rounded-[20px]"
+        style={{ boxShadow: 'inset 0 0 0 1px rgba(240,214,154,0.35), inset 0 0 26px rgba(79,216,207,0.16)' }}
+      />
+      {['left-1 top-1', 'right-1 top-1', 'left-1 bottom-1', 'right-1 bottom-1'].map((corner) => (
+        <span
+          key={corner}
+          aria-hidden="true"
+          className={`pointer-events-none absolute z-20 h-2 w-2 rotate-45 ${corner}`}
+          style={{ background: 'linear-gradient(135deg,#fff3cf,#d9b168)', boxShadow: '0 0 8px rgba(240,214,154,0.9)' }}
+        />
+      ))}
+
       {/* Kapak kartı tamamen kaplar: kart kare kalır, bilgiler kapak üstünde durur. */}
       {cover ? (
         <Image src={cover} className="absolute inset-0 h-full w-full" fittingType="fill" alt="" />
@@ -111,7 +130,7 @@ function RoomDiscoveryCard({ room, owner, kind, filmTitle, friendInside }) {
         </span>
 
         <span className="flex items-center gap-1">
-          <span className="rounded-full border border-premium-gold/55 bg-gradient-to-r from-premium-red-deep to-premium-red px-2 py-0.5 text-[9.5px] font-black text-white shadow-[0_0_10px_-3px_rgba(198,40,40,0.9)]">
+          <span className="rounded-full border border-[#ffe6a8]/60 bg-gradient-to-r from-[#1b6f8f] to-[#39c6c0] px-2 py-0.5 text-[9.5px] font-black text-white shadow-[0_0_12px_-3px_rgba(127,240,230,0.9)]">
             {isVoice ? 'Sesli' : 'Film'}
           </span>
           <span className="ml-auto flex items-center gap-1">

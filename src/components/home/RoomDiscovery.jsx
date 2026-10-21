@@ -6,6 +6,8 @@ import subscribeEntity from '@/components/data/entitySubscriptions';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { broadcasterState } from '@/lib/broadcaster';
 import RoomDiscoveryCard from '@/components/home/RoomDiscoveryCard';
+import HomeTopBar from '@/components/home/fantasy/HomeTopBar';
+import HomeEventBanner from '@/components/home/fantasy/HomeEventBanner';
 import PullToRefresh from '@/components/home/PullToRefresh';
 import GameDiscoveryRow from '@/components/home/GameDiscoveryRow';
 import useFriends from '@/hooks/useFriends';
@@ -298,15 +300,28 @@ export default function RoomDiscovery({ shortcuts = null }) {
 
   const items = searching ? searched : list;
 
+  // Üst şeritteki arama düğmesi arama kutusuna götürür: oyun sekmesinde kutu
+  // kapalı olduğu için önce oda listesine dönülür.
+  const focusSearch = useCallback(() => {
+    setTab((current) => (current === 'games' ? 'friends' : current));
+    window.setTimeout(() => {
+      const input = document.getElementById('room-search');
+      if (!input) return;
+      input.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      input.focus();
+    }, 60);
+  }, []);
+
   return (
     <PullToRefresh onRefresh={refreshList}>
-      <div className="mb-3 flex items-center gap-1.5 rounded-2xl border border-premium-gold/20 bg-black/25 p-1 backdrop-blur">
+      <HomeTopBar onSearch={focusSearch} />
+      <div className="mb-3 flex items-center gap-1.5 rounded-2xl border border-[#e8c47c]/25 bg-[#071736]/70 p-1 backdrop-blur">
         <button
           type="button"
           onClick={() => setTab('all')}
           className={`flex min-w-0 flex-1 items-center justify-center gap-1 rounded-xl py-2 text-[10.5px] font-extrabold transition ${
             tab === 'all'
-              ? 'border border-premium-gold/55 bg-gradient-to-r from-premium-red-deep via-premium-red to-premium-gold text-white shadow-[0_0_18px_-6px_rgba(198,40,40,0.95)]'
+              ? 'border border-[#ffe6a8]/70 bg-gradient-to-r from-[#d8fffb] via-[#6fe6dc] to-[#9ad7ff] text-[#062033] shadow-[0_0_20px_-5px_rgba(127,240,230,0.95)]'
               : 'border border-transparent text-white/60'
           }`}
         >
@@ -317,7 +332,7 @@ export default function RoomDiscovery({ shortcuts = null }) {
           onClick={() => setTab('friends')}
           className={`flex min-w-0 flex-1 items-center justify-center gap-1 rounded-xl py-2 text-[10.5px] font-extrabold transition ${
             tab === 'friends'
-              ? 'border border-premium-gold/55 bg-gradient-to-r from-premium-red-deep via-premium-red to-premium-gold text-white shadow-[0_0_18px_-6px_rgba(198,40,40,0.95)]'
+              ? 'border border-[#ffe6a8]/70 bg-gradient-to-r from-[#d8fffb] via-[#6fe6dc] to-[#9ad7ff] text-[#062033] shadow-[0_0_20px_-5px_rgba(127,240,230,0.95)]'
               : 'border border-transparent text-white/60'
           }`}
         >
@@ -329,7 +344,7 @@ export default function RoomDiscovery({ shortcuts = null }) {
           onClick={() => setTab('games')}
           className={`flex min-w-0 flex-1 items-center justify-center gap-1 rounded-xl py-2 text-[10.5px] font-extrabold transition ${
             tab === 'games'
-              ? 'border border-premium-gold/55 bg-gradient-to-r from-premium-red-deep via-premium-red to-premium-gold text-white shadow-[0_0_18px_-6px_rgba(198,40,40,0.95)]'
+              ? 'border border-[#ffe6a8]/70 bg-gradient-to-r from-[#d8fffb] via-[#6fe6dc] to-[#9ad7ff] text-[#062033] shadow-[0_0_20px_-5px_rgba(127,240,230,0.95)]'
               : 'border border-transparent text-white/60'
           }`}
         >
@@ -342,12 +357,13 @@ export default function RoomDiscovery({ shortcuts = null }) {
       <div className="relative mb-3">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-premium-gold/80" />
         <input
+          id="room-search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Oda numarası veya üye kimliği ara…"
           autoComplete="off"
           enterKeyHint="search"
-          className="w-full rounded-2xl border border-premium-gold/30 bg-black/30 py-2.5 pl-9 pr-3 text-[13px] font-medium text-white outline-none backdrop-blur transition placeholder:text-white/40 focus:border-premium-gold/60 focus:shadow-[0_0_18px_-6px_rgba(198,40,40,0.8)]"
+          className="w-full rounded-2xl border border-[#e8c47c]/30 bg-[#071736]/80 py-2.5 pl-9 pr-3 text-[13px] font-medium text-white outline-none backdrop-blur transition placeholder:text-white/40 focus:border-[#7ff0e6]/70 focus:shadow-[0_0_20px_-6px_rgba(127,240,230,0.9)]"
         />
       </div>
       )}
@@ -382,8 +398,8 @@ export default function RoomDiscovery({ shortcuts = null }) {
       ) : (
         <>
           <div className="mb-2 flex items-center gap-2">
-            <span className="h-3 w-1 rounded-full bg-gradient-to-b from-premium-gold to-premium-red" />
-            <h2 className="text-[10.5px] font-black tracking-[0.18em] text-premium-gold">
+            <span className="h-3 w-1 rounded-full" style={{ background: 'linear-gradient(180deg,#ffe6a8,#7ff0e6)' }} />
+            <h2 className="text-[10.5px] font-black tracking-[0.18em] text-[#ffe6a8]">
               {searching ? 'ARAMA SONUCU' : tab === 'friends' ? 'ARKADAŞLARININ ODALARI' : 'CANLI SESLİ + FİLM ODALARI'}
             </h2>
             <span className="ml-auto text-[10px] font-bold text-white/40">{items.length} oda</span>
@@ -403,6 +419,7 @@ export default function RoomDiscovery({ shortcuts = null }) {
             );
           })}
           </div>
+          <HomeEventBanner />
         </>
       )}
 
