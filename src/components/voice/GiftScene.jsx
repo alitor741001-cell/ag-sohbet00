@@ -8,6 +8,10 @@ import ScenePlane from '@/components/voice/scenes/ScenePlane';
 import SceneBalloon from '@/components/voice/scenes/SceneBalloon';
 import SceneCar from '@/components/voice/scenes/SceneCar';
 import SceneFireworks from '@/components/voice/scenes/SceneFireworks';
+import SceneHeart from '@/components/voice/scenes/SceneHeart';
+import SceneRose from '@/components/voice/scenes/SceneRose';
+import SceneGalaxy from '@/components/voice/scenes/SceneGalaxy';
+import SceneCastle from '@/components/voice/scenes/SceneCastle';
 import '@/styles/giftScenes.css';
 
 const SCENES = {
@@ -17,6 +21,10 @@ const SCENES = {
   balloon: SceneBalloon,
   car: SceneCar,
   fireworks: SceneFireworks,
+  heart: SceneHeart,
+  rose: SceneRose,
+  galaxy: SceneGalaxy,
+  castle: SceneCastle,
 };
 
 /**

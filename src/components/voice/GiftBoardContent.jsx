@@ -3,6 +3,7 @@ import GiftCard from '@/components/voice/GiftCard';
 import GiftRecipientRow from '@/components/voice/GiftRecipientRow';
 import GiftLevelTicker from '@/components/voice/GiftLevelTicker';
 import GiftBoardFooter from '@/components/voice/GiftBoardFooter';
+import Gift3DPreview from '@/components/voice/Gift3DPreview';
 import { K_UNIT, formatCoins, tierForK, toneColor } from '@/lib/giftTone';
 
 /** Hediye Tahtası içeriği: kategori sekmeleri, hediye ızgarası, alıcılar ve alt gönderim çubuğu. */
@@ -11,6 +12,7 @@ export default function GiftBoardContent({
   onSelectGift, onTogglePerson, onSelectAll, onClear, onOpenCoins, onClose, onSend, sendDisabled,
 }) {
   const [category, setCategory] = useState('Tümü');
+  const [preview, setPreview] = useState(null);
 
   const categories = useMemo(() => ['Tümü', ...new Set(gifts.map((gift) => gift.category || 'Diğer'))], [gifts]);
   const shown = useMemo(
@@ -78,7 +80,7 @@ export default function GiftBoardContent({
         ) : (
           <div className="grid grid-cols-3 gap-2 pb-1">
             {shown.map((item) => (
-              <GiftCard key={item.id} gift={item} selected={giftId === item.id} onSelect={onSelectGift} />
+              <GiftCard key={item.id} gift={item} selected={giftId === item.id} onSelect={onSelectGift} onPreview={setPreview} />
             ))}
           </div>
         )}
@@ -97,6 +99,8 @@ export default function GiftBoardContent({
         onSend={onSend}
         sendDisabled={sendDisabled}
       />
+
+      <Gift3DPreview gift={preview} onClose={() => setPreview(null)} />
     </div>
   );
 }

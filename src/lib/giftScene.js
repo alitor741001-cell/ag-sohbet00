@@ -1,7 +1,19 @@
 // Hediye gönderildiğinde oynayan sahne: her hediye kimliğinden sabit üretilir,
 // böylece aynı hediye her seferinde aynı sahneyle uçar.
 
-const SCENES = ['rocket', 'boat', 'plane', 'balloon', 'car', 'fireworks'];
+const SCENES = ['rocket', 'boat', 'plane', 'balloon', 'car', 'fireworks', 'heart', 'rose', 'galaxy', 'castle'];
+
+// Adı belirli bir hediyeye benzeyen hediyeler kendi sahnesini alır: kalp atar, gül döner,
+// galaksi döner, şato ışıldar, araba yolda geçer, roket fırlar, havai fişek patlar.
+const NAMED = [
+  [/havai fişek|firework/i, 'fireworks'],
+  [/galaksi|galaxy/i, 'galaxy'],
+  [/şato|kale|saray|castle/i, 'castle'],
+  [/araba|car/i, 'car'],
+  [/roket|rocket/i, 'rocket'],
+  [/gül|rose/i, 'rose'],
+  [/kalp|heart/i, 'heart'],
+];
 
 const hash = (value) => {
   const text = String(value || '');
@@ -12,10 +24,11 @@ const hash = (value) => {
   return total;
 };
 
-/** Hediye için sahne anahtarı: rocket | boat | plane | balloon | car | fireworks */
+/** Hediye için sahne anahtarı: rocket | boat | plane | balloon | car | fireworks | heart | rose | galaxy | castle */
 export function giftScene(gift) {
-  // Adı araba olan hediye her zaman yol sahnesiyle geçer: spor araba gerçekten yolda görünür.
-  if (/araba|car/i.test(String(gift?.name || ''))) return 'car';
+  const name = String(gift?.name || '');
+  const named = NAMED.find(([pattern]) => pattern.test(name));
+  if (named) return named[1];
   const seed = hash(gift?.id || gift?.name || gift?.emoji || 'gift');
   return SCENES[seed % SCENES.length];
 }

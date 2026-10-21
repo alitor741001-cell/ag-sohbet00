@@ -534,6 +534,243 @@
   45% { transform: translate(-50%, -50%) scale(1.08); }
 }
 
+/* --- Kalp: ışıldayarak atar ve zıplar --- */
+.gift-scene-heart { background: radial-gradient(circle at 50% 45%, #3b0518 0%, #1a0209 55%, #050005 100%); }
+.gift-scene-heart-halo {
+  position: absolute;
+  left: 50%;
+  top: 45%;
+  height: 440px;
+  width: 440px;
+  margin: -220px 0 0 -220px;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(255, 45, 90, 0.55), rgba(255, 45, 90, 0.12) 48%, transparent 70%);
+  filter: blur(6px);
+  animation: gift-heart-halo 1.6s ease-in-out infinite alternate;
+}
+@keyframes gift-heart-halo {
+  from { opacity: 0.5; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1.08); }
+}
+.gift-scene-heart-beat {
+  position: absolute;
+  left: 50%;
+  top: 45%;
+  height: 170px;
+  width: 170px;
+  margin: -85px 0 0 -85px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: gift-heart-jump 1.7s cubic-bezier(0.42, 0, 0.58, 1) infinite;
+}
+@keyframes gift-heart-jump {
+  0%, 100% { transform: translateY(0) scale(1); }
+  30% { transform: translateY(-20px) scale(1.07); }
+  62% { transform: translateY(3px) scale(0.97); }
+}
+.gift-scene-heart-shape {
+  position: absolute;
+  height: 104px;
+  width: 104px;
+  background: linear-gradient(150deg, #ff5c8a, #c81d45);
+  transform: rotate(-45deg);
+  border-radius: 0 0 10px 0;
+  box-shadow: 0 0 60px rgba(255, 23, 68, 0.85), inset 0 0 26px rgba(255, 255, 255, 0.4);
+  animation: gift-heart-glow 1.7s ease-in-out infinite;
+}
+.gift-scene-heart-shape::before,
+.gift-scene-heart-shape::after {
+  content: '';
+  position: absolute;
+  height: 104px;
+  width: 104px;
+  border-radius: 9999px;
+  background: inherit;
+}
+.gift-scene-heart-shape::before { top: -52px; left: 0; }
+.gift-scene-heart-shape::after { top: 0; right: -52px; }
+@keyframes gift-heart-glow {
+  0%, 100% { filter: brightness(1) saturate(1); }
+  40% { filter: brightness(1.4) saturate(1.2); }
+}
+.gift-scene-heart-gift {
+  position: relative;
+  z-index: 2;
+  filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.6));
+}
+.gift-scene-heart-spark {
+  position: absolute;
+  left: 50%;
+  top: 45%;
+  height: 10px;
+  width: 10px;
+  border-radius: 9999px;
+  background: #ff4d6d;
+  box-shadow: 0 0 16px #ff4d6d;
+  animation: gift-heart-spark 2s ease-out infinite;
+}
+@keyframes gift-heart-spark {
+  0% { transform: translate(-50%, -50%) rotate(var(--spark-angle, 0deg)) translateY(52px) scale(0.4); opacity: 0; }
+  28% { opacity: 1; }
+  100% { transform: translate(-50%, -50%) rotate(var(--spark-angle, 0deg)) translateY(-200px) scale(0.15); opacity: 0; }
+}
+
+/* --- Gül: kendi ekseninde döner, yapraklar süzülür --- */
+.gift-scene-rose {
+  background: radial-gradient(circle at 50% 40%, #2a0413 0%, #14010a 55%, #05010a 100%);
+  perspective: 720px;
+}
+.gift-scene-rose-glow {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  height: 320px;
+  width: 320px;
+  margin: -160px 0 0 -160px;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(244, 63, 107, 0.5), transparent 66%);
+  animation: gift-rose-glow 2.4s ease-in-out infinite alternate;
+}
+@keyframes gift-rose-glow {
+  from { opacity: 0.55; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1.06); }
+}
+.gift-scene-rose-spin {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  height: 130px;
+  width: 130px;
+  margin: -65px 0 0 -65px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform-style: preserve-3d;
+  animation: gift-rose-turn 3.4s linear infinite;
+}
+@keyframes gift-rose-turn {
+  from { transform: rotateY(0deg); }
+  to { transform: rotateY(360deg); }
+}
+.gift-scene-petal {
+  position: absolute;
+  top: -26px;
+  height: 12px;
+  width: 12px;
+  border-radius: 60% 0 60% 0;
+  background: linear-gradient(160deg, #ff7a9c, #c2185b);
+  animation: gift-petal-fall 3.8s linear infinite;
+}
+@keyframes gift-petal-fall {
+  0% { transform: translateY(-8vh) rotate(0deg); opacity: 0; }
+  14% { opacity: 1; }
+  100% { transform: translateY(104vh) rotate(320deg); opacity: 0.1; }
+}
+
+/* --- Galaksi: yörünge halkaları döner --- */
+.gift-scene-galaxy { background: radial-gradient(circle at 50% 45%, #1b1039 0%, #0a0620 52%, #03010a 100%); }
+.gift-scene-galaxy-core {
+  position: absolute;
+  left: 50%;
+  top: 45%;
+  height: 300px;
+  width: 300px;
+  margin: -150px 0 0 -150px;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(196, 181, 253, 0.45), rgba(139, 92, 246, 0.15) 46%, transparent 70%);
+  animation: gift-galaxy-glow 2.6s ease-in-out infinite alternate;
+}
+@keyframes gift-galaxy-glow {
+  from { opacity: 0.6; transform: scale(0.94); }
+  to { opacity: 1; transform: scale(1.05); }
+}
+.gift-scene-galaxy-ring {
+  position: absolute;
+  left: 50%;
+  top: 45%;
+  border-radius: 50%;
+  border: 1px solid rgba(196, 181, 253, 0.5);
+  box-shadow: 0 0 22px rgba(168, 139, 250, 0.45);
+  animation-name: gift-galaxy-turn;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+@keyframes gift-galaxy-turn {
+  from { transform: translate(-50%, -50%) rotateX(74deg) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotateX(74deg) rotate(360deg); }
+}
+.gift-scene-galaxy-gift {
+  position: absolute;
+  left: 50%;
+  top: 45%;
+  transform: translate(-50%, -50%);
+  filter: drop-shadow(0 0 26px rgba(196, 181, 253, 0.9));
+  animation: gift-galaxy-float 2.8s ease-in-out infinite;
+}
+@keyframes gift-galaxy-float {
+  0%, 100% { transform: translate(-50%, -50%) scale(0.96); }
+  50% { transform: translate(-50%, -54%) scale(1.05); }
+}
+
+/* --- Şato: pencereler ışıldar --- */
+.gift-scene-castle { background: linear-gradient(180deg, #0a0618 0%, #1a0f33 58%, #2a1140 100%); }
+.gift-scene-castle-glow {
+  position: absolute;
+  left: 50%;
+  bottom: 10%;
+  height: 260px;
+  width: 340px;
+  margin-left: -170px;
+  border-radius: 9999px;
+  background: radial-gradient(ellipse at center, rgba(196, 181, 253, 0.45), transparent 70%);
+  filter: blur(8px);
+  animation: gift-castle-glow 2s ease-in-out infinite alternate;
+}
+@keyframes gift-castle-glow {
+  from { opacity: 0.5; }
+  to { opacity: 1; }
+}
+.gift-scene-castle-base {
+  position: absolute;
+  left: 50%;
+  bottom: 14%;
+  height: 150px;
+  width: 240px;
+  margin-left: -120px;
+  background: linear-gradient(180deg, #a394cc, #4c3a78);
+  clip-path: polygon(0 100%, 0 42%, 12% 42%, 12% 8%, 26% 8%, 26% 46%, 38% 46%, 38% 18%, 50% 18%, 50% 46%, 64% 46%, 64% 4%, 78% 4%, 78% 40%, 100% 40%, 100% 100%);
+  filter: drop-shadow(0 0 26px rgba(167, 139, 250, 0.55));
+}
+.gift-scene-castle-window {
+  position: absolute;
+  bottom: 24%;
+  height: 18px;
+  width: 12px;
+  border-radius: 9999px 9999px 3px 3px;
+  background: #fde68a;
+  box-shadow: 0 0 18px #fde68a;
+  animation: gift-castle-shine 1.5s ease-in-out infinite alternate;
+}
+.gift-scene-castle-window-left { left: calc(50% - 70px); }
+.gift-scene-castle-window-right { left: calc(50% + 58px); animation-delay: 0.5s; }
+@keyframes gift-castle-shine {
+  from { opacity: 0.25; }
+  to { opacity: 1; }
+}
+.gift-scene-castle-gift {
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  transform: translate(-50%, -50%);
+  filter: drop-shadow(0 0 22px rgba(253, 230, 138, 0.85));
+  animation: gift-castle-float 2.6s ease-in-out infinite;
+}
+@keyframes gift-castle-float {
+  0%, 100% { transform: translate(-50%, -50%) scale(0.97); }
+  50% { transform: translate(-50%, -56%) scale(1.06); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .gift-scene-stage { animation-duration: 2.6s; }
   .gift-scene-stars, .gift-scene-flame, .gift-scene-wave, .gift-scene-sail, .gift-scene-cloud,

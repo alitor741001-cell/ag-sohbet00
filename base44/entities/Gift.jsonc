@@ -28,6 +28,46 @@
     "active": {
       "type": "boolean",
       "default": true
+    },
+    "model_url": {
+      "type": "string",
+      "default": ""
+    },
+    "animation_url": {
+      "type": "string",
+      "default": ""
+    },
+    "model_kind": {
+      "type": "string",
+      "enum": [
+        "auto",
+        "heart",
+        "rose",
+        "bouquet",
+        "ring",
+        "bear",
+        "car",
+        "diamond",
+        "castle",
+        "crown",
+        "rocket",
+        "galaxy",
+        "giftbox",
+        "chocolate",
+        "letter",
+        "cake",
+        "star",
+        "trophy",
+        "fireworks",
+        "jet",
+        "yacht",
+        "island",
+        "butterfly",
+        "watch",
+        "ingot",
+        "wand"
+      ],
+      "default": "auto"
     }
   },
   "required": [
