@@ -1,6 +1,5 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Film, Users } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import subscribeEntity from '@/components/data/entitySubscriptions';
 import { useCurrentUser } from '@/lib/useCurrentUser';
@@ -38,7 +37,7 @@ export default function RoomDiscovery({ shortcuts = null }) {
   const [owners, setOwners] = useState({});
   const [titles, setTitles] = useState({});
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState('friends');
+  const [tab, setTab] = useState('all');
   // Üst şerit iki görünüm arasında geçiş yapar: canlı odalar (Sıcak) ve girilen odaların geçmişi.
   const [view, setView] = useState('hot');
   const navigate = useNavigate();
@@ -55,7 +54,7 @@ export default function RoomDiscovery({ shortcuts = null }) {
   // oda listesine dönülür.
   useEffect(() => {
     if (gamesParam && gamesEnabled) setTab('games');
-    else if (!gamesParam && tab === 'games') setTab('friends');
+    else if (!gamesParam && tab === 'games') setTab('all');
   }, [gamesParam, gamesEnabled, tab]);
 
   // Gizlendiğini bildiğimiz odalar kimliğiyle işaretlenir: canlı güncelleme gelse
@@ -238,13 +237,10 @@ export default function RoomDiscovery({ shortcuts = null }) {
   }, [rooms]);
 
   const filmRooms = useMemo(() => uniqueRooms.filter((room) => !isVoiceRoom(room)), [uniqueRooms]);
-  // Sekmeler ilişkiye göre ayrılır: "Arkadaşlar" ekli arkadaşların odalarını, "Sesli+Film" ise
-  // arkadaş olmayanların odalarını gösterir; her iki sekmede sesli ve film odaları birlikte listelenir.
-  const friendRooms = useMemo(() => uniqueRooms.filter((room) => friendIds.includes(room.owner_id)), [uniqueRooms, friendIds]);
-  // Sesli+Film sekmesinde boş odanın kartı görünmez: odada kişi yoksa kart tamamen kaybolur.
-  // Arkadaşlar sekmesi olduğu gibi kalır.
-  const otherRooms = useMemo(
-    () => uniqueRooms.filter((room) => !friendIds.includes(room.owner_id) && hasPeopleInside(room)),
+  // Sıcak listesi tek akış halinde gösterilir: sesli ve film odaları bir arada listelenir.
+  // Sıcak listesi: arkadaşların odaları ve içinde kişi bulunan tüm odalar birlikte gösterilir.
+  const hotRooms = useMemo(
+    () => uniqueRooms.filter((room) => friendIds.includes(room.owner_id) || hasPeopleInside(room)),
     [uniqueRooms, friendIds]
   );
 
@@ -274,10 +270,10 @@ export default function RoomDiscovery({ shortcuts = null }) {
   };
 
   // Arkadaşının bulunduğu odalar her zaman en üstte görünür.
-  const list = useMemo(() => {
-    const tabRooms = tab === 'friends' ? friendRooms : otherRooms;
-    return [...tabRooms].sort((a, b) => Number(hasFriendInside(b)) - Number(hasFriendInside(a)));
-  }, [tab, friendRooms, otherRooms, friendRoomIds]);
+  const list = useMemo(
+    () => [...hotRooms].sort((a, b) => Number(hasFriendInside(b)) - Number(hasFriendInside(a))),
+    [hotRooms, friendRoomIds]
+  );
   const items = list;
 
   // Takip görünümü: takip edilenlerin yayınları, arkadaşlar ve son ziyaret edilen odalar.
@@ -300,33 +296,6 @@ export default function RoomDiscovery({ shortcuts = null }) {
   return (
     <PullToRefresh onRefresh={refreshList}>
       <HomeTopBar view={view} onView={setView} onSearch={() => navigate('/arama')} />
-      {tab !== 'games' && (
-      <div className="mb-3 flex items-center gap-1.5 rounded-2xl border border-[#e8c47c]/25 bg-[#071736]/70 p-1">
-        <button
-          type="button"
-          onClick={() => setTab('all')}
-          className={`flex min-w-0 flex-1 items-center justify-center gap-1 rounded-xl py-2 text-[10.5px] font-extrabold transition ${
-            tab === 'all'
-              ? 'border border-[#ffe6a8]/70 bg-gradient-to-r from-[#d8fffb] via-[#6fe6dc] to-[#9ad7ff] text-[#062033] shadow-[0_0_20px_-5px_rgba(127,240,230,0.95)]'
-              : 'border border-transparent text-white/60'
-          }`}
-        >
-          <Film className="h-4 w-4 shrink-0" /> <span className="truncate">Sesli+Film</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setTab('friends')}
-          className={`flex min-w-0 flex-1 items-center justify-center gap-1 rounded-xl py-2 text-[10.5px] font-extrabold transition ${
-            tab === 'friends'
-              ? 'border border-[#ffe6a8]/70 bg-gradient-to-r from-[#d8fffb] via-[#6fe6dc] to-[#9ad7ff] text-[#062033] shadow-[0_0_20px_-5px_rgba(127,240,230,0.95)]'
-              : 'border border-transparent text-white/60'
-          }`}
-        >
-          <Users className="h-4 w-4 shrink-0" /> <span className="truncate">Arkadaşlar</span>
-        </button>
-      </div>
-      )}
-
       {shortcuts}
 
       {tab === 'games' ? (
@@ -334,33 +303,24 @@ export default function RoomDiscovery({ shortcuts = null }) {
       ) : loading ? (
         /* Yükleme alanı kart listesinin yerini baştan ayırır: liste gelince sayfa yüksekliği
            değişmez, açılışta alt menü yukarı kayıp geri inmez. */
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3" aria-hidden="true">
+        <div className="grid grid-cols-3 gap-2 sm:grid-cols-4" aria-hidden="true">
           {Array.from({ length: 6 }).map((_, index) => (
-            <div key={index} className="animate-pulse rounded-[16px] bg-[#10141d]" style={{ aspectRatio: '4 / 5' }} />
+            <div key={index} className="animate-pulse rounded-[16px] bg-[#10141d]" style={{ aspectRatio: '1 / 1' }} />
           ))}
         </div>
       ) : items.length === 0 ? (
         <div className="premium-panel rounded-2xl px-4 py-8 text-center">
-          <p className="text-sm font-bold text-white">
-            {tab === 'friends' ? 'Şu an arkadaşlarının açık odası yok.' : 'Şu an açık oda yok.'}
-          </p>
+          <p className="text-sm font-bold text-white">Şu an açık oda yok.</p>
           <Link
-            to={tab === 'friends' ? '/arkadaslar' : '/oda-kur'}
+            to="/oda-kur"
             className="mt-2 inline-block rounded-lg border border-premium-gold/50 px-3 py-1.5 text-xs font-black text-premium-gold"
           >
-            {tab === 'friends' ? 'Arkadaş ekle →' : 'İlk odayı sen aç →'}
+            İlk odayı sen aç →
           </Link>
         </div>
       ) : (
         <>
-          <div className="mb-2 flex items-center gap-2">
-            <span className="h-3 w-1 rounded-full" style={{ background: 'linear-gradient(180deg,#ffe6a8,#7ff0e6)' }} />
-            <h2 className="text-[10.5px] font-black tracking-[0.18em] text-[#ffe6a8]">
-              {tab === 'friends' ? 'ARKADAŞLARININ ODALARI' : 'CANLI SESLİ + FİLM ODALARI'}
-            </h2>
-            <span className="ml-auto text-[10px] font-bold text-white/40">{items.length} oda</span>
-          </div>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
           {items.map((room, index) => {
             const kind = isVoiceRoom(room) ? 'voice' : 'film';
             return (

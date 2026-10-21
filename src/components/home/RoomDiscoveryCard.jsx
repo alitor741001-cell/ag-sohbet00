@@ -91,7 +91,7 @@ function RoomDiscoveryCard({ room, owner, kind, filmTitle, friendInside, rank = 
       ))}
 
       {/* Görsel alanı: kartın üst bölümü. */}
-      <div className="relative w-full overflow-hidden" style={{ aspectRatio: '4 / 5' }}>
+      <div className="relative w-full overflow-hidden" style={{ aspectRatio: '1 / 1' }}>
         {cover ? (
           <Image src={cover} className="absolute inset-0 h-full w-full" fittingType="fill" alt="" />
         ) : (
@@ -157,7 +157,7 @@ function RoomDiscoveryCard({ room, owner, kind, filmTitle, friendInside, rank = 
       </div>
 
       {/* Bilgi şeridi: sohbet ikonu, kişiler ve izleyici sayısı. */}
-      <div className="flex items-center gap-1.5 border-t border-[#e8c47c]/20 bg-[#0b0f17] px-2 py-1">
+      <div className="flex items-center gap-1.5 border-t border-[#e8c47c]/20 bg-[#0b0f17] px-1.5 py-0.5">
         <MessageSquare className="h-3 w-3 shrink-0 text-[#6cd4d6]" />
         <AvatarStack people={people} total={viewers} />
         <span className="ml-auto flex shrink-0 items-center gap-0.5 text-[10px] font-extrabold tabular-nums text-white">
@@ -167,7 +167,7 @@ function RoomDiscoveryCard({ room, owner, kind, filmTitle, friendInside, rank = 
       </div>
 
       {/* Alt bölüm: oda sahibi ve durum satırı. */}
-      <div className="flex min-w-0 flex-col gap-0.5 px-2 pb-1.5 pt-1">
+      <div className="flex min-w-0 flex-col gap-0.5 px-1.5 pb-1 pt-0.5">
         <span className="flex items-center gap-1">
           {owner?.avatar ? (
             <Image src={owner.avatar} className="h-3.5 w-3.5 shrink-0 overflow-hidden rounded-full border border-[#e8c47c]/50" fittingType="fill" alt="" />
@@ -176,12 +176,12 @@ function RoomDiscoveryCard({ room, owner, kind, filmTitle, friendInside, rank = 
               {(ownerName || '?')[0]}
             </span>
           )}
-          <span className="truncate text-[11.5px] font-extrabold text-white">{room.name}</span>
+          <span className="truncate text-[10px] font-extrabold text-white">{room.name}</span>
           {room.password && <Lock className="h-2.5 w-2.5 shrink-0 text-[#e8c47c]" />}
         </span>
         <span className="flex items-center gap-1">
-          <span className="truncate text-[9.5px] font-semibold text-white/65">{statusLine}</span>
-          <span className="ml-auto shrink-0 rounded-full border border-[#6cd4d6]/50 px-1.5 text-[8.5px] font-black text-[#7ff0e6]">
+          <span className="truncate text-[8.5px] font-semibold text-white/65">{statusLine}</span>
+          <span className="ml-auto shrink-0 rounded-full border border-[#6cd4d6]/50 px-1 text-[8px] font-black text-[#7ff0e6]">
             {isVoice ? 'Sesli' : 'Film'}
           </span>
         </span>
