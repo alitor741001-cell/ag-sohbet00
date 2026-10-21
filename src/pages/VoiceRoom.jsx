@@ -648,6 +648,19 @@ export default function VoiceRoom() {
     }
   }, [id, syncRoom, toast]);
 
+  // Oda görünümü: tema ve kapak fotoğrafı oda panelinden değiştirilir (sahip/yönetici).
+  const saveRoomLook = useCallback(async (look) => {
+    patchRoom(look);
+    try {
+      await base44.functions.invoke('room-presence', { action: 'set-look', room_id: id, ...look });
+      toast({ title: 'Oda profili güncellendi' });
+      return true;
+    } catch (error) {
+      toast({ title: 'Oda profili güncellenemedi', description: error?.response?.data?.error || error.message, variant: 'destructive' });
+      return false;
+    }
+  }, [id, patchRoom, toast]);
+
   // Duyuru kaydı: oda kaydına yazılır ve kayıt defterine (cheat paneli) düşer.
   const saveAnnouncement = useCallback(async (text) => {
     patchRoom({ announcement: text });
@@ -1248,6 +1261,7 @@ export default function VoiceRoom() {
         onRename={renameRoom}
         onSaveAnnouncement={saveAnnouncement}
         onSaveCategory={saveCategory}
+        onSaveLook={saveRoomLook}
         onOpenProfile={(targetId) => { setProfilePanelOpen(false); setProfileUserId(targetId); }}
         onRemoveMod={(targetId) => handleToggleMod(targetId, false)}
       />

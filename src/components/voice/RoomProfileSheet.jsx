@@ -5,12 +5,13 @@ import { Image } from '@/components/ui/image';
 import RoomCategoryChips from '@/components/voice/RoomCategoryChips';
 import RoomAnnouncementField from '@/components/voice/RoomAnnouncementField';
 import RoomPeopleSection from '@/components/voice/RoomPeopleSection';
+import RoomLookEditor from '@/components/voice/RoomLookEditor';
 
 /**
  * Oda paneli: en üstte profilim, altında oda ismi düzenleme, oda isim kartı, kategori
  * etiketleri, duyuru, oda sahibi ve yöneticiler. Telefonlarda ekranın yarısı kadar açılır.
  */
-export default function RoomProfileSheet({ open, onClose, room, user, moderators = [], canMod = false, onRename, onSaveAnnouncement, onSaveCategory, onOpenProfile, onRemoveMod }) {
+export default function RoomProfileSheet({ open, onClose, room, user, moderators = [], canMod = false, onRename, onSaveAnnouncement, onSaveCategory, onSaveLook, onOpenProfile, onRemoveMod }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(room?.name || '');
 
@@ -76,6 +77,10 @@ export default function RoomProfileSheet({ open, onClose, room, user, moderators
           <span className="block truncate text-sm font-bold text-white">{room?.name || 'Oda'}</span>
           {code && <span className="mt-0.5 block truncate text-[11px] tabular-nums text-white/60">ID:{code}</span>}
         </div>
+      )}
+
+      {canMod && (
+        <RoomLookEditor background={room?.background || ''} cover={room?.cover_url || ''} onSave={onSaveLook} />
       )}
 
       <RoomCategoryChips value={room?.category || ''} disabled={!canMod} onChange={onSaveCategory} />
