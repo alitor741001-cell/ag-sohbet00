@@ -15,7 +15,10 @@
   top: var(--viewport-offset, 0px);
   /* dvh desteklenmeyen eski sürümlerde de alan ekranı kaplar. */
   height: 100vh;
-  height: var(--visual-viewport-height, 100dvh);
+  /* Görünür alan ölçüsü (visualViewport) ekranın en altına ulaşmadığında çerçeve kısa
+     kalıyor ve kontrol çubuğunun altında siyah bir şerit bırakıyordu: çerçeve her zaman
+     ekran yüksekliğine tamamlanır, oda arka planı en alt piksele kadar iner. */
+  height: max(var(--visual-viewport-height, 100dvh), 100dvh);
   overscroll-behavior: none;
 }
 .voice-viewport[data-keyboard="open"] .voice-chat-flow { max-height: calc(var(--visual-viewport-height) * 0.28); }
