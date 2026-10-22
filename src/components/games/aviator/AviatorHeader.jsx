@@ -1,6 +1,5 @@
 import React from 'react';
-import { HelpCircle, Menu, Plus, Volume2, VolumeX } from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { HelpCircle, Plus, Volume2, VolumeX } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import { AVIATOR_PLANE } from '../rocketAssets';
 import { format } from '../rocket/rocketConfig';
@@ -19,21 +18,9 @@ export default function AviatorHeader({ coins, sound, onCoins, onBack, onExit, o
       <button type="button" onClick={onHelp} className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/15 bg-black/60 text-white">
         <HelpCircle className="h-5 w-5" />
       </button>
-      <DropdownMenu>
-        <DropdownMenuTrigger className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/15 bg-black/60 text-white">
-          <Menu className="h-5 w-5" />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem onSelect={(e) => { e.preventDefault(); sound.toggle(); }}>
-            {sound.on ? <Volume2 className="mr-2 h-4 w-4" /> : <VolumeX className="mr-2 h-4 w-4" />}
-            Oyun sesi: {sound.on ? 'Açık' : 'Kapalı'}
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={onLedger}>Geçmişim</DropdownMenuItem>
-          <DropdownMenuItem onClick={onHelp}>Nasıl oynanır</DropdownMenuItem>
-          {onBack && <DropdownMenuItem onClick={onBack}>Oyunlara dön</DropdownMenuItem>}
-          {onExit && <DropdownMenuItem onClick={onExit}>Çıkış</DropdownMenuItem>}
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <button type="button" onClick={sound.toggle} aria-label="Oyun sesi" className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/15 bg-black/60 text-white">
+        {sound.on ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
+      </button>
     </header>
   );
 }

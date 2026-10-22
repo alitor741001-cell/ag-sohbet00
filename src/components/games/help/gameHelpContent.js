@@ -299,7 +299,7 @@ export const GAME_HELP = {
   },
 
   rocket: {
-    title: 'ROCKET',
+    title: 'GÖKKARTAL',
     tagline: 'CRASH UÇUŞU',
     rules: [
       'Bahis kademeleri 500 coin ile 1.000.000 coin arasındadır.',

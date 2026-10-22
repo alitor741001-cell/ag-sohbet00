@@ -45,5 +45,5 @@ export const GAMES = [
   { id: FRUIT_ID, title: 'MEYVE', cover: FRUIT_COVER, originWidth: FRUIT_COVER_WIDTH, originHeight: FRUIT_COVER_HEIGHT },
   { id: SEKER_ID, title: 'ŞEKER', cover: SEKER_COVER, originWidth: SEKER_COVER_WIDTH, originHeight: SEKER_COVER_HEIGHT },
   { id: SLOT_ID, title: 'SLOT', cover: GAME_COVER, originWidth: GAME_COVER_WIDTH, originHeight: GAME_COVER_HEIGHT },
-  { id: ROCKET_ID, title: 'AVIATOR', cover: ROCKET_COVER, originWidth: ROCKET_COVER_WIDTH, originHeight: ROCKET_COVER_HEIGHT },
+  { id: ROCKET_ID, title: 'GÖKKARTAL', cover: ROCKET_COVER, originWidth: ROCKET_COVER_WIDTH, originHeight: ROCKET_COVER_HEIGHT },
 ];

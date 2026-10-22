@@ -471,7 +471,8 @@ export default function useRocketGame(variant = 'rocket') {
   // ödeme kararı her durumda sunucuda verilir. Ekran çarpanı son sunucu onayından
   // en fazla FLIGHT_LEAD_MS ileri gidebilir: yoklama gecikse bile çarpan gerçek
   // patlama noktasından çok uzaklara tırmanmaz.
-  const displayNow = Math.min(serverNow, serverNowRef.current + FLIGHT_LEAD_MS);
+  // Gecikme olmasın diye uçuş hiç beklemeden yerel saatle akar.
+  const displayNow = serverNow;
   const launchAt = round?.phase_ends_at ? new Date(round.phase_ends_at).getTime() : null;
   // Geri sayım 0'a indiği saniyede uçuş başlar; sunucu yanıtı beklenmez.
   const phase = phaseAt(round?.status, launchAt, serverNow);
