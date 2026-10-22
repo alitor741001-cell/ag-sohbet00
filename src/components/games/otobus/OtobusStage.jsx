@@ -27,16 +27,12 @@ export default function OtobusStage({ game }) {
 
       <span aria-hidden="true" className="ob-road" style={{ '--ob-heat': progress }} />
 
-      <span aria-hidden="true" className="ob-streaks" style={{ '--ob-heat': progress }} />
-
       <div
         className="ob-buswrap"
         style={{ '--ob-heat': progress, '--ob-cruise': `${cruisePercent(progress)}%` }}
       >
         <span aria-hidden="true" className="ob-flame" />
         {bus && <img src={bus} alt="" className="ob-bus" />}
-        <span aria-hidden="true" className="ob-wheel ob-wheel-rear" style={{ '--ob-heat': progress }} />
-        <span aria-hidden="true" className="ob-wheel ob-wheel-front" style={{ '--ob-heat': progress }} />
       </div>
 
       <div className="ob-mult">

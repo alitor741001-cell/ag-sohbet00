@@ -104,12 +104,6 @@ export default function RouletteGame({ onExit, onBack }) {
         </button>
       </header>
 
-      <div className="relative z-10 shrink-0 px-3 pt-1.5">
-        <div className="mx-auto w-full max-w-[27rem] sm:max-w-[32rem]">
-          <GameStatCards items={stats} />
-        </div>
-      </div>
-
       <main className="relative z-10 flex min-h-0 flex-1 flex-col items-center gap-2 overflow-y-auto px-2 py-2">
         {/* Çark solda, tur sıralaması sağında alt alta durur. */}
         <div className="rl-stage">
@@ -161,6 +155,9 @@ export default function RouletteGame({ onExit, onBack }) {
             onCoins={() => setCoinOpen(true)}
           />
           <RouletteRoundBar phase={game.phase} countdown={game.countdown} progress={game.progress} />
+        </div>
+        <div className="mx-auto mt-2 w-full max-w-[27rem] sm:max-w-[32rem]">
+          <GameStatCards items={stats} />
         </div>
       </footer>
 
