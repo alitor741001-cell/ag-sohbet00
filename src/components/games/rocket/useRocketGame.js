@@ -20,7 +20,7 @@ const STATE_EVERY_MS = 12000;
 // Abonelik olayı geldikten sonra bu süre boyunca yoklama yapılmaz.
 const EVENT_GRACE_MS = 12000;
 // Çakılma sonrası yeni tur 3 sn sonra yoklanır: tur arası bekleme kısa.
-const POLL_CRASHED = 3000;
+const POLL_CRASHED = 2000;
 const POLL_BETTING = 12000;
 // Hata sonrası yenilemeler kısa süre bekler; butonlar beklemez.
 const POLL_COOLDOWN = 6000;
@@ -241,7 +241,8 @@ export default function useRocketGame(variant = 'rocket') {
         (phaseRef.current === 'betting' && launchAtRef.current !== null && localNow >= launchAtRef.current);
       // Abonelik yakın zamanda olay gönderdiyse yoklama atlanır: gereksiz istek yok.
       // Uçuş sırasında abonelik çakılma anını iletir, yoklama yalnızca güvenlik ağıdır.
-      if (!flying && Date.now() - lastEventRef.current < EVENT_GRACE_MS) {
+      // Çakılma sonrası bekleme atlanmaz: yeni tur 2 sn sonra hemen alınır.
+      if (!flying && phaseRef.current !== 'crashed' && Date.now() - lastEventRef.current < EVENT_GRACE_MS) {
         timer = setTimeout(loop, EVENT_GRACE_MS);
         running = false;
         return;
