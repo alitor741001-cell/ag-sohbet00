@@ -12,7 +12,7 @@ export const REVEAL_MS = 10000;
 export const ROUND_MS = BETTING_MS + REVEAL_MS;
 
 // Yayınlanan numara geçmişi: son turların çıkan numaraları.
-const HISTORY_LIMIT = 10;
+const HISTORY_LIMIT = 15;
 // Sınıra çok yakın gelen bahis de turu kapatabilir: ağ ve saat payı.
 const EARLY_TOLERANCE_MS = 3000;
 

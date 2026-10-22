@@ -1,16 +1,15 @@
 import React from 'react';
-import { ChevronRight } from 'lucide-react';
+import { RotateCcw, Trash2 } from 'lucide-react';
 import { CHIP_LEVELS, CHIP_LABELS, formatCoins } from './rouletteConfig';
 import RouletteChip from './RouletteChip';
 
-/** Alt bar: bakiye (sol alt) + kedi jetonlar (orta) + gri REPEAT (sağ). */
+/** Alt bar: bakiye (sol alt) + kedi jetonlar (orta) + REPEAT / TEMİZLE (sağ köşe). */
 export default function RouletteChipRow({ coins, chip, stake, canRepeat, disabled, onChip, onRepeat, onClear, onCoins }) {
   return (
     <div className="rl2-footer-bar">
       <button type="button" onClick={onCoins} className="rl2-balance" aria-label="Coin yükle">
-        <span className="rl2-balance-icon" />
+        <span className="rl2-coin" aria-hidden="true" />
         {formatCoins(coins)}
-        <ChevronRight className="h-3 w-3" />
       </button>
       <div className="rl2-chips">
         {CHIP_LEVELS.map((level) => (
@@ -27,11 +26,14 @@ export default function RouletteChipRow({ coins, chip, stake, canRepeat, disable
           </button>
         ))}
       </div>
-      {stake > 0 && !disabled ? (
-        <button type="button" onClick={onClear} className="rl2-repeat">TEMİZLE</button>
-      ) : (
-        <button type="button" onClick={onRepeat} disabled={disabled || !canRepeat} className="rl2-repeat">REPEAT</button>
-      )}
+      <div className="rl2-actions">
+        <button type="button" onClick={onRepeat} disabled={disabled || !canRepeat} className="rl2-repeat" aria-label="Bahisleri tekrarla">
+          <RotateCcw className="h-3 w-3" /> REPEAT
+        </button>
+        <button type="button" onClick={onClear} disabled={disabled || stake <= 0} className="rl2-clear" aria-label="Bahisleri temizle">
+          <Trash2 className="h-3 w-3" /> TEMİZLE
+        </button>
+      </div>
     </div>
   );
 }
