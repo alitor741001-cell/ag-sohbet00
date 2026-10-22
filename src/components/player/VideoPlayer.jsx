@@ -138,6 +138,18 @@ export default function VideoPlayer({ src, title, onTimeUpdate, onPlayPause, onS
     if (suppressControls) { setShowControls(false); onControlsChange?.(false); }
   }, [suppressControls]);
 
+  // Film sesi: arka plana geçildiğinde mikrofon sızıntısını önlemek için sessize al.
+  useEffect(() => {
+    const v = videoRef.current; if (!v) return;
+    let bgMuted;
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') { bgMuted = v.muted; v.muted = true; }
+      else if (bgMuted !== undefined) { v.muted = bgMuted; bgMuted = undefined; }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+  }, [src]);
+
   const moveBar = (e) => {
     if (!isOwner) return;
     const v = videoRef.current; if (!v || !v.duration) return;

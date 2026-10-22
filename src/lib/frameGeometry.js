@@ -23,4 +23,13 @@ export function drawAlignedFrame(ctx, image, frame) {
   ctx.drawImage(image, sx * image.width / 1024, top * image.height / 1024,
     sw * image.width / 1024, (bottom - top) * image.height / 1024,
     240 + (sx - cx) * scale, 240 + (top - cy) * scale, sw * scale, (bottom - top) * scale);
+  // Mask out coordinate labels (e.g. "16.667%, 75%") baked into the source sheets.
+  const cellHeight = frame.family === 'star' ? 1024 / 3 : 512;
+  const labelY = (Math.floor(index / 3) + 1) * cellHeight - 22;
+  const labelX = sx + sw / 2;
+  ctx.globalCompositeOperation = 'destination-out';
+  ctx.beginPath();
+  ctx.arc(240 + (labelX - cx) * scale, 240 + (labelY - cy) * scale, 26 * scale, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalCompositeOperation = 'source-over';
 }

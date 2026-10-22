@@ -194,6 +194,19 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
     if (suppressControls) setShowControls(false);
   }, [suppressControls]);
 
+  // Film sesi: arka plana geçildiğinde mikrofon sızıntısını önlemek için sessize al.
+  useEffect(() => {
+    if (!ready) return;
+    const onVisibility = () => {
+      const player = playerRef.current;
+      if (!player?.mute) return;
+      if (document.visibilityState === 'hidden') player.mute();
+      else if (!silent) player.unMute();
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+  }, [ready, silent]);
+
   // İlerleme göstergesi + sahibin odaya konum bildirmesi.
   useEffect(() => {
     if (!ready) return;
