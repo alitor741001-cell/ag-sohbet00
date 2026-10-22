@@ -17,29 +17,35 @@ export function cosmeticArtwork(product) {
   const task = (async () => {
     const source = await cosmeticMediaUrl(product.image_url);
     if (!product.crop?.w && !product.remove_white) return source;
-    const image = new window.Image(); image.crossOrigin = 'anonymous';
-    await new Promise((resolve, reject) => { image.onload = resolve; image.onerror = () => reject(new Error('Görsel yüklenemedi.')); image.src = source; });
-    const r = product.crop?.w ? product.crop : { x: 0, y: 0, w: 1, h: 1 };
-    const canvas = document.createElement('canvas'); canvas.width = 480; canvas.height = 480;
-    const ctx = canvas.getContext('2d', { willReadFrequently: !!product.remove_white });
-    const collectionFrame = frameDesignFor(product.image_url);
-    if (collectionFrame) drawAlignedFrame(ctx, image, collectionFrame);
-    else ctx.drawImage(image, r.x * image.width, r.y * image.height, r.w * image.width, r.h * image.height, 0, 0, 480, 480);
-    if (product.remove_white) {
-      const pixels = ctx.getImageData(0, 0, 480, 480);
-      for (let i = 0; i < pixels.data.length; i += 4) {
-        const min = Math.min(pixels.data[i], pixels.data[i+1], pixels.data[i+2]);
-        const threshold = collectionFrame ? 220 : 240;
-        if (min > threshold) pixels.data[i+3] = Math.round(pixels.data[i+3] * (255 - min) / (255 - threshold));
+    try {
+      const image = new window.Image(); image.crossOrigin = 'anonymous';
+      await new Promise((resolve, reject) => { image.onload = resolve; image.onerror = () => reject(new Error('Görsel yüklenemedi.')); image.src = source; });
+      const r = product.crop?.w ? product.crop : { x: 0, y: 0, w: 1, h: 1 };
+      const canvas = document.createElement('canvas'); canvas.width = 480; canvas.height = 480;
+      const ctx = canvas.getContext('2d', { willReadFrequently: !!product.remove_white });
+      const collectionFrame = frameDesignFor(product.image_url);
+      if (collectionFrame) drawAlignedFrame(ctx, image, collectionFrame);
+      else ctx.drawImage(image, r.x * image.width, r.y * image.height, r.w * image.width, r.h * image.height, 0, 0, 480, 480);
+      if (product.remove_white) {
+        const pixels = ctx.getImageData(0, 0, 480, 480);
+        for (let i = 0; i < pixels.data.length; i += 4) {
+          const min = Math.min(pixels.data[i], pixels.data[i+1], pixels.data[i+2]);
+          const threshold = collectionFrame ? 220 : 240;
+          if (min > threshold) pixels.data[i+3] = Math.round(pixels.data[i+3] * (255 - min) / (255 - threshold));
+        }
+        ctx.putImageData(pixels, 0, 0);
       }
-      ctx.putImageData(pixels, 0, 0);
+      if (collectionFrame) {
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.beginPath(); ctx.arc(240, 240, FRAME_APERTURE_RADIUS, 0, Math.PI * 2); ctx.fill();
+        ctx.globalCompositeOperation = 'source-over';
+      }
+      return canvas.toDataURL('image/png');
+    } catch {
+      // CORS taint or image load failure — fall back to the raw URL so the
+      // Image component can still render it (server-side crop handles framing).
+      return source;
     }
-    if (collectionFrame) {
-      ctx.globalCompositeOperation = 'destination-out';
-      ctx.beginPath(); ctx.arc(240, 240, FRAME_APERTURE_RADIUS, 0, Math.PI * 2); ctx.fill();
-      ctx.globalCompositeOperation = 'source-over';
-    }
-    return canvas.toDataURL('image/png');
   })();
   artworks.set(key, task);
   task.catch(() => artworks.delete(key));
