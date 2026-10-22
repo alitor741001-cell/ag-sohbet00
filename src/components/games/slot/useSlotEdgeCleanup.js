@@ -22,8 +22,8 @@ function cleanEdges(src) {
         const seed = [0, w - 1, (h - 1) * w, h * w - 1].map(i => [rgb[i * 4], rgb[i * 4 + 1], rgb[i * 4 + 2]]);
         const isBg = i => {
           const r = rgb[i * 4], g = rgb[i * 4 + 1], b = rgb[i * 4 + 2];
-          if (Math.max(r, g, b) < 45) return true;
-          return seed.some(s => Math.abs(r - s[0]) + Math.abs(g - s[1]) + Math.abs(b - s[2]) < 60);
+          if (Math.max(r, g, b) < 70) return true;
+          return seed.some(s => Math.abs(r - s[0]) + Math.abs(g - s[1]) + Math.abs(b - s[2]) < 90);
         };
         const seen = new Uint8Array(w * h);
         const stack = [];
@@ -40,6 +40,18 @@ function cleanEdges(src) {
           if (x < w - 1) stack.push(i + 1);
           if (i >= w) stack.push(i - w);
           if (i < w * (h - 1)) stack.push(i + w);
+        }
+        // Kenar kalıntıları: şeffaf alana değen koyu/loş saçak pikseller iki tur temizlenir.
+        for (let pass = 0; pass < 2; pass++) {
+          const clear = [];
+          for (let i = 0; i < w * h; i++) {
+            if (rgb[i * 4 + 3] === 0) continue;
+            const x = i % w;
+            const edge = (x > 0 && rgb[(i - 1) * 4 + 3] === 0) || (x < w - 1 && rgb[(i + 1) * 4 + 3] === 0)
+              || (i >= w && rgb[(i - w) * 4 + 3] === 0) || (i < w * (h - 1) && rgb[(i + w) * 4 + 3] === 0);
+            if (edge && Math.max(rgb[i * 4], rgb[i * 4 + 1], rgb[i * 4 + 2]) < 120) clear.push(i);
+          }
+          clear.forEach(i => { rgb[i * 4 + 3] = 0; });
         }
         ctx.putImageData(data, 0, 0);
         canvas.toBlob(blob => blob ? resolve(URL.createObjectURL(blob)) : reject(new Error('Görsel hazırlanamadı')), 'image/png');
