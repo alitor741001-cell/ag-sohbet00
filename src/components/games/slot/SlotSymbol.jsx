@@ -14,8 +14,8 @@ export default function SlotSymbol({ symbol, top, height }) {
       <Image
         src={art}
         alt=""
-        className="slot-symbol-card w-full"
-        fittingType="fit"
+        className="slot-symbol-card aspect-square h-full max-w-full overflow-hidden rounded-lg"
+        fittingType="fill"
         blurPlaceholder={false}
         originWidth={SLOT_SYMBOL_ART_SIZE}
         originHeight={SLOT_SYMBOL_ART_SIZE}
