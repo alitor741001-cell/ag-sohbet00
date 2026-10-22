@@ -15,7 +15,7 @@ import { vipStyle } from '@/lib/userLevels';
  * kimlik numarasıyla bir arkadaşına gönderir — gönderilen VIP alıcıda anında aktif olur.
  */
 export default function VipBagPanel({ open, onClose, onChanged }) {
-  const { groups: cosmeticGroups, level: cosmeticLevel, busy: cosmeticBusy, error: cosmeticError, toggle: toggleCosmetic, refresh: refreshCosmetics } = useVipCosmetics(open);
+  const { groups: cosmeticGroups, level: cosmeticLevel, loading: cosmeticLoading, busy: cosmeticBusy, error: cosmeticError, toggle: toggleCosmetic, refresh: refreshCosmetics } = useVipCosmetics(open);
   const [items, setItems] = useState([]);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -145,7 +145,7 @@ export default function VipBagPanel({ open, onClose, onChanged }) {
   if (!open) return null;
 
   return (
-    <BagCabinet onClose={onClose} groups={cosmeticGroups} cosmetics={<VipCosmeticsBag groups={cosmeticGroups} level={cosmeticLevel} busy={cosmeticBusy} onToggle={toggleCosmetic} error={cosmeticError} />}>
+    <BagCabinet onClose={onClose} groups={cosmeticGroups} cosmetics={category => <VipCosmeticsBag category={category} groups={cosmeticGroups} level={cosmeticLevel} loading={cosmeticLoading} busy={cosmeticBusy} onToggle={toggleCosmetic} error={cosmeticError} />}>
         <div className="mx-auto w-full max-w-[430px] text-cabinet-ink">
           <p className="text-xs leading-relaxed text-cabinet-ink/65">Coin yüklemesinden gelen VIP'lerini kendin kullanabilir veya üye numarasıyla bir arkadaşına gönderebilirsin.</p>
 

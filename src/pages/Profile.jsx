@@ -208,13 +208,14 @@ export default function Profile() {
             vipCount={vipCount}
             onSelect={(key) => {
               if (key === 'shop') setCoinShopOpen(true);
+              else if (key === 'store') setStoreOpen(true);
               else if (key === 'bag') setVipBagOpen(true);
               else if (key === 'level') navigate('/seviye');
               else if (key === 'agency') navigate('/ajans');
             }}
           />
 
-          <button type="button" onClick={() => setStoreOpen(true)} className="w-full rounded-2xl border border-fantasy-gold/40 bg-cabinet-surface/35 px-4 py-4 text-left text-sm font-bold text-fantasy-gold">Mağaza <span className="ml-2 text-xs font-normal text-fantasy-text/70">Koltuk çerçeveleri · Çerçevelerim</span></button>
+
 
           <ProfileMenuCard
             isAdmin={isAdmin}
