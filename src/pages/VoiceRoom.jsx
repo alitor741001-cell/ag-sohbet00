@@ -1,6 +1,7 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
+import { roomVisitId, endRoomVisit } from '@/lib/roomVisit';
 import subscribeEntity from '@/components/data/entitySubscriptions';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { broadcasterState } from '@/lib/broadcaster';
@@ -393,7 +394,7 @@ export default function VoiceRoom() {
   const attemptJoin = useCallback(async (pw = '') => {
     for (let attempt = 0; attempt < 3; attempt += 1) {
       try {
-        const response = await base44.functions.invoke('room-presence', { action: 'join', room_id: id, password: pw });
+        const response = await base44.functions.invoke('room-presence', { action: 'join', room_id: id, password: pw, visit_id: roomVisitId(id) });
         if (response?.data?.ghost) ghostRef.current = true;
         joinedRef.current = true;
         setJoined(true);
@@ -520,6 +521,7 @@ export default function VoiceRoom() {
   }, [id, room?.seats, room?.owner_id, patchRoom, syncRoom, toast]);
 
   const leaveRoom = useCallback(async () => {
+    endRoomVisit(id);
     joinedRef.current = false;
     sawSelfRef.current = false;
     setJoined(false);

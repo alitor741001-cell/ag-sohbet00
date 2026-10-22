@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ChevronLeft, Gift, Loader2, Send, Sparkles, UserCheck } from 'lucide-react';
+import { Gift, Loader2, Send, UserCheck } from 'lucide-react';
+import BagCabinet from '@/components/store/BagCabinet';
 import { base44 } from '@/api/base44Client';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import ProfileFrame from '@/components/ProfileFrame';
@@ -144,29 +145,9 @@ export default function VipBagPanel({ open, onClose, onChanged }) {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[300] flex flex-col bg-[#0F0F14] text-white">
-      <header className="flex shrink-0 items-center gap-2 border-b border-white/10 px-3 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Geri"
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10 transition-transform active:scale-95"
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </button>
-        <p className="flex min-w-0 items-center gap-2 text-sm font-bold text-white">
-          <Sparkles className="h-4 w-4 shrink-0 text-sky-400" /> <span className="truncate">Mavi Çanta</span>
-        </p>
-      </header>
-
-      <div className="min-h-0 flex-1 overflow-y-auto p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-        <div className="mx-auto w-full max-w-[430px]">
-          <p className="text-[11px] leading-relaxed text-white/55">
-            Coin yüklemesinden gelen VIP'ler burada bekler. İstersen kendin kullan, istersen kimlik numarasıyla bir
-            arkadaşına gönder — gönderdiğin VIP alıcıda anında aktif olur.
-          </p>
-
-          <VipCosmeticsBag groups={cosmeticGroups} level={cosmeticLevel} busy={cosmeticBusy} onToggle={toggleCosmetic} error={cosmeticError} />
+    <BagCabinet onClose={onClose} groups={cosmeticGroups} cosmetics={<VipCosmeticsBag groups={cosmeticGroups} level={cosmeticLevel} busy={cosmeticBusy} onToggle={toggleCosmetic} error={cosmeticError} />}>
+        <div className="mx-auto w-full max-w-[430px] text-cabinet-ink">
+          <p className="text-xs leading-relaxed text-cabinet-ink/65">Coin yüklemesinden gelen VIP'lerini kendin kullanabilir veya üye numarasıyla bir arkadaşına gönderebilirsin.</p>
 
           {loading && !items.length ? (
             <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-sky-400" /></div>
@@ -301,7 +282,6 @@ export default function VipBagPanel({ open, onClose, onChanged }) {
             onConfirm={confirm?.kind === 'send' ? sendItem : useItem}
           />
         </div>
-      </div>
-    </div>
+    </BagCabinet>
   );
 }

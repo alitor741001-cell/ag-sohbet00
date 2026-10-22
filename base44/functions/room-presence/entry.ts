@@ -1,4 +1,6 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.56';
+import { waitUntil } from 'base44:runtime';
+import { publishRoomEntrance } from '../../shared/roomEntrances.ts';
 import { rateLimit, safeErrorResponse, logSecurity } from '../../shared/security.ts';
 import { isModerator, isSiteOwner, immuneToModeration, getRoleInfo, getRoleLabelOverrides, getSpecialFrameInfo } from '../../shared/roles.ts';
 import { upsertNotification } from '../../shared/upsertNotification.ts';
@@ -199,6 +201,7 @@ export default async function(req) {
           ? appendRoomLog(room, { text: `Duyuru: ${room.announcement}`, kind: 'announcement', actor_id: user.id, actor_name: name })
           : null;
         await base44.asServiceRole.entities.Room.update(room_id, joinLogs ? { participants, room_logs: joinLogs } : { participants });
+        waitUntil(publishRoomEntrance(base44, { ...room, participants }, me, body.visit_id).catch(error => console.error('VIP giriş efekti:', error.message)));
       }
       const roleInfo = getRoleInfo(me, await labelOverrides());
       const frameInfo = await getSpecialFrameInfo(base44, me, true);

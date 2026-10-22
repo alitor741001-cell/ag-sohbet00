@@ -1,0 +1,70 @@
+{
+  "name": "CosmeticSelection",
+  "type": "object",
+  "properties": {
+    "owner_id": {
+      "type": "string"
+    },
+    "seat_product_id": {
+      "type": "string",
+      "default": ""
+    },
+    "seat_image_url": {
+      "type": "string",
+      "default": ""
+    },
+    "seat_crop": {
+      "type": "object"
+    },
+    "seat_remove_white": {
+      "type": "boolean",
+      "default": false
+    },
+    "entrance_id": {
+      "type": "string",
+      "default": ""
+    },
+    "entrance_mode": {
+      "type": "string",
+      "enum": [
+        "random",
+        "fixed",
+        "off"
+      ],
+      "default": "random"
+    },
+    "show_entrances": {
+      "type": "boolean",
+      "default": true
+    },
+    "reduce_motion": {
+      "type": "boolean",
+      "default": false
+    },
+    "last_entrance_id": {
+      "type": "string",
+      "default": ""
+    }
+  },
+  "required": [
+    "owner_id"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

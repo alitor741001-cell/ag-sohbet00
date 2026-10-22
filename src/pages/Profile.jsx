@@ -23,6 +23,7 @@ import GiftBoxPanel from '@/components/profile/GiftBoxPanel';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
 import CoinActivityPanel from '@/components/profile/CoinActivityPanel';
 import VipBagPanel from '@/components/profile/VipBagPanel';
+import StorePanel from '@/components/store/StorePanel';
 import useWalletCoinsLive from '@/hooks/useWalletCoinsLive';
 import useGiftSummaryLive from '@/hooks/useGiftSummaryLive';
 
@@ -46,6 +47,7 @@ export default function Profile() {
 
   const [activityOpen, setActivityOpen] = useState(false);
   const [vipBagOpen, setVipBagOpen] = useState(false);
+  const [storeOpen, setStoreOpen] = useState(false);
   const [coinShopOpen, setCoinShopOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -213,6 +215,8 @@ export default function Profile() {
             }}
           />
 
+          <button type="button" onClick={() => setStoreOpen(true)} className="w-full rounded-2xl border border-fantasy-gold/40 bg-cabinet-surface/35 px-4 py-4 text-left text-sm font-bold text-fantasy-gold">Mağaza <span className="ml-2 text-xs font-normal text-fantasy-text/70">Koltuk çerçeveleri · Çerçevelerim</span></button>
+
           <ProfileMenuCard
             isAdmin={isAdmin}
             onInfo={() => toggle('info')}
@@ -252,6 +256,7 @@ export default function Profile() {
       <GiftBoxPanel open={giftBoxOpen} onClose={() => { setGiftBoxOpen(false); loadWallet(); }} />
       <CoinActivityPanel open={activityOpen} onClose={() => setActivityOpen(false)} />
       <VipBagPanel open={vipBagOpen} onClose={() => setVipBagOpen(false)} onChanged={loadVipCount} />
+      <StorePanel open={storeOpen} onClose={() => { setStoreOpen(false); loadWallet(); }} onCoins={() => { setStoreOpen(false); setCoinShopOpen(true); }} />
       <CoinPurchasePanel
         open={coinShopOpen}
         coins={wallet?.coins ?? null}

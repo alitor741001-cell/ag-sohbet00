@@ -1,0 +1,81 @@
+{
+  "name": "RoomEntranceEvent",
+  "type": "object",
+  "properties": {
+    "room_id": {
+      "type": "string"
+    },
+    "user_id": {
+      "type": "string"
+    },
+    "visit_id": {
+      "type": "string"
+    },
+    "audience_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "name": {
+      "type": "string"
+    },
+    "avatar": {
+      "type": "string"
+    },
+    "level": {
+      "type": "integer"
+    },
+    "effect_id": {
+      "type": "string"
+    },
+    "effect_name": {
+      "type": "string"
+    },
+    "image_url": {
+      "type": "string"
+    },
+    "crop": {
+      "type": "object"
+    },
+    "video_url": {
+      "type": "string",
+      "default": ""
+    }
+  },
+  "required": [
+    "room_id",
+    "user_id",
+    "visit_id",
+    "audience_ids"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.audience_ids": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

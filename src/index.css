@@ -3,6 +3,11 @@
 @tailwind utilities;
 
 :root, .dark {
+  --cabinet-night: 231 73% 13%;
+  --cabinet-surface: 232 66% 29%;
+  --cabinet-light: 221 81% 66%;
+  --cabinet-gold: 42 73% 70%;
+  --cabinet-ink: 218 80% 96%;
   --vip-accent: #ff8547;
   --vip-secondary: #f3ce78;
   --vip-night: 228 35% 6%;

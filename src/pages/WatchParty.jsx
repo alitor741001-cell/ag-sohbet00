@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
+import { roomVisitId, endRoomVisit } from '@/lib/roomVisit';
 import subscribeEntity from '@/components/data/entitySubscriptions';
 import VideoPlayer from '@/components/player/VideoPlayer';
 import ChatOverlay from '@/components/player/ChatOverlay';
@@ -175,7 +176,7 @@ export default function WatchParty() {
   const joinWithRetry = useCallback(async () => {
     for (let attempt = 0; attempt < 3; attempt += 1) {
       try {
-        const res = await base44.functions.invoke('room-presence', { action: 'join', room_id: id });
+        const res = await base44.functions.invoke('room-presence', { action: 'join', room_id: id, visit_id: roomVisitId(id) });
         joinedRef.current = true;
         setVoiceReady(true);
         setJoinCount((c) => c + 1);
@@ -208,7 +209,7 @@ export default function WatchParty() {
 
   const submitPassword = async () => {
     try {
-      await base44.functions.invoke('room-presence', { action: 'join', room_id: id, password: pwInput });
+      await base44.functions.invoke('room-presence', { action: 'join', room_id: id, password: pwInput, visit_id: roomVisitId(id) });
       joinedRef.current = true; setVoiceReady(true); setNeedPassword(false); setPwInput('');
     } catch (e) {
       toast({ title: 'Hatalı şifre', description: e.response?.data?.error || e.message, variant: 'destructive' });
@@ -351,7 +352,7 @@ export default function WatchParty() {
   leaveRoomRef.current = leaveRoom;
 
   // Odadan çık: oda üyeliği bırakılır ve ana sayfaya dönülür.
-  const handleLeave = async () => { await leaveRoom(); navigate('/'); };
+  const handleLeave = async () => { endRoomVisit(id); await leaveRoom(); navigate('/'); };
 
   // Odayı küçült: film ve mikrofon arka planda devam eder, küçük oynatıcıdan odaya dönülür.
   const minimizeRoom = () => {

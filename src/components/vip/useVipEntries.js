@@ -1,34 +1,32 @@
 import { useEffect, useRef, useState } from 'react';
-import useMessageProfiles from '@/hooks/useMessageProfiles';
-import { isHiddenName } from '@/lib/hiddenUser';
-import { vipLook } from '@/components/vip/vipTheme';
-export default function useVipEntries(roomId, participants = []) {
-  const known = useRef(new Set());
-  const [queue, setQueue] = useState([]);
-  const mountedAt = useRef(Date.now());
-  useEffect(() => { known.current = new Set(); setQueue([]); mountedAt.current = Date.now(); }, [roomId]);
-  const signature = participants.map((person) => `${person.user_id}:${person.joined_at}`).join('|');
+import { base44 } from '@/api/base44Client';
+import subscribeEntity from '@/components/data/entitySubscriptions';
+import { useCurrentUser } from '@/lib/useCurrentUser';
+export default function useVipEntries(roomId) {
+  const { user } = useCurrentUser();
+  const [queue, setQueue] = useState([]); const [preferences, setPreferences] = useState(null); const mountedAt = useRef(Date.now());
   useEffect(() => {
-    const arrivals = [];
-    for (const person of participants) {
-      const stamp = Date.parse(person.joined_at || '');
-      const key = `${person.user_id}:${person.joined_at}`;
-      if (!person.user_id || known.current.has(key)) continue;
-      known.current.add(key);
-      if (isHiddenName(person.name) || !Number.isFinite(stamp) || stamp < mountedAt.current - 5000 || Date.now() - stamp > 15000) continue;
-      arrivals.push({ ...person, entryKey: key });
-    }
-    if (arrivals.length) setQueue((previous) => [...previous, ...arrivals].slice(-5));
-  }, [roomId, signature]);
-  const profiles = useMessageProfiles(queue.map((person) => person.user_id));
+    if (!roomId || !user?.id) return;
+    let alive = true; mountedAt.current = Date.now(); setQueue([]); setPreferences(null);
+    const storageKey = `ag-entry-seen:${user.id}:${roomId}`;
+    const seen = new Set(JSON.parse(sessionStorage.getItem(storageKey) || '[]'));
+    const receive = event => {
+      if (!alive || event.room_id !== roomId || !event.audience_ids?.includes(user.id) || seen.has(event.id) || Date.now() - Date.parse(event.created_date) > 20000) return;
+      if (Date.parse(event.created_date) < mountedAt.current && event.user_id !== user.id) return;
+      seen.add(event.id); sessionStorage.setItem(storageKey, JSON.stringify([...seen].slice(-100)));
+      setQueue(old => [...old, event].slice(-4));
+    };
+    const off = subscribeEntity('RoomEntranceEvent', event => { if (event.type === 'create') receive({ ...event.data, id: event.id || event.data?.id }); });
+    const offPrefs = subscribeEntity('CosmeticSelection', event => { if (event.data?.owner_id === user.id) setPreferences(event.data); });
+    base44.entities.CosmeticSelection.filter({ owner_id: user.id }, { limit: 1 }).then(page => { if (alive) setPreferences(old => old || page.items[0] || {}); });
+    base44.entities.RoomEntranceEvent.filter({ room_id: roomId, created_date: { $gte: new Date(mountedAt.current - 15000).toISOString() } }, { sort: 'created_date', limit: 15 }).then(page => page.items.forEach(receive));
+    return () => { alive = false; off(); offPrefs(); };
+  }, [roomId, user?.id]);
   const first = queue[0];
-  const profile = profiles[first?.user_id];
-  const theme = vipLook(profile, 'banner');
-  const dismiss = () => setQueue((previous) => previous.slice(1));
   useEffect(() => {
-    if (!first) return;
-    const timer = setTimeout(() => setQueue((previous) => previous[0]?.entryKey === first.entryKey ? previous.slice(1) : previous), profile ? theme ? 3500 : 0 : 7000);
+    if (!first || !preferences) return;
+    const timer = setTimeout(() => setQueue(old => old[0]?.id === first.id ? old.slice(1) : old), preferences.show_entrances === false ? 0 : 6500);
     return () => clearTimeout(timer);
-  }, [first?.entryKey, profile, theme]);
-  return { person: first, profile, theme, dismiss };
+  }, [first?.id, preferences]);
+  return { person: preferences && preferences.show_entrances !== false ? first : null, reduced: preferences?.reduce_motion, dismiss: () => setQueue(old => old.slice(1)) };
 }

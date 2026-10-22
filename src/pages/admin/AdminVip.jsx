@@ -5,6 +5,7 @@ import VipUserRow from '@/components/admin/vip/VipUserRow';
 import FullUserProfile from '@/components/profile/FullUserProfile';
 import { useToast } from '@/components/ui/use-toast';
 import AdminVipCatalog from '@/components/admin/vip/AdminVipCatalog';
+import AdminCosmeticManager from '@/components/admin/store/AdminCosmeticManager';
 
 /** VIP Merkezi: kullanıcı arar, VIP5–VIP12 (ve 10–12 özel) seviyesi verir ya da kaldırır. */
 export default function AdminVip() {
@@ -75,6 +76,7 @@ export default function AdminVip() {
       </div>
 
       <AdminVipCatalog />
+      <AdminCosmeticManager />
       <div className="mb-4 flex gap-2">
         <input
           value={query}

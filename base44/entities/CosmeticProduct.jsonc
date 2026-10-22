@@ -1,0 +1,110 @@
+{
+  "name": "CosmeticProduct",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "seat-frame",
+        "vip-frame",
+        "entrance"
+      ]
+    },
+    "price": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "min_vip": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 12,
+      "default": 0
+    },
+    "image_url": {
+      "type": "string"
+    },
+    "crop": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "w": {
+          "type": "number"
+        },
+        "h": {
+          "type": "number"
+        }
+      }
+    },
+    "remove_white": {
+      "type": "boolean",
+      "default": false
+    },
+    "video_url": {
+      "type": "string",
+      "default": ""
+    },
+    "published": {
+      "type": "boolean",
+      "default": true
+    },
+    "sort_order": {
+      "type": "integer",
+      "default": 0
+    },
+    "reference_key": {
+      "type": "string",
+      "default": ""
+    },
+    "video_job_id": {
+      "type": "string",
+      "default": ""
+    },
+    "video_status": {
+      "type": "string",
+      "default": ""
+    }
+  },
+  "required": [
+    "name",
+    "category",
+    "image_url",
+    "price"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.published": true
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

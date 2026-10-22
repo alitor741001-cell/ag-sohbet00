@@ -1,0 +1,16 @@
+import { Loader2 } from 'lucide-react';
+import useCosmeticStore from '@/hooks/useCosmeticStore';
+import CosmeticArtwork from '@/components/store/CosmeticArtwork';
+export default function EntrancePreferences() {
+  const store = useCosmeticStore('catalog', 'entrance'); const selection = store.selection || {};
+  const save = patch => store.mutate('preferences', patch);
+  return <section className="text-cabinet-ink"><h2 className="text-lg font-black text-cabinet-gold">VIP 5–12 Ortak Giriş Havuzu</h2><p className="mt-2 text-xs text-cabinet-ink/70">Aktif VIP 5–12 üyeleri ortak havuzu kullanır. Rastgele mod, her gerçek girişte mümkünse bir önceki efektten farklı bir sahne seçer.</p>
+    <div className="my-4 flex gap-2">{[['random','Rastgele'],['off','Girişimi gizle']].map(([mode,label]) => <button type="button" key={mode} disabled={store.busy} onClick={() => save({ entrance_mode: mode })} className={`min-h-11 flex-1 rounded-xl border px-2 text-xs ${selection.entrance_mode===mode ? 'border-cabinet-gold bg-cabinet-light/25' : 'border-cabinet-light/30'}`}>{label}</button>)}</div>
+    <label className="mb-3 flex min-h-11 items-center justify-between gap-3 text-xs">Diğer kullanıcıların girişlerini göster<input type="checkbox" checked={selection.show_entrances !== false} disabled={store.busy} onChange={e => save({ show_entrances: e.target.checked })} /></label>
+    <label className="mb-5 flex min-h-11 items-center justify-between gap-3 text-xs">Hareketleri azalt<input type="checkbox" checked={!!selection.reduce_motion} disabled={store.busy} onChange={e => save({ reduce_motion: e.target.checked })} /></label>
+    {store.loading && !store.items.length ? <Loader2 className="mx-auto my-6 h-6 w-6 animate-spin" /> : <div className="grid grid-cols-2 gap-3">{store.items.map(item => <article key={item.id} className="cabinet-product rounded-2xl border border-cabinet-gold/30 p-3"><CosmeticArtwork product={item} className="mx-auto aspect-square w-full rounded-xl object-contain" /><h3 className="mt-2 text-center text-xs font-bold">{item.name}</h3><p className="mt-1 text-center text-[10px] text-cabinet-ink/60">{item.video_url ? 'Video animasyonu' : 'Hareketli sahne'}</p><button type="button" disabled={store.busy || store.vip_level < 5} onClick={() => save({ entrance_mode: 'fixed', entrance_id: item.id })} className="mt-2 min-h-11 w-full rounded-xl border border-cabinet-gold/40 text-xs disabled:opacity-50">{selection.entrance_mode==='fixed' && selection.entrance_id===item.id ? 'Sabit seçili' : store.vip_level < 5 ? 'Aktif VIP gerekli' : 'Sabitle'}</button></article>)}</div>}
+    {!store.loading && !store.items.length && <p className="py-6 text-sm">Henüz yayınlanmış giriş efekti yok.</p>}
+    {store.has_more && <button type="button" disabled={store.loading} onClick={() => store.load(store.next_cursor)} className="mt-4 min-h-11 w-full rounded-xl border border-cabinet-gold/40">Daha fazla göster</button>}
+    {store.error && <p role="alert" className="mt-3 text-sm text-destructive">{store.error} <button type="button" onClick={() => store.load()} className="underline">Yenile</button></p>}
+  </section>;
+}
