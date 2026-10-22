@@ -1,5 +1,6 @@
 import React from 'react';
 import ReferenceArt from '@/components/games/controls/ReferenceArt';
+import FitGameText from '@/components/games/controls/FitGameText';
 
 export default function GameStatCards({ items }) {
   return (
@@ -8,8 +9,8 @@ export default function GameStatCards({ items }) {
         <span key={item.key} className="ref-stat">
           <ReferenceArt name={`stat${index % 4}`} />
           <span className="ref-stat-copy">
-            <strong>{item.label}</strong>
-            <b>{item.value}</b>
+            <FitGameText as="strong">{item.label}</FitGameText>
+            <FitGameText as="b">{item.value}</FitGameText>
           </span>
         </span>
       ))}

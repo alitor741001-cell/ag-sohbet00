@@ -1,5 +1,6 @@
 import React from 'react';
 import ReferenceArt from '@/components/games/controls/ReferenceArt';
+import FitGameText from '@/components/games/controls/FitGameText';
 import ReferenceCoinButton from '@/components/games/controls/ReferenceCoinButton';
 
 /** Eylem sırası: solda bahis kademesine göre bedeli düşülen çevirme hakkı, sağda coin yükleme.
@@ -21,7 +22,7 @@ export default function GameActionRow({ coins, sessionPrice, sessionSpins, sessi
       <button type="button" onClick={buyable ? onSession : onCoins}
         disabled={active || busy} aria-label={affordable ? 'Çevirme hakkı al' : 'Coin yükle'} className="ref-banner">
         <ReferenceArt name="session" />
-        <span className="ref-banner-copy"><strong>{title}</strong><b>{sub}</b></span>
+        <span className="ref-banner-copy"><FitGameText as="strong">{title}</FitGameText><FitGameText as="b">{sub}</FitGameText></span>
       </button>
       <ReferenceCoinButton coins={coins} onClick={onCoins} format={format} />
     </div>

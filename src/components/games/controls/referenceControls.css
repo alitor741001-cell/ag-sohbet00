@@ -1,9 +1,11 @@
 .ref-art { position:absolute; inset:0; display:block; overflow:hidden; pointer-events:none; }
 .ref-art .ref-art-sheet { position:absolute; max-width:none; margin:0; }
 .ref-art-sheet img { object-fit:fill; }
+.ref-fit-text { display:block; width:100%; max-width:100%; min-width:0; overflow:hidden; box-sizing:border-box; white-space:nowrap; flex-shrink:0; }
+.ref-fit-text-inner { display:inline-block; max-width:none; white-space:pre; vertical-align:top; }
 .ref-stats { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:1%; width:100%; max-width:27rem; }
 .ref-stat { position:relative; min-width:0; aspect-ratio:245/132; container-type:inline-size; }
-.ref-stat-copy { position:absolute; left:34%; right:5%; top:19%; height:54%; display:flex; flex-direction:column; justify-content:center; align-items:center; background:linear-gradient(180deg,#0b0a10,#08090d); border-radius:6%; color:#fff; }
+.ref-stat-copy { position:absolute; left:34%; right:5%; top:19%; height:54%; display:flex; min-width:0; flex-direction:column; justify-content:center; align-items:center; overflow:hidden; padding-inline:1%; box-sizing:border-box; background:linear-gradient(180deg,#0b0a10,#08090d); border-radius:6%; color:#fff; }
 .ref-stat-copy strong { font:900 clamp(4.5px,6.1cqw,15px)/1.2 system-ui,sans-serif; letter-spacing:.06em; text-align:center; color:#efd67b; white-space:nowrap; }
 .ref-stat:nth-child(2) .ref-stat-copy strong { color:#e9baff; }
 .ref-stat:nth-child(3) .ref-stat-copy strong { color:#e6ddff; }
@@ -11,9 +13,9 @@
 .ref-actions { display:grid; grid-template-columns:555fr 425fr; gap:1.5%; width:100%; }
 .ref-banner { position:relative; display:block; padding:0; border:0; min-width:0; background:transparent; aspect-ratio:555/165; cursor:pointer; container-type:inline-size; }
 .ref-banner-coins { aspect-ratio:425/161; }
-.ref-banner-copy { position:absolute; top:22%; left:41%; right:10%; bottom:23%; display:flex; flex-direction:column; align-items:center; justify-content:center; background:linear-gradient(110deg,#110e08,#0b0909); border-radius:5%; color:#ffe28b; }
-.ref-banner-copy strong { font:900 clamp(8px,5cqw,25px)/1.3 system-ui,sans-serif; white-space:nowrap; letter-spacing:.03em; }
-.ref-banner-copy b { font:900 clamp(11px,7.5cqw,39px)/1.25 system-ui,sans-serif; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.ref-banner-copy { position:absolute; top:22%; left:41%; right:10%; bottom:23%; display:flex; min-width:0; flex-direction:column; align-items:center; justify-content:center; overflow:hidden; padding-inline:1%; box-sizing:border-box; text-align:center; background:linear-gradient(110deg,#110e08,#0b0909); border-radius:5%; color:#ffe28b; }
+.ref-banner-copy strong { font:900 clamp(5px,5cqw,25px)/1.3 system-ui,sans-serif; white-space:nowrap; letter-spacing:.03em; }
+.ref-banner-copy b { font:900 clamp(7px,7.5cqw,39px)/1.25 system-ui,sans-serif; font-variant-numeric:tabular-nums; white-space:nowrap; }
 .ref-banner-coins .ref-banner-copy { left:37%; right:18%; top:23%; bottom:24%; background:#090810; }
 .ref-banner-coins .ref-banner-copy strong { color:#e8d8ff; }
 .gctl-deck.ref-deck { container-type:inline-size; position:relative; display:block; flex:none; width:100%; max-width:27rem; aspect-ratio:988/200; padding:0; border:0; border-radius:0; background:transparent; box-shadow:none; overflow:visible; }
@@ -23,7 +25,7 @@
 .ref-hotspot { position:absolute; display:block; padding:0; border:0; background:transparent; border-radius:50%; cursor:pointer; }
 .ref-step-minus { left:6.8%; top:19%; width:17%; height:56%; }
 .ref-step-plus { right:6.8%; top:19%; width:17%; height:56%; }
-.ref-bet-value { position:absolute; left:42%; top:41%; width:24%; height:40%; display:grid; place-items:center; background:#080909; color:#fff; font:900 clamp(10px,3vw,26px)/1 system-ui,sans-serif; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.ref-bet-value.ref-fit-text { position:absolute; left:42%; top:41%; width:24%; height:40%; display:grid; place-items:center; text-align:center; background:#080909; color:#fff; font:900 clamp(10px,3vw,26px)/1 system-ui,sans-serif; font-variant-numeric:tabular-nums; white-space:nowrap; }
 .ref-max-hotspot { left:47.6%; top:17%; width:12.8%; height:69%; }
 .ref-auto-hotspot { left:62%; top:18%; width:13.3%; height:69%; }
 .ref-spin-hotspot { left:77.3%; top:3%; width:20.8%; height:96%; }
