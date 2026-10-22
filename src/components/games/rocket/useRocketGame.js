@@ -14,7 +14,7 @@ import {
 // Uçuş sırasında hafif bir tik çalışır ve çakılmayı sunucuda tetikler; tik artık
 // saniyede iki kez değil ~1,2 saniyede bir çalışır — istek bütçesi yoğunluk sınırına
 // takılmaz, görsel uçuş yerel saatle aktığı için ekranda donma olmaz.
-const TICK_MS = 1200;
+const TICK_MS = 800;
 // Uçuşta ağır durum tazelemesi seyrek yapılır (bahis listesi ve cüzdan için).
 const STATE_EVERY_MS = 8000;
 // Çakılma sonrası yeni tur yoklanır (tur arası bekleme kadar sonra).
@@ -23,12 +23,12 @@ const POLL_BETTING = 9000;
 // Hata sonrası yenilemeler kısa süre bekler; butonlar beklemez.
 const POLL_COOLDOWN = 6000;
 // Uçuş sırasında bekleme kısa tutulur: çakılma anı ve gerçek çarpan yakalanır.
-const POLL_COOLDOWN_FLIGHT = 1200;
+const POLL_COOLDOWN_FLIGHT = 800;
 // Ekrandaki çarpan son sunucu onayından en fazla bu kadar ileri gidebilir: yoklama
 // geciktiğinde ekran, turun çoktan çakılmış olabileceği bir çarpanı göstermez.
-// Pay tik aralığından biraz uzundur: uçuş tazeleme beklerken donup kalmaz,
+// Tik aralığından biraz uzundur: uçuş tazeleme beklerken donup kalmaz,
 // gösterilen çarpan da gerçek patlama noktasından kopmaz.
-const FLIGHT_LEAD_MS = 1600;
+const FLIGHT_LEAD_MS = 1200;
 const CLOCK_TICK = 100;
 // Otomatik hedef ok tuşlarına hızlı basmak tek istek üretir.
 const AUTO_SAVE_MS = 600;
@@ -446,8 +446,10 @@ export default function useRocketGame() {
   const serverNow = serverNowRef.current + sinceSync;
   // Görsel uçuş yerel saatle kesintisiz akar: sunucu yoklaması gecikse bile
   // otobüs yolda donmaz. Çakılma haberi geldiği an çarpan gerçek noktaya oturur;
-  // ödeme kararı her durumda sunucuda verilir.
-  const displayNow = serverNow;
+  // ödeme kararı her durumda sunucuda verilir. Ekran çarpanı son sunucu onayından
+  // en fazla FLIGHT_LEAD_MS ileri gidebilir: yoklama gecikse bile çarpan gerçek
+  // patlama noktasından çok uzaklara tırmanmaz.
+  const displayNow = Math.min(serverNow, serverNowRef.current + FLIGHT_LEAD_MS);
   const launchAt = round?.phase_ends_at ? new Date(round.phase_ends_at).getTime() : null;
   // Geri sayım 0'a indiği saniyede uçuş başlar; sunucu yanıtı beklenmez.
   const phase = phaseAt(round?.status, launchAt, serverNow);
@@ -457,7 +459,7 @@ export default function useRocketGame() {
   if (phase === 'running') {
     const startAt = round?.started_at ? new Date(round.started_at).getTime() : launchAt;
     if (startAt) {
-      liveMult = multiplierAt(serverNow - startAt);
+      liveMult = multiplierAt(displayNow - startAt);
       displayMult = multiplierAt(displayNow - startAt);
     }
   } else if (phase === 'crashed') {
