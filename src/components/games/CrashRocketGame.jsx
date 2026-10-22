@@ -38,8 +38,8 @@ export default function CrashRocketGame({ onExit, onBack }) {
           <AviatorPlayers bets={game.bets} />
         </AviatorStage>
         <div className="grid shrink-0 grid-cols-2 gap-2">
-          <AviatorBetCard color="red" slot={betSlot(game, 1)} onAutoEdit={() => setAutoEdit(1)} />
-          <AviatorBetCard color="green" slot={betSlot(game, 2)} onAutoEdit={() => setAutoEdit(2)} />
+          <AviatorBetCard color="red" slot={betSlot(game, 1)} onAutoSet={(v) => game.setAutoTarget(1, v)} />
+          <AviatorBetCard color="green" slot={betSlot(game, 2)} onAutoSet={(v) => game.setAutoTarget(2, v)} />
         </div>
       </div>
       <CoinPurchasePanel open={coinOpen} coins={game.coins} onBack={() => setCoinOpen(false)} />
