@@ -19,17 +19,17 @@ export const SLOT_SYMBOL_ART_SIZE = 1024;
 
 // Referans görseller: kartlar, hayvanlar, yakut, FREE ve jackpot sembolleri.
 export const SLOT_SYMBOL_ART = {
-  ten: `${MEDIA}/6dd890c6d_IMG_1535.jpg`,
-  jack: `${MEDIA}/3ee8f9056_IMG_1536.jpg`,
-  queen: `${MEDIA}/54e3eb456_IMG_1540.jpg`,
-  king: `${MEDIA}/cd345127b_IMG_1541.jpg`,
-  ace: `${MEDIA}/de3fc5d9c_IMG_1537.jpg`,
-  gem: `${MEDIA}/9457d570b_IMG_1539.jpg`,
-  eagle: `${MEDIA}/920b96084_IMG_1533.jpg`,
-  tiger: `${MEDIA}/63e519f50_IMG_1531.jpg`,
-  lion: `${MEDIA}/42fcc4e14_IMG_1532.jpg`,
-  free: `${MEDIA}/6d95d974c_IMG_1534.jpg`,
-  jackpot: `${MEDIA}/bbf968e8c_IMG_1538.jpg`,
+  ten: 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/c2b4657dc_generated_image.png',
+  jack: 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/b27dcd3f0_generated_image.png',
+  queen: 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/d0e5e86a0_generated_image.png',
+  king: 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/6d8402500_generated_image.png',
+  ace: 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/bdfddbce6_generated_image.png',
+  gem: 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/d0823632f_generated_image.png',
+  eagle: 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/b43160789_generated_image.png',
+  tiger: 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/e4f6c0497_generated_image.png',
+  lion: 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/1d809df4b_generated_image.png',
+  free: 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/23dfdd5cf_generated_image.png',
+  jackpot: 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/dd3922438_generated_image.png',
 };
 
 // Kontrol düğmelerinin madalyonları: aslan, kanarya ve kartal.

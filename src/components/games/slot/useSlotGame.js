@@ -6,7 +6,8 @@ import useWalletCoinsLive from '@/hooks/useWalletCoinsLive';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 
 const SPIN_DURATION_MS = 5000;
-const SETTLE_MS = 800;
+// Son makara (4 x 230ms gecikme + 600ms oturma) durana kadar beklenir.
+const SETTLE_MS = 1600;
 // Bu tur sayısından sonra turların bir kısmı yavaş döner.
 const SLOW_AFTER_SPINS = 4;
 const SLOW_CHANCE = 0.3;
