@@ -167,12 +167,13 @@ export default function RoomDiscovery({ shortcuts = null }) {
       if (!flushTimer) flushTimer = window.setTimeout(flush, 250);
     });
 
-    // Canlı akışın gecikebildiği cihazlarda (özellikle Android) liste kendini 5 saniyede bir
+    // Canlı akışın gecikebildiği cihazlarda (özellikle Android) liste kendini 8 saniyede bir
     // tazeler: odadaki kişiler ve oda bilgileri her cihazda güncel kalır.
+    // Canlı abonelik zaten değişiklikleri anında iletir; yoklama yalnızca güvenlik ağıdır.
     const refresh = window.setInterval(() => {
       if (document.visibilityState === 'hidden') return;
       readRooms();
-    }, 5000);
+    }, 8000);
 
     return () => {
       alive = false;

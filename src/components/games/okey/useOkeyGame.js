@@ -5,7 +5,8 @@ import { useCurrentUser } from '@/lib/useCurrentUser';
 import gameRequest from '@/lib/gameRequest';
 
 // Elde olmayan değişiklikleri (sıra, süre aşımı, bitirme) yakalamak için yoklama aralığı.
-const POLL_MS = 4000;
+// Canlı abonelik zaten masa değişimini anında iletir; yoklama yalnızca güvenlik ağıdır.
+const POLL_MS = 6000;
 
 /** OKEY istemcisi: lobi, masa durumu, kendi eli ve tur işlemleri.
     Sürüm (101 OKEY / klasik OKEY) yalnızca lobi ve masa eşleşmesini belirler. */
