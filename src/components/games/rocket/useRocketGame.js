@@ -467,14 +467,10 @@ export default function useRocketGame(variant = 'rocket') {
   const sinceSync = clock - fetchedAtRef.current;
   const serverNow = serverNowRef.current + sinceSync;
   // Görsel uçuş yerel saatle kesintisiz akar: sunucu yoklaması gecikse bile
-  // otobüs yolda donmaz. Çakılma haberi geldiği an çarpan gerçek noktaya oturur;
-  // ödeme kararı her durumda sunucuda verilir. Ekran çarpanı son sunucu onayından
-  // en fazla FLIGHT_LEAD_MS ileri gidebilir: yoklama gecikse bile çarpan gerçek
-  // patlama noktasından çok uzaklara tırmanmaz.
+  // çarpan donmaz. Çakılma haberi geldiği an çarpan gerçek noktaya oturur;
+  // ödeme kararı her durumda sunucuda verilir.
   const launchAt = round?.phase_ends_at ? new Date(round.phase_ends_at).getTime() : null;
-  // Kalkış beklemez (sınır kalkış anından sayılır), ama sunucu onayı gelmezse
-  // çarpan gerçek patlama noktasının çok üstüne tırmanmaz.
-  const displayNow = Math.min(serverNow, Math.max(serverNowRef.current, launchAt || 0) + FLIGHT_LEAD_MS);
+  const displayNow = serverNow;
   // Geri sayım 0'a indiği saniyede uçuş başlar; sunucu yanıtı beklenmez.
   const phase = phaseAt(round?.status, launchAt, serverNow);
 

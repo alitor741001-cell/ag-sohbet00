@@ -7,7 +7,7 @@ export default function AviatorPlayers({ bets }) {
   const all = bets || [];
   const cashed = all.filter((b) => b.status === 'cashed').sort((a, b) => b.cashout_at - a.cashout_at);
   const waiting = all.filter((b) => b.status === 'active');
-  const list = [...cashed, ...waiting];
+  const list = [...cashed, ...waiting].slice(0, 20);
   const total = new Set(all.map((b) => b.user_id)).size;
 
   return (
@@ -15,7 +15,7 @@ export default function AviatorPlayers({ bets }) {
       <div className="m-1.5 flex rounded-full bg-black/60 p-0.5 text-[10px] font-bold">
         <span className="av-tab-red flex-1 rounded-full py-1 text-center">Katılanlar</span>
       </div>
-      <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-1.5">
+      <div className="min-h-0 flex-1 overflow-y-auto px-1.5">
         {list.length === 0 && <p className="py-3 text-center text-[10px] text-white/40">Henüz oyuncu yok</p>}
         {list.map((b, i) => <AviatorPlayerRow key={b.id || i} bet={b} />)}
       </div>
