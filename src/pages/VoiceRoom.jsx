@@ -23,6 +23,7 @@ import RoomProfileSheet from '@/components/voice/RoomProfileSheet';
 import VoiceRoomMenu from '@/components/voice/VoiceRoomMenu';
 import VoiceSeatSheet from '@/components/voice/VoiceSeatSheet';
 import InviteSheet from '@/components/voice/InviteSheet';
+import MicPermissionGuide from '@/components/voice/MicPermissionGuide';
 import useLatestCallback from '@/hooks/useLatestCallback';
 import { useUserProfile } from '@/lib/profileCard';
 import useVoiceRoomProfileActions from '@/hooks/useVoiceRoomProfileActions';
@@ -101,6 +102,8 @@ export default function VoiceRoom() {
   // Coin yetmediğinde hediye kutusu açılıp doğrudan coin yükleme ekranı gösterilir (sayaç sinyali).
   const [coinsRequest, setCoinsRequest] = useState(0);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [micGuideDismissed, setMicGuideDismissed] = useState(false);
+  useEffect(() => { if (voice.micDenied) setMicGuideDismissed(false); }, [voice.micDenied]);
   const [logOpen, setLogOpen] = useState(false);
   // Oda paneli: profilim, oda ismi düzenleme, kategori, duyuru ve yöneticiler burada durur.
   const [profilePanelOpen, setProfilePanelOpen] = useState(false);
@@ -1134,6 +1137,12 @@ export default function VoiceRoom() {
           {voice.remoteMuted ? 'Yönetici mikrofonunu kapattı.' : voice.error}
         </p>
       )}
+
+      <MicPermissionGuide
+        open={voice.micDenied && !micGuideDismissed}
+        onClose={() => setMicGuideDismissed(true)}
+        onRetry={voice.retryMic}
+      />
 
       </div>
       {/* Controls never receive keyboard transforms; the keyboard covers them while typing. */}

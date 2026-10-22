@@ -39,6 +39,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
   const [participantMicStates, setParticipantMicStates] = useState({});
   const [connectionState, setConnectionState] = useState('disconnected');
   const [error, setError] = useState('');
+  const [micDenied, setMicDenied] = useState(false);
   const [audioBlocked, setAudioBlocked] = useState(false);
   const [debug, setDebug] = useState(initialDebug);
   const [everVoiceEnabled, setEverVoiceEnabled] = useState(voiceEnabled);
@@ -76,6 +77,8 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
 
   // Mikrofonu aç: yayın varsa yalnızca geri açılır, yoksa izinli paylaşılan kanal yayınlanır.
   // Böylece izin bir kez verilir ve arayüz geçişlerinde tekrar sorulmaz.
+  // İzin reddedilmişse micDenied durumu çıkar — kullanıcı ayarlardan izin verip
+  // geri döndüğünde otomatik olarak yeniden denenecek.
   const enableMic = useCallback(async (room) => {
     if (!room) return;
     micWantedRef.current = true;
@@ -86,15 +89,21 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
       if (publication) {
         if (publication.isMuted) await room.localParticipant.setMicrophoneEnabled(true);
         setSharedMicActive(true);
+        setMicDenied(false);
         return;
       }
       const track = await sharedMicTrack();
       if (!track || roomRef.current !== room || room.state !== 'connected') return;
       setSharedMicActive(true);
+      setMicDenied(false);
       await room.localParticipant.publishTrack(track, { source: Track.Source.Microphone });
     })();
     micEnablePendingRef.current.set(room, request);
     try { await request; }
+    catch (err) {
+      if (err?.name === 'NotAllowedError' || err?.name === 'SecurityError') setMicDenied(true);
+      throw err;
+    }
     finally { if (micEnablePendingRef.current.get(room) === request) micEnablePendingRef.current.delete(room); }
   }, []);
 
@@ -304,6 +313,8 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
     document.addEventListener('keydown', startAudioOnInteraction);
     // Arka plandan dönüş: bağlantı düşmüşse yeniden kurulur, mikrofon kapanmışsa geri açılır —
     // kullanıcı odaya tekrar girmeden konuşmaya devam eder.
+    // İzin daha önce reddedilmişse, kullanıcı ayarlardan izin verip geri döndüğünde
+    // otomatik olarak mikrofon açılır (micDenied guide'ı bu geri dönüşü tetikler).
     const restoreOnVisible = () => {
       if (document.visibilityState === 'hidden') return;
       attachCurrentRemoteAudio();
@@ -433,5 +444,13 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
     if (!next) retryAudio();
   }, [retryAudio]);
 
-  return { muted: !active, remoteMuted, deafened, localSpeaking, speakingIds, participantMicStates, active, error, requesting, connectionState, audioBlocked, retryAudio, toggleMute, toggleDeafen, debug, voiceEnabled };
+  // Kullanıcı "Tekrar dene" dediğinde veya ayarlardan dönüp geri geldiğinde mikrofonu
+  // sessizce yeniden dener — izin verilmişse açılır, yoksa guide diyalogu açık kalır.
+  const retryMic = useCallback(() => {
+    const room = roomRef.current;
+    if (!room || room.state !== 'connected') return;
+    enableMic(room).then(refreshState).catch(() => {});
+  }, [enableMic, refreshState]);
+
+  return { muted: !active, remoteMuted, deafened, localSpeaking, speakingIds, participantMicStates, active, error, micDenied, requesting, connectionState, audioBlocked, retryAudio, retryMic, toggleMute, toggleDeafen, debug, voiceEnabled };
 }
