@@ -15,6 +15,6 @@ export default function VipPrivilegeList({ level, features }) {
         </div>;
       })}
     </div>
-    <p className="mt-5 text-center text-[10px] text-muted-foreground">Her üst seviye yeni bir ejderha koleksiyonunu açar; alt seviyelerin kozmetikleri kullanılabilir. VIP, moderasyon kurallarından muafiyet sağlamaz. Ziyaretçiler ve VIP gizlilik tercihleri Profil → Eklentiler bölümünden yönetilir; ayrıcalıklar yalnızca geçerli VIP üyeliği boyunca kullanılabilir.</p>
+    <p className="mt-5 text-center text-[10px] text-muted-foreground">Çerçeveler üyeye özel rastgele seçilir; VIP 9–12 üyelerine ejderhalı çerçeveler atanır. Alt seviyelerin kozmetikleri kullanılabilir. VIP, moderasyon kurallarından muafiyet sağlamaz. Ziyaretçiler ve VIP gizlilik tercihleri Profil → Eklentiler bölümünden yönetilir; ayrıcalıklar yalnızca geçerli VIP üyeliği boyunca kullanılabilir.</p>
   </section>;
 }

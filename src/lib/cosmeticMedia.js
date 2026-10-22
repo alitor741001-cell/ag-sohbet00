@@ -1,4 +1,6 @@
 import { base44 } from '@/api/base44Client';
+import { frameDesignFor } from '@/lib/frameCollection';
+import { drawAlignedFrame, FRAME_APERTURE_RADIUS } from '@/lib/frameGeometry';
 const signed = new Map();
 const artworks = new Map();
 export async function cosmeticMediaUrl(source) {
@@ -20,8 +22,9 @@ export function cosmeticArtwork(product) {
     const r = product.crop?.w ? product.crop : { x: 0, y: 0, w: 1, h: 1 };
     const canvas = document.createElement('canvas'); canvas.width = 480; canvas.height = 480;
     const ctx = canvas.getContext('2d', { willReadFrequently: !!product.remove_white });
-    ctx.drawImage(image, r.x * image.width, r.y * image.height, r.w * image.width, r.h * image.height, 0, 0, 480, 480);
-    const collectionFrame = product.image_url.includes('#ag-frame=');
+    const collectionFrame = frameDesignFor(product.image_url);
+    if (collectionFrame) drawAlignedFrame(ctx, image, collectionFrame);
+    else ctx.drawImage(image, r.x * image.width, r.y * image.height, r.w * image.width, r.h * image.height, 0, 0, 480, 480);
     if (product.remove_white) {
       const pixels = ctx.getImageData(0, 0, 480, 480);
       for (let i = 0; i < pixels.data.length; i += 4) {
@@ -33,7 +36,7 @@ export function cosmeticArtwork(product) {
     }
     if (collectionFrame) {
       ctx.globalCompositeOperation = 'destination-out';
-      ctx.beginPath(); ctx.arc(240, 240, 480 * .335, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(240, 240, FRAME_APERTURE_RADIUS, 0, Math.PI * 2); ctx.fill();
       ctx.globalCompositeOperation = 'source-over';
     }
     return canvas.toDataURL('image/png');

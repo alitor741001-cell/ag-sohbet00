@@ -41,7 +41,7 @@ export function inventoryView(rows, level, catalog) {
   return cosmeticFeatures(catalog).flatMap((feature) => {
     const row = rows.find((item) => item.kind === feature.key);
     return (row?.owned_levels || (row ? [row.level] : [])).filter((value) => VIP_LEVELS.includes(value) && value >= feature.minLevel).map((value) => ({
-      kind: feature.key, level: value, theme: catalog.levels.find((theme) => theme.level === value),
+      kind: feature.key, level: value, theme: { ...catalog.levels.find((theme) => theme.level === value), ...(feature.key === 'frame' ? { frame_seed: row.owner_id, frame_level: level } : {}) },
       usable: level >= value && level >= feature.minLevel,
       equipped: row.active !== false && row.level === value,
       active: level >= value && level >= feature.minLevel && row.active !== false && row.level === value,
@@ -76,7 +76,7 @@ export async function publicVipLooks(base44, records, catalog) {
       const owned = !row || (row.owned_levels || [row.level]).includes(selected);
       if (owned && selected >= feature.minLevel && selected <= level) {
         const theme = catalog.levels.find((value) => value.level === selected);
-        if (theme) look[feature.key] = theme;
+        if (theme) look[feature.key] = feature.key === 'frame' ? { ...theme, frame_seed: user.id, frame_level: level } : theme;
       }
     }
     const expiry = Date.parse(user.vip_expires_at || '');

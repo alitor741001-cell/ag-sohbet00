@@ -38,7 +38,7 @@ export default function ProfileIconGrid({ vipCount = 0, onSelect }) {
             </span>
             <span className="max-w-[74px] text-center text-[10px] font-semibold leading-tight text-white/85">{item.label}</span>
           </button>
-          {item.key === 'shop' && <button type="button" onClick={() => onSelect('store')} aria-label="Animasyonlu çerçeve mağazasını aç" className="flex min-h-11 items-center justify-center gap-1 rounded-xl border border-cabinet-gold/40 bg-cabinet px-2 text-[10px] font-bold text-cabinet-gold"><Store className="h-4 w-4" />Mağaza</button>}
+          {item.key === 'shop' && <button type="button" onClick={() => onSelect('store')} aria-label="Animasyonlu çerçeve mağazasını aç" className="flex flex-col items-center gap-1.5 active:scale-95"><span className="relative flex h-14 w-14 items-center justify-center rounded-full" style={ORB}><Store className="h-8 w-8 text-cabinet-ink" strokeWidth={1.5} /></span><span className="text-center text-[10px] font-semibold leading-tight text-cabinet-ink">Mağaza</span></button>}
           </div>
         ))}
       </div>
