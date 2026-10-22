@@ -29,7 +29,7 @@ export default function SlotReelColumn({ index, random, landing, stopping, slow,
     <span ref={stripRef} key={finish ? 'finish' : 'loop'}
       className={`absolute left-0 top-0 w-full ${finish ? 'slot-reel-settle' : 'slot-reel-loop'}`}
       style={{ height: `${tiles.length / rows * 100}%`, '--reel-from': `${finish?.from || 0}%`,
-        animationDuration: `${finish ? 0.6 : (0.55 + index * 0.04) * (slow ? 2.3 : 1)}s` }}>
+        animationDuration: `${finish ? 0.6 : (1.3 + index * 0.08) * (slow ? 2.3 : 1)}s` }}>
       {tiles.map((symbol, i) => renderTile
         ? <React.Fragment key={i}>{renderTile(symbol, i, `${i / tiles.length * 100}%`, `${100 / tiles.length}%`, Boolean(finish))}</React.Fragment>
         : <SlotSymbol key={i} symbol={symbol} top={`${i / tiles.length * 100}%`} height={`${100 / tiles.length}%`} />)}
