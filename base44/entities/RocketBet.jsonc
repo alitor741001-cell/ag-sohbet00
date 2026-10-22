@@ -9,6 +9,14 @@
       "type": "integer",
       "default": 0
     },
+    "variant": {
+      "type": "string",
+      "enum": [
+        "rocket",
+        "otobus"
+      ],
+      "default": "rocket"
+    },
     "user_id": {
       "type": "string"
     },

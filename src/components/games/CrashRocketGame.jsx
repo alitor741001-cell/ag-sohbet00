@@ -14,7 +14,7 @@ import GameHelpSheet from './help/GameHelpSheet';
  * sunucudan gerçek zamanlı akar.
  */
 export default function CrashRocketGame({ onExit, onBack }) {
-  const game = useRocketGame();
+  const game = useRocketGame('rocket');
   const [ledgerOpen, setLedgerOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
 

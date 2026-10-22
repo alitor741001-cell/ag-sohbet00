@@ -6,6 +6,14 @@
       "type": "integer",
       "default": 0
     },
+    "variant": {
+      "type": "string",
+      "enum": [
+        "rocket",
+        "otobus"
+      ],
+      "default": "rocket"
+    },
     "status": {
       "type": "string",
       "enum": [

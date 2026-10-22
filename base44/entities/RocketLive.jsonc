@@ -4,7 +4,15 @@
   "properties": {
     "key": {
       "type": "string",
-      "default": "live"
+      "default": "rocket-live"
+    },
+    "variant": {
+      "type": "string",
+      "enum": [
+        "rocket",
+        "otobus"
+      ],
+      "default": "rocket"
     },
     "round_no": {
       "type": "integer",

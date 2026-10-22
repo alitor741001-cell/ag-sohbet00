@@ -59,8 +59,12 @@ function shiftLevel(levels, value, direction) {
   return levels[Math.min(levels.length - 1, Math.max(0, index + (direction > 0 ? 1 : -1)))];
 }
 
-/** Crash Rocket oyun durumu: sunucudan poll edilir, çarpan yerel saatle akıcı gösterilir. */
-export default function useRocketGame() {
+/** Crash Rocket oyun durumu: sunucudan poll edilir, çarpan yerel saatle akıcı gösterilir.
+ *  variant: 'rocket' (Crash Rocket) veya 'otobus' (Otobüs Roket) — her varyant kendi
+ *  turlarını ve canlı yayını çalıştırır; cüzdan ortaktır. */
+export default function useRocketGame(variant = 'rocket') {
+  const variantRef = useRef(variant);
+  variantRef.current = variant;
   const [data, setData] = useState(null);
   const [status, setStatus] = useState('loading');
   const [message, setMessage] = useState('');
@@ -144,7 +148,7 @@ export default function useRocketGame() {
 
   const fetchState = useCallback(async () => {
     try {
-      const result = await rocketRequests({ action: 'state', recover: needsRecoveryRef.current });
+      const result = await rocketRequests({ action: 'state', variant: variantRef.current, recover: needsRecoveryRef.current });
       applyResult(result);
       needsRecoveryRef.current = false;
     } catch {
@@ -203,7 +207,7 @@ export default function useRocketGame() {
   // yakalandığı an ekrana düşer.
   const fetchTick = useCallback(async () => {
     try {
-      const result = await rocketRequests({ action: 'tick' });
+      const result = await rocketRequests({ action: 'tick', variant: variantRef.current });
       applyRound(result?.round, result?.now);
     } catch {
       // Yoğunlukta tik kısa süre bekler ve hemen tekrar denenir: uçuş sırasında
@@ -298,6 +302,8 @@ export default function useRocketGame() {
   // tek istekle arkadan tazelenir.
   useEffect(() => {
     const unsubscribe = subscribeEntity('RocketLive', (event) => {
+      // Yalnızca bu varyantın canlı yayınını dinle: roket ve otobüs birbirini etkilemez.
+      if (event?.data?.variant && event.data.variant !== variantRef.current) return;
       lastEventRef.current = Date.now();
       applyRound(event?.data);
     });
@@ -339,7 +345,7 @@ export default function useRocketGame() {
   // Oyun defteri yalnız açıldığında istenir: düzenli yoklamaya ek yük bindirmez.
   const loadLedger = useCallback(async () => {
     try {
-      const result = await rocketRequests({ action: 'ledger' });
+      const result = await rocketRequests({ action: 'ledger', variant: variantRef.current });
       if (result && !result.error) setLedger(result);
     } catch (e) {
       setMessage(gameMessage(e));
@@ -398,6 +404,7 @@ export default function useRocketGame() {
     return act(
       {
         action: 'bet',
+        variant: variantRef.current,
         slot,
         amount: betAmtRef.current[slot],
         auto: autoAmtRef.current[slot],
@@ -407,7 +414,7 @@ export default function useRocketGame() {
   }, [act]);
 
   const cashout = useCallback((slot) => act(
-    { action: 'cashout', slot, round_no: roundNoRef.current }, { slot, lockMult: true }
+    { action: 'cashout', variant: variantRef.current, slot, round_no: roundNoRef.current }, { slot, lockMult: true }
   ), [act]);
 
   // Bahis miktarı istemcide değişir; sunucuya yalnız bahis konulurken yazılır.
@@ -432,7 +439,7 @@ export default function useRocketGame() {
   const persistAuto = useCallback((slot, value, delay = AUTO_SAVE_MS) => {
     clearTimeout(autoSaveRef.current[slot]);
     autoSaveRef.current[slot] = setTimeout(async () => {
-      const result = await act({ action: 'setAutoValue', slot, value, round_no: roundNoRef.current }, { key: `auto:${slot}` });
+      const result = await act({ action: 'setAutoValue', variant: variantRef.current, slot, value, round_no: roundNoRef.current }, { key: `auto:${slot}` });
       // An edit made during a save must not be dropped by the duplicate guard.
       if (autoAmtRef.current[slot] !== value || (!result && busyRef.current.has(`auto:${slot}`))) {
         persistAuto(slot, autoAmtRef.current[slot]);

@@ -15,7 +15,7 @@ import GameHelpSheet from './help/GameHelpSheet';
  * yalnızca o otobüs temasının arayüzüdür.
  */
 export default function OtobusRoketGame({ onExit, onBack }) {
-  const game = useRocketGame();
+  const game = useRocketGame('otobus');
   const [boardTab, setBoardTab] = useState(null);
   const [helpOpen, setHelpOpen] = useState(false);
 
