@@ -19,14 +19,19 @@ export default function SlotJackpotBar({ pools, topGap = 0 }) {
       {/* Alttaki yansıma/kırık şeridi kırpılır. */}
       <div className="relative mx-auto w-full max-w-2xl overflow-hidden" style={{ aspectRatio: '1024 / 300', containerType: 'inline-size' }}>
         <img src={JACKPOT_IMAGE} alt="Jackpot" className="absolute left-0 top-0 block w-full" draggable={false} />
-        {SPOTS.map(s => (
-          <span key={s.key}
-            className={`absolute flex items-center justify-center rounded-full bg-black font-black tabular-nums ${s.tone}`}
-            style={{ left: `${s.x - s.w / 2}%`, top: `${s.y - s.h / 2}%`, width: `${s.w}%`, height: `${s.h}%`,
-              fontSize: s.size, textShadow: '0 0 6px currentColor' }}>
-            {format(pools?.[s.key])}
-          </span>
-        ))}
+        {SPOTS.map(s => {
+          const text = format(pools?.[s.key]);
+          // Rakam uzadıkça yazı küçülür, kutunun dışına taşmaz.
+          const fit = (s.w * 1.4 / Math.max(text.length, 1)).toFixed(2);
+          return (
+            <span key={s.key}
+              className={`absolute flex items-center justify-center overflow-hidden whitespace-nowrap rounded-full bg-black font-black tabular-nums leading-none ${s.tone}`}
+              style={{ left: `${s.x - s.w / 2}%`, top: `${s.y - s.h / 2}%`, width: `${s.w}%`, height: `${s.h}%`,
+                fontSize: `min(${s.size}, ${fit}cqw)`, textShadow: '0 0 6px currentColor' }}>
+              {text}
+            </span>
+          );
+        })}
       </div>
     </div>
   );
