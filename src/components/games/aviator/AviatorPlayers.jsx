@@ -1,0 +1,33 @@
+import React, { useState } from 'react';
+import { Users } from 'lucide-react';
+import AviatorPlayerRow from './AviatorPlayerRow';
+
+/** Sol panel: Katılanlar (çekenler) / Bekleyenler (aktif bahisler) ve toplam oyuncu. */
+export default function AviatorPlayers({ bets }) {
+  const [tab, setTab] = useState('in');
+  const all = bets || [];
+  const cashed = all.filter((b) => b.status === 'cashed').sort((a, b) => b.cashout_at - a.cashout_at);
+  const waiting = all.filter((b) => b.status === 'active');
+  const list = tab === 'in' ? [...cashed, ...waiting] : waiting;
+  const total = new Set(all.map((b) => b.user_id)).size;
+
+  return (
+    <aside className="av-panel av-panel-red flex min-h-0 w-[36%] max-w-[15rem] shrink-0 flex-col">
+      <div className="m-1.5 flex rounded-full bg-black/60 p-0.5 text-[10px] font-bold">
+        <button type="button" onClick={() => setTab('in')} className={`flex-1 rounded-full py-1 ${tab === 'in' ? 'av-tab-red' : 'text-white/60'}`}>Katılanlar</button>
+        <button type="button" onClick={() => setTab('wait')} className={`flex-1 rounded-full py-1 ${tab === 'wait' ? 'av-tab-red' : 'text-white/60'}`}>Bekleyenler</button>
+      </div>
+      <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-1.5">
+        {list.length === 0 && <p className="py-3 text-center text-[10px] text-white/40">Henüz oyuncu yok</p>}
+        {list.map((b, i) => <AviatorPlayerRow key={b.id || i} bet={b} />)}
+      </div>
+      <div className="flex items-center gap-2 border-t border-white/10 px-2 py-1.5">
+        <Users className="h-5 w-5 text-red-500" />
+        <div className="leading-tight">
+          <p className="text-[9px] text-white/60">Toplam Oyuncu</p>
+          <p className="text-sm font-black text-red-500">{total}</p>
+        </div>
+      </div>
+    </aside>
+  );
+}

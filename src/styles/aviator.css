@@ -1,0 +1,28 @@
+.av-game { background: radial-gradient(circle at 20% 0%, #2a0509, #050507 45%); color: #fff; }
+.av-header { background: linear-gradient(90deg, rgba(120, 0, 15, .35), transparent 60%); border-bottom: 1px solid rgba(255, 40, 60, .25); }
+.av-logo { font-size: 1.6rem; font-weight: 900; font-style: italic; color: #ff2a3d; text-shadow: 0 0 10px rgba(255, 30, 50, .8); letter-spacing: -.02em; }
+.av-pill { flex-shrink: 0; border-radius: 9999px; padding: .2rem .6rem; font-size: .75rem; font-weight: 700; border: 1px solid; background: rgba(0, 0, 0, .5); }
+.av-pill-blue { color: #7cc4ff; border-color: rgba(80, 160, 255, .5); }
+.av-pill-violet { color: #c69bff; border-color: rgba(160, 100, 255, .6); }
+.av-pill-red { color: #fff; border-color: #ff2a3d; background: rgba(200, 10, 30, .5); box-shadow: 0 0 8px rgba(255, 30, 50, .6); }
+.av-panel { border-radius: 1rem; background: rgba(8, 8, 12, .88); border: 1.5px solid; }
+.av-panel-red { border-color: rgba(255, 40, 60, .75); box-shadow: 0 0 14px -4px rgba(255, 30, 50, .7); }
+.av-panel-green { border-color: rgba(40, 230, 110, .75); box-shadow: 0 0 14px -4px rgba(40, 230, 110, .7); }
+.av-tab-red { background: linear-gradient(180deg, #e01c34, #8e0a1b); color: #fff; }
+.av-tab-green { background: linear-gradient(180deg, #1fcf63, #0b7a37); color: #fff; }
+.av-round { display: grid; place-items: center; width: 1.8rem; height: 1.8rem; border-radius: 9999px; border: 1px solid rgba(255,255,255,.3); color: #fff; }
+.av-round:disabled { opacity: .35; }
+.av-btn { display: flex; align-items: center; justify-content: space-between; gap: .3rem; border-radius: 1rem; padding: .7rem .5rem; color: #fff; min-height: 3.6rem; transition: transform .1s, filter .2s; }
+.av-btn:active:not(:disabled) { transform: scale(.97); }
+.av-btn:disabled { filter: grayscale(.5) brightness(.6); }
+.av-btn-red { background: linear-gradient(180deg, #ff3048, #9c0a1d); box-shadow: 0 0 18px rgba(255, 30, 50, .6), inset 0 1px 0 rgba(255,255,255,.3); }
+.av-btn-green { background: linear-gradient(180deg, #2bea74, #0a8a3c); box-shadow: 0 0 18px rgba(40, 230, 110, .6), inset 0 1px 0 rgba(255,255,255,.3); }
+.av-btn-cash { background: linear-gradient(180deg, #ffc93a, #d77a00); color: #241400; box-shadow: 0 0 20px rgba(255, 180, 40, .8); animation: av-pulse 1s ease-in-out infinite; }
+.av-btn-cancel { background: linear-gradient(180deg, #555, #222); }
+.av-mult { font-size: clamp(2.6rem, 14vw, 5rem); font-weight: 900; line-height: 1; color: #fff; text-shadow: 0 0 18px rgba(255, 30, 50, .95), 0 0 4px #ff2a3d; font-variant-numeric: tabular-nums; }
+.av-plane { transform: translate(-50%, -60%) rotate(-12deg); filter: drop-shadow(0 0 8px rgba(255, 30, 50, .9)); transition: left .25s linear, top .25s linear; }
+.av-plane-fly { animation: av-bob 1.4s ease-in-out infinite; }
+.av-plane-away { animation: av-away .9s ease-in forwards; }
+@keyframes av-bob { 0%,100% { transform: translate(-50%, -60%) rotate(-12deg); } 50% { transform: translate(-50%, -72%) rotate(-8deg); } }
+@keyframes av-away { to { transform: translate(250%, -300%) rotate(-20deg); opacity: 0; } }
+@keyframes av-pulse { 50% { filter: brightness(1.2); } }
