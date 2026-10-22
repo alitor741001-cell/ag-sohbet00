@@ -21,7 +21,7 @@ export default function VipLevels() {
   const [preview, setPreview] = useState(null);
   const theme = data.catalog?.levels.find((item) => item.level === level);
   if (!theme) return <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-background text-foreground">{data.loading ? <Loader2 className="animate-spin" /> : <><p>{data.error || 'VIP bilgileri yüklenemedi.'}</p><button onClick={data.refresh}>Tekrar dene</button></>}</div>;
-  return <div className="vip-world min-h-screen pb-[calc(12rem+env(safe-area-inset-bottom))] font-body" style={vipVars(theme)}>
+  return <div className="vip-world min-h-screen pb-[calc(7rem+env(safe-area-inset-bottom))] font-body" style={vipVars(theme)}>
     <div className="mx-auto max-w-lg">
       <VipPageHeader onBack={() => window.history.length > 1 ? navigate(-1) : navigate('/profil')} onBag={() => setBagOpen(true)} onHelp={() => setHelp(!help)} />
       {help && <p className="vip-glass m-3 rounded-xl p-4 text-xs leading-relaxed">VIP 5 başlangıç, VIP 12 en üst seviyedir. Seçtiğin VIP'i aşağıdaki sabit alandan Coins ile 30 günlük satın alabilirsin; varsa kalan süreye 30 gün eklenir. VIP 6: 7.200.000 Coins, VIP 7: 21.600.000 Coins. Çantandaki üyelikleri kullanma ve hediye etme seçenekleri korunur. Süre dolunca kozmetikler saklanır, kullanım hakları durur.</p>}

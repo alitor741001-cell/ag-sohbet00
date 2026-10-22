@@ -5,7 +5,9 @@
 .cabinet-orb { background: radial-gradient(circle at 35% 25%, hsl(var(--cabinet-light) / .5), hsl(var(--cabinet-night)) 74%); box-shadow: inset 0 0 16px hsl(var(--cabinet-gold) / .2), 0 0 18px hsl(var(--cabinet-light) / .3); }
 @keyframes entrance-float { 0%,100% { transform: translateY(0) scale(.97); } 50% { transform: translateY(-8px) scale(1.025); } }
 @keyframes entrance-energy { from { transform: scale(.55); opacity: .8; } to { transform: scale(1.3); opacity: 0; } }
+@keyframes entrance-arrive { from { opacity: 0; translate: 0 -.75rem; } to { opacity: 1; translate: 0 0; } }
+.entrance-scene { animation: entrance-arrive .3s ease-out both; }
 .entrance-art { animation: entrance-float 2.7s ease-in-out infinite; }
 .entrance-energy { animation: entrance-energy 2.2s ease-out infinite; }
 .entrance-scene[data-reduced="true"] *, .entrance-scene[data-reduced="true"] { animation: none !important; }
-@media (prefers-reduced-motion: reduce) { .entrance-art,.entrance-energy { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .entrance-scene,.entrance-art,.entrance-energy { animation: none; } }

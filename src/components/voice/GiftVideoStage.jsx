@@ -1,13 +1,13 @@
-import { useEffect, useId, useRef } from 'react';
-import GiftTransparencyFilter from '@/components/voice/GiftTransparencyFilter';
+import { useEffect, useRef } from 'react';
 
 /**
  * Hediye kaydında gerçek video dosyası (mp4/webm) varsa onu oynatır.
- * Siyah zemin filtrelenir; %30 opaklık (%70 şeffaflık) koltukları görünür bırakır.
+ * Siyah pikseller screen harmanlamasıyla görünmez; %30 opaklık koltukları açık bırakır.
+ * Video üzerinde SVG filtresi kullanılmaz: mobil video katmanında siyah kutu oluşturabilir.
  */
 export default function GiftVideoStage({ src, poster = '', color = '#facc15' }) {
   const videoRef = useRef(null);
-  const filterId = `gift-video-${useId().replace(/:/g, '')}`;
+
 
   useEffect(() => {
     const el = videoRef.current;
@@ -22,8 +22,7 @@ export default function GiftVideoStage({ src, poster = '', color = '#facc15' }) 
   }, [src]);
 
   return (
-    <div className="absolute inset-0 overflow-hidden">
-      <GiftTransparencyFilter id={filterId} />
+    <div className="pointer-events-none absolute inset-0 overflow-hidden bg-transparent mix-blend-screen">
       <video
         key={src}
         ref={videoRef}
@@ -41,7 +40,7 @@ export default function GiftVideoStage({ src, poster = '', color = '#facc15' }) 
         preload="auto"
         disablePictureInPicture
         className="h-full w-full bg-transparent object-contain opacity-30"
-        style={{ filter: `url(#${filterId})` }}
+
       />
 
     </div>

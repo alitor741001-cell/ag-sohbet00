@@ -1,5 +1,4 @@
 import { Image } from '@/components/ui/image';
-import { ChevronRight, Gem } from 'lucide-react';
 import { MENU_ICONS } from '@/components/profile/fantasy/icons';
 
 const ITEMS = [
@@ -38,7 +37,6 @@ export default function ProfileIconGrid({ vipCount = 0, onSelect }) {
             </span>
             <span className="max-w-[74px] text-center text-[10px] font-semibold leading-tight text-white/85">{item.label}</span>
           </button>
-          {item.key === 'shop' && <button type="button" onClick={() => onSelect('store')} aria-label="Çerçeve koleksiyonunu aç" className="flex min-h-9 items-center justify-center gap-0.5 rounded-xl border border-cabinet-gold/40 bg-cabinet-surface/50 px-1.5 text-[9px] font-bold text-cabinet-gold active:scale-95"><Gem className="h-3 w-3 shrink-0" />Çerçeveler<ChevronRight className="h-3 w-3 shrink-0" /></button>}
           </div>
         ))}
       </div>

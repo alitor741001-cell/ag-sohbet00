@@ -5,12 +5,11 @@ import usePageScrollLock from '@/hooks/usePageScrollLock';
 import BagOrbs from '@/components/store/BagOrbs';
 import StoreCatalog from '@/components/store/StoreCatalog';
 import FrameInventory from '@/components/store/FrameInventory';
-import EntrancePreferences from '@/components/store/EntrancePreferences';
 import '@/components/store/cabinet.css';
 export default function BagCabinet({ children, cosmetics, groups = [], onClose, initialTab = 'frames', onCoins }) {
   const [tab, setTab] = useState(initialTab); usePageScrollLock(true);
   const shopping = initialTab === 'shop';
-  const tabs = shopping ? [['shop','Çerçeve Koleksiyonu'], ['frames','Çerçevelerim']] : [['frames','Çerçevelerim'], ...(children ? [['memberships','VIP Üyelikleri']] : []), ['entrances','Giriş Efektlerim'], ...groups.filter(group => !['frame','banner'].includes(group.kind)).map(group => [`vip-${group.kind}`, group.label])];
+  const tabs = shopping ? [['shop','Çerçeve Koleksiyonu'], ['frames','Çerçevelerim']] : [['frames','Çerçevelerim'], ...(children ? [['memberships','VIP Üyelikleri']] : []), ...groups.filter(group => !['frame','banner'].includes(group.kind)).map(group => [`vip-${group.kind}`, group.label])];
   return createPortal(<div role="dialog" aria-modal="true" aria-label={shopping ? 'Çerçeve Koleksiyonu' : 'Çanta'} className="cosmetic-cabinet fixed inset-0 z-[300] flex flex-col font-body">
     <header className="mx-auto flex w-full max-w-xl shrink-0 items-center justify-between gap-3 px-4 pb-3 pt-[max(1rem,env(safe-area-inset-top))]"><button type="button" onClick={onClose} aria-label="Geri" className="flex h-11 w-11 items-center justify-center rounded-full border border-cabinet-gold/30"><ChevronLeft className="h-6 w-6" /></button><h1 className="text-xl font-black text-cabinet-ink">{shopping ? 'Çerçeve Koleksiyonu' : 'Çanta'}</h1><Store className="h-6 w-6 text-cabinet-gold" /></header>
     {!shopping && <BagOrbs groups={groups} />}
@@ -19,7 +18,6 @@ export default function BagCabinet({ children, cosmetics, groups = [], onClose, 
       {tab==='memberships' && children}
       {tab==='frames' && <><FrameInventory onShop={() => setTab('shop')} />{cosmetics?.('frame')}</>}
       {tab==='shop' && <StoreCatalog onInventory={() => setTab('frames')} onCoins={onCoins} />}
-      {tab==='entrances' && <><EntrancePreferences />{cosmetics?.('banner')}</>}
       {tab.startsWith('vip-') && cosmetics?.(tab.slice(4))}
     </div>
   </div>, document.body);

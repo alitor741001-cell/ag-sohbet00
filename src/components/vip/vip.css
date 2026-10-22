@@ -3,6 +3,9 @@
 .vip-gold { color: hsl(var(--vip-gold)); }
 .vip-tint { color: var(--vip-accent); }
 .vip-button { color: hsl(var(--vip-night)); background: linear-gradient(135deg, var(--vip-secondary), var(--vip-accent)); box-shadow: 0 0 22px -10px var(--vip-accent); }
+.vip-purchase { color: hsl(var(--vip-ink)); background: hsl(var(--vip-night)); border-color: hsl(var(--vip-gold) / .45); }
+.vip-purchase-details { color: hsl(var(--vip-ink) / .85); }
+.vip-purchase .vip-button { color: hsl(var(--vip-night)); background: hsl(var(--vip-gold)); }
 .vip-scroll { scrollbar-width: none; } .vip-scroll::-webkit-scrollbar { display: none; }
 .vip-tab[aria-selected="true"] { color: hsl(var(--vip-ink)); border-bottom: 2px solid var(--vip-accent); text-shadow: 0 0 18px var(--vip-accent); }
 .vip-parchment { background: linear-gradient(155deg, hsl(var(--vip-parchment) / .22), hsl(var(--vip-night) / .94)); border: 1px solid hsl(var(--vip-gold) / .45); box-shadow: inset 0 1px 24px hsl(var(--vip-gold) / .1); }

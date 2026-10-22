@@ -33,10 +33,6 @@ export default function GiftScene({ alert, tiers = [], gifts = [] }) {
         <GiftClipStage frames={clip} color={color} />
       ) : (
         <>
-          <div
-            className="absolute inset-0"
-            style={{ background: `radial-gradient(circle at 50% 46%, ${color}22, transparent 70%)` }}
-          />
           <Gift3DStage
             gift={{
               name: alert.giftName,
@@ -44,7 +40,7 @@ export default function GiftScene({ alert, tiers = [], gifts = [] }) {
               model_kind: record?.model_kind || 'auto',
             }}
             color={color}
-            className="absolute inset-0"
+            className="absolute inset-0 opacity-30"
           />
         </>
       )}
