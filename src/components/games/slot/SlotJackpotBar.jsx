@@ -5,8 +5,8 @@ const format = (value) => new Intl.NumberFormat('tr-TR').format(Math.max(0, Math
 
 // Görseldeki sabit rakamların üstüne canlı havuz değerleri yazılır (konumlar görsele göre %).
 const SPOTS = [
-  { key: 'xmega', x: 54.5, y: 22, w: 15, h: 13, size: '3.1cqw', tone: 'text-white' },
-  { key: 'mini', x: 88, y: 22, w: 15, h: 13, size: '3.1cqw', tone: 'text-white' },
+  { key: 'xmega', x: 54.5, y: 22, w: 18, h: 16, size: '3.1cqw', tone: 'text-white' },
+  { key: 'mini', x: 87.5, y: 22, w: 19, h: 16, size: '3.1cqw', tone: 'text-white' },
   { key: 'mega', x: 18.5, y: 79, w: 25, h: 15, size: '4.6cqw', tone: 'text-violet-100' },
   { key: 'jackpot', x: 50, y: 79, w: 27, h: 15, size: '4.6cqw', tone: 'text-yellow-300' },
   { key: 'big', x: 82.5, y: 79, w: 23, h: 15, size: '4.6cqw', tone: 'text-sky-100' },
@@ -25,7 +25,7 @@ export default function SlotJackpotBar({ pools, topGap = 0 }) {
           const fit = (s.w * 1.4 / Math.max(text.length, 1)).toFixed(2);
           return (
             <span key={s.key}
-              className={`absolute flex items-center justify-center overflow-hidden whitespace-nowrap rounded-full bg-black font-black tabular-nums leading-none ${s.tone}`}
+              className={`absolute flex items-center justify-center overflow-hidden whitespace-nowrap rounded-full border border-amber-400/60 bg-gradient-to-b from-neutral-900 to-black shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_0_8px_rgba(0,0,0,0.9)] font-black tabular-nums leading-none ${s.tone}`}
               style={{ left: `${s.x - s.w / 2}%`, top: `${s.y - s.h / 2}%`, width: `${s.w}%`, height: `${s.h}%`,
                 fontSize: `min(${s.size}, ${fit}cqw)`, textShadow: '0 0 6px currentColor' }}>
               {text}
