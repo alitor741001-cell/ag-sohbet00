@@ -1,0 +1,5 @@
+import { ChevronDown } from 'lucide-react';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem } from '@/components/ui/dropdown-menu';
+export default function CosmeticChoice({ value, onValueChange, options, disabled, label }) {
+  return <DropdownMenu><DropdownMenuTrigger asChild><button type="button" disabled={disabled} aria-label={label} className="mt-2 flex min-h-11 w-full items-center justify-between gap-2 rounded-xl border border-cabinet-light/30 bg-cabinet-surface/30 px-3 text-left text-xs disabled:opacity-50"><span>{options.find(option => option.value===value)?.label}</span><ChevronDown className="h-4 w-4 shrink-0" /></button></DropdownMenuTrigger><DropdownMenuContent align="start" className="z-[550] max-h-72 overflow-y-auto"><DropdownMenuRadioGroup value={value} onValueChange={onValueChange}>{options.map(option => <DropdownMenuRadioItem key={option.value} value={option.value} className="min-h-11">{option.label}</DropdownMenuRadioItem>)}</DropdownMenuRadioGroup></DropdownMenuContent></DropdownMenu>;
+}
