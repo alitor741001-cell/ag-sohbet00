@@ -13,6 +13,9 @@ export default function AviatorStage({ game, children }) {
   const flying = phase === 'running';
   const mult = crashed ? game.round?.crash_at || 1 : flying ? game.displayMult : 1;
   const p = flying || crashed ? travel(mult) : 0;
+  // Renk kademesi: 2x altı mavi, 5x altı yeşil, 10x altı turuncu, sonrası kırmızı.
+  const tier = mult < 2 ? { c: '#3b9bff', h: 220 } : mult < 5 ? { c: '#22e06b', h: 130 } : mult < 10 ? { c: '#ff9a1f', h: 35 } : { c: '#ff2a3d', h: 0 };
+  const planeStyle = { filter: `hue-rotate(${tier.h}deg) drop-shadow(0 0 10px ${tier.c})`, transition: 'filter .4s' };
   // Eğri ve uçak, içerideki oyuncu listesinin sağında kalır (listeyi kapatmaz).
   const x0 = 40;
   const x = x0 + p * 48;
@@ -28,16 +31,16 @@ export default function AviatorStage({ game, children }) {
       </div>
 
       <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 h-full w-full">
-        {p > 0 && <path d={`${path} L ${x} 92 Z`} fill="rgba(220,20,40,0.25)" />}
-        {p > 0 && <path d={path} fill="none" stroke="#ff2a3d" strokeWidth="0.9" vectorEffect="non-scaling-stroke" style={{ filter: 'drop-shadow(0 0 4px #ff2a3d)' }} />}
+        {p > 0 && <path d={`${path} L ${x} 92 Z`} fill={tier.c} fillOpacity="0.22" />}
+        {p > 0 && <path d={path} fill="none" stroke={tier.c} strokeWidth="0.9" vectorEffect="non-scaling-stroke" style={{ filter: `drop-shadow(0 0 4px ${tier.c})` }} />}
       </svg>
 
       {(flying || phase === 'betting') && (
         <Image src={AVIATOR_PLANE} alt="Uçak"
           className={`av-plane absolute z-10 w-[24%] max-w-[7rem] mix-blend-screen ${flying ? 'av-plane-fly' : ''}`}
-          style={{ left: `${x}%`, top: `${y}%` }} fittingType="fit" />
+          style={{ left: `${x}%`, top: `${y}%`, ...planeStyle }} fittingType="fit" />
       )}
-      {crashed && <Image key={game.round?.round_no} src={AVIATOR_PLANE} alt="" className="av-plane av-plane-away absolute z-10 w-[24%] max-w-[7rem] mix-blend-screen" style={{ left: `${x}%`, top: `${y}%` }} fittingType="fit" />}
+      {crashed && <Image key={game.round?.round_no} src={AVIATOR_PLANE} alt="" className="av-plane av-plane-away absolute z-10 w-[24%] max-w-[7rem] mix-blend-screen" style={{ left: `${x}%`, top: `${y}%`, ...planeStyle }} fittingType="fit" />}
 
       {children}
       <div className="pointer-events-none absolute bottom-0 left-[36%] right-0 top-0 z-20 flex flex-col items-center justify-center">
