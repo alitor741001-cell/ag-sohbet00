@@ -4,6 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { useToast } from '@/components/ui/use-toast';
 import ThemeModeSelector from '@/components/profile/ThemeModeSelector';
 import HiddenUserCard from '@/components/profile/HiddenUserCard';
+import VipExtensionSettings from '@/components/profile/VipExtensionSettings';
 
 const CARD =
   'rounded-2xl p-[1px]';
@@ -45,6 +46,7 @@ export default function ProfileSettings({ user, onUpdated }) {
 
   return (
     <div className="space-y-3">
+      <VipExtensionSettings />
       <Panel icon={Palette} title="Görünüm" subtitle="Uygulama temasını seç">
         <ThemeModeSelector />
       </Panel>

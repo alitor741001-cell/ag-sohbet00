@@ -1,7 +1,6 @@
-import { useEffect, useState } from 'react';
+import useSocialList from '@/hooks/useSocialList';
 import { useUserProfile } from '@/lib/profileCard';
 import { ArrowLeft, Clock, Eye, HeartHandshake, Loader2, UserCheck } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
 import { Image } from '@/components/ui/image';
 
 /** Ziyaret zamanı: 22.10.2026 · 02:14 */
@@ -22,23 +21,9 @@ const TITLES = {
 
 /** Takip ve ziyaretçi listeleri: tam ekran açılır, geri butonuyla profile dönülür. */
 export default function SocialListDialog({ open, kind, onClose }) {
-  const [items, setItems] = useState([]);
+  const { items, loading, error, hasMore, loadMore, retry } = useSocialList(open, kind);
   const { openUserProfile } = useUserProfile();
-  const [loading, setLoading] = useState(false);
   const meta = TITLES[kind] || TITLES.visitors;
-
-  useEffect(() => {
-    if (!open || !kind) return;
-    let alive = true;
-    setLoading(true);
-    setItems([]);
-    const payload = kind === 'visitors' ? { action: 'visitors' } : { action: 'list', kind };
-    base44.functions.invoke('social-service', payload)
-      .then((response) => { if (alive) setItems(response.data?.items || []); })
-      .catch(() => { if (alive) setItems([]); })
-      .finally(() => { if (alive) setLoading(false); });
-    return () => { alive = false; };
-  }, [open, kind]);
 
   if (!open) return null;
 
@@ -63,10 +48,11 @@ export default function SocialListDialog({ open, kind, onClose }) {
       </header>
 
       <div className="min-h-0 flex-1 overflow-y-auto p-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
-        {loading ? (
+        {error && <p role="alert" className="mb-4 text-center text-sm text-destructive">{error}<button type="button" onClick={retry} className="ml-2 underline">Yeniden dene</button></p>}
+        {loading && items.length === 0 ? (
           <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-[#f2ce6b]" /></div>
         ) : items.length === 0 ? (
-          <p className="py-12 text-center text-sm font-semibold text-white/50">Henüz kimse yok.</p>
+          !error && <p className="py-12 text-center text-sm font-semibold text-white/50">Henüz kimse yok.</p>
         ) : (
           <div className="mx-auto w-full max-w-[430px] space-y-1.5">
             {items.map((person) => (
@@ -96,6 +82,7 @@ export default function SocialListDialog({ open, kind, onClose }) {
                 </span>
               </button>
             ))}
+            {hasMore && <button type="button" disabled={loading} onClick={loadMore} className="min-h-11 w-full rounded-xl border border-border bg-secondary py-2 text-sm text-secondary-foreground disabled:opacity-50">{loading ? 'Yükleniyor...' : 'Daha fazla ziyaretçi'}</button>}
           </div>
         )}
       </div>

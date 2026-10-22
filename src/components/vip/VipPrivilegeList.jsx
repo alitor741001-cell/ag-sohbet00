@@ -1,4 +1,5 @@
 import { Check, Lock, Wrench } from 'lucide-react';
+import { Link } from 'react-router-dom';
 export default function VipPrivilegeList({ level, features }) {
   return <section className="px-5 py-6">
     <h2 className="vip-gold mb-4 text-center text-lg font-extrabold">Özel Ayrıcalıklar</h2>
@@ -10,9 +11,10 @@ export default function VipPrivilegeList({ level, features }) {
           <span className="vip-tile vip-tint flex h-11 w-11 items-center justify-center rounded-full"><Icon className="h-5 w-5" /></span>
           <p className="text-[10px] font-semibold">{feature.label}</p>
           <p className="text-[8px] text-muted-foreground">{!feature.supported ? 'Altyapı henüz bağlı değil' : `VIP ${feature.minLevel} ve üzeri`}</p>
+          {['visitors', 'stealth-visit', 'avatar', 'room-privacy'].includes(feature.key) && <Link to="/profil?tab=settings" className="mt-1 inline-flex min-h-9 items-center rounded-lg bg-primary/10 px-2 text-[10px] font-bold text-primary">Ayarları aç</Link>}
         </div>;
       })}
     </div>
-    <p className="mt-5 text-center text-[10px] text-muted-foreground">Her üst seviye yeni bir ejderha koleksiyonunu açar; alt seviyelerin kozmetikleri kullanılabilir. VIP, moderasyon kurallarından muafiyet sağlamaz. Mevcut standart ziyaretçi ve gizli oda modu özellikleri korunur; ek VIP gizlilik ayrıcalıkları henüz bağlı değildir.</p>
+    <p className="mt-5 text-center text-[10px] text-muted-foreground">Her üst seviye yeni bir ejderha koleksiyonunu açar; alt seviyelerin kozmetikleri kullanılabilir. VIP, moderasyon kurallarından muafiyet sağlamaz. Ziyaretçiler ve VIP gizlilik tercihleri Profil → Eklentiler bölümünden yönetilir; ayrıcalıklar yalnızca geçerli VIP üyeliği boyunca kullanılabilir.</p>
   </section>;
 }

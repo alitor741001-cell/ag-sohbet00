@@ -21,11 +21,11 @@ export const VIP_FEATURES = [
   { key: 'card', label: 'Profil Kartı', minLevel: 5, supported: true },
   { key: 'banner', label: 'Giriş Efekti', minLevel: 5, supported: true },
   { key: 'name-animation', label: 'İsim Animasyonu', minLevel: 11, supported: true, cosmetic: false },
-  { key: 'visitors', label: 'VIP Ziyaretçi Yetkisi', minLevel: 6, supported: false, cosmetic: false },
-  { key: 'stealth-visit', label: 'Gizli Profil Ziyareti', minLevel: 10, supported: false, cosmetic: false },
-  { key: 'avatar', label: 'Hareketli Avatar', minLevel: 8, supported: false },
+  { key: 'visitors', label: 'VIP Ziyaretçi Yetkisi', minLevel: 6, supported: true, cosmetic: false },
+  { key: 'stealth-visit', label: 'Gizli Profil Ziyareti', minLevel: 10, supported: true, cosmetic: false },
+  { key: 'avatar', label: 'Hareketli Avatar', minLevel: 8, supported: true },
   { key: 'stickers', label: 'VIP Çıkartmalar', minLevel: 8, supported: false },
-  { key: 'room-privacy', label: 'Oda Takibini Kapat', minLevel: 9, supported: false },
+  { key: 'room-privacy', label: 'Oda Takibini Kapat', minLevel: 9, supported: true, cosmetic: false },
   { key: 'vip-gift', label: 'VIP Üyelik Hediye Et', minLevel: 5, supported: true, cosmetic: false },
 ];
 export async function getVipCatalog(base44) {

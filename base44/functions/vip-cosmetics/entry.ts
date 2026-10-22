@@ -3,6 +3,7 @@ import { rateLimit, safeErrorResponse } from '../../shared/security.ts';
 import { effectiveVipLevel } from '../../shared/vip.ts';
 import { getVipCatalog, validateVipCatalog, VIP_LEVELS } from '../../shared/vipCatalog.ts';
 import { syncVipInventory, publishVipAppearance, inventoryView } from '../../shared/vipInventory.ts';
+import { handleVipSettings } from '../../shared/vipSettings.ts';
 
 export default async function(req) {
   try {
@@ -13,7 +14,7 @@ export default async function(req) {
     if (me.is_banned || me.role === 'banned') return Response.json({ error: 'İşlem yapılamıyor.' }, { status: 403 });
     const body = await req.json();
     const action = body.action || 'list';
-    if (!['list', 'toggle', 'catalog', 'saveCatalog'].includes(action)) return Response.json({ error: 'Geçersiz işlem.' }, { status: 400 });
+    if (!['list', 'toggle', 'catalog', 'saveCatalog', 'settings', 'setSetting'].includes(action)) return Response.json({ error: 'Geçersiz işlem.' }, { status: 400 });
     if (action === 'saveCatalog') {
       if (me.role !== 'admin') return Response.json({ error: 'Yetkisiz.' }, { status: 403 });
       if (JSON.stringify(body.catalog || {}).length > 24000) return Response.json({ error: 'Ayarlar çok büyük.' }, { status: 400 });
@@ -26,6 +27,7 @@ export default async function(req) {
     }
     const catalog = await getVipCatalog(base44);
     if (action === 'catalog') return Response.json({ ok: true, catalog });
+    if (action === 'settings' || action === 'setSetting') return await handleVipSettings(base44, me, { ...body, action }, catalog);
     const level = effectiveVipLevel(me);
     if (action === 'toggle' && (typeof body.active !== 'boolean' || (body.level !== undefined && !VIP_LEVELS.includes(body.level)))) return Response.json({ error: 'Geçersiz kozmetik seçimi.' }, { status: 400 });
     const rows = await syncVipInventory(base44, me, level, catalog);

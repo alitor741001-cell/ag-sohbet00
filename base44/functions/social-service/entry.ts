@@ -1,4 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
+import { getVipCatalog } from '../../shared/vipCatalog.ts';
+import { getVipPreference, hasVipPrivilege } from '../../shared/vipPrivileges.ts';
 
 const LIMIT = 200;
 // Aynı kişi kısa sürede tekrar bakarsa yeni ziyaret kaydı açılmaz: kayıt tazelenir.
@@ -65,6 +67,8 @@ export default async function (req) {
     if (action === 'visit') {
       const profileId = String(body.profile_id || '');
       if (!profileId || profileId === me.id) return Response.json({ ok: true });
+      const [account, catalog, preference] = await Promise.all([db.User.get(me.id), getVipCatalog(base44), getVipPreference(base44, me.id)]);
+      if (preference.stealth_visit && hasVipPrivilege(account, catalog, 'stealth-visit')) return Response.json({ ok: true, private: true });
       const recent = await db.ProfileVisit.filter({ profile_id: profileId, visitor_id: me.id }, '-visited_at', 1);
       const last = recent[0];
       const now = Date.now();
@@ -77,7 +81,11 @@ export default async function (req) {
     }
 
     if (action === 'visitors') {
-      const rows = await db.ProfileVisit.filter({ profile_id: me.id }, '-visited_at', 60);
+      const [account, catalog] = await Promise.all([db.User.get(me.id), getVipCatalog(base44)]);
+      if (!hasVipPrivilege(account, catalog, 'visitors')) return Response.json({ error: `Ziyaretçileri görmek için VIP ${catalog.features.find(feature => feature.key === 'visitors').minLevel} ve üzeri üyelik gerekli.` }, { status: 403 });
+      if (body.cursor !== undefined && (typeof body.cursor !== 'string' || body.cursor.length > 2000)) return Response.json({ error: 'Geçersiz sayfa.' }, { status: 400 });
+      const page = await db.ProfileVisit.filter({ profile_id: me.id }, { sort: '-visited_at', limit: 30, ...(body.cursor ? { cursor: body.cursor } : {}) });
+      const rows = page.items;
       const seen = new Set();
       const ordered = [];
       rows.forEach((row) => {
@@ -89,6 +97,7 @@ export default async function (req) {
       const users = ids.length ? await db.User.filter({ id: { $in: ids } }, '-created_date', LIMIT) : [];
       const byId = new Map(users.map((user) => [user.id, clean(user)]));
       return Response.json({
+        has_more: page.has_more, next_cursor: page.next_cursor,
         items: ordered
           .map((row) => {
             const person = byId.get(row.visitor_id);
@@ -101,14 +110,14 @@ export default async function (req) {
     if (action === 'stats') {
       const targetId = String(body.user_id || me.id);
       const [following, followers, visitors] = await Promise.all([
-        db.Follow.filter({ follower_id: targetId }, '-created_date', LIMIT),
-        db.Follow.filter({ following_id: targetId }, '-created_date', LIMIT),
-        db.ProfileVisit.filter({ profile_id: targetId }, '-visited_at', LIMIT)
+        db.Follow.count({ follower_id: targetId }),
+        db.Follow.count({ following_id: targetId }),
+        db.ProfileVisit.count({ profile_id: targetId })
       ]);
       return Response.json({
-        following: following.length,
-        followers: followers.length,
-        visitors: visitors.length
+        following,
+        followers,
+        visitors
       });
     }
 

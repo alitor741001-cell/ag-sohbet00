@@ -106,12 +106,12 @@ export default function UserProfile({ userId, roomIdOverride, onBack, onMessage,
       <button onClick={() => onBack ? onBack() : navigate(-1)} className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground mb-4"><ArrowLeft className="w-4 h-4" /> Geri</button>
       {err ? <p className="text-center text-destructive py-10">{err}</p> : profile && (
         <div className="bg-card border border-border rounded-2xl p-6 flex flex-col items-center text-center">
-          <div className="relative mb-8">
+          <div className={`relative mb-8 ${profile.vip_look?.avatar ? 'vip-avatar-active' : ''}`}>
             {accountState?.status === 'banned' ? (
               <Image src={ACCOUNT_STATES.banned.image} className="w-28 h-28 rounded-full border border-border object-cover" fittingType="fill" />
             ) : profile.profile_frame ? (
               <ProfileFrame frame={profile.profile_frame} size="lg" avatar={profile.avatar} name={profile.username || profile.full_name} frameScale={profile.profile_frame_scale} panX={profile.profile_avatar_x} panY={profile.profile_avatar_y}>
-                {profile.avatar ? <Image src={profile.avatar} className="w-28 h-28 rounded-full object-cover" fittingType="fill" /> :
+                {profile.avatar ? <Image src={profile.avatar} className="vip-avatar-picture w-28 h-28 rounded-full object-cover" fittingType="fill" /> :
                   <div className="w-28 h-28 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-4xl font-bold">{(profile.username || profile.full_name || '?')[0]}</div>}
               </ProfileFrame>
             ) : (

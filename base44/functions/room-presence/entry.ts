@@ -10,6 +10,7 @@ import { scoresAfterRoomLeave } from '../../shared/numberBoard.ts';
 import { maskRoomIdentities } from '../../shared/hiddenUserRoom.ts';
 import { appendRoomLog } from '../../shared/roomLog.ts';
 import { sendDirect } from '../../shared/agency.ts';
+import { writeVisibleRoom } from '../../shared/vipPrivileges.ts';
 
 async function sha256Hex(salt, pw) {
   const data = new TextEncoder().encode(salt + pw);
@@ -19,7 +20,7 @@ async function sha256Hex(salt, pw) {
 
 async function updatePresenceRoom(base44, userId, roomId) {
   const records = await base44.asServiceRole.entities.UserPresence.filter({ user_id: userId }, '-created_date', 1).catch(() => []);
-  if (records[0]) await base44.asServiceRole.entities.UserPresence.update(records[0].id, { current_room_id: roomId || '' }).catch(() => {});
+  await writeVisibleRoom(base44, records, roomId);
 }
 
 function rememberParticipant(room, participant) {
@@ -348,8 +349,7 @@ export default async function(req) {
       if (insideIds.length) {
         const records = await base44.asServiceRole.entities.UserPresence
           .filter({ user_id: { $in: insideIds } }, '-created_date', insideIds.length).catch(() => []);
-        await Promise.all(records.map((record) => base44.asServiceRole.entities.UserPresence
-          .update(record.id, { current_room_id: willHide ? '' : room_id }).catch(() => {})));
+        await writeVisibleRoom(base44, records, willHide ? '' : room_id);
       }
       return Response.json({ ok: true, hidden: willHide });
     }

@@ -81,7 +81,7 @@ function VoiceSeat({ seat, index, size = 'md', musicPlaying, speaking, isSelf, i
         {musicPlaying && <span aria-label="Müzik çalıyor" className={`pointer-events-none absolute ${ring} z-[7] rounded-full room-music-glow`} />}
         {speaking && !muted && <VoiceSpeakingWave index={index} ring={ring} theme={!hidden && vipLook(profile, 'mic')} />}
         {halo && <span className="pointer-events-none absolute inset-0 z-[6] rounded-full" style={{ boxShadow: halo }} />}
-        <VoiceSeatPortrait seat={seat} className={face} variant={index} theme={!hidden && vipLook(profile, 'frame')} cosmeticChoice={!hidden ? cosmeticChoice : null} />
+        <VoiceSeatPortrait seat={seat} animated={!hidden && !!vipLook(profile, 'avatar')} className={face} variant={index} theme={!hidden && vipLook(profile, 'frame')} cosmeticChoice={!hidden ? cosmeticChoice : null} />
         {muted && (
           <span title="Mikrofon kapalı" aria-label="Mikrofon kapalı" className={`absolute left-1/2 top-1/2 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-destructive ${badge}`}>
             <MicOff className="h-3 w-3 text-white" />
