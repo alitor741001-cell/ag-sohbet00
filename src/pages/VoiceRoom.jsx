@@ -103,7 +103,6 @@ export default function VoiceRoom() {
   const [coinsRequest, setCoinsRequest] = useState(0);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [micGuideDismissed, setMicGuideDismissed] = useState(false);
-  useEffect(() => { if (voice.micDenied) setMicGuideDismissed(false); }, [voice.micDenied]);
   const [logOpen, setLogOpen] = useState(false);
   // Oda paneli: profilim, oda ismi düzenleme, kategori, duyuru ve yöneticiler burada durur.
   const [profilePanelOpen, setProfilePanelOpen] = useState(false);
@@ -280,6 +279,7 @@ export default function VoiceRoom() {
     voiceEnabled: joined && !!room?.voice_enabled,
     micEnabled: seated,
   });
+  useEffect(() => { if (voice.micDenied) setMicGuideDismissed(false); }, [voice.micDenied]);
 
   // Oda müziği: odanın açık şarkısı canlı izlenir, herkes kendi telefonunda duyar.
   // Hoparlör kapatıldığında şarkı da susar; açıldığında kullanıcı sesleriyle birlikte geri gelir.
