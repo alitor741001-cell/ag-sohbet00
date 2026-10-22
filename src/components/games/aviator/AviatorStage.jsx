@@ -17,8 +17,8 @@ export default function AviatorStage({ game, children }) {
   const tier = mult < 2 ? { c: '#3b9bff', h: 220 } : mult < 5 ? { c: '#22e06b', h: 130 } : mult < 10 ? { c: '#ff9a1f', h: 35 } : { c: '#ff2a3d', h: 0 };
   const planeStyle = { filter: `hue-rotate(${tier.h}deg) drop-shadow(0 0 10px ${tier.c})`, transition: 'filter .4s' };
   // Eğri ve uçak, içerideki oyuncu listesinin sağında kalır (listeyi kapatmaz).
-  const x0 = 40;
-  const x = x0 + p * 48;
+  const x0 = 44;
+  const x = x0 + p * 44;
   const y = 92 - p * 66;
   const path = `M ${x0} 92 Q ${x0 + (x - x0) * 0.6} 92 ${x} ${y}`;
 
@@ -37,13 +37,13 @@ export default function AviatorStage({ game, children }) {
 
       {(flying || phase === 'betting') && (
         <Image src={AVIATOR_PLANE} alt="Uçak"
-          className={`av-plane absolute z-10 w-[24%] max-w-[7rem] mix-blend-screen ${flying ? 'av-plane-fly' : ''}`}
+          className={`av-plane absolute z-10 aspect-[3/2] w-[26%] max-w-[8rem] mix-blend-screen ${flying ? 'av-plane-fly' : ''}`}
           style={{ left: `${x}%`, top: `${y}%`, ...planeStyle }} fittingType="fit" />
       )}
-      {crashed && <Image key={game.round?.round_no} src={AVIATOR_PLANE} alt="" className="av-plane av-plane-away absolute z-10 w-[24%] max-w-[7rem] mix-blend-screen" style={{ left: `${x}%`, top: `${y}%`, ...planeStyle }} fittingType="fit" />}
+      {crashed && <Image key={game.round?.round_no} src={AVIATOR_PLANE} alt="" className="av-plane av-plane-away absolute z-10 aspect-[3/2] w-[26%] max-w-[8rem] mix-blend-screen" style={{ left: `${x}%`, top: `${y}%`, ...planeStyle }} fittingType="fit" />}
 
       {children}
-      <div className="pointer-events-none absolute bottom-0 left-[36%] right-0 top-0 z-20 flex flex-col items-center justify-center">
+      <div className="pointer-events-none absolute bottom-0 left-[40%] right-0 top-0 z-20 flex flex-col items-center justify-center">
         {phase === 'betting' ? (
           <>
             <p className="text-xs font-bold tracking-widest text-white/70">SONRAKİ TUR</p>

@@ -12,7 +12,7 @@
 .av-tab-green { background: linear-gradient(180deg, #1fcf63, #0b7a37); color: #fff; }
 .av-round { display: grid; place-items: center; width: 1.8rem; height: 1.8rem; border-radius: 9999px; border: 1px solid rgba(255,255,255,.3); color: #fff; }
 .av-round:disabled { opacity: .35; }
-.av-btn { display: flex; align-items: center; justify-content: space-between; gap: .3rem; border-radius: 1rem; padding: .7rem .5rem; color: #fff; min-height: 3.6rem; transition: transform .1s, filter .2s; }
+.av-btn { display: flex; align-items: center; justify-content: space-between; gap: .3rem; border-radius: 1rem; padding: .35rem .5rem; color: #fff; min-height: 2.8rem; transition: transform .1s, filter .2s; }
 .av-btn:active:not(:disabled) { transform: scale(.97); }
 .av-btn:disabled { filter: grayscale(.5) brightness(.6); }
 .av-btn-red { background: linear-gradient(180deg, #ff3048, #9c0a1d); box-shadow: 0 0 18px rgba(255, 30, 50, .6), inset 0 1px 0 rgba(255,255,255,.3); }

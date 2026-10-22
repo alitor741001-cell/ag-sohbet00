@@ -4,7 +4,6 @@ import { Image } from '@/components/ui/image';
 import { AVIATOR_PLANE } from '../rocketAssets';
 import { format, formatAuto } from '../rocket/rocketConfig';
 
-const CHIPS = [500, 1000, 5000, 10000];
 
 /** Bahis kartı: Bahis/Otomatik sekmesi, tutar, hızlı seçimler ve büyük BAHİS butonu. */
 export default function AviatorBetCard({ color, slot, onAutoEdit }) {
@@ -22,11 +21,6 @@ export default function AviatorBetCard({ color, slot, onAutoEdit }) {
         <span className="min-w-0 flex-1 truncate text-base font-bold tabular-nums text-white">{format(slot.amount)}</span>
         <button type="button" disabled={slot.locked} onClick={() => slot.onAmount(-1)} className="av-round"><Minus className="h-4 w-4" /></button>
         <button type="button" disabled={slot.locked} onClick={() => slot.onAmount(1)} className="av-round ml-1"><Plus className="h-4 w-4" /></button>
-      </div>
-      <div className="grid grid-cols-2 gap-1">
-        {CHIPS.map((c) => (
-          <button key={c} type="button" disabled={slot.locked} onClick={() => slot.onSet(c)} className="rounded-full border border-white/10 bg-black/60 py-1 text-[11px] font-semibold text-white/85 active:bg-white/10">{format(c)}</button>
-        ))}
       </div>
       <p className="text-center text-[9px] text-white/50">Oto. çekilme: {formatAuto(slot.auto)}</p>
       <button type="button" disabled={slot.disabled} onClick={slot.onAction} className={`av-btn ${btn}`}>

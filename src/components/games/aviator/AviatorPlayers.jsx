@@ -12,7 +12,7 @@ export default function AviatorPlayers({ bets }) {
   const total = new Set(all.map((b) => b.user_id)).size;
 
   return (
-    <aside className="absolute bottom-2 left-2 top-9 z-20 flex w-[34%] max-w-[15rem] flex-col rounded-xl border border-red-500/40 bg-black/55 backdrop-blur-sm">
+    <aside className="absolute bottom-2 left-2 top-9 z-20 flex w-[38%] max-w-[17rem] flex-col rounded-xl border border-red-500/40 bg-black/55 backdrop-blur-sm">
       <div className="m-1.5 flex rounded-full bg-black/60 p-0.5 text-[10px] font-bold">
         <button type="button" onClick={() => setTab('in')} className={`flex-1 rounded-full py-1 ${tab === 'in' ? 'av-tab-red' : 'text-white/60'}`}>Katılanlar</button>
         <button type="button" onClick={() => setTab('wait')} className={`flex-1 rounded-full py-1 ${tab === 'wait' ? 'av-tab-red' : 'text-white/60'}`}>Bekleyenler</button>
