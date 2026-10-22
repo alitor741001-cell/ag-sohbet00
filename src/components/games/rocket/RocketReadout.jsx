@@ -20,7 +20,6 @@ export default function RocketReadout({ phase, mult, countdown, roundNo }) {
       <span className="rk-readout-emblem" aria-hidden="true">
         <Rocket className="h-3.5 w-3.5" />
       </span>
-      <p className="rk-tagline">HAYAL ET · İZLE · KEYFİNİ ÇIKAR</p>
 
       <span className="relative flex items-center justify-center">
         {betting && (
