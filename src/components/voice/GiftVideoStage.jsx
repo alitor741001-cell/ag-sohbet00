@@ -39,8 +39,8 @@ export default function GiftVideoStage({ src, poster = '', color = '#facc15' }) 
         playsInline
         preload="auto"
         disablePictureInPicture
-        className="h-full w-full bg-transparent object-contain opacity-60"
-        style={{ filter: 'brightness(0.8) saturate(0.9)' }}
+        className="h-full w-full bg-transparent object-contain opacity-75"
+        style={{ filter: 'brightness(0.85) saturate(0.92)' }}
 
       />
 
