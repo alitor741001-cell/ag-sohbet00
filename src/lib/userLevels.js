@@ -75,7 +75,7 @@ export const nLevelOf = (loadedCoins) => {
 /** Geçerli VIP seviyesi: süresi dolan VIP rozet sayılmaz. */
 export const vipLevelOf = (user) => {
   const level = Math.max(0, Math.floor(Number(user?.vip_level) || 0));
-  return vipActive(user) ? level : 0;
+  return level >= 5 && level <= 12 && vipActive(user) ? level : 0;
 };
 
 export const tierOf = (level) => (level >= 60 ? 'red' : level >= 50 ? 'gold' : level >= 40 ? 'blue' : level >= 30 ? 'purple' : level >= 20 ? 'dark' : 'green');

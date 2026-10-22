@@ -4,6 +4,7 @@ import VoiceSeatGrid from '@/components/voice/VoiceSeatGrid';
 import VoiceBoardTimer from '@/components/voice/VoiceBoardTimer';
 import HiddenUserMarquee from '@/components/voice/HiddenUserMarquee';
 import { useSize } from '@/hooks/use-size';
+import VipRoomEntrance from '@/components/vip/VipRoomEntrance';
 
 /**
  * Sahne: üst başlık ile alt sohbet alanı arasında kalan sabit bölge.
@@ -82,6 +83,7 @@ export default function VoiceStage({ scrollRef, handlers, room, hiddenAnnounce, 
         </div>
       </div>
       <VoiceBoardTimer active={grid.boardActive} startedAt={grid.boardStartedAt} />
+      <VipRoomEntrance roomId={room?.id} participants={room?.participants || []} />
     </>
   );
 }

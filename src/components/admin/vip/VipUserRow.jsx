@@ -9,6 +9,7 @@ const DURATIONS = [
   { key: 'week', label: '1 Hafta' },
   { key: 'half', label: '15 Gün' },
   { key: 'month', label: '1 Ay' },
+  { key: 'catalog', label: 'Seviye süresi' },
 ];
 
 /** VIP Merkezi satırı: kişi bilgisi, rozetleri, süre seçimi ve seviye düğmeleri. */

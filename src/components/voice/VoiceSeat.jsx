@@ -6,6 +6,7 @@ import VoiceSeatRing from '@/components/voice/VoiceSeatRing';
 import { isHiddenName } from '@/lib/hiddenUser';
 import SeatEmblem from '@/components/voice/SeatEmblem';
 import VoiceSpeakingWave from '@/components/voice/VoiceSpeakingWave';
+import { vipLook } from '@/components/vip/vipTheme';
 
 // Her koltuk aynı boyutta sabit bir portre alanı kullanır: profil boyutu değişse de
 // ızgara kaymaz, çerçeveler komşu koltuğa taşmaz.
@@ -19,7 +20,7 @@ const NAME = { xs: 'max-w-[42px]', sm: 'max-w-[52px]', md: 'max-w-[68px]', lg: '
 // Kilit ve + ikonları koltuk büyüdükçe büyür: referanstaki oran korunur.
 
 /** Tek koltuk: boş koltukta + ve numara, dolu koltukta profil görseli ve isim. */
-function VoiceSeat({ seat, index, size = 'md', musicPlaying, speaking, isSelf, isOwner, isMod, accent = '#ef4444', gifted, onClick, onSelect, micMuted }) {
+function VoiceSeat({ seat, index, size = 'md', musicPlaying, speaking, isSelf, isOwner, isMod, accent = '#ef4444', gifted, onClick, onSelect, micMuted, profile }) {
   const handleClick = onSelect ? () => onSelect(index) : onClick;
   const cell = CELL[size] || CELL.md;
   const face = FACE[size] || FACE.md;
@@ -67,6 +68,7 @@ function VoiceSeat({ seat, index, size = 'md', musicPlaying, speaking, isSelf, i
   const halo = gifted ? `0 0 0 2px ${accent}, 0 0 26px ${accent}` : undefined;
   // Gizli kullanıcı: koltukta maskeli profil ve kırmızı takma ad görünür, rozet taşımaz.
   const hidden = isHiddenName(seat.name);
+  const nameTheme = !hidden && vipLook(profile, 'name');
 
   return (
     <button
@@ -77,9 +79,9 @@ function VoiceSeat({ seat, index, size = 'md', musicPlaying, speaking, isSelf, i
     >
       <span className={`relative flex ${cell} shrink-0 items-center justify-center`}>
         {musicPlaying && <span aria-label="Müzik çalıyor" className={`pointer-events-none absolute ${ring} z-[7] rounded-full room-music-glow`} />}
-        {speaking && !muted && <VoiceSpeakingWave index={index} ring={ring} />}
+        {speaking && !muted && <VoiceSpeakingWave index={index} ring={ring} theme={!hidden && vipLook(profile, 'mic')} />}
         {halo && <span className="pointer-events-none absolute inset-0 z-[6] rounded-full" style={{ boxShadow: halo }} />}
-        <VoiceSeatPortrait seat={seat} className={face} variant={index} />
+        <VoiceSeatPortrait seat={seat} className={face} variant={index} theme={!hidden && vipLook(profile, 'frame')} />
         {muted && (
           <span title="Mikrofon kapalı" aria-label="Mikrofon kapalı" className={`absolute left-1/2 top-1/2 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-destructive ${badge}`}>
             <MicOff className="h-3 w-3 text-white" />
@@ -89,7 +91,7 @@ function VoiceSeat({ seat, index, size = 'md', musicPlaying, speaking, isSelf, i
           <span className="gift-pop pointer-events-none absolute -top-5 left-1/2 z-30 -translate-x-1/2 text-lg leading-none">{gifted}</span>
         )}
       </span>
-      <span className={`flex ${nameWidth} items-center gap-0.5 truncate text-[10px] leading-none`} style={{ color: gifted ? accent : '#ffffff' }}>
+      <span className={`flex ${nameWidth} items-center gap-0.5 truncate text-[10px] leading-none`} style={{ color: gifted ? accent : nameTheme?.accent || '#ffffff' }}>
         {!hidden && isOwner && <Crown className="h-3 w-3 shrink-0 text-amber-400" />}
         {!hidden && !isOwner && isMod && <Shield className="h-3 w-3 shrink-0 text-sky-400" />}
         <span className={`truncate ${hidden ? 'hidden-user-name' : ''}`}>{isSelf ? 'Sen' : seat.name}</span>

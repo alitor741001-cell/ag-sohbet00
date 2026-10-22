@@ -5,6 +5,7 @@ import { writeProfileSummary } from '../../shared/supabaseMirror.ts';
 import { applyVipToUser, vipDurationLabel, effectiveVipLevel } from '../../shared/vip.ts';
 import { findByMemberId } from '../../shared/giftBox.ts';
 import { maskUserInCurrentRoom, restoreUserInRooms } from '../../shared/hiddenUserRoom.ts';
+import { VIP_LEVELS } from '../../shared/vipCatalog.ts';
 
 const ACTIONS = ['list', 'use', 'send', 'hidden'];
 
@@ -44,8 +45,8 @@ export default async function (req: Request): Promise<Response> {
     // Çantadaki VIP'ler ve son hareketler.
     if (action === 'list') {
       const [bag, history] = await Promise.all([
-        base44.asServiceRole.entities.VipItem.filter({ owner_id: user.id, status: 'bag' }, '-created_date', 50).catch(() => []),
-        base44.asServiceRole.entities.VipItem.filter({ owner_id: user.id, status: { $ne: 'bag' } }, '-created_date', 20).catch(() => []),
+        base44.asServiceRole.entities.VipItem.filter({ owner_id: user.id, status: 'bag', level: { $in: VIP_LEVELS } }, '-created_date', 50).catch(() => []),
+        base44.asServiceRole.entities.VipItem.filter({ owner_id: user.id, status: { $ne: 'bag' }, level: { $in: VIP_LEVELS } }, '-created_date', 20).catch(() => []),
       ]);
       // Profil sayfası rozet sayısını aynadan okur: sayı burada tazelenir.
       waitUntil(writeProfileSummary(base44, user.id, { vip_count: bag.length }));
@@ -70,6 +71,7 @@ export default async function (req: Request): Promise<Response> {
     const picked = await base44.asServiceRole.entities.VipItem.get(String(body?.item_id || '')).catch(() => null);
     if (!picked || picked.owner_id !== user.id) return Response.json({ error: 'Bu VIP senin çantanda değil.' }, { status: 404 });
     if (picked.status !== 'bag') return Response.json({ error: 'Bu VIP zaten kullanıldı.' }, { status: 400 });
+    if (!VIP_LEVELS.includes(picked.level)) return Response.json({ error: 'Geçersiz VIP seviyesi.' }, { status: 400 });
 
     // Kendi çantasından kendisi kullanır: seviye ve süre profilinde anında geçerli olur.
     if (action === 'use') {

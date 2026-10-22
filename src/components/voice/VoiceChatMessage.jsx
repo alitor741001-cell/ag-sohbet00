@@ -5,6 +5,8 @@ import UserBadgeRow from '@/components/status/UserBadgeRow';
 import { getRoleInfo, isModerator } from '@/lib/roles';
 import { plainText } from '@/components/voice/voiceText';
 import { HIDDEN_AVATAR_URL, isHiddenName } from '@/lib/hiddenUser';
+import VipChatBubble from '@/components/vip/VipChatBubble';
+import { vipLook, vipVars } from '@/components/vip/vipTheme';
 
 /** Sohbet satırı: üye no, rol ve durum rozetleri + renkli isim + mesaj. */
 function VoiceChatMessage({ message, profile, ownerId, moderators = [], currentUserId, onOpenProfile }) {
@@ -26,11 +28,11 @@ function VoiceChatMessage({ message, profile, ownerId, moderators = [], currentU
 
       <div className="min-w-0 flex-1">
         <div className="flex min-w-0 flex-wrap items-center gap-x-1 gap-y-0.5">
-          <span onClick={() => onOpenProfile?.(message.user_id)} className="min-w-0 max-w-full cursor-pointer break-words text-left text-xs font-bold [overflow-wrap:anywhere]">
+          <span onClick={() => onOpenProfile?.(message.user_id)} style={vipVars(!hidden && vipLook(profile, 'name'))} className={`min-w-0 max-w-full cursor-pointer break-words text-left text-xs font-bold [overflow-wrap:anywhere] ${!hidden && !role.name_effect && vipLook(profile, 'name')?.nameAnimated ? 'vip-name-animated' : ''}`}>
             {hidden ? (
               <span className="hidden-user-name">{name}</span>
             ) : (
-              <RoleNameEffect nameEffect={role.name_effect} color={role.color} className={role.name_effect ? undefined : 'text-white'}>
+              <RoleNameEffect nameEffect={role.name_effect} color={role.name_effect ? role.color : vipLook(profile, 'name')?.accent || role.color} className={role.name_effect ? undefined : vipLook(profile, 'name') ? undefined : 'text-white'}>
                 {name}
               </RoleNameEffect>
             )}
@@ -43,7 +45,7 @@ function VoiceChatMessage({ message, profile, ownerId, moderators = [], currentU
           <UserBadgeRow profile={profile} />
         </div>
 
-        <p className="mt-1 whitespace-pre-wrap text-white">{plainText(message.text)}</p>
+        <VipChatBubble theme={!hidden && vipLook(profile, 'bubble')}><p className="mt-1 whitespace-pre-wrap text-white">{plainText(message.text)}</p></VipChatBubble>
       </div>
     </article>
   );

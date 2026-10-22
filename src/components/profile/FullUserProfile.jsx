@@ -62,7 +62,8 @@ export default function FullUserProfile({
         })
         .catch(() => {});
     }
-    return () => { alive = false; off(); };
+    const offVip = subscribeEntity('VipAppearance', (event) => { if (event.data?.owner_id === userId) load(); });
+    return () => { alive = false; off(); offVip(); };
   }, [open, userId, hidden, user?.id]);
 
   // Profil açıldığında ziyaret kaydı düşülür: sahibi kimlerin baktığını görebilir.
@@ -71,6 +72,19 @@ export default function FullUserProfile({
     if (!user?.id || userId === user.id) return;
     base44.functions.invoke('social-service', { action: 'visit', profile_id: userId }).catch(() => {});
   }, [open, userId, hidden, user?.id]);
+
+  useEffect(() => {
+    const expiry = Date.parse(profile?.vip_expires_at || '');
+    if (!open || !Number.isFinite(expiry) || expiry <= Date.now()) return;
+    let timer;
+    const checkExpiry = () => {
+      const remaining = expiry - Date.now();
+      if (remaining <= 0) setProfile((current) => current ? { ...current, vip_level: 0, vip_look: {} } : current);
+      else timer = setTimeout(checkExpiry, Math.min(remaining + 50, 2147483647));
+    };
+    checkExpiry();
+    return () => clearTimeout(timer);
+  }, [open, profile?.vip_expires_at]);
 
   if (!open || !userId) return null;
 
@@ -327,7 +341,7 @@ export default function FullUserProfile({
   );
 
   return (
-    <FantasyProfileShell female={profile?.gender === 'kadın'} hidden={hidden} name={shownName}
+    <FantasyProfileShell profile={profile} female={profile?.gender === 'kadın'} hidden={hidden} name={shownName}
       avatar={banned ? ACCOUNT_STATES.banned.image : shownAvatar} role={roleLabel} onClose={onClose}>
       <div className="space-y-3 px-4 pt-1">
         {header}

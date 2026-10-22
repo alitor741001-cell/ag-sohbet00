@@ -16,12 +16,25 @@
         "card",
         "ride",
         "room-card",
-        "seat"
+        "seat",
+        "name",
+        "avatar"
       ]
     },
     "level": {
       "type": "integer",
+      "minimum": 5,
+      "maximum": 12,
       "default": 5
+    },
+    "owned_levels": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 5,
+        "maximum": 12
+      },
+      "default": []
     },
     "active": {
       "type": "boolean",

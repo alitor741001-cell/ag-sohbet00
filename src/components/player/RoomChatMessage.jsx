@@ -8,6 +8,8 @@ import UserBadgeRow from '@/components/status/UserBadgeRow';
 import RoomLevelBadge from '@/components/status/RoomLevelBadge';
 import { getRoleInfo, isModerator } from '@/lib/roles';
 import { HIDDEN_AVATAR_URL, isHiddenName } from '@/lib/hiddenUser';
+import VipChatBubble from '@/components/vip/VipChatBubble';
+import { vipLook, vipVars } from '@/components/vip/vipTheme';
 
 /**
  * Film odası sohbet satırı: sesli oda sohbetindeki gibi küçük yuvarlak profil,
@@ -36,10 +38,10 @@ function RoomChatMessage({ message, profile, ownerId, roomModerators, currentUse
     </button>
     <div className="min-w-0 flex-1">
       <div className="flex min-w-0 flex-wrap items-center gap-x-1 gap-y-0.5">
-        <button type="button" onClick={() => onOpenProfile?.(message.user_id)} className="min-w-0 max-w-full break-words text-left text-xs font-semibold hover:underline [overflow-wrap:anywhere]">
+        <button type="button" onClick={() => onOpenProfile?.(message.user_id)} style={vipVars(!hidden && vipLook(profile, 'name'))} className={`min-w-0 max-w-full break-words text-left text-xs font-semibold hover:underline [overflow-wrap:anywhere] ${!hidden && !role.name_effect && vipLook(profile, 'name')?.nameAnimated ? 'vip-name-animated' : ''}`}>
           {hidden
             ? <span className="hidden-user-name">{name}</span>
-            : <RoleNameEffect nameEffect={role.name_effect} color={role.color}>{name}{currentUserId === message.user_id && ' (Sen)'}</RoleNameEffect>}
+            : <RoleNameEffect nameEffect={role.name_effect} color={role.name_effect ? role.color : vipLook(profile, 'name')?.accent || role.color}>{name}{currentUserId === message.user_id && ' (Sen)'}</RoleNameEffect>}
         </button>
         {!hidden && label && <span className={`text-[10px] font-bold ${isOwner ? 'text-amber-400' : 'text-sky-400'}`}>{label}</span>}
         {!hidden && profile && (profile.display_role || profile.custom_role?.name) && <RoleBadge user={profile} size="sm" showLabel={false} />}
@@ -53,10 +55,10 @@ function RoomChatMessage({ message, profile, ownerId, roomModerators, currentUse
         {!hidden && !isOwner && Number(level) < 1000 && Number(profile?.vip_level || 0) > 0 && <RoomLevelBadge level={level} />}
       </div>
       <div className="isolate mt-1 min-w-0 max-w-full overflow-hidden rounded-xl p-2">
-        <RoleMessageEffect className="max-w-full min-w-0 align-top" roleKey={profile?.display_role || (profile?.custom_role?.name ? 'custom' : '')} msgEffect={role.msg_effect} msgColor={role.color}>
+        <VipChatBubble theme={!hidden && vipLook(profile, 'bubble')}><RoleMessageEffect className="max-w-full min-w-0 align-top" roleKey={profile?.display_role || (profile?.custom_role?.name ? 'custom' : '')} msgEffect={role.msg_effect} msgColor={role.color}>
           {message.file_url && <Image src={message.file_url} alt="Sohbet görseli" className="mb-1 block h-44 w-44 max-w-full cursor-pointer rounded-lg" fittingType="fit" onClick={() => onImage(message.file_url)} />}
           {message.text && <p className={`block h-auto max-w-full whitespace-pre-wrap break-words rounded-lg px-2.5 py-1.5 leading-relaxed [overflow-wrap:anywhere] ${emoji ? `text-3xl anim-emoji ${emojiMotion}` : 'text-sm'} bg-secondary text-secondary-foreground`} style={{ maxWidth: 'min(100%, calc(35ch + 1.25rem))' }}>{message.text}</p>}
-        </RoleMessageEffect>
+        </RoleMessageEffect></VipChatBubble>
       </div>
     </div>
     {canDelete && <button onClick={() => onDelete(message.id)} className="shrink-0 self-start rounded p-1 text-muted-foreground opacity-60 hover:text-destructive sm:opacity-0 sm:group-hover:opacity-100" aria-label="Mesajı sil"><Trash2 className="h-3.5 w-3.5" /></button>}

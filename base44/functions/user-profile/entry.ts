@@ -1,7 +1,9 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.56';
 import { rateLimit, safeErrorResponse } from '../../shared/security.ts';
 import { badgeLevels } from '../../shared/userLevels.ts';
 import { readRows } from '../../shared/supabaseMirror.ts';
+import { getVipCatalog } from '../../shared/vipCatalog.ts';
+import { publicVipLooks } from '../../shared/vipInventory.ts';
 
 // Ağır profil okuması Supabase aynasından gelir; aynada olmayan kayıt kaynaktan tamamlanır.
 const MIRROR_TABLE = 'app_users';
@@ -62,8 +64,9 @@ export default async function(req) {
         const users = await base44.asServiceRole.entities.User.filter({ id: { $in: missing } }, '-created_date', missing.length).catch(() => []);
         (users || []).forEach((u) => { if (u) found.set(u.id, u); });
       }
+      const looks = await publicVipLooks(base44, [...found.values()], await getVipCatalog(base44));
       const profiles = {};
-      ids.forEach((id) => { const record = found.get(id); if (record) profiles[id] = toProfile(record); });
+      ids.forEach((id) => { const record = found.get(id); if (record) profiles[id] = { ...toProfile(record), ...looks[id] }; });
       return Response.json({ data: profiles });
     }
 
@@ -71,7 +74,8 @@ export default async function(req) {
     const found = await readMirror([user_id]);
     const u = found.get(user_id) || await base44.asServiceRole.entities.User.get(user_id).catch(() => null);
     if (!u) return Response.json({ error: 'kullanıcı bulunamadı' }, { status: 404 });
-    return Response.json(toProfile(u));
+    const looks = await publicVipLooks(base44, [u], await getVipCatalog(base44));
+    return Response.json({ ...toProfile(u), ...looks[u.id] });
   } catch (e) {
     return safeErrorResponse(e);
   }

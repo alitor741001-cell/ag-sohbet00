@@ -68,25 +68,71 @@
     },
     "vip_level": {
       "type": "integer",
+      "enum": [
+        0,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
       "minimum": 0,
       "maximum": 12,
-      "default": 0
+      "default": 0,
+      "rls": {
+        "update": {
+          "user_condition": {
+            "collaborator_role": "editor"
+          }
+        }
+      }
     },
     "vip_granted_by": {
       "type": "string",
-      "default": ""
+      "default": "",
+      "rls": {
+        "update": {
+          "user_condition": {
+            "collaborator_role": "editor"
+          }
+        }
+      }
     },
     "vip_granted_at": {
       "type": "string",
-      "format": "date-time"
+      "format": "date-time",
+      "rls": {
+        "update": {
+          "user_condition": {
+            "collaborator_role": "editor"
+          }
+        }
+      }
     },
     "vip_expires_at": {
       "type": "string",
-      "default": ""
+      "default": "",
+      "rls": {
+        "update": {
+          "user_condition": {
+            "collaborator_role": "editor"
+          }
+        }
+      }
     },
     "vip_source": {
       "type": "string",
-      "default": ""
+      "default": "",
+      "rls": {
+        "update": {
+          "user_condition": {
+            "collaborator_role": "editor"
+          }
+        }
+      }
     },
     "hidden_user": {
       "type": "boolean",

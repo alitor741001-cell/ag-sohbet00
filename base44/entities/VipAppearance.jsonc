@@ -1,0 +1,78 @@
+{
+  "name": "VipAppearance",
+  "type": "object",
+  "properties": {
+    "owner_id": {
+      "type": "string"
+    },
+    "level": {
+      "type": "integer",
+      "enum": [
+        0,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "default": 0
+    },
+    "expires_at": {
+      "type": "string",
+      "default": ""
+    },
+    "selections": {
+      "type": "object",
+      "properties": {
+        "badge": {
+          "type": "integer"
+        },
+        "frame": {
+          "type": "integer"
+        },
+        "banner": {
+          "type": "integer"
+        },
+        "mic": {
+          "type": "integer"
+        },
+        "bubble": {
+          "type": "integer"
+        },
+        "card": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "integer"
+        },
+        "avatar": {
+          "type": "integer"
+        }
+      }
+    }
+  },
+  "required": [
+    "owner_id"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

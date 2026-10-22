@@ -69,6 +69,10 @@ const ensureSubscription = () => {
     const id = event.data?.id || event.id;
     if (id && [...listeners.values()].some((ids) => ids.has(id))) requestRefresh([id]);
   });
+  const offVip = subscribeEntity('VipAppearance', (event) => {
+    const id = event.data?.owner_id;
+    if (id && [...listeners.values()].some((ids) => ids.has(id))) requestRefresh([id]);
+  });
   const refreshWatched = () => {
     if (document.visibilityState === 'hidden') return;
     const ids = [...new Set([...listeners.values()].flatMap((watched) => [...watched]))];
@@ -76,8 +80,10 @@ const ensureSubscription = () => {
   };
   window.addEventListener('online', refreshWatched);
   document.addEventListener('visibilitychange', refreshWatched);
+  const expiryRefresh = window.setInterval(refreshWatched, PROFILE_TTL_MS);
   subscription = () => {
-    off();
+    off(); offVip();
+    window.clearInterval(expiryRefresh);
     window.removeEventListener('online', refreshWatched);
     document.removeEventListener('visibilitychange', refreshWatched);
   };

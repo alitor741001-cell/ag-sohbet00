@@ -3,6 +3,12 @@
 @tailwind utilities;
 
 :root, .dark {
+  --vip-accent: #ff8547;
+  --vip-secondary: #f3ce78;
+  --vip-night: 228 35% 6%;
+  --vip-ink: 40 55% 96%;
+  --vip-gold: 42 65% 72%;
+  --vip-parchment: 35 30% 58%;
   --fantasy-gold: 42 80% 74%;
   --fantasy-text: 40 50% 96%;
   --fantasy-princess: 330 85% 72%;

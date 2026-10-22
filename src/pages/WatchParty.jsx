@@ -30,6 +30,7 @@ import RoomScreenLauncher, { RoomScreenSwitch } from '@/components/player/RoomSc
 import FilmSearchSheet from '@/components/player/FilmSearchSheet';
 import { YT_PREFIX, youtubeVideoId } from '@/lib/mediaSource';
 import SpecialRoleWelcome from '@/components/player/SpecialRoleWelcome';
+import VipRoomEntrance from '@/components/vip/VipRoomEntrance';
 import ProfileFrame from '@/components/ProfileFrame';
 import useSocialBadges from '@/hooks/useSocialBadges';
 import useMessageProfiles from '@/hooks/useMessageProfiles';
@@ -771,6 +772,7 @@ export default function WatchParty() {
         onPasteLink={() => setYtOpen(true)}
       />
       <SpecialRoleWelcome roomId={id} />
+      <VipRoomEntrance roomId={id} participants={room?.participants || []} />
 
       {profileTarget && (
         <FullUserProfile

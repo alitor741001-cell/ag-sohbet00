@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useRef } from 'react';
 import VoiceSeat from '@/components/voice/VoiceSeat';
 import VoiceSeatScore from '@/components/voice/VoiceSeatScore';
+import useMessageProfiles from '@/hooks/useMessageProfiles';
 
 import responsiveSeatRows from '@/components/voice/responsiveSeatRows';
 import { useSize } from '@/hooks/use-size';
@@ -12,6 +13,7 @@ import { useSize } from '@/hooks/use-size';
  */
 export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerId, moderators = [], speakingIds = [], localSpeaking, participantMicStates = {}, localMicMuted, onSelectSeat, boardActive, scores = {}, accent = '#ef4444', gifted = {}, maxHeight }) {
   const wrapRef = useRef(null);
+  const profiles = useMessageProfiles(seats.map((seat) => seat?.user_id).filter(Boolean));
   const measured = useSize(wrapRef);
   const width = measured?.width || 360;
   const rows = useMemo(() => responsiveSeatRows(seats.length, width), [seats.length, width]);
@@ -86,6 +88,7 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
                     <VoiceSeat
                       index={index}
                       seat={seat}
+                      profile={occupied ? profiles[seat.user_id] : null}
                       musicPlaying={occupied && seat.user_id === musicOwnerId}
                       size={seatSize}
                       isSelf={occupied && seat.user_id === userId}

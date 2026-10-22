@@ -2,6 +2,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import { rateLimit, safeErrorResponse } from '../../shared/security.ts';
 import { badgeLevels, VIP_MAX } from '../../shared/userLevels.ts';
 import { VIP_DURATIONS, applyVipToUser, vipDurationLabel } from '../../shared/vip.ts';
+import { getVipCatalog } from '../../shared/vipCatalog.ts';
 
 const ACTIONS = ['list', 'search', 'set'];
 
@@ -61,8 +62,10 @@ export default async function (req: Request): Promise<Response> {
       const rl = await rateLimit(base44, 'vip-set:' + user.id, user.id, 60, 60000);
       if (!rl.allowed) return Response.json({ error: 'Çok fazla işlem yaptın, biraz bekleyin.' }, { status: 429 });
 
-      const level = Math.max(0, Math.min(VIP_MAX, Math.floor(Number(body?.vip_level) || 0)));
-      const days = level > 0 ? VIP_DURATIONS[String(body?.duration || 'month')] || VIP_DURATIONS.month : 0;
+      const level = Number(body?.vip_level);
+      if (!Number.isInteger(level) || (level !== 0 && (level < 5 || level > VIP_MAX))) return Response.json({ error: 'VIP seviyesi yalnızca 5–12 olabilir.' }, { status: 400 });
+      const catalog = await getVipCatalog(base44);
+      const days = level > 0 ? (body.duration === 'catalog' ? catalog.levels.find((item) => item.level === level).days : VIP_DURATIONS[String(body?.duration || 'month')] || VIP_DURATIONS.month) : 0;
       // Yeni süre, kişinin kalan VIP süresinin üstüne eklenir.
       await applyVipToUser(base44, target, level, days, {
         vip_source: 'admin',

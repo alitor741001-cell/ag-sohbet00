@@ -4,6 +4,7 @@ import { base44 } from '@/api/base44Client';
 import VipUserRow from '@/components/admin/vip/VipUserRow';
 import FullUserProfile from '@/components/profile/FullUserProfile';
 import { useToast } from '@/components/ui/use-toast';
+import AdminVipCatalog from '@/components/admin/vip/AdminVipCatalog';
 
 /** VIP Merkezi: kullanıcı arar, VIP5–VIP12 (ve 10–12 özel) seviyesi verir ya da kaldırır. */
 export default function AdminVip() {
@@ -67,12 +68,13 @@ export default function AdminVip() {
         <div>
           <h1 className="text-2xl font-extrabold text-white">VIP Merkezi</h1>
           <p className="mt-1 text-[11px] leading-relaxed text-white/55">
-            VIP5–VIP9 rozet verir; VIP10–VIP12 özel rozet taşır. VIP8 ve üzeri isimler kırmızı görünür.
-            Süreyi 1 hafta, 15 gün ya da 1 ay seçebilirsin; 1M+ coin yükleyene VIP otomatik gelir.
+            VIP 5 başlangıç, VIP 12 en üst seviyedir. Her seviyenin ayrı ejderha koleksiyonu vardır.
+            Üyelik süresini seçebilir, tasarımları ve ayrıcalık seviyelerini aşağıdan düzenleyebilirsin; mevcut jeton kazanım kuralları korunur.
           </p>
         </div>
       </div>
 
+      <AdminVipCatalog />
       <div className="mb-4 flex gap-2">
         <input
           value={query}

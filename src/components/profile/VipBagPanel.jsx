@@ -14,7 +14,7 @@ import { vipStyle } from '@/lib/userLevels';
  * kimlik numarasıyla bir arkadaşına gönderir — gönderilen VIP alıcıda anında aktif olur.
  */
 export default function VipBagPanel({ open, onClose, onChanged }) {
-  const { items: cosmetics, level: cosmeticLevel, busy: cosmeticBusy, toggle: toggleCosmetic } = useVipCosmetics(open);
+  const { groups: cosmeticGroups, level: cosmeticLevel, busy: cosmeticBusy, error: cosmeticError, toggle: toggleCosmetic, refresh: refreshCosmetics } = useVipCosmetics(open);
   const [items, setItems] = useState([]);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -103,6 +103,8 @@ export default function VipBagPanel({ open, onClose, onChanged }) {
       const data = response.data || {};
       setNotice(`VIP${data.level} aktif edildi (${data.days} gün) — rozetin artık profilinde görünüyor.`);
       await load();
+      await refreshCosmetics();
+      window.dispatchEvent(new Event('vip-cosmetics-changed'));
       onChanged?.();
     } catch (error) {
       setNotice(error?.response?.data?.error || 'VIP kullanılamadı.');
@@ -128,6 +130,8 @@ export default function VipBagPanel({ open, onClose, onChanged }) {
       setMemberId('');
       setPerson(null);
       await load();
+      await refreshCosmetics();
+      window.dispatchEvent(new Event('vip-cosmetics-changed'));
       onChanged?.();
     } catch (error) {
       setNotice(error?.response?.data?.error || 'Gönderilemedi.');
@@ -162,7 +166,7 @@ export default function VipBagPanel({ open, onClose, onChanged }) {
             arkadaşına gönder — gönderdiğin VIP alıcıda anında aktif olur.
           </p>
 
-          <VipCosmeticsBag items={cosmetics} level={cosmeticLevel} busy={cosmeticBusy} onToggle={toggleCosmetic} />
+          <VipCosmeticsBag groups={cosmeticGroups} level={cosmeticLevel} busy={cosmeticBusy} onToggle={toggleCosmetic} error={cosmeticError} />
 
           {loading && !items.length ? (
             <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-sky-400" /></div>

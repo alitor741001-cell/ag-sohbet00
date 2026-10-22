@@ -7,6 +7,9 @@
  * - Süre dolduğunda rozet kendiliğinden düşer (bitiş tarihi geçmişse VIP sayılmaz).
  */
 
+import { getVipCatalog } from './vipCatalog.ts';
+import { syncVipInventory, publishVipAppearance } from './vipInventory.ts';
+
 export const VIP_MIN = 0;
 export const VIP_MAX = 12;
 
@@ -59,7 +62,7 @@ export const vipActive = (user: any) => {
 
 export const effectiveVipLevel = (user: any) => {
   const level = Math.min(VIP_MAX, Math.max(VIP_MIN, Math.floor(Number(user?.vip_level) || 0)));
-  return vipActive(user) ? level : 0;
+  return level >= 5 && vipActive(user) ? level : 0;
 };
 
 /** Gizli mod kilidi: yönetici hesabı VIP şartı aranmadan açar, diğerleri VIP10 ve üzeri. */
@@ -91,7 +94,8 @@ export const autoVipForCoins = (coins: any) => {
 /** VIP'i kişinin profiline işler; kalan sürenin üstüne ekler (kendisi kullanınca da buradan geçer). */
 export async function applyVipToUser(base44: any, target: any, level: any, days: any, extra: Record<string, any> = {}) {
   if (!target?.id) return null;
-  const value = Math.min(VIP_MAX, Math.max(VIP_MIN, Math.floor(Number(level) || 0)));
+  const value = Number(level);
+  if (!Number.isInteger(value) || (value !== 0 && (value < 5 || value > VIP_MAX))) throw new Error('VIP seviyesi 5–12 arasında olmalı.');
   const duration = Math.max(0, Math.floor(Number(days) || 0));
   const currentExpiry = vipExpiryMs(target);
   const base = value > 0 && vipActive(target) && currentExpiry ? currentExpiry : Date.now();
@@ -101,7 +105,11 @@ export async function applyVipToUser(base44: any, target: any, level: any, days:
     vip_level: value,
     vip_expires_at: expiresAt,
     ...extra,
-  }).catch(() => {});
+  });
+  const updated = { ...target, vip_level: value, vip_expires_at: expiresAt };
+  const catalog = await getVipCatalog(base44);
+  const cosmetics = await syncVipInventory(base44, updated, value, catalog);
+  await publishVipAppearance(base44, updated, value, cosmetics, catalog);
 
   return { level: value, expires_at: expiresAt };
 }
@@ -109,6 +117,7 @@ export async function applyVipToUser(base44: any, target: any, level: any, days:
 /** VIP'i mavi çantaya bırakır: kişi isterse kendisi kullanır, isterse kimlik numarasıyla gönderir. */
 export async function addVipToBag(base44: any, { owner, level, days, source = 'coin', sender = null }: any) {
   if (!owner?.id) return null;
+  if (!Number.isInteger(level) || level < 5 || level > VIP_MAX) throw new Error('Geçersiz VIP seviyesi.');
   return base44.asServiceRole.entities.VipItem.create({
     owner_id: owner.id,
     owner_name: owner.username || owner.full_name || 'Kullanıcı',
