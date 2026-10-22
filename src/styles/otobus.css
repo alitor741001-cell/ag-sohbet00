@@ -130,9 +130,7 @@
   left: 0;
   width: 140%;
   transform: translateX(calc(-1 * var(--ob-pan, 0%)));
-  /* Kayma adım adım değil kesintisiz aksın: hedef her güncellendiğinde kamera
-     yumuşakça o noktaya süzülür, manzara hiç durmaz. */
-  transition: transform 620ms linear;
+  transition: transform 300ms linear;
 }
 /* Hız çizgileri: kayma sırasında ekranda yatay olarak akar. */
 .ob-streaks {
@@ -151,15 +149,15 @@
   from { background-position-x: 0; }
   to { background-position-x: -220px; }
 }
-/* Düz yol: ufkun altında uzanan tek şerit — otobüs bu şeritte ilerler. */
+/* Düz yol: ufkun altında uzanan asfalt şerit — otobüs bu yolda ilerler. */
 .ob-road {
   position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
-  height: 30%;
+  height: 32%;
   pointer-events: none;
-  background: linear-gradient(180deg, rgba(58, 38, 18, 0) 0%, rgba(58, 38, 18, 0.55) 24%, #3a2612 60%, #241708 100%);
+  background: linear-gradient(180deg, rgba(30, 28, 24, 0) 0%, rgba(34, 30, 22, 0.6) 18%, #2e2a22 45%, #1c1913 100%);
 }
 /* Yolun uzak kenarı: dümdüz ince bir çizgi, zeminin düz olduğunu gösterir. */
 .ob-road::before {
@@ -169,31 +167,52 @@
   right: 0;
   top: 0;
   height: 2px;
-  background: linear-gradient(90deg, rgba(255, 214, 150, 0.06), rgba(255, 214, 150, 0.32), rgba(255, 214, 150, 0.06));
+  background: linear-gradient(90deg, rgba(255, 214, 150, 0.05), rgba(255, 214, 150, 0.3), rgba(255, 214, 150, 0.05));
+}
+/* Orta şerit çizgileri: yol boyunca akar, otobüs ilerledikçe hızlanır. */
+.ob-road::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 18%;
+  bottom: 0;
+  width: 5px;
+  transform: translateX(-50%);
+  background: repeating-linear-gradient(180deg, #f5e6a0 0 14px, transparent 14px 38px);
+  background-size: 100% 38px;
+  opacity: 0.5;
+  animation: ob-road-lines 0.5s linear infinite;
+  animation-duration: calc(0.5s / (0.4 + var(--ob-heat, 0) * 1.6));
+}
+@keyframes ob-road-lines {
+  from { background-position-y: 0; }
+  to { background-position-y: 38px; }
 }
 /* Otobüs düz yolda ilerler: yatay konumu doğrudan çarpanın ilerleyişine bağlıdır
    (--ob-cruise). X büyüdükçe sağa doğru akar, çakıldığı anda olduğu yerde durur. */
 .ob-buswrap {
   position: absolute;
   left: var(--ob-cruise, 7%);
-  bottom: 9%;
-  width: 46%;
-  height: 42%;
-  max-width: 420px;
-  transition: left 620ms linear;
+  bottom: 8%;
+  width: 44%;
+  height: 40%;
+  max-width: 380px;
+  transition: left 300ms linear;
 }
 .ob-bus {
   width: 100%;
   height: 100%;
   object-fit: contain;
   object-position: center bottom;
-  animation: ob-bob 0.9s ease-in-out infinite;
-  filter: drop-shadow(0 10px 12px rgba(0, 0, 0, 0.45));
+  animation: ob-bob 0.7s ease-in-out infinite;
+  filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.5));
 }
 /* Gövde esnemesi: hız arttıkça sarsıntı belirginleşir, otobüs giderken canlı kalır. */
 @keyframes ob-bob {
   0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(calc(-2px - var(--ob-heat, 0) * 4px)) rotate(-0.35deg); }
+  25% { transform: translateY(calc(-1px - var(--ob-heat, 0) * 3px)) rotate(0.2deg); }
+  50% { transform: translateY(calc(-2px - var(--ob-heat, 0) * 5px)) rotate(-0.3deg); }
+  75% { transform: translateY(calc(-1px - var(--ob-heat, 0) * 3px)) rotate(0.15deg); }
 }
 /* Egzoz alevi: çarpan büyüdükçe uzar. */
 .ob-flame {
