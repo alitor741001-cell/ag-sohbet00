@@ -4,6 +4,8 @@ import { BET_LEVELS, LINES, REELS, ROWS, tierFor } from './sekerliConfig';
 import { EMPTY_CELLS, collapseBoard, mergeSymbols, randomSymbol, toBoard } from './sekerliBoard';
 import { sekerliSound, unlockAudio } from '@/lib/sekerliAudio';
 import useBetQueue from '@/hooks/useBetQueue';
+import useWalletCoinsLive from '@/hooks/useWalletCoinsLive';
+import { useCurrentUser } from '@/lib/useCurrentUser';
 
 // Tur zamanlamaları: sonucun üzerine iniş, kazanan parlaması, patlama ve düşme.
 const LAND_MS = 1450;
@@ -68,6 +70,9 @@ export default function useSekerliGame() {
   const sessionWinRef = useRef(0);
   // Tur isteği sürerken STOP'a basılırsa iniş animasyonu atlanır.
   const skipLandingRef = useRef(false);
+  // Canlı abonelik geldikçe bakiye anında tazelenir.
+  const { user } = useCurrentUser();
+  useWalletCoinsLive(user?.id, (value) => { setCoins(value); coinsRef.current = value; });
 
   useEffect(() => { coinsRef.current = coins; }, [coins]);
   useEffect(() => { betRef.current = bet; }, [bet]);

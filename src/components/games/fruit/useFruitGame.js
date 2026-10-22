@@ -4,6 +4,8 @@ import { landMs } from '@/components/games/reels/reelRoll';
 import { FRUIT_BET_LEVELS, FRUIT_LINES } from './fruitConfig';
 import { END_MS, playCascadeSteps } from '@/components/games/reels/cascadeSteps';
 import useBetQueue from '@/hooks/useBetQueue';
+import useWalletCoinsLive from '@/hooks/useWalletCoinsLive';
+import { useCurrentUser } from '@/lib/useCurrentUser';
 
 // Sonucun üzerine iniş: 6 sütunlu ızgara, ortak makara altyapısı.
 const LAND_MS = landMs(6);
@@ -40,6 +42,9 @@ export default function useFruitGame() {
   const sessionWinRef = useRef(0);
   // Tur isteği sürerken STOP'a basılırsa iniş animasyonu atlanır.
   const skipLandingRef = useRef(false);
+  // Canlı abonelik geldikçe bakiye anında tazelenir.
+  const { user } = useCurrentUser();
+  useWalletCoinsLive(user?.id, (value) => setCoins(value));
 
   // Bekleme; STOP'a basıldığında (ya da süre dolduğunda) sona erer.
   const wait = useCallback((ms) => new Promise((resolve) => {

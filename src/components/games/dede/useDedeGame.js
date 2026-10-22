@@ -53,6 +53,9 @@ export default function useDedeGame() {
   const sessionWinRef = useRef(0);
   // Tur isteği sürerken DURDUR'a basılırsa iniş animasyonu atlanır.
   const skipLandingRef = useRef(false);
+  // Canlı abonelik geldikçe bakiye anında tazelenir.
+  const { user } = useCurrentUser();
+  useWalletCoinsLive(user?.id, (value) => setCoins(value));
 
   // Bekleme; DURDUR'a basıldığında (ya da süre dolduğunda) sona erer.
   const wait = useCallback((ms) => new Promise((resolve) => {

@@ -5,6 +5,8 @@ import { eliminSound, unlockAudio } from './eliminSound';
 import { BET_LEVELS, CHEST_MAX, LINES } from './eliminConfig';
 import { END_MS, playCascadeSteps } from '@/components/games/reels/cascadeSteps';
 import useBetQueue from '@/hooks/useBetQueue';
+import useWalletCoinsLive from '@/hooks/useWalletCoinsLive';
+import { useCurrentUser } from '@/lib/useCurrentUser';
 
 // Sonucun üzerine iniş: 6 sütunlu kare ızgara, ortak makara altyapısı.
 const LAND_MS = landMs(6);
@@ -50,6 +52,9 @@ export default function useEliminGame() {
   const soundRef = useRef(true);
   // Tur isteği sürerken DUR'a basılırsa iniş animasyonu atlanır.
   const skipLandingRef = useRef(false);
+  // Canlı abonelik geldikçe bakiye anında tazelenir.
+  const { user } = useCurrentUser();
+  useWalletCoinsLive(user?.id, (value) => setCoins(value));
 
   useEffect(() => { soundRef.current = sound; }, [sound]);
 

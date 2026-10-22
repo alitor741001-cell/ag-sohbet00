@@ -1,9 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import gameRequest from '@/lib/gameRequest';
 import { sekerliSound as gameSound, unlockAudio } from '@/lib/sekerliAudio';
+import subscribeEntity from '@/components/data/entitySubscriptions';
+import useWalletCoinsLive from '@/hooks/useWalletCoinsLive';
+import { useCurrentUser } from '@/lib/useCurrentUser';
 
-// Tur durumu üç saniyede bir tazelenir; geri sayım yerel saatle akar.
-const POLL_MS = 3000;
+// Tur durumu tazelenir; geri sayım yerel saatle akar.
+const POLL_MS = 8000;
+// Abonelik olayı geldikten sonra bu süre boyunca yoklama yapılmaz.
+const EVENT_GRACE_MS = 15000;
 const CLOCK_MS = 250;
 // Çekiliş bittikten sonra kazanan bu kadar ekranda kalır (sunucudaki RESULT_MS ile aynı).
 const HOLD_MS = 3000;
@@ -39,6 +44,11 @@ export default function useFutbolGame() {
   const seenResultRef = useRef(0);
   const mountedRef = useRef(true);
   const healedRef = useRef(false);
+  // Abonelik olayı geldikçe güncellenir: yoklama yalnızca uzun sessizlikte çalışır.
+  const lastEventRef = useRef(0);
+  // Canlı abonelik geldikçe bakiye anında tazelenir.
+  const { user } = useCurrentUser();
+  useWalletCoinsLive(user?.id, (value) => setCoins(value));
 
   useEffect(() => { soundRef.current = sound; }, [sound]);
   useEffect(() => { followRef.current = follow; }, [follow]);
@@ -92,9 +102,26 @@ export default function useFutbolGame() {
       }
     };
     poll();
-    const timer = window.setInterval(poll, POLL_MS);
+    // Abonelik yakın zamanda olay gönderdiyse yoklama atlanır: gereksiz istek yok.
+    const timer = window.setInterval(() => {
+      if (Date.now() - lastEventRef.current < EVENT_GRACE_MS) return;
+      poll();
+    }, POLL_MS);
     return () => { cancelled = true; window.clearInterval(timer); };
   }, [applyView, send]);
+
+  // Tur, kartlar ve kazanan canlı yayından gelir: odadaki herkes aynı turu görür.
+  useEffect(() => {
+    const off = subscribeEntity('FootballLive', (event) => {
+      lastEventRef.current = Date.now();
+      const data = event?.data;
+      if (!data) return;
+      // Sunucu saati farkı anında düzeltilir.
+      if (typeof data.now === 'number') offsetRef.current = data.now - Date.now();
+      applyView(data);
+    });
+    return off;
+  }, [applyView]);
 
   // Geri sayım: sunucu saati ile yerel saat farkı hesaba katılır.
   const phaseEnd = round?.phase_ends_at || '';
