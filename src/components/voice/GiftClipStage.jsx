@@ -9,7 +9,7 @@ export default function GiftClipStage({ frames = [], color = '#facc15' }) {
   if (!frames.length) return null;
 
   return (
-    <div className="absolute inset-0 overflow-hidden bg-transparent opacity-60">
+    <div className="absolute inset-0 overflow-hidden bg-transparent opacity-70">
       <div className="absolute inset-0 gift-clip-hero">
         <Image
           src={frames[0]}

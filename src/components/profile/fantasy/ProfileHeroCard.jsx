@@ -88,12 +88,19 @@ export default function ProfileHeroCard({ user, avatar, onAvatar, onEdit, upload
       </div>
 
       {picking && (
-        <div className="mt-3 flex items-center justify-center gap-2">
-          <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-[#7dd3fc]/50 bg-[#0B2A52]/70 px-3.5 py-1.5 text-xs font-semibold text-white">
-            {uploading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-            Fotoğraf Seç
-            <input type="file" accept="image/png,image/jpeg,image/webp" className="hidden" disabled={uploading} onChange={onAvatar} />
-          </label>
+        <div className="mt-3 flex flex-col items-center gap-2">
+          <div className="flex items-center justify-center gap-2">
+            <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-[#7dd3fc]/50 bg-[#0B2A52]/70 px-3.5 py-1.5 text-xs font-semibold text-white">
+              {uploading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+              Hareketli (GIF)
+              <input type="file" accept="image/gif" className="hidden" disabled={uploading} onChange={onAvatar} />
+            </label>
+            <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-[#7dd3fc]/50 bg-[#0B2A52]/70 px-3.5 py-1.5 text-xs font-semibold text-white">
+              {uploading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+              Hareketsiz
+              <input type="file" accept="image/png,image/jpeg,image/webp" className="hidden" disabled={uploading} onChange={onAvatar} />
+            </label>
+          </div>
           <button type="button" onClick={() => setPicking(false)} className="rounded-full border border-white/25 bg-white/10 px-3.5 py-1.5 text-xs font-semibold text-white">
             Kapat
           </button>

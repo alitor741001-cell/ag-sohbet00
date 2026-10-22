@@ -145,7 +145,7 @@ export default function Profile() {
   const onAvatar = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) return toast({ title: 'PNG, JPG veya WebP seçin', variant: 'destructive' });
+    if (!['image/png', 'image/jpeg', 'image/webp', 'image/gif'].includes(file.type)) return toast({ title: 'PNG, JPG, WebP veya GIF seçin', variant: 'destructive' });
     setUploading(true);
     try {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
