@@ -3,19 +3,18 @@ import { POCKET_STEP, WHEEL_ORDER, pocketTone } from './rouletteConfig';
 import '@/styles/roulette.css';
 
 const CENTER = 50;
-const RADIUS = 46; // cep dilimlerinin dış kenarı
-const LABEL_RADIUS = 34; // sayıların oturduğu halka
-const INNER = 27; // sayıların çevresindeki iç altın çember
-const HUB = 14; // göbek
-const CORE = 7; // turret
-const TRACK = 48.6; // top yatağı
+const RADIUS = 46;
+const LABEL_RADIUS = 34;
+const INNER = 27;
+const HUB = 14;
+const CORE = 7;
+const TRACK = 48.6;
 
 const polar = (angle, radius) => [
   CENTER + radius * Math.cos((angle * Math.PI) / 180),
   CENTER + radius * Math.sin((angle * Math.PI) / 180),
 ];
 
-// Cep dilimi: merkezden iki yarıçapa uzanan pasta parçası.
 function sectorPath(start, end) {
   const [x1, y1] = polar(start, RADIUS);
   const [x2, y2] = polar(end, RADIUS);
@@ -23,14 +22,13 @@ function sectorPath(start, end) {
 }
 
 /** Çark: 37 cep saat yönünde dizilir; tur sonucunda kazanan cep üstteki ibrenin altına gelir.
- *  Çark durduğunda topun düştüğü numara ışıklı rozetle gösterilir ve cep kısa süre yakınlaştırılır. */
+ *  Top çark dönerken dış yataktan merkeze iner, yörüngede döner, sonra kazanan cebe oturur. */
 export default function RouletteWheel({ index, spinning, winner, zoom, settled }) {
   const angleRef = useRef(0);
   const [angle, setAngle] = useState(0);
 
   useEffect(() => {
     if (index === null || index === undefined) return;
-    // Kazanan cebin merkezi üstteki ibreye (saat 12) gelsin.
     const target = -((index + 0.5) * POCKET_STEP);
     const current = angleRef.current;
     const delta = ((target - current) % 360 + 360) % 360;
@@ -41,14 +39,12 @@ export default function RouletteWheel({ index, spinning, winner, zoom, settled }
 
   return (
     <div className={`rl-wheel ${spinning ? 'rl-wheel-live' : ''} ${zoom ? 'rl-wheel-zoom' : ''}`}>
-      {/* Madeni kasa: top yatağının dışındaki altın kaplama halka. */}
       <span aria-hidden="true" className="rl-wheel-bezel" />
       <span aria-hidden="true" className="rl-wheel-pointer" />
       <svg viewBox="0 0 100 100" className="rl-wheel-disc" style={{ transform: `rotate(${angle}deg)` }}>
         <circle cx={CENTER} cy={CENTER} r={49.4} className="rl-wheel-bowl" />
         <circle cx={CENTER} cy={CENTER} r={TRACK} className="rl-wheel-track" />
 
-        {/* Kasanın çentikleri: her cebin sınırında ince altın çizgi. */}
         {WHEEL_ORDER.map((number, pocket) => {
           const edge = pocket * POCKET_STEP - 90;
           const [x1, y1] = polar(edge, RADIUS + 1.1);
@@ -89,14 +85,14 @@ export default function RouletteWheel({ index, spinning, winner, zoom, settled }
         </g>
         <circle cx={CENTER} cy={CENTER} r={CORE} className="rl-wheel-core" />
       </svg>
-      {/* Top çark dönerken yatakta tur atar; çark durunca kazanan cebin üstünde kalır. */}
+      {/* Top: çark dönerken dış yataktan merkeze iner, döner, sonra kazanan cebe oturur. */}
       <span
         aria-hidden="true"
         className={`rl-wheel-ball-track ${spinning && !settled ? 'rl-wheel-ball-live' : ''}`}
       >
         <span className="rl-wheel-ball" />
       </span>
-      {/* Çark durunca topun geldiği numara cebin üstünde ışıklı rozetle görünür. */}
+      {/* Çark durunca topun düştüğü numara cebin üstünde ışıklı rozetle görünür. */}
       {winner !== null && winner !== undefined && (
         <span className={`rl-wheel-hit rl-pocket-${pocketTone(winner)}`}>{winner}</span>
       )}

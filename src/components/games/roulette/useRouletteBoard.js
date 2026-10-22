@@ -26,7 +26,7 @@ export default function useRouletteBoard(round = 0) {
   const winners = [...spins]
     .filter((spin) => (spin.payout ?? 0) > 0)
     .sort((a, b) => (b.payout ?? 0) - (a.payout ?? 0))
-    .slice(0, 3);
+    .slice(0, 5);
 
   return { winners, status };
 }

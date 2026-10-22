@@ -1,28 +1,21 @@
 import React from 'react';
-import { Timer } from 'lucide-react';
 
-/** Tur şeridi: bahis süresi geri sayar, çark dönerken yeni tura kalan saniye görünür. */
+/** "Başla" + geri sayım: bahis aşamasında Altın çember içinde saniyeler görünür. */
 export default function RouletteRoundBar({ phase, countdown, progress }) {
-  const label = phase === 'betting'
-    ? 'BAHİS AÇIK'
-    : phase === 'spinning'
-      ? 'ÇARK DÖNÜYOR'
-      : 'YENİ TUR HAZIRLANIYOR';
-  const percent = Math.round(Math.min(1, Math.max(0, progress)) * 100);
+  const betting = phase === 'betting';
+  const spinning = phase === 'spinning';
+  const label = betting ? 'BAŞLA' : spinning ? 'ÇARK DÖNÜYOR' : 'YENİ TUR';
+  const showTimer = betting && countdown !== null && countdown !== undefined;
+  const urgent = showTimer && countdown <= 3;
 
   return (
-    <div className="rl-roundbar">
-      <span className={`rl-roundbar-count ${phase === 'betting' ? 'rl-roundbar-count-live' : ''}`}>
-        {countdown === null ? '–' : countdown}
-      </span>
-      <span className="rl-roundbar-body">
-        <span className="rl-roundbar-label">
-          <Timer className="h-3 w-3" strokeWidth={2.8} /> {label}
+    <div className="rl-start-row">
+      <span className="rl-start-text">{label}</span>
+      {showTimer && (
+        <span className={`rl-start-timer ${urgent ? 'rl-start-timer-urgent' : ''}`}>
+          <span className="rl-start-count">{countdown}</span>
         </span>
-        <span className="rl-roundbar-track">
-          <span className="rl-roundbar-fill" style={{ width: `${percent}%` }} />
-        </span>
-      </span>
+      )}
     </div>
   );
 }

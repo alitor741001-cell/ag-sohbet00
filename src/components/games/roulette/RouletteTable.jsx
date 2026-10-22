@@ -13,7 +13,7 @@ const TONES = {
   odd: 'gold',
 };
 
-// Kırmızı ve siyah: bahsin adı büyük ve iki kez yazılır, uzaktan da okunur.
+// Kırmızı ve siyah: bahisin adı büyük ve iki kez yazılır, uzaktan da okunur.
 const BIG_LABELS = { red: true, black: true };
 
 /** Masa: sekiz bahis bloğu 4x2 düzende durur, dokunulan bloğa jeton konar. */
@@ -32,8 +32,8 @@ export default function RouletteTable({ bets, disabled, onPlace }) {
             className={`rl-block rl-block-${TONES[block.id]} ${big ? 'rl-block-big' : ''} ${amount ? 'rl-block-armed' : ''}`}
           >
             <span className="rl-block-top">
-              <span className="rl-block-sub">{block.sub}</span>
               {amount > 0 && <span className="rl-block-stake">{formatCoins(amount)}</span>}
+              <span className="rl-block-sub">{block.sub}</span>
             </span>
             <span className="rl-block-label">{block.label}</span>
             {big && (
