@@ -142,7 +142,7 @@ export default function SlotGame({ onExit, onBack, roomId }) {
               {/* Eski kabin görseli yerine altın çerçeveli, mor-lacivert makara paneli. */}
               <div
                 className="absolute rounded-2xl border-2 border-amber-400/80 bg-[linear-gradient(180deg,#1e0b3d,#0b0620)] shadow-[0_0_24px_rgba(245,158,11,0.35),inset_0_0_18px_rgba(192,38,211,0.35)]"
-                style={{ left: '1%', width: '98%', top: '33.2%', height: '39.8%' }}
+                style={{ left: '1%', width: '98%', top: '33.2%', height: '45.6%' }}
               />
 
               {/* Tur sırasında her makaranın sembolleri değişerek aşağı doğru kayar. */}
