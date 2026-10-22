@@ -5,7 +5,7 @@ import useBetQueue from '@/hooks/useBetQueue';
 import useWalletCoinsLive from '@/hooks/useWalletCoinsLive';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 
-const SPIN_DURATION_MS = 5000;
+const SPIN_DURATION_MS = 3000;
 // Son makara (4 x 230ms gecikme + 600ms oturma) durana kadar beklenir.
 const SETTLE_MS = 1600;
 // Bu tur sayısından sonra turların bir kısmı yavaş döner.

@@ -410,9 +410,13 @@
   align-items: center;
   gap: .35rem;
   transform: translate(-50%, -50%);
+  z-index: 50;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 0 18px rgba(255, 200, 80, .55);
   border-radius: 9999px;
   border: 1px solid rgba(255, 233, 168, .8);
-  background: rgba(12, 3, 22, .82);
+  background: rgba(12, 3, 22, .92);
   padding: .32rem .85rem;
   font-size: 1.05rem;
   font-weight: 900;
