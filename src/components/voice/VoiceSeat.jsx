@@ -5,6 +5,7 @@ import VoiceSeatPortrait from '@/components/voice/VoiceSeatPortrait';
 import VoiceSeatRing from '@/components/voice/VoiceSeatRing';
 import { isHiddenName } from '@/lib/hiddenUser';
 import SeatEmblem from '@/components/voice/SeatEmblem';
+import VoiceSpeakingWave from '@/components/voice/VoiceSpeakingWave';
 
 // Her koltuk aynı boyutta sabit bir portre alanı kullanır: profil boyutu değişse de
 // ızgara kaymaz, çerçeveler komşu koltuğa taşmaz.
@@ -18,7 +19,7 @@ const NAME = { xs: 'max-w-[42px]', sm: 'max-w-[52px]', md: 'max-w-[68px]', lg: '
 // Kilit ve + ikonları koltuk büyüdükçe büyür: referanstaki oran korunur.
 
 /** Tek koltuk: boş koltukta + ve numara, dolu koltukta profil görseli ve isim. */
-function VoiceSeat({ seat, index, size = 'md', musicPlaying, speaking, gender, isSelf, isOwner, isMod, accent = '#ef4444', gifted, onClick, onSelect, micMuted }) {
+function VoiceSeat({ seat, index, size = 'md', musicPlaying, speaking, isSelf, isOwner, isMod, accent = '#ef4444', gifted, onClick, onSelect, micMuted }) {
   const handleClick = onSelect ? () => onSelect(index) : onClick;
   const cell = CELL[size] || CELL.md;
   const face = FACE[size] || FACE.md;
@@ -26,8 +27,7 @@ function VoiceSeat({ seat, index, size = 'md', musicPlaying, speaking, gender, i
   const emptyCircle = EMPTY[size] || EMPTY.md;
   const badge = BADGE[size] || BADGE.md;
   const nameWidth = NAME[size] || NAME.md;
-  // Konuşma dalgası rengi: erkeklerde mavi, kadınlarda pembe.
-  const speakingGender = gender === 'erkek' ? 'erkek' : 'kadin';
+  const muted = Boolean(seat?.muted || micMuted);
 
   if (!seat?.user_id) {
     return (
@@ -73,16 +73,15 @@ function VoiceSeat({ seat, index, size = 'md', musicPlaying, speaking, gender, i
       type="button"
       onClick={handleClick}
       className="flex flex-col items-center gap-1 active:scale-95 transition-transform"
-      aria-label={seat.name || 'Koltuk'}
+      aria-label={`${seat.name || 'Koltuk'}${muted ? ', mikrofon kapalı' : ''}`}
     >
       <span className={`relative flex ${cell} shrink-0 items-center justify-center`}>
         {musicPlaying && <span aria-label="Müzik çalıyor" className={`pointer-events-none absolute ${ring} z-[7] rounded-full room-music-glow`} />}
-        {/* Konuşma ses dalgası: çemberin dışına pembe/mavi halkalar olarak taşar. */}
-        {speaking && <span data-gender={speakingGender} aria-hidden="true" className={`voice-speaking-wave pointer-events-none absolute ${ring} z-[5] rounded-full`} />}
+        {speaking && !muted && <VoiceSpeakingWave index={index} ring={ring} />}
         {halo && <span className="pointer-events-none absolute inset-0 z-[6] rounded-full" style={{ boxShadow: halo }} />}
         <VoiceSeatPortrait seat={seat} className={face} variant={index} />
-        {seat.muted && (
-          <span className={`absolute left-1/2 top-1/2 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 ${badge}`}>
+        {muted && (
+          <span title="Mikrofon kapalı" aria-label="Mikrofon kapalı" className={`absolute left-1/2 top-1/2 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-destructive ${badge}`}>
             <MicOff className="h-3 w-3 text-white" />
           </span>
         )}

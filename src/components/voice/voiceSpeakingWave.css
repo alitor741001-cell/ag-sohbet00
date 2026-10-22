@@ -1,0 +1,49 @@
+.voice-speaking-wave {
+  color: var(--voice-wave-start, #ff5555);
+  box-shadow: 0 0 0 2px currentColor, 0 0 14px currentColor;
+  animation: voice-wave-colors 12s linear infinite;
+}
+.voice-speaking-wave::before, .voice-speaking-wave::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 9999px;
+  border: 2px solid currentColor;
+  animation: voice-wave-ring 1.6s ease-out infinite;
+}
+.voice-speaking-wave::after { animation-delay: 0.8s; }
+@keyframes voice-wave-ring {
+  0% { transform: scale(0.92); opacity: 0.95; }
+  70% { opacity: 0.35; }
+  100% { transform: scale(1.38); opacity: 0; }
+}
+@keyframes voice-wave-colors {
+  0%, 100% { color: hsl(0 90% 65%); }
+  4.167% { color: hsl(15 90% 65%); }
+  8.333% { color: hsl(30 90% 65%); }
+  12.5% { color: hsl(45 90% 65%); }
+  16.667% { color: hsl(60 90% 65%); }
+  20.833% { color: hsl(75 90% 65%); }
+  25% { color: hsl(90 90% 65%); }
+  29.167% { color: hsl(105 90% 65%); }
+  33.333% { color: hsl(120 90% 65%); }
+  37.5% { color: hsl(135 90% 65%); }
+  41.667% { color: hsl(150 90% 65%); }
+  45.833% { color: hsl(165 90% 65%); }
+  50% { color: hsl(180 90% 65%); }
+  54.167% { color: hsl(195 90% 65%); }
+  58.333% { color: hsl(210 90% 65%); }
+  62.5% { color: hsl(225 90% 65%); }
+  66.667% { color: hsl(240 90% 65%); }
+  70.833% { color: hsl(255 90% 65%); }
+  75% { color: hsl(270 90% 65%); }
+  79.167% { color: hsl(285 90% 65%); }
+  83.333% { color: hsl(300 90% 65%); }
+  87.5% { color: hsl(315 90% 65%); }
+  91.667% { color: hsl(330 90% 65%); }
+  95.833% { color: hsl(345 90% 65%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .voice-speaking-wave, .voice-speaking-wave::before, .voice-speaking-wave::after { animation: none; }
+  .voice-speaking-wave::after { display: none; }
+}

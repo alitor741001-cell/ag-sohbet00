@@ -1,7 +1,6 @@
 import { useCallback, useMemo, useRef } from 'react';
 import VoiceSeat from '@/components/voice/VoiceSeat';
 import VoiceSeatScore from '@/components/voice/VoiceSeatScore';
-import useMessageProfiles from '@/hooks/useMessageProfiles';
 
 import responsiveSeatRows from '@/components/voice/responsiveSeatRows';
 import { useSize } from '@/hooks/use-size';
@@ -11,14 +10,12 @@ import { useSize } from '@/hooks/use-size';
  * Koltuk boyutu ölçülen genişliğe göre seçilir: dar telefonlarda da satır yana taşmaz,
  * geniş ekranlarda koltuklar gereksiz küçülmez.
  */
-export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerId, moderators = [], speakingIds = [], localSpeaking, onSelectSeat, boardActive, scores = {}, accent = '#ef4444', gifted = {}, maxHeight }) {
+export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerId, moderators = [], speakingIds = [], localSpeaking, participantMicStates = {}, localMicMuted, onSelectSeat, boardActive, scores = {}, accent = '#ef4444', gifted = {}, maxHeight }) {
   const wrapRef = useRef(null);
   const measured = useSize(wrapRef);
   const width = measured?.width || 360;
   const rows = useMemo(() => responsiveSeatRows(seats.length, width), [seats.length, width]);
   const onSeatClick = useCallback((index) => onSelectSeat(index), [onSelectSeat]);
-  // Konuşma dalgası rengi kişinin cinsiyetine göre seçilir: profil bilgisi koltuklara iletilir.
-  const seatProfiles = useMessageProfiles(seats.map((seat) => seat.user_id).filter(Boolean));
 
   // 9'lu düzende üstteki tek koltuk (orta çerçeve) referanstaki gibi daha büyük çizilir.
   const featureTop = seats.length === 9;
@@ -82,6 +79,7 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
               {row.map((index) => {
                 const seat = seats[index];
                 const occupied = !!seat?.user_id;
+                const micMuted = Boolean(seat?.muted || (occupied && (seat.user_id === userId ? localMicMuted === true : participantMicStates[seat.user_id] === false)));
                 const seatSize = featureTop && row.length === 1 ? topSize : size;
                 return (
                   <div key={index} className="flex flex-col items-center">
@@ -94,11 +92,10 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
                       isOwner={occupied && seat.user_id === ownerId}
                       isMod={occupied && moderators.includes(seat.user_id)}
                       speaking={occupied && (seat.user_id === userId ? localSpeaking : speakingIds.includes(seat.user_id))}
-                      gender={occupied ? seatProfiles[seat.user_id]?.gender : ''}
                       onSelect={onSeatClick}
                       accent={accent}
                       gifted={occupied ? gifted[seat.user_id] : undefined}
-                      micMuted={!occupied && !!seat?.muted}
+                      micMuted={micMuted}
                     />
                     {boardActive && (
                       <VoiceSeatScore value={occupied ? scores[seat.user_id] || 0 : 0} size={seatSize} />

@@ -283,30 +283,7 @@
     50% { box-shadow: 0 0 0 5px rgba(74, 222, 128, 0.35), 0 0 22px 8px rgba(74, 222, 128, 0.7); }
   }
   .speaking-glow { animation: speaking-ring 1s ease-in-out infinite; }
-  /* Konuşan kişinin çember dışına taşan ses dalgası: kadınlarda pembe, erkeklerde mavi. */
-  .voice-speaking-wave {
-    --wave-tone: #FF006E;
-    box-shadow: 0 0 0 2px var(--wave-tone), 0 0 14px var(--wave-tone);
-  }
-  .voice-speaking-wave[data-gender="erkek"] { --wave-tone: #2E7DFF; }
-  .voice-speaking-wave::before,
-  .voice-speaking-wave::after {
-    content: '';
-    position: absolute;
-    inset: -4px;
-    border-radius: 9999px;
-    border: 2px solid var(--wave-tone);
-    animation: voice-wave-ring 1.6s ease-out infinite;
-  }
-  .voice-speaking-wave::after { animation-delay: 0.8s; }
-  @keyframes voice-wave-ring {
-    0% { transform: scale(0.92); opacity: 0.95; }
-    70% { opacity: 0.35; }
-    100% { transform: scale(1.38); opacity: 0; }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .voice-speaking-wave::before, .voice-speaking-wave::after { animation-duration: 3.2s; }
-  }
+
   @keyframes room-notif-in {
     from { transform: translateY(-20px) scale(0.9); opacity: 0; }
     to { transform: translateY(0) scale(1); opacity: 1; }

@@ -1093,6 +1093,8 @@ export default function VoiceRoom() {
           moderators,
           speakingIds: voice.speakingIds,
           localSpeaking: voice.localSpeaking,
+          participantMicStates: voice.participantMicStates,
+          localMicMuted: voice.muted,
           onSelectSeat: handleSeatPress,
           boardActive,
           boardStartedAt,
