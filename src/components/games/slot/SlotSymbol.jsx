@@ -6,6 +6,9 @@ import { SLOT_SYMBOL_ART } from '@/components/games/slotAssets';
  * Makara sembolü: kart görseli hücresine ortalanır, çevresinde makara yatağı kalır.
  * Kartlar Şekerli Meyve kartlarıyla aynı dilde: parlak zemin, altın çift çerçeve.
  */
+// Hayvanlar ve jackpot hafifçe büyütülür.
+const SYMBOL_SCALE = { tiger: 1.15, eagle: 1.15, lion: 1.15, jackpot: 1.12 };
+
 export default function SlotSymbol({ symbol, top, height }) {
   const art = useSlotEdgeCleanup(SLOT_SYMBOL_ART[symbol] || SLOT_SYMBOL_ART.ten);
   return (
@@ -17,6 +20,7 @@ export default function SlotSymbol({ symbol, top, height }) {
         loading="eager"
         decoding="sync"
         draggable={false}
+        style={{ transform: `scale(${SYMBOL_SCALE[symbol] || 1})` }}
         className="slot-symbol-card aspect-square h-full max-w-full rounded-lg object-cover"
       />
     </span>

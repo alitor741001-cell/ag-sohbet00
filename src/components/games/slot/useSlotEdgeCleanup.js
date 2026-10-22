@@ -53,6 +53,11 @@ function cleanEdges(src) {
           }
           clear.forEach(i => { rgb[i * 4 + 3] = 0; });
         }
+        // Alt bölgedeki beyaz/açık şerit artıkları (ör. jackpot altındaki çizgiler) silinir.
+        if (src.includes('bbf968e8c')) for (let i = Math.floor(h * 0.78) * w; i < w * h; i++) {
+          const r = rgb[i * 4], g = rgb[i * 4 + 1], b = rgb[i * 4 + 2];
+          if (Math.min(r, g, b) > 150 && Math.max(r, g, b) - Math.min(r, g, b) < 60) rgb[i * 4 + 3] = 0;
+        }
         ctx.putImageData(data, 0, 0);
         canvas.toBlob(blob => blob ? resolve(URL.createObjectURL(blob)) : reject(new Error('Görsel hazırlanamadı')), 'image/png');
       } catch (error) { reject(error); }
