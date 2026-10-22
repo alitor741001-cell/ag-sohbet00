@@ -7,7 +7,7 @@ export default function AgencyPageShell({ title, subtitle = '', sections = [], l
   const navigate = useNavigate();
 
   return (
-    <div className="dark mx-auto min-h-screen max-w-3xl bg-black px-4 py-5 text-white sm:px-6">
+    <div className="dark mx-auto min-h-screen max-w-3xl bg-background px-4 py-5 pb-24 text-foreground sm:px-6">
       <header className="flex items-center gap-3">
         <button
           type="button"
@@ -18,21 +18,20 @@ export default function AgencyPageShell({ title, subtitle = '', sections = [], l
           <ArrowLeft className="h-4 w-4" />
         </button>
         <div className="min-w-0 flex-1">
-          <h1 className="truncate text-base font-black uppercase tracking-wider" style={{ color: AGENCY_GOLD }}>{title}</h1>
+          <h1 className="break-words text-xl font-bold text-foreground">{title}</h1>
           {subtitle && <p className="truncate text-[11px] text-white/50">{subtitle}</p>}
         </div>
       </header>
 
       {sections.length > 0 && (
-        <nav className="no-scrollbar mb-4 mt-4 flex gap-1 overflow-x-auto rounded-2xl border border-white/12 bg-black/40 p-1">
+        <nav aria-label="Ajans bölümleri" className="mb-5 mt-5 grid grid-cols-2 gap-1.5 rounded-2xl border border-border bg-card p-2 sm:grid-cols-3">
           {sections.map((item) => (
             <NavLink
               key={item.key}
               to={item.path}
-              className={({ isActive }) => `shrink-0 rounded-xl px-3 py-2 text-[11px] font-bold transition-colors ${isActive ? 'text-black' : 'text-white/60'}`}
-              style={({ isActive }) => (isActive ? { background: AGENCY_GOLD } : {})}
+              className={({ isActive }) => `flex items-center gap-2 rounded-xl px-3 py-2.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${isActive ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-secondary hover:text-foreground'}`}
             >
-              {item.label}
+              {item.icon && <item.icon className="h-3.5 w-3.5 shrink-0" />}{item.label}
             </NavLink>
           ))}
         </nav>

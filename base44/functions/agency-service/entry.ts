@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
 import { rateLimit, safeErrorResponse } from '../../shared/security.ts';
 import { withLimitRetry } from '../../shared/retryLimit.ts';
+import { personalQuota } from '../../shared/personalQuota.ts';
 import { notifyUser } from '../../shared/notifyUser.ts';
 import { notifyAdmins } from '../../shared/adminNotify.ts';
 import {
@@ -29,7 +30,7 @@ export default async function (req) {
     const userPatch = (agency: any) => ({
       agency_code: agency.agency_id, agency_record_id: agency.id, agency_name: agency.name,
       agency_owner_id: agency.owner_id, agency_role: agency.owner_id === account.id ? 'owner' : 'broadcaster',
-      broadcaster_status: agency.owner_id === account.id ? '' : 'active',
+      broadcaster_status: agency.status === 'pending' && agency.owner_id === account.id ? '' : 'active',
     });
 
     const findAgencyByCode = async (code: string) => {
@@ -84,7 +85,7 @@ export default async function (req) {
 
     // ——— ÖZET: profil bölümündeki dinamik menü için ———
     if (action === 'summary') {
-      if (account.broadcaster_status === 'active' && account.agency_record_id) {
+      if (account.broadcaster_status === 'active' || account.owned_agency_id || account.agency_role === 'owner') {
         await syncQuotaRewards(base44, account.id).catch(() => {});
       }
       const [agency, ownedRecord, invites, sent, transfers] = await Promise.all([
@@ -99,7 +100,7 @@ export default async function (req) {
       // Ajans sahibi, kaydın kendisinden doğrulanır: eski kayıtlarda rol alanı yanlış kalabiliyor.
       const ownerByRecord = !!agency && agency.owner_id === account.id;
       const role = !agency ? (account.agency_role || '') : (ownerByRecord ? 'owner' : (account.agency_role || 'broadcaster'));
-      const broadcasterStatus = ownerByRecord ? '' : (account.broadcaster_status || (agency ? 'active' : ''));
+      const broadcasterStatus = ownerByRecord && isAgencyActive(agency) ? 'active' : (account.broadcaster_status || (agency && !ownerByRecord ? 'active' : ''));
       if (agency && (account.agency_role !== role || account.broadcaster_status !== broadcasterStatus)) {
         await base44.asServiceRole.entities.User.update(account.id, { agency_role: role, broadcaster_status: broadcasterStatus }).catch(() => {});
       }
@@ -328,42 +329,7 @@ export default async function (req) {
 
     // ——— YAYINCI PANELİ ———
     if (action === 'broadcaster') {
-      await syncQuotaRewards(base44, account.id).catch(() => {});
-      const [fresh, agency, tiers, rewards] = await Promise.all([
-        base44.asServiceRole.entities.User.get(account.id).catch(() => account),
-        account.agency_record_id ? base44.asServiceRole.entities.Agency.get(account.agency_record_id).catch(() => null) : null,
-        ensureQuotaTiers(base44),
-        base44.asServiceRole.entities.QuotaReward.filter({ user_id: account.id }, '-created_date', 300).catch(() => []),
-      ]);
-      const period = periodKey();
-      const month = Number(fresh?.diamond_month) || 0;
-      const active = (tiers || []).filter((tier) => tier.active !== false);
-      const nextTier = active.find((tier) => Number(tier.diamonds) > month) || null;
-      const rows = rewards || [];
-      return Response.json({
-        profile: { name: displayName, username: account.username || '', avatar: account.avatar || '', member_id: account.member_id || '-', agency_role: fresh?.agency_role || '', broadcaster_status: fresh?.broadcaster_status || '' },
-        agency: agency ? {
-          name: agency.name, agency_id: agency.agency_id, logo: agency.logo || '',
-          description: agency.description || '', rules: agency.rules || AGENCY_RULES.join('\n'),
-          owner_name: agency.owner_name || '', member_count: agency.member_count || 0,
-          commission_per_200k: Number(agency.commission_per_200k) || AGENCY_COMMISSION_PER_200K,
-        } : null,
-        diamonds: { month, total: Math.round((Number(fresh?.gift_received_k) || 0) * 1000) },
-        tiers: active,
-        next_tier: nextTier,
-        period,
-        rewards: rows.map((row) => ({
-          id: row.id, tier_id: row.tier_id, diamonds: Number(row.diamonds) || 0, amount: Number(row.amount) || 0,
-          agency_amount: Number(row.agency_amount) || 0, status: row.status || 'pending', period: row.period || '',
-          transaction_id: row.transaction_id || '', completed_at: row.completed_at || row.created_date,
-        })),
-        totals: {
-          pending: Math.round(rows.filter((row) => row.status !== 'paid').reduce((sum, row) => sum + (Number(row.amount) || 0), 0) * 100) / 100,
-          paid: Math.round(rows.filter((row) => row.status === 'paid').reduce((sum, row) => sum + (Number(row.amount) || 0), 0) * 100) / 100,
-          total: Math.round(rows.reduce((sum, row) => sum + (Number(row.amount) || 0), 0) * 100) / 100,
-          count: rows.length,
-        },
-      });
+      return Response.json(await personalQuota(base44, account, body.cursor));
     }
 
     // ——— AJANS PANELİ (sahip) ———
@@ -371,8 +337,10 @@ export default async function (req) {
       // Panel, sahip olunan ajansı gösterir; yayıncı üyeliği başka ajanda olabilir.
       const agency = await loadOwnedAgency();
       if (!agency) return Response.json({ error: 'Bir ajansa bağlı değilsin.' }, { status: 404 });
+      // Sahip de kota kazanır; üyeler ve sayaçlar okunmadan önce kişisel kota güncellenir.
+      const personal = await personalQuota(base44, account);
       const data = await agencyStats(base44, agency);
-      return Response.json({ ...data, is_owner: agency.owner_id === account.id });
+      return Response.json({ ...data, personal, is_owner: agency.owner_id === account.id });
     }
 
     // ——— AJANS DEĞİŞİKLİĞİ (TRANSFER) ———

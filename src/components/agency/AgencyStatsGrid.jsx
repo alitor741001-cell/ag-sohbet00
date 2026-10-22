@@ -14,14 +14,14 @@ export default function AgencyStatsGrid({ agency = {} }) {
     { key: 'commission', label: 'Komisyon / 200K', value: `$${agency.commission_per_200k || 3}`, icon: Banknote, tone: 'text-[#F5C542]' },
   ];
   return (
-    <div className="grid grid-cols-2 gap-2">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
       {cards.map((card) => (
-        <div key={card.key} className="rounded-2xl border border-white/10 bg-white/5 p-3">
+        <div key={card.key} className={`rounded-2xl border p-3.5 ${card.key === 'total' ? 'border-primary/30 bg-primary/10' : 'border-border bg-card'}`}>
           <div className="flex items-center gap-1.5">
-            <card.icon className={`h-3.5 w-3.5 ${card.tone}`} />
+            <card.icon className="h-4 w-4 shrink-0 text-primary" />
             <p className="text-[10px] uppercase tracking-wider text-white/45">{card.label}</p>
           </div>
-          <p className={`mt-1 text-base font-black ${card.tone}`}>{card.value}</p>
+          <p className="mt-2 break-words text-lg font-bold tabular-nums text-foreground">{card.value}</p>
         </div>
       ))}
     </div>

@@ -37,6 +37,7 @@ export default async function(req) {
       agency_role: u.agency_role || '', agency_name: u.agency_name || '', agency_code: u.agency_code || '',
       agency_record_id: u.agency_record_id || '', broadcaster_status: u.broadcaster_status || '',
       owned_agency_id: u.owned_agency_id || '', owned_agency_name: u.owned_agency_name || '', owned_agency_code: u.owned_agency_code || '',
+      owned_agency_status: u.owned_agency_status || '',
       ...badgeLevels(u),
     });
 
@@ -71,8 +72,8 @@ export default async function(req) {
     }
 
     if (!user_id) return Response.json({ error: 'user_id gerekli' }, { status: 400 });
-    const found = await readMirror([user_id]);
-    const u = found.get(user_id) || await base44.asServiceRole.entities.User.get(user_id).catch(() => null);
+    // Tek profil açılışında ajans ve görev değişiklikleri aynanın yenilenmesini beklemez.
+    const u = await base44.asServiceRole.entities.User.get(user_id).catch(() => null);
     if (!u) return Response.json({ error: 'kullanıcı bulunamadı' }, { status: 404 });
     const looks = await publicVipLooks(base44, [u], await getVipCatalog(base44));
     return Response.json({ ...toProfile(u), ...looks[u.id] });

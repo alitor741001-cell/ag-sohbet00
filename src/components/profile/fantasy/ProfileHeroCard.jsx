@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Camera, Check, Copy, Feather, Loader2, Shield } from 'lucide-react';
 import ProfileAvatarPortrait from '@/components/profile/fantasy/ProfileAvatarPortrait';
+import ProfileAgencyBadges from '@/components/profile/ProfileAgencyBadges';
 import { useToast } from '@/components/ui/use-toast';
 import { isRedNameVip } from '@/lib/userLevels';
 
@@ -87,6 +88,7 @@ export default function ProfileHeroCard({ user, avatar, onAvatar, onEdit, upload
         </div>
       </div>
 
+      <div className="mt-3"><ProfileAgencyBadges profile={user} /></div>
       {picking && (
         <div className="mt-3 flex flex-col items-center gap-2">
           <div className="flex items-center justify-center gap-2">

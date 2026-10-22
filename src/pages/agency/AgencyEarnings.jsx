@@ -3,6 +3,7 @@ import AgencyPageShell from '@/components/agency/AgencyPageShell';
 import AgencyStatsGrid from '@/components/agency/AgencyStatsGrid';
 import QuotaEarningsCard from '@/components/agency/QuotaEarningsCard';
 import EarningsHistory from '@/components/agency/EarningsHistory';
+import PersonalQuotaEarnings from '@/components/agency/PersonalQuotaEarnings';
 import useAgencyPageData from '@/components/agency/useAgencyPageData';
 import { agencySections } from '@/components/agency/agencySections';
 import { AGENCY_GOLD, formatMoney } from '@/lib/agency';
@@ -22,6 +23,10 @@ export default function AgencyEarnings() {
       {isOwner ? (
         <div className="space-y-3">
           <AgencyStatsGrid agency={panel?.agency || agency || {}} />
+          <section className="space-y-3 rounded-2xl border border-border bg-card p-3">
+            <h2 className="text-sm font-bold text-foreground">Kişisel kota kazancım</h2>
+            <PersonalQuotaEarnings data={panel?.personal} />
+          </section>
           <div className="rounded-2xl border border-[#F5C542]/25 bg-[#F5C542]/5 p-3">
             <p className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider" style={{ color: AGENCY_GOLD }}>
               <Banknote className="h-3.5 w-3.5" /> Komisyon Sistemi
@@ -34,15 +39,7 @@ export default function AgencyEarnings() {
           </div>
         </div>
       ) : (
-        <div className="space-y-4">
-          <QuotaEarningsCard
-            month={broadcaster?.diamonds?.month || 0}
-            period={broadcaster?.period || ''}
-            nextTier={broadcaster?.next_tier}
-            rewards={broadcaster?.rewards || []}
-          />
-          <EarningsHistory rewards={broadcaster?.rewards || []} totals={broadcaster?.totals || {}} />
-        </div>
+        <PersonalQuotaEarnings data={broadcaster} />
       )}
     </AgencyPageShell>
   );

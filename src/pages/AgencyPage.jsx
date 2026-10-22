@@ -12,7 +12,7 @@ export default function AgencyPage() {
   if (!user) return <div className="dark min-h-screen bg-black p-6 text-white">Yükleniyor...</div>;
 
   return (
-    <div className="dark mx-auto min-h-screen max-w-3xl xl:max-w-4xl bg-black px-4 py-5 text-white sm:px-6">
+    <div className="dark mx-auto min-h-screen max-w-3xl xl:max-w-4xl bg-background px-4 py-5 pb-24 text-foreground sm:px-6">
       <header className="mb-5 flex items-center gap-3">
         <button
           type="button"
@@ -22,7 +22,7 @@ export default function AgencyPage() {
         >
           <ArrowLeft className="h-4 w-4" />
         </button>
-        <h1 className="text-base font-black uppercase tracking-wider" style={{ color: AGENCY_GOLD }}>Ajans İşlemleri</h1>
+        <div><p className="text-[10px] font-bold uppercase tracking-widest text-primary">YÖNETİM MERKEZİ</p><h1 className="text-xl font-bold text-foreground">Ajans İşlemleri</h1></div>
       </header>
       <AgencySection user={user} onRefresh={reload} showHeading={false} />
     </div>

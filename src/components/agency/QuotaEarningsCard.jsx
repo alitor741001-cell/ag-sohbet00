@@ -2,10 +2,10 @@ import { CalendarDays, Gem, Wallet } from 'lucide-react';
 import { formatMoney, formatShortDiamonds } from '@/lib/agency';
 
 /** Yayıncının bu ayki kota kazancı: tamamlanan kota, bu ayki elmas ve kazanç. */
-export default function QuotaEarningsCard({ month = 0, period = '', nextTier = null, rewards = [] }) {
+export default function QuotaEarningsCard({ month = 0, period = '', nextTier = null, rewards = [], summary }) {
   const monthly = rewards.filter((reward) => reward.period === period);
-  const completed = monthly.reduce((max, reward) => Math.max(max, Number(reward.diamonds) || 0), 0);
-  const earned = monthly.reduce((sum, reward) => sum + (Number(reward.amount) || 0), 0);
+  const completed = summary ? Number(summary.max_diamonds) || 0 : monthly.reduce((max, reward) => Math.max(max, Number(reward.diamonds) || 0), 0);
+  const earned = summary ? Number(summary.sum_amount) || 0 : monthly.reduce((sum, reward) => sum + (Number(reward.amount) || 0), 0);
 
   return (
     <div className="space-y-3">
@@ -39,7 +39,7 @@ export default function QuotaEarningsCard({ month = 0, period = '', nextTier = n
         </div>
 
         <p className="mt-2 flex items-center gap-1 text-[10px] text-white/45">
-          <Wallet className="h-3 w-3" /> Bu ay {monthly.length} tamamlanan kota
+          <Wallet className="h-3 w-3" /> Bu ay {summary?.count ?? monthly.length} tamamlanan kota
         </p>
       </div>
     </div>

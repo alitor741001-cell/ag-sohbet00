@@ -3,6 +3,8 @@ import { ArrowLeftRight, Building2, ChevronRight, Gem, Handshake, Hourglass, Mai
 import { Link, useNavigate } from 'react-router-dom';
 import AgencyChangeSheet from '@/components/agency/AgencyChangeSheet';
 import AgencyCreateSheet from '@/components/agency/AgencyCreateSheet';
+import AgencyOverviewCard from '@/components/agency/AgencyOverviewCard';
+import AgencyActionGrid from '@/components/agency/AgencyActionGrid';
 import QuotaProgressCard from '@/components/agency/QuotaProgressCard';
 import { agencySectionBadge, agencySections } from '@/components/agency/agencySections';
 import { agencyLabel, resolveAgencyRole } from '@/lib/agencyRole';
@@ -76,12 +78,9 @@ export default function AgencySection({ user, onRefresh, showHeading = true }) {
 
   const quotaTiers = (quota?.tiers || []).filter((tier) => tier.active !== false);
   // Sahip kendi elmasıyla ilerler; geçen aydan kalan değer kota tamamlanmış sayılmaz.
-  const monthDiamonds = role === 'owner'
-    ? (user?.diamond_month_period === currentPeriod() ? (Number(user?.diamond_month) || 0) : 0)
-    : (quota?.diamonds?.month || 0);
-  const totalDiamonds = role === 'owner'
-    ? Math.round((Number(user?.gift_received_k) || 0) * 1000)
-    : (quota?.diamonds?.total || 0);
+  const personalQuota = role === 'owner' ? quota?.personal : quota;
+  const monthDiamonds = personalQuota?.diamonds?.month || 0;
+  const totalDiamonds = personalQuota?.diamonds?.total || 0;
   const nextTier = quotaTiers.find((tier) => Number(tier.diamonds) > monthDiamonds) || null;
   const showQuota = !!quota && (role === 'owner' || role === 'broadcaster');
 
@@ -113,47 +112,8 @@ export default function AgencySection({ user, onRefresh, showHeading = true }) {
         </div>
       )}
 
-      <div className="rounded-2xl border border-[#F5C542]/30 bg-gradient-to-br from-[#1a1305] via-[#0d0b16] to-[#140a1e] p-4">
-        <div className="flex items-center gap-3">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#F5C542]/45 bg-black/50">
-            {isPending ? <Hourglass className="h-5 w-5" style={{ color: AGENCY_GOLD }} /> : isOwner ? <Building2 className="h-5 w-5" style={{ color: AGENCY_GOLD }} /> : isAssistant ? <Handshake className="h-5 w-5" style={{ color: AGENCY_GOLD }} /> : <Mic2 className="h-5 w-5" style={{ color: AGENCY_GOLD }} />}
-          </span>
-          <div className="min-w-0 flex-1">
-            {role ? (
-              <>
-                <p className="truncate text-sm font-black text-white">{isPending ? '🏢 BAŞVURU ONAY BEKLİYOR' : isOwner ? '🏢 AJANS SAHİBİ' : isAssistant ? '🤝 AJANS ASİSTANI' : '🎤 YAYINCI'}</p>
-                <p className="truncate text-[11px]" style={{ color: AGENCY_GOLD }}>
-                  {agencyName || 'Ajans'} {agencyCode ? `• ${agencyCode}` : ''}
-                </p>
-                {isPending && (
-                  <p className="mt-0.5 text-[10px] text-white/45">Yönetici onayından sonra resmi ajans sahibi olur ve yayıncı davet edebilirsin.</p>
-                )}
-                {(isOwner || isPending) && !!otherMemberAgency && (
-                  <p className="mt-0.5 text-[10px] text-white/45">
-                    Yayıncı olduğun ajans: {otherMemberAgency.name || 'Ajans'}{otherMemberAgency.code ? ` • ${otherMemberAgency.code}` : ''} — gelen hediyeler ve kotan bu ajansa işler.
-                  </p>
-                )}
-                {isBroadcaster && profile.broadcaster_status !== 'active' && (
-                  <p className="mt-0.5 text-[10px] text-white/45">Yayıncı durumun pasif</p>
-                )}
-                {/* Asistanlık yayıncı rolünü kaldırmaz: aktif yayıncıysa profilinde yayıncı etiketi kalır. */}
-                {isAssistant && profile.broadcaster_status === 'active' && (
-                  <p className="mt-0.5 text-[10px] text-white/45">🎤 Yayıncı rolün de aktif — hediyeler ve kotan ajansa işler.</p>
-                )}
-              </>
-            ) : (
-              <>
-                <p className="truncate text-sm font-black text-white">Ajans sistemine katıl</p>
-                <p className="truncate text-[11px] text-white/50">Kendi ajansını kur ya da gelen davetleri değerlendir.</p>
-              </>
-            )}
-          </div>
-          {inviteCount > 0 && (
-            <span className="flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full px-1.5 text-[11px] font-black text-black" style={{ background: AGENCY_GOLD }}>
-              {inviteCount}
-            </span>
-          )}
-        </div>
+      <div className="rounded-3xl border border-border bg-card p-4 shadow-xl sm:p-5">
+        <AgencyOverviewCard role={role} name={agencyName} code={agencyCode} inviteCount={inviteCount} memberAgency={otherMemberAgency} />
 
         {pendingTransfer && (
           <Link to="/ajans/transferler" className="mt-3 flex w-full items-center gap-2 rounded-xl border border-[#5AB8FF]/40 bg-[#5AB8FF]/10 px-3 py-2.5 text-left">
@@ -172,26 +132,7 @@ export default function AgencySection({ user, onRefresh, showHeading = true }) {
           </div>
         )}
 
-        <div className="mt-3 grid grid-cols-2 gap-2">
-          {actions.map((action) => {
-            const rowClass = 'flex items-center gap-2 rounded-xl border border-white/12 bg-white/5 px-3 py-3 text-left active:scale-[0.98]';
-            const row = (
-              <>
-                <action.icon className="h-4 w-4 shrink-0" style={{ color: AGENCY_GOLD }} />
-                <span className="min-w-0 flex-1 truncate text-[11px] font-bold text-white">{action.label}</span>
-                <ChevronRight className="h-3.5 w-3.5 shrink-0 text-white/35" />
-              </>
-            );
-            // Ajans değişikliği buradan başlar: ayrı sayfaya gitmeden yeni ajans
-            // sorgulanır, talep gönderilir ve onaylar aynı yerden izlenir.
-            if (action.key === 'transferler') {
-              return <button key={action.key} type="button" onClick={() => setSheet('change')} className={rowClass}>{row}</button>;
-            }
-            return action.path
-              ? <Link key={action.key} to={action.path} className={rowClass}>{row}</Link>
-              : <button key={action.key} type="button" onClick={() => setSheet('create')} className={rowClass}>{row}</button>;
-          })}
-        </div>
+        <AgencyActionGrid actions={actions} onTransfer={() => setSheet('change')} onCreate={() => setSheet('create')} />
       </div>
 
       {/* Başvuru gönderildikten sonra ajans ayarları sayfası kendiliğinden açılır. */}

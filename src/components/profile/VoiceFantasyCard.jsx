@@ -2,6 +2,7 @@ import FantasyProfileShell from '@/components/profile/FantasyProfileShell';
 import VoiceFantasyActions from '@/components/profile/VoiceFantasyActions';
 import ProfileStatsRow from '@/components/profile/ProfileStatsRow';
 import ProfileIdentityBlock from '@/components/profile/ProfileIdentityBlock';
+import ProfileAgencyBadges from '@/components/profile/ProfileAgencyBadges';
 
 export default function VoiceFantasyCard({ profile, hidden, name, avatar, role, palette, room, userId, isSelf, onClose, onMessage, statusContent, memberId, genderLabel, age, badge, joinDate, copied, onCopyId }) {
   const female = profile?.gender === 'kadın';
@@ -12,7 +13,7 @@ export default function VoiceFantasyCard({ profile, hidden, name, avatar, role, 
           {statusContent || <div className="space-y-3 px-4 pt-1">
             {!hidden && <>
               <ProfileStatsRow palette={palette} level={0} receivedLevel={profile?.gift_received_level || 0} receivedTier={profile?.gift_received_tier} nLevel={profile?.n_level || 0} vipLevel={profile?.vip_level || 0} />
-              <div className="voice-fantasy-button flex items-center justify-between gap-2 rounded-xl px-3 py-2 text-[11px]"><span className="text-fantasy-gold">Ajans</span><span className="text-right font-bold">{agency ? `${agency}${agencyCode ? ` · ${agencyCode}` : ''}` : 'Ajansı yok'}</span></div>
+              <ProfileAgencyBadges profile={profile || {}} />
               <ProfileIdentityBlock palette={palette} genderLabel={genderLabel} age={age} country={badge.country} flag={badge.flag} memberId={memberId} joinDate={joinDate} copied={copied} onCopyId={onCopyId} />
             </>}
             {hidden && <p className="text-center text-xs text-fantasy-text/70">Gizli Kullanıcı: kimlik bilgileri gizli kalır.</p>}

@@ -1,6 +1,7 @@
 import { receivedGiftTotals, giftResetAt, monthStartIso } from './giftBox.ts';
 import { notifyUser } from './notifyUser.ts';
 import { DEFAULT_QUOTA_TIERS } from './quotaLadder.ts';
+import { quotaAgency, agencyMemberQuery } from './agencyOwnership.ts';
 
 /**
  * Yayıncı / ajans sistemi: ajans üyeliği, kota kazançları ve transfer kayıtları.
@@ -235,7 +236,10 @@ async function quotaScanRecent(base44: any, userId: string) {
 
 export async function syncQuotaRewards(base44: any, userId: string) {
   const account = await base44.asServiceRole.entities.User.get(userId).catch(() => null);
-  if (!account || account.broadcaster_status !== 'active') return { awarded: [] as any[] };
+  if (!account) return { awarded: [] as any[] };
+  const earningAgency = await quotaAgency(base44, account);
+  const earnsAsOwner = earningAgency?.owner_id === userId;
+  if (!earnsAsOwner && account.broadcaster_status !== 'active') return { awarded: [] as any[] };
   // Az önce tarandıysa tekrar taranmaz: kota kazançları o taramada yazılmıştır.
   if (await quotaScanRecent(base44, userId)) return { awarded: [] as any[] };
   const { month } = await broadcasterDiamonds(base44, userId);
@@ -247,13 +251,11 @@ export async function syncQuotaRewards(base44: any, userId: string) {
   const eligible = tiers.filter((tier) => tier.active !== false && Number(tier.diamonds || 0) <= month);
   if (!eligible.length) return { awarded: [] as any[] };
   // Yayıncıyı ajansa kazandıran asistan varsa, komisyonun yüzdelik payı ona da yazılır.
-  const ownerAgency = account.agency_record_id
-    ? await base44.asServiceRole.entities.Agency.get(account.agency_record_id).catch(() => null)
-    : null;
-  const assistantLink = ownerAgency ? await broadcasterAssistantLink(base44, userId, ownerAgency.id) : null;
+  const ownerAgency = earningAgency;
+  const assistantLink = ownerAgency && !earnsAsOwner ? await broadcasterAssistantLink(base44, userId, ownerAgency.id) : null;
   const assistant = assistantLink ? activeAssistant(ownerAgency, assistantLink.assistant_id) : null;
   // Aynı kota (kişi + kademe seviyesi + ay) ikinci kez ödenmez: kontrol kademe seviyesi üzerinden yapılır.
-  const existing = await base44.asServiceRole.entities.QuotaReward.filter({ user_id: userId, period }, '-created_date', 500).catch(() => []);
+  const existing = await base44.asServiceRole.entities.QuotaReward.filter({ user_id: userId, period, kind: { $ne: 'assistant' } }, '-created_date', 500);
   const done = new Set(existing.map((row) => Number(row.diamonds) || 0));
   const name = account.username || account.full_name || 'Yayıncı';
   const awarded = [];
@@ -261,8 +263,8 @@ export async function syncQuotaRewards(base44: any, userId: string) {
     if (done.has(Number(tier.diamonds) || 0)) continue;
     const reward = await base44.asServiceRole.entities.QuotaReward.create({
       user_id: userId, user_name: name,
-      agency_id: account.agency_record_id || '', agency_code: account.agency_code || '', agency_name: account.agency_name || '',
-      agency_owner_id: account.agency_owner_id || '', period, tier_id: tier.id,
+      agency_id: earningAgency?.id || '', agency_code: earningAgency?.agency_id || '', agency_name: earningAgency?.name || '',
+      agency_owner_id: earningAgency?.owner_id || '', period, tier_id: tier.id,
       diamonds: Number(tier.diamonds) || 0, amount: round(tier.broadcaster_dollars),
       agency_amount: round(tier.agency_dollars) || agencyCommissionFor(tier.diamonds),
       // Kota tamamlandığı anda kayıt ödendi sayılır: panelde ayrıca işaretlemek gerekmez.
@@ -307,7 +309,7 @@ export async function syncQuotaRewards(base44: any, userId: string) {
       }
     }
   }
-  if (awarded.length && account.agency_record_id) await refreshAgencyTotals(base44, account.agency_record_id);
+  if (awarded.length && earningAgency?.id) await refreshAgencyTotals(base44, earningAgency.id);
   return { awarded };
 }
 
@@ -317,10 +319,10 @@ export async function refreshAgencyTotals(base44: any, agencyId: string) {
   const agency = await base44.asServiceRole.entities.Agency.get(agencyId).catch(() => null);
   if (!agency) return null;
   const [members, rewards] = await Promise.all([
-    base44.asServiceRole.entities.User.filter({ agency_record_id: agencyId }, '-created_date', 500).catch(() => []),
+    base44.asServiceRole.entities.User.filter(agencyMemberQuery(agency), '-created_date', 500),
     base44.asServiceRole.entities.QuotaReward.filter({ agency_id: agencyId }, '-created_date', 1000).catch(() => []),
   ]);
-  const broadcasters = (members || []).filter((member: any) => member.agency_role === 'broadcaster');
+  const broadcasters = (members || []).filter((member: any) => member.id === agency.owner_id || member.agency_role === 'broadcaster' || member.broadcaster_status === 'active');
   const patch = {
     member_count: broadcasters.length,
     total_diamonds: broadcasters.reduce((sum: number, member: any) => sum + Math.round((Number(member.gift_received_k) || 0) * 1000), 0),
@@ -338,14 +340,14 @@ export async function agencyStats(base44: any, agency: any) {
   const period = periodKey();
   const today = todayKey();
   const [members, rewards, invites, transfers, tiers, acceptedInvites] = await Promise.all([
-    base44.asServiceRole.entities.User.filter({ agency_record_id: agency.id }, '-created_date', 500).catch(() => []),
+    base44.asServiceRole.entities.User.filter(agencyMemberQuery(agency), '-created_date', 500),
     base44.asServiceRole.entities.QuotaReward.filter({ agency_id: agency.id }, '-created_date', 1000).catch(() => []),
     base44.asServiceRole.entities.AgencyInvite.filter({ agency_record_id: agency.id, status: 'pending' }, '-created_date', 200).catch(() => []),
     base44.asServiceRole.entities.AgencyTransfer.filter({ $or: [{ from_agency_id: agency.id }, { to_agency_id: agency.id }] }, '-created_date', 200).catch(() => []),
     ensureQuotaTiers(base44),
     base44.asServiceRole.entities.AgencyInvite.filter({ agency_record_id: agency.id, status: 'accepted' }, '-created_date', 500).catch(() => []),
   ]);
-  const broadcasters = (members || []).filter((member: any) => member.agency_role === 'broadcaster');
+  const broadcasters = (members || []).filter((member: any) => member.id === agency.owner_id || member.agency_role === 'broadcaster' || member.broadcaster_status === 'active');
   const activeTiers = (tiers || []).filter((tier: any) => tier.active !== false);
   const rows = broadcasters.map((member: any) => {
     const own = (rewards || []).filter((row: any) => row.user_id === member.id);
@@ -364,7 +366,7 @@ export async function agencyStats(base44: any, agency: any) {
       month_commission: round(mine.reduce((sum: number, row: any) => sum + (Number(row.agency_amount) || 0), 0)),
       earnings: round(own.reduce((sum: number, row: any) => sum + (Number(row.amount) || 0), 0)),
       pending: round(own.filter((row: any) => row.status !== 'paid').reduce((sum: number, row: any) => sum + (Number(row.amount) || 0), 0)),
-      status: member.broadcaster_status === 'active' ? 'active' : 'inactive',
+      status: member.id === agency.owner_id || member.broadcaster_status === 'active' ? 'active' : 'inactive',
       joined: member.created_date || null,
     };
   }).sort((a: any, b: any) => b.diamonds - a.diamonds);

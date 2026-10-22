@@ -20,13 +20,9 @@ export default function AgencyQuota() {
   // Sahip kendi elmasına göre ilerler; yayıncı ve asistan için yayıncı kaydı okunur.
   // Sahibin elması yalnızca bu ayki veri ise sayılır: geçen aydan kalan değer
   // bütün kademeleri tamamlanmış gösteriyordu.
-  const ownerMonthFresh = user?.diamond_month_period === currentPeriod();
-  const monthDiamonds = isOwner
-    ? (ownerMonthFresh ? (Number(user?.diamond_month) || 0) : 0)
-    : (broadcaster?.diamonds?.month || 0);
-  const totalDiamonds = isOwner
-    ? Math.round((Number(user?.gift_received_k) || 0) * 1000)
-    : (broadcaster?.diamonds?.total || 0);
+  const personal = isOwner ? panel?.personal : broadcaster;
+  const monthDiamonds = personal?.diamonds?.month || 0;
+  const totalDiamonds = personal?.diamonds?.total || 0;
   // Sonraki kademe her iki rolde de tablodaki kademelerden hesaplanır: kart ile tablo aynı veriyi okur.
   const nextTier = activeTiers.find((tier) => Number(tier.diamonds) > monthDiamonds) || null;
   const share = Number(assistant?.assistant?.share) || 0;

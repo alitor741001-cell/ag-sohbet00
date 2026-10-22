@@ -17,6 +17,7 @@ import { broadcasterState } from '@/lib/broadcaster';
 import { useRoomProfileActions } from '@/lib/roomProfileActions';
 import useBackDismiss from '@/hooks/useBackDismiss';
 import VoiceFantasyCard from '@/components/profile/VoiceFantasyCard';
+import ProfileAgencyBadges from '@/components/profile/ProfileAgencyBadges';
 
 /**
  * Uygulamadaki tek profil kartı: kadın kartı pembe/altın, erkek kartı mavi/altın tonundadır.
@@ -194,30 +195,7 @@ export default function FullUserProfile({
 
   const content = statusContent || (
     <>
-      {!hidden && (profile?.broadcaster_status === 'active' || profile?.agency_name || ownerAgency) && (
-        <div className="flex flex-wrap items-center gap-1.5">
-          {profile?.broadcaster_status === 'active' && (
-            <span className="flex items-center gap-1 rounded-full border border-[#F5C542]/50 bg-[#F5C542]/10 px-2 py-0.5 text-[9px] font-black text-[#F5C542]">
-              <Mic2 className="h-3 w-3" /> 🎤 YAYINCI
-            </span>
-          )}
-          {profile?.agency_role === 'assistant' && (
-            <span
-              className="flex items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] font-black"
-              style={{ borderColor: palette.accent, background: palette.soft, color: palette.accent }}
-            >
-              🤝 ASİSTAN
-            </span>
-          )}
-          {ownerAgency ? (
-            <span className="flex items-center gap-1 rounded-full border border-[#F5C542]/60 bg-[#F5C542]/10 px-2 py-0.5 text-[9px] font-black text-[#F5C542]">
-              🏢 AJANS SAHİBİ{ownerAgency.name ? ` • ${ownerAgency.name}` : ''}{ownerAgency.code ? ` (${ownerAgency.code})` : ''}
-            </span>
-          ) : profile?.agency_name ? (
-            <span className="rounded-full border border-white/15 bg-black/40 px-2 py-0.5 text-[9px] font-semibold text-white/70">Ajans: {profile.agency_name}</span>
-          ) : null}
-        </div>
-      )}
+      {!hidden && <ProfileAgencyBadges profile={profile || {}} />}
 
       <ProfileStatsRow
         palette={palette}

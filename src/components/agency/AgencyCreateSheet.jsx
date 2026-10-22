@@ -72,7 +72,7 @@ export default function AgencyCreateSheet({ open, onClose, onCreated, memberAgen
           </div>
           {memberAgency && (
             <p className="rounded-2xl border border-white/10 bg-white/5 p-3 text-[11px] leading-relaxed text-white/60">
-              Yayıncı olduğun {memberAgency.name || 'ajans'} ajansı değişmez: gelen hediyeler ve kotan oraya işlemeye devam eder.
+              Başvurun onaylanana kadar kotan {memberAgency.name || 'mevcut ajansına'} işler. Onaylandıktan sonra yeni kotaların kendi ajansına ve kazancına yazılır.
             </p>
           )}
           <button onClick={onClose} className="w-full rounded-2xl py-3.5 text-sm font-black text-black" style={{ background: AGENCY_GOLD }}>
@@ -112,7 +112,7 @@ export default function AgencyCreateSheet({ open, onClose, onCreated, memberAgen
             <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
               <p className="text-[11px] font-bold uppercase tracking-wider text-white/50">Yayıncı Olduğun Ajans</p>
               <p className="mt-1 text-sm font-semibold">{memberAgency.name || 'Ajans'} {memberAgency.code ? `• ${memberAgency.code}` : ''}</p>
-              <p className="mt-1 text-[11px] text-white/45">Kendi ajansını açsan da gelen hediyeler ve kotan bu ajansa işlemeye devam eder.</p>
+              <p className="mt-1 text-[11px] text-white/45">Başvurun onaylandığında yeni kotaların kendi ajansına işlenir; kişisel kota kazancın ve ajans komisyonun sana yazılır.</p>
             </div>
           )}
 
