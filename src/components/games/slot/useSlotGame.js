@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { base44 } from '@/api/base44Client';
 import gameRequest from '@/lib/gameRequest';
 import { BET_LEVELS, LINES, MAX_BET, MIN_BET } from './slotConfig';
 import useBetQueue from '@/hooks/useBetQueue';
@@ -72,8 +71,7 @@ export default function useSlotGame({ roomId } = {}) {
 
   useEffect(() => {
     let cancelled = false;
-    base44.functions
-      .invoke('slot-game', { action: 'state' })
+    gameRequest('slot-game', { action: 'state' })
       .then((response) => {
         if (cancelled) return;
         applyState(response.data);
@@ -147,7 +145,7 @@ export default function useSlotGame({ roomId } = {}) {
   const saveBet = useCallback((next) => {
     setBet(next);
     // İstekler sıraya girer: hızlı basışta geç dönen eski yanıt yeni bahsi geri düşürmez.
-    enqueueBet(() => base44.functions.invoke('slot-game', { action: 'bet', bet: next }), applyState);
+    enqueueBet(() => gameRequest('slot-game', { action: 'bet', bet: next }), applyState);
   }, [applyState, enqueueBet]);
 
   const changeBet = useCallback((direction) => {

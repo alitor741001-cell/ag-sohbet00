@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { base44 } from '@/api/base44Client';
 import gameRequest from '@/lib/gameRequest';
 import { landMs } from '@/components/games/reels/reelRoll';
 import { DEDE_BET_LEVELS, DEDE_LINES, scatterIntroGrid } from './dedeConfig';
@@ -92,8 +91,7 @@ export default function useDedeGame() {
 
   useEffect(() => {
     let cancelled = false;
-    base44.functions
-      .invoke('dede-game', { action: 'state' })
+    gameRequest('dede-game', { action: 'state' })
       .then((response) => {
         if (cancelled) return;
         applyState(response.data);
@@ -201,7 +199,7 @@ export default function useDedeGame() {
   const saveBet = useCallback((next) => {
     setBet(next);
     // İstekler sıraya girer: hızlı basışta geç dönen eski yanıt yeni bahsi geri düşürmez.
-    enqueueBet(() => base44.functions.invoke('dede-game', { action: 'bet', bet: next }), applyState);
+    enqueueBet(() => gameRequest('dede-game', { action: 'bet', bet: next }), applyState);
   }, [applyState, enqueueBet]);
 
   const changeBet = useCallback((direction) => {

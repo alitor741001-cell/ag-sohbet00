@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import gameRequest from '@/lib/gameRequest';
 import { sekerliSound as gameSound, unlockAudio } from '@/lib/sekerliAudio';
 
 // Tur durumu üç saniyede bir tazelenir; geri sayım yerel saatle akar.
@@ -76,7 +76,7 @@ export default function useFutbolGame() {
   }, []);
 
   const send = useCallback(async (payload) => {
-    const response = await base44.functions.invoke('futbol-game', payload);
+    const response = await gameRequest('futbol-game', payload);
     return response.data;
   }, []);
 

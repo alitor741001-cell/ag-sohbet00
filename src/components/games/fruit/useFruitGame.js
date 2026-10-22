@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { base44 } from '@/api/base44Client';
 import gameRequest from '@/lib/gameRequest';
 import { landMs } from '@/components/games/reels/reelRoll';
 import { FRUIT_BET_LEVELS, FRUIT_LINES } from './fruitConfig';
@@ -80,8 +79,7 @@ export default function useFruitGame() {
 
   useEffect(() => {
     let cancelled = false;
-    base44.functions
-      .invoke('fruit-game', { action: 'state' })
+    gameRequest('fruit-game', { action: 'state' })
       .then((response) => {
         if (cancelled) return;
         applyState(response.data);
@@ -174,7 +172,7 @@ export default function useFruitGame() {
   const saveBet = useCallback((next) => {
     setBet(next);
     // İstekler sıraya girer: hızlı basışta geç dönen eski yanıt yeni bahsi geri düşürmez.
-    enqueueBet(() => base44.functions.invoke('fruit-game', { action: 'bet', bet: next }), applyState);
+    enqueueBet(() => gameRequest('fruit-game', { action: 'bet', bet: next }), applyState);
   }, [applyState, enqueueBet]);
 
   const changeBet = useCallback((direction) => {
@@ -210,12 +208,16 @@ export default function useFruitGame() {
       setMessage('Yetersiz coin. Coin bakiyene dokunup coin yükle.');
       return;
     }
+    busyRef.current = true;
     try {
       const response = await gameRequest('fruit-game', { action: 'session', bet });
       applyState(response.data);
       setMessage('');
     } catch (error) {
-      setMessage(error?.response?.data?.error || 'Çevirme hakkı alınamadı.');
+      const raw = error?.response?.data?.error;
+      setMessage(raw && error?.response?.status !== 429 && !/rate|limit|sınır|yoğun/i.test(raw) ? raw : 'Çok hızlı işlem yapıyorsun, birkaç saniye bekle.');
+    } finally {
+      busyRef.current = false;
     }
   }, [applyState, bet, coins, sessionPrice, status]);
 

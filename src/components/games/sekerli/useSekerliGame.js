@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { base44 } from '@/api/base44Client';
 import gameRequest from '@/lib/gameRequest';
 import { BET_LEVELS, LINES, REELS, ROWS, tierFor } from './sekerliConfig';
 import { EMPTY_CELLS, collapseBoard, mergeSymbols, randomSymbol, toBoard } from './sekerliBoard';
@@ -133,8 +132,7 @@ export default function useSekerliGame() {
 
   useEffect(() => {
     let cancelled = false;
-    base44.functions
-      .invoke('sekerli-game', { action: 'state' })
+    gameRequest('sekerli-game', { action: 'state' })
       .then((response) => {
         if (cancelled) return;
         applyState(response.data);
@@ -310,7 +308,7 @@ export default function useSekerliGame() {
   const saveBet = useCallback((next) => {
     setBet(next);
     // İstekler sıraya girer: hızlı basışta geç dönen eski yanıt yeni bahsi geri düşürmez.
-    enqueueBet(() => base44.functions.invoke('sekerli-game', { action: 'bet', bet: next }), applyState);
+    enqueueBet(() => gameRequest('sekerli-game', { action: 'bet', bet: next }), applyState);
   }, [applyState, enqueueBet]);
 
   const changeBet = useCallback((direction) => {
@@ -363,12 +361,18 @@ export default function useSekerliGame() {
       setMessage('Yetersiz coin. Coin bakiyene dokunup coin yükle.');
       return;
     }
+    busyRef.current = true;
+    setBusy(true);
     try {
       const response = await gameRequest('sekerli-game', { action: 'session', bet });
       applyState(response.data);
       setMessage('');
     } catch (error) {
-      setMessage(error?.response?.data?.error || 'Çevirme hakkı alınamadı.');
+      const raw = error?.response?.data?.error;
+      setMessage(raw && error?.response?.status !== 429 && !/rate|limit|sınır|yoğun/i.test(raw) ? raw : 'Çok hızlı işlem yapıyorsun, birkaç saniye bekle.');
+    } finally {
+      busyRef.current = false;
+      setBusy(false);
     }
   }, [applyState, bet, sessionPrice, status]);
 
