@@ -178,7 +178,7 @@ export default function EliminSlotGame({ onExit, onBack }) {
       </main>
 
       <footer className="el-foot">
-        <div className="gctl-deck">
+        <div className="gctl-deck ref-deck">
           <GameBetBar
             bet={game.bet}
             lines={LINES}

@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { Coins, Loader2, Play, ShoppingBag } from 'lucide-react';
+import { Coins, Loader2, Play } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import { OKEY_CLASSIC_COVER, OKEY_COVER } from './okeyAssets';
 import { OKEY_BETS, formatBet } from './okeyConfig';
+import ReferenceChoiceButton from '@/components/games/controls/ReferenceChoiceButton';
+import ReferenceCoinButton from '@/components/games/controls/ReferenceCoinButton';
 
 /** Lobi: bahis seç, hızlı oyna ya da açık bir masaya otur. */
 export default function OkeyLobby({ variant = 'okey101', coins, lobby, loading, busy, error, onQuick, onJoin, onStore }) {
@@ -40,15 +42,13 @@ export default function OkeyLobby({ variant = 'okey101', coins, lobby, loading, 
           <span className="okey-chip-label">COIN</span>
           <span className="okey-chip-value">{formatBet(coins)}</span>
         </span>
-        <button type="button" className="okey-store ml-auto" onClick={onStore}>
-          <ShoppingBag className="h-3.5 w-3.5" /> SATIN AL
-        </button>
+        <div className="ml-auto w-40"><ReferenceCoinButton coins={coins} onClick={onStore} format={formatBet} /></div>
       </div>
 
       <p className="okey-section-title">BAHİS SEÇ</p>
       <div className="okey-bet-row">
         {OKEY_BETS.map((value) => (
-          <button
+          <ReferenceChoiceButton
             key={value}
             type="button"
             className="okey-bet"
@@ -57,18 +57,18 @@ export default function OkeyLobby({ variant = 'okey101', coins, lobby, loading, 
             onClick={() => setBet(value)}
           >
             {formatBet(value)} coin
-          </button>
+          </ReferenceChoiceButton>
         ))}
       </div>
 
-      <button
+      <ReferenceChoiceButton
         type="button"
         className="okey-btn okey-btn-gold justify-center py-3 text-sm"
         disabled={busy || coins < bet}
         onClick={() => onQuick(bet)}
       >
         <Play className="h-4 w-4" /> HIZLI OYNA
-      </button>
+      </ReferenceChoiceButton>
       <p className="okey-lobby-text">
         Rastgele, boş yeri olan bir masaya oturursun; uygun masa yoksa senin için yeni masa açılır. Masa dört kişiye
         dolduğu anda bahisler cüzdandan düşülür ve oyun başlar.
@@ -105,14 +105,14 @@ export default function OkeyLobby({ variant = 'okey101', coins, lobby, loading, 
                 {table.id === myTable ? (
                   <span className="okey-btn okey-btn-green">MASAYA DÖN</span>
                 ) : (
-                  <button
+                  <ReferenceChoiceButton
                     type="button"
                     className="okey-btn"
                     disabled={busy || !waiting || filled >= 4 || coins < table.base_bet}
                     onClick={() => onJoin(table.id)}
                   >
                     KATIL
-                  </button>
+                  </ReferenceChoiceButton>
                 )}
               </div>
             );

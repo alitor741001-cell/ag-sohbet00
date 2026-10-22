@@ -1,5 +1,6 @@
 import React from 'react';
 import { Coins } from 'lucide-react';
+import ReferenceChoiceButton from '@/components/games/controls/ReferenceChoiceButton';
 import { STAKE_LEVELS, TEAM_MAP, formatCoins } from './futbolConfig';
 
 /** Para butonları, "önceki seçimi takip et" ve seçili kart bilgisi. */
@@ -14,28 +15,15 @@ export default function FutbolStakeDock({ selected, disabled, follow, onStake, o
 
       <div className="fut-stakes">
         {STAKE_LEVELS.map((level) => (
-          <button
-            key={level}
-            type="button"
-            disabled={disabled}
-            onClick={() => onStake(level)}
-            className="fut-stake"
-          >
-            <Coins className="h-4 w-4" />
-            {formatCoins(level)}
-          </button>
+          <ReferenceChoiceButton key={level} disabled={disabled} onClick={() => onStake(level)}>
+            <Coins className="h-4 w-4" />{formatCoins(level)}
+          </ReferenceChoiceButton>
         ))}
       </div>
 
-      <button
-        type="button"
-        onClick={onFollow}
-        aria-pressed={follow}
-        className={`fut-follow ${follow ? 'fut-follow-on' : ''}`}
-      >
-        <span className="fut-radio" aria-hidden="true" />
+      <ReferenceChoiceButton onClick={onFollow} aria-pressed={follow}>
         Önceki Seçimi Takip Et
-      </button>
+      </ReferenceChoiceButton>
     </div>
   );
 }

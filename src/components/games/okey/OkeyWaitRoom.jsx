@@ -1,5 +1,6 @@
 import { Play } from 'lucide-react';
 import { OKEY_MIN_PLAYERS, formatBet } from './okeyConfig';
+import ReferenceChoiceButton from '@/components/games/controls/ReferenceChoiceButton';
 
 /** Bekleme odası: bahsi artır, 2-3 oyuncuyla başlat ya da ayrıl. */
 export default function OkeyWaitRoom({ table, mySeat, coins, busy, onStake, onStart, onLeave, onOpenProfile }) {
@@ -18,16 +19,16 @@ export default function OkeyWaitRoom({ table, mySeat, coins, busy, onStake, onSt
           <div className="okey-wait-card">
             <div className="okey-stake-row">
               <span className="okey-section-title">BAHSİM</span>
-              <button type="button" className="okey-btn" disabled={busy || stake <= base} onClick={() => onStake(stake - base)}>
+              <ReferenceChoiceButton type="button" className="okey-btn" disabled={busy || stake <= base} onClick={() => onStake(stake - base)}>
                 −
-              </button>
+              </ReferenceChoiceButton>
               <span className="okey-stake-value">{formatBet(stake)}</span>
-              <button type="button" className="okey-btn" disabled={busy || stake + base > max} onClick={() => onStake(stake + base)}>
+              <ReferenceChoiceButton type="button" className="okey-btn" disabled={busy || stake + base > max} onClick={() => onStake(stake + base)}>
                 +
-              </button>
-              <button type="button" className="okey-btn okey-btn-gold" disabled={busy || stake >= max} onClick={() => onStake(max)}>
+              </ReferenceChoiceButton>
+              <ReferenceChoiceButton type="button" className="okey-btn okey-btn-gold" disabled={busy || stake >= max} onClick={() => onStake(max)}>
                 MAKS
-              </button>
+              </ReferenceChoiceButton>
             </div>
             <p className="okey-lobby-text">
               Bahsini istediğin kadar artırabilirsin; kazanan potun tamamını alır. Bahisler oyun başlarken cüzdandan
@@ -40,7 +41,7 @@ export default function OkeyWaitRoom({ table, mySeat, coins, busy, onStake, onSt
           </p>
           {/* Oturan oyuncuya dokununca profil kartı açılır; boş yer dokunulamaz. */}
           {seats.map((seat, index) => (seat.user_id ? (
-            <button
+            <ReferenceChoiceButton
               key={index}
               type="button"
               className="okey-seat-line w-full"
@@ -51,7 +52,7 @@ export default function OkeyWaitRoom({ table, mySeat, coins, busy, onStake, onSt
                 {index + 1}. {seat.name}
               </span>
               <span className="okey-chip-value">{formatBet(seat.stake)} coin</span>
-            </button>
+            </ReferenceChoiceButton>
           ) : (
             <p key={index} className="okey-seat-line">
               <span className="okey-seat-line-name">{index + 1}. boş yer</span>
@@ -59,23 +60,23 @@ export default function OkeyWaitRoom({ table, mySeat, coins, busy, onStake, onSt
             </p>
           )))}
 
-          <button
+          <ReferenceChoiceButton
             type="button"
             className="okey-btn okey-btn-gold justify-center py-2.5 text-sm"
             disabled={busy || !canStart}
             onClick={onStart}
           >
             <Play className="h-4 w-4" /> OYUNU BAŞLAT
-          </button>
+          </ReferenceChoiceButton>
           <p className="okey-lobby-text">
             {canStart
               ? `${filled} oyuncuyla hemen başlayabilirsin; 4 oyuncu dolunca oyun kendiliğinden başlar.`
               : `Başlamak için en az ${OKEY_MIN_PLAYERS} oyuncu gerekli.`}
           </p>
 
-          <button type="button" className="okey-btn okey-btn-red justify-center" onClick={onLeave}>
+          <ReferenceChoiceButton type="button" className="okey-btn okey-btn-red justify-center" onClick={onLeave}>
             MASADAN AYRIL
-          </button>
+          </ReferenceChoiceButton>
         </div>
       </div>
     </div>

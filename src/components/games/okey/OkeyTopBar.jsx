@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { ChevronLeft, Coins, ShoppingBag, Timer, Trophy, X } from 'lucide-react';
+import { ChevronLeft, Coins, Timer, Trophy, X } from 'lucide-react';
 import { clockOf, formatBet } from './okeyConfig';
+import ReferenceCoinButton from '@/components/games/controls/ReferenceCoinButton';
 
 /** Üst çubuk: pot, bakiye, tur süresi, mağaza ve kapatma. */
 export default function OkeyTopBar({ variant = 'okey101', table, coins, onStore, onBack, onExit }) {
@@ -41,9 +42,7 @@ export default function OkeyTopBar({ variant = 'okey101', table, coins, onStore,
           <Timer className="h-3.5 w-3.5 text-[#7df5a8]" />
           <span className="okey-chip-time">{clockOf(table?.deadline, now)}</span>
         </span>
-        <button type="button" className="okey-store" onClick={onStore}>
-          <ShoppingBag className="h-3.5 w-3.5" /> SATIN AL
-        </button>
+        <div className="ml-auto w-36"><ReferenceCoinButton coins={coins} onClick={onStore} format={formatBet} /></div>
       </div>
     </>
   );

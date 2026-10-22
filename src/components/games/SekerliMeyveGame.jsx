@@ -107,7 +107,7 @@ export default function SekerliMeyveGame({ onExit, onBack }) {
       </main>
 
       <footer className="sl-foot">
-        <div className="gctl-deck">
+        <div className="gctl-deck ref-deck">
           <GameBetBar
             bet={game.bet}
             lines={LINES}

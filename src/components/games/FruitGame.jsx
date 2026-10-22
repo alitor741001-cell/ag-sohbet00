@@ -119,7 +119,7 @@ export default function FruitGame({ onExit, onBack }) {
       </main>
 
       <footer className="relative z-10 flex shrink-0 flex-col items-center gap-2 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-1">
-        <div className="gctl-deck">
+        <div className="gctl-deck ref-deck">
           <GameBetBar
             bet={game.bet}
             lines={FRUIT_LINES}

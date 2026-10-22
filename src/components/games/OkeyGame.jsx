@@ -11,6 +11,7 @@ import OkeyResultOverlay from './okey/OkeyResultOverlay';
 import OkeyTopBar from './okey/OkeyTopBar';
 import OkeyWaitRoom from './okey/OkeyWaitRoom';
 import useOkeyGame from './okey/useOkeyGame';
+import ReferenceChoiceButton from '@/components/games/controls/ReferenceChoiceButton';
 
 /** OKEY: bahisli, dört kişilik okey masası.
     variant 'okey101' → 21 taş, 101 puan; variant 'okey' → 14 taş, klasik bitiş. */
@@ -121,17 +122,17 @@ export default function OkeyGame({ variant = 'okey101', onExit, onBack }) {
                 ? (loose ? `${loose} TAŞ FAZLA` : 'EL HAZIR')
                 : `${arrange === 'cift' ? 'ÇİFT' : 'SERİ'} · ${myScore} PUAN`}
             </span>
-            <button
+            <ReferenceChoiceButton
               type="button"
               className={`okey-btn okey-btn-green${canFinishNow ? ' okey-btn-ready' : ''}`}
               disabled={busy || !canFinishNow}
               onClick={game.actions.finish}
             >
               BİTİR
-            </button>
-            <button type="button" className="okey-btn" disabled={busy} onClick={game.actions.leave}>
+            </ReferenceChoiceButton>
+            <ReferenceChoiceButton type="button" className="okey-btn" disabled={busy} onClick={game.actions.leave}>
               AYRIL
-            </button>
+            </ReferenceChoiceButton>
           </div>
         </div>
       ) : null}

@@ -1,4 +1,5 @@
 import { formatBet } from './okeyConfig';
+import ReferenceChoiceButton from '@/components/games/controls/ReferenceChoiceButton';
 
 /** El sonucu: kazanan, tutar ve yeni masa seçeneği. */
 export default function OkeyResultOverlay({ table, mySeat, onLeave }) {
@@ -39,9 +40,9 @@ export default function OkeyResultOverlay({ table, mySeat, onLeave }) {
           </div>
         ) : null}
         <div className="okey-result-actions">
-          <button type="button" className="okey-btn okey-btn-gold" onClick={onLeave}>
+          <ReferenceChoiceButton type="button" className="okey-btn okey-btn-gold" onClick={onLeave}>
             YENİ MASA
-          </button>
+          </ReferenceChoiceButton>
         </div>
       </div>
     </div>
