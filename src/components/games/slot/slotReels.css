@@ -10,3 +10,13 @@
   78% { transform: translateY(1.2%); animation-timing-function: ease-in-out; }
   100% { transform: translateY(0); }
 }
+/* Kazanan semboller: hayvanlar hareket eder, diğerleri yanıp söner. */
+@keyframes slotWinBlink { 0%,100% { opacity: 1; filter: brightness(1); } 50% { opacity: .35; filter: brightness(1.6); } }
+@keyframes slotWinMove {
+  0%,100% { transform: translateY(0) rotate(0) scale(1); filter: brightness(1); }
+  25% { transform: translateY(-6%) rotate(-6deg) scale(1.08); filter: brightness(1.4); }
+  50% { transform: translateY(0) rotate(0) scale(1.12); }
+  75% { transform: translateY(-6%) rotate(6deg) scale(1.08); filter: brightness(1.4); }
+}
+.slot-win-blink { animation: slotWinBlink .7s ease-in-out infinite; }
+.slot-win-move { animation: slotWinMove 1.1s ease-in-out infinite; }

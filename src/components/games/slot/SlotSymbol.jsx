@@ -10,10 +10,13 @@ import { SLOT_SYMBOL_ART } from '@/components/games/slotAssets';
 // Aslan, kaplan, kartal ve jackpot daha büyük gösterilir.
 const BIG = ['lion', 'tiger', 'eagle', 'jackpot'];
 
-export default function SlotSymbol({ symbol, top, height }) {
+const MOVE = ['lion', 'tiger', 'eagle'];
+
+export default function SlotSymbol({ symbol, top, height, win }) {
   const art = useSlotEdgeCleanup(SLOT_SYMBOL_ART[symbol] || SLOT_SYMBOL_ART.ten);
+  const anim = win ? (MOVE.includes(symbol) ? 'slot-win-move' : 'slot-win-blink') : '';
   return (
-    <span className="absolute left-0 flex w-full items-center justify-center p-[7%]" style={{ top, height }}>
+    <span className={`absolute left-0 flex w-full items-center justify-center p-[7%] ${anim}`} style={{ top, height }}>
       {/* Dönerken anında görünmesi için temizlenmiş görsel doğrudan, beklemeden çizilir. */}
       <img
         src={art}
