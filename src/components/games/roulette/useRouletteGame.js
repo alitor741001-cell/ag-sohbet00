@@ -5,12 +5,14 @@ import { CHIP_LEVELS } from './rouletteConfig';
 
 // Geri sayım bu aralıkla iner; tur aşaması da aynı saate göre okunur.
 const CLOCK_TICK = 100;
-// Sunucu yoklaması: sınır anlarında sık, tur ortasında seyrek.
-const POLL_EDGE_MS = 900;
-const POLL_SPIN_MS = 6000;
-const POLL_IDLE_MS = 12000;
-const POLL_HIDDEN_MS = 10000;
-const POLL_ERROR_MS = 4000;
+// Sunucu yoklaması: abonelik geldiğinde atlanır, yalnızca güvenlik ağıdır.
+const POLL_EDGE_MS = 1200;
+const POLL_SPIN_MS = 8000;
+const POLL_IDLE_MS = 20000;
+const POLL_HIDDEN_MS = 15000;
+const POLL_ERROR_MS = 5000;
+// Abonelik olayı geldikten sonra bu süre boyunca yoklama yapılmaz.
+const EVENT_GRACE_MS = 15000;
 
 /** Tur aşaması yerel saatle de ilerler: bahis süresi dolduğu saniyede çark döner. */
 function phaseAt(round, now) {
@@ -66,6 +68,8 @@ export default function useRouletteGame() {
   const firedRef = useRef(0);
   const busyRef = useRef(false);
   const cooldownRef = useRef(0);
+  // Abonelik olayı geldikçe güncellenir: yoklama yalnızca uzun sessizlikte çalışır.
+  const lastEventRef = useRef(0);
 
   useEffect(() => { betsRef.current = bets; }, [bets]);
 
@@ -125,6 +129,12 @@ export default function useRouletteGame() {
         running = false;
         return;
       }
+      // Abonelik yakın zamanda olay gönderdiyse yoklama atlanır: gereksiz istek yok.
+      if (Date.now() - lastEventRef.current < EVENT_GRACE_MS) {
+        timer = setTimeout(loop, EVENT_GRACE_MS);
+        running = false;
+        return;
+      }
       // Bahis isteği sürerken yoklama yapılmaz: tur kapanışı bekletilmez.
       if (!busyRef.current && Date.now() >= cooldownRef.current) {
         try {
@@ -159,6 +169,7 @@ export default function useRouletteGame() {
 
   // Tur, numara ve geçmiş canlı yayından gelir: odadaki herkes aynı çarkı görür.
   useEffect(() => subscribeEntity('RouletteLive', (event) => {
+    lastEventRef.current = Date.now();
     const live = event?.data;
     applyRound(liveRound(live));
     if (Array.isArray(live?.history) && live.history.length) setHistory(live.history);

@@ -6,7 +6,9 @@ import gameRequest from '@/lib/gameRequest';
 
 // Elde olmayan değişiklikleri (sıra, süre aşımı, bitirme) yakalamak için yoklama aralığı.
 // Canlı abonelik zaten masa değişimini anında iletir; yoklama yalnızca güvenlik ağıdır.
-const POLL_MS = 6000;
+const POLL_MS = 10000;
+// Abonelik olayı geldikten sonra bu süre boyunca yoklama yapılmaz.
+const EVENT_GRACE_MS = 15000;
 
 /** OKEY istemcisi: lobi, masa durumu, kendi eli ve tur işlemleri.
     Sürüm (101 OKEY / klasik OKEY) yalnızca lobi ve masa eşleşmesini belirler. */
@@ -26,6 +28,8 @@ export default function useOkeyGame(variant = 'okey101') {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const tableRef = useRef(null);
+  // Abonelik olayı geldikçe güncellenir: yoklama yalnızca uzun sessizlikte çalışır.
+  const lastEventRef = useRef(0);
 
   useWalletCoinsLive(user?.id, (value) => setCoins(value));
 
@@ -89,6 +93,7 @@ export default function useOkeyGame(variant = 'okey101') {
     if (!tableId) return undefined;
     let timer = null;
     const off = subscribeEntity('OkeyTable', (event) => {
+      lastEventRef.current = Date.now();
       const row = event?.data;
       if (!row || row.id !== tableId) return;
       const seen = tableRef.current;
@@ -99,7 +104,11 @@ export default function useOkeyGame(variant = 'okey101') {
       window.clearTimeout(timer);
       timer = window.setTimeout(refresh, 700);
     });
-    const poll = window.setInterval(refresh, POLL_MS);
+    // Abonelik yakın zamanda olay gönderdiyse yoklama atlanır: gereksiz istek yok.
+    const poll = window.setInterval(() => {
+      if (Date.now() - lastEventRef.current < EVENT_GRACE_MS) return;
+      refresh();
+    }, POLL_MS);
     return () => {
       off();
       window.clearTimeout(timer);

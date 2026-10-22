@@ -14,12 +14,14 @@ import {
 // Uçuş sırasında hafif bir tik çalışır ve çakılmayı sunucuda tetikler; tik artık
 // saniyede iki kez değil ~1,2 saniyede bir çalışır — istek bütçesi yoğunluk sınırına
 // takılmaz, görsel uçuş yerel saatle aktığı için ekranda donma olmaz.
-const TICK_MS = 800;
+const TICK_MS = 1000;
 // Uçuşta ağır durum tazelemesi seyrek yapılır (bahis listesi ve cüzdan için).
-const STATE_EVERY_MS = 8000;
+const STATE_EVERY_MS = 12000;
+// Abonelik olayı geldikten sonra bu süre boyunca yoklama yapılmaz.
+const EVENT_GRACE_MS = 12000;
 // Çakılma sonrası yeni tur yoklanır (tur arası bekleme kadar sonra).
-const POLL_CRASHED = 3000;
-const POLL_BETTING = 9000;
+const POLL_CRASHED = 5000;
+const POLL_BETTING = 12000;
 // Hata sonrası yenilemeler kısa süre bekler; butonlar beklemez.
 const POLL_COOLDOWN = 6000;
 // Uçuş sırasında bekleme kısa tutulur: çakılma anı ve gerçek çarpan yakalanır.
@@ -88,6 +90,8 @@ export default function useRocketGame() {
   const multRef = useRef(1);
   // Çakılma sonrası cüzdan tazelemesi dağıtılmış gecikmeyle istenir.
   const crashRefreshRef = useRef(null);
+  // Abonelik olayı geldikçe güncellenir: yoklama yalnızca uzun sessizlikte çalışır.
+  const lastEventRef = useRef(0);
   const seededRef = useRef(false);
   const autoSaveRef = useRef({});
   const betAmtRef = useRef({ 1: DEFAULT_ROCKET_BET, 2: DEFAULT_ROCKET_BET });
@@ -231,6 +235,13 @@ export default function useRocketGame() {
       const flying =
         phaseRef.current === 'running' ||
         (phaseRef.current === 'betting' && launchAtRef.current !== null && localNow >= launchAtRef.current);
+      // Abonelik yakın zamanda olay gönderdiyse yoklama atlanır: gereksiz istek yok.
+      // Uçuş sırasında abonelik çakılma anını iletir, yoklama yalnızca güvenlik ağıdır.
+      if (!flying && Date.now() - lastEventRef.current < EVENT_GRACE_MS) {
+        timer = setTimeout(loop, EVENT_GRACE_MS);
+        running = false;
+        return;
+      }
       // Oyuncunun isteği sürerken yoklama yapılmaz: buton anında karşılık bulur.
       // Uçuşta ise hafif tik sürer, çakılma anı kaçmaz.
       if (busyRef.current.size && !flying) {
@@ -286,7 +297,10 @@ export default function useRocketGame() {
   // beklemez, odadaki herkes aynı anda görür. Yayın gelince cüzdan ve bahisler
   // tek istekle arkadan tazelenir.
   useEffect(() => {
-    const unsubscribe = subscribeEntity('RocketLive', (event) => applyRound(event?.data));
+    const unsubscribe = subscribeEntity('RocketLive', (event) => {
+      lastEventRef.current = Date.now();
+      applyRound(event?.data);
+    });
     return () => {
       clearTimeout(crashRefreshRef.current);
       unsubscribe();
