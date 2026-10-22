@@ -1,10 +1,9 @@
 import React from 'react';
 import { Users } from 'lucide-react';
-import { Image } from '@/components/ui/image';
 import useCutoutImage from '@/lib/cutoutImage';
 import { formatMult } from '../rocket/rocketConfig';
-import { OTOBUS_BUS, OTOBUS_SCENE } from './otobusAssets';
-import { cruisePercent, panPercent, rideProgress } from './otobusConfig';
+import { OTOBUS_BUS } from './otobusAssets';
+import { cruisePercent, rideProgress } from './otobusConfig';
 
 function stateLabel(phase, countdown) {
   if (phase === 'betting') return countdown === null ? 'BAHİS AÇIK' : `BAHİS · ${countdown} SN`;
@@ -13,29 +12,20 @@ function stateLabel(phase, countdown) {
   return 'YÜKLENİYOR';
 }
 
-/** Oyun sahnesi: savana panoraması, yolda giden otobüs, çarpan ve oyuncu sayısı. */
+/** Oyun sahnesi: asfalt yol, gökyüzü, dönen tekerlekli otobüs, çarpan ve oyuncu sayısı. */
 export default function OtobusStage({ game }) {
   const phase = game.phase;
   const crashed = phase === 'crashed';
   const mult = crashed ? game.round?.crash_at || 1 : phase === 'running' ? game.displayMult : 1;
   const progress = phase === 'running' || crashed ? rideProgress(mult) : 0;
-  // Siyah zemini kesilen otobüs, savananın üstüne şeffaf oturur.
   const bus = useCutoutImage(OTOBUS_BUS);
   const players = new Set((game.bets || []).map((bet) => bet.user_id).filter(Boolean)).size;
 
   return (
     <div className={`ob-stage ${crashed ? 'ob-stage-crash' : ''}`}>
-      <div className="ob-scene" style={{ '--ob-pan': `${panPercent(progress)}%` }}>
-        <Image
-          src={OTOBUS_SCENE}
-          alt=""
-          className="absolute inset-0 h-full w-full object-cover"
-          fittingType="fill"
-          quality={88}
-        />
-      </div>
+      <div className="ob-sky" />
 
-      <span aria-hidden="true" className="ob-road" />
+      <span aria-hidden="true" className="ob-road" style={{ '--ob-heat': progress }} />
 
       <span aria-hidden="true" className="ob-streaks" style={{ '--ob-heat': progress }} />
 
@@ -45,6 +35,8 @@ export default function OtobusStage({ game }) {
       >
         <span aria-hidden="true" className="ob-flame" />
         {bus && <img src={bus} alt="" className="ob-bus" />}
+        <span aria-hidden="true" className="ob-wheel ob-wheel-rear" style={{ '--ob-heat': progress }} />
+        <span aria-hidden="true" className="ob-wheel ob-wheel-front" style={{ '--ob-heat': progress }} />
       </div>
 
       <div className="ob-mult">

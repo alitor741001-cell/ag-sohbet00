@@ -120,46 +120,56 @@
   flex: 1 1 auto;
   min-height: 0;
   overflow: hidden;
-  background: #10312a;
+  background: #1a1e24;
 }
-/* Manzara kutudan geniştir: kayma hiçbir an kenarda boşluk bırakmaz. */
-.ob-scene {
+/* Gökyüzü: ufuk çizgisine kadar uzanan serin bir tonda asfalt yola zemin hazırlar. */
+.ob-sky {
   position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: 140%;
-  transform: translateX(calc(-1 * var(--ob-pan, 0%)));
-  transition: transform 300ms linear;
+  inset: 0 0 34% 0;
+  background: linear-gradient(180deg, #0f1a2a 0%, #1a2942 30%, #2a3a52 60%, #3a4a62 88%, #4a5a72 100%);
 }
-/* Hız çizgileri: kayma sırasında ekranda yatay olarak akar. */
+.ob-sky::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 40%;
+  background: linear-gradient(180deg, transparent, rgba(20, 30, 45, 0.6));
+}
+/* Hız çizgileri: asfaltın üzerinde yatay olarak akar, hız arttıkça belirginleşir. */
 .ob-streaks {
   position: absolute;
   inset: auto 0 0 0;
-  height: 42%;
+  height: 34%;
   pointer-events: none;
-  opacity: calc(0.12 + var(--ob-heat, 0) * 0.5);
-  background-image: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.18) 0 2px, transparent 2px 28px);
-  background-size: 220px 100%;
-  -webkit-mask-image: linear-gradient(180deg, transparent, #000 60%);
-  mask-image: linear-gradient(180deg, transparent, #000 60%);
+  opacity: calc(0.08 + var(--ob-heat, 0) * 0.45);
+  background-image: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.15) 0 2px, transparent 2px 30px);
+  background-size: 240px 100%;
+  -webkit-mask-image: linear-gradient(180deg, transparent, #000 55%);
+  mask-image: linear-gradient(180deg, transparent, #000 55%);
   animation: ob-streak 0.5s linear infinite;
+  animation-duration: calc(0.5s / (0.3 + var(--ob-heat, 0) * 1.8));
 }
 @keyframes ob-streak {
   from { background-position-x: 0; }
-  to { background-position-x: -220px; }
+  to { background-position-x: -240px; }
 }
-/* Düz yol: ufkun altında uzanan asfalt şerit — otobüs bu yolda ilerler. */
+/* Asfalt yol: ufkun altında uzanan koyu gri şerit. Doku ve perspektif
+   ile gerçek bir karayolu görünümü verir; otobüs bu yüzeyin üzerinde ilerler. */
 .ob-road {
   position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
-  height: 32%;
+  height: 34%;
   pointer-events: none;
-  background: linear-gradient(180deg, rgba(30, 28, 24, 0) 0%, rgba(34, 30, 22, 0.6) 18%, #2e2a22 45%, #1c1913 100%);
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.25) 0%, rgba(0, 0, 0, 0.45) 100%),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.02) 0 1px, transparent 1px 4px),
+    linear-gradient(180deg, #3c4046 0%, #2e3236 35%, #20242a 70%, #16191e 100%);
 }
-/* Yolun uzak kenarı: dümdüz ince bir çizgi, zeminin düz olduğunu gösterir. */
+/* Ufuk çizgisi: asfaltın başladığı yerde ince bir ışık şeridi. */
 .ob-road::before {
   content: '';
   position: absolute;
@@ -167,37 +177,73 @@
   right: 0;
   top: 0;
   height: 2px;
-  background: linear-gradient(90deg, rgba(255, 214, 150, 0.05), rgba(255, 214, 150, 0.3), rgba(255, 214, 150, 0.05));
+  background: linear-gradient(90deg, rgba(180, 190, 200, 0.05), rgba(180, 190, 200, 0.35), rgba(180, 190, 200, 0.05));
 }
-/* Orta şerit çizgileri: yol boyunca akar, otobüs ilerledikçe hızlanır. */
+/* Orta şerit: kesik beyaz çizgiler, otobüs ilerledikçe hızlanır. */
 .ob-road::after {
   content: '';
   position: absolute;
   left: 50%;
-  top: 18%;
+  top: 12%;
   bottom: 0;
   width: 5px;
   transform: translateX(-50%);
-  background: repeating-linear-gradient(180deg, #f5e6a0 0 14px, transparent 14px 38px);
-  background-size: 100% 38px;
-  opacity: 0.5;
-  animation: ob-road-lines 0.5s linear infinite;
-  animation-duration: calc(0.5s / (0.4 + var(--ob-heat, 0) * 1.6));
+  background: repeating-linear-gradient(180deg, #f0e0a0 0 16px, transparent 16px 46px);
+  background-size: 100% 46px;
+  opacity: 0.55;
+  animation: ob-road-lines 0.4s linear infinite;
+  animation-duration: calc(0.4s / (0.3 + var(--ob-heat, 0) * 2));
 }
 @keyframes ob-road-lines {
   from { background-position-y: 0; }
-  to { background-position-y: 38px; }
+  to { background-position-y: 46px; }
 }
 /* Otobüs düz yolda ilerler: yatay konumu doğrudan çarpanın ilerleyişine bağlıdır
    (--ob-cruise). X büyüdükçe sağa doğru akar, çakıldığı anda olduğu yerde durur. */
 .ob-buswrap {
   position: absolute;
   left: var(--ob-cruise, 7%);
-  bottom: 8%;
+  bottom: 6%;
   width: 44%;
   height: 40%;
   max-width: 380px;
   transition: left 300ms linear;
+}
+/* Tekerlekler: otobüsün altında dönen gerçek tekerlekler. Lastik (koyu dış halka)
+   ve jant (dönen iç kısım) olarak iki katmanlı çalışır; hız çarpana bağlı döner. */
+.ob-wheel {
+  position: absolute;
+  bottom: 0;
+  width: 13%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, #2a2a2a 55%, #0a0a0a 55% 100%);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.6), inset 0 0 0 2px #333;
+  z-index: 1;
+  pointer-events: none;
+}
+.ob-wheel-rear { left: 13%; }
+.ob-wheel-front { left: 67%; }
+.ob-wheel::before {
+  content: '';
+  position: absolute;
+  inset: 15%;
+  border-radius: 50%;
+  background: repeating-conic-gradient(#777 0 15deg, #bbb 15deg 30deg);
+  box-shadow: inset 0 0 0 2px #555;
+  animation: ob-wheel-spin calc(0.3s / (0.15 + var(--ob-heat, 0) * 2.5)) linear infinite;
+}
+.ob-wheel::after {
+  content: '';
+  position: absolute;
+  inset: 38%;
+  border-radius: 50%;
+  background: #999;
+  box-shadow: inset 0 0 0 1px #666;
+  animation: ob-wheel-spin calc(0.3s / (0.15 + var(--ob-heat, 0) * 2.5)) linear infinite;
+}
+@keyframes ob-wheel-spin {
+  to { transform: rotate(360deg); }
 }
 .ob-bus {
   width: 100%;
@@ -313,7 +359,7 @@
   100% { opacity: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .ob-bus, .ob-flame, .ob-streaks, .ob-stage-crash { animation: none; }
+  .ob-bus, .ob-flame, .ob-streaks, .ob-stage-crash, .ob-wheel::before, .ob-wheel::after { animation: none; }
   .ob-buswrap { transition: none; }
 }
 
