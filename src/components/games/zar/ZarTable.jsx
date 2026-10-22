@@ -1,51 +1,44 @@
 import React from 'react';
 import { formatCoins, ZONES } from './zarConfig';
-import ZarZoneChips from './ZarZoneChips';
+import ZarCatChip from './ZarCatChip';
 
-/** Oval çuha masa: kalın ahşap çerçeve, ince yeşil çizgilerle ayrılmış üç bahis alanı.
-    Her alanın üstünde masadaki bütün oyuncuların o alana koyduğu canlı toplam durur;
-    altında o alana yatırılan tutarlar profilsiz olarak görünür. */
-export default function ZarTable({ bets, zoneTotals, chips, disabled, revealed, outcome, onPlace, overlay }) {
-  const kaplan = ZONES[0];
-  const lowers = ZONES.filter((zone) => zone.id !== 'kaplan');
+const MAX_CHIPS = 10;
+// Jetonlar alan içinde sabit ama dağınık noktalara düşer (her render'da aynı yer).
+const spot = (i) => ({
+  left: `${14 + ((i * 37) % 62)}%`,
+  top: `${22 + ((i * 23) % 44)}%`,
+  transform: `rotate(${((i * 47) % 40) - 20}deg) scale(0.62)`,
+});
 
-  // Kendi bekleyen bahsi ve masaya konan jetonlar alanın altında listelenir.
-  const chipRow = (zone) => <ZarZoneChips own={bets[zone.id]} entries={chips?.[zone.id]} />;
-
-  const zoneProps = (zone) => ({
-    type: 'button',
-    disabled,
-    onClick: () => onPlace(zone.id),
-    className: `zar-zone zar-zone-${zone.id}${revealed && outcome === zone.id ? ' zar-zone-hit' : ''}${bets[zone.id] ? ' zar-zone-bet' : ''}`,
-  });
+/** Yeşil çuha: üstte Kaplan, altta Küçük / Büyük. Üst sarı sayı masanın toplamı, alt sayı kendi bahsin. */
+export default function ZarTable({ bets, zoneTotals, chips, disabled, revealed, outcome, onPlace }) {
+  const zone = (z, extra) => {
+    const list = [...(bets[z.id] ? [{ stake: bets[z.id] }] : []), ...(chips?.[z.id] || [])].slice(0, MAX_CHIPS);
+    return (
+      <button
+        key={z.id}
+        type="button"
+        disabled={disabled}
+        onClick={() => onPlace(z.id)}
+        aria-label={`${z.label} alanına bahis`}
+        className={`zr2-zone zr2-zone-${z.id}${revealed && outcome === z.id ? ' zr2-zone-hit' : ''}`}
+      >
+        <span className="zr2-zone-total">{formatCoins(zoneTotals[z.id])}</span>
+        {extra}
+        <span className="zr2-zone-label">{z.id === 'kaplan' ? 'Kaplan' : z.id === 'kucuk' ? 'Küçük' : 'Büyük'}</span>
+        {list.map((c, i) => (
+          <ZarCatChip key={i} value={c.stake} style={{ position: 'absolute', ...spot(i) }} />
+        ))}
+        <span className="zr2-zone-own">{formatCoins(bets[z.id])}</span>
+      </button>
+    );
+  };
 
   return (
-    <div className="zar-felt">
-      <div className="zar-felt-inner">
-        <span aria-hidden="true" className="zar-felt-mark">ZAR</span>
-
-        <button {...zoneProps(kaplan)} aria-label={`${kaplan.label} alanına bahis`}>
-          <span className="zar-zone-total">{formatCoins(zoneTotals[kaplan.id])}</span>
-          <span className="zar-zone-mult">X{kaplan.mult}</span>
-          <span className="zar-zone-label">{kaplan.label}</span>
-          <span className="zar-zone-range">{kaplan.range}</span>
-          {chipRow(kaplan)}
-        </button>
-
-        <div className="zar-zone-row">
-          {lowers.map((zone) => (
-            <button {...zoneProps(zone)} key={zone.id} aria-label={`${zone.label} alanına bahis`}>
-              <span className="zar-zone-total">{formatCoins(zoneTotals[zone.id])}</span>
-              <span className="zar-zone-mult">{zone.range} X{zone.mult}</span>
-              <span className="zar-zone-label">{zone.label}</span>
-              {chipRow(zone)}
-            </button>
-          ))}
-        </div>
-
-        {/* Kase, Küçük ve Büyük alanlarının altında durur; masa bu alandan
-            aşağıya, TOP1-TOP4 şeridine kadar uzanır. */}
-        <div className="zar-felt-court">{overlay}</div>
+    <div className="zr2-zones">
+      {zone(ZONES[0], <span className="zr2-zone-range">3 · 18 X{ZONES[0].mult}</span>)}
+      <div className="zr2-zone-row">
+        {ZONES.slice(1).map((z) => zone(z, <span className="zr2-zone-range">{z.range}  X{z.mult}</span>))}
       </div>
     </div>
   );

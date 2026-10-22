@@ -1,21 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { ChevronLeft, Clapperboard, Coins, Crown, HelpCircle, Star, X } from 'lucide-react';
+import { ChevronLeft, Lightbulb, X } from 'lucide-react';
 import '@/styles/zar.css';
-import '@/styles/gameControls.css';
+import '@/styles/zar2.css';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
-import { Image } from '@/components/ui/image';
-import GameStatCards from '@/components/games/controls/GameStatCards';
 import GameHelpSheet from '@/components/games/help/GameHelpSheet';
 import { useCurrentUser } from '@/lib/useCurrentUser';
-import { ZAR_LOGO } from './zar/zarAssets';
-import { SHAKE_HIDE_MS, formatCoins, outcomeName } from './zar/zarConfig';
+import { SHAKE_HIDE_MS, outcomeName } from './zar/zarConfig';
+import ZarDie from './zar/ZarDie';
+import ZarTimerBand from './zar/ZarTimerBand';
 import useZarGame from './zar/useZarGame';
 import useZarBoard from './zar/useZarBoard';
 import useZarBets from './zar/useZarBets';
 import ZarChipRow from './zar/ZarChipRow';
 import ZarHistory from './zar/ZarHistory';
-import ZarPodium from './zar/ZarPodium';
-import ZarRoundBar from './zar/ZarRoundBar';
 import ZarShaker from './zar/ZarShaker';
 import ZarTable from './zar/ZarTable';
 import ZarWinOverlay from './zar/ZarWinOverlay';
@@ -56,12 +53,6 @@ export default function ZarGame({ onExit, onBack }) {
   const { user } = useCurrentUser();
   const { chips, totals } = useZarBets(game.round?.round_no || 0, user?.id);
 
-  const stats = [
-    { key: 'coins', label: 'COIN BAKİYEM', value: formatCoins(game.available), icon: Star },
-    { key: 'stake', label: 'TOPLAM BAHİS', value: formatCoins(game.stake), icon: Clapperboard },
-    { key: 'win', label: 'KAZANÇ', value: formatCoins(game.payout), icon: Crown, win: game.payout > 0 },
-    { key: 'total', label: 'TOPLAM KAZANÇ', value: formatCoins(game.totalWon), icon: Coins },
-  ];
 
   // Tur sonucu: kazanç ödenmişse kutlama ekranı açılır.
   // Kutlama ekranı da kase kalkıp zarlar açıldıktan sonra belirir.
@@ -71,90 +62,66 @@ export default function ZarGame({ onExit, onBack }) {
   }, [game.result, revealed]);
 
   return (
-    <div className="zar-sky relative flex h-full min-h-0 w-full flex-col overflow-hidden">
-      <span aria-hidden="true" className="zar-sky-glow" />
-
-      <header className="relative z-10 flex shrink-0 items-center gap-2 px-3 pt-[max(0.5rem,env(safe-area-inset-top))]">
-        <button type="button" onClick={onBack} aria-label="Oyun listesine dön" className="gctl-pill gctl-icon">
+    <div className="zr2 relative flex h-full min-h-0 w-full flex-col overflow-hidden">
+      <header className="zr2-top">
+        <button type="button" onClick={onBack} aria-label="Oyun listesine dön" className="zr2-sq">
           <ChevronLeft className="h-5 w-5" />
         </button>
-        <div className="flex min-w-0 flex-1 items-center justify-center gap-2">
-          <Image src={ZAR_LOGO} alt="" aria-hidden="true" className="zar-logo" fittingType="fill" quality={80} />
-          <span className="min-w-0">
-            <p className="zar-title">ZAR</p>
-            <p className="zar-subtitle">ÜÇ ZAR · KÜÇÜK &amp; BÜYÜK</p>
-          </span>
-        </div>
-        <button type="button" onClick={() => setHelpOpen(true)} aria-label="Nasıl oynanır" className="gctl-pill gctl-icon">
-          <HelpCircle className="h-5 w-5" />
-        </button>
-        <button
-          type="button"
-          onClick={onExit}
-          aria-label="Oyunu kapat"
-          className="gctl-pill gctl-icon ring-1 ring-[#f0c96b]/50"
-        >
+        <span className="zr2-round">Tur:{game.round?.round_no || '—'}</span>
+        <button type="button" onClick={onExit} aria-label="Oyunu kapat" className="zr2-sq">
           <X className="h-5 w-5" />
         </button>
       </header>
 
-      <div className="relative z-10 shrink-0 px-3 pt-1.5">
-        <div className="mx-auto w-full max-w-[27rem] sm:max-w-[32rem]">
-          <GameStatCards items={stats} />
+      <main className="zr2-stage">
+        <div className="zr2-side-right">
+          <button type="button" onClick={() => setHelpOpen(true)} aria-label="Nasıl oynanır" className="zr2-sq zr2-bulb">
+            <Lightbulb className="h-5 w-5" />
+          </button>
         </div>
-      </div>
+        <ZarHistory entries={game.history} live={liveRound} />
 
-      <main className="relative z-10 flex min-h-0 flex-1 flex-col items-center gap-2 overflow-y-auto px-2 py-2">
-        <div className="zar-felt-body">
-          <ZarHistory entries={game.history} live={liveRound} />
-          <ZarTable
-            bets={game.bets}
-            zoneTotals={totals}
-            chips={chips}
-            disabled={!betting}
-            revealed={revealed}
-            outcome={outcome}
-            onPlace={game.placeBet}
-            /* Kase masanın ortasında durur: zarlar kase kalkmadan görünmez. */
-            overlay={(
-              <div className="zar-felt-dice">
-                <ZarShaker dice={dice} phase={game.phase} revealed={revealed} />
-                {/* Zar sonucu: açılan zarların toplamı ve düştüğü alan. */}
-                <p className={`zar-sum${sum ? ' zar-sum-live' : ''}`}>
-                  {sum
-                    ? `TOPLAM ${sum} · ${outcomeName(outcome)}`
-                    : 'ZARLAR KASEDE'}
-                </p>
-              </div>
-            )}
-          />
+        <div className="zr2-rail">
+          <div className="zr2-felt">
+            <div className={`zr2-shaker ${shaking ? 'zr2-shaker-center' : ''}`}>
+              <ZarShaker dice={dice} phase={game.phase} revealed={revealed} />
+            </div>
+            <div className="zr2-dice-slots">
+              {[0, 1, 2].map((i) => (
+                <span key={i} className="zr2-slot">
+                  <ZarDie value={(dice || game.history?.[0] && [game.history[0].d1, game.history[0].d2, game.history[0].d3] || [1, 1, 1])[i] || 1} tone="white" size="mini" />
+                </span>
+              ))}
+            </div>
+            <ZarTable
+              bets={game.bets}
+              zoneTotals={totals}
+              chips={chips}
+              disabled={!betting}
+              revealed={revealed}
+              outcome={outcome}
+              onPlace={game.placeBet}
+            />
+            <ZarTimerBand phase={game.phase} countdown={game.countdown} />
+            {sum ? <p className="zr2-sum">TOPLAM {sum} · {outcomeName(outcome)}</p> : null}
+            <div className="zr2-lane" />
+          </div>
         </div>
-
-        <ZarPodium winners={board.winners} ready={board.status === 'ready'} />
-
-        {game.status === 'loading' && <p className="zar-sum">Oyun yükleniyor...</p>}
+        {game.status === 'loading' && <p className="zr2-loading">Oyun yükleniyor...</p>}
       </main>
 
-      <footer className="relative z-10 flex shrink-0 justify-center px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-1">
-        <div className="zar-deck">
-          <ZarChipRow
-            coins={game.available}
-            chip={game.chip}
-            stake={game.stake}
-            canRepeat={!!game.lastBets}
-            disabled={!betting}
-            onChip={game.setChip}
-            onRepeat={game.repeat}
-            onClear={game.clearBets}
-            onCoins={() => setCoinOpen(true)}
-          />
-          <ZarRoundBar
-            phase={game.phase}
-            countdown={game.countdown}
-            progress={game.progress}
-            roundNo={game.round?.round_no}
-          />
-        </div>
+      <footer className="rl2-footer zr2-footer">
+        <ZarChipRow
+          coins={game.available}
+          chip={game.chip}
+          stake={game.stake}
+          canRepeat={!!game.lastBets}
+          disabled={!betting}
+          onChip={game.setChip}
+          onRepeat={game.repeat}
+          onClear={game.clearBets}
+          onCoins={() => setCoinOpen(true)}
+        />
       </footer>
 
       {game.message && !coinOpen && !prize && (

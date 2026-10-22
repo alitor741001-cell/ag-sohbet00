@@ -1,0 +1,110 @@
+/* ZAR (Sicbo referansı): kilim zemin, ahşap-deri oval masa, yeşil çuha, kedi jetonlar. */
+.zr2 {
+  color: #fff;
+  background:
+    repeating-linear-gradient(45deg, rgba(255, 170, 60, 0.08) 0 10px, transparent 10px 22px),
+    repeating-linear-gradient(-45deg, rgba(40, 120, 140, 0.1) 0 10px, transparent 10px 22px),
+    linear-gradient(180deg, #8a2a1a, #5a1a10 40%, #2a0c08);
+}
+
+.zr2-top {
+  position: relative; z-index: 12; display: flex; align-items: flex-start; justify-content: space-between;
+  padding: max(0.3rem, env(safe-area-inset-top)) 0.4rem 0;
+}
+.zr2-sq {
+  display: grid; place-items: center; height: 2.3rem; width: 2.3rem; border-radius: 0.55rem; color: #fff;
+  background: linear-gradient(180deg, #5a1a14, #2a0a08); border: 2px solid #c9925a;
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.7);
+}
+.zr2-bulb { color: #ffe27a; }
+.zr2-round {
+  padding: 0.25rem 1.6rem; border-radius: 0 0 0.6rem 0.6rem; font-size: 0.85rem; font-weight: 800;
+  background: linear-gradient(180deg, #4a1210, #2a0806); border: 2px solid #b8742f; border-top: 0;
+}
+
+.zr2-stage { position: relative; display: flex; min-height: 0; flex: 1; flex-direction: column; padding: 0.2rem 0.5rem 0; }
+.zr2-side-right { position: absolute; right: 0.4rem; top: 0.2rem; z-index: 12; }
+
+/* YENİ paneli (ZarHistory sınıfları yeniden konumlanır). */
+.zr2 .zar-history {
+  position: absolute; left: 0.3rem; top: 1.4rem; z-index: 12; width: 3.4rem; padding: 0.25rem;
+  border-radius: 0.5rem; background: rgba(15, 8, 8, 0.92); border: 1.5px solid #3a2a2a;
+}
+.zr2 .zar-history-head { text-align: center; font-size: 0.75rem; font-weight: 900; color: #ffd35c; }
+.zr2 .zar-history-frame {
+  display: flex; flex-direction: column; align-items: center; gap: 0.2rem; padding: 0.2rem 0;
+  border-radius: 0.45rem; background: #3a0d18; border: 2px solid #b8742f;
+}
+.zr2 .zar-history-total { font-size: 0.8rem; font-weight: 900; }
+.zr2 .zar-history-stack { display: flex; flex-direction: column; gap: 0.2rem; }
+
+/* Ahşap + deri kenarlı oval masa. */
+.zr2-rail {
+  position: relative; display: flex; min-height: 0; flex: 1; margin-top: 0.4rem; padding: 0.7rem;
+  border-radius: 5rem 5rem 4rem 4rem;
+  background: linear-gradient(180deg, #e0a868, #a8682e 30%, #6a3a16);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+}
+.zr2-felt {
+  position: relative; display: flex; flex: 1; min-height: 0; flex-direction: column; gap: 0.45rem;
+  padding: 4.2rem 0.6rem 0.6rem; overflow: hidden; border-radius: 4.4rem 4.4rem 3.4rem 3.4rem;
+  border: 0.55rem solid #2a2626;
+  background: radial-gradient(90% 60% at 50% 30%, #2f8a5a, #1f6a44 60%, #154a30);
+  box-shadow: inset 0 0 0 2px #4a4444, inset 0 0 30px rgba(0, 0, 0, 0.5);
+}
+
+/* Kase: üstte durur, çalkalanırken masanın ortasına iner ve büyür. */
+.zr2-shaker {
+  position: absolute; left: 50%; top: -1.3rem; z-index: 9; transform: translateX(-50%) scale(0.75);
+  transition: top 0.5s ease, transform 0.5s ease; pointer-events: none;
+}
+.zr2-shaker-center { top: 34%; transform: translateX(-50%) scale(1.25); }
+
+.zr2-dice-slots { display: flex; justify-content: center; gap: 0.9rem; }
+.zr2-slot {
+  display: grid; place-items: center; height: 2.1rem; width: 2.8rem; border-radius: 0.4rem;
+  border: 1.5px solid rgba(160, 230, 190, 0.35); background: rgba(0, 0, 0, 0.08);
+}
+.zr2 .zar-die-white { background: linear-gradient(180deg, #fff, #d8d8d8); border-color: #9a9a9a; }
+.zr2 .zar-die-white .zar-pip:not(.zar-pip-off) { background: #222; }
+
+.zr2-zones { display: flex; flex: 1; min-height: 0; flex-direction: column; gap: 0.45rem; }
+.zr2-zone-row { display: grid; flex: 1.4; grid-template-columns: 1fr 1fr; gap: 0.45rem; }
+.zr2-zone {
+  position: relative; display: flex; flex: 1; min-height: 5rem; flex-direction: column; align-items: center;
+  justify-content: space-between; padding: 0.25rem; border-radius: 0.5rem;
+  border: 1.5px solid rgba(160, 230, 190, 0.35); overflow: hidden;
+}
+.zr2-zone:active:not(:disabled) { background: rgba(255, 255, 255, 0.06); }
+.zr2-zone-hit { border-color: #ffd35c; box-shadow: inset 0 0 22px rgba(255, 211, 92, 0.45); }
+.zr2-zone-total { font-size: 0.85rem; font-weight: 800; color: #ffd35c; z-index: 2; }
+.zr2-zone-range { font-size: 1.05rem; font-weight: 900; color: rgba(150, 230, 180, 0.45); white-space: pre; }
+.zr2-zone-label { font-size: clamp(1.3rem, 7vw, 2rem); font-weight: 900; color: rgba(150, 230, 180, 0.42); }
+.zr2-zone-own { font-size: 0.8rem; font-weight: 800; color: #fff; z-index: 2; }
+.zr2-zone .rl2-chip { z-index: 1; pointer-events: none; }
+
+.zr2-band {
+  position: absolute; left: 0; right: 0; top: 7.6rem; z-index: 8; display: flex; align-items: center;
+  justify-content: center; gap: 0.5rem; padding: 0.35rem 0; font-size: 1.1rem; font-weight: 600;
+  background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.55) 15%, rgba(0, 0, 0, 0.55) 85%, transparent);
+}
+.zr2-watch {
+  position: relative; display: grid; place-items: center; height: 2rem; width: 2rem; border-radius: 9999px;
+  font-size: 1rem; font-weight: 900; color: #3a1a00;
+  background: radial-gradient(circle, #fff8e8 52%, #f0a040 58%, #b8600e 100%);
+}
+.zr2-watch::before {
+  content: ''; position: absolute; top: -0.3rem; left: 50%; height: 0.3rem; width: 0.45rem;
+  transform: translateX(-50%); border-radius: 0.1rem; background: #d08a30;
+}
+.zr2-watch-urgent { color: #b00010; animation: rl2-pulse 0.6s ease-in-out infinite alternate; }
+.zr2-sum {
+  position: absolute; left: 50%; top: 7.8rem; z-index: 10; transform: translateX(-50%); white-space: nowrap;
+  padding: 0.25rem 0.8rem; border-radius: 9999px; font-size: 0.8rem; font-weight: 900; color: #ffd35c;
+  background: rgba(0, 0, 0, 0.7);
+}
+.zr2-lane { height: 2.4rem; flex-shrink: 0; border-radius: 1rem 1rem 2.4rem 2.4rem; border: 1.5px solid rgba(160, 230, 190, 0.3); }
+.zr2-loading { text-align: center; font-size: 0.75rem; }
+.zr2-footer { background: linear-gradient(180deg, #1a3a2a, #0c1a12); border-top: 2px solid #2a4a38; }
+.rl2-chip-gold { --chip: #3a2a10; --chip-dark: #000; }
+.rl2-chip-gold .rl2-chip-face { color: #ffd35c; }
