@@ -30,8 +30,11 @@ export function cosmeticArtwork(product) {
         const pixels = ctx.getImageData(0, 0, 480, 480);
         for (let i = 0; i < pixels.data.length; i += 4) {
           const min = Math.min(pixels.data[i], pixels.data[i+1], pixels.data[i+2]);
-          const threshold = collectionFrame ? 220 : 240;
-          if (min > threshold) pixels.data[i+3] = Math.round(pixels.data[i+3] * (255 - min) / (255 - threshold));
+          const threshold = collectionFrame ? 180 : 220;
+          if (min > threshold) {
+            const t = (min - threshold) / (255 - threshold);
+            pixels.data[i+3] = Math.round(pixels.data[i+3] * (1 - t) * (1 - t));
+          }
         }
         ctx.putImageData(pixels, 0, 0);
       }

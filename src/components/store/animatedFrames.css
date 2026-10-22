@@ -1,5 +1,5 @@
 .ag-frame { color: var(--frame-glow); vertical-align: middle; overflow: visible; }
-.ag-frame-art { filter: drop-shadow(0 0 3px var(--frame-glow)); }
+.ag-frame-art { filter: drop-shadow(0 0 3px var(--frame-glow)); mix-blend-mode: multiply; }
 .ag-frame--dragon .ag-frame-art { animation: ag-frame-fire 2.4s ease-in-out infinite; }
 .ag-frame-left { clip-path: inset(0 50% 0 0); animation: ag-frame-blink 1.6s ease-in-out infinite alternate; }
 .ag-frame-right { clip-path: inset(0 0 0 50%); animation: ag-frame-blink 1.6s ease-in-out infinite alternate-reverse; }
