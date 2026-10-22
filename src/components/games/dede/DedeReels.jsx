@@ -3,47 +3,31 @@ import DedeSymbol from './DedeSymbol';
 import DedeOrb from './DedeOrb';
 import DedeStrike from './DedeStrike';
 import { DEDE_IDS, orbValueOf, randomGrid } from './dedeConfig';
-import useReelRoll from '@/components/games/reels/reelRoll';
-import '@/styles/reelRoll.css';
+import ReelSpin from '@/components/games/reels/ReelSpin';
 
-/** Tek makara: tur boyunca kesintisiz döner, sonuç gelince tam sonucun üzerine iner. */
+// Dönen şeritte de çarpan jetonu kendi küresiyle görünür.
+const renderDede = (id) => {
+  const orb = orbValueOf(id);
+  return orb ? <DedeOrb value={orb} /> : <DedeSymbol id={id} />;
+};
+
+/** Tek makara: gerçek makara gibi döner, sonuç gelince sırası geldiğinde durur. */
 function DedeColumn({ reel, column, landing, rolling, spinKey, drops, winCells, explodeCells, strikeCells, explode }) {
-  const roll = useReelRoll({ reel, spinKey, landing, rows: column.length, symbols: DEDE_IDS });
-  const visibleRows = String(column.length);
-
   return (
     <div className="dede-column min-w-0 flex-1 p-[2px] sm:p-1">
-      {rolling && (roll.landingTiles ? (
-        // İniş: dolgu satırları akar, ilk dizilim tam yerine oturur.
-        <div
-          className="rl-strip rl-strip-land"
-          style={{
-            '--rl-visible': visibleRows,
-            '--rl-rows': String(roll.landingRows),
-            '--rl-from': roll.from,
-            '--rl-to': roll.to,
-            '--rl-dur': `${roll.duration}ms`,
-          }}
-        >
-          {roll.landingTiles.map((id, index) => (
-            <span key={index} className="dede-cell"><DedeSymbol id={id} /></span>
-          ))}
-        </div>
-      ) : (
-        // Bekleme: şerit kusursuz döngüde akar (içerik iki kez yazılır).
-        <div
-          className="rl-strip rl-strip-loop"
-          style={{
-            '--rl-visible': visibleRows,
-            '--rl-rows': String(roll.waitingRows),
-            '--rl-loop': `${roll.loopMs}ms`,
-          }}
-        >
-          {roll.waiting.map((id, index) => (
-            <span key={index} className="dede-cell"><DedeSymbol id={id} /></span>
-          ))}
-        </div>
-      ))}
+      {rolling && (
+        // Makara ekrandaki dizilimden kalkar ve sunucunun dizilimine oturur.
+        <ReelSpin
+          reel={reel}
+          rows={column.length}
+          spinKey={spinKey}
+          landing={landing}
+          initial={column}
+          symbols={DEDE_IDS}
+          cellClassName="dede-cell"
+          renderSymbol={renderDede}
+        />
+      )}
 
       {!rolling && column.map((id, row) => {
         const key = `${reel}-${row}`;

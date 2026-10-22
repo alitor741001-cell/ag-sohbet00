@@ -1,13 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import gameRequest from '@/lib/gameRequest';
-import { landMs } from '@/components/games/reels/reelRoll';
+import { landWait } from '@/components/games/reels/reelMotion';
 import { DEDE_BET_LEVELS, DEDE_LINES, scatterIntroGrid } from './dedeConfig';
 import useBetQueue from '@/hooks/useBetQueue';
 import useWalletCoinsLive from '@/hooks/useWalletCoinsLive';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 
-// Sonucun üzerine iniş, karoların yerine oturması ve kazanç adımlarının süreleri.
-const LAND_MS = landMs(6);
+// Karoların yerine oturması ve kazanç adımlarının süreleri.
 const DROP_MS = 380;
 const HOLD_MS = 950;
 const EXPLODE_MS = 320;
@@ -127,6 +126,7 @@ export default function useDedeGame() {
     setRolling(true);
     setLanding(null);
     setSpinKey((key) => key + 1);
+    const startedAt = Date.now();
     skipLandingRef.current = false;
     setSpinning(true);
     // Çevirme hakkı sürerken biriken kazanç görünür kalır.
@@ -145,7 +145,8 @@ export default function useDedeGame() {
       const landed = steps[0]?.grid || data.grid || null;
       if (landed) {
         setLanding(landed);
-        if (!skipLandingRef.current) await wait(LAND_MS);
+        // Makaralar soldan sağa sırayla durur: 6 sütun x 5 satır.
+        if (!skipLandingRef.current) await wait(landWait(6, 5, startedAt));
       }
       skipLandingRef.current = false;
       setLanding(null);

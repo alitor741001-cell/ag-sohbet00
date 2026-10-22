@@ -1,28 +1,13 @@
 import React from 'react';
 import { Image } from '@/components/ui/image';
-import { SEKER_SHAPES } from '@/components/games/seker/sekerShapes';
+import useSymbolTile from '@/lib/symbolTile';
 import { SEKER_SYMBOLS } from '@/components/games/seker/sekerConfig';
 import '@/styles/gameHelp.css';
 
-/** Şeker gövdesi: taş listesinde oyunun kendi şekliyle küçük kare olarak çizilir. */
+/** Şeker: taş listesinde oyundaki gibi zemini silinmiş şeker görseli. */
 function SekerShape({ id }) {
-  const symbol = SEKER_SYMBOLS[id];
-  const Shape = symbol ? SEKER_SHAPES[symbol.shape] : null;
-  if (!Shape) return null;
-  const gradientId = `gh-seker-${id}`;
-
-  return (
-    <svg viewBox="0 0 40 40" className="gh-sym-art" aria-hidden="true">
-      <defs>
-        <radialGradient id={gradientId} cx="36%" cy="28%" r="76%">
-          <stop offset="0%" stopColor={symbol.light} />
-          <stop offset="52%" stopColor={symbol.color} />
-          <stop offset="100%" stopColor={symbol.dark} />
-        </radialGradient>
-      </defs>
-      <Shape fill={`url(#${gradientId})`} light={symbol.light} dark={symbol.dark} />
-    </svg>
-  );
+  const art = useSymbolTile(SEKER_SYMBOLS[id]?.art || '');
+  return <Image src={art} alt="" className="gh-sym-art" fittingType="fit" blurPlaceholder={false} quality={80} />;
 }
 
 /** Taş listesi: her taşın görseli, adı, bahis katı ve ne işe yaradığı tek satırda görünür. */

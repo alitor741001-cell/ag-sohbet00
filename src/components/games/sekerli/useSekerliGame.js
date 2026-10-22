@@ -6,9 +6,9 @@ import { sekerliSound, unlockAudio } from '@/lib/sekerliAudio';
 import useBetQueue from '@/hooks/useBetQueue';
 import useWalletCoinsLive from '@/hooks/useWalletCoinsLive';
 import { useCurrentUser } from '@/lib/useCurrentUser';
+import { landWait } from '@/components/games/reels/reelMotion';
 
-// Tur zamanlamaları: sonucun üzerine iniş, kazanan parlaması, patlama ve düşme.
-const LAND_MS = 1450;
+// Tur zamanlamaları: kazanan parlaması, patlama ve düşme.
 const WIN_HOLD_MS = 780;
 const BOOM_MS = 400;
 const FALL_MS = 480;
@@ -187,6 +187,7 @@ export default function useSekerliGame() {
     setSpinning(true);
     setPhase('spin');
     setSpinKey((key) => key + 1);
+    const startedAt = Date.now();
     if (soundRef.current) {
       unlockAudio();
       sekerliSound.spin();
@@ -201,7 +202,8 @@ export default function useSekerliGame() {
       // Sonuç geldi: makaralar gerçek sembollerin üzerine iner, sonra ızgara sabitlenir.
       if (landed) {
         setLanding(landed);
-        if (!skipLandingRef.current) await wait(LAND_MS);
+        // Makaralar soldan sağa sırayla durur.
+        if (!skipLandingRef.current) await wait(landWait(REELS, ROWS, startedAt));
         if (!mountedRef.current) return;
       }
       skipLandingRef.current = false;

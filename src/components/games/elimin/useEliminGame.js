@@ -1,15 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import gameRequest from '@/lib/gameRequest';
-import { landMs } from '@/components/games/reels/reelRoll';
+import { landWait } from '@/components/games/reels/reelMotion';
 import { eliminSound, unlockAudio } from './eliminSound';
-import { BET_LEVELS, CHEST_MAX, LINES } from './eliminConfig';
+import { BET_LEVELS, CHEST_MAX, LINES, REELS, ROWS } from './eliminConfig';
 import { END_MS, playCascadeSteps } from '@/components/games/reels/cascadeSteps';
 import useBetQueue from '@/hooks/useBetQueue';
 import useWalletCoinsLive from '@/hooks/useWalletCoinsLive';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 
-// Sonucun üzerine iniş: 6 sütunlu kare ızgara, ortak makara altyapısı.
-const LAND_MS = landMs(6);
 
 /** ELİMİNSLOT durumu: bakiye, bahis, tur kazancı, çevirme hakkı ve jackpot. */
 export default function useEliminGame() {
@@ -136,6 +134,7 @@ export default function useEliminGame() {
     setStopping(false);
     setLanding(null);
     setSpinKey((key) => key + 1);
+    const startedAt = Date.now();
     skipLandingRef.current = false;
     setSpinning(true);
     setWin(0);
@@ -154,7 +153,8 @@ export default function useEliminGame() {
       const landed = steps[0]?.grid || data.grid || null;
       if (landed) {
         setLanding(landed);
-        if (!skipLandingRef.current) await wait(LAND_MS);
+        // Makaralar soldan sağa sırayla durur.
+        if (!skipLandingRef.current) await wait(landWait(REELS, ROWS, startedAt));
       }
       skipLandingRef.current = false;
       setLanding(null);

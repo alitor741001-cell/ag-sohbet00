@@ -1,18 +1,22 @@
-// ELİMİNSLOT sembol görselleri: kullanıcının gönderdiği referans seti.
-// Lolipop kaldırıldı; set yalnızca referanstaki görsellerden oluşur.
+// ELİMİNSLOT sembol görselleri: referans setteki nesnelerin gerçekçi yeni çizimleri.
+// Beyaz zemin tarayıcıda silinir; nesne tahtanın üstünde durur.
 const MEDIA_BASE = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62';
 
 export const ELIMIN_SYMBOL_ART = {
-  plum: `${MEDIA_BASE}/daf0c5624_IMG_1546.jpg`,
-  grapes: `${MEDIA_BASE}/2eaab5ed5_IMG_1545.jpg`,
-  melon: `${MEDIA_BASE}/449e969a3_IMG_1550.jpg`,
-  apple: `${MEDIA_BASE}/cb18f3fc5_IMG_1551.jpg`,
-  candy: `${MEDIA_BASE}/218453834_IMG_1548.jpg`,
-  cherry: `${MEDIA_BASE}/1f761d942_IMG_1549.jpg`,
-  banana: `${MEDIA_BASE}/085d9681b_IMG_1544.jpg`,
-  chicken: `${MEDIA_BASE}/0aa7b1759_IMG_1547.jpg`,
-  dice: `${MEDIA_BASE}/3c6b6fbd9_IMG_1542.jpg`,
-  chest: `${MEDIA_BASE}/a8db20e22_IMG_1543.jpg`,
+  // Yaban mersini.
+  plum: `${MEDIA_BASE}/ee8d07da3_generated_image.png`,
+  grapes: `${MEDIA_BASE}/c761ff6c1_generated_image.png`,
+  // Ejder meyvesi.
+  melon: `${MEDIA_BASE}/bcf6a1a23_generated_image.png`,
+  apple: `${MEDIA_BASE}/aca1ed8c1_generated_image.png`,
+  // Portakal.
+  candy: `${MEDIA_BASE}/3ea9ac394_generated_image.png`,
+  // Çilek.
+  cherry: `${MEDIA_BASE}/4cd5da625_generated_image.png`,
+  banana: `${MEDIA_BASE}/9431685f6_generated_image.png`,
+  chicken: `${MEDIA_BASE}/c88f8ba03_generated_image.png`,
+  dice: `${MEDIA_BASE}/9ffea341c_generated_image.png`,
+  chest: `${MEDIA_BASE}/3d45e3537_generated_image.png`,
 };
 
 // Kartlar işlenirken bu kareye indirilir: hem makara hem ödeme tablosu aynı ölçüyü kullanır.

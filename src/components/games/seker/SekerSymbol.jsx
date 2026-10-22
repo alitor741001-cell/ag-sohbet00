@@ -1,13 +1,14 @@
 import React from 'react';
-import { SEKER_SHAPES } from './sekerShapes';
+import { Image } from '@/components/ui/image';
+import useSymbolTile from '@/lib/symbolTile';
+import { SEKER_ART_SIZE } from './sekerAssets';
 import { SEKER_SYMBOLS } from './sekerConfig';
 
-/** Tek şeker: parlak plastik görünümlü gövde, sol üstte beyaz parlama, yumuşak gölge. */
+/** Tek şeker: gerçekçi şeker görseli, zemini silinmiş halde kendi karesine oturur. */
 export default function SekerSymbol({ id, win, scatter, explode }) {
   const symbol = SEKER_SYMBOLS[id];
-  const Shape = symbol ? SEKER_SHAPES[symbol.shape] : null;
-  if (!symbol || !Shape) return null;
-  const gradientId = `seker-gloss-${id}`;
+  const art = useSymbolTile(symbol?.art || '');
+  if (!symbol) return null;
 
   return (
     <span
@@ -15,17 +16,16 @@ export default function SekerSymbol({ id, win, scatter, explode }) {
         explode ? 'seker-tile-explode' : ''
       }`}
     >
-      <svg viewBox="0 0 40 40" className="seker-art" aria-hidden="true">
-        <defs>
-          <radialGradient id={gradientId} cx="36%" cy="28%" r="76%">
-            <stop offset="0%" stopColor={symbol.light} />
-            <stop offset="52%" stopColor={symbol.color} />
-            <stop offset="100%" stopColor={symbol.dark} />
-          </radialGradient>
-        </defs>
-        <Shape fill={`url(#${gradientId})`} light={symbol.light} dark={symbol.dark} />
-      </svg>
-      <span className="sr-only">{symbol.name}</span>
+      <Image
+        src={art}
+        alt={symbol.name}
+        className="seker-art"
+        fittingType="fit"
+        blurPlaceholder={false}
+        originWidth={SEKER_ART_SIZE}
+        originHeight={SEKER_ART_SIZE}
+        quality={88}
+      />
     </span>
   );
 }

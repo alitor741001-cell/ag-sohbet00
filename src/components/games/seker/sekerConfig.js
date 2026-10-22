@@ -1,5 +1,5 @@
-// Şeker oyunu: bahis kademeleri ve şeker renkleri (arka uç kimlikleriyle birebir).
-// Renkler referans görseldeki parlak şekerlerden alındı.
+// Şeker oyunu: bahis kademeleri ve şeker sembolleri (arka uç kimlikleriyle birebir).
+import { SEKER_ART } from './sekerAssets';
 
 export const SEKER_LINES = 20;
 export const SEKER_BET_LEVELS = [10, 20, 50, 100, 250, 500, 1000, 2500, 5000];
@@ -7,13 +7,13 @@ export const SEKER_BET_LEVELS = [10, 20, 50, 100, 250, 500, 1000, 2500, 5000];
 export const SEKER_CLUSTER_MIN = 10;
 
 export const SEKER_SYMBOLS = {
-  flower: { name: 'Mor Çiçek', shape: 'flower', color: '#c028ff', light: '#eaa8ff', dark: '#7a10b4' },
-  sphere: { name: 'Mavi Top', shape: 'sphere', color: '#2381ff', light: '#9ac9ff', dark: '#0c4aa4' },
-  bean: { name: 'Kırmızı Fasulye', shape: 'bean', color: '#ff1e1e', light: '#ff9a9a', dark: '#a40000' },
-  oval: { name: 'Turuncu Şeker', shape: 'oval', color: '#ff8a00', light: '#ffcb7a', dark: '#b35400' },
-  square: { name: 'Yeşil Küp', shape: 'square', color: '#56db14', light: '#bdff85', dark: '#2d8605' },
-  drop: { name: 'Sarı Damla', shape: 'drop', color: '#ffdc00', light: '#fff6a8', dark: '#c39c00' },
-  golden: { name: 'Altın Şeker', shape: 'wrapped', color: '#ffc63a', light: '#fff3c6', dark: '#b8791a', scatter: true },
+  flower: { name: 'Mor Çiçek', art: SEKER_ART.flower },
+  sphere: { name: 'Mavi Top', art: SEKER_ART.sphere },
+  bean: { name: 'Kırmızı Fasulye', art: SEKER_ART.bean },
+  oval: { name: 'Turuncu Şeker', art: SEKER_ART.oval },
+  square: { name: 'Yeşil Küp', art: SEKER_ART.square },
+  drop: { name: 'Sarı Damla', art: SEKER_ART.drop },
+  golden: { name: 'Altın Şeker', art: SEKER_ART.golden, scatter: true },
 };
 
 export const SEKER_IDS = Object.keys(SEKER_SYMBOLS);

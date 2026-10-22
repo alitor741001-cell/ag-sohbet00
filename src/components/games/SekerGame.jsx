@@ -12,7 +12,8 @@ import GameBetBar from './controls/GameBetBar';
 import GameSpinButton from './controls/GameSpinButton';
 import GameTurnBadge from './controls/GameTurnBadge';
 import SekerWinOverlay from './seker/SekerWinOverlay';
-import { SEKER_LOGO } from './seker/sekerAssets';
+import { SEKER_ART, SEKER_LOGO } from './seker/sekerAssets';
+import { warmSymbolTiles } from '@/lib/symbolTile';
 import { SEKER_LINES, formatCoins } from './seker/sekerConfig';
 
 const WIN_FLASH_MS = 2400;
@@ -27,6 +28,8 @@ export default function SekerGame({ onExit, onBack }) {
   // Kazanç yazısının kapanma sayacı: yeni tur başlasa da çalışmaya devam eder.
   const flashTimer = useRef(null);
   const ready = game.status === 'ready';
+  // Şekerlerin zemini oyun açılırken bir kez silinir: makara dönerken hepsi hazırdır.
+  useEffect(() => { warmSymbolTiles(Object.values(SEKER_ART)); }, []);
 
   // Tur sonucu: büyük kazançta kutlama ekranı, küçük kazançta kısa parıltı.
   useEffect(() => {

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import EliminReel from './EliminReel';
 import { randomGrid } from './eliminConfig';
 import useCellDrops from '@/components/games/reels/useCellDrops';
@@ -11,6 +11,11 @@ export default function EliminGrid({ spinning, stopping, landing, spinKey, grid,
   const moving = spinning && !stopping;
   // Patlayanların yerine düşen kartlar değişen hücrelerdir: kayma animasyonuyla gelirler.
   const drops = useCellDrops({ grid: visible, rolling: moving, landing });
+  // Kalkışta ekranda duran dizilim: makaralar bu kartlardan kalkar.
+  const shownRef = useRef(visible);
+  useEffect(() => {
+    if (!moving) shownRef.current = visible;
+  }, [moving, visible]);
 
   // Kazanan kareler: makaralar durduktan sonra ışıkla işaretlenir.
   const winCells = useMemo(() => {
@@ -39,6 +44,7 @@ export default function EliminGrid({ spinning, stopping, landing, spinKey, grid,
           key={reel}
           reel={reel}
           column={column}
+          initial={shownRef.current?.[reel]}
           landing={landing?.[reel] || null}
           spinning={spinning}
           stopping={stopping}

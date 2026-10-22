@@ -1,14 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import gameRequest from '@/lib/gameRequest';
-import { landMs } from '@/components/games/reels/reelRoll';
+import { landWait } from '@/components/games/reels/reelMotion';
 import { SEKER_BET_LEVELS, SEKER_LINES } from './sekerConfig';
 import { END_MS, playCascadeSteps } from '@/components/games/reels/cascadeSteps';
 import useBetQueue from '@/hooks/useBetQueue';
 import useWalletCoinsLive from '@/hooks/useWalletCoinsLive';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 
-// Sonucun üzerine iniş: 6 sütunlu tahta, ortak makara altyapısı.
-const LAND_MS = landMs(6);
 
 /** Şeker oyununun durumu: bakiye, bahis, tur ve serbest turlar. */
 export default function useSekerGame() {
@@ -115,6 +113,7 @@ export default function useSekerGame() {
     setStopping(false);
     setLanding(null);
     setSpinKey((key) => key + 1);
+    const startedAt = Date.now();
     skipLandingRef.current = false;
     setSpinning(true);
     // Çevirme hakkı sürerken biriken kazanç görünür kalır.
@@ -132,7 +131,8 @@ export default function useSekerGame() {
       const landed = steps[0]?.grid || data.grid || null;
       if (landed) {
         setLanding(landed);
-        if (!skipLandingRef.current) await wait(LAND_MS);
+        // Makaralar soldan sağa sırayla durur: 6 sütun x 6 satır.
+        if (!skipLandingRef.current) await wait(landWait(6, 6, startedAt));
       }
       skipLandingRef.current = false;
       setLanding(null);

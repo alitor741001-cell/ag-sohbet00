@@ -1,55 +1,28 @@
 import React from 'react';
 import SekerliSymbol from './SekerliSymbol';
 import { ROWS, SYMBOL_IDS } from './sekerliConfig';
-import useReelRoll from '@/components/games/reels/reelRoll';
-import '@/styles/reelRoll.css';
+import ReelSpin from '@/components/games/reels/ReelSpin';
+
+const renderSekerli = (id) => <SekerliSymbol id={id} />;
 
 /**
- * Tek makara: tur boyunca kesintisiz döner, sonuç gelince tam sonucun üzerine iner.
- * Akış ortak makara altyapısından gelir; bu oyun o altyapının çıkış noktasıdır.
+ * Tek makara: gerçek makara gibi döner, sonuç gelince sırası geldiğinde durur.
+ * DUR'a basılırsa makara sonuç gelene kadar döner, sonuç gelince hemen oturur.
  */
-export default function SekerliReel({ reel, column, landing, spinning, stopping, winCells, newCells, phase, spinKey }) {
-  const roll = useReelRoll({ reel, spinKey, landing, rows: ROWS, symbols: SYMBOL_IDS });
-  const visibleRows = String(ROWS);
-
-  if (spinning && !stopping) {
+export default function SekerliReel({ reel, column, landing, spinning, winCells, newCells, phase, spinKey }) {
+  if (spinning) {
     return (
       <div className="sl-reel">
-        {roll.landingTiles ? (
-          <div
-            className="rl-strip rl-strip-land sl-strip"
-            style={{
-              '--rl-visible': visibleRows,
-              '--rl-rows': String(roll.landingRows),
-              '--rl-from': roll.from,
-              '--rl-to': roll.to,
-              '--rl-dur': `${roll.duration}ms`,
-            }}
-          >
-            {/* Şerit: akan semboller ve altta yerine oturacak sonuç sembolleri. */}
-            {roll.landingTiles.map((sym, index) => (
-              <span key={`${spinKey}-${index}`} className="sl-cell sl-cell-roll">
-                <SekerliSymbol id={sym} />
-              </span>
-            ))}
-          </div>
-        ) : (
-          <div
-            className="rl-strip rl-strip-loop sl-strip"
-            style={{
-              '--rl-visible': visibleRows,
-              '--rl-rows': String(roll.waitingRows),
-              '--rl-loop': `${roll.loopMs}ms`,
-            }}
-          >
-            {/* Bekleme: şerit kusursuz döngüde akar (içerik iki kez yazılır). */}
-            {roll.waiting.map((sym, index) => (
-              <span key={`${spinKey}-${index}`} className="sl-cell sl-cell-roll">
-                <SekerliSymbol id={sym} />
-              </span>
-            ))}
-          </div>
-        )}
+        <ReelSpin
+          reel={reel}
+          rows={ROWS}
+          spinKey={spinKey}
+          landing={landing}
+          initial={column.map((cell) => cell.sym)}
+          symbols={SYMBOL_IDS}
+          cellClassName="sl-cell sl-cell-roll"
+          renderSymbol={renderSekerli}
+        />
       </div>
     );
   }

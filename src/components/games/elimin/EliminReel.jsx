@@ -1,56 +1,30 @@
 import React from 'react';
 import EliminSymbol from './EliminSymbol';
 import { ROWS, SYMBOL_IDS } from './eliminConfig';
-import useReelRoll from '@/components/games/reels/reelRoll';
-import '@/styles/reelRoll.css';
+import ReelSpin from '@/components/games/reels/ReelSpin';
+
+const renderElimin = (id) => <EliminSymbol id={id} />;
 
 /**
- * Tek makara: tur boyunca kesintisiz döner, sonuç gelince tam sonucun üzerine iner.
+ * Tek makara: gerçek makara gibi döner, sonuç gelince sırası geldiğinde durur.
  * Kare kartlar kendi hücresinde durur; üst üste binme olmaz.
  */
 export default function EliminReel({
-  reel, column, landing, spinning, stopping, winCells, explodeCells, explode, drops, spinKey,
+  reel, column, initial, landing, spinning, stopping, winCells, explodeCells, explode, drops, spinKey,
 }) {
-  const roll = useReelRoll({ reel, spinKey, landing, rows: ROWS, symbols: SYMBOL_IDS });
-  const visibleRows = String(ROWS);
-  const moving = spinning && !stopping;
-
-  if (moving) {
+  if (spinning && !stopping) {
     return (
       <div className="el-reel">
-        {roll.landingTiles ? (
-          <div
-            className="rl-strip rl-strip-land el-strip"
-            style={{
-              '--rl-visible': visibleRows,
-              '--rl-rows': String(roll.landingRows),
-              '--rl-from': roll.from,
-              '--rl-to': roll.to,
-              '--rl-dur': `${roll.duration}ms`,
-            }}
-          >
-            {roll.landingTiles.map((sym, index) => (
-              <span key={`${spinKey}-${index}`} className="el-cell el-cell-roll">
-                <EliminSymbol id={sym} />
-              </span>
-            ))}
-          </div>
-        ) : (
-          <div
-            className="rl-strip rl-strip-loop el-strip"
-            style={{
-              '--rl-visible': visibleRows,
-              '--rl-rows': String(roll.waitingRows),
-              '--rl-loop': `${roll.loopMs}ms`,
-            }}
-          >
-            {roll.waiting.map((sym, index) => (
-              <span key={`${spinKey}-${index}`} className="el-cell el-cell-roll">
-                <EliminSymbol id={sym} />
-              </span>
-            ))}
-          </div>
-        )}
+        <ReelSpin
+          reel={reel}
+          rows={ROWS}
+          spinKey={spinKey}
+          landing={landing}
+          initial={initial}
+          symbols={SYMBOL_IDS}
+          cellClassName="el-cell el-cell-roll"
+          renderSymbol={renderElimin}
+        />
       </div>
     );
   }

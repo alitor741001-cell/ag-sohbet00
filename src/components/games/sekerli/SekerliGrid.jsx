@@ -12,7 +12,6 @@ export default function SekerliGrid({ game }) {
           column={column}
           landing={game.landing?.[reel]}
           spinning={game.spinning}
-          stopping={game.stopping}
           winCells={game.winCells}
           newCells={game.newCells}
           phase={game.phase}

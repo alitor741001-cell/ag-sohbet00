@@ -6,22 +6,20 @@ export const FRUIT_COVER = `${MEDIA_BASE}/e5ba3ee33_generated_image.png`;
 export const FRUIT_COVER_WIDTH = 1024;
 export const FRUIT_COVER_HEIGHT = 1024;
 
-// Sembol kartları: her meyve kendi kartında, ortada ve bol kenar boşluklu.
+// Sembol kartları: gerçekçi taze meyveler, bordo kadife zeminli kendi kartlarında.
 export const FRUIT_ART = {
-  // Lolipop kartının yerini alan portakal sembolü (referans görselden üretildi).
-  lollipop: `${MEDIA_BASE}/e1a05bbe7_generated_image.png`,
-  // Yaban mersini kartı (referans görselden üretildi).
-  plum: `${MEDIA_BASE}/b1c9c2242_generated_image.png`,
-  // Üzüm kartı (referans görselden üretildi).
-  grapes: `${MEDIA_BASE}/effc79a4f_generated_image.png`,
-  // Karpuz kartı (referans görselden üretildi).
-  melon: `${MEDIA_BASE}/623d7065c_generated_image.png`,
-  apple: `${MEDIA_BASE}/7db26e924_generated_image.png`,
-  // Şeker kartının yerini alan çilek sembolü (referans görselden üretildi).
-  candy: `${MEDIA_BASE}/7331aba36_generated_image.png`,
-  // Kiraz kartı (referans görselden üretildi).
-  cherry: `${MEDIA_BASE}/96f2dea41_generated_image.png`,
-  banana: `${MEDIA_BASE}/e82024769_generated_image.png`,
+  // Portakal (arka uç kimliği: lollipop).
+  lollipop: `${MEDIA_BASE}/afd088f8c_generated_image.png`,
+  // Yaban mersini (arka uç kimliği: plum).
+  plum: `${MEDIA_BASE}/990a8906e_generated_image.png`,
+  grapes: `${MEDIA_BASE}/a9ce796e9_generated_image.png`,
+  // Karpuz dilimi (arka uç kimliği: melon).
+  melon: `${MEDIA_BASE}/7ca40fd79_generated_image.png`,
+  apple: `${MEDIA_BASE}/88e74791c_generated_image.png`,
+  // Çilek (arka uç kimliği: candy).
+  candy: `${MEDIA_BASE}/780443e69_generated_image.png`,
+  cherry: `${MEDIA_BASE}/82d8aa144_generated_image.png`,
+  banana: `${MEDIA_BASE}/14f2045c0_generated_image.png`,
 };
 
 export const FRUIT_ART_SIZE = 1024;

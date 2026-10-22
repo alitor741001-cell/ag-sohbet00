@@ -1,21 +1,29 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import FruitSymbol from './FruitSymbol';
 import { FRUIT_SYMBOLS, randomGrid } from './fruitConfig';
 import useCellDrops from '@/components/games/reels/useCellDrops';
-import useReelRoll from '@/components/games/reels/reelRoll';
-import '@/styles/reelRoll.css';
+import ReelSpin from '@/components/games/reels/ReelSpin';
 
 // Tur boyunca akan dolgu sembolleri.
 const SYMBOL_IDS = Object.keys(FRUIT_SYMBOLS);
+const renderFruit = (id) => <FruitSymbol id={id} />;
 
-/** Tek makara: tur boyunca kesintisiz döner, sonuç gelince tam sonucun üzerine iner. */
-function FruitReel({ reel, column, landing, moving, spinKey, winCells, explodeCells, explode, drops }) {
-  const roll = useReelRoll({ reel, spinKey, landing, rows: column.length, symbols: SYMBOL_IDS });
-  const visibleRows = String(column.length);
-
+/** Tek makara: gerçek makara gibi döner, sonuç gelince sırası geldiğinde durur. */
+function FruitReel({ reel, column, initial, landing, moving, spinKey, winCells, explodeCells, explode, drops }) {
   return (
     <div className="fruit-column min-w-0 flex-1 p-[2px] sm:p-1">
-      {!moving && column.map((id, row) => {
+      {moving ? (
+        <ReelSpin
+          reel={reel}
+          rows={column.length}
+          spinKey={spinKey}
+          landing={landing}
+          initial={initial}
+          symbols={SYMBOL_IDS}
+          cellClassName="fruit-cell"
+          renderSymbol={renderFruit}
+        />
+      ) : column.map((id, row) => {
         const key = `${reel}-${row}`;
         return (
           <span key={row} className={`fruit-cell ${drops.has(key) ? 'fruit-drop' : ''}`}>
@@ -28,45 +36,13 @@ function FruitReel({ reel, column, landing, moving, spinKey, winCells, explodeCe
           </span>
         );
       })}
-
-      {moving && (roll.landingTiles ? (
-        // İniş: dolgu satırları akar, sonuç sembolleri tam yerine oturur.
-        <div
-          className="rl-strip rl-strip-land"
-          style={{
-            '--rl-visible': visibleRows,
-            '--rl-rows': String(roll.landingRows),
-            '--rl-from': roll.from,
-            '--rl-to': roll.to,
-            '--rl-dur': `${roll.duration}ms`,
-          }}
-        >
-          {roll.landingTiles.map((id, index) => (
-            <span key={index} className="fruit-cell"><FruitSymbol id={id} /></span>
-          ))}
-        </div>
-      ) : (
-        // Bekleme: şerit kusursuz döngüde akar (içerik iki kez yazılır).
-        <div
-          className="rl-strip rl-strip-loop"
-          style={{
-            '--rl-visible': visibleRows,
-            '--rl-rows': String(roll.waitingRows),
-            '--rl-loop': `${roll.loopMs}ms`,
-          }}
-        >
-          {roll.waiting.map((id, index) => (
-            <span key={index} className="fruit-cell"><FruitSymbol id={id} /></span>
-          ))}
-        </div>
-      ))}
     </div>
   );
 }
 
 /**
- * Sonuç ızgarası: 6 sütun x 5 satır. Tur boyunca sütunlar kesintisiz akar,
- * sonuç gelince kartlar tam sunucunun dizilimine oturur.
+ * Sonuç ızgarası: 6 sütun x 5 satır. Makaralar ekrandaki kartlardan kalkar,
+ * soldan sağa sırayla durur ve kartlar tam sunucunun dizilimine oturur.
  */
 export default function FruitReels({ spinning, stopping, landing, spinKey, grid, wins, explode }) {
   // Tur başlamadan ekranda duran süs ızgarası.
@@ -75,6 +51,11 @@ export default function FruitReels({ spinning, stopping, landing, spinKey, grid,
   const moving = spinning && !stopping;
   // Patlayanların yerine düşen karolar değişen hücrelerdir: kayma animasyonuyla gelirler.
   const drops = useCellDrops({ grid: visible, rolling: moving, landing });
+  // Kalkışta ekranda duran dizilim: makaralar bu kartlardan kalkar.
+  const shownRef = useRef(visible);
+  useEffect(() => {
+    if (!moving) shownRef.current = visible;
+  }, [moving, visible]);
 
   const winCells = useMemo(() => {
     const cells = new Set();
@@ -102,6 +83,7 @@ export default function FruitReels({ spinning, stopping, landing, spinKey, grid,
           key={reel}
           reel={reel}
           column={column}
+          initial={shownRef.current?.[reel]}
           landing={landing?.[reel] || null}
           moving={moving}
           spinKey={spinKey}

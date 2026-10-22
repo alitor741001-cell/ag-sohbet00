@@ -1,21 +1,29 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import SekerSymbol from './SekerSymbol';
 import { SEKER_SYMBOLS, randomGrid } from './sekerConfig';
 import useCellDrops from '@/components/games/reels/useCellDrops';
-import useReelRoll from '@/components/games/reels/reelRoll';
-import '@/styles/reelRoll.css';
+import ReelSpin from '@/components/games/reels/ReelSpin';
 
 // Tur boyunca akan dolgu sembolleri.
 const SYMBOL_IDS = Object.keys(SEKER_SYMBOLS);
+const renderSeker = (id) => <SekerSymbol id={id} />;
 
-/** Tek makara: tur boyunca kesintisiz döner, sonuç gelince tam sonucun üzerine iner. */
-function SekerColumn({ reel, column, landing, moving, spinKey, winCells, explodeCells, explode, drops }) {
-  const roll = useReelRoll({ reel, spinKey, landing, rows: column.length, symbols: SYMBOL_IDS });
-  const visibleRows = String(column.length);
-
+/** Tek makara: gerçek makara gibi döner, sonuç gelince sırası geldiğinde durur. */
+function SekerColumn({ reel, column, initial, landing, moving, spinKey, winCells, explodeCells, explode, drops }) {
   return (
     <div className="seker-column">
-      {!moving && column.map((id, row) => {
+      {moving ? (
+        <ReelSpin
+          reel={reel}
+          rows={column.length}
+          spinKey={spinKey}
+          landing={landing}
+          initial={initial}
+          symbols={SYMBOL_IDS}
+          cellClassName="seker-cell"
+          renderSymbol={renderSeker}
+        />
+      ) : column.map((id, row) => {
         const key = `${reel}-${row}`;
         return (
           <span key={row} className={`seker-cell ${drops.has(key) ? 'seker-drop' : ''}`}>
@@ -28,45 +36,13 @@ function SekerColumn({ reel, column, landing, moving, spinKey, winCells, explode
           </span>
         );
       })}
-
-      {moving && (roll.landingTiles ? (
-        // İniş: dolgu satırları akar, sonuç şekerleri tam yerine oturur.
-        <div
-          className="rl-strip rl-strip-land"
-          style={{
-            '--rl-visible': visibleRows,
-            '--rl-rows': String(roll.landingRows),
-            '--rl-from': roll.from,
-            '--rl-to': roll.to,
-            '--rl-dur': `${roll.duration}ms`,
-          }}
-        >
-          {roll.landingTiles.map((id, index) => (
-            <span key={index} className="seker-cell"><SekerSymbol id={id} /></span>
-          ))}
-        </div>
-      ) : (
-        // Bekleme: şerit kusursuz döngüde akar (içerik iki kez yazılır).
-        <div
-          className="rl-strip rl-strip-loop"
-          style={{
-            '--rl-visible': visibleRows,
-            '--rl-rows': String(roll.waitingRows),
-            '--rl-loop': `${roll.loopMs}ms`,
-          }}
-        >
-          {roll.waiting.map((id, index) => (
-            <span key={index} className="seker-cell"><SekerSymbol id={id} /></span>
-          ))}
-        </div>
-      ))}
     </div>
   );
 }
 
 /**
- * Sonuç ızgarası: 6 sütun x 6 satır. Tur boyunca sütunlar kesintisiz akar,
- * sonuç gelince şekerler tam sunucunun dizilimine oturur.
+ * Sonuç ızgarası: 6 sütun x 6 satır. Makaralar ekrandaki şekerlerden kalkar,
+ * soldan sağa sırayla durur ve şekerler tam sunucunun dizilimine oturur.
  */
 export default function SekerGrid({ spinning, stopping, landing, spinKey, grid, wins, explode }) {
   // Tur başlamadan ekranda duran süs ızgarası.
@@ -75,6 +51,11 @@ export default function SekerGrid({ spinning, stopping, landing, spinKey, grid, 
   const moving = spinning && !stopping;
   // Patlayanların yerine düşen şekerler değişen hücrelerdir: kayma animasyonuyla gelirler.
   const drops = useCellDrops({ grid: visible, rolling: moving, landing });
+  // Kalkışta ekranda duran dizilim: makaralar bu şekerlerden kalkar.
+  const shownRef = useRef(visible);
+  useEffect(() => {
+    if (!moving) shownRef.current = visible;
+  }, [moving, visible]);
 
   const winCells = useMemo(() => {
     const cells = new Set();
@@ -102,6 +83,7 @@ export default function SekerGrid({ spinning, stopping, landing, spinKey, grid, 
           key={reel}
           reel={reel}
           column={column}
+          initial={shownRef.current?.[reel]}
           landing={landing?.[reel] || null}
           moving={moving}
           spinKey={spinKey}
