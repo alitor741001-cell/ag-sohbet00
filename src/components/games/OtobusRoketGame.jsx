@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
+import { ChevronLeft } from 'lucide-react';
 import '@/styles/otobus.css';
 import useRocketGame from './rocket/useRocketGame';
 import OtobusHeader from './otobus/OtobusHeader';
-import OtobusHistoryBar from './otobus/OtobusHistoryBar';
 import OtobusStage from './otobus/OtobusStage';
 import OtobusBetDock from './otobus/OtobusBetDock';
-import OtobusFooter from './otobus/OtobusFooter';
 import OtobusBoard from './otobus/OtobusBoard';
 import GameHelpSheet from './help/GameHelpSheet';
 
@@ -19,18 +18,17 @@ export default function OtobusRoketGame({ onExit, onBack }) {
   const [boardTab, setBoardTab] = useState(null);
   const [helpOpen, setHelpOpen] = useState(false);
 
+  const openBoard = (tab) => setBoardTab(tab);
+
   return (
     <div className="ob-game relative flex h-full min-h-0 w-full flex-col overflow-hidden">
       <OtobusHeader
         coins={game.coins}
-        onBack={onBack || onExit}
-        onBoard={() => setBoardTab('all')}
+        onBoard={() => openBoard('all')}
         onHelp={() => setHelpOpen(true)}
       />
-      <OtobusHistoryBar history={game.history} onOpen={() => setBoardTab('general')} />
-      <OtobusStage game={game} />
+      <OtobusStage game={{ ...game, onOpenBoard: () => openBoard('general') }} />
       <OtobusBetDock game={game} />
-      <OtobusFooter roundNo={game.round?.round_no} tab={boardTab} onTab={setBoardTab} />
 
       <OtobusBoard
         open={boardTab !== null}
@@ -40,6 +38,17 @@ export default function OtobusRoketGame({ onExit, onBack }) {
         onClose={() => setBoardTab(null)}
       />
       <GameHelpSheet game="otobus-roket" open={helpOpen} onClose={() => setHelpOpen(false)} />
+
+      {/* Geri tuşu: alt tarafta, bahis panellerinin altında, kolay erişilebilir. */}
+      <button
+        type="button"
+        onClick={onBack || onExit}
+        aria-label="Oyun merkezine dön"
+        className="ob-back-float"
+      >
+        <ChevronLeft className="h-5 w-5" />
+        <span className="text-[11px] font-black tracking-wide">GERİ</span>
+      </button>
 
       {(game.status === 'loading' || game.status === 'error') && (
         <div className="absolute inset-0 z-40 grid place-items-center bg-[#050d09]/85">

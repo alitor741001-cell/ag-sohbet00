@@ -281,8 +281,9 @@
    halesi durur, beyaz rakam her zeminde okunur kalır. */
 .ob-mult {
   position: absolute;
-  left: 4px;
-  top: 4px;
+  left: 50%;
+  top: 6px;
+  transform: translateX(-50%);
   z-index: 3;
   padding: 6px 12px;
   border-radius: 16px;
@@ -304,21 +305,23 @@
   color: #d6e6dc;
   text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6);
 }
-.ob-players {
+.ob-players { display: none; }
+
+/* Alt Taraftaki yüzen geri tuşu: bahis panellerinin altında, kolay basılır. */
+.ob-back-float {
   position: absolute;
-  right: 10px;
-  bottom: 10px;
-  z-index: 3;
+  left: 8px;
+  bottom: max(6px, env(safe-area-inset-bottom));
+  z-index: 35;
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 3px 9px;
+  padding: 6px 14px 6px 10px;
   border-radius: 9999px;
-  background: rgba(8, 20, 14, 0.74);
-  border: 1px solid #2c5340;
-  font-size: 11px;
-  font-weight: 800;
-  color: #e8f2ec;
+  background: linear-gradient(180deg, #24382d, #182a21);
+  border: 1px solid #34533f;
+  color: #ffe9a8;
+  box-shadow: 0 4px 14px -4px rgba(0, 0, 0, 0.8);
 }
 .ob-stage-crash { animation: ob-shake 0.5s ease-in-out; }
 @keyframes ob-shake {

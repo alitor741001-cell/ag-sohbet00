@@ -1,17 +1,13 @@
 import React from 'react';
-import { ChevronLeft, Coins, HelpCircle, ListOrdered } from 'lucide-react';
+import { Coins, HelpCircle, ListOrdered } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import { format } from '../rocket/rocketConfig';
 import { OTOBUS_LOGO } from './otobusAssets';
 
 /** Üst şerit: marka, bakiye ve sağdaki iki kare düğme (bahis defteri + kurallar). */
-export default function OtobusHeader({ coins, onBack, onBoard, onHelp }) {
+export default function OtobusHeader({ coins, onBoard, onHelp }) {
   return (
     <header className="ob-top">
-      <button type="button" onClick={onBack} aria-label="Oyun merkezine dön" className="ob-back">
-        <ChevronLeft className="h-4 w-4" />
-      </button>
-
       <span className="ob-brand">
         <span className="ob-brand-logo">
           <Image

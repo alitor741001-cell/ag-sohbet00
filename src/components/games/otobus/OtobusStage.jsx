@@ -1,9 +1,10 @@
 import React from 'react';
-import { Users } from 'lucide-react';
 import useCutoutImage from '@/lib/cutoutImage';
 import { formatMult } from '../rocket/rocketConfig';
 import { OTOBUS_BUS } from './otobusAssets';
 import { cruisePercent, rideProgress } from './otobusConfig';
+import OtobusPlayers from './OtobusPlayers';
+import OtobusHistorySide from './OtobusHistorySide';
 
 function stateLabel(phase, countdown) {
   if (phase === 'betting') return countdown === null ? 'BAHİS AÇIK' : `BAHİS · ${countdown} SN`;
@@ -19,7 +20,6 @@ export default function OtobusStage({ game }) {
   const mult = crashed ? game.round?.crash_at || 1 : phase === 'running' ? game.displayMult : 1;
   const progress = phase === 'running' || crashed ? rideProgress(mult) : 0;
   const bus = useCutoutImage(OTOBUS_BUS);
-  const players = new Set((game.bets || []).map((bet) => bet.user_id).filter(Boolean)).size;
 
   return (
     <div className={`ob-stage ${crashed ? 'ob-stage-crash' : ''}`}>
@@ -40,10 +40,8 @@ export default function OtobusStage({ game }) {
         <p className="ob-mult-state">{stateLabel(phase, game.countdown)}</p>
       </div>
 
-      <span className="ob-players">
-        <Users className="h-3.5 w-3.5" />
-        {players}
-      </span>
+      <OtobusPlayers bets={game.bets} />
+      <OtobusHistorySide history={game.history} onOpen={game.onOpenBoard} />
 
       {crashed && <span key={game.round?.round_no} aria-hidden="true" className="ob-burst" />}
     </div>

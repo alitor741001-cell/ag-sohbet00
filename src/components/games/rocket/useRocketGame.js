@@ -19,8 +19,8 @@ const TICK_MS = 1000;
 const STATE_EVERY_MS = 12000;
 // Abonelik olayı geldikten sonra bu süre boyunca yoklama yapılmaz.
 const EVENT_GRACE_MS = 12000;
-// Çakılma sonrası yeni tur yoklanır (tur arası bekleme kadar sonra).
-const POLL_CRASHED = 5000;
+// Çakılma sonrası yeni tur 3 sn sonra yoklanır: tur arası bekleme kısa.
+const POLL_CRASHED = 3000;
 const POLL_BETTING = 12000;
 // Hata sonrası yenilemeler kısa süre bekler; butonlar beklemez.
 const POLL_COOLDOWN = 6000;
