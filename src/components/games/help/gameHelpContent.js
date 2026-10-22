@@ -363,25 +363,6 @@ export const GAME_HELP = {
     ],
     note: 'Zarlar kara kasenin içinde çalkalanır ve sonra masaya açılır; tur bitince yeni tur kendiliğinden başlar.',
   },
-  'otobus-roket': {
-    title: 'OTOBÜS ROKET',
-    tagline: 'SAVANADA GAZLA, ÇARPANI YAKALA!',
-    rules: [
-      'Tur bahis aşamasıyla açılır: 20 saniye içinde bir ya da iki bahis alanına jeton koyarsın.',
-      'Süre bitince otobüs kalkar ve çarpan yükselmeye başlar; çarpan büyüdükçe kazanç da büyür.',
-      'Otobüs her an çakılabilir: çakılmadan PARA ÇEK dersen bahsin çarpanla çarpılıp bakiyene geçer.',
-      'Çekmezsen ve çarpan çakılırsa bahis kaybedilir; çakılma sonrası yeni tur kendiliğinden başlar.',
-      'İki bahis alanı birbirinden bağımsızdır: aynı turda farklı miktarlarla iki kez oynayabilirsin.',
-      'Otomatik sekmesinde hedef çarpan seçersen bahis, o çarpana ulaşıldığı an kendiliğinden çekilir.',
-    ],
-    facts: [
-      'Üst şeritte son turların çakılma çarpanları akar; sağdaki düğme tüm sonuçları açar.',
-      'Altta tur numarası ile Tüm Bahisler · Bahislerim · Genel Sonuçlar sekmeleri durur.',
-      'Çarpan yükseldikçe kamera hızlanır, toz ve alev büyür.',
-      'Sonuç sunucuda üretilir: çakılma noktası tur başlamadan bellidir ve oyun başlayana kadar kimse göremez.',
-    ],
-    note: 'Bahis süresi bittiğinde tur kendiliğinden başlar: masada jetonun varsa tur oynanmış sayılır.',
-  },
 };
 
 export const helpFor = (game) => GAME_HELP[game] || null;

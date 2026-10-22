@@ -9,8 +9,7 @@
     "variant": {
       "type": "string",
       "enum": [
-        "rocket",
-        "otobus"
+        "rocket"
       ],
       "default": "rocket"
     },
