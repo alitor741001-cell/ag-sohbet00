@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Minus, Plus, Ticket } from 'lucide-react';
 import { format, formatAuto } from '../rocket/rocketConfig';
 import { OTOBUS_AUTO_PRESETS, OTOBUS_BET_PRESETS } from './otobusConfig';
+import '@/components/games/otobus/OtobusBetPanel.css';
 
 /** Tek bahis modülü: solda bahis/otomatik sekmeleri, sağda tek aksiyon düğmesi. */
 export default function OtobusBetPanel({
@@ -18,7 +19,7 @@ export default function OtobusBetPanel({
   const [tab, setTab] = useState('bet');
 
   return (
-    <div className="ob-module">
+    <div className="ob-module ob-premium-module">
       <div className="ob-module-main">
         <div className="ob-tabs">
           <button type="button" onClick={() => setTab('bet')} className={`ob-tab ${tab === 'bet' ? 'ob-tab-on' : ''}`}>
@@ -33,14 +34,14 @@ export default function OtobusBetPanel({
           <>
             <div className="ob-wager">
               <button type="button" onClick={() => onAmount(-1)} disabled={locked} aria-label="Bahsi azalt" className="ob-step">
-                <Minus className="h-3.5 w-3.5" />
+                <Minus className="h-3.5 w-3.5" strokeWidth={2.4} />
               </button>
               <span className="ob-wager-value">
-                <Ticket className="h-3.5 w-3.5 shrink-0 text-[#f6c65b]" />
+                <Ticket className="ob-ticket shrink-0" strokeWidth={1.8} />
                 {format(amount)}
               </span>
               <button type="button" onClick={() => onAmount(1)} disabled={locked} aria-label="Bahsi artır" className="ob-step">
-                <Plus className="h-3.5 w-3.5" />
+                <Plus className="h-3.5 w-3.5" strokeWidth={2.4} />
               </button>
             </div>
             <div className="ob-presets">
@@ -61,11 +62,11 @@ export default function OtobusBetPanel({
           <>
             <div className="ob-wager">
               <button type="button" onClick={() => onAuto(-1)} aria-label="Otomatik çekilme azalt" className="ob-step">
-                <Minus className="h-3.5 w-3.5" />
+                <Minus className="h-3.5 w-3.5" strokeWidth={2.4} />
               </button>
               <span className={`ob-wager-value ${auto > 0 ? 'ob-wager-auto' : ''}`}>{formatAuto(auto)}</span>
               <button type="button" onClick={() => onAuto(1)} aria-label="Otomatik çekilme artır" className="ob-step">
-                <Plus className="h-3.5 w-3.5" />
+                <Plus className="h-3.5 w-3.5" strokeWidth={2.4} />
               </button>
             </div>
             <div className="ob-presets">
@@ -84,7 +85,7 @@ export default function OtobusBetPanel({
         )}
       </div>
 
-      {/* Tek aksiyon düğmesi: beklerken turuncu, çekişte yeşil. */}
+      {/* Tek aksiyon düğmesi: onaylanan kırmızı antrasit görünüm. */}
       <button
         type="button"
         onClick={onAction}
