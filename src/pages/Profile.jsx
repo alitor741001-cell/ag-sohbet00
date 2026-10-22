@@ -11,6 +11,7 @@ import SocialListDialog from '@/components/profile/social/SocialListDialog';
 import ProfileHeroCard from '@/components/profile/fantasy/ProfileHeroCard';
 import ProfileStatBar from '@/components/profile/fantasy/ProfileStatBar';
 import ProfileTwinCards from '@/components/profile/fantasy/ProfileTwinCards';
+import ProfileBalanceCards from '@/components/profile/fantasy/ProfileBalanceCards';
 import ProfileIconGrid from '@/components/profile/fantasy/ProfileIconGrid';
 import ProfileMenuCard from '@/components/profile/fantasy/ProfileMenuCard';
 import { giftBoxLocked } from '@/lib/giftAccess';
@@ -186,9 +187,7 @@ export default function Profile() {
           onAvatar={onAvatar}
           uploading={uploading}
           onEdit={() => toggle('info')}
-          gems={elmasLocked ? null : (wallet?.month_score ?? null)}
           vipLevel={Number(user.vip_level) || 0}
-          onOpenGems={openGiftBox}
         />
 
         <div className="space-y-3 px-4 pt-4">
@@ -199,9 +198,9 @@ export default function Profile() {
             visitors={social.visitors}
             onSelect={(key) => (key === 'friends' ? navigate('/arkadaslar?view=friends') : setSocialList(key))}
           />
+          <ProfileBalanceCards coins={wallet?.coins ?? null} diamonds={elmasLocked ? null : (wallet?.month_score ?? null)} onCoins={() => setCoinShopOpen(true)} onDiamonds={openGiftBox} />
           <ProfileTwinCards
             vipCount={vipCount}
-            coins={wallet?.coins ?? null}
             onVip={() => navigate('/vip')}
             onWallet={() => setActivityOpen(true)}
           />

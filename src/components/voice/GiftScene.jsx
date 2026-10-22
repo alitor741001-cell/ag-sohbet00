@@ -26,7 +26,7 @@ export default function GiftScene({ alert, tiers = [], gifts = [] }) {
     : `${alert.senderName ? `${alert.senderName} → ` : ''}${alert.recipientName || 'Oda'}`;
 
   return (
-    <div className="pointer-events-none absolute inset-0 z-[200] overflow-hidden">
+    <div className={`pointer-events-none absolute inset-0 z-[200] overflow-hidden ${(video || clip) ? 'mix-blend-screen' : ''}`}>
       {video ? (
         <GiftVideoStage src={video} poster={clip?.[0]} color={color} />
       ) : clip ? (

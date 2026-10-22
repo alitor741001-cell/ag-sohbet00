@@ -3,7 +3,7 @@ import GiftTransparencyFilter from '@/components/voice/GiftTransparencyFilter';
 
 /**
  * Hediye kaydında gerçek video dosyası (mp4/webm) varsa onu oynatır.
- * Siyah zemin filtrelenir; %60 opaklıkla koltuklar videonun arkasında görünür.
+ * Siyah zemin filtrelenir; %30 opaklık (%70 şeffaflık) koltukları görünür bırakır.
  */
 export default function GiftVideoStage({ src, poster = '', color = '#facc15' }) {
   const videoRef = useRef(null);
@@ -40,7 +40,7 @@ export default function GiftVideoStage({ src, poster = '', color = '#facc15' }) 
         playsInline
         preload="auto"
         disablePictureInPicture
-        className="h-full w-full object-contain opacity-60"
+        className="h-full w-full bg-transparent object-contain opacity-30"
         style={{ filter: `url(#${filterId})` }}
       />
 

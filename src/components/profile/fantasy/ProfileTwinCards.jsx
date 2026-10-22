@@ -1,5 +1,4 @@
 import { Image } from '@/components/ui/image';
-import { formatCoins } from '@/lib/giftTone';
 import { MENU_ICONS } from '@/components/profile/fantasy/icons';
 
 const CARD = {
@@ -11,7 +10,7 @@ const CARD = {
 const GOLD_TEXT = { color: '#f0c469', textShadow: '0 0 14px rgba(240,196,105,0.55)' };
 
 /** Profil menüsündeki iki geniş kart: VIP çantası ve cüzdan. */
-export default function ProfileTwinCards({ vipCount = 0, coins, onVip, onWallet }) {
+export default function ProfileTwinCards({ vipCount = 0, onVip, onWallet }) {
   return (
     <div className="grid grid-cols-2 gap-2.5">
       <button type="button" onClick={onVip} className="flex items-center justify-between gap-2 rounded-xl px-3 py-2 text-left active:scale-[0.98]" style={CARD}>
@@ -26,7 +25,7 @@ export default function ProfileTwinCards({ vipCount = 0, coins, onVip, onWallet 
         <span className="flex min-w-0 flex-col">
           <span className="font-serif text-[15px] leading-none" style={GOLD_TEXT}>Hediye Geçmişi</span>
           <span className="mt-1 truncate text-[10px] font-semibold tabular-nums text-white/70">
-            {coins === null || coins === undefined ? '— coin' : `${formatCoins(coins)} coin`}
+            Geçmişi görüntüle
           </span>
         </span>
         <Image src={MENU_ICONS.wallet} alt="" fittingType="fit" className="h-12 w-12 shrink-0" style={{ mixBlendMode: 'screen' }} />

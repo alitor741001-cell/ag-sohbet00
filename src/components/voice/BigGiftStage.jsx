@@ -12,7 +12,7 @@ export default function BigGiftStage({ alert, gifts = [] }) {
   if (!alert) return null;
   const video = giftVideoFor(gifts.find((gift) => gift.id === alert.gift_id));
   if (video) return (
-    <div key={alert.id} className="pointer-events-none absolute inset-0 z-[210]">
+    <div key={alert.id} className="pointer-events-none absolute inset-0 z-[210] mix-blend-screen">
       <GiftVideoStage src={video} />
       <div className="absolute inset-x-0 bottom-[16%] px-5"><BigGiftPair alert={alert} /><p className="mt-2 text-center text-sm font-bold text-fantasy-gold">{alert.gift_name}</p></div>
     </div>

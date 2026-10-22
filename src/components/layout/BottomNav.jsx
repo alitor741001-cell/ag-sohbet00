@@ -37,7 +37,7 @@ export default function BottomNav() {
   // Canlı destek düğmesi herkeste profil sekmesinin hemen solunda durur.
   const items = [...baseItems.slice(0, -1), { dock: 'support' }, ...baseItems.slice(-1)];
 
-  if (inVoiceRoom) return null;
+  if (inVoiceRoom || location.pathname === '/vip') return null;
 
   // Aynı sekmeye tekrar basıldığında kök görünüme dönülür: iç içe adres parametreleri
   // (ör. /arkadaslar?chat=…, /profil?tab=…) temizlenir ve sayfa başına kaydırılır.

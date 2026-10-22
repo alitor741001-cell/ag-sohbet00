@@ -1,11 +1,12 @@
-import { Crown, Sparkles, UserRound } from 'lucide-react';
+import { Sparkles, UserRound } from 'lucide-react';
+import VipAvatarFrame from '@/components/vip/VipAvatarFrame';
 import { Image } from '@/components/ui/image';
 import { vipVars } from '@/components/vip/vipTheme';
 export default function VipCosmeticPreview({ kind, theme, avatar = '', name = 'AG SOHBET' }) {
   const portrait = avatar ? <Image src={avatar} alt={name} className="h-full w-full rounded-full" /> : <UserRound className="h-7 w-7" />;
   return <div style={vipVars(theme)} className="vip-tint flex h-24 w-full items-center justify-center overflow-hidden" data-vip-shape={theme.shape}>
     {kind === 'badge' && <div className="vip-badge flex items-center gap-1 rounded-lg px-2 py-1 font-black"><Image src={theme.image} alt="" className="h-9 w-9 rounded-full" /><span>VIP {theme.level}</span></div>}
-    {kind === 'frame' && <div className="vip-avatar-frame relative flex h-16 w-16 items-center justify-center" data-vip-shape={theme.shape}>{portrait}<Crown className="absolute -top-3 h-5 w-5" /></div>}
+    {kind === 'frame' && <VipAvatarFrame theme={theme} className="h-16 w-16"><span className="flex h-full w-full items-center justify-center overflow-hidden rounded-full">{portrait}</span></VipAvatarFrame>}
     {kind === 'mic' && <div className="vip-wave relative flex h-11 w-11 items-center justify-center rounded-full" data-vip-shape={theme.shape}><span className="text-xl">✦</span></div>}
     {kind === 'bubble' && <div className="vip-bubble max-w-full text-[10px]" data-vip-shape={theme.shape}>Merhaba, hoş geldin!</div>}
     {kind === 'card' && <div className="vip-badge relative flex h-20 w-full max-w-32 items-end overflow-hidden rounded-xl p-2"><Image src={theme.image} alt="" className="absolute inset-0 h-full w-full opacity-40" /><span className="relative text-[10px] font-bold">{name}<br />VIP {theme.level}</span></div>}
