@@ -12,7 +12,8 @@ import RouletteTable from './roulette/RouletteTable';
 import RouletteChipRow from './roulette/RouletteChipRow';
 import RouletteRoundBar from './roulette/RouletteRoundBar';
 import RouletteWinOverlay from './roulette/RouletteWinOverlay';
-import { formatCoins } from './roulette/rouletteConfig';
+import RoulettePlayers from './roulette/RoulettePlayers';
+import '@/styles/roulette2.css';
 
 // Çark 4.4 saniyede yerine oturur: kazanan cep bundan sonra yakınlaştırılır.
 const WHEEL_STOP_MS = 4500;
@@ -61,57 +62,50 @@ export default function RouletteGame({ onExit, onBack }) {
   }, [game.result]);
 
   return (
-    <div className="rl-sky relative flex h-full min-h-0 w-full flex-col overflow-hidden">
-      <span aria-hidden="true" className="rl-rays" />
-
-      {/* Üst bar: geri + TOP 5 + son numaralar + düğmeler */}
-      <header className="rl-topbar">
-        <button type="button" onClick={onBack} aria-label="Oyun listesine dön" className="gctl-pill gctl-icon">
+    <div className="rl2-game relative flex h-full min-h-0 w-full flex-col overflow-hidden">
+      {/* Üst bar: geri + TOP5 + ampul/çıkış */}
+      <header className="rl2-topbar">
+        <button type="button" onClick={onBack} aria-label="Oyun listesine dön" className="rl2-icon-btn">
           <ChevronLeft className="h-4 w-4" />
         </button>
-        <RouletteTopFive winners={board.winners} ready={board.status === 'ready'} />
-        <div className="rl-topbar-right">
-          <RouletteHistory entries={game.history} />
-          <button
-            type="button"
-            onClick={() => setHelpOpen(true)}
-            aria-label="Nasıl oynanır"
-            className="gctl-pill gctl-icon"
-          >
-            <Lightbulb className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            onClick={onExit}
-            aria-label="Oyunu kapat"
-            className="gctl-pill gctl-icon ring-1 ring-[#f0c96b]/50"
-          >
+        <RouletteTopFive winners={board.winners} />
+        <div className="rl2-top-actions">
+          <button type="button" onClick={onExit} aria-label="Oyunu kapat" className="rl2-icon-btn">
             <X className="h-4 w-4" />
+          </button>
+          <button type="button" onClick={() => setHelpOpen(true)} aria-label="Nasıl oynanır" className="rl2-bulb">
+            <Lightbulb className="h-5 w-5" />
           </button>
         </div>
       </header>
 
-      {/* Ana alan: çark + Başla + bahis masası */}
-      <main className="rl-main">
-        <div className="rl-wheel-arch">
-          <RouletteWheel
-            index={landedIndex}
-            spinning={spinning}
-            settled={settled}
-            winner={settled ? landedNumber : null}
-            zoom={zoom}
-          />
+      {/* Sahne: NEW kartı, ahşap çerçeveli çark, Players */}
+      <section className="rl2-stage">
+        <RouletteHistory entries={game.history} />
+        <div className="rl2-wheel-frame">
+          <RouletteWheel index={landedIndex} spinning={spinning} settled={settled} winner={settled ? landedNumber : null} zoom={false} />
         </div>
+        <RoulettePlayers winners={board.winners} />
+      </section>
 
-        <RouletteRoundBar phase={game.phase} countdown={game.countdown} progress={game.progress} />
-
-        <RouletteTable bets={game.bets} disabled={!betting} onPlace={game.placeBet} />
-
-        {game.status === 'loading' && <p className="rl-result-text">Oyun yükleniyor...</p>}
+      {/* Bordo masa: kemerli üst kenar, Başla + 4x2 bloklar */}
+      <main className="rl2-felt">
+        <RouletteRoundBar phase={game.phase} countdown={game.countdown} />
+        <RouletteTable
+          bets={game.bets}
+          disabled={!betting}
+          onPlace={game.placeBet}
+          resultNumber={settled ? landedNumber : null}
+        />
+        {spinning && (
+          <div className="rl2-bigwheel">
+            <RouletteWheel index={landedIndex} spinning settled={settled} winner={settled ? landedNumber : null} zoom={zoom} />
+          </div>
+        )}
+        {game.status === 'loading' && <p className="rl2-loading">Oyun yükleniyor...</p>}
       </main>
 
-      {/* Alt bar: bakiye + renkli jetonlar + REPEAT */}
-      <footer className="rl-footer">
+      <footer className="rl2-footer">
         <RouletteChipRow
           coins={game.available}
           chip={game.chip}

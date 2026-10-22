@@ -1,23 +1,18 @@
 import React from 'react';
-import { Cat, RotateCcw } from 'lucide-react';
-import { CHIP_LABELS, CHIP_LEVELS, formatCoins } from './rouletteConfig';
+import { ChevronRight } from 'lucide-react';
+import { CHIP_LEVELS, CHIP_LABELS, formatCoins } from './rouletteConfig';
+import RouletteChip from './RouletteChip';
 
-const CHIP_TONES = {
-  500: 'green',
-  1000: 'blue',
-  10000: 'pink',
-  100000: 'black',
-};
-
-/** Alt bar: bakiye (sol) + renkli jetonlar (orta) + REPEAT (sağ). */
+/** Alt bar: bakiye (sol alt) + kedi jetonlar (orta) + gri REPEAT (sağ). */
 export default function RouletteChipRow({ coins, chip, stake, canRepeat, disabled, onChip, onRepeat, onClear, onCoins }) {
   return (
-    <div className="rl-footer-bar">
-      <button type="button" onClick={onCoins} className="rl-balance" aria-label="Coin yükle">
-        <Cat className="h-4 w-4 rl-balance-icon" />
-        <span className="rl-balance-value">{formatCoins(coins)}</span>
+    <div className="rl2-footer-bar">
+      <button type="button" onClick={onCoins} className="rl2-balance" aria-label="Coin yükle">
+        <span className="rl2-balance-icon" />
+        {formatCoins(coins)}
+        <ChevronRight className="h-3 w-3" />
       </button>
-      <div className="rl-chips">
+      <div className="rl2-chips">
         {CHIP_LEVELS.map((level) => (
           <button
             key={level}
@@ -26,19 +21,16 @@ export default function RouletteChipRow({ coins, chip, stake, canRepeat, disable
             disabled={disabled}
             aria-label={`${CHIP_LABELS[level]} jeton`}
             aria-pressed={chip === level}
-            className={`rl-chip rl-chip-${CHIP_TONES[level]} ${chip === level ? 'rl-chip-on' : ''}`}
+            className={`rl2-chip-btn ${chip === level ? 'rl2-chip-btn-on' : ''}`}
           >
-            {CHIP_LABELS[level]}
+            <RouletteChip value={level} />
           </button>
         ))}
       </div>
-      <button type="button" onClick={onRepeat} disabled={disabled || !canRepeat} className="rl-repeat" aria-label="Bahisleri tekrarla">
-        <RotateCcw className="h-3.5 w-3.5" /> REPEAT
-      </button>
-      {stake > 0 && (
-        <button type="button" onClick={onClear} disabled={disabled} className="rl-clear" aria-label="Bahisleri temizle">
-          TEMİZLE
-        </button>
+      {stake > 0 && !disabled ? (
+        <button type="button" onClick={onClear} className="rl2-repeat">TEMİZLE</button>
+      ) : (
+        <button type="button" onClick={onRepeat} disabled={disabled || !canRepeat} className="rl2-repeat">REPEAT</button>
       )}
     </div>
   );

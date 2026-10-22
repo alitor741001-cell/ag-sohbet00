@@ -8,10 +8,10 @@ export const BLOCKS = [
   { id: 'dozen1', label: '1-12', sub: 'x3' },
   { id: 'dozen2', label: '13-24', sub: 'x3' },
   { id: 'dozen3', label: '25-36', sub: 'x3' },
-  { id: 'red', label: 'KIRMIZI', sub: 'x2' },
-  { id: 'black', label: 'SİYAH', sub: 'x2' },
-  { id: 'even', label: 'ÇİFT', sub: 'x2' },
-  { id: 'odd', label: 'TEK', sub: 'x2' },
+  { id: 'red', label: 'Kırmızı', sub: 'x2' },
+  { id: 'black', label: 'Siyah', sub: 'x2' },
+  { id: 'even', label: 'Çift', sub: 'x2' },
+  { id: 'odd', label: 'Tek', sub: 'x2' },
 ];
 
 export const WHEEL_ORDER = [
@@ -28,5 +28,27 @@ export const POCKET_STEP = 360 / WHEEL_ORDER.length;
 export const formatCoins = (value) => new Intl.NumberFormat('tr-TR').format(Math.max(0, Math.round(value || 0)));
 
 export const pocketTone = (number) => (number === 0 ? 'green' : RED_NUMBERS.includes(number) ? 'red' : 'black');
+
+// Kısa tutar: 1000 → 1K, 1500000 → 1.5M (masa blokları ve jetonlar için).
+export const shortCoins = (value) => {
+  const n = Math.max(0, Math.round(value || 0));
+  if (n >= 1e6) return `${+(n / 1e6).toFixed(1)}M`;
+  if (n >= 1e3) return `${+(n / 1e3).toFixed(1)}K`;
+  return String(n);
+};
+
+// Bir bahis bloğu çıkan numarayı kazanıyor mu?
+export const blockWins = (id, number) => {
+  if (number === null || number === undefined) return false;
+  if (id === 'zero') return number === 0;
+  if (number === 0) return false;
+  if (id === 'dozen1') return number <= 12;
+  if (id === 'dozen2') return number > 12 && number <= 24;
+  if (id === 'dozen3') return number > 24;
+  if (id === 'red') return RED_NUMBERS.includes(number);
+  if (id === 'black') return !RED_NUMBERS.includes(number);
+  if (id === 'even') return number % 2 === 0;
+  return number % 2 === 1;
+};
 
 export const pocketName = (number) => (number === 0 ? 'YEŞİL' : RED_NUMBERS.includes(number) ? 'KIRMIZI' : 'SİYAH');

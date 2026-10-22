@@ -1,0 +1,214 @@
+/* ROULETTE (görsel referans): mor kadife zemin, ahşap çark, bordo masa, kedi jetonlar. */
+.rl2-game {
+  background:
+    radial-gradient(80% 40% at 50% 18%, rgba(140, 70, 160, 0.35), transparent 70%),
+    linear-gradient(180deg, #2a1236 0%, #3a1a45 30%, #2b1030 100%);
+  color: #fff;
+}
+
+/* --- üst bar --- */
+.rl2-topbar {
+  position: relative; z-index: 12; display: flex; align-items: flex-start; gap: 0.3rem;
+  padding: 0.3rem 0.35rem 0; padding-top: max(0.3rem, env(safe-area-inset-top));
+}
+.rl2-icon-btn {
+  display: grid; place-items: center; height: 1.8rem; width: 1.8rem; flex-shrink: 0;
+  border-radius: 9999px; background: rgba(0, 0, 0, 0.45); color: #f6dfa4;
+  border: 1px solid rgba(240, 201, 107, 0.4);
+}
+.rl2-top-actions { display: flex; flex-direction: column; align-items: center; gap: 0.35rem; }
+.rl2-bulb {
+  display: grid; place-items: center; height: 2.3rem; width: 2.3rem; border-radius: 0.6rem;
+  background: linear-gradient(180deg, #4a2a1c, #2a160e); color: #ffe27a;
+  border: 2px solid #b8894a; box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.6);
+}
+
+.rl2-top5 {
+  display: flex; flex: 1; min-width: 0; align-items: flex-end; gap: 0.2rem;
+  padding: 0.3rem 0.35rem 0.35rem; border-radius: 0 0 0.6rem 0.6rem;
+  background: rgba(10, 6, 18, 0.88); box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
+}
+.rl2-top5-label {
+  align-self: center; font-size: 0.75rem; font-weight: 900; font-style: italic; letter-spacing: 0.02em;
+  color: #fff; -webkit-text-stroke: 0.6px #6a6a8a; text-shadow: 0 0 6px rgba(160, 160, 255, 0.5);
+}
+.rl2-seat { position: relative; display: flex; flex: 1; min-width: 0; flex-direction: column; align-items: center; }
+.rl2-seat-rank {
+  position: absolute; top: -0.1rem; left: 6%; z-index: 2; display: grid; place-items: center;
+  height: 0.8rem; width: 0.8rem; border-radius: 9999px; font-size: 0.5rem; font-weight: 900;
+  background: var(--seat); border: 1px solid #fff;
+}
+.rl2-seat-ring {
+  display: grid; place-items: center; height: 2.4rem; width: 2.4rem; max-width: 100%; overflow: hidden;
+  border-radius: 9999px; background: #120a18; border: 2.5px solid var(--seat);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.35), inset 0 0 6px rgba(0, 0, 0, 0.8);
+}
+.rl2-seat-initial { font-weight: 900; color: #ffe9b6; }
+.rl2-seat-base {
+  margin-top: -0.35rem; z-index: 1; width: 100%; height: 0.85rem; overflow: hidden; white-space: nowrap;
+  border-radius: 0.35rem 0.35rem 0.25rem 0.25rem; text-align: center; font-size: 0.42rem; font-weight: 800;
+  line-height: 0.85rem; color: #fff; background: linear-gradient(180deg, var(--seat), var(--seat-dark));
+  border: 1px solid rgba(255, 230, 160, 0.75);
+}
+.rl2-seat-gold { --seat: #c98a2a; --seat-dark: #7a3a12; }
+.rl2-seat-blue { --seat: #3b5ed8; --seat-dark: #1d2a7a; }
+.rl2-seat-violet { --seat: #9a7ab8; --seat-dark: #4a3460; }
+.rl2-seat-green { --seat: #3fa64a; --seat-dark: #1b5a22; }
+
+/* --- sahne: NEW + çark + Players --- */
+.rl2-stage {
+  position: relative; z-index: 6; display: flex; align-items: flex-start; justify-content: center;
+  flex-shrink: 0; padding: 0.4rem 0.3rem 0; margin-bottom: -2.8rem;
+}
+.rl2-new {
+  position: absolute; left: 0.4rem; top: 1rem; display: flex; flex-direction: column; align-items: center;
+  width: 28%; max-width: 8.5rem;
+}
+.rl2-new-title {
+  display: flex; align-items: center; justify-content: center; width: 100%; padding: 0.15rem 0;
+  font-size: 0.85rem; font-weight: 900; letter-spacing: 0.05em; color: #f6dfa4;
+  background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.75) 20%, rgba(0, 0, 0, 0.75) 80%, transparent);
+}
+.rl2-new-row {
+  display: flex; align-items: center; justify-content: center; gap: 0.3rem; width: 100%;
+  padding: 0.3rem 0.4rem; border-radius: 0.55rem; background: #3a0d18; border: 2px solid #b8742f;
+}
+.rl2-new-dots { font-size: 0.5rem; color: #ddd; }
+.rl2-new-pocket {
+  display: grid; place-items: center; height: 1.4rem; width: 1.4rem; border-radius: 9999px;
+  font-size: 0.62rem; font-weight: 800; border: 1.5px solid #fff;
+}
+.rl2-new-latest { height: 1.9rem; width: 1.9rem; font-size: 0.95rem; font-weight: 900; }
+.rl2-new-red { background: #d7262f; }
+.rl2-new-black { background: #141414; }
+.rl2-new-green { background: #1f9a3a; }
+
+.rl2-wheel-frame {
+  display: grid; place-items: center; padding: 0.55rem; border-radius: 9999px;
+  background: radial-gradient(circle, #6b3218 58%, #3a170a 72%, #a7743c 74%, #4a200e 80%, #2a1006 100%);
+  box-shadow: 0 0 0 3px #1a0b05, 0 10px 26px rgba(0, 0, 0, 0.8);
+}
+.rl2-wheel-frame .rl-wheel { height: min(44vw, 21vh, 12rem); width: min(44vw, 21vh, 12rem); min-height: 7rem; min-width: 7rem; }
+
+.rl2-players-wrap { position: absolute; right: 0.4rem; top: 2.2rem; }
+.rl2-players {
+  display: flex; align-items: center; gap: 0.45rem; padding: 0.15rem 0.15rem 0.15rem 0.8rem;
+  border-radius: 9999px; font-size: 0.75rem; font-weight: 700; color: #f6e7c8;
+  background: linear-gradient(180deg, #7a3e22, #4a2010); border: 2px solid #c48a4a;
+}
+.rl2-players-icon {
+  display: grid; place-items: center; height: 1.7rem; width: 1.7rem; border-radius: 9999px;
+  background: #8a4a2a; border: 2px solid #e0a868;
+}
+.rl2-players-list {
+  position: absolute; right: 0; top: 2.4rem; z-index: 30; min-width: 9rem; padding: 0.4rem 0.55rem;
+  border-radius: 0.6rem; background: rgba(20, 8, 14, 0.96); border: 1px solid #b8742f; font-size: 0.65rem;
+}
+.rl2-players-list p { display: flex; justify-content: space-between; gap: 0.5rem; padding: 0.15rem 0; }
+.rl2-players-list b { color: #f0c96b; }
+
+/* --- bordo masa: kemerli üst kenar --- */
+.rl2-felt {
+  position: relative; z-index: 4; display: flex; min-height: 0; flex: 1; flex-direction: column;
+  margin: 0 0.15rem; padding: 3.2rem 0.6rem 0.6rem; overflow: hidden;
+  border-radius: 1.6rem 1.6rem 0 0; border: 3px solid #c99a5a; border-bottom: 0;
+  background:
+    radial-gradient(60% 18% at 50% 0%, rgba(255, 255, 255, 0.07), transparent),
+    repeating-radial-gradient(circle at 50% 40%, rgba(255, 255, 255, 0.015) 0 6px, transparent 6px 14px),
+    linear-gradient(180deg, #8a1a30 0%, #7a1428 50%, #6a1022 100%);
+  box-shadow: inset 0 0 0 2px #5a2410, inset 0 0 40px rgba(0, 0, 0, 0.45);
+}
+.rl2-start { display: flex; align-items: center; justify-content: center; gap: 0.5rem; height: 2.4rem; margin-bottom: 0.3rem; }
+.rl2-start-text { font-size: 1.15rem; font-weight: 800; color: #f8e6b0; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6); }
+.rl2-watch {
+  position: relative; display: grid; place-items: center; height: 2.2rem; width: 2.2rem; border-radius: 9999px;
+  font-size: 1.1rem; font-weight: 900; color: #3a2400;
+  background: radial-gradient(circle, #fffbe8 55%, #e9c86a 60%, #a8761c 100%);
+  box-shadow: 0 0 0 2px #6a4a10;
+}
+.rl2-watch::before {
+  content: ''; position: absolute; top: -0.35rem; left: 50%; height: 0.35rem; width: 0.5rem;
+  transform: translateX(-50%); border-radius: 0.15rem 0.15rem 0 0; background: #c9a24a;
+}
+.rl2-watch-urgent { color: #b00010; animation: rl2-pulse 0.6s ease-in-out infinite alternate; }
+@keyframes rl2-pulse { to { transform: scale(1.12); } }
+
+.rl2-table { display: grid; flex: 1; min-height: 0; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(2, 1fr); gap: 0.35rem; }
+.rl2-block {
+  position: relative; display: flex; min-height: 6rem; flex-direction: column; align-items: center;
+  padding: 0.25rem 0.3rem; border-radius: 0.35rem; background: rgba(90, 8, 26, 0.55);
+  border: 1.5px solid rgba(190, 70, 90, 0.55); box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.35);
+  transition: background 0.15s;
+}
+.rl2-block:active:not(:disabled) { background: rgba(160, 30, 60, 0.55); }
+.rl2-block-win { border-color: #ffd35c; box-shadow: 0 0 14px rgba(255, 211, 92, 0.6), inset 0 0 12px rgba(255, 211, 92, 0.25); }
+.rl2-block-top { display: flex; width: 100%; justify-content: space-between; font-size: 0.6rem; font-weight: 800; }
+.rl2-block-won { color: #ffcf3a; }
+.rl2-block-stake { color: #fff; }
+.rl2-block-label {
+  margin-top: 0.5rem; font-size: clamp(0.8rem, 4.6vw, 1.45rem); font-weight: 900; font-style: italic;
+  white-space: nowrap; color: #ff8fae; text-shadow: 0 1px 0 #7a1030;
+}
+.rl2-block-sub { font-size: 0.8rem; font-weight: 800; color: #ffb2c4; }
+.rl2-block-chip { position: absolute; left: 12%; bottom: 18%; }
+
+.rl2-bigwheel {
+  position: absolute; inset: 2.6rem 0 0; z-index: 8; display: grid; place-items: center; pointer-events: none;
+  animation: rl2-rise 0.45s ease-out;
+}
+.rl2-bigwheel .rl-wheel { height: min(84vw, 44vh, 24rem); width: min(84vw, 44vh, 24rem); }
+@keyframes rl2-rise { from { opacity: 0; transform: scale(0.6); } }
+.rl2-loading { text-align: center; font-size: 0.75rem; color: #f8e6b0; }
+
+/* --- kedi başı jeton --- */
+.rl2-chip {
+  position: relative; display: inline-grid; place-items: center; height: 2.7rem; width: 3rem;
+  border-radius: 0.9rem 0.9rem 1.2rem 1.2rem; background: var(--chip);
+  box-shadow: inset 0 -4px 0 var(--chip-dark), inset 0 3px 0 rgba(255, 255, 255, 0.35), 0 3px 6px rgba(0, 0, 0, 0.5);
+  border: 2px solid var(--chip-dark);
+}
+.rl2-chip::before, .rl2-chip::after {
+  content: ''; position: absolute; top: -0.42rem; height: 0.85rem; width: 0.85rem; background: var(--chip);
+  border: 2px solid var(--chip-dark); border-bottom: 0; border-right: 0; transform: rotate(45deg);
+  border-radius: 0.2rem 0 0 0;
+}
+.rl2-chip::before { left: 0.18rem; }
+.rl2-chip::after { right: 0.18rem; }
+.rl2-chip-face {
+  position: relative; z-index: 1; font-size: 0.95rem; font-weight: 900; color: #fff;
+  -webkit-text-stroke: 0.5px var(--chip-dark); text-shadow: 0 2px 0 var(--chip-dark);
+}
+.rl2-chip-sm { transform: scale(0.72) rotate(-8deg); }
+.rl2-chip-green { --chip: #3fd04a; --chip-dark: #127a1c; }
+.rl2-chip-blue { --chip: #3a8ff0; --chip-dark: #12408a; }
+.rl2-chip-pink { --chip: #e04ad8; --chip-dark: #7a1478; }
+.rl2-chip-black { --chip: #2a2a2a; --chip-dark: #000; }
+.rl2-chip-black .rl2-chip-face { color: #ddd; }
+
+/* --- alt bar --- */
+.rl2-footer {
+  position: relative; z-index: 10; flex-shrink: 0; padding: 0.55rem 0.35rem 0.25rem;
+  padding-bottom: max(0.25rem, env(safe-area-inset-bottom));
+  background: linear-gradient(180deg, #1e1a1c, #0e0c0d); border-top: 2px solid #3a3034;
+}
+.rl2-footer-bar { position: relative; display: flex; align-items: flex-end; justify-content: center; gap: 0.3rem; min-height: 3.4rem; }
+.rl2-balance {
+  position: absolute; left: 0; bottom: 0; display: flex; align-items: center; gap: 0.2rem;
+  font-size: 0.7rem; font-weight: 800; color: #fff; z-index: 2;
+}
+.rl2-balance-icon { height: 1rem; width: 1.2rem; border-radius: 0.3rem; background: #3a8ff0; border: 1px solid #9cd0ff; }
+.rl2-chips { display: flex; align-items: flex-end; gap: 0.25rem; padding-bottom: 0.6rem; }
+.rl2-chip-btn { position: relative; transition: transform 0.15s; }
+.rl2-chip-btn-on { transform: translateY(-0.55rem) scale(1.12); filter: drop-shadow(0 0 8px rgba(255, 220, 120, 0.85)); }
+.rl2-chip-btn-on::before {
+  content: ''; position: absolute; top: -0.85rem; left: 50%; transform: translateX(-50%);
+  border: 0.32rem solid transparent; border-bottom-color: #fff;
+}
+.rl2-chip-btn:disabled { opacity: 0.8; }
+.rl2-repeat {
+  margin-left: 0.15rem; margin-bottom: 0.6rem; padding: 0.55rem 0.7rem; border-radius: 0.8rem;
+  font-size: 0.9rem; font-weight: 900; color: #e8e8e8; letter-spacing: 0.02em;
+  background: linear-gradient(180deg, #6a6a6a, #3a3a3a); border: 2px solid #9a9a9a;
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.25);
+}
+.rl2-repeat:disabled { opacity: 0.6; }

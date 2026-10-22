@@ -1,20 +1,15 @@
 import React from 'react';
 
-/** "Başla" + geri sayım: bahis aşamasında Altın çember içinde saniyeler görünür. */
-export default function RouletteRoundBar({ phase, countdown, progress }) {
+/** "Başla" + altın kronometre: bahis aşamasında kalan saniye. */
+export default function RouletteRoundBar({ phase, countdown }) {
   const betting = phase === 'betting';
-  const spinning = phase === 'spinning';
-  const label = betting ? 'BAŞLA' : spinning ? 'ÇARK DÖNÜYOR' : 'YENİ TUR';
+  const label = betting ? 'Başla' : phase === 'spinning' ? 'Dönüyor' : 'Yeni tur';
   const showTimer = betting && countdown !== null && countdown !== undefined;
-  const urgent = showTimer && countdown <= 3;
-
   return (
-    <div className="rl-start-row">
-      <span className="rl-start-text">{label}</span>
+    <div className="rl2-start">
+      <span className="rl2-start-text">{label}</span>
       {showTimer && (
-        <span className={`rl-start-timer ${urgent ? 'rl-start-timer-urgent' : ''}`}>
-          <span className="rl-start-count">{countdown}</span>
-        </span>
+        <span className={`rl2-watch ${countdown <= 3 ? 'rl2-watch-urgent' : ''}`}>{countdown}</span>
       )}
     </div>
   );

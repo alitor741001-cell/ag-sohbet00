@@ -1,44 +1,33 @@
 import React from 'react';
-import { BLOCKS, formatCoins } from './rouletteConfig';
+import { BLOCKS, shortCoins, blockWins } from './rouletteConfig';
+import RouletteChip from './RouletteChip';
 
-// Blok zemini: 0 yeşil, renk bahisleri kendi renginde, sayı grupları altın zeminli.
-const TONES = {
-  zero: 'green',
-  dozen1: 'gold',
-  dozen2: 'gold',
-  dozen3: 'gold',
-  red: 'red',
-  black: 'black',
-  even: 'gold',
-  odd: 'gold',
-};
+const MULT = { zero: 36, dozen1: 3, dozen2: 3, dozen3: 3 };
 
-// Kırmızı ve siyah: bahisin adı büyük ve iki kez yazılır, uzaktan da okunur.
-const BIG_LABELS = { red: true, black: true };
-
-/** Masa: sekiz bahis bloğu 4x2 düzende durur, dokunulan bloğa jeton konar. */
-export default function RouletteTable({ bets, disabled, onPlace }) {
+/** Masa: sekiz bordo bahis bloğu 4x2 düzende; solda kazanç, sağda yatırılan tutar. */
+export default function RouletteTable({ bets, disabled, onPlace, resultNumber }) {
   return (
-    <div className="rl-table">
+    <div className="rl2-table">
       {BLOCKS.map((block) => {
         const amount = bets[block.id] || 0;
-        const big = BIG_LABELS[block.id];
+        const won = amount > 0 && blockWins(block.id, resultNumber) ? amount * (MULT[block.id] || 2) : 0;
         return (
           <button
             key={block.id}
             type="button"
             onClick={() => onPlace(block.id)}
             disabled={disabled}
-            className={`rl-block rl-block-${TONES[block.id]} ${big ? 'rl-block-big' : ''} ${amount ? 'rl-block-armed' : ''}`}
+            className={`rl2-block ${won ? 'rl2-block-win' : ''}`}
           >
-            <span className="rl-block-top">
-              {amount > 0 && <span className="rl-block-stake">{formatCoins(amount)}</span>}
-              <span className="rl-block-sub">{block.sub}</span>
+            <span className="rl2-block-top">
+              <span className="rl2-block-won">{shortCoins(won)}</span>
+              <span className="rl2-block-stake">{shortCoins(amount)}</span>
             </span>
-            <span className="rl-block-label">{block.label}</span>
-            {big && (
-              <span aria-hidden="true" className="rl-block-label rl-block-label-echo">
-                {block.label}
+            <span className="rl2-block-label">{block.label}</span>
+            <span className="rl2-block-sub">{block.sub}</span>
+            {amount > 0 && (
+              <span className="rl2-block-chip">
+                <RouletteChip value={amount} small />
               </span>
             )}
           </button>
