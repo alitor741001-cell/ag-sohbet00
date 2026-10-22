@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.56';
 import { rateLimit, safeErrorResponse } from '../../shared/security.ts';
 import { withLimitRetry } from '../../shared/retryLimit.ts';
 import { personalQuota } from '../../shared/personalQuota.ts';
