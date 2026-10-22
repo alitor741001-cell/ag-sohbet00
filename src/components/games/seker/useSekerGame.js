@@ -147,6 +147,8 @@ export default function useSekerGame() {
       setWins([]);
       await wait(END_MS);
       applyState(data);
+      // 4 altın şeker: 10 bedava tur kazanıldığında otomatik çevirme başlar.
+      if (data.free_trigger && (data.free_spins ?? 0) > 0) setAuto(true);
       // Çevirme hakkı sürerken kazanç birikir; normal turda sıfırdan başlar.
       sessionWinRef.current += data.win || 0;
       setWin(sessionWinRef.current);
@@ -196,10 +198,12 @@ export default function useSekerGame() {
   // Geri sayım yalnızca satın alınan çevirme hakkında akar; bedava turlar elle oynanır.
   useEffect(() => {
     if (spinning || status !== 'ready') return undefined;
-    if (!auto && sessionSpins <= 0) return undefined;
+    if (!auto && sessionSpins <= 0 && freeSpins <= 0) return undefined;
+    // Bedava turlar tükenince otomatik döndürme kendiliğinden durur.
+    if (freeSpins <= 0 && !auto && sessionSpins <= 0) return undefined;
     const timer = window.setTimeout(() => { spin(); }, 800);
     return () => window.clearTimeout(timer);
-  }, [auto, sessionSpins, spin, spinning, status]);
+  }, [auto, sessionSpins, freeSpins, spin, spinning, status]);
 
   // "15 çevirme hakkı": bedel coinlerden düşülür, turlar kendiliğinden çevrilir.
   const buySession = useCallback(async () => {
