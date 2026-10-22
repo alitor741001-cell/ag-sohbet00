@@ -35,7 +35,7 @@ export default function GiftScene({ alert, tiers = [], gifts = [] }) {
         <>
           <div
             className="absolute inset-0"
-            style={{ background: `radial-gradient(circle at 50% 46%, ${color}38, rgba(0,0,0,0.62) 58%, rgba(0,0,0,0.85))` }}
+            style={{ background: `radial-gradient(circle at 50% 46%, ${color}22, transparent 70%)` }}
           />
           <Gift3DStage
             gift={{

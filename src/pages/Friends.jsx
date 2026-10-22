@@ -14,8 +14,10 @@ import useFriendPresence from '@/hooks/useFriendPresence';
 import { useToast } from '@/components/ui/use-toast';
 import { isModerator } from '@/lib/roles';
 import PullToRefresh from '@/components/home/PullToRefresh';
+import useTabActivity from '@/components/layout/TabActivityContext';
 
 export default function Friends() {
+  const tabActive = useTabActivity();
   const { user, relations, loading: friendsLoading, invoke, reload: reloadFriends } = useFriends();
   const { conversations, loading: convosLoading, optimisticHide, reload: reloadConversations } = useConversations();
   const { isOnline, getLastSeen } = useFriendPresence(user);
@@ -24,6 +26,7 @@ export default function Friends() {
   const [adminLoading, setAdminLoading] = useState(false);
   const [rooms, setRooms] = useState([]);
   useEffect(() => {
+    if (!tabActive) return;
     let active = true;
     let timer = null;
     const load = async () => {
@@ -52,17 +55,18 @@ export default function Friends() {
       load();
     }, 5000);
     return () => { active = false; clearTimeout(timer); clearInterval(interval); unsub(); };
-  }, []);
+  }, [tabActive]);
 
   // Özel sohbet bölümü kendini 5 saniyede bir tazeler: sohbet listesi, okunmamış sayıları
   // ve son mesaj önizlemesi canlı akış gecikse de (Android) güncel kalır.
   useEffect(() => {
+    if (!tabActive) return;
     const interval = setInterval(() => {
       if (document.visibilityState === 'hidden') return;
       reloadConversations();
     }, 5000);
     return () => clearInterval(interval);
-  }, [reloadConversations]);
+  }, [reloadConversations, tabActive]);
 
   // Kişinin yayında olduğu oda, oda kaydından okunur: kişi hangi cihazdan/oturumdan
   // girerse girsin katılımcı listesinde görünür. Birden fazla odada kaydı kalmışsa
@@ -88,13 +92,13 @@ export default function Friends() {
   // Adres çubuğu görünümün tek kaynağıdır: alt menüden sekmeye basıldığında, sohbetten
   // geri dönüldüğünde ya da geri tuşuyla gelindiğinde görünüm adresteki değere kurulur.
   useEffect(() => {
-    if (params.get('chat')) return; // açık sohbeti sohbet efekti kurar
+    if (!tabActive || params.get('chat')) return; // gizli sekmenin sohbeti ve taslağı korunur
     setView(params.get('view') === 'chats' ? 'chats' : 'friends');
-  }, [params]);
+  }, [params, tabActive]);
 
   useEffect(() => {
     const chatId = params.get('chat');
-    if (!chatId) return;
+    if (!chatId || !tabActive) return;
     const convo = conversations.find((c) => c.id === chatId);
     if (convo) { setSelected(convo); setView('chat'); }
     else {
@@ -102,7 +106,7 @@ export default function Friends() {
         .then((c) => { if (c) { setSelected(c); setView('chat'); } })
         .catch(() => {});
     }
-  }, [conversations, params]);
+  }, [conversations, params, tabActive]);
 
   const startAdminChat = async () => {
     setAdminLoading(true);

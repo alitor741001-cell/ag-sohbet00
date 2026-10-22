@@ -15,13 +15,17 @@ export function useSize(ref) {
     const rect = element.getBoundingClientRect()
     setSize({ width: rect.width, height: rect.height })
 
-    // ResizeObserver'ı bilmeyen eski sürümlerde ilk ölçüm yeterlidir: görsel görünür kalır,
-    // yalnızca pencere yeniden boyutlandığında kendiliğinden ölçeklenmez.
-    if (typeof ResizeObserver === 'undefined') return;
+    const updateSize = (width, height) => setSize(previous =>
+      previous?.width === width && previous?.height === height ? previous : { width, height });
+    if (typeof ResizeObserver === 'undefined') {
+      const measure = () => { const box = element.getBoundingClientRect(); updateSize(box.width, box.height); };
+      window.addEventListener('resize', measure, { passive: true });
+      return () => window.removeEventListener('resize', measure);
+    }
 
     const observer = new ResizeObserver(([entry]) => {
       const { width, height } = entry.contentRect
-      setSize({ width, height })
+      updateSize(width, height)
     })
 
     observer.observe(element)

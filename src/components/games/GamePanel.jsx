@@ -1,25 +1,15 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Gamepad2, Play, X } from 'lucide-react';
 import { Image } from '@/components/ui/image';
-import { DEDE_ID, ELIMIN_ID, FRUIT_ID, FUTBOL_ID, GAMES, OKEY_CLASSIC_ID, OKEY_ID, OTOBUS_ID, ROCKET_ID, ROULETTE_ID, SEKERLI_MEYVE_ID, SEKER_ID, ZAR_ID } from './gameCatalog';
-import FootballGame from './FootballGame';
-import OkeyGame from './OkeyGame';
-import SekerliMeyveGame from './SekerliMeyveGame';
-import SlotGame from './SlotGame';
-import CrashRocketGame from './CrashRocketGame';
-import OtobusRoketGame from './OtobusRoketGame';
-import FruitGame from './FruitGame';
-import EliminSlotGame from './EliminSlotGame';
-import DedeGame from './DedeGame';
-import RouletteGame from './RouletteGame';
-import ZarGame from './ZarGame';
-import SekerGame from './SekerGame';
+import { GAMES } from '@/components/games/gameCatalog';
+import GameContent from '@/components/games/GameContent';
+import usePageScrollLock from '@/hooks/usePageScrollLock';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { broadcasterState } from '@/lib/broadcaster';
 import useBackDismiss from '@/hooks/useBackDismiss';
 
 // Sinematik geçişin toplam süresi.
-const TRANSITION_MS = 700;
+const TRANSITION_MS = 220;
 
 /** Oyun merkezi: sohbet alanındaki kumanda butonuyla açılan ayrı panel.
     initialGame verilirse panel listeyi atlayıp oyunu doğrudan tam ekran açar. */
@@ -30,6 +20,7 @@ export default function GamePanel({ open, onClose, roomId, initialGame = null })
 
   // Oyun paneli de birleşik geri yığınında: geri tuşu önce oyunu kapatır.
   useBackDismiss(open, onClose);
+  usePageScrollLock(open && broadcasterState(user).games);
   const timerRef = useRef(null);
 
   useEffect(() => () => window.clearTimeout(timerRef.current), []);
@@ -102,7 +93,7 @@ export default function GamePanel({ open, onClose, roomId, initialGame = null })
 
             {/* Panelde sadece oyunun logosu durur: dokununca oyun açılır.
                 Kartlar alt alta değil, eşit genişlikte yan yana durur. */}
-            <div className="grid min-h-0 flex-1 grid-cols-2 content-center gap-3 overflow-y-auto p-3">
+            <div className="grid min-h-0 flex-1 grid-cols-2 content-start gap-3 sm:grid-cols-3 lg:grid-cols-4 overflow-y-auto p-3">
               {GAMES.map((game) => (
                 <button
                   key={game.id}
@@ -133,33 +124,7 @@ export default function GamePanel({ open, onClose, roomId, initialGame = null })
 
         {selected && (
           <div className={`game-layer bg-slot ${phase === 'opening' ? 'game-zoom-in' : phase === 'closing' ? 'game-zoom-out' : ''}`}>
-            {selected === OKEY_ID ? (
-              <OkeyGame variant="okey101" onExit={onClose} onBack={closeGame} />
-            ) : selected === OKEY_CLASSIC_ID ? (
-              <OkeyGame variant="okey" onExit={onClose} onBack={closeGame} />
-            ) : selected === SEKERLI_MEYVE_ID ? (
-              <SekerliMeyveGame onExit={onClose} onBack={closeGame} />
-            ) : selected === FUTBOL_ID ? (
-              <FootballGame onExit={onClose} onBack={closeGame} />
-            ) : selected === DEDE_ID ? (
-              <DedeGame onExit={onClose} onBack={closeGame} />
-            ) : selected === ROCKET_ID ? (
-              <CrashRocketGame onExit={onClose} onBack={closeGame} />
-            ) : selected === FRUIT_ID ? (
-              <FruitGame onExit={onClose} onBack={closeGame} />
-            ) : selected === ELIMIN_ID ? (
-              <EliminSlotGame onExit={onClose} onBack={closeGame} />
-            ) : selected === ROULETTE_ID ? (
-              <RouletteGame onExit={onClose} onBack={closeGame} />
-            ) : selected === ZAR_ID ? (
-              <ZarGame onExit={onClose} onBack={closeGame} />
-            ) : selected === SEKER_ID ? (
-              <SekerGame onExit={onClose} onBack={closeGame} />
-            ) : selected === OTOBUS_ID ? (
-              <OtobusRoketGame onExit={onClose} onBack={closeGame} />
-            ) : (
-              <SlotGame onExit={onClose} onBack={closeGame} roomId={roomId} />
-            )}
+            <GameContent selected={selected} onExit={onClose} onBack={closeGame} roomId={roomId} />
           </div>
         )}
 

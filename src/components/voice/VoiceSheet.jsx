@@ -1,5 +1,6 @@
 import { X } from 'lucide-react';
 import useBackDismiss from '@/hooks/useBackDismiss';
+import usePageScrollLock from '@/hooks/usePageScrollLock';
 
 /** Sesli oda içi alt panel — menü, koltuk ve davet pencereleri için ortak kabuk.
  *  halfHeight: telefonlarda panel ekranın yarısı kadar açılır (hediye kutusu); içerik
@@ -7,12 +8,13 @@ import useBackDismiss from '@/hooks/useBackDismiss';
 export default function VoiceSheet({ open, title, onClose, children, halfHeight = false, tall = false, hideTitle = false, panelClass = 'bg-[#12121a]' }) {
   // Geri tuşu önce bu paneli kapatır.
   useBackDismiss(open, onClose);
+  usePageScrollLock(open);
 
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-[245] flex flex-col justify-end">
+    <div role="dialog" aria-modal="true" aria-label={title} className="fixed inset-0 z-[245] flex flex-col justify-end pt-[env(safe-area-inset-top)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
       <button type="button" aria-label="Kapat" className="absolute inset-0 bg-black/70" onClick={onClose} />
-      <div className={`relative flex w-full flex-col rounded-t-3xl border-t border-white/10 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 text-white ${panelClass} ${tall ? 'voice-sheet-tall overflow-hidden' : halfHeight ? 'voice-sheet-half overflow-hidden' : 'max-h-[86vh] overflow-y-auto overscroll-contain'}`}>
+      <div className={`relative flex w-full flex-col rounded-t-3xl border-t border-white/10 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 text-white ${panelClass} ${tall ? 'voice-sheet-tall overflow-hidden' : halfHeight ? 'voice-sheet-half overflow-hidden' : 'max-h-[86dvh] overflow-y-auto overscroll-contain'}`}>
         {/* hideTitle: panel kendi başlığını çizer (hediye kutusu). */}
         {!hideTitle && (
           <div className="mx-auto mb-3 flex w-full max-w-lg shrink-0 items-center justify-between gap-3">

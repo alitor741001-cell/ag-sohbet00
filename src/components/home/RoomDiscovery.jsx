@@ -13,6 +13,7 @@ import useFriends from '@/hooks/useFriends';
 import useMessageProfiles from '@/hooks/useMessageProfiles';
 import { readRoomList, writeRoomList } from '@/lib/roomListCache';
 import { fetchYouTubeTitle, isGenericTitle, youtubeIdFromMovieId } from '@/lib/youtubeTitle';
+import useTabActivity from '@/components/layout/TabActivityContext';
 
 // Oyunlar ayrı indirilir: ana sayfa paketi küçük kalır.
 const GamePanel = lazy(() => import('@/components/games/GamePanel'));
@@ -31,6 +32,7 @@ const hasPeopleInside = (room) => (room?.participants || []).some((person) => pe
  * film odaları sekmeleri, oda numarası / üye kimliği araması ve oda kartları.
  */
 export default function RoomDiscovery({ shortcuts = null }) {
+  const tabActive = useTabActivity();
   const { user } = useCurrentUser();
   const { relations } = useFriends();
   const [allRooms, setAllRooms] = useState([]);
@@ -79,11 +81,17 @@ export default function RoomDiscovery({ shortcuts = null }) {
   const refreshList = useCallback(() => setRefreshToken((token) => token + 1), []);
 
   useEffect(() => {
+    if (!tabActive) return;
     let alive = true;
+    let reading = false;
     // Oda listesi tek yoldan okunur: ilk yükleme de düzenli tazeleme de bunu kullanır.
     const readRooms = async () => {
-      const list = await base44.entities.Room.filter({ status: 'active' }, '-created_date', 100).catch(() => []);
+      if (reading) return null;
+      reading = true;
+      const list = await base44.entities.Room.filter({ status: 'active' }, '-created_date', 100).catch(() => null);
+      reading = false;
       if (!alive) return null;
+      if (!list) { setLoading(false); return null; }
       const live = list.filter((room) => {
         if (room.hidden === true) hiddenIdsRef.current.add(room.id);
         else hiddenIdsRef.current.delete(room.id);
@@ -169,7 +177,7 @@ export default function RoomDiscovery({ shortcuts = null }) {
       window.clearInterval(refresh);
       unsubscribe();
     };
-  }, [user?.id, user?.role, refreshToken]);
+  }, [user?.id, user?.role, refreshToken, tabActive]);
 
   // Liste ve sahip profilleri hafızada tutulur: sayfa değişip geri gelindiğinde veri hazır olur.
   useEffect(() => {

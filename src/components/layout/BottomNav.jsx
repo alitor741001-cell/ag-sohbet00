@@ -7,6 +7,7 @@ import LiveChatButton from '@/components/layout/LiveChatButton';
 import UserSupportButton from '@/components/layout/UserSupportButton';
 import useKeyboardInset from '@/hooks/useKeyboardInset';
 import { TAB_PATHS } from '@/lib/tabPaths';
+import preloadRoute from '@/lib/routePreload';
 
 const fullItems = [
   { label: 'Ana Sayfa', path: '/', icon: Home },
@@ -42,6 +43,7 @@ export default function BottomNav() {
   // (ör. /arkadaslar?chat=…, /profil?tab=…) temizlenir ve sayfa başına kaydırılır.
   const handleNav = (item) => {
     const [targetPath, targetSearch = ''] = item.path.split('?');
+    preloadRoute(targetPath);
     if (location.pathname === (item.activePath || targetPath)) {
       window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
       // Aynı sekmede kalındığı için geçmiş kaydı büyütülmez.
@@ -56,7 +58,7 @@ export default function BottomNav() {
   };
 
   return (
-    <nav aria-label="Ana menü" className="lg:hidden fixed bottom-0 inset-x-0 z-50 pb-[env(safe-area-inset-bottom)]"       style={{ background: 'linear-gradient(180deg, #0d1a2e 0%, #132645 46%, #0b1930 100%)', borderTop: '1px solid rgba(140,150,192,0.28)', backdropFilter: 'blur(14px)', boxShadow: '0 -14px 34px -20px rgba(112,152,168,0.75)', transform: keyboardInset ? `translateY(-${keyboardInset}px)` : 'translateY(0)', transition: 'transform 180ms ease-out' }}>
+    <nav aria-label="Ana menü" className="lg:hidden fixed bottom-0 inset-x-0 z-50 pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]"       style={{ background: 'linear-gradient(180deg, #0d1a2e 0%, #132645 46%, #0b1930 100%)', borderTop: '1px solid rgba(140,150,192,0.28)', backdropFilter: 'blur(14px)', boxShadow: '0 -14px 34px -20px rgba(112,152,168,0.75)', transform: keyboardInset ? `translateY(-${keyboardInset}px)` : 'translateY(0)', transition: 'transform 180ms ease-out' }}>
       {/* Kristal dalga hattı: menünün üst kenarı akışkan bir çizgiyle parlar. */}
       <svg aria-hidden="true" viewBox="0 0 400 10" preserveAspectRatio="none" className="pointer-events-none absolute inset-x-0 -top-px h-2.5 w-full">
         <defs>

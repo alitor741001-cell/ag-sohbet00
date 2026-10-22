@@ -1,6 +1,7 @@
 import { Suspense, lazy, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { TAB_PATHS } from '@/lib/tabPaths';
+import { TabActivityContext } from '@/components/layout/TabActivityContext';
 
 // Sekme sayfaları ilk açılışta indirilir; sonra bellekte kalır.
 const PAGES = {
@@ -41,11 +42,12 @@ export default function TabStack({ activePath }) {
 
   return (
     <>
-      {visited.map((path) => {
+      {(activePath && !visited.includes(activePath) ? [...visited, activePath] : visited).map((path) => {
         const Page = PAGES[path];
         const visible = path === activePath;
         return (
-          <div key={path} className={visible ? undefined : 'hidden'}>
+          <TabActivityContext.Provider key={path} value={visible}>
+          <div className={visible ? undefined : 'hidden'} aria-hidden={!visible}>
             {/* Sekme değişimi: sökülüp yeniden kurulmaz, yumuşak görünürlük geçişi yapılır. */}
             <motion.div
               initial={false}
@@ -57,6 +59,7 @@ export default function TabStack({ activePath }) {
               </Suspense>
             </motion.div>
           </div>
+          </TabActivityContext.Provider>
         );
       })}
     </>

@@ -1156,6 +1156,7 @@ button:active, nav a:active, a[role="button"]:active {
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  scrollbar-gutter: stable;
 }
 
 /* Okunamayacak kadar küçük etiket kalmaz:

@@ -3,7 +3,7 @@ import VoiceSeat from '@/components/voice/VoiceSeat';
 import VoiceSeatScore from '@/components/voice/VoiceSeatScore';
 import useMessageProfiles from '@/hooks/useMessageProfiles';
 
-import { seatIndexRows } from '@/components/voice/seatLayout';
+import responsiveSeatRows from '@/components/voice/responsiveSeatRows';
 import { useSize } from '@/hooks/use-size';
 
 /**
@@ -14,7 +14,8 @@ import { useSize } from '@/hooks/use-size';
 export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerId, moderators = [], speakingIds = [], localSpeaking, onSelectSeat, boardActive, scores = {}, accent = '#ef4444', gifted = {}, maxHeight }) {
   const wrapRef = useRef(null);
   const measured = useSize(wrapRef);
-  const rows = useMemo(() => seatIndexRows(seats.length), [seats.length]);
+  const width = measured?.width || 360;
+  const rows = useMemo(() => responsiveSeatRows(seats.length, width), [seats.length, width]);
   const onSeatClick = useCallback((index) => onSelectSeat(index), [onSelectSeat]);
   // Konuşma dalgası rengi kişinin cinsiyetine göre seçilir: profil bilgisi koltuklara iletilir.
   const seatProfiles = useMessageProfiles(seats.map((seat) => seat.user_id).filter(Boolean));
@@ -23,10 +24,9 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
   const featureTop = seats.length === 9;
   // Kalabalık düzen (15/20 koltuk): koltuklar daraltılmaz, geniş kalır.
   const dense = seats.length >= 15;
-  // 30 mikrofon (dört satır): satırlar yana taşarsa ızgara sağa-sola kaydırılır, aşağı kaydırılmaz.
+  // Kalabalık odalarda satırlar ekran genişliğine göre yeniden bölünür.
   const many = seats.length >= 20;
   const widestRow = Math.max(1, ...rows.map((row) => row.length));
-  const width = measured?.width || 360;
   const narrow = width < 640;
   const baseGap = featureTop ? (narrow ? 6 : 14) : narrow ? (many ? 8 : 12) : 20;
   // Alçak ekranda satır araları daralır: en küçük koltukta bile tüm satırlar ve
@@ -37,8 +37,8 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
   const perSeat = (available - baseGap * (widestRow - 1)) / widestRow;
   // 9'lu düzende koltuk bir beden büyük çizilir: 'xl' sınırı da açıktır.
   const widthSize = featureTop
-    ? (perSeat >= 96 ? 'xl' : perSeat >= 86 ? 'lg' : perSeat >= 66 ? 'md' : perSeat >= 50 ? 'sm' : 'xs')
-    : (perSeat >= 84 ? 'lg' : perSeat >= 62 ? 'md' : perSeat >= 46 ? 'sm' : 'xs');
+    ? (perSeat >= 96 ? 'xl' : perSeat >= 88 ? 'lg' : perSeat >= 68 ? 'md' : perSeat >= 52 ? 'sm' : 'xs')
+    : (perSeat >= 88 ? 'lg' : perSeat >= 68 ? 'md' : perSeat >= 52 ? 'sm' : 'xs');
   // Koltuk arası boşluk dardır: 9'lu düzende de koltuklar referanstaki gibi bitişik durur,
   // satır genişliği aralar açılarak değil koltuk boyuyla doldurulur.
   const gap = baseGap;
@@ -61,10 +61,9 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
   // sığmayan satırlar sahne içinde kaydırılarak görünür.
   // 9'lu düzende de koltuk boyu genişlikten gelir: koltuklar referanstaki gibi büyük ve
   // satır kenarlara yanaşık kalır, sığmayan içerik sahne içinde kaydırılır.
-  // 30 mikrofon düzeninde koltuk boyu yükseklikten gelir; dar ekranda 'sm' ile sınırlanır.
-  // Satır ekrandan yalnızca biraz taşar, ızgara sağa-sola kaydırılarak alt sıralar
-  // aşağı kaydırmadan görünür.
-  const manySize = SIZES[Math.min(SIZES.indexOf(heightSize), SIZES.indexOf(narrow ? 'sm' : 'md'))];
+  // Kalabalık odalarda hem genişlik hem yükseklik sınırı uygulanır;
+  // sığmayan satırlar üst sahnenin dikey kaydırma alanında erişilebilir kalır.
+  const manySize = SIZES[Math.min(SIZES.indexOf(widthSize), SIZES.indexOf(heightSize), SIZES.indexOf(narrow ? 'sm' : 'md'))];
   const denseFloor = 'md';
   const size = dense
     ? (many ? manySize : SIZES[Math.min(SIZES.indexOf(widthSize), Math.max(SIZES.indexOf(heightSize), SIZES.indexOf(denseFloor)))])
@@ -75,8 +74,8 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
   const topSize = SIZES[Math.min(SIZES.indexOf(size) + 1, SIZES.length - 1)];
 
   return (
-    <div ref={wrapRef} className={`w-full ${many ? 'no-scrollbar overflow-x-auto overflow-y-hidden' : ''}`}>
-      <div className={`flex flex-col items-center ${many ? 'w-max min-w-full' : 'w-full'}`} style={{ rowGap }}>
+    <div ref={wrapRef} className="w-full">
+      <div className="flex w-full flex-col items-center" style={{ rowGap }}>
         {rows.map((row, rowIndex) => (
           <div key={rowIndex} className="flex flex-col items-center gap-1">
             <div className="flex items-start justify-center" style={{ columnGap: gap }}>

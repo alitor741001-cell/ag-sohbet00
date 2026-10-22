@@ -1,29 +1,15 @@
 import { useLayoutEffect, useRef } from 'react';
 
-let locks = 0;
-let restoreBody;
-function lockPage() {
-  if (locks++ === 0) {
-    const body = document.body, html = document.documentElement;
-    const x = window.scrollX, y = window.scrollY;
-    const keys = ['position', 'top', 'left', 'width', 'overflow'];
-    const saved = Object.fromEntries(keys.map(key => [key, body.style[key]]));
-    const overflow = html.style.overflow;
-    Object.assign(body.style, { position: 'fixed', top: `${-y}px`, left: `${-x}px`, width: '100%', overflow: 'hidden' });
-    html.style.overflow = 'hidden';
-    restoreBody = () => { Object.assign(body.style, saved); html.style.overflow = overflow; window.scrollTo(x, y); };
-  }
-  return () => { if (--locks === 0) restoreBody?.(); };
-}
+import acquirePageScrollLock from '@/lib/pageScrollLock';
 
 /** Geometry comes directly from the visible viewport, not a translated full-height page. */
-export default function useChatViewport(ref, onKeyboardChange) {
+export default function useChatViewport(ref, onKeyboardChange, enabled = true) {
   const callback = useRef(onKeyboardChange);
   callback.current = onKeyboardChange;
   useLayoutEffect(() => {
     const node = ref.current;
-    if (!node) return;
-    const unlock = lockPage();
+    if (!node || !enabled) return;
+    const unlock = acquirePageScrollLock();
     const viewport = window.visualViewport;
     const getHeight = () => Math.round(viewport?.height || document.documentElement.clientHeight);
     let baseline = getHeight(), width = window.innerWidth, frame = 0, last = '', open = false;
@@ -33,7 +19,9 @@ export default function useChatViewport(ref, onKeyboardChange) {
       if (width !== window.innerWidth) { width = window.innerWidth; baseline = height; }
       baseline = Math.max(baseline, height);
       const keyboard = Math.max(0, baseline - height);
-      const nextOpen = keyboard > 100;
+      const focused = document.activeElement;
+      const typing = focused?.matches('input:not([type="button"]):not([type="submit"]), textarea, [contenteditable="true"]');
+      const nextOpen = !!typing && keyboard > 100;
       const offset = Math.max(0, Math.round(viewport?.offsetTop || 0));
       const signature = `${height}:${offset}:${nextOpen}`;
       if (signature !== last) {
@@ -62,5 +50,5 @@ export default function useChatViewport(ref, onKeyboardChange) {
       document.removeEventListener('focusout', schedule);
       unlock();
     };
-  }, [ref]);
+  }, [ref, enabled]);
 }

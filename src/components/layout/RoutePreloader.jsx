@@ -1,88 +1,37 @@
 import { useEffect } from 'react';
-
-// Her sayfanın paketi: dokunulan an hiç beklemeden açılsın diye arka planda önceden indirilir.
-const routeLoaders = {
-  '/': () => import('@/pages/Home'),
-  '/acik-odalar': () => import('@/pages/OpenRooms'),
-  '/oda-kur': () => import('@/pages/CreateRoom'),
-  '/sesli-oda-kur': () => import('@/pages/VoiceRoomCreate'),
-  '/sesli-oda': () => import('@/pages/VoiceRoom'),
-  '/arkadaslar': () => import('@/pages/Friends'),
-  '/profil': () => import('@/pages/Profile'),
-  '/bildirimler': () => import('@/pages/Notifications'),
-  '/ajans': () => import('@/pages/AgencyPage'),
-  '/ajans/kazanc': () => import('@/pages/agency/AgencyEarnings'),
-  '/ajans/kota-tablosu': () => import('@/pages/agency/AgencyQuota'),
-  '/ajans/yayincilar': () => import('@/pages/agency/AgencyBroadcasters'),
-  '/ajans/asistanlar': () => import('@/pages/agency/AgencyAssistants'),
-  '/ajans/ajansim': () => import('@/pages/agency/AgencyInfo'),
-  '/ajans/davetler': () => import('@/pages/agency/AgencyInvites'),
-  '/ajans/transferler': () => import('@/pages/agency/AgencyTransfers'),
-  '/destek': () => import('@/pages/Support'),
-  '/oda': () => import('@/pages/WatchParty'),
-  '/kullanici': () => import('@/pages/UserProfile'),
-};
-
-// Alt menüdeki ana sayfalar açılışta hemen indirilir: dokunulduğu an hazır olur.
-const PRIMARY_ROUTES = ['/', '/arkadaslar', '/profil', '/bildirimler'];
-
-const preload = (path) => {
-  const cleanPath = path.split('?')[0];
-  const key = Object.keys(routeLoaders)
-    .filter((route) => route === cleanPath || (route !== '/' && cleanPath.startsWith(`${route}/`)))
-    .sort((a, b) => b.length - a.length)[0];
-  routeLoaders[key]?.();
-};
+import preloadRoute from '@/lib/routePreload';
 
 export default function RoutePreloader() {
   useEffect(() => {
-    // Açık sayfa hemen iner; kalan paketler sırayla, açılışı yavaşlatmadan indirilir.
-    preload(window.location.pathname);
-
-    const onIntent = (event) => {
+    preloadRoute(window.location.pathname);
+    const onIntent = event => {
       const anchor = event.target.closest?.('a[href]');
-      if (anchor?.origin === window.location.origin) preload(anchor.pathname);
+      if (anchor?.origin === window.location.origin) preloadRoute(anchor.pathname);
     };
     document.addEventListener('pointerdown', onIntent, { passive: true });
     document.addEventListener('pointerover', onIntent, { passive: true });
-
-    // Yavaş bağlantıda arka plan indirmesi yapılmaz.
     const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-    const canWarm = !connection?.saveData && !['slow-2g', '2g'].includes(connection?.effectiveType);
-    // Room, media and agency modules load on navigation intent, not at startup.
-    const queue = [];
-    const idle = window.requestIdleCallback ? window.requestIdleCallback.bind(window) : (callback) => window.setTimeout(callback, 800);
-    const cancelIdle = window.cancelIdleCallback ? window.cancelIdleCallback.bind(window) : window.clearTimeout;
-
-    let primaryTimer = 0;
-    let warmTimer = 0;
-    let idleHandle = 0;
-
-    // Ana sekmeler sırayla, kısa aralıklarla ısıtılır: ilk boyama bant genişliğini paylaşmaz.
-    const primaryQueue = canWarm ? PRIMARY_ROUTES
-      .filter((path) => path !== window.location.pathname)
-      .map((path) => routeLoaders[path]) : [];
-    const warmPrimary = () => {
-      primaryQueue.shift()?.();
-      if (primaryQueue.length) primaryTimer = window.setTimeout(warmPrimary, 400);
+    const warm = !connection?.saveData && !['slow-2g', '2g', '3g'].includes(connection?.effectiveType);
+    const queue = warm ? ['/', '/arkadaslar', '/profil', '/bildirimler'].filter(path => path !== window.location.pathname) : [];
+    let cancelled = false, timer = 0, idle = 0;
+    const next = () => {
+      if (cancelled || !queue.length || document.visibilityState === 'hidden') return;
+      const load = async () => {
+        if (cancelled) return;
+        await preloadRoute(queue.shift());
+        if (!cancelled && queue.length) timer = window.setTimeout(next, 1200);
+      };
+      if (window.requestIdleCallback) idle = window.requestIdleCallback(load, { timeout: 5000 });
+      else timer = window.setTimeout(load, 1200);
     };
-    if (primaryQueue.length) primaryTimer = window.setTimeout(warmPrimary, 1200);
-
-    // Kalan paketler açılıştan sonra, tarayıcı boşa çıktığında teker teker indirilir.
-    const warmNext = () => {
-      queue.shift()?.();
-      if (queue.length) idleHandle = idle(warmNext, { timeout: 8000 });
-    };
-    if (queue.length) warmTimer = window.setTimeout(() => { idleHandle = idle(warmNext, { timeout: 8000 }); }, 6000);
-
+    if (queue.length) timer = window.setTimeout(next, 4000);
     return () => {
+      cancelled = true;
       document.removeEventListener('pointerdown', onIntent);
       document.removeEventListener('pointerover', onIntent);
-      window.clearTimeout(primaryTimer);
-      window.clearTimeout(warmTimer);
-      if (idleHandle) cancelIdle(idleHandle);
+      window.clearTimeout(timer);
+      if (idle) window.cancelIdleCallback?.(idle);
     };
   }, []);
-
   return null;
 }

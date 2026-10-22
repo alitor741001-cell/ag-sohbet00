@@ -58,7 +58,9 @@
   /* Görünür alan ölçüsü (visualViewport) ekranın en altına ulaşmadığında çerçeve kısa
      kalıyor ve kontrol çubuğunun altında siyah bir şerit bırakıyordu: çerçeve her zaman
      ekran yüksekliğine tamamlanır, oda arka planı en alt piksele kadar iner. */
-  height: max(var(--visual-viewport-height, 100dvh), 100dvh);
+  height: var(--visual-viewport-height, 100dvh);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
   overscroll-behavior: none;
 }
 .voice-viewport[data-keyboard="open"] .voice-chat-flow { max-height: calc(var(--visual-viewport-height) * 0.28); }
@@ -191,4 +193,11 @@
   .voice-viewport textarea {
     font-size: 16px;
   }
+}
+
+@media (max-height: 500px) and (orientation: landscape) {
+  .voice-viewport .voice-chat-dock { min-height: 64px; }
+}
+@supports (height: 100dvh) {
+  .voice-sheet-half, .voice-sheet-tall { max-height: 86dvh; }
 }

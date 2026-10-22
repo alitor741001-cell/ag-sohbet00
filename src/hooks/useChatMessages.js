@@ -16,7 +16,7 @@ import { makeId } from '@/lib/uid';
  * 5. deleted_for: kullanıcı bazlı silme — sadece silen kullanıcıdan gizlenir
  * 6. Global listener: sayfa geçişlerinde tek bağlantı üzerinden anlık günceller
  */
-export default function useChatMessages(conversationId) {
+export default function useChatMessages(conversationId, active = true) {
   const { user } = useCurrentUser();
   const { toast } = useToast();
   const userId = user?.id;
@@ -29,6 +29,8 @@ export default function useChatMessages(conversationId) {
   const sendingRef = useRef(false);
   const readPendingRef = useRef(new Set());
   const loadPendingRef = useRef(null);
+  const visibleRef = useRef(active);
+  visibleRef.current = active;
 
   useEffect(() => {
     activeIdRef.current = conversationId;
@@ -89,8 +91,8 @@ export default function useChatMessages(conversationId) {
       });
     };
     window.addEventListener('filmkeyfi-message-realtime', onRealtimeMessage);
-    const onVisible = () => { if (document.visibilityState === 'visible') loadRef.current(); };
-    const onOnline = () => loadRef.current();
+    const onVisible = () => { if (visibleRef.current && document.visibilityState === 'visible') loadRef.current(); };
+    const onOnline = () => { if (visibleRef.current) loadRef.current(); };
     document.addEventListener('visibilitychange', onVisible);
     window.addEventListener('online', onOnline);
     return () => {
@@ -100,6 +102,12 @@ export default function useChatMessages(conversationId) {
       window.removeEventListener('online', onOnline);
     };
   }, [conversationId, userId]);
+
+  const wasActiveRef = useRef(active);
+  useEffect(() => {
+    if (active && !wasActiveRef.current && conversationId) loadRef.current();
+    wasActiveRef.current = active;
+  }, [active, conversationId]);
 
   const send = useCallback(async (content) => {
     if (!conversationId || !userId || !content.trim() || sendingRef.current) return;

@@ -9,6 +9,7 @@ import { plainText } from '@/components/voice/voiceText';
 import { LEVEL_UP_TONE, levelUpName, parseLevelUpNotice } from '@/lib/levelUpNotice';
 import isQuietNotice from '@/lib/roomNotices';
 import useMessageProfiles from '@/hooks/useMessageProfiles';
+import useFollowMessages from '@/hooks/useFollowMessages';
 
 /**
  * Oda alt bölümü: sohbet akışı (geçmiş dahil) odaya girildiği anda kendiliğinden görünür.
@@ -20,7 +21,10 @@ export default function VoiceChatDock({ messages = [], onSend, open, onCloseComp
   const [text, setText] = useState('');
   const [emojiOpen, setEmojiOpen] = useState(false);
   const inputRef = useRef(null);
-  const endRef = useRef(null);
+  const scrollRef = useRef(null);
+  const { onScroll, onContentLoad, followLatest } = useFollowMessages(scrollRef, messages, currentUserId);
+  const blurTimerRef = useRef(0);
+  useEffect(() => () => window.clearTimeout(blurTimerRef.current), []);
   const sendingRef = useRef(false);
   const [sending, setSending] = useState(false);
 
@@ -67,15 +71,13 @@ export default function VoiceChatDock({ messages = [], onSend, open, onCloseComp
     if (!emojiOpenRef.current) closeComposerRef.current?.();
   }, [keyboardOpen]);
 
-  useEffect(() => {
-    const scroller = endRef.current?.parentElement?.parentElement;
-    if (scroller) scroller.scrollTop = scroller.scrollHeight;
-  }, [messages.length, bigGiftNotice?.id]);
+  useEffect(onContentLoad, [bigGiftNotice?.id, onContentLoad]);
 
   // Yazma alanı odaktan çıkınca (klavye kapandığında, ekranda başka bir yere dokunulduğunda)
   // kendiliğinden kapanır — iOS ve Android'de aynı davranış. Emoji seçilirken açık kalır.
   const handleInputBlur = () => {
-    window.setTimeout(() => {
+    window.clearTimeout(blurTimerRef.current);
+    blurTimerRef.current = window.setTimeout(() => {
       if (emojiOpenRef.current) return;
       if (document.activeElement === inputRef.current) return;
       closeComposerRef.current?.();
@@ -92,6 +94,7 @@ export default function VoiceChatDock({ messages = [], onSend, open, onCloseComp
     // Gönderince yazma alanı ve klavye kapansın; mesaj akışı açık kalır.
     inputRef.current?.blur();
     onCloseComposer?.();
+    followLatest();
     try { await onSend(value); }
     finally { sendingRef.current = false; setSending(false); }
   };
@@ -100,6 +103,9 @@ export default function VoiceChatDock({ messages = [], onSend, open, onCloseComp
     <div className="relative flex h-full min-h-0 shrink-0 flex-col justify-end">
       {(visible.length > 0 || !!bigGiftNotice) && (
         <div
+          ref={scrollRef}
+          onScroll={onScroll}
+          onLoadCapture={onContentLoad}
           style={{ touchAction: 'pan-y' }}
           className={`voice-chat-flow ${composerOpen ? 'max-h-[16vh]' : open ? 'max-h-[30vh]' : 'max-h-[22vh]'} shrink-0 overflow-y-auto overscroll-contain pb-1 [mask-image:linear-gradient(to_bottom,transparent,black_14%)] [-webkit-mask-image:linear-gradient(to_bottom,transparent,black_14%)]`}
         >
@@ -141,7 +147,7 @@ export default function VoiceChatDock({ messages = [], onSend, open, onCloseComp
               );
             })}
             {bigGiftNotice && <BigGiftChatNotice notice={bigGiftNotice} onOpen={onOpenBigGiftRoom} />}
-            <div ref={endRef} />
+            <div aria-hidden="true" />
           </div>
         </div>
       )}

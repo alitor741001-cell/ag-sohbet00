@@ -1,8 +1,8 @@
-import { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import { createContext, lazy, Suspense, useCallback, useContext, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useToast } from '@/components/ui/use-toast';
-import FullUserProfile from '@/components/profile/FullUserProfile';
+const FullUserProfile = lazy(() => import('@/components/profile/FullUserProfile'));
 
 /**
  * Uygulamanın tek profil kartı merkezi: hangi sayfada olursa olsun
@@ -52,14 +52,14 @@ export function UserProfileProvider({ children }) {
   return (
     <ProfileCardContext.Provider value={value}>
       {children}
-      <FullUserProfile
-        key={state?.userId || 'kapali'}
+      {state?.userId && <Suspense fallback={null}><FullUserProfile
+        key={state.userId}
         open={!!state?.userId}
         userId={state?.userId}
         {...(state?.options || {})}
         onMessage={state?.options?.onMessage || openChatWith}
         onClose={closeUserProfile}
-      />
+      /></Suspense>}
     </ProfileCardContext.Provider>
   );
 }

@@ -1,0 +1,11 @@
+/* Match the visible viewport rather than translating an oversized chat frame. */
+@media (max-width: 639px) {
+  .standalone-private-chat {
+    top: var(--viewport-offset, 0px);
+    bottom: auto !important;
+    height: var(--visual-viewport-height, 100dvh);
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+  }
+  .standalone-private-chat input { font-size: 16px; }
+}

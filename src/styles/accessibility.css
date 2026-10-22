@@ -26,6 +26,18 @@
   opacity: 1;
 }
 
+/* Motion reduction is limited to decoration, not game timing or video duration. */
+@media (prefers-reduced-motion: reduce) {
+  .gift-clip-hero, .gift-clip-shot, .gift-clip-sweep, .gift-clip-grain,
+  nav .animate-pulse { animation: none !important; will-change: auto; }
+  .game-dip, .game-rise, .game-zoom-in, .game-zoom-out,
+  .game-sheen, .game-glow { animation: none !important; }
+  [role="dialog"][data-state], [role="dialog"] [data-state] {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 /* Yüksek kontrast isteyen kullanıcılar için metin ve kenarlar güçlendirilir.
    Katmansız yazıldığı için index.css içindeki token değerlerini geçersiz kılar. */
 @media (prefers-contrast: more) {

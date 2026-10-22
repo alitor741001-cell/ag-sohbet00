@@ -16,7 +16,6 @@ import RoutePreloader from '@/components/layout/RoutePreloader';
 import TabStack from '@/components/layout/TabStack';
 import { matchTabPath } from '@/lib/tabPaths';
 import { motion, useReducedMotion } from 'framer-motion';
-import { isBasicPath } from '@/lib/access';
 import { isMultiDeviceExempt } from '@/lib/sessionPolicy';
 // Yüz doğrulaması uygulamaya girişte sorulmaz: yalnızca elmaslar/bakiye bölümünde istenir.
 import useSupabaseMirror from '@/hooks/useSupabaseMirror';
@@ -207,9 +206,8 @@ export default function AppLayout() {
       <main id="main-content" tabIndex={-1} className="mx-auto w-full min-w-0 max-w-[1600px] overflow-x-clip pt-[max(env(safe-area-inset-top),0.5rem)] pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pt-16 lg:pb-8" style={{ touchAction: 'pan-y' }}>
         {/* Sayfa paketi yüklenirken kabuk (menü, sohbetler, bildirimler) yerinde kalır. */}
         <Suspense fallback={null}>
-          {activeTabPath ? (
-            <TabStack activePath={activeTabPath} />
-          ) : (
+          <TabStack activePath={activeTabPath} />
+          {!activeTabPath && (
             /* Sayfa geçişi mobil uygulama hissiyle akar: hafif aşağıdan yukarı + belirginlik. */
             <motion.div
               key={pathname}

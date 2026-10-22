@@ -42,13 +42,24 @@ export default function PullToRefresh({ children, onRefresh }) {
     if (!node) return;
     const spinning = (on) => spinRef.current?.classList.toggle('animate-spin', !!on);
     const start = (event) => {
+      startY.current = null;
       if (busy.current || event.touches.length !== 1) return;
-      // Yalnızca sayfanın en üstünden başlayan hareket yenileme sayılır.
+      // Nested chat/list scrollers own their gesture; never intercept their scrolling.
+      let target = event.target;
+      while (target && target !== node) {
+        if (target instanceof HTMLElement && target.scrollHeight > target.clientHeight + 1 && /auto|scroll/.test(getComputedStyle(target).overflowY)) {
+          startY.current = null;
+          return;
+        }
+        target = target.parentElement;
+      }
+      if (event.target.closest?.('input, textarea, select, [contenteditable="true"]')) return;
       startY.current = window.scrollY <= 2 ? event.touches[0].clientY : null;
       distance.current = 0;
     };
     const move = (event) => {
       if (startY.current == null) return;
+      if (event.touches.length !== 1) { startY.current = null; paint(0); return; }
       const delta = event.touches[0].clientY - startY.current;
       if (delta <= 0) {
         if (distance.current) { distance.current = 0; paint(0); }
@@ -78,16 +89,17 @@ export default function PullToRefresh({ children, onRefresh }) {
         paint(0);
       }, BUSY_MS);
     };
+    const cancel = () => { startY.current = null; distance.current = 0; if (!busy.current) paint(0); };
     // Kendi dinleyicimiz pasif değil: çekme sırasında tarayıcının kendi davranışı durdurulabilir.
     node.addEventListener('touchstart', start, { passive: true });
     node.addEventListener('touchmove', move, { passive: false });
     node.addEventListener('touchend', end);
-    node.addEventListener('touchcancel', end);
+    node.addEventListener('touchcancel', cancel);
     return () => {
       node.removeEventListener('touchstart', start);
       node.removeEventListener('touchmove', move);
       node.removeEventListener('touchend', end);
-      node.removeEventListener('touchcancel', end);
+      node.removeEventListener('touchcancel', cancel);
     };
   }, []);
 
