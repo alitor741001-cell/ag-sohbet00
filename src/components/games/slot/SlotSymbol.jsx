@@ -7,10 +7,13 @@ import { SLOT_SYMBOL_ART } from '@/components/games/slotAssets';
  * Kartlar Şekerli Meyve kartlarıyla aynı dilde: parlak zemin, altın çift çerçeve.
  */
 
+// Aslan, kaplan, kartal ve jackpot daha büyük gösterilir.
+const BIG = ['lion', 'tiger', 'eagle', 'jackpot'];
+
 export default function SlotSymbol({ symbol, top, height }) {
   const art = useSlotEdgeCleanup(SLOT_SYMBOL_ART[symbol] || SLOT_SYMBOL_ART.ten);
   return (
-    <span className="absolute left-0 flex w-full items-center justify-center p-[13%]" style={{ top, height }}>
+    <span className="absolute left-0 flex w-full items-center justify-center p-[7%]" style={{ top, height }}>
       {/* Dönerken anında görünmesi için temizlenmiş görsel doğrudan, beklemeden çizilir. */}
       <img
         src={art}
@@ -18,6 +21,7 @@ export default function SlotSymbol({ symbol, top, height }) {
         loading="eager"
         decoding="sync"
         draggable={false}
+        style={{ transform: `scale(${BIG.includes(symbol) ? 1.2 : 1})` }}
         className="slot-symbol-card aspect-square h-full max-w-full rounded-lg object-contain"
       />
     </span>

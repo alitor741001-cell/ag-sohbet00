@@ -42,14 +42,27 @@ function cleanEdges(src) {
           if (i < w * (h - 1)) stack.push(i + w);
         }
         // Kenar kalıntıları: şeffaf alana değen koyu/loş saçak pikseller iki tur temizlenir.
-        for (let pass = 0; pass < 2; pass++) {
+        for (let pass = 0; pass < 4; pass++) {
           const clear = [];
           for (let i = 0; i < w * h; i++) {
             if (rgb[i * 4 + 3] === 0) continue;
             const x = i % w;
             const edge = (x > 0 && rgb[(i - 1) * 4 + 3] === 0) || (x < w - 1 && rgb[(i + 1) * 4 + 3] === 0)
               || (i >= w && rgb[(i - w) * 4 + 3] === 0) || (i < w * (h - 1) && rgb[(i + w) * 4 + 3] === 0);
-            if (edge && Math.max(rgb[i * 4], rgb[i * 4 + 1], rgb[i * 4 + 2]) < 120) clear.push(i);
+            if (edge && Math.max(rgb[i * 4], rgb[i * 4 + 1], rgb[i * 4 + 2]) < 140) clear.push(i);
+          }
+          clear.forEach(i => { rgb[i * 4 + 3] = 0; });
+        }
+        // Kırıntılar: çevresinde 8 komşudan 3'ten azı dolu olan tek tük pikseller silinir.
+        for (let pass = 0; pass < 2; pass++) {
+          const clear = [];
+          for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) {
+            const i = y * w + x;
+            if (rgb[i * 4 + 3] === 0) continue;
+            let n = 0;
+            for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++)
+              if ((dx || dy) && rgb[(i + dy * w + dx) * 4 + 3] !== 0) n++;
+            if (n < 3) clear.push(i);
           }
           clear.forEach(i => { rgb[i * 4 + 3] = 0; });
         }
