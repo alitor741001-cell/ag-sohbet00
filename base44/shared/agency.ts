@@ -242,14 +242,14 @@ export async function syncQuotaRewards(base44: any, userId: string) {
   if (!earnsAsOwner && account.broadcaster_status !== 'active') return { awarded: [] as any[] };
   // Az önce tarandıysa tekrar taranmaz: kota kazançları o taramada yazılmıştır.
   if (await quotaScanRecent(base44, userId)) return { awarded: [] as any[] };
-  const { month } = await broadcasterDiamonds(base44, userId);
+  const [diamonds, tiers] = await Promise.all([broadcasterDiamonds(base44, userId), ensureQuotaTiers(base44)]);
+  const { month } = diamonds;
   const period = periodKey();
   if (Number(account.diamond_month) !== month || account.diamond_month_period !== period) {
     await base44.asServiceRole.entities.User.update(userId, { diamond_month: month, diamond_month_period: period }).catch(() => {});
   }
-  const tiers = await ensureQuotaTiers(base44);
-  const eligible = tiers.filter((tier) => tier.active !== false && Number(tier.diamonds || 0) <= month);
-  if (!eligible.length) return { awarded: [] as any[] };
+  const eligible = tiers.filter((tier: any) => tier.active !== false && Number(tier.diamonds || 0) <= month);
+  if (!eligible.length) return { awarded: [] as any[], tiers };
   // Yayıncıyı ajansa kazandıran asistan varsa, komisyonun yüzdelik payı ona da yazılır.
   const ownerAgency = earningAgency;
   const assistantLink = ownerAgency && !earnsAsOwner ? await broadcasterAssistantLink(base44, userId, ownerAgency.id) : null;
@@ -310,7 +310,7 @@ export async function syncQuotaRewards(base44: any, userId: string) {
     }
   }
   if (awarded.length && earningAgency?.id) await refreshAgencyTotals(base44, earningAgency.id);
-  return { awarded };
+  return { awarded, tiers };
 }
 
 /** Ajans sayaçlarını üyelerinden yeniden hesaplar (yayıncı sayısı, elmas, komisyon toplamı). */

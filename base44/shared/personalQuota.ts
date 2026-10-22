@@ -3,16 +3,16 @@ import { quotaAgency } from './agencyOwnership.ts';
 
 /** Kişisel kota, kayıt geçmişi ve sunucuda hesaplanan kazanç toplamları. */
 export async function personalQuota(base44, account, cursor = null, knownTiers = null) {
-  await syncQuotaRewards(base44, account.id);
+  const { tiers: syncedTiers } = await syncQuotaRewards(base44, account.id);
   const query = { user_id: account.id, kind: { $ne: 'assistant' } };
-  const [fresh, agency, tiers, page, totals, monthly] = await Promise.all([
+  const [fresh, agency, page, totals, monthly] = await Promise.all([
     base44.asServiceRole.entities.User.get(account.id),
     quotaAgency(base44, account),
-    knownTiers || ensureQuotaTiers(base44),
     base44.asServiceRole.entities.QuotaReward.filter(query, { sort: '-created_date', limit: 50, ...(cursor ? { cursor } : {}) }),
     base44.asServiceRole.entities.QuotaReward.aggregate({ query, groupBy: 'status', sum: ['amount'] }),
     base44.asServiceRole.entities.QuotaReward.aggregate({ query: { ...query, period: periodKey() }, sum: ['amount'], max: ['diamonds'] }),
   ]);
+  const tiers = knownTiers || syncedTiers || await ensureQuotaTiers(base44);
   const period = periodKey();
   const month = fresh.diamond_month_period === period ? Number(fresh.diamond_month) || 0 : 0;
   const active = tiers.filter(tier => tier.active !== false);

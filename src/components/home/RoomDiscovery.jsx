@@ -24,8 +24,11 @@ const isVoiceRoom = (room) => room?.room_type === 'voice' || room?.voice_mode ==
 const roomListSignature = (items) =>
   items.map((room) => `${room.id}:${room.updated_date || room.created_date || ''}`).join('|');
 
-/** Odada kimse yoksa kart hiç listelenmez; içeri giren olunca kart kendiliğinden gelir. */
-const hasPeopleInside = (room) => (room?.participants || []).some((person) => person?.user_id);
+/** Odada kimse yoksa kart hiç listelenmez; içeri giren olunca kart kendiliğinden gelir.
+    Koltukta oturanlar da odadaki kişi sayar: yalnızca katılımcı listesine bakmak yetersiz. */
+const hasPeopleInside = (room) =>
+  (room?.participants || []).some((person) => person?.user_id) ||
+  (room?.seats || []).some((seat) => seat?.user_id);
 
 /**
  * Ana sayfa keşfet bölümü: en üstte arkadaş şeridi, altında koltuklu odalar ve
@@ -245,11 +248,10 @@ export default function RoomDiscovery({ shortcuts = null }) {
   }, [rooms]);
 
   const filmRooms = useMemo(() => uniqueRooms.filter((room) => !isVoiceRoom(room)), [uniqueRooms]);
-  // Sıcak listesi tek akış halinde gösterilir: sesli ve film odaları bir arada listelenir.
-  // Sıcak listesi: arkadaşların odaları ve içinde kişi bulunan tüm odalar birlikte gösterilir.
+  // Sıcak listesi: yalnızca içinde kişi bulunan odalar listelenir; boş oda kartı çıkmaz.
   const hotRooms = useMemo(
-    () => uniqueRooms.filter((room) => friendIds.includes(room.owner_id) || hasPeopleInside(room)),
-    [uniqueRooms, friendIds]
+    () => uniqueRooms.filter((room) => hasPeopleInside(room)),
+    [uniqueRooms]
   );
 
   // Film odalarında açılan videonun adı: kayıtlı başlık anlamsızsa YouTube'dan bir kez okunur.
