@@ -1,4 +1,4 @@
-.slot-reel-loop { animation: slot-reel-loop linear infinite; will-change: transform; filter: blur(1.2px) brightness(1.05); }
+.slot-reel-loop { animation: slot-reel-loop linear infinite; will-change: transform; }
 @keyframes slot-reel-loop { from { transform: translateY(-50%); } to { transform: translateY(0); } }
 .slot-reel-settle { animation: slot-reel-settle ease-out both; will-change: transform; }
 .slot-win-lines g { animation: slot-line-in .5s ease-out both; }

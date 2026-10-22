@@ -335,7 +335,7 @@
 /* Sembollerin arkasındaki makara yatağı: sembol kartlarının kendi zeminiyle
    birebir aynı tonda — kartlar yatağa karışır, arada renk farkı kalmaz. */
 .slot-reel-bed {
-  background: #0a0917;
+  background: #4c1d95;
   box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.6);
 }
 /* Makara şeridi zemini değiştirmez: yatak rengi tüm alanda aynı kalır. */
@@ -376,9 +376,7 @@
 .slot-reel-sill::after { right: 0; border-radius: 0 0 16px 0; }
 /* Sembol kartı: sembolün tam karesini saran altın kenar — köşeler düz, kare bütün görünür. */
 .slot-symbol-card {
-  border: 2px solid hsl(var(--slot-gold) / 0.85);
-  background: #0a0917;
-  box-shadow: 0 0 9px hsl(var(--slot-gold) / 0.35), inset 0 0 7px rgba(0, 0, 0, 0.85);
+  background: transparent;
 }
 /* Makaraları birbirinden ayıran altın boru. */
 .slot-reel-pipe {
