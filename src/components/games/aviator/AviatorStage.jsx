@@ -7,15 +7,17 @@ import { formatMult } from '../rocket/rocketConfig';
 const travel = (m) => 1 - 1 / (1 + Math.log(Math.max(1, m)) / 1.2);
 
 /** Uçuş sahnesi: kırmızı bulutlu gökyüzü, parlayan eğri, uçak ve dev çarpan. */
-export default function AviatorStage({ game }) {
+export default function AviatorStage({ game, children }) {
   const { phase } = game;
   const crashed = phase === 'crashed';
   const flying = phase === 'running';
   const mult = crashed ? game.round?.crash_at || 1 : flying ? game.displayMult : 1;
   const p = flying || crashed ? travel(mult) : 0;
-  const x = 4 + p * 80;
-  const y = 92 - p * 70;
-  const path = `M 4 92 Q ${4 + (x - 4) * 0.6} 92 ${x} ${y}`;
+  // Eğri ve uçak, içerideki oyuncu listesinin sağında kalır (listeyi kapatmaz).
+  const x0 = 40;
+  const x = x0 + p * 48;
+  const y = 92 - p * 66;
+  const path = `M ${x0} 92 Q ${x0 + (x - x0) * 0.6} 92 ${x} ${y}`;
 
   return (
     <div className="av-panel av-panel-red relative min-h-0 flex-1 overflow-hidden">
@@ -37,7 +39,8 @@ export default function AviatorStage({ game }) {
       )}
       {crashed && <Image key={game.round?.round_no} src={AVIATOR_PLANE} alt="" className="av-plane av-plane-away absolute z-10 w-[24%] max-w-[7rem] mix-blend-screen" style={{ left: `${x}%`, top: `${y}%` }} fittingType="fit" />}
 
-      <div className="absolute inset-0 z-20 flex flex-col items-center justify-center">
+      {children}
+      <div className="pointer-events-none absolute bottom-0 left-[36%] right-0 top-0 z-20 flex flex-col items-center justify-center">
         {phase === 'betting' ? (
           <>
             <p className="text-xs font-bold tracking-widest text-white/70">SONRAKİ TUR</p>

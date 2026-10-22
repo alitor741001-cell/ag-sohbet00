@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
+import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
+import useAviatorSound from './aviator/useAviatorSound';
 import '@/styles/aviator.css';
 import useRocketGame from './rocket/useRocketGame';
 import RocketLedger from './rocket/RocketLedger';
@@ -17,23 +19,30 @@ export default function CrashRocketGame({ onExit, onBack }) {
   const [ledgerOpen, setLedgerOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [autoEdit, setAutoEdit] = useState(null);
+  const [coinOpen, setCoinOpen] = useState(false);
+  const sound = useAviatorSound(game.phase);
+  // Üstteki geçmiş, oyuna girildiği andan itibaren sıfırdan başlar.
+  const startRef = useRef(null);
+  const all = game.history || [];
+  if (startRef.current === null && all.length) startRef.current = Math.max(...all.map((h) => h.round_no));
+  const sessionHistory = all.filter((h) => h.round_no > (startRef.current ?? Infinity));
 
   return (
     <div className="av-game relative flex h-full min-h-0 w-full flex-col overflow-hidden">
-      <AviatorHeader coins={game.coins} onBack={onBack} onExit={onExit}
+      <AviatorHeader coins={game.coins} sound={sound} onCoins={() => setCoinOpen(true)} onBack={onBack} onExit={onExit}
         onLedger={() => { setLedgerOpen(true); game.loadLedger(); }} onHelp={() => setHelpOpen(true)} />
-      <div className="pt-2"><AviatorHistory history={game.history} /></div>
+      <div className="pt-2"><AviatorHistory history={sessionHistory} /></div>
 
-      <div className="flex min-h-0 flex-1 gap-2 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
-        <AviatorPlayers bets={game.bets} />
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2">
-          <AviatorStage game={game} />
-          <div className="flex shrink-0 gap-2">
-            <AviatorBetCard color="red" slot={betSlot(game, 1)} onAutoEdit={() => setAutoEdit(1)} />
-            <AviatorBetCard color="green" slot={betSlot(game, 2)} onAutoEdit={() => setAutoEdit(2)} />
-          </div>
+      <div className="flex min-h-0 flex-1 flex-col gap-2 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+        <AviatorStage game={game}>
+          <AviatorPlayers bets={game.bets} />
+        </AviatorStage>
+        <div className="grid shrink-0 grid-cols-2 gap-2">
+          <AviatorBetCard color="red" slot={betSlot(game, 1)} onAutoEdit={() => setAutoEdit(1)} />
+          <AviatorBetCard color="green" slot={betSlot(game, 2)} onAutoEdit={() => setAutoEdit(2)} />
         </div>
       </div>
+      <CoinPurchasePanel open={coinOpen} coins={game.coins} onBack={() => setCoinOpen(false)} />
 
       <RocketAutoDialog open={autoEdit !== null} value={autoEdit === 2 ? game.auto2 : game.auto1}
         onSave={(v) => game.setAutoTarget(autoEdit, v)} onClose={() => setAutoEdit(null)} />
