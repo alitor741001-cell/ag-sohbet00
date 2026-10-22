@@ -14,7 +14,7 @@ import {
 // Uçuş sırasında hafif bir tik çalışır ve çakılmayı sunucuda tetikler; tik artık
 // saniyede iki kez değil ~1,2 saniyede bir çalışır — istek bütçesi yoğunluk sınırına
 // takılmaz, görsel uçuş yerel saatle aktığı için ekranda donma olmaz.
-const TICK_MS = 1000;
+const TICK_MS = 600;
 // Uçuşta ağır durum tazelemesi seyrek yapılır (bahis listesi ve cüzdan için).
 const STATE_EVERY_MS = 12000;
 // Abonelik olayı geldikten sonra bu süre boyunca yoklama yapılmaz.
@@ -30,7 +30,7 @@ const POLL_COOLDOWN_FLIGHT = 800;
 // geciktiğinde ekran, turun çoktan çakılmış olabileceği bir çarpanı göstermez.
 // Tik aralığından biraz uzundur: uçuş tazeleme beklerken donup kalmaz,
 // gösterilen çarpan da gerçek patlama noktasından kopmaz.
-const FLIGHT_LEAD_MS = 1200;
+const FLIGHT_LEAD_MS = 3000;
 const CLOCK_TICK = 100;
 // Otomatik hedef ok tuşlarına hızlı basmak tek istek üretir.
 const AUTO_SAVE_MS = 600;
