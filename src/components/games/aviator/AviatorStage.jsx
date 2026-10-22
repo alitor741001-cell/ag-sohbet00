@@ -4,7 +4,9 @@ import { AVIATOR_PLANE, AVIATOR_SKY } from '../rocketAssets';
 import { formatMult } from '../rocket/rocketConfig';
 
 // Çarpan büyüdükçe uçak sağa-yukarı ilerler ve tepeye yaklaşınca orada süzülür.
-const travel = (m) => 1 - 1 / (1 + Math.log(Math.max(1, m)) / 1.2);
+// Kalkıştan hemen sonra belirgin hareket etsin diye başlangıç hızlı tutulur.
+const travel = (m) => 1 - 1 / (1 + Math.max(0, m - 1) * 1.6);
+const STOPS = [[2, '#3b9bff'], [5, '#22e06b'], [10, '#ff9a1f'], [Infinity, '#ff2a3d']];
 
 /** Uçuş sahnesi: kırmızı bulutlu gökyüzü, parlayan eğri, uçak ve dev çarpan. */
 export default function AviatorStage({ game, children }) {
@@ -17,10 +19,20 @@ export default function AviatorStage({ game, children }) {
   const tier = mult < 2 ? { c: '#3b9bff', h: 220 } : mult < 5 ? { c: '#22e06b', h: 130 } : mult < 10 ? { c: '#ff9a1f', h: 35 } : { c: '#ff2a3d', h: 0 };
   const planeStyle = { filter: `hue-rotate(${tier.h}deg) drop-shadow(0 0 10px ${tier.c})`, transition: 'filter .4s' };
   // Eğri ve uçak, içerideki oyuncu listesinin sağında kalır (listeyi kapatmaz).
-  const x0 = 44;
-  const x = x0 + p * 44;
-  const y = 92 - p * 66;
-  const path = `M ${x0} 92 Q ${x0 + (x - x0) * 0.6} 92 ${x} ${y}`;
+  const x0 = 32;
+  const x = x0 + p * 56;
+  const y = 88 - p * 64;
+  const path = `M ${x0} 88 Q ${x0 + (x - x0) * 0.6} 88 ${x} ${y}`;
+  // Geçilen her renk bölümü çizgide kalır: mavi → yeşil → turuncu → kırmızı.
+  const span = Math.max(0.01, x - x0);
+  const segs = [];
+  let from = 0;
+  for (const [lim, c] of STOPS) {
+    const to = Math.min(1, (travel(lim) * 56) / span);
+    segs.push({ c, from, to });
+    if (to >= 1) break;
+    from = to;
+  }
 
   return (
     <div className="av-panel av-panel-red relative min-h-0 flex-1 overflow-hidden">
@@ -31,19 +43,24 @@ export default function AviatorStage({ game, children }) {
       </div>
 
       <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 h-full w-full">
-        {p > 0 && <path d={`${path} L ${x} 92 Z`} fill={tier.c} fillOpacity="0.22" />}
-        {p > 0 && <path d={path} fill="none" stroke={tier.c} strokeWidth="0.9" vectorEffect="non-scaling-stroke" style={{ filter: `drop-shadow(0 0 4px ${tier.c})` }} />}
+        <defs>
+          <linearGradient id="av-trail" gradientUnits="userSpaceOnUse" x1={x0} y1="0" x2={x} y2="0">
+            {segs.flatMap((s, i) => [<stop key={`a${i}`} offset={s.from} stopColor={s.c} />, <stop key={`b${i}`} offset={s.to} stopColor={s.c} />])}
+          </linearGradient>
+        </defs>
+        {p > 0 && <path d={`${path} L ${x} 88 Z`} fill="url(#av-trail)" fillOpacity="0.22" />}
+        {p > 0 && <path d={path} fill="none" stroke="url(#av-trail)" strokeWidth="0.9" vectorEffect="non-scaling-stroke" style={{ filter: `drop-shadow(0 0 4px ${tier.c})` }} />}
       </svg>
 
       {(flying || phase === 'betting') && (
         <Image src={AVIATOR_PLANE} alt="Uçak"
-          className={`av-plane absolute z-10 aspect-[3/2] w-[26%] max-w-[8rem] mix-blend-screen ${flying ? 'av-plane-fly' : ''}`}
+          className={`av-plane absolute z-30 aspect-[3/2] w-[26%] max-w-[8rem] mix-blend-screen ${flying ? 'av-plane-fly' : ''}`}
           style={{ left: `${x}%`, top: `${y}%`, ...planeStyle }} fittingType="fit" />
       )}
       {crashed && <Image key={game.round?.round_no} src={AVIATOR_PLANE} alt="" className="av-plane av-plane-away absolute z-10 aspect-[3/2] w-[26%] max-w-[8rem] mix-blend-screen" style={{ left: `${x}%`, top: `${y}%`, ...planeStyle }} fittingType="fit" />}
 
       {children}
-      <div className="pointer-events-none absolute bottom-0 left-[40%] right-0 top-0 z-20 flex flex-col items-center justify-center">
+      <div className="pointer-events-none absolute bottom-0 left-[28%] right-0 top-0 z-20 flex flex-col items-center justify-center">
         {phase === 'betting' ? (
           <>
             <p className="text-xs font-bold tracking-widest text-white/70">SONRAKİ TUR</p>

@@ -1,21 +1,19 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Users } from 'lucide-react';
 import AviatorPlayerRow from './AviatorPlayerRow';
 
 /** Sol panel: Katılanlar (çekenler) / Bekleyenler (aktif bahisler) ve toplam oyuncu. */
 export default function AviatorPlayers({ bets }) {
-  const [tab, setTab] = useState('in');
   const all = bets || [];
   const cashed = all.filter((b) => b.status === 'cashed').sort((a, b) => b.cashout_at - a.cashout_at);
   const waiting = all.filter((b) => b.status === 'active');
-  const list = tab === 'in' ? [...cashed, ...waiting] : waiting;
+  const list = [...cashed, ...waiting];
   const total = new Set(all.map((b) => b.user_id)).size;
 
   return (
-    <aside className="absolute bottom-2 left-2 top-9 z-20 flex w-[38%] max-w-[17rem] flex-col rounded-xl border border-red-500/40 bg-black/55 backdrop-blur-sm">
+    <aside className="absolute bottom-2 left-2 top-9 z-20 flex w-[26%] max-w-[9rem] flex-col rounded-xl border border-red-500/40 bg-black/55 backdrop-blur-sm">
       <div className="m-1.5 flex rounded-full bg-black/60 p-0.5 text-[10px] font-bold">
-        <button type="button" onClick={() => setTab('in')} className={`flex-1 rounded-full py-1 ${tab === 'in' ? 'av-tab-red' : 'text-white/60'}`}>Katılanlar</button>
-        <button type="button" onClick={() => setTab('wait')} className={`flex-1 rounded-full py-1 ${tab === 'wait' ? 'av-tab-red' : 'text-white/60'}`}>Bekleyenler</button>
+        <span className="av-tab-red flex-1 rounded-full py-1 text-center">Katılanlar</span>
       </div>
       <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-1.5">
         {list.length === 0 && <p className="py-3 text-center text-[10px] text-white/40">Henüz oyuncu yok</p>}
