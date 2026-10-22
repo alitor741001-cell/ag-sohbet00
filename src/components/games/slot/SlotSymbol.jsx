@@ -21,7 +21,7 @@ export default function SlotSymbol({ symbol, top, height }) {
         loading="eager"
         decoding="sync"
         draggable={false}
-        style={{ transform: `scale(${BIG.includes(symbol) ? 1.2 : 1})` }}
+        style={{ transform: `scale(${BIG.includes(symbol) ? 1.1 : 1})` }}
         className="slot-symbol-card aspect-square h-full max-w-full rounded-lg object-contain"
       />
     </span>
