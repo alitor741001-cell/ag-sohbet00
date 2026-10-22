@@ -4,6 +4,7 @@ import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
 import { upsertMessage, sortMessages } from '@/lib/realtimeMessages';
 import { makeId } from '@/lib/uid';
+import useChatHistory from '@/hooks/useChatHistory';
 
 /**
  * Sohbet mesajları hook'u — belirli bir conversationId için mesajları yükler ve realtime dinler.
@@ -21,14 +22,13 @@ export default function useChatMessages(conversationId, active = true) {
   const { toast } = useToast();
   const userId = user?.id;
   const [messages, setMessages] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const messagesSnapshot = useRef(messages);
+  messagesSnapshot.current = messages;
   const seenRef = useRef(new Set());
   const activeIdRef = useRef(conversationId);
-  const lastMessageAtRef = useRef(null);
   const sendingRef = useRef(false);
   const readPendingRef = useRef(new Set());
-  const loadPendingRef = useRef(null);
   const visibleRef = useRef(active);
   visibleRef.current = active;
 
@@ -36,35 +36,7 @@ export default function useChatMessages(conversationId, active = true) {
     activeIdRef.current = conversationId;
   }, [conversationId]);
 
-  const load = useCallback(async () => {
-    if (!conversationId || !userId) { setLoading(false); return; }
-    const reqId = conversationId;
-    const key = `${userId}:${reqId}`;
-    if (loadPendingRef.current?.key === key) return;
-    const request = { key };
-    loadPendingRef.current = request;
-    try {
-      // Sohbet geçmişi Supabase aynasından okunur: ağır okuma kaynağa yüklenmez.
-      const response = await base44.functions.invoke('dm-service', { action: 'history', conversation_id: conversationId });
-      const items = response?.data?.messages || [];
-      if (activeIdRef.current !== reqId) return;
-      const visible = (items || []).filter((m) => !(m.deleted_for || []).includes(userId));
-      seenRef.current = new Set(visible.map((m) => m.id));
-      if (visible.length > 0) lastMessageAtRef.current = visible[visible.length - 1].created_date;
-      setMessages((prev) => {
-        // Optimistic mesajları koru, gerçek mesajlarla eşleşenleri kaldır
-        const optimistic = prev.filter((m) => m.id?.startsWith('temp-'));
-        const filteredOptimistic = optimistic.filter((om) => !visible.some((rm) => rm.sender_id === om.sender_id && rm.content === om.content));
-        return sortMessages([...visible, ...filteredOptimistic]);
-      });
-      setLoading(false);
-    } catch {
-      if (activeIdRef.current !== reqId) return;
-      setLoading(false);
-    } finally {
-      if (loadPendingRef.current === request) loadPendingRef.current = null;
-    }
-  }, [conversationId, userId]);
+  const { load, resetPages, ...history } = useChatHistory(conversationId, userId, setMessages, seenRef);
 
   const loadRef = useRef(load);
   loadRef.current = load;
@@ -72,10 +44,6 @@ export default function useChatMessages(conversationId, active = true) {
   useEffect(() => {
     if (!conversationId) return;
     activeIdRef.current = conversationId;
-    setMessages([]);
-    setLoading(true);
-    seenRef.current = new Set();
-    loadRef.current();
 
     const onRealtimeMessage = ({ detail: event }) => {
       if (event.data?.conversation_id !== conversationId) return;
@@ -130,7 +98,6 @@ export default function useChatMessages(conversationId, active = true) {
       if (res?.data?.message) {
         const realMsg = res.data.message;
         seenRef.current.add(realMsg.id);
-        lastMessageAtRef.current = realMsg.created_date;
         setMessages((prev) => {
           const withoutTemp = prev.filter((m) => m.id !== tempId);
           return upsertMessage(withoutTemp, realMsg);
@@ -159,12 +126,16 @@ export default function useChatMessages(conversationId, active = true) {
 
   const deleteMessage = useCallback(async (messageId) => {
     if (!messageId) return;
+    const removed = messagesSnapshot.current.find(message => message.id === messageId);
     setMessages((prev) => prev.filter((m) => m.id !== messageId));
     seenRef.current.delete(messageId);
     try {
       await base44.functions.invoke('dm-service', { action: 'delete_message', message_id: messageId });
     } catch (err) {
-      if (activeIdRef.current === conversationId) loadRef.current();
+      if (activeIdRef.current === conversationId && removed) {
+        seenRef.current.add(removed.id);
+        setMessages(previous => upsertMessage(previous, removed));
+      }
       toast({ title: 'Silinemedi', description: err.response?.data?.error || err.message, variant: 'destructive' });
     }
   }, [toast, conversationId]);
@@ -175,12 +146,13 @@ export default function useChatMessages(conversationId, active = true) {
       await base44.functions.invoke('dm-service', { action: 'delete_conversation', conversation_id: conversationId });
       setMessages([]);
       seenRef.current = new Set();
+      resetPages();
       window.dispatchEvent(new Event('social-badges-refresh'));
     } catch (err) {
       toast({ title: 'Sohbet silinemedi', description: err.response?.data?.error || err.message, variant: 'destructive' });
       throw err;
     }
-  }, [conversationId, userId, toast]);
+  }, [conversationId, userId, toast, resetPages]);
 
-  return { messages, loading, sending, send, markRead, deleteMessage, deleteConversation };
+  return { messages, ...history, sending, send, markRead, deleteMessage, deleteConversation };
 }

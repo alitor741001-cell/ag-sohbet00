@@ -1,4 +1,5 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
+import historyPage from './historyPage.ts';
 import { findProfanity } from '../../shared/profanity.ts';
 import { incrementFriendshipProgression } from '../../shared/friendshipProgression.ts';
 import { chargeDirectMessageFee, directMessageBlock, directRelation } from '../../shared/directMessage.ts';
@@ -149,6 +150,8 @@ export default async function(req) {
       const conversation = await base44.asServiceRole.entities.Conversation.get(conversationId).catch(() => null);
       if (!conversation) return Response.json({ error: 'Sohbet bulunamadı' }, { status: 404 });
       if (!(conversation.members || []).includes(user.id)) return Response.json({ error: 'yetkisiz' }, { status: 403 });
+      // Small authoritative pages; legacy mirror reads remain available to existing callers.
+      if (body.paged === true) return await historyPage(base44, user.id, conversationId, body.cursor);
       const rows = await readRows(
         base44,
         'chat_messages',

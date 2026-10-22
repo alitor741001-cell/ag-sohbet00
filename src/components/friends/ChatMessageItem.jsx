@@ -12,7 +12,7 @@ function ChatMessageItem({ message, userId, isAdmin, ownRole, friendRole, receip
   const share = parseRoomShareMarker(message.content);
   const invite = parseInviteMarker(message.content);
   return (
-    <div className={`group flex items-end gap-1.5 ${sent ? 'justify-end' : 'justify-start'}`}>
+    <div data-message-id={message.id} className={`group flex items-end gap-1.5 ${sent ? 'justify-end' : 'justify-start'}`}>
       <RoleMessageEffect roleKey={sent ? ownRole : friendRole} className="min-w-0 max-w-[80%]">
         <div className={`rounded-2xl px-3.5 py-2 text-sm shadow-md ${sent ? 'rounded-br-md bg-gradient-to-br from-[#c62828] to-[#7f1d1d] border border-[#f2ce6b]/25 text-white' : 'rounded-bl-md bg-[#1e1e24] text-white'}`}>
           {message.file_url && <Image src={message.file_url} alt="foto" className="mb-1 h-48 w-48 max-w-full cursor-pointer rounded-lg" fittingType="fit" onClick={() => onImage(message.file_url)} />}
