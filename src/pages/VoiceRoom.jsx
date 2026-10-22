@@ -57,6 +57,8 @@ import BigGiftStage from '@/components/voice/BigGiftStage';
 import { useGiftBalance, useGiftCatalog } from '@/hooks/useGiftCatalog';
 import { publishWalletCoins } from '@/hooks/useWalletCoinsLive';
 import { K_UNIT, formatCoins, tierForK, toneColor } from '@/lib/giftTone';
+import { withBoardStep } from '@/lib/numberBoard';
+import { leaveRoomKeepalive, leaveSeatKeepalive } from '@/lib/roomLeaveKeepalive';
 
 export default function VoiceRoom() {
   const { id } = useParams();
