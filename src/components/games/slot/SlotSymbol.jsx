@@ -7,8 +7,6 @@ import { SLOT_SYMBOL_ART } from '@/components/games/slotAssets';
  * Kartlar Şekerli Meyve kartlarıyla aynı dilde: parlak zemin, altın çift çerçeve.
  */
 // Hayvanlar ve jackpot hafifçe büyütülür.
-// Jackpot görselinin altındaki beyaz çizgiler kırpılarak tamamen gizlenir.
-export const JACKPOT_CLIP = 'inset(0 0 20% 0)';
 const SYMBOL_SCALE = { tiger: 1.15, eagle: 1.15, lion: 1.15, jackpot: 1.12 };
 
 export default function SlotSymbol({ symbol, top, height }) {
@@ -22,7 +20,7 @@ export default function SlotSymbol({ symbol, top, height }) {
         loading="eager"
         decoding="sync"
         draggable={false}
-        style={{ transform: `scale(${SYMBOL_SCALE[symbol] || 1})`, clipPath: symbol === 'jackpot' ? JACKPOT_CLIP : undefined }}
+        style={{ transform: `scale(${SYMBOL_SCALE[symbol] || 1})` }}
         className="slot-symbol-card aspect-square h-full max-w-full rounded-lg object-cover"
       />
     </span>

@@ -12,7 +12,7 @@ export default function SlotSymbolIcon({ symbol, size = 18 }) {
       alt=""
       aria-hidden="true"
       className="inline-block shrink-0"
-      style={{ width: size, height: size, clipPath: symbol === 'jackpot' ? 'inset(0 0 20% 0)' : undefined }}
+      style={{ width: size, height: size }}
       fittingType="fit"
       originWidth={SLOT_SYMBOL_ART_SIZE}
       originHeight={SLOT_SYMBOL_ART_SIZE}

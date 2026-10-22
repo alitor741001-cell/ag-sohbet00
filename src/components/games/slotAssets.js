@@ -29,7 +29,7 @@ export const SLOT_SYMBOL_ART = {
   tiger: `${MEDIA}/63e519f50_IMG_1531.jpg`,
   lion: `${MEDIA}/42fcc4e14_IMG_1532.jpg`,
   free: `${MEDIA}/6d95d974c_IMG_1534.jpg`,
-  jackpot: `${MEDIA}/bbf968e8c_IMG_1538.jpg`,
+  jackpot: `${MEDIA}/d52f345bc_IMG_0124.jpg`,
 };
 
 // Kontrol düğmelerinin madalyonları: aslan, kanarya ve kartal.
