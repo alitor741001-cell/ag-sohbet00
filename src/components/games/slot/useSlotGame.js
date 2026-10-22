@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import gameRequest from '@/lib/gameRequest';
 import { BET_LEVELS, LINES, MAX_BET, MIN_BET } from './slotConfig';
 import useBetQueue from '@/hooks/useBetQueue';
+import useWalletCoinsLive from '@/hooks/useWalletCoinsLive';
+import { useCurrentUser } from '@/lib/useCurrentUser';
 
 const SPIN_DURATION_MS = 5000;
 const SETTLE_MS = 800;
@@ -35,6 +37,9 @@ export default function useSlotGame({ roomId } = {}) {
   const roundRef = useRef(0);
   const [slow, setSlow] = useState(false);
   const [stopping, setStopping] = useState(false);
+  // Canlı abonelik geldikçe bakiye anında tazelenir.
+  const { user } = useCurrentUser();
+  useWalletCoinsLive(user?.id, (value) => setCoins(value));
   // Bekleme; STOP'a basıldığında (ya da süre dolduğunda) sona erer.
   const wait = useCallback((ms) => new Promise((resolve) => {
     let timer = null;

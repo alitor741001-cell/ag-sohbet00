@@ -3,6 +3,8 @@ import gameRequest from '@/lib/gameRequest';
 import { landMs } from '@/components/games/reels/reelRoll';
 import { DEDE_BET_LEVELS, DEDE_LINES, scatterIntroGrid } from './dedeConfig';
 import useBetQueue from '@/hooks/useBetQueue';
+import useWalletCoinsLive from '@/hooks/useWalletCoinsLive';
+import { useCurrentUser } from '@/lib/useCurrentUser';
 
 // Sonucun üzerine iniş, karoların yerine oturması ve kazanç adımlarının süreleri.
 const LAND_MS = landMs(6);
