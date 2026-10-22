@@ -139,7 +139,7 @@ async function crashRound(base44, round, now) {
   );
   const crashed = { ...round, status: 'crashed', ended_at: new Date(now).toISOString() };
   // Çakılma anı ve geçmiş tek yazımla yayınlanır: roket her ekranda birlikte patlar.
-  const recent = await base44.asServiceRole.entities.RocketRound.filter({ variant: round.variant, status: 'crashed' }, '-round_no', 12);
+  const recent = await base44.asServiceRole.entities.RocketRound.filter({ variant: round.variant, status: 'crashed' }, '-round_no', 20);
   await publishLive(base44, crashed, recent.map((row) => ({ round_no: row.round_no, crash_at: row.crash_at })));
   // Supabase aynası: turun bahisleri son halleriyle arka planda yazılır.
   waitUntil(base44.asServiceRole.entities.RocketBet.filter({ round_id: round.id }, '-created_date', 200)

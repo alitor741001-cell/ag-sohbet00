@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
 import useAviatorSound from './aviator/useAviatorSound';
 import '@/styles/aviator.css';
@@ -21,17 +21,12 @@ export default function CrashRocketGame({ onExit, onBack }) {
   const [autoEdit, setAutoEdit] = useState(null);
   const [coinOpen, setCoinOpen] = useState(false);
   const sound = useAviatorSound(game.phase);
-  // Üstteki geçmiş, oyuna girildiği andan itibaren sıfırdan başlar.
-  const startRef = useRef(null);
-  const all = game.history || [];
-  if (startRef.current === null && all.length) startRef.current = Math.max(...all.map((h) => h.round_no));
-  const sessionHistory = all.filter((h) => h.round_no > (startRef.current ?? Infinity));
 
   return (
     <div className="av-game relative flex h-full min-h-0 w-full flex-col overflow-hidden">
       <AviatorHeader coins={game.coins} sound={sound} onCoins={() => setCoinOpen(true)} onBack={onBack} onExit={onExit}
         onLedger={() => { setLedgerOpen(true); game.loadLedger(); }} onHelp={() => setHelpOpen(true)} />
-      <div className="pt-2"><AviatorHistory history={sessionHistory} /></div>
+      <div className="pt-2"><AviatorHistory history={game.history} /></div>
 
       <div className="flex min-h-0 flex-1 flex-col gap-2 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
         <AviatorStage game={game}>
