@@ -1,4 +1,5 @@
 import { Image } from '@/components/ui/image';
+import { Store } from 'lucide-react';
 import { MENU_ICONS } from '@/components/profile/fantasy/icons';
 
 const ITEMS = [
@@ -37,6 +38,7 @@ export default function ProfileIconGrid({ vipCount = 0, onSelect }) {
             </span>
             <span className="max-w-[74px] text-center text-[10px] font-semibold leading-tight text-white/85">{item.label}</span>
           </button>
+          {item.key === 'shop' && <button type="button" onClick={() => onSelect('store')} aria-label="Animasyonlu çerçeve mağazasını aç" className="flex min-h-11 items-center justify-center gap-1 rounded-xl border border-cabinet-gold/40 bg-cabinet px-2 text-[10px] font-bold text-cabinet-gold"><Store className="h-4 w-4" />Mağaza</button>}
           </div>
         ))}
       </div>

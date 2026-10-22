@@ -6,7 +6,7 @@ import useCosmeticStore from '@/hooks/useCosmeticStore';
 import useWalletCoinsLive from '@/hooks/useWalletCoinsLive';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 export default function StoreCatalog({ onInventory, onCoins }) {
-  const [category, setCategory] = useState('seat-frame'); const [confirm, setConfirm] = useState(null); const [notice, setNotice] = useState('');
+  const category = 'seat-frame'; const [confirm, setConfirm] = useState(null); const [notice, setNotice] = useState('');
   const store = useCosmeticStore('catalog', category); const request = useRef({}); const { user } = useCurrentUser();
   const [liveCoins, setLiveCoins] = useState(null); useWalletCoinsLive(user?.id, setLiveCoins);
   const buy = async () => {
@@ -18,7 +18,8 @@ export default function StoreCatalog({ onInventory, onCoins }) {
   };
   return <section className="text-cabinet-ink">
     <div className="mb-4 flex flex-wrap items-center justify-between gap-2"><p className="text-sm font-bold text-cabinet-gold">{(liveCoins ?? store.coins)?.toLocaleString('tr-TR') ?? '—'} Coins</p><div className="flex gap-3"><button className="text-xs underline" type="button" onClick={onInventory}>Çerçevelerim</button>{onCoins && <button className="text-xs underline" type="button" onClick={onCoins}>Coins yükle</button>}</div></div>
-    <div className="mb-4 flex gap-2" role="tablist" aria-label="Mağaza kategorileri">{[['seat-frame','Özel Koltuk Çerçeveleri'],['vip-frame','VIP Çerçeveleri']].map(([id,label]) => <button key={id} type="button" role="tab" aria-selected={category===id} onClick={() => setCategory(id)} className={`min-h-11 flex-1 rounded-xl border px-2 text-xs font-bold ${category===id ? 'border-cabinet-gold bg-cabinet-light/30 text-cabinet-gold' : 'border-cabinet-light/25'}`}>{label}</button>)}</div>
+    <h2 className="mb-1 text-lg font-black text-cabinet-gold">Animasyonlu Çerçeveler</h2>
+    <p className="mb-4 text-xs leading-relaxed text-cabinet-ink/80">Ejderha, alev, kelebek, çiçek, yarım çember ve dönen yıldız koleksiyonu. Satın aldıkların Çanta → Çerçevelerim alanına eklenir.</p>
     {store.loading && !store.items.length ? <Loader2 className="mx-auto my-8 h-6 w-6 animate-spin" /> : <div className="grid grid-cols-2 gap-3">{store.items.map(item => <CosmeticCard key={item.id} item={item} busy={store.busy} owned={store.owned_ids.includes(item.id)} vipLevel={store.vip_level} onBuy={item => { setConfirm(item); setNotice(''); }} />)}</div>}
     {!store.loading && !store.items.length && <p className="py-8 text-center text-sm">Bu kategoride henüz ürün yok.</p>}
     {store.has_more && <button disabled={store.loading} type="button" onClick={() => store.load(store.next_cursor)} className="mt-4 min-h-11 w-full rounded-xl border border-cabinet-gold/40">Daha fazla göster</button>}

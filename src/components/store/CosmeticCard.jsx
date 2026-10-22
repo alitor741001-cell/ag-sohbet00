@@ -1,11 +1,12 @@
 import { Check, Coins, Lock } from 'lucide-react';
 import CosmeticArtwork from '@/components/store/CosmeticArtwork';
+import { frameDesignFor } from '@/lib/frameCollection';
 export default function CosmeticCard({ item, owned, active, inventory, busy, vipLevel = 0, onBuy, onEquip }) {
   const locked = !owned && (item.min_vip || 0) > vipLevel;
   return <article className="cabinet-product flex flex-col rounded-2xl border border-cabinet-gold/30 bg-cabinet/60 p-3 text-cabinet-ink">
     <CosmeticArtwork product={item} className="mx-auto aspect-square w-full max-w-40 object-contain" />
     <h3 className="mt-2 text-center text-sm font-bold">{item.name}</h3>
-    <p className="mt-1 text-center text-[10px] text-cabinet-ink/65">Süresiz · yalnızca koltukta</p>
+    <p className="mt-1 text-center text-[10px] text-cabinet-ink/80">{frameDesignFor(item.image_url) ? 'Animasyonlu · Süresiz · Koltuk çerçevesi' : 'Süresiz · yalnızca koltukta'}</p>
     {item.min_vip > 0 && <p className="mt-1 text-center text-xs text-cabinet-gold">VIP {item.min_vip} gerekli</p>}
     {inventory ? <div className="mt-auto pt-3">
       <button disabled={busy} type="button" onClick={() => onEquip(active ? '' : item.product_id)} className="min-h-11 w-full rounded-xl border border-cabinet-gold/50 bg-cabinet-light/20 px-2 text-xs font-bold disabled:opacity-50">{active ? 'Kaldır' : 'Kullan'}</button>

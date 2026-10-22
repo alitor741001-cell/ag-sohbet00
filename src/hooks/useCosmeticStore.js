@@ -9,7 +9,7 @@ export default function useCosmeticStore(action = 'catalog', category = 'seat-fr
     try {
       const { data: next } = await base44.functions.invoke('cosmeticStore', { action, category, cursor });
       if (sequence.current !== id) return;
-      setData(old => ({ ...next, items: cursor ? [...old.items, ...next.items] : next.items })); setError('');
+      setData(old => ({ ...next, items: cursor ? [...old.items, ...next.items] : next.items, owned_ids: cursor ? [...new Set([...(old.owned_ids || []), ...(next.owned_ids || [])])] : next.owned_ids || [] })); setError('');
     } catch (e) { if (sequence.current === id) setError(e.response?.data?.error || 'Mağaza yüklenemedi.'); }
     finally { if (sequence.current === id) setLoading(false); }
   }, [action, category]);

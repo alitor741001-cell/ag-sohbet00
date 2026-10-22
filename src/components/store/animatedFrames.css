@@ -1,0 +1,20 @@
+.ag-frame { color: var(--frame-glow); vertical-align: middle; overflow: visible; }
+.ag-frame-art { filter: drop-shadow(0 0 3px var(--frame-glow)); }
+.ag-frame--dragon .ag-frame-art { animation: ag-frame-fire 2.4s ease-in-out infinite; }
+.ag-frame-left { clip-path: inset(0 50% 0 0); animation: ag-frame-blink 1.6s ease-in-out infinite alternate; }
+.ag-frame-right { clip-path: inset(0 0 0 50%); animation: ag-frame-blink 1.6s ease-in-out infinite alternate-reverse; }
+.ag-frame--butterfly .ag-frame-art { animation: ag-frame-wings 3.5s ease-in-out infinite; }
+.ag-frame--flower .ag-frame-art { animation: ag-frame-bloom 4.5s ease-in-out infinite; }
+.ag-frame--crescent .ag-frame-art { animation: ag-frame-halo 4s ease-in-out infinite; }
+.ag-frame-orbit { animation: ag-frame-orbit 5s linear infinite; }
+.ag-frame-tail { background: linear-gradient(90deg, currentColor, transparent); transform: translateX(-100%); opacity: .75; }
+.ag-frame-spark { animation: ag-frame-spark 2.2s ease-in-out infinite; filter: drop-shadow(0 0 2px currentColor); }
+.ag-frame-spark-late { animation-delay: -1.1s; }
+@keyframes ag-frame-fire { 50% { filter: brightness(1.22) drop-shadow(0 0 5px var(--frame-glow)); } }
+@keyframes ag-frame-blink { from { opacity: .4; } to { opacity: 1; } }
+@keyframes ag-frame-wings { 50% { transform: scale(1.035) rotate(1.5deg); } }
+@keyframes ag-frame-bloom { 50% { filter: brightness(1.12) drop-shadow(0 0 5px var(--frame-glow)); } }
+@keyframes ag-frame-halo { 50% { transform: rotate(4deg); filter: brightness(1.15) drop-shadow(0 0 4px var(--frame-glow)); } }
+@keyframes ag-frame-orbit { to { transform: rotate(360deg); } }
+@keyframes ag-frame-spark { 0%,100% { opacity: .2; transform: scale(.6); } 50% { opacity: 1; transform: scale(1.1); } }
+@media (prefers-reduced-motion: reduce) { .ag-frame *, .ag-frame { animation: none !important; } }
