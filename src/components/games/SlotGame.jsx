@@ -99,8 +99,8 @@ export default function SlotGame({ onExit, onBack, roomId }) {
   return (
     <div className="relative flex h-full min-h-0 w-full flex-col overflow-hidden bg-slot">
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
-        <Image src={SLOT_ART.shell} alt="" className="h-full w-full scale-125 blur-2xl" fittingType="fill" quality={25} />
-        <div className="absolute inset-0 bg-slot/65" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,#3b1466_0%,#140a33_45%,#05040f_100%)]" />
+        <div className="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_20%_80%,#c026d3_0%,transparent_40%),radial-gradient(circle_at_80%_70%,#f59e0b_0%,transparent_35%)]" />
       </div>
 
       {/* Üst: kazanan şeridi ve kendi jackpot konsolumuz. */}
@@ -139,12 +139,10 @@ export default function SlotGame({ onExit, onBack, roomId }) {
         {width > 0 && (
           <div className="relative overflow-hidden" style={{ width, height: viewHeight }}>
             <div className="absolute inset-x-0" style={{ height, top: -headOffset }}>
-              <Image
-                src={SLOT_ART.shell}
-                alt="slot"
-                className="absolute inset-0 h-full w-full"
-                fittingType="fill"
-                quality={92}
+              {/* Eski kabin görseli yerine altın çerçeveli, mor-lacivert makara paneli. */}
+              <div
+                className="absolute rounded-2xl border-2 border-amber-400/80 bg-[linear-gradient(180deg,#1e0b3d,#0b0620)] shadow-[0_0_24px_rgba(245,158,11,0.35),inset_0_0_18px_rgba(192,38,211,0.35)]"
+                style={{ left: '1%', width: '98%', top: '33.2%', height: '39.8%' }}
               />
 
               {/* Tur sırasında her makaranın sembolleri değişerek aşağı doğru kayar. */}

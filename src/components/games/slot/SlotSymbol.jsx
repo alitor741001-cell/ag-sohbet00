@@ -10,7 +10,7 @@ import { SLOT_SYMBOL_ART } from '@/components/games/slotAssets';
 export default function SlotSymbol({ symbol, top, height }) {
   const art = useSlotEdgeCleanup(SLOT_SYMBOL_ART[symbol] || SLOT_SYMBOL_ART.ten);
   return (
-    <span className="absolute left-0 flex w-full items-center justify-center p-[5%]" style={{ top, height }}>
+    <span className="absolute left-0 flex w-full items-center justify-center p-[13%]" style={{ top, height }}>
       {/* Dönerken anında görünmesi için temizlenmiş görsel doğrudan, beklemeden çizilir. */}
       <img
         src={art}
