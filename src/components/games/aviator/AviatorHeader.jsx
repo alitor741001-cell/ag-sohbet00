@@ -1,5 +1,5 @@
 import React from 'react';
-import { HelpCircle, Plus, Volume2, VolumeX } from 'lucide-react';
+import { ChevronLeft, HelpCircle, Plus, Volume2, VolumeX } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import { AVIATOR_PLANE } from '../rocketAssets';
 import { format } from '../rocket/rocketConfig';
@@ -8,6 +8,11 @@ import { format } from '../rocket/rocketConfig';
 export default function AviatorHeader({ coins, sound, onCoins, onBack, onExit, onLedger, onHelp }) {
   return (
     <header className="av-header flex items-center gap-2 px-3 pb-2 pt-[max(0.6rem,env(safe-area-inset-top))]">
+      {(onBack || onExit) && (
+        <button type="button" onClick={onBack || onExit} aria-label="Geri" className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/15 bg-black/60 text-white active:scale-95">
+          <ChevronLeft className="h-5 w-5" />
+        </button>
+      )}
       <Image src={AVIATOR_PLANE} alt="" className="h-8 w-12 mix-blend-screen" fittingType="fit" />
       <h1 className="av-logo">Gökkartal</h1>
       <button type="button" onClick={onCoins} className="ml-auto flex items-center gap-1.5 rounded-full border border-white/15 bg-black/60 py-1 pl-1.5 pr-1 active:scale-95">
