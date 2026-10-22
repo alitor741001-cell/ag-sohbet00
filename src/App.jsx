@@ -20,6 +20,7 @@ import { UserProfileProvider } from '@/lib/profileCard';
 import { Navigate } from 'react-router-dom';
 
 const Home = lazy(() => import('@/pages/Home'));
+const OAuthConsent = lazy(() => import('@/pages/OAuthConsent'));
 const WatchParty = lazy(() => import('@/pages/WatchParty'));
 const CreateRoom = lazy(() => import('@/pages/CreateRoom'));
 const VoiceRoomCreate = lazy(() => import('@/pages/VoiceRoomCreate'));
@@ -88,6 +89,7 @@ const AuthenticatedApp = () => {
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/oauth/consent" element={<OAuthConsent />} />
       <Route path="/onay-bekleniyor" element={<Navigate to="/" replace />} />
       <Route path="/engellendiniz" element={<BannedScreen />} />
       <Route element={<ProtectedRoute unauthenticatedElement={<LoginRedirect />} />}>

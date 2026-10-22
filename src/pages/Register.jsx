@@ -11,6 +11,7 @@ import { toast } from "@/components/ui/use-toast";
 import GoogleIcon from "@/components/GoogleIcon";
 import AppleIcon from "@/components/AppleIcon";
 import LegalLinks from "@/components/auth/LegalLinks";
+import { safeReturnTo } from "@/lib/authReturnTo";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -100,7 +101,7 @@ export default function Register() {
         telegram_data: { username: fullName || username || email, email, date: new Date().toLocaleString('tr-TR') }
       }).catch(() => {});
       toast({ title: "Kayıt tamamlandı", description: "Tüm içeriklere erişebilirsin, ana sayfaya yönlendiriliyorsun." });
-      window.location.href = "/";
+      window.location.href = safeReturnTo();
     } catch (err) {
       setError(err.message || "Geçersiz doğrulama kodu");
     } finally {
@@ -127,7 +128,7 @@ export default function Register() {
   const handleProvider = async (provider) => {
     if (!acceptTerms) { setError('Kullanım koşullarını kabul etmelisiniz'); return; }
     setError(''); setSocialLoading(provider);
-    try { await base44.auth.loginWithProvider(provider, '/'); }
+    try { await base44.auth.loginWithProvider(provider, safeReturnTo()); }
     catch (err) { setError(err.message || 'Sosyal kayıt başlatılamadı'); setSocialLoading(''); }
   };
 
