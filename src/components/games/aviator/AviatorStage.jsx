@@ -53,11 +53,11 @@ export default function AviatorStage({ game, children }) {
       </svg>
 
       {(flying || phase === 'betting') && (
-        <AviatorPlane color={tier.c}
+        <AviatorPlane hue={tier.h}
           className={`av-plane absolute z-30 w-[22%] max-w-[7rem] ${flying ? 'av-plane-fly' : ''}`}
           style={{ left: `${x}%`, top: `${y}%` }} />
       )}
-      {crashed && <AviatorPlane key={game.round?.round_no} color={tier.c} className="av-plane av-plane-away absolute z-10 w-[22%] max-w-[7rem]" style={{ left: `${x}%`, top: `${y}%` }} />}
+      {crashed && <AviatorPlane key={game.round?.round_no} hue={tier.h} className="av-plane av-plane-away absolute z-10 w-[22%] max-w-[7rem]" style={{ left: `${x}%`, top: `${y}%` }} />}
 
       {children}
       <div className="pointer-events-none absolute bottom-0 left-[28%] right-0 top-0 z-20 flex flex-col items-center justify-center">

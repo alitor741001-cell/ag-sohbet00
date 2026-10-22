@@ -20,7 +20,7 @@
 .av-btn-cash { background: linear-gradient(180deg, #ffc93a, #d77a00); color: #241400; box-shadow: 0 0 20px rgba(255, 180, 40, .8); animation: av-pulse 1s ease-in-out infinite; }
 .av-btn-cancel { background: linear-gradient(180deg, #555, #222); }
 .av-mult { font-size: clamp(2.6rem, 14vw, 5rem); font-weight: 900; line-height: 1; color: #fff; text-shadow: 0 0 18px rgba(255, 30, 50, .95), 0 0 4px #ff2a3d; font-variant-numeric: tabular-nums; }
-.av-plane { transform: translate(-50%, -60%) rotate(-12deg); filter: drop-shadow(0 0 8px rgba(255, 30, 50, .9)); transition: left .25s linear, top .25s linear; }
+.av-plane { transform: translate(-50%, -60%) rotate(-12deg); transition: left .25s linear, top .25s linear; }
 .av-plane-fly { animation: av-bob 1.4s ease-in-out infinite; }
 .av-plane-away { animation: av-away .9s ease-in forwards; }
 @keyframes av-bob { 0%,100% { transform: translate(-50%, -60%) rotate(-12deg); } 50% { transform: translate(-50%, -72%) rotate(-8deg); } }
