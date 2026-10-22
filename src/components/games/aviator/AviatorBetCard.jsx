@@ -37,7 +37,7 @@ export default function AviatorBetCard({ color, slot, onAutoSet }) {
       )}
       <p className="text-center text-[9px] text-white/50">Oto. çekilme: {formatAuto(slot.auto)}</p>
       <button type="button" disabled={slot.disabled} onClick={slot.onAction} className={`av-btn ${btn}`}>
-        <AviatorPlane color="#ffffff" className="h-7 w-10 shrink-0" />
+        <AviatorPlane className="h-7 w-10 shrink-0" />
         <span className="flex min-w-0 flex-col items-center leading-tight">
           <span className="text-base font-black">{slot.label}</span>
           {slot.sub && <span className="truncate text-[10px] font-semibold opacity-90">{slot.sub}</span>}
