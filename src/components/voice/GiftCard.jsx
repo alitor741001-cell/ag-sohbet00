@@ -1,3 +1,5 @@
+import { useId } from 'react';
+import GiftTransparencyFilter from '@/components/voice/GiftTransparencyFilter';
 import { Coins } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import { K_UNIT, formatCoins } from '@/lib/giftTone';
@@ -11,6 +13,7 @@ import { giftMotion } from '@/lib/giftMotion';
 export default function GiftCard({ gift, selected, onSelect }) {
   // Hediye sabit durur; yalnızca kendi rengindeki yumuşak ışık gösterilir.
   const { tone } = giftMotion(gift);
+  const filterId = `gift-art-${useId().replace(/:/g, '')}`;
 
   return (
     <button
@@ -20,6 +23,7 @@ export default function GiftCard({ gift, selected, onSelect }) {
       aria-pressed={selected}
       className="relative flex w-full flex-col items-center gap-0.5 py-1 active:scale-95"
     >
+      <GiftTransparencyFilter id={filterId} />
       <span className="relative inline-flex h-[70px] w-full items-center justify-center">
         <span
           className="pointer-events-none absolute inset-0"
@@ -32,9 +36,9 @@ export default function GiftCard({ gift, selected, onSelect }) {
             fittingType="fit"
             originWidth={192}
             originHeight={192}
-            className={`relative h-[62px] w-[62px] transition-transform duration-200 ${selected ? 'scale-110 drop-shadow-[0_0_12px_rgba(255,204,0,0.6)]' : 'drop-shadow-[0_4px_10px_rgba(0,0,0,0.6)]'}`}
-            // Hediyenin siyah zemini panele karışır: yalnızca nesnenin kendisi görünür.
-            style={{ mixBlendMode: 'screen' }}
+            className={`relative h-[62px] w-[62px] transition-transform duration-200 ${selected ? 'scale-110' : ''}`}
+            blurPlaceholder={false}
+            style={{ filter: `url(#${filterId})` }}
           />
         ) : (
           <span className="relative text-[38px] leading-none drop-shadow-[0_4px_10px_rgba(0,0,0,0.6)]">{gift.emoji || '🎁'}</span>

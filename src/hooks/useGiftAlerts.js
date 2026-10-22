@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-const VISIBLE_MS = 5000;
+const VISIBLE_MS = 10000;
 // Aynı anda çok hediye gelse bile animasyonlar sırayla gösterilir; kuyruk kısa tutulur.
 const MAX_QUEUE = 3;
 // Gönderdiğim hediyenin canlı yayın kopyası bu süre boyunca yok sayılır: sahne iki kez oynamaz.
-const ECHO_MS = 4000;
+const ECHO_MS = 60000;
 
 /** Odaya gelen hediyeleri sıraya alır: tekli/toplu gönderimler üst üste binmez. */
 export default function useGiftAlerts(messages, resolveGift, selfId) {

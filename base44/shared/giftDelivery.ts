@@ -12,12 +12,14 @@ export async function deliverGift(base44, context) {
   try {
     const sr = base44.asServiceRole.entities;
     const key = `${user.id}:${requestId}`;
-    let records = await sr.GiftSend.filter({ room_id: roomId, request_id: key }, 'created_date', 300);
+    let [records, wallet] = await Promise.all([
+      sr.GiftSend.filter({ room_id: roomId, request_id: key }, 'created_date', 300),
+      ensureGiftWallet(base44, user),
+    ]);
     if (records.length && (records[0].gift_id !== gift.id || records[0].quantity !== quantity || records.length > recipients.length || records.some(r => !recipients.some(p => p.user_id === r.recipient_id)))) {
       throw new Error('Gönderim kimliği başka bir hediyeye ait.');
     }
     const cost = coinsForK(gift.k_value) * quantity * recipients.length;
-    let wallet = await ensureGiftWallet(base44, user);
     const alreadyPaid = records.length > 0 || (wallet.gift_requests || []).includes(key);
     if (!alreadyPaid) {
       await sr.GameWallet.updateMany({ id: wallet.id, coins: { $gte: cost }, gift_requests: { $ne: key } }, {
@@ -48,17 +50,25 @@ export async function deliverGift(base44, context) {
     }
     if (!(room.gift_requests || []).includes(key)) throw new Error('Hediye kaydedildi, sayaç eşitlemesi tekrar denenmeli.');
     // Tekli güncelleme canlı oda yayınını tetikler; eski sayı dizisini geri yazmaz.
-    room = await sr.Room.update(roomId, { number_board: true });
-    let messages = await sr.RoomMessage.filter({ room_id: roomId, request_id: key }, 'created_date', 30);
-    for (const p of recipients.filter(p => !messages.some(m => m.gift_to_id === p.user_id))) {
-      messages.push(await sr.RoomMessage.create({
+    const finalState = await Promise.all([
+      sr.Room.update(roomId, { number_board: true }),
+      sr.RoomMessage.filter({ room_id: roomId, request_id: key }, 'created_date', 30),
+      sr.GameWallet.get(wallet.id),
+    ]);
+    room = finalState[0];
+    let messages = finalState[1];
+    wallet = finalState[2];
+    const pending = recipients.filter(p => !messages.some(m => m.gift_to_id === p.user_id));
+    // Canlı mesaj olayları korunur; alıcılar altışarlı paralel yazılır.
+    for (let i = 0; i < pending.length; i += 6) {
+      const created = await Promise.all(pending.slice(i, i + 6).map(p => sr.RoomMessage.create({
         room_id: roomId, request_id: key, user_id: hidden ? '' : user.id, user_name: name, user_avatar: avatar,
         text: `${name}, ${p.name} kişisine ${gift.name}${quantity > 1 ? ` X${quantity}` : ''} gönderdi!`,
         type: 'gift', gift: gift.id, gift_to_id: p.user_id, gift_to_name: p.name,
         gift_emoji: gift.emoji || '🎁', gift_k: Number(gift.k_value) * quantity,
-      }));
+      })));
+      messages.push(...created);
     }
-    wallet = await sr.GameWallet.get(wallet.id);
     return { ok: true, records, wallet, room, messages, first: !alreadyPaid };
   } finally {
     await giftLock(base44, [], token, true);

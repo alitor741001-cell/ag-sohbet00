@@ -3,7 +3,7 @@ import { base44 } from '@/api/base44Client';
 import subscribeEntity from '@/components/data/entitySubscriptions';
 
 // Duyuru ekranda bu kadar kalır (CSS big-gift-life süresiyle aynı).
-const VISIBLE_MS = 5000;
+const VISIBLE_MS = 10000;
 // Gerçek zamanlı yayın gecikirse yoklama aynı duyuruyu yakalar.
 // Yedek yoklama seyrek çalışır (sekme arkadayken hiç çalışmaz) — istek yükünü düşürür.
 const POLL_MS = 30000;

@@ -1,4 +1,5 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useId, useRef } from 'react';
+import GiftTransparencyFilter from '@/components/voice/GiftTransparencyFilter';
 
 /**
  * Hediye kaydında gerçek video dosyası (mp4/webm) varsa onu oynatır.
@@ -6,6 +7,7 @@ import { useEffect, useRef } from 'react';
  */
 export default function GiftVideoStage({ src, poster = '', color = '#facc15' }) {
   const videoRef = useRef(null);
+  const filterId = `gift-video-${useId().replace(/:/g, '')}`;
 
   useEffect(() => {
     const el = videoRef.current;
@@ -14,7 +16,8 @@ export default function GiftVideoStage({ src, poster = '', color = '#facc15' }) 
   }, [src]);
 
   return (
-    <div className="absolute inset-0 overflow-hidden bg-black">
+    <div className="absolute inset-0 overflow-hidden">
+      <GiftTransparencyFilter id={filterId} />
       <video
         key={src}
         ref={videoRef}
@@ -22,21 +25,19 @@ export default function GiftVideoStage({ src, poster = '', color = '#facc15' }) 
         src={src}
         poster={poster || undefined}
         autoPlay
+        onLoadedMetadata={(event) => {
+          const video = event.currentTarget;
+          if (Number.isFinite(video.duration) && video.duration > 0) video.playbackRate = video.duration / 10;
+        }}
         muted
         loop
         playsInline
         preload="auto"
         disablePictureInPicture
-        className="h-full w-full object-cover"
+        className="h-full w-full object-contain opacity-[0.85]"
+        style={{ filter: `url(#${filterId})` }}
       />
-      <div className="pointer-events-none absolute inset-0 gift-clip-grain opacity-[0.10] mix-blend-screen" />
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{ background: `radial-gradient(circle at 50% 48%, transparent 34%, ${color}22 62%, rgba(0,0,0,0.78) 100%)` }}
-      />
-      <div className="pointer-events-none absolute inset-0 gift-clip-flash" />
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-[6vh] bg-gradient-to-b from-black/85 to-transparent" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[16vh] bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+
     </div>
   );
 }
