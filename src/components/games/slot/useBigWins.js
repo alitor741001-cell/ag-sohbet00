@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import gameRequest from '@/lib/gameRequest';
 
 // Yeni büyük kazançlar geldikçe liste ve şerit kendini yeniler.
 const REFRESH_MS = 12000;
@@ -12,7 +12,7 @@ export default function useBigWins() {
 
   const load = useCallback(async () => {
     try {
-      const response = await base44.functions.invoke('slot-game', { action: 'bigwins' });
+      const response = await gameRequest('slot-game', { action: 'bigwins' });
       setWinners(response.data?.winners || []);
       setMe(response.data?.me || '');
       setStatus('ready');
