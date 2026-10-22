@@ -14,7 +14,7 @@ const MAX = 20;
 export default function AviatorHistory({ history }) {
   const ref = useRef(null);
   const [open, setOpen] = useState(false);
-  const items = [...(history || [])].reverse().slice(0, MAX);
+  const items = [...(history || [])].sort((a, b) => Number(b.round_no) - Number(a.round_no)).slice(0, MAX);
   const firstKey = items[0]?.round_no;
 
   useEffect(() => {
@@ -46,20 +46,21 @@ export default function AviatorHistory({ history }) {
         <>
           <div className="fixed inset-0 z-[90]" onClick={() => setOpen(false)} />
           <div className="absolute right-2 top-full z-[100] mt-1 w-56 rounded-lg border border-slate-700/70 bg-slate-900/95 p-3 shadow-xl backdrop-blur">
-            <div className="mb-2 flex items-center justify-between">
+            <div dir="ltr" className="grid grid-cols-3 gap-1.5">
+              {items.map((h) => (
+                <span key={h.round_no} className={`av-pill ${tone(h.crash_at)}`}>{formatMult(h.crash_at)}</span>
+              ))}
+            </div>
+            <div className="mt-2 flex items-center justify-between">
               <span className="text-xs font-medium text-slate-300">Geçmiş Sonuçlar</span>
               <button
                 type="button"
+                aria-label="Geçmiş sonuçları kapat"
                 onClick={() => setOpen(false)}
                 className="rounded p-0.5 text-slate-400 transition-colors hover:bg-slate-700/60 hover:text-white"
               >
                 <X className="h-3.5 w-3.5" />
               </button>
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {items.slice(VISIBLE).map((h) => (
-                <span key={h.round_no} className={`av-pill ${tone(h.crash_at)}`}>{formatMult(h.crash_at)}</span>
-              ))}
             </div>
           </div>
         </>
