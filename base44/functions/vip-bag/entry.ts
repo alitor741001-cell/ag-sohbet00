@@ -1,13 +1,14 @@
 import { waitUntil } from 'base44:runtime';
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.56';
 import { rateLimit, safeErrorResponse } from '../../shared/security.ts';
 import { writeProfileSummary } from '../../shared/supabaseMirror.ts';
 import { applyVipToUser, vipDurationLabel, effectiveVipLevel } from '../../shared/vip.ts';
 import { findByMemberId } from '../../shared/giftBox.ts';
 import { maskUserInCurrentRoom, restoreUserInRooms } from '../../shared/hiddenUserRoom.ts';
 import { VIP_LEVELS } from '../../shared/vipCatalog.ts';
+import { purchaseVip } from '../../shared/vipPurchase.ts';
 
-const ACTIONS = ['list', 'use', 'send', 'hidden'];
+const ACTIONS = ['list', 'use', 'send', 'hidden', 'buy'];
 
 /** Gizli kullanıcı modu bu VIP seviyesinden itibaren açılabilir. */
 const HIDDEN_REQUIRED_VIP = 10;
@@ -42,11 +43,18 @@ export default async function (req: Request): Promise<Response> {
       created_date: item.created_date || '',
     });
 
+    if (action === 'buy') {
+      const rl = await rateLimit(base44, 'vip-buy:' + user.id, user.id, 10, 60000);
+      if (!rl.allowed) return Response.json({ error: 'Çok fazla satın alma isteği; biraz sonra tekrar dene.' }, { status: 429 });
+      const result = await purchaseVip(base44, user, body);
+      return Response.json(result.data, { status: result.status || 200 });
+    }
+
     // Çantadaki VIP'ler ve son hareketler.
     if (action === 'list') {
       const [bag, history] = await Promise.all([
         base44.asServiceRole.entities.VipItem.filter({ owner_id: user.id, status: 'bag', level: { $in: VIP_LEVELS } }, '-created_date', 50).catch(() => []),
-        base44.asServiceRole.entities.VipItem.filter({ owner_id: user.id, status: { $ne: 'bag' }, level: { $in: VIP_LEVELS } }, '-created_date', 20).catch(() => []),
+        base44.asServiceRole.entities.VipItem.filter({ owner_id: user.id, status: { $ne: 'bag' }, level: { $in: VIP_LEVELS }, $or: [{ source: { $ne: 'purchase' } }, { used_at: { $ne: '' } }] }, '-created_date', 20).catch(() => []),
       ]);
       // Profil sayfası rozet sayısını aynadan okur: sayı burada tazelenir.
       waitUntil(writeProfileSummary(base44, user.id, { vip_count: bag.length }));

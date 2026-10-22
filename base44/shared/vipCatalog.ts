@@ -1,4 +1,6 @@
 export const VIP_LEVELS = [5, 6, 7, 8, 9, 10, 11, 12];
+export const VIP_PURCHASE_DAYS = 30;
+export const VIP_COIN_PRICES = { 5: 4000000, 6: 7200000, 7: 21600000, 8: 56000000, 9: 96000000, 10: 160000000, 11: 300000000, 12: 700000000 };
 const ROOT = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/';
 export const VIP_THEMES = [
   [5, 'Ateşin Hükümdarı', '#ff8547', '#f3ce78', 'f211b09b5', 'flame'],
@@ -32,7 +34,7 @@ export async function getVipCatalog(base44) {
   const features = VIP_FEATURES.map((feature) => ({ ...feature, minLevel: (saved.features || []).find((row) => row.key === feature.key)?.minLevel || feature.minLevel }));
   const animationFrom = features.find((feature) => feature.key === 'name-animation').minLevel;
   return {
-    levels: VIP_THEMES.map((theme) => ({ ...theme, ...(saved.levels || []).find((row) => row.level === theme.level), nameAnimated: theme.level >= animationFrom })),
+    levels: VIP_THEMES.map((theme) => ({ ...theme, ...(saved.levels || []).find((row) => row.level === theme.level), nameAnimated: theme.level >= animationFrom, purchase_coins: VIP_COIN_PRICES[theme.level], purchase_days: VIP_PURCHASE_DAYS })),
     features,
   };
 }

@@ -54,6 +54,23 @@
     "sent_at": {
       "type": "string",
       "default": ""
+    },
+    "purchase_request_id": {
+      "type": "string",
+      "default": ""
+    },
+    "coins_spent": {
+      "type": "integer",
+      "minimum": 0,
+      "default": 0
+    },
+    "purchase_expires_at": {
+      "type": "string",
+      "default": ""
+    },
+    "purchase_paid_at": {
+      "type": "string",
+      "default": ""
     }
   },
   "required": [

@@ -91,15 +91,19 @@ export const autoVipForCoins = (coins: any) => {
   return null;
 };
 
+export function nextVipExpiry(target, level, days) {
+  const currentExpiry = vipExpiryMs(target);
+  const base = level > 0 && vipActive(target) && currentExpiry ? currentExpiry : Date.now();
+  return level > 0 && days > 0 ? new Date(base + days * VIP_DAY_MS).toISOString() : '';
+}
+
 /** VIP'i kişinin profiline işler; kalan sürenin üstüne ekler (kendisi kullanınca da buradan geçer). */
-export async function applyVipToUser(base44: any, target: any, level: any, days: any, extra: Record<string, any> = {}) {
+export async function applyVipToUser(base44: any, target: any, level: any, days: any, extra: Record<string, any> = {}, options = {}) {
   if (!target?.id) return null;
   const value = Number(level);
   if (!Number.isInteger(value) || (value !== 0 && (value < 5 || value > VIP_MAX))) throw new Error('VIP seviyesi 5–12 arasında olmalı.');
   const duration = Math.max(0, Math.floor(Number(days) || 0));
-  const currentExpiry = vipExpiryMs(target);
-  const base = value > 0 && vipActive(target) && currentExpiry ? currentExpiry : Date.now();
-  const expiresAt = value > 0 && duration > 0 ? new Date(base + duration * VIP_DAY_MS).toISOString() : '';
+  const expiresAt = options.expiresAt || nextVipExpiry(target, value, duration);
 
   await base44.asServiceRole.entities.User.update(target.id, {
     vip_level: value,

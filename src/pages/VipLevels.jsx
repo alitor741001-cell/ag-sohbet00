@@ -9,7 +9,7 @@ import VipLevelHero from '@/components/vip/VipLevelHero';
 import VipCosmeticGrid from '@/components/vip/VipCosmeticGrid';
 import VipPrivilegeList from '@/components/vip/VipPrivilegeList';
 import VipPreviewDialog from '@/components/vip/VipPreviewDialog';
-import VipMembershipBar from '@/components/vip/VipMembershipBar';
+import VipPurchasePanel from '@/components/vip/VipPurchasePanel';
 import { vipVars } from '@/components/vip/vipTheme';
 export default function VipLevels() {
   const navigate = useNavigate();
@@ -21,16 +21,16 @@ export default function VipLevels() {
   const [preview, setPreview] = useState(null);
   const theme = data.catalog?.levels.find((item) => item.level === level);
   if (!theme) return <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-background text-foreground">{data.loading ? <Loader2 className="animate-spin" /> : <><p>{data.error || 'VIP bilgileri yüklenemedi.'}</p><button onClick={data.refresh}>Tekrar dene</button></>}</div>;
-  return <div className="vip-world min-h-screen pb-32 font-body" style={vipVars(theme)}>
+  return <div className="vip-world min-h-screen pb-[calc(12rem+env(safe-area-inset-bottom))] font-body" style={vipVars(theme)}>
     <div className="mx-auto max-w-lg">
       <VipPageHeader onBack={() => window.history.length > 1 ? navigate(-1) : navigate('/profil')} onBag={() => setBagOpen(true)} onHelp={() => setHelp(!help)} />
-      {help && <p className="vip-glass m-3 rounded-xl p-4 text-xs leading-relaxed">VIP 5 başlangıç, VIP 12 en üst seviyedir. Mevcut jeton yükleme sisteminden kazanılan üyelikleri çantandan etkinleştirebilir veya hediye edebilirsin. Süre dolunca kozmetikler saklanır, kullanım hakları durur. Seçimler ayrı ayrı kaydedilir.</p>}
+      {help && <p className="vip-glass m-3 rounded-xl p-4 text-xs leading-relaxed">VIP 5 başlangıç, VIP 12 en üst seviyedir. Seçtiğin VIP'i aşağıdaki sabit alandan Coins ile 30 günlük satın alabilirsin; varsa kalan süreye 30 gün eklenir. VIP 6: 7.200.000 Coins, VIP 7: 21.600.000 Coins. Çantandaki üyelikleri kullanma ve hediye etme seçenekleri korunur. Süre dolunca kozmetikler saklanır, kullanım hakları durur.</p>}
       <VipLevelHero theme={theme} levels={data.catalog.levels} onLevel={setLevel} />
       <VipCosmeticGrid theme={theme} features={data.catalog.features} onPreview={setPreview} avatar={user?.avatar} name={user?.username || user?.full_name} />
       <VipPrivilegeList level={level} features={data.catalog.features} />
       {data.error && <p role="alert" className="px-4 text-sm text-destructive">{data.error}</p>}
     </div>
-    <VipMembershipBar level={data.level} expiresAt={data.expires_at} onOpen={() => setBagOpen(true)} />
+    <VipPurchasePanel theme={theme} level={data.level} expiresAt={data.expires_at} onChanged={data.refresh} />
     <VipPreviewDialog preview={preview} onClose={() => setPreview(null)} avatar={user?.avatar} name={user?.username || user?.full_name} />
     <VipBagPanel open={bagOpen} onClose={() => { setBagOpen(false); data.refresh(); }} onChanged={data.refresh} />
   </div>;
