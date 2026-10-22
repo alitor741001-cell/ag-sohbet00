@@ -484,6 +484,7 @@ export default function VoiceRoom() {
   useVoiceRoomMessages(id, setMessages);
 
   // Sekme kapanırken / sayfadan çıkılırken odadan ayrıl.
+  // keepalive: tarayıcı kapatılsa bile istek sunucuya ulaşır.
   useEffect(() => () => {
     if (!joinedRef.current) return;
     joinedRef.current = false;
@@ -491,8 +492,8 @@ export default function VoiceRoom() {
     if (keepSeatRef.current) return;
     // Oda küçültüldüğünde odadan düşülmez — balon açıkken odalar gezilebilir.
     if (isRoomMinimized(id)) return;
-    base44.functions.invoke('voice-room', { action: 'seat-leave', room_id: id }).catch(() => {});
-    base44.functions.invoke('room-presence', { action: 'leave', room_id: id }).catch(() => {});
+    leaveSeatKeepalive(id);
+    leaveRoomKeepalive(id);
   }, [id]);
 
   const invokeVoice = useVoiceRoomAction(id, setRoom, toast);
@@ -910,19 +911,6 @@ export default function VoiceRoom() {
     // Gönderdiğim hediye kutu toplamına anında yansır, ardından sunucu toplamıyla doğrulanır.
     loadGiftBoard();
     flashGifted(recipientIds, data.gift?.emoji);
-    pushGiftAlert({
-      key: `send-${Date.now()}`,
-      giftId: data.gift?.id,
-      giftName: data.gift?.name || gift.name,
-      emoji: data.gift?.emoji || gift.emoji,
-      imageUrl: data.gift?.image_url || '',
-      kValue: Number(data.gift?.k_value) || 0,
-      totalK: Number(data.total_k) || 0,
-      count: Number(data.count) || recipientIds.length,
-      senderName: '',
-      recipientName: (data.recipients || []).map((item) => item.name).join(', '),
-      toId: '',
-    });
   };
 
   // Sunucu gönderimi kabul etmediyse yerelde işlenen adım geri alınır: bakiyeden düşmeyen
@@ -993,8 +981,23 @@ export default function VoiceRoom() {
       // Coin bakiyesi anında düşer: ekranda eski değer kalmaz.
       const cost = step * ids.length;
       setCoins((prev) => (prev === null || prev === undefined ? prev : Math.max(0, prev - cost)));
-
+      // Sayı tahtası anında ilerler: sunucu cevabı beklenmez.
+      setRoom((prev) => prev ? { ...prev, number_scores: withBoardStep(prev.number_scores, user?.id, cost), number_board: true } : prev);
     }
+    // Hediye animasyonu gönderim anında başlar: sunucu cevabı beklenmez.
+    pushGiftAlert({
+      key: `send-${Date.now()}`,
+      giftId: gift.id,
+      giftName: gift.name || 'Hediye',
+      emoji: gift.emoji || '🎁',
+      imageUrl: gift.image_url || '',
+      kValue: Number(gift.k_value) || 0,
+      totalK: (Number(gift.k_value) || 0) * ids.length * quantity,
+      count: ids.length,
+      senderName: '',
+      recipientName: ids.map((uid) => giftPeople.find((p) => p.user_id === uid)?.name).filter(Boolean).join(', ') || 'Oda',
+      toId: ids.length === 1 ? ids[0] : '',
+    });
     giftQueueRef.current.push({ gift, ids, quantity, requestId: makeId() });
     return flushGiftQueue();
   };
