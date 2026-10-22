@@ -1,7 +1,6 @@
 import React from 'react';
-import { Image } from '@/components/ui/image';
 import useSlotEdgeCleanup from '@/components/games/slot/useSlotEdgeCleanup';
-import { SLOT_SYMBOL_ART, SLOT_SYMBOL_ART_SIZE } from '@/components/games/slotAssets';
+import { SLOT_SYMBOL_ART } from '@/components/games/slotAssets';
 
 /**
  * Makara sembolü: kart görseli hücresine ortalanır, çevresinde makara yatağı kalır.
@@ -11,15 +10,14 @@ export default function SlotSymbol({ symbol, top, height }) {
   const art = useSlotEdgeCleanup(SLOT_SYMBOL_ART[symbol] || SLOT_SYMBOL_ART.ten);
   return (
     <span className="absolute left-0 flex w-full items-center justify-center p-[5%]" style={{ top, height }}>
-      <Image
+      {/* Dönerken anında görünmesi için temizlenmiş görsel doğrudan, beklemeden çizilir. */}
+      <img
         src={art}
         alt=""
-        className="slot-symbol-card aspect-square h-full max-w-full overflow-hidden rounded-lg"
-        fittingType="fill"
-        blurPlaceholder={false}
-        originWidth={SLOT_SYMBOL_ART_SIZE}
-        originHeight={SLOT_SYMBOL_ART_SIZE}
-        quality={88}
+        loading="eager"
+        decoding="sync"
+        draggable={false}
+        className="slot-symbol-card aspect-square h-full max-w-full rounded-lg object-cover"
       />
     </span>
   );
