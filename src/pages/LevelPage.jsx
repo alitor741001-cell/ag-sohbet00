@@ -7,14 +7,12 @@ import { useCurrentUser } from '@/lib/useCurrentUser';
 import { giftLevelOf, giftNextThreshold } from '@/lib/userLevels';
 import { formatXp } from '@/lib/xp';
 
-const TIERS = [
-  { range: '1-9', value: 1, tone: '#c98d6b', text: '#3a1c08' },
-  { range: '10-19', value: 10, tone: '#9be3b4', text: '#0d2a18' },
-  { range: '20-29', value: 20, tone: '#9fd6f5', text: '#0a2334' },
-  { range: '30-39', value: 30, tone: '#f4d03f', text: '#3a2a02' },
-  { range: '40-49', value: 40, tone: '#8ee08a', text: '#123211' },
-  { range: '50-59', value: 50, tone: '#c9b8ff', text: '#231a45' },
+const TONES = [
+  ['#c98d6b', '#3a1c08'], ['#9be3b4', '#0d2a18'], ['#9fd6f5', '#0a2334'], ['#f4d03f', '#3a2a02'], ['#8ee08a', '#123211'],
+  ['#c9b8ff', '#231a45'], ['#f9a8d4', '#3b0a24'], ['#fdba74', '#3a1a02'], ['#67e8f9', '#06282e'], ['#f87171', '#3a0606'],
 ];
+// Seviye 1-500: her 50 seviyede yeni bir renk sembolü.
+const TIERS = TONES.map(([tone, text], i) => ({ range: `${i === 0 ? 1 : i * 50}-${i === 9 ? 500 : i * 50 + 49}`, value: i === 0 ? 1 : i * 50, tone, text }));
 
 // Seviye artışı kademelidir: her yeni seviye bir öncekinden daha fazla deneyim puanı ister.
 const BASE_STEP = 20000;
@@ -29,7 +27,7 @@ const levelInfo = (score) => {
   }
   return { level, into, need: needFor(level) };
 };
-const tierFor = (level) => TIERS[Math.min(TIERS.length - 1, Math.floor((level - 1) / 10))];
+const tierFor = (level) => TIERS[Math.min(TIERS.length - 1, Math.floor(level / 50))];
 
 const TAB_ON = { color: '#ffd76a', borderBottom: '2px solid #ffd76a' };
 

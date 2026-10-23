@@ -47,7 +47,7 @@ const N_LADDER = [50000, 200000, 500000, 1000000];
 const N_STEP = 500000;
 const N_MAX = 50;
 const GIFT_LADDER_RATIO = 1.3;
-const GIFT_MAX_LEVEL = 60;
+const GIFT_MAX_LEVEL = 500;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 /** Süreli VIP: bitiş tarihi geçmişse rozet düşer (bitiş tarihi yazılmamışsa süresiz). */

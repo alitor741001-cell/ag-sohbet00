@@ -17,7 +17,7 @@ const N_STEP = 500000;
 const N_MAX = 50;
 // Hediye seviyesi: 1 K'dan başlar, her seviyede eşik %30 artar.
 const GIFT_LADDER_RATIO = 1.3;
-const GIFT_MAX_LEVEL = 60;
+const GIFT_MAX_LEVEL = 500;
 
 /** N seviyesi: 50k → N1, 200k → N2, 500k → N3, 1M → N4, sonrası her 500k'da +1 (0 ise rozet gösterilmez). */
 export const nLevel = (loadedCoins: any) => {
