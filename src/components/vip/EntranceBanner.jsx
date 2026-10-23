@@ -23,7 +23,7 @@ export default function EntranceBanner({ person, onDone }) {
           {tier !== 'basic' && <span className="entry-level">V{person.level}</span>}
         </div>
         <p className="entry-text">
-          <span className="entry-name">{person.name}</span> odaya girdi
+          <span className="entry-name">{person.name}</span> odaya katıldı
         </p>
         <span className="entry-shine" />
       </div>

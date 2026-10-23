@@ -202,8 +202,9 @@ export default async function(req) {
           ? appendRoomLog(room, { text: `Duyuru: ${room.announcement}`, kind: 'announcement', actor_id: user.id, actor_name: name })
           : null;
         await base44.asServiceRole.entities.Room.update(room_id, joinLogs ? { participants, room_logs: joinLogs } : { participants });
-        waitUntil(publishRoomEntrance(base44, { ...room, participants }, me, body.visit_id).catch(error => console.error('VIP giriş efekti:', error.message)));
       }
+      // Her girişte (yeniden girişte de) giriş şeridi yayınlanır; aynı ziyaret tekrar yayınlanmaz.
+      waitUntil(publishRoomEntrance(base44, { ...room, participants }, me, body.visit_id).catch(error => console.error('Giriş efekti:', error.message)));
       const roleInfo = getRoleInfo(me, await labelOverrides());
       const frameInfo = await getSpecialFrameInfo(base44, me, true);
       const profileMeta = profileFrameMeta(me);
