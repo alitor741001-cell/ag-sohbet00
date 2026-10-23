@@ -687,7 +687,7 @@ export default function WatchParty() {
             </div>
           );
         })()}
-        <div className={`room-video-stage flex min-w-0 flex-1 items-center justify-center bg-black ${chatOpen || directOpen ? 'room-video-panel-open' : ''}`}>
+        <div className={`room-video-stage flex min-w-0 flex-1 items-center justify-center bg-black ${chatOpen ? 'room-video-panel-open room-video-chat-open' : directOpen ? 'room-video-panel-open' : ''}`}>
           {voiceMode
             ? <p className="p-6 text-center text-sm text-muted-foreground">Sesli sohbet alanı açılıyor…</p>
             : ytId
@@ -731,7 +731,7 @@ export default function WatchParty() {
         </div>
 
         {(
-          <div hidden={!chatOpen} className="room-side-panel absolute bottom-0 right-0 top-0 z-40 flex w-full max-w-md flex-col border-l border-white/10 bg-black pt-[max(env(safe-area-inset-top),0.75rem)] pb-[max(env(safe-area-inset-bottom),0.5rem)] pl-[max(env(safe-area-inset-left),0px)] pr-[max(env(safe-area-inset-right),0px)] shadow-2xl"
+          <div hidden={!chatOpen} className="room-side-panel film-chat-panel absolute bottom-0 right-0 top-0 z-40 flex w-full max-w-md flex-col border-l border-white/10 bg-black pt-[max(env(safe-area-inset-top),0.75rem)] pb-[max(env(safe-area-inset-bottom),0.5rem)] pl-[max(env(safe-area-inset-left),0px)] pr-[max(env(safe-area-inset-right),0px)] shadow-2xl"
             onTouchStart={(e) => { touchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }; }}
             onTouchEnd={(e) => { if (!touchStart.current) return; const dx = e.changedTouches[0].clientX - touchStart.current.x; const dy = e.changedTouches[0].clientY - touchStart.current.y; if (dx > 80 && dx > Math.abs(dy) * 1.5) setChatOpen(false); }}
           >

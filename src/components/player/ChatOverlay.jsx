@@ -196,7 +196,7 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
 
   return (
     <div className="room-chat-shell relative flex h-full min-h-0 flex-col bg-black text-white">
-      <div className="flex items-center justify-between gap-1.5 border-b-2 border-[#FFD700]/70 px-2.5 py-2.5 shadow-[0_6px_14px_-10px_rgba(255,215,0,0.9)]">
+      <div className="room-chat-header flex items-center justify-between gap-1.5 border-b-2 border-[#FFD700]/70 px-2.5 py-2.5 shadow-[0_6px_14px_-10px_rgba(255,215,0,0.9)]">
         <div className="flex min-w-0 items-center gap-2">
           <span className={`relative h-9 w-9 shrink-0 ${neonCircleClass('gold')} text-[#FFD700]`}>
             <MessageSquare className="h-5 w-5" />
@@ -217,7 +217,7 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
           {isOwner && chatEnabled && (
             <button onClick={clearAll} aria-label="Sohbeti temizle" className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-[#FF4D5E] bg-black text-[#FF9A9A] shadow-[0_0_12px_-5px_rgba(255,107,107,0.9)] active:scale-95"><Trash2 className="h-4 w-4" /></button>
           )}
-          {voiceEnabled && (
+          {voice && (
             <>
               <button onClick={() => (voice.voiceEnabled === false && onMicPress ? onMicPress() : voice.toggleMute())} disabled={voice.remoteMuted || voice.requesting || (voice.voiceEnabled !== false && voice.connectionState !== 'connected')} aria-label="Mikrofon" className={`flex h-9 w-9 items-center justify-center rounded-full border-2 border-[#FFD700] bg-black text-[#FFD700] shadow-[0_0_14px_-3px_rgba(255,215,0,0.9)] active:scale-95 ${voice.localSpeaking && voice.active && !voice.remoteMuted ? 'speaking-glow' : ''}`}>
                 {voice.active ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
@@ -261,20 +261,11 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
           </div>
         )
       ) : msgFilter === 'all' ? (
-      <div ref={scrollRef} className="flex min-w-0 flex-1 min-h-0 flex-col gap-3 overflow-x-hidden overflow-y-auto overscroll-contain p-3 bg-black" style={{ touchAction: 'pan-y', WebkitOverflowScrolling: 'touch' }}>
+      <div ref={scrollRef} className="room-chat-messages flex min-w-0 flex-1 min-h-0 flex-col gap-3 overflow-x-hidden overflow-y-auto overscroll-contain p-3 bg-black" style={{ touchAction: 'pan-y', WebkitOverflowScrolling: 'touch' }}>
         {loading ? <p className="text-center text-sm text-[#A0A0A0] py-8">Yükleniyor...</p> :
          messages.length === 0 ? (
-          <div className="flex flex-1 items-center justify-center py-8">
-            <div className="flex items-center gap-3">
-              <Sparkles className="h-4 w-4 text-[#FFD700]/80" />
-              <div className="relative max-w-xs rounded-2xl border-2 border-[#FFD700] bg-black/70 px-6 py-5 text-center shadow-[0_0_24px_-6px_rgba(255,215,0,0.9)]">
-                <span className="absolute -top-3 left-1/2 flex h-6 w-6 -translate-x-1/2 items-center justify-center rounded-full border border-[#FFD700] bg-black text-[#FFD700]">
-                  <Crown className="h-3.5 w-3.5" />
-                </span>
-                <p className="text-sm text-white/85">Henüz mesaj yok. İlk mesajı sen at! 🍿</p>
-              </div>
-              <Sparkles className="h-4 w-4 text-[#FFD700]/80" />
-            </div>
+          <div className="flex flex-1 items-center justify-center p-3">
+            <p className="text-center text-xs text-muted-foreground">Henüz mesaj yok. İlk mesajı sen at!</p>
           </div>
         ) :
          messages.filter((m) => !isHiddenMarker(m)).filter((m) => !(cheatClearedAt && m.type === 'system' && new Date(m.created_date || 0).getTime() <= cheatClearedAt)).map((m) => (
@@ -354,7 +345,7 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
           </p>
         </div>
       )}
-      {chatEnabled && msgFilter === 'all' && !chatLocked && <div className="flex items-center gap-2 border-t border-[#FFD700]/25 bg-black p-2.5">
+      {chatEnabled && msgFilter === 'all' && !chatLocked && <div className="room-chat-composer flex items-center gap-2 border-t border-[#FFD700]/25 bg-black p-2.5">
         <div className="flex h-12 min-w-0 flex-1 items-center gap-2 rounded-full border border-[#FFD700]/70 bg-[#0d0d0d] pl-2 pr-3 shadow-[0_0_14px_-6px_rgba(255,215,0,0.9)]">
           <button type="button" onClick={() => setShowEmoji(!showEmoji)} aria-label="Emoji seç" aria-expanded={showEmoji} title="Emoji" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#FFD700] active:scale-95"><Smile className="h-6 w-6" /></button>
           <input value={text} onChange={(e) => { setText(e.target.value); sendTyping(); }} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(e); } }} inputMode="text" enterKeyHint="send" autoComplete="off" autoCorrect="off" autoCapitalize="sentences" spellCheck={false} placeholder="Mesaj yazın..." className="h-full min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-[#A0A0A0]" />
