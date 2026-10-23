@@ -231,12 +231,7 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
         </div>
       </div>
       {/* Paneli kapatmak için sol kenarda üçgen kol. */}
-      <button type="button" aria-label="Sohbeti kapat" onClick={onClose} className="absolute left-0 top-1/2 z-[5] -translate-y-1/2">
-        <svg width="22" height="40" viewBox="0 0 22 40" className="drop-shadow-lg">
-          <path d="M0 0 L0 40 L22 20 Z" fill="rgba(0,0,0,0.55)" />
-          <path d="M8 20 L14 14 M8 20 L14 26" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </button>
+
       {(chatEnabled || isOwner) && (
         <div className="room-chat-tabs mx-3 my-2 flex items-stretch overflow-x-auto rounded-2xl border border-[#FFD700]/40 bg-black py-1 no-scrollbar shadow-[0_0_16px_-6px_rgba(255,215,0,0.85)]" onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
           {FILTERS.map((f, index) => {
