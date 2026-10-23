@@ -42,6 +42,8 @@ const ResetPassword = lazy(() => import('@/pages/ResetPassword'));
 const BannedScreen = lazy(() => import('@/pages/BannedScreen'));
 const SecurityProtocol = lazy(() => import('@/pages/SecurityProtocol'));
 const Friends = lazy(() => import('@/pages/Friends'));
+const FriendRequests = lazy(() => import('@/pages/FriendRequests'));
+const AgencyMessages = lazy(() => import('@/pages/AgencyMessages'));
 const AdminLayout = lazy(() => import('@/pages/admin/AdminLayout'));
 const AdminUsers = lazy(() => import('@/pages/admin/AdminUsers'));
 const AdminSupport = lazy(() => import('@/pages/admin/AdminSupport'));
@@ -115,6 +117,8 @@ const AuthenticatedApp = () => {
           <Route path="/ara" element={<Navigate to="/" replace />} />
           <Route path="/destek" element={<Support />} />
           <Route path="/arkadaslar" element={<Friends />} />
+          <Route path="/arkadaslar/istekler" element={<FriendRequests />} />
+          <Route path="/ajans/mesajlar" element={<AgencyMessages />} />
           <Route path="/bildirimler" element={<Notifications />} />
           <Route path="/profil" element={<Profile />} />
           <Route path="/ajans" element={<AgencyPage />} />
