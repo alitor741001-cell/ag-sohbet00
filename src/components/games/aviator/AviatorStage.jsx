@@ -20,7 +20,7 @@ export default function AviatorStage({ game, children }) {
   const tier = mult < 2 ? { c: '#3b9bff', h: 220 } : mult < 5 ? { c: '#22e06b', h: 130 } : mult < 10 ? { c: '#ff9a1f', h: 35 } : { c: '#ff2a3d', h: 0 };
   // Eğri ve uçak, içerideki oyuncu listesinin sağında kalır (listeyi kapatmaz).
   const x0 = 30;
-  const y0 = 98;
+  const y0 = 100;
   const travelWidth = 88 - x0;
   const x = x0 + p * travelWidth;
   const y = y0 - p * (y0 - 24);
