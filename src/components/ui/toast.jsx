@@ -3,10 +3,13 @@ import { cva } from "class-variance-authority";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+// Kısa bildirimler ekranın ortasında, küçük yazıyla görünür.
+const WRAP = 'pointer-events-none fixed left-1/2 top-1/2 z-[100] flex w-full max-w-[16rem] -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-2 px-3';
+
 const ToastProvider = React.forwardRef(({ ...props }, ref) => (
   <div
     ref={ref}
-    className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] flex flex-col items-center gap-2 w-full max-w-sm px-4"
+    className={WRAP}
     {...props}
   />
 ));
@@ -15,14 +18,14 @@ ToastProvider.displayName = "ToastProvider";
 const ToastViewport = React.forwardRef(({ ...props }, ref) => (
   <div
     ref={ref}
-    className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] flex flex-col items-center gap-2 w-full max-w-sm px-4"
+    className={WRAP}
     {...props}
   />
 ));
 ToastViewport.displayName = "ToastViewport";
 
 const toastVariants = cva(
-  "group pointer-events-auto relative flex w-full items-center justify-between space-x-2 overflow-hidden rounded-lg border p-3 pr-4 shadow-lg transition-all data-[swipe=cancel]:translate-x-0 data-[swipe=end]:translate-x-[var(--radix-toast-swipe-end-x)] data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[swipe=move]:transition-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[swipe=end]:animate-out data-[state=closed]:fade-out-80 data-[state=closed]:slide-out-to-right-full data-[state=open]:slide-in-from-top-full data-[state=open]:sm:slide-in-from-bottom-full",
+  "group pointer-events-auto relative flex w-full animate-in fade-in zoom-in-95 items-center justify-between space-x-1.5 overflow-hidden rounded-lg border py-1.5 pl-2.5 pr-6 shadow-lg transition-all data-[swipe=cancel]:translate-x-0 data-[swipe=end]:translate-x-[var(--radix-toast-swipe-end-x)] data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[swipe=move]:transition-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[swipe=end]:animate-out data-[state=closed]:fade-out-80 data-[state=closed]:slide-out-to-right-full data-[state=open]:slide-in-from-top-full data-[state=open]:sm:slide-in-from-bottom-full",
   {
     variants: {
       variant: {
@@ -64,13 +67,13 @@ const ToastClose = React.forwardRef(({ className, ...props }, ref) => (
   <button
     ref={ref}
     className={cn(
-      "absolute right-2 top-2 rounded-md p-1 text-foreground/50 opacity-0 transition-opacity hover:text-foreground focus:opacity-100 focus:outline-none focus:ring-2 group-hover:opacity-100 group-[.destructive]:text-red-300 group-[.destructive]:hover:text-red-50 group-[.destructive]:focus:ring-red-400 group-[.destructive]:focus:ring-offset-red-600",
+      "absolute right-1 top-1 rounded-md p-1 text-foreground/50 opacity-0 transition-opacity hover:text-foreground focus:opacity-100 focus:outline-none focus:ring-2 group-hover:opacity-100 group-[.destructive]:text-red-300 group-[.destructive]:hover:text-red-50 group-[.destructive]:focus:ring-red-400 group-[.destructive]:focus:ring-offset-red-600",
       className
     )}
     toast-close=""
     {...props}
   >
-    <X className="h-4 w-4" />
+    <X className="h-3 w-3" />
   </button>
 ));
 ToastClose.displayName = "ToastClose";
@@ -78,7 +81,7 @@ ToastClose.displayName = "ToastClose";
 const ToastTitle = React.forwardRef(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("text-sm font-semibold", className)}
+    className={cn("text-[11px] font-bold leading-tight", className)}
     {...props}
   />
 ));
@@ -87,7 +90,7 @@ ToastTitle.displayName = "ToastTitle";
 const ToastDescription = React.forwardRef(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("text-sm opacity-90", className)}
+    className={cn("text-[10px] leading-tight opacity-90", className)}
     {...props}
   />
 ));
