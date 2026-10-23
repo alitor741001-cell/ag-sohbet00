@@ -81,7 +81,7 @@ export default function AgencyChangeSheet({ open, onClose, onChanged }) {
   };
 
   return (
-    <AgencySheet open={open} tall onClose={onClose} icon={ArrowLeftRight} title="🔄 Ajans Değişikliği" subtitle="Yeni ajans kimliğini gir, ajansı gör ve başvur">
+    <AgencySheet open={open} full onClose={onClose} icon={ArrowLeftRight} title="🔄 Ajans Değişikliği" subtitle="Yeni ajans kimliğini gir, ajansı gör ve başvur">
       <div className="space-y-4 pb-2">
         <div className="rounded-2xl border border-[#5AB8FF]/35 bg-gradient-to-br from-[#0b1b2c] to-[#0b0910] p-4">
           <p className="text-[11px] font-black uppercase tracking-wider text-[#5AB8FF]">Yeni Ajans Kimliği</p>
