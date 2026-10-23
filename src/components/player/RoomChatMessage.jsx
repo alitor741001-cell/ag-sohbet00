@@ -30,7 +30,7 @@ function RoomChatMessage({ message, profile, ownerId, roomModerators, currentUse
   const emojiMotion = ['😂','👏','😢','👍'].includes(trimmed) ? 'anim-emoji-bounce' : ['❤️','🎉','😍','🍿'].includes(trimmed) ? 'anim-emoji-pulse' : 'anim-emoji-shake';
   return <article className="group flex w-full min-w-0 shrink-0 items-start gap-2">
     <button type="button" onClick={() => onOpenProfile?.(message.user_id)} className="mt-0.5 shrink-0" aria-label={`${name} profilini aç`}>
-      <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border border-white/25 bg-white/10">
+      <span className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border-2 bg-black" style={{ borderColor: role.color || '#FFD700', boxShadow: `0 0 10px -2px ${role.color || '#FFD700'}` }}>
         {avatar
           ? <Image src={avatar} alt="" referrerPolicy="no-referrer" draggable={false} fittingType="fill" className="h-full w-full" />
           : <span className="text-[11px] font-bold text-white/80">{name.trim().charAt(0) || '?'}</span>}
@@ -45,6 +45,7 @@ function RoomChatMessage({ message, profile, ownerId, roomModerators, currentUse
         </button>
         {!hidden && label && <span className={`text-[10px] font-bold ${isOwner ? 'text-amber-400' : 'text-sky-400'}`}>{label}</span>}
         {!hidden && profile && (profile.display_role || profile.custom_role?.name) && <RoleBadge user={profile} size="sm" showLabel={false} />}
+        {message.created_date && <span className="ml-auto shrink-0 text-[10px] text-white/45">{new Date(message.created_date).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}</span>}
       </div>
       {/* İsim üstte; seviye rozetleri altta tek sırada: kişi, N, VIP, atış, alış ve LVL.
           Film odası paneli dar olduğu için rozetler kompakt ölçekte ve tek satırda tutulur. */}
@@ -57,7 +58,7 @@ function RoomChatMessage({ message, profile, ownerId, roomModerators, currentUse
       <div className="isolate mt-1 min-w-0 max-w-full overflow-hidden rounded-xl p-2">
         <VipChatBubble theme={!hidden && vipLook(profile, 'bubble')}><RoleMessageEffect className="max-w-full min-w-0 align-top" roleKey={profile?.display_role || (profile?.custom_role?.name ? 'custom' : '')} msgEffect={role.msg_effect} msgColor={role.color}>
           {message.file_url && <Image src={message.file_url} alt="Sohbet görseli" className="mb-1 block h-44 w-44 max-w-full cursor-pointer rounded-lg" fittingType="fit" onClick={() => onImage(message.file_url)} />}
-          {message.text && <p className={`block h-auto max-w-full whitespace-pre-wrap break-words rounded-lg px-2.5 py-1.5 leading-relaxed [overflow-wrap:anywhere] ${emoji ? `text-3xl anim-emoji ${emojiMotion}` : 'text-sm'} bg-secondary text-secondary-foreground`} style={{ maxWidth: 'min(100%, calc(35ch + 1.25rem))' }}>{message.text}</p>}
+          {message.text && <p className={`block h-auto max-w-full whitespace-pre-wrap break-words rounded-lg px-2.5 py-1.5 leading-relaxed [overflow-wrap:anywhere] ${emoji ? `text-3xl anim-emoji ${emojiMotion}` : 'text-sm'} inline-block bg-[#222222] text-white`} style={{ maxWidth: 'min(100%, calc(35ch + 1.25rem))' }}>{message.text}</p>}
         </RoleMessageEffect></VipChatBubble>
       </div>
     </div>

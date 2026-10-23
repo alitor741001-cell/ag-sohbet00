@@ -196,7 +196,7 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
 
   return (
     <div className="room-chat-shell relative flex h-full min-h-0 flex-col bg-black text-white">
-      <div className="flex items-center justify-between gap-1.5 border-b border-[#FFD700]/30 px-2.5 py-2">
+      <div className="flex items-center justify-between gap-1.5 border-b-2 border-[#FFD700]/70 px-2.5 py-2.5 shadow-[0_6px_14px_-10px_rgba(255,215,0,0.9)]">
         <div className="flex min-w-0 items-center gap-2">
           <span className={`relative h-9 w-9 shrink-0 ${neonCircleClass('gold')} text-[#FFD700]`}>
             <MessageSquare className="h-5 w-5" />
@@ -210,24 +210,24 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
         <div className="flex shrink-0 items-center gap-1.5">
           {voiceEnabled && (
             <>
-              <button onClick={() => (voice.voiceEnabled === false && onMicPress ? onMicPress() : voice.toggleMute())} disabled={voice.remoteMuted || voice.requesting || (voice.voiceEnabled !== false && voice.connectionState !== 'connected')} aria-label="Mikrofon" className={`flex h-9 w-9 items-center justify-center rounded-full border bg-black/70 active:scale-95 ${voice.localSpeaking && voice.active && !voice.remoteMuted ? 'speaking-glow border-[#FF0033]' : 'border-[#FF0033]/55'}`}>
-                {voice.active ? <Mic className="h-4 w-4 text-[#FF8AA0]" /> : <MicOff className="h-4 w-4 text-[#FF8AA0]" />}
+              <button onClick={() => (voice.voiceEnabled === false && onMicPress ? onMicPress() : voice.toggleMute())} disabled={voice.remoteMuted || voice.requesting || (voice.voiceEnabled !== false && voice.connectionState !== 'connected')} aria-label="Mikrofon" className={`flex h-9 w-9 items-center justify-center rounded-full border-2 border-[#FFD700] bg-black text-[#FFD700] shadow-[0_0_14px_-3px_rgba(255,215,0,0.9)] active:scale-95 ${voice.localSpeaking && voice.active && !voice.remoteMuted ? 'speaking-glow' : ''}`}>
+                {voice.active ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
               </button>
-              <button onClick={voice.toggleDeafen} aria-label="Hoparlör" className={`flex h-9 w-9 items-center justify-center rounded-full border bg-black/70 active:scale-95 ${voice.deafened ? 'border-[#007BFF]' : 'border-[#007BFF]/55'}`}>
-                {voice.deafened ? <VolumeX className="h-4 w-4 text-[#7FBEFF]" /> : <Volume2 className="h-4 w-4 text-[#7FBEFF]" />}
+              <button onClick={voice.toggleDeafen} aria-label="Hoparlör" className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-[#FFD700] bg-black text-[#FFD700] shadow-[0_0_14px_-3px_rgba(255,215,0,0.9)] active:scale-95">
+                {voice.deafened ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
               </button>
             </>
           )}
           {onDirect && (
-            <button onClick={onDirect} aria-label="Özel mesajlar" className="relative flex h-9 w-9 items-center justify-center rounded-full border border-[#8A2BE2]/55 bg-black/70 text-[#B06BFF] shadow-[0_0_18px_-8px_rgba(138,43,226,0.9)] transition-transform active:scale-95">
+            <button onClick={onDirect} aria-label="Özel mesajlar" className="relative flex h-9 w-9 items-center justify-center rounded-full border-2 border-[#8A2BE2] bg-black text-[#B06BFF] shadow-[0_0_18px_-8px_rgba(138,43,226,0.9)] transition-transform active:scale-95">
               <MessagesSquare className="h-4 w-4" />
               {directUnread > 0 && <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#FFD700] px-1 text-[9px] font-bold text-black">{directUnread > 99 ? '99+' : directUnread}</span>}
             </button>
           )}
           {isOwner && chatEnabled && (
-            <button onClick={clearAll} aria-label="Sohbeti temizle" className="flex h-9 w-9 items-center justify-center rounded-full border border-[#FF6B6B]/60 bg-black/70 text-[#FF9A9A] shadow-[0_0_12px_-5px_rgba(255,107,107,0.9)] active:scale-95"><Trash2 className="h-4 w-4" /></button>
+            <button onClick={clearAll} aria-label="Sohbeti temizle" className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-[#FF4D5E] bg-black text-[#FF9A9A] shadow-[0_0_12px_-5px_rgba(255,107,107,0.9)] active:scale-95"><Trash2 className="h-4 w-4" /></button>
           )}
-          <button onClick={onClose} aria-label="Sohbeti kapat" className="flex h-9 w-9 items-center justify-center rounded-full border border-white/25 bg-black/60 text-white active:scale-95"><X className="w-5 h-5" /></button>
+          <button onClick={onClose} aria-label="Sohbeti kapat" className="flex h-9 w-9 items-center justify-center rounded-full text-white active:scale-95"><X className="h-6 w-6" /></button>
         </div>
       </div>
       {/* Paneli kapatmak için sol kenarda üçgen kol. */}
@@ -243,7 +243,7 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
             const Icon = f.icon;
             const active = msgFilter === f.key;
             return (
-              <button key={f.key} onClick={() => setMsgFilter(f.key)} aria-pressed={active} className={`flex min-h-11 min-w-[3.75rem] flex-1 flex-col items-center justify-center gap-0.5 px-1.5 py-1 text-[9px] font-bold ${index > 0 ? 'border-l border-white/10' : ''} ${active ? 'rounded-lg bg-[#FFD700] text-black shadow-[0_0_14px_-3px_rgba(255,215,0,0.95)]' : 'text-white/80'}`}>
+              <button key={f.key} onClick={() => setMsgFilter(f.key)} aria-pressed={active} className={`mx-0.5 flex min-h-10 flex-1 items-center justify-center gap-1.5 px-2 py-1.5 text-[11px] font-bold ${index > 0 && !active ? 'border-l border-white/10' : ''} ${active ? 'rounded-xl bg-[#FFD700] text-black shadow-[0_0_14px_-3px_rgba(255,215,0,0.95)]' : 'text-white/80'}`}>
                 <Icon className="h-3.5 w-3.5" />
                 <span className="whitespace-nowrap leading-none">{f.label}</span>
               </button>
@@ -360,9 +360,8 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
         </div>
       )}
       {chatEnabled && msgFilter === 'all' && !chatLocked && <div className="flex items-center gap-2 border-t border-[#FFD700]/25 bg-black p-2.5">
-        <button type="button" onClick={() => setShowEmoji(!showEmoji)} aria-label="Emoji seç" aria-expanded={showEmoji} title="Emoji" className={`h-11 w-11 shrink-0 text-[#00FF66] active:scale-95 ${neonCircleClass('green')}`}><Smile className="w-4 h-4" /></button>
-        <div className="flex h-11 min-w-0 flex-1 items-center gap-1.5 rounded-full border border-white/15 bg-[#0d0d0d] px-3 focus-within:border-[#FFD700]/60">
-          <MessageSquare className="h-4 w-4 shrink-0 text-[#A0A0A0]" />
+        <div className="flex h-12 min-w-0 flex-1 items-center gap-2 rounded-full border border-[#FFD700]/70 bg-[#0d0d0d] pl-2 pr-3 shadow-[0_0_14px_-6px_rgba(255,215,0,0.9)]">
+          <button type="button" onClick={() => setShowEmoji(!showEmoji)} aria-label="Emoji seç" aria-expanded={showEmoji} title="Emoji" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#FFD700] active:scale-95"><Smile className="h-6 w-6" /></button>
           <input value={text} onChange={(e) => { setText(e.target.value); sendTyping(); }} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(e); } }} inputMode="text" enterKeyHint="send" autoComplete="off" autoCorrect="off" autoCapitalize="sentences" spellCheck={false} placeholder="Mesaj yazın..." className="h-full min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-[#A0A0A0]" />
         </div>
         <button type="button" onClick={send} disabled={!text.trim() || uploading || sending} aria-label="Mesaj gönder" className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 border-[#FFD700] bg-[#FFD700] text-black shadow-[0_0_22px_-2px_rgba(255,215,0,0.95)] active:scale-95 disabled:opacity-50"><Send className="w-5 h-5" /></button>
