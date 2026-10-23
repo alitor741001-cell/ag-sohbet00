@@ -10,13 +10,8 @@ export default function MessagesBanner({ relations, userId, invoke, showBell = t
   return (
     <div className="sticky top-0 z-30 w-full">
       <div className="relative w-full" style={{ aspectRatio: '1024 / 342' }}>
-        <img src={BANNER} alt="Mesajlar" className="absolute inset-0 h-full w-full object-cover" />
-        {/* Sol kenar geçişi */}
-        <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-0 w-[8%]" style={{ background: 'linear-gradient(90deg, rgba(7,6,11,1) 0%, rgba(7,6,11,0) 100%)' }} />
-        {/* Sağ kenar geçişi */}
-        <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-0 w-[8%]" style={{ background: 'linear-gradient(270deg, rgba(7,6,11,1) 0%, rgba(7,6,11,0) 100%)' }} />
-        {/* Alt kenar geçişi (ince, metne dokunmaz) */}
-        <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-[10%]" style={{ background: 'linear-gradient(180deg, rgba(7,6,11,0) 0%, rgba(7,6,11,1) 100%)' }} />
+        {/* Koyu zemin "screen" karışımıyla kaybolur, yalnızca parlak yazı ve ikonlar kalır. */}
+        <img src={BANNER} alt="Mesajlar" className="absolute inset-0 h-full w-full object-cover" style={{ mixBlendMode: 'screen' }} />
         <div className="absolute" style={{ left: '58.5%', top: '25%', width: '13.5%', height: '50%' }}>
           <Link to="/arkadaslar/istekler" aria-label="İstekler" className={HOT} />
         </div>
