@@ -6,7 +6,7 @@ import { useCurrentUser } from '@/lib/useCurrentUser';
 import { broadcasterState } from '@/lib/broadcaster';
 import RoomDiscoveryCard from '@/components/home/RoomDiscoveryCard';
 import HomeTopBar from '@/components/home/fantasy/HomeTopBar';
-import NeonPageHeader from '@/components/layout/NeonPageHeader';
+import GamesBanner from '@/components/layout/GamesBanner';
 import PullToRefresh from '@/components/home/PullToRefresh';
 import GameDiscoveryRow from '@/components/home/GameDiscoveryRow';
 import FollowPanel from '@/components/home/FollowPanel';
@@ -309,7 +309,7 @@ export default function RoomDiscovery({ shortcuts = null }) {
   return (
     <PullToRefresh onRefresh={refreshList} label={tab === 'games' ? 'Oyunları' : 'Yayınları'} busyLabel={tab === 'games' ? 'Oyunlar yenileniyor…' : 'Yayınlar yenileniyor…'}>
       {tab === 'games' ? (
-        <NeonPageHeader title="OYUNLAR" subtitle="Oda kurmadan anında oyna" />
+        <GamesBanner />
       ) : (
         <HomeTopBar view={view} onView={setView} onSearch={() => navigate('/arama')} showViews />
       )}
