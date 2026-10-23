@@ -1,34 +1,31 @@
 import { Link } from 'react-router-dom';
-import { Users, Building2 } from 'lucide-react';
 import NotificationBell from '@/components/friends/NotificationBell';
 
-/** Mesajlar üst başlığı: görsel yerine doğal, profesyonel bir başlık çubuğu.
-    İstekler, sistem bildirimi ve ajans mesajları butonları içerir. */
+const BANNER = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/86dc7f4f1_IMG_0147.jpg';
+const HOT = 'absolute inset-0 h-full w-full opacity-0';
+
+/** Mesajlar üst görseli: sağdaki üç yuvarlak tıklanabilir alanlardır.
+    Kenarlardaki arka plan sayfa zeminine yumuşakça geçer, metin net kalır. */
 export default function MessagesBanner({ relations, userId, invoke, showBell = true }) {
-  const pending = Array.isArray(relations) ? relations.filter((r) => r.status === 'pending').length : 0;
   return (
     <div className="sticky top-0 z-30 w-full">
-      <div className="relative flex items-center justify-between gap-2 px-4 py-3"
-        style={{ background: 'linear-gradient(180deg, rgba(7,6,11,0.98) 0%, rgba(7,6,11,0.92) 70%, rgba(7,6,11,0) 100%)' }}>
-        <h1 className="select-none text-lg font-bold uppercase tracking-wide text-white">Mesajlar</h1>
-        <div className="flex items-center gap-2">
-          <Link to="/arkadaslar/istekler" aria-label="İstekler"
-            className="relative flex min-h-11 items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 text-white active:scale-95">
-            <Users className="h-4 w-4" />
-            <span className="whitespace-nowrap text-[11px] font-semibold leading-none">İstekler</span>
-            {pending > 0 && (
-              <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
-                {pending > 9 ? '9+' : pending}
-              </span>
-            )}
-          </Link>
-          {showBell && <NotificationBell />}
-          <Link to="/ajans/mesajlar" aria-label="Ajans mesajları"
-            className="flex min-h-11 items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 text-white active:scale-95">
-            <Building2 className="h-4 w-4" />
-            <span className="whitespace-nowrap text-[11px] font-semibold leading-none">Ajans</span>
-          </Link>
+      <div className="relative w-full" style={{ aspectRatio: '1024 / 342' }}>
+        <img src={BANNER} alt="Mesajlar" className="absolute inset-0 h-full w-full object-cover" />
+        {/* Sol kenar geçişi */}
+        <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-0 w-[8%]" style={{ background: 'linear-gradient(90deg, rgba(7,6,11,1) 0%, rgba(7,6,11,0) 100%)' }} />
+        {/* Sağ kenar geçişi */}
+        <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-0 w-[8%]" style={{ background: 'linear-gradient(270deg, rgba(7,6,11,1) 0%, rgba(7,6,11,0) 100%)' }} />
+        {/* Alt kenar geçişi (ince, metne dokunmaz) */}
+        <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-[10%]" style={{ background: 'linear-gradient(180deg, rgba(7,6,11,0) 0%, rgba(7,6,11,1) 100%)' }} />
+        <div className="absolute" style={{ left: '58.5%', top: '25%', width: '13.5%', height: '50%' }}>
+          <Link to="/arkadaslar/istekler" aria-label="İstekler" className={HOT} />
         </div>
+        {showBell && (
+          <div className="absolute" style={{ left: '72.5%', top: '25%', width: '13.5%', height: '50%' }}>
+            <NotificationBell buttonClassName={HOT} />
+          </div>
+        )}
+        <Link to="/ajans/mesajlar" aria-label="Ajans mesajları" className="absolute" style={{ left: '86.5%', top: '25%', width: '13%', height: '50%' }} />
       </div>
     </div>
   );
