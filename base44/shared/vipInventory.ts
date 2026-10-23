@@ -1,10 +1,30 @@
 import { VIP_LEVELS } from './vipCatalog.ts';
 const cosmeticFeatures = (catalog) => catalog.features.filter((feature) => feature.supported && feature.cosmetic !== false);
+
+/**
+ * Aynı kozmetikten mükerrer kayıt oluşursa tek kayda iner: önce envanteri dolu olan,
+ * sonra en yeni kayıt geçerlidir. Böylece "Çıkar" dendikten sonra eski kayıt VIP'i geri getirmez.
+ */
+const rowScore = (row) => ((row?.owned_levels || []).length > 0 ? 1e15 : 0) + (Date.parse(row?.created_date || '') || 0);
+
+export function canonicalVipRows(rows) {
+  const byKind = new Map();
+  (rows || []).forEach((row) => {
+    if (!row?.kind) return;
+    const current = byKind.get(row.kind);
+    if (!current || rowScore(row) > rowScore(current)) byKind.set(row.kind, row);
+  });
+  return [...byKind.values()];
+}
+
 export async function syncVipInventory(base44, user, level, catalog) {
   const db = base44.asServiceRole.entities;
-  const rows = await db.VipCosmetic.filter({ owner_id: user.id }, '-created_date', 50);
-  const byKind = new Map();
-  rows.forEach((row) => { if (!byKind.has(row.kind)) byKind.set(row.kind, row); });
+  // Mükerrer kayıtlar tekilleştirilir; yoksa çıkarılan kozmetik eski kayıttan geri gelir.
+  const rows = await db.VipCosmetic.filter({ owner_id: user.id }, '-created_date', 500);
+  const canonical = canonicalVipRows(rows);
+  const byKind = new Map(canonical.map((row) => [row.kind, row]));
+  const duplicates = (rows || []).filter((row) => row?.kind && byKind.get(row.kind)?.id !== row.id).map((row) => row.id);
+  if (duplicates.length) await db.VipCosmetic.deleteMany({ id: { $in: duplicates } }).catch(() => {});
   const missing = [], patches = [];
   for (const feature of cosmeticFeatures(catalog)) {
     const granted = VIP_LEVELS.filter((value) => value >= feature.minLevel && value <= level);
@@ -66,12 +86,19 @@ export async function publicVipLooks(base44, records, catalog) {
       cursor = page.next_cursor;
     }
   }
+  // Kişi + kozmetik başına tek kayıt okunur: mükerrer satırlar görünümü geri getirmez.
+  const canonical = new Map();
+  stored.forEach((row) => {
+    const key = `${row.owner_id}|${row.kind}`;
+    const current = canonical.get(key);
+    if (!current || rowScore(row) > rowScore(current)) canonical.set(key, row);
+  });
   const result = {};
   for (const user of authoritative) {
     const level = active.some((row) => row.id === user.id) ? user.vip_level : 0;
     const look = {};
     if (level) for (const feature of cosmeticFeatures(catalog)) {
-      const row = stored.find((item) => item.owner_id === user.id && item.kind === feature.key);
+      const row = canonical.get(`${user.id}|${feature.key}`);
       const selected = row ? row.active !== false ? row.level : 0 : level;
       const owned = !row || (row.owned_levels || [row.level]).includes(selected);
       if (owned && selected >= feature.minLevel && selected <= level) {

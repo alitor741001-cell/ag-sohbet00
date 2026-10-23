@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Camera, Check, Copy, Feather, Loader2, Shield } from 'lucide-react';
+import { Camera, Check, Copy, Crown, Feather, Loader2 } from 'lucide-react';
 import ProfileAvatarPortrait from '@/components/profile/fantasy/ProfileAvatarPortrait';
 import ProfileAgencyBadges from '@/components/profile/ProfileAgencyBadges';
 import { useToast } from '@/components/ui/use-toast';
-import { isRedNameVip } from '@/lib/userLevels';
+import { isRedNameVip, vipDaysLeft } from '@/lib/userLevels';
 
 
 const RING = 'conic-gradient(from 140deg, #e0f2fe, #7dd3fc, #f8fafc, #38bdf8, #dbeafe, #60a5fa, #e0f2fe)';
@@ -80,10 +80,15 @@ export default function ProfileHeroCard({ user, avatar, onAvatar, onEdit, upload
           </button>
 
           <div className="mt-2 flex items-center gap-1.5">
-            <span className="flex h-6 items-center gap-1 rounded-md px-1.5 text-[10px] font-black text-white" style={{ background: 'rgba(37,99,235,0.55)', border: '1px solid rgba(125,211,252,0.6)' }}>
-              <Shield className="h-3 w-3 text-[#bae6fd]" fill="currentColor" /> VIP{vipLevel || 0}
-            </span>
-
+            {vipLevel > 0 && (
+              <span
+                className="flex h-6 items-center gap-1 rounded-md px-2 text-[10px] font-black"
+                style={{ color: '#20160a', background: 'linear-gradient(135deg, #fff3c4, #ffd166 46%, #c9962a)', border: '1px solid #ffeab0', boxShadow: '0 0 16px rgba(255,209,102,0.5)' }}
+              >
+                <Crown className="h-3 w-3" fill="currentColor" /> VIP{vipLevel}
+                <span className="font-bold opacity-70">· {vipDaysLeft(user) ? `${vipDaysLeft(user)} gün` : 'süresiz'}</span>
+              </span>
+            )}
           </div>
         </div>
       </div>

@@ -209,6 +209,13 @@ export function todayKey(date: Date = new Date()) {
   return date.toLocaleDateString('sv-SE', { timeZone: 'Europe/Istanbul' });
 }
 
+/** Günlük hakların yenilendiği an: Türkiye saatiyle gece 24:00. */
+export function nextDayResetIso(date: Date = new Date()) {
+  const shifted = new Date(date.getTime() + 3 * 3600000);
+  const midnight = Date.UTC(shifted.getUTCFullYear(), shifted.getUTCMonth(), shifted.getUTCDate() + 1) - 3 * 3600000;
+  return new Date(midnight).toISOString();
+}
+
 /**
  * Tamamlanan kotaları ödüllendirir. Aynı kota (kişi + kademe + ay) ikinci kez ödenmez:
  * kayıt varsa atlanır. Hediye geldiğinde ve paneller açıldığında çalışır.

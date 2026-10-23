@@ -215,7 +215,6 @@ export default function FullUserProfile({
         receivedLevel={profile?.gift_received_level || 0}
         receivedTier={profile?.gift_received_tier}
         nLevel={profile?.n_level || 0}
-        vipLevel={profile?.vip_level || 0}
       />
 
       {hidden ? (

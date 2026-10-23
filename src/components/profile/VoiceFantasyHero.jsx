@@ -2,7 +2,7 @@ import { Crown, Flame, X } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import ProfileFrame from '@/components/ProfileFrame';
 import VipAvatarFrame from '@/components/vip/VipAvatarFrame';
-import VipBadge from '@/components/vip/VipBadge';
+import VipShowcase from '@/components/profile/VipShowcase';
 import { vipLook, vipVars } from '@/components/vip/vipTheme';
 export default function VoiceFantasyHero({ female, hidden, name, avatar, role, onClose, profile }) {
   const card = !hidden && vipLook(profile, 'card');
@@ -16,7 +16,7 @@ export default function VoiceFantasyHero({ female, hidden, name, avatar, role, o
     <div className="mb-3 flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-[0.25em] text-fantasy-gold"><Emblem className="h-4 w-4" />{hidden ? 'GİZLİ PROFİL' : card?.name || (female ? 'PRENSESİN SARAYI' : 'EJDERHANIN KRALLIĞI')}</div>
     <div className="mx-auto w-fit rounded-full border-2 border-fantasy-gold p-1 shadow-lg"><VipAvatarFrame theme={!hidden && vipLook(profile, 'frame')}><ProfileFrame avatar={avatar} name={name} size="md" /></VipAvatarFrame></div>
     <h2 style={vipVars(nameTheme)} className={`mt-2 break-words text-center font-serif text-2xl font-bold ${nameTheme ? 'vip-tint' : 'text-fantasy-text'} ${nameTheme?.nameAnimated ? 'vip-name-animated' : ''}`}>{name}</h2>
-    {!hidden && <div className="mt-1 flex justify-center"><VipBadge theme={vipLook(profile, 'badge')} /></div>}
+    {!hidden && <VipShowcase profile={profile} />}
     {role && <p className="mt-1 text-center text-[10px] font-bold tracking-widest text-fantasy-gold">{role}</p>}
   </header>;
 }

@@ -1,13 +1,12 @@
 import { Heart, Shield, Star } from 'lucide-react';
-import { receivedColor, vipStyle } from '@/lib/userLevels';
+import { receivedColor } from '@/lib/userLevels';
 
-/** Rozet sırası: oda seviyesi (LVL), hediye alış seviyesi (kalp) ve N seviyesi. VIP varsa eklenir. */
-export default function ProfileStatsRow({ palette, level, receivedLevel, receivedTier, nLevel, vipLevel }) {
+/** Rozet sırası: oda seviyesi (LVL), hediye alış seviyesi (kalp) ve N seviyesi. VIP şeridi ayrı gösterilir. */
+export default function ProfileStatsRow({ palette, level, receivedLevel, receivedTier, nLevel }) {
   const badges = [
     level > 0 && { key: 'lvl', icon: <Star className="h-3 w-3" fill="currentColor" />, label: `LVL ${level}`, border: palette.accent2, color: palette.accent2 },
     receivedLevel > 0 && { key: 'heart', icon: <Heart className="h-3 w-3" fill="currentColor" />, label: String(receivedLevel), background: receivedColor(receivedTier), border: palette.accent, color: '#fff' },
     nLevel > 0 && { key: 'n', icon: <Shield className="h-3 w-3" fill="currentColor" />, label: `N${nLevel}`, border: palette.accent2, color: palette.accent2 },
-    vipLevel > 0 && { key: 'vip', label: `VIP${vipLevel}`, ...vipStyle(vipLevel) },
   ].filter(Boolean);
 
   if (!badges.length) return null;

@@ -1,5 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.56';
-import { activeAssistant, todayKey } from '../../shared/agency.ts';
+import { activeAssistant, nextDayResetIso, todayKey } from '../../shared/agency.ts';
 
 const LIMITS = { owner: 6, assistant: 3 };
 
@@ -42,7 +42,8 @@ export default async function (req) {
   const used = await db.AgencyCall.filter({ sender_id: user.id, day }, '-created_date', 10).catch(() => []);
   const limit = LIMITS[role];
   const remaining = Math.max(0, limit - (used?.length || 0));
-  if (body.action !== 'send') return Response.json({ eligible: true, role, limit, remaining, agency_name: agency.name });
+  const resetsAt = nextDayResetIso();
+  if (body.action !== 'send') return Response.json({ eligible: true, role, limit, remaining, resets_at: resetsAt, agency_name: agency.name });
 
   if (remaining <= 0) return Response.json({ error: `Bugünkü ${limit} çağrı hakkın doldu.` }, { status: 429 });
   const roomId = String(body.room_id || '');
@@ -58,5 +59,5 @@ export default async function (req) {
     message: String(body.message || '').trim().slice(0, 200), day,
     audience_ids: audience.ids, audience_all: audience.all,
   });
-  return Response.json({ eligible: true, role, limit, remaining: remaining - 1 });
+  return Response.json({ eligible: true, role, limit, remaining: remaining - 1, resets_at: resetsAt });
 }

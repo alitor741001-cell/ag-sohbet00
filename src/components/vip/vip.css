@@ -43,4 +43,6 @@
 @keyframes vip-pulse { from { transform: scale(.96); opacity: .9; } to { transform: scale(1.5); opacity: 0; } }
 @keyframes vip-name-light { 50% { text-shadow: 0 0 12px var(--vip-accent); opacity: .8; } }
 @keyframes vip-entry-in { from { transform: translateY(-1rem); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { .vip-wave::before, .vip-wave::after, .vip-name-animated, .vip-entry { animation: none; } }
+.vip-showcase-sweep { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(110deg, transparent 24%, rgba(255,255,255,.26) 48%, transparent 72%); transform: translateX(-130%); animation: vip-showcase-sweep 4.2s ease-in-out infinite; }
+@keyframes vip-showcase-sweep { 0% { transform: translateX(-130%); } 55%, 100% { transform: translateX(130%); } }
+@media (prefers-reduced-motion: reduce) { .vip-wave::before, .vip-wave::after, .vip-name-animated, .vip-entry, .vip-showcase-sweep { animation: none; } }
