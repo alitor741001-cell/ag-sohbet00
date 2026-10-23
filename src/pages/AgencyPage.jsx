@@ -9,7 +9,7 @@ export default function AgencyPage() {
   const navigate = useNavigate();
   const { user, reload } = useCurrentUser();
 
-  if (!user) return <div className="dark min-h-screen bg-black p-6 text-white">Yükleniyor...</div>;
+  if (!user) return <div className="dark min-h-screen bg-transparent p-6 text-white">Yükleniyor...</div>;
 
   return (
     <div className="dark mx-auto min-h-screen max-w-3xl xl:max-w-4xl px-4 py-5 pb-24 text-foreground sm:px-6">

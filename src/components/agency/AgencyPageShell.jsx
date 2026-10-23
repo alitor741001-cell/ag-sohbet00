@@ -7,7 +7,7 @@ export default function AgencyPageShell({ title, subtitle = '', sections = [], l
   const navigate = useNavigate();
 
   return (
-    <div className="dark mx-auto min-h-screen max-w-3xl bg-background px-4 py-5 pb-24 text-foreground sm:px-6">
+    <div className="dark mx-auto min-h-screen max-w-3xl bg-transparent px-4 py-5 pb-24 text-foreground sm:px-6">
       <header className="flex items-center gap-3">
         <button
           type="button"
