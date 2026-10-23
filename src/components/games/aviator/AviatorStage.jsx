@@ -19,16 +19,18 @@ export default function AviatorStage({ game, children }) {
   // Renk kademesi: 2x altı mavi, 5x altı yeşil, 10x altı turuncu, sonrası kırmızı.
   const tier = mult < 2 ? { c: '#3b9bff', h: 220 } : mult < 5 ? { c: '#22e06b', h: 130 } : mult < 10 ? { c: '#ff9a1f', h: 35 } : { c: '#ff2a3d', h: 0 };
   // Eğri ve uçak, içerideki oyuncu listesinin sağında kalır (listeyi kapatmaz).
-  const x0 = 32;
-  const x = x0 + p * 56;
-  const y = 88 - p * 64;
-  const path = `M ${x0} 88 Q ${x0 + (x - x0) * 0.6} 88 ${x} ${y}`;
+  const x0 = 30;
+  const y0 = 98;
+  const travelWidth = 88 - x0;
+  const x = x0 + p * travelWidth;
+  const y = y0 - p * (y0 - 24);
+  const path = `M ${x0} ${y0} Q ${x0 + (x - x0) * 0.6} ${y0} ${x} ${y}`;
   // Geçilen her renk bölümü çizgide kalır: mavi → yeşil → turuncu → kırmızı.
   const span = Math.max(0.01, x - x0);
   const segs = [];
   let from = 0;
   for (const [lim, c] of STOPS) {
-    const to = Math.min(1, (travel(lim) * 56) / span);
+    const to = Math.min(1, (travel(lim) * travelWidth) / span);
     segs.push({ c, from, to });
     if (to >= 1) break;
     from = to;
@@ -48,7 +50,7 @@ export default function AviatorStage({ game, children }) {
             {segs.flatMap((s, i) => [<stop key={`a${i}`} offset={s.from} stopColor={s.c} />, <stop key={`b${i}`} offset={s.to} stopColor={s.c} />])}
           </linearGradient>
         </defs>
-        {p > 0 && <path d={`${path} L ${x} 88 Z`} fill="url(#av-trail)" fillOpacity="0.22" />}
+        {p > 0 && <path d={`${path} L ${x} ${y0} Z`} fill="url(#av-trail)" fillOpacity="0.22" />}
         {p > 0 && <path d={path} fill="none" stroke="url(#av-trail)" strokeWidth="0.9" vectorEffect="non-scaling-stroke" style={{ filter: `drop-shadow(0 0 4px ${tier.c})` }} />}
       </svg>
 
