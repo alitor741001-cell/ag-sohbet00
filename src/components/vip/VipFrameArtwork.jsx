@@ -1,6 +1,24 @@
 import CosmeticArtwork from '@/components/store/CosmeticArtwork';
 import vipFrameArt from '@/lib/vipFrameArt';
+
+// Çerçeve, fotoğrafın tam üstüne oturur; ortasındaki parlaklık profili örtmesin diye
+// fotoğrafın denk geldiği daire tamamen şeffaf bırakılır, süsleme sadece kenarda kalır.
+const CORE_HOLE = 'radial-gradient(circle at 50% 50%, transparent 0 37%, rgba(0,0,0,0.35) 41%, #000 45%)';
+
 export default function VipFrameArtwork({ theme }) {
   const artwork = vipFrameArt(theme?.level, theme?.frame_seed, theme?.frame_level);
-  return artwork ? <span aria-hidden="true" className="pointer-events-none absolute -inset-[12.5%] z-10" style={{ filter: 'drop-shadow(0 0 6px var(--vip-accent))' }}><CosmeticArtwork product={artwork} className="h-full w-full object-contain" draggable={false} /></span> : null;
+  if (!artwork) return null;
+  return (
+    <span
+      aria-hidden="true"
+      className="pointer-events-none absolute -inset-[12.5%] z-10"
+      style={{
+        filter: 'drop-shadow(0 0 6px var(--vip-accent))',
+        maskImage: CORE_HOLE,
+        WebkitMaskImage: CORE_HOLE,
+      }}
+    >
+      <CosmeticArtwork product={artwork} className="h-full w-full object-contain" draggable={false} />
+    </span>
+  );
 }
