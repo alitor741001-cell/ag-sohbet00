@@ -8,6 +8,15 @@ import '@/components/games/slot/slotReels.css';
 
 const randomRun = () => Array.from({ length: 15 }, () => SYMBOL_IDS[Math.floor(Math.random() * SYMBOL_IDS.length)]);
 
+// Spin öncesi duran makara görüntüsü: kullanıcı ilk çevirişten önce sembolleri görür.
+const PREVIEW_GRID = [
+  ['eagle', 'ace', 'ten'],
+  ['gem', 'king', 'jack'],
+  ['jackpot', 'lion', 'queen'],
+  ['free', 'tiger', 'ace'],
+  ['gem', 'queen', 'king'],
+];
+
 /** Makara penceresi: koyu yatak, beş ayrı şerit, önlerinde kabin katmanı ve alt kapak. */
 export default function SlotReels({ spinning, stopping, slow, grid, wins }) {
   const winSet = new Set((wins || []).flatMap(w => w.cells.map(c => `${c.reel}-${c.row}`)));
@@ -15,23 +24,22 @@ export default function SlotReels({ spinning, stopping, slow, grid, wins }) {
   useEffect(() => {
     setStrips(spinning ? Array.from({ length: 5 }, randomRun) : []);
   }, [spinning]);
+  const shown = grid || PREVIEW_GRID;
   return <>
-    {(spinning || grid) && (
-      <div aria-hidden="true" className="pointer-events-none absolute overflow-hidden" style={SLOT_LAYOUT.reelWindow}>
-        <span className="slot-reel-bed absolute inset-0" />
+    <div aria-hidden="true" className="pointer-events-none absolute overflow-hidden" style={SLOT_LAYOUT.reelWindow}>
+      <span className="slot-reel-bed absolute inset-0" />
 
-        {spinning && strips.length ? strips.map((random, index) => (
-          <SlotReelColumn key={index} index={index} random={random} stopping={stopping} slow={slow}
-            landing={[0, 1, 2].map(row => grid?.[index]?.[row] || 'ten')} />
-        )) : grid && [0, 1, 2, 3, 4].map(col => (
-          <span key={col} className="slot-reel-strip absolute top-0 h-full overflow-hidden" style={{ left: `${col * 20}%`, width: '20%' }}>
-            {[0, 1, 2].map(row => <SlotSymbol key={row} symbol={grid[col]?.[row] || 'ten'} top={`${row / 3 * 100}%`} height="33.333%" win={winSet.has(`${col}-${row}`)} />)}
-          </span>
-        ))}
+      {spinning && strips.length ? strips.map((random, index) => (
+        <SlotReelColumn key={index} index={index} random={random} stopping={stopping} slow={slow}
+          landing={[0, 1, 2].map(row => grid?.[index]?.[row] || 'ten')} />
+      )) : [0, 1, 2, 3, 4].map(col => (
+        <span key={col} className="slot-reel-strip absolute top-0 h-full overflow-hidden" style={{ left: `${col * 20}%`, width: '20%' }}>
+          {[0, 1, 2].map(row => <SlotSymbol key={row} symbol={shown[col]?.[row] || 'ten'} top={`${row / 3 * 100}%`} height="33.333%" win={winSet.has(`${col}-${row}`)} />)}
+        </span>
+      ))}
 
-        <SlotReelBezel />
-      </div>
-    )}
+      <SlotReelBezel />
+    </div>
 
     <SlotReelSill />
   </>;
