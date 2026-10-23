@@ -4,7 +4,7 @@ import shallowEqual from '@/components/data/shallowEqual';
 import VoiceSeatPortrait from '@/components/voice/VoiceSeatPortrait';
 import VoiceSeatRing from '@/components/voice/VoiceSeatRing';
 import { isHiddenName } from '@/lib/hiddenUser';
-import SeatEmblem from '@/components/voice/SeatEmblem';
+import SeatDesignFrame from '@/components/voice/SeatDesignFrame';
 import VoiceSpeakingWave from '@/components/voice/VoiceSpeakingWave';
 import { vipLook } from '@/components/vip/vipTheme';
 
@@ -35,22 +35,12 @@ function VoiceSeat({ seat, index, size = 'md', musicPlaying, speaking, isSelf, i
       <button type="button" onClick={handleClick} className="flex flex-col items-center gap-1 active:scale-95 transition-transform" aria-label={`${index + 1}. koltuk`}>
         <span className={`flex ${cell} shrink-0 items-center justify-center`}>
           <span className={`relative flex ${emptyCircle} items-center justify-center`}>
-            <VoiceSeatRing className="h-full w-full" variant={index} mono glow="0 4px 12px -6px rgba(0,0,0,0.9)">
-              <span
-                className="relative flex h-full w-full items-center justify-center overflow-hidden"
-                style={{ background: 'radial-gradient(circle at 34% 26%, #17304c 0%, #0a1526 74%)' }}
-              >
-                <SeatEmblem index={index} />
+            <SeatDesignFrame index={index} />
+            {seat?.locked && (
+              <span className="pointer-events-none absolute inset-[22%] z-10 flex items-center justify-center rounded-full bg-black">
+                <Lock className="h-3.5 w-3.5 text-white" />
               </span>
-            </VoiceSeatRing>
-            {/* Kilit / artı işareti boş koltuğun tam ortasında durur. */}
-            <span className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
-              <span className="flex h-5 w-5 items-center justify-center rounded-full border border-[#f2d79c]/70 bg-[#0a1526]/85 shadow-[0_2px_8px_rgba(0,0,0,0.65)]">
-                {seat?.locked
-                  ? <Lock className="h-3 w-3 text-[#f2d79c]" />
-                  : <Plus className="h-3 w-3 text-[#f2d79c]" strokeWidth={3} />}
-              </span>
-            </span>
+            )}
             {/* Mikrofonu kendi elimle kapattığımda görünen sade rozet; mikrofonu açınca kaybolur. */}
             {micMuted && (
               <span aria-label="Mikrofon kapalı" className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full border border-white/25 bg-black/80">
@@ -59,7 +49,7 @@ function VoiceSeat({ seat, index, size = 'md', musicPlaying, speaking, isSelf, i
             )}
           </span>
         </span>
-        <span className="text-[10px] font-medium leading-none text-white/85">{index + 1}</span>
+        <span className="relative z-10 min-w-[22px] rounded-md border border-white/30 bg-black/85 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">{index + 1}</span>
       </button>
     );
   }
@@ -78,6 +68,7 @@ function VoiceSeat({ seat, index, size = 'md', musicPlaying, speaking, isSelf, i
       aria-label={`${seat.name || 'Koltuk'}${muted ? ', mikrofon kapalı' : ''}`}
     >
       <span className={`relative flex ${cell} shrink-0 items-center justify-center`}>
+        <SeatDesignFrame index={index} />
         {musicPlaying && <span aria-label="Müzik çalıyor" className={`pointer-events-none absolute ${ring} z-[7] rounded-full room-music-glow`} />}
         {speaking && !muted && <VoiceSpeakingWave index={index} ring={ring} theme={!hidden && vipLook(profile, 'mic')} />}
         {halo && <span className="pointer-events-none absolute inset-0 z-[6] rounded-full" style={{ boxShadow: halo }} />}

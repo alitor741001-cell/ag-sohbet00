@@ -1,41 +1,43 @@
 import { useMemo } from 'react';
-import { Image } from '@/components/ui/image';
 import { isHiddenName } from '@/lib/hiddenUser';
 import useMessageProfiles from '@/hooks/useMessageProfiles';
-import RoomHeaderControls from '@/components/voice/RoomHeaderControls';
+import DesignSprite from '@/components/voice/DesignSprite';
+import { formatScore } from '@/components/voice/scoreTier';
 
-export default function RoomInfoCard({ room, onOpen, viewerCount = 0, onOpenViewers, canMod = false, menuHighlighted = false, onOpenMenu, onExit }) {
+const hit = 'absolute rounded-full active:scale-95 transition-transform';
+
+/** Üst bar: tasarımdaki profil kartı, kişi sayısı, ayarlar, çıkış ve hediye kutusu. */
+export default function RoomInfoCard({ room, onOpen, viewerCount = 0, onOpenViewers, onOpenMenu, onExit, giftScore = 0, onOpenGiftBoard }) {
   const ownerId = room?.owner_id;
   const ids = useMemo(() => ownerId ? [ownerId] : [], [ownerId]);
   const profile = useMessageProfiles(ids)[ownerId] || {};
   const ownerHidden = isHiddenName(room?.owner_name);
-  const ownerName = ownerHidden ? room.owner_name : profile.username || room?.owner_name || profile.full_name || 'Kullanıcı';
   const memberId = !ownerHidden && profile.member_id && profile.member_id !== '-' ? String(profile.member_id) : '';
   const roomName = room?.name || 'Oda';
 
   return (
-    <div className="flex w-full items-center justify-between gap-2">
-      <div className="flex h-[clamp(48px,11vw,58px)] w-[calc(100%-140px)] min-w-0 shrink-0 min-[375px]:w-[54%] items-center gap-1.5 rounded-xl border border-slot-text/10 bg-slot-text/20 p-1.5">
-        <button type="button" onClick={onOpen} aria-label="Oda profilini aç" className="flex h-11 w-9 shrink-0 items-center justify-center min-[390px]:w-10">
-          {/* Kare kutu: kare oranı desteklemeyen eski sürümlerde media-box-square yüksekliği verir. */}
-          <span className="media-box-square relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-lg bg-slot-text/10">
-            {profile.avatar
-              ? <Image src={profile.avatar} alt={ownerName} className="absolute inset-0 h-full w-full" fittingType="fill" draggable={false} />
-              : <span className="text-base font-bold text-slot-text">{ownerName.trim().charAt(0)}</span>}
+    <DesignSprite x={0} y={22} w={494} h={118} className="w-full">
+      <button type="button" onClick={onOpen} aria-label="Oda profilini aç" className="absolute left-[2%] top-0 h-[73%] w-[56%]" />
+      <div className="pointer-events-none absolute left-[20.5%] top-[19%] flex h-[40%] w-[34%] flex-col justify-center overflow-hidden rounded-md bg-[#0a0c1c] px-1.5">
+        <span className="truncate text-[clamp(11px,3.4vw,15px)] font-black leading-tight text-white">{roomName} <span className="text-[#f5c542]">♛</span></span>
+        {memberId && (
+          <span className="flex items-center gap-1 truncate text-[clamp(9px,2.6vw,12px)] leading-tight text-white/80">
+            ID:{memberId}<span className="h-1.5 w-1.5 rounded-full bg-green-500" />
           </span>
-        </button>
-        <div className="min-w-0 flex-1 overflow-hidden text-left">
-          {/* Oda ismi sürekli sola kayar: iki kopya arasında kesintisiz döngü kurulur. */}
-          <span className="room-name-fade block overflow-hidden" title={roomName}>
-            <span className="room-name-marquee flex w-max">
-              <span className="pr-8 text-sm font-bold leading-tight text-slot-text min-[390px]:text-base">{roomName}</span>
-              <span aria-hidden="true" className="pr-8 text-sm font-bold leading-tight text-slot-text min-[390px]:text-base">{roomName}</span>
-            </span>
-          </span>
-          {memberId && <span className="mt-1 block truncate text-xs leading-tight tabular-nums text-slot-text/60">ID:{memberId}</span>}
-        </div>
+        )}
       </div>
-      <RoomHeaderControls {...{ viewerCount, onOpenViewers, canMod, menuHighlighted, onOpenMenu, onExit }} />
-    </div>
+
+      <button type="button" onClick={onOpenViewers} aria-label={`Odada ${viewerCount} kişi`} className={`${hit} left-[60.7%] top-[13%] h-[53%] w-[13.2%]`}>
+        <span className="absolute left-[64%] top-[38%] flex h-[34%] min-w-[24%] items-center justify-center rounded bg-[#0d0f24] text-[clamp(10px,3vw,14px)] font-bold tabular-nums text-white">{viewerCount}</span>
+      </button>
+      <button type="button" onClick={onOpenMenu} aria-label="Oda ayarları" className={`${hit} left-[74.9%] top-[13%] h-[53%] w-[11.3%]`} />
+      <button type="button" onClick={onExit} aria-label="Odadan çık" className={`${hit} left-[87.4%] top-[13%] h-[53%] w-[11.7%]`} />
+
+      <button type="button" onClick={onOpenGiftBoard} aria-label={`Hediye kutusu: ${formatScore(giftScore)}`} className="absolute left-[2.5%] top-[70%] h-[28%] w-[19%]">
+        <span className="absolute left-[54%] top-[22%] flex h-[62%] min-w-[38%] items-center justify-center rounded-sm bg-[#1f5fd6] px-0.5 text-[clamp(9px,2.8vw,13px)] font-black tabular-nums text-white">
+          {formatScore(Math.max(0, Math.round(Number(giftScore) || 0)))}
+        </span>
+      </button>
+    </DesignSprite>
   );
 }
