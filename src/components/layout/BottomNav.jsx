@@ -67,7 +67,7 @@ export default function BottomNav() {
   ];
   return (
     <nav aria-label="Ana menü" className="lg:hidden fixed bottom-0 inset-x-0 z-50 pb-[env(safe-area-inset-bottom)]" style={{ background: '#050b1e', transform: `translateY(-${keyboardInset}px)`, transition: keyboardInset ? 'transform 180ms ease-out' : 'none' }}>
-      <div className="relative w-full" style={{ aspectRatio: '682 / 190', backgroundImage: "url(https://media.base44.com/images/public/6a77d66e4da6de214628ee62/61568ee02_IMG_0140.jpg)", backgroundSize: '100% auto', backgroundPosition: 'bottom', backgroundRepeat: 'no-repeat' }}>
+      <div className="relative w-full" style={{ aspectRatio: '682 / 190', backgroundImage: "url(https://media.base44.com/images/public/6a77d66e4da6de214628ee62/5c0f0c906_IMG_0140.jpg)", backgroundSize: '100% auto', backgroundPosition: 'bottom', backgroundRepeat: 'no-repeat' }}>
         <div className="absolute inset-x-0 bottom-0 top-[18%] flex">
           {slots.map((item, index) => item.dock === 'support' ? (
             <div key="support" className="relative flex-1 opacity-0 [&_*]:!h-full [&_*]:!w-full">

@@ -195,14 +195,13 @@ export default function AppLayout() {
     return <MessageRealtimeProvider userId={user?.id}><div className="min-h-screen bg-transparent"><RoutePreloader /><RoleCelebrationOverlay /><Suspense fallback={null}><Outlet /></Suspense></div></MessageRealtimeProvider>;
   }
   return (
-    <MessageRealtimeProvider userId={user?.id}><div className={`min-h-screen w-full min-w-0 overflow-x-clip ${isDarkSurface ? '' : 'bg-background'}`} style={isDarkSurface ? { background: '#050d22' } : undefined}>
-      {isDarkSurface && <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-0" style={{ backgroundImage: 'url(https://media.base44.com/images/public/6a77d66e4da6de214628ee62/61568ee02_IMG_0140.jpg)', backgroundSize: '100vw auto', backgroundPosition: '0 -68vw', backgroundRepeat: 'no-repeat' }} />}
+    <MessageRealtimeProvider userId={user?.id}><div className={`min-h-screen w-full min-w-0 overflow-x-clip ${isDarkSurface ? '' : 'bg-background'}`} style={isDarkSurface ? { background: DARK_SURFACE_GRADIENT } : undefined}>
       <RoutePreloader />
       <RoleCelebrationOverlay />
       <Navbar />
       {/* Klavye kullanıcısı menüyü atlayıp doğrudan içeriğe geçebilir. */}
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-[100] focus:rounded-lg focus:bg-card focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-foreground focus:ring-2 focus:ring-ring">İçeriğe geç</a>
-      <main id="main-content" tabIndex={-1} className="relative z-[1] mx-auto w-full min-w-0 max-w-[1600px] overflow-x-clip pt-[max(env(safe-area-inset-top),0.5rem)] pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pt-16 lg:pb-8" style={{ touchAction: 'pan-y' }}>
+      <main id="main-content" tabIndex={-1} className="mx-auto w-full min-w-0 max-w-[1600px] overflow-x-clip pt-[max(env(safe-area-inset-top),0.5rem)] pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pt-16 lg:pb-8" style={{ touchAction: 'pan-y' }}>
         {/* Sayfa paketi yüklenirken kabuk (menü, sohbetler, bildirimler) yerinde kalır. */}
         <Suspense fallback={null}>
           <TabStack activePath={activeTabPath} />
