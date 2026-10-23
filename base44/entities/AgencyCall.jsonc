@@ -1,0 +1,67 @@
+{
+  "name": "AgencyCall",
+  "type": "object",
+  "properties": {
+    "agency_id": {
+      "type": "string"
+    },
+    "agency_name": {
+      "type": "string"
+    },
+    "room_id": {
+      "type": "string"
+    },
+    "room_name": {
+      "type": "string",
+      "default": ""
+    },
+    "sender_id": {
+      "type": "string"
+    },
+    "sender_name": {
+      "type": "string"
+    },
+    "sender_avatar": {
+      "type": "string",
+      "default": ""
+    },
+    "sender_role": {
+      "type": "string",
+      "enum": [
+        "owner",
+        "assistant"
+      ]
+    },
+    "message": {
+      "type": "string",
+      "default": ""
+    },
+    "day": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "agency_id",
+    "room_id",
+    "sender_id",
+    "day"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

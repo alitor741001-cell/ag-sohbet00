@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Armchair, Eraser, Eye, EyeOff, Film, Hash, Lock, MessageSquareOff, Music, Palette, Play, ScrollText, Share2, Square, Unlock } from 'lucide-react';
+import { Armchair, Eraser, Eye, EyeOff, Film, Hash, Lock, Megaphone, MessageSquareOff, Music, Palette, Play, ScrollText, Share2, Square, Unlock } from 'lucide-react';
 import BoardToggleRow from '@/components/voice/BoardToggleRow';
 import VoiceRoomThemePanel from '@/components/voice/VoiceRoomThemePanel';
 import SeatCountPicker from '@/components/voice/SeatCountPicker';
@@ -14,7 +14,7 @@ const Panel = ({ children, hint }) => (
 );
 
 /** "…" menüsü: yuvarlak ikon ızgarası — kilit, gizlilik, koltuk, sayaç, sohbet temizleme, sohbet yasağı ve kayıt defteri. */
-export default function VoiceRoomMenu({ open, onClose, room, isOwner, isAdmin, canMod, onSeatCount, onSetPassword, onToggleHidden, onShare, boardActive, onToggleBoard, onBoardSettings, onClearChat, onToggleChatBan, onOpenLog, onExitVoiceMode, musicPlaying, onOpenMusic, theme, onTheme }) {
+export default function VoiceRoomMenu({ open, onClose, room, isOwner, isAdmin, canMod, onSeatCount, onSetPassword, onToggleHidden, onShare, boardActive, onToggleBoard, onBoardSettings, onClearChat, onToggleChatBan, onOpenLog, onExitVoiceMode, musicPlaying, onOpenMusic, theme, onTheme, onAgencyCall }) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [panel, setPanel] = useState(null);
@@ -79,6 +79,9 @@ export default function VoiceRoomMenu({ open, onClose, room, isOwner, isAdmin, c
             tone="blue"
             onClick={() => { onClose(); onShare(); }}
           />
+        )}
+        {onAgencyCall && (
+          <VoiceMenuTile icon={Megaphone} label="Ajans Çağrısı" tone="gold" onClick={() => { onClose(); onAgencyCall(); }} />
         )}
         {/* Müzik: herkes kendi listesinden şarkı açar, oda aynı şarkıyı duyar. */}
         {onOpenMusic && (

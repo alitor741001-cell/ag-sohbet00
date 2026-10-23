@@ -52,6 +52,10 @@ import GiftEffectsSheet from '@/components/voice/GiftEffectsSheet';
 import useGiftEffects from '@/hooks/useGiftEffects';
 import useGiftAlerts from '@/hooks/useGiftAlerts';
 import useBigGiftAlerts from '@/hooks/useBigGiftAlerts';
+import useAgencyCalls from '@/hooks/useAgencyCalls';
+import useAgencyCallStatus from '@/hooks/useAgencyCallStatus';
+import AgencyCallBanner from '@/components/voice/AgencyCallBanner';
+import AgencyCallComposer from '@/components/voice/AgencyCallComposer';
 import useBigGiftNotice from '@/hooks/useBigGiftNotice';
 import BigGiftStage from '@/components/voice/BigGiftStage';
 import { useGiftBalance, useGiftCatalog } from '@/hooks/useGiftCatalog';
@@ -133,6 +137,9 @@ export default function VoiceRoom() {
   const { alert: giftAlert, push: pushGiftAlert, markSeen: markGiftSeen, markOwnSend } = useGiftAlerts(messages, resolveGift, user?.id);
   // Büyük hediye duyurusu tüm sesli odalarda görünür.
   const bigGift = useBigGiftAlerts();
+  const [agencyCallOpen, setAgencyCallOpen] = useState(false);
+  const { status: agencyCallStatus, setStatus: setAgencyCallStatus } = useAgencyCallStatus(user?.id);
+  const { call: agencyCall, dismiss: dismissAgencyCall } = useAgencyCalls();
   // Sohbetin altındaki büyük hediye satırı — basılınca hediye atan kişinin odasına gidilir.
   const { notice: bigGiftNotice, dismiss: dismissBigGiftNotice } = useBigGiftNotice(id);
 
@@ -1218,7 +1225,10 @@ export default function VoiceRoom() {
         onExitVoiceMode={canMod ? exitVoiceMode : null}
         theme={room?.background}
         onTheme={changeTheme}
+        onAgencyCall={agencyCallStatus?.eligible ? () => setAgencyCallOpen(true) : null}
       />
+      <AgencyCallComposer open={agencyCallOpen} onClose={() => setAgencyCallOpen(false)} roomId={id} status={agencyCallStatus} onSent={(data) => setAgencyCallStatus((prev) => ({ ...prev, ...data }))} />
+      <AgencyCallBanner call={agencyCall} onClose={dismissAgencyCall} onJoin={() => { const target = agencyCall?.room_id; dismissAgencyCall(); if (target && target !== id) navigate(`/sesli-oda/${target}`); }} />
 
       <RoomLogSheet
         open={logOpen}
