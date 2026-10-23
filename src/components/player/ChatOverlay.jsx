@@ -32,7 +32,7 @@ const FILTERS = [
   { key: 'yonetici', label: 'Yönetici', icon: Users },
 ];
 
-export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, isOwner, isAdmin, onClose, voice, voiceEnabled, onSettings, onDirect, onDirectUser, directUnread = 0, ownerId, roomModerators = [], participants = [], recentParticipants = [], viewerProfiles = {}, presenceMap = {}, onProfileCard, settingsProps, levels = {}, onToggleChat, onMicPress }) {
+export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, isOwner, isAdmin, voice, voiceEnabled, onSettings, onDirect, onDirectUser, directUnread = 0, ownerId, roomModerators = [], participants = [], recentParticipants = [], viewerProfiles = {}, presenceMap = {}, onProfileCard, settingsProps, levels = {}, onToggleChat, onMicPress }) {
   const { user } = useCurrentUser();
   const { toast } = useToast();
   // Cheat temizleme işaretçisi: oda için ortak zaman damgası; bu andan eski bildirimler gizlenir.
@@ -227,7 +227,6 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
               </button>
             </>
           )}
-          <button onClick={onClose} aria-label="Sohbeti kapat" className="flex h-9 w-9 items-center justify-center rounded-full text-white active:scale-95"><X className="h-6 w-6" /></button>
         </div>
       </div>
       {/* Paneli kapatmak için sol kenarda üçgen kol. */}

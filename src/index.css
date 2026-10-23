@@ -1247,7 +1247,7 @@ html.no-bounce, html.no-bounce body { overscroll-behavior: none; }
 }
 .film-chat-panel .room-chat-header h3 { font-size: clamp(.75rem, 4cqw, 1rem); }
 .film-chat-panel .room-chat-header p { font-size: .65rem; }
-.film-chat-panel .room-chat-header button:last-child { border: 1px solid hsl(var(--border) / .25); }
+.film-chat-panel .room-chat-header > :last-child > button:last-child { box-shadow: 0 0 14px -3px rgba(255, 215, 0, 0.9); }
 .film-chat-panel .room-chat-tabs {
   flex-shrink: 0;
   margin: .5rem .5rem .25rem;
