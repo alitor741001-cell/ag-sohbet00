@@ -8,6 +8,7 @@ import useAgencyPageData from '@/components/agency/useAgencyPageData';
 import { agencySections } from '@/components/agency/agencySections';
 import { useToast } from '@/components/ui/use-toast';
 import { AGENCY_GOLD, agencyApi } from '@/lib/agency';
+import useAutoRefresh from '@/hooks/useAutoRefresh';
 
 /** Transferler: ajans değişikliği talebi, onay süreci ve geçmiş kayıtlar. */
 export default function AgencyTransfers() {
@@ -25,6 +26,9 @@ export default function AgencyTransfers() {
   }, []);
 
   useEffect(() => { if (user?.id) load(); }, [user?.id, load]);
+
+  // Transfer listesi 5 saniyede bir sessizce tazelenir.
+  useAutoRefresh(() => { if (user?.id) load(); });
 
   const decide = async (transfer, accept) => {
     setBusyId(transfer.id);

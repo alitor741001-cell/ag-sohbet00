@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
+import useAutoRefresh from '@/hooks/useAutoRefresh';
 import CoinStack from '@/components/admin/coins/CoinStack';
 import CoinLoadForm from '@/components/admin/coins/CoinLoadForm';
 import CoinRecentTable from '@/components/admin/coins/CoinRecentTable';
@@ -11,8 +12,8 @@ export default function AdminCoins() {
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const load = useCallback(async (quiet = false) => {
+    if (!quiet) setLoading(true);
     try {
       const response = await base44.functions.invoke('coin-admin', { action: 'list', limit: 30 });
       setGrants(response.data?.grants || []);
@@ -24,6 +25,9 @@ export default function AdminCoins() {
   }, []);
 
   useEffect(() => { load(); }, [load, refreshKey]);
+
+  // Liste 5 saniyede bir sessizce tazelenir.
+  useAutoRefresh(() => load(true));
 
   const refresh = () => setRefreshKey((value) => value + 1);
 

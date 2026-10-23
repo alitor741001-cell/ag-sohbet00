@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Building2, Camera, Gem, Loader2, Mic2, MoveRight, Table2, Wallet } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { agencyApi } from '@/lib/agency';
+import useAutoRefresh from '@/hooks/useAutoRefresh';
 import AdminAgencyList from '@/components/admin/agency/AdminAgencyList';
 import AdminBroadcasterTable from '@/components/admin/agency/AdminBroadcasterTable';
 import AdminQuotaTiers from '@/components/admin/agency/AdminQuotaTiers';
@@ -33,6 +34,9 @@ export default function AdminAgencies() {
   }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  // Ajans paneli 5 saniyede bir sessizce tazelenir.
+  useAutoRefresh(load);
 
   // Canlı güncelleme: ödeme işareti var olan kaydı günceller, yeni tamamlanan kota
   // kaydı listeye eklenir — panelin tamamı yeniden yüklenmez.

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import subscribeEntity from '@/components/data/entitySubscriptions';
 import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
+import useAutoRefresh from '@/hooks/useAutoRefresh';
 import { useToast } from '@/components/ui/use-toast';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import UserBadge from '@/components/admin/UserBadge';
@@ -62,6 +63,8 @@ export default function AdminUsers({ pendingOnly = false }) {
       setOnlineUsers(new Set(presences.map((p) => p.user_id)));
     }).catch(() => {});
   };
+  // Liste 5 saniyede bir sessizce tazelenir: onay ve çevrimiçi durumu güncel kalır.
+  useAutoRefresh(load);
   useEffect(() => {
     setLoading(true); load();
     const offUsers = subscribeEntity('User', (event) => {

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Crown, Loader2, Search } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import useAutoRefresh from '@/hooks/useAutoRefresh';
 import VipUserRow from '@/components/admin/vip/VipUserRow';
 import FullUserProfile from '@/components/profile/FullUserProfile';
 import { useToast } from '@/components/ui/use-toast';
@@ -17,19 +18,22 @@ export default function AdminVip() {
   const [busy, setBusy] = useState(false);
   const [profile, setProfile] = useState(null);
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const load = useCallback(async (quiet = false) => {
+    if (!quiet) setLoading(true);
     try {
       const response = await base44.functions.invoke('vip-service', { action: 'list' });
       setPeople(response.data?.people || []);
     } catch {
-      setPeople([]);
+      if (!quiet) setPeople([]);
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  // Liste 5 saniyede bir sessizce tazelenir.
+  useAutoRefresh(() => load(true));
 
   const search = async () => {
     if (!query.trim()) return;

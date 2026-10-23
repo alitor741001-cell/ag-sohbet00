@@ -41,7 +41,9 @@ export default function UserProfile({ userId, roomIdOverride, onBack, onMessage,
       .finally(() => { if (active) setLoading(false); });
     load();
     const off = subscribeEntity('User', (event) => { if ((event.data?.id || event.id) === id) load(); });
-    return () => { active = false; off(); };
+    // Profil 5 saniyede bir sessizce tazelenir: seviye, VIP ve rozetler güncel kalır.
+    const poll = window.setInterval(() => { if (document.visibilityState !== 'hidden') load(); }, 5000);
+    return () => { active = false; off(); window.clearInterval(poll); };
   }, [id]);
 
   useEffect(() => {
@@ -52,7 +54,9 @@ export default function UserProfile({ userId, roomIdOverride, onBack, onMessage,
       .then((items) => { if (active) setRelation(items.find((item) => item.members?.includes(id)) || null); });
     load();
     const off = subscribeEntity('Friendship', () => load());
-    return () => { active = false; off(); };
+    // Arkadaşlık durumu 5 saniyede bir sessizce tazelenir.
+    const poll = window.setInterval(() => { if (document.visibilityState !== 'hidden') load(); }, 5000);
+    return () => { active = false; off(); window.clearInterval(poll); };
   }, [id, me?.id]);
 
   // Profil açıldığında ziyaret kaydı düşülür: sahibi kimlerin baktığını görebilir.

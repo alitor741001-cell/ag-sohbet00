@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import subscribeEntity from '@/components/data/entitySubscriptions';
 import { useCurrentUser } from '@/lib/useCurrentUser';
+import useAutoRefresh from '@/hooks/useAutoRefresh';
 import { useToast } from '@/components/ui/use-toast';
 import { Send, Trash2, XCircle } from 'lucide-react';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
@@ -28,6 +29,8 @@ export default function AdminSupport() {
     setProfiles(Object.fromEntries(uIds.map((id, i) => [id, ps[i]])));
   }).catch(() => {}); };
   useEffect(load, []);
+  // Destek listesi 5 saniyede bir sessizce tazelenir.
+  useAutoRefresh(load);
   // Gerçek zamanlı abonelik — polling yok
   useEffect(() => {
     const unsub = subscribeEntity('SupportTicket', (ev) => {
