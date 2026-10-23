@@ -215,9 +215,11 @@ export default async function(req) {
           ? `${frameInfo.title} `
           : (roleInfo.label && roleInfo.show_in_room ? `${roleInfo.icon} ${roleInfo.label} ` : '');
         const entryName = frameInfo ? `${name} ` : (roleInfo.hide_username_entry ? '' : `${name} `);
-        await base44.asServiceRole.entities.RoomMessage.create({
-          room_id, user_id: user.id, user_name: name, user_avatar: user.avatar || '',
-          text: `${profileMeta}${frameMeta}${roleMeta}${titlePrefix}${entryName}odaya katıldı.`, type: 'system'
+        // Giriş bildirimi kişi başına tek satırdır: tekrar girişlerde satır yenilenir.
+        await upsertRoomNotice(base44, room_id, {
+          key: `presence:${user.id}`,
+          user_id: user.id, user_name: name, user_avatar: user.avatar || '',
+          text: `${profileMeta}${frameMeta}${roleMeta}${titlePrefix}${entryName}odaya katıldı.`,
         });
       }
       // Gizli odada canlı oda işaretçisi yazılmaz: oda kimseye açık görünmez.
@@ -639,9 +641,10 @@ export default async function(req) {
         : (roleInfoLeave.label && roleInfoLeave.show_in_room ? `${roleInfoLeave.icon} ${roleInfoLeave.label} ` : '');
       const leaveName = frameInfoLeave ? `${name} ` : (roleInfoLeave.hide_username_entry ? '' : `${name} `);
       if (!hiddenUser && leavingParticipant && !silent) {
-        await base44.asServiceRole.entities.RoomMessage.create({
-          room_id, user_id: user.id, user_name: name, user_avatar: user.avatar || '',
-          text: `${profileMetaLeave}${frameMetaLeave}${roleMetaLeave}${titlePrefixLeave}${leaveName}odadan ayrıldı.`, type: 'system'
+        await upsertRoomNotice(base44, room_id, {
+          key: `presence:${user.id}`,
+          user_id: user.id, user_name: name, user_avatar: user.avatar || '',
+          text: `${profileMetaLeave}${frameMetaLeave}${roleMetaLeave}${titlePrefixLeave}${leaveName}odadan ayrıldı.`,
         });
       }
       return Response.json({ ok: true });
@@ -663,9 +666,10 @@ export default async function(req) {
       : (roleInfoLeave2.label && roleInfoLeave2.show_in_room ? `${roleInfoLeave2.icon} ${roleInfoLeave2.label} ` : '');
     const leaveName2 = frameInfoLeave2 ? `${name} ` : (roleInfoLeave2.hide_username_entry ? '' : `${name} `);
     if (!hiddenUser && leavingParticipant && !silent) {
-        await base44.asServiceRole.entities.RoomMessage.create({
-          room_id, user_id: user.id, user_name: name, user_avatar: user.avatar || '',
-          text: `${profileMetaLeave2}${frameMetaLeave2}${roleMetaLeave2}${titlePrefixLeave2}${leaveName2}odadan ayrıldı.`, type: 'system'
+        await upsertRoomNotice(base44, room_id, {
+          key: `presence:${user.id}`,
+          user_id: user.id, user_name: name, user_avatar: user.avatar || '',
+          text: `${profileMetaLeave2}${frameMetaLeave2}${roleMetaLeave2}${titlePrefixLeave2}${leaveName2}odadan ayrıldı.`,
         });
       }
     return Response.json({ ok: true });
