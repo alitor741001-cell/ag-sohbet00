@@ -7,6 +7,9 @@ import '@/styles/accessibility.css'
 import '@/styles/slot.css'
 import initSystemTheme from '@/lib/themeMode'
 import initAppViewport from '@/lib/appViewport'
+import initEdgeSwipeGuard from '@/lib/edgeSwipeGuard'
+
+initEdgeSwipeGuard()
 
 // Tema cihazın sistem tercihine göre canlı ayarlanır; tercih okunamazsa koyu sinema teması.
 initSystemTheme();

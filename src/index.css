@@ -203,6 +203,10 @@
     overscroll-behavior-y: none;
   }
 
+  html {
+    overscroll-behavior-x: none;
+  }
+
   /* Interactive elements: disable text selection for native-app feel */
   button, nav, [role="tab"], [role="menuitem"], [role="option"], [role="button"], summary, .no-select {
     -webkit-user-select: none;
