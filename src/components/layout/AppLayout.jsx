@@ -21,6 +21,7 @@ import { isMultiDeviceExempt } from '@/lib/sessionPolicy';
 
 // Koyu yüzeyler tek bir gece mavisi gradyanıyla boyanır: durum çubuğu, güvenli alan ve
 // kaydırma kenarlarında siyah şerit kalmaz, ana sayfanın zemini ekranın tamamını kaplar.
+import { HOME_DESIGN } from '@/components/layout/HomeImageNav';
 const DARK_SURFACE_GRADIENT = 'radial-gradient(120% 75% at 50% 0%, #103062 0%, #081a3a 44%, #04081a 100%)';
 
 export default function AppLayout() {
@@ -195,7 +196,9 @@ export default function AppLayout() {
     return <MessageRealtimeProvider userId={user?.id}><div className="min-h-screen bg-transparent"><RoutePreloader /><RoleCelebrationOverlay /><Suspense fallback={null}><Outlet /></Suspense></div></MessageRealtimeProvider>;
   }
   return (
-    <MessageRealtimeProvider userId={user?.id}><div className={`min-h-screen w-full min-w-0 overflow-x-clip ${isDarkSurface ? '' : 'bg-background'}`} style={isDarkSurface ? { background: DARK_SURFACE_GRADIENT } : undefined}>
+    <MessageRealtimeProvider userId={user?.id}><div className={`min-h-screen w-full min-w-0 overflow-x-clip ${isDarkSurface ? 'relative isolate' : 'bg-background'}`} style={isDarkSurface ? { background: DARK_SURFACE_GRADIENT } : undefined}>
+      {/* Ana sayfa teması: tasarım görseli tüm koyu sayfalarda sabit zemin olur. */}
+      {isDarkSurface && <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10" style={{ backgroundImage: `url(${HOME_DESIGN})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />}
       <RoutePreloader />
       <RoleCelebrationOverlay />
       <Navbar />
