@@ -72,6 +72,8 @@ export default function InviteDetailSheet({ open, inviteId, onClose, onAnswered 
 
   const invite = data?.invite;
   const isAssistantInvite = invite?.kind === 'assistant';
+  // Daveti gönderen (ajans sahibi/asistan) onaylayamaz: onay kartı yalnızca davet edilende çıkar.
+  const isInvitee = !invite || invite.invitee_id === user?.id;
   // Kimlik numarası davet kaydında saklanır; kendi davetinde hesabından da okunur.
   const inviteeMemberId = invite?.invitee_member_id || (invite?.invitee_id === user?.id ? user?.member_id || '' : '') || '—';
   const rules = String(data?.rules || '').split('\n').filter(Boolean);
@@ -150,21 +152,29 @@ export default function InviteDetailSheet({ open, inviteId, onClose, onAnswered 
             </div>
           </div>
 
-          <div className="flex items-center justify-center gap-1.5 text-[11px] text-white/50">
-            <Clock className="h-3 w-3" /> Lütfen kuralları okuyun — onay {left > 0 ? `${left} saniye` : 'hazır'}
-          </div>
+          {isInvitee ? (
+            <>
+              <div className="flex items-center justify-center gap-1.5 text-[11px] text-white/50">
+                <Clock className="h-3 w-3" /> Lütfen kuralları okuyun — onay {left > 0 ? `${left} saniye` : 'hazır'}
+              </div>
 
-          <button
-            onClick={() => respond(true)}
-            disabled={busy || left > 0}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#38bdf8] to-[#2563eb] py-3.5 text-sm font-black text-white shadow-[0_0_26px_-8px_rgba(56,189,248,0.95)] disabled:opacity-50"
-          >
-            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-            {left > 0 ? `ONAYLA (${left})` : 'ONAYLA'}
-          </button>
-          <button onClick={() => respond(false)} disabled={busy} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-white/20 py-3 text-sm font-bold text-white/70 disabled:opacity-50">
-            <X className="h-4 w-4" /> Reddet
-          </button>
+              <button
+                onClick={() => respond(true)}
+                disabled={busy || left > 0}
+                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#38bdf8] to-[#2563eb] py-3.5 text-sm font-black text-white shadow-[0_0_26px_-8px_rgba(56,189,248,0.95)] disabled:opacity-50"
+              >
+                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                {left > 0 ? `ONAYLA (${left})` : 'ONAYLA'}
+              </button>
+              <button onClick={() => respond(false)} disabled={busy} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-white/20 py-3 text-sm font-bold text-white/70 disabled:opacity-50">
+                <X className="h-4 w-4" /> Reddet
+              </button>
+            </>
+          ) : (
+            <p className="flex items-center justify-center gap-1.5 rounded-2xl border border-white/12 bg-white/5 py-3 text-center text-[11px] font-semibold text-white/60">
+              <Clock className="h-3 w-3" /> Bu davet {invite.invitee_name || 'kullanıcı'} kişisine gönderildi.
+            </p>
+          )}
         </div>
       )}
     </AgencySheet>

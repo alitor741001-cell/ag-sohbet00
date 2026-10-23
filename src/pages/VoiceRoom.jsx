@@ -1133,6 +1133,12 @@ export default function VoiceRoom() {
         }}
       />
 
+      {/* Ajans çağrısı kartı: "Devam Ediyor" sayacının altında çıkar. Çağrıyı yollayan
+          kişide (ajans sahibi/asistan) görünmez, yalnızca diğer kişilere düşer. */}
+      {agencyCall && agencyCall.sender_id !== user?.id && (
+        <AgencyCallBanner call={agencyCall} onClose={dismissAgencyCall} onJoin={() => { const target = agencyCall?.room_id; dismissAgencyCall(); if (target && target !== id) navigate(`/sesli-oda/${target}`); }} />
+      )}
+
       <div className={`voice-chat-dock min-h-0 shrink-0 ${composerOpen ? 'is-composing' : ''}`}>
       <VoiceChatDock
         messages={messages}
@@ -1228,7 +1234,7 @@ export default function VoiceRoom() {
         onAgencyCall={agencyCallStatus?.eligible ? () => setAgencyCallOpen(true) : null}
       />
       <AgencyCallComposer open={agencyCallOpen} onClose={() => setAgencyCallOpen(false)} roomId={id} status={agencyCallStatus} onSent={(data) => setAgencyCallStatus((prev) => ({ ...prev, ...data }))} />
-      <AgencyCallBanner call={agencyCall} onClose={dismissAgencyCall} onJoin={() => { const target = agencyCall?.room_id; dismissAgencyCall(); if (target && target !== id) navigate(`/sesli-oda/${target}`); }} />
+
 
       <RoomLogSheet
         open={logOpen}

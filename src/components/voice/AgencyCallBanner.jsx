@@ -4,7 +4,7 @@ import { Megaphone, X } from 'lucide-react';
 export default function AgencyCallBanner({ call, onJoin, onClose }) {
   if (!call) return null;
   return (
-    <div className="fixed inset-x-3 top-20 z-[70] mx-auto max-w-sm rounded-2xl border border-[#FFD700]/60 bg-black/85 p-3 text-white shadow-[0_0_24px_-6px_rgba(255,215,0,0.9)] backdrop-blur">
+    <div className="relative z-[70] mx-3 mb-2 rounded-2xl border border-[#FFD700]/60 bg-black/85 p-3 text-white shadow-[0_0_24px_-6px_rgba(255,215,0,0.9)] backdrop-blur">
       <button type="button" onClick={onClose} aria-label="Kapat" className="absolute right-1 top-1 p-2 text-white/60"><X className="h-4 w-4" /></button>
       <p className="flex items-center gap-1.5 pr-6 text-sm font-black text-[#FFD700]"><Megaphone className="h-4 w-4" /> {call.agency_name}</p>
       <p className="mt-0.5 text-xs text-white/80">katılmaya davet ediyor</p>
