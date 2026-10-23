@@ -144,6 +144,7 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
       playerRef.current?.destroy?.();
       hostRef.current.innerHTML = '';
       const mount = document.createElement('div');
+      mount.className = 'h-full w-full';
       hostRef.current.appendChild(mount);
       playerRef.current = new YT.Player(mount, {
         videoId,
