@@ -26,6 +26,14 @@
     "level": {
       "type": "integer"
     },
+    "n_level": {
+      "type": "integer",
+      "default": 0
+    },
+    "sent_level": {
+      "type": "integer",
+      "default": 0
+    },
     "effect_id": {
       "type": "string"
     },

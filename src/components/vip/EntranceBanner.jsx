@@ -22,8 +22,11 @@ export default function EntranceBanner({ person, onDone }) {
             : <Icon className="h-5 w-5" />}
           {tier !== 'basic' && <span className="entry-level">V{person.level}</span>}
         </div>
-        <p className="entry-text">
-          <span className="entry-name">{person.name}</span> odaya katıldı
+        <p className="entry-text flex min-w-0 items-center gap-1">
+          {person.n_level > 0 && <span className="shrink-0 rounded-full border border-[#cfd8dc] bg-[#4b664d] px-1.5 text-[9px] font-black text-white">N{person.n_level}</span>}
+          {person.level >= 5 && <span className="shrink-0 rounded-full bg-gradient-to-r from-[#fde68a] to-[#f59e0b] px-1.5 text-[9px] font-black text-[#3a2400]">VIP{person.level}</span>}
+          {person.sent_level > 0 && <span className="shrink-0 rounded-full bg-gradient-to-r from-[#fbbf24] to-[#f59e0b] px-1.5 text-[9px] font-black text-[#20160a]">★{person.sent_level}</span>}
+          <span className="entry-name truncate">{person.name}</span> <span className="shrink-0">katıldı</span>
         </p>
         <span className="entry-shine" />
       </div>

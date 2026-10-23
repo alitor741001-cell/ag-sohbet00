@@ -1,9 +1,12 @@
 import { effectiveVipLevel, isHiddenUser } from './vip.ts';
 import { getCosmeticSelection, saveCosmeticSelection } from './cosmeticSelection.ts';
+import { badgeLevels } from './userLevels.ts';
 export async function publishRoomEntrance(base44, room, user, visitId) {
   const level = effectiveVipLevel(user);
   if (isHiddenUser(user)) return;
   const vip = level >= 5;
+  const badges = badgeLevels(user);
+  const ranks = { n_level: badges.n_level, sent_level: badges.gift_sent_level };
   const visit = /^[0-9a-f-]{36}$/i.test(visitId || '') ? visitId : (room.participants || []).find(p => p.user_id === user.id)?.joined_at;
   if (!visit) return;
   {
@@ -14,7 +17,7 @@ export async function publishRoomEntrance(base44, room, user, visitId) {
     const name = user.username || user.full_name || 'Kullanıcı';
     // VIP olmayanlar için efektsiz, sade giriş şeridi.
     if (!vip) {
-      await sr.RoomEntranceEvent.create({ room_id: room.id, user_id: user.id, visit_id: visit, audience_ids, name, avatar: user.avatar || '', level: 0 });
+      await sr.RoomEntranceEvent.create({ room_id: room.id, user_id: user.id, visit_id: visit, audience_ids, name, avatar: user.avatar || '', level: 0, ...ranks });
       return;
     }
     const selection = await getCosmeticSelection(base44, user.id);
@@ -33,7 +36,7 @@ export async function publishRoomEntrance(base44, room, user, visitId) {
       effect = pool[Math.floor(Math.random() * pool.length)];
     }
     if (!effect) return;
-    await sr.RoomEntranceEvent.create({ room_id: room.id, user_id: user.id, visit_id: visit, audience_ids, name, avatar: user.avatar || '', level, effect_id: effect.id, effect_name: effect.name, image_url: effect.image_url, crop: effect.crop || {}, video_url: effect.video_url || '' });
+    await sr.RoomEntranceEvent.create({ room_id: room.id, user_id: user.id, visit_id: visit, audience_ids, name, avatar: user.avatar || '', level, effect_id: effect.id, effect_name: effect.name, image_url: effect.image_url, crop: effect.crop || {}, video_url: effect.video_url || '', ...ranks });
     await saveCosmeticSelection(base44, user.id, { last_entrance_id: effect.id });
   }
 }

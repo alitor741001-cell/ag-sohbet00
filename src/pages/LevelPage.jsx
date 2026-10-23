@@ -1,11 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
 import LevelHeroOrb from '@/components/level/LevelHeroOrb';
 import LevelTierLadder from '@/components/level/LevelTierLadder';
 import { useCurrentUser } from '@/lib/useCurrentUser';
-import useXp from '@/hooks/useXp';
+import { giftLevelOf, giftNextThreshold } from '@/lib/userLevels';
 import { formatXp } from '@/lib/xp';
 
 const TIERS = [
@@ -38,20 +37,16 @@ const TAB_ON = { color: '#ffd76a', borderBottom: '2px solid #ffd76a' };
 export default function LevelPage() {
   const navigate = useNavigate();
   const { user } = useCurrentUser();
-  const xp = useXp([user?.id])[user?.id];
   const [tab, setTab] = useState('wealth');
-  const [charm, setCharm] = useState(0);
 
-  // Cazibe puanı hediye özetinden gelir; bölüm kapalıysa sıfır kalır.
-  useEffect(() => {
-    base44.functions.invoke('gift-box', { action: 'summary' })
-      .then((response) => setCharm(Number(response.data?.month_score) || 0))
-      .catch(() => {});
-  }, []);
-
+  // Atış: gönderilen hediye K toplamı; Alış: alınan hediye K toplamı. Odada hediye gönderildikçe yükselir.
   const isWealth = tab === 'wealth';
-  const score = isWealth ? (xp?.xp ?? 0) : charm;
-  const { level, into, need } = levelInfo(score);
+  const k = Math.max(0, Number(isWealth ? user?.gift_sent_k : user?.gift_received_k) || 0);
+  const level = giftLevelOf(k);
+  const start = level > 0 ? giftNextThreshold(level - 1) : 0;
+  const nextAt = giftNextThreshold(level);
+  const into = Math.max(0, Math.floor(k - start));
+  const need = Math.max(1, Math.ceil(nextAt - start));
   const percent = Math.min(100, Math.round((into / need) * 100));
   const remaining = Math.max(0, need - into);
   const tier = tierFor(level);
@@ -79,8 +74,8 @@ export default function LevelPage() {
         </button>
         <div className="flex flex-1 items-center justify-center gap-6">
           {[
-            { key: 'wealth', label: 'Zenginlik' },
-            { key: 'charm', label: 'Cazibe' },
+            { key: 'wealth', label: 'Atış' },
+            { key: 'charm', label: 'Alış' },
           ].map((item) => {
             const active = tab === item.key;
             return (
@@ -104,7 +99,7 @@ export default function LevelPage() {
           style={{ background: 'radial-gradient(circle at 50% 0%, rgba(167,139,250,.28), rgba(20,10,38,.85) 70%)', boxShadow: '0 20px 50px -25px #a78bfa' }}>
           <LevelHeroOrb avatar={avatar} label={label} level={level} percent={percent} tone={tier.tone} />
           <p className="mt-5 text-center text-sm font-black">{label}</p>
-          <p className="text-center text-[10px] font-bold uppercase tracking-[.3em] text-white/45">{isWealth ? 'Zenginlik Seviyesi' : 'Cazibe Seviyesi'}</p>
+          <p className="text-center text-[10px] font-bold uppercase tracking-[.3em] text-white/45">{isWealth ? 'Atış Seviyesi' : 'Alış Seviyesi'}</p>
           <div className="mt-4 grid grid-cols-3 gap-2 text-center">
             {[['Toplanan', formatXp(into)], ['Hedef', formatXp(need)], ['İlerleme', `${percent}%`]].map(([k, v]) => (
               <div key={k} className="rounded-2xl border border-white/10 bg-white/5 py-2">
@@ -119,15 +114,15 @@ export default function LevelPage() {
           LV{level + 1} seviyesine geçmek için {formatXp(remaining)} deneyim puanı gerekiyor.
         </p>
         <p className="mt-1 text-center text-[10.5px] font-semibold text-white/40">
-          Her seviye artışında gereken puan {formatXp(STEP_GROWTH)} kadar yükselir.
+          {isWealth ? 'Odada hediye gönderdikçe Atış seviyen yükselir.' : 'Odada sana hediye gönderildikçe Alış seviyen yükselir.'}
         </p>
 
         <div className="mt-5 rounded-2xl border p-4" style={{ borderColor: 'rgba(255,215,106,0.3)', background: 'rgba(46,26,71,0.55)' }}>
           <h2 className="text-sm font-black text-white">Seviye Açıklaması</h2>
           <p className="mt-1.5 text-[11.5px] font-medium leading-5 text-white/70">
             {isWealth
-              ? 'Her zenginlik seviyesinin kendine özgü renk simgesi vardır. Hediye göndererek, hediye değeri kadar zenginlik deneyim puanı kazanabilir ve zenginlik seviyenizi yükseltebilirsiniz.'
-              : 'Her cazibe seviyesinin kendine özgü renk simgesi vardır. Hediye alarak cazibe deneyim puanı kazanabilir ve cazibe seviyenizi yükseltebilirsiniz.'}
+              ? 'Her Atış seviyesinin kendine özgü renk simgesi vardır. Odada hediye göndererek, hediye değeri kadar Atış puanı kazanır ve Atış seviyeni yükseltirsin.'
+              : 'Her Alış seviyesinin kendine özgü renk simgesi vardır. Odada hediye aldıkça Alış puanı kazanır ve Alış seviyeni yükseltirsin.'}
           </p>
         </div>
 
