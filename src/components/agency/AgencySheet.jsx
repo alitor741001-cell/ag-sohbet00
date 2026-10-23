@@ -1,4 +1,4 @@
-import { X } from 'lucide-react';
+import { ArrowLeft, X } from 'lucide-react';
 
 /** Ajans panel ve formlarının ortak alt-kart kabuğu: alttan açılır, dışarı dokununca kapanır. */
 export default function AgencySheet({ open, title, subtitle, icon: Icon, onClose, tall = false, full = false, children }) {
@@ -15,18 +15,26 @@ export default function AgencySheet({ open, title, subtitle, icon: Icon, onClose
           </div>
         )}
         <header className={`flex shrink-0 items-center gap-3 px-4 pb-3 ${full ? 'pt-[max(0.75rem,env(safe-area-inset-top))]' : ''}`}>
-          {Icon && (
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#F5C542]/50 bg-black/60 text-[#F5C542]">
-              <Icon className="h-4 w-4" />
-            </span>
+          {full ? (
+            <button onClick={onClose} aria-label="Geri" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/20 active:scale-95">
+              <ArrowLeft className="h-4 w-4" />
+            </button>
+          ) : (
+            Icon && (
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#F5C542]/50 bg-black/60 text-[#F5C542]">
+                <Icon className="h-4 w-4" />
+              </span>
+            )
           )}
           <div className="min-w-0 flex-1">
             <h2 className="truncate text-base font-black">{title}</h2>
             {subtitle && <p className="truncate text-[11px] text-white/50">{subtitle}</p>}
           </div>
-          <button onClick={onClose} aria-label="Kapat" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/20 active:scale-95">
-            <X className="h-4 w-4" />
-          </button>
+          {!full && (
+            <button onClick={onClose} aria-label="Kapat" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/20 active:scale-95">
+              <X className="h-4 w-4" />
+            </button>
+          )}
         </header>
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
           {children}
