@@ -2,8 +2,20 @@ import { useCallback, useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import subscribeEntity from '@/components/data/entitySubscriptions';
 export const VIP_COSMETIC_LABELS = { badge: 'VIP Rozeti', frame: 'Avatar Çerçevesi', banner: 'Giriş Efekti', mic: 'Ses Dalgası', bubble: 'Sohbet Balonu', card: 'Profil Kartı', name: 'İsim Rengi', avatar: 'Hareketli Avatar' };
+
+// Takılan/çıkarılan kozmetik tek kaynakta tutulur: çantada yapılan değişiklik
+// profil, profil kartı ve odadaki görünüme aynı anda yansır — ek istek beklenmez.
+const EMPTY_DATA = { items: [], level: 0, catalog: null, expires_at: '' };
+let shared = null;
+const listeners = new Set();
+const publish = (next) => {
+  if (!next) return;
+  shared = next;
+  listeners.forEach((listener) => listener(next));
+};
+
 export default function useVipCosmetics(enabled = true) {
-  const [data, setData] = useState({ items: [], level: 0, catalog: null, expires_at: '' });
+  const [data, setData] = useState(shared || EMPTY_DATA);
   const [loading, setLoading] = useState(enabled);
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
@@ -11,9 +23,14 @@ export default function useVipCosmetics(enabled = true) {
     setLoading(true);
     try {
       const response = await base44.functions.invoke('vip-cosmetics', { action: 'list' });
-      setData(response.data); setError('');
+      publish(response.data); setError('');
     } catch (failure) { setError(failure.response?.data?.error || 'VIP bilgileri yüklenemedi.'); }
     finally { setLoading(false); }
+  }, []);
+  useEffect(() => {
+    listeners.add(setData);
+    if (shared) setData(shared);
+    return () => { listeners.delete(setData); };
   }, []);
   useEffect(() => {
     if (!enabled) return;
@@ -43,7 +60,7 @@ export default function useVipCosmetics(enabled = true) {
     setBusy(kind); setError('');
     try {
       const response = await base44.functions.invoke('vip-cosmetics', { action: 'toggle', kind, active, level: selectedLevel });
-      setData(response.data);
+      publish(response.data);
       window.dispatchEvent(new Event('vip-cosmetics-changed'));
     } catch (failure) { setError(failure.response?.data?.error || 'Kozmetik kaydedilemedi.'); }
     finally { setBusy(''); }

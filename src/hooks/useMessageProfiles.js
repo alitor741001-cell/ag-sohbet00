@@ -78,12 +78,24 @@ const ensureSubscription = () => {
     const ids = [...new Set([...listeners.values()].flatMap((watched) => [...watched]))];
     requestRefresh(ids.filter((id) => Date.now() - (fetchedAt.get(id) || 0) >= PROFILE_TTL_MS));
   };
+  // VIP kozmetiği takılıp çıkarılınca görünüm beklemeden tazelenir.
+  const refreshLooks = () => {
+    if (document.visibilityState === 'hidden') return;
+    const ids = [...new Set([...listeners.values()].flatMap((watched) => [...watched]))];
+    if (!ids.length) return;
+    ids.forEach((id) => pending.add(id));
+    window.clearTimeout(refreshTimer);
+    refreshTimer = null;
+    if (!batchTimer) batchTimer = window.setTimeout(flush, 60);
+  };
   window.addEventListener('online', refreshWatched);
+  window.addEventListener('vip-cosmetics-changed', refreshLooks);
   document.addEventListener('visibilitychange', refreshWatched);
   const expiryRefresh = window.setInterval(refreshWatched, PROFILE_TTL_MS);
   subscription = () => {
     off(); offVip();
     window.clearInterval(expiryRefresh);
+    window.removeEventListener('vip-cosmetics-changed', refreshLooks);
     window.removeEventListener('online', refreshWatched);
     document.removeEventListener('visibilitychange', refreshWatched);
   };

@@ -64,7 +64,9 @@ export default function FullUserProfile({
         .catch(() => {});
     }
     const offVip = subscribeEntity('VipAppearance', (event) => { if (event.data?.owner_id === userId) load(); });
-    return () => { alive = false; off(); offVip(); };
+    // Takılan/çıkarılan kozmetik aynı sekmede anında yansır.
+    window.addEventListener('vip-cosmetics-changed', load);
+    return () => { alive = false; off(); offVip(); window.removeEventListener('vip-cosmetics-changed', load); };
   }, [open, userId, hidden, user?.id]);
 
   // Profil açıldığında ziyaret kaydı düşülür: sahibi kimlerin baktığını görebilir.
