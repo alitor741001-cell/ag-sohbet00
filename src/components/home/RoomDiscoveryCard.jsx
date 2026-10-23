@@ -69,7 +69,7 @@ function RoomDiscoveryCard({ room, owner, kind, filmTitle, friendInside, rank = 
         rememberRoom(room);
       }}
       aria-disabled={locked || undefined}
-      className="relative flex flex-col overflow-hidden rounded-[16px] bg-[#10141d] transition-transform active:scale-[0.98]"
+      className="relative flex flex-col overflow-hidden rounded-[16px] border-2 border-[#f2c14e] bg-[#0a1226] shadow-[0_0_18px_-2px_rgba(255,190,70,0.85)] transition-transform active:scale-[0.98]"
       style={{
         boxShadow:
           '0 0 0 1.5px rgba(216,180,106,0.95), 0 0 0 3px rgba(9,14,24,0.98), 0 0 18px -6px rgba(108,212,214,0.45), 0 14px 24px -18px rgba(0,0,0,0.95)',

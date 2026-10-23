@@ -1,52 +1,31 @@
 import { Link } from 'react-router-dom';
-import { Castle, Search } from 'lucide-react';
+import { Flame, Gift, Search, Star } from 'lucide-react';
 
-const ICON_BTN =
-  'flex h-9 w-9 items-center justify-center rounded-full border border-[#e8c47c]/45 bg-[#0b2144]/75 text-[#f0d79b] shadow-[inset_0_0_12px_rgba(79,216,207,0.22)] transition active:scale-95';
+const CREST = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/3aaefd82e_generated_image.png';
+const GOLD = { border: '1.5px solid #e8b84a', boxShadow: '0 0 14px -2px rgba(255,190,70,.75), inset 0 0 10px rgba(255,190,70,.25)', background: 'linear-gradient(180deg,#1a1408,#0a0f1e)' };
+const BLUE = { border: '1.5px solid #3b8cff', boxShadow: '0 0 14px -2px rgba(59,140,255,.8), inset 0 0 10px rgba(59,140,255,.25)', background: 'linear-gradient(180deg,#0b1a3a,#060d20)' };
 
-const ACTIVE_CHIP = {
-  background: 'linear-gradient(135deg,#d8fffb 0%,#6fe6dc 48%,#9ad7ff 100%)',
-  color: '#062033',
-  boxShadow: '0 0 20px -4px rgba(127,240,230,0.9)',
-};
-
-/** Ana sayfa üst şeridi: Sıcak / Geçmiş Odalar sekmeleri, üye arama ve oda kurma.
-    Oyunlar görünümünde sekmeler gizlenir; yalnızca arama ve oda kurma kalır. */
+/** Ana sayfa üst şeridi: altın/mavi neon çerçeveli Sıcak, Takip, AG arması, arama ve Oda Kur. */
 export default function HomeTopBar({ view = 'hot', onView, onSearch, showViews = true }) {
+  const chip = (key, label, Icon, color, style) => (
+    <button type="button" onClick={() => onView?.(key)} style={style}
+      className={`flex h-10 items-center gap-1.5 rounded-full px-3 text-[12px] font-bold text-white transition active:scale-95 ${view === key ? '' : 'opacity-75'}`}>
+      <Icon className={`h-4 w-4 ${color}`} fill="currentColor" /> {label}
+    </button>
+  );
   return (
-    <div className="mb-3 flex items-center gap-1.5">
-      {(showViews ? [
-        { key: 'hot', label: 'Sıcak' },
-        { key: 'history', label: 'Takip' },
-      ] : []).map((item) => {
-        const active = view === item.key;
-        return (
-          <button
-            key={item.key}
-            type="button"
-            onClick={() => onView?.(item.key)}
-            className={`rounded-full px-3.5 py-1.5 text-[11px] font-black tracking-[0.04em] transition active:scale-95 ${
-              active
-                ? ''
-                : 'border border-[#e8c47c]/35 bg-[#071736]/70 text-white/60'
-            }`}
-            style={active ? ACTIVE_CHIP : undefined}
-          >
-            {item.label}
-          </button>
-        );
-      })}
-
-      <div className="ml-auto flex items-center gap-1.5">
-        <button type="button" onClick={onSearch} aria-label="Üye numarasıyla ara" className={ICON_BTN}>
+    <div className="relative mb-4 mt-1 rounded-full px-2 py-2"
+      style={{ border: '1.5px solid #3b8cff', background: 'linear-gradient(180deg,rgba(10,22,50,.9),rgba(5,10,25,.9))', boxShadow: '0 0 18px -4px #3b8cff, 0 0 28px -10px #ffb43c' }}>
+      <div className="flex items-center gap-1.5">
+        {showViews && chip('hot', 'Sıcak', Flame, 'text-orange-400', GOLD)}
+        {showViews && chip('history', 'Takip', Star, 'text-sky-400', BLUE)}
+        <img src={CREST} alt="AG" className="mx-auto -my-4 h-16 w-16 shrink-0 object-contain mix-blend-screen" />
+        <button type="button" onClick={onSearch} aria-label="Üye numarasıyla ara" style={BLUE}
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white active:scale-95">
           <Search className="h-4 w-4" />
         </button>
-        <Link
-          to="/oda-kur"
-          className="flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3 text-[10.5px] font-black text-[#062033] shadow-[0_0_20px_-4px_rgba(127,240,230,0.9)] active:scale-95"
-          style={{ background: 'linear-gradient(135deg,#d8fffb 0%,#6fe6dc 48%,#9ad7ff 100%)' }}
-        >
-          <Castle className="h-3.5 w-3.5" /> Oda Kur
+        <Link to="/oda-kur" style={GOLD} className="flex h-10 shrink-0 items-center gap-1.5 rounded-full px-3 text-[12px] font-bold text-white active:scale-95">
+          <Gift className="h-4 w-4 text-yellow-400" /> Oda Kur
         </Link>
       </div>
     </div>

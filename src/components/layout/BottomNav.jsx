@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Gamepad2, Home, MessageCircle, User } from 'lucide-react';
+import { Crown, Gamepad2, Home, MessageCircle, User } from 'lucide-react';
 import { useCurrentUser, membershipActive } from '@/lib/useCurrentUser';
 import useSocialBadges from '@/hooks/useSocialBadges';
 import useSupportBadge from '@/hooks/useSupportBadge';
@@ -58,7 +58,7 @@ export default function BottomNav() {
   };
 
   return (
-    <nav aria-label="Ana menü" className="lg:hidden fixed bottom-0 inset-x-0 z-50 pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]"       style={{ background: 'linear-gradient(180deg, #0d1a2e 0%, #132645 46%, #0b1930 100%)', borderTop: '1px solid rgba(140,150,192,0.28)', backdropFilter: 'blur(14px)', boxShadow: '0 -14px 34px -20px rgba(112,152,168,0.75)', transform: `translateY(-${keyboardInset}px)`, transition: keyboardInset ? 'transform 180ms ease-out' : 'none' }}>
+    <nav aria-label="Ana menü" className="lg:hidden fixed bottom-0 inset-x-0 z-50 pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]"       style={{ background: 'linear-gradient(180deg, #081430 0%, #050b1e 100%)', borderTop: '2px solid #f2b84a', borderRadius: '22px 22px 0 0', backdropFilter: 'blur(14px)', boxShadow: '0 -6px 22px -4px rgba(59,140,255,0.8), 0 -2px 14px -4px rgba(255,180,60,0.9)', transform: `translateY(-${keyboardInset}px)`, transition: keyboardInset ? 'transform 180ms ease-out' : 'none' }}>
       {/* Kristal dalga hattı: menünün üst kenarı akışkan bir çizgiyle parlar. */}
       <svg aria-hidden="true" viewBox="0 0 400 10" preserveAspectRatio="none" className="pointer-events-none absolute inset-x-0 -top-px h-2.5 w-full">
         <defs>
@@ -107,6 +107,7 @@ export default function BottomNav() {
                   <span aria-hidden="true" className="absolute inset-1.5 rounded-full" style={{ background: 'radial-gradient(circle at 50% 16%, rgba(255,255,255,0.7), transparent 58%)' }} />
                   <span aria-hidden="true" className="absolute -right-1 top-2 h-1.5 w-1.5 rounded-full bg-white/90 blur-[1px]" />
                   <Icon className="relative h-8 w-8 text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.85)]" />
+                  <Crown aria-hidden="true" className="absolute -top-5 left-1/2 h-5 w-5 -translate-x-1/2 text-[#f2c14e] drop-shadow-[0_0_6px_rgba(255,190,70,0.9)]" fill="currentColor" />
                 </span>
                 <span className="text-[10px] font-black tracking-wide" style={{ color: '#f4e1a1', textShadow: '0 0 10px rgba(244,225,161,0.55)' }}>{label}</span>
               </button>
@@ -124,6 +125,7 @@ export default function BottomNav() {
               {activePath === '/arkadaslar' && messages > 0 && <span aria-hidden="true" className="absolute right-[18%] top-1 min-w-5 h-5 px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">{messages > 99 ? '99+' : messages}</span>}
               {activePath === '/arkadaslar' && requests > 0 && <span aria-hidden="true" className="absolute right-[30%] top-0 w-3 h-3 rounded-full bg-red-500 border-2 border-[#14141a]" />}
               <span className="relative text-[9.5px] font-semibold leading-none" style={{ color: active ? '#f4e1a1' : 'rgba(255,255,255,0.8)' }}>{label}</span>
+              <span aria-hidden="true" className="absolute bottom-0.5 h-[3px] w-10 rounded-full" style={{ background: active ? '#f2c14e' : '#3b8cff', boxShadow: `0 0 8px ${active ? '#f2c14e' : '#3b8cff'}` }} />
             </button>
           );
         })}
