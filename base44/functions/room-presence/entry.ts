@@ -24,6 +24,30 @@ async function updatePresenceRoom(base44, userId, roomId) {
   await writeVisibleRoom(base44, records, roomId);
 }
 
+// Oda değiştirirken kişi eski odanın katılımcı listesinde kalmasın: yeni odaya
+// katıldığında, içinde bulunduğu diğer tüm aktif odalardan koltuğuyla birlikte çıkarılır.
+async function removeFromOtherRooms(base44, userId, keepRoomId) {
+  const otherRooms = await base44.asServiceRole.entities.Room.filter(
+    { status: 'active', 'participants.user_id': userId },
+    '-created_date', 50
+  ).catch(() => []);
+  await Promise.all(otherRooms
+    .filter((r) => r.id !== keepRoomId)
+    .map((r) => {
+      const participants = (r.participants || []).filter((p) => p.user_id !== userId);
+      const seats = (r.seats || []).map((seat) => seat.user_id === userId
+        ? { index: seat.index, user_id: '', name: '', avatar: '', frame: '', frame_scale: 100, locked: !!seat.locked, muted: false }
+        : seat);
+      if (participants.length === 0 && !r.is_personal) {
+        return Promise.all([
+          base44.asServiceRole.entities.RoomMessage.deleteMany({ room_id: r.id }).catch(() => {}),
+          base44.asServiceRole.entities.Room.delete(r.id).catch(() => {}),
+        ]);
+      }
+      return base44.asServiceRole.entities.Room.update(r.id, { participants, seats }).catch(() => {});
+    }));
+}
+
 function rememberParticipant(room, participant) {
   if (!participant) return room.recent_participants || [];
   const recent = (room.recent_participants || []).filter((item) => item.user_id !== participant.user_id);
@@ -154,6 +178,11 @@ export default async function(req) {
         await base44.asServiceRole.entities.Room.update(room_id, {
           banned_users: (room.banned_users || []).filter((b) => !(b.user_id === user.id && b.banned_until && new Date(b.banned_until).getTime() <= banNow)),
         }).catch(() => {});
+      }
+      // Oda değiştirildiğinde eski odanın katılımcı listesinde kalınmaz: kullanıcı
+      // yeni odaya katılırken içinde bulunduğu diğer odalardan çıkarılır.
+      if (!alreadyInRoom) {
+        await removeFromOtherRooms(base44, user.id, room_id);
       }
       // Gizli kullanıcı (VIP10+): odada kimliği görünmez — anons düşer, isim/avatar/profil gösterilmez.
       if (hiddenUser) {

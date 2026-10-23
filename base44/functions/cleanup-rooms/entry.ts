@@ -1,7 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
 
-const ONLINE_THRESHOLD_MS = 30000; // 30 saniye içinde aktif olan çevrim içi sayılır
-const OWNER_OFFLINE_MS = 180000; // oda sahibi 3 dakika çevrim dışı kalırsa oda kapanır
+const ONLINE_THRESHOLD_MS = 180000; // katılımcı 3 dakika içinde aktifse çevrim içi sayılır
+const OWNER_OFFLINE_MS = 180000; // oda sahibi 3 dakika çevrim dışı kalırsa kapanır
 
 export default async function(req) {
   try {
@@ -66,8 +66,8 @@ export default async function(req) {
         continue;
       }
 
-      if (!hasOnlineParticipant || ownerOffline) {
-        // Oda sahibi çevrim dışı ya da içeride çevrim içi kimse yok: oda ve sohbeti silinir.
+      if (!hasOnlineParticipant && ownerOffline) {
+        // Oda sahibi ve tüm katılımcılar 3 dakikadır çevrim dışı: oda ve sohbeti silinir.
         await base44.asServiceRole.entities.RoomMessage.deleteMany({ room_id: room.id }).catch(() => {});
         await base44.asServiceRole.entities.Room.delete(room.id).catch(() => {});
         deletedCount++;

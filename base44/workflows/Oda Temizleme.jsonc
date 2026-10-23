@@ -5,7 +5,7 @@
       "trigger_type": "scheduled",
       "events": [],
       "schedule_mode": "recurring",
-      "cron_expression": "*/5 * * * *",
+      "cron_expression": "*/2 * * * *",
       "one_time_date": null,
       "timezone": "Europe/Istanbul",
       "interval_value": null,
