@@ -38,12 +38,12 @@ function bigCrash() {
 }
 
 // Çakılma noktası: 1/(1-r) dağılımı, %9 ev avantajı. Normal turlar 90x altında
-// kalır. ~%12 olasılıkla yüksek tur (100x-500x) gelir: ortalama 8-9 turda bir
-// büyük tur, 500x ise ~25-30 turda bir çıkar. 100/200/300/400 de düzenli görünür.
+// kalır. ~%7 olasılıkla yüksek tur (100x-500x) gelir: ortalama 14-15 turda bir
+// büyük tur, 500x ise ~45-50 turda bir çıkar. 100/200/300/400 de düzenli görünür.
 export function randomCrash() {
   const r = Math.random();
   if (r < 0.01) return 1;
-  if (r < 0.12) return bigCrash();
+  if (r < 0.08) return bigCrash();
   const c = HOUSE_EDGE / (1 - r);
   return Math.max(1.01, Math.min(BIG_THRESHOLD - 0.01, Math.round(c * 100) / 100));
 }
