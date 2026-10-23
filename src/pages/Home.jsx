@@ -11,7 +11,7 @@ export default function Home() {
       style={{ background: '#040b1c' }}
     >
       {/* Tasarım zemini: koyu lacivert, yanlardan altın/mavi ışık çizgileri. */}
-      <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-0" style={{
+      <div aria-hidden="true" className="pointer-events-none fixed inset-x-0 top-[-17vw] bottom-[-32vw] z-0" style={{
         backgroundImage: 'url(https://media.base44.com/images/public/6a77d66e4da6de214628ee62/a5c5853e0_IMG_0141.jpg)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',

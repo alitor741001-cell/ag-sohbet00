@@ -198,7 +198,7 @@ export default function AppLayout() {
   return (
     <MessageRealtimeProvider userId={user?.id}><div className={`min-h-screen w-full min-w-0 overflow-x-clip ${isDarkSurface ? 'relative isolate' : 'bg-background'}`} style={isDarkSurface ? { background: DARK_SURFACE_GRADIENT } : undefined}>
       {/* Ana sayfa teması: tasarım görseli tüm koyu sayfalarda sabit zemin olur. */}
-      {isDarkSurface && <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10" style={{ backgroundImage: `url(${HOME_DESIGN})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />}
+      {isDarkSurface && <div aria-hidden="true" className="pointer-events-none fixed inset-x-0 top-[-17vw] bottom-[-32vw] -z-10" style={{ backgroundImage: `url(${HOME_DESIGN})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />}
       <RoutePreloader />
       <RoleCelebrationOverlay />
       <Navbar />
