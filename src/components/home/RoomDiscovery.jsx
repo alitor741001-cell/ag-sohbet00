@@ -307,13 +307,13 @@ export default function RoomDiscovery({ shortcuts = null }) {
   }
 
   return (
-    <PullToRefresh onRefresh={refreshList} label={tab === 'games' ? 'Oyunları' : 'Yayınları'} busyLabel={tab === 'games' ? 'Oyunlar yenileniyor…' : 'Yayınlar yenileniyor…'}>
-      {tab === 'games' ? (
-        <GamesBanner />
-      ) : (
-        <HomeTopBar view={view} onView={setView} onSearch={() => navigate('/arama')} showViews />
-      )}
-      {shortcuts}
+    <>
+      {tab === 'games' && <GamesBanner />}
+      <PullToRefresh onRefresh={refreshList} label={tab === 'games' ? 'Oyunları' : 'Yayınları'} busyLabel={tab === 'games' ? 'Oyunlar yenileniyor…' : 'Yayınlar yenileniyor…'}>
+        {tab === 'games' ? null : (
+          <HomeTopBar view={view} onView={setView} onSearch={() => navigate('/arama')} showViews />
+        )}
+        {shortcuts}
 
       {tab === 'games' ? (
         <GameDiscoveryRow onPick={setGameOpen} />
@@ -363,5 +363,6 @@ export default function RoomDiscovery({ shortcuts = null }) {
         </Suspense>
       )}
     </PullToRefresh>
+    </>
   );
 }

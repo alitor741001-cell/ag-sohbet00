@@ -182,9 +182,9 @@ export default function Profile() {
     <div
       className="dark min-h-screen pb-6 text-white"
     >
-      <PullToRefresh onRefresh={() => { reload?.(); loadWallet(); loadSocial(); loadVipCount(); }}>
       <div className="mx-auto w-full max-w-2xl md:max-w-3xl xl:max-w-4xl">
         <ProfileBanner />
+      <PullToRefresh onRefresh={() => { reload?.(); loadWallet(); loadSocial(); loadVipCount(); }}>
         <ProfileHeroCard
           user={user}
           avatar={form.avatar}
@@ -254,8 +254,8 @@ export default function Profile() {
             Gizlilik Politikası
           </button>
         </div>
-      </div>
       </PullToRefresh>
+      </div>
 
       {/* Kutu kapanınca bakiye canlı değerden tazelenir: kart eski tutarı göstermez. */}
       <GiftBoxPanel open={giftBoxOpen} onClose={() => { setGiftBoxOpen(false); loadWallet(); }} />
