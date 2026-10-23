@@ -94,7 +94,7 @@ function VoiceSeat({ seat, index, size = 'md', musicPlaying, speaking, isSelf, i
       <span className={`flex ${nameWidth} items-center gap-0.5 truncate text-[10px] leading-none`} style={{ color: gifted ? accent : nameTheme?.accent || '#ffffff' }}>
         {!hidden && isOwner && <Crown className="h-3 w-3 shrink-0 text-amber-400" />}
         {!hidden && !isOwner && isMod && <Shield className="h-3 w-3 shrink-0 text-sky-400" />}
-        <span className={`truncate ${hidden ? 'hidden-user-name' : ''}`}>{isSelf ? 'Sen' : seat.name}</span>
+        <span className={`truncate ${hidden ? 'hidden-user-name' : ''}`}>{seat.name}</span>
       </span>
     </button>
   );

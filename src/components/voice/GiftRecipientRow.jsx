@@ -50,7 +50,7 @@ export default function GiftRecipientRow({ people = [], selectedIds = [], color,
                   )}
                 </span>
                 <span className="w-full truncate text-center text-[10px] leading-none" style={{ color: selected ? color : 'rgba(255,255,255,0.7)' }}>
-                  {person.me ? 'Sen' : person.name}
+                  {person.name}
                 </span>
               </button>
             );

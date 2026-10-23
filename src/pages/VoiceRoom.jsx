@@ -247,7 +247,7 @@ export default function VoiceRoom() {
     });
     // Kendisi hiç koltukta/katılımcı listesinde görünmüyorsa yine de seçilebilir ve listenin başında durur.
     const self = user?.id
-      ? (map.get(user.id) || { user_id: user.id, name: user.full_name || 'Sen', avatar: '' })
+      ? (map.get(user.id) || { user_id: user.id, name: user.full_name || 'Kullanıcı', avatar: '' })
       : null;
     const others = [...map.values()].filter((person) => person.user_id !== user?.id);
     return self ? [{ ...self, me: true }, ...others] : others;

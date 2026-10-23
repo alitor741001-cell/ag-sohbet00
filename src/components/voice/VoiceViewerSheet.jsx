@@ -27,6 +27,9 @@ export default function VoiceViewerSheet({ open, onClose, participants = [], sea
     else viewers.push(entry);
   });
 
+  // Oda sahibi her zaman listenin en üstünde durur.
+  staff.sort((a, b) => Number(b.isOwner) - Number(a.isOwner));
+
   const pick = (id) => { onClose(); onSelect?.(id); };
 
   return (

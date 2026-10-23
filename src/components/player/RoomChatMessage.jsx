@@ -41,7 +41,7 @@ function RoomChatMessage({ message, profile, ownerId, roomModerators, currentUse
         <button type="button" onClick={() => onOpenProfile?.(message.user_id)} style={vipVars(!hidden && vipLook(profile, 'name'))} className={`min-w-0 max-w-full break-words text-left text-xs font-semibold hover:underline [overflow-wrap:anywhere] ${!hidden && !role.name_effect && vipLook(profile, 'name')?.nameAnimated ? 'vip-name-animated' : ''}`}>
           {hidden
             ? <span className="hidden-user-name">{name}</span>
-            : <RoleNameEffect nameEffect={role.name_effect} color={role.name_effect ? role.color : vipLook(profile, 'name')?.accent || role.color}>{name}{currentUserId === message.user_id && ' (Sen)'}</RoleNameEffect>}
+            : <RoleNameEffect nameEffect={role.name_effect} color={role.name_effect ? role.color : vipLook(profile, 'name')?.accent || role.color}>{name}</RoleNameEffect>}
         </button>
         {!hidden && label && <span className={`text-[10px] font-bold ${isOwner ? 'text-amber-400' : 'text-sky-400'}`}>{label}</span>}
         {!hidden && profile && (profile.display_role || profile.custom_role?.name) && <RoleBadge user={profile} size="sm" showLabel={false} />}

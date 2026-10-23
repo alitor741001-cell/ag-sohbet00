@@ -655,6 +655,8 @@ export default function WatchParty() {
       else if (participant.user_id === room.owner_id || mods.includes(participant.user_id) || viewerProfiles[participant.user_id]?.role === 'admin') staff.push(participant);
       else others.push(participant);
     });
+    // Oda sahibi her zaman listenin en üstünde durur.
+    staff.sort((a, b) => Number(b.user_id === room.owner_id) - Number(a.user_id === room.owner_id));
     return [
       ...staff.map((participant) => ({ participant, group: 'Yöneticiler' })),
       ...hidden.map((participant) => ({ participant, group: 'Gizli Kullanıcı' })),
@@ -759,6 +761,7 @@ export default function WatchParty() {
                       <span className={`absolute bottom-0 right-0 w-2 h-2 rounded-full border border-card ${isOnline ? 'bg-green-400' : 'bg-red-400'}`} />
                     </div>
                     <span className="flex-1 truncate min-w-0">{hidden ? <span className="hidden-user-name">{p.name}</span> : <>{p.name}{p.user_id === room.owner_id && <Crown className="w-3 h-3 text-amber-400 inline ml-0.5 shrink-0" />}</>}</span>
+                    {p.user_id === room.owner_id && !hidden && <span className="shrink-0 rounded-full bg-amber-400/20 px-1 text-[8px] font-bold text-amber-300">Oda Sahibi</span>}
                     {!isOnline && <span className="text-[9px] text-red-400 shrink-0">çevrim dışı</span>}
                   </button>
                   </Fragment>

@@ -13,8 +13,13 @@ export default function VoiceViewerRow({ person, seat, isOwner, isMod, isAdmin, 
     <button type="button" onClick={() => onSelect?.(person.user_id)} className="flex w-full items-center gap-2.5 rounded-xl px-2 py-1.5 text-left hover:bg-white/5">
       <ProfileFrame avatar={avatar} name={name} size="sm" />
       <span className="min-w-0 flex-1">
-        <span className={`block truncate text-sm font-bold ${hidden ? 'hidden-user-name' : 'text-fantasy-text'}`}>{name}{isSelf ? ' (Sen)' : ''}</span>
-        <span className="block text-[10px] text-fantasy-gold">{isOwner ? 'Oda Sahibi' : isMod || isAdmin ? 'Yönetici' : seat ? 'Koltukta' : 'İzleyici'}</span>
+        <span className="flex min-w-0 items-center gap-1.5">
+          <span className={`truncate text-sm font-bold ${hidden ? 'hidden-user-name' : 'text-fantasy-text'}`}>{name}</span>
+          {isOwner && (
+            <span className="shrink-0 rounded-full bg-[#F2CE6B]/15 px-1.5 py-px text-[9px] font-bold text-[#F2CE6B] ring-1 ring-[#F2CE6B]/40">Oda Sahibi</span>
+          )}
+        </span>
+        <span className="block text-[10px] text-fantasy-gold">{isMod || isAdmin ? 'Yönetici' : seat ? 'Koltukta' : 'İzleyici'}</span>
       </span>
       {(seat?.muted || person.muted) && <MicOff className="h-4 w-4 text-muted-foreground" />}
     </button>
