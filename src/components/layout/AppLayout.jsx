@@ -1,4 +1,5 @@
-import { Suspense, useEffect, useRef } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
+import PullToRefresh from '@/components/home/PullToRefresh';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import subscribeEntity from '@/components/data/entitySubscriptions';
@@ -35,7 +36,8 @@ export default function AppLayout() {
   const { toast } = useToast();
   // RoleCelebrationOverlay renders a full-screen animated character when role changes
   const isRoom = pathname.startsWith('/oda/') || pathname.startsWith('/sesli-oda/') || pathname === '/sesli-oda-kur';
-  const isDarkSurface = pathname === '/' || pathname === '/profil' || pathname === '/oda-kur' || pathname === '/arkadaslar' || pathname.startsWith('/kullanici/');
+  const isDarkSurface = !pathname.startsWith('/admin');
+  const [refreshKey, setRefreshKey] = useState(0);
   // Alt menü sekmeleri bellekte kalır: sekme değişiminde sayfa değişmez, görünürlük değişir.
   const activeTabPath = matchTabPath(pathname);
   const reduceMotion = useReducedMotion();
@@ -210,14 +212,16 @@ export default function AppLayout() {
           <TabStack activePath={activeTabPath} />
           {!activeTabPath && (
             /* Sayfa geçişi mobil uygulama hissiyle akar: hafif aşağıdan yukarı + belirginlik. */
+            <PullToRefresh onRefresh={() => setRefreshKey((k) => k + 1)}>
             <motion.div
-              key={pathname}
+              key={`${pathname}-${refreshKey}`}
               initial={reduceMotion ? false : { opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: reduceMotion ? 0 : 0.24, ease: 'easeOut' }}
             >
               <Outlet />
             </motion.div>
+            </PullToRefresh>
           )}
         </Suspense>
       </main>

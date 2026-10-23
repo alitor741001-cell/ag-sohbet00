@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
+import PullToRefresh from '@/components/home/PullToRefresh';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
 import { findProtectedName } from '@/lib/protectedNames';
@@ -179,8 +180,8 @@ export default function Profile() {
   return (
     <div
       className="dark min-h-screen pb-6 text-white"
-      style={{ background: 'radial-gradient(140% 80% at 50% 0%, #0E2A5A 0%, #071731 46%, #03081A 100%)' }}
     >
+      <PullToRefresh onRefresh={() => { reload?.(); loadWallet(); loadSocial(); loadVipCount(); }}>
       <div className="mx-auto w-full max-w-2xl md:max-w-3xl xl:max-w-4xl">
         <ProfileHeroCard
           user={user}
@@ -252,6 +253,7 @@ export default function Profile() {
           </button>
         </div>
       </div>
+      </PullToRefresh>
 
       {/* Kutu kapanınca bakiye canlı değerden tazelenir: kart eski tutarı göstermez. */}
       <GiftBoxPanel open={giftBoxOpen} onClose={() => { setGiftBoxOpen(false); loadWallet(); }} />
