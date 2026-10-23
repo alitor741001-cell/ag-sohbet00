@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { Fragment, useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { roomVisitId, endRoomVisit } from '@/lib/roomVisit';
@@ -646,6 +646,21 @@ export default function WatchParty() {
   const chatLocked = room.chat_seated_only === true && !seatedNow;
   const founderCanSeeAdmins = user?.display_role === 'founder';
   const visibleParticipants = (room.participants || []).filter((participant) => participant.user_id === room.owner_id || viewerProfiles[participant.user_id]?.role !== 'admin' || founderCanSeeAdmins);
+  // İzleyici listesi bölümlere ayrılır: yöneticiler, gizli kullanıcılar ve normal izleyiciler ayrı gruplanır.
+  const viewerList = (() => {
+    const mods = room.room_moderators || [];
+    const staff = []; const hidden = []; const others = [];
+    visibleParticipants.forEach((participant) => {
+      if (isHiddenName(participant.name)) hidden.push(participant);
+      else if (participant.user_id === room.owner_id || mods.includes(participant.user_id) || viewerProfiles[participant.user_id]?.role === 'admin') staff.push(participant);
+      else others.push(participant);
+    });
+    return [
+      ...staff.map((participant) => ({ participant, group: 'Yöneticiler' })),
+      ...hidden.map((participant) => ({ participant, group: 'Gizli Kullanıcı' })),
+      ...others.map((participant) => ({ participant, group: 'İzleyiciler' })),
+    ];
+  })();
   const openDirectMessage = (userId) => { setDirectTarget(userId); setDirectOpen(true); setChatOpen(false); setShowViewers(false); };
 
   return (
@@ -725,17 +740,20 @@ export default function WatchParty() {
             {/* Boş alana dokununca izleyici listesi kapanır. */}
             <button type="button" aria-label="Kapat" onClick={() => setShowViewers(false)} className="absolute inset-0 z-[59]" />
             <div className="absolute top-[max(env(safe-area-inset-top),3.5rem)] right-3 z-[60] w-40 max-h-[55vh] overflow-y-auto rounded-xl border border-amber-400/70 bg-gradient-to-b from-[#123018]/95 to-[#33300a]/95 p-2 text-white shadow-2xl backdrop-blur-xl">
-              <p className="mb-1.5 px-0.5 text-xs font-semibold text-amber-300">İzleyiciler</p>
+              <p className="mb-1.5 px-0.5 text-xs font-semibold text-amber-300">Odadakiler ({visibleParticipants.length})</p>
             <div className="space-y-1">
-              {visibleParticipants.map((p) => {
+              {viewerList.map(({ participant: p, group }, index) => {
                 const prof = viewerProfiles[p.user_id];
                 const avatar = p.avatar || prof?.avatar;
                 const presence = presenceMap[p.user_id];
                 const isOnline = presence?.online && (Date.now() - new Date(presence.last_seen).getTime() < 60000);
                 // Gizli kullanıcı listede takma adla görünür; profili açılınca tam bilgiler görünür.
                 const hidden = isHiddenName(p.name);
+                const showGroup = index === 0 || viewerList[index - 1].group !== group;
                 return (
-                  <button key={p.user_id} onClick={() => openUserProfile(p.user_id)} className="flex items-center gap-1.5 text-xs py-0.5 w-full text-left rounded px-1 hover:bg-white/10">
+                  <Fragment key={p.user_id}>
+                  {showGroup && <p className="px-0.5 pt-1 text-[9px] font-bold uppercase tracking-wider text-amber-300/80">{group}</p>}
+                  <button onClick={() => openUserProfile(p.user_id)} className="flex items-center gap-1.5 text-xs py-0.5 w-full text-left rounded px-1 hover:bg-white/10">
                     <div className="shrink-0 relative">
                       {!hidden && prof?.profile_frame ? <ProfileFrame frame={prof.profile_frame} avatar={avatar} name={p.name} size="3xs" frameScale={prof.profile_frame_scale} /> : <XpAvatar avatar={avatar} name={p.name} userId={hidden ? '' : p.user_id} size="3xs" />}
                       <span className={`absolute bottom-0 right-0 w-2 h-2 rounded-full border border-card ${isOnline ? 'bg-green-400' : 'bg-red-400'}`} />
@@ -743,6 +761,7 @@ export default function WatchParty() {
                     <span className="flex-1 truncate min-w-0">{hidden ? <span className="hidden-user-name">{p.name}</span> : <>{p.name}{p.user_id === room.owner_id && <Crown className="w-3 h-3 text-amber-400 inline ml-0.5 shrink-0" />}</>}</span>
                     {!isOnline && <span className="text-[9px] text-red-400 shrink-0">çevrim dışı</span>}
                   </button>
+                  </Fragment>
                 );
               })}
               </div>

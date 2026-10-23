@@ -1,9 +1,33 @@
 import { X } from 'lucide-react';
-import VoiceViewerRow from '@/components/voice/VoiceViewerRow';
+import VoiceViewerSection from '@/components/voice/VoiceViewerSection';
+import useMessageProfiles from '@/hooks/useMessageProfiles';
+import { isHiddenName } from '@/lib/hiddenUser';
 
-/** İzleyici listesi: ekranın dibinden yarıya kadar yukarı kayarak açılan kart. */
+/** İzleyici listesi: yöneticiler, gizli kullanıcılar ve normal izleyiciler ayrı bölümlerde gösterilir. */
 export default function VoiceViewerSheet({ open, onClose, participants = [], seats = [], userId, ownerId, moderators = [], onSelect }) {
+  // Gizli kullanıcının profili hiç istenmez; yalnızca görünen kişilerin rolü sorgulanır.
+  const visibleIds = participants
+    .filter((person) => !person.hidden && !isHiddenName(person.name) && person.user_id)
+    .map((person) => person.user_id);
+  const profiles = useMessageProfiles(open ? visibleIds : []);
+
   if (!open) return null;
+
+  const staff = [];
+  const hidden = [];
+  const viewers = [];
+  participants.forEach((person) => {
+    const concealed = person.hidden || isHiddenName(person.name);
+    const isOwner = person.user_id === ownerId;
+    const isMod = !isOwner && moderators.includes(person.user_id);
+    const isAdmin = profiles[person.user_id]?.role === 'admin';
+    const entry = { person, isOwner, isMod, isAdmin };
+    if (concealed) hidden.push(entry);
+    else if (isOwner || isMod || isAdmin) staff.push(entry);
+    else viewers.push(entry);
+  });
+
+  const pick = (id) => { onClose(); onSelect?.(id); };
 
   return (
     <div className="fixed inset-0 z-[250] flex flex-col justify-end">
@@ -19,17 +43,10 @@ export default function VoiceViewerSheet({ open, onClose, participants = [], sea
           {participants.length === 0
             ? <p className="py-3 text-center text-xs text-[#C6A45F]">Şu an odada kimse yok.</p>
             : (
-              <div className="space-y-1">
-                {participants.map((person) => {
-                  const seatIndex = seats.findIndex((item) => item.user_id === person.user_id);
-                  const seat = seatIndex >= 0 ? seats[seatIndex] : null;
-                  const isOwner = person.user_id === ownerId;
-                  const isMod = !isOwner && moderators.includes(person.user_id);
-                  return (
-                    <VoiceViewerRow key={person.user_id} person={person} seat={seat} isOwner={isOwner} isMod={isMod}
-                      isSelf={person.user_id === userId} onSelect={(id) => { onClose(); onSelect?.(id); }} />
-                  );
-                })}
+              <div className="space-y-2">
+                <VoiceViewerSection title="Yöneticiler" entries={staff} seats={seats} userId={userId} onSelect={pick} />
+                <VoiceViewerSection title="Gizli Kullanıcı" entries={hidden} seats={seats} userId={userId} onSelect={pick} />
+                <VoiceViewerSection title="İzleyiciler" entries={viewers} seats={seats} userId={userId} onSelect={pick} />
               </div>
             )}
         </div>

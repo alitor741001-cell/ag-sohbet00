@@ -3,7 +3,7 @@ import ProfileFrame from '@/components/ProfileFrame';
 import useMessageProfiles from '@/hooks/useMessageProfiles';
 import { HIDDEN_AVATAR_URL, isHiddenName } from '@/lib/hiddenUser';
 
-export default function VoiceViewerRow({ person, seat, isOwner, isMod, isSelf, onSelect }) {
+export default function VoiceViewerRow({ person, seat, isOwner, isMod, isAdmin, isSelf, onSelect }) {
   const hidden = person.hidden || isHiddenName(person.name);
   const profiles = useMessageProfiles(hidden ? [] : [person.user_id]);
   const profile = profiles[person.user_id];
@@ -14,7 +14,7 @@ export default function VoiceViewerRow({ person, seat, isOwner, isMod, isSelf, o
       <ProfileFrame avatar={avatar} name={name} size="sm" />
       <span className="min-w-0 flex-1">
         <span className={`block truncate text-sm font-bold ${hidden ? 'hidden-user-name' : 'text-fantasy-text'}`}>{name}{isSelf ? ' (Sen)' : ''}</span>
-        <span className="block text-[10px] text-fantasy-gold">{isOwner ? 'Oda Sahibi' : isMod ? 'Yönetici' : seat ? 'Koltukta' : 'İzleyici'}</span>
+        <span className="block text-[10px] text-fantasy-gold">{isOwner ? 'Oda Sahibi' : isMod || isAdmin ? 'Yönetici' : seat ? 'Koltukta' : 'İzleyici'}</span>
       </span>
       {(seat?.muted || person.muted) && <MicOff className="h-4 w-4 text-muted-foreground" />}
     </button>
