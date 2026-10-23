@@ -1,6 +1,7 @@
 import { giftLock, mirrorRecord } from './supabaseMirror.ts';
 import { coinsForK, ensureGiftWallet } from './giftWallet.ts';
 import { withStep } from './numberBoard.ts';
+import { upsertRoomNotice } from './roomNotice.ts';
 
 // Ana kayıtlar tamamlanmadan başarılı gönderim cevabı verilmez.
 export async function deliverGift(base44, context) {
@@ -68,6 +69,14 @@ export async function deliverGift(base44, context) {
         gift_emoji: gift.emoji || '🎁', gift_k: Number(gift.k_value) * quantity,
       })));
       messages.push(...created);
+    }
+    // Sesli odada hediye haberi kişinin tek satırına eklenir: ayrı satır açılmaz.
+    if (!hidden && (room.room_type === 'voice' || room.voice_mode === true)) {
+      await upsertRoomNotice(base44, roomId, {
+        key: `presence:${user.id}`,
+        user_id: user.id, user_name: name, user_avatar: avatar,
+        text: `${name}, ${recipients.map(p => p.name).join(', ')} kişisine ${gift.name}${quantity > 1 ? ` X${quantity}` : ''} gönderdi.`,
+      });
     }
     return { ok: true, records, wallet, room, messages, first: !alreadyPaid };
   } finally {

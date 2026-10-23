@@ -2,6 +2,15 @@
 // yerinde güncellenir (konumu ve zamanı korunur), yoksa yeni satır oluşturulur.
 // Böylece giriş/çıkış/yetki ve oda eylem bildirimleri sohbet panelinde üst üste birikmez;
 // her kişi için tek satır hep en güncel durumu gösterir.
+// Yeni olay aynı satırın sonuna eklenir; aynı metin iki kez yazılmaz.
+const mergeText = (current, next) => {
+  const base = String(current || '').trim();
+  const add = String(next || '').trim();
+  if (!add) return base;
+  if (!base || base.includes(add)) return base;
+  return `${base} ${add}`;
+};
+
 export async function upsertRoomNotice(base44, room_id, notice) {
   if (!room_id || !notice?.key || !notice?.text) return;
   const existing = await base44.asServiceRole.entities.RoomMessage
@@ -9,7 +18,7 @@ export async function upsertRoomNotice(base44, room_id, notice) {
   const row = existing[0];
   if (row) {
     await base44.asServiceRole.entities.RoomMessage.update(row.id, {
-      text: notice.text,
+      text: notice.reset ? notice.text : mergeText(row.text, notice.text),
       user_id: notice.user_id || row.user_id,
       user_name: notice.user_name || row.user_name,
       user_avatar: notice.user_avatar ?? row.user_avatar,

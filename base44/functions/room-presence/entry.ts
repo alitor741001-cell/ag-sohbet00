@@ -248,7 +248,7 @@ export default async function(req) {
         // Giriş bildirimi kişi başına tek satırdır: tekrar girişlerde satır yenilenir.
         await upsertRoomNotice(base44, room_id, {
           key: `presence:${user.id}`,
-          user_id: user.id, user_name: name, user_avatar: user.avatar || '',
+          user_id: user.id, user_name: name, user_avatar: user.avatar || '', reset: true,
           text: `${profileMeta}${frameMeta}${roleMeta}${titlePrefix}${entryName}odaya katıldı.`,
         });
       }
@@ -680,7 +680,7 @@ export default async function(req) {
       if (!hiddenUser && leavingParticipant && !silent) {
         await upsertRoomNotice(base44, room_id, {
           key: `presence:${user.id}`,
-          user_id: user.id, user_name: name, user_avatar: user.avatar || '',
+          user_id: user.id, user_name: name, user_avatar: user.avatar || '', reset: true,
           text: `${profileMetaLeave}${frameMetaLeave}${roleMetaLeave}${titlePrefixLeave}${leaveName}odadan ayrıldı.`,
         });
       }
@@ -705,7 +705,7 @@ export default async function(req) {
     if (!hiddenUser && leavingParticipant && !silent) {
         await upsertRoomNotice(base44, room_id, {
           key: `presence:${user.id}`,
-          user_id: user.id, user_name: name, user_avatar: user.avatar || '',
+          user_id: user.id, user_name: name, user_avatar: user.avatar || '', reset: true,
           text: `${profileMetaLeave2}${frameMetaLeave2}${roleMetaLeave2}${titlePrefixLeave2}${leaveName2}odadan ayrıldı.`,
         });
       }

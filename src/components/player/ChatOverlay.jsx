@@ -273,7 +273,7 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
             </div>
           </div>
         ) :
-         messages.filter((m) => !isHiddenMarker(m) && !(m.type === 'system' && (m.text || '').toLowerCase().includes('moderatör'))).filter((m) => !(cheatClearedAt && m.type === 'system' && new Date(m.created_date || 0).getTime() <= cheatClearedAt)).map((m) => (
+         messages.filter((m) => !isHiddenMarker(m)).filter((m) => !(cheatClearedAt && m.type === 'system' && new Date(m.created_date || 0).getTime() <= cheatClearedAt)).map((m) => (
             <div key={m.id} className={`flex w-full min-w-0 shrink-0 gap-2 group ${m.type === 'system' ? 'justify-center' : ''}`}>
               {m.type === 'system' ? (
                 (() => {
