@@ -103,6 +103,9 @@ export default function FullUserProfile({
   const shownAvatar = hidden ? HIDDEN_AVATAR_URL : (profile?.avatar || avatar || '');
   const memberId = !hidden && profile?.member_id && profile.member_id !== '-' ? String(profile.member_id) : '';
   const badge = broadcasterState(profile);
+  // "Yayıncım": profildeki kişi benim ajansıma bağlıysa. Sahip olunan ajans, üyelikten önce gelir.
+  const myAgencyId = user?.owned_agency_id || user?.agency_record_id || '';
+  const isMyBroadcaster = !!profile?.agency_record_id && profile.agency_record_id === myAgencyId;
   const showSocial = !isSelf && !hidden && !accountState;
   const age = hidden ? null : ageFromBirthDate(profile?.birth_date);
   const genderLabel = profile?.gender === 'erkek' ? 'Erkek' : profile?.gender === 'kadın' ? 'Kadın' : 'Belirtilmedi';
@@ -198,12 +201,10 @@ export default function FullUserProfile({
   const content = statusContent || (
     <>
       {!hidden && <ProfileAgencyBadges profile={profile || {}} />}
-      {!hidden && !isSelf && badge.active && (
+      {!hidden && !isSelf && (isMyBroadcaster || badge.active) && (
         <div className="mb-2 flex justify-center">
           <span className="rounded-full border border-premium-gold/60 bg-premium-gold/15 px-3 py-0.5 text-[11px] font-black text-premium-gold">
-            {(user?.agency_role === 'owner' || user?.agency_role === 'assistant')
-              && user?.agency_record_id && profile?.agency_record_id === user.agency_record_id
-              ? 'Yayıncım' : 'Yayıncı'}
+            {isMyBroadcaster ? 'Yayıncım' : 'Yayıncı'}
           </span>
         </div>
       )}

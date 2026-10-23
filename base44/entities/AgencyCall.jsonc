@@ -38,6 +38,17 @@
     },
     "day": {
       "type": "string"
+    },
+    "audience_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "audience_all": {
+      "type": "boolean",
+      "default": false
     }
   },
   "required": [
@@ -47,7 +58,21 @@
     "day"
   ],
   "rls": {
-    "read": {},
+    "read": {
+      "$or": [
+        {
+          "data.audience_ids": "{{user.id}}"
+        },
+        {
+          "data.audience_all": true
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
     "create": {
       "user_condition": {
         "role": "admin"
