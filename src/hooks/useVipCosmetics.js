@@ -58,11 +58,17 @@ export default function useVipCosmetics(enabled = true) {
   const toggle = async (kind, active, selectedLevel) => {
     if (busy) return;
     setBusy(kind); setError('');
+    const before = shared;
+    // Anlık yansıma: sunucu yanıtı beklenmeden çantadaki durum güncellenir.
+    if (shared) {
+      const mark = (item) => item.kind !== kind ? item : { ...item, equipped: active && item.level === selectedLevel, active: active && item.level === selectedLevel && item.usable };
+      publish({ ...shared, items: (shared.items || []).map(mark), groups: (shared.groups || []).map((group) => group.kind !== kind ? group : { ...group, items: (group.items || []).map(mark) }) });
+    }
     try {
       const response = await base44.functions.invoke('vip-cosmetics', { action: 'toggle', kind, active, level: selectedLevel });
       publish(response.data);
       window.dispatchEvent(new Event('vip-cosmetics-changed'));
-    } catch (failure) { setError(failure.response?.data?.error || 'Kozmetik kaydedilemedi.'); }
+    } catch (failure) { publish(before); setError(failure.response?.data?.error || 'Kozmetik kaydedilemedi.'); }
     finally { setBusy(''); }
   };
   return { ...data, loading, busy, error, toggle, refresh: load };
