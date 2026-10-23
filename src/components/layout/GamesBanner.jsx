@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { useWhiteCutout } from '@/lib/whiteCutout';
-import BannerBackdrop from '@/components/layout/BannerBackdrop';
+import FixedBanner from '@/components/layout/FixedBanner';
 
 const SHEET = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/c58ef9c52_IMG_0153.jpg';
 const CROP = { x: 0, y: 0, w: 0.74, h: 0.54 };
@@ -9,12 +9,9 @@ const CROP = { x: 0, y: 0, w: 0.74, h: 0.54 };
 function GamesBanner() {
   const src = useWhiteCutout(SHEET, CROP);
   return (
-    <div className="sticky top-0 z-30 isolate w-full px-2 pt-2" style={{ clipPath: 'inset(0)' }}>
-      <BannerBackdrop />
-      <div className="w-full" style={{ aspectRatio: '758 / 185' }}>
-        {src && <img src={src} alt="Oyunlar" className="h-full w-full object-contain" />}
-      </div>
-    </div>
+    <FixedBanner ratio="758 / 185" className="px-2 pt-2">
+      {src && <img src={src} alt="Oyunlar" className="h-full w-full object-contain" />}
+    </FixedBanner>
   );
 }
 

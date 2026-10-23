@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import NotificationBell from '@/components/friends/NotificationBell';
 import { useWhiteCutout } from '@/lib/whiteCutout';
-import BannerBackdrop from '@/components/layout/BannerBackdrop';
+import FixedBanner from '@/components/layout/FixedBanner';
 
 const BANNER = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/4eb14dbda_IMG_0154.jpg';
 const HOT = 'absolute inset-0 h-full w-full opacity-0';
@@ -11,9 +11,7 @@ const HOT = 'absolute inset-0 h-full w-full opacity-0';
 export default function MessagesBanner({ relations, userId, invoke, showBell = true }) {
   const src = useWhiteCutout(BANNER);
   return (
-    <div className="sticky top-0 z-30 isolate w-full" style={{ clipPath: 'inset(0)' }}>
-      <BannerBackdrop />
-      <div className="relative w-full" style={{ aspectRatio: '1024 / 342' }}>
+    <FixedBanner ratio="1024 / 342">
         {src && <img src={src} alt="Mesajlar" className="absolute inset-0 h-full w-full object-cover" />}
         <div className="absolute" style={{ left: '58.5%', top: '25%', width: '13.5%', height: '50%' }}>
           <Link to="/arkadaslar/istekler" aria-label="İstekler" className={HOT} />
@@ -24,7 +22,6 @@ export default function MessagesBanner({ relations, userId, invoke, showBell = t
           </div>
         )}
         <Link to="/ajans/mesajlar" aria-label="Ajans mesajları" className="absolute" style={{ left: '86.5%', top: '25%', width: '13%', height: '50%' }} />
-      </div>
-    </div>
+    </FixedBanner>
   );
 }
