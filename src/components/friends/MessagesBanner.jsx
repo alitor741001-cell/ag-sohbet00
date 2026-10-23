@@ -10,7 +10,9 @@ export default function MessagesBanner({ relations, userId, invoke, showBell = t
     <div className="sticky top-0 z-30 mb-2 w-full">
       <div className="relative w-full" style={{ aspectRatio: '1024 / 342' }}>
         <img src={BANNER} alt="Mesajlar" className="absolute inset-0 h-full w-full object-cover" />
-        <Link to="/arkadaslar/istekler" aria-label="İstekler" className={HOT} />
+        <div className="absolute" style={{ left: '58.5%', top: '25%', width: '13.5%', height: '50%' }}>
+          <Link to="/arkadaslar/istekler" aria-label="İstekler" className={HOT} />
+        </div>
         {showBell && (
           <div className="absolute" style={{ left: '72.5%', top: '25%', width: '13.5%', height: '50%' }}>
             <NotificationBell buttonClassName={HOT} />
