@@ -58,7 +58,7 @@ export default function BottomNav() {
   };
 
   return (
-    <nav aria-label="Ana menü" className="lg:hidden fixed bottom-0 inset-x-0 z-50 pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]"       style={{ background: 'linear-gradient(180deg, #0d1a2e 0%, #132645 46%, #0b1930 100%)', borderTop: '1px solid rgba(140,150,192,0.28)', backdropFilter: 'blur(14px)', boxShadow: '0 -14px 34px -20px rgba(112,152,168,0.75)', transform: `translateY(-${keyboardInset}px)`, transition: keyboardInset ? 'transform 180ms ease-out' : 'none' }}>
+    <nav aria-label="Ana menü" className="lg:hidden fixed bottom-0 inset-x-0 z-50 pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]"       style={{ background: 'linear-gradient(180deg, #071533 0%, #050e24 100%)', borderTop: '1.5px solid #f2b347', backdropFilter: 'blur(14px)', boxShadow: '0 -6px 20px -6px rgba(255,170,40,0.7), 0 -14px 30px -14px rgba(60,140,255,0.8)', transform: `translateY(-${keyboardInset}px)`, transition: keyboardInset ? 'transform 180ms ease-out' : 'none' }}>
       {/* Kristal dalga hattı: menünün üst kenarı akışkan bir çizgiyle parlar. */}
       <svg aria-hidden="true" viewBox="0 0 400 10" preserveAspectRatio="none" className="pointer-events-none absolute inset-x-0 -top-px h-2.5 w-full">
         <defs>
@@ -99,9 +99,9 @@ export default function BottomNav() {
                 <span
                   className="-mt-9 relative flex h-16 w-16 items-center justify-center rounded-full transition-transform active:scale-90"
                   style={{
-                    background: 'radial-gradient(circle at 50% 26%, #eaf6ff 0%, #7db9f0 26%, #2f6bb0 60%, #0b1b33 100%)',
-                    border: '3px solid #d4af37',
-                    boxShadow: '0 0 0 4px rgba(8,14,26,0.94), 0 0 26px rgba(111,168,232,0.7), 0 0 12px rgba(212,175,55,0.5), inset 0 -8px 14px rgba(0,0,0,0.5)',
+                    background: 'radial-gradient(circle at 50% 30%, #6fb6ff 0%, #1f5fe0 45%, #0a2266 100%)',
+                    border: '3px solid #f2b347',
+                    boxShadow: '0 0 0 3px #050e24, 0 0 22px rgba(255,170,40,0.8), 0 0 28px rgba(60,140,255,0.8), inset 0 -8px 14px rgba(0,0,0,0.45)',
                   }}
                 >
                   <span aria-hidden="true" className="absolute inset-1.5 rounded-full" style={{ background: 'radial-gradient(circle at 50% 16%, rgba(255,255,255,0.7), transparent 58%)' }} />
@@ -116,14 +116,11 @@ export default function BottomNav() {
             <button key={path} type="button" aria-current={active ? 'page' : undefined}
               aria-label={activePath === '/arkadaslar' && messages > 0 ? `${label}, ${messages} okunmamış mesaj` : undefined}
               onClick={() => handleNav({ path, activePath })} className="flex-1 flex flex-col items-center justify-center gap-1 relative min-h-11 active:scale-95 transition-transform">
-              {active && <span aria-hidden="true" className="absolute top-0 h-[2px] w-9 rounded-full" style={{ background: 'linear-gradient(90deg, #7098a8, #a596bb, #d4af37)', boxShadow: '0 0 12px rgba(212,175,55,0.85)' }} />}
-              {active && (
-                <span aria-hidden="true" className="pointer-events-none absolute inset-x-3 top-0 h-9 rounded-2xl blur-md" style={{ background: 'radial-gradient(circle, rgba(127,240,230,0.55), transparent 70%)' }} />
-              )}
-              <Icon aria-hidden="true" strokeWidth={1.7} className="relative h-[21px] w-[21px]" style={{ color: active ? '#f4e1a1' : 'rgba(255,255,255,0.88)', filter: active ? 'drop-shadow(0 0 8px rgba(244,225,161,0.8))' : 'none' }} />
+              <span aria-hidden="true" className="absolute bottom-0.5 h-[3px] w-9 rounded-full" style={{ background: active ? '#ffb02e' : '#2f7bff', boxShadow: active ? '0 0 10px rgba(255,176,46,0.9)' : '0 0 8px rgba(47,123,255,0.8)' }} />
+              <Icon aria-hidden="true" strokeWidth={1.8} className="relative h-[22px] w-[22px]" style={{ color: active ? '#ffb02e' : '#5aa8ff', filter: active ? 'drop-shadow(0 0 8px rgba(255,176,46,0.8))' : 'drop-shadow(0 0 6px rgba(90,168,255,0.7))' }} />
               {activePath === '/arkadaslar' && messages > 0 && <span aria-hidden="true" className="absolute right-[18%] top-1 min-w-5 h-5 px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">{messages > 99 ? '99+' : messages}</span>}
               {activePath === '/arkadaslar' && requests > 0 && <span aria-hidden="true" className="absolute right-[30%] top-0 w-3 h-3 rounded-full bg-red-500 border-2 border-[#14141a]" />}
-              <span className="relative text-[9.5px] font-semibold leading-none" style={{ color: active ? '#f4e1a1' : 'rgba(255,255,255,0.8)' }}>{label}</span>
+              <span className="relative text-[9.5px] font-semibold leading-none" style={{ color: active ? '#ffc23a' : '#a9cfff' }}>{label}</span>
             </button>
           );
         })}
