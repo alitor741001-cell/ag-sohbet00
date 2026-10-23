@@ -1,4 +1,6 @@
+import { useEffect } from 'react';
 import { ArrowLeft, Hand } from 'lucide-react';
+import { markSeen } from '@/lib/seenBadge';
 import { useNavigate } from 'react-router-dom';
 import RoomFriendRequests from '@/components/friends/RoomFriendRequests';
 import useFriends from '@/hooks/useFriends';
@@ -10,6 +12,7 @@ export default function FriendRequests() {
   const navigate = useNavigate();
   const { user, relations, invoke, reload } = useFriends();
   const goBack = () => (window.history.state?.idx > 0 ? navigate(-1) : navigate('/arkadaslar?view=chats', { replace: true }));
+  useEffect(() => { markSeen('requests', user?.id); }, [user?.id, relations.length]);
   const incoming = relations.filter((relation) => relation.status === 'pending' && relation.recipient_id === user?.id);
 
   return (

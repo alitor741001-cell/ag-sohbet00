@@ -53,6 +53,12 @@ export default function GamePanel({ open, onClose, roomId, initialGame = null })
     onClose();
   }, [onClose]);
 
+  // Oyun açıkken ana sayfanın alt menüsü gizlenir.
+  useEffect(() => {
+    document.body.classList.toggle('game-open', !!(open && selected));
+    return () => document.body.classList.remove('game-open');
+  }, [open, selected]);
+
   if (!open) return null;
   // Oyun merkezi yalnızca yayıncı/ajans üyesi hesaplara açıktır.
   if (!broadcasterState(user).games) return null;

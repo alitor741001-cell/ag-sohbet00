@@ -1195,3 +1195,6 @@ input, textarea, select, button { font-family: inherit; }
 @supports not (aspect-ratio: 1) {
   .media-box-square { padding-bottom: 100%; }
 }
+
+/* Oyun açıkken ana sayfanın alt menüsü görünmez. */
+body.game-open nav[aria-label="Ana menü"] { display: none !important; }

@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { markSeen } from '@/lib/seenBadge';
+import { useCurrentUser } from '@/lib/useCurrentUser';
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import AgencyInvitesPanel from '@/components/agency/AgencyInvitesPanel';
@@ -9,6 +11,8 @@ export default function AgencyMessages() {
   const navigate = useNavigate();
   const [inviteId, setInviteId] = useState('');
   const [refreshKey, setRefreshKey] = useState(0);
+  const { user } = useCurrentUser();
+  useEffect(() => { markSeen('agency', user?.id); }, [user?.id]);
   const goBack = () => (window.history.state?.idx > 0 ? navigate(-1) : navigate('/arkadaslar?view=chats', { replace: true }));
 
   return (

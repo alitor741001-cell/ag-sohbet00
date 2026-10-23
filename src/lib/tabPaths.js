@@ -5,6 +5,6 @@ export const TAB_PATHS = ['/', '/arkadaslar', '/profil'];
 /** Verilen yol bir sekme içindeyse sekmenin kök yolunu döndürür, aksi halde null. */
 export function matchTabPath(pathname) {
   return TAB_PATHS.find((path) =>
-    path === '/' ? pathname === '/' : pathname === path || pathname.startsWith(`${path}/`)
+    pathname === path
   ) || null;
 }

@@ -10,6 +10,7 @@ import AgencyInviteActions from '@/components/notifications/AgencyInviteActions'
 import InviteDetailSheet from '@/components/agency/InviteDetailSheet';
 import { parseInviteRef } from '@/lib/agency';
 import PullToRefresh from '@/components/home/PullToRefresh';
+import { markSeen } from '@/lib/seenBadge';
 
 /** Bildirimin geldiği tarih ve saat: 06.10.2026 02:20 */
 const formatWhen = (iso) => {
@@ -44,6 +45,7 @@ export default function Notifications() {
     base44.entities.AgencyInvite.filter({ invitee_id: user.id, status: 'pending' }, '-created_date', 20)
       .then((rows) => setInviteIds(rows.map((row) => row.id))).catch(() => setInviteIds([]));
   };
+  useEffect(() => { markSeen('notes', user?.id); }, [user?.id, items.length]);
   useEffect(() => {
     load();
     loadInvites();

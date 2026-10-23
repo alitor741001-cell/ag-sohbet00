@@ -191,19 +191,10 @@ export default function Friends() {
       className="dark mx-auto min-h-[calc(100vh-8rem)] w-full min-w-0 max-w-5xl text-white supports-[height:100dvh]:min-h-[calc(100dvh-8rem)]"
     >
       {/* Aşağı çekerek tazeleme: arkadaşlar, istekler ve sohbetler yeniden okunur. */}
-      <MessagesBanner relations={relations} userId={user.id} invoke={invoke} showBell={!isModerator(user)} />
+      <MessagesBanner relations={relations} userId={user.id} invoke={invoke} />
       <PullToRefresh onRefresh={() => { reloadFriends(); reloadConversations(); }}>
 
       <>
-          {!isModerator(user) && (
-            <button onClick={startAdminChat} disabled={adminLoading} className="w-full flex items-center gap-3 px-4 py-3 bg-[hsl(var(--secondary))] border-b border-white/5 text-left active:bg-[#1c1c24]">
-              <span className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg, #b91c1c, #dc2626 52%, #f2ce6b)' }}><Shield className="w-4 h-4 text-white" /></span>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-bold text-white">Admin'e Mesaj Gönder</p>
-                <p className="text-xs text-gray-400">Arkadaş eklemeden yöneticiye yazın</p>
-              </div>
-            </button>
-          )}
 
           {conversations.length > 0 ? (
             <ConversationList conversations={conversations} userId={user.id} onOpen={openConversation} onHide={hide} isOnline={isOnline} getLastSeen={getLastSeen} rooms={rooms} getRoomId={getRoomId} />
