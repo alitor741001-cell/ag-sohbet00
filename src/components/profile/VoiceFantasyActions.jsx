@@ -36,7 +36,7 @@ export default function VoiceFantasyActions({ room, userId, name, isSelf, hidden
       {room.canModerate && !isSelf && (
         <button type="button" disabled={!!busy} onClick={() => perform('mod', () => room.toggleModerator(userId, !targetIsMod))} className="voice-fantasy-button flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2 text-[11px] font-bold disabled:opacity-50">
           {busy === 'mod' ? <Loader2 className="h-4 w-4 animate-spin" /> : targetIsMod ? <ShieldOff className="h-4 w-4" /> : <Shield className="h-4 w-4" />}
-          {targetIsMod ? 'Yöneticilik Al' : 'Yönet'}
+          {targetIsMod ? 'Yönetici ✓' : 'Yönet'}
         </button>
       )}
       {room.canModerate && !isSelf && manageItems.length > 0 && (
