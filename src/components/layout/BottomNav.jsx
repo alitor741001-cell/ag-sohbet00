@@ -5,6 +5,7 @@ import useSocialBadges from '@/hooks/useSocialBadges';
 import useSupportBadge from '@/hooks/useSupportBadge';
 import LiveChatButton from '@/components/layout/LiveChatButton';
 import UserSupportButton from '@/components/layout/UserSupportButton';
+import HomeImageNav from '@/components/layout/HomeImageNav';
 import useKeyboardInset from '@/hooks/useKeyboardInset';
 import { TAB_PATHS } from '@/lib/tabPaths';
 import preloadRoute from '@/lib/routePreload';
@@ -56,6 +57,10 @@ export default function BottomNav() {
     const isTab = TAB_PATHS.includes(targetPath);
     navigate(item.path, isTab ? { replace: true } : undefined);
   };
+
+  if (location.pathname === '/') {
+    return <HomeImageNav onNav={handleNav} isAdmin={user?.role === 'admin'} supportBadge={supportBadge} />;
+  }
 
   return (
     <nav aria-label="Ana menü" className="lg:hidden fixed bottom-0 inset-x-0 z-50 pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]"       style={{ background: 'linear-gradient(180deg, #071533 0%, #050e24 100%)', borderTop: '1.5px solid #f2b347', backdropFilter: 'blur(14px)', boxShadow: '0 -6px 20px -6px rgba(255,170,40,0.7), 0 -14px 30px -14px rgba(60,140,255,0.8)', transform: `translateY(-${keyboardInset}px)`, transition: keyboardInset ? 'transform 180ms ease-out' : 'none' }}>
