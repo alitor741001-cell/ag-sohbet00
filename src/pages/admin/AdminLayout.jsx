@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { Outlet, NavLink, useNavigate, Link } from 'react-router-dom';
+import { HOME_DESIGN } from '@/components/layout/HomeImageNav';
 import { Users, Film, FolderTree, Settings, LogOut, Menu, X, ShieldAlert, KeyRound, ChevronRight, Flag, MessageCircle, Sparkles, Home, Gift, Coins, Building2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { requestNotificationPermission } from '@/hooks/useAdminNotifications';
@@ -141,7 +142,9 @@ export default function AdminLayout() {
   };
 
   return (
-    <div className="dark min-h-screen bg-background text-white flex">
+    <div className="dark relative isolate min-h-screen text-white flex">
+      {/* Ana sayfa teması admin panelinde de sabit zemin olur. */}
+      <div aria-hidden="true" className="app-design-backdrop pointer-events-none fixed inset-0 -z-10" style={{ backgroundImage: `url(${HOME_DESIGN})` }} />
       <aside className={`fixed lg:sticky top-0 z-40 h-screen w-64 flex flex-col pt-[max(env(safe-area-inset-top),0rem)] lg:pt-0 transition-transform ${open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
         style={{ background: SIDEBAR_BG, borderRight: '1px solid rgba(239,68,68,0.18)' }}>
         <div className="px-4 py-4 flex items-center justify-between">
@@ -167,7 +170,7 @@ export default function AdminLayout() {
         </div>
       </aside>
       {open && <div className="fixed inset-0 bg-background/50 z-30 lg:hidden" onClick={() => setOpen(false)} />}
-      <div className="flex-1 min-w-0 overflow-x-hidden bg-background text-white"
+      <div className="flex-1 min-w-0 overflow-x-hidden bg-black/40 text-white"
         onTouchStart={(e) => { touchX.current = e.touches[0].clientX; touchY.current = e.touches[0].clientY; }}
         onTouchEnd={(e) => { const dx = e.changedTouches[0].clientX - (touchX.current ?? 0); const dy = e.changedTouches[0].clientY - (touchY.current ?? 0); if (Math.abs(dx) > Math.abs(dy) * 1.5 && dx > 50 && (touchX.current ?? 999) < 80) setOpen(true); else if (Math.abs(dx) > Math.abs(dy) * 1.5 && dx < -50) setOpen(false); }}>
         <header className="lg:hidden sticky top-0 z-20 border-b border-red-500/20 min-h-14 flex items-center px-4 pb-2 pt-[max(env(safe-area-inset-top),0.75rem)] bg-[#1A1414]/95 backdrop-blur"

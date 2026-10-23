@@ -1198,3 +1198,6 @@ input, textarea, select, button { font-family: inherit; }
 
 /* Oyun açıkken ana sayfanın alt menüsü görünmez. */
 body.game-open nav[aria-label="Ana menü"] { display: none !important; }
+
+/* Esneme ve yenileme sırasında düz renk yerine tema görünür. */
+html body { background-color: transparent; }
