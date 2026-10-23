@@ -1,13 +1,16 @@
 import { memo } from 'react';
+import { useWhiteCutout } from '@/lib/whiteCutout';
 
-const BANNER = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/6328bdfa4_IMG_0150.jpg';
+const SHEET = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/c58ef9c52_IMG_0153.jpg';
+const CROP = { x: 0, y: 0, w: 0.74, h: 0.54 };
 
-/** Oyunlar üst görseli: koyu zemin "screen" karışımıyla kaybolur, yalnızca parlak yazılar ana temanın üstünde kalır. */
+/** Oyunlar başlığı: arka planı şeffaf, doğrudan ana temanın üstünde durur. */
 function GamesBanner() {
+  const src = useWhiteCutout(SHEET, CROP);
   return (
-    <div className="sticky top-0 z-30 w-full">
-      <div className="relative w-full overflow-hidden" style={{ aspectRatio: '1024 / 342' }}>
-        <img src={BANNER} alt="Oyunlar" className="absolute inset-0 h-full w-full object-cover" style={{ mixBlendMode: 'screen' }} />
+    <div className="sticky top-0 z-30 w-full px-2 pt-2">
+      <div className="w-full" style={{ aspectRatio: '758 / 185' }}>
+        {src && <img src={src} alt="Oyunlar" className="h-full w-full object-contain" />}
       </div>
     </div>
   );
