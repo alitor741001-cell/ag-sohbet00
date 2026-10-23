@@ -20,5 +20,7 @@
 /* VIP çerçevelerinde kenardaki beyaz parlama istenmiyor: süsleme parlamasız çizilir. */
 .vip-frame-plain .ag-frame-art,
 .vip-frame-plain .ag-frame-spark { filter: none !important; }
+.vip-frame-plain .ag-frame-art { animation: none !important; }
+.vip-frame-plain .ag-frame-spark { display: none !important; }
 
 @media (prefers-reduced-motion: reduce) { .ag-frame *, .ag-frame { animation: none !important; } }

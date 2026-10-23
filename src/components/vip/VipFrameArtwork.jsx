@@ -3,7 +3,7 @@ import vipFrameArt from '@/lib/vipFrameArt';
 
 // Çerçeve, fotoğrafın tam üstüne oturur; ortasındaki parlaklık profili örtmesin diye
 // fotoğrafın denk geldiği daire tamamen şeffaf bırakılır, süsleme sadece kenarda kalır.
-const CORE_HOLE = 'radial-gradient(circle at 50% 50%, transparent 0 37%, rgba(0,0,0,0.35) 41%, #000 45%)';
+const CORE_HOLE = 'radial-gradient(circle at 50% 50%, transparent 0 34.5%, #000 35%)';
 
 export default function VipFrameArtwork({ theme }) {
   const artwork = vipFrameArt(theme?.level, theme?.frame_seed, theme?.frame_level);
@@ -11,7 +11,7 @@ export default function VipFrameArtwork({ theme }) {
   return (
     <span
       aria-hidden="true"
-      className="vip-frame-plain pointer-events-none absolute -inset-[12.5%] z-10"
+      className="vip-frame-plain pointer-events-none absolute -inset-[22%] z-10"
       style={{
         maskImage: CORE_HOLE,
         WebkitMaskImage: CORE_HOLE,
