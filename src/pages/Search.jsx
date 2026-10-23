@@ -60,11 +60,8 @@ export default function Search() {
   };
 
   return (
-    <div
-      className="dark min-h-screen text-white"
-      style={{ background: 'radial-gradient(140% 80% at 50% 0%, #0E2A5A 0%, #071731 46%, #03081A 100%)' }}
-    >
-      <header className="sticky top-0 z-10 flex items-center gap-2 border-b border-white/10 bg-[#05122A]/90 px-3 py-3 backdrop-blur">
+    <div className="dark min-h-screen text-white">
+      <header className="sticky top-0 z-10 flex items-center gap-2 border-b border-white/10 bg-[#040b1c]/60 px-3 py-3 backdrop-blur-md">
         <button
           type="button"
           onClick={goBack}

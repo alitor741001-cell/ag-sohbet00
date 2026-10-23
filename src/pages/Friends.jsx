@@ -167,7 +167,7 @@ export default function Friends() {
       <div
         className="dark min-h-[var(--app-height)] w-full text-white"
       >
-        <header className="sticky top-0 z-20 flex items-center gap-2 px-3 py-3" style={{ background: 'rgba(9,7,13,0.94)', borderBottom: '1px solid rgba(242,206,107,0.25)' }}>
+        <header className="sticky top-0 z-20 flex items-center gap-2 px-3 py-3 backdrop-blur-md" style={{ background: 'rgba(4,11,28,0.6)', borderBottom: '1px solid rgba(242,206,107,0.25)' }}>
           <button
             type="button"
             onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/profil'))}

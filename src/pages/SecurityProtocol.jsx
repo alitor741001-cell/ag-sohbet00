@@ -89,7 +89,7 @@ const SECTIONS = [
 
 export default function SecurityProtocol() {
   return (
-    <div className="min-h-screen bg-background pb-16">
+    <div className="min-h-screen pb-16">
       {/* Hero */}
       <div className="relative overflow-hidden border-b border-border">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-accent/5 to-transparent" />

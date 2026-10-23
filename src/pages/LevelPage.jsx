@@ -57,11 +57,8 @@ export default function LevelPage() {
   };
 
   return (
-    <div
-      className="dark min-h-screen text-white"
-      style={{ background: 'radial-gradient(130% 70% at 50% 0%, #2a1148 0%, #150a26 46%, #070311 100%)' }}
-    >
-      <header className="sticky top-0 z-10 flex items-center gap-2 bg-[#0d0618]/90 px-3 py-3 backdrop-blur">
+    <div className="dark min-h-screen text-white">
+      <header className="sticky top-0 z-10 flex items-center gap-2 bg-[#040b1c]/60 px-3 py-3 backdrop-blur-md">
         <button
           type="button"
           onClick={goBack}

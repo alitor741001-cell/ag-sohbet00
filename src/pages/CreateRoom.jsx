@@ -104,11 +104,8 @@ export default function CreateRoom() {
   }
 
   return (
-    <div
-      className="dark min-h-screen text-white"
-      style={{ background: 'radial-gradient(120% 70% at 50% 0%, #241c40 0%, #14131c 46%, #0c0c10 100%)' }}
-    >
-      <header className="sticky top-0 z-10 flex items-center gap-2 border-b border-white/10 bg-[#101018]/92 px-3 py-3 backdrop-blur">
+    <div className="dark min-h-screen text-white">
+      <header className="sticky top-0 z-10 flex items-center gap-2 border-b border-white/10 bg-[#040b1c]/60 px-3 py-3 backdrop-blur-md">
         <button
           type="button"
           onClick={goBack}
