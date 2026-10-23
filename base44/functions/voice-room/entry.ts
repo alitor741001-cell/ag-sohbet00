@@ -137,6 +137,26 @@ export default async function (req: Request): Promise<Response> {
       return respond(next);
     }
 
+    // Kişiyi boş bir koltuğa oturt (yalnızca oda sahibi ve yöneticiler)
+    if (action === 'seat-assign') {
+      if (!canMod) return Response.json({ error: 'yetkisiz' }, { status: 403 });
+      if (!target_id) return Response.json({ error: 'kullanıcı gerekli' }, { status: 400 });
+      const alreadySeated = seats.find((seat) => seat.user_id === target_id);
+      if (alreadySeated) return respond(seats);
+      const freeIndex = seats.findIndex((seat) => !seat.user_id && !seat.locked);
+      if (freeIndex < 0) return Response.json({ error: 'Boş koltuk yok.' }, { status: 409 });
+      const targetUser = await base44.asServiceRole.entities.User.get(target_id).catch(() => null);
+      const targetName = targetUser?.username || targetUser?.full_name || 'Kullanıcı';
+      const targetAvatar = targetUser?.avatar || '';
+      const next = seats.map((seat) => seat.user_id === target_id ? { ...emptySeat(seat.index), locked: seat.locked } : seat);
+      next[freeIndex] = { ...emptySeat(freeIndex), user_id: target_id, name: targetName, avatar: targetAvatar, frame: targetUser?.profile_frame || '', frame_scale: Number(targetUser?.profile_frame_scale) || 100 };
+      await persist(next);
+      await base44.asServiceRole.entities.Room.update(room_id, {
+        room_logs: appendRoomLog(room, { text: `${shownName}, ${targetName} kişisini koltuğa oturttu.`, kind: 'seat_assign', actor_id: hiddenUser ? '' : user.id, actor_name: shownName, target_id, target_name: targetName }),
+      });
+      return respond(next);
+    }
+
     // Kişiyi koltuğundan indir (odadan atma room-presence ile yapılır)
     if (action === 'seat-kick') {
       if (!target_id) return Response.json({ error: 'kullanıcı gerekli' }, { status: 400 });

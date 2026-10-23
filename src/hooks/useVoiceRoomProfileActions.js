@@ -22,6 +22,11 @@ export default function useVoiceRoomProfileActions({
       if (!targetId || targetId === userId) { invokeVoice({ action: 'seat-leave' }); return; }
       if (canMod) invokeVoice({ action: 'seat-kick', target_id: targetId });
     },
+    seatAssign: (targetId) => {
+      if (!targetId || !canMod) return;
+      invokeVoice({ action: 'seat-assign', target_id: targetId });
+    },
+    hasFreeSeat: () => seats.some((seat) => !seat?.user_id && !seat?.locked),
     toggleMic: (targetId) => {
       if (!targetId || targetId === userId) {
         if (!seated) {

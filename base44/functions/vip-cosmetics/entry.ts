@@ -40,6 +40,8 @@ export default async function(req) {
       const selected = body.level === undefined ? row?.level : body.level;
       if (!row || !VIP_LEVELS.includes(selected) || !(row.owned_levels || []).includes(selected)) return Response.json({ error: 'Bu kozmetiğe sahip değilsin.' }, { status: 403 });
       if (body.active && (selected > level || level < feature.minLevel || selected < feature.minLevel)) return Response.json({ error: 'Bu kozmetik için geçerli VIP üyeliği gerekli.' }, { status: 403 });
+      // VIP12 üyeleri yalnızca VIP12 kozmetiklerini takabilir: diğer seviyeler kilitlenir.
+      if (body.active && level === 12 && selected !== 12) return Response.json({ error: 'VIP12 üyeliğinde yalnızca VIP12 kozmetikleri kullanılabilir.' }, { status: 403 });
       await base44.asServiceRole.entities.VipCosmetic.update(row.id, { active: body.active, level: selected });
       Object.assign(row, { active: body.active, level: selected });
     }

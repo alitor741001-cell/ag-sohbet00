@@ -457,6 +457,17 @@ export default function VoiceRoom() {
     return unsubscribe;
   }, [id]);
 
+  // Oda verisini 5 saniyede bir sessizce tazeler: canlı abonelik kaçırsa bile
+  // koltuk, katılımcı ve ayarlar her cihazda güncel kalır — yükleme göstergesi çıkmaz.
+  useEffect(() => {
+    if (!joined || !id) return;
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === 'hidden') return;
+      syncRoom();
+    }, 5000);
+    return () => window.clearInterval(interval);
+  }, [joined, id, syncRoom]);
+
   // Yöneticilik alındığı an açık olan "…" menüsü kapanır; tuş da anında kaybolur.
   useEffect(() => {
     if (!canMod) setMenuOpen(false);

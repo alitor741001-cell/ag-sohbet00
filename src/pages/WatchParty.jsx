@@ -163,6 +163,18 @@ export default function WatchParty() {
   base44.entities.Movie.get(room.movie_id).then(setMovie).catch(() => {});
   }, [room?.movie_id]);
 
+  // Oda verisini 5 saniyede bir sessizce tazeler: katılımcılar ve oda durumu güncel kalır.
+  useEffect(() => {
+    if (!joinedRef.current || !id || !room) return;
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === 'hidden') return;
+      base44.functions.invoke('room-presence', { action: 'get', room_id: id })
+        .then((res) => { const r = res.data?.room; if (r) setRoom((prev) => prev?.updated_date && r.updated_date && prev.updated_date > r.updated_date ? prev : r); })
+        .catch(() => {});
+    }, 5000);
+    return () => window.clearInterval(interval);
+  }, [id, room?.id, joinedRef.current]);
+
   // Oda adını düzenleme alanını odadan başlat
   useEffect(() => { setRoomNameEdit(room?.name || ''); }, [room?.name]);
 
