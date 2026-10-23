@@ -6,6 +6,7 @@ import { useCurrentUser } from '@/lib/useCurrentUser';
 import { broadcasterState } from '@/lib/broadcaster';
 import RoomDiscoveryCard from '@/components/home/RoomDiscoveryCard';
 import HomeTopBar from '@/components/home/fantasy/HomeTopBar';
+import NeonPageHeader from '@/components/layout/NeonPageHeader';
 import PullToRefresh from '@/components/home/PullToRefresh';
 import GameDiscoveryRow from '@/components/home/GameDiscoveryRow';
 import FollowPanel from '@/components/home/FollowPanel';
@@ -291,7 +292,7 @@ export default function RoomDiscovery({ shortcuts = null }) {
   // Takip görünümü: takip edilenlerin yayınları, arkadaşlar ve son ziyaret edilen odalar.
   if (view === 'history') {
     return (
-      <PullToRefresh onRefresh={refreshList}>
+      <PullToRefresh onRefresh={refreshList} label="Yayınları" busyLabel="Yayınlar yenileniyor…">
         <HomeTopBar view="history" onView={setView} onSearch={() => navigate('/arama')} />
         <FollowPanel
           rooms={uniqueRooms}
@@ -306,8 +307,12 @@ export default function RoomDiscovery({ shortcuts = null }) {
   }
 
   return (
-    <PullToRefresh onRefresh={refreshList}>
-      <HomeTopBar view={view} onView={setView} onSearch={() => navigate('/arama')} showViews={tab !== 'games'} />
+    <PullToRefresh onRefresh={refreshList} label={tab === 'games' ? 'Oyunları' : 'Yayınları'} busyLabel={tab === 'games' ? 'Oyunlar yenileniyor…' : 'Yayınlar yenileniyor…'}>
+      {tab === 'games' ? (
+        <NeonPageHeader title="OYUNLAR" subtitle="Oda kurmadan anında oyna" />
+      ) : (
+        <HomeTopBar view={view} onView={setView} onSearch={() => navigate('/arama')} showViews />
+      )}
       {shortcuts}
 
       {tab === 'games' ? (

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import PullToRefresh from '@/components/home/PullToRefresh';
+import NeonPageHeader from '@/components/layout/NeonPageHeader';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
 import { findProtectedName } from '@/lib/protectedNames';
@@ -183,6 +184,7 @@ export default function Profile() {
     >
       <PullToRefresh onRefresh={() => { reload?.(); loadWallet(); loadSocial(); loadVipCount(); }}>
       <div className="mx-auto w-full max-w-2xl md:max-w-3xl xl:max-w-4xl">
+        <NeonPageHeader title="PROFİL" subtitle="Hesabın, bakiyen ve ayrıcalıkların" />
         <ProfileHeroCard
           user={user}
           avatar={form.avatar}

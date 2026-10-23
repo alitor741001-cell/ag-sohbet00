@@ -1173,6 +1173,23 @@ input, textarea, select, button { font-family: inherit; }
   html { font-size: 18px; }
 }
 
+/* Tasarım görseli zemin olarak kullanılırken görselin kendi üst bandı (hazır menü yazıları)
+   ve alt bandı (hazır sekme şeridi) kırpılır: sayfalarda sadece tasarımın iç alanı görünür. */
+.app-design-backdrop {
+  background-repeat: no-repeat;
+  background-size: auto 145%;
+  background-position: center 35%;
+  background-color: #05060b;
+}
+/* Görselden daha geniş ekranlarda (yatay telefon, tablet, masaüstü) genişliği kaplayacak
+   şekilde büyütülür; dikey konum yine üst bandı dışarıda bırakır. */
+@media (min-aspect-ratio: 2/3) {
+  .app-design-backdrop {
+    background-size: cover;
+    background-position: center 15%;
+  }
+}
+
 /* Kare oranı (aspect-ratio) desteklemeyen eski iOS ve Android sürümlerinde, kapağı kare
    gösteren kutular yüksekliklerini genişliklerinden alır: görsel kaybolmaz, kare boşluk korunur. */
 @supports not (aspect-ratio: 1) {

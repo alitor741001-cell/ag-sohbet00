@@ -14,6 +14,7 @@ import useFriendPresence from '@/hooks/useFriendPresence';
 import { useToast } from '@/components/ui/use-toast';
 import { isModerator } from '@/lib/roles';
 import PullToRefresh from '@/components/home/PullToRefresh';
+import NeonPageHeader from '@/components/layout/NeonPageHeader';
 import useTabActivity from '@/components/layout/TabActivityContext';
 
 export default function Friends() {
@@ -165,18 +166,17 @@ export default function Friends() {
     return (
       <div
         className="dark min-h-[var(--app-height)] w-full text-white"
-        style={{ background: 'radial-gradient(140% 80% at 50% 0%, #0E2A5A 0%, #071731 46%, #03081A 100%)' }}
       >
-        <header className="sticky top-0 z-20 flex items-center gap-2 px-3 py-3" style={{ background: 'rgba(6,20,44,0.94)', borderBottom: '1px solid rgba(125,211,252,0.25)' }}>
+        <header className="sticky top-0 z-20 flex items-center gap-2 px-3 py-3" style={{ background: 'rgba(9,7,13,0.94)', borderBottom: '1px solid rgba(242,206,107,0.25)' }}>
           <button
             type="button"
             onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/profil'))}
             aria-label="Geri"
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-[#7dd3fc]/30 bg-[#0b2a52] text-[#a5e4ff] active:scale-95"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-premium-gold/30 bg-white/5 text-[#ffeec2] active:scale-95"
           >
             <ArrowLeft className="h-4 w-4" />
           </button>
-          <h1 className="flex-1 text-center text-base font-extrabold text-[#a5e4ff]">Arkadaşlarım</h1>
+          <h1 className="flex-1 text-center text-base font-black uppercase tracking-[0.2em] text-[#ffeec2]" style={{ textShadow: '0 0 6px rgba(255,214,120,0.9), 0 0 18px rgba(239,68,68,0.75)' }}>Arkadaşlarım</h1>
           <span className="h-9 w-9" />
         </header>
         <div className="p-4">
@@ -189,17 +189,16 @@ export default function Friends() {
   return (
     <div
       className="dark mx-auto min-h-[calc(100vh-8rem)] w-full min-w-0 max-w-5xl text-white supports-[height:100dvh]:min-h-[calc(100dvh-8rem)]"
-      style={{ background: 'radial-gradient(120% 80% at 50% 0%, #3a1146 0%, #1b0a2a 46%, #0a0410 100%)' }}
     >
       {/* Aşağı çekerek tazeleme: arkadaşlar, istekler ve sohbetler yeniden okunur. */}
       <PullToRefresh onRefresh={() => { reloadFriends(); reloadConversations(); }}>
-      <header className="px-4 py-5">
-        <div className="flex items-start justify-between gap-3">
-          <div><h1 className="text-2xl font-extrabold">Arkadaşlar</h1>
-          <p className="text-sm text-gray-400 mt-1">Sohbet ve arkadaşlarını yönet.</p></div>
-          <FriendRequestsButton relations={relations} userId={user.id} invoke={invoke} />
-        </div>
-        <div className="mt-4 flex items-center gap-2">
+      <NeonPageHeader
+        title="SOHBET"
+        subtitle="Özel mesajlar ve arkadaşların"
+        right={<FriendRequestsButton relations={relations} userId={user.id} invoke={invoke} />}
+      />
+      <header className="px-4 pb-3">
+        <div className="flex items-center gap-2">
           <div className="flex flex-1 items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-bold text-white" style={{ background: 'linear-gradient(135deg, #b91c1c, #dc2626 52%, #f2ce6b)' }}>
             <MessageCircle className="w-4 h-4" /> Mesajlar
             {totalUnread > 0 && <span className="min-w-5 h-5 px-1 rounded-full bg-[#f2ce6b] text-black text-[10px] flex items-center justify-center">{totalUnread}</span>}

@@ -23,7 +23,7 @@ import { isMultiDeviceExempt } from '@/lib/sessionPolicy';
 // Koyu yüzeyler tek bir gece mavisi gradyanıyla boyanır: durum çubuğu, güvenli alan ve
 // kaydırma kenarlarında siyah şerit kalmaz, ana sayfanın zemini ekranın tamamını kaplar.
 import { HOME_DESIGN } from '@/components/layout/HomeImageNav';
-const DARK_SURFACE_GRADIENT = 'radial-gradient(120% 75% at 50% 0%, #103062 0%, #081a3a 44%, #04081a 100%)';
+const DARK_SURFACE_GRADIENT = 'radial-gradient(120% 75% at 50% 0%, #1d1013 0%, #0c0a0f 44%, #050409 100%)';
 
 export default function AppLayout() {
   const { pathname } = useLocation();
@@ -200,13 +200,13 @@ export default function AppLayout() {
   return (
     <MessageRealtimeProvider userId={user?.id}><div className={`min-h-screen w-full min-w-0 overflow-x-clip ${isDarkSurface ? 'relative isolate' : 'bg-background'}`} style={isDarkSurface ? { background: DARK_SURFACE_GRADIENT } : undefined}>
       {/* Ana sayfa teması: tasarım görseli tüm koyu sayfalarda sabit zemin olur. */}
-      {isDarkSurface && <div aria-hidden="true" className="pointer-events-none fixed inset-x-0 top-[-17vw] bottom-[-32vw] -z-10" style={{ backgroundImage: `url(${HOME_DESIGN})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />}
+      {isDarkSurface && <div aria-hidden="true" className="app-design-backdrop pointer-events-none fixed inset-0 -z-10" style={{ backgroundImage: `url(${HOME_DESIGN})` }} />}
       <RoutePreloader />
       <RoleCelebrationOverlay />
       <Navbar />
       {/* Klavye kullanıcısı menüyü atlayıp doğrudan içeriğe geçebilir. */}
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-[100] focus:rounded-lg focus:bg-card focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-foreground focus:ring-2 focus:ring-ring">İçeriğe geç</a>
-      <main id="main-content" tabIndex={-1} className="mx-auto w-full min-w-0 max-w-[1600px] overflow-x-clip pt-[max(env(safe-area-inset-top),0.5rem)] pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pt-16 lg:pb-8" style={{ touchAction: 'pan-y' }}>
+      <main id="main-content" tabIndex={-1} className="mx-auto w-full min-w-0 max-w-[1600px] overflow-x-clip pt-[max(env(safe-area-inset-top),0.5rem)] pb-[calc(7.5rem+env(safe-area-inset-bottom))] lg:pt-16 lg:pb-8" style={{ touchAction: 'pan-y' }}>
         {/* Sayfa paketi yüklenirken kabuk (menü, sohbetler, bildirimler) yerinde kalır. */}
         <Suspense fallback={null}>
           <TabStack activePath={activeTabPath} />

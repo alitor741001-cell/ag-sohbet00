@@ -19,8 +19,8 @@ function isActive(z, pathname, search) {
 /** Tüm sayfalardaki alt menü: tasarım görselinin alt şeridi, üstünde dokunma alanları. */
 export default function HomeImageNav({ onNav, isAdmin, supportBadge, messages = 0, pathname = '/', search = '', keyboardInset = 0 }) {
   return (
-    <nav aria-label="Ana menü" className="lg:hidden fixed bottom-0 inset-x-0 z-50 pb-[env(safe-area-inset-bottom)]"
-      style={{ background: '#030914', transform: `translateY(-${keyboardInset}px)` }}>
+    <nav aria-label="Ana menü" className="lg:hidden fixed bottom-0 inset-x-0 z-50"
+      style={{ background: 'transparent', paddingBottom: 'calc(env(safe-area-inset-bottom) * 0.4)', transform: `translateY(-${keyboardInset}px)` }}>
       <div className="relative mx-auto w-full max-w-[36rem]" style={{ aspectRatio: '682 / 200', backgroundImage: `url(${HOME_DESIGN})`, backgroundSize: '100% auto', backgroundPosition: 'center bottom' }}>
         {ZONES.map((z) => {
           const active = isActive(z, pathname, search);
