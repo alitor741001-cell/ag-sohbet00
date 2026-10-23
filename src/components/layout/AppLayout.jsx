@@ -18,7 +18,6 @@ import { matchTabPath } from '@/lib/tabPaths';
 import { motion, useReducedMotion } from 'framer-motion';
 import { isMultiDeviceExempt } from '@/lib/sessionPolicy';
 // Yüz doğrulaması uygulamaya girişte sorulmaz: yalnızca elmaslar/bakiye bölümünde istenir.
-import useSupabaseMirror from '@/hooks/useSupabaseMirror';
 
 // Koyu yüzeyler tek bir gece mavisi gradyanıyla boyanır: durum çubuğu, güvenli alan ve
 // kaydırma kenarlarında siyah şerit kalmaz, ana sayfanın zemini ekranın tamamını kaplar.
@@ -31,7 +30,6 @@ export default function AppLayout() {
   useFriendPresence(user, true);
   useRoleCelebration();
   // Supabase aynası: canlı veri oturum açıkken kendiliğinden eşitlenir.
-  useSupabaseMirror(user);
   const { publicSettings } = useAuth();
   const { toast } = useToast();
   // RoleCelebrationOverlay renders a full-screen animated character when role changes
