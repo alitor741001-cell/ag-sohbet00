@@ -1,5 +1,4 @@
 import { Check, Lock, Wrench } from 'lucide-react';
-import { Link } from 'react-router-dom';
 export default function VipPrivilegeList({ level, features }) {
   return <section className="px-5 py-6">
     <h2 className="vip-gold mb-4 text-center text-lg font-extrabold">Özel Ayrıcalıklar</h2>
@@ -11,7 +10,6 @@ export default function VipPrivilegeList({ level, features }) {
           <span className="vip-tile vip-tint flex h-11 w-11 items-center justify-center rounded-full"><Icon className="h-5 w-5" /></span>
           <p className="text-[10px] font-semibold">{feature.label}</p>
           <p className="text-[8px] text-muted-foreground">{!feature.supported ? 'Altyapı henüz bağlı değil' : `VIP ${feature.minLevel} ve üzeri`}</p>
-          {['visitors', 'stealth-visit', 'avatar', 'room-privacy'].includes(feature.key) && <Link to="/profil?tab=settings" className="mt-1 inline-flex min-h-9 items-center rounded-lg bg-primary/10 px-2 text-[10px] font-bold text-primary">Ayarları aç</Link>}
         </div>;
       })}
     </div>

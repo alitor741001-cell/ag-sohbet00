@@ -15,13 +15,18 @@ export default function VipLevelHero({ theme, levels, onLevel }) {
     </div>
 
     <div className="vip-hero-card relative isolate overflow-hidden rounded-[28px] border">
-      <span className="vip-hero-aura" aria-hidden="true" />
-      <span className="vip-hero-ring" aria-hidden="true" />
-      <Image key={theme.level} src={theme.image} alt={`VIP ${theme.level} ${theme.name} amblemi`} fittingType="fit" className="vip-hero-emblem relative z-10 mx-auto mt-4 aspect-square w-[70%] overflow-hidden rounded-full border-2 border-[color:var(--vip-secondary)]" />
-      <div className="relative z-10 -mt-6 px-5 pb-6 text-center">
-        <p className="vip-gold flex items-center justify-center gap-1.5 text-[9px] font-bold uppercase tracking-[.42em]">
-          <Sparkles className="h-3 w-3" /> AG SOHBET · EFSANE KOLEKSİYON <Sparkles className="h-3 w-3" />
-        </p>
+      <svg className="vip-hero-wave" viewBox="0 0 400 120" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0 70 C70 70 95 70 120 50 C150 10 250 10 280 50 C305 70 330 70 400 64" />
+      </svg>
+      <div className="relative z-10 mx-auto mt-6 flex w-[70%] items-center justify-center">
+        <span className="vip-hero-aura" aria-hidden="true" />
+        <span className="vip-hero-ring" aria-hidden="true" />
+        <Image key={theme.level} src={theme.image} alt={`VIP ${theme.level} ${theme.name} amblemi`} fittingType="fill" className="vip-hero-emblem relative aspect-square w-full overflow-hidden rounded-full border-[3px] border-[color:var(--vip-secondary)]" />
+      </div>
+      <div className="relative z-10 mt-4 px-5 pb-6 text-center">
+        <span className="vip-hero-pill inline-flex items-center gap-1.5 rounded-full px-4 py-1 text-[10px] font-black uppercase tracking-[.3em]">
+          <Sparkles className="h-3 w-3" /> Seçkin Üyelik <Sparkles className="h-3 w-3" />
+        </span>
         <h2 className="vip-hero-title mt-2 flex items-center justify-center gap-2 font-display text-4xl font-black">
           <Crown className="h-7 w-7" fill="currentColor" /> VIP {theme.level}
         </h2>
