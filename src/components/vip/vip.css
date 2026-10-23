@@ -43,6 +43,15 @@
 @keyframes vip-pulse { from { transform: scale(.96); opacity: .9; } to { transform: scale(1.5); opacity: 0; } }
 @keyframes vip-name-light { 50% { text-shadow: 0 0 12px var(--vip-accent); opacity: .8; } }
 @keyframes vip-entry-in { from { transform: translateY(-1rem); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.vip-chip { border-color: color-mix(in srgb, var(--vip-accent) 40%, transparent); background: hsl(var(--vip-night) / .6); }
+.vip-chip-on { color: hsl(var(--vip-night)); background: linear-gradient(135deg, var(--vip-secondary), var(--vip-accent)); border-color: var(--vip-secondary); box-shadow: 0 0 18px -4px var(--vip-accent); }
+.vip-hero-card { border-color: color-mix(in srgb, var(--vip-secondary) 55%, transparent); background: radial-gradient(circle at 50% 32%, color-mix(in srgb, var(--vip-accent) 34%, transparent), transparent 62%), linear-gradient(180deg, hsl(var(--vip-night) / .4), hsl(var(--vip-night))); box-shadow: 0 20px 50px -24px var(--vip-accent), inset 0 1px 0 color-mix(in srgb, var(--vip-secondary) 50%, transparent); }
+.vip-hero-aura { position: absolute; left: 50%; top: 34%; width: 92%; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 9999px; background: conic-gradient(from 0deg, transparent, color-mix(in srgb, var(--vip-accent) 45%, transparent), transparent 40%, color-mix(in srgb, var(--vip-secondary) 40%, transparent), transparent 75%); filter: blur(18px); animation: vip-aura-spin 14s linear infinite; }
+.vip-hero-ring { position: absolute; left: 50%; top: 34%; width: 70%; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 9999px; border: 1px dashed color-mix(in srgb, var(--vip-secondary) 55%, transparent); }
+.vip-hero-emblem { filter: drop-shadow(0 12px 30px color-mix(in srgb, var(--vip-accent) 60%, transparent)); }
+.vip-hero-title { background: linear-gradient(180deg, #fff, var(--vip-secondary) 55%, var(--vip-accent)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.vip-hero-title svg { color: var(--vip-secondary); }
+@keyframes vip-aura-spin { to { transform: translate(-50%, -50%) rotate(360deg); } }
 .vip-showcase-sweep { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(110deg, transparent 24%, rgba(255,255,255,.26) 48%, transparent 72%); transform: translateX(-130%); animation: vip-showcase-sweep 4.2s ease-in-out infinite; }
 @keyframes vip-showcase-sweep { 0% { transform: translateX(-130%); } 55%, 100% { transform: translateX(130%); } }
 @media (prefers-reduced-motion: reduce) { .vip-wave::before, .vip-wave::after, .vip-name-animated, .vip-entry, .vip-showcase-sweep { animation: none; } }

@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Heart } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
-import { Image } from '@/components/ui/image';
+import LevelHeroOrb from '@/components/level/LevelHeroOrb';
+import LevelTierLadder from '@/components/level/LevelTierLadder';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import useXp from '@/hooks/useXp';
 import { formatXp } from '@/lib/xp';
@@ -98,45 +99,23 @@ export default function LevelPage() {
         <span className="h-9 w-9" />
       </header>
 
-      <div className="mx-auto w-full max-w-md px-4 py-5 md:max-w-lg">
-        <div className="flex flex-col items-center">
-          <div className="h-20 w-20 overflow-hidden rounded-full border-2" style={{ borderColor: tier.tone }}>
-            {avatar ? (
-              <Image src={avatar} alt={label} fittingType="fill" className="h-full w-full" />
-            ) : (
-              <span className="flex h-full w-full items-center justify-center bg-[#1b1130] text-xl font-black text-white/70">
-                {label[0]?.toUpperCase()}
-              </span>
-            )}
-          </div>
-          <div className="mt-3 flex items-center gap-2">
-            <span className="text-2xl font-black">Lv{level}</span>
-            <span
-              className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-black"
-              style={{ background: tier.tone, color: tier.text }}
-            >
-              <Heart className="h-3 w-3" /> {tier.value}
-            </span>
+      <div className="mx-auto w-full max-w-md px-4 py-6 md:max-w-lg">
+        <div className="rounded-[28px] border border-white/10 px-4 pb-5 pt-6"
+          style={{ background: 'radial-gradient(circle at 50% 0%, rgba(167,139,250,.28), rgba(20,10,38,.85) 70%)', boxShadow: '0 20px 50px -25px #a78bfa' }}>
+          <LevelHeroOrb avatar={avatar} label={label} level={level} percent={percent} tone={tier.tone} />
+          <p className="mt-5 text-center text-sm font-black">{label}</p>
+          <p className="text-center text-[10px] font-bold uppercase tracking-[.3em] text-white/45">{isWealth ? 'Zenginlik Seviyesi' : 'Cazibe Seviyesi'}</p>
+          <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+            {[['Toplanan', formatXp(into)], ['Hedef', formatXp(need)], ['İlerleme', `${percent}%`]].map(([k, v]) => (
+              <div key={k} className="rounded-2xl border border-white/10 bg-white/5 py-2">
+                <p className="text-[9px] font-bold uppercase tracking-widest text-white/45">{k}</p>
+                <p className="text-sm font-black tabular-nums text-[#ffd76a]">{v}</p>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* İlerleme çizgisi: başlangıç seviyesi solda, tamamlanma yüzdesi sağda. */}
-        <div className="mt-6 px-1">
-          <div className="relative h-[3px] rounded-full bg-white/15">
-            <div
-              className="absolute inset-y-0 left-0 rounded-full"
-              style={{ width: `${Math.max(percent, 3)}%`, background: 'linear-gradient(90deg,#8b5cf6,#ffd76a)' }}
-            />
-            <span className="absolute -left-1 -top-[5px] h-3.5 w-3.5 rounded-full border-2 border-[#ffd76a] bg-[#150a26]" />
-          </div>
-          <div className="mt-2 flex items-center justify-between text-[10.5px] font-black text-white/60">
-            <span>LV{level}</span>
-            <span className="tabular-nums">{formatXp(into)} / {formatXp(need)}</span>
-            <span className="tabular-nums">{percent}%</span>
-          </div>
-        </div>
-
-        <p className="mt-3 text-center text-[11.5px] font-semibold text-white/70">
+        <p className="mt-4 text-center text-[11.5px] font-semibold text-white/70">
           LV{level + 1} seviyesine geçmek için {formatXp(remaining)} deneyim puanı gerekiyor.
         </p>
         <p className="mt-1 text-center text-[10.5px] font-semibold text-white/40">
@@ -152,25 +131,8 @@ export default function LevelPage() {
           </p>
         </div>
 
-        <div className="mt-3 overflow-hidden rounded-2xl border" style={{ borderColor: 'rgba(255,215,106,0.3)', background: 'rgba(46,26,71,0.55)' }}>
-          <div className="grid grid-cols-2 border-b border-white/10 text-[11.5px] font-black text-white/85">
-            <span className="px-4 py-2.5 text-center">Seviye</span>
-            <span className="border-l border-white/10 px-4 py-2.5 text-center">Sembol</span>
-          </div>
-          {TIERS.map((item) => (
-            <div key={item.range} className="grid grid-cols-2 border-b border-white/5 text-[11.5px] font-semibold text-white/70 last:border-b-0">
-              <span className="flex items-center justify-center px-4 py-2.5 tabular-nums">{item.range}</span>
-              <span className="flex items-center justify-center border-l border-white/10 px-4 py-2.5">
-                <span
-                  className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[10.5px] font-black"
-                  style={{ background: item.tone, color: item.text }}
-                >
-                  <Heart className="h-3 w-3" /> {item.value}
-                </span>
-              </span>
-            </div>
-          ))}
-        </div>
+        <h2 className="mb-2 mt-5 text-xs font-black uppercase tracking-[.25em] text-white/60">Seviye Sembolleri</h2>
+        <LevelTierLadder tiers={TIERS} level={level} wealth={isWealth} />
       </div>
     </div>
   );
