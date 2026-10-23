@@ -4,6 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
 import { findProtectedName } from '@/lib/protectedNames';
+import { vipLevelOf } from '@/lib/userLevels';
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import useFriends from '@/hooks/useFriends';
@@ -187,7 +188,7 @@ export default function Profile() {
           onAvatar={onAvatar}
           uploading={uploading}
           onEdit={() => toggle('info')}
-          vipLevel={Number(user.vip_level) || 0}
+          vipLevel={vipLevelOf(user)}
         />
 
         <div className="space-y-3 px-4 pt-4">

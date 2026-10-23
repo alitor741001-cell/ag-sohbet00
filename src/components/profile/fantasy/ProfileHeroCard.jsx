@@ -68,7 +68,7 @@ export default function ProfileHeroCard({ user, avatar, onAvatar, onEdit, upload
 
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
-            <h2 className="truncate text-lg font-extrabold" style={isRedNameVip(user.vip_level) ? { color: '#ef4444' } : undefined}>{name}</h2>
+            <h2 className="truncate text-lg font-extrabold" style={isRedNameVip(vipLevel) ? { color: '#ef4444' } : undefined}>{name}</h2>
             {male && <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#2E7DFF] text-[10px] font-black text-white">♂</span>}
             {female && <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#FF006E] text-[10px] font-black text-white">♀</span>}
             <span className="text-sm leading-none">🇹🇷</span>
