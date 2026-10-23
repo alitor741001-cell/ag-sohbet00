@@ -40,9 +40,12 @@ export default function useSupportBadge(userId) {
     const onRefresh = () => load();
     window.addEventListener('destek-goruldu', onSeen);
     window.addEventListener('destek-rozet-tazele', onRefresh);
+    // Rozet 5 saniyede bir sessizce tazelenir.
+    const interval = window.setInterval(() => { if (document.visibilityState !== 'hidden') load(); }, 5000);
     return () => {
       alive = false;
       off();
+      window.clearInterval(interval);
       window.removeEventListener('destek-goruldu', onSeen);
       window.removeEventListener('destek-rozet-tazele', onRefresh);
     };

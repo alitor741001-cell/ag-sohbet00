@@ -136,7 +136,7 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
     const reconnect = () => load();
     window.addEventListener('online', reconnect);
     // Canlı akış aksarsa mesajlar yine de görünsün: sekme görünürken kısa aralıklarla tazelenir.
-    const poll = setInterval(() => { if (document.visibilityState !== 'hidden') load(); }, 60000);
+    const poll = setInterval(() => { if (document.visibilityState !== 'hidden') load(); }, 5000);
     return () => { unsub(); window.removeEventListener('online', reconnect); clearInterval(poll); };
   }, [roomId]);
 

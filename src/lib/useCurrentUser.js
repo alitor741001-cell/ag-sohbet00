@@ -57,17 +57,49 @@ const loadUser = (force = false) => {
   return loadPromise;
 };
 
+// Uygulamanın her yerinde görünen kullanıcı verisi (bakiye, rol, VIP, ad, rozetler)
+// 5 saniyede bir sessizce tazelenir. Ağ hatasında eldeki veri korunur, oturum düşmez.
+const refreshUserQuietly = () => {
+  if (!cachedUser || loadPromise) return;
+  if (document.visibilityState === 'hidden') return;
+  base44.auth.me()
+    .then((user) => {
+      if (!user) return;
+      cachedUser = { ...cachedUser, ...user };
+      seededAt = Date.now();
+      publish();
+    })
+    .catch(() => {});
+};
+
+let refreshTimer = null;
+
+const startRefreshTimer = () => {
+  if (refreshTimer) return;
+  refreshTimer = window.setInterval(refreshUserQuietly, 5000);
+};
+
+const stopRefreshTimer = () => {
+  if (!refreshTimer) return;
+  window.clearInterval(refreshTimer);
+  refreshTimer = null;
+};
+
 export function useCurrentUser() {
   const [state, setState] = useState({ user: cachedUser, loading: loadingUser });
 
   useEffect(() => {
     listeners.add(setState);
     connectRealtime();
+    startRefreshTimer();
     if (loadingUser && !loadPromise) loadUser();
     else setState({ user: cachedUser, loading: loadingUser });
     return () => {
       listeners.delete(setState);
-      if (!listeners.size) { userSubscription?.(); userSubscription = null; }
+      if (!listeners.size) {
+        userSubscription?.(); userSubscription = null;
+        stopRefreshTimer();
+      }
     };
   }, []);
 

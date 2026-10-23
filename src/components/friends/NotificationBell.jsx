@@ -20,8 +20,8 @@ export default function NotificationBell() {
       .catch(() => {});
     load();
     const unsub = subscribeEntity('Notification', () => load());
-    // Yoklama yedeği — realtime kaçırsa diye 30 saniyede bir.
-    const interval = setInterval(() => { if (document.visibilityState !== 'hidden') load(); }, 120000);
+    // Yoklama yedeği — realtime kaçırsa diye 5 saniyede bir.
+    const interval = setInterval(() => { if (document.visibilityState !== 'hidden') load(); }, 5000);
     return () => { unsub(); clearInterval(interval); };
   }, [user?.id]);
 

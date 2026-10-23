@@ -3,6 +3,7 @@ import subscribeEntity from '@/components/data/entitySubscriptions';
 import { agencyApi } from '@/lib/agency';
 import { resolveAgencyRole } from '@/lib/agencyRole';
 import { useCurrentUser } from '@/lib/useCurrentUser';
+import useAutoRefresh from '@/hooks/useAutoRefresh';
 
 // Ajans sayfaları arasında gezinirken bekleme olmasın: son veri anında gösterilir,
 // yenisi arka planda alınır. Oturum kapanınca/başka hesapla girişte sayfa yeniden yüklenir.
@@ -61,6 +62,9 @@ export default function useAgencyPageData() {
   const refresh = useCallback(() => load(true), [load]);
 
   useEffect(() => { load(); }, [load]);
+
+  // Ajans sayfaları 5 saniyede bir sessizce tazelenir: kota ve kazanç verisi güncel kalır.
+  useAutoRefresh(refresh);
 
   // Yönetici "ödendi" işaretlediğinde yayıncı tarafında anında görünür: yalnızca
   // değişen kazanç kaydı ve toplamlar güncellenir, sayfa yenilenmez.

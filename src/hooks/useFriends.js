@@ -89,7 +89,7 @@ const start = (userId) => {
   store.onRefresh = () => load();
   window.addEventListener(REFRESH_EVENT, store.onRefresh);
   // Yoklama yedeği — realtime kaçırsa diye; sekme arkadayken durur ve tüm bileşenler aynı turu paylaşır.
-  store.interval = window.setInterval(() => { if (document.visibilityState !== 'hidden') load(); }, 60000);
+  store.interval = window.setInterval(() => { if (document.visibilityState !== 'hidden') load(); }, 5000);
 };
 
 export default function useFriends() {

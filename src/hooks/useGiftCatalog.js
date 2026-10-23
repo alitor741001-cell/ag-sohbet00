@@ -55,7 +55,7 @@ export function useGiftBalance(roomId, enabled, userId, sendingRef) {
   useEffect(() => {
     const visible = () => { if (document.visibilityState === 'visible') refresh(); };
     document.addEventListener('visibilitychange', visible);
-    const timer = setInterval(visible, 8000);
+    const timer = setInterval(visible, 5000);
     return () => { clearInterval(timer); document.removeEventListener('visibilitychange', visible); };
   }, [refresh]);
   return { coins, setCoins, refresh };
