@@ -33,6 +33,9 @@ export function rememberRoom(room) {
       movie_title: room.movie_title || '',
       movie_id: room.movie_id || '',
       owner_name: room.owner_name || '',
+      // Yayıncının profili geçmiş kartında görünür: kimliği saklanır, avatar oradan çözülür.
+      owner_id: room.owner_id || '',
+      owner_avatar: room.owner_avatar || '',
       visited_at: new Date().toISOString(),
     };
     const list = readVisitedRooms().filter((item) => item.id !== room.id);

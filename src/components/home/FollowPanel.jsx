@@ -35,7 +35,7 @@ export default function FollowPanel({ rooms, owners, friends, filmTitleFor, hist
       </div>
 
       {tab === 'visitors' ? (
-        <RoomHistory version={historyVersion} onChange={onHistoryChange} />
+        <RoomHistory version={historyVersion} onChange={onHistoryChange} rooms={rooms} />
       ) : (
         <FollowedPanel mode={tab} rooms={rooms} owners={owners} friends={friends} filmTitleFor={filmTitleFor} />
       )}

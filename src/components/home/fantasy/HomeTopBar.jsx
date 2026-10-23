@@ -10,14 +10,15 @@ const ACTIVE_CHIP = {
   boxShadow: '0 0 20px -4px rgba(127,240,230,0.9)',
 };
 
-/** Ana sayfa üst şeridi: Sıcak / Geçmiş Odalar sekmeleri, üye arama ve oda kurma. */
-export default function HomeTopBar({ view = 'hot', onView, onSearch }) {
+/** Ana sayfa üst şeridi: Sıcak / Geçmiş Odalar sekmeleri, üye arama ve oda kurma.
+    Oyunlar görünümünde sekmeler gizlenir; yalnızca arama ve oda kurma kalır. */
+export default function HomeTopBar({ view = 'hot', onView, onSearch, showViews = true }) {
   return (
     <div className="mb-3 flex items-center gap-1.5">
-      {[
+      {(showViews ? [
         { key: 'hot', label: 'Sıcak' },
         { key: 'history', label: 'Takip' },
-      ].map((item) => {
+      ] : []).map((item) => {
         const active = view === item.key;
         return (
           <button

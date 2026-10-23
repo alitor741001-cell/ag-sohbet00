@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { History, Mic, Trash2 } from 'lucide-react';
 import { Image } from '@/components/ui/image';
+import useMessageProfiles from '@/hooks/useMessageProfiles';
 import { clearVisitedRooms, readVisitedRooms } from '@/lib/visitedRooms';
 import { youtubeIdFromMovieId } from '@/lib/youtubeTitle';
 
@@ -12,11 +13,34 @@ const timeLabel = (value) => {
   return date.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit' });
 };
 
-/** Son Ziyaretçiler: son bir haftada girilen odalar, en yeni önce. */
-export default function RoomHistory({ version = 0, onChange }) {
+/** Son Ziyaretçiler: son bir haftada girilen odalar, en yeni önce.
+    Aynı yayıncının birden çok odası tek kartta toplanır. */
+export default function RoomHistory({ version = 0, onChange, rooms = [] }) {
   const items = useMemo(() => readVisitedRooms(), [version]);
 
-  if (!items.length) {
+  // Yayıncı kimliği önce kayıttan, yoksa hâlâ açık olan odadan çözülür.
+  const ownerByRoom = useMemo(
+    () => new Map((rooms || []).map((room) => [room.id, room.owner_id || ''])),
+    [rooms]
+  );
+
+  // Kişi başına tek kart: listedeki en yeni ziyaret korunur, tekrarlar elenir.
+  const entries = useMemo(() => {
+    const seen = new Set();
+    const kept = [];
+    items.forEach((item) => {
+      const ownerId = item.owner_id || ownerByRoom.get(item.id) || '';
+      const key = ownerId || item.owner_name || item.id;
+      if (seen.has(key)) return;
+      seen.add(key);
+      kept.push({ ...item, owner_id: ownerId });
+    });
+    return kept;
+  }, [items, ownerByRoom]);
+
+  const profiles = useMessageProfiles(entries.map((entry) => entry.owner_id));
+
+  if (!entries.length) {
     return (
       <div className="premium-panel rounded-2xl px-4 py-10 text-center">
         <History className="mx-auto mb-2 h-6 w-6 text-premium-gold/70" />
@@ -41,10 +65,13 @@ export default function RoomHistory({ version = 0, onChange }) {
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        {items.map((room) => {
+        {entries.map((room) => {
           const voice = room.kind === 'voice';
           const videoId = voice ? '' : youtubeIdFromMovieId(room.movie_id);
           const cover = videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : '';
+          const profile = profiles[room.owner_id];
+          const ownerName = profile?.username || profile?.full_name || room.owner_name || '';
+          const ownerAvatar = profile?.avatar || room.owner_avatar || '';
           return (
             <Link
               key={room.id}
@@ -64,6 +91,20 @@ export default function RoomHistory({ version = 0, onChange }) {
                 style={{ background: 'linear-gradient(to top, rgba(6,16,34,0.96), rgba(6,16,34,0.35) 60%, transparent)' }}
               />
               <span className="relative mt-auto p-2.5">
+                {ownerName && (
+                  <span className="mb-1 flex min-w-0 items-center gap-1.5">
+                    <span className="h-5 w-5 shrink-0 overflow-hidden rounded-full border border-[#ffe6a8]/70 bg-[#0f2a4a]">
+                      {ownerAvatar ? (
+                        <Image src={ownerAvatar} className="h-full w-full" fittingType="fill" alt="" />
+                      ) : (
+                        <span className="flex h-full w-full items-center justify-center text-[9px] font-black text-[#ffe6a8]">
+                          {ownerName.charAt(0).toUpperCase()}
+                        </span>
+                      )}
+                    </span>
+                    <span className="truncate text-[10px] font-bold text-[#ffe6a8]/90">{ownerName}</span>
+                  </span>
+                )}
                 <span className="line-clamp-2 block text-[12px] font-extrabold leading-tight text-white">{room.name}</span>
                 <span className="mt-1 flex items-center gap-1.5">
                   <span className="rounded-full border border-[#ffe6a8]/50 bg-[#0f3b52]/80 px-2 py-0.5 text-[9px] font-black text-white">

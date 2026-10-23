@@ -307,7 +307,7 @@ export default function RoomDiscovery({ shortcuts = null }) {
 
   return (
     <PullToRefresh onRefresh={refreshList}>
-      <HomeTopBar view={view} onView={setView} onSearch={() => navigate('/arama')} />
+      <HomeTopBar view={view} onView={setView} onSearch={() => navigate('/arama')} showViews={tab !== 'games'} />
       {shortcuts}
 
       {tab === 'games' ? (
