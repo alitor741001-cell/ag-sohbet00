@@ -173,7 +173,7 @@ export default function RoomDiscovery({ shortcuts = null }) {
     const refresh = window.setInterval(() => {
       if (document.visibilityState === 'hidden') return;
       readRooms();
-    }, 8000);
+    }, 5000);
 
     return () => {
       alive = false;
