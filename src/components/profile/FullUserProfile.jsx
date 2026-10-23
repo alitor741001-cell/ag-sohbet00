@@ -16,6 +16,7 @@ import { AccountStatusMark, ACCOUNT_MARKS, ACCOUNT_STATES, getAccountState } fro
 import { broadcasterState } from '@/lib/broadcaster';
 import { useRoomProfileActions } from '@/lib/roomProfileActions';
 import useBackDismiss from '@/hooks/useBackDismiss';
+import useRoomLevels from '@/hooks/useRoomLevels';
 import VoiceFantasyCard from '@/components/profile/VoiceFantasyCard';
 import ProfileAgencyBadges from '@/components/profile/ProfileAgencyBadges';
 
@@ -37,6 +38,7 @@ export default function FullUserProfile({
   const [relation, setRelation] = useState('');
   const [copied, setCopied] = useState(false);
   const [inviteSent, setInviteSent] = useState(false);
+  const roomLevels = useRoomLevels([userId]);
 
   // Profil kartı birleşik geri yığınında: geri tuşu önce kartı kapatır.
   useBackDismiss(open, onClose);
@@ -210,10 +212,11 @@ export default function FullUserProfile({
       )}
 
       <ProfileStatsRow
-        palette={palette}
-        level={0}
+        level={roomLevels[userId] || 0}
+        sentLevel={profile?.gift_sent_level || 0}
+        sentTier={profile?.gift_sent_tier || 'green'}
         receivedLevel={profile?.gift_received_level || 0}
-        receivedTier={profile?.gift_received_tier}
+        receivedTier={profile?.gift_received_tier || 'green'}
         nLevel={profile?.n_level || 0}
       />
 
