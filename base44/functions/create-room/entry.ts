@@ -105,7 +105,8 @@ export default async function(req) {
       await base44.asServiceRole.entities.RoomSecret.create({ room_id: room.id, password_hash: hashed });
     }
     await base44.asServiceRole.entities.RoomMessage.create({
-      room_id: room.id, user_id: user.id, user_name: owner_name,
+      room_id: room.id, notice_key: `presence:${user.id}`,
+      user_id: user.id, user_name: owner_name,
       text: isVoiceRoom ? `${owner_name} sesli odayı kurdu (${voiceSeats} koltuk).` : `${owner_name} odaya katıldı.`, type: 'system'
     });
     return Response.json({ id: room.id });

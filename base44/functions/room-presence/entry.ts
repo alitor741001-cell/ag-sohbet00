@@ -403,10 +403,11 @@ export default async function(req) {
       const nextVoiceMode = room.voice_mode !== true;
       // Mod değişimi oda türüne de yansır: film odası sesli odaya, sesli oda film odasına çevrilebilir.
       await base44.asServiceRole.entities.Room.update(room_id, { voice_mode: nextVoiceMode, voice_enabled: nextVoiceMode, room_type: nextVoiceMode ? 'voice' : 'watch' });
-      await base44.asServiceRole.entities.RoomMessage.create({
-        room_id, ...noteActor, user_name: noteName,
-        text: nextVoiceMode ? `${noteName} sesli sohbet alanını açtı.` : `${noteName} film odasına döndü.`, type: 'system'
-      }).catch(() => {});
+      await upsertRoomNotice(base44, room_id, {
+        key: `presence:${noteActor.user_id || 'hidden'}`,
+        user_id: noteActor.user_id || '', user_name: noteName, user_avatar: noteActor.user_avatar || '',
+        text: nextVoiceMode ? `${noteName} sesli sohbet alanını açtı.` : `${noteName} film odasına döndü.`,
+      });
       return Response.json({ ok: true, voice_mode: nextVoiceMode, voice_enabled: nextVoiceMode });
     }
 
@@ -421,12 +422,13 @@ export default async function(req) {
       if (!canModRoom) return Response.json({ error: 'yetkisiz' }, { status: 403 });
       const bannedNow = body.banned !== false;
       await base44.asServiceRole.entities.Room.update(room_id, { chat_seated_only: bannedNow });
-      await base44.asServiceRole.entities.RoomMessage.create({
-        room_id, ...noteActor, user_name: noteName,
+      await upsertRoomNotice(base44, room_id, {
+        key: `presence:${noteActor.user_id || 'hidden'}`,
+        user_id: noteActor.user_id || '', user_name: noteName, user_avatar: noteActor.user_avatar || '',
         text: bannedNow
           ? `${noteName} sohbet yasağını açtı — yalnızca koltuktakiler yazabilir.`
-          : `${noteName} sohbet yasağını kaldırdı.`, type: 'system'
-      }).catch(() => {});
+          : `${noteName} sohbet yasağını kaldırdı.`,
+      });
       return Response.json({ ok: true, chat_seated_only: bannedNow });
     }
 
@@ -452,9 +454,10 @@ export default async function(req) {
         current_time: 0, is_playing: true,
         last_sync: new Date().toISOString()
       });
-      await base44.asServiceRole.entities.RoomMessage.create({
-        room_id, ...noteActor, user_name: noteName,
-        text: `${noteName} filmi değiştirdi: ${movie_title || 'Yeni Film'}`, type: 'system'
+      await upsertRoomNotice(base44, room_id, {
+        key: `presence:${noteActor.user_id || 'hidden'}`,
+        user_id: noteActor.user_id || '', user_name: noteName, user_avatar: noteActor.user_avatar || '',
+        text: `${noteName} filmi değiştirdi: ${movie_title || 'Yeni Film'}`,
       });
       return Response.json({ ok: true });
     }
@@ -512,9 +515,9 @@ export default async function(req) {
       await base44.asServiceRole.entities.Room.update(room_id, { room_moderators: mods });
       const targetUser = await base44.asServiceRole.entities.User.get(target_id).catch(() => null);
       const targetName = targetUser?.username || targetUser?.full_name || 'Kullanıcı';
-      // Yetki bildirimi kişi başına tek satırdır: verme/kaldırma aynı satırı yeniler.
+      // Yetki bildirimi kişinin giriş/çıkış satırını günceller: verme/kaldırma aynı satırı yeniler.
       await upsertRoomNotice(base44, room_id, {
-        key: `mod:${target_id}`,
+        key: `presence:${target_id}`,
         user_id: target_id, user_name: targetName,
         text: action === 'assign-mod' ? `${targetName} oda moderatörü yapıldı.` : `${targetName}'in oda moderatörliği kaldırıldı.`,
       });
@@ -559,9 +562,10 @@ export default async function(req) {
           voice_mode: toVoice,
           voice_enabled: toVoice,
         });
-        await base44.asServiceRole.entities.RoomMessage.create({
-          room_id, ...noteActor, user_name: noteName,
-          text: toVoice ? `${noteName} odayı sesli odaya çevirdi.` : `${noteName} odayı film odasına çevirdi.`, type: 'system'
+        await upsertRoomNotice(base44, room_id, {
+          key: `presence:${noteActor.user_id || 'hidden'}`,
+          user_id: noteActor.user_id || '', user_name: noteName, user_avatar: noteActor.user_avatar || '',
+          text: toVoice ? `${noteName} odayı sesli odaya çevirdi.` : `${noteName} odayı film odasına çevirdi.`,
         });
         return Response.json({ ok: true });
       }
@@ -571,9 +575,10 @@ export default async function(req) {
         const previousOwnerId = room.owner_id;
         const keptModerators = Array.from(new Set([...(room.room_moderators || []), previousOwnerId].filter(Boolean))).filter((value) => value !== user.id);
         await base44.asServiceRole.entities.Room.update(room_id, { owner_id: user.id, owner_name: name, room_moderators: keptModerators });
-        await base44.asServiceRole.entities.RoomMessage.create({
-          room_id, ...noteActor, user_name: noteName,
-          text: `${noteName} odanın yönetimini devraldı.`, type: 'system'
+        await upsertRoomNotice(base44, room_id, {
+          key: `presence:${noteActor.user_id || 'hidden'}`,
+          user_id: noteActor.user_id || '', user_name: noteName, user_avatar: noteActor.user_avatar || '',
+          text: `${noteName} odanın yönetimini devraldı.`,
         });
         return Response.json({ ok: true });
       }

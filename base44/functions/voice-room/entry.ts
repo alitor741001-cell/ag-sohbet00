@@ -13,6 +13,7 @@ import { addGiftTotals } from '../../shared/userLevels.ts';
 import { syncQuotaRewards } from '../../shared/agency.ts';
 import { syncGiftRoomLevel } from '../../shared/roomLevels.ts';
 import { HIDDEN_AVATAR_URL, hiddenDisplayName, isHiddenDisplayName, isHiddenUser } from '../../shared/vip.ts';
+import { upsertRoomNotice } from '../../shared/roomNotice.ts';
 
 const SEAT_OPTIONS = [1, 2, 5, 8, 9, 12, 15, 24, 30];
 // Bu değerin (coin) üzerindeki hediyeler bütün sesli odalara duyurulur.
@@ -66,9 +67,11 @@ export default async function (req: Request): Promise<Response> {
       return next;
     };
     // Sohbet notu yanıtı geciktirmez: kayıt arkadan yazılır, ekran yanıtı beklemez.
-    const say = (text) => base44.asServiceRole.entities.RoomMessage.create({
-      room_id, user_id: hiddenUser ? '' : user.id, user_name: shownName, text, type: 'system',
-    }).catch(() => {});
+    // Sohbet notu kişi başına tek satırdır: aynı kişinin eylemleri aynı satırı günceller.
+    const say = (text) => upsertRoomNotice(base44, room_id, {
+      key: `presence:${hiddenUser ? 'hidden' : user.id}`,
+      user_id: hiddenUser ? '' : user.id, user_name: shownName, user_avatar: shownAvatar, text,
+    });
     const respond = (next) => Response.json({ ok: true, seats: next, seat_count: next.length });
 
     // Koltuğa otur — herkes sese çıkabilir, kilitli koltuğa yöneticiler oturabilir.
