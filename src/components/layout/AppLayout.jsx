@@ -212,7 +212,7 @@ export default function AppLayout() {
           <TabStack activePath={activeTabPath} />
           {!activeTabPath && (
             /* Sayfa geçişi mobil uygulama hissiyle akar: hafif aşağıdan yukarı + belirginlik. */
-            <PullToRefresh onRefresh={() => setRefreshKey((k) => k + 1)}>
+            <PullToRefresh disabled={pathname.startsWith('/ajans')} onRefresh={() => setRefreshKey((k) => k + 1)}>
             <motion.div
               key={`${pathname}-${refreshKey}`}
               initial={reduceMotion ? false : { opacity: 0, y: 12 }}

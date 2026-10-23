@@ -1201,3 +1201,4 @@ body.game-open nav[aria-label="Ana menü"] { display: none !important; }
 
 /* Esneme ve yenileme sırasında düz renk yerine tema görünür. */
 html body { background-color: transparent; }
+html.no-bounce, html.no-bounce body { overscroll-behavior: none; }

@@ -15,7 +15,21 @@ const BUSY_MS = 1000;
  * en üstünden başlar; çekilirken tarayıcının kendi aşağı-çek-yenile davranışı durdurulur
  * ve parmağın altındaki kart yanlışlıkla açılmaz.
  */
-export default function PullToRefresh({ children, onRefresh, label = '', busyLabel = '' }) {
+export default function PullToRefresh({ children, onRefresh, label = '', busyLabel = '', disabled = false }) {
+  if (disabled) return <StillPage>{children}</StillPage>;
+  return <PullArea onRefresh={onRefresh} label={label} busyLabel={busyLabel}>{children}</PullArea>;
+}
+
+/** Yenilemesiz sayfa: esneme kapanır, tema ve içerik yerinde sabit kalır. */
+function StillPage({ children }) {
+  useEffect(() => {
+    document.documentElement.classList.add('no-bounce');
+    return () => document.documentElement.classList.remove('no-bounce');
+  }, []);
+  return <section>{children}</section>;
+}
+
+function PullArea({ children, onRefresh, label, busyLabel }) {
   const rootRef = useRef(null);
   const boxRef = useRef(null);
   const textRef = useRef(null);
