@@ -850,7 +850,7 @@ html, body, #root {
    her pikselde (sistem çubuğu, klavye sonrası alan, kısa kalan görünüm) tema görünür. */
 html, body {
   background-color: #0a1c3c;
-  background-image: var(--room-theme-image, none), var(--room-theme-tint, linear-gradient(180deg, #103062 0%, #0a1c3c 52%, #0b1930 100%));
+  background-image: var(--room-theme-image, none), var(--room-theme-tint, url(https://media.base44.com/images/public/6a77d66e4da6de214628ee62/a5c5853e0_IMG_0141.jpg));
   background-size: cover, cover;
   background-position: center, center;
   background-repeat: no-repeat, no-repeat;
@@ -869,7 +869,7 @@ html::after {
   z-index: -1;
   pointer-events: none;
   background-color: #0a1c3c;
-  background-image: var(--room-theme-image, none), var(--room-theme-tint, linear-gradient(180deg, #103062 0%, #0a1c3c 52%, #0b1930 100%));
+  background-image: var(--room-theme-image, none), var(--room-theme-tint, url(https://media.base44.com/images/public/6a77d66e4da6de214628ee62/a5c5853e0_IMG_0141.jpg));
   background-size: cover, cover;
   background-position: center, center;
   background-repeat: no-repeat, no-repeat;
