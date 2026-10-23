@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { History, Mic, Trash2 } from 'lucide-react';
+import { History, Lock, Mic, Trash2 } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import useMessageProfiles from '@/hooks/useMessageProfiles';
 import { clearVisitedRooms, readVisitedRooms } from '@/lib/visitedRooms';
@@ -21,6 +21,13 @@ export default function RoomHistory({ version = 0, onChange, rooms = [] }) {
   // Yayıncı kimliği önce kayıttan, yoksa hâlâ açık olan odadan çözülür.
   const ownerByRoom = useMemo(
     () => new Map((rooms || []).map((room) => [room.id, room.owner_id || ''])),
+    [rooms]
+  );
+  // Yalnızca açık ve içinde kişi bulunan odaya girilebilir; diğerleri kilitli görünür.
+  const openIds = useMemo(
+    () => new Set((rooms || []).filter((room) =>
+      (room.participants || []).some((p) => p?.user_id) || (room.seats || []).some((s) => s?.user_id)
+    ).map((room) => room.id)),
     [rooms]
   );
 
@@ -72,11 +79,14 @@ export default function RoomHistory({ version = 0, onChange, rooms = [] }) {
           const profile = profiles[room.owner_id];
           const ownerName = profile?.username || profile?.full_name || room.owner_name || '';
           const ownerAvatar = profile?.avatar || room.owner_avatar || '';
+          const locked = !openIds.has(room.id);
           return (
             <Link
               key={room.id}
               to={voice ? `/sesli-oda/${room.id}` : `/oda/${room.id}`}
-              className="relative flex aspect-square flex-col overflow-hidden rounded-[20px] bg-[#07162f] active:scale-[0.98]"
+              onClick={locked ? (event) => event.preventDefault() : undefined}
+              aria-disabled={locked || undefined}
+              className={`relative flex aspect-square flex-col overflow-hidden rounded-[20px] bg-[#07162f] ${locked ? 'cursor-not-allowed' : 'active:scale-[0.98]'}`}
               style={{ boxShadow: '0 0 0 1.5px rgba(232,196,124,0.7), 0 0 20px -8px rgba(79,216,207,0.6)' }}
             >
               {cover ? (
@@ -90,6 +100,12 @@ export default function RoomHistory({ version = 0, onChange, rooms = [] }) {
                 className="absolute inset-0"
                 style={{ background: 'linear-gradient(to top, rgba(6,16,34,0.96), rgba(6,16,34,0.35) 60%, transparent)' }}
               />
+              {locked && (
+                <span className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-1 bg-black/55">
+                  <Lock className="h-6 w-6 text-[#ffe6a8]" />
+                  <span className="text-[10px] font-black text-white/80">Odada kimse yok</span>
+                </span>
+              )}
               <span className="relative mt-auto p-2.5">
                 {ownerName && (
                   <span className="mb-1 flex min-w-0 items-center gap-1.5">

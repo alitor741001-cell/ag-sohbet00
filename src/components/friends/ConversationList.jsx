@@ -28,8 +28,16 @@ export default function ConversationList({ conversations, userId, onOpen, onHide
     const unread = mine ? (c.unread_user1 || 0) : (c.unread_user2 || 0);
     return { conversation: c, name, avatar, otherId, unread };
   }).sort((a, b) => new Date(b.conversation.last_message_at || b.conversation.updated_date || 0) - new Date(a.conversation.last_message_at || a.conversation.updated_date || 0));
-  if (!chats.length) return <p className="py-16 text-center text-sm text-muted-foreground">Henüz sohbetiniz yok.</p>;
-  return <div>{chats.map(({ conversation, name, avatar, otherId, unread }) => {
+  // Aynı kişiyle birden çok sohbet kaydı tek satırda gösterilir (en yenisi kalır).
+  const seenChats = new Set();
+  const visibleChats = chats.filter((chat) => {
+    const key = chat.otherId || chat.conversation.id;
+    if (seenChats.has(key)) return false;
+    seenChats.add(key);
+    return true;
+  });
+  if (!visibleChats.length) return <p className="py-16 text-center text-sm text-muted-foreground">Henüz sohbetiniz yok.</p>;
+  return <div>{visibleChats.map(({ conversation, name, avatar, otherId, unread }) => {
     // Çevrim dışı mod: arkadaş bu sohbette offline görünüyorsa
     const profile = profiles[otherId];
     const friendOffline = (conversation.offline_for || []).includes(otherId);

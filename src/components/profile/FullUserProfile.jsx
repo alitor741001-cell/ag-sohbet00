@@ -196,6 +196,15 @@ export default function FullUserProfile({
   const content = statusContent || (
     <>
       {!hidden && <ProfileAgencyBadges profile={profile || {}} />}
+      {!hidden && !isSelf && badge.active && (
+        <div className="mb-2 flex justify-center">
+          <span className="rounded-full border border-premium-gold/60 bg-premium-gold/15 px-3 py-0.5 text-[11px] font-black text-premium-gold">
+            {(user?.agency_role === 'owner' || user?.agency_role === 'assistant')
+              && user?.agency_record_id && profile?.agency_record_id === user.agency_record_id
+              ? 'Yayıncım' : 'Yayıncı'}
+          </span>
+        </div>
+      )}
 
       <ProfileStatsRow
         palette={palette}
