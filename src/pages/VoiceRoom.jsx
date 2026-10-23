@@ -868,6 +868,7 @@ export default function VoiceRoom() {
   const roomProfileActions = useVoiceRoomProfileActions({
     seats, participants, canMod, userId: user?.id, seated, voice, invokeVoice, toast, toggleMuteFor,
     openGifts, setSelectedIds, setMentionTarget, setChatOpen, setComposerOpen, setDmUserId, kickFromRoom,
+    moderators, onToggleMod: handleToggleMod,
   });
 
   // Koltuk, sohbet satırı ve izleyici listesi aynı merkezi profil kartını açar.

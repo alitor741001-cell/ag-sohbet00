@@ -1,15 +1,15 @@
 import { useState } from 'react';
-import { AtSign, Gift, LockKeyhole, LockKeyholeOpen, LogOut, MessageSquare, Mic, MicOff, Loader2, Shield, UserCheck } from 'lucide-react';
+import { AtSign, Gift, LockKeyhole, LockKeyholeOpen, LogOut, MessageSquare, Mic, MicOff, Loader2, Shield, ShieldOff, UserCheck } from 'lucide-react';
 import FollowButton from '@/components/profile/social/FollowButton';
 import { useToast } from '@/components/ui/use-toast';
 
 export default function VoiceFantasyActions({ room, userId, name, isSelf, hidden, onClose, onMessage }) {
   const [busy, setBusy] = useState('');
-  const [manageOpen, setManageOpen] = useState(false);
   const { toast } = useToast();
   const seat = room.seatFor(userId);
   const locked = seat >= 0 && room.isLocked(seat);
   const muted = isSelf ? room.selfMicMuted : room.mutedOf(userId);
+  const targetIsMod = !isSelf && room.isModeratorOf?.(userId);
   const perform = async (key, action) => {
     if (busy) return;
     setBusy(key);
@@ -33,12 +33,13 @@ export default function VoiceFantasyActions({ room, userId, name, isSelf, hidden
   return (
     <div className="space-y-2">
       {!isSelf && !hidden && <FollowButton userId={userId} accent="var(--fantasy-accent-color)" compact />}
-      {room.canModerate && !isSelf && manageItems.length > 0 && (
-        <button type="button" onClick={() => setManageOpen(v => !v)} className="voice-fantasy-button flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2 text-[11px] font-bold">
-          <Shield className="h-4 w-4" /> {manageOpen ? 'Yönetimi Kapat' : 'Yönet'}
+      {room.canModerate && !isSelf && (
+        <button type="button" disabled={!!busy} onClick={() => perform('mod', () => room.toggleModerator(userId, !targetIsMod))} className="voice-fantasy-button flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2 text-[11px] font-bold disabled:opacity-50">
+          {busy === 'mod' ? <Loader2 className="h-4 w-4 animate-spin" /> : targetIsMod ? <ShieldOff className="h-4 w-4" /> : <Shield className="h-4 w-4" />}
+          {targetIsMod ? 'Yöneticilik Al' : 'Yönet'}
         </button>
       )}
-      {manageOpen && room.canModerate && !isSelf && (
+      {room.canModerate && !isSelf && manageItems.length > 0 && (
         <div className="grid grid-cols-3 gap-2">
           {manageItems.map(({ key, label, icon: Icon, action, danger }) => (
             <button key={key} type="button" disabled={!!busy} onClick={() => perform(key, action)} className={`voice-fantasy-button flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl px-1 py-2 text-[10px] font-bold disabled:opacity-50 ${danger ? 'text-destructive' : ''}`}>
