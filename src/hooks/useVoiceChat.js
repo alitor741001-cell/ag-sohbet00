@@ -283,7 +283,9 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
         attachCurrentRemoteAudio();
         await retryAudio();
         setAudioBlocked(!room.canPlaybackAudio);
-        if (!hasDirectCallAudioFocus() && !mutedByModeratorRef.current && voiceEnabledRef.current && micEnabledRef.current) {
+        let carryMic = false;
+        try { carryMic = sessionStorage.getItem('voice_mic_carry') === '1'; sessionStorage.removeItem('voice_mic_carry'); } catch {}
+        if (!hasDirectCallAudioFocus() && !mutedByModeratorRef.current && voiceEnabledRef.current && (micEnabledRef.current || carryMic)) {
           setRequesting(true);
           try {
             await enableMic(room);
@@ -352,6 +354,8 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
         registerVoiceSession(roomId, { room, elements: audioElementsRef.current, stopTransient });
         return;
       }
+      // Odalar arası geçişte mikrofon açıksa yeni odada da açık kalsın.
+      try { sessionStorage.setItem('voice_mic_carry', room.localParticipant.isMicrophoneEnabled ? '1' : '0'); } catch {}
       room.removeAllListeners();
       audioElementsRef.current.forEach((element) => element.remove());
       audioElementsRef.current.clear();

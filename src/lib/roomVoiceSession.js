@@ -34,6 +34,7 @@ export function disposeOtherVoiceSessions(keepRoomId) {
 
 function closeSession({ room, elements, stopTransient }) {
   stopTransient?.();
+  try { if (room?.localParticipant?.isMicrophoneEnabled) sessionStorage.setItem('voice_mic_carry', '1'); } catch {}
   room?.removeAllListeners();
   elements?.forEach((element) => { try { element.remove(); } catch {} });
   room?.localParticipant?.setMicrophoneEnabled(false).catch(() => {});

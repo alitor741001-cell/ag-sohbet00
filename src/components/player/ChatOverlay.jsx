@@ -208,6 +208,15 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
+          {onDirect && (
+            <button onClick={onDirect} aria-label="Özel mesajlar" className="relative flex h-9 w-9 items-center justify-center rounded-full border-2 border-[#8A2BE2] bg-black text-[#B06BFF] shadow-[0_0_18px_-8px_rgba(138,43,226,0.9)] transition-transform active:scale-95">
+              <MessagesSquare className="h-4 w-4" />
+              {directUnread > 0 && <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#FFD700] px-1 text-[9px] font-bold text-black">{directUnread > 99 ? '99+' : directUnread}</span>}
+            </button>
+          )}
+          {isOwner && chatEnabled && (
+            <button onClick={clearAll} aria-label="Sohbeti temizle" className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-[#FF4D5E] bg-black text-[#FF9A9A] shadow-[0_0_12px_-5px_rgba(255,107,107,0.9)] active:scale-95"><Trash2 className="h-4 w-4" /></button>
+          )}
           {voiceEnabled && (
             <>
               <button onClick={() => (voice.voiceEnabled === false && onMicPress ? onMicPress() : voice.toggleMute())} disabled={voice.remoteMuted || voice.requesting || (voice.voiceEnabled !== false && voice.connectionState !== 'connected')} aria-label="Mikrofon" className={`flex h-9 w-9 items-center justify-center rounded-full border-2 border-[#FFD700] bg-black text-[#FFD700] shadow-[0_0_14px_-3px_rgba(255,215,0,0.9)] active:scale-95 ${voice.localSpeaking && voice.active && !voice.remoteMuted ? 'speaking-glow' : ''}`}>
@@ -217,15 +226,6 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
                 {voice.deafened ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
               </button>
             </>
-          )}
-          {onDirect && (
-            <button onClick={onDirect} aria-label="Özel mesajlar" className="relative flex h-9 w-9 items-center justify-center rounded-full border-2 border-[#8A2BE2] bg-black text-[#B06BFF] shadow-[0_0_18px_-8px_rgba(138,43,226,0.9)] transition-transform active:scale-95">
-              <MessagesSquare className="h-4 w-4" />
-              {directUnread > 0 && <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#FFD700] px-1 text-[9px] font-bold text-black">{directUnread > 99 ? '99+' : directUnread}</span>}
-            </button>
-          )}
-          {isOwner && chatEnabled && (
-            <button onClick={clearAll} aria-label="Sohbeti temizle" className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-[#FF4D5E] bg-black text-[#FF9A9A] shadow-[0_0_12px_-5px_rgba(255,107,107,0.9)] active:scale-95"><Trash2 className="h-4 w-4" /></button>
           )}
           <button onClick={onClose} aria-label="Sohbeti kapat" className="flex h-9 w-9 items-center justify-center rounded-full text-white active:scale-95"><X className="h-6 w-6" /></button>
         </div>
