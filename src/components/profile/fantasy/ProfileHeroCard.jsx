@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Camera, Check, Copy, Crown, Feather, Loader2 } from 'lucide-react';
+import { Camera, Check, Copy, Crown, Loader2 } from 'lucide-react';
 import ProfileAvatarPortrait from '@/components/profile/fantasy/ProfileAvatarPortrait';
 import ProfileAgencyBadges from '@/components/profile/ProfileAgencyBadges';
 import { useToast } from '@/components/ui/use-toast';
@@ -10,7 +10,7 @@ const RING = 'conic-gradient(from 140deg, #e0f2fe, #7dd3fc, #f8fafc, #38bdf8, #d
 
 
 /** Profil başlığı: kristal çerçeveli avatar, isim, kimlik no ve rozet şeridi. */
-export default function ProfileHeroCard({ user, avatar, onAvatar, onEdit, uploading, vipLevel = 0 }) {
+export default function ProfileHeroCard({ user, avatar, onAvatar, uploading, vipLevel = 0 }) {
   const [picking, setPicking] = useState(false);
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
@@ -30,16 +30,6 @@ export default function ProfileHeroCard({ user, avatar, onAvatar, onEdit, upload
 
   return (
     <section className="relative px-4 pt-6">
-      <button
-        type="button"
-        onClick={onEdit}
-        aria-label="Profil bilgilerini düzenle"
-        className="absolute right-4 top-3 flex h-9 w-9 items-center justify-center rounded-full border border-[#7dd3fc]/40 bg-[#0B2A52]/70 text-[#a5e4ff] active:scale-95"
-        style={{ boxShadow: '0 0 14px rgba(56,189,248,0.35)' }}
-      >
-        <Feather className="h-4 w-4" />
-      </button>
-
       <div className="flex items-center gap-4">
         <div className="relative shrink-0">
           <span className="block rounded-full p-[4px]" style={{ background: RING, boxShadow: '0 0 20px rgba(125,211,252,0.55), 0 0 42px rgba(56,189,248,0.3)' }}>
