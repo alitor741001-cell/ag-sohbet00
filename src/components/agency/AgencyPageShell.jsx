@@ -1,5 +1,5 @@
 import { ArrowLeft, Loader2 } from 'lucide-react';
-import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { AGENCY_GOLD } from '@/lib/agency';
 
 /** Ajans alt sayfalarının ortak kabuğu: geri düğmesi, bölüm menüsü ve içerik alanı. */
@@ -11,7 +11,7 @@ export default function AgencyPageShell({ title, subtitle = '', sections = [], l
       <header className="flex items-center gap-3">
         <button
           type="button"
-          onClick={() => navigate(-1)}
+          onClick={() => navigate('/ajans', { replace: true })}
           aria-label="Geri"
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/5 active:scale-95"
         >
@@ -23,19 +23,8 @@ export default function AgencyPageShell({ title, subtitle = '', sections = [], l
         </div>
       </header>
 
-      {sections.length > 0 && (
-        <nav aria-label="Ajans bölümleri" className="mb-5 mt-5 grid grid-cols-2 gap-1.5 rounded-2xl border border-border bg-card p-2 sm:grid-cols-3">
-          {sections.map((item) => (
-            <NavLink
-              key={item.key}
-              to={item.path}
-              className={({ isActive }) => `flex items-center gap-2 rounded-xl px-3 py-2.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${isActive ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-secondary hover:text-foreground'}`}
-            >
-              {item.icon && <item.icon className="h-3.5 w-3.5 shrink-0" />}{item.label}
-            </NavLink>
-          ))}
-        </nav>
-      )}
+      {/* Tam ekran bölüm: diğer ajans bölümlerinin düğmeleri gösterilmez. */}
+      <div className="h-5" />
 
       {loading ? (
         <div className="flex items-center justify-center py-20">
