@@ -11,9 +11,8 @@ export default function VipFrameArtwork({ theme }) {
   return (
     <span
       aria-hidden="true"
-      className="pointer-events-none absolute -inset-[12.5%] z-10"
+      className="vip-frame-plain pointer-events-none absolute -inset-[12.5%] z-10"
       style={{
-        filter: 'drop-shadow(0 0 6px var(--vip-accent))',
         maskImage: CORE_HOLE,
         WebkitMaskImage: CORE_HOLE,
       }}

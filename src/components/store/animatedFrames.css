@@ -17,4 +17,8 @@
 @keyframes ag-frame-halo { 50% { transform: rotate(4deg); filter: brightness(1.15) drop-shadow(0 0 4px var(--frame-glow)); } }
 @keyframes ag-frame-orbit { to { transform: rotate(360deg); } }
 @keyframes ag-frame-spark { 0%,100% { opacity: .2; transform: scale(.6); } 50% { opacity: 1; transform: scale(1.1); } }
+/* VIP çerçevelerinde kenardaki beyaz parlama istenmiyor: süsleme parlamasız çizilir. */
+.vip-frame-plain .ag-frame-art,
+.vip-frame-plain .ag-frame-spark { filter: none !important; }
+
 @media (prefers-reduced-motion: reduce) { .ag-frame *, .ag-frame { animation: none !important; } }
