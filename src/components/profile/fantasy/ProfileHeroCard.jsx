@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Camera, Check, Copy, Crown, Loader2 } from 'lucide-react';
+import { Camera, Check, Copy, Crown, Heart, Loader2, Shield, Star } from 'lucide-react';
 import ProfileAvatarPortrait from '@/components/profile/fantasy/ProfileAvatarPortrait';
 import ProfileAgencyBadges from '@/components/profile/ProfileAgencyBadges';
 import { useToast } from '@/components/ui/use-toast';
-import { isRedNameVip, vipDaysLeft } from '@/lib/userLevels';
+import { badgesFromUser, isRedNameVip, receivedColor, sentColor, vipDaysLeft, N_BADGE_STYLE } from '@/lib/userLevels';
 
 
 const RING = 'conic-gradient(from 140deg, #e0f2fe, #7dd3fc, #f8fafc, #38bdf8, #dbeafe, #60a5fa, #e0f2fe)';
@@ -15,6 +15,8 @@ export default function ProfileHeroCard({ user, avatar, onAvatar, uploading, vip
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
   const name = user.username || user.full_name || 'Kullanıcı';
+  // N (isim), atış ve alış seviyeleri kayıttaki hediye toplamlarından hesaplanır.
+  const badges = badgesFromUser(user);
   const male = user.gender === 'erkek';
   const female = !!user.gender && !male;
 
@@ -69,7 +71,22 @@ export default function ProfileHeroCard({ user, avatar, onAvatar, uploading, vip
             {copied ? <Check className="h-3.5 w-3.5 text-[#7dd3fc]" /> : <Copy className="h-3.5 w-3.5 text-white/60" />}
           </button>
 
-          <div className="mt-2 flex items-center gap-1.5">
+          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+            {badges.n_level > 0 && (
+              <span className="flex h-6 items-center gap-1 rounded-md px-2 text-[10px] font-black text-white" style={{ background: N_BADGE_STYLE.background, border: `1px solid ${N_BADGE_STYLE.border}` }}>
+                <Shield className="h-3 w-3" strokeWidth={2.6} /> N{badges.n_level}
+              </span>
+            )}
+            {badges.gift_sent_level > 0 && (
+              <span className="flex h-6 items-center gap-1 rounded-md px-2 text-[10px] font-black text-white" style={{ background: sentColor(badges.gift_sent_tier), textShadow: '0 1px 2px rgba(0,0,0,0.45)' }}>
+                <Star className="h-3 w-3" fill="currentColor" /> Atış {badges.gift_sent_level}
+              </span>
+            )}
+            {badges.gift_received_level > 0 && (
+              <span className="flex h-6 items-center gap-1 rounded-md px-2 text-[10px] font-black text-white" style={{ background: receivedColor(badges.gift_received_tier), textShadow: '0 1px 2px rgba(0,0,0,0.45)' }}>
+                <Heart className="h-3 w-3" fill="currentColor" /> Alış {badges.gift_received_level}
+              </span>
+            )}
             {vipLevel > 0 && (
               <span
                 className="flex h-6 items-center gap-1 rounded-md px-2 text-[10px] font-black"
