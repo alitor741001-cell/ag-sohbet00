@@ -14,7 +14,7 @@ import useFriendPresence from '@/hooks/useFriendPresence';
 import { useToast } from '@/components/ui/use-toast';
 import { isModerator } from '@/lib/roles';
 import PullToRefresh from '@/components/home/PullToRefresh';
-import NeonPageHeader from '@/components/layout/NeonPageHeader';
+import MessagesBanner from '@/components/friends/MessagesBanner';
 import useTabActivity from '@/components/layout/TabActivityContext';
 
 export default function Friends() {
@@ -192,22 +192,7 @@ export default function Friends() {
     >
       {/* Aşağı çekerek tazeleme: arkadaşlar, istekler ve sohbetler yeniden okunur. */}
       <PullToRefresh onRefresh={() => { reloadFriends(); reloadConversations(); }}>
-      <NeonPageHeader
-        title="SOHBET"
-        subtitle="Özel mesajlar ve arkadaşların"
-        right={<FriendRequestsButton relations={relations} userId={user.id} invoke={invoke} />}
-      />
-      <header className="px-4 pb-3">
-        <div className="flex items-center gap-2">
-          <div className="flex flex-1 items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-bold text-white" style={{ background: 'linear-gradient(135deg, #b91c1c, #dc2626 52%, #f2ce6b)' }}>
-            <MessageCircle className="w-4 h-4" /> Mesajlar
-            {totalUnread > 0 && <span className="min-w-5 h-5 px-1 rounded-full bg-[#f2ce6b] text-black text-[10px] flex items-center justify-center">{totalUnread}</span>}
-          </div>
-          {/* Sistem bildirim butonu: tüm bildirimler buraya düşer, dokununca tam ekran açılır.
-              Yönetici hesabında gösterilmez — bildirimler yönetim panelinden takip edilir. */}
-          {!isModerator(user) && <NotificationBell />}
-        </div>
-      </header>
+      <MessagesBanner relations={relations} userId={user.id} invoke={invoke} showBell={!isModerator(user)} />
 
       <>
           {!isModerator(user) && (
