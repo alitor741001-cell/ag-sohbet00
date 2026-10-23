@@ -83,7 +83,7 @@ export default function VoiceStage({ scrollRef, handlers, room, hiddenAnnounce, 
         </div>
       </div>
       <VoiceBoardTimer active={grid.boardActive} startedAt={grid.boardStartedAt} />
-      <div className="pointer-events-none relative z-40 h-0 shrink-0" style={{ top: 'calc(-1 * var(--voice-board-lift, 0px))' }}>
+      <div className="pointer-events-none relative z-20 h-0 shrink-0" style={{ top: 'calc(-1 * var(--voice-board-lift, 0px))' }}>
         <VipRoomEntrance roomId={room?.id} inline />
       </div>
     </>

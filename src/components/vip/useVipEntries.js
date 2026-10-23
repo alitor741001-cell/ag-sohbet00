@@ -4,7 +4,7 @@ import subscribeEntity from '@/components/data/entitySubscriptions';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 export default function useVipEntries(roomId) {
   const { user } = useCurrentUser();
-  const [queue, setQueue] = useState([]); const [preferences, setPreferences] = useState(null); const mountedAt = useRef(Date.now());
+  const [queue, setQueue] = useState([]); const [preferences, setPreferences] = useState({}); const mountedAt = useRef(Date.now());
   useEffect(() => {
     if (!roomId || !user?.id) return;
     let alive = true; mountedAt.current = Date.now(); setQueue([]); setPreferences(null);
