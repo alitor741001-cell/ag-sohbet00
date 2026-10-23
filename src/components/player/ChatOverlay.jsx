@@ -1,9 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import useRoomTyping from '@/components/data/useRoomTyping';
 import subscribeEntity from '@/components/data/entitySubscriptions';
-import { Crown, Eye, Image as ImageIcon, LayoutGrid, MessageSquare, MessageSquareOff, MessagesSquare, Send, Shield, Smile, Sparkles, Trash2, Users, X } from 'lucide-react';
+import { Crown, Eye, Image as ImageIcon, LayoutGrid, MessageSquare, MessageSquareOff, MessagesSquare, Mic, MicOff, Send, Shield, Smile, Sparkles, Trash2, Users, Volume2, VolumeX, X } from 'lucide-react';
 import { neonCircleClass } from '@/lib/neonStyle';
-import VoiceControls from '@/components/player/VoiceControls';
 import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
@@ -196,8 +195,8 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
 
 
   return (
-    <div className="room-chat-shell flex h-full min-h-0 flex-col bg-black text-white">
-      <div className="flex items-center justify-between gap-1.5 border-b border-[#FFD700]/30 px-3 py-2.5">
+    <div className="room-chat-shell relative flex h-full min-h-0 flex-col bg-black text-white">
+      <div className="flex items-center justify-between gap-1.5 border-b border-[#FFD700]/30 px-2.5 py-2">
         <div className="flex min-w-0 items-center gap-2">
           <span className={`relative h-9 w-9 shrink-0 ${neonCircleClass('gold')} text-[#FFD700]`}>
             <MessageSquare className="h-5 w-5" />
@@ -209,25 +208,35 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
-          {/* Sohbet mesajları kendiliğinden silinmez: temizleme yalnızca bu düğmeyle, elle yapılır. */}
-          {isOwner && chatEnabled && (
-            <button onClick={clearAll} className="flex items-center gap-1 whitespace-nowrap rounded-full border border-[#FF6B6B]/60 px-2.5 py-1 text-[11px] font-semibold text-[#FF9A9A] shadow-[0_0_12px_-5px_rgba(255,107,107,0.9)]"><Trash2 className="h-3 w-3" /> Temizle</button>
+          {voiceEnabled && (
+            <>
+              <button onClick={() => (voice.voiceEnabled === false && onMicPress ? onMicPress() : voice.toggleMute())} disabled={voice.remoteMuted || voice.requesting || (voice.voiceEnabled !== false && voice.connectionState !== 'connected')} aria-label="Mikrofon" className={`flex h-9 w-9 items-center justify-center rounded-full border bg-black/70 active:scale-95 ${voice.localSpeaking && voice.active && !voice.remoteMuted ? 'speaking-glow border-[#FF0033]' : 'border-[#FF0033]/55'}`}>
+                {voice.active ? <Mic className="h-4 w-4 text-[#FF8AA0]" /> : <MicOff className="h-4 w-4 text-[#FF8AA0]" />}
+              </button>
+              <button onClick={voice.toggleDeafen} aria-label="Hoparlör" className={`flex h-9 w-9 items-center justify-center rounded-full border bg-black/70 active:scale-95 ${voice.deafened ? 'border-[#007BFF]' : 'border-[#007BFF]/55'}`}>
+                {voice.deafened ? <VolumeX className="h-4 w-4 text-[#7FBEFF]" /> : <Volume2 className="h-4 w-4 text-[#7FBEFF]" />}
+              </button>
+            </>
           )}
-          <button onClick={onClose} aria-label="Sohbeti kapat" className="flex h-11 w-11 items-center justify-center rounded-full border border-white/25 bg-black/60 text-white active:scale-95"><X className="w-5 h-5" /></button>
-        </div>
-      </div>
-      {(voiceEnabled || onSettings || onDirect) && (
-        <div className="room-voice-bar flex items-center gap-1.5 border-b border-[#FFD700]/20 px-3 py-1.5">
-          <VoiceControls voice={voice} onMic={onMicPress} />
           {onDirect && (
-            <button onClick={onDirect} className="relative flex min-w-0 flex-1 items-center justify-center gap-1 rounded-full border border-[#8A2BE2]/55 bg-black/70 px-2 py-1 text-center shadow-[0_0_18px_-8px_rgba(138,43,226,0.9)] transition-transform active:scale-95">
-              <MessagesSquare className="h-3.5 w-3.5 shrink-0 text-[#B06BFF]" />
-              <span className="min-w-0 truncate text-[9px] font-black text-white">MESAJ YAZ</span>
+            <button onClick={onDirect} aria-label="Özel mesajlar" className="relative flex h-9 w-9 items-center justify-center rounded-full border border-[#8A2BE2]/55 bg-black/70 text-[#B06BFF] shadow-[0_0_18px_-8px_rgba(138,43,226,0.9)] transition-transform active:scale-95">
+              <MessagesSquare className="h-4 w-4" />
               {directUnread > 0 && <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#FFD700] px-1 text-[9px] font-bold text-black">{directUnread > 99 ? '99+' : directUnread}</span>}
             </button>
           )}
+          {isOwner && chatEnabled && (
+            <button onClick={clearAll} aria-label="Sohbeti temizle" className="flex h-9 w-9 items-center justify-center rounded-full border border-[#FF6B6B]/60 bg-black/70 text-[#FF9A9A] shadow-[0_0_12px_-5px_rgba(255,107,107,0.9)] active:scale-95"><Trash2 className="h-4 w-4" /></button>
+          )}
+          <button onClick={onClose} aria-label="Sohbeti kapat" className="flex h-9 w-9 items-center justify-center rounded-full border border-white/25 bg-black/60 text-white active:scale-95"><X className="w-5 h-5" /></button>
         </div>
-      )}
+      </div>
+      {/* Paneli kapatmak için sol kenarda üçgen kol. */}
+      <button type="button" aria-label="Sohbeti kapat" onClick={onClose} className="absolute left-0 top-1/2 z-[5] -translate-y-1/2">
+        <svg width="22" height="40" viewBox="0 0 22 40" className="drop-shadow-lg">
+          <path d="M0 0 L0 40 L22 20 Z" fill="rgba(0,0,0,0.55)" />
+          <path d="M8 20 L14 14 M8 20 L14 26" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
       {(chatEnabled || isOwner) && (
         <div className="room-chat-tabs mx-3 my-2 flex items-stretch overflow-x-auto rounded-2xl border border-[#FFD700]/40 bg-black py-1 no-scrollbar shadow-[0_0_16px_-6px_rgba(255,215,0,0.85)]" onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
           {FILTERS.map((f, index) => {
