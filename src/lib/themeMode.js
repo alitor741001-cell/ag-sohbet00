@@ -53,7 +53,8 @@ function applyThemeColor() {
   if (typeof document === 'undefined') return;
   const meta = document.querySelector('meta[name="theme-color"]');
   if (!meta) return;
-  const hex = channelsToHex(getComputedStyle(document.documentElement).getPropertyValue('--background'));
+  const styles = getComputedStyle(document.documentElement);
+  const hex = styles.getPropertyValue('--app-shell-color').trim() || channelsToHex(styles.getPropertyValue('--background'));
   if (hex) meta.setAttribute('content', hex);
 }
 

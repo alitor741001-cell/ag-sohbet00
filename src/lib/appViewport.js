@@ -15,6 +15,9 @@ function applyHeight() {
 }
 
 export default function initAppViewport() {
+  // Modern tarayıcıda ilk çizim ve sonraki çizimler aynı CSS ölçüsünü kullanır.
+  // JS piksel ölçümü yalnız eski cihazlarda gereklidir.
+  if (window.CSS?.supports('height', '100dvh')) return;
   applyHeight();
   window.addEventListener('resize', applyHeight, { passive: true });
   window.addEventListener('orientationchange', () => setTimeout(applyHeight, 150));

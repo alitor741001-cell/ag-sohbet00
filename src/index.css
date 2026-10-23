@@ -827,9 +827,7 @@
    piksel olarak yazılır; dvh/svh birimini desteklemeyen eski iOS ve Android
    sürümlerinde de uygulama cihazın kendi ekran boyutunu kaplar. */
 :root { --app-height: 100vh; }
-@supports (height: 100svh) {
-  :root { --app-height: 100svh; }
-}
+
 
 /* Tüm cihazlar için ortak responsive güvenlik katmanı */
 html, body, #root {
@@ -853,7 +851,7 @@ html, body, #root {
 /* Sesli odadayken gövdenin kendi zemini de temayla boyanır: çerçevenin altında kalan
    her pikselde (sistem çubuğu, klavye sonrası alan, kısa kalan görünüm) tema görünür. */
 html, body {
-  background-color: #0a1c3c;
+  background-color: var(--app-shell-color, #05060b);
   background-image: var(--room-theme-image, none), var(--room-theme-tint, url(https://media.base44.com/images/public/6a77d66e4da6de214628ee62/a5c5853e0_IMG_0141.jpg));
   background-size: cover, cover;
   background-position: center, center;
