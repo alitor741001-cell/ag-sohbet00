@@ -14,7 +14,7 @@ export default function EntranceBanner({ person, onDone }) {
   const tier = tierOf(person.level || 0);
   const Icon = tier === 'elite' ? Crown : tier === 'vip' ? Gem : User;
   return (
-    <div className="pointer-events-none absolute inset-x-0 top-0 z-[260] h-14 overflow-hidden" aria-live="polite">
+    <div className="pointer-events-none absolute inset-x-0 top-[max(env(safe-area-inset-top),0px)] z-[260] h-14 overflow-hidden" aria-live="polite">
       <div className={`entry-banner entry-${tier}`} onAnimationEnd={onDone}>
         <div className="entry-badge">
           {person.avatar
