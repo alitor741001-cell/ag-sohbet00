@@ -13,6 +13,7 @@ export default function VoiceViewerSheet({ open, onClose, participants = [], sea
 
   if (!open) return null;
 
+  const owners = [];
   const staff = [];
   const hidden = [];
   const viewers = [];
@@ -22,13 +23,12 @@ export default function VoiceViewerSheet({ open, onClose, participants = [], sea
     const isMod = !isOwner && moderators.includes(person.user_id);
     const isAdmin = profiles[person.user_id]?.role === 'admin';
     const entry = { person, isOwner, isMod, isAdmin };
-    if (concealed) hidden.push(entry);
-    else if (isOwner || isMod || isAdmin) staff.push(entry);
+    // Oda sahibi kendi bölümünde, listenin en üstünde durur — yöneticiler bölümüne girmez.
+    if (isOwner) owners.push(entry);
+    else if (concealed) hidden.push(entry);
+    else if (isMod || isAdmin) staff.push(entry);
     else viewers.push(entry);
   });
-
-  // Oda sahibi her zaman listenin en üstünde durur.
-  staff.sort((a, b) => Number(b.isOwner) - Number(a.isOwner));
 
   const pick = (id) => { onClose(); onSelect?.(id); };
 
@@ -47,6 +47,7 @@ export default function VoiceViewerSheet({ open, onClose, participants = [], sea
             ? <p className="py-3 text-center text-xs text-[#C6A45F]">Şu an odada kimse yok.</p>
             : (
               <div className="space-y-2">
+                <VoiceViewerSection title="Oda Sahibi" entries={owners} seats={seats} userId={userId} onSelect={pick} />
                 <VoiceViewerSection title="Yöneticiler" entries={staff} seats={seats} userId={userId} onSelect={pick} />
                 <VoiceViewerSection title="Gizli Kullanıcı" entries={hidden} seats={seats} userId={userId} onSelect={pick} />
                 <VoiceViewerSection title="İzleyiciler" entries={viewers} seats={seats} userId={userId} onSelect={pick} />

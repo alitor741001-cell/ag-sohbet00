@@ -9,6 +9,7 @@ import { HIDDEN_AVATAR_URL, hiddenDisplayName, isHiddenUser } from '../../shared
 import { scoresAfterRoomLeave } from '../../shared/numberBoard.ts';
 import { maskRoomIdentities } from '../../shared/hiddenUserRoom.ts';
 import { appendRoomLog } from '../../shared/roomLog.ts';
+import { upsertRoomNotice } from '../../shared/roomNotice.ts';
 import { sendDirect } from '../../shared/agency.ts';
 import { writeVisibleRoom } from '../../shared/vipPrivileges.ts';
 
@@ -511,10 +512,12 @@ export default async function(req) {
       await base44.asServiceRole.entities.Room.update(room_id, { room_moderators: mods });
       const targetUser = await base44.asServiceRole.entities.User.get(target_id).catch(() => null);
       const targetName = targetUser?.username || targetUser?.full_name || 'Kullanıcı';
-      await base44.asServiceRole.entities.RoomMessage.create({
-        room_id, user_id: target_id, user_name: targetName,
-        text: action === 'assign-mod' ? `${targetName} oda moderatörü yapıldı.` : `${targetName}'in oda moderatörliği kaldırıldı.`, type: 'system'
-      }).catch(() => {});
+      // Yetki bildirimi kişi başına tek satırdır: verme/kaldırma aynı satırı yeniler.
+      await upsertRoomNotice(base44, room_id, {
+        key: `mod:${target_id}`,
+        user_id: target_id, user_name: targetName,
+        text: action === 'assign-mod' ? `${targetName} oda moderatörü yapıldı.` : `${targetName}'in oda moderatörliği kaldırıldı.`,
+      });
       if (action === 'assign-mod') {
         await upsertNotification(base44, {
           user_id: target_id, title: 'Oda moderatörü oldunuz',

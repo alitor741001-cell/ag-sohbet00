@@ -649,15 +649,16 @@ export default function WatchParty() {
   // İzleyici listesi bölümlere ayrılır: yöneticiler, gizli kullanıcılar ve normal izleyiciler ayrı gruplanır.
   const viewerList = (() => {
     const mods = room.room_moderators || [];
-    const staff = []; const hidden = []; const others = [];
+    const owners = []; const staff = []; const hidden = []; const others = [];
     visibleParticipants.forEach((participant) => {
-      if (isHiddenName(participant.name)) hidden.push(participant);
-      else if (participant.user_id === room.owner_id || mods.includes(participant.user_id) || viewerProfiles[participant.user_id]?.role === 'admin') staff.push(participant);
+      // Oda sahibi kendi bölümünde, en üstte durur — yöneticiler bölümüne girmez.
+      if (participant.user_id === room.owner_id) owners.push(participant);
+      else if (isHiddenName(participant.name)) hidden.push(participant);
+      else if (mods.includes(participant.user_id) || viewerProfiles[participant.user_id]?.role === 'admin') staff.push(participant);
       else others.push(participant);
     });
-    // Oda sahibi her zaman listenin en üstünde durur.
-    staff.sort((a, b) => Number(b.user_id === room.owner_id) - Number(a.user_id === room.owner_id));
     return [
+      ...owners.map((participant) => ({ participant, group: 'Oda Sahibi' })),
       ...staff.map((participant) => ({ participant, group: 'Yöneticiler' })),
       ...hidden.map((participant) => ({ participant, group: 'Gizli Kullanıcı' })),
       ...others.map((participant) => ({ participant, group: 'İzleyiciler' })),
