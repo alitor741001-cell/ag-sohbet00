@@ -1,15 +1,12 @@
 import { effectiveVipLevel, isHiddenUser } from './vip.ts';
 import { getCosmeticSelection, saveCosmeticSelection } from './cosmeticSelection.ts';
-import { giftLock } from './supabaseMirror.ts';
 export async function publishRoomEntrance(base44, room, user, visitId) {
   const level = effectiveVipLevel(user);
   if (isHiddenUser(user)) return;
   const vip = level >= 5;
   const visit = /^[0-9a-f-]{36}$/i.test(visitId || '') ? visitId : (room.participants || []).find(p => p.user_id === user.id)?.joined_at;
   if (!visit) return;
-  const token = crypto.randomUUID();
-  if (!await giftLock(base44, [`entrance:${room.id}:${user.id}`, `cosmetics:${user.id}`], token)) return;
-  try {
+  {
     const sr = base44.asServiceRole.entities;
     const old = await sr.RoomEntranceEvent.filter({ room_id: room.id, user_id: user.id, visit_id: visit }, '-created_date', 1);
     if (old[0]) return;
@@ -38,5 +35,5 @@ export async function publishRoomEntrance(base44, room, user, visitId) {
     if (!effect) return;
     await sr.RoomEntranceEvent.create({ room_id: room.id, user_id: user.id, visit_id: visit, audience_ids, name, avatar: user.avatar || '', level, effect_id: effect.id, effect_name: effect.name, image_url: effect.image_url, crop: effect.crop || {}, video_url: effect.video_url || '' });
     await saveCosmeticSelection(base44, user.id, { last_entrance_id: effect.id });
-  } finally { await giftLock(base44, [], token, true); }
+  }
 }
