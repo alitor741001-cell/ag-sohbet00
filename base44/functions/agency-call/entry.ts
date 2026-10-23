@@ -19,6 +19,8 @@ export default async function (req) {
     agency = (rows || []).find((row: any) => row.status === 'active' && activeAssistant(row, user.id)) || null;
     role = 'assistant';
   }
+  // Admin hesaplar ajansı olmasa da ajans sahibi hakkıyla çağrı atabilir.
+  if (!agency && user.role === 'admin') { agency = { id: 'admin', name: 'AG SOHBET' }; role = 'owner'; }
   if (!agency) return Response.json({ eligible: false });
 
   const day = todayKey();

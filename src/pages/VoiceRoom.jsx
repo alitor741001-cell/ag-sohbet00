@@ -1368,6 +1368,7 @@ export default function VoiceRoom() {
         onToggle={setGiftEffects}
         swipeEnabled={swipe.swipeEnabled}
         onToggleSwipe={swipe.toggleSwipe}
+        onAgencyCall={agencyCallStatus?.eligible ? () => setAgencyCallOpen(true) : null}
       />
 
       {notice && joined && (
