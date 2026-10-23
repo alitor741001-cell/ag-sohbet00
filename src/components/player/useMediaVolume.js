@@ -36,7 +36,10 @@ async function supportsMediaCors(video) {
  * Tüm platformlarda (iOS Safari, iOS PWA, Desktop) GainNode üzerinden gerçek ses seviyesi kontrol edilir.
  * Aynı video elementi için yalnızca bir kez createMediaElementSource çağrılır.
  */
-export default function useMediaVolume(mediaRef, mediaKey) {
+const DUCK_LEVEL = 0.35;
+
+export default function useMediaVolume(mediaRef, mediaKey, ducked = false) {
+  const duckRef = useRef(ducked);
   const [volume, setVolume] = useState(() => clamp(localStorage.getItem('filmkeyfi_player_volume') ?? 1));
   const [muted, setMuted] = useState(() => localStorage.getItem('filmkeyfi_player_muted') === 'true');
   const [audioError, setAudioError] = useState(null);
@@ -52,8 +55,12 @@ export default function useMediaVolume(mediaRef, mediaKey) {
   const applyGain = useCallback(() => {
     const gain = gainRef.current;
     if (!gain) return;
-    const target = mutedRef.current ? 0 : volumeRef.current;
-    gain.gain.value = target;
+    const target = mutedRef.current ? 0 : volumeRef.current * (duckRef.current ? DUCK_LEVEL : 1);
+    const ctx = contextRef.current;
+    if (ctx && gain.gain.setTargetAtTime) {
+      gain.gain.cancelScheduledValues(ctx.currentTime);
+      gain.gain.setTargetAtTime(target, ctx.currentTime, 0.15);
+    } else gain.gain.value = target;
   }, []);
 
   const applyVolume = useCallback(() => {
@@ -66,7 +73,7 @@ export default function useMediaVolume(mediaRef, mediaKey) {
       applyGain();
     } else {
       // Web Audio henüz hazır değil: native fallback (ilk etkileşim öncesi)
-      video.volume = mutedRef.current ? 0 : volumeRef.current;
+      video.volume = mutedRef.current ? 0 : volumeRef.current * (duckRef.current ? DUCK_LEVEL : 1);
       video.muted = mutedRef.current;
     }
   }, [mediaRef, applyGain]);
@@ -153,6 +160,12 @@ export default function useMediaVolume(mediaRef, mediaKey) {
       return ok;
     });
   }, [ensureAudioGraph]);
+
+  // Biri konuşurken film sesini otomatik kıs.
+  useEffect(() => {
+    duckRef.current = ducked;
+    applyVolume();
+  }, [ducked, applyVolume]);
 
   // State değişikliklerinde gain'i güncelle.
   useEffect(() => {

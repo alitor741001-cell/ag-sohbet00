@@ -4,11 +4,11 @@ import VolumeSlider from './VolumeSlider';
 import useMediaVolume from './useMediaVolume';
 const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
-export default function VideoPlayer({ src, title, onTimeUpdate, onPlayPause, onSeek, onEnded, onControlsChange, revealSignal, syncState, isOwner, isTimeSource, subtitles, fullscreenRef, watermark, controlsRaised = false, suppressControls = false }) {
+export default function VideoPlayer({ src, title, onTimeUpdate, onPlayPause, onSeek, onEnded, onControlsChange, revealSignal, syncState, isOwner, isTimeSource, subtitles, fullscreenRef, watermark, controlsRaised = false, suppressControls = false, ducked = false }) {
   const videoRef = useRef(null);
   const containerRef = useRef(null);
   const [playing, setPlaying] = useState(false);
-  const { volume, muted, audioError, setVolumePercent, toggleMute, resumeAudio, applyCurrentVolume } = useMediaVolume(videoRef, src);
+  const { volume, muted, audioError, setVolumePercent, toggleMute, resumeAudio, applyCurrentVolume } = useMediaVolume(videoRef, src, ducked);
   const [current, setCurrent] = useState(0);
   const [duration, setDuration] = useState(0);
   const [fullscreen, setFullscreen] = useState(false);
