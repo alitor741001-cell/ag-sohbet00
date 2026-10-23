@@ -1,0 +1,52 @@
+.entry-banner {
+  position: absolute; top: 50%; left: 50%;
+  display: flex; align-items: center; gap: 0.5rem;
+  width: min(78vw, 300px); height: 2.5rem; padding: 0 0.75rem 0 2.6rem;
+  border-radius: 0.75rem; overflow: visible; white-space: nowrap;
+  animation: entry-slide 4.8s cubic-bezier(0.22, 0.7, 0.3, 1) 1 forwards;
+}
+@keyframes entry-slide {
+  0% { transform: translate(-50%, -50%) translateX(100vw); opacity: 0; }
+  12% { opacity: 1; }
+  17% { transform: translate(-50%, -50%) translateX(0); }
+  80% { transform: translate(-50%, -50%) translateX(0); opacity: 1; }
+  100% { transform: translate(-50%, -50%) translateX(-100vw); opacity: 0; }
+}
+.entry-badge {
+  position: absolute; left: -0.6rem; top: 50%; transform: translateY(-50%);
+  display: flex; align-items: center; justify-content: center;
+  width: 3rem; height: 3rem; border-radius: 9999px; color: #fff;
+}
+.entry-level {
+  position: absolute; bottom: -0.3rem; left: 50%; transform: translateX(-50%);
+  padding: 0 0.3rem; border-radius: 0.4rem; font-size: 0.55rem; font-weight: 900; color: #fff;
+}
+.entry-text { position: relative; z-index: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; font-size: 0.8rem; font-weight: 700; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.7); }
+.entry-name { font-weight: 900; }
+.entry-shine {
+  position: absolute; inset: 0; border-radius: inherit; overflow: hidden; pointer-events: none;
+  background: linear-gradient(110deg, transparent 30%, rgba(255,255,255,.35) 50%, transparent 70%);
+  background-size: 250% 100%; animation: entry-shine 1.6s linear infinite;
+}
+@keyframes entry-shine { from { background-position: 150% 0; } to { background-position: -100% 0; } }
+
+/* VIP olmayan: sade cam şerit */
+.entry-basic { background: linear-gradient(90deg, rgba(60,70,90,.85), rgba(60,70,90,.25)); border: 1px solid rgba(255,255,255,.25); }
+.entry-basic .entry-badge { width: 2.4rem; height: 2.4rem; left: 0; background: #475569; border: 2px solid rgba(255,255,255,.6); }
+.entry-basic .entry-name { color: #cbd5e1; }
+.entry-basic .entry-shine { display: none; }
+
+/* VIP 5-9: buz mavisi neon */
+.entry-vip { background: linear-gradient(90deg, rgba(14,90,170,.9), rgba(56,189,248,.25)); border: 1px solid #7dd3fc; box-shadow: 0 0 14px rgba(56,189,248,.6), inset 0 0 10px rgba(125,211,252,.35); }
+.entry-vip .entry-badge { background: radial-gradient(circle, #0ea5e9, #0c4a6e); border: 3px solid #bae6fd; box-shadow: 0 0 14px #38bdf8; }
+.entry-vip .entry-level { background: #0284c7; border: 1px solid #bae6fd; }
+.entry-vip .entry-name { color: #fde047; }
+
+/* VIP 10-12: altın + kırmızı, güçlü parıltı */
+.entry-elite { background: linear-gradient(90deg, rgba(153,27,27,.95), rgba(234,179,8,.35)); border: 1.5px solid #facc15; box-shadow: 0 0 20px rgba(250,204,21,.75), inset 0 0 12px rgba(250,204,21,.4); }
+.entry-elite .entry-badge { width: 3.4rem; height: 3.4rem; background: radial-gradient(circle, #fbbf24, #92400e); border: 3px solid #fde68a; box-shadow: 0 0 22px #facc15, 0 0 6px #fff; animation: entry-pulse 1s ease-in-out infinite alternate; }
+.entry-elite .entry-level { background: linear-gradient(90deg, #dc2626, #f59e0b); border: 1px solid #fde68a; }
+.entry-elite .entry-name { color: #fde68a; }
+@keyframes entry-pulse { to { box-shadow: 0 0 32px #facc15, 0 0 10px #fff; } }
+
+@media (prefers-reduced-motion: reduce) { .entry-shine, .entry-elite .entry-badge { animation: none; } }
