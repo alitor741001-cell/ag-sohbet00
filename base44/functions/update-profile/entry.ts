@@ -41,6 +41,13 @@ export default async function(req) {
         if (a) updates.avatar = a;
       }
     }
+    if (body?.avatar_video !== undefined) {
+      if (body.avatar_video === '') updates.avatar_video = '';
+      else {
+        const v = validateUrl(body.avatar_video);
+        if (v) updates.avatar_video = v;
+      }
+    }
     if (birth_date !== undefined) {
       if (birth_date === '') {
         updates.birth_date = '';
