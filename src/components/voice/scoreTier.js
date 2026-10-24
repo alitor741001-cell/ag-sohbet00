@@ -19,7 +19,13 @@ const truncate = (scaled, digits) => (Math.floor(scaled * 10 ** digits) / 10 ** 
  */
 export const formatScore = (value) => {
   const n = Math.max(0, Math.round(Number(value) || 0));
-  if (n >= 1000000) return `${truncate(n / 1000000, 3)}M`;
+  if (n >= 1000000) {
+    // 1M üstü her zaman 3 rakam: 1.23M, 12.3M, 123M
+    const m = n / 1000000;
+    const decimals = m >= 100 ? 0 : m >= 10 ? 1 : 2;
+    const f = 10 ** decimals;
+    return `${(Math.floor(m * f) / f).toFixed(decimals)}M`;
+  }
   if (n >= 100000) return `${truncate(n / 1000, 2)}k`;
   if (n >= 1000) return `${truncate(n / 1000, 3)}k`;
   return String(n);
