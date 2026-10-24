@@ -1,0 +1,17 @@
+.neon-panel { position: relative; background: linear-gradient(180deg, #0d1230 0%, #070a1c 100%); border: 1.5px solid #3b6cff; clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px), 0 10px); box-shadow: inset 0 0 10px rgba(59,108,255,.55), inset 0 0 2px #b45cff; }
+.neon-panel::before { content: ''; position: absolute; inset: 2px; pointer-events: none; clip-path: inherit; border: 1px solid rgba(180,92,255,.55); }
+.neon-glow { filter: drop-shadow(0 0 5px rgba(59,108,255,.75)) drop-shadow(0 0 2px rgba(180,92,255,.8)); }
+.neon-key { display: flex; align-items: center; justify-content: center; border-radius: 9px; background: linear-gradient(180deg, #121a44, #080c22); border: 1.5px solid #3b8bff; box-shadow: inset 0 0 8px rgba(59,139,255,.6), 0 0 6px rgba(59,139,255,.6); color: #e6f0ff; transition: transform .15s; }
+.neon-key:active { transform: scale(.92); }
+.neon-key-exit { border-color: #ff3d8b; box-shadow: inset 0 0 8px rgba(255,61,139,.6), 0 0 6px rgba(255,61,139,.7); color: #ff5aa0; }
+.neon-avatar { border-radius: 50%; border: 2px solid #b45cff; box-shadow: 0 0 8px #b45cff, 0 0 3px #3b8bff inset; }
+.neon-tab { display: flex; flex: 1 1 0; min-width: 0; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 6px 0 4px; border-right: 1px solid rgba(59,139,255,.35); color: #fff; font-size: 10px; font-weight: 600; transition: transform .15s; }
+.neon-tab:last-child { border-right: 0; }
+.neon-tab:active { transform: scale(.92); }
+.neon-tab svg { width: 22px; height: 22px; stroke-width: 1.7; filter: drop-shadow(0 0 4px currentColor); }
+.neon-tab[data-off="true"] svg { opacity: .45; }
+.neon-gift { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 64px; height: 64px; margin-top: -22px; flex-shrink: 0; border-radius: 50%; background: radial-gradient(circle, #2a1606 0%, #0b0716 75%); border: 2.5px solid #ff9a1f; box-shadow: 0 0 14px #ff8a00, 0 0 0 3px #1d2c7a, 0 0 18px 4px rgba(59,108,255,.7); color: #ffb648; font-size: 10px; font-weight: 700; transition: transform .15s; }
+.neon-gift:active { transform: scale(.92); }
+.neon-gift svg { width: 24px; height: 24px; filter: drop-shadow(0 0 5px #ff9a1f); }
+.neon-gift-wrap { position: relative; display: flex; justify-content: center; padding: 0 2px; }
+.neon-gift-wrap::before { content: ''; position: absolute; top: -34px; width: 34px; height: 16px; background: linear-gradient(180deg, #8fd0ff, #2d5bff); clip-path: polygon(0 100%, 15% 20%, 33% 70%, 50% 0, 67% 70%, 85% 20%, 100% 100%); filter: drop-shadow(0 0 5px #3b8bff); }

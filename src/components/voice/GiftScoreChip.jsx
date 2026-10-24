@@ -1,5 +1,6 @@
-import { Gift } from 'lucide-react';
-import { formatScore, scoreTier } from '@/components/voice/scoreTier';
+import { Gem, Gift } from 'lucide-react';
+import { formatScore } from '@/components/voice/scoreTier';
+import '@/components/voice/voiceNeonBars.css';
 
 /**
  * Oda hediye kutusu: odada biriken hediye değeri profilin altında durur,
@@ -11,16 +12,12 @@ export default function GiftScoreChip({ score = 0, onClick }) {
     <button
       type="button"
       onClick={onClick}
-      className="voice-gift-score mt-1.5 flex items-center gap-1.5 transition-transform active:scale-95"
-      data-score-tier={scoreTier(value)}
+      className="neon-panel neon-glow mt-1.5 flex items-center gap-2 py-1 pl-2 pr-3 transition-transform active:scale-95"
       aria-label={`Hediye kutusu: ${formatScore(value)} — sıralamayı gör`}
     >
-      <Gift className="h-4 w-4 text-primary" />
-      <span className="voice-score-ribbon flex h-[19px] min-w-[34px] items-center justify-center px-2">
-        <span className="number-pop whitespace-nowrap text-[11px] font-bold tabular-nums">
-          {formatScore(value)}
-        </span>
-      </span>
+      <Gift className="h-5 w-5 text-fuchsia-400 drop-shadow-[0_0_4px_#e879f9]" />
+      <Gem className="h-5 w-5 text-cyan-300 drop-shadow-[0_0_4px_#67e8f9]" />
+      <span className="number-pop whitespace-nowrap text-sm font-bold tabular-nums text-white">{formatScore(value)}</span>
     </button>
   );
 }
