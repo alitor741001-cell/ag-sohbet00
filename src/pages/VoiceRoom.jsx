@@ -18,14 +18,9 @@ import VoiceControlBar from '@/components/voice/VoiceControlBar';
 import VoiceChatDock from '@/components/voice/VoiceChatDock';
 import VoiceViewerSheet from '@/components/voice/VoiceViewerSheet';
 import VoiceSeatInvitePrompt from '@/components/voice/VoiceSeatInvitePrompt';
-import RefRoomHeader from '@/components/voice/RefRoomHeader';
+import RoomInfoCard from '@/components/voice/RoomInfoCard';
 import RoomProfileSheet from '@/components/voice/RoomProfileSheet';
 import VoiceRoomMenu from '@/components/voice/VoiceRoomMenu';
-import VoiceRefScene from '@/components/voice/VoiceRefScene';
-import { backgroundOf } from '@/lib/roomBackgrounds';
-import VoiceRefHeader from '@/components/voice/VoiceRefHeader';
-import VoiceRefSeats from '@/components/voice/VoiceRefSeats';
-import VoiceRefBar from '@/components/voice/VoiceRefBar';
 import VoiceSeatSheet from '@/components/voice/VoiceSeatSheet';
 import InviteSheet from '@/components/voice/InviteSheet';
 import MicPermissionGuide from '@/components/voice/MicPermissionGuide';
@@ -1093,36 +1088,120 @@ export default function VoiceRoom() {
       style={dmHalfOpen ? { paddingBottom: 'var(--voice-dm-height)' } : undefined}
       onKeyboardChange={handleKeyboardChange}
     >
-      <VoiceRefScene themeImage={backgroundOf(room?.background)?.image}>
-        <VoiceRefHeader
-          room={room}
-          viewerCount={participants.length}
-          score={giftBoard?.all?.total || 0}
-          onProfile={() => setProfilePanelOpen(true)}
-          onViewers={() => setViewerOpen(true)}
-          onMenu={() => setMenuOpen(true)}
-          onExit={() => setExitOpen(true)}
-          onGift={() => { setGiftBoardOpen(true); loadGiftBoard(); }}
-          onScore={() => { setGiftBoardOpen(true); loadGiftBoard(); }}
-        />
-        <VoiceRefSeats seats={seatsView} speakingIds={voice.speakingIds} onSelectSeat={handleSeatPress} />
-        <VoiceRefBar
-          micActive={!voice.muted}
-          deafened={voice.deafened}
-          onChat={() => {
-            if (chatLocked) { toast({ title: 'Sohbet yasağı açık', description: 'Yazmak için bir koltuğa otur.' }); return; }
-            if (composerOpen) { setComposerOpen(false); return; }
-            setChatOpen(true);
-            setComposerOpen(true);
-          }}
-          onMic={handleMic}
-          onSpeaker={voice.toggleDeafen}
-          onGift={openGifts}
-          onPrivateChat={() => setDmOpen(true)}
-          onGames={() => setGamesOpen(true)}
-          onSettings={() => setSettingsOpen((value) => !value)}
-        />
-      </VoiceRefScene>
+      <RoomBackground value={room?.background} cover={room?.cover_url} />
+
+      <header className="relative shrink-0 px-4 pb-2 pt-[max(0.75rem,env(safe-area-inset-top))]">
+        <div className="flex min-w-0 flex-col items-start">
+          <RoomInfoCard
+            room={room}
+            onOpen={() => setProfilePanelOpen(true)}
+            viewerCount={participants.length}
+            onOpenViewers={() => setViewerOpen(true)}
+            canMod={canMod}
+            menuHighlighted={!!music.music?.is_playing}
+            onOpenMenu={() => setMenuOpen(true)}
+            onExit={() => setExitOpen(true)}
+          />
+          <GiftScoreChip
+            score={giftBoard?.all?.total || 0}
+            onClick={() => { setGiftBoardOpen(true); loadGiftBoard(); }}
+          />
+        </div>
+      </header>
+
+      <VoiceStage
+        scrollRef={swipeGesture.scrollRef}
+        handlers={swipeGesture.handlers}
+        room={room}
+        hiddenAnnounce={{ active: room?.ghost_entered_at, name: hiddenAnnounceName }}
+        grid={{
+          seats: seatsView,
+          musicOwnerId: music.music?.is_playing ? music.music.owner_id : null,
+          userId: user?.id,
+          ownerId: room?.owner_id,
+          moderators,
+          speakingIds: voice.speakingIds,
+          localSpeaking: voice.localSpeaking,
+          participantMicStates: voice.participantMicStates,
+          localMicMuted: voice.muted,
+          onSelectSeat: handleSeatPress,
+          boardActive,
+          boardStartedAt,
+          scores,
+          accent: seatAccent,
+          gifted,
+        }}
+      />
+
+      {agencyCall && agencyCall.sender_id !== user?.id && (
+        <AgencyCallBanner call={agencyCall} onClose={dismissAgencyCall} onJoin={() => { const target = agencyCall?.room_id; dismissAgencyCall(); if (target && target !== id) navigate(`/sesli-oda/${target}`); }} />
+      )}
+
+      <div className={`voice-chat-dock min-h-0 shrink-0 ${composerOpen ? 'is-composing' : ''}`}>
+      <VoiceChatDock
+        messages={messages}
+        chatLocked={chatLocked}
+        onSend={sendMessage}
+        open={chatOpen}
+        onCloseComposer={() => setComposerOpen(false)}
+        composerOpen={composerOpen}
+        keyboardOpen={keyboardOpen}
+        currentUserId={user?.id}
+        ownerId={room?.owner_id}
+        moderators={moderators}
+        hiddenUsers={hiddenUsersByName}
+        onOpenProfile={openRoomProfile}
+        mention={mentionTarget}
+        bigGiftNotice={bigGiftNotice}
+        onOpenBigGiftRoom={() => {
+          const target = bigGiftNotice?.room_id;
+          dismissBigGiftNotice();
+          if (target) navigate(`/sesli-oda/${target}`);
+        }}
+      />
+
+      {(voice.remoteMuted || voice.error) && (
+        <p className="px-3 pb-1 text-center text-[11px] text-amber-400">
+          {voice.remoteMuted ? 'Yönetici mikrofonunu kapattı.' : voice.error}
+        </p>
+      )}
+
+      <MicPermissionGuide
+        open={voice.micDenied && !micGuideDismissed}
+        onClose={() => setMicGuideDismissed(true)}
+        onRetry={voice.retryMic}
+      />
+
+      </div>
+      <div className="voice-controls-anchor shrink-0" hidden={composerOpen}>
+      {!composerOpen && (
+      <VoiceControlBar
+        keyboardOpen={keyboardOpen}
+        micActive={!voice.muted}
+        deafened={voice.deafened}
+        chatOpen={chatOpen}
+        onToggleMic={handleMic}
+        onToggleSpeaker={voice.toggleDeafen}
+        gamesOpen={gamesOpen}
+        gamesEnabled={gamesEnabled}
+        giftOpen={giftOpen}
+        settingsOpen={settingsOpen}
+        onOpenGames={() => setGamesOpen(true)}
+        onOpenGifts={openGifts}
+        onOpenSettings={() => setSettingsOpen((value) => !value)}
+        onOpenPrivateChat={() => setDmOpen(true)}
+        onToggleChat={() => {
+          if (chatLocked) {
+            toast({ title: 'Sohbet yasağı açık', description: 'Yazmak için bir koltuğa otur.' });
+            return;
+          }
+          if (composerOpen) { setComposerOpen(false); return; }
+          setChatOpen(true);
+          setComposerOpen(true);
+        }}
+      />
+      )}
+      </div>
 
       <VoiceRoomMenu
         open={menuOpen}
