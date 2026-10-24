@@ -56,10 +56,17 @@ export default function RoomDirectMessages({ onClose, initialUserId, onFullScree
     base44.functions.invoke('dm-service', { action: 'delete_conversation', conversation_id: conversation.id }).catch(() => {});
   };
 
+  // İstekler / sistem bildirimleri / ajans mesajları da odanın üstünde yarım panel olarak açılır,
+  // arkadaki koltuklar görünür kalır.
   const panelOverlay = Panel ? (
-    <div className="dark fixed inset-0 z-[290] flex flex-col overflow-y-auto bg-[#040b1c] pt-[env(safe-area-inset-top)] text-white">
+    <div className="dark fixed inset-0 z-[290] flex flex-col justify-end">
       <BackDismissLayer onClose={() => setRoomPanel('')} />
-      <Panel onBack={() => setRoomPanel('')} />
+      <button type="button" aria-label="Kapat" onClick={() => setRoomPanel('')} className="absolute inset-0" />
+      <div className="relative flex h-[var(--voice-dm-height)] w-full flex-col overflow-hidden rounded-t-2xl bg-[#040b1c] pt-[env(safe-area-inset-top)] text-white">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+          <Panel onBack={() => setRoomPanel('')} />
+        </div>
+      </div>
     </div>
   ) : null;
 
