@@ -8,10 +8,10 @@ import PullToRefresh from '@/components/home/PullToRefresh';
 import EmptyState from '@/components/movie/EmptyState';
 
 /** Arkadaşlık istekleri: özel sohbet üst görselindeki istek alanı bu tam ekran sayfayı açar. */
-export default function FriendRequests() {
+export default function FriendRequests({ onBack }) {
   const navigate = useNavigate();
   const { user, relations, invoke, reload } = useFriends();
-  const goBack = () => (window.history.state?.idx > 0 ? navigate(-1) : navigate('/arkadaslar?view=chats', { replace: true }));
+  const goBack = onBack || (() => (window.history.state?.idx > 0 ? navigate(-1) : navigate('/arkadaslar?view=chats', { replace: true })));
   useEffect(() => { markSeen('requests', user?.id); }, [user?.id, relations.length]);
   const incoming = relations.filter((relation) => relation.status === 'pending' && relation.recipient_id === user?.id);
 

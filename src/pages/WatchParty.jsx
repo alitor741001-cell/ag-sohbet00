@@ -749,7 +749,7 @@ export default function WatchParty() {
         )}
 
         {directOpen && (
-          <div className="room-side-panel room-direct-panel absolute inset-0 z-[70] w-full sm:left-auto sm:max-w-sm"
+          <div className="absolute inset-0 z-[70] w-full"
             onTouchStart={(e) => { touchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }; }}
             onTouchEnd={(e) => { if (!touchStart.current) return; const dx = e.changedTouches[0].clientX - touchStart.current.x; const dy = e.changedTouches[0].clientY - touchStart.current.y; if (dx > 80 && dx > Math.abs(dy) * 1.5) setDirectOpen(false); }}
           >

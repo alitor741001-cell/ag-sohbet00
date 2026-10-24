@@ -23,13 +23,13 @@ const formatWhen = (iso) => {
 };
 
 /** Bildirimler: sohbet ekranı gibi tam ekran açılır; tüm sistem bildirimleri burada listelenir. */
-export default function Notifications() {
+export default function Notifications({ onBack }) {
   const { user } = useCurrentUser();
   const navigate = useNavigate();
   const location = useLocation();
-  const goBack = () => location.state?.returnTo && window.history.state?.idx > 0
+  const goBack = onBack || (() => (location.state?.returnTo && window.history.state?.idx > 0
     ? navigate(-1)
-    : navigate('/arkadaslar?view=chats', { replace: true });
+    : navigate('/arkadaslar?view=chats', { replace: true })));
   const { toast } = useToast();
   const [items, setItems] = useState([]);
   const [inviteIds, setInviteIds] = useState([]);

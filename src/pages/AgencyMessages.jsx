@@ -7,13 +7,13 @@ import AgencyInvitesPanel from '@/components/agency/AgencyInvitesPanel';
 import InviteDetailSheet from '@/components/agency/InviteDetailSheet';
 
 /** Ajans mesajları: gelen/gönderilen ajans davetleri tek sayfada, kendi geri düğmesiyle açılır. */
-export default function AgencyMessages() {
+export default function AgencyMessages({ onBack }) {
   const navigate = useNavigate();
   const [inviteId, setInviteId] = useState('');
   const [refreshKey, setRefreshKey] = useState(0);
   const { user } = useCurrentUser();
   useEffect(() => { markSeen('agency', user?.id); }, [user?.id]);
-  const goBack = () => (window.history.state?.idx > 0 ? navigate(-1) : navigate('/arkadaslar?view=chats', { replace: true }));
+  const goBack = onBack || (() => (window.history.state?.idx > 0 ? navigate(-1) : navigate('/arkadaslar?view=chats', { replace: true })));
 
   return (
     <div className="dark mx-auto min-h-[calc(100vh-8rem)] w-full min-w-0 max-w-5xl text-white supports-[height:100dvh]:min-h-[calc(100dvh-8rem)]">

@@ -1,54 +1,20 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect } from 'react';
 import RoomDirectMessages from '@/components/player/RoomDirectMessages';
 import VoiceViewport from '@/components/voice/VoiceViewport';
 
 /**
- * Özel sohbet: ekranın dibinden yarıya kadar altın-kırmızı bir panel olarak açılır; oda
- * panelin üstünde kalan alana yerleştiği için koltuklar kesilmeden tam görünür.
- * Panelden bir mesaj açıldığında tam ekrana geçer; geri tuşuna basıldığında
- * yarım panele dönmeden özel sohbet alanı tümüyle kapanır.
+ * Özel sohbet sesli odada tam ekran açılır; cihazın geri tuşu odaya döner.
+ * Oda, panel tam ekran olduğu için altındaki yerleşimi daraltmaz.
  */
 export default function VoicePrivateChatSheet({ open, initialUserId, onClose, onExpandChange }) {
-  const [full, setFull] = useState(false);
-  const wasFullRef = useRef(false);
-
-
-  useEffect(() => {
-    if (!open) { setFull(false); wasFullRef.current = false; onExpandChange?.(false); }
-  }, [open, onExpandChange]);
-
-  // Tam ekrandan geri dönüş: yarım panele inmek yerine paneli kapatır.
-  const handleFullChange = (next) => {
-    // Oda, panelin yarım mı tam ekran mı olduğunu bilir: yarımken koltuklar görünür kalır.
-    onExpandChange?.(next);
-    if (wasFullRef.current && !next) {
-      wasFullRef.current = false;
-      setFull(false);
-      onClose();
-      return;
-    }
-    wasFullRef.current = next;
-    setFull(next);
-  };
+  useEffect(() => { onExpandChange?.(open); }, [open, onExpandChange]);
 
   if (!open) return null;
 
   return (
-    <VoiceViewport className="voice-private-chat z-[250] justify-end">
-      {!full && (
-        <button type="button" aria-label="Kapat" onClick={onClose} className="absolute inset-0 bg-black/70 backdrop-blur-[2px]" />
-      )}
-      <div
-        className={
-          full
-            ? 'relative flex h-full w-full flex-col overflow-hidden bg-[#150A0A]'
-            : 'animate-sheet-up relative flex h-[var(--voice-dm-height)] w-full flex-col overflow-hidden rounded-t-[26px] bg-gradient-to-b from-[#2C1512] to-[#150A0A] ring-1 ring-[#F2CE6B]/40'
-        }
-      >
-        {!full && <span className="mx-auto mt-2 h-1 w-10 shrink-0 self-center rounded-full bg-[#F2CE6B]/60" />}
-        <div className="flex min-h-0 flex-1 flex-col">
-          <RoomDirectMessages initialUserId={initialUserId} onClose={onClose} onFullScreenChange={handleFullChange} />
-        </div>
+    <VoiceViewport className="voice-private-chat z-[250]">
+      <div className="relative flex h-full w-full flex-col overflow-hidden bg-[#040b1c]">
+        <RoomDirectMessages initialUserId={initialUserId} onClose={onClose} />
       </div>
     </VoiceViewport>
   );
