@@ -5,7 +5,6 @@ import RoomDiscovery from '@/components/home/RoomDiscovery';
 
 import BottomNavStrip from '@/components/layout/BottomNavStrip';
 import NotchThemeStrip from '@/components/layout/NotchThemeStrip';
-const GAMES_DESIGN = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/cce749e92_IMG_0220.jpg';
 const LIVE_BG = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/f3cf6419a_IMG_0213.jpg';
 const DESIGN = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/f729cdeba_IMG_0210.jpg';
 
@@ -28,9 +27,8 @@ const EMPTY_ZONE = { label: 'İlk odayı sen aç', to: '/oda-kur', x: 22, y: 35.
 export default function Home() {
   const [hasContent, setHasContent] = useState(true);
   const [params] = useSearchParams();
-  // Oyunlar görünümü kendi tasarım görselini kullanır; üst sekme alanları burada yoktur.
+  // Oyunlar görünümü aynı ana sayfa temasını kullanır; üst sekme alanları burada yoktur.
   const games = params.get('oyunlar') === '1';
-  const design = games ? GAMES_DESIGN : DESIGN;
   // Oyunlar görünümü tam ekran oynanır: alt menü butonları ve dokunma alanları gizlenir.
   const base = games ? [] : ZONES;
   const zones = hasContent || games ? base : [...base, EMPTY_ZONE];
@@ -39,12 +37,12 @@ export default function Home() {
     <div className="fixed inset-0 overflow-hidden bg-black text-white">
       <NotchThemeStrip />
       {/* Güvenli alanın dışında kalan pikseller aynı tasarımın bulanık dolgusuyla kapanır. */}
-      <img src={design} alt="" aria-hidden="true" draggable={false} className="pointer-events-none absolute inset-0 h-full w-full scale-110 select-none object-fill opacity-60 blur-2xl" />
+      <img src={DESIGN} alt="" aria-hidden="true" draggable={false} className="pointer-events-none absolute inset-0 h-full w-full scale-110 select-none object-fill opacity-60 blur-2xl" />
       {/* Tasarım çentik ve güvenli alanın içinde kalır; tablette ortada telefon oranında durur. */}
       <div className="design-screen">
         <div className="design-stage">
           {/* Tasarım görseli oyunlar görünümünde de tam sayfa olarak arkada durur. */}
-          <img src={design} alt="" className="pointer-events-none absolute inset-0 h-full w-full select-none object-fill" draggable={false} />
+          <img src={DESIGN} alt="" className="pointer-events-none absolute inset-0 h-full w-full select-none object-fill" draggable={false} />
           {!games && hasContent && (
             <img src={LIVE_BG} alt="" className="pointer-events-none absolute inset-x-[3%] select-none rounded-2xl object-cover" style={{ top: '12%', bottom: '14%', height: '74%', width: '94%' }} draggable={false} />
           )}
