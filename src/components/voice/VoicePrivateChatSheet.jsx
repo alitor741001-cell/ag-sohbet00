@@ -1,16 +1,14 @@
 import { useEffect, useState } from 'react';
 import RoomDirectMessages from '@/components/player/RoomDirectMessages';
-import VoiceViewport from '@/components/voice/VoiceViewport';
 
 /**
- * Özel sohbet sesli odada 7. koltuk hizasına kadar açılan bir panel olarak gelir;
- * odanın koltukları panelin üstünde kalan alanda görünür kalır. Panelden bir mesaj
- * açıldığında tam ekrana geçer, geri dönünce yeniden 7. koltuk hizasına iner.
+ * Özel sohbet sesli odada oyun merkeziyle aynı şekilde açılır: ekranı kaplayan
+ * karartılı bir örtü ve alttan yükselen yarım panel. Arkadaki koltuklar görünür
+ * kalır, yerleşim yukarı kaymaz. Mesaj açılınca tam ekrana geçer.
  */
 export default function VoicePrivateChatSheet({ open, initialUserId, onClose, onExpandChange }) {
   const [full, setFull] = useState(false);
 
-  // Panel kapandığında oda yerleşimi normale döner.
   useEffect(() => { if (!open) setFull(false); }, [open]);
 
   const handleFullChange = (next) => {
@@ -21,7 +19,7 @@ export default function VoicePrivateChatSheet({ open, initialUserId, onClose, on
   if (!open) return null;
 
   return (
-    <VoiceViewport className="voice-private-chat z-[250] justify-end">
+    <div className="fixed inset-0 z-[250] flex flex-col justify-end">
       {!full && <button type="button" aria-label="Kapat" onClick={onClose} className="absolute inset-0 bg-black/70 backdrop-blur-[2px]" />}
       <div
         className={
@@ -32,6 +30,6 @@ export default function VoicePrivateChatSheet({ open, initialUserId, onClose, on
       >
         <RoomDirectMessages initialUserId={initialUserId} onClose={onClose} onFullScreenChange={handleFullChange} />
       </div>
-    </VoiceViewport>
+    </div>
   );
 }
