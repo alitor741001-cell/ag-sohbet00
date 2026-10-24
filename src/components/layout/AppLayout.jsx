@@ -6,8 +6,6 @@ import subscribeEntity from '@/components/data/entitySubscriptions';
 import { useCurrentUser, membershipActive } from '@/lib/useCurrentUser';
 import { useAuth } from '@/lib/AuthContext';
 import Navbar from '@/components/layout/Navbar';
-import DesignBottomNav from '@/components/layout/DesignBottomNav';
-import DesignBackdrop from '@/components/layout/DesignBackdrop';
 import useFriendPresence from '@/hooks/useFriendPresence';
 import useRoleCelebration from '@/hooks/useRoleCelebration';
 import RoleCelebrationOverlay from '@/components/role/RoleCelebrationOverlay';
@@ -225,8 +223,6 @@ export default function AppLayout() {
           )}
         </Suspense>
       </main>
-      {!hideNav && <DesignBackdrop />}
-      {!hideNav && <DesignBottomNav />}
     </div></MessageRealtimeProvider>
   );
 }
