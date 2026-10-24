@@ -1,42 +1,40 @@
-import { useRef } from 'react';
 import LiveChatButton from '@/components/layout/LiveChatButton';
 import UserSupportButton from '@/components/layout/UserSupportButton';
 
-export const HOME_DESIGN = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/a81cc0d80_IMG_0204.jpg';
+export const HOME_DESIGN = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/a5c5853e0_IMG_0141.jpg';
 
 const ZONES = [
-  { label: 'Ana Sayfa', path: '/', left: 1, width: 20 },
-  { label: 'Sohbet', path: '/arkadaslar?view=chats', activePath: '/arkadaslar', left: 21, width: 18 },
-  { label: 'Oyunlar', path: '/?oyunlar=1', left: 39, width: 22 },
-  { label: 'Profil', path: '/profil', left: 79, width: 20 },
+  { label: 'Ana Sayfa', path: '/', left: 0, width: 22 },
+  { label: 'Sohbet', path: '/arkadaslar?view=chats', activePath: '/arkadaslar', left: 22, width: 17.5 },
+  { label: 'Oyunlar', path: '/?oyunlar=1', left: 39.5, width: 21 },
+  { label: 'Profil', path: '/profil', left: 79.5, width: 20.5 },
 ];
 
-/** Alt menü: gönderilen tasarım görseli + üzerine yerleşmiş dokunma alanları. */
-export default function HomeImageNav({ onNav, isAdmin, supportBadge, messages = 0, keyboardInset = 0 }) {
-  const supportRef = useRef(null);
+function isActive(z, pathname, search) {
+  if (z.path === '/?oyunlar=1') return pathname === '/' && search.includes('oyunlar=1');
+  if (z.path === '/') return pathname === '/' && !search.includes('oyunlar=1');
+  return pathname.startsWith(z.activePath || z.path);
+}
 
+/** Tüm sayfalardaki alt menü: tasarım görselinin alt şeridi, üstünde dokunma alanları. */
+export default function HomeImageNav({ onNav, isAdmin, supportBadge, messages = 0, pathname = '/', search = '', keyboardInset = 0 }) {
   return (
-    <nav aria-label="Ana menü" className="home-image-nav lg:hidden fixed bottom-0 inset-x-0 z-50 pb-[env(safe-area-inset-bottom)]"
-      style={{ background: '#0a0a0d', transform: `translateY(-${keyboardInset}px)` }}>
-      <div className="relative mx-auto w-full max-w-[36rem]" style={{ aspectRatio: '1024 / 341' }}>
-        <img src={HOME_DESIGN} alt="" draggable="false" className="absolute inset-0 h-full w-full object-fill select-none pointer-events-none" />
-
-        {ZONES.map((z) => (
-          <button key={z.label} type="button" aria-label={z.label} onClick={() => onNav(z)}
-            className="absolute top-[10%] h-[80%] rounded-2xl active:bg-white/10"
-            style={{ left: `${z.left}%`, width: `${z.width}%` }}>
-            {z.activePath === '/arkadaslar' && messages > 0 && (
-              <span className="absolute right-[12%] top-[8%] min-w-5 h-5 px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">{messages > 99 ? '99+' : messages}</span>
-            )}
-          </button>
-        ))}
-
-        <button type="button" aria-label="Canlı Destek"
-          onClick={() => supportRef.current?.querySelector('button')?.click()}
-          className="absolute top-[10%] h-[80%] rounded-2xl active:bg-white/10"
-          style={{ left: '61%', width: '18%' }} />
-
-        <div ref={supportRef} aria-hidden="true" className="pointer-events-none absolute opacity-0" style={{ left: '61%', width: '18%', top: 0 }}>
+    <nav aria-label="Ana menü" className="home-image-nav lg:hidden fixed bottom-0 inset-x-0 z-50"
+      style={{ background: 'transparent', paddingBottom: 0, transform: `translateY(-${keyboardInset}px)` }}>
+      <div className="relative mx-auto w-full max-w-[36rem]" style={{ aspectRatio: '682 / 150', backgroundImage: `url(${HOME_DESIGN})`, backgroundSize: '100% auto', backgroundPosition: 'center 72%' }}>
+        {ZONES.map((z) => {
+          const active = isActive(z, pathname, search);
+          return (
+            <button key={z.label} type="button" aria-label={z.label} aria-current={active ? 'page' : undefined} onClick={() => onNav(z)}
+              className="absolute top-[10%] bottom-[env(safe-area-inset-bottom)] transition-transform active:scale-95" style={{ left: `${z.left}%`, width: `${z.width}%` }}>
+              {active && <span aria-hidden="true" className="absolute bottom-[calc(env(safe-area-inset-bottom)+2%)] left-1/2 h-[3px] w-1/2 -translate-x-1/2 rounded-full bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.9)]" />}
+              {z.activePath === '/arkadaslar' && messages > 0 && (
+                <span className="absolute right-[18%] top-[8%] min-w-5 h-5 px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">{messages > 99 ? '99+' : messages}</span>
+              )}
+            </button>
+          );
+        })}
+        <div className="absolute top-[10%] bottom-[env(safe-area-inset-bottom)] flex items-center justify-center opacity-0 [&>*]:h-full [&>*]:w-full" style={{ left: '60.5%', width: '19%' }}>
           {isAdmin ? <LiveChatButton placement="dock" /> : <UserSupportButton badge={supportBadge} />}
         </div>
       </div>
