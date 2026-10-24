@@ -1,6 +1,4 @@
 import { useLayoutEffect, useRef } from 'react';
-import { useMaleRoomTheme } from '@/components/voice/MaleRoomTheme';
-import MaleRoomBar from '@/components/voice/MaleRoomBar';
 import { Gamepad2, Gift, MessageCircle, Mic, MicOff, Settings, Volume2, VolumeX } from 'lucide-react';
 
 // Ana sayfanın alt menüsüyle aynı dil: koyu zemin, ince beyaz ikonlar ve
@@ -42,7 +40,6 @@ function BarButton({ onClick, label, children, tone = 'plain', lifted = false })
 /** Alt kontrol çubuğu: sohbet, mikrofon, hoparlör, hediye, özel sohbet, oyun merkezi ve ayarlar. */
 export default function VoiceControlBar({ micActive, deafened, gamesOpen, gamesEnabled = true, giftOpen, settingsOpen, keyboardOpen, onToggleMic, onToggleSpeaker, onOpenGames, onOpenGifts, onOpenSettings, onOpenPrivateChat, onToggleChat }) {
   const barRef = useRef(null);
-  const { male } = useMaleRoomTheme();
 
   // Çubuğun gerçek yüksekliği oda çerçevesine bildirilir: sohbet alanı tam butonların üstünde
   // biter, butonlarla sohbet arasında siyah bir şerit kalmaz. Ekran boyutu ya da alt güvenli
@@ -66,7 +63,6 @@ export default function VoiceControlBar({ micActive, deafened, gamesOpen, gamesE
       ref={barRef}
       className="voice-control-bar relative flex shrink-0 items-center justify-between gap-0.5 px-2 pb-[max(0.35rem,calc(env(safe-area-inset-bottom)*0.5))] pt-2"
     >
-      {male ? <MaleRoomBar {...{ micActive, deafened, gamesEnabled, onToggleChat, onToggleMic, onToggleSpeaker, onOpenGifts, onOpenPrivateChat, onOpenGames, onOpenSettings }} /> : <>
       {/* Sohbet: hap biçiminde geniş düğme — yalnızca yazı. */}
       <button
         type="button"
@@ -101,7 +97,6 @@ export default function VoiceControlBar({ micActive, deafened, gamesOpen, gamesE
       <BarButton onClick={onOpenSettings} label="Oda ayarları" tone={settingsOpen ? 'active' : 'plain'}>
         <Settings className={ICON} strokeWidth={1.6} />
       </BarButton>
-      </>}
     </div>
   );
 }
