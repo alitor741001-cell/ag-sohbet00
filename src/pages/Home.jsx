@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import RoomDiscovery from '@/components/home/RoomDiscovery';
 
 import BottomNavStrip from '@/components/layout/BottomNavStrip';
+import NotchThemeStrip from '@/components/layout/NotchThemeStrip';
 const GAMES_DESIGN = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/cce749e92_IMG_0220.jpg';
 const LIVE_BG = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/f3cf6419a_IMG_0213.jpg';
 const DESIGN = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/f729cdeba_IMG_0210.jpg';
@@ -34,12 +35,14 @@ export default function Home() {
 
   return (
     <div className="fixed inset-0 overflow-hidden bg-black text-white">
+      {!games && <NotchThemeStrip />}
       {/* Güvenli alanın dışında kalan pikseller aynı tasarımın bulanık dolgusuyla kapanır. */}
-      <img src={design} alt="" aria-hidden="true" draggable={false} className="pointer-events-none absolute inset-0 h-full w-full scale-110 select-none object-fill opacity-60 blur-2xl" />
+      {!games && <img src={design} alt="" aria-hidden="true" draggable={false} className="pointer-events-none absolute inset-0 h-full w-full scale-110 select-none object-fill opacity-60 blur-2xl" />}
       {/* Tasarım çentik ve güvenli alanın içinde kalır; tablette ortada telefon oranında durur. */}
       <div className="design-screen">
         <div className="design-stage">
-          <img src={design} alt="" className="pointer-events-none absolute inset-0 h-full w-full select-none object-fill" draggable={false} />
+          {/* Oyunlar görünümü tam ekran oynanır: arkada tasarım görseli görünmez. */}
+          {!games && <img src={design} alt="" className="pointer-events-none absolute inset-0 h-full w-full select-none object-fill" draggable={false} />}
           {!games && hasContent && (
             <img src={LIVE_BG} alt="" className="pointer-events-none absolute inset-x-[3%] select-none rounded-2xl object-cover" style={{ top: '12%', bottom: '14%', height: '74%', width: '94%' }} draggable={false} />
           )}
@@ -55,7 +58,7 @@ export default function Home() {
           ))}
           <div
             className={`absolute inset-x-[3%] z-10 overflow-y-auto overscroll-contain rounded-2xl px-2 py-2 ${hasContent ? '' : 'pointer-events-none opacity-0'}`}
-            style={games ? { top: '9%', bottom: '14%', left: '6%', right: '6%', background: 'transparent' } : { top: '12%', bottom: '14%', background: 'transparent' }}
+            style={games ? { top: 0, bottom: '13%', left: 0, right: 0, background: 'transparent' } : { top: '12%', bottom: '14%', background: 'transparent' }}
             key={params.toString()}
           >
             <RoomDiscovery onContentChange={setHasContent} />

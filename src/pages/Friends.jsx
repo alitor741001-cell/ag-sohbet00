@@ -15,6 +15,7 @@ import useFriendPresence from '@/hooks/useFriendPresence';
 import { useToast } from '@/components/ui/use-toast';
 import { isModerator } from '@/lib/roles';
 import useTabActivity from '@/components/layout/TabActivityContext';
+import NotchThemeStrip from '@/components/layout/NotchThemeStrip';
 import useLiveBadges from '@/hooks/useLiveBadges';
 
 export default function Friends() {
@@ -191,6 +192,7 @@ export default function Friends() {
   // tasarımdaki sabit içerik görünmez, liste kendi içinde kayar.
   return (
     <div className="dark fixed inset-0 z-10 text-white">
+      <NotchThemeStrip />
       <div className="design-screen">
         <div className="design-stage flex flex-col">
           <ChatImageTabs counts={{ chats: totalUnread, requests: incomingRequests, notes: liveBadges.notes, agency: liveBadges.agency }} />
