@@ -841,18 +841,19 @@
 :root { --app-height: 100vh; }
 @supports (height: 100dvh) { :root { --app-height: 100dvh; } }
 
-/* Tasarım ekranları üst çentikten alt çentiğe kadar tüm görünür alanı kaplar;
-   kenarda kalan pikseller (tablet/iPad) aynı görselin bulanık dolgusuyla kapanır. */
+/* Tasarım ekranları çentiğin altından başlar (iPhone'da içerik çentiğin altında kalır)
+   ve ekranın en altına kadar uzanır: altta boşluk kalmaz. Çentikli olmayan cihazlarda
+   güvenli alan 0 olduğu için tam ekran görünür. */
 :root {
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --design-height: var(--app-height);
+  --design-height: calc(var(--app-height) - var(--safe-top));
 }
 .design-screen {
   position: fixed;
   left: 0;
   right: 0;
-  top: 0;
+  top: var(--safe-top);
   height: var(--design-height);
 }
 .design-stage {
