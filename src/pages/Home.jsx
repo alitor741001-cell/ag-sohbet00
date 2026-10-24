@@ -8,7 +8,7 @@ export default function Home() {
   return (
     <div
       className="relative min-h-screen overflow-x-clip text-white"
-      style={{ background: '#040b1c' }}
+      style={{ background: '#0a0a0d' }}
     >
       <div className="relative z-10 mx-auto w-full max-w-2xl md:max-w-3xl xl:max-w-4xl px-4 pb-10 pt-0 sm:px-6">
         <RoomDiscovery />

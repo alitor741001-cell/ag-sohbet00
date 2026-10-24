@@ -1190,10 +1190,8 @@ input, textarea, select, button { font-family: inherit; }
 /* Tasarım görseli zemin olarak kullanılırken görselin kendi üst bandı (hazır menü yazıları)
    ve alt bandı (hazır sekme şeridi) kırpılır: sayfalarda sadece tasarımın iç alanı görünür. */
 .app-design-backdrop {
-  background-repeat: no-repeat;
-  background-size: auto 145%;
-  background-position: center 35%;
-  background-color: #05060b;
+  background-image: none !important;
+  background-color: #0a0a0d;
 }
 /* Görselden daha geniş ekranlarda (yatay telefon, tablet, masaüstü) genişliği kaplayacak
    şekilde büyütülür; dikey konum yine üst bandı dışarıda bırakır. */

@@ -1,24 +1,22 @@
 import { Link } from 'react-router-dom';
-import { HOME_DESIGN } from '@/components/layout/HomeImageNav';
+import { Flame, Users, Search, Plus } from 'lucide-react';
 
-const zone = (left, width) => ({ left: `${left}%`, width: `${width}%` });
+const PILL = 'flex items-center gap-1.5 rounded-full border border-white/15 px-3.5 py-2 text-sm font-bold text-white transition active:scale-95';
 
-/** Ana sayfa üst şeridi: gönderilen tasarımın üst bandı birebir, üstünde görünmez dokunma alanları. */
+/** Ana sayfa üst şeridi: düz zemin üzerinde net, okunaklı butonlar. */
 export default function HomeTopBar({ onView, onSearch, showViews = true }) {
   return (
     <>
-    {/* Yer tutucu: sabit şeridin altında içerik kaymasın. */}
-    {/* Güvenli alan boşluğu ana yerleşimde zaten veriliyor: burada tekrarlanmaz,
-        yoksa kart listesi şeridin çok altında kalır. */}
-    <div aria-hidden="true" className="mb-1"><div className="w-[100vw] max-w-[36rem]" style={{ aspectRatio: '682 / 112' }} /></div>
-    <div className="fixed inset-x-0 top-0 z-40 pt-[env(safe-area-inset-top)]" style={{ background: 'transparent' }}>
-      <div className="relative mx-auto w-full max-w-[36rem]" style={{ aspectRatio: '682 / 112', backgroundImage: `url(${HOME_DESIGN})`, backgroundSize: '100% auto', backgroundPosition: 'center top' }}>
-        {showViews && <button type="button" aria-label="Sıcak" onClick={() => onView?.('hot')} className="absolute inset-y-[15%] rounded-full" style={zone(3, 19.5)} />}
-        {showViews && <button type="button" aria-label="Takip" onClick={() => onView?.('history')} className="absolute inset-y-[15%] rounded-full" style={zone(23.5, 17.5)} />}
-        <button type="button" aria-label="Üye numarasıyla ara" onClick={onSearch} className="absolute inset-y-[15%] rounded-full" style={zone(61, 9.5)} />
-        <Link to="/oda-kur" aria-label="Oda Kur" className="absolute inset-y-[15%] rounded-full" style={zone(71.5, 21.5)} />
+      <div aria-hidden="true" className="h-14 mb-1" />
+      <div className="fixed inset-x-0 top-0 z-40 bg-[#0a0a0d] pt-[env(safe-area-inset-top)]">
+        <div className="mx-auto flex h-14 w-full max-w-[36rem] items-center gap-2 px-3">
+          {showViews && <button type="button" onClick={() => onView?.('hot')} className={PILL}><Flame className="h-4 w-4 text-orange-400" />Sıcak</button>}
+          {showViews && <button type="button" onClick={() => onView?.('history')} className={PILL}><Users className="h-4 w-4 text-sky-400" />Takip</button>}
+          <div className="flex-1" />
+          <button type="button" aria-label="Üye numarasıyla ara" onClick={onSearch} className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 text-white active:scale-95"><Search className="h-5 w-5" /></button>
+          <Link to="/oda-kur" className={`${PILL} bg-amber-400 border-amber-300 text-black`}><Plus className="h-4 w-4" />Oda Kur</Link>
+        </div>
       </div>
-    </div>
     </>
   );
 }
