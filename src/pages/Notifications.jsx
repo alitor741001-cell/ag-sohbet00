@@ -23,7 +23,7 @@ const formatWhen = (iso) => {
 };
 
 /** Bildirimler: sohbet ekranı gibi tam ekran açılır; tüm sistem bildirimleri burada listelenir. */
-export default function Notifications({ onBack }) {
+export default function Notifications({ onBack, embedded = false }) {
   const { user } = useCurrentUser();
   const navigate = useNavigate();
   const location = useLocation();
@@ -84,9 +84,9 @@ export default function Notifications({ onBack }) {
   };
 
   return (
-    <div className="dark min-h-[var(--app-height)] w-full text-white" style={{ background: '#0a0a0d' }}>
+    <div className={embedded ? 'dark w-full text-white' : 'dark min-h-[var(--app-height)] w-full text-white'} style={embedded ? undefined : { background: '#0a0a0d' }}>
       {/* Üst başlık ve geri düğmesi sabittir: liste kayarken ya da aşağı çekilirken yerinden oynamaz. */}
-      <header className="fixed inset-x-0 top-0 z-30 flex items-center gap-2 border-b border-white/10 bg-[#0a0a0d] px-3 pb-2.5" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 0.6rem)' }}>
+      {!embedded && <header className="fixed inset-x-0 top-0 z-30 flex items-center gap-2 border-b border-white/10 bg-[#0a0a0d] px-3 pb-2.5" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 0.6rem)' }}>
         <button onClick={goBack} aria-label="Geri" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/5 active:scale-95">
           <ArrowLeft className="h-4 w-4 text-white" />
         </button>
@@ -97,9 +97,9 @@ export default function Notifications({ onBack }) {
         {items.length > 0 && (
           <button onClick={deleteAll} className="flex items-center gap-1 rounded-lg bg-red-500/15 px-2.5 py-1.5 text-xs font-semibold text-red-400"><Trash2 className="w-3.5 h-3.5" /> Sil</button>
         )}
-      </header>
+      </header>}
 
-      <div style={{ paddingTop: 'calc(env(safe-area-inset-top) + 4.25rem)' }}>
+      <div style={embedded ? undefined : { paddingTop: 'calc(env(safe-area-inset-top) + 4.25rem)' }}>
         <PullToRefresh onRefresh={() => { load(); loadInvites(); }}>
           <div className="p-3">
             {loading ? <p className="py-10 text-center text-sm text-gray-400">Yükleniyor...</p> :

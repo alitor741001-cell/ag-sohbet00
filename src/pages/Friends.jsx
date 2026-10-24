@@ -207,7 +207,7 @@ export default function Friends() {
           <div className="shrink-0" style={{ height: '17.5%' }} aria-hidden="true" />
           <div className="mx-[5%] flex min-h-0 flex-1 flex-col overflow-hidden">
             <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-              {InboxPanel ? <InboxPanel onBack={() => setInboxTab('chats')} /> : conversations.length > 0 ? (
+              {InboxPanel ? <InboxPanel embedded onBack={() => setInboxTab('chats')} /> : conversations.length > 0 ? (
                 <ConversationList conversations={conversations} userId={user.id} onOpen={openConversation} onHide={hide} isOnline={isOnline} getLastSeen={getLastSeen} rooms={rooms} getRoomId={getRoomId} />
               ) : (
                 <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
