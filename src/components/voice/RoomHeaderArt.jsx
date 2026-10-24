@@ -38,7 +38,7 @@ export default function RoomHeaderArt({ room, onOpen, viewerCount = 0, onOpenVie
   return (
     <div className="voice-header-art relative w-full" style={{ aspectRatio: `${W} / ${H}` }}>
       {/* Fotoğraf çerçevenin ARKASINDA durur: çember dışına taşan kısım çerçeve altında kalır. */}
-      <div className="pointer-events-none overflow-hidden rounded-full" style={pct(27, 52, 70, 70)}>
+      <div className="pointer-events-none overflow-hidden rounded-full" style={pct(30, 52, 70, 70)}>
         {profile.avatar
           ? <Image src={profile.avatar} alt={ownerName} className="h-full w-full" fittingType="fill" draggable={false} />
           : <span className="flex h-full w-full items-center justify-center text-lg font-bold text-white">{ownerName.trim().charAt(0)}</span>}
