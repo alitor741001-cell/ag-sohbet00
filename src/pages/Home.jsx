@@ -32,8 +32,8 @@ export default function Home() {
   const games = params.get('oyunlar') === '1';
   // Oyunlar görünümü kendi tasarım görselini kullanır.
   const design = games ? GAMES_DESIGN : DESIGN;
-  // Oyunlar görünümü tam ekran oynanır: alt menü butonları ve dokunma alanları gizlenir.
-  const base = games ? [] : ZONES;
+  // Oyunlar görünümünde yalnızca alt menü düğmeleri tıklanabilir kalır.
+  const base = games ? ZONES.filter((z) => z.y >= 80) : ZONES;
   const zones = hasContent || games ? base : [...base, EMPTY_ZONE];
 
   return (
@@ -49,7 +49,10 @@ export default function Home() {
           {!games && hasContent && (
             <img src={LIVE_BG} alt="" className="pointer-events-none absolute inset-x-[3%] select-none rounded-2xl object-cover" style={{ top: '12%', bottom: '14%', height: '74%', width: '94%' }} draggable={false} />
           )}
-          {!games && <BottomNavStrip />}
+          {/* Alt menü şeridi her görünümde içeriğin üstünde durur; içerik şeridin altından akar. */}
+          <div className="pointer-events-none absolute inset-0 z-30">
+            <BottomNavStrip />
+          </div>
           {games && (
             <Link
               to="/"
@@ -70,7 +73,7 @@ export default function Home() {
           ))}
           <div
             className={`absolute inset-x-[3%] z-10 overflow-y-auto overscroll-contain rounded-2xl px-2 py-2 ${hasContent ? '' : 'pointer-events-none opacity-0'}`}
-            style={games ? { top: '3.6rem', bottom: 0, left: 0, right: 0, paddingBottom: 'var(--safe-bottom)', background: 'transparent' } : { top: '12%', bottom: '14%', background: 'transparent' }}
+            style={games ? { top: '3.6rem', bottom: 0, left: 0, right: 0, paddingBottom: '17%', background: 'transparent' } : { top: '12%', bottom: '14%', background: 'transparent' }}
             key={params.toString()}
           >
             <RoomDiscovery onContentChange={setHasContent} />
