@@ -61,10 +61,11 @@ export default function Search() {
 
   return (
     <div className="dark min-h-screen text-white">
-      <header
-        className="flex items-center gap-2 border-b border-white/10 bg-[#040b1c] px-3 py-3"
-        style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 30 }}
+      <div
+        className="fixed inset-x-0 top-0 z-30 border-b border-white/10 bg-[#040b1c] lg:top-16"
+        style={{ paddingTop: 'env(safe-area-inset-top)' }}
       >
+      <header className="flex items-center gap-2 px-3 py-3">
         <button
           type="button"
           onClick={goBack}
@@ -78,8 +79,7 @@ export default function Search() {
         </h1>
       </header>
 
-      <div className="mx-auto w-full max-w-md px-4 py-5" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 4.5rem)' }}>
-        <div className="flex items-center gap-2">
+        <div className="mx-auto flex w-full max-w-md items-center gap-2 px-4 pb-3">
           <input
             value={memberId}
             onChange={(event) => setMemberId(event.target.value.replace(/[^0-9]/g, '').slice(0, 8))}
@@ -99,7 +99,9 @@ export default function Search() {
             {searching ? <Loader2 className="h-4 w-4 animate-spin" /> : <SearchIcon className="h-4 w-4" />}
           </button>
         </div>
+      </div>
 
+      <div className="mx-auto w-full max-w-md px-4 py-5" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 9.75rem)' }}>
         {person && (
           <div className="relative mt-4 flex items-center gap-3 rounded-2xl border border-[#7dd3fc]/30 bg-[#08203f]/80 p-3">
             {liveRoom && (
