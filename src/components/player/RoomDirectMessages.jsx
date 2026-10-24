@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { base44 } from '@/api/base44Client';
 import { useToast } from '@/components/ui/use-toast';
 import useFriends from '@/hooks/useFriends';
@@ -6,7 +7,8 @@ import useConversations from '@/hooks/useConversations';
 import useFriendPresence from '@/hooks/useFriendPresence';
 import ConversationList from '@/components/friends/ConversationList';
 import ChatPanel from '@/components/friends/ChatPanel';
-import MessagesBannerInline from '@/components/friends/MessagesBannerInline';
+import RoomChatThemeList from '@/components/player/RoomChatThemeList';
+import useLiveBadges from '@/hooks/useLiveBadges';
 import BackDismissLayer from '@/components/player/BackDismissLayer';
 import FriendRequests from '@/pages/FriendRequests';
 import Notifications from '@/pages/Notifications';
@@ -20,6 +22,7 @@ export default function RoomDirectMessages({ onClose, initialUserId, onFullScree
   const { conversations, loading: convosLoading, optimisticHide } = useConversations();
   const { toast } = useToast();
   const { isOnline } = useFriendPresence(user);
+  const liveBadges = useLiveBadges(user?.id);
   const [selected, setSelected] = useState(null);
   const [roomPanel, setRoomPanel] = useState('');
   const [adminLoading, setAdminLoading] = useState(false);
@@ -58,7 +61,7 @@ export default function RoomDirectMessages({ onClose, initialUserId, onFullScree
 
   // İstekler / sistem bildirimleri / ajans mesajları da odanın üstünde yarım panel olarak açılır,
   // arkadaki koltuklar görünür kalır.
-  const panelOverlay = Panel ? (
+  const panelOverlay = Panel ? createPortal(
     <div className="dark fixed inset-0 z-[290] flex flex-col justify-end">
       <BackDismissLayer onClose={() => setRoomPanel('')} />
       <button type="button" aria-label="Kapat" onClick={() => setRoomPanel('')} className="absolute inset-0 bg-black/70 backdrop-blur-[2px]" />
@@ -67,7 +70,8 @@ export default function RoomDirectMessages({ onClose, initialUserId, onFullScree
           <Panel onBack={() => setRoomPanel('')} />
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   ) : null;
 
   if (friendsLoading || convosLoading || !user) return <div className="dark h-full bg-black p-6 text-sm text-muted-foreground">Yükleniyor...</div>;
@@ -83,25 +87,20 @@ export default function RoomDirectMessages({ onClose, initialUserId, onFullScree
     );
   }
 
-  // Ana sayfadaki özel sohbet görünümünün aynısı: aynı şerit görseli, aynı dokunma alanları.
+  // Ana sayfadaki özel sohbet tasarımının aynısı: aynı tema görseli ve sekmeler, tam ekran.
+  const counts = {
+    chats: conversations.reduce((sum, c) => sum + (c.user1_id === user.id ? (c.unread_user1 || 0) : (c.unread_user2 || 0)), 0),
+    requests: relations.filter((r) => r.status === 'pending' && r.recipient_id === user.id).length,
+    notes: liveBadges.notes,
+    agency: liveBadges.agency,
+  };
   return (
-    <section
-      className="dark flex h-full w-full min-w-0 flex-col bg-[#040b1c] pt-[env(safe-area-inset-top)] text-white"
-      onTouchStart={(e) => { touchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }; }}
-      onTouchEnd={(e) => { const dx = e.changedTouches[0].clientX - touchStart.current.x; const dy = e.changedTouches[0].clientY - touchStart.current.y; if (dx > 80 && dx > Math.abs(dy) * 1.5) onClose(); }}
-    >
+    <>
       <BackDismissLayer onClose={onClose} />
-      <MessagesBannerInline
-        relations={relations}
-        userId={user.id}
-        onOpenRequests={() => setRoomPanel('requests')}
-        onOpenNotes={() => setRoomPanel('notes')}
-        onOpenAgency={() => setRoomPanel('agency')}
-      />
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      <RoomChatThemeList counts={counts} onTab={setRoomPanel} onClose={onClose}>
         <ConversationList conversations={conversations} userId={user.id} onOpen={setSelected} onHide={hide} isOnline={isOnline} />
-      </div>
+      </RoomChatThemeList>
       {panelOverlay}
-    </section>
+    </>
   );
 }
