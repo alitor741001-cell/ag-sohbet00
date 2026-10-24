@@ -187,7 +187,7 @@ export default function Friends() {
 
   return (
     <div
-      className="dark mx-auto min-h-[calc(100vh-8rem)] w-full min-w-0 max-w-5xl text-white supports-[height:100dvh]:min-h-[calc(100dvh-8rem)]"
+      className="dark mx-auto min-h-[calc(100vh-8rem)] w-full min-w-0 max-w-5xl pt-[18vh] text-white supports-[height:100dvh]:min-h-[calc(100dvh-8rem)]"
     >
       {/* Aşağı çekerek tazeleme: arkadaşlar, istekler ve sohbetler yeniden okunur. */}
       <PullToRefresh onRefresh={() => { reloadFriends(); reloadConversations(); }}>
