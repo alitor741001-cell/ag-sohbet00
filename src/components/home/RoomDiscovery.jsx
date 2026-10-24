@@ -33,7 +33,7 @@ const hasPeopleInside = (room) =>
  * Ana sayfa keşfet bölümü: en üstte arkadaş şeridi, altında koltuklu odalar ve
  * film odaları sekmeleri, oda numarası / üye kimliği araması ve oda kartları.
  */
-export default function RoomDiscovery({ shortcuts = null }) {
+export default function RoomDiscovery({ shortcuts = null, onContentChange }) {
   const tabActive = useTabActivity();
   const { user } = useCurrentUser();
   const { relations } = useFriends();
@@ -49,6 +49,8 @@ export default function RoomDiscovery({ shortcuts = null }) {
   // Oyunlar görünümü adresten açılır: alt menüdeki Oyunlar düğmesi ?oyunlar=1 getirir.
   const [searchParams] = useSearchParams();
   const gamesParam = searchParams.get('oyunlar') === '1';
+  const followParam = searchParams.get('takip') === '1';
+  useEffect(() => { setView(followParam ? 'history' : 'hot'); }, [followParam]);
   // Açık oyun: ana sayfadan seçilen oyun tam ekran oynanır.
   const [gameOpen, setGameOpen] = useState(null);
   // Oyunlar yalnızca yayıncı/ajans üyesi hesaplara açıktır; ülke etiketiyle aynı kaynaktan çözülür.
@@ -286,6 +288,8 @@ export default function RoomDiscovery({ shortcuts = null }) {
     [hotRooms]
   );
   const items = list;
+  const hasContent = view === 'history' || tab === 'games' || loading || items.length > 0;
+  useEffect(() => { onContentChange?.(hasContent); }, [hasContent, onContentChange]);
 
   // Takip görünümü: takip edilenlerin yayınları, arkadaşlar ve son ziyaret edilen odalar.
   if (view === 'history') {
