@@ -1062,10 +1062,8 @@ export default function VoiceRoom() {
     );
   }
 
-  // Özel sohbet ya da odadakiler listesi yarım panel olarak açıkken oda yalnızca panelin üstünde
-  // kalan alana yerleşir: sahne bu alana sığar, koltuk ızgarası kesilmeden tam görünür. Panel tam
-  // ekrana geçince (zaten her yeri kapladığı için) oda normal düzeninde kalır.
-  const halfPanelOpen = viewerOpen || ((dmOpen || !!dmUserId) && !dmExpanded);
+  // Özel sohbet ya da odadakiler listesi açıldığında oda yerleşimi hiç değişmez: koltuklar olduğu
+  // yerde sabit kalır, paneller koltuklardan bağımsız olarak alttan açılır.
 
   const sheetSeat = seatIndex === null ? null : seats[seatIndex];
 
@@ -1085,11 +1083,7 @@ export default function VoiceRoom() {
   // Klavye açılınca oda düzeni yerinden oynamaz: yalnızca sohbet bölümü klavyenin üstüne kayar,
   // alttaki kontrol çubuğu (mik/hoparlör) hep aynı yerde durur.
   return (
-    <VoiceViewport
-      className={`z-[150] ${halfPanelOpen ? 'voice-dm-open' : ''}`}
-      style={halfPanelOpen ? { paddingBottom: 'var(--voice-dm-height)' } : undefined}
-      onKeyboardChange={handleKeyboardChange}
-    >
+    <VoiceViewport className="z-[150]" onKeyboardChange={handleKeyboardChange}>
       <RoomBackground value={room?.background} cover={room?.cover_url} />
 
       <header className="relative shrink-0 pl-1 pr-0 pb-1 pt-[max(0.25rem,env(safe-area-inset-top))]">
