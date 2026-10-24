@@ -1,11 +1,12 @@
 import { Check, Users } from 'lucide-react';
+import { Image } from '@/components/ui/image';
 
 /** Hediye alıcıları: odadaki kişiler çoklu seçilebilir, seçim rengi hediyenin K seviyesinden gelir. */
 export default function GiftRecipientRow({ people = [], selectedIds = [], color, onToggle, onSelectAll, onClear }) {
   const allSelected = people.length > 0 && selectedIds.length >= people.length;
 
   return (
-    <section>
+    <section className="gift-palace-recipients">
       <div className="mb-1.5 flex items-center justify-between gap-2">
         <p className="text-[11px] font-bold uppercase tracking-wide text-white/60">
           Alıcılar {selectedIds.length > 0 && <span style={{ color }}>• {selectedIds.length} kişi</span>}
@@ -39,7 +40,7 @@ export default function GiftRecipientRow({ people = [], selectedIds = [], color,
                   style={selected ? { boxShadow: `0 0 0 2px ${color}, 0 0 14px ${color}` } : undefined}
                 >
                   {person.avatar ? (
-                    <img src={person.avatar} alt={person.name} className="h-full w-full object-cover" referrerPolicy="no-referrer" draggable={false} />
+                    <Image src={person.avatar} alt={person.name} className="h-full w-full" referrerPolicy="no-referrer" draggable={false} />
                   ) : (
                     <span className="text-sm font-bold text-white">{(person.name || '?')[0]}</span>
                   )}

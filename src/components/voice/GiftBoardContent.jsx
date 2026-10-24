@@ -40,7 +40,7 @@ export default function GiftBoardContent({
   return (
     // h-full: panelin kalan yüksekliği içeriğe geçer, böylece yalnızca hediye ızgarası kayar
     // ve alttaki satırlar (alıcılar, gönderim çubuğu) her zaman görünür kalır.
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div className="gift-palace flex min-h-0 flex-1 flex-col">
       {/* Atış ve alış seviyesinin ilerlemesi. */}
       <div className="shrink-0">
         <GiftLevelTicker giftTick={giftTick} />
@@ -60,7 +60,7 @@ export default function GiftBoardContent({
       </div>
 
       {/* Üst sekmeler: hediye kategorileri. Soldaki çember kendi profilimiz, sağdaki ok kapatır. */}
-      <div className="flex shrink-0 items-end gap-2 border-b border-white/10">
+      <div className="gift-palace-tabs flex shrink-0 items-center gap-2">
         <span className="relative flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/10 ring-1 ring-[#45d6c8]/60">
           {user?.avatar ? (
             <img src={user.avatar} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" draggable={false} />
@@ -78,7 +78,7 @@ export default function GiftBoardContent({
                 type="button"
                 onClick={() => setCategory(item)}
                 aria-pressed={active}
-                className={`flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1.5 text-[12px] transition ${
+                className={`gift-palace-tab flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1.5 text-[12px] transition ${
                   active
                     ? 'border-[#ffcc00] bg-white/[0.08] font-black text-white shadow-[0_0_12px_rgba(255,204,0,0.35)]'
                     : 'border-white/10 bg-white/[0.05] font-semibold text-white/60'
@@ -97,7 +97,7 @@ export default function GiftBoardContent({
         {shown.length === 0 ? (
           <p className="rounded-xl bg-white/5 px-3 py-3 text-center text-xs text-white/50">Bu kategoride hediye yok.</p>
         ) : (
-          <div className="grid grid-cols-4 gap-x-1 gap-y-2 pb-2">
+          <div className="gift-palace-grid grid grid-cols-4 gap-2 pb-2">
             {shown.map((item) => (
               <GiftCard key={item.id} gift={item} selected={giftId === item.id} onSelect={onSelectGift} />
             ))}

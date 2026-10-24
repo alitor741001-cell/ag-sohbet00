@@ -21,7 +21,8 @@ export default function GiftCard({ gift, selected, onSelect }) {
       onClick={() => onSelect(gift.id)}
       onContextMenu={(event) => event.preventDefault()}
       aria-pressed={selected}
-      className="relative flex w-full flex-col items-center gap-0.5 py-1 active:scale-95"
+      className="gift-palace-card relative flex w-full flex-col items-center gap-0.5 py-1 active:scale-95"
+      style={{ '--gift-glow': tone }}
     >
       <GiftTransparencyFilter id={filterId} />
       <span className="relative inline-flex h-[70px] w-full items-center justify-center">

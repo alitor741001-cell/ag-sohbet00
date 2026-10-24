@@ -3,6 +3,7 @@ import VoiceSheet from '@/components/voice/VoiceSheet';
 import GiftBoardContent from '@/components/voice/GiftBoardContent';
 import GiftSendButton from '@/components/voice/GiftSendButton';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
+import '@/components/voice/giftPalace.css';
 
 /** Hediye Tahtası: hediye seçimi (alt panel) ve tam ekran "Coins Yükle" mağazası. */
 export default function GiftBoard({ open, onClose, coins, onSend, sendDisabled, coinsRequest = 0, multiplier = 1, onMultiplier, ...props }) {
@@ -44,7 +45,7 @@ export default function GiftBoard({ open, onClose, coins, onSend, sendDisabled, 
         title="Hediye Tahtası"
         tall
         hideTitle
-        panelClass="bg-[#231a31]/95 backdrop-blur-xl"
+        panelClass="gift-palace-panel"
       >
         <GiftBoardContent
           {...props}

@@ -3,6 +3,12 @@
 @tailwind utilities;
 
 :root, .dark {
+  --gift-palace-night: 245 68% 4%;
+  --gift-palace-gold: 42 100% 65%;
+  --gift-palace-purple: 271 100% 59%;
+  --gift-palace-cyan: 183 100% 54%;
+  --gift-palace-text: 240 35% 96%;
+  --gift-palace-muted: 248 34% 73%;
   --cabinet-night: 231 73% 13%;
   --cabinet-surface: 232 66% 29%;
   --cabinet-light: 221 81% 66%;

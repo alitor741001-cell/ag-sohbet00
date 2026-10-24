@@ -47,7 +47,8 @@ export default function GiftLevelTicker({ giftTick = 0 }) {
   const remainingCoins = next === null ? 0 : Math.max(0, coinsForK(nextK - kTotal));
 
   return (
-    <div key={step} className="neon-entrance flex items-center gap-2 rounded-xl bg-white/[0.06] px-2.5 py-2">
+    <div key={step} className="gift-palace-level flex items-center gap-2">
+      <span className="gift-palace-badge"><small>LVL</small><strong>{level}</strong></span>
       <div className="h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-white/15">
         <div
           className="h-full rounded-full bg-gradient-to-r from-[#6af5d9] to-[#45d6c8] transition-all duration-500"

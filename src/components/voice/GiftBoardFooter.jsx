@@ -1,14 +1,15 @@
-import { ChevronRight, Coins } from 'lucide-react';
+import { ChevronRight, Coins, Crown, Send } from 'lucide-react';
 import { formatCoins } from '@/lib/giftTone';
 
 /** Hediye Tahtası alt çubuğu: bakiye kutusu (dokununca coin mağazası) ve Gönder düğmesi. */
 export default function GiftBoardFooter({ coins, count = 0, onOpenCoins, onSend, sendDisabled }) {
   return (
-    <footer className="mt-2 flex shrink-0 items-center gap-1.5 rounded-2xl border border-white/10 bg-white/[0.06] p-1.5 backdrop-blur">
+    <footer className="gift-palace-footer mt-3 flex shrink-0 items-center gap-2">
+      <Crown className="gift-palace-crown" aria-hidden="true" />
       <button
         type="button"
         onClick={onOpenCoins}
-        className="flex min-w-0 shrink items-center gap-1 rounded-xl bg-black/40 px-2 py-1.5 text-xs font-black tabular-nums text-white transition-transform active:scale-95"
+        className="gift-palace-wallet flex min-w-0 shrink items-center gap-1 text-sm font-black tabular-nums transition-transform active:scale-95"
       >
         <Coins className="h-4 w-4 shrink-0 text-[#fbc02d]" />
         <span className="truncate">{coins === null || coins === undefined ? '—' : formatCoins(coins)}</span>
@@ -19,9 +20,9 @@ export default function GiftBoardFooter({ coins, count = 0, onOpenCoins, onSend,
         type="button"
         onClick={onSend}
         disabled={sendDisabled}
-        className="ml-auto shrink-0 rounded-xl bg-gradient-to-r from-[#6af5d9] to-[#4adec9] px-4 py-2 text-sm font-black text-[#0d2b28] transition-transform active:scale-95 disabled:opacity-40"
+        className="gift-palace-send ml-auto flex shrink-0 items-center justify-center gap-2 text-sm font-black transition-transform active:scale-95 disabled:opacity-40"
       >
-        Gönder{count > 0 ? ` · ${count}` : ''}
+        <Send className="h-4 w-4" fill="currentColor" /> Gönder{count > 1 ? ` · ${count}` : ''}
       </button>
     </footer>
   );
