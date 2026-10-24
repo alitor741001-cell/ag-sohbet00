@@ -162,10 +162,10 @@
 .voice-sheet-tall { max-height: 86vh; }
 @media (max-width: 767px) {
   .voice-sheet-tall {
-    height: 70vh;
-    height: 70dvh;
-    max-height: 70vh;
-    max-height: 70dvh;
+    height: 80vh;
+    height: 80dvh;
+    max-height: 80vh;
+    max-height: 80dvh;
   }
 }
 

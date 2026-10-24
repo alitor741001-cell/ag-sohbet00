@@ -48,7 +48,7 @@ export default function GiftBoardContent({
 
       {/* Alıcılar: seviye barının hemen altında durur — kutu açıldığında kime gönderileceği
           ilk bakışta görünür, hediye ızgarası arada kalan alanı doldurur. */}
-      <div className="shrink-0 pt-3">
+      <div className="shrink-0 pt-1">
         <GiftRecipientRow
           people={people}
           selectedIds={selectedIds}
@@ -93,7 +93,7 @@ export default function GiftBoardContent({
       </div>
 
       {/* Hediye ızgarası kendi alanında kayar; kalan yüksekliği doldurur. */}
-      <div className="no-scrollbar mt-3 min-h-0 flex-1 overflow-y-auto overscroll-contain">
+      <div className="no-scrollbar mt-2 min-h-0 flex-1 overflow-y-auto overscroll-contain">
         {shown.length === 0 ? (
           <p className="rounded-xl bg-white/5 px-3 py-3 text-center text-xs text-white/50">Bu kategoride hediye yok.</p>
         ) : (
