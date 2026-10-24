@@ -14,7 +14,6 @@ import useFriendPresence from '@/hooks/useFriendPresence';
 import { useToast } from '@/components/ui/use-toast';
 import { isModerator } from '@/lib/roles';
 import PullToRefresh from '@/components/home/PullToRefresh';
-import MessagesBanner from '@/components/friends/MessagesBanner';
 import useTabActivity from '@/components/layout/TabActivityContext';
 
 export default function Friends() {
@@ -191,7 +190,6 @@ export default function Friends() {
       className="dark mx-auto min-h-[calc(100vh-8rem)] w-full min-w-0 max-w-5xl text-white supports-[height:100dvh]:min-h-[calc(100dvh-8rem)]"
     >
       {/* Aşağı çekerek tazeleme: arkadaşlar, istekler ve sohbetler yeniden okunur. */}
-      <MessagesBanner relations={relations} userId={user.id} invoke={invoke} />
       <PullToRefresh onRefresh={() => { reloadFriends(); reloadConversations(); }}>
 
       <>

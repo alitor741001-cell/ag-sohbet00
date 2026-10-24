@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import PullToRefresh from '@/components/home/PullToRefresh';
-import ProfileBanner from '@/components/layout/ProfileBanner';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
 import { findProtectedName } from '@/lib/protectedNames';
@@ -183,7 +182,6 @@ export default function Profile() {
       className="dark min-h-screen pb-6 text-white"
     >
       <div className="mx-auto w-full max-w-2xl md:max-w-3xl xl:max-w-4xl">
-        <ProfileBanner />
       <PullToRefresh onRefresh={() => { reload?.(); loadWallet(); loadSocial(); loadVipCount(); }}>
         <ProfileHeroCard
           user={user}

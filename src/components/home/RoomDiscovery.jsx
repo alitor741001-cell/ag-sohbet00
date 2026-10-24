@@ -6,7 +6,6 @@ import { useCurrentUser } from '@/lib/useCurrentUser';
 import { broadcasterState } from '@/lib/broadcaster';
 import RoomDiscoveryCard from '@/components/home/RoomDiscoveryCard';
 import HomeTopBar from '@/components/home/fantasy/HomeTopBar';
-import GamesBanner from '@/components/layout/GamesBanner';
 import PullToRefresh from '@/components/home/PullToRefresh';
 import GameDiscoveryRow from '@/components/home/GameDiscoveryRow';
 import FollowPanel from '@/components/home/FollowPanel';
@@ -308,7 +307,6 @@ export default function RoomDiscovery({ shortcuts = null }) {
 
   return (
     <>
-      {tab === 'games' && <GamesBanner />}
       <PullToRefresh onRefresh={refreshList} label={tab === 'games' ? 'Oyunları' : 'Yayınları'} busyLabel={tab === 'games' ? 'Oyunlar yenileniyor…' : 'Yayınlar yenileniyor…'}>
         {tab === 'games' ? null : (
           <HomeTopBar view={view} onView={setView} onSearch={() => navigate('/arama')} showViews />
