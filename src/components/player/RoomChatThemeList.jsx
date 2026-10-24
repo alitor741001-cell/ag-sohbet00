@@ -31,10 +31,9 @@ export default function RoomChatThemeList({ counts, active, onTab, onClose, chil
   return createPortal(
     <>
       {onClose && <button type="button" aria-label="Kapat" onClick={onClose} className="fixed inset-0 z-[269] bg-black/60" />}
-      <div className="dark fixed inset-x-0 bottom-0 z-[270] flex flex-col overflow-hidden rounded-t-[26px] bg-[#081226] text-white ring-1 ring-white/15" style={{ height: height || '45vh' }}>
-        {/* Tasarım görselinin sekme şeridi: ev ekranındaki görünümün aynısı, panelin üstünde. */}
+      <div className="dark fixed inset-x-0 bottom-0 z-[270] flex flex-col overflow-hidden rounded-t-[26px] bg-[#081226] bg-no-repeat text-white ring-1 ring-white/15" style={{ height: height || '45vh', backgroundImage: `url(${CHATS_BG})`, backgroundSize: '100% auto', backgroundPosition: 'top center' }}>
+        {/* Ana sayfadaki özel sohbet tema görseli tüm panelin arka planıdır; sekmeler üstte. */}
         <div className="relative w-full shrink-0 overflow-hidden" style={{ height: '29.3vw' }}>
-          <img src={CHATS_BG} alt="" draggable={false} className="w-full select-none" />
           <ChatImageTabs counts={counts} active={active} onSelect={onTab} band />
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-[max(0.5rem,env(safe-area-inset-bottom))]">{children}</div>
