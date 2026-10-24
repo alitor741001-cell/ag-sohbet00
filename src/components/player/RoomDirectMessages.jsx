@@ -61,7 +61,7 @@ export default function RoomDirectMessages({ onClose, initialUserId, onFullScree
   const panelOverlay = Panel ? (
     <div className="dark fixed inset-0 z-[290] flex flex-col justify-end">
       <BackDismissLayer onClose={() => setRoomPanel('')} />
-      <button type="button" aria-label="Kapat" onClick={() => setRoomPanel('')} className="absolute inset-0" />
+      <button type="button" aria-label="Kapat" onClick={() => setRoomPanel('')} className="absolute inset-0 bg-black/70 backdrop-blur-[2px]" />
       <div className="relative flex h-[var(--voice-dm-height)] w-full flex-col overflow-hidden rounded-t-2xl bg-[#040b1c] pt-[env(safe-area-inset-top)] text-white">
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
           <Panel onBack={() => setRoomPanel('')} />

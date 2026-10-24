@@ -34,8 +34,8 @@ export default function VoiceViewerSheet({ open, onClose, participants = [], sea
 
   return (
     <div className="fixed inset-0 z-[250] flex flex-col justify-end">
-      {/* Panel 7. koltuk hizasına kadar açılır; arkasındaki koltuklar görünür kalır. */}
-      <button type="button" aria-label="Kapat" className="absolute inset-0" onClick={onClose} />
+      {/* Panel 7. koltuk hizasına kadar açılır; arkasındaki koltuklar karartılı olarak görünür kalır. */}
+      <button type="button" aria-label="Kapat" className="absolute inset-0 bg-black/70 backdrop-blur-[2px]" onClick={onClose} />
       <div className="animate-sheet-up relative flex h-[var(--voice-dm-height)] w-full flex-col overflow-hidden rounded-t-[26px] bg-gradient-to-b from-[#2E2622] to-[#1D1815] ring-1 ring-[#D9C496]/30">
         <div className="flex shrink-0 items-center justify-between gap-2 px-4 pb-2 pt-4">
           <p className="text-sm font-bold text-[#F2CE6B]">Odadakiler ({participants.length})</p>

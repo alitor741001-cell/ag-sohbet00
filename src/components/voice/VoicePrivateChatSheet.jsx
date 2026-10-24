@@ -22,7 +22,7 @@ export default function VoicePrivateChatSheet({ open, initialUserId, onClose, on
 
   return (
     <VoiceViewport className="voice-private-chat z-[250] justify-end">
-      {!full && <button type="button" aria-label="Kapat" onClick={onClose} className="absolute inset-0" />}
+      {!full && <button type="button" aria-label="Kapat" onClick={onClose} className="absolute inset-0 bg-black/70 backdrop-blur-[2px]" />}
       <div
         className={
           full
