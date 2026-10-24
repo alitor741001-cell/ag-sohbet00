@@ -18,7 +18,7 @@ import VoiceControlBar from '@/components/voice/VoiceControlBar';
 import VoiceChatDock from '@/components/voice/VoiceChatDock';
 import VoiceViewerSheet from '@/components/voice/VoiceViewerSheet';
 import VoiceSeatInvitePrompt from '@/components/voice/VoiceSeatInvitePrompt';
-import VoiceRoomHeaderArt from '@/components/voice/VoiceRoomHeaderArt';
+import RoomInfoCard from '@/components/voice/RoomInfoCard';
 import RoomProfileSheet from '@/components/voice/RoomProfileSheet';
 import VoiceRoomMenu from '@/components/voice/VoiceRoomMenu';
 import VoiceSeatSheet from '@/components/voice/VoiceSeatSheet';
@@ -1092,15 +1092,23 @@ export default function VoiceRoom() {
     >
       <RoomBackground value={room?.background} cover={room?.cover_url} />
 
-      <header className="relative shrink-0 mt-0 px-0 pb-0 pt-[env(safe-area-inset-top)]">
-        <VoiceRoomHeaderArt
-          giftTotal={giftBoard?.day?.total || 0}
-          onProfile={() => setProfilePanelOpen(true)}
-          onGifts={openGifts}
-          onViewers={() => setViewerOpen(true)}
-          onMenu={() => setMenuOpen(true)}
-          onExit={() => setExitOpen(true)}
-        />
+      <header className="relative shrink-0 px-4 pb-2 pt-[max(0.75rem,env(safe-area-inset-top))]">
+        <div className="flex min-w-0 flex-col items-start">
+          <RoomInfoCard
+            room={room}
+            onOpen={() => setProfilePanelOpen(true)}
+            viewerCount={participants.length}
+            onOpenViewers={() => setViewerOpen(true)}
+            canMod={canMod}
+            menuHighlighted={!!music.music?.is_playing}
+            onOpenMenu={() => setMenuOpen(true)}
+            onExit={() => setExitOpen(true)}
+          />
+          <GiftScoreChip
+            score={giftBoard?.all?.total || 0}
+            onClick={() => { setGiftBoardOpen(true); loadGiftBoard(); }}
+          />
+        </div>
       </header>
 
       <VoiceStage

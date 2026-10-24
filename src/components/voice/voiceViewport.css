@@ -77,8 +77,7 @@
 }
 /* Butonlar ekranın dibine yakın, arka plan görselin üzerinde serbest durur. */
 .voice-control-bar {
-  padding-bottom: max(0.1rem, calc(env(safe-area-inset-bottom, 0px) * 0.2));
-  margin-bottom: -0.5rem;
+  padding-bottom: max(0.35rem, calc(env(safe-area-inset-bottom, 0px) * 0.5));
 }
 
 @media (max-width: 767px) {
