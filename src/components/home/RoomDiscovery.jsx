@@ -318,17 +318,7 @@ export default function RoomDiscovery({ shortcuts = null }) {
             <div key={index} className="animate-pulse rounded-[16px] bg-[#10141d]" style={{ aspectRatio: '3 / 2' }} />
           ))}
         </div>
-      ) : items.length === 0 ? (
-        <div className="premium-panel rounded-2xl px-4 py-8 text-center">
-          <p className="text-sm font-bold text-white">Şu an açık oda yok.</p>
-          <Link
-            to="/oda-kur"
-            className="mt-2 inline-block rounded-lg border border-premium-gold/50 px-3 py-1.5 text-xs font-black text-premium-gold"
-          >
-            İlk odayı sen aç →
-          </Link>
-        </div>
-      ) : (
+      ) : items.length === 0 ? null : (
         <>
           <div className="grid grid-cols-2 gap-2.5">
           {items.map((room, index) => {
