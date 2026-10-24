@@ -28,7 +28,7 @@ export default function RoomHeaderArt({ room, onOpen, viewerCount = 0, onOpenVie
   return (
     <div className="relative w-full" style={{ aspectRatio: `${W} / ${H}` }}>
       {src && <img src={src} alt="" draggable={false} className="pointer-events-none absolute inset-0 h-full w-full select-none" />}
-      <button type="button" onClick={onOpen} aria-label="Oda profilini aç" className="overflow-hidden rounded-full" style={pct(39, 49, 76, 76)}>
+      <button type="button" onClick={onOpen} aria-label="Oda profilini aç" className="overflow-hidden rounded-full" style={pct(24, 49, 76, 76)}>
         {profile.avatar
           ? <Image src={profile.avatar} alt={ownerName} className="h-full w-full" fittingType="fill" draggable={false} />
           : <span className="flex h-full w-full items-center justify-center text-lg font-bold text-white">{ownerName.trim().charAt(0)}</span>}
@@ -40,11 +40,11 @@ export default function RoomHeaderArt({ room, onOpen, viewerCount = 0, onOpenVie
       <button type="button" onClick={onOpenGifts} aria-label="Hediye sıralaması" className="flex items-center text-left" style={pct(60, 138, 300, 36)}>
         <span className="ml-[37%] text-[clamp(13px,4.2vw,20px)] font-bold tabular-nums text-white">{score}</span>
       </button>
-      <button type="button" onClick={onOpenViewers} aria-label="İzleyiciler" className="flex items-center justify-end rounded-full pr-[1%]" style={pct(446, 62, 74, 72)}>
+      <button type="button" onClick={onOpenViewers} aria-label="İzleyiciler" className="flex items-center justify-end rounded-full pr-[1%]" style={pct(460, 62, 74, 72)}>
         <span className="text-[clamp(12px,3.8vw,18px)] font-bold tabular-nums text-white">{viewerCount}</span>
       </button>
-      <button type="button" onClick={onOpenMenu} aria-label="Oda menüsü" className="rounded-full" style={pct(533, 62, 72, 72)} />
-      <button type="button" onClick={onExit} aria-label="Odadan çık" className="rounded-full" style={pct(620, 62, 72, 72)} />
+      <button type="button" onClick={onOpenMenu} aria-label="Oda menüsü" className="rounded-full" style={pct(547, 62, 72, 72)} />
+      <button type="button" onClick={onExit} aria-label="Odadan çık" className="rounded-full" style={pct(634, 62, 72, 72)} />
     </div>
   );
 }

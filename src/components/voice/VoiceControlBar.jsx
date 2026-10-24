@@ -40,7 +40,7 @@ export default function VoiceControlBar({ micActive, deafened, gamesEnabled = tr
 
   const btn = 'rounded-full active:bg-white/15 transition-colors';
   return (
-    <div ref={barRef} className="voice-control-bar relative w-full shrink-0" style={{ aspectRatio: `${W} / ${H}` }}>
+    <div ref={barRef} className="voice-control-bar relative w-full shrink-0" style={{ aspectRatio: `${W} / ${H}`, transform: 'translateY(7px)' }}>
       {src && <img src={src} alt="" draggable={false} className="pointer-events-none absolute inset-0 h-full w-full select-none" />}
       <button type="button" aria-label="Sohbet" onClick={onToggleChat} className={btn} style={zone(78, 938, 84)} />
       <button type="button" aria-label="Mikrofon" onClick={onToggleMic} className={btn} style={zone(172, 938, 84)}>{!micActive && <Off />}</button>

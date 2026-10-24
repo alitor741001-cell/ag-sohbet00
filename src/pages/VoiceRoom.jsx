@@ -19,6 +19,7 @@ import VoiceChatDock from '@/components/voice/VoiceChatDock';
 import VoiceViewerSheet from '@/components/voice/VoiceViewerSheet';
 import VoiceSeatInvitePrompt from '@/components/voice/VoiceSeatInvitePrompt';
 import RoomHeaderArt from '@/components/voice/RoomHeaderArt';
+import RoomStatusPill from '@/components/voice/RoomStatusPill';
 import RoomProfileSheet from '@/components/voice/RoomProfileSheet';
 import VoiceRoomMenu from '@/components/voice/VoiceRoomMenu';
 import VoiceSeatSheet from '@/components/voice/VoiceSeatSheet';
@@ -1096,6 +1097,11 @@ export default function VoiceRoom() {
           giftScore={giftBoard?.all?.total || 0}
           onOpenGifts={() => { setGiftBoardOpen(true); loadGiftBoard(); }}
         />
+        <div className="-mt-2 flex justify-end pr-1">
+          <div className="w-[58%] max-w-[260px]">
+            <RoomStatusPill startedAt={room?.created_date} />
+          </div>
+        </div>
       </header>
 
       <VoiceStage
