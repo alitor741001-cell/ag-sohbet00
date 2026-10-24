@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import SupportLabel from '@/components/layout/SupportLabel';
 
 export const DESIGN_IMAGE = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/f729cdeba_IMG_0210.jpg';
 
@@ -6,7 +7,7 @@ const ITEMS = [
   { label: 'Ana Sayfa', to: '/', x: 3.5, w: 17.5 },
   { label: 'Sohbet', to: '/arkadaslar?view=chats', x: 23, w: 17.5 },
   { label: 'Oyunlar', to: '/?oyunlar=1', x: 41.5, w: 17.5 },
-  { label: 'Arkadaşlar', to: '/arkadaslar', x: 60, w: 18.5 },
+  { label: 'Canlı Destek', to: '/destek', x: 60, w: 18.5 },
   { label: 'Profil', to: '/profil', x: 79.5, w: 17 },
 ];
 
@@ -16,6 +17,7 @@ export default function DesignBottomNav() {
     <nav className="fixed inset-x-0 bottom-0 z-50 mx-auto w-full max-w-[540px] pb-[env(safe-area-inset-bottom)]" style={{ background: '#0a0a0d' }}>
       <div className="relative w-full overflow-hidden" style={{ aspectRatio: '540 / 144' }}>
         <img src={DESIGN_IMAGE} alt="" draggable={false} className="pointer-events-none absolute bottom-0 left-0 w-full select-none" />
+        <SupportLabel top="46.5%" height="25%" />
         {ITEMS.map((item) => (
           <Link
             key={item.label}

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import RoomDiscovery from '@/components/home/RoomDiscovery';
 
+import SupportLabel from '@/components/layout/SupportLabel';
 const DESIGN = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/f729cdeba_IMG_0210.jpg';
 
 // Dokunma alanları tasarım görseli üzerinde yüzde koordinatlarıyla yerleşir (540x1024 tabanlı).
@@ -14,7 +15,7 @@ const ZONES = [
   { label: 'Ana Sayfa', to: '/', x: 3.5, y: 87, w: 17.5, h: 9.5 },
   { label: 'Sohbet', to: '/arkadaslar?view=chats', x: 23, y: 87, w: 17.5, h: 9.5 },
   { label: 'Oyunlar', to: '/?oyunlar=1', x: 41.5, y: 87, w: 17.5, h: 9.5 },
-  { label: 'Arkadaşlar', to: '/arkadaslar', x: 60, y: 87, w: 18.5, h: 9.5 },
+  { label: 'Canlı Destek', to: '/destek', x: 60, y: 87, w: 18.5, h: 9.5 },
   { label: 'Profil', to: '/profil', x: 79.5, y: 87, w: 17, h: 9.5 },
 ];
 
@@ -28,6 +29,7 @@ export default function Home() {
   return (
     <div className="fixed inset-0 overflow-hidden text-white" style={{ background: '#0a0a0d' }}>
       <img src={DESIGN} alt="" className="pointer-events-none absolute inset-0 h-full w-full select-none object-fill" draggable={false} />
+      <SupportLabel top="92.5%" height="3.5%" />
       {zones.map((z) => (
         <Link
           key={z.label + z.y}
