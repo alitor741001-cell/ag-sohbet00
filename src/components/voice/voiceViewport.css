@@ -77,9 +77,7 @@
 }
 /* Butonlar ekranın dibine yakın, arka plan görselin üzerinde serbest durur. */
 /* Alt çubuk ekranın dibine biraz daha yakın durur: güvenli alan payı kısaltıldı. */
-.voice-control-bar {
-  padding-bottom: max(0.1rem, calc(env(safe-area-inset-bottom, 0px) * 0.2));
-}
+.voice-control-bar { padding-bottom: 0; }
 
 @media (max-width: 767px) {
   /* Sohbet alanı sabit yükseklikte durur: yeni mesaj gelmesi ya da yazma alanının açılıp
@@ -124,7 +122,7 @@
     /* Çerçeve zaten görünür ekran boyundadır; eski ekran yüksekliğiyle tekrar
        kaydırmak çubuğu çerçevenin dışına çıkarıp overflow ile kırpıyordu.
        Çubuk ekranın dibine biraz daha yakın durur. */
-    bottom: -7px;
+    bottom: 0;
   }
 }
 

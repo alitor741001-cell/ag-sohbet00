@@ -1,19 +1,27 @@
 import { useLayoutEffect, useRef } from 'react';
-import { Gamepad2, Gift, MessageCircle, Mic, MicOff, Send, Star, Volume2, VolumeX } from 'lucide-react';
-import '@/components/voice/voiceNeonBars.css';
+import useKeyedImage from '@/hooks/useKeyedImage';
 
-function Tab({ onClick, label, text, color, off, children }) {
-  return (
-    <button type="button" onClick={onClick} aria-label={label} data-off={off ? 'true' : 'false'} className={`neon-tab ${color}`}>
-      {children}
-      <span className="truncate">{text}</span>
-    </button>
-  );
-}
+const BAR_URL = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/8c3e10240_IMG_0231.jpg';
+// Görselin (748x1024) alt buton şeridi: y 790 → 1024.
+const W = 748;
+const TOP = 790;
+const H = 234;
+const CROP = { top: TOP / 1024, height: H / 1024 };
 
-/** Alt kontrol çubuğu: sohbet, mikrofon, hoparlör, hediye, özel sohbet, oyun merkezi ve ayarlar. */
-export default function VoiceControlBar({ micActive, deafened, gamesOpen, gamesEnabled = true, settingsOpen, onToggleMic, onToggleSpeaker, onOpenGames, onOpenGifts, onOpenSettings, onOpenPrivateChat, onToggleChat }) {
+const zone = (cx, cy, w, h = w) => ({
+  position: 'absolute',
+  left: `${((cx - w / 2) / W) * 100}%`,
+  top: `${((cy - TOP - h / 2) / H) * 100}%`,
+  width: `${(w / W) * 100}%`,
+  height: `${(h / H) * 100}%`,
+});
+
+const Off = () => <span className="pointer-events-none absolute left-1/2 top-[40%] h-[3px] w-3/4 -translate-x-1/2 -translate-y-1/2 rotate-45 rounded bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.9)]" />;
+
+/** Alt kontrol çubuğu: tasarım görseli, butonları görselin üzerindeki dokunma alanlarıdır. */
+export default function VoiceControlBar({ micActive, deafened, gamesEnabled = true, onToggleMic, onToggleSpeaker, onOpenGames, onOpenGifts, onOpenSettings, onOpenPrivateChat, onToggleChat }) {
   const barRef = useRef(null);
+  const src = useKeyedImage(BAR_URL, CROP);
 
   // Çubuğun gerçek yüksekliği oda çerçevesine bildirilir: sohbet alanı tam butonların üstünde biter.
   useLayoutEffect(() => {
@@ -30,21 +38,17 @@ export default function VoiceControlBar({ micActive, deafened, gamesOpen, gamesE
     };
   }, []);
 
+  const btn = 'rounded-full active:bg-white/15 transition-colors';
   return (
-    <div ref={barRef} className="voice-control-bar relative shrink-0 px-1 pb-0 pt-6">
-      <div className="neon-panel dragon-panel dragon-bar neon-glow flex items-center px-1">
-        <Tab onClick={onToggleChat} label="Sohbet" text="Sohbet" color="text-cyan-300"><MessageCircle /></Tab>
-        <Tab onClick={onToggleMic} label="Mikrofon" text="Mikrofon" color="text-fuchsia-400" off={!micActive}>{micActive ? <Mic /> : <MicOff />}</Tab>
-        <Tab onClick={onToggleSpeaker} label="Hoparlör" text="Ses" color="text-sky-400" off={deafened}>{deafened ? <VolumeX /> : <Volume2 />}</Tab>
-        <span className="neon-gift-wrap">
-          <button type="button" onClick={onOpenGifts} aria-label="Hediye gönder" className="neon-gift"><Gift /><span className="text-white">Hediye</span></button>
-        </span>
-        <Tab onClick={onOpenPrivateChat} label="Özel sohbet" text="Mesaj" color="text-pink-400"><Send /></Tab>
-        {gamesEnabled
-          ? <Tab onClick={onOpenGames} label="Oyun merkezi" text="Oyunlar" color={gamesOpen ? 'text-premium-gold' : 'text-emerald-400'}><Gamepad2 /></Tab>
-          : <span className="flex-1" />}
-        <Tab onClick={onOpenSettings} label="Oda ayarları" text="Ayarlar" color={settingsOpen ? 'text-premium-gold' : 'text-blue-400'}><Star /></Tab>
-      </div>
+    <div ref={barRef} className="voice-control-bar relative w-full shrink-0" style={{ aspectRatio: `${W} / ${H}` }}>
+      {src && <img src={src} alt="" draggable={false} className="pointer-events-none absolute inset-0 h-full w-full select-none" />}
+      <button type="button" aria-label="Sohbet" onClick={onToggleChat} className={btn} style={zone(78, 938, 84)} />
+      <button type="button" aria-label="Mikrofon" onClick={onToggleMic} className={btn} style={zone(172, 938, 84)}>{!micActive && <Off />}</button>
+      <button type="button" aria-label="Hoparlör" onClick={onToggleSpeaker} className={btn} style={zone(262, 938, 84)}>{deafened && <Off />}</button>
+      <button type="button" aria-label="Hediye gönder" onClick={onOpenGifts} className={btn} style={zone(374, 918, 124)} />
+      <button type="button" aria-label="Özel sohbet" onClick={onOpenPrivateChat} className={btn} style={zone(486, 938, 84)} />
+      {gamesEnabled && <button type="button" aria-label="Oyun merkezi" onClick={onOpenGames} className={btn} style={zone(580, 938, 84)} />}
+      <button type="button" aria-label="Oda ayarları" onClick={onOpenSettings} className={btn} style={zone(667, 938, 84)} />
     </div>
   );
 }
