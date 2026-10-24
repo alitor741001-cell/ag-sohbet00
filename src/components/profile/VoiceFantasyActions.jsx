@@ -21,12 +21,13 @@ export default function VoiceFantasyActions({ room, userId, name, isSelf, hidden
     ...(seat >= 0 && room.canControl(userId) ? [{ key: 'mic', label: muted ? 'Mik Aç' : 'Mik Kapat', icon: muted ? MicOff : Mic, action: () => room.toggleMic(userId) }] : []),
     ...(seat >= 0 && room.canModerate ? [{ key: 'lock', label: locked ? 'Kilidi Aç' : 'Koltuğu Kilitle', icon: locked ? LockKeyholeOpen : LockKeyhole, action: () => room.lockSeat(seat, !locked) }] : []),
     ...(seat < 0 && room.canModerate && !isSelf && room.hasFreeSeat?.() ? [{ key: 'assign', label: 'Koltuğa Al', icon: UserCheck, action: () => room.seatAssign(userId) }] : []),
-    ...(seat >= 0 && room.canControl(userId) ? [{ key: 'stand', label: isSelf ? 'Koltuktan İn' : 'Koltuktan İndir', icon: LogOut, action: () => room.standUp(userId) }] : []),
-    ...(room.canModerate && !isSelf ? [{ key: 'kick', label: 'Odadan At', icon: LogOut, action: () => room.kick(userId), danger: true }] : []),
+    ...(seat >= 0 && room.canControl(userId) && !isSelf ? [{ key: 'stand', label: 'Koltuktan İndir', icon: LogOut, action: () => room.standUp(userId) }] : []),
   ];
+  // Bahset, Odadan At ve Özel Mesaj aynı satırda durur: özel mesaj en sağdadır.
   const items = [
     ...(!isSelf && !hidden ? [
       { key: 'mention', label: 'Bahset', icon: AtSign, action: () => room.mention(name) },
+      ...(room.canModerate ? [{ key: 'kick', label: 'Odadan At', icon: LogOut, action: () => room.kick(userId), danger: true }] : []),
       { key: 'message', label: 'Özel Mesaj', icon: MessageSquare, action: () => room.message ? room.message(userId) : onMessage?.(userId) },
     ] : []),
   ];
@@ -48,9 +49,16 @@ export default function VoiceFantasyActions({ room, userId, name, isSelf, hidden
           ))}
         </div>
       )}
-      <div className="grid grid-cols-3 gap-2">
-        {items.map(({ key, label, icon: Icon, action }) => (
-          <button key={key} type="button" disabled={!!busy} onClick={() => perform(key, action)} className="voice-fantasy-button flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl px-1 py-2 text-[10px] font-bold disabled:opacity-50">
+      {isSelf && seat >= 0 && (
+        <div className="grid grid-cols-3 gap-2">
+          <button type="button" disabled={!!busy} onClick={() => perform('stand', () => room.standUp(userId))} className="voice-fantasy-button flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl px-1 py-2 text-[10px] font-bold disabled:opacity-50">
+            {busy === 'stand' ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogOut className="h-4 w-4" />}<span>Koltuktan İn</span>
+          </button>
+        </div>
+      )}
+      <div className={`grid gap-2 ${items.length >= 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
+        {items.map(({ key, label, icon: Icon, action, danger }) => (
+          <button key={key} type="button" disabled={!!busy} onClick={() => perform(key, action)} className={`voice-fantasy-button flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl px-1 py-2 text-[10px] font-bold disabled:opacity-50 ${danger ? 'text-destructive' : ''}`}>
             {busy === key ? <Loader2 className="h-4 w-4 animate-spin" /> : <Icon className="h-4 w-4" />}<span>{label}</span>
           </button>
         ))}

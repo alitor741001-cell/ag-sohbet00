@@ -18,6 +18,14 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
   const seatCosmetics = useSeatCosmetics(seats);
   const measured = useSize(wrapRef);
   const width = measured?.width || 360;
+  // Koltuk boyutu sahnenin anlık yüksekliğine göre her karede değişmesin: sohbet büyüdükçe
+  // yeniden ölçülen yükseklik satırları aşağı yukarı oynatıyordu. Ölçülen en büyük yükseklik
+  // sabitlenir; yalnızca koltuk sayısı ya da ekran genişliği değişince yenilenir.
+  const budgetRef = useRef({ key: '', height: 0 });
+  const budgetKey = `${seats.length}:${Math.round(width / 24)}`;
+  if (budgetRef.current.key !== budgetKey) budgetRef.current = { key: budgetKey, height: 0 };
+  if (maxHeight && maxHeight > budgetRef.current.height) budgetRef.current.height = maxHeight;
+  const heightBudget = budgetRef.current.height || maxHeight;
   const rows = useMemo(() => responsiveSeatRows(seats.length, width), [seats.length, width]);
   const onSeatClick = useCallback((index) => onSelectSeat(index), [onSelectSeat]);
 
@@ -35,7 +43,7 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
   // Alçak ekranda satır araları daralır: en küçük koltukta bile tüm satırlar ve
   // altlarındaki sayı şeritleri sahneye sığar.
   const rowsNeeded = (rows.length || 1) * (boardActive ? 83 : 62) + 12 * Math.max(0, rows.length - 1);
-  const rowGap = (spread ? 6 : 0) + (featureTop ? (narrow ? 8 : 14) : narrow ? (many ? 5 : maxHeight && maxHeight < rowsNeeded ? 6 : 12) : 20);
+  const rowGap = (spread ? 6 : 0) + (featureTop ? (narrow ? 8 : 14) : narrow ? (many ? 5 : heightBudget && heightBudget < rowsNeeded ? 6 : 12) : 20);
   const available = width - 4;
   const perSeat = (available - baseGap * (widestRow - 1)) / widestRow;
   // 9'lu düzende koltuk bir beden büyük çizilir: 'xl' sınırı da açıktır.
@@ -49,8 +57,8 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
   const columnExtra = boardActive ? (featureTop ? 33 : many ? 36 : 41) : featureTop ? 16 : 20;
   // Üstteki büyük çerçeve fazladan yer kaplar: kalan satırlar ona göre ölçülür.
   const rowUnits = rows.length + (featureTop ? 0.2 : 0);
-  const perRow = maxHeight
-    ? (maxHeight - rowGap * Math.max(0, rows.length - 1)) / (rowUnits || 1)
+  const perRow = heightBudget
+    ? (heightBudget - rowGap * Math.max(0, rows.length - 1)) / (rowUnits || 1)
     : Infinity;
   const maxCell = perRow - columnExtra;
   const heightSize = featureTop
@@ -66,8 +74,9 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
     : featureTop
       ? widthSize
       : fitSize;
-  // Orta çerçeve bir beden büyük: referanstaki 9'lu düzenin oranı korunur.
-  const topSize = SIZES[Math.min(SIZES.indexOf(size) + 1, SIZES.length - 1)];
+  // Üstteki tek çerçeve artık büyütülmez: bir beden küçülüp diğer koltuklarla aynı boyda
+  // durur, böylece satır yüksekliği hiç değişmez ve koltuklar yerinden oynamaz.
+  const topSize = size;
 
   return (
     <div ref={wrapRef} className="w-full">
