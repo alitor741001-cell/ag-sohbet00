@@ -39,7 +39,7 @@ export default function RoomHeaderArt({ room, onOpen, viewerCount = 0, onOpenVie
   const score = formatGiftTotal(giftScore);
 
   return (
-    <div className="voice-header-art relative w-full" style={{ aspectRatio: `${W} / ${H}` }}>
+    <div className="voice-header-art relative w-full" style={{ aspectRatio: `${W} / ${H}`, containerType: 'inline-size' }}>
       {/* Fotoğraf çerçevenin ARKASINDA durur: çember dışına taşan kısım çerçeve altında kalır. */}
       <div className="pointer-events-none overflow-hidden rounded-full" style={{ ...pct(PORTRAIT.cx - PORTRAIT.r, PORTRAIT.cy - PORTRAIT.r, PORTRAIT.r * 2, PORTRAIT.r * 2), clipPath: 'circle(50% at 50% 50%)' }}>
         {profile.avatar
@@ -49,8 +49,8 @@ export default function RoomHeaderArt({ room, onOpen, viewerCount = 0, onOpenVie
       {src && <img src={src} alt="" draggable={false} className="pointer-events-none absolute inset-0 h-full w-full select-none" />}
       <button type="button" onClick={onOpen} aria-label="Oda profilini aç" className="rounded-full" style={pct(PORTRAIT.cx - PORTRAIT.r, PORTRAIT.cy - PORTRAIT.r, PORTRAIT.r * 2, PORTRAIT.r * 2)} />
       <button type="button" onClick={onOpen} className="flex flex-col justify-center overflow-hidden text-left" style={pct(132, 50, 200, 66)}>
-        <RoomNameMarquee text={room?.name || 'Oda'} className="text-[clamp(13px,4.2vw,20px)] font-bold leading-normal text-white" />
-        {memberId && <span className="mt-0.5 flex items-center gap-1 text-[clamp(10px,3vw,14px)] tabular-nums text-white/75">ID:{memberId}<span className="h-2 w-2 rounded-full bg-emerald-400" /></span>}
+        <RoomNameMarquee text={room?.name || 'Oda'} className="w-full shrink-0 !py-0 text-[3.65cqw] font-bold leading-[1.2] text-white" />
+        {memberId && <span className="flex shrink-0 items-center gap-1 text-[2.7cqw] leading-[1.2] tabular-nums text-white/75">ID:{memberId}<span className="h-[1.4cqw] w-[1.4cqw] shrink-0 rounded-full bg-emerald-400" /></span>}
       </button>
       <button type="button" onClick={onOpenGifts} aria-label="Hediye sıralaması" className="flex items-center text-left" style={pct(60, 138, 300, 36)}>
         <span className="ml-[37%] text-[clamp(13px,4.2vw,20px)] font-bold tabular-nums text-white">{score}</span>

@@ -57,7 +57,8 @@ export default function Home() {
               key={z.label + z.y}
               to={z.to}
               aria-label={z.label}
-              className="absolute z-20 rounded-2xl active:bg-white/10"
+              aria-current={z.y >= 80 && z.to === (games ? '/?oyunlar=1' : '/') ? 'page' : undefined}
+              className={z.y >= 80 ? 'home-bottom-zone absolute z-40 rounded-2xl' : 'absolute z-20 rounded-2xl active:bg-white/10'}
               style={{ left: `${z.x}%`, top: `${z.y}%`, width: `${z.w}%`, height: `${z.h}%` }}
             />
           ))}
