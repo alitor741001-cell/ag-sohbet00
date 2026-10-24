@@ -1,10 +1,11 @@
-const BACKDROP = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/bb6ae2dd8_IMG_0213.jpg';
+import { DESIGN_IMAGE } from '@/components/layout/DesignBottomNav';
 
-/** Özel sohbet, canlı destek, profil ve arama sayfalarının alevli arka planı. */
+/** Ana sayfa tasarımının aynısı; sadece üst butonlar (%12) gizlenir. */
 export default function DesignBackdrop() {
   return (
     <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden" style={{ background: '#000' }} aria-hidden="true">
-      <img src={BACKDROP} alt="" draggable={false} className="absolute inset-0 h-full w-full select-none object-cover" />
+      <img src={DESIGN_IMAGE} alt="" draggable={false} className="absolute inset-0 h-full w-full select-none object-fill" />
+      <div className="absolute inset-x-0 top-0" style={{ height: '12%', background: 'linear-gradient(to bottom, #000 80%, transparent)' }} />
     </div>
   );
 }
