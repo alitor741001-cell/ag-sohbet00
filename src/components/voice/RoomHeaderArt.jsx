@@ -35,7 +35,7 @@ export default function RoomHeaderArt({ room, onOpen, viewerCount = 0, onOpenVie
   const score = formatGiftTotal(giftScore);
 
   return (
-    <div className="relative w-full" style={{ aspectRatio: `${W} / ${H}` }}>
+    <div className="voice-header-art relative w-full" style={{ aspectRatio: `${W} / ${H}` }}>
       {src && <img src={src} alt="" draggable={false} className="pointer-events-none absolute inset-0 h-full w-full select-none" />}
       <button type="button" onClick={onOpen} aria-label="Oda profilini aç" className="overflow-hidden rounded-full" style={{ ...pct(30, 55, 64, 64), aspectRatio: '1 / 1', height: 'auto' }}>
         {profile.avatar

@@ -63,6 +63,20 @@
   padding-right: env(safe-area-inset-right, 0px);
   overscroll-behavior: none;
 }
+/* Üst başlık (profil kartı, kapatma vb.) biraz daha yukarıda durur. */
+.voice-header-art { margin-top: -3.5%; }
+/* Tablet ve geniş ekranlarda oda ortada telefon genişliğinde bir sütunda kalır:
+   başlık, koltuklar ve sohbet aşırı büyümez; tema yine tüm ekranı kaplar. */
+@media (min-width: 768px) {
+  .voice-viewport {
+    padding-left: max(env(safe-area-inset-left, 0px), calc((100vw - 640px) / 2));
+    padding-right: max(env(safe-area-inset-right, 0px), calc((100vw - 640px) / 2));
+  }
+}
+/* Çok kısa/eski küçük ekranlarda (iPhone SE vb.) başlık biraz daha sıkışık durur. */
+@media (max-height: 640px) {
+  .voice-header-art { margin-top: -5%; }
+}
 .voice-viewport[data-keyboard="open"] .voice-chat-flow { max-height: calc(var(--visual-viewport-height) * 0.28); }
 .voice-viewport .voice-chat-composer { margin-bottom: 0; }
 /* Mesaj akışı doğrudan butonların üstüne yaslanır: yazma alanı kapalıyken sohbet bloğunda
