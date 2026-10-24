@@ -18,7 +18,7 @@ export default function VoiceSeatScore({ value = 0, size = 'md' }) {
 
   return (
     <span
-      className={`voice-gift-score mt-1 flex ${WIDTH[size] || WIDTH.md} items-center justify-center`}
+      className={`voice-gift-score relative z-20 mt-1 flex shrink-0 ${WIDTH[size] || WIDTH.md} items-center justify-center`}
       data-score-tier={scoreTier(shown)}
       aria-label={`${shown.toLocaleString('tr-TR')} sayaç`}
     >
