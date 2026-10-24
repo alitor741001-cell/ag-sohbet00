@@ -4,7 +4,6 @@ import shallowEqual from '@/components/data/shallowEqual';
 import VoiceSeatPortrait from '@/components/voice/VoiceSeatPortrait';
 import VoiceSeatRing from '@/components/voice/VoiceSeatRing';
 import { isHiddenName } from '@/lib/hiddenUser';
-import SeatEmblem from '@/components/voice/SeatEmblem';
 import VoiceSpeakingWave from '@/components/voice/VoiceSpeakingWave';
 import { vipLook } from '@/components/vip/vipTheme';
 
@@ -34,14 +33,7 @@ function VoiceSeat({ seat, index, size = 'md', musicPlaying, speaking, isSelf, i
       <button type="button" onClick={handleClick} className="flex flex-col items-center gap-1 active:scale-95 transition-transform" aria-label={`${index + 1}. koltuk`}>
         <span className={`flex ${cell} shrink-0 items-center justify-center`}>
           <span className={`relative flex ${emptyCircle} items-center justify-center`}>
-            <VoiceSeatRing className="h-full w-full" variant={index} mono glow="0 4px 12px -6px rgba(0,0,0,0.9)">
-              <span
-                className="relative flex h-full w-full items-center justify-center overflow-hidden"
-                style={{ background: 'radial-gradient(circle at 34% 26%, #17304c 0%, #0a1526 74%)' }}
-              >
-                <SeatEmblem index={index} />
-              </span>
-            </VoiceSeatRing>
+            <VoiceSeatRing className="h-full w-full" variant={index} />
             {/* Kilit / artı işareti boş koltuğun tam ortasında durur. */}
             <span className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
               <span className="flex h-5 w-5 items-center justify-center rounded-full border border-[#f2d79c]/70 bg-[#0a1526]/85 shadow-[0_2px_8px_rgba(0,0,0,0.65)]">
