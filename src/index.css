@@ -839,20 +839,20 @@
    piksel olarak yazılır; dvh/svh birimini desteklemeyen eski iOS ve Android
    sürümlerinde de uygulama cihazın kendi ekran boyutunu kaplar. */
 :root { --app-height: 100vh; }
+@supports (height: 100dvh) { :root { --app-height: 100dvh; } }
 
-/* Çentik, durum çubuğu ve güvenli alan: tasarım ekranları bu sınırın içinde kalır.
-   Ekran büyükse (tablet/iPad) tasarım ortada telefon oranında durur, kenarda kalan
-   pikseller aynı görselin bulanık dolgusuyla kapanır. */
+/* Tasarım ekranları üst çentikten alt çentiğe kadar tüm görünür alanı kaplar;
+   kenarda kalan pikseller (tablet/iPad) aynı görselin bulanık dolgusuyla kapanır. */
 :root {
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --design-height: calc(var(--app-height) - var(--safe-top) - var(--safe-bottom));
+  --design-height: var(--app-height);
 }
 .design-screen {
   position: fixed;
   left: 0;
   right: 0;
-  top: var(--safe-top);
+  top: 0;
   height: var(--design-height);
 }
 .design-stage {

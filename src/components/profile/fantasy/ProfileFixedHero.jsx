@@ -22,7 +22,7 @@ export default function ProfileFixedHero(props) {
 
   return (
     <>
-      <div ref={boxRef} className="fixed inset-x-0 z-30 overflow-hidden" style={{ top: 'var(--safe-top)' }}>
+      <div ref={boxRef} className="fixed inset-x-0 z-30 overflow-hidden" style={{ top: 0 }}>
         <div className="relative mx-auto w-full max-w-[560px]">
           <img
             src={THEME_BG}
