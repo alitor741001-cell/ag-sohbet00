@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import SupportLabel from '@/components/layout/SupportLabel';
+import BottomNavStrip from '@/components/layout/BottomNavStrip';
 
 const BG = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/1ac262e7e_IMG_0216.jpg';
 export const CHATS_BG = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/489f91051_IMG_0225.jpg';
@@ -20,7 +20,7 @@ export default function ThemeShell({ chats = false }) {
     <>
       {/* Güvenli alanın dışında kalan pikseller aynı görselin bulanık dolgusuyla kapanır. */}
       <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden bg-black" aria-hidden="true">
-        <img src={bg} alt="" draggable={false} className="h-full w-full scale-110 select-none object-fill opacity-60 blur-2xl" />
+        <img src={bg} alt="" draggable={false} className="h-full w-full scale-110 select-none object-fill blur-2xl" />
       </div>
       <div className="design-screen -z-10" aria-hidden="true">
         <div className="design-stage">
@@ -30,8 +30,7 @@ export default function ThemeShell({ chats = false }) {
       {/* Alt menü şeridi içeriğin üstünde kalır. */}
       <div className="design-screen pointer-events-none z-40">
         <div className="design-stage">
-          <img src={bg} alt="" aria-hidden="true" draggable={false} className="pointer-events-none absolute inset-0 h-full w-full select-none object-fill" style={{ clipPath: 'inset(85% 0 0 0)' }} />
-          <SupportLabel top="92.5%" height="3.5%" />
+          <BottomNavStrip />
           {ZONES.map((z) => (
             <Link
               key={z.label}

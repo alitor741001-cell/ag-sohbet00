@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import RoomDiscovery from '@/components/home/RoomDiscovery';
 
-import SupportLabel from '@/components/layout/SupportLabel';
+import BottomNavStrip from '@/components/layout/BottomNavStrip';
 const GAMES_DESIGN = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/cce749e92_IMG_0220.jpg';
 const LIVE_BG = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/f3cf6419a_IMG_0213.jpg';
 const DESIGN = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/f729cdeba_IMG_0210.jpg';
@@ -35,7 +35,7 @@ export default function Home() {
   return (
     <div className="fixed inset-0 overflow-hidden bg-black text-white">
       {/* Güvenli alanın dışında kalan pikseller aynı tasarımın bulanık dolgusuyla kapanır. */}
-      <img src={design} alt="" aria-hidden="true" draggable={false} className="pointer-events-none absolute inset-0 h-full w-full scale-110 select-none object-fill opacity-60 blur-2xl" />
+      <img src={design} alt="" aria-hidden="true" draggable={false} className="pointer-events-none absolute inset-0 h-full w-full scale-110 select-none object-fill blur-2xl" />
       {/* Tasarım çentik ve güvenli alanın içinde kalır; tablette ortada telefon oranında durur. */}
       <div className="design-screen">
         <div className="design-stage">
@@ -43,7 +43,7 @@ export default function Home() {
           {!games && hasContent && (
             <img src={LIVE_BG} alt="" className="pointer-events-none absolute inset-x-[3%] select-none rounded-2xl object-cover" style={{ top: '12%', bottom: '14%', height: '74%', width: '94%' }} draggable={false} />
           )}
-          <SupportLabel top="92.5%" height="3.5%" />
+          <BottomNavStrip />
           {zones.map((z) => (
             <Link
               key={z.label + z.y}
