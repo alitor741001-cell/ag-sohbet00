@@ -21,6 +21,10 @@ import VoiceSeatInvitePrompt from '@/components/voice/VoiceSeatInvitePrompt';
 import RefRoomHeader from '@/components/voice/RefRoomHeader';
 import RoomProfileSheet from '@/components/voice/RoomProfileSheet';
 import VoiceRoomMenu from '@/components/voice/VoiceRoomMenu';
+import VoiceRefScene from '@/components/voice/VoiceRefScene';
+import VoiceRefHeader from '@/components/voice/VoiceRefHeader';
+import VoiceRefSeats from '@/components/voice/VoiceRefSeats';
+import VoiceRefBar from '@/components/voice/VoiceRefBar';
 import VoiceSeatSheet from '@/components/voice/VoiceSeatSheet';
 import InviteSheet from '@/components/voice/InviteSheet';
 import MicPermissionGuide from '@/components/voice/MicPermissionGuide';
@@ -1088,7 +1092,36 @@ export default function VoiceRoom() {
       style={dmHalfOpen ? { paddingBottom: 'var(--voice-dm-height)' } : undefined}
       onKeyboardChange={handleKeyboardChange}
     >
-      <RoomBackground value={room?.background} cover={room?.cover_url} />
+      <VoiceRefScene>
+        <VoiceRefHeader
+          room={room}
+          viewerCount={participants.length}
+          score={giftBoard?.all?.total || 0}
+          onProfile={() => setProfilePanelOpen(true)}
+          onViewers={() => setViewerOpen(true)}
+          onMenu={() => setMenuOpen(true)}
+          onExit={() => setExitOpen(true)}
+          onGift={() => { setGiftBoardOpen(true); loadGiftBoard(); }}
+          onScore={() => { setGiftBoardOpen(true); loadGiftBoard(); }}
+        />
+        <VoiceRefSeats seats={seatsView} speakingIds={voice.speakingIds} onSelectSeat={handleSeatPress} />
+        <VoiceRefBar
+          micActive={!voice.muted}
+          deafened={voice.deafened}
+          onChat={() => {
+            if (chatLocked) { toast({ title: 'Sohbet yasağı açık', description: 'Yazmak için bir koltuğa otur.' }); return; }
+            if (composerOpen) { setComposerOpen(false); return; }
+            setChatOpen(true);
+            setComposerOpen(true);
+          }}
+          onMic={handleMic}
+          onSpeaker={voice.toggleDeafen}
+          onGift={openGifts}
+          onPrivateChat={() => setDmOpen(true)}
+          onGames={() => setGamesOpen(true)}
+          onSettings={() => setSettingsOpen((value) => !value)}
+        />
+      </VoiceRefScene>
 
       <VoiceRoomMenu
         open={menuOpen}
