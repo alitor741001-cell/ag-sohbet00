@@ -6,6 +6,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { ArrowLeft, Headset, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import useKeyboardInset from '@/hooks/useKeyboardInset';
+import usePageScrollLock from '@/hooks/usePageScrollLock';
 import { Image } from '@/components/ui/image';
 import SupportAttachment from '@/components/support/SupportAttachment';
 import SupportComposer from '@/components/support/SupportComposer';
@@ -25,6 +26,8 @@ export default function Support() {
   const navigate = useNavigate();
   // Özel sohbetteki gibi: klavye açılınca panel yukarı kayar.
   const keyboardInset = useKeyboardInset();
+  // Arkadaki sayfa ve tema çekme/kaydırmada oynamaz.
+  usePageScrollLock();
   const [ticket, setTicket] = useState(null);
   const [messages, setMessages] = useState([]);
   // Yönetici konuyu kapatınca görüşme silinir: son hâli ve "sonlandırıldı" uyarısı ekranda kalır.
@@ -152,7 +155,7 @@ export default function Support() {
   // Özel sohbet gibi tam ekran panel: alt menünün üzerini kaplar, geri okuyla kapanır.
   return (
     <div
-      className="standalone-private-chat dark fixed inset-x-0 top-0 z-[60] flex min-h-0 flex-col overflow-hidden bg-anthracite text-white"
+      className="standalone-private-chat dark fixed inset-x-0 top-0 z-[60] flex min-h-0 flex-col overflow-hidden overscroll-none touch-none bg-anthracite text-white"
       style={{ bottom: 'calc(min(100vw, 540px) * 144 / 540 + env(safe-area-inset-bottom))', transform: keyboardInset ? `translateY(-${keyboardInset}px)` : undefined, transition: 'transform 180ms ease-out' }}
     >
       <div className="flex items-center gap-2.5 border-b border-[#f2ce6b]/25 px-4 pb-3 pt-[max(env(safe-area-inset-top),0.75rem)]">
@@ -173,7 +176,7 @@ export default function Support() {
         {ticket && <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${STATUS_COLORS[ticket.status] || ''}`}>{statusLabel(ticket.status)}</span>}
       </div>
 
-        <div className="flex-1 space-y-2 overflow-y-auto p-3">
+        <div className="flex-1 space-y-2 overflow-y-auto overflow-x-hidden overscroll-contain p-3" style={{ touchAction: 'pan-y' }}>
           {thread.length === 0 && !closedNotice && (
             <p className="px-4 pt-6 text-center text-xs text-muted-foreground">
               Merhaba! Sorununuzu buradan doğrudan yazabilir, fotoğraf veya 30 saniyelik video gönderebilirsiniz.
