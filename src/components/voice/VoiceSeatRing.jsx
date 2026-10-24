@@ -1,6 +1,5 @@
 import React, { useId } from 'react';
-import { useMaleRoomTheme } from '@/components/voice/MaleRoomTheme';
-import MaleSeatFrame from '@/components/voice/MaleSeatFrame';
+
 import SeatRingOrnament from '@/components/voice/SeatRingOrnament';
 import { NEUTRAL_GEMS, RING_DESIGNS, gearPath, polar, polygonPath, ringPoints } from '@/components/voice/seatRingDesigns';
 
@@ -40,8 +39,7 @@ export default function VoiceSeatRing({ children, className = '', glow, variant 
   // Boş koltuklarda renk yerine metalik ton kullanılır.
   const [m0, m1, m2, m3] = mono ? NEUTRAL_GEMS[Math.abs(variant) % NEUTRAL_GEMS.length] : design.gem;
   const notched = ['circle', 'octa', 'dodeca', 'hex'].includes(design.shape);
-  const { male } = useMaleRoomTheme();
-  if (male) return <MaleSeatFrame {...{ variant, className, glow }}>{children}</MaleSeatFrame>;
+
 
   return (
     <span

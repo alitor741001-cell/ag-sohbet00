@@ -1,4 +1,4 @@
-.male-room-theme .voice-viewport > header { padding-inline: 4px; padding-bottom: 13px; padding-top: max(2px, env(safe-area-inset-top)); margin-top: -14px; }
+.male-room-theme .voice-viewport > header { padding-inline: 4px; padding-bottom: 13px; padding-top: max(6px, env(safe-area-inset-top)); margin-top: -6px; }
 .male-room-profile { position: absolute; left: 4.5%; top: 26%; width: 14%; height: 56%; border-radius: 50%; overflow: hidden; }
 .male-room-identity { position: absolute; left: 24%; top: 33%; width: 27%; height: 43%; display: flex; flex-direction: column; justify-content: center; text-align: left; background: hsl(var(--gift-palace-night)); color: hsl(var(--gift-palace-text)); }
 .male-room-identity strong { width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: clamp(11px, 3.5vw, 18px); font-style: italic; }
@@ -13,9 +13,5 @@
 .male-room-mic-state { position: absolute; right: 18%; top: 15%; width: 5px; height: 5px; border-radius: 50%; background: hsl(var(--gift-palace-muted)); }
 .male-room-mic-state.is-on { background: hsl(var(--gift-palace-cyan)); box-shadow: 0 0 5px hsl(var(--gift-palace-cyan)); }
 .male-room-sound-off { position: absolute; height: 2px; width: 45%; left: 27%; top: 48%; transform: rotate(-45deg); background: hsl(var(--gift-palace-gold)); }
-.male-room-theme .male-empty-seat { background: transparent !important; overflow: visible; }
-.male-room-theme .male-empty-seat > * { visibility: hidden; }
 .male-room-gift-chip { display: block; width: 33%; margin-top: -4px; }
-.male-room-gift-value { position: absolute; left: 60%; top: 24%; width: 32%; height: 52%; display: flex; align-items: center; justify-content: flex-start; padding-left: 4%; border-radius: 4px; background: linear-gradient(180deg, hsl(var(--gift-palace-night)), hsl(var(--gift-palace-night) / .92)); color: hsl(var(--gift-palace-gold)); font-weight: 800; font-size: clamp(10px, 3vw, 15px); letter-spacing: .02em; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-shadow: 0 0 6px hsl(var(--gift-palace-gold) / .55); }
-.male-room-theme .voice-stage { padding-top: 24px; }
-.male-room-seat-number { position: absolute; left: 32%; width: 36%; top: 82%; height: 13%; display: flex; align-items: center; justify-content: center; background: hsl(var(--gift-palace-night)); color: hsl(var(--gift-palace-text)); font-size: 9px; font-weight: 700; }
+.male-room-gift-value { position: absolute; left: 58%; top: 27%; width: 34%; height: 46%; display: flex; align-items: center; justify-content: center; background: hsl(var(--gift-palace-night)); color: hsl(var(--gift-palace-text)); font-weight: 700; font-size: clamp(10px, 2.9vw, 14px); line-height: 1; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; }
