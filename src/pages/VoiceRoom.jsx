@@ -1105,7 +1105,7 @@ export default function VoiceRoom() {
           onGift={() => { setGiftBoardOpen(true); loadGiftBoard(); }}
           onScore={() => { setGiftBoardOpen(true); loadGiftBoard(); }}
         />
-        <VoiceRefSeats seats={seatsView} speakingIds={voice.speakingIds} themed={!!backgroundOf(room?.background)} onSelectSeat={handleSeatPress} />
+        <VoiceRefSeats seats={seatsView} speakingIds={voice.speakingIds} onSelectSeat={handleSeatPress} />
         <VoiceRefBar
           micActive={!voice.muted}
           deafened={voice.deafened}
