@@ -47,7 +47,7 @@ export default function RoomHeaderArt({ room, onOpen, viewerCount = 0, onOpenVie
       {src && <img src={src} alt="" draggable={false} className="pointer-events-none absolute inset-0 h-full w-full select-none" />}
       <button type="button" onClick={onOpen} aria-label="Oda profilini aç" className="rounded-full" style={pct(24, 49, 76, 76)} />
       <button type="button" onClick={onOpen} className="flex flex-col justify-center overflow-hidden text-left" style={pct(132, 50, 200, 66)}>
-        <RoomNameMarquee text={room?.name || 'Oda'} className="text-[clamp(13px,4.2vw,20px)] font-bold leading-tight text-white" />
+        <RoomNameMarquee text={room?.name || 'Oda'} className="text-[clamp(13px,4.2vw,20px)] font-bold leading-normal text-white" />
         {memberId && <span className="mt-0.5 flex items-center gap-1 text-[clamp(10px,3vw,14px)] tabular-nums text-white/75">ID:{memberId}<span className="h-2 w-2 rounded-full bg-emerald-400" /></span>}
       </button>
       <button type="button" onClick={onOpenGifts} aria-label="Hediye sıralaması" className="flex items-center text-left" style={pct(60, 138, 300, 36)}>

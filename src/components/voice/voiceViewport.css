@@ -67,9 +67,10 @@
 .voice-header-art { margin-top: -3.5%; }
 /* Oda adı: ilk 3 sn başta bekler, sonra sola kayar ve başa döner. */
 @keyframes room-name-marquee {
-  0% { transform: translateX(0); }
-  20% { transform: translateX(0); }
-  100% { transform: translateX(var(--name-shift, 0)); }
+  0% { transform: translateX(var(--name-from, 100%)); }
+  30% { transform: translateX(0); }
+  60% { transform: translateX(0); }
+  100% { transform: translateX(var(--name-to, -100%)); }
 }
 /* Tablet ve geniş ekranlarda oda ortada telefon genişliğinde bir sütunda kalır:
    başlık, koltuklar ve sohbet aşırı büyümez; tema yine tüm ekranı kaplar. */
