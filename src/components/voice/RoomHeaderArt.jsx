@@ -12,7 +12,7 @@ const H = 195;
 const CROP = {
   top: 0, height: H / 1007, baseWidth: W,
   erase: [[132, 52, 100, 36], [132, 90, 145, 24], [165, 138, 60, 34], [488, 84, 26, 30]],
-  holes: [[62, 88, 36]],
+  holes: [[62, 88, 40]],
 };
 // Toplam hediye: her zaman 4 rakam — 1.234M, 12.34M, 123.4M; milyardan sonra B (1.234B ...).
 const four = (v) => { const d = v >= 1000 ? 0 : v >= 100 ? 1 : v >= 10 ? 2 : 3; const f = 10 ** d; return (Math.floor(v * f) / f).toFixed(d); };
@@ -39,7 +39,7 @@ export default function RoomHeaderArt({ room, onOpen, viewerCount = 0, onOpenVie
   return (
     <div className="voice-header-art relative w-full" style={{ aspectRatio: `${W} / ${H}` }}>
       {/* Fotoğraf çerçevenin ARKASINDA durur: çember dışına taşan kısım çerçeve altında kalır. */}
-      <div className="pointer-events-none overflow-hidden rounded-full" style={pct(26, 52, 72, 72)}>
+      <div className="pointer-events-none overflow-hidden rounded-full" style={pct(21, 47, 82, 82)}>
         {profile.avatar
           ? <Image src={profile.avatar} alt={ownerName} className="h-full w-full" fittingType="fill" draggable={false} />
           : <span className="flex h-full w-full items-center justify-center text-lg font-bold text-white">{ownerName.trim().charAt(0)}</span>}
