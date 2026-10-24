@@ -58,7 +58,8 @@ export default function LevelPage() {
 
   return (
     <div className="dark min-h-screen text-white">
-      <header className="sticky top-0 z-10 flex items-center gap-2 bg-[#040b1c]/60 px-3 py-3 backdrop-blur-md">
+      {/* Başlık ekranın üstüne sabitlenir: geri düğmesi ve Atış/Alış sekmeleri kaymaz. */}
+      <header className="fixed inset-x-0 z-30 flex items-center gap-2 bg-[#040b1c]/85 px-3 py-3 backdrop-blur-md" style={{ top: 'var(--safe-top)' }}>
         <button
           type="button"
           onClick={goBack}
@@ -79,7 +80,7 @@ export default function LevelPage() {
                 type="button"
                 onClick={() => setTab(item.key)}
                 className="pb-1 text-sm font-black transition"
-                style={active ? TAB_ON : { color: 'rgba(255,255,255,0.5)' }}
+                style={active ? TAB_ON : { color: 'rgba(255,255,255,0.5)', borderBottom: '2px solid transparent' }}
               >
                 {item.label}
               </button>
@@ -88,6 +89,7 @@ export default function LevelPage() {
         </div>
         <span className="h-9 w-9" />
       </header>
+      <div aria-hidden="true" style={{ height: 60 }} />
 
       <div className="mx-auto w-full max-w-md px-4 py-6 md:max-w-lg">
         <div className="rounded-[28px] border border-white/10 px-4 pb-5 pt-6"

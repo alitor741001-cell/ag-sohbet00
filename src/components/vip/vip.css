@@ -1,4 +1,5 @@
 .vip-world { background: radial-gradient(ellipse at top, color-mix(in srgb, var(--vip-accent) 15%, transparent), transparent 65%), hsl(var(--vip-night)); color: hsl(var(--vip-ink)); }
+.vip-world-fixed { position: fixed; inset: 0; z-index: 0; pointer-events: none; background: radial-gradient(ellipse at top, color-mix(in srgb, var(--vip-accent) 15%, transparent), transparent 65%), hsl(var(--vip-night)); }
 .vip-glass { background: hsl(var(--vip-night) / .78); border: 1px solid color-mix(in srgb, var(--vip-accent) 35%, transparent); }
 .vip-gold { color: hsl(var(--vip-gold)); }
 .vip-tint { color: var(--vip-accent); }

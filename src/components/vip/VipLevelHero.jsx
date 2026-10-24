@@ -30,7 +30,7 @@ export default function VipLevelHero({ theme, levels, onLevel }) {
         <h2 className="vip-hero-title mt-2 flex items-center justify-center gap-2 font-display text-4xl font-black">
           <Crown className="h-7 w-7" fill="currentColor" /> VIP {theme.level}
         </h2>
-        <p className="vip-tint mt-1 text-sm font-bold tracking-wide">{theme.name}</p>
+        <p className="vip-tint mt-1 truncate text-sm font-bold tracking-wide">{theme.name}</p>
         <div className="mt-4 grid grid-cols-2 gap-2 text-left">
           <div className="vip-glass rounded-2xl px-3 py-2">
             <p className="text-[9px] font-bold uppercase tracking-widest opacity-60">Süre</p>
