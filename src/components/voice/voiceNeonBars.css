@@ -24,7 +24,8 @@
 .neon-key-exit { background: linear-gradient(180deg, #3a0a24, #12051a); }
 .neon-key svg { filter: drop-shadow(0 0 4px currentColor); }
 .neon-tab { border-right-color: rgba(168,85,247,.35); }
-.neon-tab span { color: currentColor; text-shadow: 0 0 6px currentColor; }
+.neon-tab svg { color: currentColor; }
+.neon-tab span { color: inherit; text-shadow: 0 0 6px currentColor; }
 .neon-tab svg { width: 24px; height: 24px; }
 .neon-gift { background: radial-gradient(circle, #4a2306 0%, #140a1e 75%); box-shadow: 0 0 18px #ff8a00, 0 0 0 3px #3b1d8a, 0 0 22px 5px rgba(168,85,247,.7); }
 /* Ateşli ejderha teması: kor kırmızısı pul dokusu, alev akışlı çerçeve. */

@@ -6,7 +6,7 @@ function Tab({ onClick, label, text, color, off, children }) {
   return (
     <button type="button" onClick={onClick} aria-label={label} data-off={off ? 'true' : 'false'} className={`neon-tab ${color}`}>
       {children}
-      <span className="truncate text-white">{text}</span>
+      <span className="truncate">{text}</span>
     </button>
   );
 }
