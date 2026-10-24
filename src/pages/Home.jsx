@@ -4,6 +4,7 @@ import RoomDiscovery from '@/components/home/RoomDiscovery';
 
 import SupportLabel from '@/components/layout/SupportLabel';
 const GAMES_DESIGN = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/cce749e92_IMG_0220.jpg';
+const LIVE_BG = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/f3cf6419a_IMG_0213.jpg';
 const DESIGN = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/f729cdeba_IMG_0210.jpg';
 
 // Dokunma alanları tasarım görseli üzerinde yüzde koordinatlarıyla yerleşir (540x1024 tabanlı).
@@ -33,6 +34,9 @@ export default function Home() {
   return (
     <div className="fixed inset-0 overflow-hidden text-white" style={{ background: '#000' }}>
       <img src={games ? GAMES_DESIGN : DESIGN} alt="" className="pointer-events-none absolute inset-0 h-full w-full select-none object-fill" draggable={false} />
+      {!games && hasContent && (
+        <img src={LIVE_BG} alt="" className="pointer-events-none absolute inset-x-[3%] select-none rounded-2xl object-cover" style={{ top: '12%', bottom: '14%', height: '74%', width: '94%' }} draggable={false} />
+      )}
       <SupportLabel top="92.5%" height="3.5%" />
       {zones.map((z) => (
         <Link
