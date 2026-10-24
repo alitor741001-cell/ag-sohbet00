@@ -44,6 +44,10 @@ function keyImage(url, crop) {
         const s = w / (crop.baseWidth || w);
         ctx.fillStyle = '#0b0a0d';
         (crop.erase || []).forEach(([x, y, ew, eh]) => ctx.fillRect(x * s, y * s - sy, ew * s, eh * s));
+        // Delikler: çemberin içi tamamen şeffaf yapılır, arkadaki fotoğraf görünür.
+        ctx.globalCompositeOperation = 'destination-out';
+        (crop.holes || []).forEach(([cx, cy, r]) => { ctx.beginPath(); ctx.arc(cx * s, cy * s - sy, r * s, 0, Math.PI * 2); ctx.fill(); });
+        ctx.globalCompositeOperation = 'source-over';
         resolve(canvas.toDataURL('image/png'));
       } catch { resolve(null); }
     };
@@ -53,7 +57,7 @@ function keyImage(url, crop) {
 }
 
 export default function useKeyedImage(url, crop) {
-  const key = `${url}|${crop.top}|${crop.height}`;
+  const key = `${url}|${crop.top}|${crop.height}|${JSON.stringify(crop.holes || [])}|${(crop.erase || []).length}`;
   const [src, setSrc] = useState(() => cache.get(key) || null);
   useEffect(() => {
     if (cache.has(key)) { setSrc(cache.get(key)); return; }

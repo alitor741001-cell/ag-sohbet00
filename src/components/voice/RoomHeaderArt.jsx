@@ -10,7 +10,8 @@ const H = 192;
 // Örnek isim, ID, hediye sayısı ve izleyici sayısı görselden silinir.
 const CROP = {
   top: 0, height: H / 1024, baseWidth: W,
-  erase: [[132, 50, 96, 38], [132, 90, 140, 26], [168, 140, 172, 32], [492, 82, 24, 32], [30, 55, 64, 64]],
+  erase: [[132, 50, 96, 38], [132, 90, 140, 26], [168, 140, 172, 32], [492, 82, 24, 32]],
+  holes: [[62, 87, 34]],
 };
 // Toplam hediye: her zaman 4 rakam — 1.234M, 12.34M, 123.4M; milyardan sonra B (1.234B ...).
 const four = (v) => { const d = v >= 1000 ? 0 : v >= 100 ? 1 : v >= 10 ? 2 : 3; const f = 10 ** d; return (Math.floor(v * f) / f).toFixed(d); };
@@ -36,12 +37,14 @@ export default function RoomHeaderArt({ room, onOpen, viewerCount = 0, onOpenVie
 
   return (
     <div className="voice-header-art relative w-full" style={{ aspectRatio: `${W} / ${H}` }}>
-      {src && <img src={src} alt="" draggable={false} className="pointer-events-none absolute inset-0 h-full w-full select-none" />}
-      <button type="button" onClick={onOpen} aria-label="Oda profilini aç" className="overflow-hidden rounded-full" style={pct(24, 49, 76, 76)}>
+      {/* Fotoğraf çerçevenin ARKASINDA durur: çember dışına taşan kısım çerçeve altında kalır. */}
+      <div className="pointer-events-none overflow-hidden rounded-full" style={pct(26, 51, 72, 72)}>
         {profile.avatar
           ? <Image src={profile.avatar} alt={ownerName} className="h-full w-full" fittingType="fill" draggable={false} />
           : <span className="flex h-full w-full items-center justify-center text-lg font-bold text-white">{ownerName.trim().charAt(0)}</span>}
-      </button>
+      </div>
+      {src && <img src={src} alt="" draggable={false} className="pointer-events-none absolute inset-0 h-full w-full select-none" />}
+      <button type="button" onClick={onOpen} aria-label="Oda profilini aç" className="rounded-full" style={pct(24, 49, 76, 76)} />
       <button type="button" onClick={onOpen} className="flex flex-col justify-center overflow-hidden text-left" style={pct(132, 50, 200, 66)}>
         <span className="truncate text-[clamp(13px,4.2vw,20px)] font-bold leading-tight text-white">{room?.name || 'Oda'}</span>
         {memberId && <span className="mt-0.5 flex items-center gap-1 text-[clamp(10px,3vw,14px)] tabular-nums text-white/75">ID:{memberId}<span className="h-2 w-2 rounded-full bg-emerald-400" /></span>}
