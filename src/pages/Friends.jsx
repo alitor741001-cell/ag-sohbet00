@@ -3,7 +3,7 @@ import { ArrowLeft, MessageCircle, Shield } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import subscribeEntity from '@/components/data/entitySubscriptions';
-import ChatTabs from '@/components/friends/ChatTabs';
+import ChatImageTabs from '@/components/friends/ChatImageTabs';
 import ConversationList from '@/components/friends/ConversationList';
 import FriendsPanel from '@/components/friends/FriendsPanel';
 import ChatPanel from '@/components/friends/ChatPanel';
@@ -190,9 +190,9 @@ export default function Friends() {
   // Sohbet listesi tema görselinin içindeki örnek satırın üstüne opak panel olarak oturur:
   // tasarımdaki sabit içerik görünmez, liste kendi içinde kayar.
   return (
-    <div className="dark fixed inset-0 z-10 flex flex-col text-white pt-[9.5vh] pb-[13vh] lg:pt-20">
-      <div className="mx-2 flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-[#F2CE6B]/30 bg-[#07080d] shadow-[0_0_24px_rgba(0,0,0,0.9)]">
-        <ChatTabs counts={{ chats: totalUnread, requests: incomingRequests, notes: liveBadges.notes, agency: liveBadges.agency }} />
+    <div className="dark fixed inset-0 z-10 flex flex-col text-white" style={{ paddingTop: '17.5vh', paddingBottom: '13.5vh' }}>
+      <ChatImageTabs counts={{ chats: totalUnread, requests: incomingRequests, notes: liveBadges.notes, agency: liveBadges.agency }} />
+      <div className="mx-[5%] flex min-h-0 flex-1 flex-col overflow-hidden">
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
           {conversations.length > 0 ? (
             <ConversationList conversations={conversations} userId={user.id} onOpen={openConversation} onHide={hide} isOnline={isOnline} getLastSeen={getLastSeen} rooms={rooms} getRoomId={getRoomId} />

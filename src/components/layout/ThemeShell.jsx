@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import SupportLabel from '@/components/layout/SupportLabel';
 
 const BG = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/1ac262e7e_IMG_0216.jpg';
-export const CHATS_BG = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/afdab17c4_IMG_0218.jpg';
+export const CHATS_BG = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/35b55f624_IMG_0223.jpg';
 
 const ZONES = [
   { label: 'Ana Sayfa', to: '/', x: 3, w: 18 },
@@ -21,10 +21,10 @@ export default function ThemeShell({ chats = false }) {
         <img src={bg} alt="" draggable={false} className="h-full w-full select-none object-fill" />
       </div>
       {/* Alt menü şeridi içeriğin üstünde kalır. */}
-      <img src={bg} alt="" aria-hidden="true" draggable={false} className="pointer-events-none fixed inset-0 z-40 h-full w-full select-none object-fill" style={{ clipPath: chats ? 'inset(87% 0 0 0)' : 'inset(85% 0 0 0)' }} />
-      {!chats && <div className="pointer-events-none fixed inset-0 z-40"><SupportLabel top="92.5%" height="3.5%" /></div>}
+      <img src={bg} alt="" aria-hidden="true" draggable={false} className="pointer-events-none fixed inset-0 z-40 h-full w-full select-none object-fill" style={{ clipPath: 'inset(85% 0 0 0)' }} />
+      <div className="pointer-events-none fixed inset-0 z-40"><SupportLabel top="92.5%" height="3.5%" /></div>
       {ZONES.map((z) => (
-        <Link key={z.label} to={z.to} aria-label={z.label} className="fixed z-50 rounded-2xl active:bg-white/10" style={{ left: `${z.x}%`, width: `${z.w}%`, top: chats ? '88%' : '87%', height: '9.5%' }} />
+        <Link key={z.label} to={z.to} aria-label={z.label} className="fixed z-50 rounded-2xl active:bg-white/10" style={{ left: `${z.x}%`, width: `${z.w}%`, top: '87%', height: '9.5%' }} />
       ))}
     </>
   );
