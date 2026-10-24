@@ -29,7 +29,9 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
   const many = seats.length >= 20;
   const widestRow = Math.max(1, ...rows.map((row) => row.length));
   const narrow = width < 640;
-  const baseGap = featureTop ? (narrow ? 6 : 14) : narrow ? (many ? 8 : 12) : 20;
+  // 9/12/15/24'lü düzenlerde koltuklar sağa-sola açılır; büyük çerçeveler birbirine binmez.
+  const spread = [9, 12, 15, 24].includes(seats.length);
+  const baseGap = featureTop ? (narrow ? 14 : 22) : narrow ? (many ? (spread ? 13 : 8) : spread ? 18 : 12) : spread ? 28 : 20;
   // Alçak ekranda satır araları daralır: en küçük koltukta bile tüm satırlar ve
   // altlarındaki sayı şeritleri sahneye sığar.
   const rowsNeeded = (rows.length || 1) * (boardActive ? 83 : 62) + 12 * Math.max(0, rows.length - 1);

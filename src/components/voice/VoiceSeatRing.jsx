@@ -23,7 +23,7 @@ export default function VoiceSeatRing({ children, className = '', variant = 0 })
           aria-hidden="true"
           draggable={false}
           className="pointer-events-none absolute select-none"
-          style={{ left: '50%', top: '50%', width: '196%', height: '196%', maxWidth: 'none', transform: 'translate(-50%, -54%)' }}
+          style={{ left: '50%', top: '50%', width: '214%', height: '214%', maxWidth: 'none', transform: 'translate(-50%, -54%)' }}
         />
       )}
     </span>
