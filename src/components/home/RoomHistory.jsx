@@ -1,10 +1,8 @@
 import { useMemo } from 'react';
-import { Link } from 'react-router-dom';
-import { History, Lock, Mic, Trash2 } from 'lucide-react';
-import { Image } from '@/components/ui/image';
+import { History, Trash2 } from 'lucide-react';
+import RoomDiscoveryCard from '@/components/home/RoomDiscoveryCard';
 import useMessageProfiles from '@/hooks/useMessageProfiles';
 import { clearVisitedRooms, readVisitedRooms } from '@/lib/visitedRooms';
-import { youtubeIdFromMovieId } from '@/lib/youtubeTitle';
 
 const timeLabel = (value) => {
   if (!value) return '';
@@ -14,8 +12,9 @@ const timeLabel = (value) => {
 };
 
 /** Son Ziyaretçiler: son bir haftada girilen odalar, en yeni önce.
-    Aynı yayıncının birden çok odası tek kartta toplanır. */
-export default function RoomHistory({ version = 0, onChange, rooms = [] }) {
+    Aynı yayıncının birden çok odası tek kartta toplanır.
+    Kartlar Sıcaklar'dakiyle aynı görünür: katılımcı avatarları ve kişi sayısı dahil. */
+export default function RoomHistory({ version = 0, onChange, rooms = [], filmTitleFor }) {
   const items = useMemo(() => readVisitedRooms(), [version]);
 
   // Yayıncı kimliği önce kayıttan, yoksa hâlâ açık olan odadan çözülür.
@@ -23,11 +22,9 @@ export default function RoomHistory({ version = 0, onChange, rooms = [] }) {
     () => new Map((rooms || []).map((room) => [room.id, room.owner_id || ''])),
     [rooms]
   );
-  // Yalnızca açık ve içinde kişi bulunan odaya girilebilir; diğerleri kilitli görünür.
-  const openIds = useMemo(
-    () => new Set((rooms || []).filter((room) =>
-      (room.participants || []).some((p) => p?.user_id) || (room.seats || []).some((s) => s?.user_id)
-    ).map((room) => room.id)),
+  // Açık odaların canlı verisi: katılımcılar ve kişi sayısı kartta gösterilir.
+  const roomById = useMemo(
+    () => new Map((rooms || []).map((room) => [room.id, room])),
     [rooms]
   );
 
@@ -62,74 +59,51 @@ export default function RoomHistory({ version = 0, onChange, rooms = [] }) {
       <div className="mb-2 flex items-center gap-2">
         <span className="h-3 w-1 rounded-full" style={{ background: 'linear-gradient(180deg,#ffe6a8,#7ff0e6)' }} />
         <h2 className="text-[10.5px] font-black tracking-[0.18em] text-[#ffe6a8]">SON GİRDİĞİN ODALAR</h2>
+        <span className="ml-auto text-[10px] font-bold text-white/40">{entries.length}</span>
         <button
           type="button"
           onClick={() => { clearVisitedRooms(); onChange?.(); }}
-          className="ml-auto flex items-center gap-1 rounded-full border border-white/15 px-2 py-1 text-[9.5px] font-bold text-white/55"
+          className="flex items-center gap-1 rounded-full border border-white/15 px-2 py-1 text-[9.5px] font-bold text-white/55"
         >
           <Trash2 className="h-3 w-3" /> Temizle
         </button>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        {entries.map((room) => {
-          const voice = room.kind === 'voice';
-          const videoId = voice ? '' : youtubeIdFromMovieId(room.movie_id);
-          const cover = videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : '';
-          const profile = profiles[room.owner_id];
-          const ownerName = profile?.username || profile?.full_name || room.owner_name || '';
-          const ownerAvatar = profile?.avatar || room.owner_avatar || '';
-          const locked = !openIds.has(room.id);
+      <div className="grid grid-cols-2 gap-2.5">
+        {entries.map((entry, index) => {
+          const voice = entry.kind === 'voice';
+          const liveRoom = roomById.get(entry.id);
+          // Açık odanın canlı verisi yoksa kayıttaki bilgilerle minimal oda nesnesi kurulur.
+          const room = liveRoom || {
+            id: entry.id,
+            name: entry.name,
+            movie_id: entry.movie_id,
+            owner_id: entry.owner_id,
+            owner_name: entry.owner_name,
+            room_type: voice ? 'voice' : 'watch',
+            voice_mode: voice,
+            participants: [],
+            seats: [],
+            hidden: false,
+            category: '',
+          };
+          const profile = profiles[entry.owner_id];
+          const owner = {
+            username: profile?.username || profile?.full_name || entry.owner_name || '',
+            full_name: profile?.full_name || entry.owner_name || '',
+            avatar: profile?.avatar || entry.owner_avatar || '',
+          };
           return (
-            <Link
-              key={room.id}
-              to={voice ? `/sesli-oda/${room.id}` : `/oda/${room.id}`}
-              onClick={locked ? (event) => event.preventDefault() : undefined}
-              aria-disabled={locked || undefined}
-              className={`relative flex aspect-square flex-col overflow-hidden rounded-[20px] bg-[#07162f] ${locked ? 'cursor-not-allowed' : 'active:scale-[0.98]'}`}
-              style={{ boxShadow: '0 0 0 1.5px rgba(232,196,124,0.7), 0 0 20px -8px rgba(79,216,207,0.6)' }}
-            >
-              {cover ? (
-                <Image src={cover} className="absolute inset-0 h-full w-full" fittingType="fill" alt="" />
-              ) : (
-                <span className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[#0b2144] to-[#04081a]">
-                  <Mic className="h-8 w-8 text-premium-gold/50" />
-                </span>
-              )}
-              <span
-                className="absolute inset-0"
-                style={{ background: 'linear-gradient(to top, rgba(6,16,34,0.96), rgba(6,16,34,0.35) 60%, transparent)' }}
+            <div key={entry.id} className="relative">
+              <RoomDiscoveryCard
+                room={room}
+                owner={owner}
+                kind={voice ? 'voice' : 'film'}
+                filmTitle={voice ? '' : (filmTitleFor?.(liveRoom || room) || '')}
+                rank={index < 3 ? index + 1 : 0}
               />
-              {locked && (
-                <span className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-1 bg-black/55">
-                  <Lock className="h-6 w-6 text-[#ffe6a8]" />
-                  <span className="text-[10px] font-black text-white/80">Odada kimse yok</span>
-                </span>
-              )}
-              <span className="relative mt-auto p-2.5">
-                {ownerName && (
-                  <span className="mb-1 flex min-w-0 items-center gap-1.5">
-                    <span className="h-5 w-5 shrink-0 overflow-hidden rounded-full border border-[#ffe6a8]/70 bg-[#0f2a4a]">
-                      {ownerAvatar ? (
-                        <Image src={ownerAvatar} className="h-full w-full" fittingType="fill" alt="" />
-                      ) : (
-                        <span className="flex h-full w-full items-center justify-center text-[9px] font-black text-[#ffe6a8]">
-                          {ownerName.charAt(0).toUpperCase()}
-                        </span>
-                      )}
-                    </span>
-                    <span className="truncate text-[10px] font-bold text-[#ffe6a8]/90">{ownerName}</span>
-                  </span>
-                )}
-                <span className="line-clamp-2 block text-[12px] font-extrabold leading-tight text-white">{room.name}</span>
-                <span className="mt-1 flex items-center gap-1.5">
-                  <span className="rounded-full border border-[#ffe6a8]/50 bg-[#0f3b52]/80 px-2 py-0.5 text-[9px] font-black text-white">
-                    {voice ? 'Sesli' : 'Film'}
-                  </span>
-                  <span className="ml-auto text-[9px] font-bold text-white/45">{timeLabel(room.visited_at)}</span>
-                </span>
-              </span>
-            </Link>
+              <span className="mt-0.5 block text-center text-[9px] font-bold text-white/45">{timeLabel(entry.visited_at)}</span>
+            </div>
           );
         })}
       </div>
