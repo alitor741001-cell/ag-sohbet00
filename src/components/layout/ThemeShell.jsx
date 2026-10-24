@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import SupportLabel from '@/components/layout/SupportLabel';
 
 const BG = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/1ac262e7e_IMG_0216.jpg';
-export const CHATS_BG = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/35b55f624_IMG_0223.jpg';
+export const CHATS_BG = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/489f91051_IMG_0225.jpg';
 
 const ZONES = [
   { label: 'Ana Sayfa', to: '/', x: 3, w: 18 },
