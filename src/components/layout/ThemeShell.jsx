@@ -12,14 +12,6 @@ const ZONES = [
   { label: 'Profil', to: '/profil', x: 79.5, w: 17 },
 ];
 
-// Özel Sohbet tasarımındaki üst sekmeler.
-const TABS = [
-  { label: 'Sohbet', to: '/arkadaslar?view=chats', x: 2, w: 23 },
-  { label: 'Arkadaş İstekleri', to: '/arkadaslar/istekler', x: 26, w: 24 },
-  { label: 'Sistem Bildirimleri', to: '/bildirimler', x: 50.5, w: 23.5 },
-  { label: 'Ajans Mesajları', to: '/ajans/mesajlar', x: 75, w: 23 },
-];
-
 /** Tam ekran tema arka planı + görseldeki butonlar için dokunma alanları. */
 export default function ThemeShell({ chats = false }) {
   const bg = chats ? CHATS_BG : BG;
@@ -28,12 +20,9 @@ export default function ThemeShell({ chats = false }) {
       <div className="pointer-events-none fixed inset-0 -z-10" style={{ background: '#000' }} aria-hidden="true">
         <img src={bg} alt="" draggable={false} className="h-full w-full select-none object-fill" />
       </div>
-      <img src={bg} alt="" aria-hidden="true" draggable={false} className="pointer-events-none fixed inset-0 z-40 h-full w-full select-none object-fill" style={{ clipPath: chats ? 'inset(86% 0 0 0)' : 'inset(85% 0 0 0)' }} />
-      {chats && <img src={bg} alt="" aria-hidden="true" draggable={false} className="pointer-events-none fixed inset-0 z-40 h-full w-full select-none object-fill" style={{ clipPath: 'inset(0 0 81% 0)' }} />}
+      {/* Alt menü şeridi içeriğin üstünde kalır. */}
+      <img src={bg} alt="" aria-hidden="true" draggable={false} className="pointer-events-none fixed inset-0 z-40 h-full w-full select-none object-fill" style={{ clipPath: chats ? 'inset(87% 0 0 0)' : 'inset(85% 0 0 0)' }} />
       {!chats && <div className="pointer-events-none fixed inset-0 z-40"><SupportLabel top="92.5%" height="3.5%" /></div>}
-      {chats && TABS.map((z) => (
-        <Link key={z.label} to={z.to} aria-label={z.label} className="fixed z-50 rounded-2xl active:bg-white/10" style={{ left: `${z.x}%`, width: `${z.w}%`, top: '9.5%', height: '8%' }} />
-      ))}
       {ZONES.map((z) => (
         <Link key={z.label} to={z.to} aria-label={z.label} className="fixed z-50 rounded-2xl active:bg-white/10" style={{ left: `${z.x}%`, width: `${z.w}%`, top: chats ? '88%' : '87%', height: '9.5%' }} />
       ))}

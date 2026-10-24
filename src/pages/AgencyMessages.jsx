@@ -16,8 +16,9 @@ export default function AgencyMessages({ onBack }) {
   const goBack = onBack || (() => (window.history.state?.idx > 0 ? navigate(-1) : navigate('/arkadaslar?view=chats', { replace: true })));
 
   return (
-    <div className="dark mx-auto min-h-[calc(100vh-8rem)] w-full min-w-0 max-w-5xl text-white supports-[height:100dvh]:min-h-[calc(100dvh-8rem)]">
-      <header className="sticky top-0 z-20 flex items-center gap-2 border-b border-[#F2CE6B]/25 px-3 py-2.5 backdrop-blur-md" style={{ background: 'rgba(4,11,28,0.6)' }}>
+    <div className="dark min-h-[var(--app-height)] w-full text-white" style={{ background: '#0a0a0d' }}>
+      {/* Üst başlık ve geri düğmesi sabittir: içerik kayarken yerinden oynamaz. */}
+      <header className="fixed inset-x-0 top-0 z-30 flex items-center gap-2 border-b border-[#F2CE6B]/25 bg-[#0a0a0d] px-3 pb-2.5" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 0.6rem)' }}>
         <button type="button" onClick={goBack} aria-label="Geri" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#F2CE6B]/30 bg-white/5 text-[#ffeec2] active:scale-95">
           <ArrowLeft className="h-4 w-4" />
         </button>
@@ -25,7 +26,7 @@ export default function AgencyMessages({ onBack }) {
         <span className="h-9 w-9" />
       </header>
 
-      <div className="p-3">
+      <div className="p-3" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 4.25rem)' }}>
         <AgencyInvitesPanel open onOpenInvite={setInviteId} refreshKey={refreshKey} />
       </div>
 

@@ -49,7 +49,18 @@ export default function Notifications({ onBack }) {
   useEffect(() => {
     load();
     loadInvites();
-    const unsub = subscribeEntity('Notification', () => load());
+    // Realtime: gelen bildirim beklemeden eklenir, okunan güncellenir, silinen anında düşer.
+    const unsub = subscribeEntity('Notification', (event) => {
+      const data = event.data;
+      const id = data?.id || event.id;
+      if (data?.user_id && data.user_id !== user.id) return;
+      setItems((current) => {
+        if (event.type === 'create') return [data, ...current.filter((item) => item.id !== id)].slice(0, 50);
+        if (event.type === 'update') return current.map((item) => (item.id === id ? { ...item, ...data } : item));
+        return current.filter((item) => item.id !== id);
+      });
+      loadInvites();
+    });
     // Yoklama yedeği — realtime kaçırsa diye 5 saniyede bir; sekme arkadayken durur.
     const interval = setInterval(() => { if (document.visibilityState !== 'hidden') { load(); loadInvites(); } }, 5000);
     return () => { unsub(); clearInterval(interval); };
@@ -63,16 +74,19 @@ export default function Notifications({ onBack }) {
     await Promise.all(items.filter((n) => !n.read).map((n) => base44.entities.Notification.update(n.id, { read: true })));
     load();
   };
+  const deleteOne = (n) => {
+    setItems((current) => current.filter((item) => item.id !== n.id));
+    base44.entities.Notification.delete(n.id).catch(() => {});
+  };
   const deleteAll = async () => {
     await base44.entities.Notification.deleteMany({ user_id: user.id });
     setItems([]); toast({ title: 'Tüm bildirimler silindi' });
   };
 
   return (
-    <div className="dark mx-auto min-h-[calc(100vh-8rem)] supports-[height:100dvh]:min-h-[calc(100dvh-8rem)] w-full min-w-0 max-w-5xl text-white">
-      {/* Aşağı çekerek tazeleme: bildirimler ve bekleyen davetler yeniden okunur. */}
-      <PullToRefresh onRefresh={() => { load(); loadInvites(); }}>
-      <header className="sticky top-0 z-10 flex items-center gap-2 border-b border-white/10 bg-[#040b1c]/60 px-3 py-2.5 backdrop-blur-md">
+    <div className="dark min-h-[var(--app-height)] w-full text-white" style={{ background: '#0a0a0d' }}>
+      {/* Üst başlık ve geri düğmesi sabittir: liste kayarken ya da aşağı çekilirken yerinden oynamaz. */}
+      <header className="fixed inset-x-0 top-0 z-30 flex items-center gap-2 border-b border-white/10 bg-[#0a0a0d] px-3 pb-2.5" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 0.6rem)' }}>
         <button onClick={goBack} aria-label="Geri" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/5 active:scale-95">
           <ArrowLeft className="h-4 w-4 text-white" />
         </button>
@@ -85,43 +99,47 @@ export default function Notifications({ onBack }) {
         )}
       </header>
 
-      <div className="p-3">
-        {loading ? <p className="py-10 text-center text-sm text-gray-400">Yükleniyor...</p> :
-         items.length === 0 ? <EmptyState icon={Bell} title="Bildirim yok" description="Henüz bildiriminiz bulunmuyor." /> :
-         <div className="space-y-2">
-           {items.map((n) => {
-             const inviteId = parseInviteRef(n.ref_id);
-             const showInvite = n.type === 'agency_invite' && !!inviteId && inviteIds.includes(inviteId);
-             // Asistanlık daveti: yeşil kart detay penceresini açar, onay orada verilir.
-             const assistantInviteId = n.type === 'assistant_invite' ? parseInviteRef(n.ref_id) : '';
-             const showAssistantInvite = !!assistantInviteId && inviteIds.includes(assistantInviteId);
-             return (
-             <div key={n.id} className={`p-3 rounded-xl border flex gap-3 ${n.read ? 'bg-card border-border' : 'bg-primary/10 border-primary/30'}`}>
-               <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${n.read ? 'bg-transparent' : 'bg-primary'}`} />
-               <div className="flex-1 min-w-0">
-                 <p className="font-semibold text-sm">{n.title}</p>
-                 {n.body && <p className="text-sm text-gray-400">{n.body}</p>}
-                 {showInvite ? (
-                   <AgencyInviteActions inviteId={inviteId} onAnswered={() => { markRead(n); loadInvites(); }} />
-                 ) : showAssistantInvite ? (
-                   <button
-                     onClick={() => { markRead(n); setDetailInviteId(assistantInviteId); }}
-                     className="mt-2 w-full rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-3 py-2 text-center text-xs font-bold text-white active:scale-[0.99]"
-                   >
-                     Detaylı görüntülemek için tıklayın
-                   </button>
-                 ) : n.link && <Link to={n.link} className="text-xs text-primary">Görüntüle →</Link>}
-               </div>
-               <div className="flex shrink-0 flex-col items-end gap-1">
-                 <span className="whitespace-nowrap text-[10px] font-medium tabular-nums text-gray-500">{formatWhen(n.created_date)}</span>
-                 {!n.read && <button onClick={() => markRead(n)} className="text-xs text-gray-400 active:text-white">Okundu</button>}
-               </div>
-             </div>
-             );
-           })}
-         </div>}
+      <div style={{ paddingTop: 'calc(env(safe-area-inset-top) + 4.25rem)' }}>
+        <PullToRefresh onRefresh={() => { load(); loadInvites(); }}>
+          <div className="p-3">
+            {loading ? <p className="py-10 text-center text-sm text-gray-400">Yükleniyor...</p> :
+             items.length === 0 ? <EmptyState icon={Bell} title="Bildirim yok" description="Henüz bildiriminiz bulunmuyor." /> :
+             <div className="space-y-2">
+               {items.map((n) => {
+                 const inviteId = parseInviteRef(n.ref_id);
+                 const showInvite = n.type === 'agency_invite' && !!inviteId && inviteIds.includes(inviteId);
+                 // Asistanlık daveti: yeşil kart detay penceresini açar, onay orada verilir.
+                 const assistantInviteId = n.type === 'assistant_invite' ? parseInviteRef(n.ref_id) : '';
+                 const showAssistantInvite = !!assistantInviteId && inviteIds.includes(assistantInviteId);
+                 return (
+                 <div key={n.id} className={`p-3 rounded-xl border flex gap-3 ${n.read ? 'bg-white/5 border-white/10' : 'bg-primary/10 border-primary/30'}`}>
+                   <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${n.read ? 'bg-transparent' : 'bg-primary'}`} />
+                   <div className="flex-1 min-w-0">
+                     <p className="font-semibold text-sm">{n.title}</p>
+                     {n.body && <p className="text-sm text-gray-400">{n.body}</p>}
+                     {showInvite ? (
+                       <AgencyInviteActions inviteId={inviteId} onAnswered={() => { markRead(n); loadInvites(); }} />
+                     ) : showAssistantInvite ? (
+                       <button
+                         onClick={() => { markRead(n); setDetailInviteId(assistantInviteId); }}
+                         className="mt-2 w-full rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-3 py-2 text-center text-xs font-bold text-white active:scale-[0.99]"
+                       >
+                         Detaylı görüntülemek için tıklayın
+                       </button>
+                     ) : n.link && <Link to={n.link} className="text-xs text-primary">Görüntüle →</Link>}
+                   </div>
+                   <div className="flex shrink-0 flex-col items-end gap-1">
+                     <span className="whitespace-nowrap text-[10px] font-medium tabular-nums text-gray-500">{formatWhen(n.created_date)}</span>
+                     {!n.read && <button onClick={() => markRead(n)} className="text-xs text-gray-400 active:text-white">Okundu</button>}
+                     <button onClick={() => deleteOne(n)} aria-label="Bildirimi sil" className="rounded-lg p-1 text-red-400 active:scale-90"><Trash2 className="h-3.5 w-3.5" /></button>
+                   </div>
+                 </div>
+                 );
+               })}
+             </div>}
+          </div>
+        </PullToRefresh>
       </div>
-      </PullToRefresh>
 
       {/* Asistanlık daveti detayı: ajans ve davet edilen bilgileri, 10 saniyelik onay sayacı. */}
       <InviteDetailSheet

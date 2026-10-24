@@ -3,6 +3,7 @@ import { ArrowLeft, MessageCircle, Shield } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import subscribeEntity from '@/components/data/entitySubscriptions';
+import ChatTabs from '@/components/friends/ChatTabs';
 import ConversationList from '@/components/friends/ConversationList';
 import FriendsPanel from '@/components/friends/FriendsPanel';
 import ChatPanel from '@/components/friends/ChatPanel';
@@ -13,15 +14,16 @@ import useConversations from '@/hooks/useConversations';
 import useFriendPresence from '@/hooks/useFriendPresence';
 import { useToast } from '@/components/ui/use-toast';
 import { isModerator } from '@/lib/roles';
-import PullToRefresh from '@/components/home/PullToRefresh';
 import useTabActivity from '@/components/layout/TabActivityContext';
+import useLiveBadges from '@/hooks/useLiveBadges';
 
 export default function Friends() {
   const tabActive = useTabActivity();
-  const { user, relations, loading: friendsLoading, invoke, reload: reloadFriends } = useFriends();
+  const { user, relations, loading: friendsLoading, invoke } = useFriends();
   const { conversations, loading: convosLoading, optimisticHide, reload: reloadConversations } = useConversations();
   const { isOnline, getLastSeen } = useFriendPresence(user);
   const { toast } = useToast();
+  const liveBadges = useLiveBadges(user?.id);
   const navigate = useNavigate();
   const [adminLoading, setAdminLoading] = useState(false);
   const [rooms, setRooms] = useState([]);
@@ -185,20 +187,18 @@ export default function Friends() {
     );
   }
 
+  // Sohbet listesi tema görselinin içindeki örnek satırın üstüne opak panel olarak oturur:
+  // tasarımdaki sabit içerik görünmez, liste kendi içinde kayar.
   return (
-    <div
-      className="dark mx-auto min-h-[calc(100vh-8rem)] w-full min-w-0 max-w-5xl pt-[18vh] text-white supports-[height:100dvh]:min-h-[calc(100dvh-8rem)]"
-    >
-      {/* Aşağı çekerek tazeleme: arkadaşlar, istekler ve sohbetler yeniden okunur. */}
-      <PullToRefresh onRefresh={() => { reloadFriends(); reloadConversations(); }}>
-
-      <>
-
+    <div className="dark fixed inset-0 z-10 flex flex-col text-white pt-[9.5vh] pb-[13vh] lg:pt-20">
+      <div className="mx-2 flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-[#F2CE6B]/30 bg-[#07080d] shadow-[0_0_24px_rgba(0,0,0,0.9)]">
+        <ChatTabs counts={{ chats: totalUnread, requests: incomingRequests, notes: liveBadges.notes, agency: liveBadges.agency }} />
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
           {conversations.length > 0 ? (
             <ConversationList conversations={conversations} userId={user.id} onOpen={openConversation} onHide={hide} isOnline={isOnline} getLastSeen={getLastSeen} rooms={rooms} getRoomId={getRoomId} />
           ) : (
             <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
-              <div className="relative w-20 h-20 rounded-full bg-[hsl(var(--secondary))] flex items-center justify-center mb-5">
+              <div className="relative w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-5">
                 <MessageCircle className="w-10 h-10 text-[#f2ce6b]/50" />
                 <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-[#f2ce6b] flex items-center justify-center text-[10px] font-bold text-black">!</span>
               </div>
@@ -206,8 +206,8 @@ export default function Friends() {
               <p className="text-sm text-gray-400 max-w-xs">Mesajlaşmak için arkadaşlarınla sohbet başlatabilirsin.</p>
             </div>
           )}
-        </>
-      </PullToRefresh>
+        </div>
+      </div>
     </div>
   );
 }
