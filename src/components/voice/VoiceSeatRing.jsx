@@ -1,31 +1,12 @@
-import React, { useEffect, useState } from 'react';
-import { FRAME_COUNT, loadSeatFrames } from '@/components/voice/seatFrameSheet';
+import React from 'react';
 
-/** Koltuk çerçevesi: her koltuğa gönderilen tasarım sayfasından kendi çerçevesi. */
-export default function VoiceSeatRing({ children, className = '', variant = 0 }) {
-  const [frames, setFrames] = useState([]);
-  useEffect(() => {
-    let alive = true;
-    loadSeatFrames().then((list) => alive && setFrames(list));
-    return () => { alive = false; };
-  }, []);
-  const src = frames[Math.abs(variant) % FRAME_COUNT];
-
+/** Koltuk dairesi: süssüz, tam çember profil alanı. */
+export default function VoiceSeatRing({ children, className = '' }) {
   return (
     <span className={`relative block shrink-0 rounded-full ${className}`}>
       <span className="relative block h-full w-full overflow-hidden rounded-full bg-[#08101d]" style={{ boxShadow: '0 0 0 1.5px #f2d79c, inset 0 2px 6px rgba(0,0,0,0.6)' }}>
         {children}
       </span>
-      {src && (
-        <img
-          src={src}
-          alt=""
-          aria-hidden="true"
-          draggable={false}
-          className="pointer-events-none absolute select-none"
-          style={{ left: '50%', top: '50%', width: '178%', height: '178%', maxWidth: 'none', transform: 'translate(-50%, -54%)' }}
-        />
-      )}
     </span>
   );
 }

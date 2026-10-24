@@ -20,9 +20,9 @@ const truncate = (scaled, digits) => (Math.floor(scaled * 10 ** digits) / 10 ** 
 export const formatScore = (value) => {
   const n = Math.max(0, Math.round(Number(value) || 0));
   if (n >= 1000000) {
-    // 1M üstü her zaman 3 rakam: 1.23M, 12.3M, 123M
+    // 1M üstü her zaman 4 rakam: 1.234M, 12.34M, 123.4M, 1234M
     const m = n / 1000000;
-    const decimals = m >= 100 ? 0 : m >= 10 ? 1 : 2;
+    const decimals = m >= 1000 ? 0 : m >= 100 ? 1 : m >= 10 ? 2 : 3;
     const f = 10 ** decimals;
     return `${(Math.floor(m * f) / f).toFixed(decimals)}M`;
   }
