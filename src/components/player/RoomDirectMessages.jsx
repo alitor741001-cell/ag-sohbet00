@@ -97,10 +97,11 @@ export default function RoomDirectMessages({ onClose, initialUserId, onFullScree
   return (
     <>
       <BackDismissLayer onClose={onClose} />
-      <RoomChatThemeList counts={counts} onTab={setRoomPanel} onClose={closeOnBackdrop ? onClose : undefined}>
-        <ConversationList conversations={conversations} userId={user.id} onOpen={setSelected} onHide={hide} isOnline={isOnline} />
+      <RoomChatThemeList counts={counts} active={roomPanel || 'chats'} onTab={(key) => setRoomPanel(key === 'chats' ? '' : key)} onClose={closeOnBackdrop ? onClose : undefined}>
+        {Panel
+          ? <Panel onBack={() => setRoomPanel('')} />
+          : <ConversationList conversations={conversations} userId={user.id} onOpen={setSelected} onHide={hide} isOnline={isOnline} />}
       </RoomChatThemeList>
-      {panelOverlay}
     </>
   );
 }

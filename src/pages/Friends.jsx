@@ -4,7 +4,11 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import subscribeEntity from '@/components/data/entitySubscriptions';
 import ChatImageTabs from '@/components/friends/ChatImageTabs';
-import InboxRows from '@/components/friends/InboxRows';
+import FriendRequests from '@/pages/FriendRequests';
+import Notifications from '@/pages/Notifications';
+import AgencyMessages from '@/pages/AgencyMessages';
+
+const INBOX_PANELS = { requests: FriendRequests, notes: Notifications, agency: AgencyMessages };
 import ConversationList from '@/components/friends/ConversationList';
 import FriendsPanel from '@/components/friends/FriendsPanel';
 import ChatPanel from '@/components/friends/ChatPanel';
@@ -29,6 +33,7 @@ export default function Friends() {
   const navigate = useNavigate();
   const [adminLoading, setAdminLoading] = useState(false);
   const [rooms, setRooms] = useState([]);
+  const [inboxTab, setInboxTab] = useState('chats');
   useEffect(() => {
     if (!tabActive) return;
     let active = true;
@@ -153,6 +158,7 @@ export default function Friends() {
     base44.functions.invoke('dm-service', { action: 'delete_conversation', conversation_id: conversation.id }).catch(() => {});
   };
 
+  const InboxPanel = INBOX_PANELS[inboxTab];
   const switchView = (next) => { setView(next); setSelected(null); setParams(next === 'chats' ? { view: 'chats' } : {}); };
 
   if (friendsLoading || convosLoading || !user) return <div className="p-6 text-gray-400">Yükleniyor...</div>;
@@ -196,13 +202,12 @@ export default function Friends() {
       <NotchThemeStrip />
       <div className="design-screen">
         <div className="design-stage flex flex-col">
-          <ChatImageTabs counts={{ chats: totalUnread, requests: incomingRequests, notes: liveBadges.notes, agency: liveBadges.agency }} />
+          <ChatImageTabs counts={{ chats: totalUnread, requests: incomingRequests, notes: liveBadges.notes, agency: liveBadges.agency }} active={inboxTab} onSelect={setInboxTab} />
           {/* Sekmeler tasarım görselindeki yerinde durur; içerik çentik dışında, onların altında başlar. */}
           <div className="shrink-0" style={{ height: '17.5%' }} aria-hidden="true" />
           <div className="mx-[5%] flex min-h-0 flex-1 flex-col overflow-hidden">
             <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-              <InboxRows counts={{ requests: incomingRequests, notes: liveBadges.notes, agency: liveBadges.agency }} />
-              {conversations.length > 0 ? (
+              {InboxPanel ? <InboxPanel onBack={() => setInboxTab('chats')} /> : conversations.length > 0 ? (
                 <ConversationList conversations={conversations} userId={user.id} onOpen={openConversation} onHide={hide} isOnline={isOnline} getLastSeen={getLastSeen} rooms={rooms} getRoomId={getRoomId} />
               ) : (
                 <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
