@@ -33,7 +33,7 @@ export default function VoiceBoardTimer({ active, startedAt }) {
   return (
     <div
       className="relative z-30 flex shrink-0 justify-center px-3 pb-1.5"
-      style={{ top: 'calc(-1 * var(--voice-board-lift, 0px))' }}
+      style={{ top: 'calc(-1 * var(--voice-board-lift, 0px) + 14px)' }}
     >
       <div
         className="flex w-fit items-center gap-1.5 rounded-lg border border-slot-gold/60 bg-gradient-to-r from-slot-red/25 via-slot-panel to-slot-red/25 px-2 py-1 shadow-[0_0_10px_rgba(239,68,68,0.22)]"
