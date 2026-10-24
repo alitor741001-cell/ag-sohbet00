@@ -30,7 +30,7 @@ export default function RoomProfileSheet({ open, onClose, room, user, moderators
   const code = room?.personal_room_code || (room?.room_number ? String(room.room_number) : '');
 
   return (
-    <VoiceSheet open={open} onClose={onClose} halfHeight title="Oda Profili">
+    <VoiceSheet open={open} onClose={onClose} halfHeight height="70dvh" title="Oda Profili">
       {/* Profilim: yalnızca bilgi satırı, kart açmaz. */}
       <div className="flex w-full items-center gap-2.5 rounded-2xl border border-white/10 bg-white/[0.06] p-2 text-left">
         <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/15 bg-white/10">

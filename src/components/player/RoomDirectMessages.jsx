@@ -9,7 +9,7 @@ import useFriendPresence from '@/hooks/useFriendPresence';
 import ConversationList from '@/components/friends/ConversationList';
 import ChatPanel from '@/components/friends/ChatPanel';
 import FriendRequestsButton from '@/components/friends/FriendRequestsButton';
-import ChatHeaderActions from '@/components/friends/ChatHeaderActions';
+import MessagesBannerInline from '@/components/friends/MessagesBannerInline';
 
 export default function RoomDirectMessages({ onClose, initialUserId, onFullScreenChange }) {
   const { user, relations, loading: friendsLoading, invoke } = useFriends();
@@ -55,5 +55,22 @@ export default function RoomDirectMessages({ onClose, initialUserId, onFullScree
     const friendId = selected.user1_id === user.id ? selected.user2_id : selected.user1_id;
     return <section className="room-direct-selected dark h-full min-h-0 w-full bg-black text-white pt-[max(env(safe-area-inset-top),1rem)] pb-[env(safe-area-inset-bottom)]"><ChatPanel conversation={selected} userId={user.id} onBack={() => setSelected(null)} online={isOnline(friendId)} embedded /></section>;
   }
-  return <section className="dark flex h-full w-full min-w-0 flex-col border-l border-[#F2CE6B]/25 bg-gradient-to-b from-[#2C1512] to-[#150A0A] text-white pt-[max(env(safe-area-inset-top),1rem)] backdrop-blur-xl" onTouchStart={(e) => { touchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }; }} onTouchEnd={(e) => { const dx = e.changedTouches[0].clientX - touchStart.current.x; const dy = e.changedTouches[0].clientY - touchStart.current.y; if (dx > 80 && dx > Math.abs(dy) * 1.5) onClose(); }}><header className="flex items-center justify-between border-b border-[#F2CE6B]/25 px-4 py-3"><h2 className="font-bold text-[#F2CE6B]">Sohbetler</h2><div className="flex items-center gap-1"><ChatHeaderActions userId={user.id} relations={relations} /><FriendRequestsButton relations={relations} userId={user.id} invoke={invoke} /><button onClick={onClose} className="p-2" aria-label="Kapat"><X className="w-5 h-5" /></button></div></header><div className="min-h-0 flex-1 overflow-y-auto"><ConversationList conversations={conversations} userId={user.id} onOpen={setSelected} onHide={hide} isOnline={isOnline} /></div></section>;
+  // Ana sayfadaki özel sohbet görünümü: aynı şerit görseli, aynı tema ve düğmeler.
+  return (
+    <section
+      className="dark flex h-full w-full min-w-0 flex-col bg-[#040b1c] text-white"
+      onTouchStart={(e) => { touchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }; }}
+      onTouchEnd={(e) => { const dx = e.changedTouches[0].clientX - touchStart.current.x; const dy = e.changedTouches[0].clientY - touchStart.current.y; if (dx > 80 && dx > Math.abs(dy) * 1.5) onClose(); }}
+    >
+      <MessagesBannerInline relations={relations} userId={user.id} />
+      <header className="flex items-center justify-between gap-2 border-b border-[#F2CE6B]/25 px-4 py-2.5">
+        <h2 className="flex-1 font-black uppercase tracking-wider text-[#F2CE6B]" style={{ textShadow: '0 0 6px rgba(255,214,120,0.8), 0 0 16px rgba(239,68,68,0.6)' }}>Sohbetler</h2>
+        <FriendRequestsButton relations={relations} userId={user.id} invoke={invoke} />
+        <button onClick={onClose} className="p-2" aria-label="Kapat"><X className="w-5 h-5" /></button>
+      </header>
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        <ConversationList conversations={conversations} userId={user.id} onOpen={setSelected} onHide={hide} isOnline={isOnline} />
+      </div>
+    </section>
+  );
 }
