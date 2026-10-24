@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { giftLevelOf, giftNextThreshold, GIFT_MAX_LEVEL } from '@/lib/userLevels';
-import { K_UNIT, formatCoins } from '@/lib/giftTone';
+import { K_UNIT } from '@/lib/giftTone';
+import GiftLevelDisplay from '@/components/voice/GiftLevelDisplay';
 
 /** K değerinin coin karşılığı: 1 K = 1.000 coin. */
 const coinsForK = (kValue) => Math.max(0, Math.round((Number(kValue) || 0) * K_UNIT));
@@ -46,21 +47,5 @@ export default function GiftLevelTicker({ giftTick = 0 }) {
   const percent = next === null || span <= 0 ? 100 : Math.min(100, Math.max(0, Math.round(((kTotal - baseK) / span) * 100)));
   const remainingCoins = next === null ? 0 : Math.max(0, coinsForK(nextK - kTotal));
 
-  return (
-    <div key={step} className="gift-palace-level flex items-center gap-2">
-      <span className="gift-palace-badge"><small>LVL</small><strong>{level}</strong></span>
-      <div className="h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-white/15">
-        <div
-          className="h-full rounded-full bg-gradient-to-r from-[#6af5d9] to-[#45d6c8] transition-all duration-500"
-          style={{ width: `${percent}%` }}
-        />
-      </div>
-      <span className="shrink-0 text-[10px] font-black tabular-nums text-white/85">
-        {sending ? 'Atış' : 'Alış'} LVL {level}
-      </span>
-      <span className="shrink-0 text-[10px] font-semibold tabular-nums text-white/55">
-        {next === null ? 'En üst seviye' : `Kalan ${formatCoins(remainingCoins)} coin`}
-      </span>
-    </div>
-  );
+  return <GiftLevelDisplay level={level} percent={percent} sending={sending} next={next} remainingCoins={remainingCoins} />;
 }

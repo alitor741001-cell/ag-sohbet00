@@ -1,6 +1,6 @@
 import { useId } from 'react';
 import GiftTransparencyFilter from '@/components/voice/GiftTransparencyFilter';
-import { Coins } from 'lucide-react';
+import { Check, Coins } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import { K_UNIT, formatCoins } from '@/lib/giftTone';
 import useGiftArtColor from '@/hooks/useGiftArtColor';
@@ -21,6 +21,7 @@ export default function GiftCard({ gift, selected, onSelect }) {
     >
       <GiftTransparencyFilter id={filterId} />
       <span className="gift-palace-art relative inline-flex w-full items-center justify-center">
+        {selected && <span className="gift-palace-selected"><Check aria-hidden="true" /><span className="sr-only">Seçildi</span></span>}
         <span
         className="pointer-events-none absolute inset-0"
           style={{ background: `radial-gradient(ellipse at 50% 58%, ${tone}${selected ? '85' : '60'}, ${tone}22 42%, transparent 72%)` }}
