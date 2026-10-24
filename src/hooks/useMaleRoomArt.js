@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-const URL = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/c54d8430d_IMG_0194.jpg';
+const URL = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/3dcd0aaa7_IMG_0194.jpg';
 let artwork;
 function loadArt() {
   if (artwork) return artwork;
