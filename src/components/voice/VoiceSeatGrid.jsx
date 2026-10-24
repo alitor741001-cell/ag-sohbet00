@@ -35,7 +35,7 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
   // Alçak ekranda satır araları daralır: en küçük koltukta bile tüm satırlar ve
   // altlarındaki sayı şeritleri sahneye sığar.
   const rowsNeeded = (rows.length || 1) * (boardActive ? 83 : 62) + 12 * Math.max(0, rows.length - 1);
-  const rowGap = (featureTop ? (narrow ? 8 : 14) : narrow ? (many ? 5 : maxHeight && maxHeight < rowsNeeded ? 6 : 12) : 20);
+  const rowGap = (spread ? 6 : 0) + (featureTop ? (narrow ? 8 : 14) : narrow ? (many ? 5 : maxHeight && maxHeight < rowsNeeded ? 6 : 12) : 20);
   const available = width - 4;
   const perSeat = (available - baseGap * (widestRow - 1)) / widestRow;
   // 9'lu düzende koltuk bir beden büyük çizilir: 'xl' sınırı da açıktır.
@@ -98,8 +98,11 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
                       gifted={occupied ? gifted[seat.user_id] : undefined}
                       micMuted={micMuted}
                     />
-                    {boardActive && occupied && (
-                      <VoiceSeatScore value={scores[seat.user_id] || 0} size={seatSize} />
+                    {/* Skor alanı boş koltukta da yer tutar: koltuk değişince satırlar zıplamaz. */}
+                    {boardActive && (
+                      <div className={occupied ? '' : 'invisible'} aria-hidden={!occupied}>
+                        <VoiceSeatScore value={occupied ? scores[seat.user_id] || 0 : 0} size={seatSize} />
+                      </div>
                     )}
                   </div>
                 );

@@ -49,7 +49,7 @@ function VoiceSeat({ seat, index, size = 'md', musicPlaying, speaking, isSelf, i
             )}
           </span>
         </span>
-        <span className="text-[10px] font-medium leading-none text-white/85">{index + 1}</span>
+        <span className="flex h-3 items-center text-[10px] font-medium leading-none text-white/85">{index + 1}</span>
       </button>
     );
   }
@@ -81,7 +81,7 @@ function VoiceSeat({ seat, index, size = 'md', musicPlaying, speaking, isSelf, i
           <span className="gift-pop pointer-events-none absolute -top-5 left-1/2 z-30 -translate-x-1/2 text-lg leading-none">{gifted}</span>
         )}
       </span>
-      <span className={`flex ${nameWidth} items-center gap-0.5 truncate text-[10px] leading-none`} style={{ color: gifted ? accent : nameTheme?.accent || '#ffffff' }}>
+      <span className={`flex h-3 ${nameWidth} items-center gap-0.5 truncate text-[10px] leading-none`} style={{ color: gifted ? accent : nameTheme?.accent || '#ffffff' }}>
         {!hidden && isOwner && <Crown className="h-3 w-3 shrink-0 text-amber-400" />}
         {!hidden && !isOwner && isMod && <Shield className="h-3 w-3 shrink-0 text-sky-400" />}
         <span className={`truncate ${hidden ? 'hidden-user-name' : ''}`}>{seat.name}</span>
