@@ -22,18 +22,16 @@ export default function ProfileFixedHero(props) {
 
   return (
     <>
-      <div ref={boxRef} className="fixed inset-x-0 top-0 z-30 overflow-hidden lg:top-16">
-        <img
-          src={THEME_BG}
-          alt=""
-          aria-hidden="true"
-          draggable={false}
-          className="pointer-events-none absolute left-0 top-0 h-screen w-full select-none object-fill lg:-top-16"
-        />
-        <div
-          className="relative mx-auto w-full max-w-2xl md:max-w-3xl xl:max-w-4xl"
-          style={{ paddingTop: 'env(safe-area-inset-top)' }}
-        >
+      <div ref={boxRef} className="fixed inset-x-0 z-30 overflow-hidden" style={{ top: 'var(--safe-top)' }}>
+        <div className="relative mx-auto w-full max-w-[560px]">
+          <img
+            src={THEME_BG}
+            alt=""
+            aria-hidden="true"
+            draggable={false}
+            className="pointer-events-none absolute left-0 top-0 w-full select-none object-fill"
+            style={{ height: 'var(--design-height)' }}
+          />
           <ProfileHeroCard {...props} />
         </div>
       </div>

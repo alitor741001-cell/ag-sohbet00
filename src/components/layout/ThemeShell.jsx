@@ -12,20 +12,37 @@ const ZONES = [
   { label: 'Profil', to: '/profil', x: 79.5, w: 17 },
 ];
 
-/** Tam ekran tema arka planı + görseldeki butonlar için dokunma alanları. */
+/** Tam ekran tema arka planı + görseldeki butonlar için dokunma alanları.
+    Tasarım çentik/güvenli alan içinde kalır; geniş ekranda ortada durur. */
 export default function ThemeShell({ chats = false }) {
   const bg = chats ? CHATS_BG : BG;
   return (
     <>
-      <div className="pointer-events-none fixed inset-0 -z-10" style={{ background: '#000' }} aria-hidden="true">
-        <img src={bg} alt="" draggable={false} className="h-full w-full select-none object-fill" />
+      {/* Güvenli alanın dışında kalan pikseller aynı görselin bulanık dolgusuyla kapanır. */}
+      <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden bg-black" aria-hidden="true">
+        <img src={bg} alt="" draggable={false} className="h-full w-full scale-110 select-none object-fill opacity-60 blur-2xl" />
+      </div>
+      <div className="design-screen -z-10" aria-hidden="true">
+        <div className="design-stage">
+          <img src={bg} alt="" draggable={false} className="absolute inset-0 h-full w-full select-none object-fill" />
+        </div>
       </div>
       {/* Alt menü şeridi içeriğin üstünde kalır. */}
-      <img src={bg} alt="" aria-hidden="true" draggable={false} className="pointer-events-none fixed inset-0 z-40 h-full w-full select-none object-fill" style={{ clipPath: 'inset(85% 0 0 0)' }} />
-      <div className="pointer-events-none fixed inset-0 z-40"><SupportLabel top="92.5%" height="3.5%" /></div>
-      {ZONES.map((z) => (
-        <Link key={z.label} to={z.to} aria-label={z.label} className="fixed z-50 rounded-2xl active:bg-white/10" style={{ left: `${z.x}%`, width: `${z.w}%`, top: '87%', height: '9.5%' }} />
-      ))}
+      <div className="design-screen pointer-events-none z-40">
+        <div className="design-stage">
+          <img src={bg} alt="" aria-hidden="true" draggable={false} className="pointer-events-none absolute inset-0 h-full w-full select-none object-fill" style={{ clipPath: 'inset(85% 0 0 0)' }} />
+          <SupportLabel top="92.5%" height="3.5%" />
+          {ZONES.map((z) => (
+            <Link
+              key={z.label}
+              to={z.to}
+              aria-label={z.label}
+              className="pointer-events-auto absolute rounded-2xl active:bg-white/10"
+              style={{ left: `${z.x}%`, width: `${z.w}%`, top: '87%', height: '9.5%' }}
+            />
+          ))}
+        </div>
+      </div>
     </>
   );
 }

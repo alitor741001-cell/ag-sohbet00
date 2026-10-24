@@ -13,7 +13,7 @@ export default function ChatImageTabs({ counts = {} }) {
   return TABS.map((tab) => {
     const count = Number(counts[tab.key] || 0);
     return (
-      <Link key={tab.key} to={tab.to} aria-label={tab.label} className="fixed z-50 rounded-xl active:bg-white/10" style={{ left: `${tab.x}%`, width: `${tab.w}%`, top: '8.5%', height: '8%' }}>
+      <Link key={tab.key} to={tab.to} aria-label={tab.label} className="absolute z-50 rounded-xl active:bg-white/10" style={{ left: `${tab.x}%`, width: `${tab.w}%`, top: '8.5%', height: '8%' }}>
         {count > 0 && (
           <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
             {count > 99 ? '99+' : count}

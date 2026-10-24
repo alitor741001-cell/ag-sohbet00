@@ -840,6 +840,30 @@
    sürümlerinde de uygulama cihazın kendi ekran boyutunu kaplar. */
 :root { --app-height: 100vh; }
 
+/* Çentik, durum çubuğu ve güvenli alan: tasarım ekranları bu sınırın içinde kalır.
+   Ekran büyükse (tablet/iPad) tasarım ortada telefon oranında durur, kenarda kalan
+   pikseller aynı görselin bulanık dolgusuyla kapanır. */
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --design-height: calc(var(--app-height) - var(--safe-top) - var(--safe-bottom));
+}
+.design-screen {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: var(--safe-top);
+  height: var(--design-height);
+}
+.design-stage {
+  position: relative;
+  margin-inline: auto;
+  height: 100%;
+  width: 100%;
+  max-width: 560px;
+  overflow: hidden;
+}
+
 
 /* Tüm cihazlar için ortak responsive güvenlik katmanı */
 html, body, #root {

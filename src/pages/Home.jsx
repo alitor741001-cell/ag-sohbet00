@@ -28,31 +28,39 @@ export default function Home() {
   const [params] = useSearchParams();
   // Oyunlar görünümü kendi tasarım görselini kullanır; üst sekme alanları burada yoktur.
   const games = params.get('oyunlar') === '1';
+  const design = games ? GAMES_DESIGN : DESIGN;
   const base = games ? ZONES.filter((z) => z.y >= 80) : ZONES;
   const zones = hasContent || games ? base : [...base, EMPTY_ZONE];
 
   return (
-    <div className="fixed inset-0 overflow-hidden text-white" style={{ background: '#000' }}>
-      <img src={games ? GAMES_DESIGN : DESIGN} alt="" className="pointer-events-none absolute inset-0 h-full w-full select-none object-fill" draggable={false} />
-      {!games && hasContent && (
-        <img src={LIVE_BG} alt="" className="pointer-events-none absolute inset-x-[3%] select-none rounded-2xl object-cover" style={{ top: '12%', bottom: '14%', height: '74%', width: '94%' }} draggable={false} />
-      )}
-      <SupportLabel top="92.5%" height="3.5%" />
-      {zones.map((z) => (
-        <Link
-          key={z.label + z.y}
-          to={z.to}
-          aria-label={z.label}
-          className="absolute z-20 rounded-2xl active:bg-white/10"
-          style={{ left: `${z.x}%`, top: `${z.y}%`, width: `${z.w}%`, height: `${z.h}%` }}
-        />
-      ))}
-      <div
-        className={`absolute inset-x-[3%] z-10 overflow-y-auto rounded-2xl px-2 py-2 ${hasContent ? '' : 'pointer-events-none opacity-0'}`}
-        style={games ? { top: '9%', bottom: '14%', left: '6%', right: '6%', background: 'transparent' } : { top: '12%', bottom: '14%', background: 'transparent' }}
-        key={params.toString()}
-      >
-        <RoomDiscovery onContentChange={setHasContent} />
+    <div className="fixed inset-0 overflow-hidden bg-black text-white">
+      {/* Güvenli alanın dışında kalan pikseller aynı tasarımın bulanık dolgusuyla kapanır. */}
+      <img src={design} alt="" aria-hidden="true" draggable={false} className="pointer-events-none absolute inset-0 h-full w-full scale-110 select-none object-fill opacity-60 blur-2xl" />
+      {/* Tasarım çentik ve güvenli alanın içinde kalır; tablette ortada telefon oranında durur. */}
+      <div className="design-screen">
+        <div className="design-stage">
+          <img src={design} alt="" className="pointer-events-none absolute inset-0 h-full w-full select-none object-fill" draggable={false} />
+          {!games && hasContent && (
+            <img src={LIVE_BG} alt="" className="pointer-events-none absolute inset-x-[3%] select-none rounded-2xl object-cover" style={{ top: '12%', bottom: '14%', height: '74%', width: '94%' }} draggable={false} />
+          )}
+          <SupportLabel top="92.5%" height="3.5%" />
+          {zones.map((z) => (
+            <Link
+              key={z.label + z.y}
+              to={z.to}
+              aria-label={z.label}
+              className="absolute z-20 rounded-2xl active:bg-white/10"
+              style={{ left: `${z.x}%`, top: `${z.y}%`, width: `${z.w}%`, height: `${z.h}%` }}
+            />
+          ))}
+          <div
+            className={`absolute inset-x-[3%] z-10 overflow-y-auto overscroll-contain rounded-2xl px-2 py-2 ${hasContent ? '' : 'pointer-events-none opacity-0'}`}
+            style={games ? { top: '9%', bottom: '14%', left: '6%', right: '6%', background: 'transparent' } : { top: '12%', bottom: '14%', background: 'transparent' }}
+            key={params.toString()}
+          >
+            <RoomDiscovery onContentChange={setHasContent} />
+          </div>
+        </div>
       </div>
     </div>
   );

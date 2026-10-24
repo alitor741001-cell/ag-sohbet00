@@ -190,22 +190,29 @@ export default function Friends() {
   // Sohbet listesi tema görselinin içindeki örnek satırın üstüne opak panel olarak oturur:
   // tasarımdaki sabit içerik görünmez, liste kendi içinde kayar.
   return (
-    <div className="dark fixed inset-0 z-10 flex flex-col text-white" style={{ paddingTop: '17.5vh', paddingBottom: '13.5vh' }}>
-      <ChatImageTabs counts={{ chats: totalUnread, requests: incomingRequests, notes: liveBadges.notes, agency: liveBadges.agency }} />
-      <div className="mx-[5%] flex min-h-0 flex-1 flex-col overflow-hidden">
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-          {conversations.length > 0 ? (
-            <ConversationList conversations={conversations} userId={user.id} onOpen={openConversation} onHide={hide} isOnline={isOnline} getLastSeen={getLastSeen} rooms={rooms} getRoomId={getRoomId} />
-          ) : (
-            <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
-              <div className="relative w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-5">
-                <MessageCircle className="w-10 h-10 text-[#f2ce6b]/50" />
-                <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-[#f2ce6b] flex items-center justify-center text-[10px] font-bold text-black">!</span>
-              </div>
-              <h2 className="text-lg font-bold text-white mb-2">Henüz sohbetin yok</h2>
-              <p className="text-sm text-gray-400 max-w-xs">Mesajlaşmak için arkadaşlarınla sohbet başlatabilirsin.</p>
+    <div className="dark fixed inset-0 z-10 text-white">
+      <div className="design-screen">
+        <div className="design-stage flex flex-col">
+          <ChatImageTabs counts={{ chats: totalUnread, requests: incomingRequests, notes: liveBadges.notes, agency: liveBadges.agency }} />
+          {/* Sekmeler tasarım görselindeki yerinde durur; içerik çentik dışında, onların altında başlar. */}
+          <div className="shrink-0" style={{ height: '17.5%' }} aria-hidden="true" />
+          <div className="mx-[5%] flex min-h-0 flex-1 flex-col overflow-hidden">
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+              {conversations.length > 0 ? (
+                <ConversationList conversations={conversations} userId={user.id} onOpen={openConversation} onHide={hide} isOnline={isOnline} getLastSeen={getLastSeen} rooms={rooms} getRoomId={getRoomId} />
+              ) : (
+                <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
+                  <div className="relative w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-5">
+                    <MessageCircle className="w-10 h-10 text-[#f2ce6b]/50" />
+                    <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-[#f2ce6b] flex items-center justify-center text-[10px] font-bold text-black">!</span>
+                  </div>
+                  <h2 className="text-lg font-bold text-white mb-2">Henüz sohbetin yok</h2>
+                  <p className="text-sm text-gray-400 max-w-xs">Mesajlaşmak için arkadaşlarınla sohbet başlatabilirsin.</p>
+                </div>
+              )}
             </div>
-          )}
+          </div>
+          <div className="shrink-0" style={{ height: '13.5%' }} aria-hidden="true" />
         </div>
       </div>
     </div>
