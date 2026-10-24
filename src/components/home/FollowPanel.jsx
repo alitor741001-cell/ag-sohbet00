@@ -22,10 +22,10 @@ export default function FollowPanel({ rooms, owners, friends, filmTitleFor, hist
               key={item.key}
               type="button"
               onClick={() => setTab(item.key)}
-              className={`flex min-w-0 flex-1 items-center justify-center rounded-xl px-1 py-2 text-[10px] font-extrabold transition active:scale-[0.98] ${
+              className={`flex min-w-0 flex-1 items-center justify-center rounded-full border-2 bg-black/50 px-1 py-2 text-[11px] font-bold text-white transition active:scale-[0.98] ${
                 active
-                  ? 'border border-[#e8c47c]/70 bg-[#2c2c3e] text-[#ffe6a8] shadow-[0_0_18px_-6px_rgba(232,196,124,0.9)]'
-                  : 'border border-white/10 bg-[#3d4c63]/70 text-white/60'
+                  ? 'border-[#ffa63d] shadow-[0_0_12px_rgba(255,140,40,0.9),inset_0_0_8px_rgba(255,140,40,0.5)]'
+                  : 'border-[#3d8bff] shadow-[0_0_10px_rgba(60,140,255,0.8),inset_0_0_6px_rgba(60,140,255,0.4)]'
               }`}
             >
               <span className="truncate">{item.label}</span>

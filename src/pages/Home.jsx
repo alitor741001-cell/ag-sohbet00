@@ -45,7 +45,7 @@ export default function Home() {
       ))}
       <div
         className={`absolute inset-x-[3%] z-10 overflow-y-auto rounded-2xl px-2 py-2 ${hasContent ? '' : 'pointer-events-none opacity-0'}`}
-        style={games ? { top: '9%', bottom: '14%', left: '6%', right: '6%', background: 'transparent' } : { top: '12%', bottom: '14%', background: hasContent && params.get('view') !== 'history' ? '#0a0a0d' : 'transparent' }}
+        style={games ? { top: '9%', bottom: '14%', left: '6%', right: '6%', background: 'transparent' } : { top: '12%', bottom: '14%', background: 'transparent' }}
         key={params.toString()}
       >
         <RoomDiscovery onContentChange={setHasContent} />
