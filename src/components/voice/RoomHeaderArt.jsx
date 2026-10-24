@@ -5,14 +5,14 @@ import useMessageProfiles from '@/hooks/useMessageProfiles';
 import useKeyedImage from '@/hooks/useKeyedImage';
 import RoomNameMarquee from '@/components/voice/RoomNameMarquee';
 
-const ART_URL = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/19f5ac305_IMG_0281.jpg';
+const ART_URL = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/7c8894234_IMG_0281.jpg';
 const W = 736;
 const H = 195;
 // Örnek isim, ID, hediye sayısı ve izleyici sayısı görselden silinir.
 const CROP = {
   top: 0, height: H / 1007, baseWidth: W,
   erase: [[132, 52, 100, 36], [132, 90, 145, 24], [165, 138, 60, 34], [488, 84, 26, 30]],
-  holes: [[62, 88, 40]],
+  holes: [[63, 63, 38]],
 };
 // Toplam hediye: her zaman 4 rakam — 1.234M, 12.34M, 123.4M; milyardan sonra B (1.234B ...).
 const four = (v) => { const d = v >= 1000 ? 0 : v >= 100 ? 1 : v >= 10 ? 2 : 3; const f = 10 ** d; return (Math.floor(v * f) / f).toFixed(d); };
@@ -39,13 +39,13 @@ export default function RoomHeaderArt({ room, onOpen, viewerCount = 0, onOpenVie
   return (
     <div className="voice-header-art relative w-full" style={{ aspectRatio: `${W} / ${H}` }}>
       {/* Fotoğraf çerçevenin ARKASINDA durur: çember dışına taşan kısım çerçeve altında kalır. */}
-      <div className="pointer-events-none overflow-hidden rounded-full" style={pct(21, 47, 82, 82)}>
+      <div className="pointer-events-none overflow-hidden rounded-full" style={pct(24, 24, 78, 78)}>
         {profile.avatar
           ? <Image src={profile.avatar} alt={ownerName} className="h-full w-full" fittingType="fill" draggable={false} />
           : <span className="flex h-full w-full items-center justify-center text-lg font-bold text-white">{ownerName.trim().charAt(0)}</span>}
       </div>
       {src && <img src={src} alt="" draggable={false} className="pointer-events-none absolute inset-0 h-full w-full select-none" />}
-      <button type="button" onClick={onOpen} aria-label="Oda profilini aç" className="rounded-full" style={pct(24, 49, 76, 76)} />
+      <button type="button" onClick={onOpen} aria-label="Oda profilini aç" className="rounded-full" style={pct(25, 25, 76, 76)} />
       <button type="button" onClick={onOpen} className="flex flex-col justify-center overflow-hidden text-left" style={pct(132, 50, 200, 66)}>
         <RoomNameMarquee text={room?.name || 'Oda'} className="text-[clamp(13px,4.2vw,20px)] font-bold leading-normal text-white" />
         {memberId && <span className="mt-0.5 flex items-center gap-1 text-[clamp(10px,3vw,14px)] tabular-nums text-white/75">ID:{memberId}<span className="h-2 w-2 rounded-full bg-emerald-400" /></span>}
