@@ -20,9 +20,8 @@ import { motion, useReducedMotion } from 'framer-motion';
 import { isMultiDeviceExempt } from '@/lib/sessionPolicy';
 // Yüz doğrulaması uygulamaya girişte sorulmaz: yalnızca elmaslar/bakiye bölümünde istenir.
 
-// Koyu yüzeyler tek bir gece mavisi gradyanıyla boyanır: durum çubuğu, güvenli alan ve
-// kaydırma kenarlarında siyah şerit kalmaz, ana sayfanın zemini ekranın tamamını kaplar.
-const DARK_SURFACE_GRADIENT = 'radial-gradient(120% 75% at 50% 0%, #1d1013 0%, #0c0a0f 44%, #050409 100%)';
+// Koyu yüzeyler tek bir düz siyah zeminle boyanır: üstte ayrı bir ton/gradyan katmanı görünmez.
+const DARK_SURFACE_GRADIENT = '#0a0a0d';
 
 export default function AppLayout() {
   const { pathname } = useLocation();

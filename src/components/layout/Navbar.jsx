@@ -27,7 +27,7 @@ export default function Navbar() {
 
   return (
     <header className="hidden lg:block fixed top-0 inset-x-0 z-50"
-      style={{ background: 'linear-gradient(135deg, #151517 0%, #242428 50%, #151517 100%)', borderBottom: '1px solid rgba(239,68,68,0.25)' }}>
+      style={{ background: '#0a0a0d', borderBottom: '1px solid rgba(239,68,68,0.25)' }}>
       <div className="absolute inset-0 pointer-events-none opacity-30"
         style={{
           backgroundImage: `linear-gradient(rgba(239,68,68,0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(239,68,68,0.07) 1px, transparent 1px)`,
