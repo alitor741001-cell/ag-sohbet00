@@ -26,7 +26,7 @@ export default function HomeImageNav({ onNav, isAdmin, supportBadge, messages = 
           const active = isActive(z, pathname, search);
           return (
             <button key={z.label} type="button" aria-label={z.label} aria-current={active ? 'page' : undefined} onClick={() => onNav(z)}
-              className="absolute top-[22%] bottom-[env(safe-area-inset-bottom)] transition-transform active:scale-95" style={{ left: `${z.left}%`, width: `${z.width}%` }}>
+              className="absolute top-[34%] bottom-[env(safe-area-inset-bottom)] transition-transform active:scale-95" style={{ left: `${z.left}%`, width: `${z.width}%` }}>
               {active && <span aria-hidden="true" className="absolute bottom-[calc(env(safe-area-inset-bottom)+2%)] left-1/2 h-[3px] w-1/2 -translate-x-1/2 rounded-full bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.9)]" />}
               {z.activePath === '/arkadaslar' && messages > 0 && (
                 <span className="absolute right-[18%] top-[8%] min-w-5 h-5 px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">{messages > 99 ? '99+' : messages}</span>
@@ -34,7 +34,7 @@ export default function HomeImageNav({ onNav, isAdmin, supportBadge, messages = 
             </button>
           );
         })}
-        <div className="absolute top-[22%] bottom-[env(safe-area-inset-bottom)] flex items-center justify-center opacity-0 [&>*]:h-full [&>*]:w-full" style={{ left: '60.5%', width: '19%' }}>
+        <div className="absolute top-[34%] bottom-[env(safe-area-inset-bottom)] flex items-center justify-center opacity-0 [&>*]:h-full [&>*]:w-full" style={{ left: '60.5%', width: '19%' }}>
           {isAdmin ? <LiveChatButton placement="dock" /> : <UserSupportButton badge={supportBadge} />}
         </div>
       </div>
