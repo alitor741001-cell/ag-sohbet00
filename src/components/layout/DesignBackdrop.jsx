@@ -1,23 +1,10 @@
-import { DESIGN_IMAGE } from '@/components/layout/DesignBottomNav';
+const BACKDROP = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/bb6ae2dd8_IMG_0213.jpg';
 
-const NAV_H = 'calc(min(100vw, 540px) * 144 / 540 + env(safe-area-inset-bottom))';
-
-/** Görsel alt menüyle birebir aynı hizada; ortadaki ana sayfa içeriği koyu örtüyle gizlenir, kenar alevleri kalır. */
+/** Özel sohbet, canlı destek, profil ve arama sayfalarının alevli arka planı. */
 export default function DesignBackdrop() {
   return (
-    <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden" style={{ background: '#0a0a0d' }} aria-hidden="true">
-      <div className="absolute inset-0 mx-auto w-full max-w-[540px]">
-        <img src={DESIGN_IMAGE} alt="" draggable={false} className="absolute bottom-0 left-0 w-full select-none" />
-        <div
-          className="absolute inset-x-0 top-0"
-          style={{
-            bottom: NAV_H,
-            background: 'linear-gradient(to right, transparent 0%, #0a0a0d 20%, #0a0a0d 80%, transparent 100%)',
-            WebkitMaskImage: 'linear-gradient(to bottom, black calc(100% - 90px), transparent 100%)',
-            maskImage: 'linear-gradient(to bottom, black calc(100% - 90px), transparent 100%)',
-          }}
-        />
-      </div>
+    <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden" style={{ background: '#000' }} aria-hidden="true">
+      <img src={BACKDROP} alt="" draggable={false} className="absolute inset-0 h-full w-full select-none object-cover" />
     </div>
   );
 }
