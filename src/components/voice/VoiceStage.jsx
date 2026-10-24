@@ -64,7 +64,7 @@ export default function VoiceStage({ scrollRef, handlers, room, hiddenAnnounce, 
         {...handlers}
         // Sayı tahtası açıkken süre kartı koltukların hemen altına oturur; sahnenin alt boşluğu
         // ona devredilir, koltuklar için ayrılan yer değişmez.
-        className={`voice-stage relative z-20 min-h-0 flex-1 ${nine ? 'px-1' : 'px-3'} pt-4 ${scrollable ? 'overflow-y-auto overflow-x-hidden' : 'overflow-hidden'} ${grid.boardActive ? 'pb-0' : 'pb-4'}`}
+        className={`voice-stage relative z-20 min-h-0 flex-1 ${nine ? 'px-1' : 'px-3'} pt-4 ${scrollable ? 'overflow-y-auto overflow-x-hidden' : 'overflow-visible'} ${grid.boardActive ? 'pb-0' : 'pb-4'}`}
       >
         <div ref={boxRef} className="flex h-full min-h-0 flex-col items-center">
           {room?.password && (
