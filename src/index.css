@@ -207,10 +207,16 @@
     @apply bg-background text-foreground font-body antialiased;
     overscroll-behavior-x: none;
     overscroll-behavior-y: none;
+    /* iOS yönlendirme değişiminde metnin beklenmedik yakınlaştırılmasını önler. */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    /* Yatay taşma: butonlar ve geniş içerikler sayfayı yana kaydırmaz. */
+    overflow-x: clip;
   }
 
   html {
     overscroll-behavior-x: none;
+    overflow-x: clip;
   }
 
   /* Interactive elements: disable text selection for native-app feel */
