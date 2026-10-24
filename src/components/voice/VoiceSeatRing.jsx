@@ -13,7 +13,7 @@ export default function VoiceSeatRing({ children, className = '', variant = 0 })
 
   return (
     <span className={`relative block shrink-0 rounded-full ${className}`}>
-      <span className="relative block h-full w-full overflow-hidden rounded-full bg-[#08101d]">
+      <span className="relative block h-full w-full overflow-hidden rounded-full bg-[#08101d]" style={{ boxShadow: '0 0 0 1.5px #f2d79c, inset 0 2px 6px rgba(0,0,0,0.6)' }}>
         {children}
       </span>
       {src && (
@@ -23,7 +23,7 @@ export default function VoiceSeatRing({ children, className = '', variant = 0 })
           aria-hidden="true"
           draggable={false}
           className="pointer-events-none absolute select-none"
-          style={{ left: '50%', top: '50%', width: '214%', height: '214%', maxWidth: 'none', transform: 'translate(-50%, -54%)' }}
+          style={{ left: '50%', top: '50%', width: '178%', height: '178%', maxWidth: 'none', transform: 'translate(-50%, -54%)' }}
         />
       )}
     </span>

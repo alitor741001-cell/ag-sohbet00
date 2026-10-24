@@ -6,7 +6,7 @@ export const FRAME_COUNT = 24;
 const COLS = [88, 256, 425, 597, 768, 937];
 const ROWS = [190, 405, 635, 855];
 const BOX = 220; // kesim kutusu (sayfa pikseli, 1024 tabanında)
-const HOLE = 56; // iç dairenin yarıçapı
+const HOLE = 62; // iç dairenin yarıçapı
 
 let promise = null;
 

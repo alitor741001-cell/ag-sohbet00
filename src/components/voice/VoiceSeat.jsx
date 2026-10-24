@@ -36,10 +36,10 @@ function VoiceSeat({ seat, index, size = 'md', musicPlaying, speaking, isSelf, i
             <VoiceSeatRing className="h-full w-full" variant={index} />
             {/* Kilit / artı işareti boş koltuğun tam ortasında durur. */}
             <span className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
-              <span className="flex h-5 w-5 items-center justify-center rounded-full border border-[#f2d79c]/70 bg-[#0a1526]/85 shadow-[0_2px_8px_rgba(0,0,0,0.65)]">
+              <span className="flex h-[62%] w-[62%] items-center justify-center rounded-full border-2 border-[#f2d79c]/80 bg-[#0a1526]/85 shadow-[0_0_12px_rgba(242,215,156,0.45)]">
                 {seat?.locked
-                  ? <Lock className="h-3 w-3 text-[#f2d79c]" />
-                  : <Plus className="h-3 w-3 text-[#f2d79c]" strokeWidth={3} />}
+                  ? <Lock className="h-[55%] w-[55%] text-[#f2d79c]" />
+                  : <Plus className="h-[65%] w-[65%] text-[#f2d79c]" strokeWidth={3} />}
               </span>
             </span>
             {/* Mikrofonu kendi elimle kapattığımda görünen sade rozet; mikrofonu açınca kaybolur. */}
