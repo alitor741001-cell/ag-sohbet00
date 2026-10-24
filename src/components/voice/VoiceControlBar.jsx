@@ -28,7 +28,7 @@ export default function VoiceControlBar({ micActive, deafened, gamesOpen, gamesE
   return (
     <div
       ref={barRef}
-      className="voice-control-bar relative shrink-0 pb-[max(0.35rem,calc(env(safe-area-inset-bottom)*0.5))]"
+      className="voice-control-bar relative -mb-1 shrink-0 pb-[max(0.1rem,calc(env(safe-area-inset-bottom)*0.2))]"
     >
       <div className="relative w-full" style={{ aspectRatio: '1024 / 290' }}>
         {art && <img src={art} alt="" draggable={false} className="pointer-events-none absolute inset-0 h-full w-full select-none object-fill" />}
