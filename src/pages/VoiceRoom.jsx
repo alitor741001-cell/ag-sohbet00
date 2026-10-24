@@ -1090,7 +1090,7 @@ export default function VoiceRoom() {
     >
       <RoomBackground value={room?.background} cover={room?.cover_url} />
 
-      <header className="relative shrink-0 px-4 pb-2 pt-[max(0.75rem,env(safe-area-inset-top))]">
+      <header className="relative shrink-0 px-0 pb-1 pt-[max(0.5rem,env(safe-area-inset-top))]">
         <VoiceRoomHeaderArt
           onProfile={() => setProfilePanelOpen(true)}
           onGifts={() => { setGiftBoardOpen(true); loadGiftBoard(); }}

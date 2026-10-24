@@ -43,7 +43,7 @@ export default function VoiceRoomHeaderArt({ onProfile, onGifts, onViewers, onMe
   const actions = { profile: onProfile, gifts: onGifts, viewers: onViewers, menu: onMenu, exit: onExit };
   return (
     <div className="relative w-full" style={{ aspectRatio: '1024 / 307' }}>
-      {src && <img src={src} alt="" className="pointer-events-none absolute inset-0 h-full w-full select-none object-contain" draggable={false} />}
+      {src && <img src={src} alt="" className="pointer-events-none absolute inset-0 h-full w-full select-none object-fill" draggable={false} />}
       {SPOTS.map((spot) => (
         <button key={spot.key} type="button" aria-label={spot.label} onClick={actions[spot.key]} className="absolute rounded-full active:bg-white/10" style={spot.style} />
       ))}
