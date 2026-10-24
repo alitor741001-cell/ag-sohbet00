@@ -20,7 +20,7 @@ export default function ThemeShell({ chats = false }) {
     <>
       {/* Güvenli alanın dışında kalan pikseller aynı görselin bulanık dolgusuyla kapanır. */}
       <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden bg-black" aria-hidden="true">
-        <img src={bg} alt="" draggable={false} className="h-full w-full scale-110 select-none object-fill blur-2xl" />
+        <img src={bg} alt="" draggable={false} className="h-full w-full scale-110 select-none object-fill opacity-60 blur-2xl" />
       </div>
       <div className="design-screen -z-10" aria-hidden="true">
         <div className="design-stage">

@@ -35,7 +35,7 @@ export default function Home() {
   return (
     <div className="fixed inset-0 overflow-hidden bg-black text-white">
       {/* Güvenli alanın dışında kalan pikseller aynı tasarımın bulanık dolgusuyla kapanır. */}
-      <img src={design} alt="" aria-hidden="true" draggable={false} className="pointer-events-none absolute inset-0 h-full w-full scale-110 select-none object-fill blur-2xl" />
+      <img src={design} alt="" aria-hidden="true" draggable={false} className="pointer-events-none absolute inset-0 h-full w-full scale-110 select-none object-fill opacity-60 blur-2xl" />
       {/* Tasarım çentik ve güvenli alanın içinde kalır; tablette ortada telefon oranında durur. */}
       <div className="design-screen">
         <div className="design-stage">
