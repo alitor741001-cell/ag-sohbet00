@@ -1111,11 +1111,11 @@ button:active, nav a:active, a[role="button"]:active {
 .voice-gift-score[data-score-tier="orange"] { --score-tone: var(--score-orange); }
 .voice-gift-score[data-score-tier="black"] { --score-tone: var(--score-black); }
 .voice-score-ribbon {
-  background-image: linear-gradient(180deg, hsl(var(--score-tone) / 0.96), hsl(var(--score-tone) / 0.6));
-  /* Şerit biçimi: alt kenarı ortada sivrilen rozet — gölge clip'e takılmasın diye drop-shadow. */
-  clip-path: polygon(0 0, 100% 0, 100% 64%, 50% 100%, 0 64%);
-  filter: drop-shadow(0 1px 4px hsl(var(--score-tone) / 0.65));
-  padding-bottom: 4px;
+  /* Koyu neon kapsül: kenar çizgisi hediye seviyesinin rengini alır. */
+  background: linear-gradient(180deg, #1a0b0e, #070506);
+  border: 1px solid hsl(var(--score-tone) / 0.95);
+  border-radius: 9999px;
+  box-shadow: 0 0 6px hsl(var(--score-tone) / 0.7), inset 0 0 4px hsl(var(--score-tone) / 0.35);
 }
 .voice-score-ribbon .number-pop {
   color: #fff;

@@ -10,7 +10,7 @@ import { formatScore, scoreTier } from '@/components/voice/scoreTier';
 const WIDTH = { xs: 'w-[42px]', sm: 'w-[52px]', md: 'w-[68px]', lg: 'w-[88px]', xl: 'w-[96px]' };
 
 export default function VoiceSeatScore({ value = 0, size = 'md' }) {
-  const shown = Math.max(1, Math.round(Number(value) || 0));
+  const shown = Math.max(0, Math.round(Number(value) || 0));
 
   return (
     <span
