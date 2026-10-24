@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { CHATS_BG } from '@/components/layout/ThemeShell';
 import ChatImageTabs from '@/components/friends/ChatImageTabs';
+import InboxRows from '@/components/friends/InboxRows';
 
 const TARGET_SEAT = 6; // 7 numaralı koltuk (indeks 0'dan başlar)
 
@@ -35,9 +36,12 @@ export default function RoomChatThemeList({ counts, onTab, onClose, children }) 
         {/* Tasarım görselinin sekme şeridi: ev ekranındaki görünümün aynısı, panelin üstünde. */}
         <div className="relative w-full shrink-0 overflow-hidden" style={{ height: '29.3vw' }}>
           <img src={CHATS_BG} alt="" draggable={false} className="w-full select-none" />
-          <ChatImageTabs counts={counts} onSelect={(key) => key !== 'chats' && onTab(key)} band />
+          <ChatImageTabs counts={counts} band />
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-[max(0.5rem,env(safe-area-inset-bottom))]">{children}</div>
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+          <InboxRows counts={counts} onSelect={onTab} />
+          {children}
+        </div>
       </div>
     </>,
     document.body,

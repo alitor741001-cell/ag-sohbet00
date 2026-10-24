@@ -1,5 +1,3 @@
-import { Link } from 'react-router-dom';
-
 // Tasarım görselindeki sekme düğmelerinin konumları (yüzde, 540x1024 tabanlı).
 const TABS = [
   { key: 'chats', label: 'Sohbet', to: '/arkadaslar?view=chats', x: 2, w: 23 },
@@ -20,11 +18,8 @@ export default function ChatImageTabs({ counts = {}, onSelect, band = false }) {
         {count > 99 ? '99+' : count}
       </span>
     );
-    const className = 'absolute z-50 rounded-xl active:bg-white/10';
+    // Sekmeler artık sayfa açmaz; sadece sayaç gösterir. Açılış listedeki satırlardan yapılır.
     const style = { left: `${tab.x}%`, width: `${tab.w}%`, ...geometry };
-    if (onSelect) {
-      return <button key={tab.key} type="button" aria-label={tab.label} onClick={() => onSelect(tab.key)} className={className} style={style}>{badge}</button>;
-    }
-    return <Link key={tab.key} to={tab.to} aria-label={tab.label} className={className} style={style}>{badge}</Link>;
+    return <span key={tab.key} aria-hidden="true" className="pointer-events-none absolute z-50" style={style}>{badge}</span>;
   });
 }

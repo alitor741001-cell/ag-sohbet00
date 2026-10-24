@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import subscribeEntity from '@/components/data/entitySubscriptions';
 import ChatImageTabs from '@/components/friends/ChatImageTabs';
+import InboxRows from '@/components/friends/InboxRows';
 import ConversationList from '@/components/friends/ConversationList';
 import FriendsPanel from '@/components/friends/FriendsPanel';
 import ChatPanel from '@/components/friends/ChatPanel';
@@ -200,6 +201,7 @@ export default function Friends() {
           <div className="shrink-0" style={{ height: '17.5%' }} aria-hidden="true" />
           <div className="mx-[5%] flex min-h-0 flex-1 flex-col overflow-hidden">
             <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+              <InboxRows counts={{ requests: incomingRequests, notes: liveBadges.notes, agency: liveBadges.agency }} />
               {conversations.length > 0 ? (
                 <ConversationList conversations={conversations} userId={user.id} onOpen={openConversation} onHide={hide} isOnline={isOnline} getLastSeen={getLastSeen} rooms={rooms} getRoomId={getRoomId} />
               ) : (
