@@ -15,7 +15,7 @@ import AgencyMessages from '@/pages/AgencyMessages';
 // Şeritteki üç dokunma alanı oda içinde tam ekran açılır; geri tuşu sohbete döner.
 const ROOM_PANELS = { requests: FriendRequests, notes: Notifications, agency: AgencyMessages };
 
-export default function RoomDirectMessages({ onClose, initialUserId }) {
+export default function RoomDirectMessages({ onClose, initialUserId, onFullScreenChange }) {
   const { user, relations, loading: friendsLoading, invoke } = useFriends();
   const { conversations, loading: convosLoading, optimisticHide } = useConversations();
   const { toast } = useToast();
@@ -25,6 +25,9 @@ export default function RoomDirectMessages({ onClose, initialUserId }) {
   const [adminLoading, setAdminLoading] = useState(false);
   const touchStart = useRef({ x: 0, y: 0 });
   const Panel = roomPanel ? ROOM_PANELS[roomPanel] : null;
+
+  // Panelde bir mesaj açıldığında üst katman tam ekrana geçer, geri dönünce panelde kalır.
+  useEffect(() => { onFullScreenChange?.(!!selected); }, [selected, onFullScreenChange]);
 
   useEffect(() => {
     if (!initialUserId || !user?.id || initialUserId === user.id) return;
