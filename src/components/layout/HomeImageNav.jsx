@@ -21,7 +21,7 @@ export default function HomeImageNav({ onNav, isAdmin, supportBadge, messages = 
   return (
     <nav aria-label="Ana menü" className="home-image-nav lg:hidden fixed bottom-0 inset-x-0 z-50"
       style={{ background: 'transparent', paddingBottom: 0, transform: `translateY(-${keyboardInset}px)` }}>
-      <div className="relative mx-auto w-full max-w-[36rem]" style={{ aspectRatio: '682 / 150', backgroundImage: `url(${HOME_DESIGN})`, backgroundSize: '100% auto', backgroundPosition: 'center 72%' }}>
+      <div className="relative mx-auto w-full max-w-[36rem]" style={{ aspectRatio: '682 / 150', background: '#0a0a0d' }}>
         {ZONES.map((z) => {
           const active = isActive(z, pathname, search);
           return (
