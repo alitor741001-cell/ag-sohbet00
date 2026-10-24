@@ -92,8 +92,8 @@
     --sidebar-accent-foreground: 240 10% 15%;
     --sidebar-border: 240 10% 88%;
     --sidebar-ring: 265 83% 58%;
-    /* Koyu yüzeyin temeli gece mavisi: siyah şerit görünmez, tema ekranı kaplar. */
-    --catalog-surface: 218 62% 6%;
+    /* Koyu yüzeyin temeli düz siyah: siyah şerit görünmez, tema ekranı kaplar. */
+    --catalog-surface: 240 13% 4%;
     /* PREMIUM: altın sarısı + kırmızı + koyu antrasit */
     --premium-gold: 45 63% 52%;
     --premium-gold-light: 44 90% 61%;
@@ -167,8 +167,8 @@
     --sidebar-accent-foreground: 0 0% 98%;
     --sidebar-border: 0 4% 18%;
     --sidebar-ring: 0 84% 60%;
-    /* Koyu yüzeyin temeli gece mavisi: siyah şerit görünmez, tema ekranı kaplar. */
-    --catalog-surface: 218 62% 6%;
+    /* Koyu yüzeyin temeli düz siyah: siyah şerit görünmez, tema ekranı kaplar. */
+    --catalog-surface: 240 13% 4%;
     /* PREMIUM: altın sarısı + kırmızı + koyu antrasit */
     --premium-gold: 45 63% 52%;
     --premium-gold-light: 44 90% 61%;
@@ -863,8 +863,8 @@ html, body, #root {
 /* Sesli odadayken gövdenin kendi zemini de temayla boyanır: çerçevenin altında kalan
    her pikselde (sistem çubuğu, klavye sonrası alan, kısa kalan görünüm) tema görünür. */
 html, body {
-  background-color: var(--app-shell-color, #05060b);
-  background-image: var(--room-theme-image, none), var(--room-theme-tint, url(https://media.base44.com/images/public/6a77d66e4da6de214628ee62/a5c5853e0_IMG_0141.jpg));
+  background-color: var(--app-shell-color, #0a0a0d);
+  background-image: var(--room-theme-image, none), var(--room-theme-tint, none);
   background-size: cover, cover;
   background-position: center, center;
   background-repeat: no-repeat, no-repeat;
@@ -882,8 +882,8 @@ html::after {
   height: calc(var(--app-height) + 260px);
   z-index: -1;
   pointer-events: none;
-  background-color: #0a1c3c;
-  background-image: var(--room-theme-image, none), var(--room-theme-tint, url(https://media.base44.com/images/public/6a77d66e4da6de214628ee62/a5c5853e0_IMG_0141.jpg));
+  background-color: var(--app-shell-color, #0a0a0d);
+  background-image: var(--room-theme-image, none), var(--room-theme-tint, none);
   background-size: cover, cover;
   background-position: center, center;
   background-repeat: no-repeat, no-repeat;
