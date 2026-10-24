@@ -22,6 +22,7 @@ import RefRoomHeader from '@/components/voice/RefRoomHeader';
 import RoomProfileSheet from '@/components/voice/RoomProfileSheet';
 import VoiceRoomMenu from '@/components/voice/VoiceRoomMenu';
 import VoiceRefScene from '@/components/voice/VoiceRefScene';
+import { backgroundOf } from '@/lib/roomBackgrounds';
 import VoiceRefHeader from '@/components/voice/VoiceRefHeader';
 import VoiceRefSeats from '@/components/voice/VoiceRefSeats';
 import VoiceRefBar from '@/components/voice/VoiceRefBar';
@@ -1092,7 +1093,7 @@ export default function VoiceRoom() {
       style={dmHalfOpen ? { paddingBottom: 'var(--voice-dm-height)' } : undefined}
       onKeyboardChange={handleKeyboardChange}
     >
-      <VoiceRefScene>
+      <VoiceRefScene themeImage={backgroundOf(room?.background)?.image}>
         <VoiceRefHeader
           room={room}
           viewerCount={participants.length}
@@ -1104,7 +1105,7 @@ export default function VoiceRoom() {
           onGift={() => { setGiftBoardOpen(true); loadGiftBoard(); }}
           onScore={() => { setGiftBoardOpen(true); loadGiftBoard(); }}
         />
-        <VoiceRefSeats seats={seatsView} speakingIds={voice.speakingIds} onSelectSeat={handleSeatPress} />
+        <VoiceRefSeats seats={seatsView} speakingIds={voice.speakingIds} themed={!!backgroundOf(room?.background)} onSelectSeat={handleSeatPress} />
         <VoiceRefBar
           micActive={!voice.muted}
           deafened={voice.deafened}
