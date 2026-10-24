@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import RoomDiscovery from '@/components/home/RoomDiscovery';
-import GamePanel from '@/components/games/GamePanel';
 
 import BottomNavStrip from '@/components/layout/BottomNavStrip';
 import NotchThemeStrip from '@/components/layout/NotchThemeStrip';
@@ -28,7 +27,6 @@ const EMPTY_ZONE = { label: 'İlk odayı sen aç', to: '/oda-kur', x: 22, y: 35.
 export default function Home() {
   const [hasContent, setHasContent] = useState(true);
   const [params] = useSearchParams();
-  const navigate = useNavigate();
   // Oyunlar görünümü aynı ana sayfa temasını kullanır; üst sekme alanları burada yoktur.
   const games = params.get('oyunlar') === '1';
   // Oyunlar görünümü kendi tasarım görselini kullanır.
@@ -63,18 +61,13 @@ export default function Home() {
               style={{ left: `${z.x}%`, top: `${z.y}%`, width: `${z.w}%`, height: `${z.h}%` }}
             />
           ))}
-          {games ? (
-            /* Oyunlar sesli sohbetlerdeki oyun merkeziyle aynı tam ekran panelde açılır. */
-            <GamePanel open fullList onClose={() => navigate('/')} />
-          ) : (
-            <div
-              className={`absolute inset-x-[3%] z-10 overflow-y-auto overscroll-contain rounded-2xl px-2 py-2 ${hasContent ? '' : 'pointer-events-none opacity-0'}`}
-              style={{ top: '12%', bottom: '14%', background: 'transparent' }}
-              key={params.toString()}
-            >
-              <RoomDiscovery onContentChange={setHasContent} />
-            </div>
-          )}
+          <div
+            className={`absolute inset-x-[3%] z-10 overflow-y-auto overscroll-contain rounded-2xl px-2 py-2 ${hasContent ? '' : 'pointer-events-none opacity-0'}`}
+            style={games ? { top: '3.6rem', bottom: 0, left: 0, right: 0, paddingBottom: '17%', background: 'transparent' } : { top: '12%', bottom: '14%', background: 'transparent' }}
+            key={params.toString()}
+          >
+            <RoomDiscovery onContentChange={setHasContent} />
+          </div>
         </div>
       </div>
     </div>

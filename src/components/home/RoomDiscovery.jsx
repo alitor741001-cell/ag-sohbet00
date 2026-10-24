@@ -1,4 +1,5 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import subscribeEntity from '@/components/data/entitySubscriptions';
@@ -344,10 +345,12 @@ export default function RoomDiscovery({ shortcuts = null, onContentChange }) {
       )}
 
       {/* Seçilen oyun tam ekran açılır: oda kurmaya gerek yok. */}
-      {gameOpen && gamesEnabled && (
+      {/* Oyun temanın dışında, gövdeye taşınan ayrı tam ekran katmanda açılır. */}
+      {gameOpen && gamesEnabled && createPortal(
         <Suspense fallback={null}>
           <GamePanel open initialGame={gameOpen} onClose={() => setGameOpen(null)} />
-        </Suspense>
+        </Suspense>,
+        document.body
       )}
     </PullToRefresh>
     </>
