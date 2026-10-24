@@ -38,7 +38,7 @@ export default function RoomHeaderArt({ room, onOpen, viewerCount = 0, onOpenVie
   return (
     <div className="voice-header-art relative w-full" style={{ aspectRatio: `${W} / ${H}` }}>
       {/* Fotoğraf çerçevenin ARKASINDA durur: çember dışına taşan kısım çerçeve altında kalır. */}
-      <div className="pointer-events-none overflow-hidden rounded-full" style={pct(28, 52, 70, 70)}>
+      <div className="pointer-events-none overflow-hidden rounded-full" style={pct(25, 52, 70, 70)}>
         {profile.avatar
           ? <Image src={profile.avatar} alt={ownerName} className="h-full w-full" fittingType="fill" draggable={false} />
           : <span className="flex h-full w-full items-center justify-center text-lg font-bold text-white">{ownerName.trim().charAt(0)}</span>}
@@ -56,7 +56,7 @@ export default function RoomHeaderArt({ room, onOpen, viewerCount = 0, onOpenVie
         <span className="text-[clamp(12px,3.8vw,18px)] font-bold tabular-nums text-white">{viewerCount}</span>
       </button>
       <button type="button" onClick={onOpenMenu} aria-label="Oda menüsü" className="rounded-full" style={pct(547, 62, 72, 72)} />
-      <button type="button" onClick={onExit} aria-label="Odadan çık" className="rounded-full" style={pct(642, 62, 70, 72)} />
+      <button type="button" onClick={onExit} aria-label="Odadan çık" className="rounded-full" style={pct(652, 62, 62, 72)} />
     </div>
   );
 }
