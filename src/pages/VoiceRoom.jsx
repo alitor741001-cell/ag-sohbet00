@@ -18,7 +18,6 @@ import VoiceControlBar from '@/components/voice/VoiceControlBar';
 import VoiceChatDock from '@/components/voice/VoiceChatDock';
 import VoiceViewerSheet from '@/components/voice/VoiceViewerSheet';
 import VoiceSeatInvitePrompt from '@/components/voice/VoiceSeatInvitePrompt';
-import RoomHeaderArt from '@/components/voice/RoomHeaderArt';
 import RoomProfileSheet from '@/components/voice/RoomProfileSheet';
 import VoiceRoomMenu from '@/components/voice/VoiceRoomMenu';
 import VoiceSeatSheet from '@/components/voice/VoiceSeatSheet';
@@ -1085,18 +1084,7 @@ export default function VoiceRoom() {
     <VoiceViewport className="z-[150]" onKeyboardChange={handleKeyboardChange}>
       <RoomBackground value={room?.background} cover={room?.cover_url} />
 
-      <header className="relative shrink-0 pt-[env(safe-area-inset-top)]">
-        <RoomHeaderArt
-          room={room}
-          onOpen={() => setProfilePanelOpen(true)}
-          viewerCount={participants.length}
-          onOpenViewers={() => setViewerOpen(true)}
-          onOpenMenu={() => setMenuOpen(true)}
-          onExit={() => setExitOpen(true)}
-          giftScore={giftBoard?.all?.total || 0}
-          onOpenGifts={() => { setGiftBoardOpen(true); loadGiftBoard(); }}
-        />
-      </header>
+      <header className="relative shrink-0 pt-[env(safe-area-inset-top)]" />
 
       <VoiceStage
         scrollRef={swipeGesture.scrollRef}
