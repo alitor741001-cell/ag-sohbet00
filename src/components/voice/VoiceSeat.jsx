@@ -1,5 +1,6 @@
 import { memo } from 'react';
-import { Crown, Lock, MicOff, Plus, Shield } from 'lucide-react';
+import { Armchair, Crown, Lock, MicOff, Shield } from 'lucide-react';
+import { seatNeon } from '@/components/voice/VoiceSeatRing';
 import shallowEqual from '@/components/data/shallowEqual';
 import VoiceSeatPortrait from '@/components/voice/VoiceSeatPortrait';
 import VoiceSeatRing from '@/components/voice/VoiceSeatRing';
@@ -36,11 +37,9 @@ function VoiceSeat({ seat, index, size = 'md', musicPlaying, speaking, isSelf, i
             <VoiceSeatRing className="h-full w-full" variant={index} />
             {/* Kilit / artı işareti boş koltuğun tam ortasında durur. */}
             <span className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
-              <span className="flex h-[62%] w-[62%] items-center justify-center rounded-full border-2 border-[#f2d79c]/80 bg-[#0a1526]/85 shadow-[0_0_12px_rgba(242,215,156,0.45)]">
-                {seat?.locked
-                  ? <Lock className="h-[55%] w-[55%] text-[#f2d79c]" />
-                  : <Plus className="h-[65%] w-[65%] text-[#f2d79c]" strokeWidth={3} />}
-              </span>
+              {seat?.locked
+                ? <Lock className="h-[50%] w-[50%]" style={{ color: seatNeon(index), filter: `drop-shadow(0 0 4px ${seatNeon(index)})` }} />
+                : <Armchair className="h-[58%] w-[58%]" strokeWidth={2.2} style={{ color: seatNeon(index), filter: `drop-shadow(0 0 4px ${seatNeon(index)}) drop-shadow(0 0 9px ${seatNeon(index)})` }} />}
             </span>
             {/* Mikrofonu kendi elimle kapattığımda görünen sade rozet; mikrofonu açınca kaybolur. */}
             {micMuted && (
