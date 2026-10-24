@@ -17,6 +17,9 @@ export default function ThemeShell() {
       <div className="pointer-events-none fixed inset-0 -z-10" style={{ background: '#000' }} aria-hidden="true">
         <img src={BG} alt="" draggable={false} className="h-full w-full select-none object-fill" />
       </div>
+      {['inset(0 0 89% 0)', 'inset(85% 0 0 0)'].map((clip) => (
+        <img key={clip} src={BG} alt="" aria-hidden="true" draggable={false} className="pointer-events-none fixed inset-0 z-40 h-full w-full select-none object-fill" style={{ clipPath: clip }} />
+      ))}
       {ZONES.map((z) => (
         <Link
           key={z.label}
