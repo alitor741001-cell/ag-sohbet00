@@ -37,16 +37,12 @@ export default function Home() {
     <div className="fixed inset-0 overflow-hidden bg-black text-white">
       {!games && <NotchThemeStrip />}
       {/* Güvenli alanın dışında kalan pikseller aynı tasarımın bulanık dolgusuyla kapanır. */}
-      {!games && (
-        <img src={DESIGN} alt="" aria-hidden="true" draggable={false} className="pointer-events-none absolute inset-0 h-full w-full scale-110 select-none object-fill opacity-60 blur-2xl" />
-      )}
+      <img src={DESIGN} alt="" aria-hidden="true" draggable={false} className="pointer-events-none absolute inset-0 h-full w-full scale-110 select-none object-fill opacity-60 blur-2xl" />
       {/* Tasarım çentik ve güvenli alanın içinde kalır; tablette ortada telefon oranında durur. */}
       <div className="design-screen">
         <div className="design-stage">
-          {/* Oyunlar görünümünde hiçbir tema görseli gösterilmez. */}
-          {!games && (
-            <img src={DESIGN} alt="" className="pointer-events-none absolute inset-0 h-full w-full select-none object-fill" draggable={false} />
-          )}
+          {/* Ana tema görseli oyunlar görünümünde de arkada durur. */}
+          <img src={DESIGN} alt="" className="pointer-events-none absolute inset-0 h-full w-full select-none object-fill" draggable={false} />
           {!games && hasContent && (
             <img src={LIVE_BG} alt="" className="pointer-events-none absolute inset-x-[3%] select-none rounded-2xl object-cover" style={{ top: '12%', bottom: '14%', height: '74%', width: '94%' }} draggable={false} />
           )}
