@@ -1092,7 +1092,7 @@ export default function VoiceRoom() {
     >
       <RoomBackground value={room?.background} cover={room?.cover_url} />
 
-      <header className="relative shrink-0 px-1 pb-1 pt-[max(0.25rem,env(safe-area-inset-top))]">
+      <header className="relative shrink-0 pl-1 pr-0 pb-1 pt-[max(0.25rem,env(safe-area-inset-top))]">
         <div className="flex min-w-0 flex-col items-start">
           <RoomInfoCard
             room={room}
