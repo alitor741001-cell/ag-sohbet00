@@ -35,7 +35,7 @@ export default function AppLayout() {
   const { publicSettings } = useAuth();
   const { toast } = useToast();
   // RoleCelebrationOverlay renders a full-screen animated character when role changes
-  const isRoom = pathname.startsWith('/oda/') || pathname.startsWith('/sesli-oda/') || pathname === '/sesli-oda-kur';
+  const isRoom = pathname.startsWith('/oda/') || pathname.startsWith('/sesli-oda/') || pathname === '/sesli-oda-kur' || pathname === '/oda-kur';
   const isDarkSurface = !pathname.startsWith('/admin');
   const [refreshKey, setRefreshKey] = useState(0);
   // Alt menü sekmeleri bellekte kalır: sekme değişiminde sayfa değişmez, görünürlük değişir.
