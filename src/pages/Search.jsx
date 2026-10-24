@@ -61,7 +61,10 @@ export default function Search() {
 
   return (
     <div className="dark min-h-screen text-white">
-      <header className="sticky top-0 z-10 flex items-center gap-2 border-b border-white/10 bg-[#040b1c]/60 px-3 py-3 backdrop-blur-md">
+      <header
+        className="flex items-center gap-2 border-b border-white/10 bg-[#040b1c] px-3 py-3"
+        style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 30 }}
+      >
         <button
           type="button"
           onClick={goBack}
@@ -75,7 +78,7 @@ export default function Search() {
         </h1>
       </header>
 
-      <div className="mx-auto w-full max-w-md px-4 py-5">
+      <div className="mx-auto w-full max-w-md px-4 py-5" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 4.5rem)' }}>
         <div className="flex items-center gap-2">
           <input
             value={memberId}
