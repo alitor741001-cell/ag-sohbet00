@@ -13,7 +13,7 @@ const TRANSITION_MS = 220;
 
 /** Oyun merkezi: sohbet alanındaki kumanda butonuyla açılan ayrı panel.
     initialGame verilirse panel listeyi atlayıp oyunu doğrudan tam ekran açar. */
-export default function GamePanel({ open, onClose, roomId, initialGame = null }) {
+export default function GamePanel({ open, onClose, roomId, initialGame = null, fullList = false }) {
   const { user } = useCurrentUser();
   const [selected, setSelected] = useState(initialGame);
   const [phase, setPhase] = useState(initialGame ? 'opening' : 'idle'); // 'opening' | 'closing'
@@ -65,8 +65,8 @@ export default function GamePanel({ open, onClose, roomId, initialGame = null })
 
   const transitioning = phase !== 'idle';
 
-  // Oyun merkezi yarım panel olarak açılır; oyun seçilince tüm ekrana yayılır.
-  const full = !!selected;
+  // Oyun merkezi yarım panel olarak açılır; oyun seçilince (veya fullList ile) tüm ekrana yayılır.
+  const full = !!selected || fullList;
 
   return (
     <div className="fixed inset-0 z-[185] flex flex-col justify-end">
