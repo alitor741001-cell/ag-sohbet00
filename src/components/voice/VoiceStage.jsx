@@ -36,7 +36,8 @@ export default function VoiceStage({ scrollRef, handlers, room, hiddenAnnounce, 
   // Sahne yalnızca içerik gerçekten sığmadığında kaydırılır; sığdığında kaydırma yoktur,
   // böylece koltuklar aşağı yukarı oynamaz.
   const fitsStage = (gridMeasured?.height || 0) <= (areaMeasured?.height || 0) + 1;
-  const scrollable = nine || (dense && !many) || !fitsStage;
+  // 24/30 koltukta sahne hiç kırpılmaz: alt satır sohbet alanının üstüne taşsa da görünür kalır.
+  const scrollable = !many && (nine || dense || !fitsStage);
 
   // Koltukların altında kalan boşluk sohbet alanına bildirilir: mesajlar tam koltukların alt
   // hizasından başlar. Koltukların boyutu ve yeri değişmez — yalnızca sohbet yukarı taşar.

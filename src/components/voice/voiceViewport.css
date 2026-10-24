@@ -65,6 +65,12 @@
 }
 /* Üst başlık (profil kartı, kapatma vb.) biraz daha yukarıda durur. */
 .voice-header-art { margin-top: -3.5%; }
+/* Oda adı: ilk 3 sn başta bekler, sonra sola kayar ve başa döner. */
+@keyframes room-name-marquee {
+  0% { transform: translateX(0); }
+  20% { transform: translateX(0); }
+  100% { transform: translateX(var(--name-shift, 0)); }
+}
 /* Tablet ve geniş ekranlarda oda ortada telefon genişliğinde bir sütunda kalır:
    başlık, koltuklar ve sohbet aşırı büyümez; tema yine tüm ekranı kaplar. */
 @media (min-width: 768px) {
