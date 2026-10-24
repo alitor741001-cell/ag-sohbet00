@@ -1,4 +1,4 @@
-.male-room-theme .voice-viewport > header { padding-inline: 4px; padding-bottom: 13px; }
+.male-room-theme .voice-viewport > header { padding-inline: 4px; padding-bottom: 13px; padding-top: max(2px, env(safe-area-inset-top)); margin-top: -14px; }
 .male-room-profile { position: absolute; left: 4.5%; top: 26%; width: 14%; height: 56%; border-radius: 50%; overflow: hidden; }
 .male-room-identity { position: absolute; left: 24%; top: 33%; width: 27%; height: 43%; display: flex; flex-direction: column; justify-content: center; text-align: left; background: hsl(var(--gift-palace-night)); color: hsl(var(--gift-palace-text)); }
 .male-room-identity strong { width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: clamp(11px, 3.5vw, 18px); font-style: italic; }
@@ -6,7 +6,7 @@
 .male-room-identity i { display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: hsl(var(--gift-palace-cyan)); }
 .male-room-header-hit { position: absolute; top: 29%; height: 55%; border-radius: 20%; }
 .male-room-viewers { position: absolute; right: 12%; top: 30%; min-width: 32%; background: hsl(var(--gift-palace-night)); color: hsl(var(--gift-palace-text)); font-size: clamp(10px, 3vw, 15px); font-weight: 700; }
-.male-room-theme .voice-control-bar { padding: 0 2px max(2px, env(safe-area-inset-bottom)); }
+.male-room-theme .voice-control-bar { padding: 0 2px max(0px, calc(env(safe-area-inset-bottom) - 14px)); margin-bottom: -10px; }
 .male-room-bar-hit { position: absolute; top: 23%; height: 62%; border-radius: 20%; }
 .male-room-bar-hit:active, .male-room-header-hit:active { background: hsl(var(--gift-palace-cyan) / .2); }
 .male-room-bar-hit:disabled { opacity: .3; background: hsl(var(--gift-palace-night) / .7); }
@@ -16,6 +16,6 @@
 .male-room-theme .male-empty-seat { background: transparent !important; overflow: visible; }
 .male-room-theme .male-empty-seat > * { visibility: hidden; }
 .male-room-gift-chip { display: block; width: 33%; margin-top: -4px; }
-.male-room-gift-value { position: absolute; left: 66%; top: 29%; width: 24%; height: 40%; display: flex; align-items: center; justify-content: center; background: hsl(var(--gift-palace-night)); color: hsl(var(--gift-palace-text)); font-weight: 700; font-size: clamp(9px, 2.7vw, 14px); }
+.male-room-gift-value { position: absolute; left: 60%; top: 24%; width: 32%; height: 52%; display: flex; align-items: center; justify-content: flex-start; padding-left: 4%; border-radius: 4px; background: linear-gradient(180deg, hsl(var(--gift-palace-night)), hsl(var(--gift-palace-night) / .92)); color: hsl(var(--gift-palace-gold)); font-weight: 800; font-size: clamp(10px, 3vw, 15px); letter-spacing: .02em; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-shadow: 0 0 6px hsl(var(--gift-palace-gold) / .55); }
 .male-room-theme .voice-stage { padding-top: 24px; }
 .male-room-seat-number { position: absolute; left: 32%; width: 36%; top: 82%; height: 13%; display: flex; align-items: center; justify-content: center; background: hsl(var(--gift-palace-night)); color: hsl(var(--gift-palace-text)); font-size: 9px; font-weight: 700; }
