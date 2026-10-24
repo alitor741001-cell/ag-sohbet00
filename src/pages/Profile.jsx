@@ -10,7 +10,7 @@ import { vipLevelOf } from '@/lib/userLevels';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import useFriends from '@/hooks/useFriends';
 import SocialListDialog from '@/components/profile/social/SocialListDialog';
-import ProfileHeroCard from '@/components/profile/fantasy/ProfileHeroCard';
+import ProfileFixedHero from '@/components/profile/fantasy/ProfileFixedHero';
 import ProfileStatBar from '@/components/profile/fantasy/ProfileStatBar';
 import ProfileTwinCards from '@/components/profile/fantasy/ProfileTwinCards';
 import ProfileBalanceCards from '@/components/profile/fantasy/ProfileBalanceCards';
@@ -182,16 +182,16 @@ export default function Profile() {
       className="dark min-h-screen pb-6 text-white"
     >
       <div className="mx-auto w-full max-w-2xl md:max-w-3xl xl:max-w-4xl">
-      <PullToRefresh onRefresh={() => { reload?.(); loadWallet(); loadSocial(); loadVipCount(); }}>
-        <ProfileHeroCard
-          user={user}
-          avatar={form.avatar}
-          onAvatar={onAvatar}
-          uploading={uploading}
-          onEdit={() => toggle('info')}
-          vipLevel={vipLevelOf(user)}
-        />
+      <ProfileFixedHero
+        user={user}
+        avatar={form.avatar}
+        onAvatar={onAvatar}
+        uploading={uploading}
+        onEdit={() => toggle('info')}
+        vipLevel={vipLevelOf(user)}
+      />
 
+      <PullToRefresh onRefresh={() => { reload?.(); loadWallet(); loadSocial(); loadVipCount(); }}>
         <div className="space-y-3 px-4 pt-4">
           <ProfileStatBar
             friends={friendCount}
