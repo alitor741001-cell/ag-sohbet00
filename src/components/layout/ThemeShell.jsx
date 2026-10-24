@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import SupportLabel from '@/components/layout/SupportLabel';
 
 const BG = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/1ac262e7e_IMG_0216.jpg';
 
@@ -20,6 +21,7 @@ export default function ThemeShell() {
       {['inset(85% 0 0 0)'].map((clip) => (
         <img key={clip} src={BG} alt="" aria-hidden="true" draggable={false} className="pointer-events-none fixed inset-0 z-40 h-full w-full select-none object-fill" style={{ clipPath: clip }} />
       ))}
+      <div className="pointer-events-none fixed inset-0 z-40"><SupportLabel top="92.5%" height="3.5%" /></div>
       {ZONES.map((z) => (
         <Link
           key={z.label}
