@@ -1111,12 +1111,18 @@ button:active, nav a:active, a[role="button"]:active {
 .voice-gift-score[data-score-tier="orange"] { --score-tone: var(--score-orange); }
 .voice-gift-score[data-score-tier="black"] { --score-tone: var(--score-black); }
 .voice-score-ribbon {
-  /* Koyu neon kapsül: kenar çizgisi hediye seviyesinin rengini alır. */
-  background: linear-gradient(180deg, #1a0b0e, #070506);
-  border: 1px solid hsl(var(--score-tone) / 0.95);
-  border-radius: 9999px;
-  box-shadow: 0 0 6px hsl(var(--score-tone) / 0.7), inset 0 0 4px hsl(var(--score-tone) / 0.35);
+  /* Kesik köşeli cam rozet: seviye rengiyle parlayan kenar + üstten geçen ışık süzmesi. */
+  position: relative;
+  background:
+    linear-gradient(100deg, transparent 30%, rgba(255,255,255,0.35) 45%, transparent 60%) -150% 0 / 250% 100% no-repeat,
+    linear-gradient(180deg, hsl(var(--score-tone) / 0.55), rgba(10, 6, 8, 0.92) 70%);
+  clip-path: polygon(6px 0, calc(100% - 6px) 0, 100% 50%, calc(100% - 6px) 100%, 6px 100%, 0 50%);
+  box-shadow: inset 0 0 0 1px hsl(var(--score-tone) / 0.9);
+  filter: drop-shadow(0 0 4px hsl(var(--score-tone) / 0.8));
+  animation: score-shine 3.2s ease-in-out infinite;
 }
+.voice-score-gem { color: hsl(var(--score-tone)); filter: drop-shadow(0 0 2px hsl(var(--score-tone))); }
+@keyframes score-shine { 0%, 60% { background-position: -150% 0, 0 0; } 100% { background-position: 150% 0, 0 0; } }
 .voice-score-ribbon .number-pop {
   color: #fff;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
