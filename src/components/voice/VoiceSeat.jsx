@@ -36,7 +36,7 @@ function VoiceSeat({ seat, index, size = 'md', musicPlaying, speaking, isSelf, i
           <span className={`relative flex ${emptyCircle} items-center justify-center`}>
             <VoiceSeatRing className="h-full w-full" variant={index} mono glow="0 4px 12px -6px rgba(0,0,0,0.9)">
               <span
-                className="relative flex h-full w-full items-center justify-center overflow-hidden"
+                className="male-empty-seat relative flex h-full w-full items-center justify-center overflow-hidden"
                 style={{ background: 'radial-gradient(circle at 34% 26%, #17304c 0%, #0a1526 74%)' }}
               >
                 <SeatEmblem index={index} />

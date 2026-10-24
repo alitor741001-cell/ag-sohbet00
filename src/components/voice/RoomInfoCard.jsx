@@ -3,6 +3,8 @@ import { Image } from '@/components/ui/image';
 import { isHiddenName } from '@/lib/hiddenUser';
 import useMessageProfiles from '@/hooks/useMessageProfiles';
 import RoomHeaderControls from '@/components/voice/RoomHeaderControls';
+import { useMaleRoomTheme } from '@/components/voice/MaleRoomTheme';
+import MaleRoomHeader from '@/components/voice/MaleRoomHeader';
 
 export default function RoomInfoCard({ room, onOpen, viewerCount = 0, onOpenViewers, canMod = false, menuHighlighted = false, onOpenMenu, onExit }) {
   const ownerId = room?.owner_id;
@@ -12,6 +14,8 @@ export default function RoomInfoCard({ room, onOpen, viewerCount = 0, onOpenView
   const ownerName = ownerHidden ? room.owner_name : profile.username || room?.owner_name || profile.full_name || 'Kullanıcı';
   const memberId = !ownerHidden && profile.member_id && profile.member_id !== '-' ? String(profile.member_id) : '';
   const roomName = room?.name || 'Oda';
+  const { male } = useMaleRoomTheme();
+  if (male) return <MaleRoomHeader {...{ room, profile, viewerCount, onOpen, onOpenViewers, onOpenMenu, onExit }} />;
 
   return (
     <div className="flex w-full items-center justify-between gap-2">

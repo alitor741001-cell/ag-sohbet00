@@ -6,6 +6,7 @@ import useSeatCosmetics from '@/hooks/useSeatCosmetics';
 
 import responsiveSeatRows from '@/components/voice/responsiveSeatRows';
 import { useSize } from '@/hooks/use-size';
+import { useMaleRoomTheme } from '@/components/voice/MaleRoomTheme';
 
 /**
  * Sahnedeki yuvarlak oturma düzeni — satırlar ortalanır. Sayı tahtası açıkken her kişinin altında sayı hücresi durur.
@@ -14,6 +15,7 @@ import { useSize } from '@/hooks/use-size';
  */
 export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerId, moderators = [], speakingIds = [], localSpeaking, participantMicStates = {}, localMicMuted, onSelectSeat, boardActive, scores = {}, accent = '#ef4444', gifted = {}, maxHeight }) {
   const wrapRef = useRef(null);
+  const { male } = useMaleRoomTheme();
   const profiles = useMessageProfiles(seats.map((seat) => seat?.user_id).filter(Boolean));
   const seatCosmetics = useSeatCosmetics(seats);
   const measured = useSize(wrapRef);
@@ -33,7 +35,7 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
   // Alçak ekranda satır araları daralır: en küçük koltukta bile tüm satırlar ve
   // altlarındaki sayı şeritleri sahneye sığar.
   const rowsNeeded = (rows.length || 1) * (boardActive ? 83 : 62) + 12 * Math.max(0, rows.length - 1);
-  const rowGap = featureTop ? (narrow ? 8 : 14) : narrow ? (many ? 5 : maxHeight && maxHeight < rowsNeeded ? 6 : 12) : 20;
+  const rowGap = (featureTop ? (narrow ? 8 : 14) : narrow ? (many ? 5 : maxHeight && maxHeight < rowsNeeded ? 6 : 12) : 20) + (male ? 24 : 0);
   const available = width - 4;
   const perSeat = (available - baseGap * (widestRow - 1)) / widestRow;
   // 9'lu düzende koltuk bir beden büyük çizilir: 'xl' sınırı da açıktır.

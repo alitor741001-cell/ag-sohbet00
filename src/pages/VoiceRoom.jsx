@@ -15,6 +15,7 @@ import { resizeSeats } from '@/components/voice/seatLayout';
 import { isHiddenName } from '@/lib/hiddenUser';
 import useVoiceRoomMessages from '@/hooks/useVoiceRoomMessages';
 import VoiceControlBar from '@/components/voice/VoiceControlBar';
+import MaleRoomTheme from '@/components/voice/MaleRoomTheme';
 import VoiceChatDock from '@/components/voice/VoiceChatDock';
 import VoiceViewerSheet from '@/components/voice/VoiceViewerSheet';
 import VoiceSeatInvitePrompt from '@/components/voice/VoiceSeatInvitePrompt';
@@ -1085,6 +1086,7 @@ export default function VoiceRoom() {
   // Klavye açılınca oda düzeni yerinden oynamaz: yalnızca sohbet bölümü klavyenin üstüne kayar,
   // alttaki kontrol çubuğu (mik/hoparlör) hep aynı yerde durur.
   return (
+    <MaleRoomTheme ownerId={room?.owner_id} user={user}>
     <VoiceViewport
       className={`z-[150] ${dmHalfOpen ? 'voice-dm-open' : ''}`}
       style={dmHalfOpen ? { paddingBottom: 'var(--voice-dm-height)' } : undefined}
@@ -1377,5 +1379,6 @@ export default function VoiceRoom() {
         <p className="pointer-events-none absolute left-1/2 top-20 z-[170] -translate-x-1/2 rounded-full bg-black/80 px-4 py-2 text-xs text-white">{notice}</p>
       )}
     </VoiceViewport>
+    </MaleRoomTheme>
   );
 }
