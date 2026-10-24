@@ -301,6 +301,8 @@ export default function VoiceRoom() {
     return record;
   }, [id]);
 
+  useEffect(() => { loadGiftBoard(); }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Hediye kutusu: odada biriken hediyeler (son 24 saat + tüm zamanlar).
   const loadGiftBoard = useCallback(async () => {
     const version = ++giftBoardRequestRef.current;
@@ -1092,8 +1094,7 @@ export default function VoiceRoom() {
 
       <header className="relative shrink-0 mt-0 px-0 pb-0 pt-[env(safe-area-inset-top)]">
         <VoiceRoomHeaderArt
-          room={room}
-          viewerCount={room?.participants?.length || 0}
+          giftTotal={giftBoard?.day?.total || 0}
           onProfile={() => setProfilePanelOpen(true)}
           onGifts={openGifts}
           onViewers={() => setViewerOpen(true)}

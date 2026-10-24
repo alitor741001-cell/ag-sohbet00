@@ -38,8 +38,7 @@ const SPOTS = [
 ];
 
 /** Sesli odanın üst bölümü: gönderilen tasarım görseli ve üstüne yerleşen görünmez dokunma alanları. */
-export default function VoiceRoomHeaderArt({ room, viewerCount = 0, onProfile, onGifts, onViewers, onMenu, onExit }) {
-  const roomId = room?.room_number || room?.personal_room_code || '';
+export default function VoiceRoomHeaderArt({ giftTotal = 0, onProfile, onGifts, onViewers, onMenu, onExit }) {
   const src = useTransparentArt();
   const actions = { profile: onProfile, gifts: onGifts, viewers: onViewers, menu: onMenu, exit: onExit };
   return (
@@ -48,14 +47,7 @@ export default function VoiceRoomHeaderArt({ room, viewerCount = 0, onProfile, o
       {SPOTS.map((spot) => (
         <button key={spot.key} type="button" aria-label={spot.label} onClick={actions[spot.key]} className="absolute rounded-full active:bg-white/10" style={spot.style} />
       ))}
-      <button type="button" aria-label="Oda profili" onClick={onProfile} className="absolute overflow-hidden rounded-full" style={{ left: '3%', top: '10%', width: '15%', aspectRatio: '1 / 1' }}>
-        {room?.cover_url && <img src={room.cover_url} alt="" className="h-full w-full object-cover" />}
-      </button>
-      <button type="button" onClick={onProfile} className="absolute flex flex-col justify-center overflow-hidden rounded-md bg-black/85 px-1.5 text-left" style={{ left: '20%', top: '16%', width: '36%', height: '38%' }}>
-        <span className="truncate text-[13px] font-bold leading-tight text-white">{room?.name}</span>
-        <span className="truncate text-[10px] leading-tight text-white/80">ID:{roomId}</span>
-      </button>
-      <span className="pointer-events-none absolute flex items-center justify-center rounded bg-[#1b1430] text-[11px] font-bold text-white" style={{ left: '64%', top: '32%', width: '6%', height: '24%' }}>{viewerCount}</span>
+      <span className="pointer-events-none absolute flex items-center justify-center rounded bg-[#1b1430] text-[10px] font-bold text-white" style={{ left: '8%', top: '74%', width: '12%', height: '18%' }}>{Math.round(giftTotal).toLocaleString('tr-TR')}</span>
     </div>
   );
 }
