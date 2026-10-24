@@ -35,6 +35,8 @@ export default function AppLayout() {
   // RoleCelebrationOverlay renders a full-screen animated character when role changes
   const isRoom = pathname.startsWith('/oda/') || pathname.startsWith('/sesli-oda/') || pathname === '/sesli-oda-kur' || pathname === '/oda-kur';
   const isDarkSurface = !pathname.startsWith('/admin');
+  // Ana sayfada üst ve alt menü düğmeleri istenmiyor: yalnızca içerik görünür.
+  const hideNav = pathname === '/';
   const [refreshKey, setRefreshKey] = useState(0);
   // Alt menü sekmeleri bellekte kalır: sekme değişiminde sayfa değişmez, görünürlük değişir.
   const activeTabPath = matchTabPath(pathname);
@@ -200,10 +202,10 @@ export default function AppLayout() {
 
       <RoutePreloader />
       <RoleCelebrationOverlay />
-      <Navbar />
+      {!hideNav && <Navbar />}
       {/* Klavye kullanıcısı menüyü atlayıp doğrudan içeriğe geçebilir. */}
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-[100] focus:rounded-lg focus:bg-card focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-foreground focus:ring-2 focus:ring-ring">İçeriğe geç</a>
-      <main id="main-content" tabIndex={-1} className="mx-auto w-full min-w-0 max-w-[1600px] overflow-x-clip pt-[max(env(safe-area-inset-top),0.5rem)] pb-[calc(7.5rem+env(safe-area-inset-bottom))] lg:pt-16 lg:pb-8" style={{ touchAction: 'pan-y' }}>
+      <main id="main-content" tabIndex={-1} className={`mx-auto w-full min-w-0 max-w-[1600px] overflow-x-clip pt-[max(env(safe-area-inset-top),0.5rem)] ${hideNav ? 'pb-[calc(1.5rem+env(safe-area-inset-bottom))] lg:pt-4 lg:pb-8' : 'pb-[calc(7.5rem+env(safe-area-inset-bottom))] lg:pt-16 lg:pb-8'}`} style={{ touchAction: 'pan-y' }}>
         {/* Sayfa paketi yüklenirken kabuk (menü, sohbetler, bildirimler) yerinde kalır. */}
         <Suspense fallback={null}>
           <TabStack activePath={activeTabPath} />
@@ -222,7 +224,7 @@ export default function AppLayout() {
           )}
         </Suspense>
       </main>
-      <BottomNav />
+      {!hideNav && <BottomNav />}
     </div></MessageRealtimeProvider>
   );
 }
