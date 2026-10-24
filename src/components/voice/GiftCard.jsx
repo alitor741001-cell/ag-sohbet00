@@ -3,16 +3,11 @@ import GiftTransparencyFilter from '@/components/voice/GiftTransparencyFilter';
 import { Coins } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import { K_UNIT, formatCoins } from '@/lib/giftTone';
-import { giftMotion } from '@/lib/giftMotion';
+import useGiftArtColor from '@/hooks/useGiftArtColor';
 
-/**
- * Katalogdaki tek hediye: kare kutu, çerçeve ve etiket yok — hediye görseli siyah zeminde
- * serbest durur; altında adı ve altın coin fiyatı yazar.
- * Uzun basışta hiçbir şey açılmaz; dokunuş yalnızca hediyeyi seçer.
- */
 export default function GiftCard({ gift, selected, onSelect }) {
   // Hediye sabit durur; yalnızca kendi rengindeki yumuşak ışık gösterilir.
-  const { tone } = giftMotion(gift);
+  const tone = useGiftArtColor(gift);
   const filterId = `gift-art-${useId().replace(/:/g, '')}`;
 
   return (
@@ -25,7 +20,7 @@ export default function GiftCard({ gift, selected, onSelect }) {
       style={{ '--gift-glow': tone }}
     >
       <GiftTransparencyFilter id={filterId} />
-      <span className="relative inline-flex h-[70px] w-full items-center justify-center">
+      <span className="gift-palace-art relative inline-flex w-full items-center justify-center">
         <span
           className="pointer-events-none absolute inset-0"
           style={{ background: `radial-gradient(circle at 50% 52%, ${tone}${selected ? '55' : '24'}, transparent 66%)` }}
@@ -37,7 +32,7 @@ export default function GiftCard({ gift, selected, onSelect }) {
             fittingType="fit"
             originWidth={192}
             originHeight={192}
-            className={`relative h-[62px] w-[62px] transition-transform duration-200 ${selected ? 'scale-110' : ''}`}
+            className={`gift-palace-image relative h-full w-full ${selected ? 'scale-105' : ''}`}
             blurPlaceholder={false}
             style={{ filter: `url(#${filterId})` }}
           />

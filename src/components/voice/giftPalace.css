@@ -1,21 +1,18 @@
 .gift-palace-panel {
   color: hsl(var(--gift-palace-text));
-  background: radial-gradient(ellipse at 5% 0%, hsl(var(--gift-palace-purple) / .18), transparent 40%), radial-gradient(ellipse at 95% 100%, hsl(var(--gift-palace-purple) / .24), transparent 44%), hsl(var(--gift-palace-night));
+  background: radial-gradient(ellipse at 0% 35%, hsl(var(--gift-palace-purple) / .07), transparent 40%), radial-gradient(ellipse at 100% 85%, hsl(var(--gift-palace-cyan) / .04), transparent 45%), hsl(var(--gift-palace-night));
   padding: 14px 12px max(12px, env(safe-area-inset-bottom));
-  border-color: hsl(var(--gift-palace-purple) / .5);
+  border-color: hsl(var(--gift-palace-muted) / .15);
 }
 .gift-palace { color: hsl(var(--gift-palace-text)); }
 .gift-palace-level, .gift-palace-footer {
   position: relative; isolation: isolate; border: 2px solid hsl(var(--gift-palace-gold) / .85); border-radius: 28px;
-  background: linear-gradient(115deg, transparent 30%, hsl(var(--gift-palace-purple) / .35) 50%, transparent 67%), hsl(var(--gift-palace-night));
-  box-shadow: inset 0 0 9px hsl(var(--gift-palace-gold) / .5), 0 0 7px hsl(var(--gift-palace-purple) / .8);
+  background: radial-gradient(ellipse at bottom, hsl(var(--gift-palace-gold) / .08), transparent 65%), hsl(var(--gift-palace-night));
+  box-shadow: inset 0 0 9px hsl(var(--gift-palace-gold) / .35), 0 0 7px hsl(var(--gift-palace-gold) / .35);
 }
-.gift-palace-level::before, .gift-palace-footer::before {
-  content: ''; position: absolute; pointer-events: none; inset: -5px 9px; border: 2px solid hsl(var(--gift-palace-purple) / .8); border-radius: 35px 15px; z-index: -1;
-  box-shadow: inset 0 0 5px hsl(var(--gift-palace-gold) / .7);
-}
+.gift-palace-level::before, .gift-palace-footer::before { content: none; }
 .gift-palace-level { min-height: 62px; padding: 8px 10px; gap: 8px; display: grid; grid-template-columns: 42px minmax(40px, 1fr) minmax(115px, auto); }
-.gift-palace-badge { grid-row: span 2; display: flex; flex-direction: column; align-items: center; justify-content: center; align-self: stretch; color: hsl(var(--gift-palace-gold)); border: 2px solid currentColor; background: linear-gradient(145deg, hsl(var(--gift-palace-purple) / .6), hsl(var(--gift-palace-night))); clip-path: polygon(50% 0, 100% 18%, 100% 78%, 50% 100%, 0 78%, 0 18%); }
+.gift-palace-badge { grid-row: span 2; display: flex; flex-direction: column; align-items: center; justify-content: center; align-self: stretch; color: hsl(var(--gift-palace-gold)); border: 2px solid currentColor; background: linear-gradient(145deg, hsl(var(--gift-palace-gold) / .2), hsl(var(--gift-palace-night))); clip-path: polygon(50% 0, 100% 18%, 100% 78%, 50% 100%, 0 78%, 0 18%); }
 .gift-palace-badge small { font-size: 8px; font-weight: 900; }
 .gift-palace-badge strong { font-size: 20px; line-height: 1; color: hsl(var(--gift-palace-text)); }
 .gift-palace-level > div { grid-column: 2; grid-row: 1 / span 2; height: 15px; padding: 2px; border: 1px solid hsl(var(--gift-palace-muted) / .4); background: hsl(var(--gift-palace-night)); }
@@ -29,10 +26,13 @@
 .gift-palace-tabs { padding: 4px 0 8px; }
 .gift-palace-tab { min-height: 34px; padding-inline: 14px; color: hsl(var(--gift-palace-muted)); border-color: hsl(var(--gift-palace-muted) / .25); background: hsl(var(--gift-palace-night)); }
 .gift-palace-tab[aria-pressed="true"] { color: hsl(var(--gift-palace-gold)); border-color: hsl(var(--gift-palace-gold)); box-shadow: 0 0 10px hsl(var(--gift-palace-gold) / .45), inset 0 0 6px hsl(var(--gift-palace-gold) / .2); }
-.gift-palace-card { min-height: 112px; border: 1px solid color-mix(in srgb, var(--gift-glow), transparent 55%); border-radius: 12px; padding: 5px 2px 8px; background: radial-gradient(ellipse at bottom, color-mix(in srgb, var(--gift-glow), transparent 90%), transparent 65%), hsl(var(--gift-palace-night)); box-shadow: inset 0 -2px 3px color-mix(in srgb, var(--gift-glow), transparent 60%); }
-.gift-palace-card[aria-pressed="true"] { border-color: var(--gift-glow); box-shadow: 0 0 10px color-mix(in srgb, var(--gift-glow), transparent 40%), inset 0 0 8px color-mix(in srgb, var(--gift-glow), transparent 80%); }
-.gift-palace-card > span:nth-child(2) { height: clamp(62px, 18vw, 94px); }
-.gift-palace-card > span:nth-child(2) > img, .gift-palace-card > span:nth-child(2) > picture { height: 100%; width: 100%; object-fit: contain; }
+.gift-palace-card { isolation: isolate; min-height: 112px; border: 1px solid color-mix(in srgb, var(--gift-glow), transparent 45%); border-radius: 12px; padding: 5px 3px 9px; background: radial-gradient(ellipse at 50% 35%, color-mix(in srgb, var(--gift-glow), transparent 90%), transparent 60%), linear-gradient(to top, color-mix(in srgb, var(--gift-glow), transparent 94%), transparent 35%), hsl(var(--gift-palace-night)); box-shadow: inset 0 -2px 2px color-mix(in srgb, var(--gift-glow), transparent 15%), 0 3px 7px color-mix(in srgb, var(--gift-glow), transparent 76%); }
+.gift-palace-card::after { content: ''; pointer-events: none; position: absolute; inset: -1px; border-radius: inherit; border-bottom: 2px solid var(--gift-glow); border-left: 1px solid var(--gift-glow); mask-image: linear-gradient(to top, black, transparent 65%); filter: drop-shadow(0 0 3px var(--gift-glow)); }
+.gift-palace-card[aria-pressed="true"] { border-color: var(--gift-glow); box-shadow: 0 0 12px color-mix(in srgb, var(--gift-glow), transparent 35%), inset 0 0 10px color-mix(in srgb, var(--gift-glow), transparent 86%); }
+.gift-palace-art { height: clamp(64px, 18vw, 100px); padding: 3px; }
+.gift-palace-art .gift-palace-image { height: 100%; width: 100%; object-fit: contain; }
+.gift-palace-card > span:nth-last-child(2) { color: hsl(var(--gift-palace-text)); font-size: clamp(10px, 2.8vw, 14px); padding-top: 3px; }
+.gift-palace-card > span:last-child { color: hsl(var(--gift-palace-text)); margin-top: 3px; font-size: clamp(10px, 2.8vw, 14px); }
 .gift-palace-footer { min-height: 64px; padding: 8px; margin-bottom: 5px; }
 .gift-palace-crown { position: absolute; top: -15px; left: calc(50% - 12px); width: 24px; height: 20px; color: hsl(var(--gift-palace-gold)); fill: hsl(var(--gift-palace-gold) / .3); filter: drop-shadow(0 0 5px hsl(var(--gift-palace-gold))); }
 .gift-palace-wallet { border: 1px solid hsl(var(--gift-palace-gold) / .8); border-radius: 24px; padding: 10px 9px; box-shadow: inset 0 0 7px hsl(var(--gift-palace-gold) / .25); color: hsl(var(--gift-palace-text)); }
