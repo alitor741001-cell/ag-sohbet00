@@ -31,7 +31,7 @@ export default function VoiceControlBar({ micActive, deafened, gamesOpen, gamesE
   }, []);
 
   return (
-    <div ref={barRef} className="voice-control-bar relative shrink-0 px-1.5 pb-[max(0.35rem,calc(env(safe-area-inset-bottom)*0.5))] pt-6">
+    <div ref={barRef} className="voice-control-bar relative shrink-0 px-1 pb-[max(0.1rem,calc(env(safe-area-inset-bottom)*0.35))] pt-6">
       <div className="neon-panel neon-glow flex items-center px-1">
         <Tab onClick={onToggleChat} label="Sohbet" text="Sohbet" color="text-cyan-300"><MessageCircle /></Tab>
         <Tab onClick={onToggleMic} label="Mikrofon" text="Mikrofon" color="text-fuchsia-400" off={!micActive}>{micActive ? <Mic /> : <MicOff />}</Tab>
