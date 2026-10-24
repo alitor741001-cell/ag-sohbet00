@@ -34,7 +34,7 @@ const SPOTS = [
   { key: 'gifts', label: 'Hediye puanı', style: { left: '1%', top: '68%', width: '20%', height: '30%' } },
   { key: 'viewers', label: 'Odadakiler', style: { left: '61%', top: '15%', width: '11%', height: '60%' } },
   { key: 'menu', label: 'Oda menüsü', style: { left: '74%', top: '15%', width: '12%', height: '60%' } },
-  { key: 'exit', label: 'Odadan çık', style: { left: '88%', top: '15%', width: '12%', height: '60%' } },
+  { key: 'exit', label: 'Odadan çık', style: { left: '86%', top: '15%', width: '12%', height: '60%' } },
 ];
 
 /** Sesli odanın üst bölümü: gönderilen tasarım görseli ve üstüne yerleşen görünmez dokunma alanları. */

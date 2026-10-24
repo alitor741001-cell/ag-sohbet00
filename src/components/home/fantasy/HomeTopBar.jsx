@@ -11,7 +11,7 @@ export default function HomeTopBar({ onView, onSearch, showViews = true }) {
     {/* Güvenli alan boşluğu ana yerleşimde zaten veriliyor: burada tekrarlanmaz,
         yoksa kart listesi şeridin çok altında kalır. */}
     <div aria-hidden="true" className="mb-1"><div className="w-[100vw] max-w-[36rem]" style={{ aspectRatio: '682 / 112' }} /></div>
-    <div className="fixed inset-x-0 top-0 z-40 pt-[env(safe-area-inset-top)]" style={{ background: '#030914' }}>
+    <div className="fixed inset-x-0 top-0 z-40 pt-[env(safe-area-inset-top)]" style={{ background: 'transparent' }}>
       <div className="relative mx-auto w-full max-w-[36rem]" style={{ aspectRatio: '682 / 112', backgroundImage: `url(${HOME_DESIGN})`, backgroundSize: '100% auto', backgroundPosition: 'center top' }}>
         {showViews && <button type="button" aria-label="Sıcak" onClick={() => onView?.('hot')} className="absolute inset-y-[15%] rounded-full" style={zone(3, 19.5)} />}
         {showViews && <button type="button" aria-label="Takip" onClick={() => onView?.('history')} className="absolute inset-y-[15%] rounded-full" style={zone(23.5, 17.5)} />}
