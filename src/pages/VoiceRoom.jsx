@@ -1092,8 +1092,10 @@ export default function VoiceRoom() {
 
       <header className="relative shrink-0 mt-0 px-0 pb-0 pt-[env(safe-area-inset-top)]">
         <VoiceRoomHeaderArt
+          room={room}
+          viewerCount={room?.participants?.length || 0}
           onProfile={() => setProfilePanelOpen(true)}
-          onGifts={() => { setGiftBoardOpen(true); loadGiftBoard(); }}
+          onGifts={openGifts}
           onViewers={() => setViewerOpen(true)}
           onMenu={() => setMenuOpen(true)}
           onExit={() => setExitOpen(true)}
