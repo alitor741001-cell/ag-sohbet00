@@ -753,7 +753,7 @@ export default function WatchParty() {
             onTouchStart={(e) => { touchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }; }}
             onTouchEnd={(e) => { if (!touchStart.current) return; const dx = e.changedTouches[0].clientX - touchStart.current.x; const dy = e.changedTouches[0].clientY - touchStart.current.y; if (dx > 80 && dx > Math.abs(dy) * 1.5) setDirectOpen(false); }}
           >
-            <RoomDirectMessages onClose={() => { setDirectOpen(false); setDirectTarget(null); }} initialUserId={directTarget} />
+            <RoomDirectMessages onClose={() => { setDirectOpen(false); setDirectTarget(null); }} initialUserId={directTarget} closeOnBackdrop />
           </div>
         )}
 

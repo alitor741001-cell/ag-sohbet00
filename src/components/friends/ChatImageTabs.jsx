@@ -9,8 +9,10 @@ const TABS = [
 ];
 
 /** Görseldeki sekmelerin üstüne dokunma alanı + canlı sayaç yerleştirir.
+    band: sekme şeridi görselin üst kısmından kırpıldığında (oda içi panel) kullanılır.
     onSelect verilirse (oda içi) sayfa değişmez, sekme anahtarı bildirilir. */
-export default function ChatImageTabs({ counts = {}, onSelect }) {
+export default function ChatImageTabs({ counts = {}, onSelect, band = false }) {
+  const geometry = band ? { top: '51.5%', height: '48.5%' } : { top: '8.5%', height: '8%' };
   return TABS.map((tab) => {
     const count = Number(counts[tab.key] || 0);
     const badge = count > 0 && (
@@ -19,7 +21,7 @@ export default function ChatImageTabs({ counts = {}, onSelect }) {
       </span>
     );
     const className = 'absolute z-50 rounded-xl active:bg-white/10';
-    const style = { left: `${tab.x}%`, width: `${tab.w}%`, top: '8.5%', height: '8%' };
+    const style = { left: `${tab.x}%`, width: `${tab.w}%`, ...geometry };
     if (onSelect) {
       return <button key={tab.key} type="button" aria-label={tab.label} onClick={() => onSelect(tab.key)} className={className} style={style}>{badge}</button>;
     }

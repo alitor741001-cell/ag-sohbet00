@@ -79,7 +79,7 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
                 const micMuted = Boolean(seat?.muted || (occupied && (seat.user_id === userId ? localMicMuted === true : participantMicStates[seat.user_id] === false)));
                 const seatSize = featureTop && row.length === 1 ? topSize : size;
                 return (
-                  <div key={index} className="flex flex-col items-center">
+                  <div key={index} data-seat-index={index} className="flex flex-col items-center">
                     <VoiceSeat
                       index={index}
                       seat={seat}

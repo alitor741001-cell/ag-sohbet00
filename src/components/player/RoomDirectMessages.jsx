@@ -17,7 +17,7 @@ import AgencyMessages from '@/pages/AgencyMessages';
 // Şeritteki üç dokunma alanı oda içinde tam ekran açılır; geri tuşu sohbete döner.
 const ROOM_PANELS = { requests: FriendRequests, notes: Notifications, agency: AgencyMessages };
 
-export default function RoomDirectMessages({ onClose, initialUserId, onFullScreenChange }) {
+export default function RoomDirectMessages({ onClose, initialUserId, onFullScreenChange, closeOnBackdrop = false }) {
   const { user, relations, loading: friendsLoading, invoke } = useFriends();
   const { conversations, loading: convosLoading, optimisticHide } = useConversations();
   const { toast } = useToast();
@@ -97,7 +97,7 @@ export default function RoomDirectMessages({ onClose, initialUserId, onFullScree
   return (
     <>
       <BackDismissLayer onClose={onClose} />
-      <RoomChatThemeList counts={counts} onTab={setRoomPanel} onClose={onClose}>
+      <RoomChatThemeList counts={counts} onTab={setRoomPanel} onClose={closeOnBackdrop ? onClose : undefined}>
         <ConversationList conversations={conversations} userId={user.id} onOpen={setSelected} onHide={hide} isOnline={isOnline} />
       </RoomChatThemeList>
       {panelOverlay}

@@ -25,7 +25,7 @@ export default function VoicePrivateChatSheet({ open, initialUserId, onClose, on
         className={
           full
             ? 'relative flex h-full w-full flex-col overflow-hidden bg-[#040b1c]'
-            : 'animate-sheet-up relative flex h-[var(--voice-dm-height)] w-full flex-col overflow-hidden rounded-t-2xl bg-[#040b1c]'
+            : 'relative flex h-[var(--voice-dm-height)] w-full flex-col overflow-hidden bg-transparent'
         }
       >
         <RoomDirectMessages initialUserId={initialUserId} onClose={onClose} onFullScreenChange={handleFullChange} />
