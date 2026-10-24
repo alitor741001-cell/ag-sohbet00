@@ -8,7 +8,7 @@ export default function RoomHeaderControls({ viewerCount, onOpenViewers, canMod,
         <UserRound className="h-5 w-5 fill-current" /><span className="text-sm font-bold tabular-nums">{viewerCount}</span>
       </button>
       {canMod && (
-        <button type="button" onClick={onOpenMenu} aria-label="Oda ayarları" className={`neon-key neon-key-violet relative h-10 w-10 ${menuHighlighted ? 'text-premium-gold' : ''}`}>
+        <button type="button" onClick={onOpenMenu} aria-label="Oda ayarları" className={`neon-key neon-key-cyan relative h-10 w-10 ${menuHighlighted ? 'text-premium-gold' : ''}`}>
           <Settings className="h-5 w-5" />
         </button>
       )}
