@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import RoomDiscovery from '@/components/home/RoomDiscovery';
 
 import SupportLabel from '@/components/layout/SupportLabel';
+const GAMES_DESIGN = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/cce749e92_IMG_0220.jpg';
 const DESIGN = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/f729cdeba_IMG_0210.jpg';
 
 // Dokunma alanları tasarım görseli üzerinde yüzde koordinatlarıyla yerleşir (540x1024 tabanlı).
@@ -24,11 +25,14 @@ const EMPTY_ZONE = { label: 'İlk odayı sen aç', to: '/oda-kur', x: 22, y: 35.
 export default function Home() {
   const [hasContent, setHasContent] = useState(true);
   const [params] = useSearchParams();
-  const zones = hasContent ? ZONES : [...ZONES, EMPTY_ZONE];
+  // Oyunlar görünümü kendi tasarım görselini kullanır; üst sekme alanları burada yoktur.
+  const games = params.get('oyunlar') === '1';
+  const base = games ? ZONES.filter((z) => z.y >= 80) : ZONES;
+  const zones = hasContent || games ? base : [...base, EMPTY_ZONE];
 
   return (
-    <div className="fixed inset-0 overflow-hidden text-white" style={{ background: '#0a0a0d' }}>
-      <img src={DESIGN} alt="" className="pointer-events-none absolute inset-0 h-full w-full select-none object-fill" draggable={false} />
+    <div className="fixed inset-0 overflow-hidden text-white" style={{ background: '#000' }}>
+      <img src={games ? GAMES_DESIGN : DESIGN} alt="" className="pointer-events-none absolute inset-0 h-full w-full select-none object-fill" draggable={false} />
       <SupportLabel top="92.5%" height="3.5%" />
       {zones.map((z) => (
         <Link
@@ -41,7 +45,7 @@ export default function Home() {
       ))}
       <div
         className={`absolute inset-x-[3%] z-10 overflow-y-auto rounded-2xl px-2 py-2 ${hasContent ? '' : 'pointer-events-none opacity-0'}`}
-        style={{ top: '12%', bottom: '14%', background: hasContent ? '#0a0a0d' : 'transparent' }}
+        style={games ? { top: '9%', bottom: '14%', left: '6%', right: '6%', background: 'transparent' } : { top: '12%', bottom: '14%', background: hasContent ? '#0a0a0d' : 'transparent' }}
         key={params.toString()}
       >
         <RoomDiscovery onContentChange={setHasContent} />
