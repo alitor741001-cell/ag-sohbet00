@@ -18,7 +18,7 @@ import VoiceControlBar from '@/components/voice/VoiceControlBar';
 import VoiceChatDock from '@/components/voice/VoiceChatDock';
 import VoiceViewerSheet from '@/components/voice/VoiceViewerSheet';
 import VoiceSeatInvitePrompt from '@/components/voice/VoiceSeatInvitePrompt';
-import RoomInfoCard from '@/components/voice/RoomInfoCard';
+import RoomHeaderArt from '@/components/voice/RoomHeaderArt';
 import RoomProfileSheet from '@/components/voice/RoomProfileSheet';
 import VoiceRoomMenu from '@/components/voice/VoiceRoomMenu';
 import VoiceSeatSheet from '@/components/voice/VoiceSeatSheet';
@@ -30,7 +30,6 @@ import useVoiceRoomProfileActions from '@/hooks/useVoiceRoomProfileActions';
 import useRoomActionGate from '@/hooks/useRoomActionGate';
 import useVoiceRoomAction from '@/hooks/useVoiceRoomAction';
 import RoomLogSheet from '@/components/voice/RoomLogSheet';
-import GiftScoreChip from '@/components/voice/GiftScoreChip';
 import GiftBoardSheet from '@/components/voice/GiftBoardSheet';
 import RoomExitOverlay from '@/components/voice/RoomExitOverlay';
 import VoiceRoomGate from '@/components/voice/VoiceRoomGate';
@@ -1086,23 +1085,17 @@ export default function VoiceRoom() {
     <VoiceViewport className="z-[150]" onKeyboardChange={handleKeyboardChange}>
       <RoomBackground value={room?.background} cover={room?.cover_url} />
 
-      <header className="relative shrink-0 pl-1 pr-0 pb-1 pt-[max(0.25rem,env(safe-area-inset-top))]">
-        <div className="flex min-w-0 flex-col items-start">
-          <RoomInfoCard
-            room={room}
-            onOpen={() => setProfilePanelOpen(true)}
-            viewerCount={participants.length}
-            onOpenViewers={() => setViewerOpen(true)}
-            canMod={canMod}
-            menuHighlighted={!!music.music?.is_playing}
-            onOpenMenu={() => setMenuOpen(true)}
-            onExit={() => setExitOpen(true)}
-            giftChip={<GiftScoreChip
-              score={giftBoard?.all?.total || 0}
-              onClick={() => { setGiftBoardOpen(true); loadGiftBoard(); }}
-            />}
-          />
-        </div>
+      <header className="relative shrink-0 pt-[env(safe-area-inset-top)]">
+        <RoomHeaderArt
+          room={room}
+          onOpen={() => setProfilePanelOpen(true)}
+          viewerCount={participants.length}
+          onOpenViewers={() => setViewerOpen(true)}
+          onOpenMenu={() => setMenuOpen(true)}
+          onExit={() => setExitOpen(true)}
+          giftScore={giftBoard?.all?.total || 0}
+          onOpenGifts={() => { setGiftBoardOpen(true); loadGiftBoard(); }}
+        />
       </header>
 
       <VoiceStage

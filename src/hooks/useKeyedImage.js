@@ -40,6 +40,10 @@ function keyImage(url, crop) {
           if (p < w * (h - 1)) stack.push(p + w);
         }
         ctx.putImageData(data, 0, 0);
+        // Görsele basılı örnek yazılar (isim, ID, sayılar) koyu zeminle örtülür.
+        const s = w / (crop.baseWidth || w);
+        ctx.fillStyle = '#0b0a0d';
+        (crop.erase || []).forEach(([x, y, ew, eh]) => ctx.fillRect(x * s, y * s - sy, ew * s, eh * s));
         resolve(canvas.toDataURL('image/png'));
       } catch { resolve(null); }
     };
