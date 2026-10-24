@@ -152,8 +152,8 @@ export default function Support() {
   // Özel sohbet gibi tam ekran panel: alt menünün üzerini kaplar, geri okuyla kapanır.
   return (
     <div
-      className="standalone-private-chat dark fixed inset-0 z-[60] flex min-h-0 flex-col overflow-hidden bg-anthracite text-white"
-      style={{ transform: keyboardInset ? `translateY(-${keyboardInset}px)` : undefined, transition: 'transform 180ms ease-out' }}
+      className="standalone-private-chat dark fixed inset-x-0 top-0 z-40 flex min-h-0 flex-col overflow-hidden bg-transparent text-white"
+      style={{ bottom: 'calc(min(100vw, 540px) * 144 / 540 + env(safe-area-inset-bottom))', transform: keyboardInset ? `translateY(-${keyboardInset}px)` : undefined, transition: 'transform 180ms ease-out' }}
     >
       <div className="flex items-center gap-2.5 border-b border-[#f2ce6b]/25 px-4 pb-3 pt-[max(env(safe-area-inset-top),0.75rem)]">
         <button
