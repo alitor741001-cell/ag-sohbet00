@@ -16,7 +16,7 @@ export default function MessagesBanner({ relations, userId, showBell = true }) {
   const src = useWhiteCutout(BANNER);
   const badges = useBannerBadges(userId, relations);
   return (
-    <FixedBanner ratio="1024 / 342" maxWidth="max-w-md">
+    <FixedBanner ratio="1024 / 342" maxWidth="max-w-[20rem]" shiftUp={8}>
       {src && <img src={src} alt="Mesajlar" className="absolute inset-0 h-full w-full object-cover" />}
       <div className="absolute" style={{ left: '58.5%', top: '25%', width: '13.5%', height: '50%' }}>
         <Link to="/arkadaslar/istekler" aria-label="İstekler" className={HOT} />

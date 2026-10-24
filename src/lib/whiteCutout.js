@@ -17,8 +17,8 @@ export function whiteCutout(url, crop = { x: 0, y: 0, w: 1, h: 1 }) {
       const d = ctx.getImageData(0, 0, c.width, c.height); const p = d.data;
       for (let i = 0; i < p.length; i += 4) {
         const min = Math.min(p[i], p[i + 1], p[i + 2]);
-        if (min > 200) {
-          const a = Math.max(0, Math.min(1, (255 - min) / 55));
+        if (min > 240) {
+          const a = Math.max(0, Math.min(1, (255 - min) / 15));
           p[i + 3] = Math.round(p[i + 3] * a);
         }
       }

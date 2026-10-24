@@ -9,7 +9,7 @@ const CROP = { x: 0, y: 0.54, w: 0.72, h: 0.46 };
 function ProfileBanner() {
   const src = useWhiteCutout(SHEET, CROP);
   return (
-    <FixedBanner ratio="737 / 157" className="px-2 pt-2" maxWidth="max-w-lg">
+    <FixedBanner ratio="737 / 157" className="px-2 pt-0" maxWidth="max-w-[21rem]">
       {src && <img src={src} alt="Profil" className="h-full w-full object-contain" />}
     </FixedBanner>
   );

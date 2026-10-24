@@ -9,7 +9,7 @@ const CROP = { x: 0, y: 0, w: 0.74, h: 0.54 };
 function GamesBanner() {
   const src = useWhiteCutout(SHEET, CROP);
   return (
-    <FixedBanner ratio="758 / 185" className="px-2 pt-2" maxWidth="max-w-lg">
+    <FixedBanner ratio="758 / 185" className="px-2 pt-0" maxWidth="max-w-[21rem]">
       {src && <img src={src} alt="Oyunlar" className="h-full w-full object-contain" />}
     </FixedBanner>
   );
