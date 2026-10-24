@@ -5,14 +5,14 @@ import useMessageProfiles from '@/hooks/useMessageProfiles';
 import useKeyedImage from '@/hooks/useKeyedImage';
 import RoomNameMarquee from '@/components/voice/RoomNameMarquee';
 
-const ART_URL = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/8c3e10240_IMG_0231.jpg';
-const W = 748;
-const H = 192;
+const ART_URL = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/19f5ac305_IMG_0281.jpg';
+const W = 736;
+const H = 195;
 // Örnek isim, ID, hediye sayısı ve izleyici sayısı görselden silinir.
 const CROP = {
-  top: 0, height: H / 1024, baseWidth: W,
-  erase: [[132, 50, 96, 38], [132, 90, 140, 26], [168, 140, 172, 32], [492, 82, 24, 32]],
-  holes: [[62, 87, 35]],
+  top: 0, height: H / 1007, baseWidth: W,
+  erase: [[132, 52, 100, 36], [132, 90, 145, 24], [165, 138, 60, 34], [488, 84, 26, 30]],
+  holes: [[62, 88, 36]],
 };
 // Toplam hediye: her zaman 4 rakam — 1.234M, 12.34M, 123.4M; milyardan sonra B (1.234B ...).
 const four = (v) => { const d = v >= 1000 ? 0 : v >= 100 ? 1 : v >= 10 ? 2 : 3; const f = 10 ** d; return (Math.floor(v * f) / f).toFixed(d); };
@@ -39,7 +39,7 @@ export default function RoomHeaderArt({ room, onOpen, viewerCount = 0, onOpenVie
   return (
     <div className="voice-header-art relative w-full" style={{ aspectRatio: `${W} / ${H}` }}>
       {/* Fotoğraf çerçevenin ARKASINDA durur: çember dışına taşan kısım çerçeve altında kalır. */}
-      <div className="pointer-events-none overflow-hidden rounded-full" style={pct(27, 52, 70, 70)}>
+      <div className="pointer-events-none overflow-hidden rounded-full" style={pct(26, 52, 72, 72)}>
         {profile.avatar
           ? <Image src={profile.avatar} alt={ownerName} className="h-full w-full" fittingType="fill" draggable={false} />
           : <span className="flex h-full w-full items-center justify-center text-lg font-bold text-white">{ownerName.trim().charAt(0)}</span>}
@@ -53,11 +53,10 @@ export default function RoomHeaderArt({ room, onOpen, viewerCount = 0, onOpenVie
       <button type="button" onClick={onOpenGifts} aria-label="Hediye sıralaması" className="flex items-center text-left" style={pct(60, 138, 300, 36)}>
         <span className="ml-[37%] text-[clamp(13px,4.2vw,20px)] font-bold tabular-nums text-white">{score}</span>
       </button>
-      <button type="button" onClick={onOpenViewers} aria-label="İzleyiciler" className="flex items-center justify-end rounded-full pr-[4%]" style={pct(460, 62, 74, 72)}>
-        <span className="text-[clamp(12px,3.8vw,18px)] font-bold tabular-nums text-white">{viewerCount}</span>
-      </button>
-      <button type="button" onClick={onOpenMenu} aria-label="Oda menüsü" className="rounded-full" style={pct(547, 62, 72, 72)} />
-      <button type="button" onClick={onExit} aria-label="Odadan çık" className="rounded-full" style={pct(652, 62, 62, 72)} />
+      <button type="button" onClick={onOpenViewers} aria-label="İzleyiciler" className="rounded-full" style={pct(440, 60, 82, 78)} />
+      <span className="pointer-events-none flex items-center justify-center text-[clamp(12px,3.8vw,18px)] font-bold leading-none tabular-nums text-white" style={pct(486, 84, 30, 30)}>{viewerCount}</span>
+      <button type="button" onClick={onOpenMenu} aria-label="Oda menüsü" className="rounded-full" style={pct(530, 60, 78, 78)} />
+      <button type="button" onClick={onExit} aria-label="Odadan çık" className="rounded-full" style={pct(614, 60, 78, 78)} />
     </div>
   );
 }

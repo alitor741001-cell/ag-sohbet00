@@ -12,7 +12,7 @@ const formatClock = (totalSeconds) => {
  * Sayı tahtası açıkken görünen süre kartı: altın sarısı-kırmızı çerçeve içinde
  * "Devam Ediyor" yazar ve süre 00:00:01'den başlayıp her saniye artar.
  */
-export default function VoiceBoardTimer({ active, startedAt }) {
+export default function VoiceBoardTimer({ active, startedAt, raise = false }) {
   const startedMs = Date.parse(startedAt || '');
   const [seconds, setSeconds] = useState(1);
 
@@ -33,7 +33,7 @@ export default function VoiceBoardTimer({ active, startedAt }) {
   return (
     <div
       className="relative z-30 flex shrink-0 justify-center px-3 pb-1.5"
-      style={{ top: 'calc(-1 * var(--voice-board-lift, 0px) + 52px)' }}
+      style={{ top: `calc(-1 * var(--voice-board-lift, 0px) + ${raise ? 34 : 52}px)` }}
     >
       <div
         className="flex w-fit items-center gap-1.5 rounded-lg border border-slot-gold/60 bg-gradient-to-r from-slot-red/25 via-slot-panel to-slot-red/25 px-2 py-1 shadow-[0_0_10px_rgba(239,68,68,0.22)]"
