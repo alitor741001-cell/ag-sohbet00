@@ -12,7 +12,7 @@ export default function GiftScoreChip({ score = 0, onClick }) {
     <button
       type="button"
       onClick={onClick}
-      className="neon-panel neon-glow mt-1.5 flex items-center gap-2 py-1 pl-2 pr-3 transition-transform active:scale-95"
+      className="dragon-chip ml-3 flex items-center gap-2 py-1 pl-2 pr-3 transition-transform active:scale-95"
       aria-label={`Hediye kutusu: ${formatScore(value)} — sıralamayı gör`}
     >
       <Gift className="h-5 w-5 text-fuchsia-400 drop-shadow-[0_0_4px_#e879f9]" />

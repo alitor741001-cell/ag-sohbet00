@@ -1103,10 +1103,10 @@ export default function VoiceRoom() {
             menuHighlighted={!!music.music?.is_playing}
             onOpenMenu={() => setMenuOpen(true)}
             onExit={() => setExitOpen(true)}
-          />
-          <GiftScoreChip
-            score={giftBoard?.all?.total || 0}
-            onClick={() => { setGiftBoardOpen(true); loadGiftBoard(); }}
+            giftChip={<GiftScoreChip
+              score={giftBoard?.all?.total || 0}
+              onClick={() => { setGiftBoardOpen(true); loadGiftBoard(); }}
+            />}
           />
         </div>
       </header>

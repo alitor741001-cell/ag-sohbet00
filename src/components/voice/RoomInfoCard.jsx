@@ -5,7 +5,7 @@ import useMessageProfiles from '@/hooks/useMessageProfiles';
 import RoomHeaderControls from '@/components/voice/RoomHeaderControls';
 import '@/components/voice/voiceNeonBars.css';
 
-export default function RoomInfoCard({ room, onOpen, viewerCount = 0, onOpenViewers, canMod = false, menuHighlighted = false, onOpenMenu, onExit }) {
+export default function RoomInfoCard({ room, onOpen, viewerCount = 0, onOpenViewers, canMod = false, menuHighlighted = false, onOpenMenu, onExit, giftChip }) {
   const ownerId = room?.owner_id;
   const ids = useMemo(() => ownerId ? [ownerId] : [], [ownerId]);
   const profile = useMessageProfiles(ids)[ownerId] || {};
@@ -15,8 +15,9 @@ export default function RoomInfoCard({ room, onOpen, viewerCount = 0, onOpenView
   const roomName = room?.name || 'Oda';
 
   return (
-    <div className="flex w-full items-center justify-between gap-2">
-      <div className="neon-panel neon-glow flex h-[clamp(52px,12vw,60px)] min-w-0 flex-1 items-center gap-2 p-1.5">
+    <div className="flex w-full items-start justify-between gap-2">
+      <div className="flex min-w-0 flex-1 flex-col items-start">
+      <div className="neon-panel dragon-panel neon-glow flex w-full h-[clamp(52px,12vw,60px)] min-w-0 flex-1 items-center gap-2 p-1.5">
         <button type="button" onClick={onOpen} aria-label="Oda profilini aç" className="flex h-11 w-11 shrink-0 items-center justify-center">
           {/* Kare kutu: kare oranı desteklemeyen eski sürümlerde media-box-square yüksekliği verir. */}
           <span className="neon-avatar media-box-square relative flex aspect-square w-full items-center justify-center overflow-hidden bg-slot-text/10">
@@ -35,6 +36,8 @@ export default function RoomInfoCard({ room, onOpen, viewerCount = 0, onOpenView
           </span>
           {memberId && <span className="mt-1 flex items-center gap-1 truncate text-xs leading-tight tabular-nums text-slot-text/75">ID:{memberId}<span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399]" /></span>}
         </div>
+      </div>
+      {giftChip}
       </div>
       <RoomHeaderControls {...{ viewerCount, onOpenViewers, canMod, menuHighlighted, onOpenMenu, onExit }} />
     </div>
