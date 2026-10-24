@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import RoomDiscovery from '@/components/home/RoomDiscovery';
 
 import BottomNavStrip from '@/components/layout/BottomNavStrip';
@@ -30,7 +31,8 @@ export default function Home() {
   // Oyunlar görünümü kendi tasarım görselini kullanır; üst sekme alanları burada yoktur.
   const games = params.get('oyunlar') === '1';
   const design = games ? GAMES_DESIGN : DESIGN;
-  const base = games ? ZONES.filter((z) => z.y >= 80) : ZONES;
+  // Oyunlar görünümü tam ekran oynanır: alt menü butonları ve dokunma alanları gizlenir.
+  const base = games ? [] : ZONES;
   const zones = hasContent || games ? base : [...base, EMPTY_ZONE];
 
   return (
@@ -46,7 +48,16 @@ export default function Home() {
           {!games && hasContent && (
             <img src={LIVE_BG} alt="" className="pointer-events-none absolute inset-x-[3%] select-none rounded-2xl object-cover" style={{ top: '12%', bottom: '14%', height: '74%', width: '94%' }} draggable={false} />
           )}
-          <BottomNavStrip />
+          {!games && <BottomNavStrip />}
+          {games && (
+            <Link
+              to="/"
+              aria-label="Ana sayfaya dön"
+              className="absolute left-3 top-2 z-30 flex h-10 w-10 items-center justify-center rounded-full bg-black/65 text-white ring-1 ring-white/20 active:bg-white/15"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Link>
+          )}
           {zones.map((z) => (
             <Link
               key={z.label + z.y}
@@ -58,7 +69,7 @@ export default function Home() {
           ))}
           <div
             className={`absolute inset-x-[3%] z-10 overflow-y-auto overscroll-contain rounded-2xl px-2 py-2 ${hasContent ? '' : 'pointer-events-none opacity-0'}`}
-            style={games ? { top: 0, bottom: '13%', left: 0, right: 0, background: 'transparent' } : { top: '12%', bottom: '14%', background: 'transparent' }}
+            style={games ? { top: '3.6rem', bottom: 0, left: 0, right: 0, background: 'transparent' } : { top: '12%', bottom: '14%', background: 'transparent' }}
             key={params.toString()}
           >
             <RoomDiscovery onContentChange={setHasContent} />
