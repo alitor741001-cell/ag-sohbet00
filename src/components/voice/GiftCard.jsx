@@ -22,8 +22,8 @@ export default function GiftCard({ gift, selected, onSelect }) {
       <GiftTransparencyFilter id={filterId} />
       <span className="gift-palace-art relative inline-flex w-full items-center justify-center">
         <span
-          className="pointer-events-none absolute inset-0"
-          style={{ background: `radial-gradient(circle at 50% 52%, ${tone}${selected ? '55' : '24'}, transparent 66%)` }}
+        className="pointer-events-none absolute inset-0"
+          style={{ background: `radial-gradient(ellipse at 50% 58%, ${tone}${selected ? '85' : '60'}, ${tone}22 42%, transparent 72%)` }}
         />
         {gift.image_url ? (
           <Image
@@ -34,7 +34,7 @@ export default function GiftCard({ gift, selected, onSelect }) {
             originHeight={192}
             className={`gift-palace-image relative h-full w-full ${selected ? 'scale-105' : ''}`}
             blurPlaceholder={false}
-            style={{ filter: `url(#${filterId})` }}
+            style={{ filter: `url(#${filterId}) drop-shadow(0 4px 7px ${tone}99) drop-shadow(0 0 3px ${tone}66)` }}
           />
         ) : (
           <span className="relative text-[38px] leading-none drop-shadow-[0_4px_10px_rgba(0,0,0,0.6)]">{gift.emoji || '🎁'}</span>

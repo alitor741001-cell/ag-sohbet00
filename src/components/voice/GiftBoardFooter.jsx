@@ -5,13 +5,14 @@ import { formatCoins } from '@/lib/giftTone';
 export default function GiftBoardFooter({ coins, count = 0, onOpenCoins, onSend, sendDisabled }) {
   return (
     <footer className="gift-palace-footer mt-3 flex shrink-0 items-center gap-2">
+      <span className="gift-palace-footer-ribbon" aria-hidden="true" />
       <Crown className="gift-palace-crown" aria-hidden="true" />
       <button
         type="button"
         onClick={onOpenCoins}
         className="gift-palace-wallet flex min-w-0 shrink items-center gap-1 text-sm font-black tabular-nums transition-transform active:scale-95"
       >
-        <Coins className="h-4 w-4 shrink-0 text-[#fbc02d]" />
+        <span className="gift-palace-coin-stack" aria-hidden="true"><Coins /><Coins /><Coins /></span>
         <span className="truncate">{coins === null || coins === undefined ? '—' : formatCoins(coins)}</span>
         <ChevronRight className="h-3.5 w-3.5 shrink-0 text-white/50" />
       </button>
