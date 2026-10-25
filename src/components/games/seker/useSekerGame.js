@@ -46,6 +46,7 @@ export default function useSekerGame() {
 
   // Bekleme; STOP'a basıldığında (ya da süre dolduğunda) sona erer.
   const wait = useCallback((ms) => new Promise((resolve) => {
+    if (skipLandingRef.current) { resolve(); return; }
     let timer = null;
     let done = false;
     const finish = () => {
@@ -62,8 +63,8 @@ export default function useSekerGame() {
   const stop = useCallback(() => {
     if (!busyRef.current) return;
     // İniş sürerken bekleme kesilir; istek sürerken basıldıysa iniş atlanır.
-    if (stopRef.current) stopRef.current();
-    else skipLandingRef.current = true;
+    skipLandingRef.current = true;
+    stopRef.current?.();
   }, []);
 
   useEffect(() => () => { stopRef.current?.(); }, []);
@@ -134,7 +135,6 @@ export default function useSekerGame() {
         // Makaralar soldan sağa sırayla durur: 6 sütun x 6 satır.
         if (!skipLandingRef.current) await wait(landWait(6, 6, startedAt));
       }
-      skipLandingRef.current = false;
       setLanding(null);
       setStopping(true);
       // Tahta hemen görünür: sütunlar durduğu an ekranda duran dizilim budur.

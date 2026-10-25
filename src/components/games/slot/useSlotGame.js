@@ -35,6 +35,7 @@ export default function useSlotGame({ roomId } = {}) {
   const [message, setMessage] = useState('');
   const busyRef = useRef(false);
   const stopRef = useRef(null);
+  const stopRequestedRef = useRef(false);
   const roundRef = useRef(0);
   const [slow, setSlow] = useState(false);
   const [stopping, setStopping] = useState(false);
@@ -43,6 +44,7 @@ export default function useSlotGame({ roomId } = {}) {
   useWalletCoinsLive(user?.id, (value) => setCoins(value));
   // Bekleme; STOP'a basıldığında (ya da süre dolduğunda) sona erer.
   const wait = useCallback((ms) => new Promise((resolve) => {
+    if (stopRequestedRef.current) { resolve(); return; }
     let timer = null;
     let done = false;
     const finish = () => {
@@ -58,6 +60,7 @@ export default function useSlotGame({ roomId } = {}) {
   // STOP: tur hangi aşamada olursa olsun bekleme hemen biter ve sonuç gösterilir.
   const stop = useCallback(() => {
     if (!busyRef.current) return;
+    stopRequestedRef.current = true;
     stopRef.current?.();
   }, []);
   useEffect(() => () => { stopRef.current?.(); }, []);
@@ -101,6 +104,7 @@ export default function useSlotGame({ roomId } = {}) {
       return;
     }
     busyRef.current = true;
+    stopRequestedRef.current = false;
     // Bahis tur başlarken bakiyeden düşülür: coin gerçek zamanlı azalır.
     if (cost > 0 && !noLimit) setCoins((value) => Math.max(0, value - cost));
     roundRef.current += 1;

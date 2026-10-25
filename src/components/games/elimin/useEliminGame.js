@@ -63,6 +63,7 @@ export default function useEliminGame() {
 
   // Bekleme; DUR'a basıldığında sona erer.
   const wait = useCallback((ms) => new Promise((resolve) => {
+    if (skipLandingRef.current) { resolve(); return; }
     let timer = null;
     let done = false;
     const finish = () => {
@@ -79,8 +80,8 @@ export default function useEliminGame() {
   const stop = useCallback(() => {
     if (!busyRef.current) return;
     // İniş sürerken bekleme kesilir; istek sürerken basıldıysa iniş atlanır.
-    if (stopRef.current) stopRef.current();
-    else skipLandingRef.current = true;
+    skipLandingRef.current = true;
+    stopRef.current?.();
   }, []);
 
   useEffect(() => () => { stopRef.current?.(); }, []);
@@ -156,7 +157,6 @@ export default function useEliminGame() {
         // Makaralar soldan sağa sırayla durur.
         if (!skipLandingRef.current) await wait(landWait(REELS, ROWS, startedAt));
       }
-      skipLandingRef.current = false;
       setLanding(null);
       setStopping(true);
       play('landing');

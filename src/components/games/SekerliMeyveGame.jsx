@@ -117,7 +117,7 @@ export default function SekerliMeyveGame({ onExit, onBack }) {
             format={formatCredits}
           />
           <GameSpinButton
-            spinning={game.spinning}
+            spinning={game.busy && !game.prize}
             disabled={!ready}
             auto={game.auto}
             icon={Play}

@@ -2,7 +2,7 @@ import React from 'react';
 import '@/components/games/controls/referenceControls.css';
 
 export default function GameSpinButton({ spinning, disabled, spinDisabled, auto, onSpin, onStop, onAuto, extra }) {
-  const off = spinDisabled ?? (disabled && !spinning);
+  const off = !spinning && (spinDisabled ?? disabled);
   return (
     <div className="ref-spin-controls">
       <button type="button" onClick={onAuto} disabled={disabled} aria-pressed={!!auto} aria-label={auto ? 'Otomatik tur açık' : 'Otomatik tur'} className="ref-hotspot ref-auto-hotspot"><span className="sr-only">AUTO</span></button>

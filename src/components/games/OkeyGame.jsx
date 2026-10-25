@@ -12,6 +12,8 @@ import OkeyTopBar from './okey/OkeyTopBar';
 import OkeyWaitRoom from './okey/OkeyWaitRoom';
 import useOkeyGame from './okey/useOkeyGame';
 import ReferenceChoiceButton from '@/components/games/controls/ReferenceChoiceButton';
+import OkeyExitChoice from '@/components/games/okey/OkeyExitChoice';
+import useBackDismiss from '@/hooks/useBackDismiss';
 
 /** OKEY: bahisli, dört kişilik okey masası.
     variant 'okey101' → 21 taş, 101 puan; variant 'okey' → 14 taş, klasik bitiş. */
@@ -19,6 +21,12 @@ export default function OkeyGame({ variant = 'okey101', onExit, onBack }) {
   const game = useOkeyGame(variant);
   const classic = variant === 'okey';
   const [coinOpen, setCoinOpen] = useState(false);
+  const [exitAction, setExitAction] = useState(null);
+  const requestExit = (action) => {
+    if (game.table) setExitAction(() => action);
+    else action?.();
+  };
+  useBackDismiss(!exitAction, () => requestExit(onBack));
   // Tahta dizilimi: seri (renk sırası), çift (sayı sırası) ya da elle (parmakla sürüklenen).
   const [mode, setMode] = useState('seri');
   // Son seçilen dizilim: elle dizilişte de puan bu dizilime göre hesaplanır.
@@ -92,8 +100,8 @@ export default function OkeyGame({ variant = 'okey101', onExit, onBack }) {
         table={table}
         coins={coins}
         onStore={() => setCoinOpen(true)}
-        onBack={onBack}
-        onExit={onExit}
+        onBack={() => requestExit(onBack)}
+        onExit={() => requestExit(onExit)}
       />
 
       {table ? (
@@ -184,6 +192,9 @@ export default function OkeyGame({ variant = 'okey101', onExit, onBack }) {
       {profileSeat ? <OkeyPlayerProfile player={profileSeat} onClose={() => setProfileSeat(null)} /> : null}
 
       <CoinPurchasePanel open={coinOpen} coins={coins} onBack={() => setCoinOpen(false)} />
+      {exitAction && <OkeyExitChoice busy={busy} error={game.error} onCancel={() => setExitAction(null)} onBack={exitAction} onLeave={async () => {
+        if (await game.actions.leave()) exitAction();
+      }} />}
     </div>
   );
 }

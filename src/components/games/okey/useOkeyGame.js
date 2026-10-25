@@ -144,7 +144,11 @@ export default function useOkeyGame(variant = 'okey101') {
     },
     finish: () => request({ action: 'finish', table_id: tableId }),
     leave: async () => {
-      if (tableId) await request({ action: 'leave', table_id: tableId });
+      if (tableId) {
+        const data = await request({ action: 'leave', table_id: tableId });
+        if (!data || data.error) return false;
+      }
+      setTableId('');
       setTable(null);
       tableRef.current = null;
       setHand([]);
@@ -154,6 +158,7 @@ export default function useOkeyGame(variant = 'okey101') {
       setHandScore(0);
       setFinishScore(0);
       await openLobby();
+      return true;
     },
   };
 

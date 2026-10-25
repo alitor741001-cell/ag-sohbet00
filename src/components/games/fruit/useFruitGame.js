@@ -46,6 +46,7 @@ export default function useFruitGame() {
 
   // Bekleme; STOP'a basıldığında (ya da süre dolduğunda) sona erer.
   const wait = useCallback((ms) => new Promise((resolve) => {
+    if (skipLandingRef.current) { resolve(); return; }
     let timer = null;
     let done = false;
     const finish = () => {
@@ -62,8 +63,8 @@ export default function useFruitGame() {
   const stop = useCallback(() => {
     if (!busyRef.current) return;
     // İniş sürerken bekleme kesilir; istek sürerken basıldıysa iniş atlanır.
-    if (stopRef.current) stopRef.current();
-    else skipLandingRef.current = true;
+    skipLandingRef.current = true;
+    stopRef.current?.();
   }, []);
 
   useEffect(() => () => { stopRef.current?.(); }, []);
@@ -134,7 +135,6 @@ export default function useFruitGame() {
         // Makaralar soldan sağa sırayla durur: 6 sütun x 5 satır.
         if (!skipLandingRef.current) await wait(landWait(6, 5, startedAt));
       }
-      skipLandingRef.current = false;
       setLanding(null);
       setStopping(true);
       // Dizilim hemen görünür: makara durduğu an ekranda duran ızgara budur.

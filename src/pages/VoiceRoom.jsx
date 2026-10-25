@@ -51,9 +51,9 @@ import GiftEffectsSheet from '@/components/voice/GiftEffectsSheet';
 import useGiftEffects from '@/hooks/useGiftEffects';
 import useGiftAlerts from '@/hooks/useGiftAlerts';
 import useBigGiftAlerts from '@/hooks/useBigGiftAlerts';
-import useAgencyCalls from '@/hooks/useAgencyCalls';
+
 import useAgencyCallStatus from '@/hooks/useAgencyCallStatus';
-import AgencyCallBanner from '@/components/voice/AgencyCallBanner';
+
 import AgencyCallComposer from '@/components/voice/AgencyCallComposer';
 import useBigGiftNotice from '@/hooks/useBigGiftNotice';
 import BigGiftStage from '@/components/voice/BigGiftStage';
@@ -138,7 +138,7 @@ export default function VoiceRoom() {
   const bigGift = useBigGiftAlerts();
   const [agencyCallOpen, setAgencyCallOpen] = useState(false);
   const { status: agencyCallStatus, setStatus: setAgencyCallStatus } = useAgencyCallStatus(user?.id);
-  const { call: agencyCall, dismiss: dismissAgencyCall } = useAgencyCalls();
+
   // Sohbetin altındaki büyük hediye satırı — basılınca hediye atan kişinin odasına gidilir.
   const { notice: bigGiftNotice, dismiss: dismissBigGiftNotice } = useBigGiftNotice(id);
 
@@ -1122,9 +1122,7 @@ export default function VoiceRoom() {
         }}
       />
 
-      {agencyCall && agencyCall.sender_id !== user?.id && (
-        <AgencyCallBanner call={agencyCall} onClose={dismissAgencyCall} onJoin={() => { const target = agencyCall?.room_id; dismissAgencyCall(); if (target && target !== id) navigate(`/sesli-oda/${target}`); }} />
-      )}
+
 
       <div className={`voice-chat-dock min-h-0 shrink-0 ${composerOpen ? 'is-composing' : ''}`}>
       <VoiceChatDock

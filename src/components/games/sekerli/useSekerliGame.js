@@ -91,6 +91,7 @@ export default function useSekerliGame() {
 
   /** Durdurulabilir bekleme: tur sırasında STOP'a basılırsa hemen biter. */
   const wait = useCallback((ms) => new Promise((resolve) => {
+    if (skipLandingRef.current) { resolve(); return; }
     let done = false;
     const finish = () => {
       if (done) return;
@@ -206,7 +207,6 @@ export default function useSekerliGame() {
         if (!skipLandingRef.current) await wait(landWait(REELS, ROWS, startedAt));
         if (!mountedRef.current) return;
       }
-      skipLandingRef.current = false;
       setLanding(null);
       setSpinning(false);
       setPhase('idle');
@@ -248,6 +248,9 @@ export default function useSekerliGame() {
         setPhase('idle');
       }
 
+      if (data.final_grid) setBoard(toBoard(data.final_grid));
+      setWinCells(EMPTY_CELLS);
+      setNewCells(EMPTY_CELLS);
       applyState(data);
       // Çevirme hakkı boyunca kazanç birikir; normal turda tur kazancı yazılır.
       const won = data.win || 0;
@@ -306,8 +309,8 @@ export default function useSekerliGame() {
     if (!busyRef.current) return;
     setStopping(true);
     // İniş sürerken bekleme kesilir; istek sürerken basıldıysa iniş atlanır.
-    if (stopRef.current) stopRef.current();
-    else skipLandingRef.current = true;
+    skipLandingRef.current = true;
+    stopRef.current?.();
   }, []);
 
   const enqueueBet = useBetQueue();
