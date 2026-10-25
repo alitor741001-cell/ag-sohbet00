@@ -6,6 +6,7 @@ import useMessageProfiles from '@/hooks/useMessageProfiles';
 import { getAccountState } from '@/components/friends/AccountStatusAvatar';
 import { useMessageRealtime } from '@/components/messages/MessageRealtimeProvider';
 import LiveBadge from '@/components/friends/LiveBadge';
+import NeonMessageCard from '@/components/friends/NeonMessageCard';
 import { findLiveRoom } from '@/lib/liveRoom';
 import { parseInviteMarker } from '@/lib/agency';
 import { useUserProfile } from '@/lib/profileCard';
@@ -51,7 +52,7 @@ export default function ConversationList({ conversations, userId, onOpen, onHide
     const inviteCard = parseInviteMarker(conversation.last_message_text);
     const shareCard = parseRoomShareMarker(conversation.last_message_text);
 
-    return <div key={conversation.id} className="relative overflow-hidden border-b border-border">
+    return <div key={conversation.id} className="relative overflow-hidden">
       {/* Sil butonu — sadece swipe ile görünür */}
       <button
         onClick={(e) => { e.stopPropagation(); e.preventDefault(); onHide(conversation); }}
@@ -77,9 +78,19 @@ export default function ConversationList({ conversations, userId, onOpen, onHide
           if (swipingRef.current) return;
           onOpen(conversation);
         }}
-        className={`relative z-10 w-full flex items-center gap-3 px-4 py-4 cursor-pointer transition-transform bg-background ${swiped === conversation.id ? '-translate-x-20' : 'translate-x-0'} ${unread > 0 ? 'bg-[#f2ce6b]/5' : ''}`}
+        className={`relative z-10 w-full cursor-pointer px-3 py-2 transition-transform bg-black ${swiped === conversation.id ? '-translate-x-20' : 'translate-x-0'}`}
       >
-        <button type="button" onClick={(event) => { event.stopPropagation(); openUserProfile(otherId); }} aria-label={`${name} profilini aç`} className="relative flex h-16 w-16 shrink-0 items-center justify-center"><span className="relative">{profile?.profile_frame ? <ProfileFrame frame={profile.profile_frame} avatar={profile.avatar || avatar} name={name} size="sm" frameScale={profile.profile_frame_scale} /> : <XpAvatar avatar={profile?.avatar || avatar} name={name} userId={otherId} size="sm" />}{liveRoom && <LiveBadge />}</span>{unread > 0 && <span className="absolute -top-0.5 -right-0.5 min-w-5 h-5 px-1 rounded-full bg-[#f2ce6b] text-black text-[10px] font-bold flex items-center justify-center border-2 border-background">{unread}</span>}{!accountState && !liveRoom && <span className={`absolute right-0 bottom-0 w-3.5 h-3.5 rounded-full border-2 border-background ${online ? 'bg-green-500' : 'bg-muted-foreground'}`} />}</button><div className="min-w-0 flex-1"><p className={`truncate ${unread > 0 ? 'font-bold text-foreground' : 'font-semibold text-muted-foreground'}`}>{name}</p><p className={`truncate text-xs ${typing ? 'font-semibold text-green-400' : liveRoom ? 'font-semibold text-[#f97316]' : 'text-muted-foreground'}`}>{typing ? `${name} yazıyor...` : liveRoom ? 'Yayında' : realOnline ? 'Çevrim içi' : lastSeen ? `Son görülme: ${new Date(lastSeen).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}` : 'Çevrim dışı'}</p><p className={`text-sm truncate ${unread > 0 ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>{unread > 0 ? <span className="text-[#f2ce6b]">● </span> : ''}{inviteCard ? '🎤 Yayıncı Daveti' : shareCard ? '🎬 Yayın paylaşıldı' : conversation.last_message_text || 'Sohbeti başlatın.'}</p></div><div className="text-right shrink-0 flex flex-col items-end gap-1"><p className="text-xs text-muted-foreground">{conversation.last_message_at ? new Date(conversation.last_message_at).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : ''}</p><ChevronRight className="w-4 h-4 ml-auto text-muted-foreground" /></div>
+        <NeonMessageCard
+          gender={profile?.gender}
+          name={name}
+          avatar={profile?.avatar || avatar}
+          time={conversation.last_message_at ? new Date(conversation.last_message_at).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : ''}
+          aside={<ChevronRight className="h-5 w-5" />}
+          badge={<>{liveRoom && <LiveBadge />}{unread > 0 && <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-black bg-[#f2ce6b] px-1 text-[10px] font-bold text-black">{unread}</span>}</>}
+          footer={<span className="truncate">{typing ? `${name} yazıyor...` : liveRoom ? 'Yayında' : (online && !accountState) ? 'Çevrim içi' : lastSeen ? `Son görülme: ${new Date(lastSeen).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}` : 'Çevrim dışı'}</span>}
+        >
+          <p className={`truncate ${unread > 0 ? 'font-semibold' : ''}`}>{inviteCard ? '🎤 Yayıncı Daveti' : shareCard ? '🎬 Yayın paylaşıldı' : conversation.last_message_text || 'Sohbeti başlatın.'}</p>
+        </NeonMessageCard>
       </div>
     </div>;
   })}</div>;
