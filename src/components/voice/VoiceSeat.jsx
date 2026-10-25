@@ -83,7 +83,11 @@ function VoiceSeat({ seat, index, size = 'md', musicPlaying, speaking, isSelf, i
           <span className="gift-pop pointer-events-none absolute -top-5 left-1/2 z-30 -translate-x-1/2 text-lg leading-none">{gifted}</span>
         )}
       </span>
-      {boardActive && <VoiceSeatScore value={score} size={size} />}
+      {/* Dolu koltukta alt şeritteki rakam görünmez; yeri korunur ki ızgara kaymasın.
+          Boş koltuğun numarası görünmeye devam eder. */}
+      {boardActive && (
+        <span className="invisible" aria-hidden="true"><VoiceSeatScore value={score} size={size} /></span>
+      )}
       <span className={`flex h-3 ${nameWidth} items-center gap-0.5 truncate text-[10px] leading-none`} style={{ color: gifted ? accent : nameTheme?.accent || '#ffffff' }}>
         {!hidden && isOwner && <Crown className="h-3 w-3 shrink-0 text-amber-400" />}
         {!hidden && !isOwner && isMod && <Shield className="h-3 w-3 shrink-0 text-sky-400" />}
