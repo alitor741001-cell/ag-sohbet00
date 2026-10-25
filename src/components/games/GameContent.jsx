@@ -1,10 +1,9 @@
 import { lazy, Suspense } from 'react';
-import { ANKA_ID, DEDE_ID, ELIMIN_ID, FRUIT_ID, FUTBOL_ID, OKEY_CLASSIC_ID, OKEY_ID, ROCKET_ID, ROULETTE_ID, SEKERLI_MEYVE_ID, SEKER_ID, ZAR_ID } from '@/components/games/gameCatalog';
+import { DEDE_ID, ELIMIN_ID, FRUIT_ID, FUTBOL_ID, OKEY_CLASSIC_ID, OKEY_ID, ROCKET_ID, ROULETTE_ID, SEKERLI_MEYVE_ID, SEKER_ID, ZAR_ID } from '@/components/games/gameCatalog';
 
 const SlotGame = lazy(() => import('@/components/games/SlotGame'));
 const OkeyGame = lazy(() => import('@/components/games/OkeyGame'));
 const games = {
-  [ANKA_ID]: lazy(() => import('@/components/games/anka/AnkaGame')),
   [OKEY_ID]: OkeyGame,
   [OKEY_CLASSIC_ID]: OkeyGame,
   [SEKERLI_MEYVE_ID]: lazy(() => import('@/components/games/SekerliMeyveGame')),
