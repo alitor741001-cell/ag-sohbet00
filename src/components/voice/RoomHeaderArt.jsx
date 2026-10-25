@@ -13,8 +13,8 @@ const PORTRAIT = { cx: 74.5, cy: 84, r: 38 };
 // Örnek isim, ID, hediye sayısı ve izleyici sayısı görselden silinir.
 const CROP = {
   top: 0, height: H / 1007, baseWidth: W,
-  erase: [[132, 52, 100, 36], [132, 90, 145, 24], [156, 133, 104, 42], [488, 84, 26, 30]],
-  holes: [[PORTRAIT.cx, PORTRAIT.cy, PORTRAIT.r]],
+  erase: [[132, 52, 100, 36], [132, 90, 145, 24], [166, 140, 30, 25]],
+  holes: [[PORTRAIT.cx, PORTRAIT.cy, PORTRAIT.r], [473, 96, 33]],
 };
 // Toplam hediye: her zaman 4 rakam — 1.234M, 12.34M, 123.4M; milyardan sonra B (1.234B ...).
 const four = (v) => { const d = v >= 1000 ? 0 : v >= 100 ? 1 : v >= 10 ? 2 : 3; const f = 10 ** d; return (Math.floor(v * f) / f).toFixed(d); };
@@ -52,11 +52,12 @@ export default function RoomHeaderArt({ room, onOpen, viewerCount = 0, onOpenVie
         <RoomNameMarquee text={room?.name || 'Oda'} className="w-full shrink-0 !py-0 text-[3.65cqw] font-bold leading-[1.2] text-white" />
         {memberId && <span className="flex shrink-0 items-center gap-1 text-[2.7cqw] leading-[1.2] tabular-nums text-white/75">ID:{memberId}<span className="h-[1.4cqw] w-[1.4cqw] shrink-0 rounded-full bg-emerald-400" /></span>}
       </button>
-      <button type="button" onClick={onOpenGifts} aria-label="Hediye sıralaması" className="flex items-center justify-center overflow-hidden" style={pct(156, 133, 104, 42)}>
-        <span className="truncate text-[3.8cqw] font-bold leading-none tabular-nums text-white">{score}</span>
+      <button type="button" onClick={onOpenGifts} aria-label="Hediye sıralaması" className="flex items-center justify-center bg-transparent p-0" style={pct(166, 137, 176, 28)}>
+        <span className="whitespace-nowrap text-[3cqw] font-bold leading-none tabular-nums text-white">{score}</span>
       </button>
-      <button type="button" onClick={onOpenViewers} aria-label="İzleyiciler" className="rounded-full" style={pct(440, 60, 82, 78)} />
-      <span className="pointer-events-none flex items-center justify-center text-[clamp(12px,3.8vw,18px)] font-bold leading-none tabular-nums text-white" style={pct(486, 84, 30, 30)}>{viewerCount}</span>
+      <button type="button" onClick={onOpenViewers} aria-label={`İzleyiciler: ${viewerCount}`} className="flex items-center justify-center rounded-full bg-transparent p-0" style={pct(440, 63, 66, 66)}>
+        <span className="whitespace-nowrap font-bold leading-none tabular-nums text-white" style={{ fontSize: `${Math.min(4.2, 7 / String(viewerCount).length)}cqw` }}>{viewerCount}</span>
+      </button>
       <button type="button" onClick={onOpenMenu} aria-label="Oda menüsü" className="rounded-full" style={pct(530, 60, 78, 78)} />
       <button type="button" onClick={onExit} aria-label="Odadan çık" className="rounded-full" style={pct(614, 60, 78, 78)} />
     </div>
