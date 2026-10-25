@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Armchair, Eraser, Eye, EyeOff, Film, Hash, Lock, Megaphone, MessageSquareOff, Music, Palette, Play, ScrollText, Share2, Square, Unlock } from 'lucide-react';
+import { Armchair, Eraser, Eye, EyeOff, Film, Hash, Lock, MessageSquareOff, Music, Palette, Play, ScrollText, Square, Unlock } from 'lucide-react';
 import BoardToggleRow from '@/components/voice/BoardToggleRow';
 import VoiceRoomThemePanel from '@/components/voice/VoiceRoomThemePanel';
 import SeatCountPicker from '@/components/voice/SeatCountPicker';
@@ -14,7 +14,7 @@ const Panel = ({ children, hint }) => (
 );
 
 /** "…" menüsü: yuvarlak ikon ızgarası — kilit, gizlilik, koltuk, sayaç, sohbet temizleme, sohbet yasağı ve kayıt defteri. */
-export default function VoiceRoomMenu({ open, onClose, room, isOwner, isAdmin, canMod, onSeatCount, onSetPassword, onToggleHidden, onShare, boardActive, onToggleBoard, onBoardSettings, onClearChat, onToggleChatBan, onOpenLog, onExitVoiceMode, musicPlaying, onOpenMusic, theme, onTheme, onAgencyCall }) {
+export default function VoiceRoomMenu({ open, onClose, room, isOwner, isAdmin, canMod, onSeatCount, onSetPassword, onToggleHidden, boardActive, onToggleBoard, onBoardSettings, onClearChat, onToggleChatBan, onOpenLog, onExitVoiceMode, musicPlaying, onOpenMusic, theme, onTheme }) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [panel, setPanel] = useState(null);
@@ -71,9 +71,6 @@ export default function VoiceRoomMenu({ open, onClose, room, isOwner, isAdmin, c
   return (
     <VoiceSheet open={open} onClose={onClose} title="Oda ayarları">
       <div className="grid grid-cols-4 gap-x-2 gap-y-4">
-        {onAgencyCall && (
-          <VoiceMenuTile icon={Megaphone} label="Ajans Çağrısı" tone="gold" onClick={() => { onClose(); onAgencyCall(); }} />
-        )}
         {/* Müzik: herkes kendi listesinden şarkı açar, oda aynı şarkıyı duyar. */}
         {onOpenMusic && (
           <VoiceMenuTile
@@ -166,17 +163,6 @@ export default function VoiceRoomMenu({ open, onClose, room, isOwner, isAdmin, c
         <p className="mt-3 rounded-xl bg-primary/15 px-3 py-2 text-[11px] font-semibold text-primary">
           Sohbet yasağı açık — yalnızca koltuktakiler yazabilir.
         </p>
-      )}
-
-      {/* En altta: yayını paylaş — arkadaş (kişiler) listesinden seçim yapılır. */}
-      {onShare && (
-        <button
-          type="button"
-          onClick={() => { onClose(); onShare(); }}
-          className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-[#3b82f6]/60 bg-[#3b82f6]/15 text-sm font-bold text-white shadow-[0_0_18px_-8px_rgba(59,130,246,0.9)]"
-        >
-          <Share2 className="h-4 w-4" /> Yayını paylaş
-        </button>
       )}
     </VoiceSheet>
   );

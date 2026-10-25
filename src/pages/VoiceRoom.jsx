@@ -1217,7 +1217,6 @@ export default function VoiceRoom() {
         onSeatCount={changeSeatCount}
         onSetPassword={handleSetPassword}
         onToggleHidden={handleToggleHidden}
-        onShare={canMod ? () => setShareOpen(true) : null}
         boardActive={boardActive}
         onToggleBoard={toggleBoard}
         onBoardSettings={saveBoardSettings}
@@ -1227,7 +1226,6 @@ export default function VoiceRoom() {
         onExitVoiceMode={canMod ? exitVoiceMode : null}
         theme={room?.background}
         onTheme={changeTheme}
-        onAgencyCall={agencyCallStatus?.eligible ? () => setAgencyCallOpen(true) : null}
       />
       <AgencyCallComposer open={agencyCallOpen} onClose={() => setAgencyCallOpen(false)} roomId={id} status={agencyCallStatus} onSent={(data) => setAgencyCallStatus((prev) => ({ ...prev, ...data }))} />
 
@@ -1371,6 +1369,7 @@ export default function VoiceRoom() {
         swipeEnabled={swipe.swipeEnabled}
         onToggleSwipe={swipe.toggleSwipe}
         onAgencyCall={agencyCallStatus?.eligible ? () => setAgencyCallOpen(true) : null}
+        onShare={canMod ? () => setShareOpen(true) : null}
       />
 
       {notice && joined && (

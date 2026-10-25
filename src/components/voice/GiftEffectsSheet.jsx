@@ -1,4 +1,4 @@
-import { ArrowUpDown, Gift, Megaphone, Sparkles, X } from 'lucide-react';
+import { ArrowUpDown, Gift, Megaphone, Share2, Sparkles, X } from 'lucide-react';
 import NoiseSuppressionSetting from '@/components/voice/NoiseSuppressionSetting';
 
 /** Tek ayar satırı: solda simge, ortada başlık ve açıklama, sağda açma/kapama anahtarı. */
@@ -27,7 +27,7 @@ function ToggleRow({ icon: Icon, title, hint, enabled, onToggle, disabled = fals
 }
 
 /** Oda ayarları: ekranın dibinden altın-kırmızı kart olarak açılır. */
-export default function GiftEffectsSheet({ open, onClose, enabled, onToggle, swipeEnabled, onToggleSwipe, onAgencyCall }) {
+export default function GiftEffectsSheet({ open, onClose, enabled, onToggle, swipeEnabled, onToggleSwipe, onAgencyCall, onShare }) {
   if (!open) return null;
 
   return (
@@ -45,15 +45,6 @@ export default function GiftEffectsSheet({ open, onClose, enabled, onToggle, swi
         </div>
 
         <div className="space-y-2">
-          {onAgencyCall && (
-            <button type="button" onClick={() => { onClose(); onAgencyCall(); }} className="flex w-full items-center gap-3 rounded-2xl border border-[#F2CE6B]/25 bg-black/30 px-3 py-2.5 text-left">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#F2CE6B] to-[#ef4444] text-black"><Megaphone className="h-4 w-4" /></span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-sm font-bold text-[#F6E2A8]">Ajans Çağrısı</span>
-                <span className="block text-[11px] text-[#F6E2A8]/60">Herkesi bu odaya davet et.</span>
-              </span>
-            </button>
-          )}
           <ToggleRow
             icon={Gift}
             title="Hediye efektleri"
@@ -71,6 +62,24 @@ export default function GiftEffectsSheet({ open, onClose, enabled, onToggle, swi
             onToggle={onToggleSwipe}
           />
           <NoiseSuppressionSetting Row={ToggleRow} />
+          {onAgencyCall && (
+            <button type="button" onClick={() => { onClose(); onAgencyCall(); }} className="flex w-full items-center gap-3 rounded-2xl border border-[#F2CE6B]/25 bg-black/30 px-3 py-2.5 text-left">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#F2CE6B] to-[#ef4444] text-black"><Megaphone className="h-4 w-4" /></span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-bold text-[#F6E2A8]">Ajans Çağrısı</span>
+                <span className="block text-[11px] text-[#F6E2A8]/60">Herkesi bu odaya davet et.</span>
+              </span>
+            </button>
+          )}
+          {onShare && (
+            <button type="button" onClick={() => { onClose(); onShare(); }} className="flex w-full items-center gap-3 rounded-2xl border border-[#F2CE6B]/25 bg-black/30 px-3 py-2.5 text-left">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#F2CE6B] to-[#ef4444] text-black"><Share2 className="h-4 w-4" /></span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-bold text-[#F6E2A8]">Yayını paylaş</span>
+                <span className="block text-[11px] text-[#F6E2A8]/60">Seçtiğin kişilere yayın daveti gönder.</span>
+              </span>
+            </button>
+          )}
         </div>
       </div>
     </div>
