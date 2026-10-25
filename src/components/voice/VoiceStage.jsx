@@ -53,9 +53,13 @@ export default function VoiceStage({ scrollRef, handlers, room, hiddenAnnounce, 
     // kart son satırın (sayı şeritlerinin) altında durur. Kart kendi yerleşiminde kalır,
     // yalnızca yukarı taşınır — koltukların yeri ve boyutu değişmez.
     frame.style.setProperty('--voice-board-lift', `${free}px`);
+    // Taşan son satırda da sayaç numaraların altından başlasın.
+    const timerOffset = gridBox.getBoundingClientRect().bottom - box.getBoundingClientRect().bottom;
+    frame.style.setProperty('--voice-board-offset', `${timerOffset}px`);
     return () => {
       frame.style.removeProperty('--voice-seat-free');
       frame.style.removeProperty('--voice-board-lift');
+      frame.style.removeProperty('--voice-board-offset');
     };
   }, [measured?.height, gridMeasured?.height, grid.seats?.length, grid.boardActive, room?.password]);
 
@@ -84,7 +88,7 @@ export default function VoiceStage({ scrollRef, handlers, room, hiddenAnnounce, 
           <HiddenUserMarquee active={hiddenAnnounce.active} name={hiddenAnnounce.name} />
         </div>
       </div>
-      <VoiceBoardTimer active={grid.boardActive} startedAt={grid.boardStartedAt} raise={[8, 12, 15].includes(total)} />
+      <VoiceBoardTimer active={grid.boardActive} startedAt={grid.boardStartedAt} />
       <div className="pointer-events-none relative z-20 h-0 shrink-0" style={{ top: 'calc(-1 * var(--voice-board-lift, 0px))' }}>
         <VipRoomEntrance roomId={room?.id} inline />
       </div>
