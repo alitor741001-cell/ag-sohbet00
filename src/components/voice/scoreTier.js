@@ -8,16 +8,13 @@ export const scoreTier = (value) => {
   return 'default';
 };
 
-// Koltuk tablosu: 999K → 1M; milyonlarda en fazla dört anlamlı rakam.
-// Tam değer korunur; yalnızca ekrandaki gösterim aşağı doğru kısaltılır.
+// Koltuk tablosu: binlerde iki, milyonlarda üç ondalık basamak.
+// Tam değer korunur; eşik geçilmeden üst birime yuvarlanmaz.
 export const formatSeatScore = (value) => {
   const n = Math.max(0, Math.round(Number(value) || 0));
   if (n < 1000) return String(n);
-  if (n < 1000000) return `${Math.floor(n / 1000)}K`;
-  const digits = Math.max(0, 4 - String(Math.floor(n / 1000000)).length);
-  const step = 1000000 / 10 ** digits;
-  const millions = Math.floor(n / step) / 10 ** digits;
-  return `${Number(millions.toFixed(digits))}M`;
+  if (n < 1000000) return `${(Math.floor(n / 10) / 100).toFixed(2)}K`;
+  return `${(Math.floor(n / 1000) / 1000).toFixed(3)}M`;
 };
 
 // Küsürat kısaltılır (yuvarlanmaz): 100.250k → 100.25k, 20.002.650 → 20.002M
