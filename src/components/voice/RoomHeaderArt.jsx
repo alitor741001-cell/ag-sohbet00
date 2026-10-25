@@ -57,7 +57,7 @@ export default function RoomHeaderArt({ room, onOpen, viewerCount = 0, onOpenVie
       </button>
       <button type="button" onClick={onOpenViewers} aria-label={`İzleyiciler: ${viewerCount}`} className="rounded-full bg-transparent p-0" style={pct(440, 60, 82, 78)} />
       <span className="pointer-events-none flex items-center justify-end overflow-hidden" style={pct(443, 80, 44, 34)}>
-        <span className="max-w-full bg-background whitespace-nowrap text-right font-bold leading-none tabular-nums text-white" style={{ fontSize: `${Math.min(3.8, 8.5 / String(viewerCount).length)}cqw` }}>{viewerCount}</span>
+        <span className="max-w-full bg-transparent whitespace-nowrap text-right font-bold leading-none tabular-nums text-white" style={{ fontSize: `${Math.min(3.8, 8.5 / String(viewerCount).length)}cqw` }}>{viewerCount}</span>
       </span>
       <button type="button" onClick={onOpenMenu} aria-label="Oda menüsü" className="rounded-full" style={pct(530, 60, 78, 78)} />
       <button type="button" onClick={onExit} aria-label="Odadan çık" className="rounded-full" style={pct(614, 60, 78, 78)} />
