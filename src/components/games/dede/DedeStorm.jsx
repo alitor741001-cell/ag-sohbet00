@@ -17,7 +17,8 @@ export default function DedeStorm({ orbs, spinKey, rolling, grid, tone = 'red' }
   useEffect(() => () => clearTimeout(timer.current), []);
   if (!impact) return null;
   const { cols, rows, cue } = impact;
-  const stormTone = impact.tone === 'blue' ? 'blue' : 'red';
+  // Kazanç bilgisi inişten sonra gelir; rengi ilk iniş anındaki değere kilitleme.
+  const stormTone = tone === 'blue' ? 'blue' : 'red';
   return (
     <svg key={cue} className={`dede-storm dede-title ${stormTone === 'blue' ? 'dede-storm-blue' : 'dede-storm-red'}`} viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true">
       <rect width="1000" height="1000" fill="currentColor" opacity="0.16" />

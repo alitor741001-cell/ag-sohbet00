@@ -25,8 +25,9 @@ const WIN_FLASH_MS = 2400;
 export default function DedeGame({ onExit, onBack }) {
   const game = useDedeGame();
   const strikeOrbs = useDedeVisibleOrbs(game.grid, game.rolling);
-  // Şimşek rengi: çarpan küresi indiğinde (patladığında) mavi, çarpansız vuruşta kırmızı.
-  const strikeTone = (game.orbs || []).length > 0 ? 'blue' : 'red';
+  // Kazanan nesnelerle aynı dizilimde çarpan varsa mavi; yalnızca çarpan inmesi kırmızı.
+  const hasExplodingSymbols = (game.wins || []).some(win => !win.scatter && win.cells?.length > 0);
+  const strikeTone = hasExplodingSymbols && (strikeOrbs.length > 0 || (game.orbs || []).length > 0) ? 'blue' : 'red';
   const [coinOpen, setCoinOpen] = useState(false);
   const [flash, setFlash] = useState(0);
   const [prize, setPrize] = useState(null);
