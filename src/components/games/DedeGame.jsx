@@ -26,7 +26,7 @@ export default function DedeGame({ onExit, onBack }) {
   const game = useDedeGame();
   const strikeOrbs = useDedeVisibleOrbs(game.grid, game.rolling);
   // Şimşek rengi: çarpan küresi indiğinde (patladığında) mavi, çarpansız vuruşta kırmızı.
-  const strikeTone = (game.orbs || []).length > 0 ? 'blue' : 'red';
+  const strikeTone = strikeOrbs.length > 0 || (game.orbs || []).length > 0 ? 'blue' : 'red';
   const [coinOpen, setCoinOpen] = useState(false);
   const [flash, setFlash] = useState(0);
   const [prize, setPrize] = useState(null);
