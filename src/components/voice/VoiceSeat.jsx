@@ -84,11 +84,7 @@ function VoiceSeat({ seat, index, size = 'md', musicPlaying, speaking, isSelf, i
           <span className="gift-pop pointer-events-none absolute -top-5 left-1/2 z-30 -translate-x-1/2 text-lg leading-none">{gifted}</span>
         )}
       </span>
-      {/* Dolu koltukta alt şeritteki rakam görünmez; yeri korunur ki ızgara kaymasın.
-          Boş koltuğun numarası görünmeye devam eder. */}
-      {boardActive && (
-        <span className="invisible" aria-hidden="true"><VoiceSeatScore value={score} size={size} /></span>
-      )}
+      {boardActive && <VoiceSeatScore value={score} size={size} />}
       <VoiceSeatName name={seat.name} fullName={fullName} width={nameSpace} hidden={hidden} isOwner={isOwner} isMod={isMod} color={gifted ? accent : nameTheme?.accent || '#ffffff'} />
     </button>
   );

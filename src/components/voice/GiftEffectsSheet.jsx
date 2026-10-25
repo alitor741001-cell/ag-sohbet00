@@ -1,4 +1,5 @@
 import { ArrowUpDown, Gift, Megaphone, Sparkles, X } from 'lucide-react';
+import NoiseSuppressionSetting from '@/components/voice/NoiseSuppressionSetting';
 
 /** Tek ayar satırı: solda simge, ortada başlık ve açıklama, sağda açma/kapama anahtarı. */
 function ToggleRow({ icon: Icon, title, hint, enabled, onToggle }) {
@@ -42,6 +43,7 @@ export default function GiftEffectsSheet({ open, onClose, enabled, onToggle, swi
         </div>
 
         <div className="space-y-2">
+          <NoiseSuppressionSetting />
           <ToggleRow
             icon={Gift}
             title="Hediye efektleri"

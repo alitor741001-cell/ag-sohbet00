@@ -2,7 +2,19 @@
 // Böylece film odası ↔ sesli sohbet geçişlerinde tarayıcı tekrar izin sormaz.
 const RELEASE_MS = 30000;
 // Yankı önleme tek kanal yakalamada daha iyi çalışır: film sesi ve konuşma mikrofona kaçmaz.
-const CONSTRAINTS = { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: { ideal: 1 } };
+const CONSTRAINTS = { echoCancellation: true, channelCount: { ideal: 1 } };
+const NOISE_KEY = 'ag_voice_noise_suppression';
+export const getMicNoiseSuppression = () => localStorage.getItem(NOISE_KEY) !== 'off';
+export const supportsMicNoiseSuppression = () => Boolean(navigator.mediaDevices?.getSupportedConstraints?.().noiseSuppression);
+const noiseConstraints = (enabled) => ({ ...CONSTRAINTS, noiseSuppression: enabled, autoGainControl: !enabled });
+
+/** Mevcut yayını kesmeden mikrofon işlemesini güncelle; sonraki odalarda da koru. */
+export async function setMicNoiseSuppression(enabled) {
+  if (!supportsMicNoiseSuppression()) throw new Error('Bu tarayıcı gürültü engellemeyi desteklemiyor.');
+  const track = sharedTrack || (acquiring ? await acquiring : null);
+  if (track?.readyState === 'live') await track.applyConstraints(noiseConstraints(enabled));
+  localStorage.setItem(NOISE_KEY, enabled ? 'on' : 'off');
+}
 
 let sharedTrack = null;
 let acquiring = null;
@@ -15,7 +27,7 @@ export async function sharedMicTrack() {
   if (sharedTrack && sharedTrack.readyState === 'live') return sharedTrack;
   if (acquiring) return acquiring;
   acquiring = navigator.mediaDevices
-    .getUserMedia({ audio: CONSTRAINTS })
+    .getUserMedia({ audio: noiseConstraints(getMicNoiseSuppression()) })
     .then((stream) => {
       sharedTrack = stream.getAudioTracks()[0] || null;
       acquiring = null;
