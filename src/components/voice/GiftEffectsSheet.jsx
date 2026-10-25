@@ -45,7 +45,6 @@ export default function GiftEffectsSheet({ open, onClose, enabled, onToggle, swi
         </div>
 
         <div className="space-y-2">
-          <NoiseSuppressionSetting Row={ToggleRow} />
           <ToggleRow
             icon={Gift}
             title="Hediye efektleri"
@@ -71,6 +70,7 @@ export default function GiftEffectsSheet({ open, onClose, enabled, onToggle, swi
               </span>
             </button>
           )}
+          <NoiseSuppressionSetting Row={ToggleRow} />
         </div>
       </div>
     </div>
