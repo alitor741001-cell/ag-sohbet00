@@ -26,6 +26,11 @@ function makeTransparent() {
           d[i] = Math.max(0, Math.min(255, (d[i] - 255 * (1 - k)) / k));
           d[i + 1] = Math.max(0, Math.min(255, (d[i + 1] - 255 * (1 - k)) / k));
           d[i + 2] = Math.max(0, Math.min(255, (d[i + 2] - 255 * (1 - k)) / k));
+          // Şeffaflığı koruyarak koltuk çiziminin kabartmasını buz mavisine boya.
+          const shade = 0.65 + 0.35 * (0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2]) / 255;
+          d[i] = Math.round(165 * shade);
+          d[i + 1] = Math.round(225 * shade);
+          d[i + 2] = Math.round(250 * shade);
           d[i + 3] = a;
         }
         ctx.putImageData(data, 0, 0);

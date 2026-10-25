@@ -2,20 +2,22 @@ import { ArrowUpDown, Gift, Megaphone, Sparkles, X } from 'lucide-react';
 import NoiseSuppressionSetting from '@/components/voice/NoiseSuppressionSetting';
 
 /** Tek ayar satırı: solda simge, ortada başlık ve açıklama, sağda açma/kapama anahtarı. */
-function ToggleRow({ icon: Icon, title, hint, enabled, onToggle }) {
+function ToggleRow({ icon: Icon, title, hint, enabled, onToggle, disabled = false, busy = false }) {
   return (
     <button
       type="button"
       onClick={() => onToggle(!enabled)}
       aria-pressed={enabled}
-      className="flex w-full items-center gap-3 rounded-2xl border border-[#F2CE6B]/25 bg-black/30 px-3 py-2.5 text-left"
+      aria-busy={busy}
+      disabled={disabled}
+      className="flex w-full items-center gap-3 rounded-2xl border border-[#F2CE6B]/25 bg-black/30 px-3 py-2.5 text-left disabled:opacity-50"
     >
       <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${enabled ? 'bg-gradient-to-br from-[#F2CE6B] to-[#ef4444] text-black' : 'bg-white/10 text-[#F2CE6B]'}`}>
-        <Icon className="h-4 w-4" />
+        <Icon className={`h-4 w-4 ${busy ? 'animate-spin' : ''}`} />
       </span>
       <span className="min-w-0 flex-1">
         <span className="block text-sm font-bold text-[#F6E2A8]">{title}</span>
-        <span className="block text-[11px] text-[#F6E2A8]/60">{hint}</span>
+        {hint && <span className="block text-[11px] text-[#F6E2A8]/60">{hint}</span>}
       </span>
       <span className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${enabled ? 'bg-[#ef4444]' : 'bg-white/15'}`}>
         <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-[#F2CE6B] transition-all ${enabled ? 'left-[22px]' : 'left-0.5'}`} />
@@ -43,7 +45,7 @@ export default function GiftEffectsSheet({ open, onClose, enabled, onToggle, swi
         </div>
 
         <div className="space-y-2">
-          <NoiseSuppressionSetting />
+          <NoiseSuppressionSetting Row={ToggleRow} />
           <ToggleRow
             icon={Gift}
             title="Hediye efektleri"
