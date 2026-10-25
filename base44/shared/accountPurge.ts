@@ -50,9 +50,9 @@ export async function purgeAccount(base44: any, opts: {
     try {
       await base44.asServiceRole.integrations.Core.SendEmail({
         to: email,
-        subject: subject || 'Hesabınız Silinmiştir - FILMKEYFİ',
+        subject: subject || 'Hesabınız Silinmiştir - AG SOHBET',
         body: accountDeletedEmail({ name: name || email }),
-        from_name: 'FILMKEYFİ',
+        from_name: 'AG SOHBET',
       });
     } catch (e) { console.error('[purge-account email error]', e?.message || String(e)); }
   }

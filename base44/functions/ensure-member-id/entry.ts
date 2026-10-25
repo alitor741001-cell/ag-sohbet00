@@ -43,8 +43,8 @@ export default async function(req) {
       const displayName = me.username || me.full_name || 'Kullanıcı';
       await base44.asServiceRole.integrations.Core.SendEmail({
         to: me.email,
-        from_name: 'FILMKEYFİ',
-        subject: 'FILMKEYFİ - Üyeliğiniz Aktif Edilmiştir',
+        from_name: 'AG SOHBET',
+        subject: 'AG SOHBET - Üyeliğiniz Aktif Edilmiştir',
         body: membershipEmail({ name: displayName, status: 'active' }),
       });
     }
