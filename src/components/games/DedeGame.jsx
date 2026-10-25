@@ -1,10 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ChevronLeft, HelpCircle, X, Zap } from 'lucide-react';
+import { Zap } from 'lucide-react';
 import '@/styles/dede.css';
 import '@/styles/gameControls.css';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
-import { Image } from '@/components/ui/image';
-import useCutoutImage from '@/lib/cutoutImage';
+import DedeHeader from '@/components/games/dede/DedeHeader';
+import DedeStorm from '@/components/games/dede/DedeStorm';
+import '@/components/games/dede/dedeWizard.css';
 import useDedeGame from './dede/useDedeGame';
 import DedeReels from './dede/DedeReels';
 import DedeHud from './dede/DedeHud';
@@ -14,7 +15,7 @@ import GameSpinButton from './controls/GameSpinButton';
 import DedeWinOverlay from './dede/DedeWinOverlay';
 import DedeMultiplierCircle from './dede/DedeMultiplierCircle';
 import DedeOrbMerge from './dede/DedeOrbMerge';
-import { DEDE_DEITY } from './dede/dedeAssets';
+
 import { DEDE_LINES, formatCoins } from './dede/dedeConfig';
 
 const WIN_FLASH_MS = 2400;
@@ -29,8 +30,7 @@ export default function DedeGame({ onExit, onBack }) {
   // Kazanç yazısının kapanma sayacı: yeni tur başlasa da çalışmaya devam eder.
   const flashTimer = useRef(null);
   const ready = game.status === 'ready';
-  // Siyah zemini tarayıcıda gerçek zamanlı kesilmiş dede karakteri.
-  const deity = useCutoutImage(DEDE_DEITY);
+
 
   // Tur sonucu: büyük kazançta kutlama ekranı, küçük kazançta kısa parıltı.
   useEffect(() => {
@@ -56,45 +56,7 @@ export default function DedeGame({ onExit, onBack }) {
   return (
     <div className="dede-sky relative flex h-full min-h-0 w-full flex-col overflow-hidden">
       <span aria-hidden="true" className="dede-rays" />
-      {deity && (
-        <Image
-          src={deity}
-          alt=""
-          aria-hidden="true"
-          fittingType="fit"
-          originWidth={1024}
-          originHeight={1024}
-          className="dede-deity"
-        />
-      )}
-
-      <header className="relative z-10 flex shrink-0 items-center gap-2 px-3 pt-[max(0.5rem,env(safe-area-inset-top))]">
-        <button type="button" onClick={onBack} aria-label="Oyun listesine dön" className="gctl-pill gctl-icon">
-          <ChevronLeft className="h-5 w-5" />
-        </button>
-        <div className="min-w-0 flex-1 text-center">
-          <p className="dede-title text-lg">DEDE</p>
-          <p className="text-[9px] font-black tracking-[0.14em] text-[#ffe9a8]/80">
-            ÇARPAN KÜRELERİ · 4+ SCATTER 15 ÇEVİRME HAKKI
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => setHelpOpen(true)}
-          aria-label="Nasıl oynanır"
-          className="gctl-pill gctl-icon"
-        >
-          <HelpCircle className="h-5 w-5" />
-        </button>
-        <button
-          type="button"
-          onClick={onExit}
-          aria-label="Oyunu kapat"
-          className="gctl-pill gctl-icon ring-1 ring-[#ffd35c]/50"
-        >
-          <X className="h-5 w-5" />
-        </button>
-      </header>
+      <DedeHeader onBack={onBack} onHelp={() => setHelpOpen(true)} orbs={game.orbs} spinKey={game.spinKey} rolling={game.rolling} />
 
       <main className="relative z-10 flex min-h-0 flex-1 flex-col items-center gap-1 px-0 py-1">
         {/* Izgara ekranın kalan tüm alanını kaplar: madalyonlar olabildiğince büyük durur. */}
@@ -117,6 +79,7 @@ export default function DedeGame({ onExit, onBack }) {
                 grid={game.grid}
                 explode={game.explode}
               />
+              <DedeStorm orbs={game.orbs} spinKey={game.spinKey} rolling={game.rolling} grid={game.grid} />
             </div>
           </div>
         </div>

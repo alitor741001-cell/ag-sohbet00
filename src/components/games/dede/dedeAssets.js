@@ -6,8 +6,9 @@ export const DEDE_COVER = `${MEDIA_BASE}/9a29944a2_generated_image.png`;
 export const DEDE_COVER_WIDTH = 1024;
 export const DEDE_COVER_HEIGHT = 1024;
 
-// Sahnede çerçevenin arkasında duran dede karakteri (siyah zemini tarayıcıda kesilir).
-export const DEDE_DEITY = `${MEDIA_BASE}/8484dbf0d_generated_image.png`;
+// Referans fotoğraftan oluşturulan gerçek alfa kanallı karakter ve bağımsız asa.
+export const DEDE_DEITY = `${MEDIA_BASE}/1b33c80ee_generated_6378ea70.png`;
+export const DEDE_STAFF = `${MEDIA_BASE}/c134764c7_generated_9337375d.png`;
 
 // Sembol kartları: gönderilen referans tasarımdaki nesnelerin birebir aynısı —
 // taç, kum saati, yüzük, kupa, elmas ve yakut yıldız; bonus kartı Zeus kabartmasıdır.

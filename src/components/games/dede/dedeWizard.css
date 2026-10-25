@@ -1,0 +1,52 @@
+.dede-header { min-height: clamp(8rem, 19dvh, 11rem); }
+.dede-header-copy { padding-right: 30%; padding-bottom: .75rem; }
+.dede-header-subtitle { color: inherit; opacity: .8; }
+.dede-wizard { position: absolute; top: max(.25rem, env(safe-area-inset-top)); right: .5rem; bottom: 0; width: 30%; max-width: 8rem; pointer-events: none; color: inherit; }
+.dede-wizard-pose { position: relative; width: 100%; height: 100%; }
+.dede-wizard-body, .dede-wizard-grip { position: absolute; inset: 0; width: 100%; height: 100%; }
+.dede-wizard-body { filter: drop-shadow(0 0 .4rem currentColor); }
+.dede-wizard-staff-position { position: absolute; inset: 0; transform: translateX(-33%); }
+.dede-wizard-staff { display: block; width: 100%; height: 100%; transform-origin: 50% 46%; }
+.dede-wizard-grip { clip-path: polygon(3% 38%, 29% 38%, 29% 55%, 3% 55%); }
+.dede-wizard-striking .dede-wizard-staff { animation: dede-staff-slam .9s ease-out both; }
+.dede-wizard-striking .dede-wizard-body, .dede-wizard-striking .dede-wizard-grip { animation: dede-wizard-brace .9s ease-out both; }
+.dede-wizard-impact { position: absolute; left: -30%; bottom: -2%; width: 78%; height: 17%; border: 2px solid currentColor; border-radius: 50%; opacity: 0; box-shadow: 0 0 .7rem currentColor, inset 0 0 .5rem currentColor; animation: dede-staff-impact .6s .28s ease-out both; }
+@keyframes dede-staff-slam {
+  0% { transform: translateY(0) rotate(0); }
+  24% { transform: translateY(-11%) rotate(-9deg); }
+  34% { transform: translateY(3%) rotate(2deg); }
+  46% { transform: translateY(-1%) rotate(-1deg); }
+  65%, 100% { transform: translateY(0) rotate(0); }
+}
+@keyframes dede-wizard-brace {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  24% { transform: translateY(-2%) rotate(1deg); }
+  34% { transform: translateY(2%) rotate(-1deg); }
+  60% { transform: translateY(0) rotate(0); }
+}
+@keyframes dede-staff-impact {
+  0% { opacity: 0; transform: scale(.2); }
+  12% { opacity: 1; }
+  100% { opacity: 0; transform: scale(1.8); }
+}
+.dede-storm { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 8; pointer-events: none; overflow: visible; opacity: 0; animation: dede-storm-impact .65s .28s ease-out both; }
+.dede-storm-edges { filter: drop-shadow(0 0 4px currentColor); }
+.dede-storm-edge-glow { stroke-width: 5; opacity: .4; }
+.dede-storm-edge-core { stroke-width: 1.5; }
+.dede-storm-bolts { filter: drop-shadow(0 0 6px currentColor); }
+@keyframes dede-storm-impact {
+  0% { opacity: 0; }
+  12%, 65% { opacity: 1; }
+  100% { opacity: 0; }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .dede-header { min-height: 5.25rem; }
+  .dede-header > div:first-child { flex-direction: row; }
+  .dede-wizard { width: 18%; }
+  .dede-header-copy { padding-right: 18%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dede-wizard-striking .dede-wizard-staff, .dede-wizard-striking .dede-wizard-body, .dede-wizard-striking .dede-wizard-grip { animation: none; }
+  .dede-wizard-impact, .dede-storm-bolts { display: none; }
+  .dede-storm { animation: none; opacity: .5; }
+}
