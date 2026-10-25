@@ -98,6 +98,8 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
                       cosmeticChoice={occupied ? seatCosmetics[seat.user_id] : null}
                       musicPlaying={occupied && seat.user_id === musicOwnerId}
                       size={seatSize}
+                      fullName={[1, 2, 5].includes(seats.length)}
+                      nameSpace={row.length === 1 ? available : ({ xs: 42, sm: 52, md: 68, lg: 88, xl: 96 }[seatSize] + gap - 4)}
                       isSelf={occupied && seat.user_id === userId}
                       isOwner={occupied && seat.user_id === ownerId}
                       isMod={occupied && moderators.includes(seat.user_id)}

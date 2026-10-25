@@ -9,6 +9,7 @@ import VoiceSpeakingWave from '@/components/voice/VoiceSpeakingWave';
 import { vipLook } from '@/components/vip/vipTheme';
 import SeatArt from '@/components/voice/SeatArt';
 import VoiceSeatScore from '@/components/voice/VoiceSeatScore';
+import VoiceSeatName from '@/components/voice/VoiceSeatName';
 
 // Her koltuk aynı boyutta sabit bir portre alanı kullanır: profil boyutu değişse de
 // ızgara kaymaz, çerçeveler komşu koltuğa taşmaz.
@@ -21,7 +22,7 @@ const BADGE = { xs: 'translate-x-[3px] translate-y-[3px]', sm: 'translate-x-[5px
 const NAME = { xs: 'max-w-[42px]', sm: 'max-w-[52px]', md: 'max-w-[68px]', lg: 'max-w-[88px]', xl: 'max-w-[96px]' };
 
 /** Tek koltuk: boş koltukta + ve numara, dolu koltukta profil görseli ve isim. */
-function VoiceSeat({ seat, index, size = 'md', musicPlaying, speaking, isSelf, isOwner, isMod, accent = '#ef4444', gifted, onClick, onSelect, micMuted, profile, cosmeticChoice, boardActive = false, score = 0 }) {
+function VoiceSeat({ seat, index, size = 'md', musicPlaying, speaking, isSelf, isOwner, isMod, accent = '#ef4444', gifted, onClick, onSelect, micMuted, profile, cosmeticChoice, boardActive = false, score = 0, fullName = false, nameSpace }) {
   const handleClick = onSelect ? () => onSelect(index) : onClick;
   const cell = CELL[size] || CELL.md;
   const face = FACE[size] || FACE.md;
@@ -66,7 +67,7 @@ function VoiceSeat({ seat, index, size = 'md', musicPlaying, speaking, isSelf, i
     <button
       type="button"
       onClick={handleClick}
-      className="flex flex-col items-center gap-1 active:scale-95 transition-transform"
+      className={`flex ${cell.split(' ')[1]} flex-col items-center gap-1 active:scale-95 transition-transform`}
       aria-label={`${seat.name || 'Koltuk'}${muted ? ', mikrofon kapalı' : ''}`}
     >
       <span className={`relative flex ${cell} shrink-0 items-center justify-center`}>
@@ -88,11 +89,7 @@ function VoiceSeat({ seat, index, size = 'md', musicPlaying, speaking, isSelf, i
       {boardActive && (
         <span className="invisible" aria-hidden="true"><VoiceSeatScore value={score} size={size} /></span>
       )}
-      <span className={`flex h-3 ${nameWidth} items-center gap-0.5 truncate text-[10px] leading-none`} style={{ color: gifted ? accent : nameTheme?.accent || '#ffffff' }}>
-        {!hidden && isOwner && <Crown className="h-3 w-3 shrink-0 text-amber-400" />}
-        {!hidden && !isOwner && isMod && <Shield className="h-3 w-3 shrink-0 text-sky-400" />}
-        <span className={`truncate ${hidden ? 'hidden-user-name' : ''}`}>{seat.name}</span>
-      </span>
+      <VoiceSeatName name={seat.name} fullName={fullName} width={nameSpace} hidden={hidden} isOwner={isOwner} isMod={isMod} color={gifted ? accent : nameTheme?.accent || '#ffffff'} />
     </button>
   );
 }
