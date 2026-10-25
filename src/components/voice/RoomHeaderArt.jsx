@@ -13,7 +13,7 @@ const PORTRAIT = { cx: 74.5, cy: 84, r: 38 };
 // Örnek isim, ID, hediye sayısı ve izleyici sayısı görselden silinir.
 const CROP = {
   top: 0, height: H / 1007, baseWidth: W,
-  erase: [[132, 52, 100, 36], [132, 90, 145, 24], [165, 138, 60, 34], [488, 84, 26, 30]],
+  erase: [[132, 52, 100, 36], [132, 90, 145, 24], [156, 133, 104, 42], [488, 84, 26, 30]],
   holes: [[PORTRAIT.cx, PORTRAIT.cy, PORTRAIT.r]],
 };
 // Toplam hediye: her zaman 4 rakam — 1.234M, 12.34M, 123.4M; milyardan sonra B (1.234B ...).
@@ -52,8 +52,8 @@ export default function RoomHeaderArt({ room, onOpen, viewerCount = 0, onOpenVie
         <RoomNameMarquee text={room?.name || 'Oda'} className="w-full shrink-0 !py-0 text-[3.65cqw] font-bold leading-[1.2] text-white" />
         {memberId && <span className="flex shrink-0 items-center gap-1 text-[2.7cqw] leading-[1.2] tabular-nums text-white/75">ID:{memberId}<span className="h-[1.4cqw] w-[1.4cqw] shrink-0 rounded-full bg-emerald-400" /></span>}
       </button>
-      <button type="button" onClick={onOpenGifts} aria-label="Hediye sıralaması" className="flex items-center text-left" style={pct(60, 138, 300, 36)}>
-        <span className="ml-[37%] text-[clamp(13px,4.2vw,20px)] font-bold tabular-nums text-white">{score}</span>
+      <button type="button" onClick={onOpenGifts} aria-label="Hediye sıralaması" className="flex items-center justify-center overflow-hidden" style={pct(156, 133, 104, 42)}>
+        <span className="truncate text-[3.8cqw] font-bold leading-none tabular-nums text-white">{score}</span>
       </button>
       <button type="button" onClick={onOpenViewers} aria-label="İzleyiciler" className="rounded-full" style={pct(440, 60, 82, 78)} />
       <span className="pointer-events-none flex items-center justify-center text-[clamp(12px,3.8vw,18px)] font-bold leading-none tabular-nums text-white" style={pct(486, 84, 30, 30)}>{viewerCount}</span>
