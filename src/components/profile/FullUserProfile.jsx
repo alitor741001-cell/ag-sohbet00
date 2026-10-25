@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, ChevronRight, Loader2, MessageSquare, Mic2, MicOff, Settings, UserPlus } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Loader2, MessageSquare, Mic2, MicOff, Settings } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import subscribeEntity from '@/components/data/entitySubscriptions';
 import { useToast } from '@/components/ui/use-toast';
@@ -11,7 +11,7 @@ import { agencyApi } from '@/lib/agency';
 import FantasyProfileShell from '@/components/profile/FantasyProfileShell';
 import ProfileStatsRow from '@/components/profile/ProfileStatsRow';
 import ProfileIdentityBlock from '@/components/profile/ProfileIdentityBlock';
-import FollowButton from '@/components/profile/social/FollowButton';
+import ProfileSocialRow from '@/components/profile/social/ProfileSocialRow';
 import { AccountStatusMark, ACCOUNT_MARKS, ACCOUNT_STATES, getAccountState } from '@/components/friends/AccountStatusAvatar';
 import { broadcasterState } from '@/lib/broadcaster';
 import { useRoomProfileActions } from '@/lib/roomProfileActions';
@@ -143,16 +143,6 @@ export default function FullUserProfile({
     }
   };
 
-  const addFriend = async () => {
-    try {
-      await base44.functions.invoke('friend-service', { action: 'request', user_id: userId });
-      setRelation('pending');
-      toast({ title: 'Arkadaşlık isteği gönderildi' });
-    } catch (error) {
-      toast({ title: 'İşlem başarısız', description: error.response?.data?.error || error.message, variant: 'destructive' });
-    }
-  };
-
   const openChat = () => {
     if (isSelf) return;
     if (room?.message) { room.message(userId); onClose?.(); return; }
@@ -251,29 +241,15 @@ export default function FullUserProfile({
 
       {showSocial && (
         <div className="space-y-1.5">
-          <FollowButton userId={userId} accent={palette.accent} compact />
-          <div className="flex items-stretch gap-1.5">
-            {relation !== 'friend' && (
-              <button
-                type="button"
-                onClick={addFriend}
-                disabled={relation === 'pending'}
-                className="flex min-w-0 flex-1 items-center justify-center gap-1 rounded-xl border-2 px-2 py-2 text-[11px] font-black text-white disabled:opacity-60"
-                style={{ borderColor: palette.accent, background: palette.soft, boxShadow: `0 0 16px -8px ${palette.glow}` }}
-              >
-                <UserPlus className="h-3.5 w-3.5 shrink-0" />
-                <span className="truncate">{relation === 'pending' ? 'İstek Gönderildi' : 'Arkadaş Ekle'}</span>
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={openChat}
-              className="flex min-w-0 flex-1 items-center justify-center gap-1 rounded-xl border-2 px-2 py-2 text-[11px] font-black text-white"
-              style={{ borderColor: palette.accent2, background: 'rgba(0,0,0,0.5)', boxShadow: `0 0 16px -8px ${palette.glow}` }}
-            >
-              <MessageSquare className="h-3.5 w-3.5 shrink-0" /> Mesaj Yaz
-            </button>
-          </div>
+          <ProfileSocialRow userId={userId} accent={palette.accent} />
+          <button
+            type="button"
+            onClick={openChat}
+            className="flex w-full min-w-0 items-center justify-center gap-1 rounded-xl border-2 px-2 py-2 text-[11px] font-black text-white"
+            style={{ borderColor: palette.accent2, background: 'rgba(0,0,0,0.5)', boxShadow: `0 0 16px -8px ${palette.glow}` }}
+          >
+            <MessageSquare className="h-3.5 w-3.5 shrink-0" /> Mesaj Yaz
+          </button>
           {canInvite && (
             <button
               type="button"
