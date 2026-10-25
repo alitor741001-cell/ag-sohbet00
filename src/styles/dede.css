@@ -209,6 +209,19 @@
   filter: drop-shadow(0 0 10px rgba(255, 242, 168, 1));
   animation: dede-strike-bolt 1.25s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
 }
+/* Şimşek rengi: patlamayan çarpanda kırmızı, patlayan vuruşta mavi. */
+.dede-strike-red .dede-strike-bolt path { fill: #ffd9d6; stroke: #ff8a80; }
+.dede-strike-red .dede-strike-flash {
+  background: radial-gradient(circle at 50% 55%, rgba(255, 170, 160, 0.9), rgba(255, 70, 60, 0.5) 46%, rgba(255, 40, 30, 0) 74%);
+  box-shadow: 0 0 22px rgba(255, 90, 80, 0.9), inset 0 0 18px rgba(255, 60, 50, 0.6);
+}
+.dede-strike-red .dede-strike-bolt { filter: drop-shadow(0 0 10px rgba(255, 90, 80, 1)); }
+.dede-strike-blue .dede-strike-bolt path { fill: #d9f4ff; stroke: #7fd8ff; }
+.dede-strike-blue .dede-strike-flash {
+  background: radial-gradient(circle at 50% 55%, rgba(170, 226, 255, 0.9), rgba(60, 170, 255, 0.5) 46%, rgba(30, 130, 255, 0) 74%);
+  box-shadow: 0 0 22px rgba(90, 190, 255, 0.9), inset 0 0 18px rgba(60, 160, 255, 0.6);
+}
+.dede-strike-blue .dede-strike-bolt { filter: drop-shadow(0 0 10px rgba(90, 190, 255, 1)); }
 @keyframes dede-strike-life {
   0% { opacity: 0; }
   4% { opacity: 1; }

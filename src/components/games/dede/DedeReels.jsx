@@ -12,7 +12,7 @@ const renderDede = (id) => {
 };
 
 /** Tek makara: gerçek makara gibi döner, sonuç gelince sırası geldiğinde durur. */
-function DedeColumn({ reel, column, landing, rolling, spinKey, drops, winCells, explodeCells, strikeCells, explode }) {
+function DedeColumn({ reel, column, landing, rolling, spinKey, drops, winCells, explodeCells, strikeCells, strikeTone, explode }) {
   return (
     <div className="dede-column min-w-0 flex-1 p-[2px] sm:p-1">
       {rolling && (
@@ -43,7 +43,7 @@ function DedeColumn({ reel, column, landing, rolling, spinKey, drops, winCells, 
                 explode={!!explode && explodeCells.has(key)}
               />
             )}
-            {strikeCells.has(key) && <DedeStrike className="dede-strike-cell" />}
+            {strikeCells.has(key) && <DedeStrike className="dede-strike-cell" tone={strikeTone} />}
           </span>
         );
       })}
@@ -55,7 +55,7 @@ function DedeColumn({ reel, column, landing, rolling, spinKey, drops, winCells, 
  * 6 sütun x 5 satır ızgara. Tur boyunca sütunlar kesintisiz akar ve tam sunucunun
  * dizilimine oturur; sonra kazanan karolar parlar, patlar ve yenileri düşer.
  */
-export default function DedeReels({ rolling, landing, spinKey, grid, wins, orbs, explode }) {
+export default function DedeReels({ rolling, landing, spinKey, grid, wins, orbs, strikeTone, explode }) {
   // Tur başlamadan ekranda duran süs ızgarası.
   const fallback = useMemo(() => randomGrid(), []);
   const visible = grid || fallback;
@@ -118,6 +118,7 @@ export default function DedeReels({ rolling, landing, spinKey, grid, wins, orbs,
           winCells={winCells}
           explodeCells={explodeCells}
           strikeCells={strikeCells}
+          strikeTone={strikeTone}
           explode={explode}
         />
       ))}

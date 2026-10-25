@@ -25,6 +25,8 @@ const WIN_FLASH_MS = 2400;
 export default function DedeGame({ onExit, onBack }) {
   const game = useDedeGame();
   const strikeOrbs = useDedeVisibleOrbs(game.grid, game.rolling);
+  // Şimşek rengi: patlayan kazanç varsa mavi, yalnızca çarpan parladıysa kırmızı.
+  const strikeTone = (game.wins || []).some((item) => !item.scatter) ? 'blue' : 'red';
   const [coinOpen, setCoinOpen] = useState(false);
   const [flash, setFlash] = useState(0);
   const [prize, setPrize] = useState(null);
@@ -72,6 +74,7 @@ export default function DedeGame({ onExit, onBack }) {
                 grid={game.grid}
                 wins={game.wins}
                 orbs={game.orbs}
+                strikeTone={strikeTone}
                 explode={game.explode}
               />
               {/* İnen çarpan küreleri ızgaranın ortasında birleşip patlar. */}
@@ -81,7 +84,7 @@ export default function DedeGame({ onExit, onBack }) {
                 grid={game.grid}
                 explode={game.explode}
               />
-              <DedeStorm orbs={strikeOrbs} spinKey={game.spinKey} rolling={game.rolling} grid={game.grid} />
+              <DedeStorm orbs={strikeOrbs} spinKey={game.spinKey} rolling={game.rolling} grid={game.grid} tone={strikeTone} />
             </div>
           </div>
         </div>
