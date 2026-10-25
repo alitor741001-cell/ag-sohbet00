@@ -29,7 +29,7 @@ export default function ForgotPassword() {
     <main className="blue-auth">
       <div
         className="blue-auth-stage"
-        style={{ backgroundImage: `url(${ART})`, width: "min(100vw, calc(var(--app-height, 100dvh) * 575 / 1024))", aspectRatio: "575 / 1024" }}
+        style={{ backgroundImage: `url(${ART})`, width: "max(100vw, calc(var(--app-height, 100dvh) * 575 / 1024))", flex: "none", maxWidth: "none", aspectRatio: "575 / 1024" }}
       >
         <form onSubmit={handleSubmit} className="contents">
           <input

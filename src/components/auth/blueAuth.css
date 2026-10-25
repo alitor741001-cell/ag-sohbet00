@@ -1,5 +1,5 @@
 .blue-auth { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: #02030c; overflow: hidden; }
-.blue-auth-stage { position: relative; width: min(100vw, calc(var(--app-height, 100dvh) * 682 / 1024)); aspect-ratio: 682 / 1024; background-size: 100% 100%; background-repeat: no-repeat; container-type: inline-size; }
+.blue-auth-stage { position: relative; width: max(100vw, calc(var(--app-height, 100dvh) * 682 / 1024)); flex: none; max-width: none; aspect-ratio: 682 / 1024; background-size: 100% 100%; background-repeat: no-repeat; container-type: inline-size; }
 .blue-auth-stage > * { position: absolute; }
 .blue-auth-hit { display: block; border-radius: 999px; background: transparent; color: transparent; font-size: 0; -webkit-tap-highlight-color: transparent; }
 .blue-auth-hit:active:not(:disabled) { box-shadow: 0 0 16px rgba(80, 140, 255, .9); background: rgba(80, 140, 255, .15); }
