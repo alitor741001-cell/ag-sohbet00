@@ -9,6 +9,7 @@ import VoiceSpeakingWave from '@/components/voice/VoiceSpeakingWave';
 import { vipLook } from '@/components/vip/vipTheme';
 import VoiceSeatScore from '@/components/voice/VoiceSeatScore';
 
+const EMPTY_SEAT_ART = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/eea21aae7_IMG_0309.jpg';
 // Her koltuk aynı boyutta sabit bir portre alanı kullanır: profil boyutu değişse de
 // ızgara kaymaz, çerçeveler komşu koltuğa taşmaz.
 const CELL = { xs: 'h-[42px] w-[42px]', sm: 'h-[52px] w-[52px]', md: 'h-[68px] w-[68px]', lg: 'h-[88px] w-[88px]', xl: 'h-[96px] w-[96px]' };
@@ -35,13 +36,14 @@ function VoiceSeat({ seat, index, size = 'md', musicPlaying, speaking, isSelf, i
       <button type="button" onClick={handleClick} className="flex flex-col items-center gap-1 active:scale-95 transition-transform" aria-label={`${index + 1}. koltuk`}>
         <span className={`flex ${cell} shrink-0 items-center justify-center`}>
           <span className={`relative flex ${emptyCircle} items-center justify-center`}>
-            <VoiceSeatRing className="h-full w-full" variant={index} />
-            {/* Kilit / artı işareti boş koltuğun tam ortasında durur. */}
-            <span className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
-              {seat?.locked
-                ? <Lock className="h-[50%] w-[50%]" style={{ color: seatNeon(index), filter: `drop-shadow(0 0 4px ${seatNeon(index)})` }} />
-                : <Armchair className="h-[58%] w-[58%]" strokeWidth={2.2} style={{ color: seatNeon(index), filter: `drop-shadow(0 0 4px ${seatNeon(index)}) drop-shadow(0 0 9px ${seatNeon(index)})` }} />}
+            <span className="relative block h-full w-full overflow-hidden rounded-full bg-white">
+              <img src={EMPTY_SEAT_ART} alt="" draggable={false} className="h-full w-full scale-[1.3] object-cover" />
             </span>
+            {seat?.locked && (
+              <span className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-full bg-black/45">
+                <Lock className="h-[50%] w-[50%] text-white" />
+              </span>
+            )}
             {/* Mikrofonu kendi elimle kapattığımda görünen sade rozet; mikrofonu açınca kaybolur. */}
             {micMuted && (
               <span aria-label="Mikrofon kapalı" className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full border border-white/25 bg-black/80">
