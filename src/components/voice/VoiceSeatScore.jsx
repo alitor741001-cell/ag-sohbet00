@@ -1,5 +1,5 @@
 import '@/components/voice/seatScore.css';
-import { formatScore, scoreTier } from '@/components/voice/scoreTier';
+import { formatSeatScore, scoreTier } from '@/components/voice/scoreTier';
 
 /**
  * Koltuk altı ileri sayaç: 1'den başlar, hediye geldikçe artar.
@@ -22,9 +22,9 @@ export default function VoiceSeatScore({ value = 0, size = 'md' }) {
       data-score-tier={scoreTier(shown)}
       aria-label={`${shown.toLocaleString('tr-TR')} sayaç`}
     >
-      <span className={`voice-score-ribbon flex w-full max-w-full items-center justify-center gap-0.5 overflow-hidden px-1 ${TEXT[size] || TEXT.md}`}>
-        <span key={shown} className="number-pop min-w-0 truncate font-extrabold tabular-nums leading-none">
-          {formatScore(shown)}
+      <span className={`voice-score-ribbon flex w-full max-w-full items-center justify-center px-0.5 ${TEXT[size] || TEXT.md}`}>
+        <span key={shown} className="number-pop shrink-0 whitespace-nowrap font-extrabold tabular-nums tracking-tight leading-none">
+          {formatSeatScore(shown)}
         </span>
       </span>
     </span>
