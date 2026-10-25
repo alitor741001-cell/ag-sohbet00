@@ -13,8 +13,8 @@ const PORTRAIT = { cx: 74.5, cy: 84, r: 38 };
 // Örnek isim, ID, hediye sayısı ve izleyici sayısı görselden silinir.
 const CROP = {
   top: 0, height: H / 1007, baseWidth: W,
-  erase: [[132, 52, 100, 36], [132, 90, 145, 24], [166, 140, 30, 25]],
-  holes: [[PORTRAIT.cx, PORTRAIT.cy, PORTRAIT.r], [501, 99, 16]],
+  erase: [[132, 52, 100, 36], [132, 90, 145, 24], [166, 140, 30, 25], [488, 84, 26, 30]],
+  holes: [[PORTRAIT.cx, PORTRAIT.cy, PORTRAIT.r]],
 };
 // Toplam hediye: her zaman 4 rakam — 1.234M, 12.34M, 123.4M; milyardan sonra B (1.234B ...).
 const four = (v) => { const d = v >= 1000 ? 0 : v >= 100 ? 1 : v >= 10 ? 2 : 3; const f = 10 ** d; return (Math.floor(v * f) / f).toFixed(d); };
@@ -56,7 +56,9 @@ export default function RoomHeaderArt({ room, onOpen, viewerCount = 0, onOpenVie
         <span className="whitespace-nowrap text-[3cqw] font-bold leading-none tabular-nums text-white">{score}</span>
       </button>
       <button type="button" onClick={onOpenViewers} aria-label={`İzleyiciler: ${viewerCount}`} className="rounded-full bg-transparent p-0" style={pct(440, 60, 82, 78)} />
-      <span className="pointer-events-none flex items-center justify-center whitespace-nowrap font-bold leading-none tabular-nums text-white" style={{ ...pct(486, 84, 30, 30), fontSize: `${Math.min(3.8, 4 / String(viewerCount).length)}cqw` }}>{viewerCount}</span>
+      <span className="pointer-events-none flex items-center justify-end overflow-hidden" style={pct(443, 80, 44, 34)}>
+        <span className="max-w-full bg-background whitespace-nowrap text-right font-bold leading-none tabular-nums text-white" style={{ fontSize: `${Math.min(3.8, 8.5 / String(viewerCount).length)}cqw` }}>{viewerCount}</span>
+      </span>
       <button type="button" onClick={onOpenMenu} aria-label="Oda menüsü" className="rounded-full" style={pct(530, 60, 78, 78)} />
       <button type="button" onClick={onExit} aria-label="Odadan çık" className="rounded-full" style={pct(614, 60, 78, 78)} />
     </div>
