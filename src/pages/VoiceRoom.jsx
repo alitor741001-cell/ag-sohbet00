@@ -209,11 +209,26 @@ export default function VoiceRoom() {
 
   const seatsView = useMemo(() => {
     const mutedByUser = new Map(participants.map((person) => [person.user_id, !!person.muted]));
+    // Koltuk daveti gönderilen kişi, daveti onaylayana kadar o koltukta profiliyle bekler.
+    const invites = Array.isArray(room?.seat_invites) ? room.seat_invites : [];
     return seats.map((seat) => {
       const muted = seat.user_id ? !!mutedByUser.get(seat.user_id) : !!seat.muted;
-      return seat.muted === muted ? seat : { ...seat, muted };
+      const base = seat.muted === muted ? seat : { ...seat, muted };
+      const pending = base.user_id ? null : invites.find((item) => item.seat_index === base.index);
+      if (!pending) return base;
+      // Bekleyen davet koltuğu: mikrofon ve konuşma kapalıdır, yalnızca profil görünür.
+      return {
+        ...base,
+        user_id: pending.user_id,
+        name: pending.name || 'Kullanıcı',
+        avatar: pending.avatar || '',
+        frame: pending.frame || '',
+        frame_scale: Number(pending.frame_scale) || 100,
+        pending: true,
+        muted: true,
+      };
     });
-  }, [seats, participants]);
+  }, [seats, participants, room?.seat_invites]);
 
   // Mik'e davet listesi: koltukta oturmayan odadakiler (kendisi hariç).
   const unseatedViewers = useMemo(() => {
@@ -575,7 +590,7 @@ export default function VoiceRoom() {
 
   // Dolu koltuk yalnızca hediye seçiminde işaretlenir; boş koltuk beyaz koltuk menüsünü açar.
   const handleSeatPress = useLatestCallback((index) => {
-    const seat = seats[index];
+    const seat = seatsView[index] || seats[index];
     if (seat?.user_id) {
       if (giftOpen) toggleGiftPerson(seat.user_id);
       else openRoomProfile(seat.user_id);

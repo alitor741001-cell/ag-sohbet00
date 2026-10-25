@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { Armchair, Crown, Lock, MicOff, Shield } from 'lucide-react';
+import { Armchair, Crown, Hourglass, Lock, MicOff, Shield } from 'lucide-react';
 import { seatNeon } from '@/components/voice/VoiceSeatRing';
 import shallowEqual from '@/components/data/shallowEqual';
 import VoiceSeatPortrait from '@/components/voice/VoiceSeatPortrait';
@@ -30,7 +30,9 @@ function VoiceSeat({ seat, index, size = 'md', musicPlaying, speaking, isSelf, i
   const emptyCircle = EMPTY[size] || EMPTY.md;
   const badge = BADGE[size] || BADGE.md;
   const nameWidth = NAME[size] || NAME.md;
-  const muted = Boolean(seat?.muted || micMuted);
+  // Bekleyen koltuk daveti: kişi profiliyle görünür ama mikrofonu ve konuşması kapalıdır.
+  const pending = Boolean(seat?.pending);
+  const muted = !pending && Boolean(seat?.muted || micMuted);
 
   if (!seat?.user_id) {
     return (
@@ -72,9 +74,14 @@ function VoiceSeat({ seat, index, size = 'md', musicPlaying, speaking, isSelf, i
     >
       <span className={`relative flex ${cell} shrink-0 items-center justify-center`}>
         {musicPlaying && <span aria-label="Müzik çalıyor" className={`pointer-events-none absolute ${ring} z-[7] rounded-full room-music-glow`} />}
-        {speaking && !muted && <VoiceSpeakingWave index={index} ring={ring} theme={!hidden && vipLook(profile, 'mic')} />}
+        {speaking && !muted && !pending && <VoiceSpeakingWave index={index} ring={ring} theme={!hidden && vipLook(profile, 'mic')} />}
         {halo && <span className="pointer-events-none absolute inset-0 z-[6] rounded-full" style={{ boxShadow: halo }} />}
         <VoiceSeatPortrait seat={seat} animated={!hidden && !!vipLook(profile, 'avatar')} className={face} variant={index} theme={!hidden && vipLook(profile, 'frame')} cosmeticChoice={!hidden ? cosmeticChoice : null} />
+        {pending && (
+          <span aria-label="Koltuk daveti onayı bekleniyor" title="Koltuk daveti onayı bekleniyor" className="pointer-events-none absolute -bottom-0.5 -left-0.5 z-10 flex h-4 w-4 items-center justify-center rounded-full border border-premium-gold/70 bg-black/85">
+            <Hourglass className="h-2.5 w-2.5 text-premium-gold" />
+          </span>
+        )}
         {muted && (
           <span title="Mikrofon kapalı" aria-label="Mikrofon kapalı" className={`absolute left-1/2 top-1/2 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-destructive ${badge}`}>
             <MicOff className="h-3 w-3 text-white" />

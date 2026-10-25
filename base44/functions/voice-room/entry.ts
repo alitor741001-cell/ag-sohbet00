@@ -308,6 +308,9 @@ export default async function (req: Request): Promise<Response> {
         .concat({
           user_id: target_id,
           name: targetUser.username || targetUser.full_name || 'Kullanıcı',
+          avatar: targetUser.avatar || '',
+          frame: targetUser.profile_frame || '',
+          frame_scale: Number(targetUser.profile_frame_scale) || 100,
           seat_index: index,
           invited_by: user.id,
           invited_by_name: shownName,
