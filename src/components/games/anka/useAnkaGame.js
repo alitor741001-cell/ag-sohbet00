@@ -3,7 +3,7 @@ import gameRequest from '@/lib/gameRequest';
 import { ANKA_BETS, ANKA_LINES } from '@/components/games/anka/ankaConfig';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import useWalletCoinsLive from '@/hooks/useWalletCoinsLive';
-export default function useAnkaGame() {
+export default function useAnkaGame(paused = false) {
   const [state, setState] = useState({ bet: 100, coins: 0, free_spins: 0, win: 0 });
   const [status, setStatus] = useState('loading'), [busy, setBusy] = useState(false), [rolling, setRolling] = useState(false);
   const [auto, setAuto] = useState(false), [message, setMessage] = useState(''), [prize, setPrize] = useState(null);
@@ -31,10 +31,10 @@ export default function useAnkaGame() {
     finally { lock.current = false; wake.current = null; if (alive.current) { setBusy(false); setRolling(false); } }
   }
   useEffect(() => {
-    if (busy || prize || message || status !== 'ready' || (!auto && !state.free_spins)) return;
+    if (paused || busy || prize || message || status !== 'ready' || (!auto && !state.free_spins)) return;
     const timer = setTimeout(() => act('spin'), 1100);
     return () => clearTimeout(timer);
-  }, [busy, auto, state.free_spins, prize, message, status]);
+  }, [paused, busy, auto, state.free_spins, prize, message, status]);
   const step = direction => { const i = ANKA_BETS.indexOf(state.bet); act('bet', ANKA_BETS[Math.max(0, Math.min(ANKA_BETS.length - 1, i + direction))]); };
   const max = () => act('bet', [...ANKA_BETS].reverse().find(b => b * ANKA_LINES <= state.coins) || ANKA_BETS[0]);
   return { ...state, status, busy, rolling, auto, message, prize, step, max, spin: () => act('spin'), buy: () => act('session'),

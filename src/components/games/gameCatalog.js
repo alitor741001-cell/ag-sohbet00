@@ -31,9 +31,11 @@ export const OKEY_ID = 'okey-101';
 export const OKEY_CLASSIC_ID = 'okey';
 // ZAR: üç zarlı bahis masası (küçük, büyük, kaplan).
 export const ZAR_ID = 'zar';
+export const ANKA_ID = 'anka-kusu';
 
 // Oyun merkezi kartları: kapak görseli durur, dokununca oyun açılır.
 export const GAMES = [
+  { id: ANKA_ID, title: 'ANKA KUŞU', cover: 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/cae340047_generated_image.png', originWidth: 1024, originHeight: 1024 },
   { id: OKEY_ID, title: '101 OKEY', cover: OKEY_COVER, originWidth: OKEY_COVER_WIDTH, originHeight: OKEY_COVER_HEIGHT },
   { id: OKEY_CLASSIC_ID, title: 'OKEY', cover: OKEY_CLASSIC_COVER, originWidth: OKEY_CLASSIC_COVER_WIDTH, originHeight: OKEY_CLASSIC_COVER_HEIGHT },
   { id: ZAR_ID, title: 'ZAR', cover: ZAR_COVER, originWidth: ZAR_COVER_WIDTH, originHeight: ZAR_COVER_HEIGHT },

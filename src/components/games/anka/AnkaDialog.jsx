@@ -1,9 +1,11 @@
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import * as DialogPrimitive from '@radix-ui/react-dialog';
+import { Dialog, DialogPortal, DialogOverlay, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { formatCoins } from '@/components/games/anka/ankaConfig';
 export default function AnkaDialog({ kind, onClose, game, onBuy }) {
   return <Dialog open={!!kind} onOpenChange={open => { if (!open) onClose(); }}>
-    <DialogContent className="anka-dialog bg-slot text-slot-text border-slot-gold font-body">
+    <DialogPortal><DialogOverlay className="z-[219]" />
+    <DialogPrimitive.Content className="anka-dialog fixed left-1/2 top-1/2 grid max-h-[85dvh] w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 overflow-y-auto rounded-2xl border bg-slot p-6 font-body text-slot-text border-slot-gold">
       <DialogHeader><DialogTitle className="text-slot-gold">{kind === 'buy' ? 'BONUS SATIN AL' : kind === 'prize' ? game.prize?.title : 'ANKA KUŞU · NASIL OYNANIR'}</DialogTitle>
         <DialogDescription className="text-slot-text">{kind === 'buy' ? '15 Anka turu, ortak coin bakiyenle oynanır.' : kind === 'prize' ? 'Kazancın coin bakiyene işlendi.' : 'Üç makara, 45 kazanma yolu. Tüm tutarlar uygulama coinidir.'}</DialogDescription></DialogHeader>
       {kind === 'help' && <div className="space-y-3 text-sm">
@@ -15,6 +17,7 @@ export default function AnkaDialog({ kind, onClose, game, onBuy }) {
       </div>}
       {kind === 'buy' && <><p className="text-center text-2xl font-bold text-slot-gold">{formatCoins(game.session_price)} COIN</p><button className="anka-confirm" disabled={game.busy || game.free_spins > 0} onClick={onBuy}>15 TURU BAŞLAT</button></>}
       {kind === 'prize' && <><p className="text-center text-3xl font-bold text-slot-gold">{formatCoins(game.prize?.amount)} COIN</p><button className="anka-confirm" onClick={onClose}>KABUL ET</button></>}
-    </DialogContent>
+      <DialogPrimitive.Close className="text-sm underline text-slot-gold">Kapat</DialogPrimitive.Close>
+    </DialogPrimitive.Content></DialogPortal>
   </Dialog>;
 }

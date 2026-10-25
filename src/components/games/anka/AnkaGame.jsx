@@ -10,8 +10,8 @@ import { formatCoins, ANKA_LINES } from '@/components/games/anka/ankaConfig';
 import '@/components/games/anka/anka.css';
 import '@/styles/gameControls.css';
 export default function AnkaGame({ onBack, onExit }) {
-  const game = useAnkaGame();
   const [coinsOpen, setCoinsOpen] = useState(false), [dialog, setDialog] = useState(null);
+  const game = useAnkaGame(coinsOpen || !!dialog);
   const kind = game.prize ? 'prize' : dialog;
   const closeDialog = () => { if (game.prize) game.clearPrize(); else setDialog(null); };
   return <section className="anka-game font-body">

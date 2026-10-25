@@ -3,6 +3,9 @@
 @tailwind utilities;
 
 :root, .dark {
+  --anka-night: 330 22% 10%;
+  --anka-gold: 43 100% 72%;
+  --anka-ember: 18 100% 50%;
   --auth-night: 235 80% 2%;
   --auth-panel: 228 80% 7%;
   --auth-blue: 226 100% 50%;
