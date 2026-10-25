@@ -1,21 +1,18 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Image } from '@/components/ui/image';
 import { DEDE_STAFF_VIDEO } from '@/components/games/dede/dedeAssets';
 import useDedeStaffPlayback from '@/components/games/dede/useDedeStaffPlayback';
 
 const DEDE_PNG = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/82ee50581_generated_91ebaea1.png';
 
-export default function DedeWizard({ orbs, spinKey, rolling, spinning }) {
+export default function DedeWizard({ orbs, spinKey, rolling }) {
   const [strike, setStrike] = useState(0);
   const { videoRef, canvasRef, failed, onError } = useDedeStaffPlayback(strike);
-  const struckSpin = useRef(0);
   const orbKey = (orbs || []).map(o => `${o.reel}:${o.row}:${o.value}`).join('-');
   useEffect(() => {
-    if (!spinKey || rolling) return;
-    if (!orbKey && (spinning || struckSpin.current === spinKey)) return;
-    struckSpin.current = spinKey;
+    if (!spinKey || rolling || !orbKey) return;
     setStrike(value => value + 1);
-  }, [spinKey, rolling, spinning, orbKey]);
+  }, [spinKey, rolling, orbKey]);
   return (
     <div className="dede-wizard" aria-hidden="true">
       <video ref={videoRef} src={DEDE_STAFF_VIDEO} crossOrigin="anonymous" muted playsInline preload="auto" disablePictureInPicture onError={onError} className="dede-wizard-source" />

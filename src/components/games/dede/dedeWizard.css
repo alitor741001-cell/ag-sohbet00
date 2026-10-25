@@ -5,14 +5,14 @@
 .dede-wizard-png { display: block; width: 100%; height: 100%; }
 .dede-wizard-source { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 .dede-wizard-motion { width: 100%; height: 100%; object-fit: contain; object-position: right bottom; }
-.dede-storm { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 8; pointer-events: none; overflow: visible; opacity: 0; animation: dede-storm-impact .65s .28s ease-out both; }
-.dede-storm-edges { filter: drop-shadow(0 0 4px currentColor); }
-.dede-storm-edge-glow { stroke-width: 5; opacity: .4; }
-.dede-storm-edge-core { stroke-width: 1.5; }
-.dede-storm-bolts { filter: drop-shadow(0 0 6px currentColor); }
+.dede-storm { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 8; pointer-events: none; overflow: visible; opacity: 0; animation: dede-storm-impact 1s 1.1s ease-out both; }
+.dede-storm-edges { filter: drop-shadow(0 0 9px currentColor); }
+.dede-storm-edge-glow { stroke-width: 9; opacity: .6; }
+.dede-storm-edge-core { stroke-width: 2.5; }
+.dede-storm-bolts { filter: drop-shadow(0 0 8px currentColor) drop-shadow(0 0 18px currentColor); }
 @keyframes dede-storm-impact {
   0% { opacity: 0; }
-  12%, 65% { opacity: 1; }
+  25%, 45% { opacity: 1; }
   100% { opacity: 0; }
 }
 @media (orientation: landscape) and (max-height: 500px) {
