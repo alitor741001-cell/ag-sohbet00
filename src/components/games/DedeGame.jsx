@@ -56,7 +56,7 @@ export default function DedeGame({ onExit, onBack }) {
   return (
     <div className="dede-sky relative flex h-full min-h-0 w-full flex-col overflow-hidden">
       <span aria-hidden="true" className="dede-rays" />
-      <DedeHeader onBack={onBack} onHelp={() => setHelpOpen(true)} orbs={game.orbs} spinKey={game.spinKey} rolling={game.rolling} />
+      <DedeHeader onBack={onBack} onHelp={() => setHelpOpen(true)} orbs={game.orbs} spinKey={game.spinKey} rolling={game.rolling} spinning={game.spinning} />
 
       <main className="relative z-10 flex min-h-0 flex-1 flex-col items-center gap-1 px-0 py-1">
         {/* Izgara ekranın kalan tüm alanını kaplar: madalyonlar olabildiğince büyük durur. */}

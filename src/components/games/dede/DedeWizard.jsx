@@ -1,19 +1,21 @@
-import { Image } from '@/components/ui/image';
-import { DEDE_DEITY, DEDE_STAFF } from '@/components/games/dede/dedeAssets';
+import { DEDE_STAFF_VIDEO } from '@/components/games/dede/dedeAssets';
+import useDedeWizardVideo from '@/components/games/dede/useDedeWizardVideo';
 
-export default function DedeWizard({ orbs, spinKey, rolling }) {
-  const active = !rolling && orbs?.length > 0;
-  const cue = active ? `${spinKey}-${orbs.map(o => `${o.reel}:${o.row}:${o.value}`).join('-')}` : 'idle';
+export default function DedeWizard({ orbs, spinKey, rolling, spinning }) {
+  const playback = useDedeWizardVideo({ orbs, spinKey, rolling, spinning });
   return (
-    <div className="dede-wizard" aria-hidden="true">
-      <div key={cue} className={`dede-wizard-pose ${active ? 'dede-wizard-striking' : ''}`}>
-        <Image src={DEDE_DEITY} alt="" fittingType="fit" blurPlaceholder={false} loading="eager" className="dede-wizard-body" />
-        <span className="dede-wizard-staff-position">
-          <Image src={DEDE_STAFF} alt="" fittingType="fit" blurPlaceholder={false} loading="eager" className="dede-wizard-staff" />
-        </span>
-        <Image src={DEDE_DEITY} alt="" fittingType="fit" blurPlaceholder={false} loading="eager" className="dede-wizard-grip" />
-        {active && <span className="dede-wizard-impact" />}
-      </div>
+    <div className="dede-wizard">
+      <video
+        {...playback}
+        src={DEDE_STAFF_VIDEO}
+        muted
+        playsInline
+        preload="auto"
+        disablePictureInPicture
+        disableRemotePlayback
+        className="dede-wizard-video"
+        aria-label="Dede asasını avucunda tutarak yukarı kaldırır ve yere vurur. İki saniyelik oyun animasyonu."
+      />
     </div>
   );
 }

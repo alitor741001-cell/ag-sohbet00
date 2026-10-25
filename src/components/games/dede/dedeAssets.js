@@ -9,6 +9,7 @@ export const DEDE_COVER_HEIGHT = 1024;
 // Referans fotoğraftan oluşturulan gerçek alfa kanallı karakter ve bağımsız asa.
 export const DEDE_DEITY = `${MEDIA_BASE}/1b33c80ee_generated_6378ea70.png`;
 export const DEDE_STAFF = `${MEDIA_BASE}/c134764c7_generated_9337375d.png`;
+export const DEDE_STAFF_VIDEO = 'https://media.base44.com/videos/public/6a77d66e4da6de214628ee62/42b2c3c7e_Dede_Asa_Videosu.mp4';
 
 // Sembol kartları: gönderilen referans tasarımdaki nesnelerin birebir aynısı —
 // taç, kum saati, yüzük, kupa, elmas ve yakut yıldız; bonus kartı Zeus kabartmasıdır.
