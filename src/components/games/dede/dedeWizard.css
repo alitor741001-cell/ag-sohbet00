@@ -1,11 +1,26 @@
 .dede-header { min-height: clamp(8rem, 19dvh, 11rem); }
 .dede-header-copy { padding-right: 30%; padding-bottom: .75rem; }
 .dede-header-subtitle { color: inherit; opacity: .8; }
-.dede-wizard { position: absolute; top: calc(max(.25rem, env(safe-area-inset-top)) + .75rem); right: .5rem; bottom: -.75rem; width: 30%; max-width: 8rem; pointer-events: none; color: inherit; }
+.dede-wizard { position: absolute; top: calc(max(.25rem, env(safe-area-inset-top)) + 1.75rem); right: .5rem; bottom: -1.75rem; width: 31%; max-width: 8.5rem; pointer-events: none; color: inherit; }
 .dede-wizard-png { display: block; width: 100%; height: 100%; }
 .dede-wizard-source { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 .dede-wizard-motion { width: 100%; height: 100%; object-fit: contain; object-position: right bottom; }
-.dede-storm { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 8; pointer-events: none; overflow: visible; opacity: 0; animation: dede-storm-impact 1s 1.1s ease-out both; }
+.dede-wizard-boom .dede-wizard-motion,
+.dede-wizard-boom .dede-wizard-png { animation: dede-wizard-smash .82s cubic-bezier(.4, 0, .2, 1) both; transform-origin: 92% 96%; }
+.dede-wizard-burst { position: absolute; inset: -12%; border-radius: 50%; background: radial-gradient(circle at 62% 72%, currentColor 0%, transparent 62%); mix-blend-mode: screen; opacity: 0; animation: dede-wizard-burst .6s ease-out both; }
+@keyframes dede-wizard-smash {
+  0% { transform: scale(1) translateY(0) rotate(0deg); }
+  18% { transform: scale(1.08) translateY(-5%) rotate(-4deg); }
+  46% { transform: scale(1.22) translateY(7%) rotate(3deg); }
+  72% { transform: scale(1.1) translateY(2%) rotate(-1.2deg); }
+  100% { transform: scale(1) translateY(0) rotate(0deg); }
+}
+@keyframes dede-wizard-burst {
+  0% { opacity: 0; transform: scale(.5); }
+  22% { opacity: .95; transform: scale(.95); }
+  100% { opacity: 0; transform: scale(1.4); }
+}
+.dede-storm { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 8; pointer-events: none; overflow: visible; opacity: 0; animation: dede-storm-impact 1s .6s ease-out both; }
 .dede-storm-edges { filter: drop-shadow(0 0 9px currentColor); }
 .dede-storm-edge-glow { stroke-width: 9; opacity: .6; }
 .dede-storm-edge-core { stroke-width: 2.5; }
@@ -23,5 +38,7 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .dede-storm-bolts { display: none; }
+  .dede-wizard-boom .dede-wizard-motion,
+  .dede-wizard-boom .dede-wizard-png { animation: none; }
   .dede-storm { animation: none; opacity: .5; }
 }
