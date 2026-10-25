@@ -12,7 +12,7 @@ export default function useRoomRocket(room, details) {
     enabled: !!id,
     queryFn: async () => (await base44.functions.invoke('roomRocket', { room_id: id, details })).data,
     staleTime: 15000,
-    placeholderData: previous => previous,
+    placeholderData: (previous, previousQuery) => previousQuery?.queryKey?.[1] === id ? previous : undefined,
     refetchInterval: details ? 15000 : 60000,
     retry: 1,
   });
