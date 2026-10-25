@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ChevronLeft, Lightbulb, X } from 'lucide-react';
+import { ChevronLeft, Lightbulb } from 'lucide-react';
 import '@/styles/roulette.css';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
 import useRouletteGame from './roulette/useRouletteGame';
@@ -70,9 +70,7 @@ export default function RouletteGame({ onExit, onBack }) {
         </button>
         <RouletteTopFive winners={board.winners} />
         <div className="rl2-top-actions">
-          <button type="button" onClick={onExit} aria-label="Oyunu kapat" className="rl2-icon-btn">
-            <X className="h-4 w-4" />
-          </button>
+
           <button type="button" onClick={() => setHelpOpen(true)} aria-label="Nasıl oynanır" className="rl2-bulb">
             <Lightbulb className="h-5 w-5" />
           </button>

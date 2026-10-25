@@ -78,7 +78,7 @@ export default function FootballGame({ onExit, onBack }) {
           onSound={game.toggleSound}
           onMenu={() => setMenuOpen(true)}
           onCoins={() => setCoinOpen(true)}
-          onExit={onExit}
+          onBack={onBack}
         />
 
         <div className="fut-stats">

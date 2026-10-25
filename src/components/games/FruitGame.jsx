@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ChevronLeft, HelpCircle, Play, X } from 'lucide-react';
+import { ChevronLeft, HelpCircle, Play } from 'lucide-react';
 import '@/styles/fruit.css';
 import '@/styles/gameControls.css';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
@@ -69,14 +69,7 @@ export default function FruitGame({ onExit, onBack }) {
         >
           <HelpCircle className="h-5 w-5" />
         </button>
-        <button
-          type="button"
-          onClick={onExit}
-          aria-label="Oyunu kapat"
-          className="gctl-pill gctl-icon ring-1 ring-[#f0c46a]/50"
-        >
-          <X className="h-5 w-5" />
-        </button>
+
       </header>
 
       <main className="relative z-10 flex min-h-0 flex-1 flex-col items-center gap-1 px-0 py-1">

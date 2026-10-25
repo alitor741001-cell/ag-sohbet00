@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ChevronLeft, Coins, Timer, Trophy, X } from 'lucide-react';
+import { ChevronLeft, Coins, Timer, Trophy } from 'lucide-react';
 import { clockOf, formatBet } from './okeyConfig';
 import ReferenceCoinButton from '@/components/games/controls/ReferenceCoinButton';
 
@@ -22,9 +22,7 @@ export default function OkeyTopBar({ variant = 'okey101', table, coins, onStore,
           <span className="okey-title-name">{variant === 'okey' ? 'OKEY' : '101 OKEY'}</span>
           <span className="okey-title-sub">MASA {table?.code || '----'} · BAHİSLİ · TEKLİ</span>
         </span>
-        <button type="button" onClick={onExit} aria-label="Oyunu kapat" className="okey-round">
-          <X className="h-4 w-4" />
-        </button>
+
       </header>
 
       <div className="okey-chips">

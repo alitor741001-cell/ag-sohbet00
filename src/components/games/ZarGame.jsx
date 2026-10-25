@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ChevronLeft, Lightbulb, X } from 'lucide-react';
+import { ChevronLeft, Lightbulb } from 'lucide-react';
 import '@/styles/zar.css';
 import '@/styles/zar2.css';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
@@ -68,9 +68,7 @@ export default function ZarGame({ onExit, onBack }) {
           <ChevronLeft className="h-5 w-5" />
         </button>
         <span className="zr2-round">Tur:{game.round?.round_no || '—'}</span>
-        <button type="button" onClick={onExit} aria-label="Oyunu kapat" className="zr2-sq">
-          <X className="h-5 w-5" />
-        </button>
+
       </header>
 
       <main className="zr2-stage">

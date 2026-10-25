@@ -1,13 +1,16 @@
 import React from 'react';
-import { Coins, HelpCircle, Volume2, VolumeX, X } from 'lucide-react';
+import { ChevronLeft, Coins, HelpCircle, Volume2, VolumeX } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import { FUTBOL_LOGO } from './futbolAssets';
 
 /** Üst bant: ses solda; marka ortada (kurallara dokunulur), coin ve kapatma sağda. */
-export default function FutbolHeader({ roundNo, sound, onSound, onMenu, onCoins, onExit }) {
+export default function FutbolHeader({ roundNo, sound, onSound, onMenu, onCoins, onBack }) {
   return (
     <header className="fut-head">
       <div className="fut-head-row">
+        <button type="button" onClick={onBack} aria-label="Oyun listesine dön" className="gctl-pill gctl-icon">
+          <ChevronLeft className="h-5 w-5" />
+        </button>
         <button
           type="button"
           onClick={onSound}
@@ -38,9 +41,7 @@ export default function FutbolHeader({ roundNo, sound, onSound, onMenu, onCoins,
         <button type="button" onClick={onCoins} aria-label="Coin yükle" className="gctl-pill gctl-icon">
           <Coins className="h-5 w-5" />
         </button>
-        <button type="button" onClick={onExit} aria-label="Oyunu kapat" className="gctl-pill gctl-icon">
-          <X className="h-5 w-5" />
-        </button>
+
       </div>
 
       <p className="fut-round">MEVCUT TUR {roundNo}</p>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ChevronLeft, HelpCircle, Play, Volume2, VolumeX, X } from 'lucide-react';
+import { ChevronLeft, HelpCircle, Play, Volume2, VolumeX } from 'lucide-react';
 import '@/styles/sekerli.css';
 import '@/styles/gameControls.css';
 import { Image } from '@/components/ui/image';
@@ -64,9 +64,7 @@ export default function SekerliMeyveGame({ onExit, onBack }) {
         >
           <HelpCircle className="h-5 w-5" />
         </button>
-        <button type="button" onClick={onExit} aria-label="Oyunu kapat" className="gctl-pill gctl-icon sl-close">
-          <X className="h-5 w-5" />
-        </button>
+
       </header>
 
       <main className="sl-main">

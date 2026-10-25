@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ChevronLeft, HelpCircle, X } from 'lucide-react';
+import { ChevronLeft, HelpCircle } from 'lucide-react';
 import GameHelpSheet from './help/GameHelpSheet';
 import { Image } from '@/components/ui/image';
 import { useSize } from '@/hooks/use-size';
@@ -125,14 +125,7 @@ export default function SlotGame({ onExit, onBack, roomId }) {
       >
         <HelpCircle className="h-5 w-5" />
       </button>
-      <button
-        type="button"
-        onClick={onExit}
-        aria-label="Oyunu kapat"
-        className="absolute right-2 top-[env(safe-area-inset-top)] z-20 mt-2 flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm active:scale-95"
-      >
-        <X className="h-5 w-5" />
-      </button>
+
 
       {/* Oyun ekranı: görselin kırpılan iki paneli arasında kalan kısım alta yaslanır. */}
       <div ref={areaRef} className="relative flex min-h-0 flex-1 items-end justify-center overflow-hidden">

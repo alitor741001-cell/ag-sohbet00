@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ChevronLeft, HelpCircle, Play, Volume2, VolumeX, X } from 'lucide-react';
+import { ChevronLeft, HelpCircle, Play, Volume2, VolumeX } from 'lucide-react';
 import '@/styles/elimin.css';
 import '@/styles/eliminExtras.css';
 import '@/styles/gameControls.css';
@@ -115,9 +115,7 @@ export default function EliminSlotGame({ onExit, onBack }) {
         >
           {game.sound ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
         </button>
-        <button type="button" onClick={onExit} aria-label="Oyunu kapat" className="gctl-pill gctl-icon el-close-pill">
-          <X className="h-5 w-5" />
-        </button>
+
       </header>
 
       <main className="el-main">

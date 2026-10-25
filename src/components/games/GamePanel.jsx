@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Gamepad2, Play, X } from 'lucide-react';
+import { ChevronLeft, Gamepad2, Play } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import { GAMES } from '@/components/games/gameCatalog';
 import GameContent from '@/components/games/GameContent';
@@ -85,16 +85,16 @@ export default function GamePanel({ open, onClose, roomId, initialGame = null, f
           <div className={`game-layer ${phase === 'opening' ? 'game-dip' : phase === 'closing' ? 'game-rise' : ''}`}>
             {!full && <span className="mx-auto mt-2 h-1 w-10 shrink-0 rounded-full bg-[#F2CE6B]/60" />}
             <header className="flex shrink-0 items-center gap-2 border-b border-[#F2CE6B]/25 px-3 pb-2.5 pt-2">
-              <Gamepad2 className="h-5 w-5 text-[#F2CE6B]" />
-              <p className="min-w-0 flex-1 truncate text-sm font-black tracking-wide text-[#F2CE6B]">Oyun Merkezi</p>
               <button
                 type="button"
                 onClick={onClose}
-                aria-label="Oyun panelini kapat"
+                aria-label="Geri dön"
                 className="flex h-9 w-9 items-center justify-center rounded-full bg-slot-panel"
               >
-                <X className="h-5 w-5" />
+                <ChevronLeft className="h-5 w-5" />
               </button>
+              <Gamepad2 className="h-5 w-5 text-[#F2CE6B]" />
+              <p className="min-w-0 flex-1 truncate text-sm font-black tracking-wide text-[#F2CE6B]">Oyun Merkezi</p>
             </header>
 
             {/* Panelde sadece oyunun logosu durur: dokununca oyun açılır.
