@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Image } from '@/components/ui/image';
+import TransparentWinArt from '@/components/games/shared/TransparentWinArt';
 import useBackDismiss from '@/hooks/useBackDismiss';
 import '@/components/games/shared/gameWinArtwork.css';
 
@@ -24,7 +24,7 @@ export default function GameWinArtwork({ open, amount, title = 'TEBRİKLER!', su
   return createPortal(<div className="game-win-artwork font-body" role="dialog" aria-modal="true" aria-label={finished ? '15 çevirme hakkı bitti, toplam kazanç' : title}
     onKeyDown={event => { if (event.key === 'Escape') onAccept?.(); if (event.key === 'Tab') { event.preventDefault(); button.current?.focus(); } }}>
     <div className={`game-win-artwork-frame ${finished ? 'game-win-artwork-session' : ''}`}>
-      <Image src={finished ? SESSION : NORMAL} alt="" aria-hidden="true" fittingType="fit" blurPlaceholder={false} className="game-win-artwork-image" />
+      <TransparentWinArt src={finished ? SESSION : NORMAL} session={finished} award={award} />
       {award && <span className="game-win-artwork-award-label">ÜCRETSİZ ÇEVİRME</span>}
       <output className="game-win-artwork-amount" aria-label={award ? 'Kazanılan tur' : 'Toplam coin kazancı'} style={{ fontSize: `${Math.min(finished ? 11 : 12, 98 / value.length)}cqw` }}>{value}</output>
       {(detail || (award && subtitle)) && <div className="game-win-artwork-detail">{detail || subtitle}</div>}
