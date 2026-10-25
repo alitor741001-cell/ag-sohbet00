@@ -19,7 +19,7 @@ export default function DedeStorm({ orbs, spinKey, rolling, grid }) {
   const { cols, rows, cue } = impact;
   return (
     <svg key={cue} className="dede-storm dede-title" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true">
-      <rect width="1000" height="1000" fill="currentColor" opacity="0.12" />
+      <rect width="1000" height="1000" fill="currentColor" opacity="0.16" />
       <g className="dede-storm-edges" fill="none" stroke="currentColor" strokeLinejoin="round">
         {Array.from({ length: cols * rows }, (_, i) => (
           <svg key={i} x={(i % cols) * 1000 / cols} y={Math.floor(i / cols) * 1000 / rows} width={1000 / cols} height={1000 / rows} viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -28,13 +28,13 @@ export default function DedeStorm({ orbs, spinKey, rolling, grid }) {
           </svg>
         ))}
       </g>
-      <g className="dede-storm-bolts" fill="none" stroke="currentColor" strokeWidth="7" strokeLinejoin="round">
+      <g className="dede-storm-bolts" fill="none" stroke="currentColor" strokeWidth="11" strokeLinejoin="round">
         {impact.orbs.map((orb, i) => {
           const x = (orb.reel + 0.5) * 1000 / cols;
           const y = (orb.row + 0.5) * 1000 / rows;
           const bolt = `M940 -20 L870 80 920 115 ${x + 80} ${y * 0.45} ${x + 120} ${y * 0.55} ${x} ${y}`;
           return <g key={i}>
-            <path d={bolt} strokeWidth="22" opacity=".35" />
+            <path d={bolt} strokeWidth="34" opacity=".4" />
             <path d={bolt} />
             <path d={`M${x + 80} ${y * .45} l-110 55 45 35 -100 90 M${x + 120} ${y * .55} l130 20 -40 45 100 65`} strokeWidth="4" />
           </g>;

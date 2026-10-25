@@ -3,7 +3,7 @@ import DedeWizard from '@/components/games/dede/DedeWizard';
 
 export default function DedeHeader({ onBack, onHelp, orbs, spinKey, rolling, spinning }) {
   return (
-    <header className="dede-header relative z-10 flex shrink-0 items-start gap-2 px-3 pt-[max(0.5rem,env(safe-area-inset-top))]">
+    <header className="dede-header relative z-20 flex shrink-0 items-start gap-2 px-3 pt-[max(0.5rem,env(safe-area-inset-top))]">
       <div className="relative z-10 flex shrink-0 flex-col gap-2">
         <button type="button" onClick={onBack} aria-label="Oyun listesine dön" className="gctl-pill gctl-icon">
           <ChevronLeft className="h-5 w-5" />

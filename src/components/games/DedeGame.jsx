@@ -5,6 +5,7 @@ import '@/styles/gameControls.css';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
 import DedeHeader from '@/components/games/dede/DedeHeader';
 import DedeStorm from '@/components/games/dede/DedeStorm';
+import useDedeVisibleOrbs from '@/components/games/dede/useDedeVisibleOrbs';
 import '@/components/games/dede/dedeWizard.css';
 import useDedeGame from './dede/useDedeGame';
 import DedeReels from './dede/DedeReels';
@@ -23,6 +24,7 @@ const WIN_FLASH_MS = 2400;
 /** DEDE: Olympos'un çarpan küreleri. 6x5 ızgarada semboller patlar, yenileri düşer. */
 export default function DedeGame({ onExit, onBack }) {
   const game = useDedeGame();
+  const strikeOrbs = useDedeVisibleOrbs(game.grid, game.rolling);
   const [coinOpen, setCoinOpen] = useState(false);
   const [flash, setFlash] = useState(0);
   const [prize, setPrize] = useState(null);
@@ -56,7 +58,7 @@ export default function DedeGame({ onExit, onBack }) {
   return (
     <div className="dede-sky relative flex h-full min-h-0 w-full flex-col overflow-hidden">
       <span aria-hidden="true" className="dede-rays" />
-      <DedeHeader onBack={onBack} onHelp={() => setHelpOpen(true)} orbs={game.orbs} spinKey={game.spinKey} rolling={game.rolling} spinning={game.spinning} />
+      <DedeHeader onBack={onBack} onHelp={() => setHelpOpen(true)} orbs={strikeOrbs} spinKey={game.spinKey} rolling={game.rolling} spinning={game.spinning} />
 
       <main className="relative z-10 flex min-h-0 flex-1 flex-col items-center gap-1 px-0 py-1">
         {/* Izgara ekranın kalan tüm alanını kaplar: madalyonlar olabildiğince büyük durur. */}
@@ -79,7 +81,7 @@ export default function DedeGame({ onExit, onBack }) {
                 grid={game.grid}
                 explode={game.explode}
               />
-              <DedeStorm orbs={game.orbs} spinKey={game.spinKey} rolling={game.rolling} grid={game.grid} />
+              <DedeStorm orbs={strikeOrbs} spinKey={game.spinKey} rolling={game.rolling} grid={game.grid} />
             </div>
           </div>
         </div>
