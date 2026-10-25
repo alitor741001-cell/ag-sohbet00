@@ -301,17 +301,22 @@ export default function FullUserProfile({
     </>
   );
 
+  // Kart içindeki herhangi bir düğmeye basıldığında kart hemen kapanır.
+  const closeOnAction = (event) => {
+    if (event.target.closest('button')) onClose?.();
+  };
+
   if (room?.kind === 'voice') return (
     <VoiceFantasyCard profile={profile} hidden={hidden} name={shownName} avatar={banned ? ACCOUNT_STATES.banned.image : shownAvatar}
       role={roleLabel} palette={palette} room={room} userId={userId} isSelf={isSelf} onClose={onClose} onMessage={onMessage}
       statusContent={statusContent} memberId={memberId} genderLabel={genderLabel} age={age} badge={badge}
-      joinDate={formatDate(profile?.created_date)} copied={copied} onCopyId={copyId} />
+      joinDate={formatDate(profile?.created_date)} copied={copied} onCopyId={copyId} onAction={closeOnAction} />
   );
 
   return (
     <FantasyProfileShell profile={profile} female={profile?.gender === 'kadın'} hidden={hidden} name={shownName}
       avatar={banned ? ACCOUNT_STATES.banned.image : shownAvatar} role={roleLabel} onClose={onClose}>
-      <div className="space-y-3 px-4 pt-1">
+      <div className="space-y-3 px-4 pt-1" onClick={closeOnAction}>
         {header}
         <div className="flex flex-col gap-3">{content}</div>
       </div>

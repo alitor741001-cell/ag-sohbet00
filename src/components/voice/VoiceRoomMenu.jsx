@@ -71,15 +71,6 @@ export default function VoiceRoomMenu({ open, onClose, room, isOwner, isAdmin, c
   return (
     <VoiceSheet open={open} onClose={onClose} title="Oda ayarları">
       <div className="grid grid-cols-4 gap-x-2 gap-y-4">
-        {/* Yayını paylaş: seçilen arkadaşlara özel sohbetten katılma kartı gönderilir. */}
-        {onShare && (
-          <VoiceMenuTile
-            icon={Share2}
-            label="Paylaş"
-            tone="blue"
-            onClick={() => { onClose(); onShare(); }}
-          />
-        )}
         {onAgencyCall && (
           <VoiceMenuTile icon={Megaphone} label="Ajans Çağrısı" tone="gold" onClick={() => { onClose(); onAgencyCall(); }} />
         )}
@@ -175,6 +166,17 @@ export default function VoiceRoomMenu({ open, onClose, room, isOwner, isAdmin, c
         <p className="mt-3 rounded-xl bg-primary/15 px-3 py-2 text-[11px] font-semibold text-primary">
           Sohbet yasağı açık — yalnızca koltuktakiler yazabilir.
         </p>
+      )}
+
+      {/* En altta: yayını paylaş — arkadaş (kişiler) listesinden seçim yapılır. */}
+      {onShare && (
+        <button
+          type="button"
+          onClick={() => { onClose(); onShare(); }}
+          className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-[#3b82f6]/60 bg-[#3b82f6]/15 text-sm font-bold text-white shadow-[0_0_18px_-8px_rgba(59,130,246,0.9)]"
+        >
+          <Share2 className="h-4 w-4" /> Yayını paylaş
+        </button>
       )}
     </VoiceSheet>
   );
