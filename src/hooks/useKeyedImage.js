@@ -48,6 +48,19 @@ function keyImage(url, crop) {
         ctx.globalCompositeOperation = 'destination-out';
         (crop.holes || []).forEach(([cx, cy, r]) => { ctx.beginPath(); ctx.arc(cx * s, cy * s - sy, r * s, 0, Math.PI * 2); ctx.fill(); });
         ctx.globalCompositeOperation = 'source-over';
+        if (crop.transparentDarkCircles?.length) {
+          const keyed = ctx.getImageData(0, 0, w, h);
+          crop.transparentDarkCircles.forEach(([cx, cy, radius]) => {
+            const centerX = cx * s, centerY = cy * s - sy, r = radius * s;
+            for (let y = Math.max(0, Math.floor(centerY - r)); y < Math.min(h, centerY + r); y++) {
+              for (let x = Math.max(0, Math.floor(centerX - r)); x < Math.min(w, centerX + r); x++) {
+                const i = (y * w + x) * 4;
+                if ((x - centerX) ** 2 + (y - centerY) ** 2 <= r * r && Math.max(keyed.data[i], keyed.data[i + 1], keyed.data[i + 2]) < 64) keyed.data[i + 3] = 0;
+              }
+            }
+          });
+          ctx.putImageData(keyed, 0, 0);
+        }
         resolve(canvas.toDataURL('image/png'));
       } catch { resolve(null); }
     };
@@ -57,7 +70,7 @@ function keyImage(url, crop) {
 }
 
 export default function useKeyedImage(url, crop) {
-  const key = `${url}|${crop.top}|${crop.height}|${JSON.stringify(crop.holes || [])}|${(crop.erase || []).length}`;
+  const key = `${url}|${crop.top}|${crop.height}|${JSON.stringify(crop.holes || [])}|${(crop.erase || []).length}|${JSON.stringify(crop.transparentDarkCircles || [])}`;
   const [src, setSrc] = useState(() => cache.get(key) || null);
   useEffect(() => {
     if (cache.has(key)) { setSrc(cache.get(key)); return; }
