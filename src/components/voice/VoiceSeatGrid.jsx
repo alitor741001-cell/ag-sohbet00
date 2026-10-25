@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useRef } from 'react';
 import VoiceSeat from '@/components/voice/VoiceSeat';
-import VoiceSeatScore from '@/components/voice/VoiceSeatScore';
+
 import useMessageProfiles from '@/hooks/useMessageProfiles';
 import useSeatCosmetics from '@/hooks/useSeatCosmetics';
 
@@ -106,13 +106,9 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
                       accent={accent}
                       gifted={occupied ? gifted[seat.user_id] : undefined}
                       micMuted={micMuted}
+                      boardActive={boardActive}
+                      score={occupied ? scores[seat.user_id] || 0 : 0}
                     />
-                    {/* Skor alanı boş koltukta da yer tutar: koltuk değişince satırlar zıplamaz. */}
-                    {boardActive && (
-                      <div className={occupied ? '' : 'invisible'} aria-hidden={!occupied}>
-                        <VoiceSeatScore value={occupied ? scores[seat.user_id] || 0 : 0} size={seatSize} />
-                      </div>
-                    )}
                   </div>
                 );
               })}

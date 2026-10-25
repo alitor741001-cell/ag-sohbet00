@@ -1,4 +1,4 @@
-import { Gem } from 'lucide-react';
+import '@/components/voice/seatScore.css';
 import { formatScore, scoreTier } from '@/components/voice/scoreTier';
 
 /**
@@ -18,12 +18,11 @@ export default function VoiceSeatScore({ value = 0, size = 'md' }) {
 
   return (
     <span
-      className={`voice-gift-score relative z-20 mt-1 flex shrink-0 ${WIDTH[size] || WIDTH.md} items-center justify-center`}
+      className={`voice-gift-score relative z-20 -mt-2 mb-0.5 flex shrink-0 ${WIDTH[size] || WIDTH.md} items-center justify-center`}
       data-score-tier={scoreTier(shown)}
       aria-label={`${shown.toLocaleString('tr-TR')} sayaç`}
     >
       <span className={`voice-score-ribbon flex w-full max-w-full items-center justify-center gap-0.5 overflow-hidden px-1 ${TEXT[size] || TEXT.md}`}>
-        <Gem className="voice-score-gem h-[1.1em] w-[1.1em] shrink-0" strokeWidth={2.5} />
         <span key={shown} className="number-pop min-w-0 truncate font-extrabold tabular-nums leading-none">
           {formatScore(shown)}
         </span>

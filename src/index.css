@@ -3,6 +3,14 @@
 @tailwind utilities;
 
 :root, .dark {
+  --auth-night: 235 80% 2%;
+  --auth-panel: 228 80% 7%;
+  --auth-blue: 226 100% 50%;
+  --auth-deep: 243 100% 35%;
+  --auth-line: 214 95% 65%;
+  --auth-cyan: 190 100% 53%;
+  --auth-ink: 220 100% 98%;
+  --auth-muted: 222 60% 84%;
   --gift-palace-night: 245 68% 4%;
   --gift-palace-gold: 42 100% 65%;
   --gift-palace-purple: 271 100% 59%;
@@ -1102,35 +1110,7 @@ button:active, nav a:active, a[role="button"]:active {
 
 /* Slot ve oyun paneli stilleri: src/styles/slot.css */
 
-/* Hediye sayı tahtası — profilin altında şerit rozet: rakamlar beyaz, rozetin rengi seviyeye göre değişir. */
-.voice-gift-score { --score-tone: var(--score-blue); }
-.voice-gift-score[data-score-tier="blue"] { --score-tone: var(--score-blue); }
-.voice-gift-score[data-score-tier="purple"] { --score-tone: var(--score-purple); }
-.voice-gift-score[data-score-tier="pink"] { --score-tone: var(--score-pink); }
-.voice-gift-score[data-score-tier="yellow"] { --score-tone: var(--score-yellow); }
-.voice-gift-score[data-score-tier="orange"] { --score-tone: var(--score-orange); }
-.voice-gift-score[data-score-tier="black"] { --score-tone: var(--score-black); }
-.voice-score-ribbon {
-  /* Kesik köşeli cam rozet: seviye rengiyle parlayan kenar + üstten geçen ışık süzmesi. */
-  position: relative;
-  background:
-    linear-gradient(100deg, transparent 30%, rgba(255,255,255,0.35) 45%, transparent 60%) -150% 0 / 250% 100% no-repeat,
-    linear-gradient(180deg, hsl(var(--score-tone) / 0.55), rgba(10, 6, 8, 0.92) 70%);
-  clip-path: polygon(6px 0, calc(100% - 6px) 0, 100% 50%, calc(100% - 6px) 100%, 6px 100%, 0 50%);
-  box-shadow: inset 0 0 0 1px hsl(var(--score-tone) / 0.9);
-  filter: drop-shadow(0 0 4px hsl(var(--score-tone) / 0.8));
-  animation: score-shine 3.2s ease-in-out infinite;
-}
-.voice-score-gem { color: hsl(var(--score-tone)); filter: drop-shadow(0 0 2px hsl(var(--score-tone))); }
-@keyframes score-shine { 0%, 60% { background-position: -150% 0, 0 0; } 100% { background-position: 150% 0, 0 0; } }
-.voice-score-ribbon .number-pop {
-  color: #fff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
-}
-.voice-gift-score[data-score-tier="black"] .voice-score-ribbon {
-  background-image: linear-gradient(180deg, #2f2f2f, #000000);
-  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.85));
-}
+/* Koltuk puan şeritleri: components/voice/seatScore.css */
 
 /* Oda ismi: 10 harften uzun isimler soldan akar ve her turda baştan tekrarlar. */
 @keyframes room-name-marquee {

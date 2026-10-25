@@ -7,6 +7,7 @@ import VoiceSeatRing from '@/components/voice/VoiceSeatRing';
 import { isHiddenName } from '@/lib/hiddenUser';
 import VoiceSpeakingWave from '@/components/voice/VoiceSpeakingWave';
 import { vipLook } from '@/components/vip/vipTheme';
+import VoiceSeatScore from '@/components/voice/VoiceSeatScore';
 
 // Her koltuk aynı boyutta sabit bir portre alanı kullanır: profil boyutu değişse de
 // ızgara kaymaz, çerçeveler komşu koltuğa taşmaz.
@@ -19,7 +20,7 @@ const BADGE = { xs: 'translate-x-[3px] translate-y-[3px]', sm: 'translate-x-[5px
 const NAME = { xs: 'max-w-[42px]', sm: 'max-w-[52px]', md: 'max-w-[68px]', lg: 'max-w-[88px]', xl: 'max-w-[96px]' };
 
 /** Tek koltuk: boş koltukta + ve numara, dolu koltukta profil görseli ve isim. */
-function VoiceSeat({ seat, index, size = 'md', musicPlaying, speaking, isSelf, isOwner, isMod, accent = '#ef4444', gifted, onClick, onSelect, micMuted, profile, cosmeticChoice }) {
+function VoiceSeat({ seat, index, size = 'md', musicPlaying, speaking, isSelf, isOwner, isMod, accent = '#ef4444', gifted, onClick, onSelect, micMuted, profile, cosmeticChoice, boardActive = false, score = 0 }) {
   const handleClick = onSelect ? () => onSelect(index) : onClick;
   const cell = CELL[size] || CELL.md;
   const face = FACE[size] || FACE.md;
@@ -49,6 +50,7 @@ function VoiceSeat({ seat, index, size = 'md', musicPlaying, speaking, isSelf, i
             )}
           </span>
         </span>
+        {boardActive && <span className="invisible" aria-hidden="true"><VoiceSeatScore value={0} size={size} /></span>}
         <span className="flex h-3 items-center text-[10px] font-medium leading-none text-white/85">{index + 1}</span>
       </button>
     );
@@ -81,6 +83,7 @@ function VoiceSeat({ seat, index, size = 'md', musicPlaying, speaking, isSelf, i
           <span className="gift-pop pointer-events-none absolute -top-5 left-1/2 z-30 -translate-x-1/2 text-lg leading-none">{gifted}</span>
         )}
       </span>
+      {boardActive && <VoiceSeatScore value={score} size={size} />}
       <span className={`flex h-3 ${nameWidth} items-center gap-0.5 truncate text-[10px] leading-none`} style={{ color: gifted ? accent : nameTheme?.accent || '#ffffff' }}>
         {!hidden && isOwner && <Crown className="h-3 w-3 shrink-0 text-amber-400" />}
         {!hidden && !isOwner && isMod && <Shield className="h-3 w-3 shrink-0 text-sky-400" />}

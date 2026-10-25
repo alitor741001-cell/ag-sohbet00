@@ -1,20 +1,12 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Mail, Lock, Loader2, Eye, EyeOff, ArrowRight, Sparkles, MessageSquare, Lock as LockIcon, Users, AlertCircle } from "lucide-react";
-import AuthBackground from "@/components/auth/AuthBackground";
-import SupportWidget from "@/components/auth/SupportWidget";
-import DownloadButtons from "@/components/DownloadButtons";
-import { safeReturnTo } from "@/lib/authReturnTo";
-import GoogleIcon from "@/components/GoogleIcon";
-import AppleIcon from "@/components/AppleIcon";
-import LegalLinks from "@/components/auth/LegalLinks";
-import { consumeBanNotice } from "@/lib/banNotice";
-import { detectConnectionType } from "@/lib/connectionType";
-import { isBasicPath } from "@/lib/access";
+import React, { useState } from 'react';
+import { base44 } from '@/api/base44Client';
+import BlueAuthLayout from '@/components/auth/BlueAuthLayout';
+import BlueLoginForm from '@/components/auth/BlueLoginForm';
+import SupportWidget from '@/components/auth/SupportWidget';
+import DownloadButtons from '@/components/DownloadButtons';
+import { safeReturnTo } from '@/lib/authReturnTo';
+import { consumeBanNotice } from '@/lib/banNotice';
+import { detectConnectionType } from '@/lib/connectionType';
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -82,175 +74,15 @@ export default function Login() {
     catch (err) { setError(err.message || 'Sosyal giriş başlatılamadı'); setSocialLoading(''); }
   };
 
-  const features = [
-    { icon: Sparkles, label: "Yüksek Kalite" },
-    { icon: MessageSquare, label: "Canlı Oda Sohbeti" },
-    { icon: LockIcon, label: "Şifreli & Şifresiz Odalar" },
-    { icon: Users, label: "Arkadaşlarla İzle" },
-  ];
-
   return (
-    <AuthBackground>
-      {/* Açılışta marka logosu gösterilmez: uygulama doğrudan içeriğe geçer. */}
-      <div className="text-center mb-8">
-        <h1 className="neon-welcome text-2xl sm:text-3xl font-black tracking-[0.14em] text-white">AG HOŞ GELDİNİZ</h1>
-      </div>
-
-      {/* Login Box */}
-      <div className="bg-[#141414]/95 backdrop-blur-sm rounded-2xl border border-[#2a2a2a] p-7 shadow-2xl">
-        <div className="mb-6">
-          <h2 className="text-xl font-bold text-white">Hoş Geldin!</h2>
-          <p className="text-sm text-[#a0a0a0] mt-1">Hesabına giriş yaparak devam et.</p>
-        </div>
-
-        {banned && (
-          <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm flex items-start gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-            <div>
-              <p className="font-semibold">Hesabınız Banlandı</p>
-              <p className="mt-1 text-xs">Hesabınız banlanmıştır. Yönetici tarafından engellendiğiniz için giriş yapamazsınız.</p>
-              {noticeReason && <p className="mt-1 text-xs font-medium">Neden: {noticeReason}</p>}
-              {noticeDesc && <p className="mt-0.5 text-xs">Açıklama: {noticeDesc}</p>}
-            </div>
-          </div>
-        )}
-        {removed && (
-          <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm flex items-start gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-            <div>
-              <p className="font-semibold">Hesabınız Silindi</p>
-              <p className="mt-1 text-xs">Hesabınız yönetici tarafından silinmiştir. Giriş yapamazsınız.</p>
-            </div>
-          </div>
-        )}
-        {kicked && (
-          <div className="mb-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400 text-sm flex items-start gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-            <div>
-              <p className="font-semibold">Hesabınız Başka Cihazdan Açıldı</p>
-              <p className="mt-1 text-xs">Hesabınıza başka bir cihazdan giriş yapıldığı için bu oturum kapatıldı.</p>
-            </div>
-          </div>
-        )}
-
-        {error && (
-          <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email" className="text-[#a0a0a0]">E-posta veya kullanıcı adı</Label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#a0a0a0]" aria-hidden="true" />
-              <Input
-                id="email"
-                type="text"
-                autoComplete="email"
-                autoFocus
-                placeholder="ornek@email.com"
-                value={email}
-                onChange={(e) => { setEmail(e.target.value); if (error) setError(""); }}
-                className="pl-10 h-12 bg-[#0a0a0a] border-[#2a2a2a] text-white placeholder:text-[#555] focus:border-[#e50914]"
-                required
-              />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password" className="text-[#a0a0a0]">Şifre</Label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#a0a0a0]" aria-hidden="true" />
-              <Input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                autoComplete="current-password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => { setPassword(e.target.value); if (error) setError(""); }}
-                className="pl-10 pr-10 h-12 bg-[#0a0a0a] border-[#2a2a2a] text-white placeholder:text-[#555] focus:border-[#e50914]"
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword((s) => !s)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#a0a0a0] hover:text-white"
-              >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
-            </div>
-          </div>
-          <div className="flex items-center justify-between">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={remember}
-                onChange={(e) => setRemember(e.target.checked)}
-                className="w-4 h-4 rounded accent-[#e50914] bg-[#0a0a0a] border-[#2a2a2a]"
-              />
-              <span className="text-sm text-[#a0a0a0]">Beni hatırla</span>
-            </label>
-            <Link to="/forgot-password" className="text-sm text-[#e50914] hover:underline">
-              Şifremi Unuttum?
-            </Link>
-          </div>
-          <Button
-            type="submit"
-            className="w-full h-12 font-semibold bg-[#e50914] hover:bg-[#f6121d] text-white"
-            disabled={loading}
-          >
-            {loading ? (
-              <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Giriş yapılıyor...</>
-            ) : (
-              <>Giriş Yap <ArrowRight className="w-4 h-4 ml-2" /></>
-            )}
-          </Button>
-        </form>
-
-        <div className="relative my-6">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-[#2a2a2a]" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-[#141414] px-3 text-[#a0a0a0]">veya</span>
-          </div>
-        </div>
-
-        <div className="grid sm:grid-cols-2 gap-3 mb-4">
-          <Button type="button" variant="outline" onClick={() => handleProvider('google')} disabled={!!socialLoading} className="h-12 border-[#2a2a2a] bg-white text-black hover:bg-[#eee] hover:text-black">
-            {socialLoading === 'google' ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <GoogleIcon className="w-5 h-5 mr-2" />} Google ile Giriş
-          </Button>
-          <Button type="button" variant="outline" onClick={() => handleProvider('apple')} disabled={!!socialLoading} className="h-12 border-[#2a2a2a] bg-black text-white hover:bg-[#111] hover:text-white">
-            {socialLoading === 'apple' ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <AppleIcon className="w-5 h-5 mr-2" />} Apple ile Giriş
-          </Button>
-        </div>
-        <Link to={"/register" + (returnTo !== "/" ? "?returnTo=" + encodeURIComponent(returnTo) : "")}>
-          <Button type="button" variant="outline" className="w-full h-12 font-medium border-[#2a2a2a] bg-transparent text-white hover:bg-[#1a1a1a] hover:text-white">Hesap Oluştur</Button>
-        </Link>
-        <p className="text-center text-[11px] text-[#777] mt-4">Devam ederek yasal koşulları kabul etmiş olursunuz.</p>
-        <LegalLinks className="w-full mt-2 text-[11px] text-[#a0a0a0]" />
-      </div>
-
-      {/* Footer Features */}
-      <div className="grid grid-cols-2 gap-3 mt-6">
-        {features.map((f) => (
-          <div key={f.label} className="flex items-center gap-2 text-xs text-[#a0a0a0]">
-            <f.icon className="w-4 h-4 text-[#e50914] shrink-0" />
-            <span>{f.label}</span>
-          </div>
-        ))}
-      </div>
-
-      {/* Mobil indirme butonları */}
-      <div className="mt-6">
-        <p className="text-center text-xs text-[#a0a0a0] mb-3">📱 Telefonuna indir, her zaman yanında</p>
-        <DownloadButtons variant="light" />
-      </div>
-
-      <p className="text-center text-xs text-[#555] mt-6">© 2024. Tüm hakları saklıdır.</p>
-
-      {/* Canlı destek butonu */}
+    <BlueAuthLayout title="Hoş Geldin" subtitle="Sesli sohbet dünyasına sen de katıl!">
+      {banned && <div className="blue-auth-error" role="alert"><strong>Hesabınız Banlandı</strong><p>Hesabınız yönetici tarafından engellenmiştir. Giriş yapamazsınız.</p>{noticeReason && <p>Neden: {noticeReason}</p>}{noticeDesc && <p>Açıklama: {noticeDesc}</p>}</div>}
+      {removed && <p className="blue-auth-error" role="alert">Hesabınız yönetici tarafından silinmiştir. Giriş yapamazsınız.</p>}
+      {kicked && <p className="blue-auth-error" role="alert">Hesabınız başka cihazdan açıldığı için bu oturum kapatıldı.</p>}
+      {error && <p className="blue-auth-error" role="alert">{error}</p>}
+      <BlueLoginForm email={email} setEmail={v => { setEmail(v); setError(''); }} password={password} setPassword={v => { setPassword(v); setError(''); }} shown={showPassword} toggle={() => setShowPassword(v => !v)} remember={remember} setRemember={setRemember} loading={loading} socialLoading={socialLoading} onProvider={handleProvider} onSubmit={handleSubmit} returnTo={returnTo} />
+      <details className="blue-auth-extras"><summary>Telefonuna indir</summary><div className="mt-3"><DownloadButtons variant="light" /></div></details>
       <SupportWidget />
-    </AuthBackground>
+    </BlueAuthLayout>
   );
 }
