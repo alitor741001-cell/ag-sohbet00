@@ -5,6 +5,7 @@ import BlueLoginForm from '@/components/auth/BlueLoginForm';
 import { safeReturnTo } from '@/lib/authReturnTo';
 import { consumeBanNotice } from '@/lib/banNotice';
 import { detectConnectionType } from '@/lib/connectionType';
+import authErrorMessage from '@/components/auth/authErrorMessage';
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -60,7 +61,7 @@ export default function Login() {
       // Abonelik/paket kapısı kaldırıldı: giriş yapan kullanıcı doğrudan hedefine gider.
       window.location.href = returnTo;
     } catch (err) {
-      setError(err.message || "Geçersiz e-posta veya şifre");
+      setError(authErrorMessage(err, 'Geçersiz e-posta veya şifre'));
     } finally {
       setLoading(false);
     }
@@ -69,7 +70,7 @@ export default function Login() {
   const handleProvider = async (provider) => {
     setError(''); setSocialLoading(provider);
     try { await base44.auth.loginWithProvider(provider, returnTo); }
-    catch (err) { setError(err.message || 'Sosyal giriş başlatılamadı'); setSocialLoading(''); }
+    catch (err) { setError(authErrorMessage(err, 'Sosyal giriş başlatılamadı')); setSocialLoading(''); }
   };
 
   return (

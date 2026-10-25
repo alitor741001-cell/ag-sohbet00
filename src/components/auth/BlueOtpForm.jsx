@@ -6,7 +6,7 @@ export default function BlueOtpForm({ email, error, code, setCode, loading, onVe
   return <form style={zone(150, 420, 532, 845)} className="absolute flex flex-col justify-center gap-3 rounded-2xl bg-[#04071a] p-4 text-center text-white" onSubmit={e => { e.preventDefault(); if (code.length === 6 && !loading) onVerify(); }}>
     <h1 className="text-xl font-bold">E-postanı doğrula</h1>
     <p className="text-xs text-blue-100">{email} adresine bir kod gönderdik</p>
-    {error && <p className="text-xs text-red-300" role="alert">{error}</p>}
+
     <div className="flex justify-center"><InputOTP maxLength={6} value={code} onChange={setCode} autoFocus autoComplete="one-time-code"><InputOTPGroup>
       {Array.from({ length: 6 }, (_, i) => <InputOTPSlot key={i} index={i} />)}
     </InputOTPGroup></InputOTP></div>

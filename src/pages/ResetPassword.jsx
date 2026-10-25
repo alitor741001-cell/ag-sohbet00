@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Lock, Loader2, AlertTriangle } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
+import authErrorMessage from '@/components/auth/authErrorMessage';
 
 export default function ResetPassword() {
   const [searchParams] = useSearchParams();
@@ -20,7 +21,7 @@ export default function ResetPassword() {
     e.preventDefault();
     setError("");
     if (newPassword !== confirmPassword) {
-      setError("Passwords do not match");
+      setError("Şifreler eşleşmiyor");
       return;
     }
     setLoading(true);
@@ -28,7 +29,7 @@ export default function ResetPassword() {
       await base44.auth.resetPassword({ resetToken, newPassword });
       window.location.href = "/login";
     } catch (err) {
-      setError(err.message || "Failed to reset password");
+      setError(authErrorMessage(err, 'Şifre sıfırlanamadı. Yeni bir sıfırlama bağlantısı isteyin.'));
     } finally {
       setLoading(false);
     }

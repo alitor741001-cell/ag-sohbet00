@@ -12,4 +12,5 @@
 .blue-auth-select option { background: #04071a; color: #f5f8ff; }
 .blue-auth-pick { border-radius: 2.5cqw; background: transparent; }
 .blue-auth-pick[aria-pressed="true"] { box-shadow: 0 0 0 2px #4d8bff, 0 0 18px #2f6bff; }
-.blue-auth-error { top: 1.5%; left: 5%; right: 5%; z-index: 5; padding: 2.4cqw; border-radius: 2.5cqw; background: rgba(120, 10, 20, .92); color: #fff; font-size: 3.4cqw; text-align: center; }
+.blue-auth-error { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 6vh); left: 8%; right: 8%; z-index: 50; max-width: 480px; margin: 0 auto; padding: 12px 16px; border-radius: 14px; background: rgba(120, 10, 20, .96); color: #fff; font-size: 14px; line-height: 1.4; text-align: center; }
+.blue-auth-notice { background: #102653; }

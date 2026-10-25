@@ -11,7 +11,7 @@ export default function BlueRegisterForm({ values, setters, shown, toggle, showC
   const select = (part, label, x1, x2, count, toValue) => <select aria-label={label} required value={{ day, month, year }[part]} onChange={e => setDate(part, e.target.value)} className={`blue-auth-select absolute ${{ day, month, year }[part] ? 'has-value' : ''}`} style={zone(x1, 744, x2, 776)}>
     <option value="">{label}</option>{Array.from({ length: count }, (_, i) => <option key={i} value={toValue(i)}>{toValue(i).replace(/^0/, '')}</option>)}
   </select>;
-  return <form onSubmit={onSubmit} className="contents">
+  return <form onSubmit={onSubmit} noValidate className="contents">
     {input('username', 'Kullanıcı adı', 430, { autoComplete: 'username' })}
     {input('email', 'E-posta adresiniz', 478, { type: 'email', autoComplete: 'email' })}
     {input('password', 'Şifre oluşturun', 526, { type: shown ? 'text' : 'password', autoComplete: 'new-password', minLength: 6 })}

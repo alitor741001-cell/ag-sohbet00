@@ -3,7 +3,7 @@ import { base44 } from '@/api/base44Client';
 import BlueAuthLayout from '@/components/auth/BlueAuthLayout';
 import BlueRegisterForm from '@/components/auth/BlueRegisterForm';
 import BlueOtpForm from '@/components/auth/BlueOtpForm';
-import { toast } from '@/components/ui/use-toast';
+import authErrorMessage from '@/components/auth/authErrorMessage';
 import { safeReturnTo } from '@/lib/authReturnTo';
 
 export default function Register() {
@@ -20,6 +20,7 @@ export default function Register() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(true);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState('');
   const [loading, setLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState('');
   const [showOtp, setShowOtp] = useState(false);
@@ -40,7 +41,11 @@ export default function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (loading) return;
     setError("");
+    setNotice('');
+    if (!username.trim()) { setError('Kullanıcı adınızı girin'); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())) { setError('Geçerli bir e-posta adresi girin. Örnek: isim@gmail.com'); return; }
     if (!acceptTerms) { setError("Kullanım koşullarını kabul etmelisiniz"); return; }
     if (password !== confirmPassword) { setError("Şifreler eşleşmiyor"); return; }
     if (password.length < 6) { setError("Şifre en az 6 karakter olmalı"); return; }
@@ -61,9 +66,9 @@ export default function Register() {
       await base44.auth.register({ email: email.trim().toLowerCase(), password });
       // Doğrulama ekranına geç — OTP doğrulanmadan giriş yapılmaz
       setShowOtp(true);
-      toast({ title: "Kod gönderildi", description: `${email} adresine doğrulama kodu gönderildi.` });
+      setNotice(`${email.trim()} adresine doğrulama kodu gönderildi. Kodu girince ana sayfa açılacak.`);
     } catch (err) {
-      setError(err.message || "Kayıt başarısız");
+      setError(authErrorMessage(err, 'Kayıt oluşturulamadı. Bilgilerinizi kontrol edip tekrar deneyin.'));
     } finally {
       setLoading(false);
     }
@@ -94,10 +99,10 @@ export default function Register() {
         link: '/admin/kullanicilar',
         telegram_data: { username: fullName || username || email, email, date: new Date().toLocaleString('tr-TR') }
       }).catch(() => {});
-      toast({ title: "Kayıt tamamlandı", description: "Tüm içeriklere erişebilirsin, ana sayfaya yönlendiriliyorsun." });
+      setNotice('Kayıt tamamlandı. Ana sayfaya yönlendiriliyorsunuz.');
       window.location.href = safeReturnTo();
     } catch (err) {
-      setError(err.message || "Geçersiz doğrulama kodu");
+      setError(authErrorMessage(err, 'Kod doğrulanamadı. E-postanıza gelen 6 haneli kodu kontrol edin.'));
     } finally {
       setLoading(false);
     }
@@ -111,9 +116,9 @@ export default function Register() {
       await base44.auth.resendOtp(email.trim().toLowerCase());
       setOtpCode("");
       setResendCooldown(60);
-      toast({ title: "Yeni kod gönderildi", description: `${email} adresine yeni doğrulama kodu gönderildi.` });
+      setNotice(`${email.trim()} adresine yeni doğrulama kodu gönderildi.`);
     } catch (err) {
-      setError(err.message || "Kod gönderilemedi. Lütfen tekrar deneyin.");
+      setError(authErrorMessage(err, 'Kod gönderilemedi. Lütfen tekrar deneyin.'));
     } finally {
       setResending(false);
     }
@@ -123,16 +128,16 @@ export default function Register() {
     if (!acceptTerms) { setError('Kullanım koşullarını kabul etmelisiniz'); return; }
     setError(''); setSocialLoading(provider);
     try { await base44.auth.loginWithProvider(provider, safeReturnTo()); }
-    catch (err) { setError(err.message || 'Sosyal kayıt başlatılamadı'); setSocialLoading(''); }
+    catch (err) { setError(authErrorMessage(err, 'Sosyal kayıt başlatılamadı')); setSocialLoading(''); }
   };
 
   if (showOtp) {
-    return <BlueAuthLayout mode="register">
+    return <BlueAuthLayout mode="register" error={error} notice={notice}>
       <BlueOtpForm email={email} error={error} code={otpCode} setCode={value => { setOtpCode(value); setError(''); }} loading={loading} onVerify={handleVerify} resending={resending} cooldown={resendCooldown} onResend={handleResend} />
     </BlueAuthLayout>;
   }
 
-  return <BlueAuthLayout mode="register" error={error}>
+  return <BlueAuthLayout mode="register" error={error} notice={notice}>
     <BlueRegisterForm
       values={{ email, password, confirmPassword, fullName, username, birthDate, gender, avatar, acceptTerms }}
       setters={{ email: setEmail, password: setPassword, confirmPassword: setConfirmPassword, fullName: setFullName, username: setUsername, birthDate: setBirthDate, gender: setGender, acceptTerms: setAcceptTerms }}
