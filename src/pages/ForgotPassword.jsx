@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Mail, ArrowLeft, Loader2 } from "lucide-react";
-import AuthLayout from "@/components/AuthLayout";
+import "@/components/auth/blueAuth.css";
+
+const ART = "https://media.base44.com/images/public/6a77d66e4da6de214628ee62/ed1e8f656_IMG_0300.jpg";
+// Tasarım görseli 575x1024; alanlar görseldeki çizimlerin üstüne oturur.
+const zone = (x1, y1, x2, y2) => ({ left: `${x1 / 5.75}%`, top: `${y1 / 10.24}%`, width: `${(x2 - x1) / 5.75}%`, height: `${(y2 - y1) / 10.24}%` });
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -18,7 +18,7 @@ export default function ForgotPassword() {
     try {
       await base44.auth.resetPasswordRequest(email);
     } catch {
-      // Always show success regardless
+      // Hesabın var olup olmadığı gizli kalır
     } finally {
       setLoading(false);
       setSent(true);
@@ -26,51 +26,39 @@ export default function ForgotPassword() {
   };
 
   return (
-    <AuthLayout
-      icon={Mail}
-      title="Reset password"
-      subtitle="We'll send you a link to reset it"
-      footer={
-        <Link to="/login" className="text-primary font-medium hover:underline">
-          <ArrowLeft className="w-3 h-3 inline mr-1" />Back to log in
-        </Link>
-      }
-    >
-      {sent ? (
-        <p className="text-sm text-foreground text-center">
-          If an account exists with that email, you'll receive a password reset link shortly.
-        </p>
-      ) : (
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email address</Label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
-              <Input
-                id="email"
-                type="email"
-                autoComplete="email"
-                autoFocus
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="pl-10 h-12"
-                required
-              />
-            </div>
-          </div>
-          <Button type="submit" className="w-full h-12 font-medium" disabled={loading}>
-            {loading ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Sending...
-              </>
-            ) : (
-              "Send reset link"
-            )}
-          </Button>
+    <main className="blue-auth">
+      <div
+        className="blue-auth-stage"
+        style={{ backgroundImage: `url(${ART})`, width: "min(100vw, calc(var(--app-height, 100dvh) * 575 / 1024))", aspectRatio: "575 / 1024" }}
+      >
+        <form onSubmit={handleSubmit} className="contents">
+          <input
+            aria-label="E-posta adresiniz"
+            type="email"
+            placeholder=" "
+            autoComplete="email"
+            className="blue-auth-input absolute"
+            style={{ ...zone(137, 544, 438, 583), paddingLeft: "13cqw" }}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+          <button type="submit" aria-label="Sıfırlama Bağlantısı Gönder" className="blue-auth-hit absolute" style={zone(137, 606, 438, 649)} disabled={loading}>
+            Sıfırlama Bağlantısı Gönder
+          </button>
         </form>
-      )}
-    </AuthLayout>
+        <Link aria-label="Giriş Yap sayfasına dön" className="blue-auth-hit absolute" style={zone(200, 664, 380, 694)} to="/login">
+          Giriş Yap sayfasına dön
+        </Link>
+        {sent && (
+          <div
+            className="absolute flex items-center justify-center text-center"
+            style={{ ...zone(137, 536, 438, 656), background: "#030618", borderRadius: "5cqw", boxShadow: "inset 0 0 0 2px #3b6dff", color: "#f5f8ff", fontSize: "3.4cqw", padding: "3cqw" }}
+          >
+            Bu e-posta ile bir hesap varsa, sıfırlama bağlantısı kısa süre içinde gönderilecek.
+          </div>
+        )}
+      </div>
+    </main>
   );
 }
