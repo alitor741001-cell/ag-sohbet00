@@ -12,6 +12,7 @@ import AviatorStage from './aviator/AviatorStage';
 import AviatorBetCard from './aviator/AviatorBetCard';
 import betSlot from './aviator/useBetSlot';
 import GameHelpSheet from './help/GameHelpSheet';
+import RocketWinOverlay from '@/components/games/rocket/RocketWinOverlay';
 
 /** Aviator: uçak havalanır, çarpan yükselir; uçak uçup gitmeden önce çek. */
 export default function CrashRocketGame({ onExit, onBack }) {
@@ -43,6 +44,7 @@ export default function CrashRocketGame({ onExit, onBack }) {
         onSave={(v) => game.setAutoTarget(autoEdit, v)} onClose={() => setAutoEdit(null)} />
       <RocketLedger open={ledgerOpen} onClose={() => setLedgerOpen(false)} data={game.ledger} />
       <GameHelpSheet game="rocket" open={helpOpen} onClose={() => setHelpOpen(false)} />
+      <RocketWinOverlay game={game} />
 
       {(game.status === 'loading' || game.status === 'error') && (
         <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/85">

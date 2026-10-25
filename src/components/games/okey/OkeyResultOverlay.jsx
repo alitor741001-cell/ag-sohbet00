@@ -1,3 +1,4 @@
+import GameWinArtwork from '@/components/games/shared/GameWinArtwork';
 import { formatBet } from './okeyConfig';
 import ReferenceChoiceButton from '@/components/games/controls/ReferenceChoiceButton';
 
@@ -9,6 +10,9 @@ export default function OkeyResultOverlay({ table, mySeat, onLeave }) {
   // El sonu hesabı: her oyuncunun elinde kalan taşların puanı.
   const scores = table.final_scores || [];
   const winnerSeat = (table.seats || []).findIndex((seat) => seat.user_id && seat.user_id === table.winner_id);
+  if (won) return <GameWinArtwork open amount={table.win_amount} onAccept={onLeave} detail={
+    <><p>{table.winner_name || 'Kazanan'} · Pot hesabına eklendi.</p>{scores.map(entry => <p key={entry.seat}>{entry.name || `Koltuk ${entry.seat + 1}`}: {entry.score} puan</p>)}</>
+  } />;
 
   return (
     <div className="okey-result">
