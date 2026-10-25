@@ -1,0 +1,81 @@
+{
+  "description": "Roket dolumlar\u0131nda ilk d\u00f6rde seviyeli, di\u011fer hediye g\u00f6nderenlerden rastgele 10 ki\u015fiye 100 coin verir.",
+  "name": "Oda Roketi \u00d6d\u00fclleri",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "entity",
+      "events": [
+        "create"
+      ],
+      "entity_name": "RoomRocketGift"
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "room_rocket_awards",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "distribute_rewards": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "roomRocketAwards",
+            "args": {
+              "signal_id": "${ .trigger.entity_id }"
+            }
+          },
+          "then": "check_remaining",
+          "x-base44": {
+            "title": "Roket \u00f6d\u00fcllerini da\u011f\u0131t",
+            "description": "\u0130lk d\u00f6rt ve rastgele 10 hediye g\u00f6nderen"
+          }
+        }
+      },
+      {
+        "check_remaining": {
+          "switch": [
+            {
+              "when": "${ .distribute_rewards.more == true }",
+              "then": "wait_for_room"
+            },
+            {
+              "when": "${ true }",
+              "then": "end"
+            }
+          ],
+          "x-base44": {
+            "title": "Bekleyen \u00f6d\u00fclleri kontrol et"
+          }
+        }
+      },
+      {
+        "wait_for_room": {
+          "wait": "PT10S",
+          "then": "finish_rewards",
+          "x-base44": {
+            "title": "\u0130\u015flem s\u0131ras\u0131n\u0131 bekle"
+          }
+        }
+      },
+      {
+        "finish_rewards": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "roomRocketAwards",
+            "args": {
+              "signal_id": "${ .trigger.entity_id }"
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "S\u0131radaki roketleri tamamla"
+          }
+        }
+      }
+    ]
+  }
+}

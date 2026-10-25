@@ -1,0 +1,60 @@
+{
+  "name": "RoomRocketState",
+  "type": "object",
+  "properties": {
+    "room_id": {
+      "type": "string"
+    },
+    "total_coins": {
+      "type": "number",
+      "default": 0
+    },
+    "completed": {
+      "type": "integer",
+      "default": 0
+    },
+    "pending": {
+      "type": "boolean",
+      "default": false
+    },
+    "audience_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    }
+  },
+  "required": [
+    "room_id"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.audience_ids": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

@@ -19,6 +19,13 @@
       },
       "default": []
     },
+    "room_rocket_rewards": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
     "bet": {
       "type": "number",
       "default": 100

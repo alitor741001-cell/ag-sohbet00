@@ -1,0 +1,46 @@
+{
+  "description": "Yo\u011fun hediye ak\u0131\u015f\u0131nda s\u0131rada kalan roket \u00f6d\u00fcllerini, ayn\u0131 \u00f6d\u00fcl\u00fc iki kez vermeden tamamlar.",
+  "name": "Bekleyen Roket \u00d6d\u00fclleri",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "recurring",
+      "cron_expression": "*/5 * * * *",
+      "one_time_date": null,
+      "timezone": "UTC",
+      "interval_value": null,
+      "interval_unit": null,
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "room_rocket_recovery",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "finish_pending": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "roomRocketAwards",
+            "args": {
+              "action": "pending"
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Bekleyen \u00f6d\u00fclleri tamamla"
+          }
+        }
+      }
+    ]
+  }
+}

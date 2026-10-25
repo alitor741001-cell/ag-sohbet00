@@ -15,6 +15,7 @@ import { resizeSeats } from '@/components/voice/seatLayout';
 import { isHiddenName } from '@/lib/hiddenUser';
 import useVoiceRoomMessages from '@/hooks/useVoiceRoomMessages';
 import VoiceControlBar from '@/components/voice/VoiceControlBar';
+import RoomRocketFeature from '@/components/voice/roomRocket/RoomRocketFeature';
 import VoiceChatDock from '@/components/voice/VoiceChatDock';
 import VoiceViewerSheet from '@/components/voice/VoiceViewerSheet';
 import VoiceSeatInvitePrompt from '@/components/voice/VoiceSeatInvitePrompt';
@@ -1176,6 +1177,7 @@ export default function VoiceRoom() {
 
       </div>
       <div className="voice-controls-anchor shrink-0" hidden={composerOpen}>
+      <RoomRocketFeature room={room} hidden={composerOpen} />
       {!composerOpen && (
       <VoiceControlBar
         keyboardOpen={keyboardOpen}

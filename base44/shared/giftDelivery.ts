@@ -78,6 +78,14 @@ export async function deliverGift(base44, context) {
         text: `${name}, ${recipients.map(p => p.name).join(', ')} kişisine ${gift.name}${quantity > 1 ? ` X${quantity}` : ''} gönderdi.`,
       });
     }
+    if (room.room_type === 'voice' || room.voice_mode === true) {
+      const signals = await sr.RoomRocketGift.filter({ room_id: roomId, request_id: key }, 'created_date', 1);
+      if (!signals.length) {
+        const total = await sr.RoomRocketGift.aggregate({ query: { room_id: roomId }, sum: ['coins'] });
+        const giftAt = records.reduce((latest, record) => record.created_date > latest ? record.created_date : latest, records[0].created_date);
+        await sr.RoomRocketGift.create({ room_id: roomId, request_id: key, coins: cost, total_after: (total.rows[0]?.sum_coins || 0) + cost, gift_at: giftAt });
+      }
+    }
     return { ok: true, records, wallet, room, messages, first: !alreadyPaid };
   } finally {
     await giftLock(base44, [], token, true);

@@ -1,0 +1,101 @@
+{
+  "name": "RoomRocketRound",
+  "type": "object",
+  "properties": {
+    "room_id": {
+      "type": "string"
+    },
+    "ordinal": {
+      "type": "integer"
+    },
+    "level": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4
+    },
+    "cycle": {
+      "type": "integer"
+    },
+    "as_of": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "paying",
+        "complete"
+      ],
+      "default": "paying"
+    },
+    "recipients": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "avatar": {
+            "type": "string"
+          },
+          "rank": {
+            "type": "integer"
+          },
+          "score": {
+            "type": "number"
+          },
+          "amount": {
+            "type": "integer"
+          },
+          "paid": {
+            "type": "boolean"
+          },
+          "unavailable": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "user_id",
+          "rank",
+          "amount"
+        ]
+      }
+    },
+    "finished_at": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "room_id",
+    "ordinal",
+    "level",
+    "cycle",
+    "as_of",
+    "recipients"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

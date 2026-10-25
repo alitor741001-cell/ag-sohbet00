@@ -1,0 +1,51 @@
+{
+  "name": "RoomRocketGift",
+  "type": "object",
+  "properties": {
+    "room_id": {
+      "type": "string"
+    },
+    "request_id": {
+      "type": "string"
+    },
+    "coins": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "total_after": {
+      "type": "number"
+    },
+    "gift_at": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "room_id",
+    "request_id",
+    "coins",
+    "gift_at",
+    "total_after"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
