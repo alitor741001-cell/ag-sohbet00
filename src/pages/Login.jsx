@@ -2,8 +2,6 @@ import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import BlueAuthLayout from '@/components/auth/BlueAuthLayout';
 import BlueLoginForm from '@/components/auth/BlueLoginForm';
-import SupportWidget from '@/components/auth/SupportWidget';
-import DownloadButtons from '@/components/DownloadButtons';
 import { safeReturnTo } from '@/lib/authReturnTo';
 import { consumeBanNotice } from '@/lib/banNotice';
 import { detectConnectionType } from '@/lib/connectionType';
@@ -75,14 +73,8 @@ export default function Login() {
   };
 
   return (
-    <BlueAuthLayout title="Hoş Geldin" subtitle="Sesli sohbet dünyasına sen de katıl!">
-      {banned && <div className="blue-auth-error" role="alert"><strong>Hesabınız Banlandı</strong><p>Hesabınız yönetici tarafından engellenmiştir. Giriş yapamazsınız.</p>{noticeReason && <p>Neden: {noticeReason}</p>}{noticeDesc && <p>Açıklama: {noticeDesc}</p>}</div>}
-      {removed && <p className="blue-auth-error" role="alert">Hesabınız yönetici tarafından silinmiştir. Giriş yapamazsınız.</p>}
-      {kicked && <p className="blue-auth-error" role="alert">Hesabınız başka cihazdan açıldığı için bu oturum kapatıldı.</p>}
-      {error && <p className="blue-auth-error" role="alert">{error}</p>}
-      <BlueLoginForm email={email} setEmail={v => { setEmail(v); setError(''); }} password={password} setPassword={v => { setPassword(v); setError(''); }} shown={showPassword} toggle={() => setShowPassword(v => !v)} remember={remember} setRemember={setRemember} loading={loading} socialLoading={socialLoading} onProvider={handleProvider} onSubmit={handleSubmit} returnTo={returnTo} />
-      <details className="blue-auth-extras"><summary>Telefonuna indir</summary><div className="mt-3"><DownloadButtons variant="light" /></div></details>
-      <SupportWidget />
+    <BlueAuthLayout error={banned ? `Hesabınız banlandı. Giriş yapamazsınız.${noticeReason ? ` Neden: ${noticeReason}` : ''}${noticeDesc ? ` Açıklama: ${noticeDesc}` : ''}` : removed ? 'Hesabınız yönetici tarafından silinmiştir. Giriş yapamazsınız.' : kicked ? 'Hesabınız başka cihazdan açıldığı için bu oturum kapatıldı.' : error}>
+      <BlueLoginForm email={email} setEmail={v => { setEmail(v); setError(''); }} password={password} setPassword={v => { setPassword(v); setError(''); }} shown={showPassword} toggle={() => setShowPassword(v => !v)} loading={loading} onSubmit={handleSubmit} returnTo={returnTo} />
     </BlueAuthLayout>
   );
 }

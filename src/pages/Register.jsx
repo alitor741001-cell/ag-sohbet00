@@ -18,7 +18,7 @@ export default function Register() {
   const [avatar, setAvatar] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [acceptTerms, setAcceptTerms] = useState(false);
+  const [acceptTerms, setAcceptTerms] = useState(true);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState('');
@@ -127,13 +127,12 @@ export default function Register() {
   };
 
   if (showOtp) {
-    return <BlueAuthLayout mode="register" title="E-postanı doğrula" subtitle={`${email} adresine bir kod gönderdik`}>
-      <BlueOtpForm error={error} code={otpCode} setCode={value => { setOtpCode(value); setError(''); }} loading={loading} onVerify={handleVerify} resending={resending} cooldown={resendCooldown} onResend={handleResend} />
+    return <BlueAuthLayout mode="register">
+      <BlueOtpForm email={email} error={error} code={otpCode} setCode={value => { setOtpCode(value); setError(''); }} loading={loading} onVerify={handleVerify} resending={resending} cooldown={resendCooldown} onResend={handleResend} />
     </BlueAuthLayout>;
   }
 
-  return <BlueAuthLayout mode="register" title="Kayıt Ol" subtitle="Hesabını oluştur ve film keyfine katıl!">
-    {error && <p className="blue-auth-error" role="alert">{error}</p>}
+  return <BlueAuthLayout mode="register" error={error}>
     <BlueRegisterForm
       values={{ email, password, confirmPassword, fullName, username, birthDate, gender, avatar, acceptTerms }}
       setters={{ email: setEmail, password: setPassword, confirmPassword: setConfirmPassword, fullName: setFullName, username: setUsername, birthDate: setBirthDate, gender: setGender, acceptTerms: setAcceptTerms }}
