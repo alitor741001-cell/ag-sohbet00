@@ -17,9 +17,11 @@ export async function grantRocketVip(base44, round) {
   const target = winner ? await sr.User.get(winner.user_id).catch(() => null) : null;
   if (!target?.id) return sr.RoomRocketRound.update(round.id, { vip_level: vipLevel, vip_granted: true });
   const catalog = await getVipCatalog(base44);
-  const days = catalog.levels.find(level => level.level === vipLevel)?.days || 30;
+  // Süre her roket ödülünde rastgele çıkar: 7 gün ile seviyenin tanımlı üst süresi arasında.
+  const maxDays = Math.max(7, catalog.levels.find(level => level.level === vipLevel)?.days || 30);
   const receipt = `rocket:${round.id}`;
   const existing = await sr.VipItem.filter({ owner_id: target.id, source: 'rocket', purchase_request_id: receipt }, 'created_date', 1);
+  const days = existing[0]?.days || 7 + Math.floor(Math.random() * (maxDays - 6));
   if (!existing[0]) await sr.VipItem.create({
     owner_id: target.id,
     owner_name: target.username || target.full_name || winner?.name || '',
