@@ -17,7 +17,7 @@ export default function RocketRewardSheet({ data, loading, error, onClose, onRet
       <DialogTitle className="sr-only">Roket Patlaması, LVL {level}</DialogTitle>
       <DialogDescription className="sr-only">Günlük hediye sıralaması ve roket seviyesi ödülleri.</DialogDescription>
       <div id="room-rocket-winners" role="tabpanel" aria-label={`LVL ${level} ödülleri`}>
-        <Image src={REWARD_PANEL_ART[level - 1]} alt={`Roket Patlaması LVL ${level} ödül paneli`} loading="eager" decoding="sync" fittingType="fill" className="room-rocket-sheet-art" />
+        <Image src={REWARD_PANEL_ART[level - 1]} alt={`Roket Patlaması LVL ${level} ödül paneli`} unoptimized blurPlaceholder={false} loading="eager" decoding="sync" fittingType="fit" className="room-rocket-sheet-art" />
       </div>
       <button type="button" className="room-rocket-close" aria-label="Kapat" onClick={onClose} />
       <button type="button" className="room-rocket-help" aria-label="Roket kuralları" onClick={() => setHelp(!help)} />
