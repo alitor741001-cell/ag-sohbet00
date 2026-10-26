@@ -115,6 +115,9 @@ export default function FullUserProfile({
     && (user?.agency_role === 'owner' || user?.agency_role === 'assistant') && !!user?.agency_record_id
     && !!profile && profile.agency_record_id !== user?.agency_record_id;
 
+  // Yönetici başkasının kartını açtığında hediye düğmesi "AG Yetkilisi" düğmesinin yanına geçer.
+  const adminGiftRow = !hidden && !isSelf && user?.role === 'admin' && !!room?.gift;
+
   const inviteBroadcaster = async () => {
     try {
       await agencyApi('invite', { user_id: userId });
@@ -279,7 +282,7 @@ export default function FullUserProfile({
   if (room?.kind === 'voice') return (
     <VoiceFantasyCard profile={profile} hidden={hidden} name={shownName} avatar={banned ? ACCOUNT_STATES.banned.image : shownAvatar}
       role={roleLabel} palette={palette} room={room} userId={userId} isSelf={isSelf} onClose={onClose} onMessage={onMessage}
-      statusContent={statusContent} moderation={!hidden && <ProfileModeration userId={userId} profile={profile} onChanged={setProfile} />} memberId={memberId} genderLabel={genderLabel} age={age} badge={badge}
+      statusContent={statusContent} moderation={!hidden && <ProfileModeration userId={userId} profile={profile} onChanged={setProfile} giftAction={adminGiftRow ? () => room.gift(userId) : null} />} memberId={memberId} genderLabel={genderLabel} age={age} badge={badge} giftInAdminRow={adminGiftRow}
       joinDate={formatDate(profile?.created_date)} copied={copied} onCopyId={copyId} onAction={closeOnAction} />
   );
 

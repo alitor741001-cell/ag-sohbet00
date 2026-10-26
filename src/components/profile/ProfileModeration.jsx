@@ -4,7 +4,8 @@ import { ShieldCheck, Ban, Trash2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import useAgOfficial from '@/hooks/useAgOfficial';
-export default function ProfileModeration({ userId, profile, onChanged }) {
+import VoiceGiftButton from '@/components/profile/VoiceGiftButton';
+export default function ProfileModeration({ userId, profile, onChanged, giftAction = null }) {
   const { user } = useCurrentUser();
   const own = useAgOfficial(user?.id), target = useAgOfficial(userId);
   const client = useQueryClient();
@@ -25,8 +26,14 @@ export default function ProfileModeration({ userId, profile, onChanged }) {
     {canAct && <div className="grid grid-cols-2 gap-2">
       <button className={button} disabled={busy || profile.account_status === 'banned'} onClick={() => { setPending('ban_user'); setError(''); }}><Ban className="h-4 w-4 text-destructive" />BANLA</button>
       <button className={button} disabled={busy} onClick={() => { setPending('delete_user'); setError(''); }}><Trash2 className="h-4 w-4 text-destructive" />SİL</button>
-      {admin && <button className={`${button} col-span-2`} disabled={busy} onClick={() => { setPending('set_ag_official'); setError(''); }}><ShieldCheck className="h-4 w-4 text-premium-gold" />{target.active ? 'AG Yetkilisini Kaldır' : 'AG Yetkilisi'}</button>}
+      {admin && (giftAction
+        ? <>
+          <button className={`${button} min-w-0 px-1 text-[11px] leading-tight`} disabled={busy} onClick={() => { setPending('set_ag_official'); setError(''); }}><ShieldCheck className="h-4 w-4 shrink-0 text-premium-gold" />{target.active ? 'AG Yetkilisini Kaldır' : 'AG Yetkilisi'}</button>
+          <VoiceGiftButton onClick={giftAction} compact />
+        </>
+        : <button className={`${button} col-span-2`} disabled={busy} onClick={() => { setPending('set_ag_official'); setError(''); }}><ShieldCheck className="h-4 w-4 text-premium-gold" />{target.active ? 'AG Yetkilisini Kaldır' : 'AG Yetkilisi'}</button>)}
     </div>}
+    {admin && giftAction && !canAct && <VoiceGiftButton onClick={giftAction} compact />}
     {canAct && pending && <div className="rounded-xl border border-border bg-card p-3 text-center text-xs text-card-foreground">
       <p>{pending === 'delete_user' ? 'Bu hesap kalıcı silinecek. Onaylıyor musunuz?' : pending === 'ban_user' ? 'Hesap hemen banlanacak. Onaylıyor musunuz?' : target.active ? 'AG Yetkilisi yetkisi kaldırılsın mı?' : 'Banlama, kalıcı hesap silme ve destek yetkisi verilsin mi?'}</p>
       <div className="mt-2 flex justify-center gap-2"><button className={button} disabled={busy} onClick={run}>{busy ? 'İşleniyor...' : 'Onayla'}</button><button className={button} disabled={busy} onClick={() => setPending('')}>İptal</button></div>
