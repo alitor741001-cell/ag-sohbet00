@@ -611,6 +611,8 @@ export default function VoiceRoom() {
 
   const handleMic = async () => {
     voice.retryAudio();
+    // Abonelik yoksa koltuk işgal edilmez: uyarı gösterilir, kullanıcı dinleyici kalır.
+    if (voice.canSpeak === false) { voice.requestMic(); return; }
     // Koltukta değilken mikrofona basınca ilk boş koltuğa oturulur ve mikrofon kendiliğinden açılır.
     if (!seated) {
       const freeSeat = seats.find((seat) => !seat.user_id && !seat.locked);

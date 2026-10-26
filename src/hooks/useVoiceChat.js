@@ -24,7 +24,9 @@ const micPermissionGranted = async () => {
   } catch { return false; }
 };
 // Mikrofon izni verilmese bile kişi odayı dinlemeye devam eder; mesaj bunu açıkça söyler.
+const subscriptionError = '💎 Sesli odada konuşmak abonelik gerektirir — dinlemeye devam edebilirsin.';
 const friendlyMicError = (error) => {
+  if (error?.code === 'subscription_required') return subscriptionError;
   if (error?.name === 'NotAllowedError') return '🎤 Mikrofon izni verilmedi — diğerlerini duymaya devam edersin.';
   if (error?.name === 'NotReadableError') return '🎤 Mikrofon kullanılamıyor — diğerlerini duymaya devam edersin.';
   return '🎤 Mikrofon başlatılamadı — diğerlerini duymaya devam edersin.';
@@ -60,6 +62,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
   const [connectionState, setConnectionState] = useState('disconnected');
   const [error, setError] = useState('');
   const [micDenied, setMicDenied] = useState(false);
+  const [canSpeak, setCanSpeak] = useState(true);
   const [audioBlocked, setAudioBlocked] = useState(false);
   const [debug, setDebug] = useState(initialDebug);
   const [everVoiceEnabled, setEverVoiceEnabled] = useState(voiceEnabled);
@@ -88,6 +91,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
     setSpeakingIds((previous) => sameList(previous, snapshot.speakers) ? previous : snapshot.speakers);
     setConnectionState(snapshot.connectionState);
     setAudioBlocked(!!snapshot.audioBlocked);
+    setCanSpeak(snapshot.canPublish !== false);
     const nextDebug = {
       participantCount: snapshot.participantCount,
       remoteParticipants: snapshot.peerCount,
@@ -333,6 +337,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
   const toggleMute = useCallback(async () => {
     const mesh = meshRef.current;
     if (hasDirectCallAudioFocus() || mutedByModeratorRef.current) return;
+    if (!canSpeak) { setError(subscriptionError); return; }
     // Takılı kalan bir önceki deneme butonu kilitlemesin: 10 saniye sonra yeni deneme açılır.
     if (micTogglePendingRef.current && Date.now() - micToggleAtRef.current < 10000) return;
     micGestureRef.current = true;
@@ -356,7 +361,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
       setMicDenied(isPermissionError(micError));
       setError(friendlyMicError(micError));
     } finally { micTogglePendingRef.current = false; setRequesting(false); }
-  }, [connectionState, enableMic, refreshState]);
+  }, [canSpeak, connectionState, enableMic, refreshState]);
 
   const toggleDeafen = useCallback(() => {
     const next = !deafenedRef.current;
@@ -381,6 +386,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
 
   // Mikrofon düğmesine basıldı: izin bu dokunuşla istenir, verilirse yayın açılır.
   const requestMic = useCallback(() => {
+    if (!canSpeak) { setError(subscriptionError); return; }
     micGestureRef.current = true;
     micWantedRef.current = true;
     const mesh = meshRef.current;
@@ -390,7 +396,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
       setError(friendlyMicError(micError));
       refreshState();
     });
-  }, [connectionState, enableMic, refreshState]);
+  }, [canSpeak, connectionState, enableMic, refreshState]);
 
-  return { muted: !active, remoteMuted, deafened, localSpeaking, speakingIds, participantMicStates, active, error, micDenied, requesting, connectionState, audioBlocked, retryAudio, retryMic, requestMic, toggleMute, toggleDeafen, debug, voiceEnabled };
+  return { muted: !active, remoteMuted, deafened, localSpeaking, speakingIds, participantMicStates, active, error, micDenied, requesting, connectionState, audioBlocked, canSpeak, retryAudio, retryMic, requestMic, toggleMute, toggleDeafen, debug, voiceEnabled };
 }

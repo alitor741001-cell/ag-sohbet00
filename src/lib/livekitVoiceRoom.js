@@ -34,6 +34,8 @@ export class LiveKitVoiceRoom {
     this.connectionState = 'disconnected';
     this.audioBlocked = false;
     this.speakers = [];
+    // Abonelik kontrolü jetondan gelir: false ise kullanıcı yalnızca dinleyicidir.
+    this.canPublish = true;
   }
 
   emit() {
@@ -78,6 +80,7 @@ export class LiveKitVoiceRoom {
     });
     const data = response?.data || {};
     if (!data.url || !data.token) throw new Error(data.error || 'Ses jetonu alınamadı.');
+    this.canPublish = data.canPublish !== false;
     await room.connect(data.url, data.token, { autoSubscribe: true });
     this.connectionState = 'connected';
     this.attachAllAudio();
@@ -133,6 +136,11 @@ export class LiveKitVoiceRoom {
     const room = this.room;
     if (!room || room.state !== 'connected') throw new Error('Ses bağlantısı kurulmadı.');
     if (!on) { this.stopMic(); return false; }
+    if (!this.canPublish) {
+      const denied = new Error('subscription_required');
+      denied.code = 'subscription_required';
+      throw denied;
+    }
     const open = () => room.localParticipant.setMicrophoneEnabled(true, micCaptureOptions());
     try {
       await open();
@@ -202,6 +210,7 @@ export class LiveKitVoiceRoom {
       speakers: this.speakers,
       connectionState: room?.state === 'reconnecting' ? 'reconnecting' : this.connectionState,
       audioBlocked: this.audioBlocked,
+      canPublish: this.canPublish,
       participantCount,
       peerCount: Math.max(0, participantCount - 1),
       remoteTracks: this.elements.size,

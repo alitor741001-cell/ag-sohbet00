@@ -23,18 +23,27 @@ export default async function(req: Request): Promise<Response> {
       return Response.json({ error: 'Sesli odaya erişiminiz yok.' }, { status: 403 });
     }
 
+    // Sesli odada konuşmak aboneliğe bağlı: aktif aboneliği (VIP) olmayan kullanıcı
+    // odaya dinleyici olarak bağlanır, mikrofon yayını jetonla engellenir.
+    const vipLevel = Number((user as any).vip_level || 0);
+    const expiresAt = (user as any).vip_expires_at ? new Date((user as any).vip_expires_at).getTime() : 0;
+    const hasSubscription = vipLevel > 0 && (!expiresAt || expiresAt > Date.now());
+    const canPublish = hasSubscription || ['admin', 'moderator'].includes(user.role);
+
     const livekitRoom = `filmkeyfi-${room.id}`;
     const token = new AccessToken(secrets.get('LIVEKIT_API_KEY'), secrets.get('LIVEKIT_API_SECRET'), {
       identity: user.id,
       name: displayName,
       ttl: '2h',
     });
-    token.addGrant({ roomJoin: true, room: livekitRoom, canPublish: true, canSubscribe: true });
+    token.addGrant({ roomJoin: true, room: livekitRoom, canPublish, canSubscribe: true });
 
     return Response.json({
       token: await token.toJwt(),
       url: secrets.get('LIVEKIT_URL'),
       roomName: livekitRoom,
+      canPublish,
+      subscriptionRequired: !canPublish,
     });
   } catch (error) {
     console.error('[LiveKit Token]', error);

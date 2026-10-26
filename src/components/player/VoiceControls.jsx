@@ -16,7 +16,7 @@ export default function VoiceControls({ voice, onMic }) {
   // Film odasında sesli sohbet kapalıysa mikrofon düğmesi odaya sesli sohbeti açar (onMic).
   const voiceOff = voice.voiceEnabled === false;
   const speaking = voice.localSpeaking && voice.active && !voice.remoteMuted;
-  const micLabel = voiceOff ? 'MİKROFONU AÇ' : voice.requesting ? 'HAZIRLANIYOR' : voice.remoteMuted ? 'YÖNETİCİ KAPATTI' : speaking ? 'KONUŞUYOR' : voice.active ? 'MİKROFONU KAPAT' : 'MİKROFONU AÇ';
+  const micLabel = voice.canSpeak === false ? 'ABONELİK GEREKLİ' : voiceOff ? 'MİKROFONU AÇ' : voice.requesting ? 'HAZIRLANIYOR' : voice.remoteMuted ? 'YÖNETİCİ KAPATTI' : speaking ? 'KONUŞUYOR' : voice.active ? 'MİKROFONU KAPAT' : 'MİKROFONU AÇ';
   const micDisabled = voice.remoteMuted || voice.requesting || (!voiceOff && ['connecting', 'reconnecting'].includes(voice.connectionState));
   return <div className="room-voice-controls flex min-w-0 flex-1 flex-col gap-1">
     <div className="flex items-center gap-1.5">
