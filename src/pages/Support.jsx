@@ -33,6 +33,7 @@ export default function Support() {
   // Yönetici konuyu kapatınca görüşme silinir: son hâli ve "sonlandırıldı" uyarısı ekranda kalır.
   const [closedMessages, setClosedMessages] = useState([]);
   const [closedNotice, setClosedNotice] = useState(false);
+  const [closedUntil, setClosedUntil] = useState(null);
   const [lightbox, setLightbox] = useState(null);
   const [sending, setSending] = useState(false);
   const endRef = useRef(null);
@@ -52,22 +53,46 @@ export default function Support() {
 
   useEffect(() => {
     if (!user) return;
-    base44.entities.SupportTicket.filter({ user_id: user.id }, '-created_date', 1)
-      .then((t) => {
-        const open = t?.[0] || null;
-        setTicket(open);
-        if (open) { localStorage.setItem(conversationKey, '1'); return; }
-        // Açık görüşme yoktu ama daha önce vardı: yönetici konuyu kapatıp görüşmeyi silmiş.
+    let alive = true;
+    const load = async () => {
+      const rows = await base44.entities.SupportTicket.filter({ user_id: user.id }, '-created_date', 1);
+      if (!alive) return;
+      const latest = rows?.[0];
+      const expired = latest?.status === 'closed' && Date.parse(latest.delete_after || '') <= Date.now();
+      if (!latest || expired) {
+        setTicket(null); setMessages([]); setClosedMessages([]);
         if (localStorage.getItem(conversationKey)) { setClosedNotice(true); localStorage.removeItem(conversationKey); }
-      })
-      .catch(() => {});
+        return;
+      }
+      setTicket(latest);
+      if (latest.status === 'closed') {
+        setClosedNotice(true); setClosedUntil(latest.delete_after);
+      } else {
+        setClosedNotice(false); setClosedUntil(null); localStorage.setItem(conversationKey, '1');
+      }
+    };
+    load();
+    const poll = setInterval(load, 3000);
+    return () => { alive = false; clearInterval(poll); };
   }, [user?.id]);
 
   useEffect(() => {
+    if (!closedUntil) return;
+    const timeout = setTimeout(() => {
+      setMessages([]); setClosedMessages([]); messagesRef.current = [];
+      setTicket(current => current?.status === 'closed' ? null : current);
+      setClosedUntil(null);
+    }, Math.max(0, Date.parse(closedUntil) - Date.now()));
+    return () => clearTimeout(timeout);
+  }, [closedUntil]);
+
+  useEffect(() => {
     if (!ticket) return undefined;
-    base44.entities.SupportMessage.filter({ ticket_id: ticket.id }, 'created_date', 200)
-      .then((m) => { setMessages(m); setTimeout(() => endRef.current?.scrollIntoView(), 50); })
-      .catch(() => {});
+    let alive = true;
+    const loadMessages = () => base44.entities.SupportMessage.filter({ ticket_id: ticket.id }, 'created_date', 200)
+      .then((m) => { if (alive) { setMessages(m); setTimeout(() => endRef.current?.scrollIntoView(), 50); } });
+    loadMessages();
+    const poll = setInterval(loadMessages, 3000);
     const unsubMsg = subscribeEntity('SupportMessage', (ev) => {
       if (ev.data?.ticket_id !== ticket.id) return;
       if (ev.type === 'create') {
@@ -79,21 +104,23 @@ export default function Support() {
     });
     // Yönetici görüşmeyi kapatıp silerse son hâli korunur; yazma alanının üstünde uyarı çıkar.
     const unsubTicket = subscribeEntity('SupportTicket', (ev) => {
-      if (ev.data?.id !== ticket.id) return;
-      if (ev.type === 'delete' || (ev.type === 'update' && ev.data?.status === 'closed')) {
-        setClosedMessages(messagesRef.current);
-        setMessages([]);
-        setTicket(null);
-        localStorage.setItem(conversationKey, '1');
-        setClosedNotice(true);
+      if ((ev.data?.id || ev.id) !== ticket.id) return;
+      if (ev.type === 'update' && ev.data?.status === 'closed') {
+        setTicket(current => ({ ...current, ...ev.data }));
+        setClosedNotice(true); setClosedUntil(ev.data.delete_after);
+      }
+      if (ev.type === 'delete') {
+        setMessages([]); setClosedMessages([]); messagesRef.current = [];
+        setTicket(null); setClosedNotice(true);
+        localStorage.removeItem(conversationKey);
       }
     });
-    return () => { unsubMsg(); unsubTicket(); };
+    return () => { alive = false; clearInterval(poll); unsubMsg(); unsubTicket(); };
   }, [ticket?.id]);
 
   /** Görüşme yoksa ilk mesajla birlikte açılır: üye konu seçmez. */
   const ensureTicket = async (subject) => {
-    if (ticket) {
+    if (ticket && ticket.status !== 'closed') {
       if (ticket.status !== 'answered' && ticket.status !== 'closed') {
         base44.entities.SupportTicket.update(ticket.id, { status: 'reviewing' }).catch(() => {});
         setTicket({ ...ticket, status: 'reviewing' });
@@ -130,12 +157,12 @@ export default function Support() {
     if (!user || sending) return;
     setSending(true);
     try {
-      const isNew = !ticket;
+      const isNew = !ticket || ticket.status === 'closed';
       const active = await ensureTicket(isNew ? subjectFrom(payload.text, payload.media_type) : ticket.subject);
       const msg = await base44.entities.SupportMessage.create({ ticket_id: active.id, owner_id: user.id, user_id: user.id, sender: 'user', ...payload });
       if (msg?.id) {
         // Yeni görüşme başlıyorsa kapanmış görüşmenin izleri temizlenir.
-        if (isNew) { setMessages([msg]); setClosedMessages([]); setClosedNotice(false); }
+        if (isNew) { setMessages([msg]); setClosedMessages([]); setClosedNotice(false); setClosedUntil(null); }
         else setMessages((p) => (p.some((m) => m.id === msg.id) ? p : [...p, msg]));
         setTimeout(() => endRef.current?.scrollIntoView(), 60);
         if (active?.id) localStorage.setItem(conversationKey, '1');
@@ -150,7 +177,7 @@ export default function Support() {
 
   if (!user) return <div className="flex h-[60vh] items-center justify-center text-sm text-muted-foreground">Yükleniyor...</div>;
 
-  const thread = closedNotice ? closedMessages : messages;
+  const thread = messages;
 
   // Özel sohbet gibi tam ekran panel: alt menünün üzerini kaplar, geri okuyla kapanır.
   return (
@@ -196,7 +223,7 @@ export default function Support() {
         {/* Yönetici konuyu kapattığında yazma alanının üstünde görüşmenin kapandığı yazar. */}
         {closedNotice && (
           <p className="border-t border-[#f2ce6b]/25 bg-[#f2ce6b]/10 px-4 py-2 text-center text-[11px] font-semibold text-[#f2ce6b]">
-            Konuşma sonlandırılmıştır. Yazdığınızda yeni bir görüşme başlar.
+            Konu kapandı. Mesajlar bir dakika sonra silinir. Yazdığınızda yeni bir görüşme başlar.
           </p>
         )}
 

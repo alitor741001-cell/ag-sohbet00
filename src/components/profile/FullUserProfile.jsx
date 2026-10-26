@@ -107,8 +107,6 @@ export default function FullUserProfile({
   const memberId = !hidden && profile?.member_id && profile.member_id !== '-' ? String(profile.member_id) : '';
   const badge = broadcasterState(profile);
   // "Yayıncım": profildeki kişi benim ajansıma bağlıysa. Sahip olunan ajans, üyelikten önce gelir.
-  const myAgencyId = user?.owned_agency_id || user?.agency_record_id || '';
-  const isMyBroadcaster = !!profile?.agency_record_id && profile.agency_record_id === myAgencyId;
   const showSocial = !isSelf && !hidden && !accountState;
   const age = hidden ? null : ageFromBirthDate(profile?.birth_date);
   const genderLabel = profile?.gender === 'erkek' ? 'Erkek' : profile?.gender === 'kadın' ? 'Kadın' : 'Belirtilmedi';
@@ -153,14 +151,7 @@ export default function FullUserProfile({
 
   const header = (
     <header className="flex items-center justify-between">
-      <button
-        type="button"
-        onClick={onClose}
-        className="flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-bold text-white"
-        style={{ borderColor: palette.soft, background: 'rgba(0,0,0,0.45)' }}
-      >
-        <ArrowLeft className="h-3.5 w-3.5" /> Geri
-      </button>
+
       <div className="flex items-center gap-2">
         {muted && <MicOff className="h-4 w-4" style={{ color: palette.accent }} />}
         {isSelf && !hideSettings && (
@@ -193,15 +184,9 @@ export default function FullUserProfile({
 
   const content = statusContent || (
     <>
-      {!hidden && <ProfileAgencyBadges profile={profile || {}} />}
+      {!hidden && <ProfileAgencyBadges profile={profile || {}} userId={userId} />}
       {!hidden && <ProfileModeration userId={userId} profile={profile} onChanged={setProfile} />}
-      {!hidden && !isSelf && (isMyBroadcaster || badge.active) && (
-        <div className="mb-2 flex justify-center">
-          <span className="rounded-full border border-premium-gold/60 bg-premium-gold/15 px-3 py-0.5 text-[11px] font-black text-premium-gold">
-            {isMyBroadcaster ? 'Yayıncım' : 'Yayıncı'}
-          </span>
-        </div>
-      )}
+
 
       <ProfileStatsRow
         level={roomLevels[userId] || 0}
@@ -289,7 +274,7 @@ export default function FullUserProfile({
             <button
               key={item.key}
               type="button"
-              onClick={item.onClick}
+              onClick={event => { event.stopPropagation(); item.onClick(); }}
               className="flex min-w-0 items-center gap-1.5 rounded-xl border px-2 py-1.5 text-left text-[11px] font-bold"
               style={{ borderColor: palette.soft, background: 'rgba(0,0,0,0.45)', color: item.danger ? palette.danger : '#fff' }}
             >

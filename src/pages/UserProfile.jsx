@@ -18,8 +18,10 @@ import XpAvatar from '@/components/xp/XpAvatar';
 import XpStatsCard from '@/components/xp/XpStatsCard';
 import { AccountStatusMark, ACCOUNT_MARKS, ACCOUNT_STATES, getAccountState } from '@/components/friends/AccountStatusAvatar';
 import { daysInApp } from '@/lib/xp';
+import usePageScrollLock from '@/hooks/usePageScrollLock';
 
 export default function UserProfile({ userId, roomIdOverride, onBack, onMessage, embedded = false }) {
+  usePageScrollLock();
   const { id: routeUserId } = useParams();
   const id = userId || routeUserId;
   const roomId = roomIdOverride || new URLSearchParams(window.location.search).get('room');
@@ -89,27 +91,27 @@ export default function UserProfile({ userId, roomIdOverride, onBack, onMessage,
     }
   };
 
-  if (loading) return <div className="dark h-screen bg-black text-white flex items-center justify-center"><div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>;
+  if (loading) return <div className="dark fixed inset-0 z-[1000] flex items-center justify-center bg-background text-foreground"><button onClick={() => onBack ? onBack() : window.history.length > 1 ? navigate(-1) : navigate('/')} className="absolute left-4 top-[max(1rem,env(safe-area-inset-top))] flex items-center gap-1 text-sm font-bold"><ArrowLeft className="h-4 w-4" />Geri</button><div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" /></div>;
 
   const isSelf = me?.id === id;
   const accountState = getAccountState(profile);
 
   // Engellenen hesapta bilgiler görünür kalır; yalnızca profil resmi ban görseline döner.
   if (accountState && !isSelf && accountState.status !== 'banned') return (
-    <div className={`dark ${embedded ? 'fixed inset-0 z-[100] bg-black pt-[env(safe-area-inset-top)]' : 'bg-black'} flex min-h-screen items-center justify-center p-4 text-white`}>
+    <div className="dark fixed inset-0 z-[1000] flex min-h-screen items-center justify-center overflow-y-auto bg-background p-4 pt-[env(safe-area-inset-top)] text-foreground">
       <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 text-center">
         <AccountStatusMark status={accountState.status} />
         <h1 className="mt-4 text-xl font-bold">{accountState.name}</h1>
         <p className="mt-2 text-sm text-destructive">{accountState.message}</p>
-        <button onClick={() => onBack ? onBack() : navigate(-1)} className="mt-5 rounded-lg bg-secondary px-5 py-2 text-sm font-semibold">Geri</button>
+        <button onClick={() => onBack ? onBack() : window.history.length > 1 ? navigate(-1) : navigate('/')} className="mt-5 rounded-lg bg-secondary px-5 py-2 text-sm font-semibold">Geri</button>
       </div>
     </div>
   );
 
   return (
-    <div className={`dark bg-black text-white ${embedded ? 'fixed inset-0 z-[100] overflow-y-auto overscroll-contain pt-[env(safe-area-inset-top)]' : ''}`}>
+    <div className="dark fixed inset-0 z-[1000] overflow-y-auto overscroll-contain bg-background pt-[env(safe-area-inset-top)] text-foreground">
     <div className="w-full min-w-0 px-4 sm:px-6 py-6 pb-[calc(2rem+env(safe-area-inset-bottom))] max-w-2xl md:max-w-3xl xl:max-w-4xl mx-auto">
-      <button onClick={() => onBack ? onBack() : navigate(-1)} className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground mb-4"><ArrowLeft className="w-4 h-4" /> Geri</button>
+      <button onClick={() => onBack ? onBack() : window.history.length > 1 ? navigate(-1) : navigate('/')} className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground mb-4"><ArrowLeft className="w-4 h-4" /> Geri</button>
       {err ? <p className="text-center text-destructive py-10">{err}</p> : profile && (
         <div className="bg-card border border-border rounded-2xl p-6 flex flex-col items-center text-center">
           <div className={`relative mb-8 ${profile.vip_look?.avatar ? 'vip-avatar-active' : ''}`}>
@@ -127,7 +129,7 @@ export default function UserProfile({ userId, roomIdOverride, onBack, onMessage,
           {accountState?.status === 'banned' && <p className="mb-3 text-[11px] font-black tracking-[0.3em] text-destructive">{ACCOUNT_MARKS.banned}</p>}
           <h1 className="max-w-full text-2xl font-extrabold flex flex-wrap justify-center items-center gap-2 [overflow-wrap:anywhere]">{profile.title || profile.username || profile.full_name || 'Kullanıcı'} {(profile.role === 'admin' || profile.role === 'moderator') && <Crown className="w-5 h-5 text-amber-400" />}</h1>
           {getRoleInfo(profile).label && <div className="mt-1.5"><RoleBadge user={profile} size="md" /></div>}
-          <div className="mt-3 w-full"><ProfileAgencyBadges profile={profile} /></div>
+          <div className="mt-3 w-full"><ProfileAgencyBadges profile={profile} userId={id} /></div>
           <div className="mt-3 w-full"><ProfileModeration userId={id} profile={profile} onChanged={setProfile} /></div>
           {['admin', 'moderator'].includes(profile.role) && <p className="mt-2 text-sm font-bold text-primary">{profile.role === 'admin' ? 'YÖNETİCİ' : 'MODERATÖR'}</p>}
           <div className="mt-4 w-full"><XpStatsCard stats={xpStats} days={daysInApp(profile.created_date)} compact /></div>

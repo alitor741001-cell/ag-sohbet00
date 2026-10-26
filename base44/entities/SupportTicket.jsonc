@@ -23,6 +23,14 @@
         "closed"
       ],
       "default": "new"
+    },
+    "closed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "delete_after": {
+      "type": "string",
+      "format": "date-time"
     }
   },
   "required": [

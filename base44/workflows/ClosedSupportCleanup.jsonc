@@ -1,0 +1,48 @@
+{
+  "name": "Kapanan Destek Mesajlar\u0131n\u0131 Sil",
+  "description": "Kapat\u0131lan destek g\u00f6r\u00fc\u015fmesini yetkili listesinden hemen gizler; \u00fcyede kalan mesajlar\u0131 bir dakika sonra siler.",
+  "trigger": {
+    "config": {
+      "trigger_type": "entity",
+      "entity_name": "SupportTicket",
+      "events": [
+        "update"
+      ]
+    },
+    "condition": "${ .trigger.data.status == \"closed\" and .trigger.old_data.status != \"closed\" and .trigger.data.delete_after != null }"
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "closed_support_cleanup",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "wait_for_member": {
+          "wait": "PT1M",
+          "then": "delete_conversation",
+          "x-base44": {
+            "title": "Bir dakika bekle"
+          }
+        }
+      },
+      {
+        "delete_conversation": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "cleanupClosedSupport",
+            "args": {
+              "ticket_id": "${ .trigger.entity_id }"
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "G\u00f6r\u00fc\u015fme ve mesajlar\u0131 sil"
+          }
+        }
+      }
+    ]
+  }
+}

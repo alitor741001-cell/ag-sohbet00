@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { useUserProfile } from '@/lib/profileCard';
 import { Image } from '@/components/ui/image';
 import { Copy, Crown } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
@@ -8,6 +8,7 @@ import { getRoleInfo } from '@/lib/roles';
 
 export default function UserBadge({ userId, name, avatar, memberId, size = 'sm', showCopy = true, isOwner = false, displayRole, customRole, profileFrame, frameScale = 100, className = '', onOpen }) {
   const { toast } = useToast();
+  const { openUserProfile } = useUserProfile();
   const copy = (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -51,8 +52,8 @@ export default function UserBadge({ userId, name, avatar, memberId, size = 'sm',
   }
 
   return (
-    <Link to={userId ? `/kullanici/${userId}` : '#'} className={`inline-flex items-center gap-2 min-w-0 group hover:opacity-90 ${className}`}>
+    <div role="button" tabIndex={0} onClick={() => userId && openUserProfile(userId)} onKeyDown={e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); userId && openUserProfile(userId); } }} className={`inline-flex cursor-pointer items-center gap-2 min-w-0 group hover:opacity-90 ${className}`}>
       {content}
-    </Link>
+    </div>
   );
 }

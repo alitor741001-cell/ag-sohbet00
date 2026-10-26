@@ -22,7 +22,7 @@ export default function VoiceFantasyCard({ profile, hidden, name, avatar, role, 
                 receivedTier={profile?.gift_received_tier || 'green'}
                 nLevel={profile?.n_level || 0}
               />
-              <ProfileAgencyBadges profile={profile || {}} />
+              <ProfileAgencyBadges profile={profile || {}} userId={userId} />
               {moderation}
               <ProfileIdentityBlock palette={palette} genderLabel={genderLabel} age={age} country={badge.country} flag={badge.flag} memberId={memberId} joinDate={joinDate} copied={copied} onCopyId={onCopyId} />
             </>}

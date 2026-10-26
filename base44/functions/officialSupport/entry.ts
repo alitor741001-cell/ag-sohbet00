@@ -8,10 +8,28 @@ export default async function(req) {
     if (me.is_banned || me.role === 'banned' || (me.role !== 'admin' && !await isAgOfficial(base44, me))) return Response.json({ error: 'Yetkiniz yok' }, { status: 403 });
     const body = await req.json().catch(() => ({}));
     const entities = base44.asServiceRole.entities;
-    if (body.action === 'list') return Response.json(await entities.SupportTicket.list({ sort: '-updated_date', limit: 30, ...(typeof body.cursor === 'string' ? { cursor: body.cursor } : {}) }));
+    if (body.action === 'list') {
+      const query = { status: { $ne: 'closed' } };
+      if (typeof body.member_id === 'string' && body.member_id.trim()) {
+        const memberId = body.member_id.trim().replace(/^#/, '');
+        if (memberId.length > 64) return Response.json({ error: 'Geçersiz kimlik numarası' }, { status: 400 });
+        const matches = await entities.User.filter({ member_id: memberId }, '-created_date', 1);
+        if (!matches.length) return Response.json({ items: [], has_more: false });
+        query.user_id = matches[0].id;
+      }
+      const page = await entities.SupportTicket.filter(query, { sort: '-updated_date', limit: 30, ...(typeof body.cursor === 'string' ? { cursor: body.cursor } : {}) });
+      const ids = [...new Set(page.items.map(ticket => ticket.user_id).filter(Boolean))];
+      const users = ids.length ? await entities.User.filter({ id: { $in: ids } }, '-created_date', ids.length) : [];
+      const profiles = new Map(users.map(user => [user.id, user]));
+      return Response.json({ ...page, items: page.items.map(ticket => {
+        const user = profiles.get(ticket.user_id);
+        return { ...ticket, user_name: user?.username || user?.full_name || ticket.user_name, user_avatar: user?.avatar || '', member_id: user?.member_id || '' };
+      }) });
+    }
     if (!['messages', 'reply', 'close'].includes(body.action) || typeof body.ticket_id !== 'string' || !body.ticket_id) return Response.json({ error: 'Geçersiz işlem' }, { status: 400 });
     const ticket = await entities.SupportTicket.get(body.ticket_id);
     if (!ticket) return Response.json({ error: 'Görüşme bulunamadı' }, { status: 404 });
+    if (ticket.status === 'closed') return body.action === 'close' ? Response.json({ ok: true }) : Response.json({ error: 'Konu kapandı' }, { status: 410 });
     if (body.action === 'messages') return Response.json(await entities.SupportMessage.filter({ ticket_id: ticket.id }, { sort: '-created_date', limit: 50, ...(typeof body.cursor === 'string' ? { cursor: body.cursor } : {}) }));
     if (body.action === 'reply') {
       if (typeof body.text !== 'string' || !body.text.trim() || body.text.length > 2000) return Response.json({ error: 'Mesaj 1–2000 karakter olmalıdır' }, { status: 400 });
@@ -19,9 +37,10 @@ export default async function(req) {
       await entities.SupportMessage.create({ ticket_id: ticket.id, owner_id: ticket.user_id, user_id: me.id, sender: 'admin', text: body.text.trim() });
       await entities.SupportTicket.update(ticket.id, { status: 'answered' });
     } else {
-      await entities.SupportTicket.update(ticket.id, { status: 'closed' });
-      await entities.SupportMessage.deleteMany({ ticket_id: ticket.id });
-      await entities.SupportTicket.delete(ticket.id);
+      const closedAt = new Date().toISOString();
+      const deleteAfter = new Date(Date.now() + 60000).toISOString();
+      await entities.SupportTicket.update(ticket.id, { status: 'closed', closed_at: closedAt, delete_after: deleteAfter });
+      await entities.Notification.create({ user_id: ticket.user_id, title: 'Destek konusu kapandı', body: 'Konu kapandı. Görüşme mesajları bir dakika sonra otomatik silinecek.', type: 'info', link: '/destek', ref_id: `support-closed:${ticket.id}` });
     }
     return Response.json({ ok: true });
   } catch (error) { return Response.json({ error: error.message }, { status: 500 }); }

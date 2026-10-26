@@ -7,5 +7,5 @@ export default function SupportEntry() {
   const { user, loading } = useCurrentUser();
   const official = useAgOfficial(user?.id);
   if (loading || official.loading) return <p className="p-4 text-muted-foreground">Yükleniyor...</p>;
-  return <Suspense fallback={<p className="p-4">Yükleniyor...</p>}>{official.active ? <OfficialInbox /> : <Support />}</Suspense>;
+  return <Suspense fallback={<p className="p-4">Yükleniyor...</p>}>{user?.role === 'admin' || official.active ? <OfficialInbox /> : <Support />}</Suspense>;
 }

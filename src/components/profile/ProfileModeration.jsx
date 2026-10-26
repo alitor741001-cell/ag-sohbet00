@@ -4,7 +4,6 @@ import { ShieldCheck, Ban, Trash2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import useAgOfficial from '@/hooks/useAgOfficial';
-import OfficialBadge from '@/components/profile/OfficialBadge';
 export default function ProfileModeration({ userId, profile, onChanged }) {
   const { user } = useCurrentUser();
   const own = useAgOfficial(user?.id), target = useAgOfficial(userId);
@@ -23,7 +22,6 @@ export default function ProfileModeration({ userId, profile, onChanged }) {
   };
   const button = 'flex items-center justify-center gap-1 rounded-xl border border-border bg-secondary px-3 py-2 text-xs font-bold text-foreground disabled:opacity-50';
   return <section className="w-full space-y-2" onClick={e => e.stopPropagation()}>
-    {target.active && <div className="flex justify-center"><OfficialBadge /></div>}
     {canAct && <div className="grid grid-cols-2 gap-2">
       <button className={button} disabled={busy || profile.account_status === 'banned'} onClick={() => { setPending('ban_user'); setError(''); }}><Ban className="h-4 w-4 text-destructive" />BANLA</button>
       <button className={button} disabled={busy} onClick={() => { setPending('delete_user'); setError(''); }}><Trash2 className="h-4 w-4 text-destructive" />SİL</button>
