@@ -322,6 +322,11 @@
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
 }
+/* Küçük yuvarlak simge düğmesi: geri, yardım ve ses. */
+.gctl-icon-sm {
+  height: 1.9rem;
+  width: 1.9rem;
+}
 
 /* --- eylem düğmeleri: çevirme hakkı ve coin yükleme ---
    Siyah parlak kart + çift altın çerçeve; satın alınabilirken tamamen altına döner. */

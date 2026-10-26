@@ -1,6 +1,7 @@
 import React from 'react';
 import { ChevronLeft, HelpCircle, Plus, Volume2, VolumeX } from 'lucide-react';
 import { Image } from '@/components/ui/image';
+import GameIconButton from '../controls/GameIconButton';
 import { AVIATOR_PLANE } from '../rocketAssets';
 import { format } from '../rocket/rocketConfig';
 
@@ -9,9 +10,9 @@ export default function AviatorHeader({ coins, sound, onCoins, onBack, onExit, o
   return (
     <header className="av-header flex items-center gap-2 px-3 pb-2 pt-[max(0.6rem,env(safe-area-inset-top))]">
       {(onBack || onExit) && (
-        <button type="button" onClick={onBack || onExit} aria-label="Geri" className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/15 bg-black/60 text-white active:scale-95">
-          <ChevronLeft className="h-5 w-5" />
-        </button>
+        <GameIconButton label="Geri" onClick={onBack || onExit}>
+          <ChevronLeft className="h-4 w-4" />
+        </GameIconButton>
       )}
       <Image src={AVIATOR_PLANE} alt="" className="h-8 w-12 mix-blend-screen" fittingType="fit" />
       <h1 className="av-logo">Gökkartal</h1>
@@ -20,12 +21,12 @@ export default function AviatorHeader({ coins, sound, onCoins, onBack, onExit, o
         <span className="text-[13px] font-bold tabular-nums text-white">{format(coins)}</span>
         <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-white"><Plus className="h-3.5 w-3.5" /></span>
       </button>
-      <button type="button" onClick={onHelp} className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/15 bg-black/60 text-white">
-        <HelpCircle className="h-5 w-5" />
-      </button>
-      <button type="button" onClick={sound.toggle} aria-label="Oyun sesi" className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/15 bg-black/60 text-white">
-        {sound.on ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
-      </button>
+      <GameIconButton label="Nasıl oynanır" onClick={onHelp}>
+        <HelpCircle className="h-4 w-4" />
+      </GameIconButton>
+      <GameIconButton label={sound.on ? 'Sesi kapat' : 'Sesi aç'} active={sound.on} onClick={sound.toggle}>
+        {sound.on ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+      </GameIconButton>
     </header>
   );
 }

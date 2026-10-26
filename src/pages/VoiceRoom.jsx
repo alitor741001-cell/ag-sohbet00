@@ -7,7 +7,6 @@ import { useCurrentUser } from '@/lib/useCurrentUser';
 import { broadcasterState } from '@/lib/broadcaster';
 import { makeId } from '@/lib/uid';
 import { useVoiceChat } from '@/hooks/useVoiceChat';
-import useRocketCrashAlert from '@/hooks/useRocketCrashAlert';
 import VoiceViewport from '@/components/voice/VoiceViewport';
 import RoomBackground from '@/components/voice/RoomBackground';
 import { useToast } from '@/components/ui/use-toast';
@@ -103,8 +102,6 @@ export default function VoiceRoom() {
   const [dmExpanded, setDmExpanded] = useState(false);
   const [exitOpen, setExitOpen] = useState(false);
   const [gamesOpen, setGamesOpen] = useState(false);
-  // Roket çakılınca patlama sesi odadaki herkese duyulur (oyun ekranı açık olmasa da).
-  useRocketCrashAlert();
   const [giftOpen, setGiftOpen] = useState(false);
   // Profil kartındaki "Bahset" isteği: yazma alanına @isim eklenir.
   const [mentionTarget, setMentionTarget] = useState(null);
