@@ -3,6 +3,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import useAgOfficial from '@/hooks/useAgOfficial';
 import { useCurrentUser } from '@/lib/useCurrentUser';
+import subscribeEntity from '@/components/data/entitySubscriptions';
+import isMessageNotification from '@/lib/messageNotification';
 export default function useSupportBadge(userId) {
   const { user } = useCurrentUser();
   const official = useAgOfficial(userId);
@@ -15,10 +17,13 @@ export default function useSupportBadge(userId) {
       return base44.entities.SupportMessage.count({ owner_id: userId, sender: 'admin', created_date: { $gt: since } });
     }, refetchInterval: 10000, staleTime: 5000 });
   useEffect(() => {
+    if (!userId) return;
     const refresh = () => client.invalidateQueries({ queryKey: ['support-unread', userId] });
+    const offMessage = subscribeEntity('SupportMessage', event => { if (staff || event.data?.owner_id === userId) refresh(); });
+    const offNotification = subscribeEntity('Notification', event => { if (event.data?.user_id === userId && event.data?.type !== 'dm' && isMessageNotification(event.data)) refresh(); });
     window.addEventListener('destek-goruldu', refresh);
     window.addEventListener('destek-rozet-tazele', refresh);
-    return () => { window.removeEventListener('destek-goruldu', refresh); window.removeEventListener('destek-rozet-tazele', refresh); };
-  }, [client, userId]);
+    return () => { offMessage(); offNotification(); window.removeEventListener('destek-goruldu', refresh); window.removeEventListener('destek-rozet-tazele', refresh); };
+  }, [client, userId, staff]);
   return query.data || 0;
 }

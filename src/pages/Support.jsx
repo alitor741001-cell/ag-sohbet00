@@ -13,6 +13,7 @@ import SupportChatMessage from '@/components/support/SupportChatMessage';
 import useChatViewport from '@/hooks/useChatViewport';
 import '@/components/support/supportChat.css';
 import useAgOfficial from '@/hooks/useAgOfficial';
+import useMemberSupportMessages from '@/hooks/useMemberSupportMessages';
 
 
 /**
@@ -49,6 +50,11 @@ export default function Support() {
     window.dispatchEvent(new Event('destek-goruldu'));
   };
 
+  const history = useMemberSupportMessages(ticket?.id, setMessages, () => {
+    markSeen();
+  });
+  useEffect(() => { endRef.current?.scrollIntoView({ block: 'end' }); }, [messages[messages.length - 1]?.id]);
+
   // Silinme olayları geldiğinde kapanan görüşme kaybolmasın diye son dolu mesaj listesi tutulur.
   useEffect(() => { if (messages.length) messagesRef.current = messages; }, [messages]);
   useEffect(() => { if (ticket?.id) markSeen(); }, [ticket?.id]);
@@ -74,8 +80,12 @@ export default function Support() {
       }
     };
     load();
-    const poll = setInterval(load, 3000);
-    return () => { alive = false; clearInterval(poll); };
+    const visible = () => { if (document.visibilityState === 'visible') load(); };
+    const poll = setInterval(visible, 15000);
+    const off = subscribeEntity('SupportTicket', event => { if (event.data?.user_id === user.id) visible(); });
+    window.addEventListener('online', visible);
+    document.addEventListener('visibilitychange', visible);
+    return () => { alive = false; clearInterval(poll); off(); window.removeEventListener('online', visible); document.removeEventListener('visibilitychange', visible); };
   }, [user?.id]);
 
   useEffect(() => {
@@ -90,20 +100,6 @@ export default function Support() {
 
   useEffect(() => {
     if (!ticket) return undefined;
-    let alive = true;
-    const loadMessages = () => base44.entities.SupportMessage.filter({ ticket_id: ticket.id }, 'created_date', 200)
-      .then((m) => { if (alive) { setMessages(m); setTimeout(() => endRef.current?.scrollIntoView(), 50); } });
-    loadMessages();
-    const poll = setInterval(loadMessages, 3000);
-    const unsubMsg = subscribeEntity('SupportMessage', (ev) => {
-      if (ev.data?.ticket_id !== ticket.id) return;
-      if (ev.type === 'create') {
-        setMessages((p) => (p.some((m) => m.id === ev.data.id) ? p : [...p, ev.data]));
-        markSeen();
-        setTimeout(() => endRef.current?.scrollIntoView(), 50);
-      }
-      if (ev.type === 'delete') setMessages((p) => p.filter((m) => m.id !== ev.data.id));
-    });
     // Yönetici görüşmeyi kapatıp silerse son hâli korunur; yazma alanının üstünde uyarı çıkar.
     const unsubTicket = subscribeEntity('SupportTicket', (ev) => {
       if ((ev.data?.id || ev.id) !== ticket.id) return;
@@ -117,7 +113,7 @@ export default function Support() {
         localStorage.removeItem(conversationKey);
       }
     });
-    return () => { alive = false; clearInterval(poll); unsubMsg(); unsubTicket(); };
+    return unsubTicket;
   }, [ticket?.id]);
 
 
@@ -175,7 +171,10 @@ export default function Support() {
               Merhaba! Sorununuzu buradan doğrudan yazabilir, fotoğraf veya 30 saniyelik video gönderebilirsiniz.
             </p>
           )}
-          {thread.map(m => <SupportChatMessage key={m.id} message={m} viewer="user" memberName={user.username || user.full_name || 'Üye'} memberAvatar={user.avatar} onImageClick={setLightbox} />)}
+          {history.hasOlder && <button type="button" disabled={history.loading} onClick={history.loadOlder} className="w-full p-2 text-xs text-muted-foreground">Eski mesajları yükle</button>}
+          {history.loading && !thread.length && <p className="text-center text-xs text-muted-foreground">Mesajlar yükleniyor...</p>}
+          {history.error && <p role="alert" className="text-center text-xs text-destructive">Mesajlar alınamadı. Bağlantı yenilendiğinde tekrar denenecek.</p>}
+          {thread.map(m => <SupportChatMessage key={m.id} message={m} viewer="user" memberName={user.username || user.full_name || 'Üye'} memberAvatar={user.avatar} memberGender={user.gender} onImageClick={setLightbox} />)}
           <div ref={endRef} />
         </div>
 

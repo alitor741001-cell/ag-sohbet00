@@ -10,10 +10,13 @@ export default function OfficialThread({ ticket, onClosed, onCloseTopic, closing
   const client = useQueryClient();
   const messages = useInfiniteQuery({ queryKey: ['official-messages', ticket.id], initialPageParam: undefined,
     queryFn: ({ pageParam }) => call({ action: 'messages', ticket_id: ticket.id, cursor: pageParam }),
-    getNextPageParam: page => page.has_more ? page.next_cursor : undefined, refetchInterval: 5000 });
+    getNextPageParam: page => page.has_more ? page.next_cursor : undefined, refetchInterval: 15000 });
   useEffect(() => { if ([403, 404, 410].includes(messages.error?.response?.status)) { client.invalidateQueries({ queryKey: ['official-tickets'] }); onClosed(); } }, [messages.error, client, onClosed]);
   const mutation = useMutation({ mutationFn: payload => call({ action: 'reply', ticket_id: ticket.id, ...payload }),
-    onSuccess: () => { client.invalidateQueries({ queryKey: ['official-tickets'] }); client.invalidateQueries({ queryKey: ['official-messages', ticket.id] }); } });
+    onSuccess: data => {
+      if (data.message) client.setQueryData(['official-messages', ticket.id], current => current ? { ...current, pages: current.pages.map((page, index) => ({ ...page, items: index === 0 ? [data.message, ...page.items.filter(item => item.id !== data.message.id)] : page.items.filter(item => item.id !== data.message.id) })) } : current);
+      client.invalidateQueries({ queryKey: ['official-tickets'] }); client.invalidateQueries({ queryKey: ['official-messages', ticket.id] });
+    } });
   useEffect(() => { end.current?.scrollIntoView({ block: 'end' }); }, [messages.data?.pages[0]?.items[0]?.id]);
   const send = async payload => { try { await mutation.mutateAsync(payload); return true; } catch { return false; } };
   return <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
@@ -21,7 +24,7 @@ export default function OfficialThread({ ticket, onClosed, onCloseTopic, closing
     <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-5" aria-live="polite">
       {messages.isPending && <p className="support-chat-muted text-sm">Yükleniyor...</p>}{messages.isError && <p role="alert" className="text-sm text-destructive">Mesajlar alınamadı.</p>}
       {messages.hasNextPage && <button onClick={() => messages.fetchNextPage()} disabled={messages.isFetchingNextPage} className="support-chat-muted mb-4 w-full text-xs">Eski mesajları yükle</button>}
-      {messages.data?.pages.flatMap(page => page.items).reverse().map(message => <SupportChatMessage key={message.id} message={message} viewer="admin" memberName={ticket.user_name || 'Üye'} memberAvatar={ticket.user_avatar} />)}
+      {messages.data?.pages.flatMap(page => page.items).reverse().map(message => <SupportChatMessage key={message.id} message={message} viewer="admin" memberName={ticket.user_name || 'Üye'} memberAvatar={ticket.user_avatar} memberGender={ticket.user_gender} />)}
       <div ref={end} />
     </div>
     {mutation.isError && <p role="alert" className="px-4 py-2 text-xs text-destructive">{mutation.error.response?.data?.error || 'Mesaj gönderilemedi.'}</p>}

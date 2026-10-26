@@ -9,12 +9,14 @@ import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import useBackDismiss from '@/hooks/useBackDismiss';
 import OfficialThread from '@/components/support/OfficialThread';
+import useOfficialSupportRealtime from '@/hooks/useOfficialSupportRealtime';
 const call = async payload => (await base44.functions.invoke('officialSupport', payload)).data;
 export default function OfficialInbox() {
   const frame = useRef(null);
   useChatViewport(frame);
   const { user } = useCurrentUser();
   const [ticket, setTicket] = useState(null);
+  useOfficialSupportRealtime(ticket?.id);
   useEffect(() => {
     if (!user?.id) return;
     localStorage.setItem(`destek-okundu:${user.id}`, new Date().toISOString());
@@ -24,7 +26,7 @@ export default function OfficialInbox() {
   useBackDismiss(!!ticket, () => setTicket(null));
   const query = useInfiniteQuery({ queryKey: ['official-tickets'], initialPageParam: undefined,
     queryFn: ({ pageParam }) => call({ action: 'list', cursor: pageParam }),
-    getNextPageParam: page => page.has_more ? page.next_cursor : undefined, refetchInterval: 5000 });
+    getNextPageParam: page => page.has_more ? page.next_cursor : undefined, refetchInterval: 15000 });
   // Görüşme kapatılınca ekrandan anında kalkar; üye tarafında mesajlar bir dakika sonra silinir.
   const close = useMutation({ mutationFn: id => call({ action: 'close', ticket_id: id }), onSuccess: () => {
     setTicket(null); client.invalidateQueries({ queryKey: ['official-tickets'] });

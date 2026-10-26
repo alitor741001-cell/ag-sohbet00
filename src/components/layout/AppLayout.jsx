@@ -19,6 +19,7 @@ import TabStack from '@/components/layout/TabStack';
 import { matchTabPath } from '@/lib/tabPaths';
 import { motion, useReducedMotion } from 'framer-motion';
 import { isMultiDeviceExempt } from '@/lib/sessionPolicy';
+import isMessageNotification from '@/lib/messageNotification';
 // Yüz doğrulaması uygulamaya girişte sorulmaz: yalnızca elmaslar/bakiye bölümünde istenir.
 
 // Koyu yüzeyler tek bir düz siyah zeminle boyanır: üstte ayrı bir ton/gradyan katmanı görünmez.
@@ -136,8 +137,8 @@ export default function AppLayout() {
         window.location.href = '/login?banned=1';
         return;
       }
-      // Özel mesajlar üst bildirim yerine yalnızca sohbet rozetinde gösterilir.
-      if (ev.data?.type === 'dm') return;
+      // Mesaj içeriği hiçbir rolde açılır bildirim olarak gösterilmez; rozetler korunur.
+      if (isMessageNotification(ev.data)) return;
       // Asistanlık daveti ve onayı siyah kutuda değil, yalnızca sistem bildiriminde görünür.
       if (ev.data?.type === 'assistant_invite' || ev.data?.type === 'assistant_accepted') return;
       toast({ title: ev.data?.title || 'Bildirim', description: ev.data?.body });

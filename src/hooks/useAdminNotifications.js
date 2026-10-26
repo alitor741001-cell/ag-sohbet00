@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
 import subscribeEntity from '@/components/data/entitySubscriptions';
 import { useCurrentUser } from '@/lib/useCurrentUser';
+import isMessageNotification from '@/lib/messageNotification';
 
 function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - base64String.length % 4) % 4);
@@ -41,7 +42,7 @@ export function useAdminNotifications() {
         setNotifications(prev => [ev.data, ...prev].slice(0, 50));
         setUnreadCount(prev => prev + 1);
         // In-app notification (tab açıkken)
-        if ('Notification' in window && Notification.permission === 'granted') {
+        if (!isMessageNotification(ev.data) && 'Notification' in window && Notification.permission === 'granted') {
           try {
             const n = new Notification(ev.data.title, { body: ev.data.body || '', icon: '/favicon.ico' });
             n.onclick = () => { if (ev.data.link) window.location.href = ev.data.link; n.close(); };

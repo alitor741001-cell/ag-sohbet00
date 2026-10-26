@@ -132,8 +132,8 @@ export default function MessageRealtimeProvider({ userId, children }) {
     const opened = (event) => { openThread.current = event.detail?.conversationId || null; setConversations((current) => current.map((item) => item.id !== openThread.current ? item : { ...item, ...(item.user1_id === userId ? { unread_user1: 0 } : { unread_user2: 0 }) })); };
     const closed = () => { openThread.current = null; };
     const reconnect = () => reload(); const visible = () => { if (document.visibilityState === 'visible') reload(); };
-    // Sohbet listesi ve rozetler 5 saniyede bir sessizce tazelenir.
-    const refreshPoll = window.setInterval(() => { if (document.visibilityState !== 'hidden') reload(); }, 5000);
+    // Anlık abonelikler önceliklidir; yedek yenileme gereksiz istekleri azaltır.
+    const refreshPoll = window.setInterval(() => { if (document.visibilityState !== 'hidden') reload(); }, 15000);
     window.addEventListener('social-thread-open', opened); window.addEventListener('social-thread-close', closed); window.addEventListener('online', reconnect); document.addEventListener('visibilitychange', visible);
     return () => { alive = false; timers.forEach(clearTimeout); timers.clear(); offConversations(); offMessages(); offFriends(); offDmTyping(); clearInterval(typingPoll); clearInterval(refreshPoll); window.removeEventListener('social-thread-open', opened); window.removeEventListener('social-thread-close', closed); window.removeEventListener('online', reconnect); document.removeEventListener('visibilitychange', visible); };
   }, [userId, reload]);

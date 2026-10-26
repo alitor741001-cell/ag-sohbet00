@@ -1,6 +1,8 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
 import { isAgOfficial } from '../../shared/agOfficial.ts';
 import { routeSupport, supportPayload } from '../../shared/supportRouting.ts';
+import { supportProfiles, supportMessageProfile } from '../../shared/supportProfiles.ts';
+import { waitUntil } from 'base44:runtime';
 export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
@@ -18,11 +20,25 @@ export default async function(req) {
       const message = await entities.SupportMessage.create({ ticket_id: ticket.id, owner_id: me.id, user_id: me.id, sender: 'user', ...payload });
       const updated = await entities.SupportTicket.update(ticket.id, { status: 'reviewing', last_message: payload.text || (payload.media_type === 'video' ? 'Video' : 'Fotoğraf'), last_message_at: now, last_member_message_at: now });
       await routeSupport(base44);
-      return Response.json({ ticket: updated, message, is_new: !existing.length });
+      waitUntil((async () => {
+        const assigned = await entities.SupportTicket.get(ticket.id);
+        if (assigned?.assigned_official_id) await entities.Notification.create({ user_id: assigned.assigned_official_id, title: 'Yeni destek mesajı', type: 'support_message', link: '/destek', ref_id: `support-message:${message.id}` });
+      })());
+      return Response.json({ ticket: updated, message: supportMessageProfile(message, me), is_new: !existing.length });
+    }
+    if (body.action === 'messages' && typeof body.ticket_id === 'string' && body.ticket_id) {
+      const ticket = await entities.SupportTicket.get(body.ticket_id);
+      if (!ticket) return Response.json({ error: 'Görüşme bulunamadı' }, { status: 404 });
+      const member = ticket.user_id === me.id;
+      const allowed = member || me.role === 'admin' || (ticket.assigned_official_id === me.id && await isAgOfficial(base44, me));
+      if (!allowed) return Response.json({ error: 'Yetkiniz yok' }, { status: 403 });
+      if (ticket.status === 'closed' && (!member || Date.parse(ticket.delete_after || '') <= Date.now())) return Response.json({ error: 'Konu kapandı' }, { status: 410 });
+      const page = await entities.SupportMessage.filter({ ticket_id: ticket.id }, { sort: '-created_date', limit: 50, ...(typeof body.cursor === 'string' ? { cursor: body.cursor } : {}) });
+      return Response.json({ ...page, items: await supportProfiles(entities, page.items) });
     }
     if (me.role !== 'admin' && !await isAgOfficial(base44, me)) return Response.json({ error: 'Yetkiniz yok' }, { status: 403 });
     if (['list', 'badge'].includes(body.action)) {
-      await routeSupport(base44);
+      if (body.action === 'list') await routeSupport(base44);
       const query = { status: { $ne: 'closed' }, ...(me.role !== 'admin' ? { assigned_official_id: me.id } : {}) };
       if (body.action === 'badge') {
         const since = typeof body.since === 'string' && Number.isFinite(Date.parse(body.since)) ? new Date(body.since).toISOString() : new Date(0).toISOString();
@@ -41,7 +57,7 @@ export default async function(req) {
       const profiles = new Map(users.map(user => [user.id, user]));
       return Response.json({ ...page, items: page.items.map(ticket => {
         const user = profiles.get(ticket.user_id);
-        return { ...ticket, user_name: user?.username || user?.full_name || ticket.user_name, user_avatar: user?.avatar || '', member_id: user?.member_id || '' };
+        return { ...ticket, user_name: user?.username || user?.full_name || ticket.user_name, user_avatar: user?.avatar || '', user_gender: user?.gender || '', member_id: user?.member_id || '' };
       }) });
     }
     if (!['messages', 'reply', 'close'].includes(body.action) || typeof body.ticket_id !== 'string' || !body.ticket_id) return Response.json({ error: 'Geçersiz işlem' }, { status: 400 });
@@ -49,12 +65,12 @@ export default async function(req) {
     if (!ticket) return Response.json({ error: 'Görüşme bulunamadı' }, { status: 404 });
     if (me.role !== 'admin' && ticket.assigned_official_id !== me.id) return Response.json({ error: 'Bu görüşme başka bir yetkiliye atanmış.' }, { status: 403 });
     if (ticket.status === 'closed') return body.action === 'close' ? Response.json({ ok: true }) : Response.json({ error: 'Konu kapandı' }, { status: 410 });
-    if (body.action === 'messages') return Response.json(await entities.SupportMessage.filter({ ticket_id: ticket.id }, { sort: '-created_date', limit: 50, ...(typeof body.cursor === 'string' ? { cursor: body.cursor } : {}) }));
     if (body.action === 'reply') {
       const payload = supportPayload(body);
       if (!payload) return Response.json({ error: 'Geçerli bir mesaj veya ek gönderin. Mesaj en fazla 2000 karakter olabilir.' }, { status: 400 });
-      await entities.SupportMessage.create({ ticket_id: ticket.id, owner_id: ticket.user_id, user_id: me.id, sender: 'admin', ...payload });
+      const message = await entities.SupportMessage.create({ ticket_id: ticket.id, owner_id: ticket.user_id, user_id: me.id, sender: 'admin', ...payload });
       await entities.SupportTicket.update(ticket.id, { status: 'answered', last_message: payload.text || (payload.media_type === 'video' ? 'Video' : 'Fotoğraf'), last_message_at: new Date().toISOString() });
+      return Response.json({ ok: true, message: supportMessageProfile(message, me) });
     } else {
       const closedAt = new Date().toISOString();
       const deleteAfter = new Date(Date.now() + 60000).toISOString();
