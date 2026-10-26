@@ -38,6 +38,6 @@ function closeSession({ room, elements, stopTransient }) {
   room?.removeAllListeners();
   elements?.forEach((element) => { try { element.remove(); } catch {} });
   room?.localParticipant?.setMicrophoneEnabled(false).catch(() => {});
-  room?.disconnect(false);
+  room?.disconnect(true);
   releaseSharedMic();
 }

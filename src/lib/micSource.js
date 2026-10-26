@@ -11,11 +11,13 @@ const noiseConstraints = (enabled) => ({ ...CONSTRAINTS, noiseSuppression: enabl
 /** Mevcut yayını kesmeden mikrofon işlemesini güncelle; sonraki odalarda da koru. */
 export async function setMicNoiseSuppression(enabled) {
   if (!supportsMicNoiseSuppression()) throw new Error('Bu tarayıcı gürültü engellemeyi desteklemiyor.');
-  const track = sharedTrack || (acquiring ? await acquiring : null);
+  const track = roomTrack?.readyState === 'live' ? roomTrack : sharedTrack || (acquiring ? await acquiring : null);
   if (track?.readyState === 'live') await track.applyConstraints(noiseConstraints(enabled));
   localStorage.setItem(NOISE_KEY, enabled ? 'on' : 'off');
 }
 
+let roomTrack = null;
+export const registerRoomMicTrack = track => { roomTrack = track; };
 let sharedTrack = null;
 let acquiring = null;
 let releaseTimer = null;
