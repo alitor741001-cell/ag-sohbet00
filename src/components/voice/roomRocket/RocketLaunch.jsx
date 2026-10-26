@@ -3,6 +3,7 @@ import { Loader2 } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import useRocketPng from '@/components/voice/roomRocket/useRocketPng';
 import RocketLaunchBurst from '@/components/voice/roomRocket/RocketLaunchBurst';
+import RocketEngineFlame from '@/components/voice/roomRocket/RocketEngineFlame';
 import '@/components/voice/roomRocket/rocketLevelLaunch.css';
 
 export default function RocketLaunch({ level = 1, onComplete }) {
@@ -18,7 +19,7 @@ export default function RocketLaunch({ level = 1, onComplete }) {
   return <div className="rocket-level-launch" data-level={level} data-ready={ready} role="img" aria-label={`LVL ${level} roketinin ateşlenme, yükseliş ve patlama animasyonu`}>
     {!ready && <Loader2 className="absolute left-1/2 top-1/2 h-8 w-8 -translate-x-1/2 -translate-y-1/2 animate-spin text-slot-gold" />}
     {src && <div className="rocket-level-vehicle" aria-hidden="true">
-      <div className="rocket-level-exhaust" />
+      <RocketEngineFlame />
       <Image src={src} alt="" fittingType="fit" loading="eager" className="rocket-level-original" onLoad={() => setReady(true)} />
     </div>}
     <RocketLaunchBurst />

@@ -1,0 +1,16 @@
+.rocket-engine-system{position:absolute;inset:0;pointer-events:none}
+.rocket-engine-system .rocket-level-exhaust{left:42%;top:77%;width:16%;height:36%;border-radius:0;background:none;filter:none;transform-origin:50% 0}
+.rocket-level-launch[data-level="1"] .rocket-engine-system .rocket-level-exhaust{top:84%;height:32%}
+.rocket-engine-halo{position:absolute;inset:-12% -110% -15%;background:radial-gradient(ellipse at 50% 20%,hsl(var(--slot-orange)/.65),hsl(var(--slot-red)/.22) 35%,transparent 68%);filter:blur(.7rem)}
+.rocket-engine-fire,.rocket-engine-core,.rocket-engine-booster{position:absolute;top:0;left:0;width:100%;height:100%;transform-origin:50% 0;clip-path:polygon(22% 0,78% 0,91% 12%,80% 28%,92% 41%,68% 58%,73% 70%,50% 100%,30% 72%,32% 58%,11% 40%,23% 26%,10% 13%);background:linear-gradient(to bottom,hsl(var(--slot-text)) 0%,hsl(var(--slot-gold)) 15%,hsl(var(--slot-orange)) 42%,hsl(var(--slot-red)/.9) 70%,hsl(var(--slot-red)/0) 100%);filter:drop-shadow(0 0 .65rem hsl(var(--slot-orange)/.9))}
+.rocket-engine-core{left:28%;width:44%;height:68%;background:linear-gradient(to bottom,hsl(var(--slot-text)),hsl(var(--slot-text)) 20%,hsl(var(--slot-gold)) 55%,hsl(var(--slot-orange)/0));filter:blur(.12rem)}
+.rocket-engine-booster{top:75%;width:5%;height:20%;opacity:.9}
+.rocket-engine-booster-left{left:12%}.rocket-engine-booster-right{left:83%}
+.rocket-level-launch[data-level="1"] .rocket-engine-booster{top:84%;height:17%}
+.rocket-engine-ember{position:absolute;top:16%;left:48%;width:5%;height:9%;border-radius:50%;background:hsl(var(--slot-gold));box-shadow:0 0 .45rem hsl(var(--slot-orange));opacity:0}
+.rocket-level-launch[data-ready="true"] .rocket-engine-fire,.rocket-level-launch[data-ready="true"] .rocket-engine-booster{animation:rocket-engine-flicker .11s ease-in-out infinite alternate}
+.rocket-level-launch[data-ready="true"] .rocket-engine-core{animation:rocket-engine-flicker .075s ease-in-out infinite alternate-reverse}
+.rocket-level-launch[data-ready="true"] .rocket-engine-ember{animation:rocket-engine-embers var(--ember-speed) var(--ember-delay) linear infinite}
+@keyframes rocket-engine-flicker{from{transform:scaleX(.86) scaleY(.87);opacity:.85}to{transform:scaleX(1.08) scaleY(1.14);opacity:1}}
+@keyframes rocket-engine-embers{0%{opacity:0;transform:translate(0,0) scale(1)}12%{opacity:1}100%{opacity:0;transform:translate(var(--ember-x),850%) scale(.15)}}
+@media(prefers-reduced-motion:reduce){.rocket-level-launch[data-ready="true"] .rocket-engine-fire,.rocket-level-launch[data-ready="true"] .rocket-engine-core,.rocket-level-launch[data-ready="true"] .rocket-engine-booster,.rocket-level-launch[data-ready="true"] .rocket-engine-ember{animation:none}}
