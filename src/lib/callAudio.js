@@ -181,6 +181,39 @@ export function createVoiceOutput(track, roomId, { startMuted = false, nativeOnl
   return output;
 }
 
+/**
+ * Uzak eşin ses akışını yönlendirilebilir bir <audio> elementine bağlar.
+ * createVoiceOutput ile aynı çıkış yönlendirmesini kullanır (iOS hoparlör/ahize).
+ */
+export function createStreamOutput(stream, roomId, { startMuted = false } = {}) {
+  const element = new Audio();
+  element.autoplay = true;
+  element.playsInline = true;
+  element.setAttribute('playsinline', 'true');
+  element.style.display = 'none';
+  element.muted = startMuted;
+  element.srcObject = stream;
+  document.body.appendChild(element);
+
+  const output = {
+    dataset: { voiceRoom: roomId, mediaId: stream.id },
+    element,
+    play() {
+      routeOutput(output).catch(() => {});
+      return element.play();
+    },
+    remove() {
+      outputs.delete(output);
+      try { element.srcObject = null; } catch {}
+      element.remove();
+    },
+    get muted() { return element.muted; },
+    set muted(value) { element.muted = value; },
+  };
+  outputs.add(output);
+  return output;
+}
+
 // --- Zil sesi (AudioContext yok: eski cihazlarda mikrofonu düşürmesin) ---
 
 let ringElement = null;
