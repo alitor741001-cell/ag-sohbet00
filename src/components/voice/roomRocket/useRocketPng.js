@@ -31,7 +31,10 @@ export default function useRocketPng(level) {
   const art = ROCKET_ART[level - 1] || ROCKET_ART[0];
   useEffect(() => {
     let active = true;
-    prepare(art).then(src => { if (active) setResult({ source: art.src, src }); });
+    prepare(art).then(
+      src => { if (active) setResult({ source: art.src, src }); },
+      () => { if (active) setResult({ source: art.src, src: art.src }); },
+    );
     return () => { active = false; };
   }, [art]);
   return result?.source === art.src ? result.src : null;

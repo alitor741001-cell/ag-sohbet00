@@ -1,16 +1,26 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Loader2 } from 'lucide-react';
+import { Image } from '@/components/ui/image';
+import useRocketPng from '@/components/voice/roomRocket/useRocketPng';
+import RocketLaunchBurst from '@/components/voice/roomRocket/RocketLaunchBurst';
+import '@/components/voice/roomRocket/rocketLevelLaunch.css';
 
-const LAUNCH_VIDEO = 'https://media.base44.com/videos/public/6a77d66e4da6de214628ee62/171076feb_Roket_uuu.mp4';
-
-export default function RocketLaunch({ onComplete }) {
-  return <div className="rocket-launch-video-frame">
-    <video
-      src={LAUNCH_VIDEO}
-      autoPlay muted playsInline controls preload="auto"
-      className="h-full w-full object-contain"
-      aria-label="Altın roketin ateşlenip uzaya yükseldiği ödül uçuşu"
-      onEnded={onComplete}
-      onError={onComplete}
-    />
+export default function RocketLaunch({ level = 1, onComplete }) {
+  const src = useRocketPng(level);
+  const [ready, setReady] = useState(false);
+  const done = useRef(onComplete);
+  done.current = onComplete;
+  useEffect(() => {
+    if (!ready) return;
+    const timer = window.setTimeout(() => done.current(), 4600);
+    return () => window.clearTimeout(timer);
+  }, [ready]);
+  return <div className="rocket-level-launch" data-level={level} data-ready={ready} role="img" aria-label={`LVL ${level} roketinin ateşlenme, yükseliş ve patlama animasyonu`}>
+    {!ready && <Loader2 className="absolute left-1/2 top-1/2 h-8 w-8 -translate-x-1/2 -translate-y-1/2 animate-spin text-slot-gold" />}
+    {src && <div className="rocket-level-vehicle" aria-hidden="true">
+      <div className="rocket-level-exhaust" />
+      <Image src={src} alt="" fittingType="fit" loading="eager" className="rocket-level-original" onLoad={() => setReady(true)} />
+    </div>}
+    <RocketLaunchBurst />
   </div>;
 }
