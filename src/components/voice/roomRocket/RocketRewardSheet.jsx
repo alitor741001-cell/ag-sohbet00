@@ -7,6 +7,7 @@ import useBackDismiss from '@/hooks/useBackDismiss';
 import RocketRewardRules from '@/components/voice/roomRocket/RocketRewardRules';
 import { REWARD_PANEL_ART } from '@/components/voice/roomRocket/rocketArtwork';
 import RocketRewardValues from '@/components/voice/roomRocket/RocketRewardValues';
+import RocketWinnerProfiles from '@/components/voice/roomRocket/RocketWinnerProfiles';
 
 export default function RocketRewardSheet({ data, loading, error, onClose, onRetry }) {
   const [level, setLevel] = useState(1);
@@ -20,6 +21,7 @@ export default function RocketRewardSheet({ data, loading, error, onClose, onRet
       <div id="room-rocket-winners" role="tabpanel" aria-label={`LVL ${level} ödülleri`}>
         <Image src={REWARD_PANEL_ART[0]} alt="Roket Patlaması ödül paneli" unoptimized blurPlaceholder={false} loading="eager" fittingType="fit" className="room-rocket-sheet-art" />
         <RocketRewardValues level={level} />
+        <RocketWinnerProfiles data={data} level={level} />
       </div>
       <button type="button" className="room-rocket-close" aria-label="Kapat" onClick={onClose} />
       <button type="button" className="room-rocket-help" aria-label="Roket kuralları" onClick={() => setHelp(!help)} />
