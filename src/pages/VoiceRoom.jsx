@@ -7,6 +7,7 @@ import { useCurrentUser } from '@/lib/useCurrentUser';
 import { broadcasterState } from '@/lib/broadcaster';
 import { makeId } from '@/lib/uid';
 import { useVoiceChat } from '@/hooks/useVoiceChat';
+import useSocialBadges from '@/hooks/useSocialBadges';
 import VoiceViewport from '@/components/voice/VoiceViewport';
 import RoomBackground from '@/components/voice/RoomBackground';
 import { useToast } from '@/components/ui/use-toast';
@@ -98,6 +99,8 @@ export default function VoiceRoom() {
   const [seatIndex, setSeatIndex] = useState(null);
   const [dmUserId, setDmUserId] = useState(null);
   const [dmOpen, setDmOpen] = useState(false);
+  // Özel sohbet butonunun üstündeki okunmamış mesaj bildirimi.
+  const { messages: directUnread } = useSocialBadges();
   // Özel sohbet paneli tam ekrana geçti mi? Yarım panelken oda panelin üstüne sığar.
   const [dmExpanded, setDmExpanded] = useState(false);
   const [exitOpen, setExitOpen] = useState(false);
@@ -1192,6 +1195,7 @@ export default function VoiceRoom() {
         onOpenGames={() => setGamesOpen(true)}
         onOpenGifts={openGifts}
         onOpenSettings={() => setSettingsOpen((value) => !value)}
+        privateUnread={directUnread}
         onOpenPrivateChat={() => setDmOpen(true)}
         onToggleChat={() => {
           if (chatLocked) {

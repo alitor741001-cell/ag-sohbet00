@@ -4,6 +4,7 @@ import subscribeEntity from '@/components/data/entitySubscriptions';
 import { Crown, Eye, Image as ImageIcon, LayoutGrid, MessageSquare, MessageSquareOff, MessagesSquare, Mic, MicOff, Send, Shield, Smile, Sparkles, Trash2, Users, Volume2, VolumeX, X } from 'lucide-react';
 import { neonCircleClass } from '@/lib/neonStyle';
 import { base44 } from '@/api/base44Client';
+import PrivateChatBadge from '@/components/messages/PrivateChatBadge';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
 import { Image } from '@/components/ui/image';
@@ -211,7 +212,7 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
           {onDirect && (
             <button onClick={onDirect} aria-label="Özel mesajlar" className="relative flex h-9 w-9 items-center justify-center rounded-full border-2 border-[#8A2BE2] bg-black text-[#B06BFF] shadow-[0_0_18px_-8px_rgba(138,43,226,0.9)] transition-transform active:scale-95">
               <MessagesSquare className="h-4 w-4" />
-              {directUnread > 0 && <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#FFD700] px-1 text-[9px] font-bold text-black">{directUnread > 99 ? '99+' : directUnread}</span>}
+              <PrivateChatBadge count={directUnread} />
             </button>
           )}
           {isOwner && chatEnabled && (
