@@ -6,7 +6,7 @@ import { Image } from '@/components/ui/image';
 import useBackDismiss from '@/hooks/useBackDismiss';
 import RocketWinnerZones from '@/components/voice/roomRocket/RocketWinnerZones';
 import RocketRewardRules from '@/components/voice/roomRocket/RocketRewardRules';
-import { REWARD_ART } from '@/components/voice/roomRocket/rocketArtwork';
+import { LEVEL_VIPS, REWARD_ART } from '@/components/voice/roomRocket/rocketArtwork';
 
 export default function RocketRewardSheet({ data, loading, error, onClose, onRetry }) {
   const [level, setLevel] = useState(data?.level || 1);
@@ -27,7 +27,7 @@ export default function RocketRewardSheet({ data, loading, error, onClose, onRet
         <button type="button" key={value} role="tab" aria-selected={level === value} aria-controls="room-rocket-winners" className={level === value ? 'is-selected' : ''} onClick={() => setLevel(value)}><span className="sr-only">LVL {value}</span></button>
       )}</div>
       <div id="room-rocket-winners" role="tabpanel" aria-label={`LVL ${level} kazananları`}><RocketWinnerZones winners={winners} level={level} /></div>
-      <div className="room-rocket-sheet-status" role="status">{loading ? <Loader2 className="mx-auto h-4 w-4 animate-spin" /> : error ? <button type="button" onClick={onRetry}>Yüklenemedi · Tekrar dene</button> : round ? `Tur ${round.cycle} · ${round.status === 'complete' ? 'Ödüller bakiyelere eklendi' : 'Ödüller dağıtılıyor'}${round.vip_level ? ` · 1. sıraya VIP${round.vip_level}` : ''}` : `Günlük sıralama · LVL ${level} roketi 1. sıraya VIP${[6, 7, 9, 11][level - 1]} hediye eder`}</div>
+      <div className="room-rocket-sheet-status" role="status">{loading ? <Loader2 className="mx-auto h-4 w-4 animate-spin" /> : error ? <button type="button" onClick={onRetry}>Yüklenemedi · Tekrar dene</button> : round ? `Tur ${round.cycle} · ${round.status === 'complete' ? 'Ödüller bakiyelere eklendi' : 'Ödüller dağıtılıyor'}${round.vip_level ? ` · 1. sıraya VIP${round.vip_level}` : ''}` : `Günlük sıralama · LVL ${level} roketi 1. sıraya VIP${LEVEL_VIPS[level - 1]} hediye eder`}</div>
       {help && <RocketRewardRules onClose={() => setHelp(false)} />}
     </Content>
   </DialogPortal></Dialog>;

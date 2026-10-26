@@ -9,3 +9,5 @@ export const ROCKET_ART = [
 export const REWARD_ART = ROOT + '6ecd43e2d_IMG_0331.jpg';
 export const TARGET_LABELS = ['1.0M', '1.5M', '2.5M', '5.0M'];
 export const BASE_PRIZES = [1000, 750, 500, 250];
+/** Her roket seviyesinde 1. sıradaki kişiye hediye edilen VIP seviyesi. */
+export const LEVEL_VIPS = [6, 7, 9, 11];
