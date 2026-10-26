@@ -1,6 +1,8 @@
 .rocket-personal-reward{display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto;width:min(76vw,290px);max-height:calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 32px);overflow-y:auto;padding:0 8px 12px;text-align:center;color:hsl(var(--slot-text))}
 .rocket-personal-vehicle{position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0;width:min(46vw,170px,22dvh);aspect-ratio:1;background:none}
-.rocket-personal-image{width:100%;height:100%;filter:drop-shadow(0 0 16px hsl(var(--slot-gold)/.28))}
+.rocket-personal-image{width:100%;height:100%;filter:drop-shadow(0 0 16px hsl(var(--slot-gold)/.28));animation:rocket-personal-float 3s ease-in-out infinite}
+@keyframes rocket-personal-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@media(prefers-reduced-motion:reduce){.rocket-personal-image{animation:none}}
 .rocket-personal-card{width:100%;padding:10px 8px 8px;border:0;border-radius:0;background:transparent;box-shadow:none;text-shadow:0 2px 6px hsl(var(--slot-bg)/.85)}
 .rocket-personal-level{margin:0;font-size:11px;font-weight:800;letter-spacing:.18em;color:hsl(var(--slot-gold))}
 .rocket-personal-heading{margin:8px 0 12px;font-family:var(--font-heading);font-size:clamp(28px,8vw,38px);font-weight:900;line-height:1.1}
