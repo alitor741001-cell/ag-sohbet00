@@ -14,6 +14,14 @@ const isLiveMicTrack = (publication) => {
   const media = publication?.track?.mediaStreamTrack;
   return !!media && media.readyState === 'live';
 };
+// İzin bir kez verildiyse hatırlanır: sonraki girişlerde mikrofon kendiliğinden açılır.
+const MIC_ALLOWED_KEY = 'voice_mic_allowed';
+const micAllowedBefore = () => {
+  try { return localStorage.getItem(MIC_ALLOWED_KEY) === '1'; } catch { return false; }
+};
+const rememberMicAllowed = () => {
+  try { localStorage.setItem(MIC_ALLOWED_KEY, '1'); } catch {}
+};
 // Mikrofon izni verilmese bile kişi odayı dinlemeye devam eder; mesaj bunu açıkça söyler.
 const friendlyMicError = (error) => {
   if (error?.name === 'NotAllowedError') return '🎤 Mikrofon izni verilmedi — diğerlerini duymaya devam edersin.';
@@ -55,7 +63,9 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
   const voiceEnabledRef = useRef(voiceEnabled);
   // Koltuk düzeni: mikrofon yayını yalnızca koltukta oturan kişide açık kalır.
   const micEnabledRef = useRef(micEnabled !== false);
-  const micAppliedRef = useRef(micEnabled !== false);
+  const micAppliedRef = useRef(null);
+  // İzin reddedildiyse kendiliğinden tekrar denenmez; kullanıcı izni verince sıfırlanır.
+  const micDeniedRef = useRef(false);
   useEffect(() => { voiceEnabledRef.current = voiceEnabled; if (voiceEnabled) setEverVoiceEnabled(true); }, [voiceEnabled]);
   useEffect(() => { micEnabledRef.current = micEnabled !== false; }, [micEnabled]);
 
@@ -100,6 +110,9 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
         if (media) media.enabled = true;
         setSharedMicActive(true);
         setMicDenied(false);
+        micDeniedRef.current = false;
+        setActive(true);
+        rememberMicAllowed();
         return;
       }
       const track = await sharedMicTrack();
@@ -111,11 +124,15 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
       await room.localParticipant.publishTrack(track, { source: Track.Source.Microphone });
       const published = room.localParticipant.getTrackPublication(Track.Source.Microphone);
       if (!isLiveMicTrack(published)) throw new Error('Mikrofon yayını doğrulanamadı.');
+      setActive(true);
+      rememberMicAllowed();
     })();
     micEnablePendingRef.current.set(room, request);
     try { await request; }
     catch (err) {
-      if (err?.name === 'NotAllowedError' || err?.name === 'SecurityError') setMicDenied(true);
+      const refused = err?.name === 'NotAllowedError' || err?.name === 'SecurityError';
+      micDeniedRef.current = refused;
+      if (refused) setMicDenied(true);
       throw err;
     }
     finally { if (micEnablePendingRef.current.get(room) === request) micEnablePendingRef.current.delete(room); }
@@ -300,7 +317,10 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
         setAudioBlocked(!room.canPlaybackAudio);
         let carryMic = false;
         try { carryMic = sessionStorage.getItem('voice_mic_carry') === '1'; sessionStorage.removeItem('voice_mic_carry'); } catch {}
-        if (!hasDirectCallAudioFocus() && !mutedByModeratorRef.current && voiceEnabledRef.current && (micWantedRef.current || carryMic)) {
+        // İzin daha önce verildiyse koltuktaki kişinin mikrofonu kendiliğinden açılır.
+        const autoOpen = micEnabledRef.current && micAllowedBefore();
+        if (!hasDirectCallAudioFocus() && !mutedByModeratorRef.current && voiceEnabledRef.current && (micWantedRef.current || carryMic || autoOpen)) {
+          micWantedRef.current = true;
           setRequesting(true);
           try {
             await enableMic(room);
@@ -334,10 +354,11 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
     // otomatik olarak mikrofon açılır (micDenied guide'ı bu geri dönüşü tetikler).
     const restoreOnVisible = () => {
       if (document.visibilityState === 'hidden') return;
+      micDeniedRef.current = false;
       attachCurrentRemoteAudio();
       retryAudio();
       if (room.state === 'disconnected') { setSessionKey((value) => value + 1); return; }
-      if (micWantedRef.current && !mutedByModeratorRef.current && voiceEnabledRef.current) {
+      if ((micWantedRef.current || micAllowedBefore()) && mutedByModeratorRef.current === false && voiceEnabledRef.current) {
         enableMic(room).then(refreshState).catch(() => {});
       }
     };
@@ -348,6 +369,13 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
       refreshState();
       attachCurrentRemoteAudio();
       if (room.canPlaybackAudio && audioElementsRef.current.size > 0) retryAudio();
+      // Mikrofon açık kalmalı ama yayın düşmüşse kendiliğinden geri kurulur;
+      // böylece buton "kapalı" görünüp öyle kalmaz.
+      const micPublication = room.localParticipant.getTrackPublication(Track.Source.Microphone);
+      if (micWantedRef.current && !micDeniedRef.current && !mutedByModeratorRef.current && voiceEnabledRef.current
+        && room.state === 'connected' && !isLiveMicTrack(micPublication)) {
+        enableMic(room).then(refreshState).catch(() => {});
+      }
     }, 2000);
 
     const stopTransient = () => {
@@ -426,14 +454,19 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
   useEffect(() => {
     if (micEnabled === undefined) return;
     const next = micEnabled !== false;
-    if (micAppliedRef.current === next) return;
-    micAppliedRef.current = next;
     micWantedRef.current = next;
     const room = roomRef.current;
     if (!room || hasDirectCallAudioFocus() || connectionState !== 'connected' || mutedByModeratorRef.current) return;
+    // Bağlantı hazır olduğunda tekrar denenir: bağlantı kurulmadan gelen istek kaybolmaz.
+    if (micAppliedRef.current === next) return;
     // Mikrofon reddedilse bile dinleme sürer: uzak ses bir kez daha bağlanıp oynatılır.
-    if (next) enableMic(room).then(refreshState).catch(() => { retryAudio(); refreshState(); });
-    else room.localParticipant.setMicrophoneEnabled(false).then(refreshState).catch(() => {});
+    if (next) {
+      micDeniedRef.current = false;
+      enableMic(room).then(() => { micAppliedRef.current = true; refreshState(); }).catch(() => { retryAudio(); refreshState(); });
+    } else {
+      micAppliedRef.current = false;
+      room.localParticipant.setMicrophoneEnabled(false).then(refreshState).catch(() => {});
+    }
   }, [micEnabled, connectionState, refreshState]);
 
   // Buton hiçbir durumda sessizce boşa basmaz: ya mikrofonu açar/kapatır ya da
