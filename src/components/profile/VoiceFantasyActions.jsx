@@ -33,13 +33,12 @@ export default function VoiceFantasyActions({ room, userId, name, isSelf, hidden
   ];
   return (
     <div className="space-y-2">
-      {!isSelf && !hidden && <ProfileSocialRow userId={userId} accent="var(--fantasy-accent-color)" />}
-      {room.canModerate && !isSelf && (
-        <button type="button" disabled={!!busy} onClick={() => perform('mod', () => room.toggleModerator(userId, !targetIsMod))} className="voice-fantasy-button flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2 text-[11px] font-bold disabled:opacity-50">
-          {busy === 'mod' ? <Loader2 className="h-4 w-4 animate-spin" /> : targetIsMod ? <ShieldOff className="h-4 w-4" /> : <Shield className="h-4 w-4" />}
-          {targetIsMod ? 'Yönetici ✓' : 'Yönet'}
+      {!isSelf && !hidden && <ProfileSocialRow userId={userId} accent="var(--fantasy-accent-color)" leadingAction={room.canModerate && (
+        <button type="button" disabled={!!busy} onClick={() => perform('mod', () => room.toggleModerator(userId, !targetIsMod))} className="voice-fantasy-button flex min-w-0 flex-1 items-center justify-center gap-1 rounded-xl border-2 px-2 py-1.5 text-[10px] font-black disabled:opacity-50">
+          {busy === 'mod' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : targetIsMod ? <ShieldOff className="h-3.5 w-3.5" /> : <Shield className="h-3.5 w-3.5" />}
+          {targetIsMod ? 'Yönetici ✓' : 'Yönetici'}
         </button>
-      )}
+      )} />}
       {room.canModerate && !isSelf && manageItems.length > 0 && (
         <div className="grid grid-cols-3 gap-2">
           {manageItems.map(({ key, label, icon: Icon, action, danger }) => (

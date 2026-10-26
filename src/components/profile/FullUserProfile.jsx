@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, ChevronRight, Loader2, MessageSquare, Mic2, MicOff, Settings } from 'lucide-react';
+import { ChevronRight, Loader2, MessageSquare, Mic2, MicOff, Settings } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import subscribeEntity from '@/components/data/entitySubscriptions';
 import { useToast } from '@/components/ui/use-toast';
@@ -12,7 +12,7 @@ import FantasyProfileShell from '@/components/profile/FantasyProfileShell';
 import ProfileStatsRow from '@/components/profile/ProfileStatsRow';
 import ProfileIdentityBlock from '@/components/profile/ProfileIdentityBlock';
 import ProfileSocialRow from '@/components/profile/social/ProfileSocialRow';
-import { AccountStatusMark, ACCOUNT_MARKS, ACCOUNT_STATES, getAccountState } from '@/components/friends/AccountStatusAvatar';
+import { AccountStatusMark, ACCOUNT_STATES, getAccountState } from '@/components/friends/AccountStatusAvatar';
 import { broadcasterState } from '@/lib/broadcaster';
 import { useRoomProfileActions } from '@/lib/roomProfileActions';
 import useBackDismiss from '@/hooks/useBackDismiss';
@@ -20,6 +20,7 @@ import useRoomLevels from '@/hooks/useRoomLevels';
 import VoiceFantasyCard from '@/components/profile/VoiceFantasyCard';
 import ProfileAgencyBadges from '@/components/profile/ProfileAgencyBadges';
 import ProfileModeration from '@/components/profile/ProfileModeration';
+import useProfileFriendship from '@/hooks/useProfileFriendship';
 
 /**
  * Uygulamadaki tek profil kartı: kadın kartı pembe/altın, erkek kartı mavi/altın tonundadır.
@@ -36,7 +37,8 @@ export default function FullUserProfile({
   const roomContext = useRoomProfileActions();
   const room = roomActions || roomContext;
   const [profile, setProfile] = useState(null);
-  const [relation, setRelation] = useState('');
+  const { friendship } = useProfileFriendship(open && !hidden ? userId : null);
+  const relation = friendship?.status === 'accepted' ? 'friend' : friendship?.status === 'pending' ? 'pending' : '';
   const [copied, setCopied] = useState(false);
   const [inviteSent, setInviteSent] = useState(false);
   const roomLevels = useRoomLevels([userId]);
@@ -47,10 +49,9 @@ export default function FullUserProfile({
   const isSelf = self || userId === user?.id;
 
   useEffect(() => {
-    if (!open || !userId || hidden) { setProfile(null); setRelation(''); return; }
+    if (!open || !userId || hidden) { setProfile(null); return; }
     let alive = true;
     setProfile(null);
-    setRelation('');
     // Profil, açıkken tazelenebilsin diye fonksiyona alındı: ban anında görsel değişir.
     const load = () => base44.functions.invoke('user-profile', { user_id: userId })
       .then((response) => { if (alive) setProfile(response?.data || {}); })
@@ -58,14 +59,6 @@ export default function FullUserProfile({
     load();
     // Kart açıkken ban / ban kaldırma anında işler: kayıt değişince profil yeniden okunur.
     const off = subscribeEntity('User', (event) => { if ((event.data?.id || event.id) === userId) load(); });
-    if (user?.id && userId !== user.id) {
-      base44.entities.Friendship.filter({ members: userId }, '-created_date', 50)
-        .then((rows) => {
-          const found = (rows || []).find((row) => row.members.includes(user.id));
-          if (alive) setRelation(found?.status === 'accepted' ? 'friend' : found?.status === 'pending' ? 'pending' : '');
-        })
-        .catch(() => {});
-    }
     const offVip = subscribeEntity('VipAppearance', (event) => { if (event.data?.owner_id === userId) load(); });
     // Takılan/çıkarılan kozmetik aynı sekmede anında yansır.
     window.addEventListener('vip-cosmetics-changed', load);
@@ -184,6 +177,7 @@ export default function FullUserProfile({
 
   const content = statusContent || (
     <>
+      {!hidden && <ProfileIdentityBlock genderLabel={genderLabel} age={age} country={badge.country} flag={badge.flag} joinDate={formatDate(profile?.created_date)} />}
       {!hidden && <ProfileAgencyBadges profile={profile || {}} userId={userId} />}
       {!hidden && <ProfileModeration userId={userId} profile={profile} onChanged={setProfile} />}
 
@@ -197,22 +191,10 @@ export default function FullUserProfile({
         nLevel={profile?.n_level || 0}
       />
 
-      {hidden ? (
+      {hidden && (
         <p className="rounded-2xl border px-3 py-2 text-center text-[10px] leading-snug text-white/70" style={{ borderColor: palette.soft, background: 'rgba(0,0,0,0.5)' }}>
           Kullanıcı, özel Gizli Kullanıcı modunu etkinleştirdi. Kimlik bilgileri gizli kalır.
         </p>
-      ) : (
-        <ProfileIdentityBlock
-          palette={palette}
-          genderLabel={genderLabel}
-          age={age}
-          country={badge.country}
-          flag={badge.flag}
-          memberId={memberId}
-          joinDate={formatDate(profile?.created_date)}
-          copied={copied}
-          onCopyId={copyId}
-        />
       )}
 
       {!hidden && info.length > 0 && (
@@ -302,7 +284,8 @@ export default function FullUserProfile({
 
   return (
     <FantasyProfileShell profile={profile} female={profile?.gender === 'kadın'} hidden={hidden} name={shownName}
-      avatar={banned ? ACCOUNT_STATES.banned.image : shownAvatar} role={roleLabel} onClose={onClose}>
+      avatar={banned ? ACCOUNT_STATES.banned.image : shownAvatar} role={roleLabel} onClose={onClose}
+      memberId={memberId} copied={copied} onCopyId={copyId}>
       <div className="space-y-3 px-4 pt-1" onClick={closeOnAction}>
         {header}
         <div className="flex flex-col gap-3">{content}</div>

@@ -60,10 +60,10 @@ export default function FollowButton({ userId, accent = '#6fe6dc', variant = 'fu
   }
 
   return (
-    <div className="flex w-full min-w-0 items-center gap-1.5">
+    <div className="flex h-full w-full min-w-0 items-stretch gap-1.5">
       <button
         type="button"
-        onClick={toggle}
+        onClick={event => { event.stopPropagation(); toggle(); }}
         disabled={busy}
         className={`flex min-w-0 flex-1 items-center justify-center border-2 font-black text-white disabled:opacity-60 ${compact ? 'gap-1 rounded-xl px-2 py-1.5 text-[10px]' : 'gap-2 rounded-2xl px-4 py-3 text-sm'}`}
         style={{
@@ -75,9 +75,7 @@ export default function FollowButton({ userId, accent = '#6fe6dc', variant = 'fu
         {busy ? <Loader2 className="h-4 w-4 shrink-0 animate-spin" /> : state.following ? <UserCheck className={`shrink-0 ${compact ? 'h-3.5 w-3.5' : 'h-4 w-4'}`} /> : <UserPlus className={`shrink-0 ${compact ? 'h-3.5 w-3.5' : 'h-4 w-4'}`} />}
         <span className="truncate">{state.following ? 'Takipten Çık' : 'Takip Et'}</span>
       </button>
-      <span className={`shrink-0 whitespace-nowrap border border-white/15 font-bold text-white/70 ${compact ? 'rounded-xl px-1.5 py-1.5 text-[9px]' : 'rounded-2xl px-3 py-3 text-[11px]'}`}>
-        {state.followers} takipçi
-      </span>
+
     </div>
   );
 }

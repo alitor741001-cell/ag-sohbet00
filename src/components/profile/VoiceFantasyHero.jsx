@@ -4,7 +4,8 @@ import ProfileFrame from '@/components/ProfileFrame';
 import VipAvatarFrame from '@/components/vip/VipAvatarFrame';
 import VipShowcase from '@/components/profile/VipShowcase';
 import { vipLook, vipVars } from '@/components/vip/vipTheme';
-export default function VoiceFantasyHero({ female, hidden, name, avatar, role, onClose, profile }) {
+import ProfileMemberId from '@/components/profile/ProfileMemberId';
+export default function VoiceFantasyHero({ female, hidden, name, avatar, role, onClose, profile, memberId, copied, onCopyId }) {
   const card = !hidden && vipLook(profile, 'card');
   const nameTheme = !hidden && vipLook(profile, 'name');
   const Emblem = female ? Crown : Flame;
@@ -18,5 +19,6 @@ export default function VoiceFantasyHero({ female, hidden, name, avatar, role, o
     <h2 style={vipVars(nameTheme)} className={`mt-2 break-words text-center font-serif text-2xl font-bold ${nameTheme ? 'vip-tint' : 'text-fantasy-text'} ${nameTheme?.nameAnimated ? 'vip-name-animated' : ''}`}>{name}</h2>
     {!hidden && <VipShowcase profile={profile} />}
     {role && <p className="mt-1 text-center text-[10px] font-bold tracking-widest text-fantasy-gold">{role}</p>}
+    {!hidden && <ProfileMemberId memberId={memberId} copied={copied} onCopyId={onCopyId} />}
   </header>;
 }

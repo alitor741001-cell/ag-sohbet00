@@ -11,7 +11,8 @@ export default function VoiceFantasyCard({ profile, hidden, name, avatar, role, 
   const agency = profile?.owned_agency_name || profile?.agency_name;
   const agencyCode = profile?.owned_agency_code || profile?.agency_code;
   return (
-    <FantasyProfileShell profile={profile} female={female} hidden={hidden} name={name} avatar={avatar} role={role} onClose={onClose}>
+    <FantasyProfileShell profile={profile} female={female} hidden={hidden} name={name} avatar={avatar} role={role} onClose={onClose}
+      memberId={memberId} copied={copied} onCopyId={onCopyId} seatAnchored>
           {statusContent || <div className="space-y-3 px-4 pt-1" onClick={onAction}>
             {!hidden && <>
               <ProfileStatsRow
@@ -22,9 +23,9 @@ export default function VoiceFantasyCard({ profile, hidden, name, avatar, role, 
                 receivedTier={profile?.gift_received_tier || 'green'}
                 nLevel={profile?.n_level || 0}
               />
+              <ProfileIdentityBlock genderLabel={genderLabel} age={age} country={badge.country} flag={badge.flag} joinDate={joinDate} />
               <ProfileAgencyBadges profile={profile || {}} userId={userId} />
               {moderation}
-              <ProfileIdentityBlock palette={palette} genderLabel={genderLabel} age={age} country={badge.country} flag={badge.flag} memberId={memberId} joinDate={joinDate} copied={copied} onCopyId={onCopyId} />
             </>}
             {hidden && <p className="text-center text-xs text-fantasy-text/70">Gizli Kullanıcı: kimlik bilgileri gizli kalır.</p>}
             <VoiceFantasyActions room={room} userId={userId} name={name} isSelf={isSelf} hidden={hidden} onClose={onClose} onMessage={onMessage} />
