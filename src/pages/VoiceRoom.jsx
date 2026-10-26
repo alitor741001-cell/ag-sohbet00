@@ -1178,7 +1178,6 @@ export default function VoiceRoom() {
       </div>
       <div className="voice-controls-anchor shrink-0" hidden={composerOpen}>
       <RoomRocketFeature room={room} hidden={composerOpen} />
-      {!composerOpen && (
       <VoiceControlBar
         keyboardOpen={keyboardOpen}
         micActive={!voice.muted}
@@ -1204,7 +1203,6 @@ export default function VoiceRoom() {
           setComposerOpen(true);
         }}
       />
-      )}
       </div>
 
       <VoiceRoomMenu

@@ -3,18 +3,17 @@ import { base44 } from '@/api/base44Client';
 import subscribeEntity from '@/components/data/entitySubscriptions';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
-import { ArrowLeft, Headset, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import useKeyboardInset from '@/hooks/useKeyboardInset';
 import usePageScrollLock from '@/hooks/usePageScrollLock';
 import { Image } from '@/components/ui/image';
-import SupportAttachment from '@/components/support/SupportAttachment';
 import SupportComposer from '@/components/support/SupportComposer';
-import { statusLabel, STATUS_COLORS } from '@/lib/supportStatus';
+import SupportChatHeader from '@/components/support/SupportChatHeader';
+import SupportChatMessage from '@/components/support/SupportChatMessage';
+import useChatViewport from '@/hooks/useChatViewport';
+import '@/components/support/supportChat.css';
+import useAgOfficial from '@/hooks/useAgOfficial';
 
-/** İlk mesaj görüşmenin konusu olur: yönetici panelinde sohbet bununla listelenir. */
-const subjectFrom = (text, mediaType) =>
-  text ? text.slice(0, 60) : mediaType === 'video' ? '🎥 Video' : '📷 Fotoğraf';
 
 /**
  * Canlı destek: üye konu/kategori seçmeden doğrudan yazar. İlk mesajla görüşme
@@ -22,10 +21,13 @@ const subjectFrom = (text, mediaType) =>
  */
 export default function Support() {
   const { user } = useCurrentUser();
+  const official = useAgOfficial(user?.id);
+  const staff = user?.role === 'admin' || official.active;
   const { toast } = useToast();
   const navigate = useNavigate();
   // Özel sohbetteki gibi: klavye açılınca panel yukarı kayar.
-  const keyboardInset = useKeyboardInset();
+  const frame = useRef(null);
+  useChatViewport(frame);
   // Arkadaki sayfa ve tema çekme/kaydırmada oynamaz.
   usePageScrollLock();
   const [ticket, setTicket] = useState(null);
@@ -118,25 +120,7 @@ export default function Support() {
     return () => { alive = false; clearInterval(poll); unsubMsg(); unsubTicket(); };
   }, [ticket?.id]);
 
-  /** Görüşme yoksa ilk mesajla birlikte açılır: üye konu seçmez. */
-  const ensureTicket = async (subject) => {
-    if (ticket && ticket.status !== 'closed') {
-      if (ticket.status !== 'answered' && ticket.status !== 'closed') {
-        base44.entities.SupportTicket.update(ticket.id, { status: 'reviewing' }).catch(() => {});
-        setTicket({ ...ticket, status: 'reviewing' });
-      }
-      return ticket;
-    }
-    const created = await base44.entities.SupportTicket.create({
-      user_id: user.id,
-      user_name: user.username || user.full_name,
-      subject,
-      category: 'Genel',
-      status: 'reviewing',
-    });
-    setTicket(created);
-    return created;
-  };
+
 
   // Yöneticiye anlık bildirim: yeni görüşme ya da yeni mesaj.
   const notifyAdmin = (msg, isNew, bodyText) => base44.functions.invoke('admin-notify', {
@@ -157,9 +141,9 @@ export default function Support() {
     if (!user || sending) return;
     setSending(true);
     try {
-      const isNew = !ticket || ticket.status === 'closed';
-      const active = await ensureTicket(isNew ? subjectFrom(payload.text, payload.media_type) : ticket.subject);
-      const msg = await base44.entities.SupportMessage.create({ ticket_id: active.id, owner_id: user.id, user_id: user.id, sender: 'user', ...payload });
+      const { data } = await base44.functions.invoke('officialSupport', { action: 'sendMember', ...payload });
+      const active = data.ticket, msg = data.message, isNew = data.is_new;
+      setTicket(active);
       if (msg?.id) {
         // Yeni görüşme başlıyorsa kapanmış görüşmenin izleri temizlenir.
         if (isNew) { setMessages([msg]); setClosedMessages([]); setClosedNotice(false); setClosedUntil(null); }
@@ -169,10 +153,11 @@ export default function Support() {
         markSeen();
         notifyAdmin(msg, isNew, payload.text || 'Ek gönderildi');
       }
+      return true;
     } catch {
       toast({ title: 'Mesaj gönderilemedi', variant: 'destructive' });
-    }
-    setSending(false);
+      return false;
+    } finally { setSending(false); }
   };
 
   if (!user) return <div className="flex h-[60vh] items-center justify-center text-sm text-muted-foreground">Yükleniyor...</div>;
@@ -181,27 +166,8 @@ export default function Support() {
 
   // Özel sohbet gibi tam ekran panel: alt menünün üzerini kaplar, geri okuyla kapanır.
   return (
-    <div
-      className="standalone-private-chat dark fixed inset-x-0 top-0 z-[60] flex min-h-0 flex-col overflow-hidden overscroll-none touch-none bg-anthracite text-white"
-      style={{ bottom: 'calc(min(100vw, 540px) * 144 / 540 + env(safe-area-inset-bottom))', transform: keyboardInset ? `translateY(-${keyboardInset}px)` : undefined, transition: 'transform 180ms ease-out' }}
-    >
-      <div className="flex items-center gap-2.5 border-b border-[#f2ce6b]/25 px-4 pb-3 pt-[max(env(safe-area-inset-top),0.75rem)]">
-        <button
-          onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/'))}
-          aria-label="Geri"
-          className="shrink-0 p-1 text-white/60 hover:text-white"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full" style={{ background: 'linear-gradient(135deg, #c62828, #f2ce6b)' }}>
-          <Headset className="h-4 w-4 text-white" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-bold">Canlı Destek</p>
-          <p className="text-[11px] text-green-400">● Çevrimiçi — hemen yazabilirsiniz</p>
-        </div>
-        {ticket && <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${STATUS_COLORS[ticket.status] || ''}`}>{statusLabel(ticket.status)}</span>}
-      </div>
+    <div ref={frame} className="support-chat fixed inset-x-0 z-[250] flex min-h-0 flex-col overflow-hidden overscroll-none" style={{ top: 'var(--viewport-offset, 0px)', height: 'var(--visual-viewport-height, 100dvh)' }}>
+      <SupportChatHeader onBack={() => window.history.length > 1 ? navigate(-1) : navigate('/')} />
 
         <div className="flex-1 space-y-2 overflow-y-auto overflow-x-hidden overscroll-contain p-3" style={{ touchAction: 'pan-y' }}>
           {thread.length === 0 && !closedNotice && (
@@ -209,19 +175,12 @@ export default function Support() {
               Merhaba! Sorununuzu buradan doğrudan yazabilir, fotoğraf veya 30 saniyelik video gönderebilirsiniz.
             </p>
           )}
-          {thread.map((m) => (
-            <div key={m.id} className={`flex ${m.user_id === m.owner_id ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[80%] overflow-hidden rounded-2xl px-3 py-2 text-sm ${m.user_id === m.owner_id ? 'bg-primary text-primary-foreground' : 'bg-secondary'}`}>
-                <SupportAttachment message={m} className="mb-1 max-h-48 max-w-full rounded-lg" onImageClick={setLightbox} />
-                {m.text && <p className="whitespace-pre-wrap break-words">{m.text}</p>}
-              </div>
-            </div>
-          ))}
+          {thread.map(m => <SupportChatMessage key={m.id} message={m} memberName={user.username || user.full_name || 'Üye'} memberAvatar={user.avatar} onImageClick={setLightbox} />)}
           <div ref={endRef} />
         </div>
 
         {/* Yönetici konuyu kapattığında yazma alanının üstünde görüşmenin kapandığı yazar. */}
-        {closedNotice && (
+        {closedNotice && !staff && !official.loading && (
           <p className="border-t border-[#f2ce6b]/25 bg-[#f2ce6b]/10 px-4 py-2 text-center text-[11px] font-semibold text-[#f2ce6b]">
             Konu kapandı. Mesajlar bir dakika sonra silinir. Yazdığınızda yeni bir görüşme başlar.
           </p>
@@ -234,7 +193,7 @@ export default function Support() {
         />
 
       {lightbox && (
-        <div onClick={() => setLightbox(null)} className="fixed inset-0 z-[110] flex items-center justify-center bg-black/90 p-4">
+        <div onClick={() => setLightbox(null)} className="fixed inset-0 z-[300] flex items-center justify-center bg-background/95 p-4">
           <button className="absolute right-4 top-4 p-2 text-white"><X className="h-6 w-6" /></button>
           <Image src={lightbox} className="max-h-full max-w-full rounded-lg" fittingType="fit" />
         </div>

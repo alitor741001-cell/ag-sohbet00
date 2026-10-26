@@ -222,3 +222,38 @@
 @supports (height: 100dvh) {
   .voice-sheet-half, .voice-sheet-tall { max-height: 86dvh; }
 }
+
+/* One geometry for Android, iOS and tablets; sheets never resize the stage. */
+.voice-viewport:not(.voice-private-chat) {
+  box-sizing: border-box;
+  right: auto;
+  overflow-x: clip;
+  padding-bottom: calc(var(--voice-bar-height, 120px) + env(safe-area-inset-bottom, 0px));
+}
+.voice-viewport .voice-controls-anchor {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (min-width: 768px) {
+  .voice-viewport .voice-controls-anchor {
+    left: max(env(safe-area-inset-left, 0px), calc((100vw - 640px) / 2));
+    right: max(env(safe-area-inset-right, 0px), calc((100vw - 640px) / 2));
+  }
+}
+.voice-viewport:not(.voice-private-chat) .voice-chat-dock {
+  height: calc(var(--visual-viewport-height, 100vh) * .24);
+  min-height: 64px;
+}
+.voice-viewport[data-keyboard="open"]:not(.voice-private-chat) .voice-chat-dock {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: var(--keyboard-height, 0px);
+  max-height: calc(var(--voice-visible-height, 100vh) * .6);
+  z-index: 30;
+}
+.gift-palace-panel, .gift-palace { min-width: 0; max-width: 100%; overflow-x: hidden; overscroll-behavior-x: none; }
+.gift-palace-panel { touch-action: auto; }
+.gift-palace-tabs, .gift-palace-recipients { overscroll-behavior-x: contain; }

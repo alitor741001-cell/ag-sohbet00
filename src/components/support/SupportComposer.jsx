@@ -39,8 +39,7 @@ export default function SupportComposer({ onSendText, onSendMedia, busy = false 
     e.preventDefault();
     const value = text.trim();
     if (!value || picking) return;
-    setText('');
-    await onSendText(value);
+    if (await onSendText(value) !== false) setText('');
   };
 
   const onFile = async (e, kind) => {
@@ -67,7 +66,7 @@ export default function SupportComposer({ onSendText, onSendMedia, busy = false 
   };
 
   return (
-    <form onSubmit={submit} className="flex shrink-0 items-center gap-1.5 border-t border-border p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+    <form onSubmit={submit} className="support-composer flex shrink-0 items-center gap-2 border-t border-border p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
       <div className="relative shrink-0">
         <button
           type="button"
@@ -92,6 +91,7 @@ export default function SupportComposer({ onSendText, onSendMedia, busy = false 
         <input ref={videoRef} type="file" accept="video/*" className="hidden" onChange={(e) => onFile(e, 'video')} />
       </div>
       <input
+        maxLength={2000}
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder="Mesajınızı yazın..."

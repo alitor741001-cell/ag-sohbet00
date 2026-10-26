@@ -1,6 +1,6 @@
 import { giftLock } from './supabaseMirror.ts';
 
-/** Persistent least-loaded routing. Existing conversations keep their official. */
+/** Persisted routing, balanced across all active officials; admins see everything. */
 export async function routeSupport(base44) {
   const e = base44.asServiceRole.entities;
   const officialIds = new Set();
@@ -15,7 +15,10 @@ export async function routeSupport(base44) {
   const roster = [...officialIds].sort();
   if (!roster.length) return;
   const pending = { status: { $ne: 'closed' }, assigned_official_id: { $nin: roster } };
-  if (!await e.SupportTicket.count(pending)) return;
+  const snapshot = await e.SupportTicket.aggregate({ query: { status: { $ne: 'closed' } }, groupBy: 'assigned_official_id' });
+  const counts = roster.map(id => snapshot.rows.find(row => row.assigned_official_id === id)?.count || 0);
+  const unassigned = snapshot.rows.some(row => !officialIds.has(row.assigned_official_id) && row.count > 0);
+  if (!unassigned && Math.max(...counts) - Math.min(...counts) <= 1) return;
   const token = crypto.randomUUID();
   if (!await giftLock(base44, ['support-routing'], token)) return;
   try {
@@ -31,6 +34,17 @@ export async function routeSupport(base44) {
       });
       await e.SupportTicket.bulkUpdate(updates);
       if (!page.has_more) break;
+    }
+    while (true) {
+      const most = roster.reduce((best, id) => loads.get(id) > loads.get(best) ? id : best);
+      const least = roster.reduce((best, id) => loads.get(id) < loads.get(best) ? id : best);
+      const difference = loads.get(most) - loads.get(least);
+      if (difference <= 1) break;
+      const page = await e.SupportTicket.filter({ status: { $ne: 'closed' }, assigned_official_id: most }, { sort: '-created_date', limit: Math.min(100, Math.floor(difference / 2)) });
+      if (!page.items.length) break;
+      await e.SupportTicket.bulkUpdate(page.items.map(ticket => ({ id: ticket.id, assigned_official_id: least })));
+      loads.set(most, loads.get(most) - page.items.length);
+      loads.set(least, loads.get(least) + page.items.length);
     }
   } finally { await giftLock(base44, ['support-routing'], token, true); }
 }

@@ -1,4 +1,5 @@
 import { X } from 'lucide-react';
+import { createPortal } from 'react-dom';
 import useBackDismiss from '@/hooks/useBackDismiss';
 import usePageScrollLock from '@/hooks/usePageScrollLock';
 
@@ -11,7 +12,7 @@ export default function VoiceSheet({ open, title, onClose, children, halfHeight 
   usePageScrollLock(open);
 
   if (!open) return null;
-  return (
+  return createPortal(
     <div role="dialog" aria-modal="true" aria-label={title} className="fixed inset-0 z-[245] flex flex-col justify-end pt-[env(safe-area-inset-top)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
       <button type="button" aria-label="Kapat" className="absolute inset-0 bg-black/70" onClick={onClose} />
       <div style={height ? { height, maxHeight: height } : undefined} className={`relative flex w-full flex-col rounded-t-3xl border-t border-white/10 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 text-white ${panelClass} ${tall ? 'voice-sheet-tall overflow-hidden' : halfHeight ? 'voice-sheet-half overflow-hidden' : 'max-h-[86dvh] overflow-y-auto overscroll-contain'}`}>
@@ -27,8 +28,8 @@ export default function VoiceSheet({ open, title, onClose, children, halfHeight 
         {/* halfHeight / tall: başlık sabit kalır, gövde kalan alanı kaplar — kaydırma yalnızca
             içerikteki listeye (hediye ızgarası) aittir. Gövde kolon olarak kurulmazsa içerik
             panelin boyunu aşar ve alttaki satırlar (alıcılar, Gönder) kırpılır. */}
-        <div className={`mx-auto w-full max-w-lg ${halfHeight || tall ? 'flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain' : ''}`}>{children}</div>
+        <div className={`mx-auto w-full max-w-lg ${halfHeight || tall ? 'flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-contain' : ''}`}>{children}</div>
       </div>
-    </div>
+    </div>, document.body
   );
 }

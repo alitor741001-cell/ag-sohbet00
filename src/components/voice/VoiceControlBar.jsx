@@ -28,7 +28,10 @@ export default function VoiceControlBar({ micActive, deafened, gamesEnabled = tr
     const bar = barRef.current;
     const frame = bar?.closest('.voice-viewport');
     if (!bar || !frame) return undefined;
-    const apply = () => frame.style.setProperty('--voice-bar-height', `${Math.round(bar.getBoundingClientRect().height)}px`);
+    const apply = () => {
+      const height = Math.round(bar.getBoundingClientRect().height);
+      if (height > 0) frame.style.setProperty('--voice-bar-height', `${height}px`);
+    };
     apply();
     const observer = new ResizeObserver(apply);
     observer.observe(bar);
