@@ -141,7 +141,7 @@ export default function VoiceRoom() {
   const { status: agencyCallStatus, setStatus: setAgencyCallStatus } = useAgencyCallStatus(user?.id);
 
   // Sohbetin altındaki büyük hediye satırı — basılınca hediye atan kişinin odasına gidilir.
-  const { notice: bigGiftNotice, dismiss: dismissBigGiftNotice } = useBigGiftNotice(id);
+  const { notices: bigGiftNotices, dismiss: dismissBigGiftNotice } = useBigGiftNotice(id);
 
   const joinedRef = useRef(false);
   const joinTriedRef = useRef(false);
@@ -1155,10 +1155,10 @@ export default function VoiceRoom() {
         hiddenUsers={hiddenUsersByName}
         onOpenProfile={openRoomProfile}
         mention={mentionTarget}
-        bigGiftNotice={bigGiftNotice}
-        onOpenBigGiftRoom={() => {
-          const target = bigGiftNotice?.room_id;
-          dismissBigGiftNotice();
+        bigGiftNotices={bigGiftNotices}
+        onOpenBigGiftRoom={(notice) => {
+          const target = notice?.room_id;
+          if (notice?.id) dismissBigGiftNotice(notice.id);
           if (target) navigate(`/sesli-oda/${target}`);
         }}
       />

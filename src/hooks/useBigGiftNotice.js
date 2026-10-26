@@ -14,7 +14,7 @@ const POLL_MS = 30000;
  * hediye atan kişinin odasına gidilir.
  */
 export default function useBigGiftNotice(roomId) {
-  const [notice, setNotice] = useState(null);
+  const [notices, setNotices] = useState([]);
   const seenRef = useRef(new Set());
 
   const accept = useCallback((record) => {
@@ -24,7 +24,11 @@ export default function useBigGiftNotice(roomId) {
     if (seenRef.current.has(record.id)) return;
     if (record.created_date && Date.now() - new Date(record.created_date).getTime() > VISIBLE_MS) return;
     seenRef.current.add(record.id);
-    setNotice(record);
+    const item = { ...record, shown_at: Date.now() };
+    // Roket patlamaları alt alta birikir (LVL 1, LVL 2 …); normal hediye satırı tek kalır.
+    setNotices((previous) => record.kind === 'rocket'
+      ? [...previous.filter(entry => entry.id !== record.id), item].slice(-4)
+      : [item]);
   }, [roomId]);
 
   useEffect(() => {
@@ -40,11 +44,20 @@ export default function useBigGiftNotice(roomId) {
     return () => { unsubscribe(); window.clearInterval(timer); };
   }, [accept]);
 
+  // Süresi dolan satırlar tek tek düşer; yenisi gelince eskisi yerinde kalır.
   useEffect(() => {
-    if (!notice) return undefined;
-    const timer = window.setTimeout(() => setNotice(null), VISIBLE_MS);
-    return () => window.clearTimeout(timer);
-  }, [notice]);
+    const timer = window.setInterval(() => {
+      setNotices((previous) => {
+        const alive = previous.filter(entry => Date.now() - entry.shown_at < VISIBLE_MS);
+        return alive.length === previous.length ? previous : alive;
+      });
+    }, 5000);
+    return () => window.clearInterval(timer);
+  }, []);
 
-  return { notice, dismiss: () => setNotice(null) };
+  const dismiss = useCallback((noticeId) => {
+    setNotices((previous) => (noticeId ? previous.filter(entry => entry.id !== noticeId) : []));
+  }, []);
+
+  return { notices, notice: notices[notices.length - 1] || null, dismiss };
 }

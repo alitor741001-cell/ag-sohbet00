@@ -17,7 +17,7 @@ import useFollowMessages from '@/hooks/useFollowMessages';
  * klavye iner, akış görünür kalır. Klavye açıkken oda alt bloğu (bu akış + kontrol çubuğu) tek
  * parça hâlinde klavyenin üstüne kayar; oda yerleşimi yeniden akışa girmez.
  */
-export default function VoiceChatDock({ messages = [], onSend, open, onCloseComposer, composerOpen, keyboardOpen = false, chatLocked, currentUserId, ownerId, moderators = [], onOpenProfile, bigGiftNotice, onOpenBigGiftRoom, hiddenUsers = {}, mention = null }) {
+export default function VoiceChatDock({ messages = [], onSend, open, onCloseComposer, composerOpen, keyboardOpen = false, chatLocked, currentUserId, ownerId, moderators = [], onOpenProfile, bigGiftNotices = [], onOpenBigGiftRoom, hiddenUsers = {}, mention = null }) {
   const [text, setText] = useState('');
   const [emojiOpen, setEmojiOpen] = useState(false);
   const inputRef = useRef(null);
@@ -71,7 +71,7 @@ export default function VoiceChatDock({ messages = [], onSend, open, onCloseComp
     if (!emojiOpenRef.current) closeComposerRef.current?.();
   }, [keyboardOpen]);
 
-  useEffect(onContentLoad, [bigGiftNotice?.id, onContentLoad]);
+  useEffect(onContentLoad, [bigGiftNotices.map(notice => notice.id).join(','), onContentLoad]);
 
   // Yazma alanı odaktan çıkınca (klavye kapandığında, ekranda başka bir yere dokunulduğunda)
   // kendiliğinden kapanır — iOS ve Android'de aynı davranış. Emoji seçilirken açık kalır.
@@ -101,7 +101,7 @@ export default function VoiceChatDock({ messages = [], onSend, open, onCloseComp
 
   return (
     <div className="relative flex h-full min-h-0 shrink-0 flex-col justify-end">
-      {(visible.length > 0 || !!bigGiftNotice) && (
+      {(visible.length > 0 || bigGiftNotices.length > 0) && (
         <div
           ref={scrollRef}
           onScroll={onScroll}
@@ -146,7 +146,7 @@ export default function VoiceChatDock({ messages = [], onSend, open, onCloseComp
                 />
               );
             })}
-            {bigGiftNotice && <BigGiftChatNotice notice={bigGiftNotice} onOpen={onOpenBigGiftRoom} />}
+            {bigGiftNotices.map(notice => <BigGiftChatNotice key={notice.id} notice={notice} onOpen={() => onOpenBigGiftRoom?.(notice)} />)}
             <div aria-hidden="true" />
           </div>
         </div>
