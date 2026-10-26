@@ -27,6 +27,7 @@ const micPermissionGranted = async () => {
 const subscriptionError = '💎 Sesli odada konuşmak abonelik gerektirir — dinlemeye devam edebilirsin.';
 const friendlyMicError = (error) => {
   if (error?.code === 'subscription_required') return subscriptionError;
+  if (error?.code === 'mic_timeout') return '🎤 Mikrofon yanıt vermedi — Safari izin penceresini kapatıp tekrar dene.';
   if (error?.name === 'NotAllowedError') return '🎤 Mikrofon izni verilmedi — diğerlerini duymaya devam edersin.';
   if (error?.name === 'NotReadableError') return '🎤 Mikrofon kullanılamıyor — diğerlerini duymaya devam edersin.';
   return '🎤 Mikrofon başlatılamadı — diğerlerini duymaya devam edersin.';
@@ -63,6 +64,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
   const [error, setError] = useState('');
   const [micDenied, setMicDenied] = useState(false);
   const [canSpeak, setCanSpeak] = useState(true);
+  const [lastMicrophoneError, setLastMicrophoneError] = useState('');
   const [audioBlocked, setAudioBlocked] = useState(false);
   const [debug, setDebug] = useState(initialDebug);
   const [everVoiceEnabled, setEverVoiceEnabled] = useState(voiceEnabled);
@@ -106,8 +108,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
   const enableMic = useCallback(async (mesh, on = true) => {
     if (!mesh) throw new Error('Ses bağlantısı hazır değil.');
     micWantedRef.current = !!on;
-    const pending = micPendingRef.current;
-    if (pending) await pending.catch(() => {});
+    // Takılı kalan eski bir deneme düğmeyi kilitlemez: yeni istek doğrudan başlar.
     if (!on) {
       micDeniedRef.current = false;
       const stop = (async () => {
@@ -125,6 +126,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
       micDeniedRef.current = false;
       micAppliedRef.current = true;
       setMicDenied(false);
+      setLastMicrophoneError('');
       setActive(true);
       rememberMicAllowed();
       refreshState();
@@ -134,6 +136,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
     catch (err) {
       micDeniedRef.current = isPermissionError(err);
       if (micDeniedRef.current) setMicDenied(true);
+      setLastMicrophoneError(mesh.lastMicrophoneError || err?.code || err?.name || 'mic_failed');
       throw err;
     }
     finally { if (micPendingRef.current === request) micPendingRef.current = null; }
@@ -338,30 +341,39 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
     const mesh = meshRef.current;
     if (hasDirectCallAudioFocus() || mutedByModeratorRef.current) return;
     if (!canSpeak) { setError(subscriptionError); return; }
-    // Takılı kalan bir önceki deneme butonu kilitlemesin: 10 saniye sonra yeni deneme açılır.
-    if (micTogglePendingRef.current && Date.now() - micToggleAtRef.current < 10000) return;
+    // Çift dokunma koruması: işlem sürerken ikinci dokunuş yok sayılır.
+    if (micTogglePendingRef.current) return;
     micGestureRef.current = true;
-    micToggleAtRef.current = Date.now();
     micTogglePendingRef.current = true;
     setRequesting(true);
     setError('');
+    const wasOn = !!mesh?.isMicOn();
+    // Dokunuş anındaki gerçek durum: bağlantı, mikrofon ve yayın yetkisi birlikte raporlanır.
+    console.info('[LiveKit] Mikrofon düğmesi', {
+      action: wasOn ? 'kapat' : 'aç',
+      connected: !!mesh?.isConnected(),
+      micOn: wasOn,
+      canPublish: mesh?.canPublishNow?.() ?? null,
+    });
     try {
-      if (mesh?.isMicOn()) {
+      if (wasOn) {
         await enableMic(mesh, false);
-      } else if (!mesh || connectionState !== 'connected') {
+      } else if (!mesh?.isConnected()) {
+        // Bağlantı yokken istek kaybolmaz: yeniden bağlanılır, mikrofon bağlanınca açılır.
         micWantedRef.current = true;
-        setError('🎤 Ses bağlantısı yeniden kuruluyor — mikrofon bağlanınca açılacak.');
+        setError('🎤 Ses bağlantısı kuruluyor — mikrofon bağlanınca açılacak.');
         setSessionKey((value) => value + 1);
       } else {
+        // Mikrofon doğrudan bu dokunuşun içinde açılır, arka plan görevine devredilmez.
         await enableMic(mesh);
       }
       refreshState();
     } catch (micError) {
-      console.error('[LiveKit] Microphone toggle failed', micError);
+      console.error('[LiveKit] Microphone toggle failed', micError, { lastMicrophoneError: micError?.code || micError?.name });
       setMicDenied(isPermissionError(micError));
       setError(friendlyMicError(micError));
     } finally { micTogglePendingRef.current = false; setRequesting(false); }
-  }, [canSpeak, connectionState, enableMic, refreshState]);
+  }, [canSpeak, enableMic, refreshState]);
 
   const toggleDeafen = useCallback(() => {
     const next = !deafenedRef.current;
@@ -387,16 +399,26 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
   // Mikrofon düğmesine basıldı: izin bu dokunuşla istenir, verilirse yayın açılır.
   const requestMic = useCallback(() => {
     if (!canSpeak) { setError(subscriptionError); return; }
+    if (micTogglePendingRef.current) return;
     micGestureRef.current = true;
     micWantedRef.current = true;
     const mesh = meshRef.current;
-    if (!mesh || connectionState !== 'connected') return;
-    enableMic(mesh).then(refreshState).catch((micError) => {
+    if (!mesh) { setError('🎤 Ses bağlantısı hazır değil — lütfen tekrar dene.'); return; }
+    if (!mesh.isConnected()) {
+      setError('🎤 Ses bağlantısı kuruluyor — mikrofon bağlanınca açılacak.');
+      setSessionKey((value) => value + 1);
+      return;
+    }
+    micTogglePendingRef.current = true;
+    setRequesting(true);
+    setError('');
+    enableMic(mesh).then(() => refreshState()).catch((micError) => {
+      console.error('[LiveKit] Microphone request failed', micError);
       setMicDenied(isPermissionError(micError));
       setError(friendlyMicError(micError));
       refreshState();
-    });
-  }, [canSpeak, connectionState, enableMic, refreshState]);
+    }).finally(() => { micTogglePendingRef.current = false; setRequesting(false); });
+  }, [canSpeak, enableMic, refreshState]);
 
-  return { muted: !active, remoteMuted, deafened, localSpeaking, speakingIds, participantMicStates, active, error, micDenied, requesting, connectionState, audioBlocked, canSpeak, retryAudio, retryMic, requestMic, toggleMute, toggleDeafen, debug, voiceEnabled };
+  return { muted: !active, remoteMuted, deafened, localSpeaking, speakingIds, participantMicStates, active, error, micDenied, requesting, connectionState, audioBlocked, canSpeak, lastMicrophoneError, retryAudio, retryMic, requestMic, toggleMute, toggleDeafen, debug, voiceEnabled };
 }

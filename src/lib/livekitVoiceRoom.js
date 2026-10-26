@@ -10,6 +10,19 @@ const micCaptureOptions = () => ({
   autoGainControl: !getMicNoiseSuppression(),
 });
 const isPermissionError = (error) => error?.name === 'NotAllowedError' || error?.name === 'SecurityError';
+// iOS Safari mikrofon izni istemi bazen hiç sonuçlanmaz: istek zaman aşımına düşer,
+// böylece düğme "HAZIRLANIYOR" durumunda kilitli kalmaz.
+const withTimeout = (promise, ms, code) => new Promise((resolve, reject) => {
+  const timer = setTimeout(() => {
+    const error = new Error(code);
+    error.code = code;
+    reject(error);
+  }, ms);
+  promise.then(
+    (value) => { clearTimeout(timer); resolve(value); },
+    (error) => { clearTimeout(timer); reject(error); },
+  );
+});
 // Ölü veya kapatılmış kanal "açık" sayılmaz.
 const isLiveMicTrack = (publication) => {
   const media = publication?.track?.mediaStreamTrack;
@@ -36,6 +49,8 @@ export class LiveKitVoiceRoom {
     this.speakers = [];
     // Abonelik kontrolü jetondan gelir: false ise kullanıcı yalnızca dinleyicidir.
     this.canPublish = true;
+    // Son mikrofon hatası ("NotAllowedError", "publish_denied", "mic_timeout"…).
+    this.lastMicrophoneError = null;
   }
 
   emit() {
@@ -132,32 +147,75 @@ export class LiveKitVoiceRoom {
     this.emit();
   }
 
+  // Oda gerçekten bağlı mı: React durumu bayat olabileceği için canlı bağlantı sorulur.
+  isConnected() {
+    return !!this.room && this.room.state === 'connected';
+  }
+
+  // Yayın yetkisi: jetonla gelen abonelik bayrağı + LiveKit'in verdiği izin.
+  canPublishNow() {
+    const permissions = this.room?.localParticipant?.permissions;
+    return this.canPublish && permissions?.canPublish !== false;
+  }
+
   async setMicEnabled(on) {
     const room = this.room;
-    if (!room || room.state !== 'connected') throw new Error('Ses bağlantısı kurulmadı.');
+    this.lastMicrophoneError = null;
+    if (!room || room.state !== 'connected') {
+      this.lastMicrophoneError = 'room_not_connected';
+      throw new Error('Ses bağlantısı kurulmadı.');
+    }
     if (!on) { this.stopMic(); return false; }
-    if (!this.canPublish) {
+    if (!this.canPublishNow()) {
       const denied = new Error('subscription_required');
       denied.code = 'subscription_required';
+      this.lastMicrophoneError = 'publish_denied';
       throw denied;
     }
-    const open = () => room.localParticipant.setMicrophoneEnabled(true, micCaptureOptions());
+    const open = () => withTimeout(
+      room.localParticipant.setMicrophoneEnabled(true, micCaptureOptions()),
+      15000,
+      'mic_timeout',
+    );
     try {
       await open();
     } catch (firstError) {
+      if (firstError?.code === 'mic_timeout') {
+        this.lastMicrophoneError = 'mic_timeout';
+        throw firstError;
+      }
       // Ölü bir yayın kaydı kalmışsa temizlenir ve bir kez daha denenir.
       const stale = room.localParticipant.getTrackPublication(Track.Source.Microphone);
-      if (isPermissionError(firstError) || !stale?.track) throw firstError;
+      if (isPermissionError(firstError) || !stale?.track) {
+        this.lastMicrophoneError = firstError?.name || 'mic_failed';
+        throw firstError;
+      }
       await room.localParticipant.unpublishTrack(stale.track, true).catch(() => {});
-      await open();
+      try {
+        await open();
+      } catch (retryError) {
+        this.lastMicrophoneError = retryError?.code || retryError?.name || 'mic_failed';
+        throw retryError;
+      }
     }
-    const publication = room.localParticipant.getTrackPublication(Track.Source.Microphone);
+    let publication = room.localParticipant.getTrackPublication(Track.Source.Microphone);
+    // iOS Safari: yayın açılmış ama sessize alınmış gelebilir; gerçek duruma çekilir.
+    if (publication?.track && publication.isMuted) {
+      await publication.unmute().catch(() => {});
+      publication = room.localParticipant.getTrackPublication(Track.Source.Microphone);
+    }
     const media = publication?.track?.mediaStreamTrack;
     if (!publication || !media || media.readyState !== 'live' || publication.isMuted) {
+      this.lastMicrophoneError = 'publish_unverified';
       throw new Error('Mikrofon yayını doğrulanamadı.');
     }
     media.enabled = true;
     this.micOn = true;
+    console.info('[LiveKit] Mikrofon yayınlandı', {
+      sid: publication.trackSid,
+      muted: publication.isMuted,
+      track: media.readyState,
+    });
     this.emit();
     return true;
   }

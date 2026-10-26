@@ -621,9 +621,15 @@ export default function VoiceRoom() {
         return;
       }
       setSeatIndex(null);
-      await invokeVoice({ action: 'seat-take', seat_index: freeSeat.index });
-      // Koltuğa oturunca mikrofon izni bu dokunuşla istenir; izin verilirse yayın açılır.
+      // Mikrofon izni doğrudan bu dokunuşun içinde istenir (iOS Safari dokunuş bekler);
+      // koltuk kaydı hemen ardından yapılır.
       voice.requestMic();
+      try {
+        await invokeVoice({ action: 'seat-take', seat_index: freeSeat.index });
+      } catch (seatError) {
+        voice.toggleMute();
+        throw seatError;
+      }
       return;
     }
     if (room?.voice_enabled) { await voice.toggleMute(); return; }
