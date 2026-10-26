@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
+import { playRocketCrash } from '@/lib/rocketCrashSound';
 
 const KEY = 'aviator-sound';
 
-/** Basit Web Audio sesleri: uçuşta motor uğultusu, uçup gidince düşen ton. */
-export default function useAviatorSound(phase) {
+/** Basit Web Audio sesleri: uçuşta motor uğultusu, çakılınca patlama. */
+export default function useAviatorSound(phase, roundNo) {
   const [on, setOn] = useState(() => localStorage.getItem(KEY) !== 'off');
   const ctxRef = useRef(null);
   const engineRef = useRef(null);
@@ -28,19 +29,12 @@ export default function useAviatorSound(phase) {
     }
     if (phase === 'crashed') {
       stopEngine();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.frequency.setValueAtTime(700, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(80, ctx.currentTime + 0.7);
-      gain.gain.setValueAtTime(0.12, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8);
-      osc.connect(gain).connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.8);
+      // Patlama sesi odadaki herkesle aynı kaynaktan gelir: tur başına tek kez çalar.
+      playRocketCrash(roundNo);
     }
     if (phase === 'betting') stopEngine();
     return undefined;
-  }, [phase, on]);
+  }, [phase, on, roundNo]);
 
   useEffect(() => () => engineRef.current?.stop(), []);
 

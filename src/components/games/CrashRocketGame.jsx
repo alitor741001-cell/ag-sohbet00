@@ -21,7 +21,7 @@ export default function CrashRocketGame({ onExit, onBack }) {
   const [helpOpen, setHelpOpen] = useState(false);
   const [autoEdit, setAutoEdit] = useState(null);
   const [coinOpen, setCoinOpen] = useState(false);
-  const sound = useAviatorSound(game.phase);
+  const sound = useAviatorSound(game.phase, game.round?.round_no);
 
   return (
     <div className="av-game relative flex h-full min-h-0 w-full flex-col overflow-hidden">
