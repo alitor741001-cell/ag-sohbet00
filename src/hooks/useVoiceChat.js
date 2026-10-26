@@ -51,6 +51,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
   const [active, setActive] = useState(false);
   const [requesting, setRequesting] = useState(false);
   const micTogglePendingRef = useRef(false);
+  const micToggleAtRef = useRef(0);
   const micPendingRef = useRef(null);
   const [deafened, setDeafened] = useState(false);
   const [remoteMuted, setRemoteMuted] = useState(false);
@@ -492,7 +493,10 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
   // bağlantıyı yeniden kurup isteği sıraya alır ve durumu ekranda söyler.
   const toggleMute = useCallback(async () => {
     const room = roomRef.current;
-    if (hasDirectCallAudioFocus() || micTogglePendingRef.current || mutedByModeratorRef.current) return;
+    if (hasDirectCallAudioFocus() || mutedByModeratorRef.current) return;
+    // Takılı kalan bir önceki deneme butonu kilitlemesin: 10 saniye sonra yeni deneme açılır.
+    if (micTogglePendingRef.current && Date.now() - micToggleAtRef.current < 10000) return;
+    micToggleAtRef.current = Date.now();
     micTogglePendingRef.current = true;
     setRequesting(true);
     setError('');

@@ -611,8 +611,15 @@ export default function VoiceRoom() {
 
   const handleMic = async () => {
     voice.retryAudio();
+    // Koltukta değilken mikrofona basınca ilk boş koltuğa oturulur ve mikrofon kendiliğinden açılır.
     if (!seated) {
-      toast({ title: 'Konuşmak için bir koltuğa otur', description: 'Yukarıdaki boş bir koltuğa dokun.' });
+      const freeSeat = seats.find((seat) => !seat.user_id && !seat.locked);
+      if (!freeSeat) {
+        toast({ title: 'Boş koltuk yok', description: 'Mikrofonu açmak için boş bir koltuk gerekiyor.' });
+        return;
+      }
+      setSeatIndex(null);
+      await invokeVoice({ action: 'seat-take', seat_index: freeSeat.index });
       return;
     }
     if (room?.voice_enabled) { await voice.toggleMute(); return; }
