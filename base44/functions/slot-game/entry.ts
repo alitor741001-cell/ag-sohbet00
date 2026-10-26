@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import { waitUntil } from 'base44:runtime';
 import { mirrorRecord } from '../../shared/supabaseMirror.ts';
+import { personalGameResult } from '../../shared/personalGameOdds.ts';
 import { LINES, BET_LEVELS, BIG_WIN_MULTIPLE, spinReels, evaluateGrid } from '../../shared/slotEngine.ts';
 import { DEFAULT_BET, START_COINS, clampBet, loadWallet, nearestBet } from '../../shared/gameWallet.ts';
 
@@ -164,8 +165,11 @@ export default async function (req) {
       const coins = wallet.coins ?? START_COINS;
       if (!isFree && coins < cost) return Response.json({ error: 'Yetersiz coin.' }, { status: 400 });
 
-      const grid = spinReels();
-      const result = evaluateGrid(grid, bet);
+      const selected = await personalGameResult(base44, user, stake > JACKPOT_MIN_STAKE ? 'slotJackpot' : 'slot', () => {
+        const grid = spinReels();
+        return { grid, result: evaluateGrid(grid, bet) };
+      }, outcome => outcome.result.total > 0 || (stake > JACKPOT_MIN_STAKE && outcome.grid.flat().filter(symbol => symbol === 'jackpot').length >= JACKPOT_SYMBOLS));
+      const { grid, result } = selected;
       // Ekranda 5 jackpot sembolü geldiğinde jackpot çıkar: bahsin 120 katı ödenir.
       // Toplam bahis 5.000'i geçmeyen (en düşük kademe) turlarda jackpot çıkmaz.
       const jackpotHit = stake > JACKPOT_MIN_STAKE

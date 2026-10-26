@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import { waitUntil } from 'base44:runtime';
 import { mirrorRecord } from '../../shared/supabaseMirror.ts';
+import { personalGameResult } from '../../shared/personalGameOdds.ts';
 import {
   BET_LEVELS,
   BIG_WIN_MULTIPLE,
@@ -89,7 +90,7 @@ export default async function (req) {
       if (!isFree && coins < cost) return Response.json({ error: 'Yetersiz coin.' }, { status: 400 });
 
       // Patlayan kümelerin yerine yenileri düşer; kalan şekerler aşağı kayar.
-      const result = playSeker(bet);
+      const result = await personalGameResult(base44, user, 'seker', () => playSeker(bet), outcome => outcome.total > 0);
       const total = result.total;
       // 4 ve üzeri altın şeker hem bonus öder hem bedava tur verir; ilk tahtada sayılır.
       const freeTrigger = result.initial.flat().filter((symbol) => symbol === SCATTER_ID).length >= SCATTER_MIN;

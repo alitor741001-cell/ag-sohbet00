@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import { waitUntil } from 'base44:runtime';
 import { mirrorRecord } from '../../shared/supabaseMirror.ts';
+import { personalGameResult } from '../../shared/personalGameOdds.ts';
 import {
   BET_LEVELS,
   BIG_WIN_MULTIPLE,
@@ -165,11 +166,11 @@ export default async function (req: Request) {
 
       // Küme eşiği bu oyunda daha yüksektir: kazanç daha seyrek gelir.
       // Patlayan kümelerin yerine yenileri düşer; kalan karolar aşağı kayar.
-      const result = playFruit(
+      const result = await personalGameResult(base44, user, 'elimin', () => playFruit(
         bet,
         { clusterMin: ELIMIN_CLUSTER_MIN, tiers: ELIMIN_CLUSTER_TIERS },
         eliminCell,
-      );
+      ), outcome => outcome.total > 0 || countOf(outcome.grid, 'dice') >= DICE_MIN);
       // Turun sonunda duran dizilim: ek nesneler bu dizilimden sayılır.
       const grid = result.grid;
       const total = result.total;

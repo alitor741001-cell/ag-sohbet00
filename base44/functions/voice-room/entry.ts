@@ -14,6 +14,7 @@ import { syncQuotaRewards } from '../../shared/agency.ts';
 import { syncGiftRoomLevel } from '../../shared/roomLevels.ts';
 import { HIDDEN_AVATAR_URL, hiddenDisplayName, isHiddenDisplayName, isHiddenUser } from '../../shared/vip.ts';
 import { upsertRoomNotice } from '../../shared/roomNotice.ts';
+import { isAgOfficial } from '../../shared/agOfficial.ts';
 
 const SEAT_OPTIONS = [1, 2, 5, 8, 9, 12, 15, 24, 30];
 // Bu değerin (coin) üzerindeki hediyeler bütün sesli odalara duyurulur.
@@ -174,6 +175,7 @@ export default async function (req: Request): Promise<Response> {
       if (targetUser?.role === 'admin') {
         return Response.json({ error: 'Yönetici koltuğundan indirilemez.', adminProtected: true }, { status: 403 });
       }
+      if (await isAgOfficial(base44, targetUser)) return Response.json({ error: 'AG Yetkilisi koltuğundan indirilemez. Önce admin yetkiyi geri almalıdır.', officialProtected: true }, { status: 403 });
       const targetName = targetUser?.username || targetUser?.full_name || target.name || 'Kullanıcı';
       const next = seats.map((seat) => (seat.user_id === target_id ? { ...emptySeat(seat.index), locked: seat.locked } : seat));
       await persist(next);
@@ -222,6 +224,10 @@ export default async function (req: Request): Promise<Response> {
         return slot ? { ...slot, index, locked } : emptySeat(index, locked);
       });
 
+      if (dropped.length) {
+        const protectedOfficials = await base44.asServiceRole.entities.AgOfficial.filter({ user_id: { $in: dropped.map(person => person.user_id) }, active: true }, '-created_date', 100);
+        if (protectedOfficials.length) return Response.json({ error: 'Koltuk sayısı değiştirilemedi: AG Yetkilisi koltuğundan indirilemez. Önce admin yetkiyi geri almalıdır.', officialProtected: true }, { status: 403 });
+      }
       const patch: Record<string, any> = { seats: next, seat_count: next.length };
       if (dropped.length) {
         // Koltuktan düşenlerin koltuk puanları temizlenir ve işlem kayıt defterine yazılır.

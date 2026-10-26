@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import { waitUntil } from 'base44:runtime';
 import { mirrorRecord } from '../../shared/supabaseMirror.ts';
+import { personalGameResult } from '../../shared/personalGameOdds.ts';
 import { BET_LEVELS, BIG_WIN_MULTIPLE, LINES, SCATTER_MIN, playDede } from '../../shared/dedeEngine.ts';
 import {
   DEFAULT_BET,
@@ -83,7 +84,7 @@ export default async function (req) {
 
       // Birikmiş çarpan yalnızca 15 çevirme hakkı boyunca devrolur.
       const carried = isFree ? Math.max(0, Math.round(wallet.dede_multiplier ?? 0)) : 0;
-      const result = playDede(bet, isFree, carried);
+      const result = await personalGameResult(base44, user, 'dede', () => playDede(bet, isFree, carried), outcome => outcome.total > 0);
       const total = result.total;
       // 4+ dede yalnızca bonus öder; bedava tur sistemi oyundan kaldırıldı.
       const sessionLeft = Math.max(0, sessionTurns - (isFree ? 1 : 0));

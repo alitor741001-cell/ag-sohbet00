@@ -10,6 +10,7 @@ import UserBadge from '@/components/admin/UserBadge';
 import UserGenderDialog from '@/components/admin/UserGenderDialog';
 import FullUserProfile from '@/components/profile/FullUserProfile';
 import { visibleEmail } from '@/lib/visibleEmail';
+import AgOfficialRoles from '@/components/admin/AgOfficialRoles';
 
 
 // Dokunma alanı en az 44px: telefon ve tablette ıskalanmadan basılır.
@@ -156,6 +157,7 @@ export default function AdminUsers({ pendingOnly = false }) {
   return (
     <div>
       <h1 className="text-2xl font-extrabold mb-4">{pendingOnly ? 'Kayıt Kontrol' : 'Kullanıcı Yönetimi'}</h1>
+      {!pendingOnly && <AgOfficialRoles />}
       {!pendingOnly && (
         <div className="flex flex-wrap gap-2 mb-4">
           <input value={idQuery} onChange={(e) => setIdQuery(e.target.value)} type="search" aria-label="Üye numarası ile ara" placeholder="Üye No ile ara (8 haneli)" className="bg-card border border-border rounded-lg px-3 min-h-11 text-sm w-44 outline-none focus:ring-2 focus:ring-ring" />

@@ -12,6 +12,7 @@ import { appendRoomLog } from '../../shared/roomLog.ts';
 import { upsertRoomNotice } from '../../shared/roomNotice.ts';
 import { sendDirect } from '../../shared/agency.ts';
 import { writeVisibleRoom } from '../../shared/vipPrivileges.ts';
+import { isAgOfficial } from '../../shared/agOfficial.ts';
 
 async function sha256Hex(salt, pw) {
   const data = new TextEncoder().encode(salt + pw);
@@ -265,6 +266,7 @@ export default async function(req) {
       if (targetUser?.role === 'admin') {
         return Response.json({ error: 'Yönetici hesabı odadan atılamaz.', adminProtected: true }, { status: 403 });
       }
+      if (await isAgOfficial(base44, targetUser)) return Response.json({ error: 'AG Yetkilisi odadan atılamaz veya engellenemez. Önce admin yetkiyi geri almalıdır.', officialProtected: true }, { status: 403 });
       // Yetki hiyerarşisi: kurucu korunur; admin yardımcısı ve kraliçeyi yalnızca kurucu atabilir.
       const actorRoleKey = me?.display_role || '';
       const targetRoleKey = targetUser?.display_role || '';

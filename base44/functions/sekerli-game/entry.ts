@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import { waitUntil } from 'base44:runtime';
 import { mirrorRecord } from '../../shared/supabaseMirror.ts';
+import { personalGameResult } from '../../shared/personalGameOdds.ts';
 import { BET_LEVELS, LINES, spinSekerli } from '../../shared/sekerliEngine.ts';
 import {
   DEFAULT_BET,
@@ -76,7 +77,7 @@ export default async function (req) {
       const coins = wallet.coins ?? START_COINS;
       if (coins < cost) return Response.json({ error: 'Yetersiz coin.' }, { status: 400 });
 
-      const result = spinSekerli();
+      const result = await personalGameResult(base44, user, 'sekerli', () => spinSekerli(), outcome => outcome.units > 0);
       const win = Math.round(result.units * bet);
       const sessionLeft = Math.max(0, sessionTurns - (inSession ? 1 : 0));
 
