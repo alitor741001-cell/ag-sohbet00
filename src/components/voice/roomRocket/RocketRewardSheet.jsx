@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Content } from '@radix-ui/react-dialog';
 import { Loader2 } from 'lucide-react';
 import { Dialog, DialogPortal, DialogOverlay, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -12,7 +12,8 @@ export default function RocketRewardSheet({ data, loading, error, onClose, onRet
   const [level, setLevel] = useState(data?.level || 1);
   const [help, setHelp] = useState(false);
   useBackDismiss(true, onClose);
-  const round = data?.history?.find(entry => entry.level === level);
+  useEffect(() => { setLevel(data?.level || 1); }, [data?.cycle]);
+  const round = data?.history?.find(entry => entry.level === level && entry.cycle === data?.cycle);
   const winners = round?.winners || data?.leaders || [];
   return <Dialog open onOpenChange={value => { if (!value) onClose(); }}><DialogPortal>
     <DialogOverlay className="z-[290] bg-slot-bg/75" />

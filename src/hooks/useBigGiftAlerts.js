@@ -21,7 +21,7 @@ export default function useBigGiftAlerts() {
   const seenRef = useRef(new Set());
 
   const accept = useCallback((record) => {
-    if (!record?.id || seenRef.current.has(record.id)) return;
+    if (!record?.id || record.kind === 'rocket' || seenRef.current.has(record.id)) return;
     if (record.created_date && Date.now() - new Date(record.created_date).getTime() > FRESH_MS) return;
     seenRef.current.add(record.id);
     setQueue((prev) => prev.length ? [prev[0], ...[...prev.slice(1), record].slice(-(MAX_QUEUE - 1))] : [record]);
@@ -31,7 +31,7 @@ export default function useBigGiftAlerts() {
     const unsubscribe = subscribeEntity('BigGiftAlert', (event) => {
       if (event?.type === 'create' && event.data) accept({ ...event.data, id: event.id });
     });
-    const poll = () => base44.entities.BigGiftAlert.list('-created_date', MAX_QUEUE)
+    const poll = () => base44.entities.BigGiftAlert.filter({ kind: { $ne: 'rocket' } }, '-created_date', MAX_QUEUE)
       .then((rows) => rows.forEach(accept))
       .catch(() => {});
     const tick = () => { if (document.visibilityState !== 'hidden') poll(); };

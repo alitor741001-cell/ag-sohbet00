@@ -1,11 +1,17 @@
 import { dayStartIso } from './giftBox.ts';
 import { HIDDEN_AVATAR_URL, hiddenDisplayName, isHiddenUser } from './vip.ts';
-import { ROCKET_PRIZES } from './roomRocketRules.ts';
+import { ROCKET_PRIZES, rocketBoundary } from './roomRocketRules.ts';
 
-export async function rocketDayQuery(base44, roomId, asOf) {
-  const { items } = await base44.asServiceRole.entities.AppConfig.filter({ key: { $in: ['room_gift_reset_at', 'room_gift_day_reset_at'] } }, { limit: 20 });
+export async function rocketDayQuery(base44, roomId, asOf, cycle = 1) {
+  const sr = base44.asServiceRole.entities;
+  const { items } = await sr.AppConfig.filter({ key: { $in: ['room_gift_reset_at', 'room_gift_day_reset_at'] } }, { limit: 20 });
   const floor = items.reduce((latest, item) => String(item.value || '').slice(0, 19) > latest ? String(item.value).slice(0, 19) : latest, dayStartIso(new Date(asOf)));
-  return { room_id: roomId, status: 'success', k_value: { $gt: 0 }, created_date: { $gte: floor, $lte: asOf } };
+  const range = { $gte: floor, $lte: asOf };
+  if (cycle > 1) {
+    const previous = await sr.RoomRocketGift.filter({ room_id: roomId, total_after: { $gte: rocketBoundary((cycle - 1) * 4) } }, { sort: 'total_after', limit: 1 });
+    if (previous.items[0]) range.$gt = previous.items[0].gift_at;
+  }
+  return { room_id: roomId, status: 'success', k_value: { $gt: 0 }, created_date: range };
 }
 
 export async function rocketProfiles(base44, rows) {
@@ -25,8 +31,8 @@ export async function rocketLeaders(base44, query) {
 }
 
 // Reservoir sampling gives every other distinct sender an equal chance, across all pages.
-export async function rocketRecipients(base44, roomId, level, asOf) {
-  const query = await rocketDayQuery(base44, roomId, asOf);
+export async function rocketRecipients(base44, roomId, level, asOf, cycle = 1) {
+  const query = await rocketDayQuery(base44, roomId, asOf, cycle);
   const top = await rocketLeaders(base44, query);
   const excluded = top.map(row => row.user_id);
   const draw = [];

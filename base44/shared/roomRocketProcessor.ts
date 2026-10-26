@@ -2,6 +2,7 @@ import { giftLock } from './supabaseMirror.ts';
 import { rocketBoundary, rocketPosition, rocketTotal } from './roomRocketRules.ts';
 import { rocketRecipients } from './roomRocketRanking.ts';
 import { payRocketRound } from './roomRocketRewards.ts';
+import { announceRocketRound } from './roomRocketAnnouncement.ts';
 
 export async function processRoomRockets(base44, room) {
   const sr = base44.asServiceRole.entities;
@@ -26,11 +27,12 @@ export async function processRoomRockets(base44, room) {
         const crossing = await sr.RoomRocketGift.filter({ room_id: room.id, total_after: { $gte: rocketBoundary(ordinal) } }, { sort: 'total_after', limit: 1 });
         if (!crossing.items[0]) throw new Error('Roketi dolduran hediye bulunamadı.');
         const asOf = crossing.items[0].gift_at;
-        const recipients = await rocketRecipients(base44, room.id, level, asOf);
+        const recipients = await rocketRecipients(base44, room.id, level, asOf, Math.floor((ordinal - 1) / 4) + 1);
         round = await sr.RoomRocketRound.create({ room_id: room.id, ordinal, level, cycle: Math.floor((ordinal - 1) / 4) + 1, as_of: asOf, status: 'paying', recipients });
       }
       if (round.status !== 'complete') round = await payRocketRound(base44, round);
       if (round.status !== 'complete') return { ok: true, more: true, completed };
+      await announceRocketRound(base44, room, round);
       completed = ordinal;
       state = await sr.RoomRocketState.update(state.id, { completed, total_coins: total, audience_ids: audience, pending: completed < position.completed });
     }

@@ -20,7 +20,7 @@ export default function useBigGiftNotice(roomId) {
   const accept = useCallback((record) => {
     if (!record?.id || !record.room_id) return;
     // Kendi odamızdaki hediye zaten ekranda — gitmeye gerek yok.
-    if (record.room_id === roomId) return;
+    if (record.room_id === roomId && record.kind !== 'rocket') return;
     if (seenRef.current.has(record.id)) return;
     if (record.created_date && Date.now() - new Date(record.created_date).getTime() > VISIBLE_MS) return;
     seenRef.current.add(record.id);
