@@ -289,7 +289,7 @@ export default function FullUserProfile({
   return (
     <FantasyProfileShell profile={profile} female={profile?.gender === 'kadın'} hidden={hidden} name={shownName}
       avatar={banned ? ACCOUNT_STATES.banned.image : shownAvatar} role={roleLabel} onClose={onClose}
-      memberId={memberId} copied={copied} onCopyId={copyId}>
+      memberId={memberId} copied={copied} onCopyId={copyId} userId={userId} self={isSelf}>
       <div className="space-y-3 px-4 pt-1" onClick={closeOnAction}>
         {header}
         <div className="flex flex-col gap-3">{content}</div>

@@ -12,7 +12,7 @@ export default function VoiceFantasyCard({ profile, hidden, name, avatar, role, 
   const agencyCode = profile?.owned_agency_code || profile?.agency_code;
   return (
     <FantasyProfileShell profile={profile} female={female} hidden={hidden} name={name} avatar={avatar} role={role} onClose={onClose}
-      memberId={memberId} copied={copied} onCopyId={onCopyId} seatAnchored>
+      memberId={memberId} copied={copied} onCopyId={onCopyId} seatAnchored userId={userId} self={isSelf}>
           {statusContent || <div className="space-y-3 px-4 pt-1" onClick={onAction}>
             {!hidden && <>
               <ProfileStatsRow
