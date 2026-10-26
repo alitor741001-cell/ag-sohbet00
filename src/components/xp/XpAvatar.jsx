@@ -11,7 +11,7 @@ export default function XpAvatar({ avatar, name, size = 'sm', className = '', an
       {playVideo
         ? <video src={video} poster={avatar || undefined} autoPlay loop muted playsInline className="h-full w-full object-cover" />
         : avatar
-          ? <Image src={avatar} alt={name || 'Profil fotoğrafı'} fittingType="fill" className="vip-avatar-picture h-full w-full" draggable={false} referrerPolicy="no-referrer" />
+          ? <Image src={avatar} alt={name || 'Profil fotoğrafı'} unoptimized loading="eager" fittingType="fill" className="vip-avatar-picture h-full w-full" draggable={false} referrerPolicy="no-referrer" />
           : <span className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary to-accent font-bold text-white">{(name || '?')[0]}</span>}
     </div>
   );

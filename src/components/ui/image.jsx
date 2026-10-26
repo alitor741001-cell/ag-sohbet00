@@ -185,6 +185,7 @@ const Image = React.forwardRef(
       focalPointY,
       quality = 90,
       blurPlaceholder = true,
+      unoptimized = false,
       ...props
     },
     ref
@@ -212,12 +213,12 @@ const Image = React.forwardRef(
 
     // The fallback renders as a plain <img> so a broken upload can't cascade
     // into a second (transformed) failing request.
-    const parsed = imgSrc === FALLBACK_IMAGE_URL ? null : parseWixMediaUrl(imgSrc)
+    const parsed = unoptimized || imgSrc === FALLBACK_IMAGE_URL ? null : parseWixMediaUrl(imgSrc)
 
     if (!parsed) {
       const isErrorUrl = imgSrc === FALLBACK_IMAGE_URL
       return (
-        <img ref={ref} src={imgSrc} {...imageProps} data-error-image={isErrorUrl || undefined} />
+        <img ref={ref} src={imgSrc} {...imageProps} className={cn(fittingType === 'fit' ? 'object-contain' : 'object-cover', props.className)} data-error-image={isErrorUrl || undefined} />
       )
     }
 

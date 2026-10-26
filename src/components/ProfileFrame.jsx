@@ -17,7 +17,7 @@ export default function ProfileFrame({ avatar, name, size = 'md', className = ''
   return children || (
     <div className={`relative shrink-0 overflow-hidden rounded-full ${dims} ${className}`}>
       {avatar
-        ? <Image src={avatar} alt={name || 'Profil'} fittingType="fill" className="h-full w-full" draggable={false} referrerPolicy="no-referrer" />
+        ? <Image src={avatar} alt={name || 'Profil'} unoptimized loading="eager" fittingType="fill" className="h-full w-full" draggable={false} referrerPolicy="no-referrer" />
         : <span className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary to-accent font-bold text-white">{(name || '?')[0]}</span>}
     </div>
   );
