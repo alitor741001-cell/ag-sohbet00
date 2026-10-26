@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import RoomDiscovery from '@/components/home/RoomDiscovery';
 
 import BottomNavStrip from '@/components/layout/BottomNavStrip';
+import HomeNavBadges from '@/components/home/HomeNavBadges';
 import NotchThemeStrip from '@/components/layout/NotchThemeStrip';
 const LIVE_BG = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/f3cf6419a_IMG_0213.jpg';
 const GAMES_DESIGN = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/cce749e92_IMG_0220.jpg';
@@ -52,6 +53,8 @@ export default function Home() {
           <div className="pointer-events-none absolute inset-0 z-30">
             <BottomNavStrip />
           </div>
+          {/* Sohbet ve canlı destek düğmelerinde okunmamış mesaj sayısı. */}
+          <HomeNavBadges />
           {zones.map((z) => (
             <Link
               key={z.label + z.y}

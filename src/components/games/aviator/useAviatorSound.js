@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { playRocketCrash } from '@/lib/rocketCrashSound';
+import { playRocketCrash } from '@/lib/rocketSound';
 
 const KEY = 'aviator-sound';
 

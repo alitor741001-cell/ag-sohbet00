@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import subscribeEntity from '@/components/data/entitySubscriptions';
-import { playRocketCrash, unlockRocketSound } from '@/lib/rocketCrashSound';
+import { playRocketCrash, unlockRocketSound } from '@/lib/rocketSound';
 
 /**
  * Sesli odada roket çakıldığı an patlama sesi odadaki herkese duyulur:
