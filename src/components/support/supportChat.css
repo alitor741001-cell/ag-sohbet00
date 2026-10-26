@@ -2,6 +2,7 @@
 .support-chat-header { flex-shrink: 0; display: flex; align-items: center; gap: .8rem; padding: max(.85rem, env(safe-area-inset-top)) 1rem .85rem; border-bottom: 1px solid hsl(var(--support-line)); }
 .support-chat-logo { display: flex; align-items: center; justify-content: center; width: 3rem; height: 3rem; flex-shrink: 0; border-radius: 50%; color: hsl(var(--support-ink)); background: hsl(var(--support-orange)); box-shadow: 0 0 15px hsl(var(--support-orange) / .2); }
 .support-chat-menu { position: absolute; right: 0; top: 100%; z-index: 40; min-width: 12rem; padding: .35rem; border: 1px solid hsl(var(--support-line)); border-radius: .85rem; background: hsl(var(--support-bubble)); box-shadow: 0 .5rem 2rem hsl(var(--support-night) / .8); }
+.support-chat-menu-left { left: 0; right: auto; }
 .support-chat-menu button { display: block; width: 100%; padding: .7rem; text-align: left; border-radius: .5rem; }
 .support-chat-menu button:active { background: hsl(var(--support-line)); }
 .support-ticket { display: flex; width: 100%; align-items: flex-start; gap: .85rem; padding: 1rem; text-align: left; background: hsl(var(--support-surface)); border-radius: 1.2rem; }

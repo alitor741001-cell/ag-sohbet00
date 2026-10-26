@@ -58,7 +58,9 @@ export default async function(req) {
     } else {
       const closedAt = new Date().toISOString();
       const deleteAfter = new Date(Date.now() + 60000).toISOString();
-      await entities.SupportTicket.update(ticket.id, { status: 'closed', closed_at: closedAt, delete_after: deleteAfter });
+      // Üyeye son mesaj olarak "Görüşme sonlandırılmıştır." düşer; bir dakika sonra silinir.
+      await entities.SupportMessage.create({ ticket_id: ticket.id, owner_id: ticket.user_id, user_id: me.id, sender: 'admin', text: 'Görüşme sonlandırılmıştır.' });
+      await entities.SupportTicket.update(ticket.id, { status: 'closed', closed_at: closedAt, delete_after: deleteAfter, last_message: 'Görüşme sonlandırılmıştır.', last_message_at: closedAt });
       await entities.Notification.create({ user_id: ticket.user_id, title: 'Destek konusu kapandı', body: 'Konu kapandı. Görüşme mesajları bir dakika sonra otomatik silinecek.', type: 'info', link: '/destek', ref_id: `support-closed:${ticket.id}` });
     }
     return Response.json({ ok: true });
