@@ -43,7 +43,7 @@ export default function AppLayout() {
   const isChatList = pathname === '/arkadaslar' && new URLSearchParams(search).get('view') === 'chats' && !new URLSearchParams(search).get('chat');
   const hideTheme = pathname === '/arkadaslar/istekler' || pathname === '/bildirimler' || pathname === '/ajans/mesajlar' || (pathname === '/arkadaslar' && !isChatList);
   // Sabit başlıklı sayfalarda sayfa aşağı çekilerek kaymaz: başlık ve geri düğmesi yerinde kalır.
-  const stillPage = pathname.startsWith('/ajans') || pathname === '/arkadaslar/istekler' || pathname === '/bildirimler' || pathname === '/arama' || pathname === '/vip' || pathname === '/seviye';
+  const stillPage = pathname.startsWith('/ajans') || pathname === '/arkadaslar/istekler' || pathname === '/bildirimler' || pathname === '/arama' || pathname === '/vip' || pathname === '/seviye' || pathname === '/destek';
   const [refreshKey, setRefreshKey] = useState(0);
   // Alt menü sekmeleri bellekte kalır: sekme değişiminde sayfa değişmez, görünürlük değişir.
   const activeTabPath = matchTabPath(pathname);
