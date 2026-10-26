@@ -11,6 +11,7 @@ import UserGenderDialog from '@/components/admin/UserGenderDialog';
 import FullUserProfile from '@/components/profile/FullUserProfile';
 import { visibleEmail } from '@/lib/visibleEmail';
 import AgOfficialRoles from '@/components/admin/AgOfficialRoles';
+import { isNewMember } from '@/lib/broadcaster';
 
 
 // Dokunma alanı en az 44px: telefon ve tablette ıskalanmadan basılır.
@@ -179,6 +180,7 @@ export default function AdminUsers({ pendingOnly = false }) {
                   </div>
                 </div>
                 {!u.is_banned && <span className={`text-xs px-2 py-1 rounded ${isActive ? 'bg-green-500/20 text-green-400' : u.membership_status === 'pending' ? 'bg-amber-500/20 text-amber-400' : 'bg-red-500/20 text-red-400'}`}>{isActive ? 'Aktif' : u.membership_status === 'pending' ? 'Beklemede' : 'Pasif'}</span>}
+                {isNewMember(u) && <span className="text-xs px-2 py-1 rounded bg-sky-500/20 text-sky-300 font-semibold">YENİ ÜYE</span>}
                 {paidUserIds.has(u.id) && <span className="text-xs px-2 py-1 rounded bg-green-500/20 text-green-400 font-semibold">ÖDENDİ</span>}
                 {onlineUsers.has(u.id) ? <span className="text-xs px-2 py-1 rounded bg-green-500/20 text-green-400">Online</span> : <span className="text-xs px-2 py-1 rounded bg-muted text-muted-foreground">Offline</span>}
                 {u.is_banned && <span className="text-xs px-2 py-1 rounded bg-red-500/20 text-red-400 font-semibold" title={u.ban_reason}><span aria-hidden="true">🚫</span> ENGELLİ</span>}

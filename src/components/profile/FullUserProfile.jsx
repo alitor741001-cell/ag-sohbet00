@@ -13,7 +13,7 @@ import ProfileStatsRow from '@/components/profile/ProfileStatsRow';
 import ProfileIdentityBlock from '@/components/profile/ProfileIdentityBlock';
 import ProfileSocialRow from '@/components/profile/social/ProfileSocialRow';
 import { AccountStatusMark, ACCOUNT_STATES, getAccountState } from '@/components/friends/AccountStatusAvatar';
-import { broadcasterState } from '@/lib/broadcaster';
+import { broadcasterState, isNewMember } from '@/lib/broadcaster';
 import { useRoomProfileActions } from '@/lib/roomProfileActions';
 import useBackDismiss from '@/hooks/useBackDismiss';
 import useRoomLevels from '@/hooks/useRoomLevels';
@@ -105,7 +105,8 @@ export default function FullUserProfile({
   const genderLabel = profile?.gender === 'erkek' ? 'Erkek' : profile?.gender === 'kadın' ? 'Kadın' : 'Belirtilmedi';
   const roleLabel = hidden
     ? ''
-    : (profile?.custom_role?.name || profile?.title || profile?.display_role || (profile?.role === 'admin' ? 'ADMIN' : 'ÜYE'));
+    : (profile?.custom_role?.name || profile?.title || profile?.display_role
+      || (profile?.role === 'admin' ? 'ADMIN' : (badge.active && isNewMember(profile) ? 'YENİ YAYINCI' : '')));
   const ownerAgency = profile?.owned_agency_id
     ? { name: profile.owned_agency_name, code: profile.owned_agency_code }
     : null;

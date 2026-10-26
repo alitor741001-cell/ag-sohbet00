@@ -4,6 +4,14 @@
  * Değerler kullanıcı kaydından okunur; oturumdaki kullanıcı canlı dinlendiği için
  * (useCurrentUser) değişiklik yoklama beklemeden ekrana düşer.
  */
+const NEW_MEMBER_DAYS = 7;
+
+/** Son bir hafta içinde kaydolan hesap "yeni üye" sayılır; yayıncıysa "yeni yayıncı" etiketi alır. */
+export function isNewMember(profile) {
+  const created = new Date(profile?.created_date || 0).getTime();
+  return !!created && Date.now() - created < NEW_MEMBER_DAYS * 86400000;
+}
+
 export function broadcasterState(profile) {
   const source = profile || {};
   const active = source.broadcaster_status === 'active'
