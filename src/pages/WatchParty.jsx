@@ -839,7 +839,6 @@ export default function WatchParty() {
           name={profilePerson?.name || ''}
           avatar={profilePerson?.avatar || ''}
           sheet
-          theme="blue"
           hideSettings
           hideBlock={canMod}
           onClose={closeUserProfile}

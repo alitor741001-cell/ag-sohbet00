@@ -14,10 +14,10 @@
 .support-chat-muted { color: hsl(var(--support-muted)); }
 .support-chat-online { color: hsl(var(--support-green)); }
 .support-message { display: flex; align-items: flex-start; gap: .65rem; margin-bottom: 1.15rem; }
-.support-message.is-staff { flex-direction: row-reverse; }
+.support-message.is-mine { flex-direction: row-reverse; }
 .support-message .support-ticket-avatar { width: 2.3rem; height: 2.3rem; }
-.support-message.is-staff .support-message-bubble { background: hsl(var(--support-staff)); border-color: hsl(var(--support-rose) / .35); border-bottom-right-radius: .2rem; }
-.support-message:not(.is-staff) .support-message-bubble { border-bottom-left-radius: .2rem; }
+.support-message.is-mine .support-message-bubble { background: hsl(var(--support-rose) / .18); border-color: hsl(var(--support-rose) / .5); border-bottom-right-radius: .2rem; }
+.support-message:not(.is-mine) .support-message-bubble { border-bottom-left-radius: .2rem; }
 .support-message-time { display: flex; align-items: center; justify-content: flex-end; gap: .25rem; margin-top: .25rem; font-size: .65rem; color: hsl(var(--support-muted)); }
 .support-message-time svg { color: hsl(var(--support-rose)); }
 .support-chat .support-composer { background: hsl(var(--support-night)); border-color: hsl(var(--support-line)); }

@@ -1,4 +1,5 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
+import warmChunks from '@/lib/warmChunks';
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
@@ -172,6 +173,8 @@ const AuthenticatedApp = () => {
 function App() {
   // Arama katmanı ve küçültülmüş oda balonu ilk boyamayı beklemez.
   const deferredReady = useDeferredMount();
+  // Sık gidilen ekranlar tarayıcı boşa çıkınca indirilir: geçişler anında açılır.
+  useEffect(() => { warmChunks(); }, []);
 
   return (
     <AuthProvider>

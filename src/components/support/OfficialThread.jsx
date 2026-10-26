@@ -21,7 +21,7 @@ export default function OfficialThread({ ticket, onClosed, onCloseTopic, closing
     <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-5" aria-live="polite">
       {messages.isPending && <p className="support-chat-muted text-sm">Yükleniyor...</p>}{messages.isError && <p role="alert" className="text-sm text-destructive">Mesajlar alınamadı.</p>}
       {messages.hasNextPage && <button onClick={() => messages.fetchNextPage()} disabled={messages.isFetchingNextPage} className="support-chat-muted mb-4 w-full text-xs">Eski mesajları yükle</button>}
-      {messages.data?.pages.flatMap(page => page.items).reverse().map(message => <SupportChatMessage key={message.id} message={message} memberName={ticket.user_name || 'Üye'} memberAvatar={ticket.user_avatar} />)}
+      {messages.data?.pages.flatMap(page => page.items).reverse().map(message => <SupportChatMessage key={message.id} message={message} viewer="admin" memberName={ticket.user_name || 'Üye'} memberAvatar={ticket.user_avatar} />)}
       <div ref={end} />
     </div>
     {mutation.isError && <p role="alert" className="px-4 py-2 text-xs text-destructive">{mutation.error.response?.data?.error || 'Mesaj gönderilemedi.'}</p>}

@@ -175,7 +175,7 @@ export default function Support() {
               Merhaba! Sorununuzu buradan doğrudan yazabilir, fotoğraf veya 30 saniyelik video gönderebilirsiniz.
             </p>
           )}
-          {thread.map(m => <SupportChatMessage key={m.id} message={m} memberName={user.username || user.full_name || 'Üye'} memberAvatar={user.avatar} onImageClick={setLightbox} />)}
+          {thread.map(m => <SupportChatMessage key={m.id} message={m} viewer="user" memberName={user.username || user.full_name || 'Üye'} memberAvatar={user.avatar} onImageClick={setLightbox} />)}
           <div ref={endRef} />
         </div>
 
