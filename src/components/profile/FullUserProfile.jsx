@@ -41,10 +41,12 @@ export default function FullUserProfile({
   const relation = friendship?.status === 'accepted' ? 'friend' : friendship?.status === 'pending' ? 'pending' : '';
   const [copied, setCopied] = useState(false);
   const [inviteSent, setInviteSent] = useState(false);
+  // Karttaki profile tekrar dokunmak profili tam ekran açar; Geri düğmesi kart görünümüne döner.
+  const [full, setFull] = useState(false);
   const roomLevels = useRoomLevels([userId]);
 
-  // Profil kartı birleşik geri yığınında: geri tuşu önce kartı kapatır.
-  useBackDismiss(open, onClose);
+  // Profil kartı birleşik geri yığınında: geri tuşu önce tam ekrandan, sonra karttan çıkar.
+  useBackDismiss(open, full ? () => setFull(false) : onClose);
 
   const isSelf = self || userId === user?.id;
 
@@ -52,6 +54,7 @@ export default function FullUserProfile({
     if (!open || !userId || hidden) { setProfile(null); return; }
     let alive = true;
     setProfile(null);
+    setFull(false);
     // Profil, açıkken tazelenebilsin diye fonksiyona alındı: ban anında görsel değişir.
     const load = () => base44.functions.invoke('user-profile', { user_id: userId })
       .then((response) => { if (alive) setProfile(response?.data || {}); })
@@ -283,13 +286,15 @@ export default function FullUserProfile({
     <VoiceFantasyCard profile={profile} hidden={hidden} name={shownName} avatar={banned ? ACCOUNT_STATES.banned.image : shownAvatar}
       role={roleLabel} palette={palette} room={room} userId={userId} isSelf={isSelf} onClose={onClose} onMessage={onMessage}
       statusContent={statusContent} moderation={!hidden && <ProfileModeration userId={userId} profile={profile} onChanged={setProfile} giftAction={adminGiftRow ? () => room.gift(userId) : null} />} memberId={memberId} genderLabel={genderLabel} age={age} badge={badge} giftInAdminRow={adminGiftRow}
-      joinDate={formatDate(profile?.created_date)} copied={copied} onCopyId={copyId} onAction={closeOnAction} />
+      joinDate={formatDate(profile?.created_date)} copied={copied} onCopyId={copyId} onAction={closeOnAction}
+      full={full} onBack={() => setFull(false)} onOpenFull={() => setFull(true)} />
   );
 
   return (
     <FantasyProfileShell profile={profile} female={profile?.gender === 'kadın'} hidden={hidden} name={shownName}
       avatar={banned ? ACCOUNT_STATES.banned.image : shownAvatar} role={roleLabel} onClose={onClose}
-      memberId={memberId} copied={copied} onCopyId={copyId} userId={userId} self={isSelf}>
+      memberId={memberId} copied={copied} onCopyId={copyId} userId={userId} self={isSelf}
+      full={full} onBack={() => setFull(false)} onOpenFull={() => setFull(true)}>
       <div className="space-y-3 px-4 pt-1" onClick={closeOnAction}>
         {header}
         <div className="flex flex-col gap-3">{content}</div>

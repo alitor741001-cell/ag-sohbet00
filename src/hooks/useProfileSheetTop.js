@@ -5,8 +5,8 @@ export default function useProfileSheetTop(enabled) {
   useLayoutEffect(() => {
     if (!enabled) return;
     const seats = document.querySelectorAll('.voice-viewport [data-seat-index]');
-    const seat = document.querySelector('.voice-viewport [data-seat-index="4"]') || seats[seats.length - 1];
-    // Kartın üst kenarı 5. koltuğun alt hizasından başlar: üstteki boşluk kırpılır,
+    const seat = document.querySelector('.voice-viewport [data-seat-index="6"]') || seats[seats.length - 1];
+    // Kartın üst kenarı 7. koltuğun alt hizasından başlar: üstteki boşluk kırpılır,
     // profil resmi ve çemberi bir satır aşağı iner.
     const measure = () => {
       const rect = seat?.getBoundingClientRect();

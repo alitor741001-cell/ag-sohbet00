@@ -15,11 +15,11 @@ const ZONES = [
   { label: 'Takip', to: '/?takip=1', x: 45, y: 3.5, w: 19.5, h: 5 },
   { label: 'Ara', to: '/arama', x: 66, y: 3.5, w: 9, h: 5 },
   { label: 'Oda Kur', to: '/oda-kur', x: 77, y: 2.5, w: 21.5, h: 7.5 },
-  { label: 'Ana Sayfa', to: '/', x: 3.5, y: 87, w: 17.5, h: 9.5 },
-  { label: 'Sohbet', to: '/arkadaslar?view=chats', x: 23, y: 87, w: 17.5, h: 9.5 },
-  { label: 'Oyunlar', to: '/?oyunlar=1', x: 41.5, y: 87, w: 17.5, h: 9.5 },
-  { label: 'Canlı Destek', to: '/destek', x: 60, y: 87, w: 18.5, h: 9.5 },
-  { label: 'Profil', to: '/profil', x: 79.5, y: 87, w: 17, h: 9.5 },
+  { label: 'Ana Sayfa', to: '/', x: 3.5, y: 89.5, w: 17.5, h: 9.5 },
+  { label: 'Sohbet', to: '/arkadaslar?view=chats', x: 23, y: 89.5, w: 17.5, h: 9.5 },
+  { label: 'Oyunlar', to: '/?oyunlar=1', x: 41.5, y: 89.5, w: 17.5, h: 9.5 },
+  { label: 'Canlı Destek', to: '/destek', x: 60, y: 89.5, w: 18.5, h: 9.5 },
+  { label: 'Profil', to: '/profil', x: 79.5, y: 89.5, w: 17, h: 9.5 },
 ];
 
 const EMPTY_ZONE = { label: 'İlk odayı sen aç', to: '/oda-kur', x: 22, y: 35.5, w: 57, h: 7 };

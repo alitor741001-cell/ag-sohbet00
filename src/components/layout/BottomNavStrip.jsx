@@ -6,8 +6,9 @@ export const NAV_BG = 'https://media.base44.com/images/public/6a77d66e4da6de2146
 export default function BottomNavStrip() {
   return (
     <>
-      <img src={NAV_BG} alt="" aria-hidden="true" draggable={false} className="pointer-events-none absolute inset-0 h-full w-full select-none object-fill" style={{ clipPath: 'inset(85% 0 0 0)' }} />
-      <SupportLabel top="92.5%" height="3.5%" />
+      {/* Şerit biraz daha aşağı indirilir: alt menü düğmeleri ekranın dibine yaklaşır. */}
+      <img src={NAV_BG} alt="" aria-hidden="true" draggable={false} className="pointer-events-none absolute inset-x-0 w-full select-none object-fill" style={{ top: '2.5%', height: '100%', clipPath: 'inset(82.5% 0 0 0)' }} />
+      <SupportLabel top="95%" height="3.5%" />
     </>
   );
 }
