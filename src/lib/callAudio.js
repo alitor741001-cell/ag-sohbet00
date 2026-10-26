@@ -23,10 +23,31 @@ function releaseMicStream() {
   micTrack = null;
 }
 
+// Eski iOS/Android: mediaDevices bulunmaz, ön ekli getUserMedia kullanılır.
+function micGetter() {
+  if (navigator.mediaDevices?.getUserMedia) {
+    return (constraints) => navigator.mediaDevices.getUserMedia(constraints);
+  }
+  const legacy = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+  if (!legacy) return null;
+  return (constraints) => new Promise((resolve, reject) => legacy.call(navigator, constraints, resolve, reject));
+}
+
 async function acquireMic() {
-  if (!navigator.mediaDevices?.getUserMedia) throw new Error('mikrofon desteklenmiyor');
+  const getMedia = micGetter();
+  if (!getMedia) throw new Error('mikrofon desteklenmiyor');
   const generation = micGeneration;
-  const next = await navigator.mediaDevices.getUserMedia({ audio: MIC_OPTIONS });
+  let next;
+  try {
+    next = await getMedia({ audio: MIC_OPTIONS });
+  } catch (error) {
+    // Eski cihazlar gelişmiş ses kısıtlarını reddedebilir: sade istekle tekrar denenir.
+    if (['NotSupportedError', 'OverconstrainedError', 'TypeError'].includes(error?.name)) {
+      next = await getMedia({ audio: true });
+    } else {
+      throw error;
+    }
+  }
   if (generation !== micGeneration) {
     next.getTracks().forEach((track) => track.stop());
     throw new Error('arama sonlandı');
@@ -36,7 +57,9 @@ async function acquireMic() {
   const stale = micStream;
   micStream = next;
   micTrack = track;
-  if (track) track.addEventListener('ended', () => { if (micTrack === track) { micTrack = null; micStream = null; } });
+  const onEnded = () => { if (micTrack === track) { micTrack = null; micStream = null; } };
+  if (track.addEventListener) track.addEventListener('ended', onEnded);
+  else track.onended = onEnded;
   stale?.getTracks().forEach((oldTrack) => oldTrack.stop());
   return track;
 }
@@ -192,7 +215,17 @@ export function createStreamOutput(stream, roomId, { startMuted = false } = {}) 
   element.setAttribute('playsinline', 'true');
   element.style.display = 'none';
   element.muted = startMuted;
-  element.srcObject = stream;
+  element.setAttribute('webkit-playsinline', 'true');
+  // Eski iOS/Android: srcObject yoktur, akış nesne adresiyle bağlanır.
+  let objectUrl = '';
+  if ('srcObject' in element) {
+    element.srcObject = stream;
+  } else {
+    try {
+      objectUrl = (window.URL || window.webkitURL).createObjectURL(stream);
+      element.src = objectUrl;
+    } catch (error) {}
+  }
   document.body.appendChild(element);
 
   const output = {
@@ -205,6 +238,7 @@ export function createStreamOutput(stream, roomId, { startMuted = false } = {}) 
     remove() {
       outputs.delete(output);
       try { element.srcObject = null; } catch {}
+      if (objectUrl) { try { (window.URL || window.webkitURL).revokeObjectURL(objectUrl); } catch {} }
       element.remove();
     },
     get muted() { return element.muted; },

@@ -11,6 +11,37 @@ const ICE_SERVERS = [
   { urls: ['turn:openrelay.metered.ca:443', 'turns:openrelay.metered.ca:443?transport=tcp'], username: 'openrelayproject', credential: 'openrelayproject' },
 ];
 
+// --- Eski cihaz uyumluluğu (iOS 12 öncesi Safari, eski Android WebView) ---
+const RTCPeerConnectionCtor = typeof window !== 'undefined'
+  ? (window.RTCPeerConnection || window.webkitRTCPeerConnection || window.mozRTCPeerConnection)
+  : null;
+const MediaStreamCtor = typeof window !== 'undefined'
+  ? (window.MediaStream || window.webkitMediaStream)
+  : null;
+
+// Eski tarayıcılarda MediaStream kurucusu yoktur: akış gerektiren yerlerde null geçilir.
+const makeStream = (track) => (track && MediaStreamCtor ? new MediaStreamCtor([track]) : null);
+
+const sessionDescription = (sdp) => {
+  if (!sdp) return sdp;
+  const init = { type: sdp.type, sdp: sdp.sdp };
+  return typeof window !== 'undefined' && window.RTCSessionDescription
+    ? new window.RTCSessionDescription(init)
+    : init;
+};
+
+const candidateInit = (candidate) => {
+  if (!candidate) return null;
+  if (typeof candidate.toJSON === 'function') {
+    try { return candidate.toJSON(); } catch (error) {}
+  }
+  return { candidate: candidate.candidate, sdpMid: candidate.sdpMid, sdpMLineIndex: candidate.sdpMLineIndex };
+};
+
+// Eski sürümlerde connectionState yoktur: ICE durumu ile eşdeğer karar verilir.
+const pcConnected = (pc) => ['connected', 'completed'].includes(pc.connectionState || pc.iceConnectionState);
+const pcFailed = (pc) => ['failed', 'closed'].includes(pc.connectionState || pc.iceConnectionState);
+
 const MIC_TIMEOUT_MS = 15000;
 const HEARTBEAT_MS = 6000;
 // Teklif yanıtsız kalırsa bu süre sonunda yeniden denenir (kaçan sinyal kurtarılır).
@@ -55,7 +86,7 @@ export class P2PVoiceRoom {
     this.unsubscribe = null;
     this.peers = new Map(); // peerId -> { id, pc, sender, output, pending, remoteReady, attemptAt }
     this.remotePeers = [];
-    this.micStream = null;
+    this.micTrack = null;
     this.micOn = false;
     this.outputsEnabled = true;
     this.deafened = false;
@@ -157,14 +188,17 @@ export class P2PVoiceRoom {
     const wanted = new Set(this.wantedPeerIds());
     [...this.peers.keys()].forEach((id) => { if (!wanted.has(id)) this.dropPeer(id); });
     wanted.forEach((id) => {
-      const peer = this.ensurePeer(id);
-      const state = peer.pc.connectionState;
-      if (state === 'failed' || state === 'closed') {
-        this.dropPeer(id);
-        this.ensurePeer(id);
+      try {
+        const peer = this.ensurePeer(id);
+        if (pcFailed(peer.pc)) {
+          this.dropPeer(id);
+          this.ensurePeer(id);
+        }
+        // Aynı anda iki teklif gitmesin: yalnızca küçük peerId teklif eder.
+        if (this.peerId < id) void this.callPeer(id);
+      } catch (error) {
+        console.warn('[P2P] eş kurulamadı', error);
       }
-      // Aynı anda iki teklif gitmesin: yalnızca küçük peerId teklif eder.
-      if (this.peerId < id) void this.callPeer(id);
     });
     this.emit();
   }
@@ -172,31 +206,25 @@ export class P2PVoiceRoom {
   ensurePeer(peerId) {
     const existing = this.peers.get(peerId);
     if (existing) return existing;
-    const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+    if (!RTCPeerConnectionCtor) throw new Error('webrtc_unsupported');
+    const pc = new RTCPeerConnectionCtor({ iceServers: ICE_SERVERS });
     const peer = { id: peerId, pc, sender: null, output: null, pending: [], remoteReady: false, attemptAt: 0 };
     this.peers.set(peerId, peer);
 
-    // Ses hattı baştan açık: mikrofon sonradan açıldığında yeniden anlaşma gerekmez.
-    try {
-      const transceiver = pc.addTransceiver('audio', { direction: 'sendrecv' });
-      peer.sender = transceiver.sender;
-      const live = this.micOn ? this.micStream?.getAudioTracks?.()[0] : null;
-      if (live) peer.sender.replaceTrack(live).catch(() => {});
-    } catch (error) {
-      console.warn('[P2P] ses hattı kurulamadı', error);
-    }
+    this.attachLocalAudio(peer);
 
     pc.onicecandidate = (event) => {
-      if (event.candidate) {
-        this.sendSignal(peerId, { kind: 'ice', candidate: event.candidate.toJSON() });
-      }
+      const candidate = candidateInit(event.candidate);
+      if (candidate) this.sendSignal(peerId, { kind: 'ice', candidate });
     };
     pc.ontrack = (event) => {
-      const stream = (event.streams && event.streams[0]) || new MediaStream([event.track]);
-      this.attachRemote(peer, stream);
+      const stream = (event.streams && event.streams[0]) || makeStream(event.track);
+      if (stream) this.attachRemote(peer, stream);
     };
-    pc.onconnectionstatechange = () => {
-      if (pc.connectionState === 'failed') {
+    // Eski Android/iOS sürümleri ses akışını ayrı olayla bildirir.
+    pc.onaddstream = (event) => { if (event?.stream) this.attachRemote(peer, event.stream); };
+    const onStateChange = () => {
+      if (this.peers.get(peerId) === peer && pcFailed(pc)) {
         this.dropPeer(peerId);
         if (this.wantedPeerIds().includes(peerId)) {
           this.ensurePeer(peerId);
@@ -205,7 +233,37 @@ export class P2PVoiceRoom {
       }
       this.emit();
     };
+    pc.onconnectionstatechange = onStateChange;
+    pc.oniceconnectionstatechange = onStateChange;
     return peer;
+  }
+
+  // Ses hattı baştan açık: mikrofon sonradan açıldığında yeniden anlaşma gerekmez.
+  // Eski cihazlarda transceiver/replaceTrack yoktur: hat mikrofonla doğrudan eklenir.
+  attachLocalAudio(peer) {
+    const track = this.isMicOn() ? this.micTrack : null;
+    try {
+      if (typeof peer.pc.addTransceiver === 'function') {
+        const transceiver = peer.pc.addTransceiver('audio', { direction: 'sendrecv' });
+        peer.sender = transceiver.sender || null;
+        if (track && peer.sender?.replaceTrack) peer.sender.replaceTrack(track).catch(() => {});
+        return;
+      }
+      if (track && typeof peer.pc.addTrack === 'function') {
+        peer.sender = peer.pc.addTrack(track, makeStream(track)) || null;
+      }
+    } catch (error) {
+      console.warn('[P2P] ses hattı kurulamadı', error);
+    }
+  }
+
+  // Eski cihazlarda track yerinde değiştirilemez: hat mikrofonla birlikte yeniden kurulur.
+  applyLocalTrack(peer, track) {
+    if (peer.sender && typeof peer.sender.replaceTrack === 'function') {
+      peer.sender.replaceTrack(track).catch(() => {});
+      return;
+    }
+    this.dropPeer(peer.id);
   }
 
   attachRemote(peer, stream) {
@@ -227,12 +285,13 @@ export class P2PVoiceRoom {
   async callPeer(peerId) {
     const peer = this.peers.get(peerId);
     if (!peer || peer.pc.signalingState !== 'stable') return;
-    if (peer.pc.connectionState === 'connected') return;
+    if (pcConnected(peer.pc)) return;
     peer.attemptAt = Date.now();
     try {
-      const offer = await peer.pc.createOffer();
+      // offerToReceiveAudio: eski cihazlarda alıcı hat yalnızca bu bayrakla açılır.
+      const offer = await peer.pc.createOffer({ offerToReceiveAudio: true });
       await peer.pc.setLocalDescription(offer);
-      this.sendSignal(peerId, { kind: 'offer', sdp: peer.pc.localDescription });
+      this.sendSignal(peerId, { kind: 'offer', sdp: { type: peer.pc.localDescription.type, sdp: peer.pc.localDescription.sdp } });
     } catch (error) {
       console.warn('[P2P] teklif oluşturulamadı', error);
     }
@@ -243,7 +302,7 @@ export class P2PVoiceRoom {
     if (!this.peerId) return;
     const now = Date.now();
     this.peers.forEach((peer) => {
-      if (peer.pc.connectionState === 'connected') return;
+      if (pcConnected(peer.pc)) return;
       if (now - (peer.attemptAt || 0) < OFFER_RETRY_MS) return;
       if (this.peerId < peer.id) void this.callPeer(peer.id);
     });
@@ -262,12 +321,12 @@ export class P2PVoiceRoom {
       const peer = this.ensurePeer(from);
       try {
         if (peer.pc.signalingState !== 'stable') return;
-        await peer.pc.setRemoteDescription(new RTCSessionDescription(data.sdp));
+        await peer.pc.setRemoteDescription(sessionDescription(data.sdp));
         peer.remoteReady = true;
         peer.pending.splice(0).forEach((candidate) => peer.pc.addIceCandidate(candidate).catch(() => {}));
         const answer = await peer.pc.createAnswer();
         await peer.pc.setLocalDescription(answer);
-        this.sendSignal(from, { kind: 'answer', sdp: peer.pc.localDescription });
+        this.sendSignal(from, { kind: 'answer', sdp: { type: peer.pc.localDescription.type, sdp: peer.pc.localDescription.sdp } });
       } catch (error) {
         console.warn('[P2P] teklif işlenemedi', error);
       }
@@ -278,7 +337,7 @@ export class P2PVoiceRoom {
       if (!peer) return;
       try {
         if (peer.pc.signalingState !== 'have-local-offer') return;
-        await peer.pc.setRemoteDescription(new RTCSessionDescription(data.sdp));
+        await peer.pc.setRemoteDescription(sessionDescription(data.sdp));
         peer.remoteReady = true;
         peer.pending.splice(0).forEach((candidate) => peer.pc.addIceCandidate(candidate).catch(() => {}));
       } catch (error) {
@@ -304,29 +363,33 @@ export class P2PVoiceRoom {
       this.lastMicrophoneError = 'publish_denied';
       throw denied;
     }
-    const stream = await withTimeout((async () => {
-      const track = await ensureMicTrack();
-      return new MediaStream([track]);
-    })(), MIC_TIMEOUT_MS, 'mic_timeout');
-    const track = stream.getAudioTracks()[0];
+    if (!RTCPeerConnectionCtor) {
+      const unsupported = new Error('webrtc_unsupported');
+      unsupported.code = 'webrtc_unsupported';
+      this.lastMicrophoneError = 'webrtc_unsupported';
+      throw unsupported;
+    }
+    const track = await withTimeout(ensureMicTrack(), MIC_TIMEOUT_MS, 'mic_timeout');
     if (!track || track.readyState !== 'live') {
       this.lastMicrophoneError = 'publish_unverified';
       throw new Error('Mikrofon yayını doğrulanamadı.');
     }
     track.enabled = true;
-    this.micStream = stream;
+    this.micTrack = track;
     this.micOn = true;
-    this.peers.forEach((peer) => { peer.sender?.replaceTrack(track).catch(() => {}); });
+    this.peers.forEach((peer) => this.applyLocalTrack(peer, track));
     this.socket?.send({ type: 'mic', on: true });
     // Konuşmaya başlayınca odadaki herkesle hat kurulur.
     this.reconcile();
+    // Eski iOS'ta kayıt oturumu açılınca uzak ses susabilir: çıkışlar dokunuş içinde yeniden başlatılır.
+    void this.retryPlayback();
     this.emit();
     return true;
   }
 
   stopMic() {
     this.micOn = false;
-    this.peers.forEach((peer) => { peer.sender?.replaceTrack(null).catch(() => {}); });
+    this.peers.forEach((peer) => this.applyLocalTrack(peer, null));
     this.socket?.send({ type: 'mic', on: false });
     // Sustuysan yalnızca konuşanları dinlemeye devam et.
     this.reconcile();
@@ -334,7 +397,7 @@ export class P2PVoiceRoom {
   }
 
   isMicOn() {
-    const track = this.micStream?.getAudioTracks?.()[0];
+    const track = this.micTrack;
     return !!this.micOn && !!track && track.readyState === 'live';
   }
 
@@ -410,7 +473,7 @@ export class P2PVoiceRoom {
     this.connectionState = 'disconnected';
     this.peerId = '';
     this.remotePeers = [];
-    this.micStream = null;
+    this.micTrack = null;
     try { socket?.close(); } catch (error) {}
     this.emit();
   }
