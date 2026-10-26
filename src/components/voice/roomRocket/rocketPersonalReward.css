@@ -1,0 +1,13 @@
+.rocket-personal-reward{display:flex;flex-direction:column;align-items:center;width:min(88vw,360px);max-height:calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 32px);overflow-y:auto;padding:0 8px 12px;text-align:center;color:hsl(var(--slot-text))}
+.rocket-personal-vehicle{position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0;width:min(64vw,250px,31dvh);aspect-ratio:1;background:radial-gradient(ellipse at center,hsl(var(--slot-gold)/.23),transparent 68%)}
+.rocket-personal-image{width:100%;height:100%;filter:drop-shadow(0 0 16px hsl(var(--slot-gold)/.28))}
+.rocket-personal-card{width:100%;padding:24px 20px 20px;border:1px solid hsl(var(--slot-gold)/.5);border-radius:28px;background:linear-gradient(155deg,hsl(var(--slot-panel)),hsl(var(--slot-bg)));box-shadow:0 12px 40px hsl(var(--slot-bg)/.4),inset 0 1px 0 hsl(var(--slot-gold)/.2)}
+.rocket-personal-level{margin:0;font-size:11px;font-weight:800;letter-spacing:.18em;color:hsl(var(--slot-gold))}
+.rocket-personal-heading{margin:8px 0 12px;font-family:var(--font-heading);font-size:clamp(28px,8vw,38px);font-weight:900;line-height:1.1}
+.rocket-personal-amount{display:flex;align-items:baseline;justify-content:center;flex-wrap:wrap;gap:8px;font-size:clamp(30px,9vw,44px);font-weight:900;line-height:1.2;font-variant-numeric:tabular-nums;color:hsl(var(--slot-gold));overflow-wrap:anywhere}
+.rocket-personal-amount span{font-size:13px;letter-spacing:.12em}
+.rocket-personal-status{margin:16px 0;font-size:12px;line-height:1.5;color:hsl(var(--slot-text)/.8)}
+.rocket-personal-accept{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:50px;padding:12px;border:1px solid hsl(var(--slot-gold));border-radius:16px;background:linear-gradient(135deg,hsl(var(--slot-gold)),hsl(var(--slot-gold-deep)));color:hsl(var(--slot-bg));font-weight:900;font-size:14px;letter-spacing:.06em;cursor:pointer}
+.rocket-personal-accept:focus-visible{outline:2px solid hsl(var(--slot-text));outline-offset:4px}
+.rocket-personal-accept:active{box-shadow:0 0 20px hsl(var(--primary)/.6)}
+.rocket-personal-accept:disabled{opacity:.6;cursor:wait}

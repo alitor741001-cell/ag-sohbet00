@@ -14,7 +14,7 @@ export default function RocketRewardSheet({ data, loading, error, onClose, onRet
   useBackDismiss(true, onClose);
   useEffect(() => { setLevel(data?.level || 1); }, [data?.cycle]);
   const round = data?.history?.find(entry => entry.level === level && entry.cycle === data?.cycle);
-  const winners = round?.winners || data?.leaders || [];
+  const winners = round?.winners || [];
   return <Dialog open onOpenChange={value => { if (!value) onClose(); }}><DialogPortal>
     <DialogOverlay className="z-[290] bg-slot-bg/75" />
     <Content className="room-rocket-sheet font-body text-slot-text">

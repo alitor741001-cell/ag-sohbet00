@@ -3,7 +3,7 @@ import RoomRocketBadge from '@/components/voice/roomRocket/RoomRocketBadge';
 import RocketRewardSheet from '@/components/voice/roomRocket/RocketRewardSheet';
 import useRoomRocket from '@/components/voice/roomRocket/useRoomRocket';
 import useRocketEvents from '@/components/voice/roomRocket/useRocketEvents';
-import useRocketCelebrationArt from '@/components/voice/roomRocket/useRocketCelebrationArt';
+
 import RoomRocketCelebration from '@/components/voice/roomRocket/RoomRocketCelebration';
 import '@/components/voice/roomRocket/roomRocket.css';
 
@@ -11,7 +11,7 @@ export default function RoomRocketFeature({ room, hidden }) {
   const [open, setOpen] = useState(false);
   const query = useRoomRocket(room, open);
   const { active, complete } = useRocketEvents(room?.id, query.data);
-  const artwork = useRocketCelebrationArt();
+
   const awaitingPayment = !!active?.my_award && !active.my_award.paid;
   useEffect(() => {
     if (!awaitingPayment) return;
@@ -22,6 +22,6 @@ export default function RoomRocketFeature({ room, hidden }) {
   return <>
     {!hidden && <RoomRocketBadge data={query.data} loading={query.isLoading} error={query.isError} onOpen={() => setOpen(true)} />}
     {open && !active && <RocketRewardSheet data={query.data} loading={query.isLoading} error={query.isError} onClose={() => setOpen(false)} onRetry={query.refetch} />}
-    {active && <RoomRocketCelebration key={active.id} event={active} roomId={room.id} art={artwork.art} error={artwork.error} onComplete={complete} />}
+    {active && <RoomRocketCelebration key={active.id} event={active} roomId={room.id} onComplete={complete} />}
   </>;
 }
