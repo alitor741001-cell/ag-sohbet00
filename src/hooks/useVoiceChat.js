@@ -3,7 +3,7 @@ import { unlockVoicePlayback } from '@/lib/callAudio';
 import { hasDirectCallAudioFocus, subscribeCallAudioFocus } from '@/lib/callAudioFocus';
 import { isRoomMinimized } from '@/lib/minimizedRoom';
 import { disposeOtherVoiceSessions, registerVoiceSession, takeVoiceSession } from '@/lib/roomVoiceSession';
-import { VoiceMesh } from '@/lib/p2pVoiceMesh';
+import { LiveKitVoiceRoom } from '@/lib/livekitVoiceRoom';
 import shallowEqual from '@/components/data/shallowEqual';
 
 const initialDebug = { participantCount: 0, remoteParticipants: 0, remoteTracks: 0, playback: 'hazır' };
@@ -144,7 +144,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
       setError(previous => previous.startsWith('🔊') ? '' : previous);
       refreshState();
     } catch (playError) {
-      console.warn('[VoiceMesh] Audio playback could not start', playError);
+      console.warn('[LiveKit] Audio playback could not start', playError);
       setAudioBlocked(true);
       setError('🔊 Ses başlatılamadı. Ekrana dokunarak tekrar deneyin.');
     }
@@ -156,7 +156,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
     // Küçültülmüş odadan dönüş: bağlantı ve mikrofon yayını hâlâ ayakta, yalnızca arayüz bağlanır.
     disposeOtherVoiceSessions(roomId);
     const resumed = takeVoiceSession(roomId);
-    const mesh = resumed?.room || new VoiceMesh({
+    const mesh = resumed?.room || new LiveKitVoiceRoom({
       roomId,
       userId: user.id,
       name: user.title || user.username || user.full_name || 'Kullanıcı',
@@ -202,7 +202,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
         refreshState();
       } catch (connectError) {
         if (cancelled) return;
-        console.error('[VoiceMesh] Connection failed', connectError);
+        console.error('[LiveKit] Connection failed', connectError);
         setConnectionState('disconnected');
         setError('🌐 Ses bağlantısı kurulamadı.');
       }
@@ -257,7 +257,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
       // oda sesi duyulmaya devam eder — odaya dönüldüğünde aynı bağlantı yeniden kullanılır.
       if (isRoomMinimized(roomId)) {
         stopTransient();
-        registerVoiceSession(roomId, { room: mesh, elements: [], stopTransient });
+        registerVoiceSession(roomId, { room: mesh, elements: mesh.audioElements(), stopTransient });
         return;
       }
       // Odalar arası geçişte mikrofon açıksa yeni odada da açık kalsın.
@@ -352,7 +352,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
       }
       refreshState();
     } catch (micError) {
-      console.error('[VoiceMesh] Microphone toggle failed', micError);
+      console.error('[LiveKit] Microphone toggle failed', micError);
       setMicDenied(isPermissionError(micError));
       setError(friendlyMicError(micError));
     } finally { micTogglePendingRef.current = false; setRequesting(false); }
