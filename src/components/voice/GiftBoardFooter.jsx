@@ -1,5 +1,5 @@
 import { ChevronRight, Coins, Crown, Send } from 'lucide-react';
-import { formatCoins } from '@/lib/giftTone';
+import formatCoinAmount from '@/components/voice/formatCoinAmount';
 
 /** Hediye Tahtası alt çubuğu: bakiye kutusu (dokununca coin mağazası) ve Gönder düğmesi. */
 export default function GiftBoardFooter({ coins, count = 0, onOpenCoins, onSend, sendDisabled }) {
@@ -13,7 +13,7 @@ export default function GiftBoardFooter({ coins, count = 0, onOpenCoins, onSend,
         className="gift-palace-wallet flex min-w-0 shrink items-center gap-1 text-sm font-black tabular-nums transition-transform active:scale-95"
       >
         <span className="gift-palace-coin-stack" aria-hidden="true"><Coins /><Coins /><Coins /></span>
-        <span className="truncate">{coins === null || coins === undefined ? '—' : formatCoins(coins)}</span>
+        <span className="truncate" title={coins == null ? undefined : `${Number(coins).toLocaleString('tr-TR')} coins`}>{coins === null || coins === undefined ? '—' : formatCoinAmount(coins)}</span>
         <ChevronRight className="h-3.5 w-3.5 shrink-0 text-white/50" />
       </button>
 

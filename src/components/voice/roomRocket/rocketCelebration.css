@@ -1,4 +1,5 @@
-.rocket-celebration{position:fixed;inset:0;z-index:360;display:flex;align-items:center;justify-content:center;overflow:hidden;isolation:isolate;background:transparent;outline:none;color:hsl(var(--slot-text))}
+.rocket-celebration{position:fixed;inset:0;z-index:360;display:flex;align-items:center;justify-content:center;overflow:hidden;isolation:isolate;background:transparent;border:0;box-shadow:none;outline:none;color:hsl(var(--slot-text))}
+.rocket-launch-video-frame{width:min(100vw,calc(100dvh * 9 / 16));height:min(100dvh,calc(100vw * 16 / 9));flex:none}
 .rocket-celebration-frame{position:relative;width:min(100vw,calc((100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * .666015625));aspect-ratio:682/1024;container-type:inline-size;flex:none}
 .rocket-celebration-art{position:absolute!important;inset:0;display:block;width:100%;height:100%;object-fit:contain;pointer-events:none;user-select:none}
 .rocket-launch-base{animation:rocket-base-burst 3.2s ease-out both}

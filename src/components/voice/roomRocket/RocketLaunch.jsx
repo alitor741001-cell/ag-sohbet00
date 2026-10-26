@@ -1,11 +1,16 @@
 import React from 'react';
-import { Image } from '@/components/ui/image';
 
-export default function RocketLaunch({ art }) {
-  return <div className="rocket-celebration-frame" aria-label="Roket patladı ve havalanıyor">
-    <div className="rocket-launch-flash" />
-    <Image src={art.base} alt="Roket patladı!" className="rocket-celebration-art rocket-launch-base" />
-    <Image src={art.rocket} alt="Havalanan roket" className="rocket-celebration-art rocket-launch-body" />
-    {Array.from({ length: 16 }, (_, i) => <i key={i} className="rocket-launch-spark" aria-hidden="true" style={{ '--rocket-dx': `${Math.cos(i * Math.PI / 8) * 55}vmin`, '--rocket-dy': `${Math.sin(i * Math.PI / 8) * 55}vmin` }} />)}
+const LAUNCH_VIDEO = 'https://media.base44.com/videos/public/6a77d66e4da6de214628ee62/171076feb_Roket_uuu.mp4';
+
+export default function RocketLaunch({ onComplete }) {
+  return <div className="rocket-launch-video-frame">
+    <video
+      src={LAUNCH_VIDEO}
+      autoPlay muted playsInline controls preload="auto"
+      className="h-full w-full object-contain"
+      aria-label="Altın roketin ateşlenip uzaya yükseldiği ödül uçuşu"
+      onEnded={onComplete}
+      onError={onComplete}
+    />
   </div>;
 }

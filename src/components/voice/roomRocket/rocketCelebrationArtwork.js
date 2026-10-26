@@ -1,4 +1,5 @@
 import removeRocketWhite from '@/components/voice/roomRocket/removeRocketWhite';
+import removeRocketPanelBackground from '@/components/voice/roomRocket/removeRocketPanelBackground';
 
 const ROOT = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/';
 const ROCKET_MASK = 'M716 8 L750 55 C785 137 733 262 680 323 L743 349 L753 389 L695 469 L655 462 L669 402 L628 393 L591 422 L571 478 L526 520 L310 520 L350 432 L398 382 L362 397 L303 460 L283 452 L294 349 L351 283 L447 227 L461 155 C508 94 592 56 716 8Z';
@@ -37,7 +38,7 @@ function blankPrintedPrize(canvas) {
   gradient.addColorStop(1, colour(.795));
   ctx.fillStyle = gradient;
   ctx.fillRect(w * .455, h * .731, w * .34, h * .07);
-  return canvas.toDataURL('image/png');
+  return removeRocketPanelBackground(canvas).toDataURL('image/png');
 }
 export default function prepareRocketCelebration() {
   if (!prepared) prepared = Promise.all([loadTransparent(ROOT + '071f540c7_IMG_0333.jpg'), loadTransparent(ROOT + 'ad8bdc4ed_IMG_0334.jpg')])

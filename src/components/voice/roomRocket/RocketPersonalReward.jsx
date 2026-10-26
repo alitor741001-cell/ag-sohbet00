@@ -29,11 +29,11 @@ export default function RocketPersonalReward({ src, award, roomId, onAccept }) {
     }
   };
   return <div className="rocket-celebration-frame">
-    <Image src={src} alt="Roketten coins kazandın!" className="rocket-celebration-art" />
+    <Image src={src} alt="Roketten coins kazandın!" unoptimized loading="eager" className="rocket-celebration-art" />
     <output className="rocket-award-amount" aria-label={`${award.amount} coin kazandın`}>{award.amount.toLocaleString('tr-TR')}</output>
     <button type="button" className="rocket-award-accept" onClick={accept} disabled={!award.paid || saving} aria-label="Kabul et" aria-busy={saving}>
       {saving && <Loader2 className="mx-auto h-6 w-6 animate-spin text-slot-bg" />}<span className="sr-only">KABUL ET</span>
     </button>
-    <p className="rocket-award-status" role="status">{error || (!award.paid ? 'Ödülün bakiyene ekleniyor…' : '')}</p>
+    <p className="rocket-award-status" role="status">{error || (!award.paid ? 'Ödülün bakiyene ekleniyor…' : 'Ödülün coin bakiyene aktarıldı.')}</p>
   </div>;
 }
