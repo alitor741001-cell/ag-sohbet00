@@ -3,7 +3,7 @@ import { unlockVoicePlayback } from '@/lib/callAudio';
 import { hasDirectCallAudioFocus, subscribeCallAudioFocus } from '@/lib/callAudioFocus';
 import { isRoomMinimized } from '@/lib/minimizedRoom';
 import { disposeOtherVoiceSessions, registerVoiceSession, takeVoiceSession } from '@/lib/roomVoiceSession';
-import { LiveKitVoiceRoom } from '@/lib/livekitVoiceRoom';
+import { P2PVoiceRoom } from '@/lib/p2pVoiceRoom';
 import shallowEqual from '@/components/data/shallowEqual';
 
 const initialDebug = { participantCount: 0, remoteParticipants: 0, remoteTracks: 0, playback: 'hazır' };
@@ -163,8 +163,9 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
     // Küçültülmüş odadan dönüş: bağlantı ve mikrofon yayını hâlâ ayakta, yalnızca arayüz bağlanır.
     disposeOtherVoiceSessions(roomId);
     const resumed = takeVoiceSession(roomId);
-    const mesh = resumed?.room || new LiveKitVoiceRoom({
+    const mesh = resumed?.room || new P2PVoiceRoom({
       roomId,
+      user,
       userId: user.id,
       name: user.title || user.username || user.full_name || 'Kullanıcı',
       onChange: () => refreshState(),
