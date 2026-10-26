@@ -1220,7 +1220,7 @@ export default function VoiceRoom() {
         open={menuOpen}
         onClose={() => setMenuOpen(false)}
         musicPlaying={!!music.music?.is_playing}
-        onOpenMusic={() => { setMusicBubble(true); setMusicOpen(true); }}
+        onOpenMusic={canMod ? () => { setMusicBubble(true); setMusicOpen(true); } : null}
         room={room}
         isOwner={isOwner}
         isAdmin={user?.role === 'admin'}

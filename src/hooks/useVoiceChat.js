@@ -76,31 +76,21 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
     setDebug((previous) => shallowEqual(previous, nextDebug) ? previous : nextDebug);
   }, []);
 
-  // Her oda kendi mikrofon kanalını yönetir; eski odanın kapanışı yeni yayını susturamaz.
+  // Mikrofonu aç: LiveKit kanalı kendisi yönetir — yalnızca yayını başlat ve izin kontrol et.
   const enableMic = useCallback(async (room) => {
     if (!room || room.state !== 'connected' || mutedByModeratorRef.current || !voiceEnabledRef.current || hasDirectCallAudioFocus()) return;
     micWantedRef.current = true;
     const pending = micEnablePendingRef.current.get(room);
     if (pending) return pending;
     const request = (async () => {
-      let publication = room.localParticipant.getTrackPublication(Track.Source.Microphone);
-      const options = { echoCancellation: true, noiseSuppression: getMicNoiseSuppression(), autoGainControl: true, channelCount: 1 };
-      const current = publication?.track;
-      // Eski paylaşılan/bitmiş kanalı tekrar etkinleştirmek yerine odaya ait yeni kanal al.
-      if (current && (current.isUserProvided || current.mediaStreamTrack.readyState === 'ended')) {
-        await room.localParticipant.unpublishTrack(current, true);
-      } else if (current?.mediaStreamTrack.muted) {
-        await current.restartTrack(options);
-      }
-      if (roomRef.current !== room || !micWantedRef.current || mutedByModeratorRef.current) return;
-      publication = await room.localParticipant.setMicrophoneEnabled(true, options);
+      const options = { echoCancellation: true, noiseSuppression: getMicNoiseSuppression(), autoGainControl: true, channelCount: { ideal: 1 } };
+      const publication = await room.localParticipant.setMicrophoneEnabled(true, options);
       if (roomRef.current !== room || !micWantedRef.current || mutedByModeratorRef.current || !voiceEnabledRef.current) {
         await room.localParticipant.setMicrophoneEnabled(false);
         return;
       }
       const track = publication?.track?.mediaStreamTrack;
       if (!track || track.readyState !== 'live') throw new Error('Mikrofon yayını oluşturulamadı.');
-      track.enabled = true;
       registerRoomMicTrack(track);
       setMicDenied(false);
     })();
