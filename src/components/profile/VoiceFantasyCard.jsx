@@ -5,7 +5,7 @@ import ProfileIdentityBlock from '@/components/profile/ProfileIdentityBlock';
 import ProfileAgencyBadges from '@/components/profile/ProfileAgencyBadges';
 import useRoomLevels from '@/hooks/useRoomLevels';
 
-export default function VoiceFantasyCard({ profile, hidden, name, avatar, role, palette, room, userId, isSelf, onClose, onMessage, statusContent, memberId, genderLabel, age, badge, joinDate, copied, onCopyId, onAction }) {
+export default function VoiceFantasyCard({ profile, hidden, name, avatar, role, palette, room, userId, isSelf, onClose, onMessage, statusContent, moderation, memberId, genderLabel, age, badge, joinDate, copied, onCopyId, onAction }) {
   const roomLevels = useRoomLevels([userId]);
   const female = profile?.gender === 'kadın';
   const agency = profile?.owned_agency_name || profile?.agency_name;
@@ -23,6 +23,7 @@ export default function VoiceFantasyCard({ profile, hidden, name, avatar, role, 
                 nLevel={profile?.n_level || 0}
               />
               <ProfileAgencyBadges profile={profile || {}} />
+              {moderation}
               <ProfileIdentityBlock palette={palette} genderLabel={genderLabel} age={age} country={badge.country} flag={badge.flag} memberId={memberId} joinDate={joinDate} copied={copied} onCopyId={onCopyId} />
             </>}
             {hidden && <p className="text-center text-xs text-fantasy-text/70">Gizli Kullanıcı: kimlik bilgileri gizli kalır.</p>}

@@ -8,6 +8,7 @@ import { ArrowLeft, Crown, Hash, MessageCircle, UserPlus, Copy } from 'lucide-re
 import { useToast } from '@/components/ui/use-toast';
 import RoleBadge from '@/components/RoleBadge';
 import ProfileAgencyBadges from '@/components/profile/ProfileAgencyBadges';
+import ProfileModeration from '@/components/profile/ProfileModeration';
 import ProfileFrame from '@/components/ProfileFrame';
 import { getRoleInfo } from '@/lib/roles';
 import ProfileRoomActions from '@/components/profile/ProfileRoomActions';
@@ -127,6 +128,7 @@ export default function UserProfile({ userId, roomIdOverride, onBack, onMessage,
           <h1 className="max-w-full text-2xl font-extrabold flex flex-wrap justify-center items-center gap-2 [overflow-wrap:anywhere]">{profile.title || profile.username || profile.full_name || 'Kullanıcı'} {(profile.role === 'admin' || profile.role === 'moderator') && <Crown className="w-5 h-5 text-amber-400" />}</h1>
           {getRoleInfo(profile).label && <div className="mt-1.5"><RoleBadge user={profile} size="md" /></div>}
           <div className="mt-3 w-full"><ProfileAgencyBadges profile={profile} /></div>
+          <div className="mt-3 w-full"><ProfileModeration userId={id} profile={profile} onChanged={setProfile} /></div>
           {['admin', 'moderator'].includes(profile.role) && <p className="mt-2 text-sm font-bold text-primary">{profile.role === 'admin' ? 'YÖNETİCİ' : 'MODERATÖR'}</p>}
           <div className="mt-4 w-full"><XpStatsCard stats={xpStats} days={daysInApp(profile.created_date)} compact /></div>
           {profile.title && <p className="text-base font-semibold text-gradient mt-1">{profile.title}</p>}

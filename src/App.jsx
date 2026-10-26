@@ -27,7 +27,7 @@ const VoiceRoomCreate = lazy(() => import('@/pages/VoiceRoomCreate'));
 const VoiceRoom = lazy(() => import('@/pages/VoiceRoom'));
 const Profile = lazy(() => import('@/pages/Profile'));
 const AgencyPage = lazy(() => import('@/pages/AgencyPage'));
-const Support = lazy(() => import('@/pages/Support'));
+const Support = lazy(() => import('@/pages/SupportEntry'));
 const Notifications = lazy(() => import('@/pages/Notifications'));
 const OpenRooms = lazy(() => import('@/pages/OpenRooms'));
 const MaintenanceMode = lazy(() => import('@/pages/MaintenanceMode'));

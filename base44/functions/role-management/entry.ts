@@ -5,6 +5,7 @@ import { upsertNotification } from '../../shared/upsertNotification.ts';
 import { setRoomLevel, validRoomLevel } from '../../shared/roomLevels.ts';
 import { resolveProfileFrame } from '../../shared/profileFrames.ts';
 import { detachAssistant, releaseAgencyMembers } from '../../shared/agency.ts';
+import { isAgOfficial } from '../../shared/agOfficial.ts';
 
 async function removeFromAllRooms(base44, userId, userName) {
   const rooms = await base44.asServiceRole.entities.Room.filter({ status: 'active' }, '-created_date', 200).catch(() => []);
@@ -62,7 +63,9 @@ export default async function(req) {
     const body = await req.json();
     const { action, user_id } = body || {};
     if (!user_id || !action) return Response.json({ error: 'eksik bilgi' }, { status: 400 });
-    if (!isSiteOwner(me) && !(me.role === 'admin' && action === 'set_room_level')) return Response.json({ error: 'Bu işlem için yetkiniz yok' }, { status: 403 });
+    const admin = isSiteOwner(me);
+    const official = !admin && await isAgOfficial(base44, me);
+    if (me.is_banned || me.role === 'banned' || (!admin && !(official && ['ban_user', 'delete_user'].includes(action)))) return Response.json({ error: 'Bu işlem için yetkiniz yok' }, { status: 403 });
 
     const target = await base44.asServiceRole.entities.User.get(user_id);
     if (!target) return Response.json({ error: 'kullanıcı bulunamadı' }, { status: 404 });
@@ -71,6 +74,17 @@ export default async function(req) {
     }
 
     const adminName = me.username || me.full_name;
+    if (['ban_user', 'delete_user'].includes(action) && (user_id === me.id || target.role === 'admin' || (!admin && await isAgOfficial(base44, target)))) {
+      return Response.json({ error: 'Bu hesap üzerinde işlem yapılamaz' }, { status: 403 });
+    }
+    if (action === 'set_ag_official') {
+      if (!admin || target.role === 'admin' || user_id === me.id || typeof body.active !== 'boolean') return Response.json({ error: 'Bu işlem yalnızca admin tarafından bir üyeye uygulanabilir' }, { status: 403 });
+      const rows = await base44.asServiceRole.entities.AgOfficial.filter({ user_id }, '-created_date', 100);
+      if (rows.length) await base44.asServiceRole.entities.AgOfficial.bulkUpdate(rows.map(row => ({ id: row.id, active: body.active })));
+      else await base44.asServiceRole.entities.AgOfficial.create({ user_id, active: body.active });
+      await base44.asServiceRole.entities.AdminLog.create({ admin_id: me.id, admin_name: adminName, action: body.active ? 'AG Yetkilisi atandı' : 'AG Yetkilisi kaldırıldı', target: target.email || user_id });
+      return Response.json({ ok: true, active: body.active });
+    }
 
     if (action === 'set_room_level') {
       const level = Number(body.level);
@@ -207,6 +221,7 @@ export default async function(req) {
       await removeFromAllRooms(base44, user_id, targetName);
       // Silinen hesabın ajans tarafındaki asistanlığı kalmasın.
       await detachAssistant(base44, user_id).catch(() => {});
+      await base44.asServiceRole.entities.AgOfficial.deleteMany({ user_id });
       await base44.asServiceRole.entities.User.delete(user_id);
       await base44.asServiceRole.entities.AdminLog.create({
         admin_id: me.id, admin_name: adminName,

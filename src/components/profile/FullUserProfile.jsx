@@ -19,6 +19,7 @@ import useBackDismiss from '@/hooks/useBackDismiss';
 import useRoomLevels from '@/hooks/useRoomLevels';
 import VoiceFantasyCard from '@/components/profile/VoiceFantasyCard';
 import ProfileAgencyBadges from '@/components/profile/ProfileAgencyBadges';
+import ProfileModeration from '@/components/profile/ProfileModeration';
 
 /**
  * Uygulamadaki tek profil kartı: kadın kartı pembe/altın, erkek kartı mavi/altın tonundadır.
@@ -193,6 +194,7 @@ export default function FullUserProfile({
   const content = statusContent || (
     <>
       {!hidden && <ProfileAgencyBadges profile={profile || {}} />}
+      {!hidden && <ProfileModeration userId={userId} profile={profile} onChanged={setProfile} />}
       {!hidden && !isSelf && (isMyBroadcaster || badge.active) && (
         <div className="mb-2 flex justify-center">
           <span className="rounded-full border border-premium-gold/60 bg-premium-gold/15 px-3 py-0.5 text-[11px] font-black text-premium-gold">
@@ -309,7 +311,7 @@ export default function FullUserProfile({
   if (room?.kind === 'voice') return (
     <VoiceFantasyCard profile={profile} hidden={hidden} name={shownName} avatar={banned ? ACCOUNT_STATES.banned.image : shownAvatar}
       role={roleLabel} palette={palette} room={room} userId={userId} isSelf={isSelf} onClose={onClose} onMessage={onMessage}
-      statusContent={statusContent} memberId={memberId} genderLabel={genderLabel} age={age} badge={badge}
+      statusContent={statusContent} moderation={!hidden && <ProfileModeration userId={userId} profile={profile} onChanged={setProfile} />} memberId={memberId} genderLabel={genderLabel} age={age} badge={badge}
       joinDate={formatDate(profile?.created_date)} copied={copied} onCopyId={copyId} onAction={closeOnAction} />
   );
 
