@@ -3,6 +3,18 @@
 @tailwind utilities;
 
 :root, .dark {
+  --support-night: 225 47% 4%;
+  --support-surface: 226 35% 5%;
+  --support-bubble: 222 25% 12%;
+  --support-input: 224 35% 8%;
+  --support-line: 224 23% 18%;
+  --support-ink: 220 25% 96%;
+  --support-muted: 218 15% 62%;
+  --support-orange: 32 100% 57%;
+  --support-green: 157 94% 43%;
+  --support-rose: 340 100% 44%;
+  --support-violet: 273 100% 58%;
+  --support-staff: 332 70% 10%;
   --auth-night: 235 80% 2%;
   --auth-panel: 228 80% 7%;
   --auth-blue: 226 100% 50%;

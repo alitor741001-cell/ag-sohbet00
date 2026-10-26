@@ -1,0 +1,32 @@
+.support-chat { background: hsl(var(--support-night)); color: hsl(var(--support-ink)); font-family: var(--font-body); touch-action: pan-y; }
+.support-chat-header { flex-shrink: 0; display: flex; align-items: center; gap: .8rem; padding: max(.85rem, env(safe-area-inset-top)) 1rem .85rem; border-bottom: 1px solid hsl(var(--support-line)); }
+.support-chat-logo { display: flex; align-items: center; justify-content: center; width: 3rem; height: 3rem; flex-shrink: 0; border-radius: 50%; color: hsl(var(--support-ink)); background: hsl(var(--support-orange)); box-shadow: 0 0 15px hsl(var(--support-orange) / .2); }
+.support-chat-menu { position: absolute; right: 0; top: 100%; z-index: 40; min-width: 12rem; padding: .35rem; border: 1px solid hsl(var(--support-line)); border-radius: .85rem; background: hsl(var(--support-bubble)); box-shadow: 0 .5rem 2rem hsl(var(--support-night) / .8); }
+.support-chat-menu button { display: block; width: 100%; padding: .7rem; text-align: left; border-radius: .5rem; }
+.support-chat-menu button:active { background: hsl(var(--support-line)); }
+.support-ticket { display: flex; width: 100%; align-items: flex-start; gap: .85rem; padding: 1rem; text-align: left; background: hsl(var(--support-surface)); border-radius: 1.2rem; }
+.support-ticket-avatar { flex-shrink: 0; width: 3.6rem; height: 3.6rem; border: 2px solid hsl(var(--support-violet)); border-radius: 50%; object-fit: cover; box-shadow: 0 0 12px hsl(var(--support-violet) / .3); }
+.support-ticket:nth-child(3n+2) .support-ticket-avatar { border-color: hsl(var(--support-orange)); box-shadow: 0 0 12px hsl(var(--support-orange) / .3); }
+.support-ticket:nth-child(3n) .support-ticket-avatar { border-color: hsl(var(--support-rose)); box-shadow: 0 0 12px hsl(var(--support-rose) / .3); }
+.support-preview, .support-message-bubble { border: 1px solid hsl(var(--support-line)); background: hsl(var(--support-bubble)); border-radius: 1.1rem; padding: .65rem .85rem; overflow-wrap: anywhere; }
+.support-preview { margin-top: .25rem; border-bottom-left-radius: .2rem; }
+.support-chat-muted { color: hsl(var(--support-muted)); }
+.support-chat-online { color: hsl(var(--support-green)); }
+.support-message { display: flex; align-items: flex-start; gap: .65rem; margin-bottom: 1.15rem; }
+.support-message.is-staff { flex-direction: row-reverse; }
+.support-message .support-ticket-avatar { width: 2.3rem; height: 2.3rem; }
+.support-message.is-staff .support-message-bubble { background: hsl(var(--support-staff)); border-color: hsl(var(--support-rose) / .35); border-bottom-right-radius: .2rem; }
+.support-message:not(.is-staff) .support-message-bubble { border-bottom-left-radius: .2rem; }
+.support-message-time { display: flex; align-items: center; justify-content: flex-end; gap: .25rem; margin-top: .25rem; font-size: .65rem; color: hsl(var(--support-muted)); }
+.support-message-time svg { color: hsl(var(--support-rose)); }
+.support-chat .support-composer { background: hsl(var(--support-night)); border-color: hsl(var(--support-line)); }
+.support-chat .support-composer input { background: hsl(var(--support-input)); border: 1px solid hsl(var(--support-line)); color: hsl(var(--support-ink)); padding: .85rem 1rem; font-size: 16px; }
+.support-chat .support-composer input::placeholder { color: hsl(var(--support-muted)); }
+.support-chat .support-composer button[type="submit"] { background: hsl(var(--support-rose)); color: hsl(var(--support-ink)); padding: .85rem; }
+.support-chat .support-member-strip { border-bottom: 1px solid hsl(var(--support-line)); padding: .8rem 1rem; }
+.support-chat .support-member-strip > button { width: 100%; }
+.support-chat .support-member-strip .text-primary { color: hsl(var(--support-ink)); }
+.support-chat .support-member-strip .text-muted-foreground { color: hsl(var(--support-muted)); }
+.support-chat-search { display: flex; gap: .7rem; padding: .85rem 1rem max(.85rem, env(safe-area-inset-bottom)); border-top: 1px solid hsl(var(--support-line)); }
+.support-chat-search input { min-width: 0; flex: 1; border: 1px solid hsl(var(--support-line)); border-radius: 2rem; background: hsl(var(--support-input)); padding: .75rem 1rem; font-size: 16px; }
+.support-chat-search button[type="submit"] { border-radius: 50%; padding: .8rem; background: hsl(var(--support-green)); color: hsl(var(--support-ink)); }

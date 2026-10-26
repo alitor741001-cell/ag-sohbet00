@@ -29,7 +29,7 @@ export default function ProfileAgencyBadges({ profile = {}, userId }) {
         {official.active && <OfficialBadge />}
         {isMine && <span className={chip}>YAYINCIM</span>}
       </div>
-      {name && <p className="flex items-start gap-1.5 text-[11px] text-muted-foreground"><Building2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" /><span className="break-words">{name}{code ? ` · ${code}` : ''}</span></p>}
+      {name && <div className="flex w-full min-w-0 items-start gap-2 rounded-xl border border-primary/30 bg-primary/10 px-3 py-2 text-left text-xs font-bold text-primary"><Building2 className="mt-0.5 h-4 w-4 shrink-0" /><div className="min-w-0 flex-1 whitespace-normal [overflow-wrap:anywhere]"><p>Ajans: {name}</p><p className="mt-1 text-[11px]">Ajans Kimliği: {code || '—'}</p></div></div>}
       {profile.agency_role === 'assistant' && owner && profile.agency_name && profile.agency_record_id !== profile.owned_agency_id && <p className="text-[10px] text-muted-foreground">Asistan olduğu ajans: {profile.agency_name}</p>}
     </div>
   );
