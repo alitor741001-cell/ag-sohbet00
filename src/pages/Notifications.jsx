@@ -100,6 +100,12 @@ export default function Notifications({ onBack, embedded = false }) {
       </header>}
 
       <div style={embedded ? undefined : { paddingTop: 'calc(env(safe-area-inset-top) + 4.25rem)' }}>
+        {/* Sohbet bölümünde başlık gizli olduğu için tümünü sil butonu listenin üstünde durur. */}
+        {embedded && items.length > 0 && (
+          <div className="flex justify-end px-3 pt-3">
+            <button onClick={deleteAll} className="flex items-center gap-1 rounded-full border border-red-400/40 bg-red-500/15 px-3 py-1 text-[11px] font-bold text-red-300 active:scale-95"><Trash2 className="h-3.5 w-3.5" /> Tümünü Sil</button>
+          </div>
+        )}
         <PullToRefresh onRefresh={() => { load(); loadInvites(); }}>
           <div className="p-3">
             {loading ? <p className="py-10 text-center text-sm text-gray-400">Yükleniyor...</p> :

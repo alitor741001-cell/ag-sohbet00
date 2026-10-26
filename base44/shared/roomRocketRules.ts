@@ -1,5 +1,7 @@
 export const ROCKET_TARGETS = [1000000, 1500000, 2500000, 5000000];
 export const ROCKET_PRIZES = [1000, 750, 500, 250];
+/** Her roket seviyesinde 1. sıradaki kişiye hediye edilen VIP seviyesi. */
+export const ROCKET_VIP_LEVELS = [6, 7, 9, 11];
 const CYCLE = 10000000;
 
 export function rocketPosition(coins) {

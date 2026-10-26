@@ -6,6 +6,7 @@
 .rocket-personal-heading{margin:8px 0 12px;font-family:var(--font-heading);font-size:clamp(28px,8vw,38px);font-weight:900;line-height:1.1}
 .rocket-personal-amount{display:flex;align-items:baseline;justify-content:center;flex-wrap:wrap;gap:8px;font-size:clamp(30px,9vw,44px);font-weight:900;line-height:1.2;font-variant-numeric:tabular-nums;color:hsl(var(--slot-gold));overflow-wrap:anywhere}
 .rocket-personal-amount span{font-size:13px;letter-spacing:.12em}
+.rocket-personal-vip{display:inline-block;margin:10px 0 0;padding:6px 14px;border:1px solid hsl(var(--slot-gold)/.55);border-radius:999px;font-size:12px;font-weight:900;letter-spacing:.08em;color:hsl(var(--slot-gold));background:hsl(var(--slot-gold)/.12)}
 .rocket-personal-status{margin:16px 0;font-size:12px;line-height:1.5;color:hsl(var(--slot-text)/.8)}
 .rocket-personal-accept{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:50px;padding:12px;border:1px solid hsl(var(--slot-gold));border-radius:16px;background:linear-gradient(135deg,hsl(var(--slot-gold)),hsl(var(--slot-gold-deep)));color:hsl(var(--slot-bg));font-weight:900;font-size:14px;letter-spacing:.06em;cursor:pointer}
 .rocket-personal-accept:focus-visible{outline:2px solid hsl(var(--slot-text));outline-offset:4px}

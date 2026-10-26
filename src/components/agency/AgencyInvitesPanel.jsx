@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ChevronRight, Loader2, MailOpen, Mic2 } from 'lucide-react';
+import { ChevronRight, Loader2, MailOpen, Mic2, Trash2 } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import { AGENCY_GOLD, agencyApi, dateText } from '@/lib/agency';
 
@@ -7,6 +7,7 @@ import { AGENCY_GOLD, agencyApi, dateText } from '@/lib/agency';
 export default function AgencyInvitesPanel({ open = true, compact = false, onOpenInvite, refreshKey = 0 }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [clearing, setClearing] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -22,10 +23,11 @@ export default function AgencyInvitesPanel({ open = true, compact = false, onOpe
   }
 
   const received = data?.received || [];
+  const sent = data?.sent || [];
   const pendingReceived = received.filter((invite) => invite.status === 'pending');
-  const pendingSent = (data?.sent || []).filter((invite) => invite.status === 'pending');
+  const pendingSent = sent.filter((invite) => invite.status === 'pending');
 
-  if (!compact && pendingReceived.length === 0 && pendingSent.length === 0) {
+  if (!compact && received.length === 0 && sent.length === 0) {
     return (
       <div className="rounded-2xl border border-white/10 bg-white/5 py-10 text-center">
         <MailOpen className="mx-auto h-6 w-6 text-white/30" />
@@ -34,6 +36,14 @@ export default function AgencyInvitesPanel({ open = true, compact = false, onOpe
       </div>
     );
   }
+
+  const clearAll = async () => {
+    if (clearing) return;
+    setClearing(true);
+    await agencyApi('invite-clear').catch(() => {});
+    setData({ received: [], sent: [] });
+    setClearing(false);
+  };
 
   const row = (invite, isIncoming) => (
     <button
@@ -66,6 +76,12 @@ export default function AgencyInvitesPanel({ open = true, compact = false, onOpe
 
   return (
     <div className="space-y-3">
+      {/* Mesaj olduğunda topluca silme: gelen ve gönderilen davetler listeden kaldırılır. */}
+      <div className="flex justify-end">
+        <button type="button" onClick={clearAll} disabled={clearing} className="flex items-center gap-1 rounded-full border border-red-400/40 bg-red-500/15 px-3 py-1 text-[11px] font-bold text-red-300 active:scale-95 disabled:opacity-60">
+          <Trash2 className="h-3.5 w-3.5" /> {clearing ? 'Siliniyor…' : 'Tümünü Sil'}
+        </button>
+      </div>
       {pendingReceived.length > 0 && (
         <div>
           <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-white/50">Gelen Davetler ({pendingReceived.length})</p>

@@ -64,6 +64,21 @@
         ]
       }
     },
+    "vip_level": {
+      "type": "integer"
+    },
+    "vip_user_id": {
+      "type": "string",
+      "default": ""
+    },
+    "vip_user_name": {
+      "type": "string",
+      "default": ""
+    },
+    "vip_granted": {
+      "type": "boolean",
+      "default": false
+    },
     "finished_at": {
       "type": "string"
     }

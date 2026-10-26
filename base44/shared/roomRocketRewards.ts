@@ -1,6 +1,34 @@
 import { ensureGiftWallet } from './giftWallet.ts';
 import { upsertNotification } from './upsertNotification.ts';
 import { giftLock } from './supabaseMirror.ts';
+import { ROCKET_VIP_LEVELS } from './roomRocketRules.ts';
+import { applyVipToUser, vipDurationLabel } from './vip.ts';
+import { getVipCatalog } from './vipCatalog.ts';
+
+/**
+ * Roket ödülü VIP'i: her seviyede 1. sıradaki kişiye VIP6 / VIP7 / VIP9 / VIP11.
+ * Tur başına bir kez verilir; vip_granted işareti tekrar denemelerde ikinci kez vermeyi önler.
+ */
+export async function grantRocketVip(base44, round) {
+  const sr = base44.asServiceRole.entities;
+  const vipLevel = ROCKET_VIP_LEVELS[round.level - 1] || 0;
+  if (round.vip_granted || !vipLevel) return round;
+  const winner = (round.recipients || []).find(recipient => recipient.rank === 1 && !recipient.unavailable);
+  const target = winner ? await sr.User.get(winner.user_id).catch(() => null) : null;
+  if (!target?.id) return sr.RoomRocketRound.update(round.id, { vip_level: vipLevel, vip_granted: true });
+  const catalog = await getVipCatalog(base44);
+  const days = catalog.levels.find(level => level.level === vipLevel)?.days || 30;
+  await applyVipToUser(base44, target, vipLevel, days, { vip_source: 'rocket', vip_granted_at: new Date().toISOString() });
+  await upsertNotification(base44, {
+    user_id: target.id,
+    title: `LVL ${round.level} roketi · VIP${vipLevel}`,
+    body: `Roket ödülünde 1. sırada yer aldın. VIP${vipLevel} (${vipDurationLabel(days)}) hesabına tanımlandı.`,
+    type: 'vip',
+    link: '/profil',
+    ref_id: round.id,
+  });
+  return sr.RoomRocketRound.update(round.id, { vip_level: vipLevel, vip_user_id: target.id, vip_user_name: winner?.name || '', vip_granted: true });
+}
 
 export async function payRocketRound(base44, round) {
   const sr = base44.asServiceRole.entities;
@@ -30,5 +58,6 @@ export async function payRocketRound(base44, round) {
     await sr.RoomRocketRound.update(round.id, { recipients });
   }
   const pending = recipients.some(recipient => !recipient.paid && !recipient.unavailable);
-  return sr.RoomRocketRound.update(round.id, { recipients, status: pending ? 'paying' : 'complete', ...(pending ? {} : { finished_at: new Date().toISOString() }) });
+  const finished = await sr.RoomRocketRound.update(round.id, { recipients, status: pending ? 'paying' : 'complete', ...(pending ? {} : { finished_at: new Date().toISOString() }) });
+  return pending ? finished : grantRocketVip(base44, finished);
 }

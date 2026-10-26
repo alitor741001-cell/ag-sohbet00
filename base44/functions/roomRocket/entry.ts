@@ -1,5 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
-import { ROCKET_TARGETS, ROCKET_PRIZES, rocketPosition, rocketTotal } from '../../shared/roomRocketRules.ts';
+import { ROCKET_TARGETS, ROCKET_PRIZES, ROCKET_VIP_LEVELS, rocketPosition, rocketTotal } from '../../shared/roomRocketRules.ts';
 import { rocketDayQuery, rocketLeaders, rocketProfiles } from '../../shared/roomRocketRanking.ts';
 import { safeErrorResponse } from '../../shared/security.ts';
 
@@ -24,10 +24,11 @@ export default async function(req) {
       const query = await rocketDayQuery(base44, room.id, new Date().toISOString(), position.cycle);
       leaders = await rocketProfiles(base44, await rocketLeaders(base44, query));
     }
-    const history = rounds.items.filter(round => round.cycle === position.cycle).map(round => ({ level: round.level, cycle: round.cycle, status: round.status, finished_at: round.finished_at, winners: (round.recipients || []).filter(person => person.rank > 0 && !person.unavailable).map(person => ({ rank: person.rank, name: person.name, avatar: person.avatar, amount: person.amount, paid: person.paid })) }));
+    const vipFor = round => round.vip_level || ROCKET_VIP_LEVELS[round.level - 1] || 0;
+    const history = rounds.items.filter(round => round.cycle === position.cycle).map(round => ({ level: round.level, cycle: round.cycle, status: round.status, finished_at: round.finished_at, vip_level: vipFor(round), winners: (round.recipients || []).filter(person => person.rank > 0 && !person.unavailable).map(person => ({ rank: person.rank, name: person.name, avatar: person.avatar, amount: person.amount, paid: person.paid })) }));
     const events = rounds.items.map(round => {
       const mine = (round.recipients || []).find(person => person.user_id === user.id && !person.unavailable);
-      return { id: round.id, ordinal: round.ordinal, level: round.level, status: round.status, my_award: mine ? { amount: mine.amount, paid: mine.paid === true } : null };
+      return { id: round.id, ordinal: round.ordinal, level: round.level, status: round.status, my_award: mine ? { amount: mine.amount, paid: mine.paid === true, vip: mine.rank === 1 ? vipFor(round) : 0 } : null };
     });
     return Response.json({ ok: true, ...position, total_coins: total, targets: ROCKET_TARGETS, prizes: ROCKET_PRIZES, leaders: leaders.map(({ rank, name, avatar }) => ({ rank, name, avatar })), history, events });
   } catch (error) {

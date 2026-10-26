@@ -238,6 +238,18 @@ export default async function (req) {
       return Response.json({ received: received || [], sent: sent || [] });
     }
 
+    // Ajans mesajlarını topluca sil: kişinin aldığı ve gönderdiği davetler listeden kaldırılır.
+    if (action === 'invite-clear') {
+      const rl = await rateLimit(base44, 'invite-clear:' + account.id, account.id, 10, 60000);
+      if (!rl.allowed) return Response.json({ error: 'Çok fazla işlem yaptın, biraz bekleyin.' }, { status: 429 });
+      await Promise.all([
+        base44.asServiceRole.entities.AgencyInvite.deleteMany({ invitee_id: account.id }).catch(() => {}),
+        base44.asServiceRole.entities.AgencyInvite.deleteMany({ owner_id: account.id }).catch(() => {}),
+      ]);
+      await base44.asServiceRole.entities.Notification.deleteMany({ user_id: account.id, type: { $in: ['agency_invite', 'assistant_invite'] } }).catch(() => {});
+      return Response.json({ ok: true });
+    }
+
     if (action === 'invite-detail') {
       const invite = await base44.asServiceRole.entities.AgencyInvite.get(String(body.invite_id || '')).catch(() => null);
       if (!invite) return Response.json({ error: 'Davet bulunamadı.' }, { status: 404 });

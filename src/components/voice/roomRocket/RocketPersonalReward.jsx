@@ -39,6 +39,7 @@ export default function RocketPersonalReward({ level, award, roomId, onAccept })
       <p className="rocket-personal-level">LVL {level} ROKET ÖDÜLÜ</p>
       <h2 className="rocket-personal-heading">Kazandın!</h2>
       <output className="rocket-personal-amount" aria-label={`${award.amount} coin kazandın`}>{award.amount.toLocaleString('tr-TR')} <span>COIN</span></output>
+      {award.vip > 0 && <p className="rocket-personal-vip">+ VIP{award.vip} hediye</p>}
       <p className="rocket-personal-status" role="status">{error || (!award.paid ? 'Ödülün bakiyene ekleniyor…' : 'Ödülün coin bakiyene aktarıldı.')}</p>
       <button type="button" className="rocket-personal-accept" onClick={accept} disabled={!award.paid || saving} aria-busy={saving}>
         {saving && <Loader2 className="h-5 w-5 animate-spin" />}{saving ? 'BAKİYE YENİLENİYOR…' : 'KABUL ET'}
