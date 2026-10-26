@@ -17,17 +17,17 @@ function RoomChatMessage({ message, profile, ownerId, currentUserId, canDelete, 
   const seed = [...String(message.user_id || name)].reduce((s, c) => s + c.charCodeAt(0), 0);
   const color = hidden ? '#FF4D6D' : message.user_id === ownerId ? '#FFD700' : (role.color || COLORS[seed % COLORS.length]);
   const time = message.created_date ? new Date(message.created_date).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : '';
-  return <article className={`group flex w-full min-w-0 shrink-0 items-start gap-2.5 ${mine ? 'flex-row-reverse text-right' : ''}`}>
+  // Tüm mesajlar solda hizalanır: profil ve isim her zaman solda görünür.
+  return <article className="group flex w-full min-w-0 shrink-0 items-start gap-2.5">
     <button type="button" onClick={() => onOpenProfile?.(message.user_id)} aria-label={`${name} profilini aç`} className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 bg-black" style={{ borderColor: color, boxShadow: `0 0 10px -2px ${color}` }}>
       {avatar ? <Image src={avatar} alt="" fittingType="fill" className="h-full w-full" /> : <span className="text-sm font-bold" style={{ color }}>{name.trim().charAt(0) || '?'}</span>}
     </button>
     <div className="min-w-0 flex-1">
-      <div className={`flex items-center gap-2 ${mine ? 'justify-end' : ''}`}>
-        {mine && time && <span className="shrink-0 text-[10px] text-white/45">{time}</span>}
+      <div className="flex items-center gap-2">
         <button type="button" onClick={() => onOpenProfile?.(message.user_id)} className="min-w-0 truncate text-left text-xs font-bold" style={{ color }}>{name}</button>
-        {!mine && time && <span className="ml-auto shrink-0 text-[10px] text-white/45">{time}</span>}
+        {time && <span className="ml-auto shrink-0 text-[10px] text-white/45">{time}</span>}
       </div>
-      {message.file_url && <Image src={message.file_url} alt="Sohbet görseli" className={`mt-1 block h-40 w-40 max-w-full cursor-pointer rounded-xl ${mine ? 'ml-auto' : ''}`} fittingType="fit" onClick={() => onImage(message.file_url)} />}
+      {message.file_url && <Image src={message.file_url} alt="Sohbet görseli" className="mt-1 block h-40 w-40 max-w-full cursor-pointer rounded-xl" fittingType="fit" onClick={() => onImage(message.file_url)} />}
       {message.text && <p className={`mt-1 inline-block max-w-full whitespace-pre-wrap break-words rounded-xl px-3 py-1.5 text-sm text-white [overflow-wrap:anywhere] ${mine ? 'border border-primary/45 bg-primary/25' : 'bg-[#232323]'}`}>{message.text}</p>}
     </div>
     {canDelete && <button onClick={() => onDelete(message.id)} className="shrink-0 self-center p-1 text-white/40 opacity-60 hover:text-[#FF4D5E] sm:opacity-0 sm:group-hover:opacity-100" aria-label="Mesajı sil"><Trash2 className="h-3.5 w-3.5" /></button>}

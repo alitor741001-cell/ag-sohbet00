@@ -1330,4 +1330,10 @@ html.no-bounce, html.no-bounce body { overscroll-behavior: none; }
 @media (orientation: portrait) {
   :root, .dark { --film-chat-width: 100%; }
   .room-video-stage.room-video-chat-open { margin-right: 0; }
+  /* Dikey konumda sohbet paneli videonun üstünde tam ekran: mesaj kutusu en altta
+     güvenli alanın üstünde durur, dokununca klavye açılır. */
+  .film-chat-panel.room-side-panel {
+    z-index: 60;
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 0.5rem) !important;
+  }
 }

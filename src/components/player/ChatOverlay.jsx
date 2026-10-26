@@ -57,6 +57,8 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
   const hiddenUsersByName = {};
   participants.forEach((person) => { if (person?.user_id && isHiddenName(person.name)) hiddenUsersByName[person.name] = person.user_id; });
   const scrollRef = useRef(null);
+  // Dikey konumda mesaj kutusuna dokunulduğunda klavye açılsın: kutuya odak verilir.
+  const inputRef = useRef(null);
   const profiles = useMessageProfiles([...messages.map((message) => message.user_id), ...Object.values(hiddenUsersByName)]);
   const [roomMods, setRoomMods] = useState([]);
   useEffect(() => {
@@ -345,10 +347,15 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
           </p>
         </div>
       )}
-      {chatEnabled && msgFilter === 'all' && !chatLocked && <div className="room-chat-composer flex items-center gap-2 border-t border-[#FFD700]/25 bg-black p-2.5">
+      {chatEnabled && msgFilter === 'all' && !chatLocked && <div
+        className="room-chat-composer flex items-center gap-2 border-t border-[#FFD700]/25 bg-black p-2.5"
+        onClick={(e) => { if (!e.target.closest('button')) inputRef.current?.focus(); }}
+        onTouchStart={(e) => e.stopPropagation()}
+        onTouchEnd={(e) => e.stopPropagation()}
+      >
         <div className="flex h-12 min-w-0 flex-1 items-center gap-2 rounded-full border border-[#FFD700]/70 bg-[#0d0d0d] pl-2 pr-3 shadow-[0_0_14px_-6px_rgba(255,215,0,0.9)]">
           <button type="button" onClick={() => setShowEmoji(!showEmoji)} aria-label="Emoji seç" aria-expanded={showEmoji} title="Emoji" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#FFD700] active:scale-95"><Smile className="h-6 w-6" /></button>
-          <input value={text} onChange={(e) => { setText(e.target.value); sendTyping(); }} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(e); } }} inputMode="text" enterKeyHint="send" autoComplete="off" autoCorrect="off" autoCapitalize="sentences" spellCheck={false} placeholder="Mesaj yazın..." className="h-full min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-[#A0A0A0]" />
+          <input ref={inputRef} value={text} onChange={(e) => { setText(e.target.value); sendTyping(); }} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(e); } }} inputMode="text" enterKeyHint="send" autoComplete="off" autoCorrect="off" autoCapitalize="sentences" spellCheck={false} placeholder="Mesaj yazın..." className="h-full min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-[#A0A0A0]" />
         </div>
         <button type="button" onClick={send} disabled={!text.trim() || uploading || sending} aria-label="Mesaj gönder" className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 border-[#FFD700] bg-[#FFD700] text-black shadow-[0_0_22px_-2px_rgba(255,215,0,0.95)] active:scale-95 disabled:opacity-50"><Send className="w-5 h-5" /></button>
         {(uploading || sending) && <span className="shrink-0 animate-pulse text-xs text-[#A0A0A0]">...</span>}

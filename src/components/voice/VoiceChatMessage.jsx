@@ -21,7 +21,8 @@ function VoiceChatMessage({ message, profile, ownerId, moderators = [], currentU
   const mine = !!currentUserId && message.user_id === currentUserId;
 
   return (
-    <article className={`flex min-w-0 items-start gap-2 text-sm leading-relaxed [overflow-wrap:anywhere] [text-shadow:0_1px_4px_rgba(0,0,0,0.9)] ${mine ? 'flex-row-reverse text-right' : ''}`}>
+    // Tüm mesajlar solda hizalanır: profil ve isim her zaman solda görünür.
+    <article className="flex min-w-0 items-start gap-2 text-sm leading-relaxed [overflow-wrap:anywhere] [text-shadow:0_1px_4px_rgba(0,0,0,0.9)]">
       <span onClick={() => onOpenProfile?.(message.user_id)} className="mt-0.5 flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full border border-white/25 bg-white/10">
         {hidden || profile?.avatar
           ? <Image src={hidden ? HIDDEN_AVATAR_URL : profile.avatar} alt="" referrerPolicy="no-referrer" draggable={false} fittingType="fill" className="h-full w-full" />
@@ -29,7 +30,7 @@ function VoiceChatMessage({ message, profile, ownerId, moderators = [], currentU
       </span>
 
       <div className="min-w-0 flex-1">
-        <div className={`flex min-w-0 flex-wrap items-center gap-x-1 gap-y-0.5 ${mine ? 'justify-end' : ''}`}>
+        <div className="flex min-w-0 flex-wrap items-center gap-x-1 gap-y-0.5">
           <span onClick={() => onOpenProfile?.(message.user_id)} style={vipVars(!hidden && vipLook(profile, 'name'))} className={`min-w-0 max-w-full cursor-pointer break-words text-left text-xs font-bold [overflow-wrap:anywhere] ${!hidden && !role.name_effect && vipLook(profile, 'name')?.nameAnimated ? 'vip-name-animated' : ''}`}>
             {hidden ? (
               <span className="hidden-user-name">{name}</span>
@@ -43,7 +44,7 @@ function VoiceChatMessage({ message, profile, ownerId, moderators = [], currentU
           {/* Mesajlarda seviye rozeti gösterilmez. */}
         </div>
 
-        <div className={`mt-1 flex flex-wrap items-center gap-1 ${mine ? 'justify-end' : ''}`}>
+        <div className="mt-1 flex flex-wrap items-center gap-1">
           <UserBadgeRow profile={profile} />
         </div>
 

@@ -620,6 +620,8 @@ export default function VoiceRoom() {
       }
       setSeatIndex(null);
       await invokeVoice({ action: 'seat-take', seat_index: freeSeat.index });
+      // Koltuğa oturunca mikrofon izni bu dokunuşla istenir; izin verilirse yayın açılır.
+      voice.requestMic();
       return;
     }
     if (room?.voice_enabled) { await voice.toggleMute(); return; }

@@ -503,7 +503,9 @@ export default function WatchParty() {
       await base44.functions.invoke('room-presence', { action: 'enable-voice', room_id: id });
       setMicRequested(true);
       setRoom(previous => previous ? { ...previous, voice_enabled: true } : previous);
-      toast({ title: 'Sesli sohbet açıldı', description: 'Mikrofonun açılıyor…' });
+      // İzin dokunuşla istenir; verildikten sonra mikrofon açılır.
+      voice.requestMic();
+      toast({ title: 'Sesli sohbet açıldı', description: 'Mikrofon izni isteniyor…' });
     } catch (e) {
       toast({ title: 'Mikrofon açılamadı', description: e.response?.data?.error || e.message, variant: 'destructive' });
     }

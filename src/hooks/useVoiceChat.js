@@ -22,6 +22,14 @@ const micAllowedBefore = () => {
 const rememberMicAllowed = () => {
   try { localStorage.setItem(MIC_ALLOWED_KEY, '1'); } catch {}
 };
+// Tarayıcı izni daha önce verildiyse mikrofon kendiliğinden açılabilir. İzin henüz
+// sorulmadıysa mikrofon yalnızca kişi mikrofon düğmesine bastığında istenir.
+const micPermissionGranted = async () => {
+  try {
+    const status = await navigator.permissions.query({ name: 'microphone' });
+    return status.state === 'granted';
+  } catch { return false; }
+};
 // Mikrofon izni verilmese bile kişi odayı dinlemeye devam eder; mesaj bunu açıkça söyler.
 const friendlyMicError = (error) => {
   if (error?.name === 'NotAllowedError') return '🎤 Mikrofon izni verilmedi — diğerlerini duymaya devam edersin.';
@@ -52,6 +60,8 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
   const [requesting, setRequesting] = useState(false);
   const micTogglePendingRef = useRef(false);
   const micToggleAtRef = useRef(0);
+  // Kişi mikrofon düğmesine bastığında işaretlenir: izin o anda sorulur.
+  const micGestureRef = useRef(false);
   const micPendingRef = useRef(null);
   const [deafened, setDeafened] = useState(false);
   const [remoteMuted, setRemoteMuted] = useState(false);
@@ -337,9 +347,10 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
         setAudioBlocked(!room.canPlaybackAudio);
         let carryMic = false;
         try { carryMic = sessionStorage.getItem('voice_mic_carry') === '1'; sessionStorage.removeItem('voice_mic_carry'); } catch {}
-        // İzin daha önce verildiyse koltuktaki kişinin mikrofonu kendiliğinden açılır.
-        const autoOpen = micEnabledRef.current && micAllowedBefore();
-        if (!hasDirectCallAudioFocus() && !mutedByModeratorRef.current && voiceEnabledRef.current && (micWantedRef.current || carryMic || autoOpen)) {
+        // İzin daha önce verildiyse mikrofon kendiliğinden açılır; henüz sorulmadıysa
+        // mikrofon yalnızca kişi düğmeye bastığında, izin sorularak açılır.
+        const mayOpen = micGestureRef.current || await micPermissionGranted();
+        if (!hasDirectCallAudioFocus() && !mutedByModeratorRef.current && voiceEnabledRef.current && mayOpen && (micWantedRef.current || carryMic)) {
           micWantedRef.current = true;
           setRequesting(true);
           try {
@@ -481,7 +492,12 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
     // Mikrofon reddedilse bile dinleme sürer: uzak ses bir kez daha bağlanıp oynatılır.
     if (next) {
       micDeniedRef.current = false;
-      enableMic(room).then(() => { micAppliedRef.current = true; refreshState(); }).catch(() => { retryAudio(); refreshState(); });
+      // İzin henüz sorulmadıysa mikrofon kendiliğinden açılmaz: kişi düğmeye bastığında
+      // izin sorulur, izin verildikten sonra yayın açılır.
+      Promise.resolve(micGestureRef.current || micPermissionGranted()).then((mayOpen) => {
+        if (!mayOpen) { micAppliedRef.current = false; return; }
+        enableMic(room).then(() => { micAppliedRef.current = true; refreshState(); }).catch(() => { retryAudio(); refreshState(); });
+      });
     } else {
       micAppliedRef.current = false;
       // Koltuktan kalkınca yayın kapanır ve istek sıfırlanır (kendiliğinden geri açılmaz).
@@ -496,6 +512,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
     if (hasDirectCallAudioFocus() || mutedByModeratorRef.current) return;
     // Takılı kalan bir önceki deneme butonu kilitlemesin: 10 saniye sonra yeni deneme açılır.
     if (micTogglePendingRef.current && Date.now() - micToggleAtRef.current < 10000) return;
+    micGestureRef.current = true;
     micToggleAtRef.current = Date.now();
     micTogglePendingRef.current = true;
     setRequesting(true);
@@ -533,6 +550,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
   // Kullanıcı "Tekrar dene" dediğinde veya ayarlardan dönüp geri geldiğinde mikrofonu
   // sessizce yeniden dener — izin verilmişse açılır, yoksa guide diyalogu açık kalır.
   const retryMic = useCallback(() => {
+    micGestureRef.current = true;
     micWantedRef.current = true;
     const room = roomRef.current;
     if (!room || room.state !== 'connected') { setSessionKey((value) => value + 1); return; }
@@ -542,5 +560,18 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
     });
   }, [enableMic, refreshState]);
 
-  return { muted: !active, remoteMuted, deafened, localSpeaking, speakingIds, participantMicStates, active, error, micDenied, requesting, connectionState, audioBlocked, retryAudio, retryMic, toggleMute, toggleDeafen, debug, voiceEnabled };
+  // Mikrofon düğmesine basıldı: izin bu dokunuşla istenir, verilirse yayın açılır.
+  const requestMic = useCallback(() => {
+    micGestureRef.current = true;
+    micWantedRef.current = true;
+    const room = roomRef.current;
+    if (!room || room.state !== 'connected') return;
+    enableMic(room).then(refreshState).catch((micError) => {
+      setMicDenied(micError?.name === 'NotAllowedError' || micError?.name === 'SecurityError');
+      setError(friendlyMicError(micError));
+      refreshState();
+    });
+  }, [enableMic, refreshState]);
+
+  return { muted: !active, remoteMuted, deafened, localSpeaking, speakingIds, participantMicStates, active, error, micDenied, requesting, connectionState, audioBlocked, retryAudio, retryMic, requestMic, toggleMute, toggleDeafen, debug, voiceEnabled };
 }
