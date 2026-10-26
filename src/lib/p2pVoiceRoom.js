@@ -2,15 +2,19 @@ import { base44 } from '@/api/base44Client';
 import { createStreamOutput, ensureMicTrack, unlockVoicePlayback } from '@/lib/callAudio';
 import { vipLevelOf } from '@/lib/userLevels';
 
-// Eşlerin birbirini bulması için genel STUN; simetrik NAT arkasında kalan
-// mobil ağlar için yedek TURN. Ses trafiği sunucuya yüklenmez, yalnızca geçiş.
+// Eşlerin birbirini bulması için genel STUN; simetrik NAT / mobil ağlar için
+// yedek TURN (80, 443 ve 443/TCP — kısıtlı ağlarda TCP yolu açık kalır).
+// Ses trafiği sunucudan geçmez, yalnızca eşleşme için kullanılır.
 const ICE_SERVERS = [
   { urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] },
   { urls: ['turn:openrelay.metered.ca:80'], username: 'openrelayproject', credential: 'openrelayproject' },
+  { urls: ['turn:openrelay.metered.ca:443', 'turns:openrelay.metered.ca:443?transport=tcp'], username: 'openrelayproject', credential: 'openrelayproject' },
 ];
 
 const MIC_TIMEOUT_MS = 15000;
-const HEARTBEAT_MS = 8000;
+const HEARTBEAT_MS = 6000;
+// Teklif yanıtsız kalırsa bu süre sonunda yeniden denenir (kaçan sinyal kurtarılır).
+const OFFER_RETRY_MS = 5000;
 
 const withTimeout = (promise, ms, code) => new Promise((resolve, reject) => {
   const timer = setTimeout(() => {
@@ -24,12 +28,20 @@ const withTimeout = (promise, ms, code) => new Promise((resolve, reject) => {
   );
 });
 
+const randomId = () => {
+  try {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+  } catch (error) {}
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+};
+
 // Konuşma yetkisi: yönetici/mod veya aktif abonelik (VIP) — dinlemek herkese açık.
 const canSpeakFor = (user) => ['admin', 'moderator'].includes(user?.role) || vipLevelOf(user) > 0;
 
 /**
  * Sesli oda bağlantısı — tarayıcılar arası doğrudan WebRTC (mesh).
  * Sinyal Base44 actor'ından geçer, ses doğrudan eşler arasında akar.
+ * Yalnızca konuşanlarla hat kurulur: 40 kişilik odada dinleyiciler yük bindirmez.
  */
 export class P2PVoiceRoom {
   constructor({ roomId, userId, name, user, onChange }) {
@@ -41,7 +53,7 @@ export class P2PVoiceRoom {
     this.peerId = '';
     this.socket = null;
     this.unsubscribe = null;
-    this.peers = new Map(); // peerId -> { id, pc, sender, output, pending, remoteReady }
+    this.peers = new Map(); // peerId -> { id, pc, sender, output, pending, remoteReady, attemptAt }
     this.remotePeers = [];
     this.micStream = null;
     this.micOn = false;
@@ -51,26 +63,29 @@ export class P2PVoiceRoom {
     this.audioBlocked = false;
     this.lastMicrophoneError = null;
     this.heartbeat = null;
+    this.lastMessageAt = 0;
+    this.lastReconnectAt = 0;
   }
 
   emit() {
     try { this.onChange(); } catch {}
   }
 
-  // Sekme yenilendiğinde aynı bağlantı kimliği kullanılır: koltuğu kaybetmez.
+  // Sekme yenilendiğinde aynı bağlantı kimliği kullanılır: yeri kaybetmez.
   stableConnId() {
     const key = `voice_conn_${this.roomId}`;
     try {
       let id = sessionStorage.getItem(key);
-      if (!id) { id = crypto.randomUUID(); sessionStorage.setItem(key, id); }
+      if (!id) { id = randomId(); sessionStorage.setItem(key, id); }
       return id;
     } catch (error) {
-      return crypto.randomUUID();
+      return randomId();
     }
   }
 
   async connect() {
     if (this.socket) return;
+    if (!base44.actors?.VoiceMesh) throw new Error('Ses sinyal servisi hazır değil.');
     this.connectionState = 'connecting';
     this.emit();
     const socket = base44.actors.VoiceMesh(this.roomId).connect({ id: this.stableConnId() });
@@ -78,14 +93,35 @@ export class P2PVoiceRoom {
     this.unsubscribe = socket.subscribe((msg) => this.onMessage(msg));
     socket.send({ type: 'hello', name: this.name });
     this.connectionState = 'connected';
-    // Durum taze kalsın: sessiz kalan oda uykuya dalsa da presence yenilenir.
+    this.lastMessageAt = Date.now();
+    window.clearInterval(this.heartbeat);
+    // Kalp atışı: kimlik ve oda listesi tazelenir, yarım kalan teklifler yeniden denenir.
     this.heartbeat = window.setInterval(() => {
+      // Sinyal sessizce öldüyse (ağ değişimi, uygulama arka planda kalması) yeniden bağlanılır.
+      if (Date.now() - this.lastMessageAt > 20000) {
+        this.reconnect();
+        return;
+      }
       this.socket?.send({ type: 'mic', on: this.isMicOn() });
+      this.retryPendingOffers();
     }, HEARTBEAT_MS);
     this.emit();
   }
 
+  reconnect() {
+    if (Date.now() - this.lastReconnectAt < 10000) return;
+    this.lastReconnectAt = Date.now();
+    const socket = this.socket;
+    try { this.unsubscribe?.(); } catch (error) {}
+    this.unsubscribe = null;
+    this.socket = null;
+    try { socket?.close(); } catch (error) {}
+    // Eş hatları korunur: yeni presence listesiyle yalnızca eksikler kurulur.
+    this.connect().catch(() => { this.connectionState = 'disconnected'; this.emit(); });
+  }
+
   onMessage(raw) {
+    this.lastMessageAt = Date.now();
     let msg = raw;
     if (typeof msg === 'string') {
       try { msg = JSON.parse(msg); } catch (error) { return; }
@@ -110,15 +146,25 @@ export class P2PVoiceRoom {
     }
   }
 
+  // Hangi eşlerle hat kurulacak: konuşan herkesle, mikrofonum açıksa odadaki herkesle.
+  wantedPeerIds() {
+    if (this.micOn) return this.remotePeers.map((peer) => peer.peerId);
+    return this.remotePeers.filter((peer) => peer.mic === true).map((peer) => peer.peerId);
+  }
+
   reconcile() {
     if (!this.peerId) return;
-    const present = new Set(this.remotePeers.map((peer) => peer.peerId));
-    [...this.peers.keys()].forEach((id) => { if (!present.has(id)) this.dropPeer(id); });
-    this.remotePeers.forEach((peer) => {
-      if (this.peers.has(peer.peerId)) return;
-      this.ensurePeer(peer.peerId);
+    const wanted = new Set(this.wantedPeerIds());
+    [...this.peers.keys()].forEach((id) => { if (!wanted.has(id)) this.dropPeer(id); });
+    wanted.forEach((id) => {
+      const peer = this.ensurePeer(id);
+      const state = peer.pc.connectionState;
+      if (state === 'failed' || state === 'closed') {
+        this.dropPeer(id);
+        this.ensurePeer(id);
+      }
       // Aynı anda iki teklif gitmesin: yalnızca küçük peerId teklif eder.
-      if (this.peerId < peer.peerId) void this.callPeer(peer.peerId);
+      if (this.peerId < id) void this.callPeer(id);
     });
     this.emit();
   }
@@ -127,7 +173,7 @@ export class P2PVoiceRoom {
     const existing = this.peers.get(peerId);
     if (existing) return existing;
     const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
-    const peer = { id: peerId, pc, sender: null, output: null, pending: [], remoteReady: false };
+    const peer = { id: peerId, pc, sender: null, output: null, pending: [], remoteReady: false, attemptAt: 0 };
     this.peers.set(peerId, peer);
 
     // Ses hattı baştan açık: mikrofon sonradan açıldığında yeniden anlaşma gerekmez.
@@ -151,7 +197,11 @@ export class P2PVoiceRoom {
     };
     pc.onconnectionstatechange = () => {
       if (pc.connectionState === 'failed') {
-        try { pc.restartIce?.(); } catch (error) {}
+        this.dropPeer(peerId);
+        if (this.wantedPeerIds().includes(peerId)) {
+          this.ensurePeer(peerId);
+          if (this.peerId < peerId) void this.callPeer(peerId);
+        }
       }
       this.emit();
     };
@@ -177,6 +227,8 @@ export class P2PVoiceRoom {
   async callPeer(peerId) {
     const peer = this.peers.get(peerId);
     if (!peer || peer.pc.signalingState !== 'stable') return;
+    if (peer.pc.connectionState === 'connected') return;
+    peer.attemptAt = Date.now();
     try {
       const offer = await peer.pc.createOffer();
       await peer.pc.setLocalDescription(offer);
@@ -184,6 +236,17 @@ export class P2PVoiceRoom {
     } catch (error) {
       console.warn('[P2P] teklif oluşturulamadı', error);
     }
+  }
+
+  // Cevapsız kalan teklifler sessizce ölü bırakılmaz: yeniden denenir.
+  retryPendingOffers() {
+    if (!this.peerId) return;
+    const now = Date.now();
+    this.peers.forEach((peer) => {
+      if (peer.pc.connectionState === 'connected') return;
+      if (now - (peer.attemptAt || 0) < OFFER_RETRY_MS) return;
+      if (this.peerId < peer.id) void this.callPeer(peer.id);
+    });
   }
 
   async onSignal(from, data) {
@@ -198,6 +261,7 @@ export class P2PVoiceRoom {
     if (data.kind === 'offer') {
       const peer = this.ensurePeer(from);
       try {
+        if (peer.pc.signalingState !== 'stable') return;
         await peer.pc.setRemoteDescription(new RTCSessionDescription(data.sdp));
         peer.remoteReady = true;
         peer.pending.splice(0).forEach((candidate) => peer.pc.addIceCandidate(candidate).catch(() => {}));
@@ -213,6 +277,7 @@ export class P2PVoiceRoom {
       const peer = this.peers.get(from);
       if (!peer) return;
       try {
+        if (peer.pc.signalingState !== 'have-local-offer') return;
         await peer.pc.setRemoteDescription(new RTCSessionDescription(data.sdp));
         peer.remoteReady = true;
         peer.pending.splice(0).forEach((candidate) => peer.pc.addIceCandidate(candidate).catch(() => {}));
@@ -250,9 +315,11 @@ export class P2PVoiceRoom {
     }
     track.enabled = true;
     this.micStream = stream;
-    this.peers.forEach((peer) => { peer.sender?.replaceTrack(track).catch(() => {}); });
     this.micOn = true;
+    this.peers.forEach((peer) => { peer.sender?.replaceTrack(track).catch(() => {}); });
     this.socket?.send({ type: 'mic', on: true });
+    // Konuşmaya başlayınca odadaki herkesle hat kurulur.
+    this.reconcile();
     this.emit();
     return true;
   }
@@ -261,6 +328,8 @@ export class P2PVoiceRoom {
     this.micOn = false;
     this.peers.forEach((peer) => { peer.sender?.replaceTrack(null).catch(() => {}); });
     this.socket?.send({ type: 'mic', on: false });
+    // Sustuysan yalnızca konuşanları dinlemeye devam et.
+    this.reconcile();
     this.emit();
   }
 
@@ -316,7 +385,7 @@ export class P2PVoiceRoom {
     return {
       micStates,
       selfMicOn: this.isMicOn(),
-      // Web Audio iOS'ta mikrofonu sessize düşürdüğü için ayrı ses analizi yapılmaz:
+      // Web Audio iOS'ta mikrofonu sessize düşürdüğü için ses analizi yapılmaz:
       // mikrofonu açık olan kişi konuşuyor sayılır.
       localSpeaking: this.isMicOn(),
       speakers,

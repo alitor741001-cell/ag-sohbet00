@@ -8,7 +8,8 @@
 // kullanılmaz. Her bağlantıya sunucu tarafında kısa bir peerId verilir.
 import { Actor } from 'base44:runtime/actors';
 
-const MAX_PEERS = 12;
+// Dinleyiciler sinyal odasında kalabalık olabilir; ses yalnızca konuşanlarla eşleşir.
+const MAX_PEERS = 40;
 // Kısa kopmalarda kimlik korunur: 15 saniye içinde dönen aynı bağlantı yerini geri alır.
 const DROP_GRACE_MS = 15000;
 
@@ -83,13 +84,18 @@ export default class VoiceMesh extends Actor {
         me.name = name;
         await this.save();
       }
+      // İlk 'you' mesajı kaçmış olabilir: her selamlamada kimlik tekrar verilir.
+      conn.send({ type: 'you', peerId: me.peerId });
       this.broadcastPeers();
       return;
     }
 
     if (msg.type === 'mic') {
+      const changed = me.mic !== (msg.on === true);
       me.mic = msg.on === true;
-      this.broadcastPeers();
+      // Kalp atışı: kimlik ve oda listesi kendini onarır.
+      conn.send({ type: 'you', peerId: me.peerId });
+      if (changed) this.broadcastPeers();
       return;
     }
 
