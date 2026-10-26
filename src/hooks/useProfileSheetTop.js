@@ -10,7 +10,7 @@ export default function useProfileSheetTop(enabled) {
     // profil resmi ve çemberi bir satır aşağı iner.
     const measure = () => {
       const rect = seat?.getBoundingClientRect();
-      const edge = rect ? rect.bottom + 90 : window.innerHeight * 0.6;
+      const edge = rect ? rect.bottom + 54 : window.innerHeight * 0.6;
       const lowest = Math.max(0, window.innerHeight - 340);
       setTop(Math.max(0, Math.min(edge, lowest)));
     };
