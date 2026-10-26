@@ -147,12 +147,12 @@ export default function VipBagPanel({ open, onClose, onChanged }) {
   return (
     <BagCabinet onClose={onClose} groups={cosmeticGroups} cosmetics={category => <VipCosmeticsBag category={category} groups={cosmeticGroups} level={cosmeticLevel} loading={cosmeticLoading} busy={cosmeticBusy} onToggle={toggleCosmetic} error={cosmeticError} />}>
         <div className="mx-auto w-full max-w-[430px] text-cabinet-ink">
-          <p className="text-xs leading-relaxed text-cabinet-ink/65">Coin yüklemesinden gelen VIP'lerini kendin kullanabilir veya üye numarasıyla bir arkadaşına gönderebilirsin.</p>
+          <p className="text-xs leading-relaxed text-cabinet-ink/65">Coin yüklemesinden ve roketten kazandığın VIP'lerini kendin kullanabilir veya üye numarasıyla bir arkadaşına gönderebilirsin.</p>
 
           {loading && !items.length ? (
             <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-sky-400" /></div>
           ) : items.length === 0 ? (
-            <p className="py-10 text-center text-sm text-white/50">Çantan boş — 1M+ coin yüklediğinde VIP buraya gelir.</p>
+            <p className="py-10 text-center text-sm text-white/50">Çantan boş — coin yüklemesinden ve roketten kazandığın VIP'ler burada bekler.</p>
           ) : (
             <div className="mt-3 space-y-2.5">
               {items.map((item) => {
@@ -170,7 +170,7 @@ export default function VipBagPanel({ open, onClose, onChanged }) {
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-bold text-white">{item.duration_label} geçerli</p>
                         <p className="truncate text-[10px] text-white/45">
-                          {item.sender_name ? `${item.sender_name} gönderdi` : 'Coin yüklemesinden geldi'}
+                          {item.sender_name ? `${item.sender_name} gönderdi` : item.source === 'rocket' ? 'Roketten kazanıldı' : 'Coin yüklemesinden geldi'}
                         </p>
                       </div>
                     </div>

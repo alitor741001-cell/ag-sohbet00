@@ -2,7 +2,7 @@ import { ensureGiftWallet } from './giftWallet.ts';
 import { upsertNotification } from './upsertNotification.ts';
 import { giftLock } from './supabaseMirror.ts';
 import { ROCKET_VIP_LEVELS } from './roomRocketRules.ts';
-import { applyVipToUser, vipDurationLabel } from './vip.ts';
+import { vipDurationLabel } from './vip.ts';
 import { getVipCatalog } from './vipCatalog.ts';
 
 /**
@@ -18,11 +18,21 @@ export async function grantRocketVip(base44, round) {
   if (!target?.id) return sr.RoomRocketRound.update(round.id, { vip_level: vipLevel, vip_granted: true });
   const catalog = await getVipCatalog(base44);
   const days = catalog.levels.find(level => level.level === vipLevel)?.days || 30;
-  await applyVipToUser(base44, target, vipLevel, days, { vip_source: 'rocket', vip_granted_at: new Date().toISOString() });
+  const receipt = `rocket:${round.id}`;
+  const existing = await sr.VipItem.filter({ owner_id: target.id, source: 'rocket', purchase_request_id: receipt }, 'created_date', 1);
+  if (!existing[0]) await sr.VipItem.create({
+    owner_id: target.id,
+    owner_name: target.username || target.full_name || winner?.name || '',
+    level: vipLevel,
+    days,
+    source: 'rocket',
+    status: 'bag',
+    purchase_request_id: receipt,
+  });
   await upsertNotification(base44, {
     user_id: target.id,
     title: `LVL ${round.level} roketi · VIP${vipLevel}`,
-    body: `Roket ödülünde 1. sırada yer aldın. VIP${vipLevel} (${vipDurationLabel(days)}) hesabına tanımlandı.`,
+    body: `Roket ödülünde 1. sırada yer aldın. VIP${vipLevel} (${vipDurationLabel(days)}) profilindeki Çanta > VIP Üyelik bölümüne eklendi. Otomatik etkinleştirilmez; istediğinde kullanabilirsin.`,
     type: 'vip',
     link: '/profil',
     ref_id: round.id,

@@ -4,6 +4,7 @@ import { Image } from '@/components/ui/image';
 import useRocketPng from '@/components/voice/roomRocket/useRocketPng';
 import RocketLaunchBurst from '@/components/voice/roomRocket/RocketLaunchBurst';
 import RocketEngineFlame from '@/components/voice/roomRocket/RocketEngineFlame';
+import RocketGroundFlames from '@/components/voice/roomRocket/RocketGroundFlames';
 import '@/components/voice/roomRocket/rocketLevelLaunch.css';
 
 export default function RocketLaunch({ level = 1, onComplete }) {
@@ -23,5 +24,6 @@ export default function RocketLaunch({ level = 1, onComplete }) {
       <Image src={src} alt="" fittingType="fit" loading="eager" className="rocket-level-original" onLoad={() => setReady(true)} />
     </div>}
     <RocketLaunchBurst />
+    <RocketGroundFlames />
   </div>;
 }
