@@ -609,12 +609,19 @@ export default function VoiceRoom() {
     if (index !== null) invokeVoice({ action: 'seat-take', seat_index: index });
   };
 
-  const handleMic = () => {
+  const handleMic = async () => {
+    voice.retryAudio();
     if (!seated) {
       toast({ title: 'Konuşmak için bir koltuğa otur', description: 'Yukarıdaki boş bir koltuğa dokun.' });
       return;
     }
-    voice.toggleMute();
+    if (room?.voice_enabled) { await voice.toggleMute(); return; }
+    try {
+      await base44.functions.invoke('room-presence', { action: 'enable-voice', room_id: id });
+      setRoom(previous => previous ? { ...previous, voice_enabled: true } : previous);
+    } catch (error) {
+      toast({ title: 'Mikrofon açılamadı', description: error.response?.data?.error || error.message, variant: 'destructive' });
+    }
   };
 
   // Boş koltuk menüsündeki mikrofon tuşu kendi mikrofonumu değil, dokunulan koltuğun mikrofonunu açar/kapatır.

@@ -97,7 +97,8 @@ export default function WatchParty() {
   const seenRoomMessagesRef = useRef(new Set());
   // Film odasında mikrofon kendiliğinden açılmaz: film sesi mikrofona kaçıp odada
   // yankı yapmasın diye konuşmak isteyen kişi mikrofonu elle açar.
-  const voice = useVoiceChat({ roomId: id, user, participants: room?.participants, voiceEnabled: !!room?.voice_enabled && voiceReady, micEnabled: false });
+  const [micRequested, setMicRequested] = useState(false);
+  const voice = useVoiceChat({ roomId: id, user, participants: room?.participants, voiceEnabled: !!room?.voice_enabled && voiceReady, micEnabled: micRequested });
   const { messages: directUnread } = useSocialBadges(user?.id);
 
   const [roomNameEdit, setRoomNameEdit] = useState('');
@@ -500,6 +501,8 @@ export default function WatchParty() {
     if (room?.voice_enabled) { await voice.toggleMute(); return; }
     try {
       await base44.functions.invoke('room-presence', { action: 'enable-voice', room_id: id });
+      setMicRequested(true);
+      setRoom(previous => previous ? { ...previous, voice_enabled: true } : previous);
       toast({ title: 'Sesli sohbet açıldı', description: 'Mikrofonun açılıyor…' });
     } catch (e) {
       toast({ title: 'Mikrofon açılamadı', description: e.response?.data?.error || e.message, variant: 'destructive' });

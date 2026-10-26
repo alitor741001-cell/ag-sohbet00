@@ -1,4 +1,4 @@
-import { Flame, Heart, Shield, Star } from 'lucide-react';
+import { Heart, Shield, Star } from 'lucide-react';
 import { N_BADGE_STYLE, SENT_BADGE_BACKGROUND, receivedColor } from '@/lib/userLevels';
 
 /** Katman renkleri: her seviye katmanı kendi fantastik degradesiyle parlar. */
@@ -14,20 +14,12 @@ const TIER_GLOW = {
 const HEART_GLOW = { ...TIER_GLOW, green: '#e58e46' };
 
 /**
- * Profil kartındaki gerçek seviye şeridi: oda LVL'i, gönderilen hediye (yıldız),
- * alınan hediye (kalp) ve N seviyesi. Değerler sesli odadaki rozetlerle aynıdır.
+ * Profil kartında gönderilen hediye (yıldız), alınan hediye (kalp) ve N seviyesi.
+ * Oda seviyesi profil kartlarında gösterilmez.
  */
 export default function ProfileStatsRow({ level = 0, sentLevel = 0, sentTier = 'green', receivedLevel = 0, receivedTier = 'green', nLevel = 0 }) {
   const badges = [
-    level > 0 && {
-      key: 'lvl',
-      icon: <Flame className="h-3 w-3" fill="currentColor" />,
-      label: `LVL ${level}`,
-      background: 'linear-gradient(135deg, #38bdf8, #6366f1)',
-      border: '#a5e4ff',
-      color: '#06121f',
-      glow: '#38bdf8',
-    },
+
     sentLevel > 0 && {
       key: 'sent',
       icon: <Star className="h-3 w-3" fill="currentColor" />,

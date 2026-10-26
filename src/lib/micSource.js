@@ -21,11 +21,13 @@ let acquiring = null;
 let releaseTimer = null;
 
 /** İzinli mikrofon kanalı: varsa aynısı döner, yoksa bir kez izin istenir. */
-export async function sharedMicTrack() {
+export async function sharedMicTrack({ fresh = false } = {}) {
   window.clearTimeout(releaseTimer);
   releaseTimer = null;
-  if (sharedTrack && sharedTrack.readyState === 'live') return sharedTrack;
+  if (!fresh && sharedTrack && sharedTrack.readyState === 'live' && !sharedTrack.muted) return sharedTrack;
   if (acquiring) return acquiring;
+  sharedTrack?.stop();
+  sharedTrack = null;
   acquiring = navigator.mediaDevices
     .getUserMedia({ audio: noiseConstraints(getMicNoiseSuppression()) })
     .then((stream) => {
@@ -45,6 +47,10 @@ export const hasSharedMic = () => !!sharedTrack && sharedTrack.readyState === 'l
 
 /** Kanala dokunmadan sesi kes/aç — izin ve kanal korunur, ses yakalanmaz. */
 export function setSharedMicActive(active) {
+  if (active) {
+    window.clearTimeout(releaseTimer);
+    releaseTimer = null;
+  }
   if (sharedTrack && sharedTrack.readyState === 'live') sharedTrack.enabled = !!active;
 }
 

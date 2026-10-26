@@ -220,7 +220,7 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
           )}
           {voice && (
             <>
-              <button onClick={() => (voice.voiceEnabled === false && onMicPress ? onMicPress() : voice.toggleMute())} disabled={voice.remoteMuted || voice.requesting || (voice.voiceEnabled !== false && voice.connectionState !== 'connected')} aria-label="Mikrofon" className={`flex h-9 w-9 items-center justify-center rounded-full border-2 border-[#FFD700] bg-black text-[#FFD700] shadow-[0_0_14px_-3px_rgba(255,215,0,0.9)] active:scale-95 ${voice.localSpeaking && voice.active && !voice.remoteMuted ? 'speaking-glow' : ''}`}>
+              <button onClick={() => (voice.voiceEnabled === false && onMicPress ? onMicPress() : voice.toggleMute())} disabled={voice.remoteMuted || voice.requesting || (voice.voiceEnabled !== false && ['connecting', 'reconnecting'].includes(voice.connectionState))} aria-label="Mikrofon" className={`flex h-9 w-9 items-center justify-center rounded-full border-2 border-[#FFD700] bg-black text-[#FFD700] shadow-[0_0_14px_-3px_rgba(255,215,0,0.9)] active:scale-95 ${voice.localSpeaking && voice.active && !voice.remoteMuted ? 'speaking-glow' : ''}`}>
                 {voice.active ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
               </button>
               <button onClick={voice.toggleDeafen} aria-label="Hoparlör" className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-[#FFD700] bg-black text-[#FFD700] shadow-[0_0_14px_-3px_rgba(255,215,0,0.9)] active:scale-95">

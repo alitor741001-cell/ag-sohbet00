@@ -1259,6 +1259,7 @@ html.no-bounce, html.no-bounce body { overscroll-behavior: none; }
   container-type: size;
 }
 .film-chat-panel .room-chat-shell {
+  padding-top: env(safe-area-inset-top, 0px);
   padding-right: env(safe-area-inset-right, 0px);
   padding-bottom: env(safe-area-inset-bottom, 0px);
   background: hsl(var(--film-chat-surface));
