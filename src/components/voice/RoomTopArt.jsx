@@ -10,9 +10,8 @@ const BAR_RATIO = 2172 / (0.54 * 724);
 // Hediye kartı: dama zemin şeffaf yapılır, elmas miktarı sağdaki alana yazılır.
 const PILL_CROP = { top: 0, height: 1 };
 const PILL_RATIO = 1935 / 812;
-// İzleyici çemberi: beyaz/dama zemin şeffaf yapılır, çemberin içi boşaltılır.
+// İzleyici çemberi: beyaz zemin şeffaf yapılır.
 const FULL_CROP = { top: 0, height: 1 };
-const RING_CROP = { top: 0, height: 1, clearWhiteIslands: true };
 
 // Elmas miktarı: odanın her yerinde kullanılan K/M kısaltmasıyla aynı biçim.
 const amountText = (value) => formatCoinAmount(value);
@@ -33,8 +32,7 @@ export default function RoomTopArt({
 }) {
   const barArt = useKeyedImage(ART.roomBar, BAR_CROP);
   const pillArt = useKeyedImage(ART.roomGiftPill, PILL_CROP);
-  const ringArt = useKeyedImage(ART.roomViewerRing, RING_CROP);
-  const eyeArt = useKeyedImage(ART.roomViewerEye, FULL_CROP);
+  const ringArt = useKeyedImage(ART.roomViewerBadge, FULL_CROP);
   const shown = viewerCount > 999 ? '999+' : String(viewerCount || 0);
   const roomId = room?.room_number || room?.personal_room_code || '';
 
@@ -132,15 +130,6 @@ export default function RoomTopArt({
           aria-label={`İzleyiciler: ${viewerCount}`}
           className="relative h-11 w-11 shrink-0 active:scale-95"
         >
-          {/* Çemberin içindeki göz amblemi, üstünde metalik halka. */}
-          {eyeArt && (
-            <img
-              src={eyeArt}
-              alt=""
-              draggable={false}
-              className="pointer-events-none absolute inset-[16%] h-[68%] w-[68%] select-none object-contain opacity-95"
-            />
-          )}
           {ringArt && (
             <img
               src={ringArt}
