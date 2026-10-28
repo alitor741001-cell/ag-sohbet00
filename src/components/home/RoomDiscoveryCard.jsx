@@ -16,6 +16,8 @@ const CATEGORY_ICONS = { Sohbet: MessageSquare, DJ: Music, 'Eğlence': Sparkles,
 // veriler arkadan görünür ve çerçevenin üzerine yazılır.
 const CARD_CROP = { top: 0, height: 1, clearWhiteIslands: 'all', islandMin: 0.004 };
 const CARD_RATIO = 1078 / 1459;
+// Oda isminin plakası: her iki çerçevede de metin siyah zemin üstünde durur.
+const NAME_PLATE = { left: '21%', right: '9%', top: '67.2%', height: '7.6%', background: '#000', borderRadius: 4 };
 // Oda ismi görseldeki gibi soldan sağa camgöbeği → mor → turuncu geçişli yazılır.
 const NAME_GRADIENT = {
   backgroundImage: 'linear-gradient(90deg,#22f9ff 0%,#b900ff 38%,#ff7a00 68%,#fff83d 100%)',
@@ -123,8 +125,8 @@ function RoomDiscoveryCard({ room, owner, kind, filmTitle, friendInside }) {
         />
       )}
 
-      {/* Oda ismi: çerçevenin üstündeki ince şerit. */}
-      <span className="absolute flex items-center justify-center overflow-hidden px-1" style={{ left: '8%', right: '8%', top: '67%', height: '7%' }}>
+      {/* Oda ismi: çerçevenin üstündeki siyah plaka — iki kart türünde de aynı görünür. */}
+      <span className="absolute flex items-center justify-center overflow-hidden px-1" style={{ ...NAME_PLATE }}>
         <span className="block w-full truncate text-center text-[10px] font-black leading-none tracking-tight" style={NAME_GRADIENT}>
           {room.name}
         </span>
