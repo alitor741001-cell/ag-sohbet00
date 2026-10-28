@@ -14,7 +14,12 @@ export default function VoiceFantasyActions({ room, userId, name, isSelf, hidden
   const perform = async (key, action) => {
     if (busy) return;
     setBusy(key);
-    try { await action(); }
+    try {
+      await action();
+      // Hediye tahtası, özel mesaj ve sohbet paneli kartın altında kalmasın diye kart kapanır;
+      // koltuktan inen ya da odadan atılan kişinin kartı da açık kalmaz.
+      if (['gift', 'message', 'mention', 'stand', 'kick'].includes(key)) onClose?.();
+    }
     catch (error) { toast({ title: 'İşlem yapılamadı', description: error?.response?.data?.error || error.message, variant: 'destructive' }); }
     finally { setBusy(''); }
   };

@@ -5,6 +5,7 @@ import { base44 } from '@/api/base44Client';
 import { Image } from '@/components/ui/image';
 import { useToast } from '@/components/ui/use-toast';
 import { useUserProfile } from '@/lib/profileCard';
+import SearchPersonActions from '@/components/friends/SearchPersonActions';
 
 const isVoice = (room) => room?.room_type === 'voice' || room?.voice_mode === true;
 
@@ -103,7 +104,8 @@ export default function Search() {
 
       <div className="mx-auto w-full max-w-md px-4 py-5" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 9.75rem)' }}>
         {person && (
-          <div className="relative mt-4 flex items-center gap-3 rounded-2xl border border-[#7dd3fc]/30 bg-[#08203f]/80 p-3">
+          <div className="relative mt-4 flex flex-col gap-2 rounded-2xl border border-[#7dd3fc]/30 bg-[#08203f]/80 p-3">
+            <div className="relative flex w-full items-center gap-3">
             {liveRoom && (
               <button
                 type="button"
@@ -132,6 +134,8 @@ export default function Search() {
               </span>
               <ChevronRight className="h-4 w-4 shrink-0 text-white/40" />
             </button>
+            </div>
+            <SearchPersonActions userId={person.id} />
           </div>
         )}
       </div>

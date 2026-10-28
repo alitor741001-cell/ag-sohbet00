@@ -8,7 +8,7 @@ import useProfileFriendship from '@/hooks/useProfileFriendship';
 export default function BlockButton({ userId, accent, onChange }) {
   const { user, setUser } = useCurrentUser();
   const { toast } = useToast();
-  const { friendship, loading, error, refresh } = useProfileFriendship(userId);
+  const { friendship, loading, refresh } = useProfileFriendship(userId);
   const [busy, setBusy] = useState(false);
   const blocked = (user?.blocked_users || []).includes(userId) || (friendship?.blocked_by || []).includes(user?.id);
   if (!userId || !user || userId === user.id) return null;
@@ -32,7 +32,7 @@ export default function BlockButton({ userId, accent, onChange }) {
     } finally { setBusy(false); }
   };
   const Icon = busy || loading ? Loader2 : blocked ? ShieldCheck : Ban;
-  return <button type="button" onClick={toggle} disabled={busy || loading || !!error}
+  return <button type="button" onClick={toggle} disabled={busy || loading}
     className="flex min-w-0 flex-1 items-center justify-center gap-1 rounded-xl border-2 px-2 py-1.5 text-[10px] font-black text-fantasy-text disabled:opacity-60"
     style={{ borderColor: accent }}>
     <Icon className={`h-3.5 w-3.5 shrink-0 ${busy || loading ? 'animate-spin' : ''}`} />

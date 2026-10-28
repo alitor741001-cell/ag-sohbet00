@@ -8,7 +8,7 @@ import useProfileFriendship from '@/hooks/useProfileFriendship';
 export default function FriendButton({ userId, accent = '#6fe6dc', compact = true, onChange }) {
   const { user } = useCurrentUser();
   const { toast } = useToast();
-  const { friendship, loading, error, refresh } = useProfileFriendship(userId);
+  const { friendship, loading, refresh } = useProfileFriendship(userId);
   const [busy, setBusy] = useState(false);
   const accepted = friendship?.status === 'accepted';
   const pending = friendship?.status === 'pending';
@@ -30,7 +30,7 @@ export default function FriendButton({ userId, accent = '#6fe6dc', compact = tru
     } finally { setBusy(false); }
   };
   const Icon = busy || loading ? Loader2 : accepted ? UserMinus : pending ? Check : UserPlus;
-  return <button type="button" onClick={send} disabled={busy || loading || pending || blocked || !!error}
+  return <button type="button" onClick={send} disabled={busy || loading || pending || blocked}
     className={`flex min-w-0 flex-1 items-center justify-center border-2 font-black text-fantasy-text disabled:opacity-60 ${compact ? 'gap-1 rounded-xl px-2 py-1.5 text-[10px]' : 'gap-2 rounded-2xl px-4 py-3 text-sm'}`}
     style={{ borderColor: accent }}>
     <Icon className={`h-3.5 w-3.5 shrink-0 ${busy || loading ? 'animate-spin' : ''}`} />

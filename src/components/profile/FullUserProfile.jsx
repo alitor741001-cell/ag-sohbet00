@@ -277,18 +277,13 @@ export default function FullUserProfile({
     </>
   );
 
-  // Kart içindeki herhangi bir düğmeye basıldığında kart hemen kapanır.
-  // Yakalama aşamasında dinlenir: butonların kendi olay durdurmaları kapanışı engellemez.
-  const closeOnAction = (event) => {
-    if (event.target?.closest?.('[data-keep-open]')) return;
-    if (event.target?.closest?.('button')) onClose?.();
-  };
-
+  // Kart artık her dokunuşta kapanmaz: düğmelerin kendi işlemi bitene kadar açık kalır.
+  // Başka bir paneli açan işlemler (hediye, özel mesaj, bahset) kartı kendileri kapatır.
   if (room?.kind === 'voice') return (
     <VoiceFantasyCard profile={profile} hidden={hidden} name={shownName} avatar={banned ? ACCOUNT_STATES.banned.image : shownAvatar}
       role={roleLabel} palette={palette} room={room} userId={userId} isSelf={isSelf} onClose={onClose} onMessage={onMessage}
       statusContent={statusContent} moderation={!hidden && <ProfileModeration userId={userId} profile={profile} onChanged={setProfile} giftAction={adminGiftRow ? () => room.gift(userId) : null} />} memberId={memberId} genderLabel={genderLabel} age={age} badge={badge} giftInAdminRow={adminGiftRow}
-      joinDate={formatDate(profile?.created_date)} copied={copied} onCopyId={copyId} onAction={closeOnAction}
+      joinDate={formatDate(profile?.created_date)} copied={copied} onCopyId={copyId}
       full={full} onBack={() => setFull(false)} onOpenFull={() => setFull(true)} />
   );
 
@@ -297,7 +292,7 @@ export default function FullUserProfile({
       avatar={banned ? ACCOUNT_STATES.banned.image : shownAvatar} role={roleLabel} onClose={onClose}
       memberId={memberId} copied={copied} onCopyId={copyId} userId={userId} self={isSelf}
       full={full} onBack={() => setFull(false)} onOpenFull={() => setFull(true)}>
-      <div className="space-y-3 px-4 pt-1" onClickCapture={closeOnAction}>
+      <div className="space-y-3 px-4 pt-1">
         {header}
         <div className="flex flex-col gap-3">{content}</div>
       </div>

@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Image } from '@/components/ui/image';
 import { useToast } from '@/components/ui/use-toast';
 import { useUserProfile } from '@/lib/profileCard';
+import SearchPersonActions from '@/components/friends/SearchPersonActions';
 
 const isVoice = (room) => room?.room_type === 'voice' || room?.voice_mode === true;
 
@@ -87,7 +88,8 @@ export default function FriendSearchSheet({ open, onClose }) {
         </div>
 
         {person && (
-          <div className="relative mt-2 flex items-center gap-3 rounded-2xl border border-[#7dd3fc]/30 bg-[#08203f]/80 p-3">
+          <div className="relative mt-2 flex flex-col gap-2 rounded-2xl border border-[#7dd3fc]/30 bg-[#08203f]/80 p-3">
+            <div className="relative flex w-full items-center gap-3">
             {liveRoom && (
               <button
                 type="button"
@@ -116,6 +118,8 @@ export default function FriendSearchSheet({ open, onClose }) {
               </span>
               <ChevronRight className="h-4 w-4 shrink-0 text-white/40" />
             </button>
+            </div>
+            <SearchPersonActions userId={person.id} />
           </div>
         )}
       </DialogContent>
