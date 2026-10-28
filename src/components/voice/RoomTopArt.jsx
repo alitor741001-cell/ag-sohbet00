@@ -101,6 +101,7 @@ export default function RoomTopArt({
           type="button"
           onClick={onOpenGiftBoard}
           aria-label="Hediye sıralamasını aç"
+          data-room-gift-pill
           className="relative block active:scale-[0.97]"
           style={{ marginLeft: '-2%', marginTop: '6px', width: '34%', aspectRatio: String(PILL_RATIO) }}
         >
