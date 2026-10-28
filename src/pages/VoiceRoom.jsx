@@ -1134,6 +1134,9 @@ export default function VoiceRoom() {
       <RoomBackground value={room?.background} cover={room?.cover_url} />
 
       <RoomTopArt
+        room={room}
+        giftTotal={giftBoard?.all?.total || 0}
+        giftToday={giftBoard?.day?.total || 0}
         onOpenRoom={() => setProfilePanelOpen(true)}
         viewerCount={participants.length}
         onOpenViewers={() => setViewerOpen(true)}
