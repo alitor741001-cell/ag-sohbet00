@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { Link } from 'react-router-dom';
-import { Cake, Check, EyeOff, Film, Gamepad2, Lock, MessageSquare, Mic, Music, PartyPopper, Sparkles } from 'lucide-react';
+import { Cake, Check, Eye, EyeOff, Film, Gamepad2, Lock, MessageSquare, Mic, Music, PartyPopper, Sparkles } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import { youtubeIdFromMovieId } from '@/lib/youtubeTitle';
 import { prefetchRoomCancel, prefetchRoomSoon } from '@/lib/roomPrefetch';
@@ -118,7 +118,7 @@ function RoomDiscoveryCard({ room, owner, kind, filmTitle, friendInside, rank = 
         {!isHidden && (
           <span className="absolute bottom-1 right-1 flex items-center gap-0.5 rounded-full bg-black/70 px-1.5 py-0.5 text-[8.5px] font-extrabold tabular-nums text-white">
             {viewers}
-            <EyeOff className="h-2.5 w-2.5 rotate-180 text-[#7ff0e6]" />
+            <Eye className="h-2.5 w-2.5 text-[#7ff0e6]" />
           </span>
         )}
 
@@ -141,7 +141,7 @@ function RoomDiscoveryCard({ room, owner, kind, filmTitle, friendInside, rank = 
       )}
 
       {/* Oda ismi: çerçevenin üstündeki ince şerit. */}
-      <span className="absolute flex items-center justify-center overflow-hidden px-1" style={{ left: '9%', right: '9%', top: '66%', height: '8.5%' }}>
+      <span className="absolute flex items-center justify-center overflow-hidden px-1" style={{ left: '9%', right: '9%', top: '67%', height: '7%' }}>
         <span
           className="truncate text-[10px] font-black leading-none tracking-tight"
           style={{ ...NAME_GRADIENT, filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.95))' }}
