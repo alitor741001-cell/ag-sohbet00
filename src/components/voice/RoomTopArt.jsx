@@ -4,17 +4,14 @@ import { ART } from '@/lib/designArt';
 import { UserRound } from 'lucide-react';
 
 // Oda şeridi: beyaz fotoğraf penceresi şeffaf yapılır, oda fotoğrafı pencerenin arkasından görünür.
-const BAR_CROP = { top: 0.24, height: 0.54, windows: [[111, 195, 305, 337]] };
+const BAR_CROP = { top: 0.24, height: 0.54, windows: [[104, 216, 312, 312]] };
 const BAR_RATIO = 2172 / (0.54 * 724);
-// Hediye kartı: içindeki örnek sayı koyu zeminle örtülür, yerine odanın gerçek toplamı yazılır.
-const PILL_CROP = { top: 0.3, height: 0.42, erase: [[459, 448, 739, 316]] };
-const PILL_RATIO = 1369 / (0.42 * 1149);
+// Hediye kartı: dama zemin şeffaf yapılır, elmas miktarı sağdaki alana yazılır.
+const PILL_CROP = { top: 0, height: 1 };
+const PILL_RATIO = 1935 / 812;
 
-// Hediye toplamı puan cinsindendir: 1.000 puan = 1K.
-const kText = (value) => {
-  const k = Math.round((Number(value) || 0) / 1000);
-  return k >= 1000 ? `${(k / 1000).toFixed(1)}M` : `${k}K`;
-};
+// Elmas miktarı: binlik ayraçlı tam sayı.
+const amountText = (value) => Number(value || 0).toLocaleString('tr-TR');
 
 /** Sesli odanın üst şeridi: solda oda şeridi (fotoğraf, isim, ID) ve altında hediye kartı,
     sağda izleyici sayısı, yöneticide oda ayarları ve en sağda çıkış düğmesi. */
@@ -22,6 +19,7 @@ export default function RoomTopArt({
   room,
   giftTotal = 0,
   onOpenRoom,
+  onFollow,
   viewerCount = 0,
   onOpenViewers,
   onOpenMenu,
@@ -41,7 +39,7 @@ export default function RoomTopArt({
       <div className="min-w-0 shrink-0" style={{ width: 'clamp(178px, 58vw, 250px)' }}>
         <div className="relative" style={{ aspectRatio: String(BAR_RATIO) }}>
           {/* Oda fotoğrafı: şeridin penceresinin arkasında durur. */}
-          <div className="absolute overflow-hidden" style={{ left: '5.1%', top: '5.5%', width: '14%', height: '86.1%' }}>
+          <div className="absolute overflow-hidden" style={{ left: '4.8%', top: '10.7%', width: '14.4%', height: '79.8%' }}>
             {room?.cover_url ? (
               <img src={room.cover_url} alt="" className="h-full w-full object-cover" />
             ) : (
@@ -76,18 +74,18 @@ export default function RoomTopArt({
             <span className="truncate text-[8px] font-bold leading-tight text-white/70">ID: {roomId || '-'}</span>
           </button>
 
-          {/* Şeridin sağ ucundaki yuvarlak düğme: oda profilini açar. */}
+          {/* Şeridin sağ ucundaki yeşil düğme: odanın sahibini takibe alır. */}
           <button
             type="button"
-            onClick={onOpenRoom}
-            aria-label="Oda profili"
+            onClick={onFollow}
+            aria-label="Yayıncıyı takip et"
             className="absolute rounded-full active:scale-95"
             style={{ left: '89%', top: '49%', width: '14.5%', aspectRatio: '1', transform: 'translate(-50%, -50%)' }}
           />
         </div>
 
-        {/* Hediye kartı: şeridin hemen altında, beyaz zemin şeffaf. */}
-        <div className="relative" style={{ marginLeft: '6%', marginTop: '-1.5%', width: '56%', aspectRatio: String(PILL_RATIO) }}>
+        {/* Hediye kartı: şeridin hemen altında, arada ince bir boşluk kalır. */}
+        <div className="relative" style={{ marginLeft: '4%', marginTop: '2.5%', width: '82%', aspectRatio: String(PILL_RATIO) }}>
           {pillArt && (
             <img
               src={pillArt}
@@ -96,12 +94,12 @@ export default function RoomTopArt({
               className="pointer-events-none absolute inset-0 h-full w-full select-none object-contain"
             />
           )}
-          <span className="absolute flex items-center justify-center" style={{ left: '34%', right: '13.5%', top: '22%', bottom: '15%' }}>
+          <span className="absolute flex items-center justify-center" style={{ left: '34%', right: '5.5%', top: '25%', bottom: '20%' }}>
             <span
-              className="truncate text-[11px] font-black leading-none text-white"
-              style={{ textShadow: '0 0 8px rgba(255,60,40,0.85)' }}
+              className="truncate font-black leading-none text-white"
+              style={{ fontSize: 'clamp(11px, 3.4vw, 16px)', textShadow: '0 0 8px rgba(255,60,40,0.85)' }}
             >
-              {kText(giftTotal)}
+              {amountText(giftTotal)}
             </span>
           </span>
         </div>

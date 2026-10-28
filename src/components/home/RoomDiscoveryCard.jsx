@@ -12,15 +12,9 @@ import { ART } from '@/lib/designArt';
 /** Oda kategorisi kartın sağ üstünde kendi ikonuyla gösterilir. */
 const CATEGORY_ICONS = { Sohbet: MessageSquare, DJ: Music, 'Eğlence': Sparkles, 'Parti': PartyPopper, Oyun: Gamepad2, 'Doğum Günü': Cake };
 
-/** İlk üç oda için madalya tonu: kırmızı, gümüş, bronz. */
-const RANK_STYLE = {
-  1: 'linear-gradient(160deg,#ff8a65,#c62828)',
-  2: 'linear-gradient(160deg,#f2f5f9,#9aa7b8)',
-  3: 'linear-gradient(160deg,#f0c08a,#a1652f)',
-};
-
-// Kart çerçevesi: fotoğraf penceresi ve isim şeridi şeffaf yapılır, veriler arkadan/üzerinden yazılır.
-const CARD_CROP = { windows: [[80, 270, 919, 650], [97, 983, 885, 96]] };
+// Kart çerçevesi: beyaz fotoğraf alanı ve isim şeritleri şeffaf yapılır,
+// veriler arkadan görünür ve çerçevenin üzerine yazılır.
+const CARD_CROP = { top: 0, height: 1, clearWhiteIslands: 'all', islandMin: 0.004 };
 const CARD_RATIO = 1078 / 1459;
 // Oda ismi görseldeki gibi soldan sağa camgöbeği → mor → turuncu geçişli yazılır.
 const NAME_GRADIENT = {
@@ -32,7 +26,7 @@ const NAME_GRADIENT = {
 
 /** Ana sayfa keşfet ızgarasındaki oda kartı: moda göre sesli/film çerçevesi,
     büyük fotoğraf, şeritte oda ismi ve altta oda sahibinin adı. */
-function RoomDiscoveryCard({ room, owner, kind, filmTitle, friendInside, rank = 0 }) {
+function RoomDiscoveryCard({ room, owner, kind, filmTitle, friendInside }) {
   const { user } = useCurrentUser();
   const viewers = room.participants?.length || 0;
   // İçeride kimse yoksa oda kilitlidir: sahibi odaya girene kadar kimse içeri alınmaz.
@@ -63,22 +57,12 @@ function RoomDiscoveryCard({ room, owner, kind, filmTitle, friendInside, rank = 
       style={{ aspectRatio: String(CARD_RATIO) }}
     >
       {/* Fotoğraf penceresi: çerçevenin arkasında durur, pencereden görünür. */}
-      <div className="absolute overflow-hidden" style={{ left: '7.4%', top: '18.5%', width: '85.2%', height: '44.5%' }}>
+      <div className="absolute overflow-hidden" style={{ left: '7.4%', top: '18%', width: '85.2%', height: '46.5%' }}>
         {cover ? (
           <Image src={cover} className="absolute inset-0 h-full w-full" fittingType="fill" alt="" />
         ) : (
           <span className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[#173a5e] to-[#0a1220]">
             {isVoice ? <Mic className="h-7 w-7 text-[#7ff0e6]/70" /> : <Film className="h-7 w-7 text-[#ffa63d]/70" />}
-          </span>
-        )}
-
-        {/* Madalya: en çok izlenen ilk üç oda. */}
-        {rank > 0 && RANK_STYLE[rank] && (
-          <span
-            className="absolute left-1 top-1 flex h-5 w-5 items-center justify-center rounded-full border border-white/60 text-[10px] font-black text-white"
-            style={{ background: RANK_STYLE[rank], boxShadow: '0 2px 8px rgba(0,0,0,0.55)' }}
-          >
-            {rank}
           </span>
         )}
 
@@ -111,10 +95,7 @@ function RoomDiscoveryCard({ room, owner, kind, filmTitle, friendInside, rank = 
           </span>
         )}
 
-        {/* Alt şerit: canlı etiketi ve izleyici sayısı. */}
-        <span className="absolute bottom-1 left-1 flex items-center gap-1 rounded-full bg-gradient-to-r from-[#c62828] to-[#ef5350] px-1.5 py-0.5 text-[8px] font-black tracking-wide text-white shadow-[0_0_10px_-3px_rgba(198,40,40,0.95)]">
-          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" /> CANLI
-        </span>
+        {/* Alt şerit: izleyici sayısı. */}
         {!isHidden && (
           <span className="absolute bottom-1 right-1 flex items-center gap-0.5 rounded-full bg-black/70 px-1.5 py-0.5 text-[8.5px] font-extrabold tabular-nums text-white">
             {viewers}
@@ -151,7 +132,7 @@ function RoomDiscoveryCard({ room, owner, kind, filmTitle, friendInside, rank = 
       </span>
 
       {/* Oda sahibi: “Sesli / Film” yazısının solunda. */}
-      <span className="absolute flex items-center justify-end overflow-hidden" style={{ left: '9%', right: '42%', top: '77%', height: '9%' }}>
+      <span className="absolute flex items-center justify-end overflow-hidden" style={{ left: '9%', right: '42%', top: '78%', height: '6%' }}>
         <span className="truncate text-[8.5px] font-black leading-none text-white" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.95)' }}>
           {ownerName}
         </span>

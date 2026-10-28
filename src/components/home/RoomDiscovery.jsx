@@ -326,7 +326,7 @@ export default function RoomDiscovery({ shortcuts = null, onContentChange }) {
       ) : items.length === 0 ? null : (
         <>
           <div className="grid grid-cols-2 gap-2.5">
-          {items.map((room, index) => {
+          {items.map((room) => {
             const kind = isVoiceRoom(room) ? 'voice' : 'film';
             return (
               <RoomDiscoveryCard
@@ -336,7 +336,6 @@ export default function RoomDiscovery({ shortcuts = null, onContentChange }) {
                 kind={kind}
                 filmTitle={kind === 'film' ? filmTitleFor(room) : ''}
                 friendInside={hasFriendInside(room)}
-                rank={index < 3 ? index + 1 : 0}
               />
             );
           })}

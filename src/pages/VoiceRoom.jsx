@@ -1092,6 +1092,22 @@ export default function VoiceRoom() {
     return true;
   };
 
+  // Sol üstteki yeşil düğme: odanın sahibini doğrudan takibe alır.
+  const followOwner = async () => {
+    const ownerId = room?.owner_id;
+    if (!ownerId) return;
+    if (ownerId === user?.id) {
+      toast({ title: 'Kendi odanı takip edemezsin' });
+      return;
+    }
+    try {
+      await base44.functions.invoke('social-service', { action: 'follow', user_id: ownerId });
+      toast({ title: 'Takibe alındı', description: `${room?.owner_name || 'Yayıncı'} takip listenizde.` });
+    } catch (error) {
+      toast({ title: 'Takip edilemedi', description: error?.response?.data?.error || error.message, variant: 'destructive' });
+    }
+  };
+
   // Odaya giriş ekranları (yükleme, giriş yasağı, şifre ve bağlanma beklemesi) tek bileşende toplanır.
   if (loading || banNotice || !joined) {
     return (
@@ -1138,6 +1154,7 @@ export default function VoiceRoom() {
         giftTotal={giftBoard?.all?.total || 0}
         giftToday={giftBoard?.day?.total || 0}
         onOpenRoom={() => setProfilePanelOpen(true)}
+        onFollow={followOwner}
         viewerCount={participants.length}
         onOpenViewers={() => setViewerOpen(true)}
         onOpenMenu={() => setMenuOpen(true)}

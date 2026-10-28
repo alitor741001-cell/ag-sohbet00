@@ -28,7 +28,7 @@ export const ART = {
   // 12) Sesli oda: sol üstteki oda şeridi (kırmızı kapsül + fotoğraf penceresi)
   roomBar: `${P}0862ba7cd_IMG_0422.jpg`,
   // 13) Sesli oda: oda şeridinin altındaki hediye kartı
-  roomGiftPill: `${P}b8d5c6405_IMG_0425.jpg`,
+  roomGiftPill: `${P}35e13eab6_IMG_0426.jpg`,
   // 14) Oda kartı: sesli sohbet
   cardVoice: `${P}fa5577e04_IMG_0415.jpg`,
   // 15) Oda kartı: film
