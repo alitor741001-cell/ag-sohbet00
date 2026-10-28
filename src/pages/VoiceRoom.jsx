@@ -42,6 +42,7 @@ import RoomMusicLayer from '@/components/voice/RoomMusicLayer';
 import { takeRoomPrefetch } from '@/lib/roomPrefetch';
 import { rememberRoom } from '@/lib/visitedRooms';
 import useRoomSwipeNav from '@/hooks/useRoomSwipeNav';
+import useChatDockToSeat from '@/hooks/useChatDockToSeat';
 import useVerticalSwipe from '@/hooks/useVerticalSwipe';
 import useOfflineExit from '@/hooks/useOfflineExit';
 import useOfflineParticipantCleanup from '@/hooks/useOfflineParticipantCleanup';
@@ -159,6 +160,9 @@ export default function VoiceRoom() {
   const giftSyncTimerRef = useRef(0);
 
   const seats = useMemo(() => (Array.isArray(room?.seats) ? room.seats : []), [room?.seats]);
+  // Sohbet alanı 7 numaralı koltuğun hizasına kadar uzar.
+  const chatDockRef = useRef(null);
+  const chatDockHeight = useChatDockToSeat(chatDockRef, 6, seats.length);
   const myInvite = useMemo(
     () => (Array.isArray(room?.seat_invites) ? room.seat_invites.find((item) => item.user_id === user?.id) : null),
     [room?.seat_invites, user?.id]
@@ -1191,7 +1195,11 @@ export default function VoiceRoom() {
 
 
 
-      <div className={`voice-chat-dock min-h-0 shrink-0 ${composerOpen ? 'is-composing' : ''}`}>
+      <div
+        ref={chatDockRef}
+        className={`voice-chat-dock min-h-0 shrink-0 ${composerOpen ? 'is-composing' : ''}`}
+        style={chatDockHeight ? { height: `${chatDockHeight}px` } : undefined}
+      >
       <VoiceChatDock
         messages={messages}
         chatLocked={chatLocked}

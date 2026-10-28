@@ -32,7 +32,7 @@ export default function MessagesHeaderArt({ counts = {}, active = 'chats', onSel
             aria-label={tab.label}
             aria-pressed={on}
             onClick={() => onSelect?.(tab.key)}
-            className={`absolute rounded-xl transition ${on ? 'bg-white/10 ring-2 ring-[#ff2b2b] shadow-[0_0_18px_rgba(255,45,45,0.8)]' : 'active:bg-white/10'}`}
+            className={`absolute rounded-xl transition ${on ? 'bg-white/20 brightness-125 shadow-[0_0_16px_rgba(255,255,255,0.35)]' : 'active:bg-white/15'}`}
             style={{ left: `${tab.x}%`, width: `${tab.w}%`, top: '47%', height: '32%' }}
           >
             {count > 0 && (

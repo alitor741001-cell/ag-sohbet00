@@ -115,8 +115,8 @@ export default function RoomTopArt({
           {/* Toplam hediye alanı sağa ve sola doğru genişletildi. */}
           <span className="absolute flex items-center justify-center" style={{ left: '26%', right: '2%', top: '24%', bottom: '19%' }}>
             <span
-              className="truncate font-black leading-none text-white"
-              style={{ fontSize: 'clamp(6px, 1.6vw, 9px)', textShadow: '0 0 8px rgba(255,60,40,0.85)' }}
+              className="truncate font-black leading-none tabular-nums text-red-500"
+              style={{ fontSize: 'clamp(7px, 1.9vw, 10px)', textShadow: '0 0 8px rgba(255,45,45,0.9), 0 1px 2px rgba(0,0,0,0.95)' }}
             >
               {amountText(giftTotal)}
             </span>

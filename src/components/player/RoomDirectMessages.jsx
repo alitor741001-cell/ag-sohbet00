@@ -19,6 +19,15 @@ import AgencyMessages from '@/pages/AgencyMessages';
 // Şeritteki üç dokunma alanı oda içinde tam ekran açılır; geri tuşu sohbete döner.
 const ROOM_PANELS = { requests: FriendRequests, notes: Notifications, agency: AgencyMessages };
 
+// Oda teması sohbetin altına kadar dolsun: ana sayfadaki özel sohbet gibi tek parça zemin.
+const THEME_BG = {
+  backgroundColor: 'var(--app-shell-color, #02030c)',
+  backgroundImage: 'var(--room-theme-image, none), var(--room-theme-tint, none)',
+  backgroundSize: 'cover, cover',
+  backgroundPosition: 'center, center',
+  backgroundRepeat: 'no-repeat, no-repeat',
+};
+
 export default function RoomDirectMessages({ onClose, initialUserId, onFullScreenChange, closeOnBackdrop = false }) {
   const { user, relations, loading: friendsLoading, invoke } = useFriends();
   const { conversations, loading: convosLoading, optimisticHide } = useConversations();
@@ -82,7 +91,7 @@ export default function RoomDirectMessages({ onClose, initialUserId, onFullScree
   if (selected) {
     const friendId = selected.user1_id === user.id ? selected.user2_id : selected.user1_id;
     return (
-      <section className="room-direct-selected dark mx-auto flex h-full min-h-0 w-full min-w-0 max-w-5xl flex-col bg-[#02030c] text-white">
+      <section className="room-direct-selected dark mx-auto flex h-full min-h-0 w-full min-w-0 max-w-5xl flex-col text-white" style={THEME_BG}>
         <BackDismissLayer onClose={() => setSelected(null)} />
         <ChatPanel key={selected.id} conversation={selected} userId={user.id} onBack={() => setSelected(null)} online={isOnline(friendId)} getLastSeen={getLastSeen} rooms={rooms} getRoomId={getRoomId} embedded />
         {panelOverlay}
@@ -98,7 +107,7 @@ export default function RoomDirectMessages({ onClose, initialUserId, onFullScree
     agency: liveBadges.agency,
   };
   return (
-    <div className="dark flex h-full min-h-0 w-full flex-col bg-[#02030c] text-white">
+    <div className="dark flex h-full min-h-0 w-full flex-col text-white" style={THEME_BG}>
       <BackDismissLayer onClose={onClose} />
       {/* MESAJLAR başlığı ve dört neon sekme: ana sayfadaki özel sohbetin birebir aynısı. */}
       <div className="relative shrink-0">
