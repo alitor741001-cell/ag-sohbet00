@@ -110,7 +110,7 @@ export default function VoiceChatDock({ messages = [], onSend, open, onCloseComp
           style={{ touchAction: 'pan-y' }}
           className={`voice-chat-flow ${composerOpen ? 'max-h-[16vh]' : open ? 'max-h-[30vh]' : 'max-h-[22vh]'} shrink-0 overflow-y-auto overscroll-contain pb-0 [mask-image:linear-gradient(to_bottom,transparent,black_14%)] [-webkit-mask-image:linear-gradient(to_bottom,transparent,black_14%)]`}
         >
-          <div className={`flex flex-col gap-1.5 px-4 ${composerOpen ? '' : 'voice-chat-rocket-reserve'}`}>
+          <div className={`flex flex-col gap-1.5 pl-0.5 pr-4 ${composerOpen ? '' : 'voice-chat-rocket-reserve'}`}>
             {visible.map((message) => {
               if (message.type === 'slot_win') {
                 return <SlotWinMessage key={message.id} message={message} />;
@@ -162,10 +162,16 @@ export default function VoiceChatDock({ messages = [], onSend, open, onCloseComp
       )}
 
       {composerOpen && !chatLocked && (
-        <>
+        <div className="relative shrink-0">
+          {/* Emoji paneli yazma alanının üstüne açılır: sohbet alanının yüksekliğini sıkıştırmaz. */}
           {emojiOpen && (
-            <div className="mx-3 mb-1 overflow-hidden rounded-2xl border border-white/10">
-              <EmojiPicker onSelect={(emoji) => setText((prev) => prev + emoji)} />
+            <div className="absolute bottom-full left-3 right-3 z-30 mb-1 max-h-[40vh] overflow-y-auto rounded-2xl border border-[#00e5ff]/35 bg-[#050515]/95 shadow-[0_0_18px_rgba(0,229,255,0.28)] backdrop-blur-md">
+              <EmojiPicker
+                onSelect={(emoji) => {
+                  setText((prev) => prev + emoji);
+                  inputRef.current?.focus({ preventScroll: true });
+                }}
+              />
             </div>
           )}
 
@@ -179,7 +185,7 @@ export default function VoiceChatDock({ messages = [], onSend, open, onCloseComp
             onToggleEmoji={() => setEmojiOpen((value) => !value)}
             sending={sending}
           />
-        </>
+        </div>
       )}
     </div>
   );
