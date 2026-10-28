@@ -85,11 +85,41 @@
   .voice-header-art { margin-top: -5%; }
 }
 .voice-viewport[data-keyboard="open"] .voice-chat-flow { max-height: calc(var(--visual-viewport-height) * 0.28); }
+/* Yazma alanı: neon kapsül. Zemin yarı saydamdır, arkada beyaz kutu oluşmaz. */
+.voice-neon-composer {
+  background:
+    radial-gradient(120% 160% at 10% 0%, rgba(0, 120, 255, 0.26), transparent 62%),
+    linear-gradient(180deg, rgba(6, 10, 32, 0.82), rgba(2, 3, 14, 0.86));
+  border: 1px solid rgba(0, 229, 255, 0.55);
+  box-shadow:
+    0 0 12px rgba(0, 120, 255, 0.55),
+    0 0 26px rgba(0, 229, 255, 0.2),
+    inset 0 0 18px rgba(0, 140, 255, 0.3);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.voice-neon-ring {
+  border-color: rgba(0, 229, 255, 0.85);
+  box-shadow: 0 0 10px rgba(0, 229, 255, 0.7), inset 0 0 8px rgba(0, 229, 255, 0.35);
+}
+.voice-neon-ring.is-active { background: rgba(0, 229, 255, 0.22); }
+.voice-neon-send {
+  background: linear-gradient(135deg, #0066ff 0%, #2a63ff 45%, #ff00ff 100%);
+  box-shadow:
+    0 0 12px rgba(0, 102, 255, 0.75),
+    0 0 18px rgba(255, 0, 255, 0.5),
+    inset 0 0 10px rgba(255, 255, 255, 0.25);
+}
 .voice-viewport .voice-chat-composer { margin-bottom: 0; }
+/* Hediye roketi kontrol çubuğunun üstünde yükselir: mesajlar roketin hizasında biter,
+   roketin arkasına geçmez. Yazma alanı açıkken roket gizlendiği için pay kaldırılır. */
 /* Mesaj akışı doğrudan butonların üstüne yaslanır: yazma alanı kapalıyken sohbet bloğunda
    alt dolgu kalmaz (önceden güvenli alan kadar boşluk mesajları yukarıda bırakıyordu).
    Yazma alanı açıkken aynı boşluk klavyenin üstünde korunur. */
 .voice-viewport .voice-chat-dock { padding-bottom: 0; }
+/* Hediye roketi kontrol çubuğunun üstünde yükselir: son mesajlar roketin hizasında biter,
+   roketin arkasına geçmez. Yazma alanı açıkken roket gizlendiği için pay uygulanmaz. */
+.voice-chat-rocket-reserve { padding-bottom: calc(clamp(100px, 29vw, 154px) + 10px); }
 .voice-viewport .voice-chat-dock.is-composing { padding-bottom: env(safe-area-inset-bottom, 0px); }
 .voice-viewport[data-keyboard="open"] .voice-chat-dock { padding-bottom: 0; }
 .voice-viewport[data-keyboard="open"] .room-direct-selected { padding-bottom: 0; }

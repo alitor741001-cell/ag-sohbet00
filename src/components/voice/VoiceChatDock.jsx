@@ -1,7 +1,8 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Gift, Send, Smile, Trophy } from 'lucide-react';
+import { Gift, Trophy } from 'lucide-react';
 import EmojiPicker from '@/components/player/EmojiPicker';
 import VoiceChatMessage from '@/components/voice/VoiceChatMessage';
+import VoiceChatNeonComposer from '@/components/voice/VoiceChatNeonComposer';
 import VoiceGiftMessage from '@/components/voice/VoiceGiftMessage';
 import SlotWinMessage from '@/components/games/SlotWinMessage';
 import BigGiftChatNotice from '@/components/voice/BigGiftChatNotice';
@@ -109,7 +110,7 @@ export default function VoiceChatDock({ messages = [], onSend, open, onCloseComp
           style={{ touchAction: 'pan-y' }}
           className={`voice-chat-flow ${composerOpen ? 'max-h-[16vh]' : open ? 'max-h-[30vh]' : 'max-h-[22vh]'} shrink-0 overflow-y-auto overscroll-contain pb-0 [mask-image:linear-gradient(to_bottom,transparent,black_14%)] [-webkit-mask-image:linear-gradient(to_bottom,transparent,black_14%)]`}
         >
-          <div className="flex flex-col gap-1.5 px-4">
+          <div className={`flex flex-col gap-1.5 px-4 ${composerOpen ? '' : 'voice-chat-rocket-reserve'}`}>
             {visible.map((message) => {
               if (message.type === 'slot_win') {
                 return <SlotWinMessage key={message.id} message={message} />;
@@ -168,37 +169,16 @@ export default function VoiceChatDock({ messages = [], onSend, open, onCloseComp
             </div>
           )}
 
-          <form
+          <VoiceChatNeonComposer
+            text={text}
+            onChange={(event) => setText(event.target.value)}
             onSubmit={submit}
-            className="voice-chat-composer mx-3 mb-2 mt-1.5 flex items-center gap-1 px-1 py-1"
-          >
-            <input
-              ref={inputRef}
-              value={text}
-              onChange={(event) => setText(event.target.value)}
-              onBlur={handleInputBlur}
-              placeholder="Selam…"
-              autoComplete="off"
-              enterKeyHint="send"
-              className="h-10 min-w-0 flex-1 bg-transparent px-1 text-base text-white outline-none placeholder:text-white/45"
-            />
-            <button
-              type="button"
-              onClick={() => setEmojiOpen((value) => !value)}
-              aria-label="Emoji ekle"
-              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-transform active:scale-95 ${emojiOpen ? 'bg-white/20 text-white' : 'text-white/60'}`}
-            >
-              <Smile className="h-5 w-5" />
-            </button>
-            <button
-              type="submit"
-              disabled={sending || !text.trim()}
-              aria-label="Gönder"
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[#FFD700] transition-transform active:scale-95 disabled:opacity-40"
-            >
-              <Send className="h-5 w-5" />
-            </button>
-          </form>
+            onBlur={handleInputBlur}
+            inputRef={inputRef}
+            emojiOpen={emojiOpen}
+            onToggleEmoji={() => setEmojiOpen((value) => !value)}
+            sending={sending}
+          />
         </>
       )}
     </div>

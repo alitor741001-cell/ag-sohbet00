@@ -82,7 +82,7 @@ function VoiceChatMessage({ message, profile, ownerId, moderators = [], currentU
         </span>
       )}
       <article
-        className={`flex min-w-0 items-start gap-2 rounded-xl text-sm leading-relaxed [overflow-wrap:anywhere] [text-shadow:0_1px_4px_rgba(0,0,0,0.9)] ${flash ? 'bg-[#FFD700]/15 ring-1 ring-[#FFD700]/70' : ''}`}
+        className={`flex min-w-0 items-start gap-2 text-sm leading-relaxed [overflow-wrap:anywhere] [text-shadow:0_1px_4px_rgba(0,0,0,0.9)] ${flash ? 'rounded-lg bg-[#FFD700]/15 ring-1 ring-[#FFD700]/70' : ''}`}
         style={{ transform: `translateX(${drag}px)`, transition: drag ? 'none' : 'transform 160ms ease-out' }}
       >
         {/* Tüm mesajlar solda hizalanır: profil ve isim her zaman solda görünür. */}
@@ -122,7 +122,7 @@ function VoiceChatMessage({ message, profile, ownerId, moderators = [], currentU
           )}
 
           <VipChatBubble theme={!hidden && vipLook(profile, 'bubble')}>
-            <p className={`mt-1 whitespace-pre-wrap text-white ${mine ? 'inline-block max-w-full rounded-xl border border-primary/45 bg-primary/25 px-3 py-1.5' : ''}`}>
+            <p className="mt-1 whitespace-pre-wrap text-white">
               {text.split(MENTION_RE).map((part, index) => (
                 part.startsWith('@')
                   ? <span key={index} className={`rounded px-0.5 font-bold ${part === myTag ? 'bg-[#FFD700]/25 text-[#FFD700]' : 'text-sky-300'}`}>{part}</span>
