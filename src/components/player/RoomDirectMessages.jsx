@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useToast } from '@/components/ui/use-toast';
 import useFriends from '@/hooks/useFriends';
@@ -7,7 +8,8 @@ import useConversations from '@/hooks/useConversations';
 import useFriendPresence from '@/hooks/useFriendPresence';
 import ConversationList from '@/components/friends/ConversationList';
 import ChatPanel from '@/components/friends/ChatPanel';
-import RoomChatThemeList from '@/components/player/RoomChatThemeList';
+import MessagesHeaderArt from '@/components/friends/MessagesHeaderArt';
+import useActiveRooms from '@/hooks/useActiveRooms';
 import useLiveBadges from '@/hooks/useLiveBadges';
 import BackDismissLayer from '@/components/player/BackDismissLayer';
 import FriendRequests from '@/pages/FriendRequests';
@@ -21,7 +23,8 @@ export default function RoomDirectMessages({ onClose, initialUserId, onFullScree
   const { user, relations, loading: friendsLoading, invoke } = useFriends();
   const { conversations, loading: convosLoading, optimisticHide } = useConversations();
   const { toast } = useToast();
-  const { isOnline } = useFriendPresence(user);
+  const { isOnline, getLastSeen } = useFriendPresence(user);
+  const { rooms, getRoomId } = useActiveRooms(true);
   const liveBadges = useLiveBadges(user?.id);
   const [selected, setSelected] = useState(null);
   const [roomPanel, setRoomPanel] = useState('');
@@ -79,9 +82,9 @@ export default function RoomDirectMessages({ onClose, initialUserId, onFullScree
   if (selected) {
     const friendId = selected.user1_id === user.id ? selected.user2_id : selected.user1_id;
     return (
-      <section className="room-direct-selected dark flex h-full min-h-0 w-full flex-col bg-black text-white pt-[max(env(safe-area-inset-top),1rem)] pb-[env(safe-area-inset-bottom)]">
-        <BackDismissLayer onClose={onClose} />
-        <ChatPanel conversation={selected} userId={user.id} onBack={() => setSelected(null)} online={isOnline(friendId)} embedded />
+      <section className="room-direct-selected dark mx-auto flex h-full min-h-0 w-full min-w-0 max-w-5xl flex-col bg-[#02030c] text-white">
+        <BackDismissLayer onClose={() => setSelected(null)} />
+        <ChatPanel key={selected.id} conversation={selected} userId={user.id} onBack={() => setSelected(null)} online={isOnline(friendId)} getLastSeen={getLastSeen} rooms={rooms} getRoomId={getRoomId} embedded />
         {panelOverlay}
       </section>
     );
@@ -95,13 +98,27 @@ export default function RoomDirectMessages({ onClose, initialUserId, onFullScree
     agency: liveBadges.agency,
   };
   return (
-    <>
+    <div className="dark flex h-full min-h-0 w-full flex-col bg-[#02030c] text-white">
       <BackDismissLayer onClose={onClose} />
-      <RoomChatThemeList counts={counts} active={roomPanel || 'chats'} onTab={(key) => setRoomPanel(key === 'chats' ? '' : key)} onClose={closeOnBackdrop ? onClose : undefined}>
-        {Panel
-          ? <Panel embedded onBack={() => setRoomPanel('')} />
-          : <ConversationList conversations={conversations} userId={user.id} onOpen={setSelected} onHide={hide} isOnline={isOnline} />}
-      </RoomChatThemeList>
-    </>
+      {/* MESAJLAR başlığı ve dört neon sekme: ana sayfadaki özel sohbetin birebir aynısı. */}
+      <div className="relative shrink-0">
+        <MessagesHeaderArt counts={counts} active={roomPanel || 'chats'} onSelect={(key) => setRoomPanel(key === 'chats' ? '' : key)} />
+        <button
+          type="button"
+          aria-label="Kapat"
+          onClick={onClose}
+          className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-black/50 text-white/80 active:scale-95"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+      <div className="mx-[5%] flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+          {Panel
+            ? <Panel embedded onBack={() => setRoomPanel('')} />
+            : <ConversationList conversations={conversations} userId={user.id} onOpen={setSelected} onHide={hide} isOnline={isOnline} getLastSeen={getLastSeen} rooms={rooms} getRoomId={getRoomId} />}
+        </div>
+      </div>
+    </div>
   );
 }

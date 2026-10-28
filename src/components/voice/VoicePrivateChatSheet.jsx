@@ -1,34 +1,19 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import RoomDirectMessages from '@/components/player/RoomDirectMessages';
 
 /**
- * Özel sohbet sesli odada oyun merkeziyle aynı şekilde açılır: ekranı kaplayan
- * karartılı bir örtü ve alttan yükselen yarım panel. Arkadaki koltuklar görünür
- * kalır, yerleşim yukarı kaymaz. Mesaj açılınca tam ekrana geçer.
+ * Özel sohbet sesli odada ana sayfadaki özel sohbetin birebir aynısı olarak
+ * tam ekran açılır: aynı başlık tasarımı, aynı sekmeler ve aynı sohbet ekranı.
  */
 export default function VoicePrivateChatSheet({ open, initialUserId, onClose, onExpandChange }) {
-  const [full, setFull] = useState(false);
-
-  useEffect(() => { if (!open) setFull(false); }, [open]);
-
-  const handleFullChange = (next) => {
-    setFull(next);
-    onExpandChange?.(next);
-  };
+  useEffect(() => { if (!open) onExpandChange?.(false); }, [open]);
 
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[250] flex flex-col justify-end">
-      {!full && <button type="button" aria-label="Kapat" onClick={onClose} className="absolute inset-0 bg-black/70 backdrop-blur-[2px]" />}
-      <div
-        className={
-          full
-            ? 'relative flex h-full w-full flex-col overflow-hidden bg-[#040b1c]'
-            : 'relative flex h-[var(--voice-dm-height)] w-full flex-col overflow-hidden bg-transparent'
-        }
-      >
-        <RoomDirectMessages initialUserId={initialUserId} onClose={onClose} onFullScreenChange={handleFullChange} />
+    <div className="fixed inset-0 z-[250] flex flex-col justify-end bg-[#02030c]">
+      <div className="relative flex h-full w-full flex-col overflow-hidden pt-[env(safe-area-inset-top)]">
+        <RoomDirectMessages initialUserId={initialUserId} onClose={onClose} />
       </div>
     </div>
   );
