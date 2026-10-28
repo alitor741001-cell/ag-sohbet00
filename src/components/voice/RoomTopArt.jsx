@@ -40,8 +40,14 @@ export default function RoomTopArt({
     >
       <div className="min-w-0 shrink-0" style={{ width: 'clamp(178px, 58vw, 250px)' }}>
         <div className="relative" style={{ aspectRatio: String(BAR_RATIO) }}>
-          {/* Oda fotoğrafı: şeridin penceresinin arkasında durur. */}
-          <div className="absolute overflow-hidden" style={{ left: '4.8%', top: '10.7%', width: '14.4%', height: '79.8%' }}>
+          {/* Oda fotoğrafı: basılınca odanın profil sayfası açılır. */}
+          <button
+            type="button"
+            onClick={onOpenRoom}
+            aria-label="Oda profilini aç"
+            className="absolute overflow-hidden active:scale-95"
+            style={{ left: '4.8%', top: '10.7%', width: '14.4%', height: '79.8%' }}
+          >
             {room?.cover_url ? (
               <img src={room.cover_url} alt="" className="h-full w-full object-cover" />
             ) : (
@@ -49,7 +55,7 @@ export default function RoomTopArt({
                 <UserRound className="h-1/2 w-1/2 text-[#ff6b6b]" />
               </span>
             )}
-          </div>
+          </button>
 
           {barArt && (
             <img
@@ -86,13 +92,13 @@ export default function RoomTopArt({
           />
         </div>
 
-        {/* Hediye kartı: küçültülüp biraz yukarı alındı; basılınca hediye sıralaması açılır. */}
+        {/* Hediye kartı: küçültülüp sola ve biraz aşağı alındı; basılınca hediye sıralaması açılır. */}
         <button
           type="button"
           onClick={onOpenGiftBoard}
           aria-label="Hediye sıralamasını aç"
           className="relative block active:scale-[0.97]"
-          style={{ marginLeft: '5%', marginTop: '-8px', width: '54%', aspectRatio: String(PILL_RATIO) }}
+          style={{ marginLeft: '-2%', marginTop: '6px', width: '34%', aspectRatio: String(PILL_RATIO) }}
         >
           {pillArt && (
             <img
@@ -106,7 +112,7 @@ export default function RoomTopArt({
           <span className="absolute flex items-center justify-center" style={{ left: '26%', right: '2%', top: '24%', bottom: '19%' }}>
             <span
               className="truncate font-black leading-none text-white"
-              style={{ fontSize: 'clamp(8px, 2vw, 11px)', textShadow: '0 0 8px rgba(255,60,40,0.85)' }}
+              style={{ fontSize: 'clamp(6px, 1.6vw, 9px)', textShadow: '0 0 8px rgba(255,60,40,0.85)' }}
             >
               {amountText(giftTotal)}
             </span>
@@ -119,16 +125,16 @@ export default function RoomTopArt({
           type="button"
           onClick={onOpenViewers}
           aria-label={`İzleyiciler: ${viewerCount}`}
-          className="relative h-10 w-10 active:scale-95"
+          className="relative flex h-10 w-10 items-center justify-center active:scale-95"
         >
-          <DesignArt src={ART.roomViewers} className="absolute inset-0 h-full w-full object-contain" />
-          <span className="absolute inset-0 flex items-center justify-center">
-            <span
-              className="rounded-full bg-black/70 px-1 font-black leading-none tabular-nums text-[#ff2b2b]"
-              style={{ fontSize: shown.length > 2 ? 11 : 15, textShadow: '0 0 8px rgba(255,40,40,0.95)' }}
-            >
-              {shown}
-            </span>
+          <span
+            className="bg-gradient-to-b from-white via-[#ffb3aa] to-[#ff1f1f] bg-clip-text font-black leading-none tabular-nums tracking-tight text-transparent"
+            style={{
+              fontSize: shown.length > 2 ? 13 : shown.length > 1 ? 18 : 22,
+              filter: 'drop-shadow(0 0 6px rgba(255,40,40,0.95)) drop-shadow(0 1px 3px rgba(0,0,0,0.95))',
+            }}
+          >
+            {shown}
           </span>
         </button>
         {showMenu && (
