@@ -10,6 +10,9 @@ const BAR_RATIO = 2172 / (0.54 * 724);
 // Hediye kartı: dama zemin şeffaf yapılır, elmas miktarı sağdaki alana yazılır.
 const PILL_CROP = { top: 0, height: 1 };
 const PILL_RATIO = 1935 / 812;
+// İzleyici çemberi: beyaz/dama zemin şeffaf yapılır, çemberin içi boşaltılır.
+const FULL_CROP = { top: 0, height: 1 };
+const RING_CROP = { top: 0, height: 1, clearWhiteIslands: true };
 
 // Elmas miktarı: odanın her yerinde kullanılan K/M kısaltmasıyla aynı biçim.
 const amountText = (value) => formatCoinAmount(value);
@@ -30,6 +33,8 @@ export default function RoomTopArt({
 }) {
   const barArt = useKeyedImage(ART.roomBar, BAR_CROP);
   const pillArt = useKeyedImage(ART.roomGiftPill, PILL_CROP);
+  const ringArt = useKeyedImage(ART.roomViewerRing, RING_CROP);
+  const eyeArt = useKeyedImage(ART.roomViewerEye, FULL_CROP);
   const shown = viewerCount > 999 ? '999+' : String(viewerCount || 0);
   const roomId = room?.room_number || room?.personal_room_code || '';
 
@@ -125,16 +130,36 @@ export default function RoomTopArt({
           type="button"
           onClick={onOpenViewers}
           aria-label={`İzleyiciler: ${viewerCount}`}
-          className="relative flex h-10 w-10 items-center justify-center active:scale-95"
+          className="relative h-11 w-11 shrink-0 active:scale-95"
         >
-          <span
-            className="bg-gradient-to-b from-white via-[#ffb3aa] to-[#ff1f1f] bg-clip-text font-black leading-none tabular-nums tracking-tight text-transparent"
-            style={{
-              fontSize: shown.length > 2 ? 13 : shown.length > 1 ? 18 : 22,
-              filter: 'drop-shadow(0 0 6px rgba(255,40,40,0.95)) drop-shadow(0 1px 3px rgba(0,0,0,0.95))',
-            }}
-          >
-            {shown}
+          {/* Çemberin içindeki göz amblemi, üstünde metalik halka. */}
+          {eyeArt && (
+            <img
+              src={eyeArt}
+              alt=""
+              draggable={false}
+              className="pointer-events-none absolute inset-[16%] h-[68%] w-[68%] select-none object-contain opacity-95"
+            />
+          )}
+          {ringArt && (
+            <img
+              src={ringArt}
+              alt=""
+              draggable={false}
+              className="pointer-events-none absolute inset-0 h-full w-full select-none object-contain"
+            />
+          )}
+          {/* İzleyici sayısı: büyük çemberin tam ortasında beyaz rakam. */}
+          <span className="absolute inset-0 flex items-center justify-center">
+            <span
+              className="font-black leading-none tabular-nums text-white"
+              style={{
+                fontSize: shown.length > 2 ? 10 : shown.length > 1 ? 13 : 16,
+                textShadow: '0 0 6px rgba(255,0,0,0.95), 0 1px 3px rgba(0,0,0,0.95)',
+              }}
+            >
+              {shown}
+            </span>
           </span>
         </button>
         {showMenu && (

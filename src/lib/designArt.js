@@ -33,4 +33,8 @@ export const ART = {
   cardVoice: `${P}fa5577e04_IMG_0415.jpg`,
   // 15) Oda kartı: film
   cardFilm: `${P}ab0f922e8_IMG_0409.jpg`,
+  // 16) Sesli oda: izleyici çemberi (metalik halka)
+  roomViewerRing: `${P}672979b77_IMG_0432.jpg`,
+  // 17) Sesli oda: izleyici çemberinin içindeki neon göz amblemi
+  roomViewerEye: `${P}7793955ca_IMG_0431.jpg`,
 };
