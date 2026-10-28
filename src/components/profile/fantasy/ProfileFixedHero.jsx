@@ -31,7 +31,7 @@ export default function ProfileFixedHero(props) {
           src={ART.pageBg}
           alt=""
           draggable={false}
-          className="fixed inset-0 h-full w-full select-none object-cover"
+          className="absolute inset-0 h-full w-full select-none object-cover"
         />
       </div>
       <div ref={boxRef} className="fixed inset-x-0 z-30 overflow-hidden" style={{ top: 'var(--safe-top)' }}>
@@ -39,7 +39,8 @@ export default function ProfileFixedHero(props) {
           <ProfileHeroCard {...props} />
         </div>
       </div>
-      <div style={{ height }} aria-hidden="true" />
+      {/* İçerik, başlığın arkasındaki zemin şeridinin hemen altından başlar. */}
+      <div style={{ height: `calc(var(--safe-top) + ${height}px)` }} aria-hidden="true" />
     </>
   );
 }
