@@ -140,6 +140,8 @@ export default function RoomTopArt({
               className="pointer-events-none absolute inset-0 h-full w-full select-none object-contain"
             />
           )}
+          {/* Çemberin içi: beyaz yerine siyah zemin. */}
+          <span className="pointer-events-none absolute inset-[22%] rounded-full bg-black" />
           <span className="absolute inset-0 flex items-center justify-center">
             <span
               className="font-black leading-none tabular-nums text-red-500"
