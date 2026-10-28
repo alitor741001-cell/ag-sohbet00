@@ -18,6 +18,7 @@ import RoomGiftStage from '@/components/voice/RoomGiftStage';
 import RoomExitOverlay from '@/components/voice/RoomExitOverlay';
 import { clearMinimizedRoom, getMinimizedRoom, isRoomMinimized, setMinimizedRoom } from '@/lib/minimizedRoom';
 import { clearChatEntry } from '@/lib/roomChatEntry';
+import { ensureMicTrack } from '@/lib/callAudio';
 import { clearChatMessages } from '@/lib/roomChatCache';
 import { clearMinimizedFilm, getMinimizedFilm, setMinimizedFilm } from '@/lib/minimizedFilm';
 
@@ -499,6 +500,9 @@ export default function WatchParty() {
   // Film odasındaki mikrofon: sesli sohbet kapalıysa odayı sesli moda geçirmeden sesli sohbeti açar.
   const handleMicPress = async () => {
     if (room?.voice_enabled) { await voice.toggleMute(); return; }
+    // Mikrofon izni dokunuşun içinde istenir: eski iOS/Android sürümleri izni yalnızca
+    // doğrudan dokunuşta kabul eder, ağ isteğinden sonra reddedebilir.
+    ensureMicTrack().catch(() => {});
     try {
       await base44.functions.invoke('room-presence', { action: 'enable-voice', room_id: id });
       setMicRequested(true);

@@ -17,7 +17,7 @@ import useFollowMessages from '@/hooks/useFollowMessages';
  * klavye iner, akış görünür kalır. Klavye açıkken oda alt bloğu (bu akış + kontrol çubuğu) tek
  * parça hâlinde klavyenin üstüne kayar; oda yerleşimi yeniden akışa girmez.
  */
-export default function VoiceChatDock({ messages = [], onSend, open, onCloseComposer, composerOpen, keyboardOpen = false, chatLocked, currentUserId, ownerId, moderators = [], onOpenProfile, bigGiftNotices = [], onOpenBigGiftRoom, hiddenUsers = {}, mention = null }) {
+export default function VoiceChatDock({ messages = [], onSend, open, onCloseComposer, composerOpen, keyboardOpen = false, chatLocked, currentUserId, currentUserName = '', ownerId, moderators = [], onOpenProfile, onMention, bigGiftNotices = [], onOpenBigGiftRoom, hiddenUsers = {}, mention = null }) {
   const [text, setText] = useState('');
   const [emojiOpen, setEmojiOpen] = useState(false);
   const inputRef = useRef(null);
@@ -142,6 +142,8 @@ export default function VoiceChatDock({ messages = [], onSend, open, onCloseComp
                   ownerId={ownerId}
                   moderators={moderators}
                   currentUserId={currentUserId}
+                  currentUserName={currentUserName}
+                  onMention={onMention}
                   onOpenProfile={onOpenProfile}
                 />
               );
@@ -168,7 +170,7 @@ export default function VoiceChatDock({ messages = [], onSend, open, onCloseComp
 
           <form
             onSubmit={submit}
-            className="voice-chat-composer mx-3 mb-2 mt-1.5 flex items-center gap-1 rounded-full border border-[#FFD700]/45 bg-black/70 px-3 py-1.5 shadow-[0_0_16px_-6px_rgba(255,215,0,0.85)] backdrop-blur-md"
+            className="voice-chat-composer mx-3 mb-2 mt-1.5 flex items-center gap-1 px-1 py-1"
           >
             <input
               ref={inputRef}
@@ -192,7 +194,7 @@ export default function VoiceChatDock({ messages = [], onSend, open, onCloseComp
               type="submit"
               disabled={sending || !text.trim()}
               aria-label="Gönder"
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#FFD700] bg-[#FFD700] text-black shadow-[0_0_14px_-3px_rgba(255,215,0,0.95)] transition-transform active:scale-95"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[#FFD700] transition-transform active:scale-95 disabled:opacity-40"
             >
               <Send className="h-5 w-5" />
             </button>

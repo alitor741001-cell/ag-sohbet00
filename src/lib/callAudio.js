@@ -16,6 +16,7 @@ const EARPIECE_RE = /earpiece|receiver|handset|ahize|kulak|communication/i;
 let micStream = null;
 let micTrack = null;
 let micPending = null;
+let micPendingAt = 0;
 let micGeneration = 0;
 
 let speakerOn = true;
@@ -38,6 +39,26 @@ function micGetter() {
   return (constraints) => new Promise((resolve, reject) => legacy.call(navigator, constraints, resolve, reject));
 }
 
+const wait = (ms) => new Promise((resolve) => { setTimeout(resolve, ms); });
+// Kısıtları anlamayan eski tarayıcılar ve aygıtı henüz bırakmamış Android sürücüleri.
+const SIMPLIFY_ERRORS = ['NotSupportedError', 'OverconstrainedError', 'TypeError'];
+const DEVICE_BUSY_ERRORS = ['NotReadableError', 'TrackStartError', 'AbortError'];
+
+/** Mikrofonu açar; eski/Android cihazlarda sık görülen hatalarda kendiliğinden yeniden dener. */
+async function openAudio(getMedia, constraints, attempt = 0) {
+  try {
+    return await getMedia(constraints);
+  } catch (error) {
+    const name = error?.name || '';
+    const simplify = SIMPLIFY_ERRORS.includes(name);
+    if (!simplify && !DEVICE_BUSY_ERRORS.includes(name)) throw error;
+    if (attempt >= 2) throw error;
+    // Gelişmiş kısıtlar reddedildiyse sade istekle, aygıt meşgulse kısa bekleyip tekrar denenir.
+    if (!simplify) await wait(attempt === 0 ? 200 : 500);
+    return openAudio(getMedia, { audio: true }, attempt + 1);
+  }
+}
+
 async function acquireMic() {
   const getMedia = micGetter();
   if (!getMedia) throw new Error('mikrofon desteklenmiyor');
@@ -45,19 +66,9 @@ async function acquireMic() {
   // Android aynı giriş aygıtı hâlâ tutulurken ikinci kayıt isteğini reddedebilir.
   // Yeniden edinim gerekiyorsa eski (sessiz/askıda) kayıt önce serbest bırakılır.
   releaseMicStream();
-  let next;
-  try {
-    // Android WebView'in eski ses sürücüleri işleme kısıtlarıyla açılamayabilir.
-    const android = /Android/i.test(navigator.userAgent || '');
-    next = await getMedia({ audio: android ? true : micOptions() });
-  } catch (error) {
-    // Eski cihazlar gelişmiş ses kısıtlarını reddedebilir: sade istekle tekrar denenir.
-    if (['NotSupportedError', 'OverconstrainedError', 'TypeError'].includes(error?.name)) {
-      next = await getMedia({ audio: true });
-    } else {
-      throw error;
-    }
-  }
+  // Android WebView'in eski ses sürücüleri işleme kısıtlarıyla açılamayabilir.
+  const android = /Android/i.test(navigator.userAgent || '');
+  const next = await openAudio(getMedia, { audio: android ? true : micOptions() });
   if (generation !== micGeneration) {
     next.getTracks().forEach((track) => track.stop());
     throw new Error('arama sonlandı');
@@ -85,7 +96,10 @@ async function acquireMic() {
  */
 export function ensureMicTrack({ fresh = false } = {}) {
   if (!fresh && micTrack && micTrack.readyState === 'live' && !micTrack.muted) return Promise.resolve(micTrack);
-  if (!micPending) {
+  // Eski cihazlarda izin isteği yanıtsız kalabilir: asılı deneme düğmeyi kilitlemez,
+  // 12 saniyeden sonra yeni bir dokunuş temiz bir deneme başlatır.
+  if (!micPending || Date.now() - micPendingAt > 12000) {
+    micPendingAt = Date.now();
     const pending = acquireMic().finally(() => {
       if (micPending === pending) micPending = null;
     });
@@ -98,6 +112,7 @@ export function ensureMicTrack({ fresh = false } = {}) {
 export function releaseMic() {
   micGeneration += 1;
   micPending = null;
+  micPendingAt = 0;
   releaseMicStream();
 }
 

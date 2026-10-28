@@ -171,6 +171,11 @@ export default function VoiceRoom() {
     return names;
   }, [participants, seats]);
   const moderators = useMemo(() => room?.room_moderators || [], [room?.room_moderators]);
+  // Sohbetteki etiketler (@isim) odadaki görünen adla eşleşir: kişi kendine yapılan etiketi görür.
+  const myRoomName = useMemo(() => {
+    const self = [...participants, ...seats].find((person) => person?.user_id === user?.id);
+    return self?.name || user?.full_name || '';
+  }, [participants, seats, user?.id, user?.full_name]);
   // Oda LVL'i: odadakilerin seviyesi canlı izlenir — seviye atlayınca rozet anında değişir.
   const mySeatIndex = seats.findIndex((seat) => seat.user_id === user?.id);
   const seated = mySeatIndex >= 0;
@@ -1177,6 +1182,8 @@ export default function VoiceRoom() {
         composerOpen={composerOpen}
         keyboardOpen={keyboardOpen}
         currentUserId={user?.id}
+        currentUserName={myRoomName}
+        onMention={roomProfileActions.mention}
         ownerId={room?.owner_id}
         moderators={moderators}
         hiddenUsers={hiddenUsersByName}
