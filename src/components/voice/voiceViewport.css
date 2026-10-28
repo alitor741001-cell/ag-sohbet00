@@ -228,14 +228,14 @@
   box-sizing: border-box;
   right: auto;
   overflow-x: clip;
-  padding-bottom: calc(var(--voice-bar-height, 120px) + env(safe-area-inset-bottom, 0px));
+  padding-bottom: var(--voice-bar-height, 120px);
 }
 .voice-viewport .voice-controls-anchor {
   position: absolute;
   left: 0;
   right: 0;
-  /* Dokunma alanları cihazın güvenli alanının üzerinde kalır. */
-  bottom: env(safe-area-inset-bottom, 0px);
+  /* Çubuk ekranın en alt kenarına, çentik hizasına kadar iner. */
+  bottom: 0;
 }
 @media (min-width: 768px) {
   .voice-viewport .voice-controls-anchor {
