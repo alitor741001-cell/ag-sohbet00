@@ -3,8 +3,8 @@
 const P = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/';
 
 export const ART = {
-  // 1) Sayfa teması: Sıcaklar, Takip, Son Ziyaretçiler, Arkadaşlar, Profil, Arama
-  pageBg: `${P}94b72756c_IMG_0392.jpg`,
+  // 1) Sayfa teması: tüm ekranı kaplayan ateş–buz zemini (Sıcaklar, Takip, Profil, Arama, odalar)
+  pageBg: `${P}970dbeb37_IMG_0427.jpg`,
   // 2) Sıcaklar sekmesinde yayın yokken görünen boş durum
   emptyRooms: `${P}9c42ae982_IMG_0397.jpg`,
   // 3) Özel mesajlar

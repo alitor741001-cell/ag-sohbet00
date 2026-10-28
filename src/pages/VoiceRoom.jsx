@@ -606,9 +606,8 @@ export default function VoiceRoom() {
     const seat = seatsView[index] || seats[index];
     if (seat?.user_id) {
       if (giftOpen) toggleGiftPerson(seat.user_id);
-      // Profil çerçevesine basınca kişinin profil sayfası açılır.
-      else if (seat.user_id === user?.id) navigate('/profil');
-      else navigate(`/kullanici/${seat.user_id}`);
+      // Profil çerçevesine basınca odanın içinde ortadaki profil kartı açılır (kendi profilim dahil).
+      else openRoomProfile(seat.user_id);
       return;
     }
     setSeatIndex(index);
