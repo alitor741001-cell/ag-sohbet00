@@ -18,10 +18,11 @@ const CARD_CROP = { top: 0, height: 1, clearWhiteIslands: 'all', islandMin: 0.00
 const CARD_RATIO = 1078 / 1459;
 // Oda ismi görseldeki gibi soldan sağa camgöbeği → mor → turuncu geçişli yazılır.
 const NAME_GRADIENT = {
-  backgroundImage: 'linear-gradient(90deg,#00f0ff 0%,#cc00ff 42%,#ff8800 72%,#ffe93d 100%)',
+  backgroundImage: 'linear-gradient(90deg,#22f9ff 0%,#b900ff 38%,#ff7a00 68%,#fff83d 100%)',
   WebkitBackgroundClip: 'text',
   backgroundClip: 'text',
   color: 'transparent',
+  filter: 'drop-shadow(0 1px 1px #000) drop-shadow(0 0 6px rgba(0,0,0,0.95))',
 };
 
 /** Ana sayfa keşfet ızgarasındaki oda kartı: moda göre sesli/film çerçevesi,
@@ -34,7 +35,8 @@ function RoomDiscoveryCard({ room, owner, kind, filmTitle, friendInside }) {
   const isVoice = kind === 'voice';
   const isHidden = room.hidden === true;
   const videoId = isVoice ? '' : youtubeIdFromMovieId(room.movie_id);
-  const cover = isVoice ? owner?.avatar : videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : '';
+  // Film kapağı: kenarında siyah bant olmayan (16:9) küçük görsel kullanılır, çerçeve tamamen dolar.
+  const cover = isVoice ? owner?.avatar : videoId ? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg` : '';
   const ownerName = owner?.username || owner?.full_name || room.owner_name || 'Kullanıcı';
   const category = room.category || '';
   const CategoryIcon = CATEGORY_ICONS[category] || null;
@@ -57,7 +59,7 @@ function RoomDiscoveryCard({ room, owner, kind, filmTitle, friendInside }) {
       style={{ aspectRatio: String(CARD_RATIO) }}
     >
       {/* Fotoğraf penceresi: çerçevenin arkasında durur, pencereden görünür. */}
-      <div className="absolute overflow-hidden" style={{ left: '7.4%', top: '18%', width: '85.2%', height: '46.5%' }}>
+      <div className="absolute overflow-hidden" style={{ left: '7.2%', top: '17.4%', width: '85.6%', height: '47.6%' }}>
         {cover ? (
           <Image src={cover} className="absolute inset-0 h-full w-full" fittingType="fill" alt="" />
         ) : (
@@ -122,17 +124,14 @@ function RoomDiscoveryCard({ room, owner, kind, filmTitle, friendInside }) {
       )}
 
       {/* Oda ismi: çerçevenin üstündeki ince şerit. */}
-      <span className="absolute flex items-center justify-center overflow-hidden px-1" style={{ left: '9%', right: '9%', top: '67%', height: '7%' }}>
-        <span
-          className="truncate text-[10px] font-black leading-none tracking-tight"
-          style={{ ...NAME_GRADIENT, filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.95))' }}
-        >
+      <span className="absolute flex items-center justify-center overflow-hidden px-1" style={{ left: '8%', right: '8%', top: '67%', height: '7%' }}>
+        <span className="block w-full truncate text-center text-[10px] font-black leading-none tracking-tight" style={NAME_GRADIENT}>
           {room.name}
         </span>
       </span>
 
       {/* Oda sahibi: “Sesli / Film” yazısının solunda. */}
-      <span className="absolute flex items-center justify-end overflow-hidden" style={{ left: '9%', right: '42%', top: '78%', height: '6%' }}>
+      <span className="absolute flex items-center justify-end overflow-hidden" style={{ left: '9%', right: '47%', top: '78%', height: '6%' }}>
         <span className="truncate text-[8.5px] font-black leading-none text-white" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.95)' }}>
           {ownerName}
         </span>

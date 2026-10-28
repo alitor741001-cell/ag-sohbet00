@@ -2,6 +2,7 @@ import useKeyedImage from '@/hooks/useKeyedImage';
 import DesignArt from '@/components/layout/DesignArt';
 import { ART } from '@/lib/designArt';
 import { UserRound } from 'lucide-react';
+import formatCoinAmount from '@/components/voice/formatCoinAmount';
 
 // Oda şeridi: beyaz fotoğraf penceresi şeffaf yapılır, oda fotoğrafı pencerenin arkasından görünür.
 const BAR_CROP = { top: 0.24, height: 0.54, windows: [[104, 216, 312, 312]] };
@@ -10,8 +11,8 @@ const BAR_RATIO = 2172 / (0.54 * 724);
 const PILL_CROP = { top: 0, height: 1 };
 const PILL_RATIO = 1935 / 812;
 
-// Elmas miktarı: binlik ayraçlı tam sayı.
-const amountText = (value) => Number(value || 0).toLocaleString('tr-TR');
+// Elmas miktarı: odanın her yerinde kullanılan K/M kısaltmasıyla aynı biçim.
+const amountText = (value) => formatCoinAmount(value);
 
 /** Sesli odanın üst şeridi: solda oda şeridi (fotoğraf, isim, ID) ve altında hediye kartı,
     sağda izleyici sayısı, yöneticide oda ayarları ve en sağda çıkış düğmesi. */
@@ -85,7 +86,7 @@ export default function RoomTopArt({
         </div>
 
         {/* Hediye kartı: şeridin hemen altında, arada ince bir boşluk kalır. */}
-        <div className="relative" style={{ marginLeft: '4%', marginTop: '2.5%', width: '82%', aspectRatio: String(PILL_RATIO) }}>
+        <div className="relative" style={{ marginLeft: '4%', marginTop: '2.5%', width: '62%', aspectRatio: String(PILL_RATIO) }}>
           {pillArt && (
             <img
               src={pillArt}
@@ -97,7 +98,7 @@ export default function RoomTopArt({
           <span className="absolute flex items-center justify-center" style={{ left: '34%', right: '5.5%', top: '25%', bottom: '20%' }}>
             <span
               className="truncate font-black leading-none text-white"
-              style={{ fontSize: 'clamp(11px, 3.4vw, 16px)', textShadow: '0 0 8px rgba(255,60,40,0.85)' }}
+              style={{ fontSize: 'clamp(8px, 2.2vw, 12px)', textShadow: '0 0 8px rgba(255,60,40,0.85)' }}
             >
               {amountText(giftTotal)}
             </span>
