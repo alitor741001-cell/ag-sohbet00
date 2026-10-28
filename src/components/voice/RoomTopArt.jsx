@@ -5,7 +5,7 @@ import { UserRound } from 'lucide-react';
 import formatCoinAmount from '@/components/voice/formatCoinAmount';
 
 // Oda şeridi: beyaz fotoğraf penceresi şeffaf yapılır, oda fotoğrafı pencerenin arkasından görünür.
-const BAR_CROP = { top: 0.24, height: 0.54, windows: [[104, 216, 312, 312]] };
+const BAR_CROP = { top: 0.24, height: 0.54, windows: [[101, 219, 318, 318]] };
 const BAR_RATIO = 2172 / (0.54 * 724);
 // Hediye kartı: dama zemin şeffaf yapılır, elmas miktarı sağdaki alana yazılır.
 const PILL_CROP = { top: 0, height: 1 };
@@ -50,7 +50,7 @@ export default function RoomTopArt({
             onClick={onOpenRoom}
             aria-label="Oda profilini aç"
             className="absolute overflow-hidden active:scale-95"
-            style={{ left: '4.8%', top: '10.7%', width: '14.4%', height: '79.8%' }}
+            style={{ left: '4.5%', top: '11.4%', width: '14.9%', height: '82%' }}
           >
             {room?.cover_url ? (
               <img src={room.cover_url} alt="" className="h-full w-full object-cover" />
@@ -168,11 +168,11 @@ export default function RoomTopArt({
           )}
         </button>
         {showMenu && (
-          <button type="button" onClick={onOpenMenu} aria-label="Oda ayarları" className="h-10 w-10 active:scale-95">
+          <button type="button" onClick={onOpenMenu} aria-label="Oda ayarları" className="-ml-2 h-10 w-10 active:scale-95">
             <DesignArt src={ART.roomSettings} className="h-full w-full object-contain" />
           </button>
         )}
-        <button type="button" onClick={onExit} aria-label="Odadan çık" className="h-10 w-10 active:scale-95">
+        <button type="button" onClick={onExit} aria-label="Odadan çık" className="-ml-2 h-10 w-10 active:scale-95">
           <DesignArt src={ART.roomClose} className="h-full w-full object-contain" />
         </button>
       </div>

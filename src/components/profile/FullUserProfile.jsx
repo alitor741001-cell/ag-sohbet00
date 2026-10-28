@@ -278,8 +278,10 @@ export default function FullUserProfile({
   );
 
   // Kart içindeki herhangi bir düğmeye basıldığında kart hemen kapanır.
+  // Yakalama aşamasında dinlenir: butonların kendi olay durdurmaları kapanışı engellemez.
   const closeOnAction = (event) => {
-    if (event.target.closest('button')) onClose?.();
+    if (event.target?.closest?.('[data-keep-open]')) return;
+    if (event.target?.closest?.('button')) onClose?.();
   };
 
   if (room?.kind === 'voice') return (
@@ -295,7 +297,7 @@ export default function FullUserProfile({
       avatar={banned ? ACCOUNT_STATES.banned.image : shownAvatar} role={roleLabel} onClose={onClose}
       memberId={memberId} copied={copied} onCopyId={copyId} userId={userId} self={isSelf}
       full={full} onBack={() => setFull(false)} onOpenFull={() => setFull(true)}>
-      <div className="space-y-3 px-4 pt-1" onClick={closeOnAction}>
+      <div className="space-y-3 px-4 pt-1" onClickCapture={closeOnAction}>
         {header}
         <div className="flex flex-col gap-3">{content}</div>
       </div>

@@ -14,7 +14,7 @@ export default function VoiceFantasyCard({ profile, hidden, name, avatar, role, 
     <FantasyProfileShell profile={profile} female={female} hidden={hidden} name={name} avatar={avatar} role={role} onClose={onClose}
       memberId={memberId} copied={copied} onCopyId={onCopyId} seatAnchored userId={userId} self={isSelf}
       full={full} onBack={onBack} onOpenFull={onOpenFull}>
-          {statusContent || <div className="space-y-3 px-4 pt-1" onClick={onAction}>
+          {statusContent || <div className="space-y-3 px-4 pt-1" onClickCapture={onAction}>
             {!hidden && <>
               <ProfileStatsRow
                 level={roomLevels[userId] || 0}
