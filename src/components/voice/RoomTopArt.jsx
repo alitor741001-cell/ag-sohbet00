@@ -130,7 +130,7 @@ export default function RoomTopArt({
           type="button"
           onClick={onOpenViewers}
           aria-label={`İzleyiciler: ${viewerCount}`}
-          className="relative -mr-1 h-6 w-6 shrink-0 active:scale-95"
+          className="relative -mr-2.5 h-6 w-6 shrink-0 active:scale-95"
         >
           {countArt && (
             <img
@@ -142,7 +142,7 @@ export default function RoomTopArt({
           )}
           <span className="absolute inset-0 flex items-center justify-center">
             <span
-              className="font-black leading-none tabular-nums text-white"
+              className="font-black leading-none tabular-nums text-red-500"
               style={{
                 fontSize: shown.length > 2 ? 6 : shown.length > 1 ? 8 : 10,
                 textShadow: '0 1px 2px rgba(0,0,0,0.9)',
