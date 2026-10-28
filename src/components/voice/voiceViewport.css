@@ -117,9 +117,8 @@
    alt dolgu kalmaz (önceden güvenli alan kadar boşluk mesajları yukarıda bırakıyordu).
    Yazma alanı açıkken aynı boşluk klavyenin üstünde korunur. */
 .voice-viewport .voice-chat-dock { padding-bottom: 0; }
-/* Hediye roketi kontrol çubuğunun üstünde yükselir: son mesajlar roketin hizasında biter,
-   roketin arkasına geçmez. Yazma alanı açıkken roket gizlendiği için pay uygulanmaz. */
-.voice-chat-rocket-reserve { padding-bottom: calc(clamp(100px, 29vw, 154px) + 10px); }
+/* Mesajlar alt buton çubuğunun hemen üstünden başlar: sohbet bloğunun altında ek pay yok,
+   akış çubuğun üst hizasına yaslanır ve yukarı doğru uzar. */
 .voice-viewport .voice-chat-dock.is-composing { padding-bottom: env(safe-area-inset-bottom, 0px); }
 .voice-viewport[data-keyboard="open"] .voice-chat-dock { padding-bottom: 0; }
 .voice-viewport[data-keyboard="open"] .room-direct-selected { padding-bottom: 0; }

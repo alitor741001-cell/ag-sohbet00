@@ -110,7 +110,7 @@ export default function VoiceChatDock({ messages = [], onSend, open, onCloseComp
           style={{ touchAction: 'pan-y' }}
           className={`voice-chat-flow ${composerOpen ? 'max-h-[16vh]' : open ? 'max-h-[30vh]' : 'max-h-[22vh]'} shrink-0 overflow-y-auto overscroll-contain pb-0 [mask-image:linear-gradient(to_bottom,transparent,black_14%)] [-webkit-mask-image:linear-gradient(to_bottom,transparent,black_14%)]`}
         >
-          <div className={`flex flex-col gap-1.5 pl-0.5 pr-4 ${composerOpen ? '' : 'voice-chat-rocket-reserve'}`}>
+          <div className="flex flex-col gap-1.5 pl-0.5 pr-4">
             {visible.map((message) => {
               if (message.type === 'slot_win') {
                 return <SlotWinMessage key={message.id} message={message} />;
