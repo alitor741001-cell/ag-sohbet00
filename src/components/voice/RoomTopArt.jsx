@@ -19,6 +19,7 @@ const amountText = (value) => formatCoinAmount(value);
 export default function RoomTopArt({
   room,
   giftTotal = 0,
+  onOpenGiftBoard,
   onOpenRoom,
   onFollow,
   viewerCount = 0,
@@ -85,8 +86,14 @@ export default function RoomTopArt({
           />
         </div>
 
-        {/* Hediye kartı: şeridin hemen altında, arada ince bir boşluk kalır. */}
-        <div className="relative" style={{ marginLeft: '4%', marginTop: '2.5%', width: '62%', aspectRatio: String(PILL_RATIO) }}>
+        {/* Hediye kartı: küçültülüp biraz yukarı alındı; basılınca hediye sıralaması açılır. */}
+        <button
+          type="button"
+          onClick={onOpenGiftBoard}
+          aria-label="Hediye sıralamasını aç"
+          className="relative block active:scale-[0.97]"
+          style={{ marginLeft: '5%', marginTop: '-8px', width: '54%', aspectRatio: String(PILL_RATIO) }}
+        >
           {pillArt && (
             <img
               src={pillArt}
@@ -95,15 +102,16 @@ export default function RoomTopArt({
               className="pointer-events-none absolute inset-0 h-full w-full select-none object-contain"
             />
           )}
-          <span className="absolute flex items-center justify-center" style={{ left: '34%', right: '5.5%', top: '25%', bottom: '20%' }}>
+          {/* Toplam hediye alanı sağa ve sola doğru genişletildi. */}
+          <span className="absolute flex items-center justify-center" style={{ left: '26%', right: '2%', top: '24%', bottom: '19%' }}>
             <span
               className="truncate font-black leading-none text-white"
-              style={{ fontSize: 'clamp(8px, 2.2vw, 12px)', textShadow: '0 0 8px rgba(255,60,40,0.85)' }}
+              style={{ fontSize: 'clamp(8px, 2vw, 11px)', textShadow: '0 0 8px rgba(255,60,40,0.85)' }}
             >
               {amountText(giftTotal)}
             </span>
           </span>
-        </div>
+        </button>
       </div>
 
       <div className="ml-auto mt-1 flex shrink-0 items-center gap-1">

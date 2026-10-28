@@ -602,7 +602,9 @@ export default function VoiceRoom() {
     const seat = seatsView[index] || seats[index];
     if (seat?.user_id) {
       if (giftOpen) toggleGiftPerson(seat.user_id);
-      else openRoomProfile(seat.user_id);
+      // Profil çerçevesine basınca kişinin profil sayfası açılır.
+      else if (seat.user_id === user?.id) navigate('/profil');
+      else navigate(`/kullanici/${seat.user_id}`);
       return;
     }
     setSeatIndex(index);
@@ -1153,6 +1155,7 @@ export default function VoiceRoom() {
         room={room}
         giftTotal={giftBoard?.all?.total || 0}
         giftToday={giftBoard?.day?.total || 0}
+        onOpenGiftBoard={() => setGiftBoardOpen(true)}
         onOpenRoom={() => setProfilePanelOpen(true)}
         onFollow={followOwner}
         viewerCount={participants.length}
