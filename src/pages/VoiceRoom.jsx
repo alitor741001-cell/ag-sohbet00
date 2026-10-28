@@ -1,6 +1,6 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ChevronLeft } from 'lucide-react';
+import RoomTopArt from '@/components/voice/RoomTopArt';
 import { base44 } from '@/api/base44Client';
 import { roomVisitId, endRoomVisit } from '@/lib/roomVisit';
 import subscribeEntity from '@/components/data/entitySubscriptions';
@@ -1133,15 +1133,14 @@ export default function VoiceRoom() {
     <VoiceViewport className="z-[150]" onKeyboardChange={handleKeyboardChange}>
       <RoomBackground value={room?.background} cover={room?.cover_url} />
 
-      <button
-        type="button"
-        onClick={() => setExitOpen(true)}
-        aria-label="Odadan çık"
-        className="absolute left-2 z-40 grid h-10 w-10 place-items-center rounded-full bg-black/45 text-white backdrop-blur active:scale-95"
-        style={{ top: 'calc(env(safe-area-inset-top) + 8px)' }}
-      >
-        <ChevronLeft className="h-6 w-6" />
-      </button>
+      <RoomTopArt
+        onOpenRoom={() => setProfilePanelOpen(true)}
+        viewerCount={participants.length}
+        onOpenViewers={() => setViewerOpen(true)}
+        onOpenMenu={() => setMenuOpen(true)}
+        onExit={() => setExitOpen(true)}
+        showMenu={canMod}
+      />
 
       <VoiceStage
         scrollRef={swipeGesture.scrollRef}

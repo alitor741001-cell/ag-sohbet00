@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { CHATS_BG } from '@/components/layout/ThemeShell';
-import ChatImageTabs from '@/components/friends/ChatImageTabs';
+import MessagesHeaderArt from '@/components/friends/MessagesHeaderArt';
 
 const TARGET_SEAT = 6; // 7 numaralı koltuk (indeks 0'dan başlar)
 
@@ -16,7 +15,7 @@ function measureHeight() {
   return Math.min(Math.max(viewport - rect.bottom, 260), viewport * 0.85);
 }
 
-/** Oda içindeki özel mesaj listesi: ana sayfadaki özel sohbetle aynı tema görseli ve
+/** Oda içindeki özel mesaj listesi: ana sayfadaki özel sohbetle aynı başlık tasarımı ve
     sekmeler, 7 numaralı koltuğa kadar açılan panelde. */
 export default function RoomChatThemeList({ counts, active, onTab, onClose, children }) {
   const [height, setHeight] = useState(0);
@@ -31,11 +30,9 @@ export default function RoomChatThemeList({ counts, active, onTab, onClose, chil
   return createPortal(
     <>
       {onClose && <button type="button" aria-label="Kapat" onClick={onClose} className="fixed inset-0 z-[269] bg-black/60" />}
-      <div className="dark fixed inset-x-0 bottom-0 z-[270] flex flex-col overflow-hidden rounded-t-[26px] bg-[#081226] bg-no-repeat text-white ring-1 ring-white/15" style={{ height: height || '45vh', backgroundImage: `url(${CHATS_BG})`, backgroundSize: '100% auto', backgroundPosition: 'top center' }}>
-        {/* Ana sayfadaki özel sohbet tema görseli tüm panelin arka planıdır; sekmeler üstte. */}
-        <div className="relative w-full shrink-0 overflow-hidden" style={{ height: '29.3vw' }}>
-          <ChatImageTabs counts={counts} active={active} onSelect={onTab} band />
-        </div>
+      <div className="dark fixed inset-x-0 bottom-0 z-[270] flex flex-col overflow-hidden rounded-t-[26px] bg-[#02030c] text-white ring-1 ring-white/15" style={{ height: height || '45vh' }}>
+        {/* Ana sayfadaki özel sohbet başlık tasarımı: MESAJLAR yazısı ve dört neon sekme. */}
+        <MessagesHeaderArt counts={counts} active={active} onSelect={onTab} />
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-[max(0.5rem,env(safe-area-inset-bottom))]">{children}</div>
       </div>
     </>,

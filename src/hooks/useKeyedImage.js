@@ -64,6 +64,30 @@ function keyImage(url, crop) {
           if (p >= w) stack.push(p - w);
           if (p < w * (h - 1)) stack.push(p + w);
         }
+        // Kenarlara değmeyen beyaz alanlar (tasarımdaki beyaz yer tutucu daire) şeffaf yapılır:
+        // beyaz kutu kalmaz, arkadaki oda zemini görünür.
+        if (crop.clearWhiteIslands) {
+          const visited = new Uint8Array(w * h);
+          let biggest = null;
+          for (let start = 0; start < w * h; start += 1) {
+            if (visited[start] || px[start * 4 + 3] === 0 || !isBg(start * 4)) continue;
+            const cells = [];
+            const queue = [start];
+            visited[start] = 1;
+            while (queue.length) {
+              const q = queue.pop();
+              if (px[q * 4 + 3] === 0 || !isBg(q * 4)) continue;
+              cells.push(q);
+              const x = q % w;
+              if (x > 0 && !visited[q - 1]) { visited[q - 1] = 1; queue.push(q - 1); }
+              if (x < w - 1 && !visited[q + 1]) { visited[q + 1] = 1; queue.push(q + 1); }
+              if (q >= w && !visited[q - w]) { visited[q - w] = 1; queue.push(q - w); }
+              if (q < w * (h - 1) && !visited[q + w]) { visited[q + w] = 1; queue.push(q + w); }
+            }
+            if (!biggest || cells.length > biggest.length) biggest = cells;
+          }
+          if (biggest && biggest.length > w * h * 0.02) biggest.forEach((q) => { px[q * 4 + 3] = 0; });
+        }
         ctx.putImageData(data, 0, 0);
         // Görsele basılı örnek yazılar (isim, ID, sayılar) koyu zeminle örtülür.
         const s = w / (crop.baseWidth || w);
@@ -95,7 +119,7 @@ function keyImage(url, crop) {
 }
 
 function useKeyedArt(url, crop) {
-  const key = `${url}|${crop.top}|${crop.height}|${crop.trim ? 'trim' : ''}|${JSON.stringify(crop.holes || [])}|${(crop.erase || []).length}|${JSON.stringify(crop.transparentDarkCircles || [])}`;
+  const key = `${url}|${crop.top}|${crop.height}|${crop.trim ? 'trim' : ''}|${crop.clearWhiteIslands ? 'islands' : ''}|${JSON.stringify(crop.holes || [])}|${(crop.erase || []).length}|${JSON.stringify(crop.transparentDarkCircles || [])}`;
   const [art, setArt] = useState(() => cache.get(key) || null);
   useEffect(() => {
     if (cache.has(key)) { setArt(cache.get(key)); return; }

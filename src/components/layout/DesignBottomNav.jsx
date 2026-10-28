@@ -27,7 +27,7 @@ export default function DesignBottomNav() {
   const art = useTrimmedArt(ART.bottomNav, { top: 0, height: 1, trim: true });
 
   return (
-    <nav aria-label="Ana menü" className="pointer-events-none fixed inset-x-0 bottom-0 z-[60]">
+    <nav aria-label="Ana menü" className="pointer-events-none fixed inset-x-0 bottom-0 z-[60]" style={{ transform: 'translateY(calc(env(safe-area-inset-bottom, 0px) + 8px))' }}>
       <div
         className="relative w-full"
         style={art ? { aspectRatio: String(art.ratio) } : { height: NAV_HEIGHT }}

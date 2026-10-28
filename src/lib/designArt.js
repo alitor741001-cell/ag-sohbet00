@@ -21,4 +21,8 @@ export const ART = {
   roomSettings: `${P}97b1b150d_IMG_0388.jpg`,
   // 9) Sesli oda: izleyici sayısı
   roomViewers: `${P}854f0f509_IMG_0390.jpg`,
+  // 10) Sesli oda: sol üstteki profil şeridi
+  roomProfileBar: `${P}671e0b898_IMG_0402.jpg`,
+  // 11) Özel mesajlar: MESAJLAR başlığı ve dört neon sekme
+  messagesHeader: `${P}acd5fa518_IMG_0403.jpg`,
 };

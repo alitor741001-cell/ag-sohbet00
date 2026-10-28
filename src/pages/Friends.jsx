@@ -3,7 +3,7 @@ import { ArrowLeft, MessageCircle, Shield } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import subscribeEntity from '@/components/data/entitySubscriptions';
-import InboxTabBar from '@/components/friends/InboxTabBar';
+import MessagesHeaderArt from '@/components/friends/MessagesHeaderArt';
 import FriendRequests from '@/pages/FriendRequests';
 import Notifications from '@/pages/Notifications';
 import AgencyMessages from '@/pages/AgencyMessages';
@@ -200,9 +200,8 @@ export default function Friends() {
     <div className="dark fixed inset-0 z-10 text-white">
       <div className="design-screen">
         <div className="design-stage flex flex-col">
-          {/* Tasarım görselindeki "MESAJLAR" başlığı için ayrılan üst boşluk. */}
-          <div className="shrink-0" style={{ height: '11%' }} aria-hidden="true" />
-          <InboxTabBar counts={{ chats: totalUnread, requests: incomingRequests, notes: liveBadges.notes, agency: liveBadges.agency }} active={inboxTab} onSelect={setInboxTab} />
+          {/* MESAJLAR başlığı ve dört neon sekme: tasarım görseli, sekmeler üstünde tıklanır. */}
+          <MessagesHeaderArt counts={{ chats: totalUnread, requests: incomingRequests, notes: liveBadges.notes, agency: liveBadges.agency }} active={inboxTab} onSelect={setInboxTab} />
           <div className="mx-[5%] flex min-h-0 flex-1 flex-col overflow-hidden">
             <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
               {InboxPanel ? <InboxPanel embedded onBack={() => setInboxTab('chats')} /> : conversations.length > 0 ? (
