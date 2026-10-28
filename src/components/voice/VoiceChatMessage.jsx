@@ -82,18 +82,18 @@ function VoiceChatMessage({ message, profile, ownerId, moderators = [], currentU
         </span>
       )}
       <article
-        className={`flex min-w-0 items-start gap-2 text-sm leading-relaxed [overflow-wrap:anywhere] [text-shadow:0_1px_4px_rgba(0,0,0,0.9)] ${flash ? 'rounded-lg bg-[#FFD700]/15 ring-1 ring-[#FFD700]/70' : ''}`}
+        className={`flex min-w-0 items-start gap-2 text-sm leading-relaxed [overflow-wrap:anywhere] [text-shadow:0_1px_4px_rgba(0,0,0,0.9)] ${mine ? 'flex-row-reverse' : ''} ${flash ? 'rounded-lg bg-[#FFD700]/15 ring-1 ring-[#FFD700]/70' : ''}`}
         style={{ transform: `translateX(${drag}px)`, transition: drag ? 'none' : 'transform 160ms ease-out' }}
       >
-        {/* Tüm mesajlar solda hizalanır: profil ve isim her zaman solda görünür. */}
+        {/* Kendi mesajım sağda durur: profil ve isim sağa geçer, diğerleri solda kalır. */}
         <span onClick={() => onOpenProfile?.(message.user_id)} className="mt-0.5 flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full border border-white/25 bg-white/10">
           {hidden || profile?.avatar
             ? <Image src={hidden ? HIDDEN_AVATAR_URL : profile.avatar} alt="" referrerPolicy="no-referrer" draggable={false} fittingType="fill" className="h-full w-full" />
             : <span className="text-[11px] font-bold text-white/80">{name.trim().charAt(0) || '?'}</span>}
         </span>
 
-        <div className="min-w-0 flex-1">
-          <div className="flex min-w-0 flex-wrap items-center gap-x-1 gap-y-0.5">
+        <div className={`min-w-0 flex-1 ${mine ? 'text-right' : ''}`}>
+          <div className={`flex min-w-0 flex-wrap items-center gap-x-1 gap-y-0.5 ${mine ? 'justify-end' : ''}`}>
             <span onClick={() => onOpenProfile?.(message.user_id)} style={vipVars(!hidden && vipLook(profile, 'name'))} className={`min-w-0 max-w-full cursor-pointer break-words text-left text-xs font-bold [overflow-wrap:anywhere] ${!hidden && !role.name_effect && vipLook(profile, 'name')?.nameAnimated ? 'vip-name-animated' : ''}`}>
               {hidden ? (
                 <span className="hidden-user-name">{name}</span>
@@ -107,7 +107,7 @@ function VoiceChatMessage({ message, profile, ownerId, moderators = [], currentU
             {/* Mesajlarda seviye rozeti gösterilmez. */}
           </div>
 
-          <div className="mt-1 flex flex-wrap items-center gap-1">
+          <div className={`mt-1 flex flex-wrap items-center gap-1 ${mine ? 'justify-end' : ''}`}>
             <UserBadgeRow profile={profile} />
           </div>
 
