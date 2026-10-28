@@ -15,16 +15,19 @@ const ZONES = [
 export default function HomeTopBar() {
   return (
     <div className="relative w-full" style={{ height: 'clamp(72px, 30vw, 140px)' }}>
-      <DesignArt src={ART.topBar} className="absolute inset-0 h-full w-full object-contain" />
-      {ZONES.map((zone) => (
-        <Link
-          key={zone.label}
-          to={zone.to}
-          aria-label={zone.label}
-          className="absolute rounded-full active:scale-95"
-          style={{ left: `${zone.x}%`, width: `${zone.w}%`, top: '6%', height: '88%' }}
-        />
-      ))}
+      {/* Tasarım iki yana doğru biraz taşırılır; düğme alanları aynı oranda büyür. */}
+      <div className="absolute inset-0" style={{ transform: 'scale(1.09)' }}>
+        <DesignArt src={ART.topBar} className="absolute inset-0 h-full w-full object-contain" />
+        {ZONES.map((zone) => (
+          <Link
+            key={zone.label}
+            to={zone.to}
+            aria-label={zone.label}
+            className="absolute rounded-full active:scale-95"
+            style={{ left: `${zone.x}%`, width: `${zone.w}%`, top: '6%', height: '88%' }}
+          />
+        ))}
+      </div>
     </div>
   );
 }
