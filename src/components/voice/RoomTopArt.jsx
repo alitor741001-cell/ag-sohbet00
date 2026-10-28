@@ -33,7 +33,7 @@ export default function RoomTopArt({
   const barArt = useKeyedImage(ART.roomBar, BAR_CROP);
   const pillArt = useKeyedImage(ART.roomGiftPill, PILL_CROP);
   const ringArt = useKeyedImage(ART.roomViewerBadge, FULL_CROP);
-  const countArt = useKeyedImage(ART.roomViewerCount, FULL_CROP);
+  const countArt = useKeyedImage(ART.roomViewerCount, { ...FULL_CROP, fillWhiteBlack: true });
   const shown = viewerCount > 999 ? '999+' : String(viewerCount || 0);
   const roomId = room?.room_number || room?.personal_room_code || '';
 
@@ -140,8 +140,6 @@ export default function RoomTopArt({
               className="pointer-events-none absolute inset-0 h-full w-full select-none object-contain"
             />
           )}
-          {/* Çemberin içi: beyaz yerine siyah zemin. */}
-          <span className="pointer-events-none absolute inset-[22%] rounded-full bg-black" />
           <span className="absolute inset-0 flex items-center justify-center">
             <span
               className="font-black leading-none tabular-nums text-red-500"

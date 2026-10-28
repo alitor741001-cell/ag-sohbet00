@@ -97,8 +97,17 @@ function keyImage(url, crop) {
             if (biggest && biggest.length > w * h * 0.02) biggest.forEach((q) => { px[q * 4 + 3] = 0; });
           }
         }
+        // Görselin içinde kalan beyaz alanlar (ör. çemberin içi) siyahla doldurulur.
+        if (crop.fillWhiteBlack) {
+          for (let i = 0; i < w * h; i += 1) {
+            const i4 = i * 4;
+            const r = px[i4], g = px[i4 + 1], b = px[i4 + 2];
+            if (px[i4 + 3] > 8 && Math.min(r, g, b) > 140 && Math.max(r, g, b) - Math.min(r, g, b) < 45) {
+              px[i4] = 0; px[i4 + 1] = 0; px[i4 + 2] = 0;
+            }
+          }
+        }
         ctx.putImageData(data, 0, 0);
-        // Görsele basılı örnek yazılar (isim, ID, sayılar) koyu zeminle örtülür.
         const s = w / (crop.baseWidth || w);
         ctx.fillStyle = '#0b0a0d';
         (crop.erase || []).forEach(([x, y, ew, eh]) => ctx.fillRect(x * s, y * s - sy, ew * s, eh * s));
@@ -132,7 +141,7 @@ function keyImage(url, crop) {
 }
 
 function useKeyedArt(url, crop) {
-  const key = `${url}|${crop.top}|${crop.height}|${crop.trim ? 'trim' : ''}|${crop.clearWhiteIslands || ''}|${crop.islandMin || ''}|${JSON.stringify(crop.windows || [])}|${JSON.stringify(crop.holes || [])}|${JSON.stringify(crop.erase || [])}|${JSON.stringify(crop.transparentDarkCircles || [])}`;
+  const key = `${url}|${crop.top}|${crop.height}|${crop.trim ? 'trim' : ''}|${crop.clearWhiteIslands || ''}|${crop.islandMin || ''}|${crop.fillWhiteBlack ? 'fb' : ''}|${JSON.stringify(crop.windows || [])}|${JSON.stringify(crop.holes || [])}|${JSON.stringify(crop.erase || [])}|${JSON.stringify(crop.transparentDarkCircles || [])}`;
   const [art, setArt] = useState(() => cache.get(key) || null);
   useEffect(() => {
     if (cache.has(key)) { setArt(cache.get(key)); return; }
