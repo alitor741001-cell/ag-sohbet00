@@ -3,8 +3,8 @@ import { useEffect, useState } from 'react';
 const SOURCE = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/9e599f886_IMG_0375.jpg';
 let cached = null;
 
-// Kenarlardan başlayarak düz zemin rengi şeffaf yapılır: çubuk bütünüyle görünür,
-// arkası gerçek alfa kanallı PNG olur.
+// Görselin kenarındaki zemin (beyaz) tamamen şeffaf yapılır, kalan kısım kırpılır:
+// geriye yalnızca tasarımın kendisi, gerçek alfa kanallı PNG olarak kalır.
 function keyBar(image) {
   const w = image.naturalWidth;
   const h = image.naturalHeight;
@@ -14,48 +14,44 @@ function keyBar(image) {
   ctx.drawImage(image, 0, 0);
   const data = ctx.getImageData(0, 0, w, h);
   const px = data.data;
-  // Görselin kenarında görülen zemin tonları (düz renk ya da damalı desen) toplanır.
-  const buckets = new Map();
-  const touch = (x, y) => {
+
+  // Kenar piksellerinde en sık görülen renk zemin kabul edilir.
+  const counts = new Map();
+  const at = (x, y) => {
     const i = (y * w + x) * 4;
     const key = `${px[i] >> 4}-${px[i + 1] >> 4}-${px[i + 2] >> 4}`;
-    const entry = buckets.get(key) || { r: px[i], g: px[i + 1], b: px[i + 2], n: 0 };
+    const entry = counts.get(key) || { r: px[i], g: px[i + 1], b: px[i + 2], n: 0 };
     entry.n += 1;
-    buckets.set(key, entry);
+    counts.set(key, entry);
   };
-  for (let x = 0; x < w; x += 1) { touch(x, 0); touch(x, h - 1); }
-  for (let y = 0; y < h; y += 1) { touch(0, y); touch(w - 1, y); }
-  const border = w * 2 + h * 2;
-  const grounds = [...buckets.values()].filter((c) => c.n > border * 0.02);
-  const isBg = (i) => grounds.some((c) => Math.abs(px[i] - c.r) < 26 && Math.abs(px[i + 1] - c.g) < 26 && Math.abs(px[i + 2] - c.b) < 26);
+  for (let x = 0; x < w; x += 1) { at(x, 0); at(x, h - 1); }
+  for (let y = 0; y < h; y += 1) { at(0, y); at(w - 1, y); }
+  const sorted = [...counts.values()].sort((a, b) => b.n - a.n);
+  const ground = sorted[0];
+  const isBg = (i) => Math.abs(px[i] - ground.r) < 34
+    && Math.abs(px[i + 1] - ground.g) < 34
+    && Math.abs(px[i + 2] - ground.b) < 34;
+
   const seen = new Uint8Array(w * h);
   const stack = [];
   for (let x = 0; x < w; x += 1) { stack.push(x, (h - 1) * w + x); }
   for (let y = 0; y < h; y += 1) { stack.push(y * w, y * w + w - 1); }
-  let cleared = 0;
   while (stack.length) {
     const p = stack.pop();
     if (seen[p]) continue;
     seen[p] = 1;
     if (!isBg(p * 4)) continue;
     px[p * 4 + 3] = 0;
-    cleared += 1;
     const x = p % w;
     if (x > 0) stack.push(p - 1);
     if (x < w - 1) stack.push(p + 1);
     if (p >= w) stack.push(p - w);
     if (p < w * (h - 1)) stack.push(p + w);
   }
-  // Zemin çubuğun kendisini yutuyorsa (tasarım kenara dayanıyorsa) hiç silinmez.
-  if (cleared > w * h * 0.55) {
-    const whole = document.createElement('canvas');
-    whole.width = w; whole.height = h;
-    whole.getContext('2d').drawImage(image, 0, 0);
-    return { src: whole.toDataURL('image/png'), ratio: `${w} / ${h}` };
-  }
   ctx.putImageData(data, 0, 0);
-  // Görünür çubuğun sınırları: görseldeki fazla boşluk kırpılır.
-  let left = w; let top = h; let right = 0; let bottom = 0;
+
+  // Kalan görünür alanın sınırları bulunur ve fazla boşluk atılır.
+  let left = w; let top = h; let right = -1; let bottom = -1;
   for (let y = 0; y < h; y += 1) {
     for (let x = 0; x < w; x += 1) {
       if (px[(y * w + x) * 4 + 3] > 8) {
@@ -68,7 +64,8 @@ function keyBar(image) {
   }
   const cw = right - left + 1;
   const ch = bottom - top + 1;
-  if (cw < w * 0.2 || ch < 10) return { src: canvas.toDataURL('image/png'), ratio: `${w} / ${h}` };
+  if (cw < 8 || ch < 8) return { src: canvas.toDataURL('image/png'), ratio: `${w} / ${h}` };
+
   const cropped = document.createElement('canvas');
   cropped.width = cw; cropped.height = ch;
   cropped.getContext('2d').drawImage(canvas, left, top, cw, ch, 0, 0, cw, ch);
