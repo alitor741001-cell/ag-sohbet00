@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-const SOURCE = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/3c212c019_IMG_0373.jpg';
+const SOURCE = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/9e599f886_IMG_0375.jpg';
 let cached = null;
 
 // Kenarlardan başlayarak düz zemin rengi şeffaf yapılır: çubuk bütünüyle görünür,
@@ -14,24 +14,44 @@ function keyBar(image) {
   ctx.drawImage(image, 0, 0);
   const data = ctx.getImageData(0, 0, w, h);
   const px = data.data;
-  const corner = (1 * w + 1) * 4;
-  const cr = px[corner]; const cg = px[corner + 1]; const cb = px[corner + 2];
-  const isBg = (i) => Math.abs(px[i] - cr) < 28 && Math.abs(px[i + 1] - cg) < 28 && Math.abs(px[i + 2] - cb) < 28;
+  // Görselin kenarında görülen zemin tonları (düz renk ya da damalı desen) toplanır.
+  const buckets = new Map();
+  const touch = (x, y) => {
+    const i = (y * w + x) * 4;
+    const key = `${px[i] >> 4}-${px[i + 1] >> 4}-${px[i + 2] >> 4}`;
+    const entry = buckets.get(key) || { r: px[i], g: px[i + 1], b: px[i + 2], n: 0 };
+    entry.n += 1;
+    buckets.set(key, entry);
+  };
+  for (let x = 0; x < w; x += 1) { touch(x, 0); touch(x, h - 1); }
+  for (let y = 0; y < h; y += 1) { touch(0, y); touch(w - 1, y); }
+  const border = w * 2 + h * 2;
+  const grounds = [...buckets.values()].filter((c) => c.n > border * 0.02);
+  const isBg = (i) => grounds.some((c) => Math.abs(px[i] - c.r) < 26 && Math.abs(px[i + 1] - c.g) < 26 && Math.abs(px[i + 2] - c.b) < 26);
   const seen = new Uint8Array(w * h);
   const stack = [];
   for (let x = 0; x < w; x += 1) { stack.push(x, (h - 1) * w + x); }
   for (let y = 0; y < h; y += 1) { stack.push(y * w, y * w + w - 1); }
+  let cleared = 0;
   while (stack.length) {
     const p = stack.pop();
     if (seen[p]) continue;
     seen[p] = 1;
     if (!isBg(p * 4)) continue;
     px[p * 4 + 3] = 0;
+    cleared += 1;
     const x = p % w;
     if (x > 0) stack.push(p - 1);
     if (x < w - 1) stack.push(p + 1);
     if (p >= w) stack.push(p - w);
     if (p < w * (h - 1)) stack.push(p + w);
+  }
+  // Zemin çubuğun kendisini yutuyorsa (tasarım kenara dayanıyorsa) hiç silinmez.
+  if (cleared > w * h * 0.55) {
+    const whole = document.createElement('canvas');
+    whole.width = w; whole.height = h;
+    whole.getContext('2d').drawImage(image, 0, 0);
+    return { src: whole.toDataURL('image/png'), ratio: `${w} / ${h}` };
   }
   ctx.putImageData(data, 0, 0);
   // Görünür çubuğun sınırları: görseldeki fazla boşluk kırpılır.
