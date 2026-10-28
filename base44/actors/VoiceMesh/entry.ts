@@ -33,7 +33,11 @@ export default class VoiceMesh extends Actor {
   connFor(peerId) {
     const entry = [...this.peers.entries()].find(([, peer]) => peer.peerId === peerId && !peer.offline);
     if (!entry) return null;
-    return this.getConnections().find((conn) => conn.id === entry[0]) || null;
+    // Aynı kimlikle yeniden bağlanan istemci (uygulama kapatılıp açıldığında) eski
+    // soketi bir süre geride bırakır: sinyal her zaman EN YENİ açık bağlantıya gider,
+    // yoksa teklif/yanıt ölü sokete düşüp ses hiç kurulmaz.
+    const matching = this.getConnections().filter((conn) => conn.id === entry[0]);
+    return matching.length ? matching[matching.length - 1] : null;
   }
 
   async handleStart() {
@@ -76,7 +80,13 @@ export default class VoiceMesh extends Actor {
   async handleMessage(conn, msg) {
     if (!msg || typeof msg !== 'object') return;
     const me = this.peers.get(conn.id);
-    if (!me || me.offline) return;
+    if (!me) return;
+    // Mesaj canlı soketten geldiğine göre kişi bağlıdır: eski bir kopma kaydı varsa temizlenir.
+    if (me.offline) {
+      me.offline = false;
+      this.cancelSchedule(`drop:${me.peerId}`);
+      this.broadcastPeers();
+    }
 
     if (msg.type === 'hello') {
       const name = String(msg.name || 'Kullanıcı').slice(0, 60);
@@ -110,6 +120,10 @@ export default class VoiceMesh extends Actor {
   async handleClose(conn) {
     const me = this.peers.get(conn.id);
     if (!me) return;
+    // Aynı kimlikle daha yeni bir bağlantı açıldıysa eski soketin kapanması kişiyi düşürmez.
+    // (Uygulama kapatılıp açıldığında eski soket sonradan kapanıyor ve sesi tamamen kesiyordu.)
+    const superseded = this.getConnections().some((other) => other !== conn && other.id === conn.id);
+    if (superseded) return;
     me.offline = true;
     me.mic = false;
     this.schedule(`drop:${me.peerId}`, Date.now() + DROP_GRACE_MS);

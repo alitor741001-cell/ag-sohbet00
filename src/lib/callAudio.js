@@ -116,10 +116,37 @@ export function releaseMic() {
   releaseMicStream();
 }
 
+let autoRetryTimer = null;
+let autoRetryUntil = 0;
+
+// iOS/Safari uzak sesi ancak bir dokunuştan sonra başlatır. Ses engellendiğinde
+// kısa aralıklarla kendiliğinden yeniden denenir: kullanıcı ekrana dokunduğu anda
+// ses geri gelir, uygulama kapatılıp açıldığında da takılı kalmaz.
+function armAutoRetry() {
+  if (autoRetryTimer) return;
+  autoRetryUntil = Date.now() + 45000;
+  autoRetryTimer = setInterval(() => {
+    if (Date.now() > autoRetryUntil) { disarmAutoRetry(); return; }
+    retryPlayback();
+  }, 1500);
+}
+
+function disarmAutoRetry() {
+  if (!autoRetryTimer) return;
+  clearInterval(autoRetryTimer);
+  autoRetryTimer = null;
+}
+
 function retryPlayback() {
+  let pending = false;
   outputs.forEach((output) => {
-    if (output.element?.paused) output.element.play().catch(() => {});
+    if (output.element?.paused) {
+      pending = true;
+      output.element.play().catch(() => {});
+    }
   });
+  if (pending) armAutoRetry();
+  else disarmAutoRetry();
 }
 
 /** Arayüz uyumluluğu: bekleyen oynatmayı dener. */
@@ -189,9 +216,14 @@ export function resetAudioRouting() {
 }
 
 if (typeof window !== 'undefined') {
-  // iOS'ta oynatma kullanıcı dokunuşuyla kilidini açar; ilk dokunuşta dener.
+  // iOS'ta oynatma kullanıcı dokunuşuyla kilidini açar; her dokunuşta denenir.
   window.addEventListener('pointerdown', retryPlayback, { capture: true, passive: true });
   window.addEventListener('touchend', retryPlayback, { capture: true, passive: true });
+  window.addEventListener('click', retryPlayback, { capture: true, passive: true });
+  // Uygulamaya geri dönüldüğünde (ekran kilidi, uygulama değiştirme) ses yeniden başlatılır.
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'hidden') retryPlayback();
+  });
 }
 
 /**
@@ -241,9 +273,20 @@ export function createStreamOutput(stream, roomId, { startMuted = false } = {}) 
   element.autoplay = true;
   element.playsInline = true;
   element.setAttribute('playsinline', 'true');
-  element.style.display = 'none';
   element.muted = startMuted;
   element.setAttribute('webkit-playsinline', 'true');
+  // iOS'ta "display:none" olan ses elementi çalmayabiliyor: görünmez ama ekran
+  // içinde duran 1px'lik bir katman kullanılır.
+  element.style.position = 'fixed';
+  element.style.bottom = '0';
+  element.style.left = '0';
+  element.style.width = '1px';
+  element.style.height = '1px';
+  element.style.opacity = '0';
+  element.style.pointerEvents = 'none';
+  // iOS Safari akışı, element sayfaya eklendikten SONRA bağlamayı gerektirir:
+  // ters sırada bağlanan uzak ses iOS cihazlarda hiç çalmıyordu.
+  document.body.appendChild(element);
   // Eski iOS/Android: srcObject yoktur, akış nesne adresiyle bağlanır.
   let objectUrl = '';
   if ('srcObject' in element) {
@@ -254,14 +297,16 @@ export function createStreamOutput(stream, roomId, { startMuted = false } = {}) 
       element.src = objectUrl;
     } catch (error) {}
   }
-  document.body.appendChild(element);
 
   const output = {
     dataset: { voiceRoom: roomId, mediaId: stream.id },
     element,
     play() {
       routeOutput(output).catch(() => {});
-      return element.play();
+      const playing = element.play();
+      // Safari oynatmayı reddederse kendiliğinden yeniden denenir (ilk dokunuşta başlar).
+      if (playing && typeof playing.catch === 'function') playing.catch(() => armAutoRetry());
+      return playing;
     },
     remove() {
       outputs.delete(output);

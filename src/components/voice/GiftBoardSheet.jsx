@@ -20,7 +20,8 @@ const TONES = {
 };
 
 /** Zenginlik sıralaması: 24 saatlik, 1 haftalık ve toplam hediye gönderim listeleri.
-    Ortadaki profil kartıyla aynı biçimde açılır; zeminini yeni tema görseli tam kaplar. */
+    Alttan yukarı açılır, yanları ve altı tamamen kaplar; zeminini tema görseli
+    kesintisiz doldurur (kart içinde kart yoktur). */
 export default function GiftBoardSheet({ open, onClose, board, loading, onSelect }) {
   const [tab, setTab] = useState('all');
   useBackDismiss(open, onClose);
@@ -35,9 +36,19 @@ export default function GiftBoardSheet({ open, onClose, board, loading, onSelect
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[260] flex items-center justify-center bg-black/75 px-3 backdrop-blur-[2px]" onClick={onClose} role="presentation">
-      <div className="relative w-full max-w-[420px]" onClick={(event) => event.stopPropagation()} role="presentation">
-        <div className="relative flex h-[76vh] max-h-[660px] w-full flex-col overflow-hidden rounded-[26px] pb-[max(0.5rem,env(safe-area-inset-bottom))] text-white shadow-[0_18px_60px_rgba(0,0,0,0.75)] ring-1 ring-white/15">
+    <div className="fixed inset-0 z-[260] bg-black/75 backdrop-blur-[2px]" onClick={onClose} role="presentation">
+      <div
+        className="absolute inset-x-0 bottom-0 animate-sheet-up"
+        onClick={(event) => event.stopPropagation()}
+        role="presentation"
+      >
+        <div
+          className="relative flex h-[86dvh] max-h-[96dvh] w-full flex-col overflow-hidden rounded-t-[26px] text-white shadow-[0_-14px_54px_rgba(0,0,0,0.8)] ring-1 ring-white/15"
+          style={{
+            backgroundColor: '#050912',
+            paddingBottom: 'max(0.6rem, env(safe-area-inset-bottom))',
+          }}
+        >
           <img
             src={ART.pageBg}
             alt=""
@@ -45,7 +56,7 @@ export default function GiftBoardSheet({ open, onClose, board, loading, onSelect
             draggable={false}
             className="pointer-events-none absolute inset-0 h-full w-full select-none object-cover"
           />
-          <div className="pointer-events-none absolute inset-0 bg-black/25" aria-hidden="true" />
+          <div className="pointer-events-none absolute inset-0 bg-black/30" aria-hidden="true" />
           <GiftBoardFlames />
 
           <button
@@ -58,7 +69,7 @@ export default function GiftBoardSheet({ open, onClose, board, loading, onSelect
           </button>
 
           {/* Sekmeler: 24 saatlik, 1 haftalık, toplam — ateş ve buz plakaları */}
-          <div className="relative z-10 mx-auto mt-5 flex w-[94%] max-w-[380px] shrink-0 items-center gap-1.5">
+          <div className="relative z-10 mx-auto mt-4 flex w-[92%] shrink-0 items-center gap-1.5">
             {TABS.map((item) => {
               const isActive = tab === item.key;
               const tone = TONES[item.tone];

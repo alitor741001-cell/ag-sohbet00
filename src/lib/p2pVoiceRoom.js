@@ -42,6 +42,10 @@ const candidateInit = (candidate) => {
 const pcConnected = (pc) => ['connected', 'completed'].includes(pc.connectionState || pc.iceConnectionState);
 const pcFailed = (pc) => ['failed', 'closed'].includes(pc.connectionState || pc.iceConnectionState);
 
+// iOS Safari (iPad dahil): mikrofon sonradan eklenen ses hattında sessiz kalabiliyor.
+const IS_IOS = typeof navigator !== 'undefined'
+  && (/iPad|iPhone|iPod/.test(navigator.userAgent || '') || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
+
 const MIC_TIMEOUT_MS = 15000;
 const HEARTBEAT_MS = 6000;
 // Teklif yanıtsız kalırsa bu süre sonunda yeniden denenir (kaçan sinyal kurtarılır).
@@ -127,6 +131,7 @@ export class P2PVoiceRoom {
     this.lastMessageAt = Date.now();
     window.clearInterval(this.heartbeat);
     // Kalp atışı: kimlik ve oda listesi tazelenir, yarım kalan teklifler yeniden denenir.
+    this.bindLifecycle();
     this.heartbeat = window.setInterval(() => {
       // Sinyal sessizce öldüyse (ağ değişimi, uygulama arka planda kalması) yeniden bağlanılır.
       if (Date.now() - this.lastMessageAt > 20000) {
@@ -147,8 +152,38 @@ export class P2PVoiceRoom {
     this.unsubscribe = null;
     this.socket = null;
     try { socket?.close(); } catch (error) {}
-    // Eş hatları korunur: yeni presence listesiyle yalnızca eksikler kurulur.
+    // Ağ değişimi ya da arka plan sonrası eski ses hatları ölü kalır (ICE yenilenmiyor).
+    // Hatlar bırakılır; yeni bağlantıda tazeleri kurulur, böylece ses geri gelir.
+    [...this.peers.keys()].forEach((id) => this.dropPeer(id));
     this.connect().catch(() => { this.connectionState = 'disconnected'; this.emit(); });
+  }
+
+  // Telefon uygulamadan çıkıp döndüğünde: kopan bağlantı kurulur, mikrofon yayını tazelenir.
+  bindLifecycle() {
+    if (this.lifecycleBound) return;
+    this.lifecycleBound = true;
+    this.onResume = () => {
+      if (document.visibilityState === 'hidden') return;
+      if (!this.isConnected()) { this.lastReconnectAt = 0; this.reconnect(); }
+      void this.retryPlayback();
+      if (this.micOn) void this.refreshMic();
+    };
+    this.onOnline = () => { this.lastReconnectAt = 0; this.reconnect(); };
+    document.addEventListener('visibilitychange', this.onResume);
+    window.addEventListener('pageshow', this.onResume);
+    window.addEventListener('focus', this.onResume);
+    window.addEventListener('online', this.onOnline);
+  }
+
+  unbindLifecycle() {
+    if (!this.lifecycleBound) return;
+    this.lifecycleBound = false;
+    document.removeEventListener('visibilitychange', this.onResume);
+    window.removeEventListener('pageshow', this.onResume);
+    window.removeEventListener('focus', this.onResume);
+    window.removeEventListener('online', this.onOnline);
+    this.onResume = null;
+    this.onOnline = null;
   }
 
   onMessage(raw) {
@@ -267,7 +302,9 @@ export class P2PVoiceRoom {
 
   // Eski cihazlarda track yerinde değiştirilemez: hat mikrofonla birlikte yeniden kurulur.
   async applyLocalTrack(peer, track) {
-    if (peer.sender && typeof peer.sender.replaceTrack === 'function') {
+    // iOS Safari mikrofonsuz açılan hatta sonradan konan sesi çoğu sürümde yayınlamaz
+    // (karşı taraf sessizlik duyar): hat doğrudan mikrofonla yeniden kurulur.
+    if (!IS_IOS && peer.sender && typeof peer.sender.replaceTrack === 'function') {
       try { await peer.sender.replaceTrack(track); return; }
       catch (error) { console.warn('[P2P] mikrofon kanalı yeniden kuruluyor', error); }
     }
@@ -315,6 +352,11 @@ export class P2PVoiceRoom {
     this.peers.forEach((peer) => {
       if (pcConnected(peer.pc)) return;
       if (now - (peer.attemptAt || 0) < OFFER_RETRY_MS) return;
+      // Yanıtsız kalan kendi teklifi geri alınır: hat "have-local-offer" durumunda kilitli kalmaz.
+      if (peer.pc.signalingState === 'have-local-offer' && now - (peer.attemptAt || 0) > OFFER_RETRY_MS * 2) {
+        peer.pc.setLocalDescription({ type: 'rollback' }).catch(() => {});
+        return;
+      }
       if (this.peerId < peer.id) void this.callPeer(peer.id);
     });
   }
@@ -336,6 +378,11 @@ export class P2PVoiceRoom {
     if (data.kind === 'offer') {
       const peer = this.ensurePeer(from);
       try {
+        // İki taraf aynı anda teklif verdiyse küçük peerId'li tarafın teklifi geçerlidir;
+        // büyük olan kendi teklifini geri alır (yoksa iki taraf da kilitlenip ses kurulmaz).
+        if (peer.pc.signalingState === 'have-local-offer' && this.peerId > from) {
+          try { await peer.pc.setLocalDescription({ type: 'rollback' }); } catch (error) {}
+        }
         if (peer.pc.signalingState !== 'stable') return;
         await peer.pc.setRemoteDescription(sessionDescription(data.sdp));
         peer.remoteReady = true;
@@ -401,6 +448,21 @@ export class P2PVoiceRoom {
     void this.retryPlayback();
     this.emit();
     return true;
+  }
+
+  // Arka plandan dönüşte iOS mikrofon kanalını sessize alır: kanal tazelenirse yayın geri gelir.
+  async refreshMic() {
+    if (!this.micOn) return;
+    const previous = this.micTrack;
+    try {
+      const track = await ensureMicTrack();
+      if (!track || track.readyState !== 'live' || track === previous) return;
+      track.enabled = true;
+      this.micTrack = track;
+      await Promise.all([...this.peers.values()].map((peer) => this.applyLocalTrack(peer, track)));
+      this.socket?.send({ type: 'mic', on: true });
+      this.emit();
+    } catch (error) {}
   }
 
   stopMic() {
@@ -481,6 +543,7 @@ export class P2PVoiceRoom {
     this.micOn = false;
     window.clearInterval(this.heartbeat);
     this.heartbeat = null;
+    this.unbindLifecycle();
     [...this.peers.keys()].forEach((peerId) => this.dropPeer(peerId));
     try { this.unsubscribe?.(); } catch (error) {}
     this.unsubscribe = null;
