@@ -68,7 +68,7 @@ function keyImage(url, crop) {
         // beyaz kutu kalmaz, arkadaki oda zemini görünür.
         if (crop.clearWhiteIslands) {
           const visited = new Uint8Array(w * h);
-          let biggest = null;
+          const islands = [];
           for (let start = 0; start < w * h; start += 1) {
             if (visited[start] || px[start * 4 + 3] === 0 || !isBg(start * 4)) continue;
             const cells = [];
