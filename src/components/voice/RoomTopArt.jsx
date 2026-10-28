@@ -130,7 +130,7 @@ export default function RoomTopArt({
           type="button"
           onClick={onOpenViewers}
           aria-label={`İzleyiciler: ${viewerCount}`}
-          className="relative -mr-1 h-6 w-6 shrink-0 active:scale-95"
+          className="relative -mr-2.5 h-6 w-6 shrink-0 active:scale-95"
         >
           {countArt && (
             <img
