@@ -6,7 +6,11 @@
 // çalınır; ahize/hoparlör seçimi iOS'ta navigator.audioSession, diğer
 // cihazlarda setSinkId ile yapılır.
 
-const MIC_OPTIONS = { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: { ideal: 1 } };
+// Oda ayarlarındaki "Gürültü engelleyici" anahtarı bu kanalın üzerinde çalışır.
+import { getMicNoiseSuppression, registerRoomMicTrack } from '@/lib/micSource';
+
+// Gürültü engelleme, oda ayarlarındaki anahtardan okunur; kanal her açılışta aynı ayarı alır.
+const micOptions = () => ({ echoCancellation: true, noiseSuppression: getMicNoiseSuppression(), autoGainControl: true, channelCount: { ideal: 1 } });
 const EARPIECE_RE = /earpiece|receiver|handset|ahize|kulak|communication/i;
 
 let micStream = null;
@@ -21,6 +25,7 @@ function releaseMicStream() {
   try { micStream?.getTracks().forEach((track) => track.stop()); } catch {}
   micStream = null;
   micTrack = null;
+  registerRoomMicTrack(null);
 }
 
 // Eski iOS/Android: mediaDevices bulunmaz, ön ekli getUserMedia kullanılır.
@@ -44,7 +49,7 @@ async function acquireMic() {
   try {
     // Android WebView'in eski ses sürücüleri işleme kısıtlarıyla açılamayabilir.
     const android = /Android/i.test(navigator.userAgent || '');
-    next = await getMedia({ audio: android ? true : MIC_OPTIONS });
+    next = await getMedia({ audio: android ? true : micOptions() });
   } catch (error) {
     // Eski cihazlar gelişmiş ses kısıtlarını reddedebilir: sade istekle tekrar denenir.
     if (['NotSupportedError', 'OverconstrainedError', 'TypeError'].includes(error?.name)) {
@@ -62,7 +67,10 @@ async function acquireMic() {
   const stale = micStream;
   micStream = next;
   micTrack = track;
-  const onEnded = () => { if (micTrack === track) { micTrack = null; micStream = null; } };
+  registerRoomMicTrack(track);
+  const onEnded = () => {
+    if (micTrack === track) { micTrack = null; micStream = null; registerRoomMicTrack(null); }
+  };
   if (track.addEventListener) track.addEventListener('ended', onEnded);
   else track.onended = onEnded;
   stale?.getTracks().forEach((oldTrack) => oldTrack.stop());
