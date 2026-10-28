@@ -84,15 +84,28 @@ function keyImage(url, crop) {
               if (q >= w && !visited[q - w]) { visited[q - w] = 1; queue.push(q - w); }
               if (q < w * (h - 1) && !visited[q + w]) { visited[q + w] = 1; queue.push(q + w); }
             }
-            if (!biggest || cells.length > biggest.length) biggest = cells;
+            islands.push(cells);
           }
-          if (biggest && biggest.length > w * h * 0.02) biggest.forEach((q) => { px[q * 4 + 3] = 0; });
+          // 'all': görselin içindeki bütün beyaz pencereler (fotoğraf alanı, isim şeridi) şeffaf olur.
+          if (crop.clearWhiteIslands === 'all') {
+            const minArea = w * h * (crop.islandMin ?? 0.004);
+            islands.forEach((cells) => {
+              if (cells.length > minArea) cells.forEach((q) => { px[q * 4 + 3] = 0; });
+            });
+          } else {
+            const biggest = islands.reduce((best, cells) => (!best || cells.length > best.length ? cells : best), null);
+            if (biggest && biggest.length > w * h * 0.02) biggest.forEach((q) => { px[q * 4 + 3] = 0; });
+          }
         }
         ctx.putImageData(data, 0, 0);
         // Görsele basılı örnek yazılar (isim, ID, sayılar) koyu zeminle örtülür.
         const s = w / (crop.baseWidth || w);
         ctx.fillStyle = '#0b0a0d';
         (crop.erase || []).forEach(([x, y, ew, eh]) => ctx.fillRect(x * s, y * s - sy, ew * s, eh * s));
+        // Pencereler: dikdörtgen alanlar tamamen şeffaf yapılır (fotoğraf alanı, isim şeridi).
+        ctx.globalCompositeOperation = 'destination-out';
+        (crop.windows || []).forEach(([x, y, ew, eh]) => ctx.fillRect(x * s, y * s - sy, ew * s, eh * s));
+        ctx.globalCompositeOperation = 'source-over';
         // Delikler: çemberin içi tamamen şeffaf yapılır, arkadaki fotoğraf görünür.
         ctx.globalCompositeOperation = 'destination-out';
         (crop.holes || []).forEach(([cx, cy, r]) => { ctx.beginPath(); ctx.arc(cx * s, cy * s - sy, r * s, 0, Math.PI * 2); ctx.fill(); });
@@ -119,7 +132,7 @@ function keyImage(url, crop) {
 }
 
 function useKeyedArt(url, crop) {
-  const key = `${url}|${crop.top}|${crop.height}|${crop.trim ? 'trim' : ''}|${crop.clearWhiteIslands ? 'islands' : ''}|${JSON.stringify(crop.holes || [])}|${(crop.erase || []).length}|${JSON.stringify(crop.transparentDarkCircles || [])}`;
+  const key = `${url}|${crop.top}|${crop.height}|${crop.trim ? 'trim' : ''}|${crop.clearWhiteIslands || ''}|${crop.islandMin || ''}|${JSON.stringify(crop.windows || [])}|${JSON.stringify(crop.holes || [])}|${JSON.stringify(crop.erase || [])}|${JSON.stringify(crop.transparentDarkCircles || [])}`;
   const [art, setArt] = useState(() => cache.get(key) || null);
   useEffect(() => {
     if (cache.has(key)) { setArt(cache.get(key)); return; }

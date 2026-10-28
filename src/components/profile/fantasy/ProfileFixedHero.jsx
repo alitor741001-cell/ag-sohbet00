@@ -1,11 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import ProfileHeroCard from '@/components/profile/fantasy/ProfileHeroCard';
 
-// Tema arka planıyla birebir aynı görsel: sabit başlık arkasında içerik kayarken
-// görüntü değişmez, başlık hiçbir yöne kaymaz.
-const THEME_BG = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/1ac262e7e_IMG_0216.jpg';
-
-/** Profil başlığı ekranın üstünde sabit kalır; altındaki içerik yukarı doğru altından geçer. */
+/** Profil başlığı ekranın üstünde sabit kalır; altındaki içerik yukarı doğru altından geçer.
+    Başlığın arkasında tema görseli yoktur: profil kartı doğrudan sayfa zemininde durur. */
 export default function ProfileFixedHero(props) {
   const boxRef = useRef(null);
   const [height, setHeight] = useState(0);
@@ -24,14 +21,6 @@ export default function ProfileFixedHero(props) {
     <>
       <div ref={boxRef} className="fixed inset-x-0 z-30 overflow-hidden" style={{ top: 'var(--safe-top)' }}>
         <div className="relative mx-auto w-full max-w-[560px]">
-          <img
-            src={THEME_BG}
-            alt=""
-            aria-hidden="true"
-            draggable={false}
-            className="pointer-events-none absolute left-0 top-0 w-full select-none object-fill"
-            style={{ height: 'var(--design-height)' }}
-          />
           <ProfileHeroCard {...props} />
         </div>
       </div>
