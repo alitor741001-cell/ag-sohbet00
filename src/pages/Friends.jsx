@@ -3,7 +3,7 @@ import { ArrowLeft, MessageCircle, Shield } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import subscribeEntity from '@/components/data/entitySubscriptions';
-import ChatImageTabs from '@/components/friends/ChatImageTabs';
+import InboxTabBar from '@/components/friends/InboxTabBar';
 import FriendRequests from '@/pages/FriendRequests';
 import Notifications from '@/pages/Notifications';
 import AgencyMessages from '@/pages/AgencyMessages';
@@ -20,7 +20,6 @@ import useFriendPresence from '@/hooks/useFriendPresence';
 import { useToast } from '@/components/ui/use-toast';
 import { isModerator } from '@/lib/roles';
 import useTabActivity from '@/components/layout/TabActivityContext';
-import NotchThemeStrip from '@/components/layout/NotchThemeStrip';
 import useLiveBadges from '@/hooks/useLiveBadges';
 
 export default function Friends() {
@@ -199,12 +198,11 @@ export default function Friends() {
   // tasarımdaki sabit içerik görünmez, liste kendi içinde kayar.
   return (
     <div className="dark fixed inset-0 z-10 text-white">
-      <NotchThemeStrip />
       <div className="design-screen">
         <div className="design-stage flex flex-col">
-          <ChatImageTabs counts={{ chats: totalUnread, requests: incomingRequests, notes: liveBadges.notes, agency: liveBadges.agency }} active={inboxTab} onSelect={setInboxTab} />
-          {/* Sekmeler tasarım görselindeki yerinde durur; içerik çentik dışında, onların altında başlar. */}
-          <div className="shrink-0" style={{ height: '17.5%' }} aria-hidden="true" />
+          {/* Tasarım görselindeki "MESAJLAR" başlığı için ayrılan üst boşluk. */}
+          <div className="shrink-0" style={{ height: '11%' }} aria-hidden="true" />
+          <InboxTabBar counts={{ chats: totalUnread, requests: incomingRequests, notes: liveBadges.notes, agency: liveBadges.agency }} active={inboxTab} onSelect={setInboxTab} />
           <div className="mx-[5%] flex min-h-0 flex-1 flex-col overflow-hidden">
             <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
               {InboxPanel ? <InboxPanel embedded onBack={() => setInboxTab('chats')} /> : conversations.length > 0 ? (

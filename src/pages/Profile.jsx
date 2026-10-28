@@ -11,7 +11,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import useFriends from '@/hooks/useFriends';
 import SocialListDialog from '@/components/profile/social/SocialListDialog';
 import ProfileFixedHero from '@/components/profile/fantasy/ProfileFixedHero';
-import NotchThemeStrip from '@/components/layout/NotchThemeStrip';
 import ProfileStatBar from '@/components/profile/fantasy/ProfileStatBar';
 import ProfileTwinCards from '@/components/profile/fantasy/ProfileTwinCards';
 import ProfileBalanceCards from '@/components/profile/fantasy/ProfileBalanceCards';
@@ -182,7 +181,6 @@ export default function Profile() {
     <div
       className="dark min-h-screen pb-6 text-white"
     >
-      <NotchThemeStrip />
       <div className="mx-auto w-full max-w-2xl md:max-w-3xl xl:max-w-4xl">
       <ProfileFixedHero
         user={user}

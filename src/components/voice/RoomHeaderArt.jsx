@@ -4,6 +4,8 @@ import { isHiddenName } from '@/lib/hiddenUser';
 import useMessageProfiles from '@/hooks/useMessageProfiles';
 import useKeyedImage from '@/hooks/useKeyedImage';
 import RoomNameMarquee from '@/components/voice/RoomNameMarquee';
+import DesignArt from '@/components/layout/DesignArt';
+import { ART } from '@/lib/designArt';
 
 const ART_URL = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/7c8894234_IMG_0281.jpg';
 const W = 736;
@@ -13,7 +15,8 @@ const PORTRAIT = { cx: 74.5, cy: 84, r: 38 };
 // Örnek isim, ID, hediye sayısı ve izleyici sayısı görselden silinir.
 const CROP = {
   top: 0, height: H / 1007, baseWidth: W,
-  erase: [[132, 52, 100, 36], [132, 90, 145, 24], [166, 140, 30, 25], [488, 84, 26, 30]],
+  // Sağ üstteki eski izleyici/ayarlar/kapatma simgeleri silinir: yerlerine yeni düğme görselleri gelir.
+  erase: [[132, 52, 100, 36], [132, 90, 145, 24], [166, 140, 30, 25], [430, 55, 282, 88]],
   holes: [[PORTRAIT.cx, PORTRAIT.cy, PORTRAIT.r]],
 
 };
@@ -29,7 +32,7 @@ const formatGiftTotal = (value) => {
 const pct = (x, y, w, h) => ({ position: 'absolute', left: `${(x / W) * 100}%`, top: `${(y / H) * 100}%`, width: `${(w / W) * 100}%`, height: `${(h / H) * 100}%` });
 
 /** Sesli oda üst başlığı: tasarım görseli, gerçek oda verileri ve dokunma alanları üstünde. */
-export default function RoomHeaderArt({ room, onOpen, viewerCount = 0, onOpenViewers, onOpenMenu, onExit, giftScore = 0, onOpenGifts }) {
+export default function RoomHeaderArt({ room, onOpen, viewerCount = 0, onOpenViewers, onOpenMenu, onExit, giftScore = 0, onOpenGifts, showMenu = false }) {
   const src = useKeyedImage(ART_URL, CROP);
   const ownerId = room?.owner_id;
   const ids = useMemo(() => ownerId ? [ownerId] : [], [ownerId]);
@@ -56,12 +59,28 @@ export default function RoomHeaderArt({ room, onOpen, viewerCount = 0, onOpenVie
       <button type="button" onClick={onOpenGifts} aria-label="Hediye sıralaması" className="flex items-center justify-center bg-transparent p-0" style={pct(166, 137, 176, 28)}>
         <span className="whitespace-nowrap text-[3cqw] font-bold leading-none tabular-nums text-white">{score}</span>
       </button>
-      <button type="button" onClick={onOpenViewers} aria-label={`İzleyiciler: ${viewerCount}`} className="rounded-full bg-transparent p-0" style={pct(440, 60, 82, 78)} />
-      <span className="pointer-events-none flex items-center justify-end overflow-hidden" style={pct(443, 80, 44, 34)}>
-        <span className="max-w-full bg-transparent whitespace-nowrap text-right font-bold leading-none tabular-nums text-white" style={{ fontSize: `${Math.min(3.8, 8.5 / String(viewerCount).length)}cqw` }}>{viewerCount}</span>
-      </span>
-      <button type="button" onClick={onOpenMenu} aria-label="Oda menüsü" className="rounded-full" style={pct(530, 60, 78, 78)} />
-      <button type="button" onClick={onExit} aria-label="Odadan çık" className="rounded-full" style={pct(614, 60, 78, 78)} />
+      {/* Üst sağ köşe: izleyici sayısı, yöneticide ayarlar, en sağda kapatma. */}
+      <div className="absolute flex items-center gap-[2%]" style={{ right: '1.5%', top: '27%', height: '44%' }}>
+        <button type="button" onClick={onOpenViewers} aria-label={`İzleyiciler: ${viewerCount}`} className="relative aspect-square h-full active:scale-95">
+          <DesignArt src={ART.roomViewers} className="absolute inset-0 h-full w-full object-contain" />
+          <span className="absolute inset-0 flex items-center justify-center">
+            <span
+              className="rounded-full bg-black/70 px-[0.3em] font-black leading-none tabular-nums text-[#ff2b2b]"
+              style={{ fontSize: `${Math.min(3.4, 8 / String(viewerCount || 0).length)}cqw`, textShadow: '0 0 8px rgba(255,40,40,0.95)' }}
+            >
+              {viewerCount > 999 ? '999+' : viewerCount || 0}
+            </span>
+          </span>
+        </button>
+        {showMenu && (
+          <button type="button" onClick={onOpenMenu} aria-label="Oda menüsü" className="aspect-square h-full active:scale-95">
+            <DesignArt src={ART.roomSettings} className="h-full w-full object-contain" />
+          </button>
+        )}
+        <button type="button" onClick={onExit} aria-label="Odadan çık" className="aspect-square h-full active:scale-95">
+          <DesignArt src={ART.roomClose} className="h-full w-full object-contain" />
+        </button>
+      </div>
     </div>
   );
 }

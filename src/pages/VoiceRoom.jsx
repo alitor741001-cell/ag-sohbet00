@@ -1140,6 +1140,7 @@ export default function VoiceRoom() {
           viewerCount={participants.length}
           onOpenViewers={() => setViewerOpen(true)}
           onOpenMenu={() => setMenuOpen(true)}
+          showMenu={canMod}
           onExit={() => setExitOpen(true)}
           giftScore={giftBoard?.all?.total || 0}
           onOpenGifts={() => { setGiftBoardOpen(true); loadGiftBoard(); }}
