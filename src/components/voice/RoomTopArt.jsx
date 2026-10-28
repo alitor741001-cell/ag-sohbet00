@@ -33,6 +33,7 @@ export default function RoomTopArt({
   const barArt = useKeyedImage(ART.roomBar, BAR_CROP);
   const pillArt = useKeyedImage(ART.roomGiftPill, PILL_CROP);
   const ringArt = useKeyedImage(ART.roomViewerBadge, FULL_CROP);
+  const countArt = useKeyedImage(ART.roomViewerCount, FULL_CROP);
   const shown = viewerCount > 999 ? '999+' : String(viewerCount || 0);
   const roomId = room?.room_number || room?.personal_room_code || '';
 
@@ -124,6 +125,33 @@ export default function RoomTopArt({
       </div>
 
       <div className="ml-auto mt-1 flex shrink-0 items-center gap-1">
+        {/* İzleyici sayısı: izleyici çemberinin soluna birleşik, küçük kırmızı çember. */}
+        <button
+          type="button"
+          onClick={onOpenViewers}
+          aria-label={`İzleyiciler: ${viewerCount}`}
+          className="relative -mr-1 h-6 w-6 shrink-0 active:scale-95"
+        >
+          {countArt && (
+            <img
+              src={countArt}
+              alt=""
+              draggable={false}
+              className="pointer-events-none absolute inset-0 h-full w-full select-none object-contain"
+            />
+          )}
+          <span className="absolute inset-0 flex items-center justify-center">
+            <span
+              className="font-black leading-none tabular-nums text-white"
+              style={{
+                fontSize: shown.length > 2 ? 6 : shown.length > 1 ? 8 : 10,
+                textShadow: '0 1px 2px rgba(0,0,0,0.9)',
+              }}
+            >
+              {shown}
+            </span>
+          </span>
+        </button>
         <button
           type="button"
           onClick={onOpenViewers}
@@ -138,18 +166,6 @@ export default function RoomTopArt({
               className="pointer-events-none absolute inset-0 h-full w-full select-none object-contain"
             />
           )}
-          {/* İzleyici sayısı: büyük çemberin tam ortasında beyaz rakam. */}
-          <span className="absolute inset-0 flex items-center justify-center">
-            <span
-              className="font-black leading-none tabular-nums text-white"
-              style={{
-                fontSize: shown.length > 2 ? 10 : shown.length > 1 ? 13 : 16,
-                textShadow: '0 0 6px rgba(255,0,0,0.95), 0 1px 3px rgba(0,0,0,0.95)',
-              }}
-            >
-              {shown}
-            </span>
-          </span>
         </button>
         {showMenu && (
           <button type="button" onClick={onOpenMenu} aria-label="Oda ayarları" className="h-10 w-10 active:scale-95">

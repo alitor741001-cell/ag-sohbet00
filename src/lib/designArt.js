@@ -39,4 +39,6 @@ export const ART = {
   roomViewerEye: `${P}7793955ca_IMG_0431.jpg`,
   // 18) Sesli oda: izleyici çemberi (tek parça neon göz amblemi)
   roomViewerBadge: `${P}0ad250bcc_IMG_0431.jpg`,
+  // 19) Sesli oda: izleyici sayısını taşıyan küçük kırmızı çember
+  roomViewerCount: `${P}55f78c01e_IMG_0433.jpg`,
 };
