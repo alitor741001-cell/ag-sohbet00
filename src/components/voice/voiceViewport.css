@@ -234,8 +234,8 @@
   position: absolute;
   left: 0;
   right: 0;
-  /* Çubuk ekranın en dibine kadar iner: çentik / home göstergesi alanı da temayla kaplanır. */
-  bottom: 0;
+  /* Dokunma alanları cihazın güvenli alanının üzerinde kalır. */
+  bottom: env(safe-area-inset-bottom, 0px);
 }
 @media (min-width: 768px) {
   .voice-viewport .voice-controls-anchor {

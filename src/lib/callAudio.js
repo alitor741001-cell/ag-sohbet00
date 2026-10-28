@@ -37,9 +37,14 @@ async function acquireMic() {
   const getMedia = micGetter();
   if (!getMedia) throw new Error('mikrofon desteklenmiyor');
   const generation = micGeneration;
+  // Android aynı giriş aygıtı hâlâ tutulurken ikinci kayıt isteğini reddedebilir.
+  // Yeniden edinim gerekiyorsa eski (sessiz/askıda) kayıt önce serbest bırakılır.
+  releaseMicStream();
   let next;
   try {
-    next = await getMedia({ audio: MIC_OPTIONS });
+    // Android WebView'in eski ses sürücüleri işleme kısıtlarıyla açılamayabilir.
+    const android = /Android/i.test(navigator.userAgent || '');
+    next = await getMedia({ audio: android ? true : MIC_OPTIONS });
   } catch (error) {
     // Eski cihazlar gelişmiş ses kısıtlarını reddedebilir: sade istekle tekrar denenir.
     if (['NotSupportedError', 'OverconstrainedError', 'TypeError'].includes(error?.name)) {

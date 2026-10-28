@@ -244,13 +244,21 @@ export class P2PVoiceRoom {
     const track = this.isMicOn() ? this.micTrack : null;
     try {
       if (typeof peer.pc.addTransceiver === 'function') {
-        const transceiver = peer.pc.addTransceiver('audio', { direction: 'sendrecv' });
+        // Android'de teklif oluşturulmadan önce gerçek kayıt kanalı bağlanır.
+        const stream = track ? makeStream(track) : null;
+        const transceiver = peer.pc.addTransceiver(track || 'audio', {
+          direction: 'sendrecv',
+          ...(stream ? { streams: [stream] } : {}),
+        });
         peer.sender = transceiver.sender || null;
-        if (track && peer.sender?.replaceTrack) peer.sender.replaceTrack(track).catch(() => {});
         return;
       }
       if (track && typeof peer.pc.addTrack === 'function') {
-        peer.sender = peer.pc.addTrack(track, makeStream(track)) || null;
+        const stream = makeStream(track);
+        peer.sender = (stream ? peer.pc.addTrack(track, stream) : peer.pc.addTrack(track)) || null;
+      } else if (track && typeof peer.pc.addStream === 'function') {
+        const stream = makeStream(track);
+        if (stream) peer.pc.addStream(stream);
       }
     } catch (error) {
       console.warn('[P2P] ses hattı kurulamadı', error);
@@ -258,12 +266,15 @@ export class P2PVoiceRoom {
   }
 
   // Eski cihazlarda track yerinde değiştirilemez: hat mikrofonla birlikte yeniden kurulur.
-  applyLocalTrack(peer, track) {
+  async applyLocalTrack(peer, track) {
     if (peer.sender && typeof peer.sender.replaceTrack === 'function') {
-      peer.sender.replaceTrack(track).catch(() => {});
-      return;
+      try { await peer.sender.replaceTrack(track); return; }
+      catch (error) { console.warn('[P2P] mikrofon kanalı yeniden kuruluyor', error); }
     }
+    // Bazı Android WebView sürümleri boş sender'a track geçişini reddeder.
+    // Her iki uç da eski hattı bırakır; mikrofon baştan eklenerek anlaşılır.
     this.dropPeer(peer.id);
+    this.sendSignal(peer.id, { kind: 'restart' });
   }
 
   attachRemote(peer, stream) {
@@ -310,6 +321,11 @@ export class P2PVoiceRoom {
 
   async onSignal(from, data) {
     if (!from || !data || typeof data !== 'object') return;
+    if (data.kind === 'restart') {
+      this.dropPeer(from);
+      this.reconcile();
+      return;
+    }
     if (data.kind === 'ice') {
       const peer = this.peers.get(from);
       if (!peer) return;
@@ -377,7 +393,7 @@ export class P2PVoiceRoom {
     track.enabled = true;
     this.micTrack = track;
     this.micOn = true;
-    this.peers.forEach((peer) => this.applyLocalTrack(peer, track));
+    await Promise.all([...this.peers.values()].map((peer) => this.applyLocalTrack(peer, track)));
     this.socket?.send({ type: 'mic', on: true });
     // Konuşmaya başlayınca odadaki herkesle hat kurulur.
     this.reconcile();
@@ -389,7 +405,7 @@ export class P2PVoiceRoom {
 
   stopMic() {
     this.micOn = false;
-    this.peers.forEach((peer) => this.applyLocalTrack(peer, null));
+    this.peers.forEach((peer) => { void this.applyLocalTrack(peer, null); });
     this.socket?.send({ type: 'mic', on: false });
     // Sustuysan yalnızca konuşanları dinlemeye devam et.
     this.reconcile();

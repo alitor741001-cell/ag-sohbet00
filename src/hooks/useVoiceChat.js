@@ -27,7 +27,7 @@ const micPermissionGranted = async () => {
 const subscriptionError = '💎 Sesli odada konuşmak abonelik gerektirir — dinlemeye devam edebilirsin.';
 const friendlyMicError = (error) => {
   if (error?.code === 'subscription_required') return subscriptionError;
-  if (error?.code === 'mic_timeout') return '🎤 Mikrofon yanıt vermedi — Safari izin penceresini kapatıp tekrar dene.';
+  if (error?.code === 'mic_timeout') return 'Mikrofon yanıt vermedi. Tarayıcının mikrofon iznini kontrol edip tekrar dene.';
   if (error?.code === 'webrtc_unsupported') return '🎤 Bu cihazın tarayıcısı ses iletimini desteklemiyor — uygulamayı güncel Chrome veya Safari ile açmayı dene.';
   if (error?.name === 'NotAllowedError') return '🎤 Mikrofon izni verilmedi — diğerlerini duymaya devam edersin.';
   if (error?.name === 'NotReadableError') return '🎤 Mikrofon kullanılamıyor — diğerlerini duymaya devam edersin.';

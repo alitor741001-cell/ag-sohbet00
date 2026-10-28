@@ -107,7 +107,7 @@ export default function VoiceChatDock({ messages = [], onSend, open, onCloseComp
           onScroll={onScroll}
           onLoadCapture={onContentLoad}
           style={{ touchAction: 'pan-y' }}
-          className={`voice-chat-flow ${composerOpen ? 'max-h-[16vh]' : open ? 'max-h-[30vh]' : 'max-h-[22vh]'} shrink-0 overflow-y-auto overscroll-contain pb-1 [mask-image:linear-gradient(to_bottom,transparent,black_14%)] [-webkit-mask-image:linear-gradient(to_bottom,transparent,black_14%)]`}
+          className={`voice-chat-flow ${composerOpen ? 'max-h-[16vh]' : open ? 'max-h-[30vh]' : 'max-h-[22vh]'} shrink-0 overflow-y-auto overscroll-contain pb-0 [mask-image:linear-gradient(to_bottom,transparent,black_14%)] [-webkit-mask-image:linear-gradient(to_bottom,transparent,black_14%)]`}
         >
           <div className="flex flex-col gap-1.5 px-4">
             {visible.map((message) => {
