@@ -1,5 +1,6 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { ChevronLeft } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { roomVisitId, endRoomVisit } from '@/lib/roomVisit';
 import subscribeEntity from '@/components/data/entitySubscriptions';
@@ -21,7 +22,6 @@ import VoiceChatDock from '@/components/voice/VoiceChatDock';
 import VoiceViewerSheet from '@/components/voice/VoiceViewerSheet';
 import VoiceSeatInvitePrompt from '@/components/voice/VoiceSeatInvitePrompt';
 import RoomProfileSheet from '@/components/voice/RoomProfileSheet';
-import RoomHeaderArt from '@/components/voice/RoomHeaderArt';
 import VoiceRoomMenu from '@/components/voice/VoiceRoomMenu';
 import VoiceSeatSheet from '@/components/voice/VoiceSeatSheet';
 import InviteSheet from '@/components/voice/InviteSheet';
@@ -1133,19 +1133,15 @@ export default function VoiceRoom() {
     <VoiceViewport className="z-[150]" onKeyboardChange={handleKeyboardChange}>
       <RoomBackground value={room?.background} cover={room?.cover_url} />
 
-      <header className="relative shrink-0 pt-[env(safe-area-inset-top)]">
-        <RoomHeaderArt
-          room={room}
-          onOpen={() => setProfilePanelOpen(true)}
-          viewerCount={participants.length}
-          onOpenViewers={() => setViewerOpen(true)}
-          onOpenMenu={() => setMenuOpen(true)}
-          showMenu={canMod}
-          onExit={() => setExitOpen(true)}
-          giftScore={giftBoard?.all?.total || 0}
-          onOpenGifts={() => { setGiftBoardOpen(true); loadGiftBoard(); }}
-        />
-      </header>
+      <button
+        type="button"
+        onClick={() => setExitOpen(true)}
+        aria-label="Odadan çık"
+        className="absolute left-2 z-40 grid h-10 w-10 place-items-center rounded-full bg-black/45 text-white backdrop-blur active:scale-95"
+        style={{ top: 'calc(env(safe-area-inset-top) + 8px)' }}
+      >
+        <ChevronLeft className="h-6 w-6" />
+      </button>
 
       <VoiceStage
         scrollRef={swipeGesture.scrollRef}

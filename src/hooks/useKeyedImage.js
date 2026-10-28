@@ -2,6 +2,31 @@ import { useEffect, useState } from 'react';
 
 const cache = new Map();
 
+// Şeffaf kenar boşluklarını kırpar: görsel kutunun kenarına tam oturur (çentik hizası).
+function trimCanvas(canvas) {
+  const { width: w, height: h } = canvas;
+  const px = canvas.getContext('2d').getImageData(0, 0, w, h).data;
+  let top = h, left = w, right = -1, bottom = -1;
+  for (let y = 0; y < h; y += 1) {
+    for (let x = 0; x < w; x += 1) {
+      if (px[(y * w + x) * 4 + 3] > 8) {
+        if (y < top) top = y;
+        if (y > bottom) bottom = y;
+        if (x < left) left = x;
+        if (x > right) right = x;
+      }
+    }
+  }
+  if (bottom < 0 || right < 0) return { url: canvas.toDataURL('image/png'), ratio: w / h };
+  const tw = right - left + 1;
+  const th = bottom - top + 1;
+  if (tw === w && th === h) return { url: canvas.toDataURL('image/png'), ratio: w / h };
+  const out = document.createElement('canvas');
+  out.width = tw; out.height = th;
+  out.getContext('2d').drawImage(canvas, left, top, tw, th, 0, 0, tw, th);
+  return { url: out.toDataURL('image/png'), ratio: tw / th };
+}
+
 // Görseldeki açık gri/beyaz dama zemini kenarlardan başlayarak şeffaf yapar
 // (içerideki beyaz yazılara dokunmaz). Hata olursa orijinal görsel kullanılır.
 function keyImage(url, crop) {
@@ -61,7 +86,7 @@ function keyImage(url, crop) {
           });
           ctx.putImageData(keyed, 0, 0);
         }
-        resolve(canvas.toDataURL('image/png'));
+        resolve(crop.trim ? trimCanvas(canvas) : { url: canvas.toDataURL('image/png'), ratio: w / h });
       } catch { resolve(null); }
     };
     img.onerror = () => resolve(null);
@@ -69,14 +94,27 @@ function keyImage(url, crop) {
   });
 }
 
-export default function useKeyedImage(url, crop) {
-  const key = `${url}|${crop.top}|${crop.height}|${JSON.stringify(crop.holes || [])}|${(crop.erase || []).length}|${JSON.stringify(crop.transparentDarkCircles || [])}`;
-  const [src, setSrc] = useState(() => cache.get(key) || null);
+function useKeyedArt(url, crop) {
+  const key = `${url}|${crop.top}|${crop.height}|${crop.trim ? 'trim' : ''}|${JSON.stringify(crop.holes || [])}|${(crop.erase || []).length}|${JSON.stringify(crop.transparentDarkCircles || [])}`;
+  const [art, setArt] = useState(() => cache.get(key) || null);
   useEffect(() => {
-    if (cache.has(key)) { setSrc(cache.get(key)); return; }
+    if (cache.has(key)) { setArt(cache.get(key)); return; }
     let alive = true;
-    keyImage(url, crop).then((out) => { cache.set(key, out); if (alive) setSrc(out); });
+    keyImage(url, crop).then((out) => {
+      if (!out) return;
+      cache.set(key, out);
+      if (alive) setArt(out);
+    });
     return () => { alive = false; };
   }, [key]);
-  return src;
+  return art;
+}
+
+export default function useKeyedImage(url, crop) {
+  return useKeyedArt(url, crop)?.url || null;
+}
+
+/** Şeffaf kenarları kırpılmış görsel + en-boy oranı (görsel kutuyu tam doldurur). */
+export function useTrimmedArt(url, crop) {
+  return useKeyedArt(url, crop);
 }

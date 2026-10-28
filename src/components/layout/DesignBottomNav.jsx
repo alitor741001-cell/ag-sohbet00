@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import DesignArt from '@/components/layout/DesignArt';
+import { useTrimmedArt } from '@/hooks/useKeyedImage';
 import { ART } from '@/lib/designArt';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import useSupportBadge from '@/hooks/useSupportBadge';
@@ -23,11 +23,16 @@ export default function DesignBottomNav() {
   const support = useSupportBadge(user?.id);
   const { badges } = useMessageRealtime();
   const counts = { chat: badges?.messages || 0, support: support || 0 };
+  // Kenar boşlukları kırpılır: tasarımın alt kenarı çentik hizasına oturur.
+  const art = useTrimmedArt(ART.bottomNav, { top: 0, height: 1, trim: true });
 
   return (
     <nav aria-label="Ana menü" className="pointer-events-none fixed inset-x-0 bottom-0 z-[60]">
-      <div className="relative w-full" style={{ height: NAV_HEIGHT }}>
-        <DesignArt src={ART.bottomNav} className="absolute inset-0 h-full w-full object-contain object-bottom" />
+      <div
+        className="relative w-full"
+        style={art ? { aspectRatio: String(art.ratio) } : { height: NAV_HEIGHT }}
+      >
+        {art && <img src={art.url} alt="" draggable={false} className="pointer-events-none absolute inset-0 h-full w-full select-none" />}
         <div className="pointer-events-auto absolute inset-x-[3%] bottom-0 top-[16%] flex items-stretch">
           {ZONES.map((zone) => {
             const active = zone.match(pathname, search);
