@@ -216,7 +216,6 @@ export default function Profile() {
             liveRoom={liveRoom}
             viewers={viewers}
             onChat={() => navigate('/arkadaslar')}
-            onJoin={() => liveRoom && navigate(liveRoom.link)}
             onEdit={() => toggle('info')}
             onSettings={() => toggle('settings')}
           />

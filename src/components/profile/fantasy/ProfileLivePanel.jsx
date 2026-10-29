@@ -4,9 +4,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 
 const RING = 'conic-gradient(from 140deg, #ff00ff, #8a2be2, #7dd3fc, #00ffff, #ff00ff)';
 
-/** Profil üst şeridi: neon halkalı avatar, isim ve yayın durumu.
-    Yayındayken altında 2. tasarımdaki "Yayına Katıl" düğmesi görünür. */
-export default function ProfileLivePanel({ user, avatar, liveRoom, viewers = 0, onChat, onJoin, onEdit, onSettings }) {
+/** Profil üst şeridi: neon halkalı avatar, isim ve yayın durumu. */
+export default function ProfileLivePanel({ user, avatar, liveRoom, viewers = 0, onChat, onEdit, onSettings }) {
   const name = user?.username || user?.full_name || 'Kullanıcı';
   const live = !!liveRoom;
   const count = (viewers || 0).toLocaleString('tr-TR');
@@ -95,28 +94,6 @@ export default function ProfileLivePanel({ user, avatar, liveRoom, viewers = 0, 
           </DropdownMenu>
         </div>
       </div>
-
-      {live && (
-        <button
-          type="button"
-          onClick={onJoin}
-          className="mt-3 flex w-full items-center gap-2 rounded-full px-3 py-2 active:scale-[0.99]"
-          style={{
-            background: 'linear-gradient(#0a0a2e,#0a0a2e) padding-box, linear-gradient(110deg,#ff00ff,#8a2be2 45%,#00ffff) border-box',
-            border: '2px solid transparent',
-            boxShadow: '0 0 16px rgba(255,0,255,0.45), 0 0 26px rgba(0,255,255,0.3)',
-          }}
-        >
-          <span className="text-[15px] leading-none drop-shadow-[0_0_6px_rgba(255,215,0,0.9)]">👑</span>
-          <span className="flex-1 text-center text-sm font-black text-white" style={{ textShadow: '0 1px 0 #6b21a8, 0 2px 10px rgba(0,191,255,0.8)' }}>
-            Yayına Katıl
-          </span>
-          <span className="flex items-center gap-0.5">
-            <span className="text-[11px] text-[#ffcc00] drop-shadow-[0_0_6px_rgba(255,204,0,0.9)]">✦</span>
-            <span className="text-[11px] text-[#00ffff] drop-shadow-[0_0_6px_rgba(0,255,255,0.9)]">✦</span>
-          </span>
-        </button>
-      )}
 
       <div
         className="mt-2 flex items-center justify-center gap-3 rounded-full px-3 py-1"
