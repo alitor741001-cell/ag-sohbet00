@@ -24,7 +24,7 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
   const budgetRef = useRef({ key: '', height: 0 });
   const budgetKey = `${seats.length}:${Math.round(width / 24)}`;
   if (budgetRef.current.key !== budgetKey) budgetRef.current = { key: budgetKey, height: 0 };
-  if (maxHeight) budgetRef.current.height = maxHeight;
+  if (maxHeight && maxHeight > budgetRef.current.height) budgetRef.current.height = maxHeight;
   const heightBudget = budgetRef.current.height || maxHeight;
   const rows = useMemo(() => responsiveSeatRows(seats.length, width), [seats.length, width]);
   const onSeatClick = useCallback((index) => onSelectSeat(index), [onSelectSeat]);
@@ -32,6 +32,7 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
   // 9'lu düzende üstteki tek koltuk (orta çerçeve) referanstaki gibi daha büyük çizilir.
   const featureTop = seats.length === 9;
   // Kalabalık düzen (15/20 koltuk): koltuklar daraltılmaz, geniş kalır.
+  const dense = seats.length >= 15;
   // Kalabalık odalarda satırlar ekran genişliğine göre yeniden bölünür.
   const many = seats.length >= 20;
   const widestRow = Math.max(1, ...rows.map((row) => row.length));
@@ -63,11 +64,15 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
   const heightSize = featureTop
     ? (maxCell >= 96 ? 'xl' : maxCell >= 86 ? 'lg' : maxCell >= 66 ? 'md' : maxCell >= 50 ? 'sm' : 'xs')
     : (maxCell >= 88 ? 'lg' : maxCell >= 68 ? 'md' : maxCell >= 52 ? 'sm' : 'xs');
-  // Koltuk boyu yalnızca ekran genişliğine ve koltuk sayısına bağlıdır: sahnenin ölçülen
-  // yüksekliği sonradan değişse de (sohbet, klavye, alt çubuk) koltuklar oynamaz.
-  const size = many
-    ? SIZES[Math.min(SIZES.indexOf(widthSize), SIZES.indexOf(narrow ? 'sm' : 'md'))]
-    : widthSize;
+  const fitSize = SIZES[Math.min(SIZES.indexOf(widthSize), SIZES.indexOf(heightSize))];
+  // Kalabalık odalarda hem genişlik hem yükseklik sınırı uygulanır.
+  const manySize = SIZES[Math.min(SIZES.indexOf(widthSize), SIZES.indexOf(heightSize), SIZES.indexOf(narrow ? 'sm' : 'md'))];
+  const denseFloor = 'md';
+  const size = dense
+    ? (many ? manySize : SIZES[Math.min(SIZES.indexOf(widthSize), Math.max(SIZES.indexOf(heightSize), SIZES.indexOf(denseFloor)))])
+    : featureTop
+      ? widthSize
+      : fitSize;
   // Üstteki tek çerçeve artık büyütülmez: bir beden küçülüp diğer koltuklarla aynı boyda
   // durur, böylece satır yüksekliği hiç değişmez ve koltuklar yerinden oynamaz.
   const topSize = size;
