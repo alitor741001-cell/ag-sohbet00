@@ -45,10 +45,14 @@
   background-repeat: no-repeat, no-repeat;
 }
 
-/* Koltuk sahnesi tema katmanının üstünde durur: koltuklar her zaman temanın üzerinde görünür. */
-.voice-viewport .voice-stage-region { position: relative; z-index: 1; }
+/* Tema ve oda içeriği ayrı katmanlardır. Koltukların üst kapsayıcısı da
+   öne alınır; arka plan görseli hiçbir koltuk düzenini örtemez. */
+.voice-viewport > .room-bg-layer { z-index: -1; }
+.voice-viewport > .voice-room-layout { position: relative; z-index: 1; }
+.voice-viewport .voice-stage-region { position: relative; z-index: 2; }
 
 .voice-viewport {
+  isolation: isolate;
   top: var(--viewport-offset, 0px);
   /* Zemin temanın kendisidir: butonların altındaki dolgu ve alt güvenli alan dahil
      görünen her piksel tema görseliyle boyanır; seçim yoksa gece mavisi kalır. */
