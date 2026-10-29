@@ -90,23 +90,26 @@ html { scrollbar-gutter: auto; }
   .voice-room-layout .voice-stage { padding-top: 0.5rem; }
 }
 
-/* Phones: the visible button edge meets the home-indicator safe boundary.
-   Apply the inset once, including landscape, without an extra padded gap. */
+/* Phones (iOS + Android): the bottom bars run all the way down to the notch /
+   home-indicator edge — no safe-area gap above them. */
 @media (max-width: 767px), (pointer: coarse) and (orientation: landscape) and (max-height: 500px) {
   .design-bottom-nav, .home-image-nav {
     top: auto;
-    bottom: env(safe-area-inset-bottom, 0px);
+    bottom: 0;
     padding-bottom: 0;
   }
   .home-scroll {
-    padding-bottom: calc(var(--main-nav-space) + env(safe-area-inset-bottom, 0px) + 0.75rem);
+    padding-bottom: calc(var(--main-nav-space) + 0.75rem);
+  }
+  .voice-viewport.voice-viewport:not(.voice-private-chat) {
+    padding-bottom: var(--voice-bar-height, 120px);
   }
   .voice-viewport .voice-room-layout .voice-controls-anchor {
     position: absolute;
     top: auto;
-    bottom: env(safe-area-inset-bottom, 0px);
-    left: env(safe-area-inset-left, 0px);
-    right: env(safe-area-inset-right, 0px);
+    bottom: 0;
+    left: 0;
+    right: 0;
     padding-bottom: 0;
   }
 }
