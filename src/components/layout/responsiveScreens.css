@@ -17,7 +17,8 @@ html { scrollbar-gutter: auto; }
 .voice-room-layout { display: flex; flex: 1; flex-direction: column; min-height: 0; min-width: 0; }
 .voice-stage-region { display: flex; flex: 1; flex-direction: column; min-height: 0; min-width: 0; }
 .voice-room-layout .voice-stage { overflow-y: auto; overflow-x: hidden; }
-.voice-room-layout .voice-controls-anchor { padding-bottom: env(safe-area-inset-bottom, 0px); }
+/* Anchor to the screen, not the room height recalculated during startup. */
+.voice-viewport .voice-room-layout .voice-controls-anchor { position: fixed; top: auto; bottom: 0; padding-bottom: env(safe-area-inset-bottom, 0px); }
 
 @media (min-width: 768px) {
   .app-content { max-width: none; padding-inline: max(1rem, env(safe-area-inset-left), env(safe-area-inset-right)); }
@@ -69,7 +70,7 @@ html { scrollbar-gutter: auto; }
   .voice-room-layout .voice-chat-flow { flex: 1 1 auto; min-height: 0; max-height: 100% !important; }
   .voice-viewport .voice-room-layout .voice-controls-anchor {
     grid-area: auto;
-    position: absolute;
+    position: fixed;
     left: env(safe-area-inset-left, 0px);
     right: env(safe-area-inset-right, 0px);
     bottom: 0;
@@ -105,7 +106,7 @@ html { scrollbar-gutter: auto; }
     padding-bottom: var(--voice-bar-height, 120px);
   }
   .voice-viewport .voice-room-layout .voice-controls-anchor {
-    position: absolute;
+    position: fixed;
     top: auto;
     bottom: 0;
     left: 0;
