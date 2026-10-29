@@ -26,6 +26,11 @@ import VoiceRoomMenu from '@/components/voice/VoiceRoomMenu';
 import VoiceSeatSheet from '@/components/voice/VoiceSeatSheet';
 import InviteSheet from '@/components/voice/InviteSheet';
 import MicPermissionGuide from '@/components/voice/MicPermissionGuide';
+import MicPermissionPrompt from '@/components/voice/MicPermissionPrompt';
+import isAndroidDevice from '@/lib/isAndroidDevice';
+
+// Android cihazlarda koltuğa oturunca mikrofon izni uyarısı gösterilir.
+const ANDROID_DEVICE = isAndroidDevice();
 import useLatestCallback from '@/hooks/useLatestCallback';
 import { useUserProfile } from '@/lib/profileCard';
 import useVoiceRoomProfileActions from '@/hooks/useVoiceRoomProfileActions';
@@ -113,6 +118,7 @@ export default function VoiceRoom() {
   const [coinsRequest, setCoinsRequest] = useState(0);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [micGuideDismissed, setMicGuideDismissed] = useState(false);
+  const [micPromptDismissed, setMicPromptDismissed] = useState(false);
   const [logOpen, setLogOpen] = useState(false);
   // Oda paneli: profilim, oda ismi düzenleme, kategori, duyuru ve yöneticiler burada durur.
   const [profilePanelOpen, setProfilePanelOpen] = useState(false);
@@ -316,6 +322,8 @@ export default function VoiceRoom() {
     micEnabled: seated,
   });
   useEffect(() => { if (voice.micDenied) setMicGuideDismissed(false); }, [voice.micDenied]);
+  // Her koltuğa oturuşta izin uyarısı yeniden görünür (Android).
+  useEffect(() => { if (seated) setMicPromptDismissed(false); }, [seated]);
 
   // Oda müziği: odanın açık şarkısı canlı izlenir, herkes kendi telefonunda duyar.
   // Hoparlör kapatıldığında şarkı da susar; açıldığında kullanıcı sesleriyle birlikte geri gelir.
@@ -1237,6 +1245,12 @@ export default function VoiceRoom() {
 
       </div>
       <div className="voice-controls-anchor shrink-0" hidden={composerOpen}>
+      <MicPermissionPrompt
+        open={ANDROID_DEVICE && seated && !!room?.voice_enabled && !voice.active && !micPromptDismissed}
+        requesting={voice.requesting}
+        onAllow={voice.requestMic}
+        onDismiss={() => setMicPromptDismissed(true)}
+      />
       <RoomRocketFeature room={room} hidden={composerOpen} />
       <VoiceControlBar
         keyboardOpen={keyboardOpen}

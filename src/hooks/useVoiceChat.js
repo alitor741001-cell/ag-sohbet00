@@ -5,6 +5,11 @@ import { isRoomMinimized } from '@/lib/minimizedRoom';
 import { disposeOtherVoiceSessions, registerVoiceSession, takeVoiceSession } from '@/lib/roomVoiceSession';
 import { P2PVoiceRoom } from '@/lib/p2pVoiceRoom';
 import shallowEqual from '@/components/data/shallowEqual';
+import isAndroidDevice from '@/lib/isAndroidDevice';
+
+// Android: izin durumu "prompt" iken mikrofon hiç istenmiyordu; bu cihazlarda
+// izin koltuğa oturur oturmaz doğrudan sorulur.
+const ANDROID = isAndroidDevice();
 
 const initialDebug = { participantCount: 0, remoteParticipants: 0, remoteTracks: 0, playback: 'hazır' };
 // İzin bir kez verildiyse hatırlanır: sonraki girişlerde mikrofon kendiliğinden açılır.
@@ -329,6 +334,20 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
     // Mikrofon reddedilse bile dinleme sürer.
     if (next) {
       micDeniedRef.current = false;
+      // Android: izin her koltukta yeniden istenir — tarayıcının "İzin Ver / Reddet"
+      // sorusu çıkar, izin bekleyen cihaz sessizce mikrofonsuz kalmaz.
+      if (ANDROID) {
+        micGestureRef.current = true;
+        setRequesting(true);
+        enableMic(mesh).then(() => { micAppliedRef.current = true; refreshState(); })
+          .catch((micError) => {
+            setMicDenied(isPermissionError(micError));
+            setError(friendlyMicError(micError));
+            refreshState();
+          })
+          .finally(() => setRequesting(false));
+        return;
+      }
       // İzin henüz sorulmadıysa mikrofon kendiliğinden açılmaz: izin kişi düğmeye
       // bastığında sorulur.
       Promise.resolve(micGestureRef.current || micPermissionGranted()).then((mayOpen) => {
