@@ -24,7 +24,9 @@ export default class PeerAudioLink {
     this.sender = this.pc.addTransceiver(track || 'audio', {
       direction: 'sendrecv', ...(track ? { streams: [new MediaStream([track])] } : {}),
     }).sender;
-    this.pc.onnegotiationneeded = () => { void this.offer(); };
+    // Both ends already own a sendrecv transceiver. Elect one offerer so
+    // Android and Safari never create competing initial audio descriptions.
+    this.pc.onnegotiationneeded = () => { if (!this.polite) void this.offer(); };
     this.pc.onicecandidate = ({ candidate }) => {
       if (candidate && !this.closed) this.send({ kind: 'ice', session: this.session, candidate: candidate.toJSON() });
     };
@@ -35,12 +37,16 @@ export default class PeerAudioLink {
       this.output = createStreamOutput(stream, roomId, { startMuted: this.muted, onPlaybackChange: (blocked) => {
         this.blocked = blocked; this.changed();
       } });
+      if (this.remoteTrack) this.remoteTrack.removeEventListener('unmute', this.resumeRemote);
+      this.remoteTrack = remoteTrack;
+      this.resumeRemote = () => { void this.play(); };
+      remoteTrack.addEventListener('unmute', this.resumeRemote);
       void this.play();
     };
     this.pc.onconnectionstatechange = () => {
       if (this.closed) return;
       const state = this.pc.connectionState;
-      if (state === 'connected') { this.disconnectedAt = 0; this.restartCount = 0; }
+      if (state === 'connected') { this.disconnectedAt = 0; this.restartCount = 0; void this.play(); }
       else if (state === 'disconnected' && !this.disconnectedAt) this.disconnectedAt = Date.now();
       this.changed();
     };
@@ -69,10 +75,11 @@ export default class PeerAudioLink {
   async accept(data) {
     if (this.closed) return;
     if (data.kind === 'ice') {
-      if (this.ignored.has(data.session)) return;
-      if (!this.pc.remoteDescription || data.session !== this.remoteSession) {
+      const ufrag = data.candidate?.usernameFragment;
+      const description = this.pc.remoteDescription;
+      if (!description || data.session !== this.remoteSession || (ufrag && !description.sdp.includes(`a=ice-ufrag:${ufrag}\r\n`))) {
         if (this.pending.length < 128) this.pending.push(data);
-      } else await this.pc.addIceCandidate(data.candidate);
+      } else await this.addCandidate(data.candidate);
       return;
     }
     if (!['offer', 'answer'].includes(data.kind) || !data.sdp) return;
@@ -83,12 +90,21 @@ export default class PeerAudioLink {
     if (collision && this.pc.signalingState !== 'stable') await this.pc.setLocalDescription({ type: 'rollback' });
     await this.pc.setRemoteDescription(data.sdp);
     this.remoteSession = data.session;
-    const candidates = this.pending.splice(0).filter((entry) => entry.session === data.session);
-    for (const entry of candidates) await this.pc.addIceCandidate(entry.candidate);
     if (data.kind === 'offer') {
       await this.pc.setLocalDescription(await this.pc.createAnswer());
       if (!this.closed) this.send({ kind: 'answer', session: this.session, replyTo: data.session, sdp: this.pc.localDescription.toJSON() });
     }
+    const candidates = this.pending.splice(0).filter((entry) => entry.session === data.session);
+    for (const entry of candidates) await this.addCandidate(entry.candidate);
+  }
+
+  async addCandidate(candidate) {
+    if (this.closed) return;
+    const ufrag = candidate?.usernameFragment;
+    if (ufrag && !this.pc.remoteDescription?.sdp.includes(`a=ice-ufrag:${ufrag}\r\n`)) return;
+    // An obsolete candidate must not prevent sending the SDP answer.
+    try { await this.pc.addIceCandidate(candidate); }
+    catch (error) { if (!this.closed) console.warn('[Voice] ICE candidate', error); }
   }
 
   async setTrack(track) {
@@ -132,6 +148,7 @@ export default class PeerAudioLink {
     this.closed = true;
     this.pc.onnegotiationneeded = this.pc.onicecandidate = this.pc.ontrack = this.pc.onconnectionstatechange = null;
     this.pc.close();
+    if (this.remoteTrack) this.remoteTrack.removeEventListener('unmute', this.resumeRemote);
     this.output?.remove();
     this.output = null;
     this.pending = [];

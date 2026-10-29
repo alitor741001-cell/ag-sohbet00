@@ -94,9 +94,10 @@ async function acquireMic() {
  * kez verildiği için tarayıcı tekrar sormaz.
  */
 export function ensureMicTrack({ fresh = false } = {}) {
-  if (!fresh && micTrack && micTrack.readyState === 'live' && !micTrack.muted) return Promise.resolve(micTrack);
-  // Eski cihazlarda izin isteği yanıtsız kalabilir: asılı deneme düğmeyi kilitlemez,
-  // 12 saniyeden sonra yeni bir dokunuş temiz bir deneme başlatır.
+  // Android briefly hardware-mutes a live track during startup or route changes.
+  // Reopening it at that point resets capture before the first audio can arrive.
+  if (!fresh && micTrack && micTrack.readyState === 'live') return Promise.resolve(micTrack);
+  // Share the outstanding permission request instead of opening the device twice.
   if (!micPending) {
     micPendingAt = Date.now();
     const pending = acquireMic().finally(() => {

@@ -3,11 +3,12 @@ import { ensureMicTrack, releaseMic, unlockVoicePlayback } from '@/lib/callAudio
 import { vipLevelOf } from '@/lib/userLevels';
 import PeerAudioLink from '@/lib/voice/PeerAudioLink';
 import voiceSessionId from '@/lib/voice/sessionId';
+import waitForAudioTrack from '@/lib/voice/waitForAudioTrack';
 
 // Existing relay configuration; production relay capacity is managed separately.
 const ICE_SERVERS = [
   { urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] },
-  { urls: ['turn:openrelay.metered.ca:80', 'turn:openrelay.metered.ca:443', 'turns:openrelay.metered.ca:443?transport=tcp'], username: 'openrelayproject', credential: 'openrelayproject' },
+  { urls: ['turn:openrelay.metered.ca:80', 'turn:openrelay.metered.ca:443?transport=tcp', 'turns:openrelay.metered.ca:443?transport=tcp'], username: 'openrelayproject', credential: 'openrelayproject' },
 ];
 
 /** Room session owns capture, signalling and one audio output per remote peer. */
@@ -17,6 +18,7 @@ export class P2PVoiceRoom {
     this.canPublish = ['admin', 'moderator'].includes(user?.role) || vipLevelOf(user) > 0;
     this.peers = new Map();
     this.remotePeers = [];
+    this.pendingSignals = [];
     this.peerId = '';
     this.micTrack = null;
     this.micOn = false;
@@ -97,6 +99,7 @@ export class P2PVoiceRoom {
     [...this.peers.keys()].forEach((id) => this.dropPeer(id));
     this.peerId = '';
     this.remotePeers = [];
+    this.pendingSignals = [];
   }
 
   async reconnect() {
@@ -126,12 +129,26 @@ export class P2PVoiceRoom {
     } else if (msg.type === 'peers') {
       this.remotePeers = (msg.peers || []).filter((peer) => peer.peerId && peer.peerId !== this.peerId && peer.userId !== this.userId);
       this.reconcile();
+      const queued = this.pendingSignals;
+      this.pendingSignals = [];
+      queued.forEach((signal) => { if (this.remotePeers.some((peer) => peer.peerId === signal.from)) this.onMessage(signal); });
     } else if (msg.type === 'gone') {
+      this.pendingSignals = this.pendingSignals.filter((signal) => signal.from !== msg.peerId);
       this.dropPeer(msg.peerId);
     } else if (msg.type === 'signal' && msg.from && msg.data) {
-      if (msg.from === this.peerId || !this.remotePeers.some((peer) => peer.peerId === msg.from)) return;
+      if (msg.from === this.peerId) return;
+      // A new peer's offer/ICE can arrive just before its presence broadcast.
+      if (!this.peerId || !this.remotePeers.some((peer) => peer.peerId === msg.from)) {
+        if (this.pendingSignals.length < 128) this.pendingSignals.push(msg);
+        return;
+      }
       if (msg.data.kind === 'restart') { this.dropPeer(msg.from); this.reconcile(); return; }
-      if (!this.wantedPeerIds().includes(msg.from)) return;
+      if (!this.wantedPeerIds().includes(msg.from)) {
+        // Capture announcements and SDP are asynchronous: retain the offer
+        // until the microphone presence update makes this peer eligible.
+        if (this.pendingSignals.length < 128) this.pendingSignals.push(msg);
+        return;
+      }
       void this.ensurePeer(msg.from).receive(msg.data);
     }
     this.emit();
@@ -179,13 +196,19 @@ export class P2PVoiceRoom {
   }
 
   async startMic(version) {
-    const track = await ensureMicTrack();
-    if (this.closed || !this.micWanted || version !== this.micVersion) {
-      if (!this.micWanted) track.enabled = false;
-      return false;
-    }
-    if (track.readyState !== 'live') throw new Error('Mikrofon kullanılamıyor.');
+    let track = await ensureMicTrack();
+    if (this.closed || !this.micWanted || version !== this.micVersion) return false;
     track.enabled = true;
+    try { await waitForAudioTrack(track); }
+    catch (error) {
+      if (error.code !== 'mic_muted' || this.closed || !this.micWanted || version !== this.micVersion) throw error;
+      // Only replace capture after a real hardware stall, not a transient mute.
+      track = await ensureMicTrack({ fresh: true });
+      if (this.closed || !this.micWanted || version !== this.micVersion) return false;
+      track.enabled = true;
+      await waitForAudioTrack(track);
+    }
+    if (this.closed || !this.micWanted || version !== this.micVersion) return false;
     this.micTrack = track;
     this.micOn = true;
     await Promise.all([...this.peers.values()].map((peer) => peer.setTrack(track)));
