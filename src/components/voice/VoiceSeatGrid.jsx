@@ -63,11 +63,11 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
   const heightSize = featureTop
     ? (maxCell >= 96 ? 'xl' : maxCell >= 86 ? 'lg' : maxCell >= 66 ? 'md' : maxCell >= 50 ? 'sm' : 'xs')
     : (maxCell >= 88 ? 'lg' : maxCell >= 68 ? 'md' : maxCell >= 52 ? 'sm' : 'xs');
-  const fitSize = SIZES[Math.min(SIZES.indexOf(widthSize), SIZES.indexOf(heightSize))];
-  // Kalabalık odalarda hem genişlik hem yükseklik sınırı uygulanır;
-  // sığmayan satırlar üst sahnenin dikey kaydırma alanında erişilebilir kalır.
-  const manySize = SIZES[Math.min(SIZES.indexOf(widthSize), SIZES.indexOf(heightSize), SIZES.indexOf(narrow ? 'sm' : 'md'))];
-  const size = many ? manySize : fitSize;
+  // Koltuk boyu yalnızca ekran genişliğine ve koltuk sayısına bağlıdır: sahnenin ölçülen
+  // yüksekliği sonradan değişse de (sohbet, klavye, alt çubuk) koltuklar oynamaz.
+  const size = many
+    ? SIZES[Math.min(SIZES.indexOf(widthSize), SIZES.indexOf(narrow ? 'sm' : 'md'))]
+    : widthSize;
   // Üstteki tek çerçeve artık büyütülmez: bir beden küçülüp diğer koltuklarla aynı boyda
   // durur, böylece satır yüksekliği hiç değişmez ve koltuklar yerinden oynamaz.
   const topSize = size;

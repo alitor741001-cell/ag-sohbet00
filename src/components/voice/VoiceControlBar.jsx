@@ -17,8 +17,12 @@ export default function VoiceControlBar({ micActive, requesting = false, deafene
     const frame = bar?.closest('.voice-viewport');
     if (!bar || !frame) return undefined;
     const apply = () => {
+      // Yükseklik yalnızca bir kez yazılır: çubuk görseli sonradan çözülse de oda düzeni
+      // yeniden ölçülmez, koltuklar yerinden oynamaz.
       const height = Math.round(bar.getBoundingClientRect().height);
-      if (height > 0) frame.style.setProperty('--voice-bar-height', `${height}px`);
+      if (height > 0 && !frame.style.getPropertyValue('--voice-bar-height')) {
+        frame.style.setProperty('--voice-bar-height', `${height}px`);
+      }
     };
     apply();
     const observer = new ResizeObserver(apply);
