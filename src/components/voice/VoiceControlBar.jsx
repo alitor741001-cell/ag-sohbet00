@@ -17,12 +17,8 @@ export default function VoiceControlBar({ micActive, requesting = false, deafene
     const frame = bar?.closest('.voice-viewport');
     if (!bar || !frame) return undefined;
     const apply = () => {
-      // Yükseklik yalnızca bir kez yazılır: çubuk görseli sonradan çözülse de oda düzeni
-      // yeniden ölçülmez, koltuklar yerinden oynamaz.
       const height = Math.round(bar.getBoundingClientRect().height);
-      if (height > 0 && !frame.style.getPropertyValue('--voice-bar-height')) {
-        frame.style.setProperty('--voice-bar-height', `${height}px`);
-      }
+      if (height > 0) frame.style.setProperty('--voice-bar-height', `${height}px`);
     };
     apply();
     const observer = new ResizeObserver(apply);
@@ -35,7 +31,7 @@ export default function VoiceControlBar({ micActive, requesting = false, deafene
 
   const btn = 'rounded-full active:bg-primary/20 transition-colors';
   return (
-    <div ref={barRef} className="voice-control-bar relative w-full shrink-0" style={{ aspectRatio: ratio || '3 / 1', visibility: src ? 'visible' : 'hidden' }}>
+    <div ref={barRef} className="voice-control-bar relative w-full shrink-0" style={{ aspectRatio: ratio || '3 / 1' }}>
       {src && <Image src={src} alt="Alt menü" className="pointer-events-none absolute inset-0 h-full w-full select-none" fittingType="fit" />}
       <button type="button" aria-label="Sohbet" onClick={onToggleChat} className={btn} style={zone(7.1)} />
       <button type="button" aria-label={requesting ? 'Mikrofon hazırlanıyor' : 'Mikrofon'} aria-busy={requesting} disabled={requesting} aria-pressed={micActive} onClick={onToggleMic} className={btn} style={zone(21.4)}>{micActive && <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-primary" />}</button>

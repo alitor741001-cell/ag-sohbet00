@@ -21,7 +21,7 @@ function NavButton({ z, active, messages, onNav }) {
   const Icon = z.icon;
   return (
     <button type="button" aria-label={z.label} aria-current={active ? 'page' : undefined} onClick={() => onNav(z)}
-      className="relative flex flex-1 flex-col items-center justify-center gap-1 pb-2 pt-2 transition-transform active:scale-95">
+      className="relative flex flex-1 flex-col items-center justify-center gap-1 pb-[env(safe-area-inset-bottom)] pt-2 transition-transform active:scale-95">
       <Icon aria-hidden="true" strokeWidth={2} className="h-6 w-6" style={{ color: active ? '#ffb02e' : '#e5e7eb' }} />
       <span className="text-[11px] font-bold leading-none" style={{ color: active ? '#ffc23a' : '#ffffff' }}>{z.label}</span>
       {z.activePath === '/arkadaslar' && messages > 0 && (
@@ -37,9 +37,9 @@ export default function HomeImageNav({ onNav, isAdmin, supportBadge, messages = 
   return (
     <nav aria-label="Ana menü" className="home-image-nav lg:hidden fixed bottom-0 inset-x-0 z-50 bg-[#0a0a0d]"
       style={{ transform: `translateY(-${keyboardInset}px)` }}>
-      <div className="mx-auto flex w-full items-stretch" style={{ minHeight: '4rem' }}>
+      <div className="mx-auto flex w-full max-w-[36rem] items-stretch" style={{ minHeight: '4rem' }}>
         {ZONES.slice(0, 3).map(btn)}
-        <div className="flex flex-1 items-center justify-center pb-2 pt-2">
+        <div className="flex flex-1 items-center justify-center pb-[env(safe-area-inset-bottom)] pt-2">
           {isAdmin ? <LiveChatButton placement="dock" /> : <UserSupportButton badge={supportBadge} />}
         </div>
         {ZONES.slice(3).map(btn)}
