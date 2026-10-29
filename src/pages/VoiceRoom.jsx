@@ -118,7 +118,7 @@ export default function VoiceRoom() {
   const [coinsRequest, setCoinsRequest] = useState(0);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [micGuideDismissed, setMicGuideDismissed] = useState(false);
-  const [micPromptDismissed, setMicPromptDismissed] = useState(false);
+
   const [logOpen, setLogOpen] = useState(false);
   // Oda paneli: profilim, oda ismi düzenleme, kategori, duyuru ve yöneticiler burada durur.
   const [profilePanelOpen, setProfilePanelOpen] = useState(false);
@@ -322,8 +322,7 @@ export default function VoiceRoom() {
     micEnabled: seated,
   });
   useEffect(() => { if (voice.micDenied) setMicGuideDismissed(false); }, [voice.micDenied]);
-  // Her koltuğa oturuşta izin uyarısı yeniden görünür (Android).
-  useEffect(() => { if (seated) setMicPromptDismissed(false); }, [seated]);
+
 
   // Oda müziği: odanın açık şarkısı canlı izlenir, herkes kendi telefonunda duyar.
   // Hoparlör kapatıldığında şarkı da susar; açıldığında kullanıcı sesleriyle birlikte geri gelir.
@@ -641,7 +640,7 @@ export default function VoiceRoom() {
       setSeatIndex(null);
       // Mikrofon izni doğrudan bu dokunuşun içinde istenir (iOS Safari dokunuş bekler);
       // koltuk kaydı hemen ardından yapılır.
-      voice.requestMic();
+      if (!ANDROID_DEVICE) voice.requestMic();
       try {
         await invokeVoice({ action: 'seat-take', seat_index: freeSeat.index });
       } catch (seatError) {
@@ -1231,6 +1230,7 @@ export default function VoiceRoom() {
         }}
       />
 
+      {voice.requesting && <p role="status" className="px-3 pb-1 text-center text-xs text-primary">Mikrofon açılıyor, cihazın izin penceresini onayla…</p>}
       {(voice.remoteMuted || voice.error) && (
         <p className="px-3 pb-1 text-center text-[11px] text-amber-400">
           {voice.remoteMuted ? 'Yönetici mikrofonunu kapattı.' : voice.error}
@@ -1246,10 +1246,10 @@ export default function VoiceRoom() {
       </div>
       <div className="voice-controls-anchor shrink-0" hidden={composerOpen}>
       <MicPermissionPrompt
-        open={ANDROID_DEVICE && seated && !!room?.voice_enabled && !voice.active && !micPromptDismissed}
+        open={seated && !!room?.voice_enabled && voice.micConsentRequired}
         requesting={voice.requesting}
         onAllow={voice.requestMic}
-        onDismiss={() => setMicPromptDismissed(true)}
+        onDismiss={voice.declineMic}
       />
       <RoomRocketFeature room={room} hidden={composerOpen} />
       <VoiceControlBar

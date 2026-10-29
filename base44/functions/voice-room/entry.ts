@@ -384,7 +384,7 @@ export default async function (req: Request): Promise<Response> {
       if (delivery.busy) return Response.json({ error: 'Gönderim sırada.', retry_after_ms: 700 }, { status: 429 });
       if (delivery.insufficient) return Response.json({ error: 'Yetersiz K bakiyesi.', needed_k: totalK, available_k: delivery.coins / 1000 }, { status: 400 });
       waitUntil(mirrorGiftDelivery(base44, delivery));
-      if (delivery.first) waitUntil(giftAftercare(base44, { user, room: delivery.room, gift: giftRecord, recipients, quantity, name: shownName, avatar: shownAvatar, hidden: hiddenUser, me }).catch(error => console.error('Hediye seviye/kota eşitlemesi:', error)));
+      if (delivery.first) waitUntil(giftAftercare(base44, { user, room: delivery.room, gift: giftRecord, recipients, quantity, name: shownName, avatar: shownAvatar, hidden: hiddenUser, me, progression: delivery.progression }).catch(error => console.error('Hediye kota/duyuru eşitlemesi:', error)));
       return Response.json({
         ok: true, gift: { id: giftRecord.id, name: giftRecord.name, emoji: giftRecord.emoji || '🎁', image_url: giftRecord.image_url || '', k_value: giftRecord.k_value },
         recipients, count: recipients.length, quantity, total_k: totalK,

@@ -19,7 +19,7 @@ export async function giftLock(base44, keys, token, release = false) {
   const expires_at = new Date(Date.now() + LOCK_TTL_MS).toISOString();
   await locks.bulkCreate(keys.map((key) => ({ key, token, expires_at })));
   // Aynı anda iki istek yazdıysa ilk yazan kazanır.
-  const rows = await locks.filter({ key: { $in: keys } }, 'created_date', 50);
+  const rows = await locks.filter({ key: { $in: keys } }, 'created_date', 500);
   const lost = keys.some((key) => rows.find((row) => row.key === key)?.token !== token);
   if (lost) { await locks.deleteMany({ token }).catch(() => {}); return false; }
   return true;

@@ -114,7 +114,7 @@ export function ensureMicTrack({ fresh = false } = {}) {
         releaseMicStream();
       }
       reject(Object.assign(new Error('Mikrofon yanıt vermedi.'), { code: 'mic_timeout' }));
-    }, 14000);
+    }, 60000);
   });
   const pending = Promise.race([acquireMic(), timeout]).finally(() => {
     clearTimeout(timer);

@@ -1,6 +1,6 @@
 import { base44 } from '@/api/base44Client';
 import { createStreamOutput, ensureMicTrack } from '@/lib/callAudio';
-import { vipLevelOf } from '@/lib/userLevels';
+import { membershipActive } from '@/lib/useCurrentUser';
 import answerVoiceTrack from '@/lib/answerVoiceTrack';
 
 // Eşlerin birbirini bulması için genel STUN; simetrik NAT / mobil ağlar için
@@ -47,7 +47,8 @@ const pcFailed = (pc) => ['failed', 'closed'].includes(pc.connectionState || pc.
 const IS_IOS = typeof navigator !== 'undefined'
   && (/iPad|iPhone|iPod/.test(navigator.userAgent || '') || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
 
-const MIC_TIMEOUT_MS = 15000;
+// Sistem izin penceresindeki karar süresi de bu beklemeye dahildir.
+const MIC_TIMEOUT_MS = 65000;
 const HEARTBEAT_MS = 6000;
 // Teklif yanıtsız kalırsa bu süre sonunda yeniden denenir (kaçan sinyal kurtarılır).
 const OFFER_RETRY_MS = 5000;
@@ -74,8 +75,8 @@ const randomId = () => {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 };
 
-// Konuşma yetkisi: yönetici/mod veya aktif abonelik (VIP) — dinlemek herkese açık.
-const canSpeakFor = (user) => ['admin', 'moderator'].includes(user?.role) || vipLevelOf(user) > 0;
+// Koltuk servisiyle aynı üyelik kuralı: paket sistemi kaldırıldı, üyeler konuşabilir.
+const canSpeakFor = (user) => membershipActive(user);
 
 /**
  * Sesli oda bağlantısı — tarayıcılar arası doğrudan WebRTC (mesh).

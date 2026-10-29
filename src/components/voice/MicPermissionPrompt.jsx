@@ -5,7 +5,7 @@ export default function MicPermissionPrompt({ open, requesting, onAllow, onDismi
     <div className="room-mic-prompt mx-3 mb-2 rounded-2xl border border-primary/40 bg-black/75 px-3 py-2.5 backdrop-blur">
       <p className="text-[12px] font-semibold leading-snug text-white">Mikrofon izni</p>
       <p className="mt-0.5 text-[11px] leading-snug text-white/55">
-        Konuşmak için mikrofona izin ver. Soru çıkmazsa “İzin Ver”e dokun.
+        Konuşmak için “İzin Ver”e dokun. Cihaz izin sorarsa onayla; önceden izin verdiysen tekrar sormayabilir.
       </p>
       <div className="mt-2 flex gap-2">
         <button

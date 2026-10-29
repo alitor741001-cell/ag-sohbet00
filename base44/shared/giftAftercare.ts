@@ -1,24 +1,21 @@
-import { addGiftTotals } from './userLevels.ts';
 import { syncQuotaRewards } from './agency.ts';
-import { syncGiftRoomLevel } from './roomLevels.ts';
 import { mirrorRecord } from './supabaseMirror.ts';
 import { coinsForK } from './giftWallet.ts';
 
-export async function giftAftercare(base44, { user, room, gift, recipients, quantity, name, avatar, hidden, me }) {
+export async function giftAftercare(base44, { user, room, gift, recipients, quantity, name, avatar, hidden, me, progression }) {
   const sr = base44.asServiceRole.entities;
-  const progression = await addGiftTotals(base44, { senderId: user.id, recipientIds: recipients.map(p => p.user_id), kPerRecipient: Number(gift.k_value) * quantity });
-  for (let i = 0; i < recipients.length; i += 4) {
-    await Promise.all(recipients.slice(i, i + 4).map(p => syncQuotaRewards(base44, p.user_id)));
-  }
   const notices = [];
   if (progression?.sender) {
-    const synced = await syncGiftRoomLevel(base44, { userId: user.id, userName: name, level: progression.sender.after });
+    const synced = progression.roomLevel;
     if (synced?.leveledUp) notices.push({ room_id: room.id, user_id: hidden ? '' : user.id, user_name: name, user_avatar: avatar, text: `${name} ${synced.level} lvl atladı`, type: 'system' });
   }
   for (const person of progression?.recipients || []) {
     if (person.after > person.before) notices.push({ room_id: room.id, user_id: person.user_id, user_name: person.name, text: `${person.name} ${person.after} hediye lvl atladı`, type: 'system' });
   }
-  if (notices.length) await sr.RoomMessage.bulkCreate(notices);
+  if (notices.length) await Promise.all(notices.map(notice => sr.RoomMessage.create(notice)));
+  for (let i = 0; i < recipients.length; i += 4) {
+    await Promise.all(recipients.slice(i, i + 4).map(p => syncQuotaRewards(base44, p.user_id)));
+  }
   if (coinsForK(gift.k_value) * quantity >= 1000000) {
     const primary = recipients[0];
     const recipient = await sr.User.get(primary.user_id);

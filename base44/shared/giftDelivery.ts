@@ -2,12 +2,15 @@ import { giftLock, mirrorRecord } from './supabaseMirror.ts';
 import { coinsForK, ensureGiftWallet } from './giftWallet.ts';
 import { withStep } from './numberBoard.ts';
 import { upsertRoomNotice } from './roomNotice.ts';
+import { addGiftTotals } from './userLevels.ts';
+import { syncGiftRoomLevel } from './roomLevels.ts';
 
 // Ana kayıtlar tamamlanmadan başarılı gönderim cevabı verilmez.
 export async function deliverGift(base44, context) {
   const { roomId, user, gift, recipients, quantity, name, avatar, hidden, requestId } = context;
   const token = crypto.randomUUID();
-  if (!await giftLock(base44, [`room:${roomId}`, `wallet:${user.id}`], token)) {
+  const levelLocks = [...new Set([user.id, ...recipients.map(p => p.user_id)])].map(id => `gift-level:${id}`);
+  if (!await giftLock(base44, [`room:${roomId}`, `wallet:${user.id}`, ...levelLocks], token)) {
     return { busy: true };
   }
   try {
@@ -86,7 +89,12 @@ export async function deliverGift(base44, context) {
         await sr.RoomRocketGift.create({ room_id: roomId, request_id: key, coins: cost, total_after: (total.rows[0]?.sum_coins || 0) + cost, gift_at: giftAt });
       }
     }
-    return { ok: true, records, wallet, room, messages, first: !alreadyPaid };
+    // Puan ve oda LVL'i kaydedilmeden gönderim tamamlandı sayılmaz.
+    const progression = await addGiftTotals(base44, { senderId: user.id, recipientIds: recipients.map(p => p.user_id) });
+    if (progression?.sender) {
+      progression.roomLevel = await syncGiftRoomLevel(base44, { userId: user.id, userName: name, level: progression.sender.after });
+    }
+    return { ok: true, records, wallet, room, messages, progression, first: !alreadyPaid };
   } finally {
     await giftLock(base44, [], token, true);
   }

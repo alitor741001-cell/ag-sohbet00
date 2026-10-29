@@ -78,36 +78,35 @@ export async function addLoadedCoins(base44: any, userId: string, amount: any) {
  * kPerRecipient: tek bir alıcıya giden K (adet dahil).
  * Dönen değer, hediye seviyesinin önce → sonra değişimidir; seviye atlama duyurusu bununla kurulur.
  */
-export async function addGiftTotals(base44: any, { senderId, recipientIds, kPerRecipient }: any) {
-  const k = Math.max(0, Number(kPerRecipient) || 0);
-  if (!k) return null;
-  const ids = [...new Set((recipientIds || []).filter(Boolean))];
-  let sender = null;
-  if (senderId) {
-    const record = await base44.asServiceRole.entities.User.get(senderId).catch(() => null);
-    if (record?.id) {
-      const sentK = Math.round(((Number(record.gift_sent_k) || 0) + k * ids.length) * 100) / 100;
-      sender = {
-        user_id: record.id,
-        name: record.username || record.full_name || 'Kullanıcı',
-        before: giftLevel(record.gift_sent_k),
-        after: giftLevel(sentK),
-      };
-      await base44.asServiceRole.entities.User.updateMany({ id: record.id }, { $inc: { gift_sent_k: k * ids.length } });
-    }
+export async function addGiftTotals(base44: any, { senderId, recipientIds }: any) {
+  const sr = base44.asServiceRole.entities;
+  const ids = [...new Set([senderId, ...(recipientIds || [])].filter(Boolean))];
+  if (!ids.length) return null;
+  // Kalıcı başarılı gönderimler kaynak kabul edilir. Tekrar deneme aynı hediyeyi
+  // ikinci kez eklemez; önceki başarısız seviye güncellemeleri de tamamlanır.
+  const [people, sent, received] = await Promise.all([
+    sr.User.filter({ id: { $in: ids } }, '-created_date', ids.length),
+    sr.GiftSend.aggregate({ query: { sender_id: { $in: ids }, status: 'success' }, groupBy: 'sender_id', sum: ['k_value'] }),
+    sr.GiftSend.aggregate({ query: { recipient_id: { $in: ids }, status: 'success' }, groupBy: 'recipient_id', sum: ['k_value'] }),
+  ]);
+  if (sent.truncated || received.truncated) throw new Error('Hediye toplamları tamamlanamadı.');
+  const sentById = new Map(sent.rows.map(row => [row.sender_id, Number(row.sum_k_value) || 0]));
+  const receivedById = new Map(received.rows.map(row => [row.recipient_id, Number(row.sum_k_value) || 0]));
+  const progress = [];
+  for (let i = 0; i < people.length; i += 4) {
+    const batch = await Promise.all(people.slice(i, i + 4).map(async person => {
+      const sentK = Math.max(Number(person.gift_sent_k) || 0, sentById.get(person.id) || 0);
+      const receivedK = Math.max(Number(person.gift_received_k) || 0, receivedById.get(person.id) || 0);
+      // User toplu güncellemeyi desteklemez; tekli yazım canlı rozet olayını da üretir.
+      await sr.User.update(person.id, { gift_sent_k: sentK, gift_received_k: receivedK });
+      return { user_id: person.id, name: person.username || person.full_name || 'Kullanıcı',
+        sentBefore: giftLevel(person.gift_sent_k), sentAfter: giftLevel(sentK),
+        before: giftLevel(person.gift_received_k), after: giftLevel(receivedK) };
+    }));
+    progress.push(...batch);
   }
-  const recipients = [];
-  for (const id of ids) {
-    const person = await base44.asServiceRole.entities.User.get(id).catch(() => null);
-    if (!person?.id) continue;
-    const receivedK = Math.round(((Number(person.gift_received_k) || 0) + k) * 100) / 100;
-    recipients.push({
-      user_id: person.id,
-      name: person.username || person.full_name || 'Kullanıcı',
-      before: giftLevel(person.gift_received_k),
-      after: giftLevel(receivedK),
-    });
-    await base44.asServiceRole.entities.User.updateMany({ id: person.id }, { $inc: { gift_received_k: k } });
-  }
+  const source = progress.find(person => person.user_id === senderId);
+  const sender = source ? { ...source, before: source.sentBefore, after: source.sentAfter } : null;
+  const recipients = progress.filter(person => (recipientIds || []).includes(person.user_id));
   return { sender, recipients };
 }

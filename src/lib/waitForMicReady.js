@@ -1,6 +1,6 @@
 // Mobil sürücüler canlı kanalı ilk anda muted olarak döndürebilir.
 // Kanalı hemen kapatmak yerine aygıtın unmute olayını bekle.
-export default function waitForMicReady(track, timeout = 2500) {
+export default function waitForMicReady(track, timeout = 8000) {
   return new Promise((resolve, reject) => {
     let timer;
     const finish = (error) => {
