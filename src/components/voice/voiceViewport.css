@@ -48,7 +48,9 @@
 /* Tema ve oda içeriği ayrı katmanlardır. Koltukların üst kapsayıcısı da
    öne alınır; arka plan görseli hiçbir koltuk düzenini örtemez. */
 .voice-viewport > .room-bg-layer { z-index: -1; }
-.voice-viewport > .voice-room-layout { position: relative; z-index: 1; }
+/* Oda düzeni kendi konumlandırma kapsayıcısı olmaz: alt çubuk doğrudan oda çerçevesine
+   hizalanır, böylece dünkü gibi ekranın en altına iner. */
+.voice-viewport > .voice-room-layout { z-index: 1; }
 .voice-viewport .voice-stage-region { position: relative; z-index: 2; }
 
 .voice-viewport {
