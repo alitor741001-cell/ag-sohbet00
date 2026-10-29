@@ -10,11 +10,8 @@ import { vipLevelOf } from '@/lib/userLevels';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import useFriends from '@/hooks/useFriends';
 import SocialListDialog from '@/components/profile/social/SocialListDialog';
-import useActiveRooms from '@/hooks/useActiveRooms';
-import { findLiveRoom } from '@/lib/liveRoom';
 import ProfileFixedHero from '@/components/profile/fantasy/ProfileFixedHero';
 import ProfileStatBar from '@/components/profile/fantasy/ProfileStatBar';
-import ProfileLivePanel from '@/components/profile/fantasy/ProfileLivePanel';
 import ProfileTwinCards from '@/components/profile/fantasy/ProfileTwinCards';
 import ProfileBalanceCards from '@/components/profile/fantasy/ProfileBalanceCards';
 import ProfileIconGrid from '@/components/profile/fantasy/ProfileIconGrid';
@@ -115,12 +112,6 @@ export default function Profile() {
   const { relations } = useFriends();
   const friendCount = relations.filter((relation) => relation.status === 'accepted').length;
 
-  // Kişi şu anda bir odada yayındaysa profil şeridi "Yayında" ve "Yayına Katıl" gösterir.
-  const { rooms, getRoomId } = useActiveRooms(true);
-  const liveRoom = user ? findLiveRoom(rooms, user.id, getRoomId(user.id)) : null;
-  const viewers = liveRoom
-    ? [...(liveRoom.room.participants || []), ...(liveRoom.room.seats || [])].filter((person) => person?.user_id).length
-    : 0;
 
   // Sayfa kendini 5 saniyede bir sessizce tazeler: bakiye canlı değerden okunur, böylece
   // hediye/oyun harcamaları ekranda eski tutarla kalmaz — yükleme göstergesi çıkmaz.
@@ -209,15 +200,6 @@ export default function Profile() {
             followers={social.followers}
             visitors={social.visitors}
             onSelect={(key) => (key === 'friends' ? navigate('/arkadaslar?view=friends') : setSocialList(key))}
-          />
-          <ProfileLivePanel
-            user={user}
-            avatar={form.avatar || user.avatar}
-            liveRoom={liveRoom}
-            viewers={viewers}
-            onChat={() => navigate('/arkadaslar')}
-            onEdit={() => toggle('info')}
-            onSettings={() => toggle('settings')}
           />
           <ProfileBalanceCards coins={wallet?.coins ?? null} diamonds={elmasLocked ? null : (wallet?.month_score ?? null)} onCoins={() => setCoinShopOpen(true)} onDiamonds={openGiftBox} />
           <ProfileTwinCards
