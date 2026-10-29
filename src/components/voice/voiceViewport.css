@@ -15,7 +15,6 @@
    ölçüsüne (100lvh) yayılır, böylece alt güvenli alanda da görsel devam eder ve
    ekranın dibinde siyah şerit kalmaz. Sayfa düzenine yer eklemez. */
 .room-bg-layer {
-  z-index: 0;
   position: fixed;
   /* Katman ekranın dört yanından taşar: çentik, alt güvenli alan ve tarayıcı
      araç çubuğu boşluklarında da tema görseli devam eder, lacivert şerit kalmaz. */
@@ -36,9 +35,7 @@
   right: -80px;
   bottom: -200px;
   left: -80px;
-  /* Tema katmanı her zaman odanın arkasında kalır: hiçbir koltuk ya da buton
-     bu katmanın altına geçemez. */
-  z-index: -1;
+  z-index: 1;
   pointer-events: none;
   background-color: #0a1c3c;
   background-image: var(--room-theme-image, none), var(--room-theme-tint, linear-gradient(180deg, #103062 0%, #0a1c3c 52%, #0b1930 100%));
@@ -47,17 +44,7 @@
   background-repeat: no-repeat, no-repeat;
 }
 
-/* Tema ve oda içeriği ayrı katmanlardır. Koltukların üst kapsayıcısı da
-   öne alınır; arka plan görseli hiçbir koltuk düzenini örtemez. */
-.voice-viewport > .room-bg-layer { z-index: -1; }
-/* Oda düzeni kendi konumlandırma kapsayıcısı olmaz: alt çubuk doğrudan oda çerçevesine
-   hizalanır, böylece dünkü gibi ekranın en altına iner. */
-.voice-viewport > .voice-room-layout { z-index: 1; }
-/* Koltuk sahnesi odadaki her zemin ve tema katmanının üstünde durur. */
-.voice-viewport .voice-stage-region { position: relative; z-index: 25; }
-
 .voice-viewport {
-  isolation: isolate;
   top: var(--viewport-offset, 0px);
   /* Zemin temanın kendisidir: butonların altındaki dolgu ve alt güvenli alan dahil
      görünen her piksel tema görseliyle boyanır; seçim yoksa gece mavisi kalır. */
@@ -276,9 +263,8 @@
   position: absolute;
   left: 0;
   right: 0;
-  /* Çubuk ekranın en alt kenarına, çentik hizasına kadar iner ve koltukların üstünde kalır. */
+  /* Çubuk ekranın en alt kenarına, çentik hizasına kadar iner. */
   bottom: 0;
-  z-index: 40;
 }
 @media (min-width: 768px) {
   .voice-viewport .voice-controls-anchor {

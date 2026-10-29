@@ -14,7 +14,7 @@ export default function useVoiceRoomViewport(ref, onKeyboardChange) {
       frame = 0;
       const visible = Math.round(viewport?.height || window.innerHeight);
       const typing = document.activeElement?.matches('input,textarea,[contenteditable="true"]');
-      if (width !== window.innerWidth || !typing) { width = window.innerWidth; height = visible; }
+      if (width !== window.innerWidth) { width = window.innerWidth; height = visible; }
       const keyboard = typing ? Math.max(0, height - visible - (viewport?.offsetTop || 0)) : 0;
       const next = keyboard > 100;
       node.style.setProperty('--visual-viewport-height', `${height}px`);

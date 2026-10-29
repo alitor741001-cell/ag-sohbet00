@@ -8,9 +8,10 @@ import { findProtectedName } from '@/lib/protectedNames';
 import { vipLevelOf } from '@/lib/userLevels';
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import SocialListDialog from '@/components/profile/social/SocialListDialog';
+import useActiveRooms from '@/hooks/useActiveRooms';
+import { findLiveRoom } from '@/lib/liveRoom';
 import ProfileFixedHero from '@/components/profile/fantasy/ProfileFixedHero';
-import ProfileStatBar from '@/components/profile/fantasy/ProfileStatBar';
+import ProfileLivePanel from '@/components/profile/fantasy/ProfileLivePanel';
 import ProfileTwinCards from '@/components/profile/fantasy/ProfileTwinCards';
 import ProfileBalanceCards from '@/components/profile/fantasy/ProfileBalanceCards';
 import ProfileIconGrid from '@/components/profile/fantasy/ProfileIconGrid';
@@ -43,8 +44,6 @@ export default function Profile() {
   const [vipCount, setVipCount] = useState(0);
   const [giftBoxOpen, setGiftBoxOpen] = useState(false);
   const [privacyOpen, setPrivacyOpen] = useState(false);
-  const [social, setSocial] = useState({ friends: null, following: null, followers: null, visitors: null });
-  const [socialList, setSocialList] = useState(null);
 
   const [activityOpen, setActivityOpen] = useState(false);
   const [vipBagOpen, setVipBagOpen] = useState(false);
@@ -95,15 +94,12 @@ export default function Profile() {
   useWalletCoinsLive(user?.id, (coins) => setWallet((prev) => ({ ...prev, coins })));
   useGiftSummaryLive(user?.id, loadWallet);
 
-  const loadSocial = async () => {
-    if (!user?.id) return;
-    const [response, friends] = await Promise.all([
-      base44.functions.invoke('social-service', { action: 'stats' }),
-      base44.entities.Friendship.count({ status: 'accepted', members: user.id }),
-    ]);
-    setSocial({ ...response.data, friends });
-  };
-  useEffect(() => { if (user?.id) void loadSocial(); }, [user?.id]);
+  // Kişi şu anda bir odada yayındaysa profil şeridi "Yayında" ve "Yayına Katıl" gösterir.
+  const { rooms, getRoomId } = useActiveRooms(true);
+  const liveRoom = user ? findLiveRoom(rooms, user.id, getRoomId(user.id)) : null;
+  const viewers = liveRoom
+    ? [...(liveRoom.room.participants || []), ...(liveRoom.room.seats || [])].filter((person) => person?.user_id).length
+    : 0;
 
   // Sayfa kendini 5 saniyede bir sessizce tazeler: bakiye canlı değerden okunur, böylece
   // hediye/oyun harcamaları ekranda eski tutarla kalmaz — yükleme göstergesi çıkmaz.
@@ -184,9 +180,18 @@ export default function Profile() {
         vipLevel={vipLevelOf(user)}
       />
 
-      <PullToRefresh onRefresh={() => { reload?.(); loadWallet(); loadSocial(); loadVipCount(); }}>
-        <div className="profile-content-grid space-y-3 px-4 pt-4">
-          <ProfileStatBar {...social} onSelect={(key) => key === 'friends' ? navigate('/arkadaslar?view=friends') : setSocialList(key)} />
+      <PullToRefresh onRefresh={() => { reload?.(); loadWallet(); loadVipCount(); }}>
+        <div className="space-y-3 px-4 pt-4">
+          <ProfileLivePanel
+            user={user}
+            avatar={form.avatar || user.avatar}
+            liveRoom={liveRoom}
+            viewers={viewers}
+            onChat={() => navigate('/arkadaslar')}
+            onJoin={() => liveRoom && navigate(liveRoom.link)}
+            onEdit={() => toggle('info')}
+            onSettings={() => toggle('settings')}
+          />
           <ProfileBalanceCards coins={wallet?.coins ?? null} diamonds={elmasLocked ? null : (wallet?.month_score ?? null)} onCoins={() => setCoinShopOpen(true)} onDiamonds={openGiftBox} />
           <ProfileTwinCards
             vipCount={vipCount}
@@ -253,7 +258,6 @@ export default function Profile() {
         onBack={() => { setCoinShopOpen(false); loadWallet(); }}
       />
 
-      <SocialListDialog open={!!socialList} kind={socialList} onClose={() => { setSocialList(null); loadSocial(); }} />
       <Dialog open={privacyOpen} onOpenChange={(value) => !value && setPrivacyOpen(false)}>
         <DialogContent className="max-h-[88vh] max-w-2xl gap-0 border-[#7dd3fc]/30 bg-[linear-gradient(180deg,#0B2A52,#05122A)] p-0 text-white">
           <DialogHeader className="border-b border-[#7dd3fc]/20 px-5 pb-3 pt-5 text-left">

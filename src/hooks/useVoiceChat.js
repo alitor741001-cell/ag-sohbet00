@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ensureMicTrack, unlockVoicePlayback } from '@/lib/callAudio';
+import { unlockVoicePlayback } from '@/lib/callAudio';
 import { hasDirectCallAudioFocus, subscribeCallAudioFocus } from '@/lib/callAudioFocus';
 import { isRoomMinimized } from '@/lib/minimizedRoom';
 import { disposeOtherVoiceSessions, registerVoiceSession, takeVoiceSession } from '@/lib/roomVoiceSession';
@@ -67,7 +67,6 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
   const [canSpeak, setCanSpeak] = useState(true);
   const [lastMicrophoneError, setLastMicrophoneError] = useState('');
   const [audioBlocked, setAudioBlocked] = useState(false);
-  const [networkIssue, setNetworkIssue] = useState(false);
   const [debug, setDebug] = useState(initialDebug);
   const [everVoiceEnabled, setEverVoiceEnabled] = useState(voiceEnabled);
   // Arka plandan dönüşte bağlantı yeniden kurulur: oda ve koltuk kaydı değişmez.
@@ -78,8 +77,6 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
   // Koltuk düzeni: mikrofon yayını yalnızca koltukta oturan kişide açık kalır.
   const micEnabledRef = useRef(micEnabled !== false);
   const micAppliedRef = useRef(null);
-  const micAuthorizedRef = useRef(false);
-  const lastSeatEnabledRef = useRef(micEnabled);
   // İzin reddedildiyse kendiliğinden tekrar denenmez; kullanıcı izni verince sıfırlanır.
   const micDeniedRef = useRef(false);
   // Kendiliğinden açma denemeleri seyreltilir (cihazı üst üste meşgul etmesin).
@@ -97,7 +94,6 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
     setSpeakingIds((previous) => sameList(previous, snapshot.speakers) ? previous : snapshot.speakers);
     setConnectionState(snapshot.connectionState);
     setAudioBlocked(!!snapshot.audioBlocked);
-    setNetworkIssue(!!snapshot.networkIssue);
     setCanSpeak(snapshot.canPublish !== false);
     const nextDebug = {
       participantCount: snapshot.participantCount,
@@ -118,7 +114,6 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
       micDeniedRef.current = false;
       const stop = (async () => {
         mesh.stopMic();
-        micAppliedRef.current = false;
         setActive(false);
         refreshState();
       })();
@@ -126,13 +121,9 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
       try { await stop; } finally { if (micPendingRef.current === stop) micPendingRef.current = null; }
       return;
     }
-    if (!micEnabledRef.current || mutedByModeratorRef.current || hasDirectCallAudioFocus() || !voiceEnabledRef.current) return;
-    if (micPendingRef.current) return micPendingRef.current;
     const request = (async () => {
       const opened = await mesh.setMicEnabled(true);
-      if (!micWantedRef.current || meshRef.current !== mesh || !micEnabledRef.current || mutedByModeratorRef.current || hasDirectCallAudioFocus()) { mesh.stopMic(); return; }
       if (!opened || !mesh.isMicOn()) throw new Error('Mikrofon yayını doğrulanamadı.');
-      micAuthorizedRef.current = true;
       micDeniedRef.current = false;
       micAppliedRef.current = true;
       setMicDenied(false);
@@ -155,8 +146,9 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
   const retryAudio = useCallback(async () => {
     try {
       const mesh = meshRef.current;
-      const played = mesh ? await mesh.retryPlayback() : await unlockVoicePlayback();
-      setAudioBlocked(!played);
+      if (mesh) await mesh.retryPlayback();
+      else await unlockVoicePlayback();
+      setAudioBlocked(false);
       setError(previous => previous.startsWith('🔊') ? '' : previous);
       refreshState();
     } catch (playError) {
@@ -180,10 +172,6 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
       onChange: () => refreshState(),
     });
     meshRef.current = mesh;
-    micPendingRef.current = null;
-    mesh.onChange = refreshState;
-    mesh.setDeafened(deafenedRef.current);
-    micAppliedRef.current = null;
 
     (async () => {
       try {
@@ -192,7 +180,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
           mesh.setOutputsEnabled(true);
           void retryAudio();
           // Doğrudan arama sesi yeniden öncelik aldıysa mikrofon kapalı kalır.
-          if (!hasDirectCallAudioFocus() && !mutedByModeratorRef.current && voiceEnabledRef.current && micEnabledRef.current && micWantedRef.current) {
+          if (!hasDirectCallAudioFocus() && !mutedByModeratorRef.current && voiceEnabledRef.current && micWantedRef.current) {
             await enableMic(mesh).catch(() => {});
           }
           refreshState();
@@ -209,9 +197,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
         // İzin daha önce verildiyse mikrofon kendiliğinden açılır; henüz sorulmadıysa
         // mikrofon yalnızca kişi düğmeye bastığında, izin sorularak açılır.
         const mayOpen = micGestureRef.current || await micPermissionGranted();
-        micAuthorizedRef.current = !!mayOpen;
-        if (cancelled) return;
-        if (!hasDirectCallAudioFocus() && !mutedByModeratorRef.current && voiceEnabledRef.current && micEnabledRef.current && mayOpen && (micWantedRef.current || carryMic)) {
+        if (!hasDirectCallAudioFocus() && !mutedByModeratorRef.current && voiceEnabledRef.current && mayOpen && (micWantedRef.current || carryMic)) {
           micWantedRef.current = true;
           setRequesting(true);
           try {
@@ -240,8 +226,9 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
     // tekrar girmeden konuşmaya devam eder.
     const restoreOnVisible = () => {
       if (document.visibilityState === 'hidden') return;
+      micDeniedRef.current = false;
       void retryAudio();
-      if (micWantedRef.current && micEnabledRef.current && micAuthorizedRef.current && !mutedByModeratorRef.current && voiceEnabledRef.current && !hasDirectCallAudioFocus() && !mesh.isMicOn()) {
+      if ((micWantedRef.current || micAllowedBefore()) && !mutedByModeratorRef.current && voiceEnabledRef.current) {
         enableMic(mesh).then(refreshState).catch(() => {});
       }
     };
@@ -249,13 +236,11 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
     window.addEventListener('focus', restoreOnVisible);
     window.addEventListener('orientationchange', startAudioOnInteraction);
     const recoveryTimer = window.setInterval(() => {
-      if (document.visibilityState === 'hidden' || cancelled) return;
-      if (!mesh.isConnected()) void mesh.reconnect();
       refreshState();
       // Mikrofon açık kalmalı ama yayın düşmüşse kendiliğinden geri kurulur;
       // böylece buton "kapalı" görünüp öyle kalmaz. Denemeler seyreltilir.
-      const micBroken = micWantedRef.current && micEnabledRef.current && micAuthorizedRef.current && !micDeniedRef.current && !mutedByModeratorRef.current
-        && !hasDirectCallAudioFocus() && voiceEnabledRef.current && meshRef.current === mesh && !mesh.isMicOn() && !micPendingRef.current;
+      const micBroken = micWantedRef.current && !micDeniedRef.current && !mutedByModeratorRef.current
+        && voiceEnabledRef.current && meshRef.current === mesh && !mesh.isMicOn();
       if (micBroken && Date.now() >= micRetryAtRef.current) {
         micRetryAtRef.current = Date.now() + 6000;
         enableMic(mesh).then(refreshState).catch((micError) => {
@@ -281,7 +266,6 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
       // oda sesi duyulmaya devam eder — odaya dönüldüğünde aynı bağlantı yeniden kullanılır.
       if (isRoomMinimized(roomId)) {
         stopTransient();
-        mesh.onChange = null;
         registerVoiceSession(roomId, { room: mesh, elements: mesh.audioElements(), stopTransient });
         return;
       }
@@ -332,16 +316,13 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
   useEffect(() => {
     if (micEnabled === undefined) return;
     const next = micEnabled !== false;
-    if (lastSeatEnabledRef.current !== micEnabled) {
-      micWantedRef.current = next;
-      lastSeatEnabledRef.current = micEnabled;
-    }
+    micWantedRef.current = next;
     const mesh = meshRef.current;
     if (!mesh || hasDirectCallAudioFocus() || connectionState !== 'connected' || mutedByModeratorRef.current) return;
     // Bağlantı hazır olduğunda tekrar denenir: bağlantı kurulmadan gelen istek kaybolmaz.
     if (micAppliedRef.current === next) return;
     // Mikrofon reddedilse bile dinleme sürer.
-    if (next && micWantedRef.current) {
+    if (next) {
       micDeniedRef.current = false;
       // İzin henüz sorulmadıysa mikrofon kendiliğinden açılmaz: izin kişi düğmeye
       // bastığında sorulur.
@@ -441,24 +422,5 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
     }).finally(() => { micTogglePendingRef.current = false; setRequesting(false); });
   }, [canSpeak, enableMic, refreshState]);
 
-  const prepareMic = useCallback(async () => {
-    micGestureRef.current = true;
-    setRequesting(true);
-    try {
-      const track = await ensureMicTrack();
-      track.enabled = false;
-      micAuthorizedRef.current = true;
-      micDeniedRef.current = false;
-      setMicDenied(false);
-      return track;
-    } catch (error) {
-      micDeniedRef.current = isPermissionError(error);
-      setMicDenied(micDeniedRef.current);
-      setError(friendlyMicError(error));
-      throw error;
-    } finally { setRequesting(false); }
-  }, []);
-
-  const retryConnection = useCallback(() => meshRef.current?.reconnect(), []);
-  return { prepareMic, networkIssue, retryConnection, muted: !active, remoteMuted, deafened, localSpeaking, speakingIds, participantMicStates, active, error, micDenied, requesting, connectionState, audioBlocked, canSpeak, lastMicrophoneError, retryAudio, retryMic, requestMic, toggleMute, toggleDeafen, debug, voiceEnabled };
+  return { muted: !active, remoteMuted, deafened, localSpeaking, speakingIds, participantMicStates, active, error, micDenied, requesting, connectionState, audioBlocked, canSpeak, lastMicrophoneError, retryAudio, retryMic, requestMic, toggleMute, toggleDeafen, debug, voiceEnabled };
 }

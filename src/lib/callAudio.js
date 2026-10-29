@@ -67,7 +67,8 @@ async function acquireMic() {
   // Yeniden edinim gerekiyorsa eski (sessiz/askıda) kayıt önce serbest bırakılır.
   releaseMicStream();
   // Android WebView'in eski ses sürücüleri işleme kısıtlarıyla açılamayabilir.
-  const next = await openAudio(getMedia, { audio: micOptions() });
+  const android = /Android/i.test(navigator.userAgent || '');
+  const next = await openAudio(getMedia, { audio: android ? true : micOptions() });
   if (generation !== micGeneration) {
     next.getTracks().forEach((track) => track.stop());
     throw new Error('arama sonlandı');
@@ -94,11 +95,10 @@ async function acquireMic() {
  * kez verildiği için tarayıcı tekrar sormaz.
  */
 export function ensureMicTrack({ fresh = false } = {}) {
-  // Android briefly hardware-mutes a live track during startup or route changes.
-  // Reopening it at that point resets capture before the first audio can arrive.
-  if (!fresh && micTrack && micTrack.readyState === 'live') return Promise.resolve(micTrack);
-  // Share the outstanding permission request instead of opening the device twice.
-  if (!micPending) {
+  if (!fresh && micTrack && micTrack.readyState === 'live' && !micTrack.muted) return Promise.resolve(micTrack);
+  // Eski cihazlarda izin isteği yanıtsız kalabilir: asılı deneme düğmeyi kilitlemez,
+  // 12 saniyeden sonra yeni bir dokunuş temiz bir deneme başlatır.
+  if (!micPending || Date.now() - micPendingAt > 12000) {
     micPendingAt = Date.now();
     const pending = acquireMic().finally(() => {
       if (micPending === pending) micPending = null;
@@ -268,7 +268,7 @@ export function createVoiceOutput(track, roomId, { startMuted = false, nativeOnl
  * Uzak eşin ses akışını yönlendirilebilir bir <audio> elementine bağlar.
  * createVoiceOutput ile aynı çıkış yönlendirmesini kullanır (iOS hoparlör/ahize).
  */
-export function createStreamOutput(stream, roomId, { startMuted = false, onPlaybackChange = () => {} } = {}) {
+export function createStreamOutput(stream, roomId, { startMuted = false } = {}) {
   const element = new Audio();
   element.autoplay = true;
   element.playsInline = true;
@@ -302,14 +302,14 @@ export function createStreamOutput(stream, roomId, { startMuted = false, onPlayb
     dataset: { voiceRoom: roomId, mediaId: stream.id },
     element,
     play() {
-      const playing = Promise.resolve(element.play());
-      playing.then(() => onPlaybackChange(false)).catch(() => { onPlaybackChange(!element.muted); armAutoRetry(); });
+      routeOutput(output).catch(() => {});
+      const playing = element.play();
+      // Safari oynatmayı reddederse kendiliğinden yeniden denenir (ilk dokunuşta başlar).
+      if (playing && typeof playing.catch === 'function') playing.catch(() => armAutoRetry());
       return playing;
     },
     remove() {
       outputs.delete(output);
-      element.onplaying = element.onpause = element.onerror = null;
-      element.pause();
       try { element.srcObject = null; } catch {}
       if (objectUrl) { try { (window.URL || window.webkitURL).revokeObjectURL(objectUrl); } catch {} }
       element.remove();
@@ -317,12 +317,7 @@ export function createStreamOutput(stream, roomId, { startMuted = false, onPlayb
     get muted() { return element.muted; },
     set muted(value) { element.muted = value; },
   };
-  element.onplaying = () => onPlaybackChange(false);
-  element.onpause = () => { if (outputs.has(output) && !element.muted) onPlaybackChange(true); };
-  element.onerror = () => onPlaybackChange(!element.muted);
   outputs.add(output);
-  // Route once when the output is created, not at every tap/play retry.
-  void routeOutput(output);
   return output;
 }
 

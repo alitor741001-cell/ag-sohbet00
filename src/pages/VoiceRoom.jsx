@@ -1,5 +1,6 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import RoomTopArt from '@/components/voice/RoomTopArt';
 import { base44 } from '@/api/base44Client';
 import { roomVisitId, endRoomVisit } from '@/lib/roomVisit';
 import subscribeEntity from '@/components/data/entitySubscriptions';
@@ -7,21 +8,24 @@ import { useCurrentUser } from '@/lib/useCurrentUser';
 import { broadcasterState } from '@/lib/broadcaster';
 import { makeId } from '@/lib/uid';
 import { useVoiceChat } from '@/hooks/useVoiceChat';
-import useVoiceMicControls from '@/hooks/useVoiceMicControls';
 import useSocialBadges from '@/hooks/useSocialBadges';
 import VoiceViewport from '@/components/voice/VoiceViewport';
 import RoomBackground from '@/components/voice/RoomBackground';
 import { useToast } from '@/components/ui/use-toast';
-import VoiceRoomSurface from '@/components/voice/VoiceRoomSurface';
+import VoiceStage from '@/components/voice/VoiceStage';
 import { resizeSeats } from '@/components/voice/seatLayout';
 import { isHiddenName } from '@/lib/hiddenUser';
 import useVoiceRoomMessages from '@/hooks/useVoiceRoomMessages';
+import VoiceControlBar from '@/components/voice/VoiceControlBar';
+import RoomRocketFeature from '@/components/voice/roomRocket/RoomRocketFeature';
+import VoiceChatDock from '@/components/voice/VoiceChatDock';
 import VoiceViewerSheet from '@/components/voice/VoiceViewerSheet';
 import VoiceSeatInvitePrompt from '@/components/voice/VoiceSeatInvitePrompt';
 import RoomProfileSheet from '@/components/voice/RoomProfileSheet';
 import VoiceRoomMenu from '@/components/voice/VoiceRoomMenu';
 import VoiceSeatSheet from '@/components/voice/VoiceSeatSheet';
 import InviteSheet from '@/components/voice/InviteSheet';
+import MicPermissionGuide from '@/components/voice/MicPermissionGuide';
 import useLatestCallback from '@/hooks/useLatestCallback';
 import { useUserProfile } from '@/lib/profileCard';
 import useVoiceRoomProfileActions from '@/hooks/useVoiceRoomProfileActions';
@@ -609,9 +613,51 @@ export default function VoiceRoom() {
     setSeatIndex(index);
   });
 
-  const { handleMic, handleTakeSeat, muteMicFromSeat } = useVoiceMicControls({
-    voice, seated, seats, seatIndex, setSeatIndex, invokeVoice, room, setRoom, id, toast,
-  });
+  const handleTakeSeat = () => {
+    const index = seatIndex;
+    setSeatIndex(null);
+    if (index !== null) invokeVoice({ action: 'seat-take', seat_index: index });
+  };
+
+  const handleMic = async () => {
+    voice.retryAudio();
+    // Abonelik yoksa koltuk işgal edilmez: uyarı gösterilir, kullanıcı dinleyici kalır.
+    if (voice.canSpeak === false) { voice.requestMic(); return; }
+    // Koltukta değilken mikrofona basınca ilk boş koltuğa oturulur ve mikrofon kendiliğinden açılır.
+    if (!seated) {
+      const freeSeat = seats.find((seat) => !seat.user_id && !seat.locked);
+      if (!freeSeat) {
+        toast({ title: 'Boş koltuk yok', description: 'Mikrofonu açmak için boş bir koltuk gerekiyor.' });
+        return;
+      }
+      setSeatIndex(null);
+      // Mikrofon izni doğrudan bu dokunuşun içinde istenir (iOS Safari dokunuş bekler);
+      // koltuk kaydı hemen ardından yapılır.
+      voice.requestMic();
+      try {
+        await invokeVoice({ action: 'seat-take', seat_index: freeSeat.index });
+      } catch (seatError) {
+        voice.toggleMute();
+        throw seatError;
+      }
+      return;
+    }
+    if (room?.voice_enabled) { await voice.toggleMute(); return; }
+    try {
+      await base44.functions.invoke('room-presence', { action: 'enable-voice', room_id: id });
+      setRoom(previous => previous ? { ...previous, voice_enabled: true } : previous);
+    } catch (error) {
+      toast({ title: 'Mikrofon açılamadı', description: error.response?.data?.error || error.message, variant: 'destructive' });
+    }
+  };
+
+  // Boş koltuk menüsündeki mikrofon tuşu kendi mikrofonumu değil, dokunulan koltuğun mikrofonunu açar/kapatır.
+  const muteMicFromSeat = () => {
+    const index = seatIndex;
+    setSeatIndex(null);
+    if (index === null) return;
+    invokeVoice({ action: 'seat-mute', seat_index: index, muted: !seats[index]?.muted });
+  };
 
   // Koltuk daveti: hedef koltuk verilirse o koltuğa, verilmezse ilk boş koltuğa gider.
   const inviteToSeat = async (targetId, index) => {
@@ -1108,30 +1154,117 @@ export default function VoiceRoom() {
     <VoiceViewport className="z-[150]" onKeyboardChange={handleKeyboardChange}>
       <RoomBackground value={room?.background} cover={room?.cover_url} />
 
-      <VoiceRoomSurface
-        room={room} audio={voice} composerOpen={composerOpen} dockRef={chatDockRef} dockHeight={chatDockHeight}
-        guideDismissed={micGuideDismissed} onDismissGuide={() => setMicGuideDismissed(true)}
-        top={{ giftTotal: giftBoard?.all?.total || 0, giftToday: giftBoard?.day?.total || 0,
-          onOpenGiftBoard: () => setGiftBoardOpen(true), onOpenRoom: () => setProfilePanelOpen(true), onFollow: followOwner,
-          viewerCount: participants.length, onOpenViewers: () => setViewerOpen(true), onOpenMenu: () => setMenuOpen(true), onExit: () => setExitOpen(true), showMenu: canMod }}
-        stage={{ scrollRef: swipeGesture.scrollRef, handlers: swipeGesture.handlers,
-          hiddenAnnounce: { active: room?.ghost_entered_at, name: hiddenAnnounceName },
-          grid: { seats: seatsView, musicOwnerId: music.music?.is_playing ? music.music.owner_id : null,
-            userId: user?.id, ownerId: room?.owner_id, moderators, speakingIds: voice.speakingIds, localSpeaking: voice.localSpeaking,
-            participantMicStates: voice.participantMicStates, localMicMuted: voice.muted, onSelectSeat: handleSeatPress,
-            boardActive, boardStartedAt, scores, accent: seatAccent, gifted } }}
-        chat={{ messages, chatLocked, onSend: sendMessage, open: chatOpen, onCloseComposer: () => setComposerOpen(false), keyboardOpen,
-          currentUserId: user?.id, currentUserName: myRoomName, onMention: roomProfileActions.mention, ownerId: room?.owner_id,
-          moderators, hiddenUsers: hiddenUsersByName, onOpenProfile: openRoomProfile, mention: mentionTarget, bigGiftNotices,
-          onOpenBigGiftRoom: (notice) => { if (notice?.id) dismissBigGiftNotice(notice.id); if (notice?.room_id) navigate(`/sesli-oda/${notice.room_id}`); } }}
-        controls={{ onToggleMic: handleMic, gamesEnabled, privateUnread: directUnread,
-          onOpenGames: () => setGamesOpen(true), onOpenGifts: openGifts, onOpenSettings: () => setSettingsOpen(value => !value),
-          onOpenPrivateChat: () => setDmOpen(true), onToggleChat: () => {
-            if (chatLocked) { toast({ title: 'Sohbet yasağı açık', description: 'Yazmak için bir koltuğa otur.' }); return; }
-            if (composerOpen) { setComposerOpen(false); return; }
-            setChatOpen(true); setComposerOpen(true);
-          } }}
+      <RoomTopArt
+        room={room}
+        giftTotal={giftBoard?.all?.total || 0}
+        giftToday={giftBoard?.day?.total || 0}
+        onOpenGiftBoard={() => setGiftBoardOpen(true)}
+        onOpenRoom={() => setProfilePanelOpen(true)}
+        onFollow={followOwner}
+        viewerCount={participants.length}
+        onOpenViewers={() => setViewerOpen(true)}
+        onOpenMenu={() => setMenuOpen(true)}
+        onExit={() => setExitOpen(true)}
+        showMenu={canMod}
       />
+
+      <VoiceStage
+        scrollRef={swipeGesture.scrollRef}
+        handlers={swipeGesture.handlers}
+        room={room}
+        hiddenAnnounce={{ active: room?.ghost_entered_at, name: hiddenAnnounceName }}
+        grid={{
+          seats: seatsView,
+          musicOwnerId: music.music?.is_playing ? music.music.owner_id : null,
+          userId: user?.id,
+          ownerId: room?.owner_id,
+          moderators,
+          speakingIds: voice.speakingIds,
+          localSpeaking: voice.localSpeaking,
+          participantMicStates: voice.participantMicStates,
+          localMicMuted: voice.muted,
+          onSelectSeat: handleSeatPress,
+          boardActive,
+          boardStartedAt,
+          scores,
+          accent: seatAccent,
+          gifted,
+        }}
+      />
+
+
+
+      <div
+        ref={chatDockRef}
+        className={`voice-chat-dock min-h-0 shrink-0 ${composerOpen ? 'is-composing' : ''}`}
+        style={chatDockHeight ? { height: `${chatDockHeight}px` } : undefined}
+      >
+      <VoiceChatDock
+        messages={messages}
+        chatLocked={chatLocked}
+        onSend={sendMessage}
+        open={chatOpen}
+        onCloseComposer={() => setComposerOpen(false)}
+        composerOpen={composerOpen}
+        keyboardOpen={keyboardOpen}
+        currentUserId={user?.id}
+        currentUserName={myRoomName}
+        onMention={roomProfileActions.mention}
+        ownerId={room?.owner_id}
+        moderators={moderators}
+        hiddenUsers={hiddenUsersByName}
+        onOpenProfile={openRoomProfile}
+        mention={mentionTarget}
+        bigGiftNotices={bigGiftNotices}
+        onOpenBigGiftRoom={(notice) => {
+          const target = notice?.room_id;
+          if (notice?.id) dismissBigGiftNotice(notice.id);
+          if (target) navigate(`/sesli-oda/${target}`);
+        }}
+      />
+
+      {(voice.remoteMuted || voice.error) && (
+        <p className="px-3 pb-1 text-center text-[11px] text-amber-400">
+          {voice.remoteMuted ? 'Yönetici mikrofonunu kapattı.' : voice.error}
+        </p>
+      )}
+
+      <MicPermissionGuide
+        open={voice.micDenied && !micGuideDismissed}
+        onClose={() => setMicGuideDismissed(true)}
+        onRetry={voice.retryMic}
+      />
+
+      </div>
+      <div className="voice-controls-anchor shrink-0" hidden={composerOpen}>
+      <RoomRocketFeature room={room} hidden={composerOpen} />
+      <VoiceControlBar
+        keyboardOpen={keyboardOpen}
+        micActive={!voice.muted}
+        deafened={voice.deafened}
+        chatOpen={chatOpen}
+        onToggleMic={handleMic}
+        onToggleSpeaker={voice.toggleDeafen}
+        gamesOpen={gamesOpen}
+        gamesEnabled={gamesEnabled}
+        giftOpen={giftOpen}
+        settingsOpen={settingsOpen}
+        onOpenGames={() => setGamesOpen(true)}
+        onOpenGifts={openGifts}
+        onOpenSettings={() => setSettingsOpen((value) => !value)}
+        privateUnread={directUnread}
+        onOpenPrivateChat={() => setDmOpen(true)}
+        onToggleChat={() => {
+          if (chatLocked) {
+            toast({ title: 'Sohbet yasağı açık', description: 'Yazmak için bir koltuğa otur.' });
+            return;
+          }
+          if (composerOpen) { setComposerOpen(false); return; }
+          setChatOpen(true);
+          setComposerOpen(true);
+        }}
+      />
+      </div>
 
       <VoiceRoomMenu
         open={menuOpen}

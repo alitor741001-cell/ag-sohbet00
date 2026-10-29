@@ -19,7 +19,26 @@ export default function VoiceStage({ scrollRef, handlers, room, hiddenAnnounce, 
   const areaRef = useRef(null);
   const measured = useSize(boxRef);
   const gridMeasured = useSize(gridBoxRef);
-  // Sahne hiçbir düzende kaymaz ve kırpılmaz: koltuklar sabit durur, temanın üstünde görünür.
+  const areaMeasured = useSize(areaRef);
+  // Klavye açıldığında sahne kısalır; koltuk boyutu bu kısalıktan etkilenmesin diye
+  // son "klavye kapalı" yükseklik sabit tutulur (24/30 koltuk düzeni).
+  const steadyHeight = useRef(0);
+  const keyboardOpen = areaRef.current?.closest?.('.voice-viewport')?.dataset.keyboard === 'open';
+  if (!keyboardOpen && areaMeasured?.height) steadyHeight.current = areaMeasured.height;
+  const gridMaxHeight = keyboardOpen && steadyHeight.current ? steadyHeight.current : areaMeasured?.height;
+  // Kalabalık düzende (15/20 koltuk) satırlar sahneye sığmazsa sahne kendi içinde kayar.
+  const total = grid.seats?.length || 0;
+  const dense = total >= 15;
+  // 30 mikrofon: koltuklar küçülerek ekrana sığar, sahne kaymaz — düzen sabit durur.
+  const many = total >= 20;
+  // 9'lu düzende koltuklar sahnenin iki kenarına yanaşır: yan boşluk kısalır.
+  const nine = total === 9;
+  // Sahne yalnızca içerik gerçekten sığmadığında kaydırılır; sığdığında kaydırma yoktur,
+  // böylece koltuklar aşağı yukarı oynamaz.
+  const fitsStage = (gridMeasured?.height || 0) <= (areaMeasured?.height || 0) + 1;
+  // 24/30 koltukta sahne hiç kırpılmaz: alt satır sohbet alanının üstüne taşsa da görünür kalır.
+  // Hiçbir düzende sahne kaymaz ve kırpılmaz: koltuklar sabit durur, temanın üstünde görünür.
+  const scrollable = false;
 
   // Koltukların altında kalan boşluk sohbet alanına bildirilir: mesajlar tam koltukların alt
   // hizasından başlar. Koltukların boyutu ve yeri değişmez — yalnızca sohbet yukarı taşar.
@@ -51,7 +70,7 @@ export default function VoiceStage({ scrollRef, handlers, room, hiddenAnnounce, 
         {...handlers}
         // Sayı tahtası açıkken süre kartı koltukların hemen altına oturur; sahnenin alt boşluğu
         // ona devredilir, koltuklar için ayrılan yer değişmez.
-        className={`voice-stage relative z-20 min-h-0 flex-1 px-3 pt-4 overflow-visible ${grid.boardActive ? 'pb-0' : 'pb-4'}`}
+        className={`voice-stage relative z-20 min-h-0 flex-1 ${nine ? 'px-1' : 'px-3'} pt-4 ${scrollable ? 'overflow-y-auto overflow-x-hidden' : 'overflow-visible'} ${grid.boardActive ? 'pb-0' : 'pb-4'}`}
       >
         <div ref={boxRef} className="flex h-full min-h-0 flex-col items-center">
           {room?.password && (
@@ -59,11 +78,11 @@ export default function VoiceStage({ scrollRef, handlers, room, hiddenAnnounce, 
               <Lock className="h-3 w-3" /> Şifreli oda
             </p>
           )}
-          {/* Koltuk ızgarası sahnenin tepesine demirlenir: boyutu yalnızca koltuk sayısı ve
-              ekran genişliğine bağlıdır, ölçüme göre yeniden boyutlanmaz. */}
+          {/* Koltuk ızgarasına kalan alan ölçülür: satırlar bu yüksekliğe sığacak boyutta çizilir,
+              böylece alttaki koltukların rakam şeritleri kırpılmaz. */}
           <div ref={areaRef} className="flex w-full min-h-0 flex-1 flex-col items-center">
             <div ref={gridBoxRef} className="flex w-full flex-col items-center">
-              <VoiceSeatGrid {...grid} />
+              <VoiceSeatGrid {...grid} maxHeight={gridMaxHeight} />
             </div>
           </div>
           <HiddenUserMarquee active={hiddenAnnounce.active} name={hiddenAnnounce.name} />

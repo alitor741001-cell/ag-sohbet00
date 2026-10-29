@@ -31,7 +31,7 @@ export default function VoiceBoardTimer({ active, startedAt }) {
   // Koltukların yeri ve boyutu değişmez.
   return (
     <div
-      className="voice-board-timer relative z-30 flex shrink-0 justify-center px-3 pb-1.5"
+      className="relative z-30 flex shrink-0 justify-center px-3 pb-1.5"
       style={{ top: 'calc(var(--voice-board-offset, 0px) + 8px)' }}
     >
       <div
