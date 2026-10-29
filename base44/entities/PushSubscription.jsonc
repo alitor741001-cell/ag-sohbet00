@@ -20,12 +20,14 @@
     "endpoint"
   ],
   "rls": {
+    "create": {
+      "data.user_id": "{{user.id}}"
+    },
     "read": {
       "user_condition": {
         "role": "admin"
       }
     },
-    "create": {},
     "update": {
       "user_condition": {
         "role": "admin"
