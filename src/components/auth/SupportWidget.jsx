@@ -5,6 +5,8 @@ import { Headset, Send, X, Loader2, Image as ImageIcon } from "lucide-react";
 export default function SupportWidget() {
   const [open, setOpen] = useState(false);
   const [ticketId, setTicketId] = useState(() => localStorage.getItem("guest_ticket_id") || "");
+  // Görüşme jetonu: talep yalnızca bu tarayıcıdan okunup yazılabilir.
+  const [guestToken, setGuestToken] = useState(() => localStorage.getItem("guest_ticket_token") || "");
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
@@ -16,9 +18,12 @@ export default function SupportWidget() {
     const id = tid || ticketId;
     if (!id) return;
     try {
-      const res = await base44.functions.invoke("guest-support", { action: "poll", ticket_id: id });
+      const token = localStorage.getItem("guest_ticket_token") || guestToken;
+      const res = await base44.functions.invoke("guest-support", { action: "poll", ticket_id: id, guest_token: token });
       if (res.ticket_status === "closed") {
         localStorage.removeItem("guest_ticket_id");
+        localStorage.removeItem("guest_ticket_token");
+        setGuestToken("");
         setTicketId("");
         setMessages([]);
         return;
@@ -47,9 +52,13 @@ export default function SupportWidget() {
       const res = await base44.functions.invoke("guest-support", {
         action: "create", text: msgText || "📷 Fotoğraf", file_url: fileUrl || ""
       });
-      localStorage.setItem("guest_ticket_id", res.ticket_id);
-      setTicketId(res.ticket_id);
-      setTimeout(() => poll(res.ticket_id), 500);
+      const newId = res.ticket_id || res.data?.ticket_id;
+      const newToken = res.guest_token || res.data?.guest_token || "";
+      localStorage.setItem("guest_ticket_id", newId);
+      localStorage.setItem("guest_ticket_token", newToken);
+      setTicketId(newId);
+      setGuestToken(newToken);
+      setTimeout(() => poll(newId), 500);
     } catch {
       setError("Mesaj gönderilemedi");
     } finally {
@@ -67,7 +76,7 @@ export default function SupportWidget() {
       await sendFirst(msg);
     } else {
       try {
-        await base44.functions.invoke("guest-support", { action: "send", ticket_id: ticketId, text: msg });
+        await base44.functions.invoke("guest-support", { action: "send", ticket_id: ticketId, guest_token: guestToken || localStorage.getItem("guest_ticket_token") || "", text: msg });
       } catch {
         setError("Mesaj gönderilemedi");
       }
@@ -86,7 +95,7 @@ export default function SupportWidget() {
       if (!ticketId) {
         await sendFirst("", file_url);
       } else {
-        await base44.functions.invoke("guest-support", { action: "send", ticket_id: ticketId, text: "📷 Fotoğraf", file_url });
+        await base44.functions.invoke("guest-support", { action: "send", ticket_id: ticketId, guest_token: guestToken || localStorage.getItem("guest_ticket_token") || "", text: "📷 Fotoğraf", file_url });
       }
     } catch {
       setError("Fotoğraf yüklenemedi");

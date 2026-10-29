@@ -46,6 +46,17 @@
     "delete_after": {
       "type": "string",
       "format": "date-time"
+    },
+    "guest_token": {
+      "type": "string",
+      "default": "",
+      "rls": {
+        "read": {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      }
     }
   },
   "required": [

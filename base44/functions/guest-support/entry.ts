@@ -1,13 +1,13 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
 import { waitUntil } from 'base44:runtime';
-import { sendPushToAll } from '../../shared/webPush.ts';
+import { sendPushToAdmins } from '../../shared/webPush.ts';
 import { sanitizeText, validateUploadUrl, rateLimit, safeErrorResponse } from '../../shared/security.ts';
 
 export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
-    const body = await req.json();
-    const { action, ticket_id, name, email, subject, text, file_url } = body || {};
+    const body = await req.json().catch(() => ({}));
+    const { action, ticket_id, name, email, subject, text, file_url, guest_token } = body || {};
 
     if (action === 'create') {
       if (!text && !file_url) return Response.json({ error: 'eksik bilgi' }, { status: 400 });
@@ -22,13 +22,16 @@ export default async function(req) {
       const cleanText = sanitizeText(text, 2000) || '📷 Fotoğraf';
       const cleanFile = file_url ? validateUploadUrl(file_url) : '';
       const cleanSubject = sanitizeText(subject, 100) || 'Canlı Destek';
+      // Görüşmeye yalnızca bu jetonu bilen tarayıcı erişir.
+      const token = crypto.randomUUID();
 
       const ticket = await base44.asServiceRole.entities.SupportTicket.create({
         user_id: guestId,
         user_name: displayName,
         subject: cleanSubject,
         category: 'Genel',
-        status: 'new'
+        status: 'new',
+        guest_token: token
       });
       await base44.asServiceRole.entities.SupportMessage.create({
         ticket_id: ticket.id,
@@ -38,19 +41,26 @@ export default async function(req) {
         text: cleanText,
         file_url: cleanFile || ''
       });
-      waitUntil(sendPushToAll(base44, '🎫 Yeni Destek Talebi', cleanText.slice(0, 100), '/admin/destek'));
-      return Response.json({ ticket_id: ticket.id });
+      // Bildirim metni misafirin yazdığı metinden değil, sunucudaki talep bilgisinden üretilir.
+      waitUntil(sendPushToAdmins(base44, '🎫 Yeni Destek Talebi', cleanSubject, '/admin/destek'));
+      return Response.json({ ticket_id: ticket.id, guest_token: token });
+    }
+
+    // 'send' ve 'poll': talep jetonu eşleşmeli — aksi hâlde görüşme okunamaz/yazılamaz.
+    const ticket = ticket_id
+      ? await base44.asServiceRole.entities.SupportTicket.get(ticket_id).catch((e) => (e.status === 404 ? null : Promise.reject(e)))
+      : null;
+    if (!ticket) return Response.json({ error: 'ticket bulunamadı' }, { status: 404 });
+    if (!ticket.guest_token || !guest_token || String(guest_token) !== String(ticket.guest_token)) {
+      return Response.json({ error: 'yetkisiz' }, { status: 403 });
     }
 
     if (action === 'send') {
-      if (!ticket_id || (!text && !file_url)) return Response.json({ error: 'eksik bilgi' }, { status: 400 });
+      if (!text && !file_url) return Response.json({ error: 'eksik bilgi' }, { status: 400 });
 
       // Rate limit: mesaj gönderme — ticket bazlı
       const rl = await rateLimit(base44, 'guest-msg:' + ticket_id, '', 20, 60000);
       if (!rl.allowed) return Response.json({ error: 'çok hızlı mesaj gönderiyorsunuz' }, { status: 429 });
-
-      const ticket = await base44.asServiceRole.entities.SupportTicket.get(ticket_id).catch(() => null);
-      if (!ticket) return Response.json({ error: 'ticket bulunamadı' }, { status: 404 });
       if (ticket.status === 'closed') return Response.json({ error: 'destek talebi kapatıldı' }, { status: 403 });
 
       const ownerId = ticket.user_id || 'guest';
@@ -65,19 +75,14 @@ export default async function(req) {
         text: cleanText,
         file_url: cleanFile || ''
       });
-      waitUntil(sendPushToAll(base44, '💬 Yeni Destek Mesajı', cleanText.slice(0, 100), '/admin/destek'));
+      const noticeText = `${ticket.user_name || 'Misafir'} — ${sanitizeText(ticket.subject, 100)}`;
+      waitUntil(sendPushToAdmins(base44, '💬 Yeni Destek Mesajı', noticeText, '/admin/destek'));
       return Response.json({ ok: true });
     }
 
     if (action === 'poll') {
-      if (!ticket_id) return Response.json({ error: 'eksik bilgi' }, { status: 400 });
       const messages = await base44.asServiceRole.entities.SupportMessage.filter({ ticket_id }, 'created_date', 200);
-      let ticket_status = 'active';
-      try {
-        const ticket = await base44.asServiceRole.entities.SupportTicket.get(ticket_id);
-        ticket_status = ticket?.status || 'active';
-      } catch {}
-      return Response.json({ messages, ticket_status });
+      return Response.json({ messages, ticket_status: ticket.status || 'active' });
     }
 
     return Response.json({ error: 'geçersiz işlem' }, { status: 400 });

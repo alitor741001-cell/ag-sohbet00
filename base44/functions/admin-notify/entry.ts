@@ -12,6 +12,21 @@ export default async function(req) {
 
     if (!event || !title) return Response.json({ error: 'eksik bilgi' }, { status: 400 });
 
+    // Yönetici olmayan kullanıcı yalnızca kendi akışlarının bildirimini tetikleyebilir:
+    // olay türü ve bağlantı sunucuda belirlenir, istemciden gelen bağlantı kullanılmaz.
+    const USER_EVENTS = {
+      new_user: '/admin/kullanicilar',
+      support: '/admin/destek',
+      support_message: '/admin/destek',
+    };
+    let safeLink = link;
+    if (user.role !== 'admin') {
+      safeLink = USER_EVENTS[event];
+      if (!safeLink) return Response.json({ error: 'yetkisiz' }, { status: 403 });
+    } else if (typeof safeLink !== 'string' || !/^\/[a-z0-9\-/]*$/i.test(safeLink)) {
+      safeLink = '/admin';
+    }
+
     // Rate limit: 20 bildirim / dakika / kullanıcı
     const rl = await rateLimit(base44, 'admin-notify:' + user.id, user.id, 20, 60000);
     if (!rl.allowed) return Response.json({ error: 'rate limited' }, { status: 429 });
@@ -21,7 +36,7 @@ export default async function(req) {
       ref_id,
       title,
       body: msgBody,
-      link,
+      link: safeLink,
       telegram_data,
     });
 

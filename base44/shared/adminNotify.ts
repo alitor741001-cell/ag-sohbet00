@@ -7,6 +7,15 @@ function sanitize(text: string, max: number) {
   return String(text || '').replace(/[<>]/g, '').slice(0, max);
 }
 
+// Telegram HTML modunda değerler şablona gömülür: & < > kaçırılmazsa biçimlendirme enjekte edilir.
+function escapeTelegram(value: unknown, max = 300) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .slice(0, max);
+}
+
 export async function notifyAdmins(base44: any, opts: {
   event: string;
   ref_id?: string;
@@ -55,8 +64,14 @@ export async function notifyAdmins(base44: any, opts: {
     }
   }
 
+  const safeTelegram: Record<string, string> = {};
+  for (const [key, value] of Object.entries(telegram_data || {})) {
+    if (!/^[a-z_]{1,30}$/i.test(key)) continue;
+    safeTelegram[key] = escapeTelegram(value);
+  }
+
   // Telegram mesajı tamamlanana kadar beklenir (çağıran bekliyorsa bildirim kaybolmaz).
-  await sendTelegram(base44, event, telegram_data || {}, dedupRefId).catch(() => {});
+  await sendTelegram(base44, event, safeTelegram, dedupRefId).catch(() => {});
   // Web Push arka planda gönderilir
   sendPushToAdmins(base44, cleanTitle, cleanBody, cleanLink).catch(() => {});
 

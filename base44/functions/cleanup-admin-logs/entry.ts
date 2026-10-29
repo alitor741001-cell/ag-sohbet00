@@ -1,19 +1,14 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
 
 // Admin paneli güvenlik olayları (SecurityLog) ve son aktiviteler (AdminLog)
-// kayıtlarını 1 günden eskı olanları otomatik siler. Zamanlanmış workflow çağırır.
+// kayıtlarını 1 günden eski olanları otomatik siler. Zamanlanmış workflow çağırır.
 export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
-    // Doğrudan çağrıyı engelle: auth varsa admin olmalı, yoksa (workflow) devam et
-    try {
-      const user = await base44.auth.me();
-      if (user && user.role !== 'admin') {
-        return Response.json({ error: 'yetkisiz' }, { status: 403 });
-      }
-    } catch {
-      // auth yok — workflow çağrısı, devam et
-    }
+    // Workflow çağrıları uygulama yöneticisi kimliğiyle gelir; anonim çağrı silme yapamaz.
+    const user = await base44.auth.me().catch((e) => (e.status === 401 ? null : Promise.reject(e)));
+    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    if (user.role !== 'admin') return Response.json({ error: 'yetkisiz' }, { status: 403 });
 
     const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 

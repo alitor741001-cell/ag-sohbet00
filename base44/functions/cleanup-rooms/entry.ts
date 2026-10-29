@@ -6,14 +6,11 @@ const OWNER_OFFLINE_MS = 180000; // oda sahibi 3 dakika çevrim dışı kalırsa
 export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
-    // Doğrudan çağrıyı engelle: auth varsa admin olmalı, yoksa (workflow) devam et
-    try {
-      const user = await base44.auth.me();
-      if (user && user.role !== 'admin' && user.role !== 'moderator') {
-        return Response.json({ error: 'yetkisiz' }, { status: 403 });
-      }
-    } catch {
-      // auth yok — workflow çağrısı, devam et
+    // Workflow çağrıları uygulama yöneticisi kimliğiyle gelir; anonim çağrı oda silamaz.
+    const user = await base44.auth.me().catch((e) => (e.status === 401 ? null : Promise.reject(e)));
+    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    if (user.role !== 'admin' && user.role !== 'moderator') {
+      return Response.json({ error: 'yetkisiz' }, { status: 403 });
     }
 
     const rooms = await base44.asServiceRole.entities.Room.filter({ status: 'active' }, '-created_date', 500);

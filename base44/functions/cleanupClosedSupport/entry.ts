@@ -3,9 +3,10 @@ import { isAgOfficial } from '../../shared/agOfficial.ts';
 export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
-    // Zamanlanmış akış yetkili adına çalışır; admin veya AG yetkilisi olabilir, servis çağrısında kullanıcı yoktur.
-    const user = await base44.auth.me().catch(() => null);
-    if (user && user.role !== 'admin' && !await isAgOfficial(base44, user)) return Response.json({ error: 'Yetkiniz yok' }, { status: 403 });
+    // Zamanlanmış akış yönetici kimliğiyle çalışır; anonim çağrı görüşme silemez.
+    const user = await base44.auth.me().catch((e) => (e.status === 401 ? null : Promise.reject(e)));
+    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    if (user.role !== 'admin' && !await isAgOfficial(base44, user)) return Response.json({ error: 'Yetkiniz yok' }, { status: 403 });
     const body = await req.json().catch(() => ({}));
     if (typeof body.ticket_id !== 'string' || !body.ticket_id) return Response.json({ error: 'Görüşme gerekli' }, { status: 400 });
     const entities = base44.asServiceRole.entities;

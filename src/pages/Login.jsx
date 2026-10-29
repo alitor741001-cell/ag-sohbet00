@@ -36,13 +36,16 @@ export default function Login() {
       if (!email.includes('@')) {
         try {
           const res = await base44.functions.invoke('lookup-username', { username: email });
-          loginEmail = res.data?.email || res.email;
-          if (!loginEmail) throw new Error('Kullanıcı bulunamadı');
+          const masked = res.data?.masked || res.masked;
+          // Güvenlik: e-posta adresi sunucudan düz metin olarak verilmez.
+          // Kullanıcı adına kayıtlı adres maskeli gösterilir; giriş e-posta ile yapılır.
+          if (!masked) throw new Error('Kullanıcı bulunamadı');
+          setError(`Bu kullanıcı adına kayıtlı e-posta: ${masked} — giriş için e-posta adresinizi yazın.`);
         } catch {
           setError('Kullanıcı bulunamadı');
-          setLoading(false);
-          return;
         }
+        setLoading(false);
+        return;
       }
       await base44.auth.loginViaEmailPassword(loginEmail, password);
       const me = await base44.auth.me();

@@ -148,12 +148,17 @@ export default async function (req) {
         return Response.json({ error: 'Bu tur için bahis üst sınırına ulaştın.' }, { status: 400 });
       }
 
-      const coins = wallet.coins ?? START_COINS;
-      if (coins < stake) {
+      const existing = mineRows.find((row) => row.team_id === teamId);
+
+      // Bakiye tek adımda ve koşullu düşülür: eşzamanlı istekler bakiyeyi aşamaz.
+      const debit = await base44.asServiceRole.entities.GameWallet.updateMany(
+        { id: wallet.id, coins: { $gte: stake } },
+        { $inc: { coins: -stake } }
+      );
+      if (!debit.updated) {
         return Response.json({ error: 'Yetersiz coin. Coin bakiyene dokunup coin yükle.' }, { status: 400 });
       }
 
-      const existing = mineRows.find((row) => row.team_id === teamId);
       const pick = existing
         ? await base44.asServiceRole.entities.FootballPick.update(existing.id, {
             stake: (existing.stake || 0) + stake,
@@ -170,7 +175,7 @@ export default async function (req) {
             settled: false,
           });
 
-      const updated = await base44.asServiceRole.entities.GameWallet.update(wallet.id, { coins: coins - stake });
+      const updated = await base44.asServiceRole.entities.GameWallet.get(wallet.id);
       const live = await base44.asServiceRole.entities.FootballLive.update(record.id, {
         pots: addPot(record.pots, teamId, stake),
         picks_count: (record.picks_count ?? 0) + 1,
@@ -202,7 +207,9 @@ export default async function (req) {
         user_id: user.id,
         settled: false,
       });
-      const updated = await base44.asServiceRole.entities.GameWallet.update(wallet.id, { coins: (wallet.coins ?? 0) + refund });
+      // İade de atomik artırılır: eşzamanlı bahislerin düşümü ezilmez.
+      await base44.asServiceRole.entities.GameWallet.updateMany({ id: wallet.id }, { $inc: { coins: refund } });
+      const updated = await base44.asServiceRole.entities.GameWallet.get(wallet.id);
       const live = await base44.asServiceRole.entities.FootballLive.update(record.id, {
         pots,
         picks_count: Math.max(0, (record.picks_count ?? 0) - mineRows.length),
