@@ -1,6 +1,7 @@
 import { base44 } from '@/api/base44Client';
-import { createStreamOutput, ensureMicTrack, unlockVoicePlayback } from '@/lib/callAudio';
+import { createStreamOutput, ensureMicTrack } from '@/lib/callAudio';
 import { vipLevelOf } from '@/lib/userLevels';
+import answerVoiceTrack from '@/lib/answerVoiceTrack';
 
 // Eşlerin birbirini bulması için genel STUN; simetrik NAT / mobil ağlar için
 // yedek TURN (80, 443 ve 443/TCP — kısıtlı ağlarda TCP yolu açık kalır).
@@ -103,6 +104,11 @@ export class P2PVoiceRoom {
     this.heartbeat = null;
     this.lastMessageAt = 0;
     this.lastReconnectAt = 0;
+    this.pendingIce = new Map();
+    this.signalQueues = new Map();
+    this.micRevision = 0;
+    this.micRequest = null;
+    this.micDesired = false;
   }
 
   emit() {
@@ -244,7 +250,7 @@ export class P2PVoiceRoom {
     this.emit();
   }
 
-  ensurePeer(peerId) {
+  ensurePeer(peerId, incoming = false) {
     const existing = this.peers.get(peerId);
     if (existing) return existing;
     if (!RTCPeerConnectionCtor) throw new Error('webrtc_unsupported');
@@ -252,7 +258,9 @@ export class P2PVoiceRoom {
     const peer = { id: peerId, pc, sender: null, output: null, pending: [], remoteReady: false, attemptAt: 0, disconnectTimer: null };
     this.peers.set(peerId, peer);
 
-    this.attachLocalAudio(peer);
+    peer.pending = this.pendingIce.get(peerId) || [];
+    this.pendingIce.delete(peerId);
+    if (!incoming || typeof pc.addTransceiver !== 'function') this.attachLocalAudio(peer);
 
     pc.onicecandidate = (event) => {
       const candidate = candidateInit(event.candidate);
@@ -364,8 +372,9 @@ export class P2PVoiceRoom {
 
   async callPeer(peerId) {
     const peer = this.peers.get(peerId);
-    if (!peer || peer.pc.signalingState !== 'stable') return;
+    if (!peer || peer.makingOffer || peer.pc.signalingState !== 'stable') return;
     if (pcConnected(peer.pc)) return;
+    peer.makingOffer = true;
     peer.attemptAt = Date.now();
     try {
       // offerToReceiveAudio: eski cihazlarda alıcı hat yalnızca bu bayrakla açılır.
@@ -374,7 +383,7 @@ export class P2PVoiceRoom {
       this.sendSignal(peerId, { kind: 'offer', sdp: { type: peer.pc.localDescription.type, sdp: peer.pc.localDescription.sdp } });
     } catch (error) {
       console.warn('[P2P] teklif oluşturulamadı', error);
-    }
+    } finally { peer.makingOffer = false; }
   }
 
   // Cevapsız kalan teklifler sessizce ölü bırakılmaz: yeniden denenir.
@@ -393,8 +402,17 @@ export class P2PVoiceRoom {
     });
   }
 
-  async onSignal(from, data) {
+  onSignal(from, data) {
     if (!from || !data || typeof data !== 'object') return;
+    const previous = this.signalQueues.get(from) || Promise.resolve();
+    const next = previous.then(() => this.socket && this.processSignal(from, data))
+      .catch((error) => console.warn('[P2P] ses sinyali işlenemedi', error))
+      .finally(() => { if (this.signalQueues.get(from) === next) this.signalQueues.delete(from); });
+    this.signalQueues.set(from, next);
+    return next;
+  }
+
+  async processSignal(from, data) {
     if (data.kind === 'restart') {
       this.dropPeer(from);
       this.reconcile();
@@ -402,13 +420,20 @@ export class P2PVoiceRoom {
     }
     if (data.kind === 'ice') {
       const peer = this.peers.get(from);
-      if (!peer) return;
+      if (!peer) {
+        const pending = this.pendingIce.get(from) || [];
+        if (pending.length < 64 && this.pendingIce.size < 256) {
+          pending.push(data.candidate);
+          this.pendingIce.set(from, pending);
+        }
+        return;
+      }
       if (!peer.remoteReady) { peer.pending.push(data.candidate); return; }
-      peer.pc.addIceCandidate(data.candidate).catch(() => {});
+      await peer.pc.addIceCandidate(data.candidate).catch(() => {});
       return;
     }
     if (data.kind === 'offer') {
-      const peer = this.ensurePeer(from);
+      const peer = this.ensurePeer(from, true);
       try {
         // İki taraf aynı anda teklif verdiyse küçük peerId'li tarafın teklifi geçerlidir;
         // büyük olan kendi teklifini geri alır (yoksa iki taraf da kilitlenip ses kurulmaz).
@@ -417,8 +442,9 @@ export class P2PVoiceRoom {
         }
         if (peer.pc.signalingState !== 'stable') return;
         await peer.pc.setRemoteDescription(sessionDescription(data.sdp));
+        await answerVoiceTrack(peer, this.isMicOn() ? this.micTrack : null);
         peer.remoteReady = true;
-        peer.pending.splice(0).forEach((candidate) => peer.pc.addIceCandidate(candidate).catch(() => {}));
+        await Promise.all(peer.pending.splice(0).map((candidate) => peer.pc.addIceCandidate(candidate).catch(() => {})));
         const answer = await peer.pc.createAnswer();
         await peer.pc.setLocalDescription(answer);
         this.sendSignal(from, { kind: 'answer', sdp: { type: peer.pc.localDescription.type, sdp: peer.pc.localDescription.sdp } });
@@ -449,9 +475,21 @@ export class P2PVoiceRoom {
     return this.canPublish;
   }
 
-  async setMicEnabled(on) {
+  setMicEnabled(on) {
+    if (!on) { this.stopMic(); return Promise.resolve(false); }
+    this.micDesired = true;
+    if (this.micRequest) return this.micRequest;
+    if (this.isMicOn()) return Promise.resolve(true);
+    const revision = ++this.micRevision;
+    const request = this.startMic(revision).finally(() => {
+      if (this.micRequest === request) this.micRequest = null;
+    });
+    this.micRequest = request;
+    return request;
+  }
+
+  async startMic(revision) {
     this.lastMicrophoneError = null;
-    if (!on) { this.stopMic(); return false; }
     if (!this.canPublish) {
       const denied = new Error('subscription_required');
       denied.code = 'subscription_required';
@@ -469,8 +507,16 @@ export class P2PVoiceRoom {
     let track = await withTimeout(ensureMicTrack({ fresh: IS_IOS }), MIC_TIMEOUT_MS, 'mic_timeout');
     // Android'de ilk açılan kanal sessiz (muted) gelebilir: taze kanalla bir kez
     // daha denenir.
+    if (revision !== this.micRevision || !this.micDesired) {
+      if (!this.micDesired && track) track.enabled = false;
+      return false;
+    }
     if (!track || track.readyState !== 'live' || track.muted) {
       track = await withTimeout(ensureMicTrack({ fresh: true }), MIC_TIMEOUT_MS, 'mic_timeout');
+    }
+    if (revision !== this.micRevision || !this.micDesired) {
+      if (!this.micDesired && track) track.enabled = false;
+      return false;
     }
     if (!track || track.readyState !== 'live' || track.muted) {
       this.lastMicrophoneError = 'publish_unverified';
@@ -480,6 +526,7 @@ export class P2PVoiceRoom {
     this.micTrack = track;
     this.micOn = true;
     await Promise.all([...this.peers.values()].map((peer) => this.applyLocalTrack(peer, track)));
+    if (revision !== this.micRevision || !this.micDesired) return false;
     this.socket?.send({ type: 'mic', on: true });
     // Konuşmaya başlayınca odadaki herkesle hat kurulur.
     this.reconcile();
@@ -491,20 +538,19 @@ export class P2PVoiceRoom {
 
   // Arka plandan dönüşte iOS mikrofon kanalını sessize alır: kanal tazelenirse yayın geri gelir.
   async refreshMic() {
-    if (!this.micOn) return;
-    const previous = this.micTrack;
-    try {
-      const track = await ensureMicTrack({ fresh: IS_IOS });
-      if (!track || track.readyState !== 'live' || track === previous) return;
-      track.enabled = true;
-      this.micTrack = track;
-      await Promise.all([...this.peers.values()].map((peer) => this.applyLocalTrack(peer, track)));
-      this.socket?.send({ type: 'mic', on: true });
+    if (!this.micDesired || this.isMicOn()) return;
+    try { await this.setMicEnabled(true); }
+    catch (error) {
+      this.lastMicrophoneError = error?.code || error?.name || 'mic_failed';
       this.emit();
-    } catch (error) {}
+    }
   }
 
   stopMic() {
+    this.micRevision += 1;
+    this.micDesired = false;
+    this.micRequest = null;
+    if (this.micTrack) this.micTrack.enabled = false;
     this.micOn = false;
     this.peers.forEach((peer) => { void this.applyLocalTrack(peer, null); });
     this.socket?.send({ type: 'mic', on: false });
@@ -515,7 +561,7 @@ export class P2PVoiceRoom {
 
   isMicOn() {
     const track = this.micTrack;
-    return !!this.micOn && !!track && track.readyState === 'live';
+    return !!this.micOn && !!track && track.readyState === 'live' && track.enabled && !track.muted;
   }
 
   setOutputsEnabled(on) {
@@ -537,9 +583,11 @@ export class P2PVoiceRoom {
   }
 
   async retryPlayback() {
-    await Promise.all(this.audioElements().map((output) => Promise.resolve(output.play?.()).catch(() => {})));
-    await unlockVoicePlayback().catch(() => {});
+    const results = await Promise.all(this.audioElements().map((output) =>
+      Promise.resolve(output.play?.()).then(() => true, () => false)));
+    this.audioBlocked = results.some((played) => !played);
     this.emit();
+    return !this.audioBlocked;
   }
 
   dropPeer(peerId) {
@@ -580,7 +628,13 @@ export class P2PVoiceRoom {
   }
 
   close() {
+    this.micRevision += 1;
+    this.micDesired = false;
+    this.micRequest = null;
+    if (this.micTrack) this.micTrack.enabled = false;
     this.micOn = false;
+    this.pendingIce.clear();
+    this.signalQueues.clear();
     window.clearInterval(this.heartbeat);
     this.heartbeat = null;
     this.unbindLifecycle();

@@ -123,6 +123,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
     }
     const request = (async () => {
       const opened = await mesh.setMicEnabled(true);
+      if (meshRef.current !== mesh || !micWantedRef.current) return;
       if (!opened || !mesh.isMicOn()) throw new Error('Mikrofon yayını doğrulanamadı.');
       micDeniedRef.current = false;
       micAppliedRef.current = true;
@@ -146,8 +147,8 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
   const retryAudio = useCallback(async () => {
     try {
       const mesh = meshRef.current;
-      if (mesh) await mesh.retryPlayback();
-      else await unlockVoicePlayback();
+      const played = mesh ? await mesh.retryPlayback() : await unlockVoicePlayback();
+      if (!played) throw new Error('Ses oynatma izni bekleniyor.');
       setAudioBlocked(false);
       setError(previous => previous.startsWith('🔊') ? '' : previous);
       refreshState();
@@ -228,7 +229,9 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
       if (document.visibilityState === 'hidden') return;
       micDeniedRef.current = false;
       void retryAudio();
-      if ((micWantedRef.current || micAllowedBefore()) && !mutedByModeratorRef.current && voiceEnabledRef.current) {
+      if (micWantedRef.current && micEnabledRef.current && !mutedByModeratorRef.current
+        && voiceEnabledRef.current && !hasDirectCallAudioFocus() && !mesh.isMicOn()
+        && (micGestureRef.current || micAllowedBefore())) {
         enableMic(mesh).then(refreshState).catch(() => {});
       }
     };
@@ -239,8 +242,10 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
       refreshState();
       // Mikrofon açık kalmalı ama yayın düşmüşse kendiliğinden geri kurulur;
       // böylece buton "kapalı" görünüp öyle kalmaz. Denemeler seyreltilir.
-      const micBroken = micWantedRef.current && !micDeniedRef.current && !mutedByModeratorRef.current
-        && voiceEnabledRef.current && meshRef.current === mesh && !mesh.isMicOn();
+      const micBroken = micWantedRef.current && micEnabledRef.current && !micDeniedRef.current && !mutedByModeratorRef.current
+        && voiceEnabledRef.current && meshRef.current === mesh && !mesh.isMicOn()
+        && !micPendingRef.current && mesh.canPublishNow() && !hasDirectCallAudioFocus()
+        && document.visibilityState !== 'hidden' && (micGestureRef.current || micAllowedBefore());
       if (micBroken && Date.now() >= micRetryAtRef.current) {
         micRetryAtRef.current = Date.now() + 6000;
         enableMic(mesh).then(refreshState).catch((micError) => {
@@ -347,6 +352,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
     if (micTogglePendingRef.current) return;
     micGestureRef.current = true;
     micTogglePendingRef.current = true;
+    void retryAudio();
     setRequesting(true);
     setError('');
     const wasOn = !!mesh?.isMicOn();
@@ -375,7 +381,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
       setMicDenied(isPermissionError(micError));
       setError(friendlyMicError(micError));
     } finally { micTogglePendingRef.current = false; setRequesting(false); }
-  }, [canSpeak, enableMic, refreshState]);
+  }, [canSpeak, enableMic, refreshState, retryAudio]);
 
   const toggleDeafen = useCallback(() => {
     const next = !deafenedRef.current;
@@ -412,6 +418,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
       return;
     }
     micTogglePendingRef.current = true;
+    void retryAudio();
     setRequesting(true);
     setError('');
     enableMic(mesh).then(() => refreshState()).catch((micError) => {
@@ -420,7 +427,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
       setError(friendlyMicError(micError));
       refreshState();
     }).finally(() => { micTogglePendingRef.current = false; setRequesting(false); });
-  }, [canSpeak, enableMic, refreshState]);
+  }, [canSpeak, enableMic, refreshState, retryAudio]);
 
   return { muted: !active, remoteMuted, deafened, localSpeaking, speakingIds, participantMicStates, active, error, micDenied, requesting, connectionState, audioBlocked, canSpeak, lastMicrophoneError, retryAudio, retryMic, requestMic, toggleMute, toggleDeafen, debug, voiceEnabled };
 }

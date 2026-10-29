@@ -8,6 +8,7 @@
 
 // Oda ayarlarındaki "Gürültü engelleyici" anahtarı bu kanalın üzerinde çalışır.
 import { getMicNoiseSuppression, getRoomMicTrack, registerRoomMicTrack } from '@/lib/micSource';
+import waitForMicReady from '@/lib/waitForMicReady';
 
 // Gürültü engelleme, oda ayarlarındaki anahtardan okunur; kanal her açılışta aynı ayarı alır.
 const micOptions = () => ({ echoCancellation: true, noiseSuppression: getMicNoiseSuppression(), autoGainControl: true, channelCount: { ideal: 1 } });
@@ -85,6 +86,9 @@ async function acquireMic() {
   if (track.addEventListener) track.addEventListener('ended', onEnded);
   else track.onended = onEnded;
   stale?.getTracks().forEach((oldTrack) => oldTrack.stop());
+  // Kayıt açılınca iOS'un playback oturumu bırakılır; mikrofon susturulmaz.
+  applySessionType();
+  await waitForMicReady(track);
   return track;
 }
 
@@ -95,17 +99,29 @@ async function acquireMic() {
  * kez verildiği için tarayıcı tekrar sormaz.
  */
 export function ensureMicTrack({ fresh = false } = {}) {
-  if (!fresh && micTrack && micTrack.readyState === 'live' && !micTrack.muted) return Promise.resolve(micTrack);
-  // Eski cihazlarda izin isteği yanıtsız kalabilir: asılı deneme düğmeyi kilitlemez,
-  // 12 saniyeden sonra yeni bir dokunuş temiz bir deneme başlatır.
-  if (!micPending || Date.now() - micPendingAt > 12000) {
-    micPendingAt = Date.now();
-    const pending = acquireMic().finally(() => {
-      if (micPending === pending) micPending = null;
-    });
-    micPending = pending;
+  // İzin penceresinin focus olayı ikinci getUserMedia isteği başlatmamalı.
+  if (micPending) return micPending;
+  if (!fresh && micTrack && micTrack.readyState === 'live' && !micTrack.muted) {
+    micTrack.enabled = true;
+    return Promise.resolve(micTrack);
   }
-  return micPending;
+  const generation = ++micGeneration;
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => {
+      if (micGeneration === generation) {
+        micGeneration += 1;
+        releaseMicStream();
+      }
+      reject(Object.assign(new Error('Mikrofon yanıt vermedi.'), { code: 'mic_timeout' }));
+    }, 14000);
+  });
+  const pending = Promise.race([acquireMic(), timeout]).finally(() => {
+    clearTimeout(timer);
+    if (micPending === pending) micPending = null;
+  });
+  micPending = pending;
+  return pending;
 }
 
 /** Görüşme bitince mikrofonu serbest bırak: sonraki arama temiz bir akışla başlar. */
