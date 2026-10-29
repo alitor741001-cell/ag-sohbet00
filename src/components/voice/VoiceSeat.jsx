@@ -53,7 +53,8 @@ function VoiceSeat({ seat, index, size = 'md', musicPlaying, speaking, isSelf, i
             )}
           </span>
         </span>
-        {boardActive && <span className="invisible" aria-hidden="true"><VoiceSeatScore value={0} size={size} /></span>}
+        {/* Sayı şeridinin yeri her zaman ayrılır: tahta açılıp kapansa da satırlar oynamaz. */}
+        <span className={boardActive ? '' : 'invisible'} aria-hidden={!boardActive}><VoiceSeatScore value={0} size={size} /></span>
         <span className="flex h-3 items-center text-[10px] font-medium leading-none text-white/85">{index + 1}</span>
       </button>
     );
@@ -91,7 +92,9 @@ function VoiceSeat({ seat, index, size = 'md', musicPlaying, speaking, isSelf, i
           <span className="gift-pop pointer-events-none absolute -top-5 left-1/2 z-30 -translate-x-1/2 text-lg leading-none">{gifted}</span>
         )}
       </span>
-      {boardActive && <VoiceSeatScore value={score} size={size} />}
+      {/* Sayı şeridinin yeri her zaman ayrılır: tahta açılıp kapansa, puan gelse de
+          koltuklar aşağı yukarı kaymaz. */}
+      <span className={boardActive ? '' : 'invisible'} aria-hidden={!boardActive}><VoiceSeatScore value={boardActive ? score : 0} size={size} /></span>
       <VoiceSeatName name={seat.name} fullName={fullName} width={nameSpace} hidden={hidden} isOwner={isOwner} isMod={isMod} color={gifted ? accent : nameTheme?.accent || '#ffffff'} />
     </button>
   );
