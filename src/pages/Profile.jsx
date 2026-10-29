@@ -8,9 +8,12 @@ import { findProtectedName } from '@/lib/protectedNames';
 import { vipLevelOf } from '@/lib/userLevels';
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import useFriends from '@/hooks/useFriends';
+import SocialListDialog from '@/components/profile/social/SocialListDialog';
 import useActiveRooms from '@/hooks/useActiveRooms';
 import { findLiveRoom } from '@/lib/liveRoom';
 import ProfileFixedHero from '@/components/profile/fantasy/ProfileFixedHero';
+import ProfileStatBar from '@/components/profile/fantasy/ProfileStatBar';
 import ProfileLivePanel from '@/components/profile/fantasy/ProfileLivePanel';
 import ProfileTwinCards from '@/components/profile/fantasy/ProfileTwinCards';
 import ProfileBalanceCards from '@/components/profile/fantasy/ProfileBalanceCards';
@@ -44,6 +47,9 @@ export default function Profile() {
   const [vipCount, setVipCount] = useState(0);
   const [giftBoxOpen, setGiftBoxOpen] = useState(false);
   const [privacyOpen, setPrivacyOpen] = useState(false);
+  // Takip ve ziyaretçi sayaçları ile açılan liste: takip edilenler, takipçiler, ziyaretçiler.
+  const [social, setSocial] = useState({ following: 0, followers: 0, visitors: 0 });
+  const [socialList, setSocialList] = useState(null);
 
   const [activityOpen, setActivityOpen] = useState(false);
   const [vipBagOpen, setVipBagOpen] = useState(false);
@@ -83,16 +89,31 @@ export default function Profile() {
       .catch(() => {});
   };
 
+  const loadSocial = () => {
+    base44.functions.invoke('social-service', { action: 'stats' })
+      .then((response) => setSocial({
+        following: response.data?.following ?? 0,
+        followers: response.data?.followers ?? 0,
+        visitors: response.data?.visitors ?? 0,
+      }))
+      .catch(() => {});
+  };
+
   useEffect(() => {
     // Ayna hızlı açılış sağlar; bakiye hemen canlı değerle doğrulanır.
     loadSummary();
     loadWallet();
+    loadSocial();
   }, []);
 
   // Cüzdan canlıdır: oyun kazancı, hesaba gelen coin ve hediye harcaması bakiyeye
   // anında işler — kart 5 saniyelik yenilemeyi beklemez.
   useWalletCoinsLive(user?.id, (coins) => setWallet((prev) => ({ ...prev, coins })));
   useGiftSummaryLive(user?.id, loadWallet);
+
+  // Arkadaş sayısı ortak arkadaşlık deposundan gelir.
+  const { relations } = useFriends();
+  const friendCount = relations.filter((relation) => relation.status === 'accepted').length;
 
   // Kişi şu anda bir odada yayındaysa profil şeridi "Yayında" ve "Yayına Katıl" gösterir.
   const { rooms, getRoomId } = useActiveRooms(true);
@@ -180,8 +201,15 @@ export default function Profile() {
         vipLevel={vipLevelOf(user)}
       />
 
-      <PullToRefresh onRefresh={() => { reload?.(); loadWallet(); loadVipCount(); }}>
+      <PullToRefresh onRefresh={() => { reload?.(); loadWallet(); loadSocial(); loadVipCount(); }}>
         <div className="space-y-3 px-4 pt-4">
+          <ProfileStatBar
+            friends={friendCount}
+            following={social.following}
+            followers={social.followers}
+            visitors={social.visitors}
+            onSelect={(key) => (key === 'friends' ? navigate('/arkadaslar?view=friends') : setSocialList(key))}
+          />
           <ProfileLivePanel
             user={user}
             avatar={form.avatar || user.avatar}
@@ -257,6 +285,8 @@ export default function Profile() {
         coins={wallet?.coins ?? null}
         onBack={() => { setCoinShopOpen(false); loadWallet(); }}
       />
+
+      <SocialListDialog open={!!socialList} kind={socialList} onClose={() => { setSocialList(null); loadSocial(); }} />
 
       <Dialog open={privacyOpen} onOpenChange={(value) => !value && setPrivacyOpen(false)}>
         <DialogContent className="max-h-[88vh] max-w-2xl gap-0 border-[#7dd3fc]/30 bg-[linear-gradient(180deg,#0B2A52,#05122A)] p-0 text-white">

@@ -50,6 +50,9 @@ const MIC_TIMEOUT_MS = 15000;
 const HEARTBEAT_MS = 6000;
 // Teklif yanıtsız kalırsa bu süre sonunda yeniden denenir (kaçan sinyal kurtarılır).
 const OFFER_RETRY_MS = 5000;
+// Hat "disconnected" görünüp kendine dönmezse bu süre sonunda tazelenir:
+// ağ değişimi sonrası ses sessizce kaybolmasın (Android'de sık görülür).
+const DISCONNECT_GRACE_MS = 4000;
 
 const withTimeout = (promise, ms, code) => new Promise((resolve, reject) => {
   const timer = setTimeout(() => {
@@ -140,6 +143,9 @@ export class P2PVoiceRoom {
       }
       this.socket?.send({ type: 'mic', on: this.isMicOn() });
       this.retryPendingOffers();
+      // iOS/Android tarayıcısı uzak sesi kendiliğinden duraklatabilir:
+      // bekleyen çıkışlar tazelenir, karşı tarafın sesi geri gelir.
+      void this.retryPlayback();
     }, HEARTBEAT_MS);
     this.emit();
   }
@@ -243,7 +249,7 @@ export class P2PVoiceRoom {
     if (existing) return existing;
     if (!RTCPeerConnectionCtor) throw new Error('webrtc_unsupported');
     const pc = new RTCPeerConnectionCtor({ iceServers: ICE_SERVERS });
-    const peer = { id: peerId, pc, sender: null, output: null, pending: [], remoteReady: false, attemptAt: 0 };
+    const peer = { id: peerId, pc, sender: null, output: null, pending: [], remoteReady: false, attemptAt: 0, disconnectTimer: null };
     this.peers.set(peerId, peer);
 
     this.attachLocalAudio(peer);
@@ -258,12 +264,28 @@ export class P2PVoiceRoom {
     };
     // Eski Android/iOS sürümleri ses akışını ayrı olayla bildirir.
     pc.onaddstream = (event) => { if (event?.stream) this.attachRemote(peer, event.stream); };
+    const rebuild = () => {
+      this.dropPeer(peerId);
+      if (!this.wantedPeerIds().includes(peerId)) return;
+      this.ensurePeer(peerId);
+      if (this.peerId < peerId) void this.callPeer(peerId);
+    };
     const onStateChange = () => {
-      if (this.peers.get(peerId) === peer && pcFailed(pc)) {
-        this.dropPeer(peerId);
-        if (this.wantedPeerIds().includes(peerId)) {
-          this.ensurePeer(peerId);
-          if (this.peerId < peerId) void this.callPeer(peerId);
+      if (this.peers.get(peerId) === peer) {
+        if (pcFailed(pc)) {
+          rebuild();
+        } else if (['disconnected', 'interrupted'].includes(pc.iceConnectionState)) {
+          // Kısa kopmalar (ekran kilidi, ağ değişimi) kendiliğinden düzelir.
+          // Düzelmezse hat tazelenir: ses sessizce kesik kalmaz.
+          if (!peer.disconnectTimer) {
+            peer.disconnectTimer = window.setTimeout(() => {
+              peer.disconnectTimer = null;
+              if (this.peers.get(peerId) === peer && !pcConnected(pc)) rebuild();
+            }, DISCONNECT_GRACE_MS);
+          }
+        } else if (peer.disconnectTimer) {
+          window.clearTimeout(peer.disconnectTimer);
+          peer.disconnectTimer = null;
         }
       }
       this.emit();
@@ -302,16 +324,26 @@ export class P2PVoiceRoom {
 
   // Eski cihazlarda track yerinde değiştirilemez: hat mikrofonla birlikte yeniden kurulur.
   async applyLocalTrack(peer, track) {
+    // Mikrofon kapatılırken hat ayakta kalır: yalnızca yayın kanalı boşaltılır.
+    if (!track) {
+      if (peer.sender && typeof peer.sender.replaceTrack === 'function') {
+        try { await peer.sender.replaceTrack(null); return; } catch (error) {}
+      }
+      return;
+    }
+    // Hat mikrofonla hiç anlaşmadıysa (dinleyici olarak kuruldu) bazı Android ve iOS
+    // sürümlerinde ses karşıya gitmez. Böyle bir hat mikrofonla yeniden kurulur.
+    const negotiated = !!peer.sender?.track || !!peer.micNegotiated;
     // iOS Safari mikrofonsuz açılan hatta sonradan konan sesi çoğu sürümde yayınlamaz
     // (karşı taraf sessizlik duyar): hat doğrudan mikrofonla yeniden kurulur.
-    if (!IS_IOS && peer.sender && typeof peer.sender.replaceTrack === 'function') {
-      try { await peer.sender.replaceTrack(track); return; }
+    if (!IS_IOS && negotiated && peer.sender && typeof peer.sender.replaceTrack === 'function') {
+      try { await peer.sender.replaceTrack(track); peer.micNegotiated = true; return; }
       catch (error) { console.warn('[P2P] mikrofon kanalı yeniden kuruluyor', error); }
     }
-    // Bazı Android WebView sürümleri boş sender'a track geçişini reddeder.
     // Her iki uç da eski hattı bırakır; mikrofon baştan eklenerek anlaşılır.
     this.dropPeer(peer.id);
     this.sendSignal(peer.id, { kind: 'restart' });
+    this.reconcile();
   }
 
   attachRemote(peer, stream) {
@@ -432,8 +464,15 @@ export class P2PVoiceRoom {
       this.lastMicrophoneError = 'webrtc_unsupported';
       throw unsupported;
     }
-    const track = await withTimeout(ensureMicTrack(), MIC_TIMEOUT_MS, 'mic_timeout');
-    if (!track || track.readyState !== 'live') {
+    // iOS'ta önbellekteki kanal arka plandan sonra sessiz kalır: mikrofon açılırken
+    // taze kanal istenir, yoksa karşı taraf hiç ses duymaz.
+    let track = await withTimeout(ensureMicTrack({ fresh: IS_IOS }), MIC_TIMEOUT_MS, 'mic_timeout');
+    // Android'de ilk açılan kanal sessiz (muted) gelebilir: taze kanalla bir kez
+    // daha denenir.
+    if (!track || track.readyState !== 'live' || track.muted) {
+      track = await withTimeout(ensureMicTrack({ fresh: true }), MIC_TIMEOUT_MS, 'mic_timeout');
+    }
+    if (!track || track.readyState !== 'live' || track.muted) {
       this.lastMicrophoneError = 'publish_unverified';
       throw new Error('Mikrofon yayını doğrulanamadı.');
     }
@@ -455,7 +494,7 @@ export class P2PVoiceRoom {
     if (!this.micOn) return;
     const previous = this.micTrack;
     try {
-      const track = await ensureMicTrack();
+      const track = await ensureMicTrack({ fresh: IS_IOS });
       if (!track || track.readyState !== 'live' || track === previous) return;
       track.enabled = true;
       this.micTrack = track;
@@ -507,6 +546,7 @@ export class P2PVoiceRoom {
     const peer = this.peers.get(peerId);
     if (!peer) return;
     this.peers.delete(peerId);
+    if (peer.disconnectTimer) { window.clearTimeout(peer.disconnectTimer); peer.disconnectTimer = null; }
     try { peer.pc.close(); } catch (error) {}
     if (peer.output) { try { peer.output.remove(); } catch (error) {} }
     this.emit();

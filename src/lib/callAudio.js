@@ -7,7 +7,7 @@
 // cihazlarda setSinkId ile yapılır.
 
 // Oda ayarlarındaki "Gürültü engelleyici" anahtarı bu kanalın üzerinde çalışır.
-import { getMicNoiseSuppression, registerRoomMicTrack } from '@/lib/micSource';
+import { getMicNoiseSuppression, getRoomMicTrack, registerRoomMicTrack } from '@/lib/micSource';
 
 // Gürültü engelleme, oda ayarlarındaki anahtardan okunur; kanal her açılışta aynı ayarı alır.
 const micOptions = () => ({ echoCancellation: true, noiseSuppression: getMicNoiseSuppression(), autoGainControl: true, channelCount: { ideal: 1 } });
@@ -168,8 +168,12 @@ function audioSession() {
 function applySessionType() {
   const session = audioSession();
   if (!session) return false;
+  // iOS: mikrofon kapalıyken 'playback' sesi kesin olarak hoparlöre verir —
+  // dinleyen kişi sesi kulağa değil hoparlörden duyar. Mikrofon açıkken 'playback'
+  // kaydı düşürebildiği için oturum varsayılanda bırakılır (mikrofon susmaz).
+  const microphoneLive = !!getRoomMicTrack();
   try {
-    session.type = speakerOn ? 'auto' : 'play-and-record';
+    session.type = speakerOn ? (microphoneLive ? 'auto' : 'playback') : 'play-and-record';
     return true;
   } catch { return false; }
 }

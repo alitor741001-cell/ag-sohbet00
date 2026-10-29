@@ -22,6 +22,8 @@ export async function setMicNoiseSuppression(enabled) {
 
 let roomTrack = null;
 export const registerRoomMicTrack = track => { roomTrack = track; };
+/** Ses çıkışı yönlendirmesi için canlı mikrofon kanalı (iOS ses oturumu kararı). */
+export const getRoomMicTrack = () => (roomTrack && roomTrack.readyState === 'live' ? roomTrack : null);
 let sharedTrack = null;
 let acquiring = null;
 let releaseTimer = null;
