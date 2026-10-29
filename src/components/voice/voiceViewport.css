@@ -15,6 +15,7 @@
    ölçüsüne (100lvh) yayılır, böylece alt güvenli alanda da görsel devam eder ve
    ekranın dibinde siyah şerit kalmaz. Sayfa düzenine yer eklemez. */
 .room-bg-layer {
+  z-index: 0;
   position: fixed;
   /* Katman ekranın dört yanından taşar: çentik, alt güvenli alan ve tarayıcı
      araç çubuğu boşluklarında da tema görseli devam eder, lacivert şerit kalmaz. */
