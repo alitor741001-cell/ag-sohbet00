@@ -67,8 +67,7 @@ async function acquireMic() {
   // Yeniden edinim gerekiyorsa eski (sessiz/askıda) kayıt önce serbest bırakılır.
   releaseMicStream();
   // Android WebView'in eski ses sürücüleri işleme kısıtlarıyla açılamayabilir.
-  const android = /Android/i.test(navigator.userAgent || '');
-  const next = await openAudio(getMedia, { audio: android ? true : micOptions() });
+  const next = await openAudio(getMedia, { audio: micOptions() });
   if (generation !== micGeneration) {
     next.getTracks().forEach((track) => track.stop());
     throw new Error('arama sonlandı');
@@ -98,7 +97,7 @@ export function ensureMicTrack({ fresh = false } = {}) {
   if (!fresh && micTrack && micTrack.readyState === 'live' && !micTrack.muted) return Promise.resolve(micTrack);
   // Eski cihazlarda izin isteği yanıtsız kalabilir: asılı deneme düğmeyi kilitlemez,
   // 12 saniyeden sonra yeni bir dokunuş temiz bir deneme başlatır.
-  if (!micPending || Date.now() - micPendingAt > 12000) {
+  if (!micPending) {
     micPendingAt = Date.now();
     const pending = acquireMic().finally(() => {
       if (micPending === pending) micPending = null;
@@ -268,7 +267,7 @@ export function createVoiceOutput(track, roomId, { startMuted = false, nativeOnl
  * Uzak eşin ses akışını yönlendirilebilir bir <audio> elementine bağlar.
  * createVoiceOutput ile aynı çıkış yönlendirmesini kullanır (iOS hoparlör/ahize).
  */
-export function createStreamOutput(stream, roomId, { startMuted = false } = {}) {
+export function createStreamOutput(stream, roomId, { startMuted = false, onPlaybackChange = () => {} } = {}) {
   const element = new Audio();
   element.autoplay = true;
   element.playsInline = true;
@@ -302,14 +301,14 @@ export function createStreamOutput(stream, roomId, { startMuted = false } = {}) 
     dataset: { voiceRoom: roomId, mediaId: stream.id },
     element,
     play() {
-      routeOutput(output).catch(() => {});
-      const playing = element.play();
-      // Safari oynatmayı reddederse kendiliğinden yeniden denenir (ilk dokunuşta başlar).
-      if (playing && typeof playing.catch === 'function') playing.catch(() => armAutoRetry());
+      const playing = Promise.resolve(element.play());
+      playing.then(() => onPlaybackChange(false)).catch(() => { onPlaybackChange(!element.muted); armAutoRetry(); });
       return playing;
     },
     remove() {
       outputs.delete(output);
+      element.onplaying = element.onpause = element.onerror = null;
+      element.pause();
       try { element.srcObject = null; } catch {}
       if (objectUrl) { try { (window.URL || window.webkitURL).revokeObjectURL(objectUrl); } catch {} }
       element.remove();
@@ -317,7 +316,12 @@ export function createStreamOutput(stream, roomId, { startMuted = false } = {}) 
     get muted() { return element.muted; },
     set muted(value) { element.muted = value; },
   };
+  element.onplaying = () => onPlaybackChange(false);
+  element.onpause = () => { if (outputs.has(output) && !element.muted) onPlaybackChange(true); };
+  element.onerror = () => onPlaybackChange(!element.muted);
   outputs.add(output);
+  // Route once when the output is created, not at every tap/play retry.
+  void routeOutput(output);
   return output;
 }
 

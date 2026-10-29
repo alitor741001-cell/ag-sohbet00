@@ -1,4 +1,6 @@
+import { useLayoutEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { Image } from '@/components/ui/image';
 import { useTrimmedArt } from '@/hooks/useKeyedImage';
 import { ART } from '@/lib/designArt';
 import { useCurrentUser } from '@/lib/useCurrentUser';
@@ -18,6 +20,15 @@ export const NAV_HEIGHT = 'clamp(92px, 33vw, 154px)';
 
 /** Ana menü: tasarım görseli çentik hizasına kadar iner, düğmeler görselin üstünde tıklanır. */
 export default function DesignBottomNav() {
+  const navRef = useRef(null);
+  useLayoutEffect(() => {
+    const node = navRef.current;
+    const measure = () => document.documentElement.style.setProperty('--main-nav-space', `${Math.ceil(node.getBoundingClientRect().height)}px`);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
   const { pathname, search } = useLocation();
   const { user } = useCurrentUser();
   const support = useSupportBadge(user?.id);
@@ -27,12 +38,12 @@ export default function DesignBottomNav() {
   const art = useTrimmedArt(ART.bottomNav, { top: 0, height: 1, trim: true });
 
   return (
-    <nav aria-label="Ana menü" className="pointer-events-none fixed inset-x-0 bottom-0 z-[60]" style={{ transform: 'translateY(calc(env(safe-area-inset-bottom, 0px) - 10px))' }}>
+    <nav ref={navRef} aria-label="Ana menü" className="design-bottom-nav pointer-events-none fixed inset-x-0 bottom-0 z-[60]">
       <div
         className="relative w-full"
         style={art ? { aspectRatio: String(art.ratio) } : { height: NAV_HEIGHT }}
       >
-        {art && <img src={art.url} alt="" draggable={false} className="pointer-events-none absolute inset-0 h-full w-full select-none" />}
+        {art && <Image src={art.url} alt="" draggable={false} className="pointer-events-none absolute inset-0 h-full w-full select-none" />}
         <div className="pointer-events-auto absolute inset-x-[3%] bottom-0 top-[16%] flex items-stretch">
           {ZONES.map((zone) => {
             const active = zone.match(pathname, search);

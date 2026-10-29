@@ -318,14 +318,14 @@ export default function RoomDiscovery({ shortcuts = null, onContentChange }) {
       ) : loading ? (
         /* Yükleme alanı kart listesinin yerini baştan ayırır: liste gelince sayfa yüksekliği
            değişmez, açılışta alt menü yukarı kayıp geri inmez. */
-        <div className="grid grid-cols-2 gap-2.5" aria-hidden="true">
+        <div className="room-discovery-grid grid grid-cols-2 gap-2.5" aria-hidden="true">
           {Array.from({ length: 4 }).map((_, index) => (
             <div key={index} className="animate-pulse rounded-[16px] bg-[#10141d]" style={{ aspectRatio: '3 / 2' }} />
           ))}
         </div>
       ) : items.length === 0 ? null : (
         <>
-          <div className="grid grid-cols-2 gap-2.5">
+          <div className="room-discovery-grid grid grid-cols-2 gap-2.5">
           {items.map((room) => {
             const kind = isVoiceRoom(room) ? 'voice' : 'film';
             return (

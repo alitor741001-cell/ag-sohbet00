@@ -39,7 +39,7 @@ export default function RoomTopArt({
 
   return (
     <div
-      className="relative z-30 flex shrink-0 items-start gap-1 px-2"
+      className="voice-room-top relative z-30 flex shrink-0 items-start gap-1 px-2"
       style={{ paddingTop: 'calc(env(safe-area-inset-top) + 4px)' }}
     >
       <div className="min-w-0 shrink-0" style={{ width: 'clamp(178px, 58vw, 250px)' }}>

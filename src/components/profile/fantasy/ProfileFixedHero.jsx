@@ -24,7 +24,7 @@ export default function ProfileFixedHero(props) {
           ajans kimliği şeridinin altından geçer, arkasında görünmez. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none fixed inset-x-0 top-0 z-20 overflow-hidden bg-[#02030c]"
+        className="profile-hero-backdrop pointer-events-none fixed inset-x-0 top-0 z-20 overflow-hidden bg-[#02030c]"
         style={{ height: `calc(var(--safe-top) + ${height}px)` }}
       >
         <img
@@ -34,13 +34,13 @@ export default function ProfileFixedHero(props) {
           className="absolute inset-0 h-full w-full select-none object-cover"
         />
       </div>
-      <div ref={boxRef} className="fixed inset-x-0 z-30 overflow-hidden" style={{ top: 'var(--safe-top)' }}>
+      <div ref={boxRef} className="profile-hero-fixed fixed inset-x-0 z-30 overflow-hidden" style={{ top: 'var(--safe-top)' }}>
         <div className="relative mx-auto w-full max-w-[560px]">
           <ProfileHeroCard {...props} />
         </div>
       </div>
       {/* İçerik, başlığın arkasındaki zemin şeridinin hemen altından başlar. */}
-      <div style={{ height: `calc(var(--safe-top) + ${height}px)` }} aria-hidden="true" />
+      <div className="profile-hero-spacer" style={{ height: `calc(var(--safe-top) + ${height}px)` }} aria-hidden="true" />
     </>
   );
 }

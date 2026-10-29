@@ -17,6 +17,7 @@ export default function useChatDockToSeat(dockRef, seatIndex = 6, seatCount = 0)
     let retry = 0;
     const measure = () => {
       frame = 0;
+      if (window.matchMedia('(min-width: 900px), (min-width: 640px) and (orientation: landscape)').matches) { setHeight(0); return; }
       const seat = root.querySelector(`[data-seat-index="${seatIndex}"]`);
       const controls = root.querySelector('.voice-controls-anchor');
       if (!seat || !controls) {

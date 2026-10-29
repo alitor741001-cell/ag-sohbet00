@@ -5,7 +5,7 @@ import { GAMES } from '@/components/games/gameCatalog';
 /** Ana sayfadaki Oyunlar sekmesi: altın çerçeveli premium oyun kartları, oda kurmadan oynanır. */
 export default function GameDiscoveryRow({ onPick }) {
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="game-discovery-grid grid grid-cols-2 gap-3">
       {GAMES.map((game) => (
         <button
           key={game.id}

@@ -94,7 +94,8 @@ export default class VoiceMesh extends Actor {
         me.name = name;
         await this.save();
       }
-      // İlk 'you' mesajı kaçmış olabilir: her selamlamada kimlik tekrar verilir.
+      // A new browser transport must replace the other end's stale peer connection.
+      if (msg.reset === true) this.broadcast({ type: 'gone', peerId: me.peerId });
       conn.send({ type: 'you', peerId: me.peerId });
       this.broadcastPeers();
       return;
@@ -105,7 +106,8 @@ export default class VoiceMesh extends Actor {
       me.mic = msg.on === true;
       // Kalp atışı: kimlik ve oda listesi kendini onarır.
       conn.send({ type: 'you', peerId: me.peerId });
-      if (changed) this.broadcastPeers();
+      if (changed) { await this.save(); this.broadcastPeers(); }
+      else conn.send({ type: 'peers', peers: this.peerList() });
       return;
     }
 
@@ -126,6 +128,7 @@ export default class VoiceMesh extends Actor {
     if (superseded) return;
     me.offline = true;
     me.mic = false;
+    await this.save();
     this.schedule(`drop:${me.peerId}`, Date.now() + DROP_GRACE_MS);
     this.broadcast({ type: 'gone', peerId: me.peerId });
     this.broadcastPeers();

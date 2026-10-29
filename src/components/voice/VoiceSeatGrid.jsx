@@ -24,7 +24,7 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
   const budgetRef = useRef({ key: '', height: 0 });
   const budgetKey = `${seats.length}:${Math.round(width / 24)}`;
   if (budgetRef.current.key !== budgetKey) budgetRef.current = { key: budgetKey, height: 0 };
-  if (maxHeight && maxHeight > budgetRef.current.height) budgetRef.current.height = maxHeight;
+  if (maxHeight) budgetRef.current.height = maxHeight;
   const heightBudget = budgetRef.current.height || maxHeight;
   const rows = useMemo(() => responsiveSeatRows(seats.length, width), [seats.length, width]);
   const onSeatClick = useCallback((index) => onSelectSeat(index), [onSelectSeat]);
@@ -32,7 +32,6 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
   // 9'lu düzende üstteki tek koltuk (orta çerçeve) referanstaki gibi daha büyük çizilir.
   const featureTop = seats.length === 9;
   // Kalabalık düzen (15/20 koltuk): koltuklar daraltılmaz, geniş kalır.
-  const dense = seats.length >= 15;
   // Kalabalık odalarda satırlar ekran genişliğine göre yeniden bölünür.
   const many = seats.length >= 20;
   const widestRow = Math.max(1, ...rows.map((row) => row.length));
@@ -68,12 +67,7 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
   // Kalabalık odalarda hem genişlik hem yükseklik sınırı uygulanır;
   // sığmayan satırlar üst sahnenin dikey kaydırma alanında erişilebilir kalır.
   const manySize = SIZES[Math.min(SIZES.indexOf(widthSize), SIZES.indexOf(heightSize), SIZES.indexOf(narrow ? 'sm' : 'md'))];
-  const denseFloor = 'md';
-  const size = dense
-    ? (many ? manySize : SIZES[Math.min(SIZES.indexOf(widthSize), Math.max(SIZES.indexOf(heightSize), SIZES.indexOf(denseFloor)))])
-    : featureTop
-      ? widthSize
-      : fitSize;
+  const size = many ? manySize : fitSize;
   // Üstteki tek çerçeve artık büyütülmez: bir beden küçülüp diğer koltuklarla aynı boyda
   // durur, böylece satır yüksekliği hiç değişmez ve koltuklar yerinden oynamaz.
   const topSize = size;

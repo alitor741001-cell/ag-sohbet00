@@ -1,20 +1,8 @@
 @supports (height: 100dvh) {
   :root { --app-height: 100dvh; }
 }
-@media (display-mode: standalone) {
-  @supports (height: 100lvh) {
-    :root { --app-height: 100lvh; }
-  }
-}
+/* Standalone uses the same visible viewport as the browser, not the largest one. */
 
 /* iOS açılışındaki geçici viewport ölçüsü alt menüyü oynatmaz. */
 .home-image-nav { --home-nav-height: min(29.325514vw, 10.557185rem); }
-@media (display-mode: standalone) {
-  @supports (height: 100lvh) {
-    .home-image-nav {
-      top: calc(100lvh - var(--home-nav-height));
-      bottom: auto;
-      height: var(--home-nav-height);
-    }
-  }
-}
+.home-image-nav { bottom: 0; top: auto; }
