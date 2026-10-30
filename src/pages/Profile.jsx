@@ -9,8 +9,9 @@ import { ART } from '@/lib/designArt';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import useFriends from '@/hooks/useFriends';
 import SocialListDialog from '@/components/profile/social/SocialListDialog';
-import ProfileFixedHero from '@/components/profile/fantasy/ProfileFixedHero';
+import ProfileHeroCard from '@/components/profile/fantasy/ProfileHeroCard';
 import ProfileMenuDeck from '@/components/profile/fantasy/ProfileMenuDeck';
+import usePageScrollLock from '@/hooks/usePageScrollLock';
 import { isModerator } from '@/lib/roles';
 import { giftBoxLocked } from '@/lib/giftAccess';
 import PrivacyPolicyBody from '@/components/profile/PrivacyPolicyBody';
@@ -25,6 +26,8 @@ import useGiftSummaryLive from '@/hooks/useGiftSummaryLive';
 
 /** Profil sayfası: cüzdan, kişisel bilgiler, eklentiler (ayarlar) ve hesap işlemleri. */
 export default function Profile() {
+  // Profil ekranı sabittir: sayfa kaymaz, tasarım yerinde durur.
+  usePageScrollLock();
   const { user, reload, setUser } = useCurrentUser();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -156,9 +159,11 @@ export default function Profile() {
   const elmasLocked = giftBoxLocked(user);
   // Paket/abonelik sistemi kaldırıldı: üyelik süresi artık erişimi etkilemez.
 
+  // Ekran sabit: profil kaymaz. Ana yerleşimin üst boşluğu geri alınır, yükseklik
+  // cihazın görünür alanına kilitlenir — başlığın üstünde boş şerit kalmaz.
   return (
     <div
-      className="dark relative min-h-screen pb-6 text-white"
+      className="dark relative flex h-[var(--app-height)] flex-col overflow-hidden text-white mt-[calc(-1*max(env(safe-area-inset-top),0.5rem))] lg:mt-0 lg:h-[calc(var(--app-height)-6rem)]"
       style={{
         marginLeft: 'calc(-1 * env(safe-area-inset-left, 0px))',
         marginRight: 'calc(-1 * env(safe-area-inset-right, 0px))',
@@ -168,14 +173,16 @@ export default function Profile() {
       <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10 overflow-hidden bg-black">
         <img src={ART.pageBg} alt="" draggable={false} className="h-full w-full select-none object-cover" />
       </div>
-      <div className="flex min-h-[var(--app-height)] w-full flex-col">
-      <ProfileFixedHero
-        user={user}
-        avatar={form.avatar}
-        onAvatar={onAvatar}
-        uploading={uploading}
-        vipLevel={vipLevelOf(user)}
-      />
+      <div className="flex min-h-0 w-full flex-1 flex-col pt-[env(safe-area-inset-top)]">
+        <div className="mx-auto w-full max-w-[560px]">
+          <ProfileHeroCard
+            user={user}
+            avatar={form.avatar}
+            onAvatar={onAvatar}
+            uploading={uploading}
+            vipLevel={vipLevelOf(user)}
+          />
+        </div>
 
       <div className="flex min-h-0 flex-1 flex-col px-4 pb-[env(safe-area-inset-bottom)]">
           <ProfileMenuDeck
