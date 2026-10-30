@@ -1,25 +1,28 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { ChevronRight, LogOut, Shield, User } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import PullToRefresh from '@/components/home/PullToRefresh';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
 import { findProtectedName } from '@/lib/protectedNames';
-import { vipLevelOf } from '@/lib/userLevels';
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import useFriends from '@/hooks/useFriends';
 import SocialListDialog from '@/components/profile/social/SocialListDialog';
-import ProfileFixedHero from '@/components/profile/fantasy/ProfileFixedHero';
-import ProfileStatBar from '@/components/profile/fantasy/ProfileStatBar';
-import ProfileTwinCards from '@/components/profile/fantasy/ProfileTwinCards';
-import ProfileBalanceCards from '@/components/profile/fantasy/ProfileBalanceCards';
-import ProfileIconGrid from '@/components/profile/fantasy/ProfileIconGrid';
-import ProfileMenuCard from '@/components/profile/fantasy/ProfileMenuCard';
+import NeonHero from '@/components/profile/neon/NeonHero';
+import NeonAgencyBar from '@/components/profile/neon/NeonAgencyBar';
+import NeonStats from '@/components/profile/neon/NeonStats';
+import NeonWalletCards from '@/components/profile/neon/NeonWalletCards';
+import NeonIconGrid from '@/components/profile/neon/NeonIconGrid';
+import NeonFooterMenu from '@/components/profile/neon/NeonFooterMenu';
+import NeonPanel from '@/components/profile/neon/NeonPanel';
+import '@/components/profile/neon/neonProfile.css';
 import { giftBoxLocked } from '@/lib/giftAccess';
 import ProfileDetailsSection from '@/components/profile/ProfileDetailsSection';
 import ProfileSettings from '@/components/profile/ProfileSettings';
 import PrivacyPolicyBody from '@/components/profile/PrivacyPolicyBody';
+import BlockedUsers from '@/components/profile/BlockedUsers';
 
 import DeleteAccountSection from '@/components/profile/DeleteAccountSection';
 import GiftBoxPanel from '@/components/profile/GiftBoxPanel';
@@ -31,8 +34,9 @@ import useWalletCoinsLive from '@/hooks/useWalletCoinsLive';
 import useGiftSummaryLive from '@/hooks/useGiftSummaryLive';
 
 const EMPTY_FORM = { username: '', full_name: '', phone: '', avatar: '', birth_date: '' };
+const PROFILE_BG = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/b553a4428_generated_image.png';
 
-/** Profil sayfası: cüzdan, kişisel bilgiler, eklentiler (ayarlar) ve hesap işlemleri. */
+/** Profil sayfası: alev çerçeveli tek ekran — kimlik, ajans, istatistik, cüzdan ve menü. */
 export default function Profile() {
   const { user, reload, setUser } = useCurrentUser();
   const { toast } = useToast();
@@ -44,6 +48,7 @@ export default function Profile() {
   const [vipCount, setVipCount] = useState(0);
   const [giftBoxOpen, setGiftBoxOpen] = useState(false);
   const [privacyOpen, setPrivacyOpen] = useState(false);
+  const [blockedOpen, setBlockedOpen] = useState(false);
   // Takip ve ziyaretçi sayaçları ile açılan liste: takip edilenler, takipçiler, ziyaretçiler.
   const [social, setSocial] = useState({ following: 0, followers: 0, visitors: 0 });
   const [socialList, setSocialList] = useState(null);
@@ -57,7 +62,7 @@ export default function Profile() {
   const [uploading, setUploading] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
 
-  // /profil?tab=settings bağlantısı Eklentiler bölümünü açar ve oraya kaydırır.
+  // /profil?tab=settings bağlantısı ayarlar bölümünü açar ve oraya kaydırır.
   useEffect(() => {
     if (new URLSearchParams(location.search).get('tab') !== 'settings') return;
     setOpenKey('settings');
@@ -101,6 +106,7 @@ export default function Profile() {
     loadSummary();
     loadWallet();
     loadSocial();
+    loadVipCount();
   }, []);
 
   // Cüzdan canlıdır: oyun kazancı, hesaba gelen coin ve hediye harcaması bakiyeye
@@ -112,9 +118,7 @@ export default function Profile() {
   const { relations } = useFriends();
   const friendCount = relations.filter((relation) => relation.status === 'accepted').length;
 
-
-  // Sayfa kendini 5 saniyede bir sessizce tazeler: bakiye canlı değerden okunur, böylece
-  // hediye/oyun harcamaları ekranda eski tutarla kalmaz — yükleme göstergesi çıkmaz.
+  // Sayfa kendini 5 saniyede bir sessizce tazeler: bakiye canlı değerden okunur.
   useEffect(() => {
     const interval = setInterval(() => {
       if (document.visibilityState === 'hidden') return;
@@ -176,84 +180,91 @@ export default function Profile() {
   const elmasLocked = giftBoxLocked(user);
   const resetForm = () => setForm({ username: user.username || '', full_name: user.full_name || '', phone: user.phone || '', avatar: user.avatar || '', birth_date: user.birth_date || '' });
   const toggle = (key) => setOpenKey((current) => (current === key ? null : key));
-  // Paket/abonelik sistemi kaldırıldı: üyelik süresi artık erişimi etkilemez.
 
   return (
-    <div
-      className="dark min-h-screen pb-6 text-white"
-    >
+    <div className="profile-neon-shell dark min-h-screen pb-6 text-white" style={{ '--profile-bg': `url(${PROFILE_BG})` }}>
       <div className="mx-auto w-full max-w-2xl md:max-w-3xl xl:max-w-4xl">
-      <ProfileFixedHero
-        user={user}
-        avatar={form.avatar}
-        onAvatar={onAvatar}
-        uploading={uploading}
-        onEdit={() => toggle('info')}
-        vipLevel={vipLevelOf(user)}
-      />
-
-      <PullToRefresh onRefresh={() => { reload?.(); loadWallet(); loadSocial(); loadVipCount(); }}>
-        <div className="space-y-3 px-4 pt-4">
-          <ProfileStatBar
-            friends={friendCount}
-            following={social.following}
-            followers={social.followers}
-            visitors={social.visitors}
-            onSelect={(key) => (key === 'friends' ? navigate('/arkadaslar?view=friends') : setSocialList(key))}
-          />
-          <ProfileBalanceCards coins={wallet?.coins ?? null} diamonds={elmasLocked ? null : (wallet?.month_score ?? null)} onCoins={() => setCoinShopOpen(true)} onDiamonds={openGiftBox} />
-          <ProfileTwinCards
-            vipCount={vipCount}
-            onVip={() => navigate('/vip')}
-            onWallet={() => setActivityOpen(true)}
-          />
-          <ProfileIconGrid
-            vipCount={vipCount}
-            onSelect={(key) => {
-              if (key === 'shop') setCoinShopOpen(true);
-              else if (key === 'store') setStoreOpen(true);
-              else if (key === 'bag') setVipBagOpen(true);
-              else if (key === 'level') navigate('/seviye');
-              else if (key === 'agency') navigate('/ajans');
-            }}
-          />
-
-
-
-          <ProfileMenuCard
-            isAdmin={isAdmin}
-            onInfo={() => toggle('info')}
-            onSettings={() => toggle('settings')}
-            onLogout={() => base44.auth.logout('/login')}
-            onAdmin={() => navigate('/admin')}
-          />
-
-          {openKey === 'info' && (
-            <ProfileDetailsSection
-              user={user}
-              editing={editing}
-              form={form}
-              setForm={setForm}
-              saving={saving}
-              onSave={save}
-              onEdit={() => { resetForm(); setEditing(true); }}
-              onCancel={() => { resetForm(); setEditing(false); }}
+        <PullToRefresh onRefresh={() => { reload?.(); loadWallet(); loadSocial(); loadVipCount(); }}>
+          <div className="space-y-2.5 px-3 pt-4">
+            <NeonHero user={user} avatar={form.avatar} onAvatar={onAvatar} uploading={uploading} />
+            <NeonAgencyBar user={user} />
+            <NeonStats
+              friends={friendCount}
+              following={social.following}
+              followers={social.followers}
+              visitors={social.visitors}
+              onSelect={(key) => (key === 'friends' ? navigate('/arkadaslar?view=friends') : setSocialList(key))}
             />
-          )}
+            <NeonWalletCards
+              coins={wallet?.coins ?? null}
+              score={wallet?.received_score ?? null}
+              diamonds={elmasLocked ? null : (wallet?.month_score ?? null)}
+              diamondScore={elmasLocked ? null : (wallet?.month_k ?? null)}
+              vipCount={vipCount}
+              onCoins={() => setCoinShopOpen(true)}
+              onDiamonds={openGiftBox}
+              onVip={() => navigate('/vip')}
+              onHistory={() => setActivityOpen(true)}
+            />
+            <NeonIconGrid
+              vipCount={vipCount}
+              onSelect={(key) => {
+                if (key === 'shop') setCoinShopOpen(true);
+                else if (key === 'cp') setStoreOpen(true);
+                else if (key === 'bag') setVipBagOpen(true);
+                else if (key === 'level') navigate('/seviye');
+                else if (key === 'agency') navigate('/ajans');
+              }}
+            />
+            <NeonFooterMenu
+              onSelect={(key) => {
+                if (key === 'blocked') setBlockedOpen(true);
+                else if (key === 'privacy') setPrivacyOpen(true);
+                else toggle('settings');
+              }}
+            />
 
-          {openKey === 'settings' && (
-            <div id="eklentiler" className="scroll-mt-24 space-y-3">
-              <ProfileSettings user={user} onUpdated={reload} />
-              {/* Hesabı Sil: Eklentiler bölümünün en altında durur. */}
-              <DeleteAccountSection />
-            </div>
-          )}
+            {openKey === 'settings' && (
+              <div id="eklentiler" className="scroll-mt-24 space-y-2.5">
+                <NeonPanel innerClassName="overflow-hidden">
+                  {[
+                    { key: 'info', label: 'Kişisel Bilgiler', icon: User, run: () => toggle('info') },
+                    ...(isAdmin ? [{ key: 'admin', label: 'Yönetim Paneli', icon: Shield, run: () => navigate('/admin') }] : []),
+                    { key: 'logout', label: 'Çıkış Yap', icon: LogOut, run: () => base44.auth.logout('/login') },
+                  ].map((row, index) => (
+                    <button
+                      key={row.key}
+                      type="button"
+                      onClick={row.run}
+                      className={`flex w-full items-center gap-3 px-4 py-3 text-left active:bg-white/5 ${index > 0 ? 'border-t border-white/10' : ''}`}
+                    >
+                      <row.icon className="h-4 w-4 shrink-0 text-[#9fd8ff]" aria-hidden="true" />
+                      <span className="flex-1 text-[13px] font-bold text-white">{row.label}</span>
+                      <ChevronRight className="h-4 w-4 shrink-0 text-white/40" aria-hidden="true" />
+                    </button>
+                  ))}
+                </NeonPanel>
 
-          <button type="button" onClick={() => setPrivacyOpen(true)} className="mx-auto block py-3 text-[11px] font-semibold underline" style={{ color: 'rgba(165,228,255,0.7)' }}>
-            Gizlilik Politikası
-          </button>
-        </div>
-      </PullToRefresh>
+                {openKey === 'info' && (
+                  <ProfileDetailsSection
+                    user={user}
+                    editing={editing}
+                    form={form}
+                    setForm={setForm}
+                    saving={saving}
+                    onSave={save}
+                    onEdit={() => { resetForm(); setEditing(true); }}
+                    onCancel={() => { resetForm(); setEditing(false); }}
+                  />
+                )}
+
+                <ProfileSettings user={user} onUpdated={reload} />
+                {/* Hesabı Sil: ayarlar bölümünün en altında durur. */}
+                <DeleteAccountSection />
+              </div>
+            )}
+          </div>
+        </PullToRefresh>
       </div>
 
       {/* Kutu kapanınca bakiye canlı değerden tazelenir: kart eski tutarı göstermez. */}
@@ -268,6 +279,17 @@ export default function Profile() {
       />
 
       <SocialListDialog open={!!socialList} kind={socialList} onClose={() => { setSocialList(null); loadSocial(); }} />
+
+      <Dialog open={blockedOpen} onOpenChange={(value) => !value && setBlockedOpen(false)}>
+        <DialogContent className="max-h-[88vh] max-w-2xl gap-0 border-[#7dd3fc]/30 bg-[linear-gradient(180deg,#0B2A52,#05122A)] p-0 text-white">
+          <DialogHeader className="border-b border-[#7dd3fc]/20 px-5 pb-3 pt-5 text-left">
+            <DialogTitle className="text-[#a5e4ff]">Engellenen Hesaplar</DialogTitle>
+          </DialogHeader>
+          <div className="max-h-[68vh] overflow-y-auto overscroll-contain px-5 pb-8 pt-4">
+            <BlockedUsers />
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={privacyOpen} onOpenChange={(value) => !value && setPrivacyOpen(false)}>
         <DialogContent className="max-h-[88vh] max-w-2xl gap-0 border-[#7dd3fc]/30 bg-[linear-gradient(180deg,#0B2A52,#05122A)] p-0 text-white">
