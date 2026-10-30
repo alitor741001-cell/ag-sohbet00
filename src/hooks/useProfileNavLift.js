@@ -9,10 +9,13 @@ export default function useProfileNavLift(ref) {
   useEffect(() => {
     const apply = () => {
       const el = ref.current;
-      const nav = document.querySelector('nav[aria-label="Ana menü"]');
+      const nav = document.getElementById('app-bottom-nav');
       if (!el || !nav) return;
-      const lift = Math.round(window.innerHeight - nav.getBoundingClientRect().top);
-      if (lift > 0) el.style.setProperty('--profile-lift', `${lift}px`);
+      const rect = nav.getBoundingClientRect();
+      // Görünmeyen çubuktan ölçü alınmaz: tasarım küçülüp içerik kaybolmaz.
+      if (rect.height < 20) return;
+      const lift = Math.round(window.innerHeight - rect.top);
+      if (lift > 0 && lift < window.innerHeight * 0.4) el.style.setProperty('--profile-lift', `${lift}px`);
     };
     apply();
     // Çubuk görseli ve profil görseli sonradan yüklendiğinde ölçü birkaç kez tazelenir.
