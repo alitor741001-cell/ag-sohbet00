@@ -2,8 +2,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import subscribeEntity from '@/components/data/entitySubscriptions';
 
-const FRESH_MS = 60000;
+const FRESH_MS = 120000;
 const VISIBLE_MS = 15000;
+const POLL_MS = 15000;
 
 /** Tüm sesli odalara düşen ajans çağrıları; aynı çağrı bir kez gösterilir. */
 export default function useAgencyCalls() {
@@ -21,8 +22,17 @@ export default function useAgencyCalls() {
     const unsubscribe = subscribeEntity('AgencyCall', (event) => {
       if (event?.type === 'create' && event.data) accept({ ...event.data, id: event.id });
     });
-    base44.entities.AgencyCall.list('-created_date', 1).then((rows) => rows.forEach(accept)).catch(() => {});
-    return unsubscribe;
+    // Kullanıcı hangi sayfada olursa olsun çağrıyı görsün: canlı olay gelmese bile
+    // liste kısa aralıklarla yoklanır ve yeni çağrı ekranda belirir.
+    const check = () => base44.entities.AgencyCall.list('-created_date', 2)
+      .then((rows) => (rows || []).forEach(accept))
+      .catch(() => {});
+    check();
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === 'hidden') return;
+      check();
+    }, POLL_MS);
+    return () => { window.clearInterval(timer); unsubscribe(); };
   }, [accept]);
 
   useEffect(() => {

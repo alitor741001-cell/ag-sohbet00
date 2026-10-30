@@ -8,6 +8,7 @@ import { useCurrentUser } from '@/lib/useCurrentUser';
 import { Image } from '@/components/ui/image';
 import AdminNotifBell from '@/components/admin/AdminNotifBell';
 import LiveChatButton from '@/components/layout/LiveChatButton';
+import GlobalAgencyCall from '@/components/voice/GlobalAgencyCall';
 
 const SIDEBAR_BG = '#1A1414';
 const SIDEBAR_TEXT = '#e0e0e0';
@@ -190,6 +191,7 @@ export default function AdminLayout() {
           </div>
         </header>
         <div className="w-full min-h-[calc(100vh-3.5rem)] min-w-0 overflow-x-clip bg-background p-3 sm:p-5 xl:p-6">
+          <GlobalAgencyCall />
           <Outlet />
         </div>
       </div>
