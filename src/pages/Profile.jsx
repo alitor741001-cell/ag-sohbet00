@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import PullToRefresh from '@/components/home/PullToRefresh';
 import { useCurrentUser } from '@/lib/useCurrentUser';
@@ -13,11 +13,9 @@ import ProfileFixedHero from '@/components/profile/fantasy/ProfileFixedHero';
 import ProfileMenuDeck from '@/components/profile/fantasy/ProfileMenuDeck';
 import { isModerator } from '@/lib/roles';
 import { giftBoxLocked } from '@/lib/giftAccess';
-import ProfileSettings from '@/components/profile/ProfileSettings';
 import BlockedUsers from '@/components/profile/BlockedUsers';
 import PrivacyPolicyBody from '@/components/profile/PrivacyPolicyBody';
 
-import DeleteAccountSection from '@/components/profile/DeleteAccountSection';
 import GiftBoxPanel from '@/components/profile/GiftBoxPanel';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
 import CoinActivityPanel from '@/components/profile/CoinActivityPanel';
@@ -30,10 +28,7 @@ import useGiftSummaryLive from '@/hooks/useGiftSummaryLive';
 export default function Profile() {
   const { user, reload, setUser } = useCurrentUser();
   const { toast } = useToast();
-  const location = useLocation();
   const navigate = useNavigate();
-  // Bölümler kapalı başlar; yalnızca kullanıcı dokununca açılır (ayar bağlantısı hariç).
-  const [openKey, setOpenKey] = useState(() => (new URLSearchParams(window.location.search).get('tab') === 'settings' ? 'settings' : null));
   const [wallet, setWallet] = useState(null);
   const [vipCount, setVipCount] = useState(0);
   const [giftBoxOpen, setGiftBoxOpen] = useState(false);
@@ -50,13 +45,11 @@ export default function Profile() {
   const [uploading, setUploading] = useState(false);
   const [form, setForm] = useState({ avatar: '' });
 
-  // /profil?tab=settings bağlantısı Eklentiler bölümünü açar ve oraya kaydırır.
+  // Eski /profil?tab=settings bağlantıları Ayarlar sayfasına gider.
   useEffect(() => {
-    if (new URLSearchParams(location.search).get('tab') !== 'settings') return;
-    setOpenKey('settings');
-    const frame = requestAnimationFrame(() => requestAnimationFrame(() => document.getElementById('eklentiler')?.scrollIntoView({ behavior: 'smooth', block: 'start' })));
-    return () => cancelAnimationFrame(frame);
-  }, [location.search]);
+    if (new URLSearchParams(window.location.search).get('tab') !== 'settings') return;
+    navigate('/profil/ayarlar', { replace: true });
+  }, []);
 
   const loadVipCount = () => {
     base44.functions.invoke('vip-bag', { action: 'list' })
@@ -150,7 +143,6 @@ export default function Profile() {
 
   if (!user) return <div className="dark min-h-screen p-6 text-white">Yükleniyor...</div>;
   const elmasLocked = giftBoxLocked(user);
-  const toggle = (key) => setOpenKey((current) => (current === key ? null : key));
   // Paket/abonelik sistemi kaldırıldı: üyelik süresi artık erişimi etkilemez.
 
   return (
@@ -192,19 +184,11 @@ export default function Profile() {
               else if (key === 'admin') navigate('/admin');
               else if (key === 'blocked') setBlockedOpen(true);
               else if (key === 'privacy') setPrivacyOpen(true);
-              else if (key === 'settings') toggle('settings');
+              else if (key === 'settings') navigate('/profil/ayarlar');
             }}
           />
 
 
-
-          {openKey === 'settings' && (
-            <div id="eklentiler" className="scroll-mt-24 space-y-3">
-              <ProfileSettings user={user} onUpdated={reload} />
-              {/* Hesabı Sil: Eklentiler bölümünün en altında durur. */}
-              <DeleteAccountSection />
-            </div>
-          )}
 
         </div>
       </PullToRefresh>

@@ -33,6 +33,7 @@ const Notifications = lazy(() => import('@/pages/Notifications'));
 const OpenRooms = lazy(() => import('@/pages/OpenRooms'));
 const MaintenanceMode = lazy(() => import('@/pages/MaintenanceMode'));
 const Profile = lazy(() => import('@/pages/Profile'));
+const ProfileSettingsPage = lazy(() => import('@/pages/ProfileSettingsPage'));
 const UserProfile = lazy(() => import('@/pages/UserProfile'));
 const Search = lazy(() => import('@/pages/Search'));
 const VipLevels = lazy(() => import('@/pages/VipLevels'));
@@ -124,6 +125,7 @@ const AuthenticatedApp = () => {
           <Route path="/bildirimler" element={<Notifications />} />
           {/* Profil kısmı kaldırıldı: eski bağlantılar ana sayfaya düşer. */}
           <Route path="/profil" element={<Profile />} />
+          <Route path="/profil/ayarlar" element={<ProfileSettingsPage />} />
           <Route path="/ajans" element={<AgencyPage />} />
           <Route path="/ajans/kazanc" element={<AgencyEarnings />} />
           <Route path="/ajans/kota-tablosu" element={<AgencyQuota />} />
