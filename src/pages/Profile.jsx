@@ -10,8 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import useFriends from '@/hooks/useFriends';
 import SocialListDialog from '@/components/profile/social/SocialListDialog';
 import ProfileFixedHero from '@/components/profile/fantasy/ProfileFixedHero';
-import ProfileActionDeck from '@/components/profile/fantasy/ProfileActionDeck';
-import FantasyQuickBar from '@/components/profile/fantasy/FantasyQuickBar';
+import ProfileMenuDeck from '@/components/profile/fantasy/ProfileMenuDeck';
+import { isModerator } from '@/lib/roles';
 import { giftBoxLocked } from '@/lib/giftAccess';
 import ProfileSettings from '@/components/profile/ProfileSettings';
 import BlockedUsers from '@/components/profile/BlockedUsers';
@@ -167,7 +167,8 @@ export default function Profile() {
 
       <PullToRefresh onRefresh={() => { reload?.(); loadWallet(); loadSocial(); loadVipCount(); }}>
         <div className="space-y-3 px-4 pt-4">
-          <ProfileActionDeck
+          <ProfileMenuDeck
+            admin={isModerator(user)}
             onAction={(key) => {
               if (key === 'friends') navigate('/arkadaslar?view=friends');
               else if (key === 'following' || key === 'followers' || key === 'visitors') setSocialList(key);
@@ -175,18 +176,14 @@ export default function Profile() {
               else if (key === 'diamonds') openGiftBox();
               else if (key === 'vip') navigate('/vip');
               else if (key === 'giftHistory') setActivityOpen(true);
-              else if (key === 'admin') navigate('/admin');
-              else if (key === 'blocked') setBlockedOpen(true);
-              else if (key === 'settings') toggle('settings');
-            }}
-          />
-          <FantasyQuickBar
-            onSelect={(key) => {
-              if (key === 'shop') setCoinShopOpen(true);
               else if (key === 'store') setStoreOpen(true);
               else if (key === 'bag') setVipBagOpen(true);
               else if (key === 'level') navigate('/seviye');
               else if (key === 'agency') navigate('/ajans');
+              else if (key === 'admin') navigate('/admin');
+              else if (key === 'blocked') setBlockedOpen(true);
+              else if (key === 'privacy') setPrivacyOpen(true);
+              else if (key === 'settings') toggle('settings');
             }}
           />
 
@@ -200,9 +197,6 @@ export default function Profile() {
             </div>
           )}
 
-          <button type="button" onClick={() => setPrivacyOpen(true)} className="mx-auto block py-3 text-[11px] font-semibold underline" style={{ color: 'rgba(165,228,255,0.7)' }}>
-            Gizlilik Politikası
-          </button>
         </div>
       </PullToRefresh>
       </div>
