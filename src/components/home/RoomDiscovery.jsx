@@ -310,7 +310,7 @@ export default function RoomDiscovery({ shortcuts = null, onContentChange }) {
 
   return (
     <>
-      <PullToRefresh onRefresh={refreshList} label={tab === 'games' ? 'Oyunları' : 'Yayınları'} busyLabel={tab === 'games' ? 'Oyunlar yenileniyor…' : 'Yayınlar yenileniyor…'}>
+      <PullToRefresh disabled={tab === 'games'} onRefresh={refreshList} label="Yayınları" busyLabel="Yayınlar yenileniyor…">
         {shortcuts}
 
       {tab === 'games' ? (

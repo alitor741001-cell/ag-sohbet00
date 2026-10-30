@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import PullToRefresh from '@/components/home/PullToRefresh';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
 import { vipLevelOf } from '@/lib/userLevels';
@@ -146,9 +145,15 @@ export default function Profile() {
 
   return (
     <div
-      className="dark min-h-screen pb-6 text-white"
+      className="dark relative min-h-screen bg-[#02030c] pb-6 text-white"
+      style={{
+        marginLeft: 'calc(-1 * env(safe-area-inset-left, 0px))',
+        marginRight: 'calc(-1 * env(safe-area-inset-right, 0px))',
+      }}
     >
-      <div className="mx-auto w-full max-w-2xl md:max-w-3xl xl:max-w-4xl">
+      {/* Profil zemini: çentik kenarlarına, üst çerçeveye ve alt menü hizasına kadar düz siyah. */}
+      <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10 bg-[#02030c]" />
+      <div className="w-full">
       <ProfileFixedHero
         user={user}
         avatar={form.avatar}
@@ -157,8 +162,7 @@ export default function Profile() {
         vipLevel={vipLevelOf(user)}
       />
 
-      <PullToRefresh onRefresh={() => { reload?.(); loadWallet(); loadSocial(); loadVipCount(); }}>
-        <div className="space-y-3 px-4 pt-4">
+      <div className="space-y-3 px-4 pt-4">
           <ProfileMenuDeck
             admin={isModerator(user)}
             stats={{
@@ -190,7 +194,6 @@ export default function Profile() {
 
 
         </div>
-      </PullToRefresh>
       </div>
 
       {/* Kutu kapanınca bakiye canlı değerden tazelenir: kart eski tutarı göstermez. */}
