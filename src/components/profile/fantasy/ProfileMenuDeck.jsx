@@ -39,9 +39,11 @@ const VALUE_CLASS = {
   amount: 'text-[14px] font-extrabold tabular-nums text-amber-100 [text-shadow:0_1px_3px_rgba(0,0,0,0.95)]',
 };
 
-function formatValue(value) {
+function formatValue(value, amount = false) {
   if (value === null || value === undefined) return '';
-  return Number(value).toLocaleString('tr-TR');
+  return Number(value).toLocaleString('tr-TR', amount
+    ? { minimumIntegerDigits: 6, useGrouping: false }
+    : undefined);
 }
 
 /**
@@ -69,7 +71,7 @@ export default function ProfileMenuDeck({ admin = false, stats = {}, onAction })
               style={{ top: `${row.top * 100}%`, height: `${row.height * 100}%`, gridTemplateColumns: `repeat(${row.actions.length}, minmax(0, 1fr))` }}
             >
               {row.actions.map((action) => {
-                const value = formatValue(stats[action]);
+                const value = formatValue(stats[action], row.valueStyle === 'amount');
                 return (
                   <button
                     key={action}
@@ -77,10 +79,12 @@ export default function ProfileMenuDeck({ admin = false, stats = {}, onAction })
                     onClick={() => onAction?.(action)}
                     aria-label={LABELS[action]}
                     className="relative rounded-xl transition-colors active:bg-white/10"
+                    style={row.valueStyle === 'amount' ? { containerType: 'inline-size' } : undefined}
                   >
                     {row.valueStyle && value && (
                       <span
-                        className={`absolute left-1/2 max-w-full -translate-x-1/2 overflow-hidden px-1 text-center ${row.valueStyle === 'nav' ? 'bottom-[4%]' : 'bottom-[9%]'} ${VALUE_CLASS[row.valueStyle]} whitespace-nowrap`}
+                        className={`absolute text-center ${row.valueStyle === 'nav' ? 'bottom-[4%] left-1/2 max-w-full -translate-x-1/2 overflow-hidden px-1' : 'bottom-[9%] left-[38%] right-[8%]'} ${VALUE_CLASS[row.valueStyle]} whitespace-nowrap`}
+                        style={row.valueStyle === 'amount' ? { fontSize: `min(14px, ${80 / Math.max(6, value.length)}cqw)` } : undefined}
                       >
                         {value}
                       </span>
