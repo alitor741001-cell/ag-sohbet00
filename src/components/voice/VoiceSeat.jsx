@@ -17,7 +17,6 @@ const CELL = { xs: 'h-[42px] w-[42px]', sm: 'h-[52px] w-[52px]', md: 'h-[68px] w
 const FACE = { xs: 'h-10 w-10', sm: 'h-12 w-12', md: 'h-14 w-14', lg: 'h-20 w-20', xl: 'h-[88px] w-[88px]' };
 const RING = { xs: 'h-10 w-10', sm: 'h-12 w-12', md: 'h-14 w-14', lg: 'h-20 w-20', xl: 'h-[88px] w-[88px]' };
 const EMPTY = { xs: 'h-10 w-10', sm: 'h-12 w-12', md: 'h-14 w-14', lg: 'h-20 w-20', xl: 'h-[88px] w-[88px]' };
-const BADGE = { xs: 'translate-x-[3px] translate-y-[3px]', sm: 'translate-x-[5px] translate-y-[5px]', md: 'translate-x-[9px] translate-y-[9px]', lg: 'translate-x-[12px] translate-y-[12px]', xl: 'translate-x-[14px] translate-y-[14px]' };
 // İsim alanı koltuk genişliğini aşmaz: uzun isimler satırı yana taşırmaz.
 const NAME = { xs: 'max-w-[42px]', sm: 'max-w-[52px]', md: 'max-w-[68px]', lg: 'max-w-[88px]', xl: 'max-w-[96px]' };
 
@@ -28,7 +27,6 @@ function VoiceSeat({ seat, index, size = 'md', musicPlaying, speaking, isSelf, i
   const face = FACE[size] || FACE.md;
   const ring = RING[size] || RING.md;
   const emptyCircle = EMPTY[size] || EMPTY.md;
-  const badge = BADGE[size] || BADGE.md;
   const nameWidth = NAME[size] || NAME.md;
   // Bekleyen koltuk daveti: kişi profiliyle görünür ama mikrofonu ve konuşması kapalıdır.
   const pending = Boolean(seat?.pending);
@@ -76,15 +74,18 @@ function VoiceSeat({ seat, index, size = 'md', musicPlaying, speaking, isSelf, i
         {musicPlaying && <span aria-label="Müzik çalıyor" className={`pointer-events-none absolute ${ring} z-[7] rounded-full room-music-glow`} />}
         {speaking && !muted && !pending && <VoiceSpeakingWave index={index} ring={ring} theme={!hidden && vipLook(profile, 'mic')} />}
         {halo && <span className="pointer-events-none absolute inset-0 z-[6] rounded-full" style={{ boxShadow: halo }} />}
-        <VoiceSeatPortrait seat={seat} animated={!hidden && !!vipLook(profile, 'avatar')} className={face} variant={index} theme={!hidden && vipLook(profile, 'frame')} cosmeticChoice={!hidden ? cosmeticChoice : null} />
+        <span className={`relative ${face}`}>
+          <VoiceSeatPortrait seat={seat} animated={!hidden && !!vipLook(profile, 'avatar')} className="h-full w-full" variant={index} theme={!hidden && vipLook(profile, 'frame')} cosmeticChoice={!hidden ? cosmeticChoice : null} />
+          {/* Mikrofon kapalı rozeti çemberin sağ alt köşesinde durur. */}
+          {muted && (
+            <span title="Mikrofon kapalı" aria-label="Mikrofon kapalı" className="absolute -bottom-1 -right-1 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-destructive">
+              <MicOff className="h-3 w-3 text-white" />
+            </span>
+          )}
+        </span>
         {pending && (
           <span aria-label="Koltuk daveti onayı bekleniyor" title="Koltuk daveti onayı bekleniyor" className="pointer-events-none absolute -bottom-0.5 -left-0.5 z-10 flex h-4 w-4 items-center justify-center rounded-full border border-premium-gold/70 bg-black/85">
             <Hourglass className="h-2.5 w-2.5 text-premium-gold" />
-          </span>
-        )}
-        {muted && (
-          <span title="Mikrofon kapalı" aria-label="Mikrofon kapalı" className={`absolute -bottom-0.5 -right-0.5 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-destructive ${badge}`}>
-            <MicOff className="h-3 w-3 text-white" />
           </span>
         )}
         {gifted && (
