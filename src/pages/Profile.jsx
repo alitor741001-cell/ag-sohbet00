@@ -13,7 +13,6 @@ import ProfileFixedHero from '@/components/profile/fantasy/ProfileFixedHero';
 import ProfileMenuDeck from '@/components/profile/fantasy/ProfileMenuDeck';
 import { isModerator } from '@/lib/roles';
 import { giftBoxLocked } from '@/lib/giftAccess';
-import BlockedUsers from '@/components/profile/BlockedUsers';
 import PrivacyPolicyBody from '@/components/profile/PrivacyPolicyBody';
 
 import GiftBoxPanel from '@/components/profile/GiftBoxPanel';
@@ -41,7 +40,7 @@ export default function Profile() {
   const [vipBagOpen, setVipBagOpen] = useState(false);
   const [storeOpen, setStoreOpen] = useState(false);
   const [coinShopOpen, setCoinShopOpen] = useState(false);
-  const [blockedOpen, setBlockedOpen] = useState(false);
+
   const [uploading, setUploading] = useState(false);
   const [form, setForm] = useState({ avatar: '' });
 
@@ -182,7 +181,7 @@ export default function Profile() {
               else if (key === 'level') navigate('/seviye');
               else if (key === 'agency') navigate('/ajans');
               else if (key === 'admin') navigate('/admin');
-              else if (key === 'blocked') setBlockedOpen(true);
+              else if (key === 'blocked') navigate('/profil/engellenen');
               else if (key === 'privacy') setPrivacyOpen(true);
               else if (key === 'settings') navigate('/profil/ayarlar');
             }}
@@ -206,17 +205,6 @@ export default function Profile() {
       />
 
       <SocialListDialog open={!!socialList} kind={socialList} onClose={() => { setSocialList(null); loadSocial(); }} />
-
-      <Dialog open={blockedOpen} onOpenChange={(value) => !value && setBlockedOpen(false)}>
-        <DialogContent className="max-h-[88vh] max-w-2xl gap-0 border-[#7dd3fc]/30 bg-[linear-gradient(180deg,#0B2A52,#05122A)] p-0 text-white">
-          <DialogHeader className="border-b border-[#7dd3fc]/20 px-5 pb-3 pt-5 text-left">
-            <DialogTitle className="text-[#a5e4ff]">Engellenen Hesaplar</DialogTitle>
-          </DialogHeader>
-          <div className="max-h-[68vh] overflow-y-auto overscroll-contain px-5 pb-8 pt-4">
-            <BlockedUsers />
-          </div>
-        </DialogContent>
-      </Dialog>
 
       <Dialog open={privacyOpen} onOpenChange={(value) => !value && setPrivacyOpen(false)}>
         <DialogContent className="max-h-[88vh] max-w-2xl gap-0 border-[#7dd3fc]/30 bg-[linear-gradient(180deg,#0B2A52,#05122A)] p-0 text-white">

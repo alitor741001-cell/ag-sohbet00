@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ChevronRight, LogOut, ShieldOff } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
@@ -8,12 +8,7 @@ import ProfileDetailsSection from '@/components/profile/ProfileDetailsSection';
 import ProfileSettings from '@/components/profile/ProfileSettings';
 import DeleteAccountSection from '@/components/profile/DeleteAccountSection';
 
-const CARD_STYLE = {
-  background: 'linear-gradient(160deg, rgba(18,58,112,0.95), rgba(6,22,48,0.95))',
-  border: '1px solid rgba(125,211,252,0.35)',
-};
-
-/** Ayarlar sayfası: kişisel bilgiler, eklentiler (tema/gizli hesap/şifre) ve hesap işlemleri tek ekranda. */
+/** Ayarlar sayfası: kişisel bilgiler ve eklentiler; çıkış ile hesap silme en altta ayrı durur. */
 export default function ProfileSettingsPage() {
   const { user, reload } = useCurrentUser();
   const { toast } = useToast();
@@ -64,53 +59,76 @@ export default function ProfileSettingsPage() {
   return (
     <div className="dark min-h-screen text-white">
       <div className="mx-auto w-full max-w-2xl px-4 pt-3 md:max-w-3xl xl:max-w-4xl">
-        <div className="mb-3 flex items-center gap-2">
+        <div className="mb-4 flex items-center gap-2">
           <button
             type="button"
             onClick={() => navigate('/profil')}
             aria-label="Geri"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#7dd3fc]/35 bg-[#0B2A52] text-[#a5e4ff] active:scale-95"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/15 bg-white/[0.06] text-white active:scale-95"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
           <h1 className="text-lg font-black text-white">Ayarlar</h1>
         </div>
 
-        <div className="space-y-4 pb-10">
-          <Section title="Kişisel Bilgiler" subtitle="Hesap bilgilerin ve profil detayların">
-            <ProfileDetailsSection
-              user={user}
-              editing={editing}
-              form={form}
-              setForm={setForm}
-              onSave={save}
-              onEdit={startEdit}
-              onCancel={() => setEditing(false)}
-              saving={saving}
-            />
-          </Section>
+        <div className="pb-10">
+          <div className="mb-3">
+            <h2 className="text-sm font-black text-white">Kişisel Bilgiler</h2>
+            <p className="text-[11px] font-semibold text-white/45">Hesap bilgilerin ve profil detayların</p>
+          </div>
+          <ProfileDetailsSection
+            user={user}
+            editing={editing}
+            form={form}
+            setForm={setForm}
+            onSave={save}
+            onEdit={startEdit}
+            onCancel={() => setEditing(false)}
+            saving={saving}
+          />
 
-          <Section title="Eklentiler" subtitle="Tema, gizli hesap ve şifre">
-            <ProfileSettings user={user} onUpdated={reload} />
-          </Section>
+          <div className="mb-3 mt-6">
+            <h2 className="text-sm font-black text-white">Eklentiler</h2>
+            <p className="text-[11px] font-semibold text-white/45">Tema, gizli hesap ve şifre</p>
+          </div>
+          <ProfileSettings user={user} onUpdated={reload} />
 
-          <Section title="Hesap" subtitle="Hesabını kalıcı olarak sil">
+          {/* Çıkış ve hesap silme ayarların dışında, en altta ayrı durur. */}
+          <div className="mt-8 space-y-2.5">
+            <button
+              type="button"
+              onClick={() => base44.auth.logout('/login')}
+              className="flex w-full items-center gap-3 rounded-2xl border border-white/12 bg-white/[0.04] px-3.5 py-3 text-left active:scale-[0.99]"
+            >
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/[0.06]">
+                <LogOut className="h-[18px] w-[18px] text-white/75" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-bold text-white">Çıkış Yap</span>
+                <span className="block truncate text-[11px] text-white/45">Hesabından güvenli biçimde çık</span>
+              </span>
+              <ChevronRight className="h-4 w-4 shrink-0 text-white/30" />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => navigate('/profil/engellenen')}
+              className="flex w-full items-center gap-3 rounded-2xl border border-white/12 bg-white/[0.04] px-3.5 py-3 text-left active:scale-[0.99]"
+            >
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/[0.06]">
+                <ShieldOff className="h-[18px] w-[18px] text-white/75" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-bold text-white">Engellenen Hesaplar</span>
+                <span className="block truncate text-[11px] text-white/45">Engellediğin üyeleri yönet</span>
+              </span>
+              <ChevronRight className="h-4 w-4 shrink-0 text-white/30" />
+            </button>
+
             <DeleteAccountSection />
-          </Section>
+          </div>
         </div>
       </div>
-    </div>
-  );
-}
-
-function Section({ title, subtitle, children }) {
-  return (
-    <div className="rounded-2xl p-3.5" style={CARD_STYLE}>
-      <div className="mb-3">
-        <p className="text-sm font-black text-white">{title}</p>
-        <p className="text-[11px] font-semibold text-[#a5e4ff]/70">{subtitle}</p>
-      </div>
-      {children}
     </div>
   );
 }
