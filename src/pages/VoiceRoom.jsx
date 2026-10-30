@@ -50,6 +50,7 @@ import useRoomSwipeNav from '@/hooks/useRoomSwipeNav';
 import useChatDockToSeat from '@/hooks/useChatDockToSeat';
 import useVerticalSwipe from '@/hooks/useVerticalSwipe';
 import useOfflineExit from '@/hooks/useOfflineExit';
+import useGameOpen from '@/hooks/useGameOpen';
 import useOfflineParticipantCleanup from '@/hooks/useOfflineParticipantCleanup';
 // Oyun paneli ağır: oda açılışında indirilmez, yalnızca açıldığında yüklenir.
 const GamePanel = lazy(() => import('@/components/games/GamePanel'));
@@ -136,6 +137,8 @@ export default function VoiceRoom() {
   }, []);
   // Hediye efektleri tercihi: kapalıyken atılan hediyelerin görselleri gösterilmez.
   const { giftEffects, setGiftEffects } = useGiftEffects();
+  // Oyun açıkken hediye ve roket animasyonları oyunun üstüne binmez.
+  const gameOpen = useGameOpen();
 
   // Hediye Tahtası: katalog, K seviyeleri, bakiye ve gelen hediye animasyonları.
   const { gifts, tiers } = useGiftCatalog();
@@ -159,6 +162,8 @@ export default function VoiceRoom() {
   // Yönetici görünmez (ghost) katılabilir: katılımcı listesinde görünmez, atılmış sayılmaz.
   const ghostRef = useRef(false);
   const keepSeatRef = useRef(false);
+  // Sayfadan ayrılırken balonun göstereceği oda bilgisi güncel tutulur.
+  const roomInfoRef = useRef(null);
   const giftFlashRef = useRef(null);
   const giftBoardRef = useRef(0);
   const giftRefreshTimerRef = useRef(null);
@@ -313,6 +318,21 @@ export default function VoiceRoom() {
       return next.length === prev.length ? prev : next;
     });
   }, [giftPeople, selectedIds.length]);
+
+  // Oda bilgisi her çizimde tazelenir: sayfadan ayrılışta balon güncel odayı gösterir.
+  roomInfoRef.current = { name: room?.name, owner_id: room?.owner_id, owner_name: room?.owner_name };
+
+  // Başka sayfaya geçişte oda kapanmaz, küçültülür: ses ve koltuk sürer, sağ alttaki
+  // balondan odaya dönülür. Bu etki ses oturumundan önce tanımlıdır; böylece ses
+  // bağlantısı kapanmadan küçültme kaydı yazılır.
+  useEffect(() => () => {
+    if (!joinedRef.current || keepSeatRef.current || isRoomMinimized(id)) return;
+    // Başka bir odanın içine geçildiyse eski oda kapatılır, küçültülmez.
+    const nextRoomId = window.location.pathname.match(/^\/sesli-oda\/([^/]+)/)?.[1] || '';
+    if (nextRoomId && nextRoomId !== id) return;
+    const info = roomInfoRef.current || {};
+    setMinimizedRoom({ id, name: info.name || 'Sesli oda', owner_id: info.owner_id, owner_name: info.owner_name, path: `/sesli-oda/${id}` });
+  }, [id]);
 
   const voice = useVoiceChat({
     roomId: id,
@@ -1433,8 +1453,8 @@ export default function VoiceRoom() {
         sendDisabled={!selectedGift || !selectedIds.length}
       />
 
-      <GiftScene key={overlayAlert?.key} alert={giftEffects && !bigGift ? overlayAlert : null} tiers={tiers} gifts={gifts} />
-      {giftEffects && <BigGiftStage alert={bigGift} gifts={gifts} />}
+      <GiftScene key={overlayAlert?.key} alert={giftEffects && !bigGift && !gameOpen ? overlayAlert : null} tiers={tiers} gifts={gifts} />
+      {giftEffects && !gameOpen && <BigGiftStage alert={bigGift} gifts={gifts} />}
 
       <GiftEffectsSheet
         open={settingsOpen}
