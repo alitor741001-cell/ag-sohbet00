@@ -4,12 +4,6 @@ import { openInBrowser } from '@/lib/filmSearch';
 // Telif hakkına uygun, Türkiye'de erişilebilen yasal izleme platformları.
 const PLATFORMS = [
   { name: 'Netflix', url: 'https://www.netflix.com/tr/', tone: 'from-[#e50914]/35 to-transparent', mark: 'N' },
-  { name: 'Prime Video', url: 'https://www.primevideo.com/', tone: 'from-[#00a8e1]/35 to-transparent', mark: 'P' },
-  { name: 'Disney+', url: 'https://www.disneyplus.com/tr-tr', tone: 'from-[#1f80e0]/35 to-transparent', mark: 'D+' },
-  { name: 'BluTV', url: 'https://www.blutv.com/', tone: 'from-[#0f6fff]/35 to-transparent', mark: 'B' },
-  { name: 'Exxen', url: 'https://www.exxen.com/', tone: 'from-[#f2ff00]/30 to-transparent', mark: 'E' },
-  { name: 'MUBI', url: 'https://mubi.com/tr', tone: 'from-[#ffffff]/20 to-transparent', mark: 'M' },
-  { name: 'TRT İzle', url: 'https://www.trtizle.com/', tone: 'from-[#00b3a4]/35 to-transparent', mark: 'T' },
   { name: 'YouTube', url: 'https://www.youtube.com/', tone: 'from-[#ff0033]/35 to-transparent', mark: '▶' },
 ];
 
