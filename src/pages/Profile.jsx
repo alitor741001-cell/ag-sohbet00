@@ -146,8 +146,9 @@ export default function Profile() {
 
   return (
     <div
-      className="dark relative min-h-screen pb-6 text-white"
+      className="dark fixed inset-x-0 top-0 z-10 overflow-hidden text-white"
       style={{
+        height: 'var(--app-height)',
         marginLeft: 'calc(-1 * env(safe-area-inset-left, 0px))',
         marginRight: 'calc(-1 * env(safe-area-inset-right, 0px))',
       }}
@@ -156,7 +157,7 @@ export default function Profile() {
       <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10 overflow-hidden bg-black">
         <img src={ART.pageBg} alt="" draggable={false} className="h-full w-full select-none object-cover" />
       </div>
-      <div className="flex min-h-[var(--app-height)] w-full flex-col">
+      <div className="mx-auto flex h-full w-full max-w-[560px] flex-col">
       <ProfileFixedHero
         user={user}
         avatar={form.avatar}
@@ -165,7 +166,7 @@ export default function Profile() {
         vipLevel={vipLevelOf(user)}
       />
 
-      <div className="flex min-h-0 flex-1 flex-col px-4 pb-[env(safe-area-inset-bottom)]">
+      <div className="flex min-h-0 flex-1 flex-col px-4 pb-[calc(14vh+env(safe-area-inset-bottom))]">
           <ProfileMenuDeck
             admin={isModerator(user)}
             stats={{
