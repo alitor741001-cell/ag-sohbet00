@@ -1,17 +1,17 @@
 import { useState } from 'react';
-import { ExternalLink, Search } from 'lucide-react';
-import { SEARCH_MODES, googleSearchUrl } from '@/lib/filmSearch';
+import { Loader2, Search } from 'lucide-react';
+import { SEARCH_MODES } from '@/lib/filmSearch';
 
-/** Film arama kutusu: yazılan metinle gerçek Google sonuçları yeni sekmede açılır. */
-export default function FilmSearchBar({ onSearch }) {
+/** Film arama kutusu: arama uygulama içinde yapılır, seçilen film uygulama içinde oynar. */
+export default function FilmSearchBar({ onSearch, loading }) {
   const [text, setText] = useState('');
   const [mode, setMode] = useState('title');
-  const url = googleSearchUrl(text, mode);
+  const valid = text.trim().length >= 2;
 
   const submit = (event) => {
     event.preventDefault();
-    if (!url) return;
-    onSearch?.(url);
+    if (!valid || loading) return;
+    onSearch?.({ text: text.trim(), mode });
   };
 
   return (
@@ -49,17 +49,18 @@ export default function FilmSearchBar({ onSearch }) {
           </div>
           <button
             type="submit"
-            disabled={!url}
+            disabled={!valid || loading}
             className="flex h-12 shrink-0 items-center gap-1.5 rounded-2xl px-4 text-sm font-black text-black disabled:opacity-40"
             style={{ background: 'linear-gradient(135deg,#ffd9cf,#ef4343 60%,#b91c1c)' }}
           >
-            Ara <ExternalLink className="h-4 w-4" />
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+            Ara
           </button>
         </div>
 
         <p className="mt-3 flex items-start gap-1.5 text-[11px] leading-snug text-white/45">
-          <ExternalLink className="mt-[1px] h-3 w-3 shrink-0" />
-          Arama, Google'da gerçek sonuçlarla yeni sekmede açılır. Uygulama sonuç üretmez, kendi tarayıcınızda gösterir.
+          <Search className="mt-[1px] h-3 w-3 shrink-0" />
+          Arama uygulamanın içinde yapılır, seçtiğiniz film uygulamadan çıkmadan oynar.
         </p>
       </form>
     </section>

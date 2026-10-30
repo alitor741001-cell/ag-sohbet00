@@ -1,18 +1,46 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Clapperboard } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
 import FilmSearchBar from '@/components/film/FilmSearchBar';
-import FilmAppSearch from '@/components/film/FilmAppSearch';
+import FilmSearchResults from '@/components/film/FilmSearchResults';
 import FilmPlayOverlay from '@/components/film/FilmPlayOverlay';
 import FilmPlayerPanel from '@/components/film/FilmPlayerPanel';
 import LegalPlatformGrid from '@/components/film/LegalPlatformGrid';
-import { openInBrowser } from '@/lib/filmSearch';
 
-/** Film İzle: uygulama içi arama ve oynatma, Google araması ve yasal platformlar. */
+/** Arama türüne göre sorgu sonu: oyuncu ve tür aramaları da film sonucu getirir. */
+const MODE_SUFFIX = { title: '', actor: ' oyuncusu filmleri', genre: ' filmi' };
+/** YouTube kutusu: uygulama içinde oynayan filmleri listeler. */
+const YOUTUBE_QUERY = 'türkçe dublaj tek parça full film';
+
+/** Film İzle: arama ve oynatma uygulamanın içinde; sayfadan çıkılmaz. */
 export default function FilmWatch() {
   const navigate = useNavigate();
-  // Seçilen film sayfanın üstünde oynar; sayfa yapısı aynı kalır.
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [searched, setSearched] = useState(false);
+  // Seçilen film uygulamanın üstünde oynar; sayfa yapısı aynı kalır.
   const [film, setFilm] = useState(null);
+
+  const runSearch = async (text, mode = 'title') => {
+    if (loading) return;
+    setLoading(true);
+    setError('');
+    setSearched(true);
+    try {
+      const response = await base44.functions.invoke('search-films', {
+        query: `${text}${MODE_SUFFIX[mode] || ''}`.trim(),
+      });
+      setResults(response.data?.results || []);
+    } catch (e) {
+      setResults([]);
+      setError(e.response?.data?.error || 'Film aranamadı, tekrar deneyin.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const goBack = () => {
     if (window.history.length > 1) navigate(-1);
     else navigate('/');
@@ -47,10 +75,16 @@ export default function FilmWatch() {
       </header>
 
       <div className="flex flex-col gap-5 pt-4">
-        <FilmAppSearch onPick={setFilm} />
-        <FilmSearchBar onSearch={(url) => openInBrowser(url)} />
+        <FilmSearchBar onSearch={({ text, mode }) => runSearch(text, mode)} loading={loading} />
+        <FilmSearchResults
+          results={results}
+          loading={loading}
+          error={error}
+          searched={searched}
+          onPick={setFilm}
+        />
         <FilmPlayerPanel />
-        <LegalPlatformGrid />
+        <LegalPlatformGrid onYouTube={() => runSearch(YOUTUBE_QUERY)} />
       </div>
 
       <FilmPlayOverlay film={film} onClose={() => setFilm(null)} />
