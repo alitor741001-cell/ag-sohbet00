@@ -14,7 +14,6 @@ import NeonHero from '@/components/profile/neon/NeonHero';
 import NeonAgencyBar from '@/components/profile/neon/NeonAgencyBar';
 import NeonStats from '@/components/profile/neon/NeonStats';
 import NeonWalletCards from '@/components/profile/neon/NeonWalletCards';
-import DragonWalletTile from '@/components/profile/neon/DragonWalletTile';
 import NeonIconGrid from '@/components/profile/neon/NeonIconGrid';
 import NeonFooterMenu from '@/components/profile/neon/NeonFooterMenu';
 import NeonPanel from '@/components/profile/neon/NeonPanel';
@@ -211,9 +210,6 @@ export default function Profile() {
               onVip={() => navigate('/vip')}
               onHistory={() => setActivityOpen(true)}
             />
-            <div className="grid grid-cols-2 gap-2.5">
-              <DragonWalletTile kind="vip" label="Vip" value={`${vipCount} VIP`} onClick={() => navigate('/vip')} />
-            </div>
             <NeonIconGrid
               vipCount={vipCount}
               onSelect={(key) => {

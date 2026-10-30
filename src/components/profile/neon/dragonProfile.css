@@ -36,20 +36,8 @@
 .dragon-hero > .flex > .relative > svg { width: 38px; height: 30px; top: -12px; }
 .dragon-hero .flex-wrap { gap: 5px; }
 .dragon-hero .flex-wrap > span { padding-inline: 8px; font-size: clamp(9px, 2.4vw, 14px); border: 1px solid hsl(var(--dragon-gold) / .65); }
-.dragon-hero > .mt-3 { justify-content: center; flex-wrap: nowrap; gap: 14px; }
-.dragon-hero > .mt-3 > span { flex: 1; max-width: 190px; justify-content: center; height: 34px; border-radius: 999px; border: 1.5px solid hsl(var(--dragon-fire)); background: linear-gradient(180deg, hsl(0 70% 18% / .85), hsl(var(--dragon-night) / .9)); color: hsl(var(--dragon-ink)); box-shadow: 0 0 12px hsl(var(--dragon-fire) / .6), inset 0 0 8px hsl(var(--dragon-fire) / .35); font-size: clamp(10px, 2.6vw, 13px); letter-spacing: .04em; }
-.dragon-hero > .mt-3 > span svg { color: hsl(var(--dragon-gold)); }
-.dragon-hero .flex-wrap > span { height: 28px; border-radius: 999px; font-weight: 900; border-width: 1.5px; }
-.dragon-hero .flex-wrap > span:first-child { background: linear-gradient(180deg, hsl(170 60% 18%), hsl(190 70% 8%)) !important; border-color: hsl(160 70% 50%); }
-.dragon-profile, .dragon-profile button, .dragon-profile h1 { font-family: var(--font-display); }
-.dragon-profile .font-black, .dragon-profile h1 { font-weight: 900; letter-spacing: .01em; text-shadow: 0 1px 0 hsl(var(--dragon-night)), 0 0 8px hsl(var(--dragon-ice) / .45); }
-.dragon-menu .grid { position: relative; }
-.dragon-menu .grid > button + button { border-left: 1px solid hsl(var(--dragon-ice) / .25); }
-.dragon-menu button > span:first-child { border-radius: 999px; background: radial-gradient(circle at 50% 40%, hsl(var(--dragon-ice) / .45), hsl(var(--dragon-night)) 70%) !important; outline: 2px solid hsl(var(--dragon-gold) / .8); outline-offset: 1px; box-shadow: 0 0 14px hsl(var(--dragon-ice) / .7) !important; }
-.dragon-menu button > span:first-child > span { top: -14px !important; right: -10px !important; font-size: 10px !important; padding: 1px 7px !important; }
-.dragon-footer-old > svg { box-sizing: content-box; padding: 8px; border-radius: 999px; outline: 2px solid hsl(var(--dragon-gold) / .75); background: radial-gradient(circle, hsl(var(--dragon-ice) / .35), hsl(var(--dragon-night))); }
-.dragon-footer-old:first-child > svg { background: radial-gradient(circle, hsl(0 80% 45%), hsl(0 70% 15%)); color: hsl(var(--dragon-ink)) !important; }
-.dragon-wallet-tile button { min-height: 88px; }
+.dragon-hero > .mt-3 { justify-content: center; }
+
 .dragon-agency p:first-child { color: hsl(var(--dragon-gold)); font-size: clamp(12px, 3vw, 18px); }
 .dragon-agency p:last-child { color: hsl(var(--dragon-fire)); }
 .dragon-agency svg { width: 29px; height: 29px; color: hsl(var(--dragon-fire)); filter: drop-shadow(0 0 4px currentColor); }

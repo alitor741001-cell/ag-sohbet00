@@ -12,5 +12,6 @@ export default function NeonWalletCards({ coins, score, diamonds, diamondScore, 
         <Gift className="h-4 w-4" />
       </button>
     </div>
+    <DragonWalletTile kind="vip" label="Vip" value={`${vipCount} VIP`} onClick={onVip} />
   </div>;
 }
