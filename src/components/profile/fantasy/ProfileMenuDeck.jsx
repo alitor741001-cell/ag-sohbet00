@@ -97,9 +97,7 @@ export default function ProfileMenuDeck({ admin = false, stats = {}, onAction })
                           fontSize: `min(${action === 'diamonds' ? 12 : 13}px, ${(action === 'diamonds' ? 70 : 74) / Math.max(6, value.length)}cqw)`,
                           left: action === 'coins' ? '65%' : undefined,
                           transform: action === 'coins' ? 'translateX(-50%)' : 'translateX(calc(-50% - 7%))',
-                        } : {
-                          left: action === 'friends' ? '56%' : action === 'visitors' ? '44%' : '50%',
-                        }}
+                        } : undefined}
                       >
                         {value}
                       </span>
