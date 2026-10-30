@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
+import { Clapperboard } from 'lucide-react';
 import RoomDiscovery from '@/components/home/RoomDiscovery';
 import EmptyRoomsArt from '@/components/home/EmptyRoomsArt';
 import DesignBottomNav, { NAV_HEIGHT } from '@/components/layout/DesignBottomNav';
@@ -56,6 +57,16 @@ export default function Home() {
         </div>
       </div>
       {showEmpty && <EmptyRoomsArt />}
+      {/* Menüde Film İzle girişi: alt menünün hemen üstünde, sağda durur. */}
+      <Link
+        to="/film-izle"
+        aria-label="Film İzle"
+        className="absolute right-3 z-30 flex items-center gap-1.5 rounded-full border border-[#ef4343]/60 bg-black/80 px-3.5 py-2 text-[12px] font-extrabold text-white shadow-[0_0_18px_rgba(239,67,67,0.45)] backdrop-blur active:scale-95"
+        style={{ bottom: `calc(${NAV_HEIGHT} + 0.75rem)` }}
+      >
+        <Clapperboard className="h-4 w-4 text-[#ef4343]" />
+        Film İzle
+      </Link>
       <DesignBottomNav />
     </div>
   );

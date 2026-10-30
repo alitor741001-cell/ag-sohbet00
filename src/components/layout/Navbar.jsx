@@ -11,6 +11,7 @@ const links = [
   { label: 'Açık Odalar', path: '/acik-odalar' },
   { label: 'Oda Kur', path: '/oda-kur' },
   { label: 'Arkadaşlar', path: '/arkadaslar' },
+  { label: 'Film İzle', path: '/film-izle' },
 ];
 
 export default function Navbar() {

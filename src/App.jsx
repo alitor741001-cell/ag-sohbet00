@@ -31,6 +31,7 @@ const AgencyPage = lazy(() => import('@/pages/AgencyPage'));
 const Support = lazy(() => import('@/pages/SupportEntry'));
 const Notifications = lazy(() => import('@/pages/Notifications'));
 const OpenRooms = lazy(() => import('@/pages/OpenRooms'));
+const FilmWatch = lazy(() => import('@/pages/FilmWatch'));
 const MaintenanceMode = lazy(() => import('@/pages/MaintenanceMode'));
 const Profile = lazy(() => import('@/pages/Profile'));
 const ProfileSettingsPage = lazy(() => import('@/pages/ProfileSettingsPage'));
@@ -114,6 +115,7 @@ const AuthenticatedApp = () => {
           <Route path="/odalar" element={<Navigate to="/" replace />} />
           <Route path="/oda/:id" element={<WatchParty />} />
           <Route path="/oda-kur" element={<CreateRoom />} />
+          <Route path="/film-izle" element={<FilmWatch />} />
           <Route path="/arama" element={<Search />} />
           <Route path="/vip" element={<VipLevels />} />
           <Route path="/seviye" element={<LevelPage />} />
