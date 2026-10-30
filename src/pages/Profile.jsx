@@ -1,81 +1,283 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { base44 } from '@/api/base44Client';
+import PullToRefresh from '@/components/home/PullToRefresh';
 import { useCurrentUser } from '@/lib/useCurrentUser';
-import { Image } from '@/components/ui/image';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
-import { giftBoxLocked } from '@/lib/giftAccess';
-import Zone from '@/components/profile/design/Zone';
-import useProfileDesignData from '@/components/profile/design/useProfileDesignData';
-import GiftBoxPanel from '@/components/profile/GiftBoxPanel';
-import GiftSendersPanel from '@/components/profile/GiftSendersPanel';
-import VipBagPanel from '@/components/profile/VipBagPanel';
-import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
+import { findProtectedName } from '@/lib/protectedNames';
+import { vipLevelOf } from '@/lib/userLevels';
+
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import useFriends from '@/hooks/useFriends';
 import SocialListDialog from '@/components/profile/social/SocialListDialog';
-import BlockedUsers from '@/components/profile/BlockedUsers';
-import PrivacyPolicyBody from '@/components/profile/PrivacyPolicyBody';
+import ProfileFixedHero from '@/components/profile/fantasy/ProfileFixedHero';
+import ProfileStatBar from '@/components/profile/fantasy/ProfileStatBar';
+import ProfileTwinCards from '@/components/profile/fantasy/ProfileTwinCards';
+import ProfileBalanceCards from '@/components/profile/fantasy/ProfileBalanceCards';
+import ProfileIconGrid from '@/components/profile/fantasy/ProfileIconGrid';
+import ProfileMenuCard from '@/components/profile/fantasy/ProfileMenuCard';
+import { giftBoxLocked } from '@/lib/giftAccess';
+import ProfileDetailsSection from '@/components/profile/ProfileDetailsSection';
 import ProfileSettings from '@/components/profile/ProfileSettings';
+import PrivacyPolicyBody from '@/components/profile/PrivacyPolicyBody';
 
-const DESIGN = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/a360d8cea_IMG_0483.jpg';
-const fmt = (n) => Number(n || 0).toLocaleString('tr-TR');
-const Val = ({ children, color = '#fff' }) => <span className="truncate text-[min(3.6vw,15px)] font-extrabold" style={{ color, textShadow: '0 1px 3px #000' }}>{children}</span>;
+import DeleteAccountSection from '@/components/profile/DeleteAccountSection';
+import GiftBoxPanel from '@/components/profile/GiftBoxPanel';
+import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
+import CoinActivityPanel from '@/components/profile/CoinActivityPanel';
+import VipBagPanel from '@/components/profile/VipBagPanel';
+import StorePanel from '@/components/store/StorePanel';
+import useWalletCoinsLive from '@/hooks/useWalletCoinsLive';
+import useGiftSummaryLive from '@/hooks/useGiftSummaryLive';
 
+const EMPTY_FORM = { username: '', full_name: '', phone: '', avatar: '', birth_date: '' };
+
+/** Profil sayfası: cüzdan, kişisel bilgiler, eklentiler (ayarlar) ve hesap işlemleri. */
 export default function Profile() {
-  const { user, reload } = useCurrentUser();
-  const navigate = useNavigate();
+  const { user, reload, setUser } = useCurrentUser();
   const { toast } = useToast();
-  const { wallet, profile, vipCount, counts } = useProfileDesignData(user);
-  const [panel, setPanel] = useState(null);
-  const [list, setList] = useState(null);
-  const [sheet, setSheet] = useState(null);
-  if (!user) return null;
+  const location = useLocation();
+  const navigate = useNavigate();
+  // Bölümler kapalı başlar; yalnızca kullanıcı dokununca açılır (ayar bağlantısı hariç).
+  const [openKey, setOpenKey] = useState(() => (new URLSearchParams(window.location.search).get('tab') === 'settings' ? 'settings' : null));
+  const [wallet, setWallet] = useState(null);
+  const [vipCount, setVipCount] = useState(0);
+  const [giftBoxOpen, setGiftBoxOpen] = useState(false);
+  const [privacyOpen, setPrivacyOpen] = useState(false);
+  // Takip ve ziyaretçi sayaçları ile açılan liste: takip edilenler, takipçiler, ziyaretçiler.
+  const [social, setSocial] = useState({ following: 0, followers: 0, visitors: 0 });
+  const [socialList, setSocialList] = useState(null);
 
-  const p = profile || user;
-  const name = user.username || user.full_name || 'Profilim';
-  const isOwner = p.agency_role === 'owner' || !!p.owned_agency_id;
-  const isCaster = p.broadcaster_status === 'active' || !!p.agency_record_id;
-  const locked = giftBoxLocked(user);
-  const social = [['friends', 'Arkadaşlar', () => navigate('/arkadaslar')], ['following', 'Takip Edilenler'], ['followers', 'Takipçiler'], ['visitors', 'Ziyaretçiler']];
-  const sheets = { blocked: ['Engellenen Hesaplar', <BlockedUsers key="b" />], privacy: ['Gizlilik Politikası', <PrivacyPolicyBody key="p" />], settings: ['Ayarlar', <ProfileSettings key="s" user={user} onUpdated={reload} />] };
+  const [activityOpen, setActivityOpen] = useState(false);
+  const [vipBagOpen, setVipBagOpen] = useState(false);
+  const [storeOpen, setStoreOpen] = useState(false);
+  const [coinShopOpen, setCoinShopOpen] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [form, setForm] = useState(EMPTY_FORM);
+
+  // /profil?tab=settings bağlantısı Eklentiler bölümünü açar ve oraya kaydırır.
+  useEffect(() => {
+    if (new URLSearchParams(location.search).get('tab') !== 'settings') return;
+    setOpenKey('settings');
+    const frame = requestAnimationFrame(() => requestAnimationFrame(() => document.getElementById('eklentiler')?.scrollIntoView({ behavior: 'smooth', block: 'start' })));
+    return () => cancelAnimationFrame(frame);
+  }, [location.search]);
+
+  const loadVipCount = () => {
+    base44.functions.invoke('vip-bag', { action: 'list' })
+      .then((response) => setVipCount((response.data?.items || []).length))
+      .catch(() => {});
+  };
+
+  const loadWallet = () => {
+    base44.functions.invoke('gift-box', { action: 'summary' })
+      .then((response) => setWallet(response.data))
+      .catch(() => {});
+  };
+
+  // Profil açılışı tek çağrıda Supabase aynasından gelir: cüzdan ve VIP sayısı birlikte.
+  const loadSummary = () => {
+    base44.functions.invoke('profile-summary', {})
+      .then((response) => {
+        setVipCount(response.data?.vip_count ?? 0);
+      })
+      .catch(() => {});
+  };
+
+  const loadSocial = () => {
+    base44.functions.invoke('social-service', { action: 'stats' })
+      .then((response) => setSocial({
+        following: response.data?.following ?? 0,
+        followers: response.data?.followers ?? 0,
+        visitors: response.data?.visitors ?? 0,
+      }))
+      .catch(() => {});
+  };
+
+  useEffect(() => {
+    // Ayna hızlı açılış sağlar; bakiye hemen canlı değerle doğrulanır.
+    loadSummary();
+    loadWallet();
+    loadSocial();
+  }, []);
+
+  // Cüzdan canlıdır: oyun kazancı, hesaba gelen coin ve hediye harcaması bakiyeye
+  // anında işler — kart 5 saniyelik yenilemeyi beklemez.
+  useWalletCoinsLive(user?.id, (coins) => setWallet((prev) => ({ ...prev, coins })));
+  useGiftSummaryLive(user?.id, loadWallet);
+
+  // Arkadaş sayısı ortak arkadaşlık deposundan gelir.
+  const { relations } = useFriends();
+  const friendCount = relations.filter((relation) => relation.status === 'accepted').length;
+
+
+  // Sayfa kendini 5 saniyede bir sessizce tazeler: bakiye canlı değerden okunur, böylece
+  // hediye/oyun harcamaları ekranda eski tutarla kalmaz — yükleme göstergesi çıkmaz.
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'hidden') return;
+      loadWallet();
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    setForm({ username: user.username || '', full_name: user.full_name || '', phone: user.phone || '', avatar: user.avatar || '', birth_date: user.birth_date || '' });
+    if (!user.member_id) base44.functions.invoke('ensure-member-id').then(reload).catch(() => {});
+  }, [user?.id]);
+
+  const save = async () => {
+    if (saving || uploading) return;
+    const blocked = findProtectedName(form.username);
+    if (blocked) return toast({ title: 'Kullanıcı adı reddedildi', description: `'${blocked}' gibi yetki/rol kelimeleri kullanıcı adında kullanılamaz. Lütfen başka bir ad seçin.`, variant: 'destructive' });
+    setSaving(true);
+    try {
+      const { data } = await base44.functions.invoke('update-profile', { username: form.username, phone: form.phone, avatar: form.avatar, birth_date: form.birth_date });
+      if (!data?.ok || data.profile?.id !== user.id) throw new Error(data?.error || 'Kayıt doğrulanamadı. Lütfen tekrar deneyin.');
+      setUser((current) => ({ ...current, ...data.profile }));
+      setEditing(false);
+      toast({ title: 'Profil güncellendi' });
+    } catch (error) {
+      toast({ title: 'Profil güncellenemedi', description: error.response?.data?.error || error.message, variant: 'destructive' });
+    } finally { setSaving(false); }
+  };
+
+  const onAvatar = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (!['image/png', 'image/jpeg', 'image/webp', 'image/gif'].includes(file.type)) return toast({ title: 'PNG, JPG, WebP veya GIF seçin', variant: 'destructive' });
+    setUploading(true);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const { data } = await base44.functions.invoke('update-profile', { avatar: file_url });
+      if (!data?.ok || data.profile?.id !== user.id) throw new Error(data?.error || 'Fotoğraf kaydedilemedi.');
+      setForm((current) => ({ ...current, avatar: file_url }));
+      setUser((current) => ({ ...current, avatar: file_url }));
+      toast({ title: 'Profil fotoğrafı güncellendi' });
+    } catch (error) {
+      toast({ title: 'Yükleme hatası', description: error.response?.data?.error || error.message, variant: 'destructive' });
+    } finally { setUploading(false); event.target.value = ''; }
+  };
+
+  // Elmas/bakiye bölümüne giriş: yalnızca yayıncı hesaba açılır, sonra yüz doğrulaması istenir.
+  const openGiftBox = async () => {
+    if (giftBoxLocked(user)) {
+      toast({ title: 'Elmas ve bakiye bölümü yayıncılara açıktır', description: 'Yayıncı olduğunuzda elmas ve bakiye bölümünü kullanabilirsiniz.', variant: 'destructive' });
+      return;
+    }
+    setGiftBoxOpen(true);
+  };
+
+  if (!user) return <div className="dark min-h-screen p-6 text-white">Yükleniyor...</div>;
+  const isAdmin = user.role === 'admin';
+  const elmasLocked = giftBoxLocked(user);
+  const resetForm = () => setForm({ username: user.username || '', full_name: user.full_name || '', phone: user.phone || '', avatar: user.avatar || '', birth_date: user.birth_date || '' });
+  const toggle = (key) => setOpenKey((current) => (current === key ? null : key));
+  // Paket/abonelik sistemi kaldırıldı: üyelik süresi artık erişimi etkilemez.
 
   return (
-    <div className="design-screen z-0 overflow-hidden touch-none bg-[#02030c]" style={{ height: 'calc(var(--design-height) - 4rem - env(safe-area-inset-bottom))' }}>
-      <div className="relative mx-auto h-full" style={{ aspectRatio: '682 / 1024', maxWidth: '100%' }}>
-        <img src={DESIGN} alt="" draggable={false} className="absolute inset-0 h-full w-full select-none object-fill" />
-        <Zone x={98} y={112} w={120} h={120} className="overflow-hidden rounded-full">
-          {user.avatar ? <Image src={user.avatar} className="h-full w-full rounded-full" fittingType="fill" /> : <span className="text-3xl font-bold text-white">{name[0]?.toUpperCase()}</span>}
-        </Zone>
-        <Zone x={290} y={200} w={78} h={32}><Val>{p.member_id || '-'}</Val></Zone>
-        <Zone x={420} y={200} w={68} h={32}><Val>Lv {p.n_level || 0}</Val></Zone>
-        <Zone x={536} y={200} w={82} h={32}><Val>{p.gift_received_level || 0}</Val></Zone>
-        <Zone x={300} y={246} w={170} h={34}><Val color="#ffe08a">{name}</Val></Zone>
-        <Zone x={58} y={300} w={237} h={50} className={isOwner ? '' : 'bg-black/45 rounded-full'} />
-        <Zone x={316} y={300} w={164} h={50} className={isCaster ? '' : 'bg-black/45 rounded-full'} />
-        <Zone x={130} y={372} w={490} h={52} className="justify-start"><Val>{user.title || user.slogan || (p.vip_level ? `VIP${p.vip_level}` : 'AG SOHBET')}</Val></Zone>
-        {social.map(([key, label, go], i) => (
-          <Zone key={key} x={48 + i * 148} y={466} w={146} h={104} label={label} onClick={go || (() => setList(key))} className="items-end pb-0">
-            <span className="mb-[-2%] text-[min(3vw,12px)] font-bold text-white/90">{fmt(counts[key])}</span>
-          </Zone>
-        ))}
-        <Zone x={170} y={640} w={155} h={50} label="Coins" onClick={() => setPanel('coins')}><Val color="#ffd36b">{wallet ? fmt(wallet.coins) : '…'}</Val></Zone>
-        <Zone x={470} y={640} w={160} h={50} label="Elmaslar" onClick={() => locked ? toast({ title: 'Elmas bölümü yayıncılara açıktır', variant: 'destructive' }) : setPanel('gift')}><Val color="#7fe3ff">{locked ? '🔒' : wallet ? fmt(wallet.month_score) : '…'}</Val></Zone>
-        <Zone x={170} y={770} w={155} h={50} label="Vip" onClick={() => setPanel('vip')}><Val color="#ffd36b">{p.vip_level ? `VIP${p.vip_level}` : `${vipCount} çanta`}</Val></Zone>
-        <Zone x={470} y={790} w={160} h={36} label="Hediye Geçmişi" onClick={() => setPanel('senders')} />
-        <Zone x={40} y={590} w={130} h={115} label="Coins" onClick={() => setPanel('coins')} />
-        <Zone x={160} y={872} w={140} h={100} label="Engellenen Hesaplar" onClick={() => setSheet('blocked')} />
-        <Zone x={300} y={872} w={110} h={100} label="Gizlilik Politikası" onClick={() => setSheet('privacy')} />
-        <Zone x={420} y={872} w={130} h={100} label="Ayarlar" onClick={() => setSheet('settings')} />
+    <div
+      className="dark min-h-screen pb-6 text-white"
+    >
+      <div className="mx-auto w-full max-w-2xl md:max-w-3xl xl:max-w-4xl">
+      <ProfileFixedHero
+        user={user}
+        avatar={form.avatar}
+        onAvatar={onAvatar}
+        uploading={uploading}
+        onEdit={() => toggle('info')}
+        vipLevel={vipLevelOf(user)}
+      />
+
+      <PullToRefresh onRefresh={() => { reload?.(); loadWallet(); loadSocial(); loadVipCount(); }}>
+        <div className="space-y-3 px-4 pt-4">
+          <ProfileStatBar
+            friends={friendCount}
+            following={social.following}
+            followers={social.followers}
+            visitors={social.visitors}
+            onSelect={(key) => (key === 'friends' ? navigate('/arkadaslar?view=friends') : setSocialList(key))}
+          />
+          <ProfileBalanceCards coins={wallet?.coins ?? null} diamonds={elmasLocked ? null : (wallet?.month_score ?? null)} onCoins={() => setCoinShopOpen(true)} onDiamonds={openGiftBox} />
+          <ProfileTwinCards
+            vipCount={vipCount}
+            onVip={() => navigate('/vip')}
+            onWallet={() => setActivityOpen(true)}
+          />
+          <ProfileIconGrid
+            vipCount={vipCount}
+            onSelect={(key) => {
+              if (key === 'shop') setCoinShopOpen(true);
+              else if (key === 'store') setStoreOpen(true);
+              else if (key === 'bag') setVipBagOpen(true);
+              else if (key === 'level') navigate('/seviye');
+              else if (key === 'agency') navigate('/ajans');
+            }}
+          />
+
+
+
+          <ProfileMenuCard
+            isAdmin={isAdmin}
+            onInfo={() => toggle('info')}
+            onSettings={() => toggle('settings')}
+            onLogout={() => base44.auth.logout('/login')}
+            onAdmin={() => navigate('/admin')}
+          />
+
+          {openKey === 'info' && (
+            <ProfileDetailsSection
+              user={user}
+              editing={editing}
+              form={form}
+              setForm={setForm}
+              saving={saving}
+              onSave={save}
+              onEdit={() => { resetForm(); setEditing(true); }}
+              onCancel={() => { resetForm(); setEditing(false); }}
+            />
+          )}
+
+          {openKey === 'settings' && (
+            <div id="eklentiler" className="scroll-mt-24 space-y-3">
+              <ProfileSettings user={user} onUpdated={reload} />
+              {/* Hesabı Sil: Eklentiler bölümünün en altında durur. */}
+              <DeleteAccountSection />
+            </div>
+          )}
+
+          <button type="button" onClick={() => setPrivacyOpen(true)} className="mx-auto block py-3 text-[11px] font-semibold underline" style={{ color: 'rgba(165,228,255,0.7)' }}>
+            Gizlilik Politikası
+          </button>
+        </div>
+      </PullToRefresh>
       </div>
 
-      <GiftBoxPanel open={panel === 'gift'} onClose={() => setPanel(null)} />
-      <GiftSendersPanel open={panel === 'senders'} onClose={() => setPanel(null)} />
-      <VipBagPanel open={panel === 'vip'} onClose={() => setPanel(null)} />
-      <CoinPurchasePanel open={panel === 'coins'} coins={wallet?.coins} onBack={() => setPanel(null)} />
-      <SocialListDialog open={!!list} kind={list} onClose={() => setList(null)} />
-      <Dialog open={!!sheet} onOpenChange={(o) => !o && setSheet(null)}>
-        <DialogContent className="max-h-[85vh] overflow-y-auto bg-[#0a0a14] text-white">
-          <DialogTitle>{sheets[sheet]?.[0]}</DialogTitle>
-          {sheets[sheet]?.[1]}
+      {/* Kutu kapanınca bakiye canlı değerden tazelenir: kart eski tutarı göstermez. */}
+      <GiftBoxPanel open={giftBoxOpen} onClose={() => { setGiftBoxOpen(false); loadWallet(); }} />
+      <CoinActivityPanel open={activityOpen} onClose={() => setActivityOpen(false)} />
+      <VipBagPanel open={vipBagOpen} onClose={() => setVipBagOpen(false)} onChanged={loadVipCount} />
+      <StorePanel open={storeOpen} onClose={() => { setStoreOpen(false); loadWallet(); }} onCoins={() => { setStoreOpen(false); setCoinShopOpen(true); }} />
+      <CoinPurchasePanel
+        open={coinShopOpen}
+        coins={wallet?.coins ?? null}
+        onBack={() => { setCoinShopOpen(false); loadWallet(); }}
+      />
+
+      <SocialListDialog open={!!socialList} kind={socialList} onClose={() => { setSocialList(null); loadSocial(); }} />
+
+      <Dialog open={privacyOpen} onOpenChange={(value) => !value && setPrivacyOpen(false)}>
+        <DialogContent className="max-h-[88vh] max-w-2xl gap-0 border-[#7dd3fc]/30 bg-[linear-gradient(180deg,#0B2A52,#05122A)] p-0 text-white">
+          <DialogHeader className="border-b border-[#7dd3fc]/20 px-5 pb-3 pt-5 text-left">
+            <DialogTitle className="text-[#a5e4ff]">Gizlilik Politikası</DialogTitle>
+            <p className="mt-1 text-[11px] font-normal text-white/55">Son güncelleme: 21 Ekim 2026</p>
+          </DialogHeader>
+          <div className="max-h-[68vh] overflow-y-auto overscroll-contain px-5 pb-8 pt-4">
+            <PrivacyPolicyBody />
+          </div>
         </DialogContent>
       </Dialog>
     </div>
