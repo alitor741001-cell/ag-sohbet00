@@ -1,7 +1,9 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
-const MAX_RESULTS = 10;
+const MAX_RESULTS = 24;
+// Her sorgu biçiminden alınacak sonuç: birleşince tek listede geniş film havuzu olur.
+const PER_QUERY = 12;
 // YouTube'un arama uç noktası: HTML kazımak yerine yapısal yanıt verir, engellenmez.
 const SEARCH_KEY = 'AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8';
 const CLIENT_VERSION = '2.20240101.00.00';
@@ -41,16 +43,33 @@ function collect(node, out) {
 }
 
 /** Tekrarları atar, başlıksız kayıtları eler ve sonucu sınırlar. */
-function toResults(found) {
+function toResults(found, limit = MAX_RESULTS) {
   const seen = new Set();
   const results = [];
   for (const item of found) {
     if (!item.title || seen.has(item.video_id)) continue;
     seen.add(item.video_id);
     results.push(item);
-    if (results.length >= MAX_RESULTS) break;
+    if (results.length >= limit) break;
   }
   return results;
+}
+
+/** Birden fazla sorgunun sonuçlarını sırayla harmanlar; aynı video iki kez çıkmaz. */
+function mergeLists(lists) {
+  const seen = new Set();
+  const merged = [];
+  const longest = lists.reduce((max, list) => Math.max(max, list.length), 0);
+  for (let index = 0; index < longest; index += 1) {
+    for (const list of lists) {
+      const item = list[index];
+      if (!item || !item.title || seen.has(item.video_id)) continue;
+      seen.add(item.video_id);
+      merged.push(item);
+      if (merged.length >= MAX_RESULTS) return merged;
+    }
+  }
+  return merged;
 }
 
 /** YouTube arama uç noktası (yapısal JSON yanıtı). */
@@ -75,7 +94,7 @@ async function searchApi(query) {
   if (!data) return [];
   const found = [];
   collect(data, found);
-  return toResults(found);
+  return toResults(found, PER_QUERY);
 }
 
 /** Yedek yol: arama sayfasının içindeki veriden toplama. */
@@ -97,7 +116,7 @@ async function searchHtml(query) {
   }
   const found = [];
   collect(data, found);
-  return toResults(found);
+  return toResults(found, PER_QUERY);
 }
 
 export default async function (req) {
@@ -112,7 +131,15 @@ export default async function (req) {
 
     // Tür adı yazıldıysa film aramasına çevrilir; sonuç yoksa sayfa yöntemi denenir.
     const normalized = normalizeQuery(query);
-    let results = await searchApi(normalized).catch(() => []);
+    // Tek aramada geniş havuz: düz arama, HD kopyaları ve tek parça film sürümleri
+    // birlikte aranır — Google'da film ararken çıkan sonuçların karşılığı.
+    const variants = [
+      normalized,
+      `${normalized} full hd film`,
+      `${normalized} tek parça türkçe dublaj izle`,
+    ];
+    const lists = await Promise.all(variants.map((variant) => searchApi(variant).catch(() => [])));
+    let results = mergeLists(lists);
     if (!results.length) results = await searchHtml(normalized).catch(() => []);
     return Response.json({ results });
   } catch (error) {
