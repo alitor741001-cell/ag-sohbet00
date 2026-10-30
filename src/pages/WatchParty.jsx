@@ -9,7 +9,7 @@ import StageSwipeLayer from '@/components/player/StageSwipeLayer';
 import { useVoiceChat } from '@/hooks/useVoiceChat';
 import { useCurrentUser, membershipActive } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
-import { Ban, Crown, Eye, LogOut, UserMinus } from 'lucide-react';
+import { Ban, Crown, Eye, LogOut, MicOff, UserMinus } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import RoomSettingsMenu from '@/components/player/RoomSettingsMenu';
@@ -783,6 +783,8 @@ export default function WatchParty() {
                 const isOnline = presence?.online && (Date.now() - new Date(presence.last_seen).getTime() < 60000);
                 // Gizli kullanıcı listede takma adla görünür; profili açılınca tam bilgiler görünür.
                 const hidden = isHiddenName(p.name);
+                // Mikrofonu kapalı kişinin satırının sağ köşesinde mikrofon simgesi durur.
+                const micOff = Boolean(p.muted) || voice?.participantMicStates?.[p.user_id] === false;
                 const showGroup = index === 0 || viewerList[index - 1].group !== group;
                 return (
                   <Fragment key={p.user_id}>
@@ -795,6 +797,11 @@ export default function WatchParty() {
                     <span className="flex-1 truncate min-w-0">{hidden ? <span className="hidden-user-name">{p.name}</span> : <>{p.name}{p.user_id === room.owner_id && <Crown className="w-3 h-3 text-amber-400 inline ml-0.5 shrink-0" />}</>}</span>
                     {p.user_id === room.owner_id && !hidden && <span className="shrink-0 rounded-full bg-amber-400/20 px-1 text-[8px] font-bold text-amber-300">Oda Sahibi</span>}
                     {!isOnline && <span className="text-[9px] text-red-400 shrink-0">çevrim dışı</span>}
+                    {micOff && (
+                      <span title="Mikrofon kapalı" aria-label="Mikrofon kapalı" className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-red-600">
+                        <MicOff className="h-2.5 w-2.5 text-white" />
+                      </span>
+                    )}
                   </button>
                   </Fragment>
                 );

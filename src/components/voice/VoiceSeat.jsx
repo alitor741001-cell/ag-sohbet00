@@ -83,7 +83,7 @@ function VoiceSeat({ seat, index, size = 'md', musicPlaying, speaking, isSelf, i
           </span>
         )}
         {muted && (
-          <span title="Mikrofon kapalı" aria-label="Mikrofon kapalı" className={`absolute left-1/2 top-1/2 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-destructive ${badge}`}>
+          <span title="Mikrofon kapalı" aria-label="Mikrofon kapalı" className={`absolute -bottom-0.5 -right-0.5 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-destructive ${badge}`}>
             <MicOff className="h-3 w-3 text-white" />
           </span>
         )}
