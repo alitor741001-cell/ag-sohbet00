@@ -40,8 +40,8 @@ export default function ProfileSettings({ user, onUpdated }) {
   return (
     <div className="space-y-2.5">
       <p className="px-1 text-[11px] font-bold uppercase tracking-wide text-white/35">Gizlilik ve Görünüm</p>
-      <VipExtensionSettings />
       <HiddenUserCard user={user} onUpdated={onUpdated} />
+      <VipExtensionSettings />
 
       <p className="px-1 pt-3 text-[11px] font-bold uppercase tracking-wide text-white/35">Uygulama</p>
       <div className={ROW}>
