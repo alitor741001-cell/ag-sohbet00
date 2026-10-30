@@ -5,17 +5,12 @@ import PullToRefresh from '@/components/home/PullToRefresh';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
 import { findProtectedName } from '@/lib/protectedNames';
-import { vipLevelOf } from '@/lib/userLevels';
 import '@/components/profile/fireice/fireIce.css';
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import useActiveRooms from '@/hooks/useActiveRooms';
 import { findLiveRoom } from '@/lib/liveRoom';
-import FireIceHeader from '@/components/profile/fireice/FireIceHeader';
-import FireIceQuickBar from '@/components/profile/fireice/FireIceQuickBar';
-import FireIceWalletPanel from '@/components/profile/fireice/FireIceWalletPanel';
-import FireIceGrid from '@/components/profile/fireice/FireIceGrid';
-import FireIceFooter from '@/components/profile/fireice/FireIceFooter';
+import ReferenceProfileScene from '@/components/profile/fireice/ReferenceProfileScene';
 import { giftBoxLocked } from '@/lib/giftAccess';
 import ProfileDetailsSection from '@/components/profile/ProfileDetailsSection';
 import ProfileSettings from '@/components/profile/ProfileSettings';
@@ -164,7 +159,6 @@ export default function Profile() {
   };
 
   if (!user) return <div className="dark min-h-screen p-6 text-white">Yükleniyor...</div>;
-  const isAdmin = user.role === 'admin';
   const elmasLocked = giftBoxLocked(user);
   const resetForm = () => setForm({ username: user.username || '', full_name: user.full_name || '', phone: user.phone || '', avatar: user.avatar || '', birth_date: user.birth_date || '' });
   const toggle = (key) => setOpenKey((current) => (current === key ? null : key));
@@ -181,44 +175,19 @@ export default function Profile() {
 
   return (
     <div className="dark relative min-h-screen pb-28 text-white">
-      <div className="fi-backdrop" aria-hidden="true" />
-
-      <div className="relative z-10 mx-auto w-full max-w-[560px] px-3 pt-3">
+      <div className="relative z-10 mx-auto w-full max-w-[575px]">
         <PullToRefresh onRefresh={() => { reload?.(); loadWallet(); loadVipCount(); }}>
           <div className="space-y-2.5">
-            <FireIceHeader
-              user={user}
-              avatar={form.avatar}
-              uploading={uploading}
-              onAvatar={onAvatar}
-              vipLevel={vipLevelOf(user)}
-              liveRoom={liveRoom}
-              viewers={viewers}
-              isAdmin={isAdmin}
-              onEdit={() => toggle('info')}
-              onSettings={() => toggle('settings')}
-              onAdmin={() => navigate('/admin')}
-              onLogout={() => base44.auth.logout('/login')}
+            <ReferenceProfileScene
+              identity={{ user, avatar: form.avatar, uploading, onAvatar,
+                onEdit: () => toggle('info'), onSettings: () => toggle('settings'),
+                onAdmin: () => navigate('/admin'), onLogout: () => base44.auth.logout('/login') }}
+              wallet={{ coins: wallet?.coins ?? null, diamonds: elmasLocked ? null : (wallet?.month_score ?? null), liveRoom, viewers,
+                onCoins: () => setCoinShopOpen(true), onDiamonds: openGiftBox, onJoin: () => liveRoom && navigate(liveRoom.link) }}
+              vipCount={vipCount} onSelect={openGrid}
+              onInfo={() => toggle('info')} onSettings={() => toggle('settings')}
+              onActivity={() => setActivityOpen(true)} onBlocked={() => setBlockedOpen(true)} onPrivacy={() => setPrivacyOpen(true)}
             />
-
-            <FireIceQuickBar
-              onInfo={() => toggle('info')}
-              onSettings={() => toggle('settings')}
-              onActivity={() => setActivityOpen(true)}
-            />
-
-            <FireIceWalletPanel
-              coins={wallet?.coins ?? null}
-              diamonds={elmasLocked ? null : (wallet?.month_score ?? null)}
-              vipLevel={vipLevelOf(user)}
-              liveRoom={liveRoom}
-              viewers={viewers}
-              onCoins={() => setCoinShopOpen(true)}
-              onDiamonds={openGiftBox}
-              onJoin={() => liveRoom && navigate(liveRoom.link)}
-            />
-
-            <FireIceGrid vipCount={vipCount} onSelect={openGrid} />
 
             {openKey === 'info' && (
               <ProfileDetailsSection
@@ -241,11 +210,7 @@ export default function Profile() {
               </div>
             )}
 
-            <FireIceFooter
-              onBlocked={() => setBlockedOpen(true)}
-              onPrivacy={() => setPrivacyOpen(true)}
-              onSettings={() => toggle('settings')}
-            />
+
           </div>
         </PullToRefresh>
       </div>
