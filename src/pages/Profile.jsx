@@ -13,7 +13,7 @@ import ProfileFixedHero from '@/components/profile/fantasy/ProfileFixedHero';
 import ProfileStatBar from '@/components/profile/fantasy/ProfileStatBar';
 import ProfileTwinCards from '@/components/profile/fantasy/ProfileTwinCards';
 import ProfileBalanceCards from '@/components/profile/fantasy/ProfileBalanceCards';
-import ProfileIconGrid from '@/components/profile/fantasy/ProfileIconGrid';
+import FantasyQuickBar from '@/components/profile/fantasy/FantasyQuickBar';
 import FantasyMenuBar from '@/components/profile/fantasy/FantasyMenuBar';
 import { giftBoxLocked } from '@/lib/giftAccess';
 import ProfileSettings from '@/components/profile/ProfileSettings';
@@ -184,8 +184,7 @@ export default function Profile() {
             onVip={() => navigate('/vip')}
             onWallet={() => setActivityOpen(true)}
           />
-          <ProfileIconGrid
-            vipCount={vipCount}
+          <FantasyQuickBar
             onSelect={(key) => {
               if (key === 'shop') setCoinShopOpen(true);
               else if (key === 'store') setStoreOpen(true);
