@@ -95,7 +95,7 @@ export default function ProfileMenuDeck({ admin = false, stats = {}, onAction })
                         className={`absolute text-center ${row.valueStyle === 'nav' ? 'bottom-[4%] left-1/2 max-w-full -translate-x-1/2 overflow-hidden px-1' : 'bottom-[9%] left-1/2'} ${VALUE_CLASS[row.valueStyle]} whitespace-nowrap`}
                         style={row.valueStyle === 'amount' ? {
                           fontSize: `min(${action === 'diamonds' ? 12 : 13}px, ${(action === 'diamonds' ? 70 : 74) / Math.max(6, value.length)}cqw)`,
-                          transform: `translateX(calc(-50% ${action === 'diamonds' ? '- 14%' : ''}))`,
+                          transform: `translateX(calc(-50% ${action === 'diamonds' ? '- 7%' : '+ 5%'}))`,
                         } : undefined}
                       >
                         {value}
