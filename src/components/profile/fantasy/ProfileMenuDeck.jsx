@@ -65,7 +65,7 @@ export default function ProfileMenuDeck({ admin = false, stats = {}, onAction })
   const rows = [...ROWS, { top: 0.735, height: 0.265, actions: admin ? ADMIN_TAIL : USER_TAIL }];
 
   return (
-    <div className="relative -mx-2 mt-2 w-[calc(100%+1rem)]">
+    <div className="relative -mx-4 w-[calc(100%+2rem)]">
       {src ? (
         <img src={src} alt="Profil menüsü" draggable={false} className="block h-auto w-full select-none" />
       ) : (

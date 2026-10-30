@@ -162,7 +162,7 @@ export default function Profile() {
         vipLevel={vipLevelOf(user)}
       />
 
-      <div className="space-y-3 px-4 pt-4">
+      <div className="px-4">
           <ProfileMenuDeck
             admin={isModerator(user)}
             stats={{
