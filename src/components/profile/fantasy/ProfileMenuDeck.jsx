@@ -1,4 +1,5 @@
 import { useBorderWhiteCutout } from '@/lib/whiteCutout';
+import ProfileStatDeckRow from '@/components/profile/fantasy/ProfileStatDeckRow';
 
 // Yönetici tasarımı (en altta yönetim paneli) ve üye tasarımı (yönetim paneli yok).
 const ADMIN_IMAGE = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/7cf1dceb7_IMG_0491.jpg';
@@ -7,7 +8,6 @@ const CROP = { x: 0, y: 0, w: 1, h: 1 };
 
 // Görseldeki satırlar, dokunulabilir bölgeler ve gerçek değerin yazıldığı yer.
 const ROWS = [
-  { top: 0, height: 0.175, actions: ['friends', 'following', 'followers', 'visitors'], valueStyle: 'nav' },
   { top: 0.175, height: 0.17, actions: ['coins', 'diamonds'], valueStyle: 'amount' },
   { top: 0.345, height: 0.17, actions: ['vip', 'giftHistory'] },
   { top: 0.515, height: 0.22, actions: ['store', 'bag', 'level', 'agency'] },
@@ -35,7 +35,6 @@ const LABELS = {
 };
 
 const VALUE_CLASS = {
-  nav: 'text-[12px] font-extrabold tabular-nums text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.95)]',
   amount: 'text-[14px] font-extrabold tabular-nums text-amber-100 [text-shadow:0_1px_3px_rgba(0,0,0,0.95)]',
 };
 
@@ -73,6 +72,7 @@ export default function ProfileMenuDeck({ admin = false, stats = {}, onAction })
       )}
       {src && (
         <div className="absolute inset-0">
+          <ProfileStatDeckRow stats={stats} onAction={onAction} />
           {rows.map((row) => (
             <div
               key={row.top}
@@ -92,13 +92,11 @@ export default function ProfileMenuDeck({ admin = false, stats = {}, onAction })
                   >
                     {row.valueStyle && value && (
                       <span
-                        className={`absolute text-center ${row.valueStyle === 'nav' ? 'bottom-[4%] left-1/2 max-w-full -translate-x-1/2 overflow-hidden px-1' : 'bottom-[9%] left-1/2'} ${VALUE_CLASS[row.valueStyle]} whitespace-nowrap`}
-                        style={row.valueStyle === 'amount' ? {
+                        className={`absolute bottom-[9%] left-1/2 text-center ${VALUE_CLASS[row.valueStyle]} whitespace-nowrap`}
+                        style={{
                           fontSize: `min(${action === 'diamonds' ? 12 : 13}px, ${(action === 'diamonds' ? 70 : 74) / Math.max(6, value.length)}cqw)`,
                           left: action === 'coins' ? '65%' : undefined,
                           transform: action === 'coins' ? 'translateX(-50%)' : 'translateX(calc(-50% - 7%))',
-                        } : {
-                          left: action === 'friends' ? '56%' : action === 'visitors' ? '44%' : undefined,
                         }}
                       >
                         {value}
