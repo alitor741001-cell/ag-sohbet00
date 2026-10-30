@@ -10,7 +10,12 @@ import { findProtectedName } from '@/lib/protectedNames';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import useFriends from '@/hooks/useFriends';
 import SocialListDialog from '@/components/profile/social/SocialListDialog';
-import NeonDesignProfile from '@/components/profile/neon/NeonDesignProfile';
+import NeonHero from '@/components/profile/neon/NeonHero';
+import NeonAgencyBar from '@/components/profile/neon/NeonAgencyBar';
+import NeonStats from '@/components/profile/neon/NeonStats';
+import NeonWalletCards from '@/components/profile/neon/NeonWalletCards';
+import NeonIconGrid from '@/components/profile/neon/NeonIconGrid';
+import NeonFooterMenu from '@/components/profile/neon/NeonFooterMenu';
 import NeonPanel from '@/components/profile/neon/NeonPanel';
 import '@/components/profile/neon/neonProfile.css';
 import { giftBoxLocked } from '@/lib/giftAccess';
@@ -180,36 +185,45 @@ export default function Profile() {
     <div className="profile-neon-shell dark min-h-screen pb-6 text-white" style={{ '--profile-bg': `url(${PROFILE_BG})` }}>
       <div className="mx-auto w-full max-w-2xl md:max-w-3xl xl:max-w-4xl">
         <PullToRefresh onRefresh={() => { reload?.(); loadWallet(); loadSocial(); loadVipCount(); }}>
-          <div className="space-y-2.5">
-            <NeonDesignProfile
-              user={user}
-              avatar={form.avatar}
-              onAvatar={uploading ? null : onAvatar}
-              onCopyId={() => navigator.clipboard?.writeText(String(user.member_id || user.id)).then(() => toast({ title: 'Kimlik no kopyalandı' })).catch(() => {})}
-              stats={{ friends: friendCount, ...social }}
-              wallet={{
-                coins: wallet?.coins ?? null,
-                score: wallet?.received_score ?? null,
-                diamonds: elmasLocked ? null : (wallet?.month_score ?? null),
-                diamondScore: elmasLocked ? null : (wallet?.month_k ?? null),
+          <div className="space-y-2.5 px-3 pt-4">
+            <NeonHero user={user} avatar={form.avatar} onAvatar={onAvatar} uploading={uploading} />
+            <NeonAgencyBar user={user} />
+            <NeonStats
+              friends={friendCount}
+              following={social.following}
+              followers={social.followers}
+              visitors={social.visitors}
+              onSelect={(key) => {
+                if (key === 'friends') navigate('/arkadaslar?view=friends');
+                else setSocialList(key);
               }}
+            />
+            <NeonWalletCards
+              coins={wallet?.coins ?? null}
+              score={wallet?.received_score ?? null}
+              diamonds={elmasLocked ? null : (wallet?.month_score ?? null)}
+              diamondScore={elmasLocked ? null : (wallet?.month_k ?? null)}
               vipCount={vipCount}
-              on={{
-                friends: () => navigate('/arkadaslar?view=friends'),
-                following: () => setSocialList('following'),
-                followers: () => setSocialList('followers'),
-                visitors: () => setSocialList('visitors'),
-                coins: () => setCoinShopOpen(true),
-                diamonds: openGiftBox,
-                vip: () => navigate('/vip'),
-                history: () => setActivityOpen(true),
-                shop: () => setCoinShopOpen(true),
-                bag: () => setVipBagOpen(true),
-                level: () => navigate('/seviye'),
-                agency: () => navigate('/ajans'),
-                blocked: () => setBlockedOpen(true),
-                privacy: () => setPrivacyOpen(true),
-                settings: () => toggle('settings'),
+              onCoins={() => setCoinShopOpen(true)}
+              onDiamonds={openGiftBox}
+              onVip={() => navigate('/vip')}
+              onHistory={() => setActivityOpen(true)}
+            />
+            <NeonIconGrid
+              vipCount={vipCount}
+              onSelect={(key) => {
+                if (key === 'shop') setStoreOpen(true);
+                else if (key === 'bag') setVipBagOpen(true);
+                else if (key === 'level') navigate('/seviye');
+                else if (key === 'agency') navigate('/ajans');
+                else setCoinShopOpen(true);
+              }}
+            />
+            <NeonFooterMenu
+              onSelect={(key) => {
+                if (key === 'blocked') setBlockedOpen(true);
+                else if (key === 'privacy') setPrivacyOpen(true);
+                else toggle('settings');
               }}
             />
 
