@@ -80,7 +80,7 @@ export default function ProfileMenuDeck({ admin = false, stats = {}, onAction })
                   >
                     {row.valueStyle && value && (
                       <span
-                        className={`absolute ${row.valueStyle === 'nav' ? 'bottom-[9%] left-1/2 -translate-x-1/2' : 'bottom-[14%] left-[27%]'} ${VALUE_CLASS[row.valueStyle]} whitespace-nowrap`}
+                        className={`absolute left-1/2 max-w-full -translate-x-1/2 overflow-hidden px-1 text-center ${row.valueStyle === 'nav' ? 'bottom-[4%]' : 'bottom-[9%]'} ${VALUE_CLASS[row.valueStyle]} whitespace-nowrap`}
                       >
                         {value}
                       </span>
