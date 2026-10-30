@@ -2,6 +2,7 @@ import { CalendarDays, Mail, MapPin, Phone, ShieldCheck, User, Users } from 'luc
 import { ageFromBirthDate, formatDate } from '@/components/profile/genderPalette';
 import { visibleEmail } from '@/lib/visibleEmail';
 import { broadcasterState } from '@/lib/broadcaster';
+import PasswordChangeCard from '@/components/profile/PasswordChangeCard';
 
 const genderLabel = (gender) => {
   if (gender === 'erkek') return 'Erkek';
@@ -53,6 +54,9 @@ export default function ProfileDetailsSection({ user, editing, form, setForm, on
       <button onClick={onEdit} className="m-3 rounded-lg border border-white/20 px-4 py-2 text-sm font-semibold text-white active:scale-95">
         Düzenle
       </button>
+      <div className="border-t border-white/10">
+        <PasswordChangeCard userId={user.id} />
+      </div>
     </div>
   );
 }
