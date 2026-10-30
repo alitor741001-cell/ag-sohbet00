@@ -149,6 +149,7 @@ export default function Profile() {
   };
 
   if (!user) return <div className="dark min-h-screen p-6 text-white">Yükleniyor...</div>;
+  const elmasLocked = giftBoxLocked(user);
   const toggle = (key) => setOpenKey((current) => (current === key ? null : key));
   // Paket/abonelik sistemi kaldırıldı: üyelik süresi artık erişimi etkilemez.
 
@@ -169,6 +170,14 @@ export default function Profile() {
         <div className="space-y-3 px-4 pt-4">
           <ProfileMenuDeck
             admin={isModerator(user)}
+            stats={{
+              friends: friendCount,
+              following: social.following,
+              followers: social.followers,
+              visitors: social.visitors,
+              coins: wallet?.coins ?? null,
+              diamonds: elmasLocked ? null : (wallet?.month_score ?? null),
+            }}
             onAction={(key) => {
               if (key === 'friends') navigate('/arkadaslar?view=friends');
               else if (key === 'following' || key === 'followers' || key === 'visitors') setSocialList(key);
