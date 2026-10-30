@@ -4,6 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
 import { vipLevelOf } from '@/lib/userLevels';
+import { ART } from '@/lib/designArt';
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import useFriends from '@/hooks/useFriends';
@@ -145,14 +146,16 @@ export default function Profile() {
 
   return (
     <div
-      className="dark relative min-h-screen bg-[#02030c] pb-6 text-white"
+      className="dark relative min-h-screen pb-6 text-white"
       style={{
         marginLeft: 'calc(-1 * env(safe-area-inset-left, 0px))',
         marginRight: 'calc(-1 * env(safe-area-inset-right, 0px))',
       }}
     >
-      {/* Profil zemini: çentik kenarlarına, üst çerçeveye ve alt menü hizasına kadar düz siyah. */}
-      <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10 bg-[#02030c]" />
+      {/* Profil zemini: ana sayfadaki tema görseli, çentik kenarlarına kadar uzanır. */}
+      <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10 overflow-hidden bg-black">
+        <img src={ART.pageBg} alt="" draggable={false} className="h-full w-full select-none object-cover" />
+      </div>
       <div className="w-full">
       <ProfileFixedHero
         user={user}
