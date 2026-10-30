@@ -41,7 +41,16 @@ const VALUE_CLASS = {
 
 function formatValue(value, amount = false) {
   if (value === null || value === undefined) return '';
-  return Number(value).toLocaleString('tr-TR', amount
+  const numeric = Number(value);
+  if (amount && Math.abs(numeric) >= 1_000_000) {
+    const unit = Math.abs(numeric) >= 1_000_000_000_000
+      ? { divisor: 1_000_000_000_000, label: 'Tn' }
+      : Math.abs(numeric) >= 1_000_000_000
+        ? { divisor: 1_000_000_000, label: 'Mr' }
+        : { divisor: 1_000_000, label: 'Mn' };
+    return `${(numeric / unit.divisor).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${unit.label}`;
+  }
+  return numeric.toLocaleString('tr-TR', amount
     ? { minimumIntegerDigits: 6, useGrouping: false }
     : undefined);
 }
