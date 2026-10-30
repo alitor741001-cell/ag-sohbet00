@@ -156,7 +156,7 @@ export default function Profile() {
       <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10 overflow-hidden bg-black">
         <img src={ART.pageBg} alt="" draggable={false} className="h-full w-full select-none object-cover" />
       </div>
-      <div className="w-full">
+      <div className="flex min-h-[var(--app-height)] w-full flex-col">
       <ProfileFixedHero
         user={user}
         avatar={form.avatar}
@@ -165,7 +165,7 @@ export default function Profile() {
         vipLevel={vipLevelOf(user)}
       />
 
-      <div className="px-4">
+      <div className="flex min-h-0 flex-1 flex-col px-4 pb-[env(safe-area-inset-bottom)]">
           <ProfileMenuDeck
             admin={isModerator(user)}
             stats={{

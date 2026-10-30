@@ -63,9 +63,11 @@ export default function ProfileMenuDeck({ admin = false, stats = {}, onAction })
   const rows = [...ROWS, { top: 0.735, height: 0.265, actions: admin ? ADMIN_TAIL : USER_TAIL }];
 
   return (
-    <div className="relative -mx-4 w-[calc(100%+2rem)]">
+    <div className="relative -mx-4 flex min-h-0 w-[calc(100%+2rem)] flex-1 flex-col">
       {src ? (
-        <img src={src} alt="Profil menüsü" draggable={false} className="block h-auto w-full select-none" />
+        // Tasarım, üstteki ajans kimliği çerçevesinden en alttaki düğmenin çerçevesine
+        // kadar tüm alanı kaplar: bölgeler yüzdelerle tanımlı olduğu için düğmeler kayar.
+        <img src={src} alt="Profil menüsü" draggable={false} className="block h-full w-full flex-1 select-none object-fill" />
       ) : (
         <div className="aspect-[1024/970] w-full" aria-hidden="true" />
       )}
