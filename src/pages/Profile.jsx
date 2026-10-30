@@ -163,7 +163,7 @@ export default function Profile() {
   // cihazın görünür alanına kilitlenir — başlığın üstünde boş şerit kalmaz.
   return (
     <div
-      className="dark relative flex h-[var(--app-height)] flex-col overflow-hidden text-white mt-[calc(-1*max(env(safe-area-inset-top),0.5rem))] lg:mt-0 lg:h-[calc(var(--app-height)-6rem)]"
+      className="dark relative flex h-[calc(var(--app-height)-var(--profile-lift))] flex-col overflow-hidden text-white mt-[calc(-1*max(env(safe-area-inset-top),0.5rem))] lg:mt-0"
       style={{
         marginLeft: 'calc(-1 * env(safe-area-inset-left, 0px))',
         marginRight: 'calc(-1 * env(safe-area-inset-right, 0px))',
