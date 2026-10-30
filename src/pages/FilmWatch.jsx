@@ -1,13 +1,18 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Clapperboard } from 'lucide-react';
 import FilmSearchBar from '@/components/film/FilmSearchBar';
+import FilmAppSearch from '@/components/film/FilmAppSearch';
+import FilmPlayOverlay from '@/components/film/FilmPlayOverlay';
 import FilmPlayerPanel from '@/components/film/FilmPlayerPanel';
 import LegalPlatformGrid from '@/components/film/LegalPlatformGrid';
 import { openInBrowser } from '@/lib/filmSearch';
 
-/** Film İzle: gerçek Google araması, yasal platformlar ve uygulama içi oynatıcı. */
+/** Film İzle: uygulama içi arama ve oynatma, Google araması ve yasal platformlar. */
 export default function FilmWatch() {
   const navigate = useNavigate();
+  // Seçilen film sayfanın üstünde oynar; sayfa yapısı aynı kalır.
+  const [film, setFilm] = useState(null);
   const goBack = () => {
     if (window.history.length > 1) navigate(-1);
     else navigate('/');
@@ -42,10 +47,13 @@ export default function FilmWatch() {
       </header>
 
       <div className="flex flex-col gap-5 pt-4">
+        <FilmAppSearch onPick={setFilm} />
         <FilmSearchBar onSearch={(url) => openInBrowser(url)} />
         <FilmPlayerPanel />
         <LegalPlatformGrid />
       </div>
+
+      <FilmPlayOverlay film={film} onClose={() => setFilm(null)} />
     </div>
   );
 }
