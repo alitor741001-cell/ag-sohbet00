@@ -16,9 +16,9 @@ export default function VoiceFantasyActions({ room, userId, name, isSelf, hidden
     setBusy(key);
     try {
       await action();
-      // Hediye tahtası, özel mesaj ve sohbet paneli kartın altında kalmasın diye kart kapanır;
-      // koltuktan inen ya da odadan atılan kişinin kartı da açık kalmaz.
-      if (['gift', 'message', 'mention', 'stand', 'kick'].includes(key)) onClose?.();
+      // Karta basılan her düğme işini yapar ve kartı kapatır: hediye tahtası, sohbet,
+      // koltuk ve oda işlemlerinin sonucu kartın altında kalmaz.
+      onClose?.();
     }
     catch (error) { toast({ title: 'İşlem yapılamadı', description: error?.response?.data?.error || error.message, variant: 'destructive' }); }
     finally { setBusy(''); }
@@ -36,11 +36,12 @@ export default function VoiceFantasyActions({ room, userId, name, isSelf, hidden
     ...(seat >= 0 && room.canControl(userId) && !isSelf ? [{ key: 'stand', label: 'Koltuktan İndir', icon: LogOut, action: () => room.standUp(userId) }] : []),
   ];
   // Bahset, Odadan At ve Özel Mesaj aynı satırda durur: özel mesaj en sağdadır.
+  // Gizli kullanıcıda da odadan atma görünür: yönetici maskeli kişiyi odadan çıkarabilir.
   const items = [
-    ...(!isSelf && !hidden ? [
-      { key: 'mention', label: 'Bahset', icon: AtSign, action: () => room.mention(name) },
+    ...(!isSelf ? [
+      ...(!hidden ? [{ key: 'mention', label: 'Bahset', icon: AtSign, action: () => room.mention(name) }] : []),
       ...(room.canModerate ? [{ key: 'kick', label: 'Odadan At', icon: LogOut, action: () => room.kick(userId), danger: true }] : []),
-      { key: 'message', label: 'Özel Mesaj', icon: MessageSquare, action: () => room.message ? room.message(userId) : onMessage?.(userId) },
+      ...(!hidden ? [{ key: 'message', label: 'Özel Mesaj', icon: MessageSquare, action: () => room.message ? room.message(userId) : onMessage?.(userId) }] : []),
     ] : []),
   ];
   return (
@@ -69,7 +70,7 @@ export default function VoiceFantasyActions({ room, userId, name, isSelf, hidden
         </div>
       )}
       {items.length > 0 && (
-        <div className={`grid gap-2 ${items.length >= 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
+        <div className={`grid gap-2 ${items.length === 1 ? 'grid-cols-1' : items.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
           {items.map(({ key, label, icon: Icon, action, danger }) => (
             <button key={key} type="button" disabled={!!busy} onClick={() => perform(key, action)} className={`voice-fantasy-button flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl px-1 py-2 text-[10px] font-bold disabled:opacity-50 ${danger ? 'text-destructive' : ''}`}>
               {busy === key ? <Loader2 className="h-4 w-4 animate-spin" /> : <Icon className="h-4 w-4" />}<span>{label}</span>
