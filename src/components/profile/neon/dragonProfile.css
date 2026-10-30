@@ -47,8 +47,8 @@
 .dragon-menu .grid > button + button { border-left: 1px solid hsl(var(--dragon-ice) / .25); }
 .dragon-menu button > span:first-child { border-radius: 999px; background: radial-gradient(circle at 50% 40%, hsl(var(--dragon-ice) / .45), hsl(var(--dragon-night)) 70%) !important; outline: 2px solid hsl(var(--dragon-gold) / .8); outline-offset: 1px; box-shadow: 0 0 14px hsl(var(--dragon-ice) / .7) !important; }
 .dragon-menu button > span:first-child > span { top: -14px !important; right: -10px !important; font-size: 10px !important; padding: 1px 7px !important; }
-.dragon-footer button > svg { box-sizing: content-box; padding: 8px; border-radius: 999px; outline: 2px solid hsl(var(--dragon-gold) / .75); background: radial-gradient(circle, hsl(var(--dragon-ice) / .35), hsl(var(--dragon-night))); }
-.dragon-footer button:first-child > svg { background: radial-gradient(circle, hsl(0 80% 45%), hsl(0 70% 15%)); color: hsl(var(--dragon-ink)) !important; }
+.dragon-footer-old > svg { box-sizing: content-box; padding: 8px; border-radius: 999px; outline: 2px solid hsl(var(--dragon-gold) / .75); background: radial-gradient(circle, hsl(var(--dragon-ice) / .35), hsl(var(--dragon-night))); }
+.dragon-footer-old:first-child > svg { background: radial-gradient(circle, hsl(0 80% 45%), hsl(0 70% 15%)); color: hsl(var(--dragon-ink)) !important; }
 .dragon-wallet-tile button { min-height: 88px; }
 .dragon-agency p:first-child { color: hsl(var(--dragon-gold)); font-size: clamp(12px, 3vw, 18px); }
 .dragon-agency p:last-child { color: hsl(var(--dragon-fire)); }

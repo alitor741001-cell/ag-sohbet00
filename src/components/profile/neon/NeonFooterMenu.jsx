@@ -1,5 +1,7 @@
 import { Settings, ShieldCheck, UserMinus } from 'lucide-react';
 import NeonPanel from '@/components/profile/neon/NeonPanel';
+import CosmeticArtwork from '@/components/store/CosmeticArtwork';
+import { DRAGON_ICONS } from '@/components/profile/neon/dragonArt';
 
 const ITEMS = [
   { key: 'blocked', label: 'Engellenen Hesaplar', icon: UserMinus, color: '#ff6b6b' },
@@ -19,7 +21,7 @@ export default function NeonFooterMenu({ onSelect }) {
           className="flex min-w-0 flex-col items-center gap-1.5 px-1 py-3 active:scale-95"
           style={index > 0 ? { borderLeft: '1px solid rgba(125,211,252,0.14)' } : undefined}
         >
-          <item.icon className="h-4 w-4" style={{ color: item.color }} aria-hidden="true" />
+          <CosmeticArtwork product={DRAGON_ICONS[item.key]} blend={false} className="h-12 w-12" />
           <span className="text-center text-[9.5px] font-semibold leading-tight text-white/85">{item.label}</span>
         </button>
       ))}
