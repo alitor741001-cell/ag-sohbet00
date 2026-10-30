@@ -4,7 +4,6 @@ import { base44 } from '@/api/base44Client';
 import PullToRefresh from '@/components/home/PullToRefresh';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
-import { findProtectedName } from '@/lib/protectedNames';
 import { vipLevelOf } from '@/lib/userLevels';
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -15,10 +14,10 @@ import ProfileStatBar from '@/components/profile/fantasy/ProfileStatBar';
 import ProfileTwinCards from '@/components/profile/fantasy/ProfileTwinCards';
 import ProfileBalanceCards from '@/components/profile/fantasy/ProfileBalanceCards';
 import ProfileIconGrid from '@/components/profile/fantasy/ProfileIconGrid';
-import ProfileMenuCard from '@/components/profile/fantasy/ProfileMenuCard';
+import FantasyMenuBar from '@/components/profile/fantasy/FantasyMenuBar';
 import { giftBoxLocked } from '@/lib/giftAccess';
-import ProfileDetailsSection from '@/components/profile/ProfileDetailsSection';
 import ProfileSettings from '@/components/profile/ProfileSettings';
+import BlockedUsers from '@/components/profile/BlockedUsers';
 import PrivacyPolicyBody from '@/components/profile/PrivacyPolicyBody';
 
 import DeleteAccountSection from '@/components/profile/DeleteAccountSection';
@@ -29,8 +28,6 @@ import VipBagPanel from '@/components/profile/VipBagPanel';
 import StorePanel from '@/components/store/StorePanel';
 import useWalletCoinsLive from '@/hooks/useWalletCoinsLive';
 import useGiftSummaryLive from '@/hooks/useGiftSummaryLive';
-
-const EMPTY_FORM = { username: '', full_name: '', phone: '', avatar: '', birth_date: '' };
 
 /** Profil sayfası: cüzdan, kişisel bilgiler, eklentiler (ayarlar) ve hesap işlemleri. */
 export default function Profile() {
@@ -52,10 +49,9 @@ export default function Profile() {
   const [vipBagOpen, setVipBagOpen] = useState(false);
   const [storeOpen, setStoreOpen] = useState(false);
   const [coinShopOpen, setCoinShopOpen] = useState(false);
-  const [editing, setEditing] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const [blockedOpen, setBlockedOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [form, setForm] = useState(EMPTY_FORM);
+  const [form, setForm] = useState({ avatar: '' });
 
   // /profil?tab=settings bağlantısı Eklentiler bölümünü açar ve oraya kaydırır.
   useEffect(() => {
@@ -129,22 +125,6 @@ export default function Profile() {
     if (!user.member_id) base44.functions.invoke('ensure-member-id').then(reload).catch(() => {});
   }, [user?.id]);
 
-  const save = async () => {
-    if (saving || uploading) return;
-    const blocked = findProtectedName(form.username);
-    if (blocked) return toast({ title: 'Kullanıcı adı reddedildi', description: `'${blocked}' gibi yetki/rol kelimeleri kullanıcı adında kullanılamaz. Lütfen başka bir ad seçin.`, variant: 'destructive' });
-    setSaving(true);
-    try {
-      const { data } = await base44.functions.invoke('update-profile', { username: form.username, phone: form.phone, avatar: form.avatar, birth_date: form.birth_date });
-      if (!data?.ok || data.profile?.id !== user.id) throw new Error(data?.error || 'Kayıt doğrulanamadı. Lütfen tekrar deneyin.');
-      setUser((current) => ({ ...current, ...data.profile }));
-      setEditing(false);
-      toast({ title: 'Profil güncellendi' });
-    } catch (error) {
-      toast({ title: 'Profil güncellenemedi', description: error.response?.data?.error || error.message, variant: 'destructive' });
-    } finally { setSaving(false); }
-  };
-
   const onAvatar = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -172,9 +152,7 @@ export default function Profile() {
   };
 
   if (!user) return <div className="dark min-h-screen p-6 text-white">Yükleniyor...</div>;
-  const isAdmin = user.role === 'admin';
   const elmasLocked = giftBoxLocked(user);
-  const resetForm = () => setForm({ username: user.username || '', full_name: user.full_name || '', phone: user.phone || '', avatar: user.avatar || '', birth_date: user.birth_date || '' });
   const toggle = (key) => setOpenKey((current) => (current === key ? null : key));
   // Paket/abonelik sistemi kaldırıldı: üyelik süresi artık erişimi etkilemez.
 
@@ -188,7 +166,6 @@ export default function Profile() {
         avatar={form.avatar}
         onAvatar={onAvatar}
         uploading={uploading}
-        onEdit={() => toggle('info')}
         vipLevel={vipLevelOf(user)}
       />
 
@@ -220,26 +197,12 @@ export default function Profile() {
 
 
 
-          <ProfileMenuCard
-            isAdmin={isAdmin}
-            onInfo={() => toggle('info')}
-            onSettings={() => toggle('settings')}
-            onLogout={() => base44.auth.logout('/login')}
+          {/* Yönetim · Engellenen Hesaplar · Ayarlar: kristal şerit menü */}
+          <FantasyMenuBar
             onAdmin={() => navigate('/admin')}
+            onBlocked={() => setBlockedOpen(true)}
+            onSettings={() => toggle('settings')}
           />
-
-          {openKey === 'info' && (
-            <ProfileDetailsSection
-              user={user}
-              editing={editing}
-              form={form}
-              setForm={setForm}
-              saving={saving}
-              onSave={save}
-              onEdit={() => { resetForm(); setEditing(true); }}
-              onCancel={() => { resetForm(); setEditing(false); }}
-            />
-          )}
 
           {openKey === 'settings' && (
             <div id="eklentiler" className="scroll-mt-24 space-y-3">
@@ -268,6 +231,17 @@ export default function Profile() {
       />
 
       <SocialListDialog open={!!socialList} kind={socialList} onClose={() => { setSocialList(null); loadSocial(); }} />
+
+      <Dialog open={blockedOpen} onOpenChange={(value) => !value && setBlockedOpen(false)}>
+        <DialogContent className="max-h-[88vh] max-w-2xl gap-0 border-[#7dd3fc]/30 bg-[linear-gradient(180deg,#0B2A52,#05122A)] p-0 text-white">
+          <DialogHeader className="border-b border-[#7dd3fc]/20 px-5 pb-3 pt-5 text-left">
+            <DialogTitle className="text-[#a5e4ff]">Engellenen Hesaplar</DialogTitle>
+          </DialogHeader>
+          <div className="max-h-[68vh] overflow-y-auto overscroll-contain px-5 pb-8 pt-4">
+            <BlockedUsers />
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={privacyOpen} onOpenChange={(value) => !value && setPrivacyOpen(false)}>
         <DialogContent className="max-h-[88vh] max-w-2xl gap-0 border-[#7dd3fc]/30 bg-[linear-gradient(180deg,#0B2A52,#05122A)] p-0 text-white">
