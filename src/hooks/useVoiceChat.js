@@ -139,6 +139,17 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
       refreshState();
     })();
     micPendingRef.current = request;
+    // Yanıtsız kalan deneme düğmeyi kilitlemez: 10 saniye sonra istek bırakılır,
+    // düğme yeniden basılabilir olur — uygulamayı kapatmak ya da sayfayı yenilemek gerekmez.
+    const watchdog = window.setTimeout(() => {
+      if (micPendingRef.current !== request) return;
+      micPendingRef.current = null;
+      mesh.abandonMicRequest?.();
+      if (meshRef.current === mesh) {
+        setRequesting(false);
+        setError('🎤 Mikrofon yanıt vermedi — mikrofon düğmesine yeniden dokun.');
+      }
+    }, 10000);
     try { await request; }
     catch (err) {
       micDeniedRef.current = isPermissionError(err);
@@ -146,7 +157,10 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
       setLastMicrophoneError(mesh.lastMicrophoneError || err?.code || err?.name || 'mic_failed');
       throw err;
     }
-    finally { if (micPendingRef.current === request) micPendingRef.current = null; }
+    finally {
+      window.clearTimeout(watchdog);
+      if (micPendingRef.current === request) micPendingRef.current = null;
+    }
   }, [refreshState]);
 
   const retryAudio = useCallback(async () => {
@@ -387,6 +401,8 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
       console.error('[LiveKit] Microphone toggle failed', micError, { lastMicrophoneError: micError?.code || micError?.name });
       setMicDenied(isPermissionError(micError));
       setError(friendlyMicError(micError));
+      // Kayıt oturumu açılamadıysa mobil tarayıcı uzak sesi duraklatabilir: ses geri getirilir.
+      void retryAudio();
     } finally { micTogglePendingRef.current = false; setRequesting(false); }
   }, [canSpeak, enableMic, refreshState, retryAudio]);
 
@@ -442,6 +458,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
       setMicDenied(isPermissionError(micError));
       setError(friendlyMicError(micError));
       refreshState();
+      void retryAudio();
     }).finally(() => { micTogglePendingRef.current = false; setRequesting(false); });
   }, [canSpeak, enableMic, refreshState, retryAudio]);
 

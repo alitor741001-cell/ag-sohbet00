@@ -47,8 +47,9 @@ const pcFailed = (pc) => ['failed', 'closed'].includes(pc.connectionState || pc.
 const IS_IOS = typeof navigator !== 'undefined'
   && (/iPad|iPhone|iPod/.test(navigator.userAgent || '') || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
 
-// Sistem izin penceresindeki karar süresi de bu beklemeye dahildir.
-const MIC_TIMEOUT_MS = 65000;
+// Sistem izin penceresindeki karar süresi de bu beklemeye dahildir. Süre kısa
+// tutulur: yanıtsız kalan deneme mikrofon düğmesini kilitlemez.
+const MIC_TIMEOUT_MS = 25000;
 const HEARTBEAT_MS = 6000;
 // Teklif yanıtsız kalırsa bu süre sonunda yeniden denenir (kaçan sinyal kurtarılır).
 const OFFER_RETRY_MS = 5000;
@@ -489,6 +490,13 @@ export class P2PVoiceRoom {
     return request;
   }
 
+  // Yanıtsız kalan açma denemesi bırakılır: sonraki dokunuş yeni bir deneme başlatır,
+  // arayüz kilitli kalmaz (uygulamayı kapatmaya gerek olmaz).
+  abandonMicRequest() {
+    this.micRevision += 1;
+    this.micRequest = null;
+  }
+
   async startMic(revision) {
     this.lastMicrophoneError = null;
     if (!this.canPublish) {
@@ -557,6 +565,9 @@ export class P2PVoiceRoom {
     this.socket?.send({ type: 'mic', on: false });
     // Sustuysan yalnızca konuşanları dinlemeye devam et.
     this.reconcile();
+    // Kayıt oturumu kapandığında mobil tarayıcı uzak sesi duraklatabilir:
+    // karşı tarafın sesi hemen geri getirilir, kullanıcı sayfa yenilemek zorunda kalmaz.
+    void this.retryPlayback();
     this.emit();
   }
 

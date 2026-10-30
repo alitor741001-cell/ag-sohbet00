@@ -98,7 +98,20 @@ async function acquireMic() {
  * çağrıdan önce açılan akış sessiz kalabiliyor. İzin kullanıcı tarafından bir
  * kez verildiği için tarayıcı tekrar sormaz.
  */
+// Yanıtsız kalan açma isteği düğmeyi kilitlemez: bu süre sonunda bırakılır ve
+// mikrofon temiz bir kanalla yeniden açılır (sayfa yenilemeye gerek kalmaz).
+const MIC_PENDING_STALE_MS = 10000;
+const MIC_OPEN_TIMEOUT_MS = 20000;
+
 export function ensureMicTrack({ fresh = false } = {}) {
+  // Cihaz başka uygulamada kaldıysa ya da izin penceresi kapandıysa istek hiç
+  // yanıt vermez: eski istek bırakılır, kanal serbest bırakılır, yenisi açılır.
+  if (micPending && Date.now() - micPendingAt > MIC_PENDING_STALE_MS) {
+    micGeneration += 1;
+    micPending = null;
+    micPendingAt = 0;
+    releaseMicStream();
+  }
   // İzin penceresinin focus olayı ikinci getUserMedia isteği başlatmamalı.
   if (micPending) return micPending;
   if (!fresh && micTrack && micTrack.readyState === 'live' && !micTrack.muted) {
@@ -114,13 +127,14 @@ export function ensureMicTrack({ fresh = false } = {}) {
         releaseMicStream();
       }
       reject(Object.assign(new Error('Mikrofon yanıt vermedi.'), { code: 'mic_timeout' }));
-    }, 60000);
+    }, MIC_OPEN_TIMEOUT_MS);
   });
   const pending = Promise.race([acquireMic(), timeout]).finally(() => {
     clearTimeout(timer);
-    if (micPending === pending) micPending = null;
+    if (micPending === pending) { micPending = null; micPendingAt = 0; }
   });
   micPending = pending;
+  micPendingAt = Date.now();
   return pending;
 }
 

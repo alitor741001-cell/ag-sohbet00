@@ -232,6 +232,13 @@ export default function ChatOverlay({ roomId, chatEnabled, chatLocked = false, i
           )}
         </div>
       </div>
+      {/* Ses sorunu görünür kalır: dokunuşla aynı düğmeden yeniden denenir. */}
+      {voice?.error && (
+        <button type="button" onClick={() => (voice.audioBlocked ? voice.retryAudio() : voice.toggleMute())} className="mx-3 mt-1 rounded-xl border border-destructive/40 bg-black/85 px-3 py-2 text-left text-[11px] font-semibold leading-snug text-white/90">
+          {voice.error}
+          <span className="ml-1 text-[#FFD700]">Tekrar dene</span>
+        </button>
+      )}
       {/* Paneli kapatmak için sol kenarda üçgen kol. */}
 
       {(chatEnabled || isOwner) && (
