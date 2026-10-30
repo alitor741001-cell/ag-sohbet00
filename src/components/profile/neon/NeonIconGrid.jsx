@@ -7,14 +7,13 @@ const ITEMS = [
   { key: 'bag', label: 'Çanta' },
   { key: 'level', label: 'Seviye' },
   { key: 'agency', label: 'Ajans' },
-  { key: 'cp', label: 'CP' },
 ];
 
 /** Profil ikon şeridi: mağaza, çanta, seviye, ajans ve CP. */
 export default function NeonIconGrid({ vipCount = 0, onSelect }) {
   return (
     <NeonPanel className="dragon-menu" innerClassName="px-1.5 py-3">
-      <div className="grid grid-cols-5 gap-y-1">
+      <div className="grid grid-cols-4 gap-y-1">
         {ITEMS.map((item) => (
           <button key={item.key} type="button" onClick={() => onSelect(item.key)} className="flex min-w-0 flex-col items-center gap-1.5 active:scale-95">
             <span className="relative flex h-11 w-11 items-center justify-center rounded-full border border-[#7dd3fc]/45 bg-[radial-gradient(circle_at_50%_35%,rgba(0,180,255,0.32),rgba(6,18,40,0.95)_72%)] shadow-[inset_0_0_16px_rgba(56,189,248,0.3)]">

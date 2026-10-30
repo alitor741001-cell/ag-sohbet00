@@ -9,16 +9,17 @@
   background-position: center top;
   background-size: cover;
 }
-.dragon-profile > div { max-width: 682px; }
-.dragon-profile .space-y-2\.5.px-3 { padding: 12px clamp(16px, 7.5vw, 48px) 30px; }
+.dragon-profile > div { max-width: 600px; }
+.dragon-profile .space-y-2\.5.px-3 { padding: 12px clamp(22px, 9vw, 60px) 30px; }
+.dragon-gift-button { color: hsl(var(--dragon-gold)); border: 1px solid hsl(var(--dragon-gold)); background: radial-gradient(circle, hsl(var(--dragon-fire) / .55), hsl(var(--dragon-night))); box-shadow: 0 0 10px hsl(var(--dragon-fire)); }
 .dragon-profile .neon-panel {
-  border-radius: 20px 7px 20px 7px;
-  padding: 3px;
+  border-radius: 14px 5px 14px 5px;
+  padding: 1.5px;
   background: linear-gradient(135deg,hsl(var(--dragon-gold)),hsl(var(--dragon-ice)) 12%,hsl(var(--dragon-fire)) 25%,hsl(var(--dragon-gold)) 36%,hsl(var(--dragon-night)) 45%,hsl(var(--dragon-ice)) 58%,hsl(var(--dragon-gold)) 75%,hsl(var(--dragon-fire)) 90%,hsl(var(--dragon-gold)));
   box-shadow: 0 0 3px hsl(var(--dragon-gold)),0 0 12px hsl(var(--dragon-fire) / .4), inset 0 0 8px hsl(var(--dragon-ice));
 }
 .dragon-profile .neon-panel-inner {
-  border-radius: 17px 5px 17px 5px;
+  border-radius: 13px 4px 13px 4px;
   background: linear-gradient(110deg,hsl(var(--dragon-ice) / .12),hsl(var(--dragon-night) / .94) 20%,hsl(var(--dragon-night) / .86) 75%,hsl(var(--dragon-fire) / .17));
   border: 1px solid hsl(var(--dragon-ice) / .65);
   box-shadow: inset 0 0 10px hsl(var(--dragon-ice) / .4), inset 0 -3px 6px hsl(var(--dragon-fire) / .45);
