@@ -10,7 +10,7 @@ const ITEMS = [
 /** Profil alt menüsü. */
 export default function NeonFooterMenu({ onSelect }) {
   return (
-    <NeonPanel innerClassName="grid grid-cols-3">
+    <NeonPanel className="dragon-footer" innerClassName="grid grid-cols-3">
       {ITEMS.map((item, index) => (
         <button
           key={item.key}

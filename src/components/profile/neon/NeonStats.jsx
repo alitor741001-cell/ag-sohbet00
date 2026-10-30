@@ -12,7 +12,7 @@ const COLUMNS = [
 export default function NeonStats({ friends = 0, following = 0, followers = 0, visitors = 0, onSelect }) {
   const values = { friends, following, followers, visitors };
   return (
-    <NeonPanel innerClassName="grid grid-cols-4 px-1 py-3">
+    <NeonPanel className="dragon-stats" innerClassName="grid grid-cols-4 px-1 py-3">
       {COLUMNS.map((column, index) => (
         <button
           key={column.key}

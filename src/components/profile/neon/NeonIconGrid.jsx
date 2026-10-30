@@ -13,7 +13,7 @@ const ITEMS = [
 /** Profil ikon şeridi: mağaza, çanta, seviye, ajans ve CP. */
 export default function NeonIconGrid({ vipCount = 0, onSelect }) {
   return (
-    <NeonPanel innerClassName="px-1.5 py-3">
+    <NeonPanel className="dragon-menu" innerClassName="px-1.5 py-3">
       <div className="grid grid-cols-5 gap-y-1">
         {ITEMS.map((item) => (
           <button key={item.key} type="button" onClick={() => onSelect(item.key)} className="flex min-w-0 flex-col items-center gap-1.5 active:scale-95">

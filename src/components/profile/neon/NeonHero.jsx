@@ -4,7 +4,7 @@ import ProfileAvatarPortrait from '@/components/profile/fantasy/ProfileAvatarPor
 import { useToast } from '@/components/ui/use-toast';
 import { badgesFromUser, vipDaysLeft, vipLevelOf } from '@/lib/userLevels';
 import { broadcasterState } from '@/lib/broadcaster';
-import NeonPanel from '@/components/profile/neon/NeonPanel';
+
 
 const PILL = 'inline-flex h-6 items-center gap-1 rounded-full px-2.5 text-[11px] font-black text-white';
 
@@ -34,7 +34,7 @@ export default function NeonHero({ user, avatar, onAvatar, uploading }) {
   };
 
   return (
-    <NeonPanel innerClassName="px-3.5 py-4">
+    <div className="dragon-hero px-1 py-4">
       <div className="flex items-start gap-3">
         <div className="relative shrink-0 pt-3">
           <Crown className="absolute -top-0.5 left-1/2 h-5 w-5 -translate-x-1/2 text-[#ffd166] drop-shadow-[0_0_6px_rgba(255,190,60,0.9)]" fill="#ffd166" aria-hidden="true" />
@@ -138,6 +138,6 @@ export default function NeonHero({ user, avatar, onAvatar, uploading }) {
           </button>
         </div>
       )}
-    </NeonPanel>
+    </div>
   );
 }

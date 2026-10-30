@@ -18,6 +18,7 @@ import NeonIconGrid from '@/components/profile/neon/NeonIconGrid';
 import NeonFooterMenu from '@/components/profile/neon/NeonFooterMenu';
 import NeonPanel from '@/components/profile/neon/NeonPanel';
 import '@/components/profile/neon/neonProfile.css';
+import '@/components/profile/neon/dragonProfile.css';
 import { giftBoxLocked } from '@/lib/giftAccess';
 import ProfileDetailsSection from '@/components/profile/ProfileDetailsSection';
 import ProfileSettings from '@/components/profile/ProfileSettings';
@@ -34,7 +35,7 @@ import useWalletCoinsLive from '@/hooks/useWalletCoinsLive';
 import useGiftSummaryLive from '@/hooks/useGiftSummaryLive';
 
 const EMPTY_FORM = { username: '', full_name: '', phone: '', avatar: '', birth_date: '' };
-const PROFILE_BG = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/b553a4428_generated_image.png';
+const PROFILE_BG = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/6c665228d_generated_image.png';
 
 /** Profil sayfası: alev çerçeveli tek ekran — kimlik, ajans, istatistik, cüzdan ve menü. */
 export default function Profile() {
@@ -182,7 +183,7 @@ export default function Profile() {
   const toggle = (key) => setOpenKey((current) => (current === key ? null : key));
 
   return (
-    <div className="profile-neon-shell dark min-h-screen pb-6 text-white" style={{ '--profile-bg': `url(${PROFILE_BG})` }}>
+    <div className="profile-neon-shell dragon-profile dark min-h-screen pb-6 text-white" style={{ '--profile-bg': `url(${PROFILE_BG})` }}>
       <div className="mx-auto w-full max-w-2xl md:max-w-3xl xl:max-w-4xl">
         <PullToRefresh onRefresh={() => { reload?.(); loadWallet(); loadSocial(); loadVipCount(); }}>
           <div className="space-y-2.5 px-3 pt-4">

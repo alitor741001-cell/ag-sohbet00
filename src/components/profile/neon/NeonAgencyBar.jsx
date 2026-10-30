@@ -8,7 +8,7 @@ export default function NeonAgencyBar({ user }) {
   const code = owned ? user.owned_agency_code || user.agency_code : user.agency_code;
   if (!name && !code) return null;
   return (
-    <NeonPanel innerClassName="flex items-center gap-3 px-3.5 py-3">
+    <NeonPanel className="dragon-agency" innerClassName="flex items-center gap-3 px-3.5 py-3">
       <FileText className="h-5 w-5 shrink-0 text-[#7dd3fc]" aria-hidden="true" />
       <div className="min-w-0">
         <p className="truncate text-xs font-bold text-white">Ajans: {name || '—'}</p>
