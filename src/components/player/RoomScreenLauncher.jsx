@@ -1,41 +1,37 @@
-import { ArrowLeft, Search } from 'lucide-react';
+import { Clapperboard } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
-/** Kaynak yokken ekranda çıkan tek seçim: film paneli. */
-export default function RoomScreenLauncher({ onSearch }) {
+/** Kaynak yokken ekranda çıkan tek seçim: Film İzle bölümü. */
+export default function RoomScreenLauncher() {
   return (
-    <div className="flex h-full w-full flex-col items-center justify-center gap-5 bg-black px-6 text-center">
-      <div>
-        <p className="text-lg font-extrabold text-white">Filmler</p>
-        <p className="mt-1 text-xs text-white/50">Film adını yaz ya da kategori seç, odada tam ekran izle.</p>
-      </div>
-      <button
-        type="button"
-        onClick={onSearch}
-        className="flex w-64 items-center gap-3 rounded-2xl border border-red-500/40 bg-red-500/10 px-4 py-4 transition active:scale-95"
+    <div className="flex h-full w-full flex-col items-center justify-center gap-4 bg-black px-6 text-center">
+      <Link
+        to="/film-izle"
+        className="flex items-center gap-1.5 rounded-full border border-[#ef4343]/60 bg-black/80 px-4 py-2.5 text-[13px] font-extrabold text-white shadow-[0_0_18px_rgba(239,67,67,0.45)] backdrop-blur active:scale-95"
       >
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-600">
-          <Search className="h-5 w-5 text-white" />
-        </span>
-        <span className="text-left">
-          <span className="block text-sm font-bold text-white">Film Ara</span>
-          <span className="block text-[10px] text-white/50">Tüm filmler, tek dokunuşta</span>
-        </span>
-      </button>
+        <Clapperboard className="h-4 w-4 text-[#ef4343]" />
+        Film İzle
+      </Link>
       <p className="max-w-xs text-[10px] leading-relaxed text-white/40">
-        Arama uygulamanın içinde çalışır. Seçtiğin film odanın ekranında, herkes aynı anda ve tam ekran izler.
+        Film adını yaz, yasal platformlarda izle.
       </p>
     </div>
   );
 }
 
-/** Yayın oynarken ekranın üstünde duran film paneli düğmesi. */
+/** Arama sonucu varsa ekranın üstünde duran geri dönüş düğmesi. */
 export function RoomScreenSwitch({ onFilms, hasResults }) {
-  const base = 'flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-bold border backdrop-blur-md transition active:scale-95';
+  if (!hasResults) return null;
   return (
-    <button type="button" onClick={onFilms} className={`${base} border-white/15 bg-black/60 text-white/80`}>
-      {hasResults
-        ? <><ArrowLeft className="h-3.5 w-3.5" /> Geri</>
-        : <><Search className="h-3.5 w-3.5" /> Filmler</>}
+    <button
+      type="button"
+      onClick={onFilms}
+      className="flex items-center gap-1.5 rounded-full border border-white/15 bg-black/60 px-3 py-1.5 text-[11px] font-bold text-white/80 backdrop-blur-md transition active:scale-95"
+    >
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M19 12H5M12 19l-7-7 7-7" />
+      </svg>
+      Geri
     </button>
   );
 }

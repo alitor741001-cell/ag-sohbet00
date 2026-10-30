@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Clapperboard, Info, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Clapperboard } from 'lucide-react';
 import FilmSearchBar from '@/components/film/FilmSearchBar';
 import FilmPlayerPanel from '@/components/film/FilmPlayerPanel';
 import LegalPlatformGrid from '@/components/film/LegalPlatformGrid';
@@ -45,23 +45,6 @@ export default function FilmWatch() {
         <FilmSearchBar onSearch={(url) => openInBrowser(url)} />
         <FilmPlayerPanel />
         <LegalPlatformGrid />
-
-        <section className="mx-auto w-full max-w-2xl px-4">
-          <div className="rounded-2xl border border-white/10 bg-[#0b0d16]/80 p-4">
-            <h2 className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.16em] text-white/50">
-              <Info className="h-3.5 w-3.5" /> Nasıl çalışır
-            </h2>
-            <ul className="mt-2 space-y-1.5 text-[11px] leading-relaxed text-white/55">
-              <li>• Arama kutusu Google'da gerçek sonuçları açar; uygulama film üretmez.</li>
-              <li>• Film siteleri uygulama içinde gösterilmeyi engellediği için sonuçlar tarayıcıda açılır.</li>
-              <li>• YouTube ve doğrudan video bağlantıları uygulamanın kendi oynatıcısında oynar.</li>
-            </ul>
-            <p className="mt-2 flex items-start gap-1.5 text-[11px] font-semibold text-[#8ef0b8]">
-              <ShieldCheck className="mt-[1px] h-3.5 w-3.5 shrink-0" />
-              Yalnızca yasal izleme platformlarını destekliyoruz.
-            </p>
-          </div>
-        </section>
       </div>
     </div>
   );
