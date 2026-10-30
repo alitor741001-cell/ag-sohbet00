@@ -35,6 +35,8 @@ const MaintenanceMode = lazy(() => import('@/pages/MaintenanceMode'));
 const Profile = lazy(() => import('@/pages/Profile'));
 const ProfileSettingsPage = lazy(() => import('@/pages/ProfileSettingsPage'));
 const BlockedAccounts = lazy(() => import('@/pages/BlockedAccounts'));
+const ProfileDetailsPage = lazy(() => import('@/pages/ProfileDetailsPage'));
+const ProfileExtensionsPage = lazy(() => import('@/pages/ProfileExtensionsPage'));
 const UserProfile = lazy(() => import('@/pages/UserProfile'));
 const Search = lazy(() => import('@/pages/Search'));
 const VipLevels = lazy(() => import('@/pages/VipLevels'));
@@ -127,6 +129,8 @@ const AuthenticatedApp = () => {
           {/* Profil kısmı kaldırıldı: eski bağlantılar ana sayfaya düşer. */}
           <Route path="/profil" element={<Profile />} />
           <Route path="/profil/ayarlar" element={<ProfileSettingsPage />} />
+          <Route path="/profil/ayarlar/kisisel" element={<ProfileDetailsPage />} />
+          <Route path="/profil/ayarlar/eklentiler" element={<ProfileExtensionsPage />} />
           <Route path="/profil/engellenen" element={<BlockedAccounts />} />
           <Route path="/ajans" element={<AgencyPage />} />
           <Route path="/ajans/kazanc" element={<AgencyEarnings />} />

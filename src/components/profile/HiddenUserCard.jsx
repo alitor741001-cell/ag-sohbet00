@@ -5,10 +5,11 @@ import { useToast } from '@/components/ui/use-toast';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { vipLevelOf } from '@/lib/userLevels';
 import { HIDDEN_REQUIRED_VIP, hiddenUnlocked } from '@/lib/hiddenUser';
+import SettingSwitch from '@/components/profile/SettingSwitch';
 
 /**
  * Gizli Kullanıcı: VIP10 ve üzeri hesaplarda açılır; yönetici hesabı VIP şartı olmadan açar.
- * Buton her zaman görünür; kilidi olmayan hesap aktif edemez.
+ * Anahtar her zaman görünür; kilidi olmayan hesap aktif edemez.
  */
 export default function HiddenUserCard({ user, onUpdated }) {
   const { toast } = useToast();
@@ -42,30 +43,23 @@ export default function HiddenUserCard({ user, onUpdated }) {
   };
 
   return (
-    <section className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4">
-      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${enabled ? 'bg-emerald-500/15' : 'bg-secondary'}`}>
-        {unlocked ? <EyeOff className={`h-5 w-5 ${enabled ? 'text-emerald-400' : 'text-muted-foreground'}`} /> : <Lock className="h-5 w-5 text-muted-foreground" />}
+    <div className="rounded-2xl border border-white/12 bg-white/[0.04] px-3.5 py-3">
+      <div className="flex items-center gap-3">
+        {unlocked
+          ? <EyeOff className={`h-[18px] w-[18px] shrink-0 ${enabled ? 'text-green-400' : 'text-white/60'}`} />
+          : <Lock className="h-[18px] w-[18px] shrink-0 text-white/40" />}
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-bold text-white">Gizli Kullanıcı</p>
+          <p className="text-[11px] font-semibold text-white/45">
+            {!unlocked
+              ? `VIP${HIDDEN_REQUIRED_VIP}+ gerekir (VIP${level})`
+              : adminBypass
+                ? 'Yönetici hesabı · VIP şartı yok'
+                : enabled ? 'Açık · odalarda görünmüyorsun' : 'Kapalı · odalarda görünürsün'}
+          </p>
+        </div>
+        <SettingSwitch checked={enabled} disabled={saving || !unlocked} onChange={toggle} label="Gizli Kullanıcı" />
       </div>
-      <div className="min-w-0 flex-1">
-        <p className="font-bold">Gizli Kullanıcı</p>
-        <p className="text-xs text-muted-foreground">
-          {!unlocked
-            ? `VIP${HIDDEN_REQUIRED_VIP} ve üzeri hesaplarda aktif edilir (VIP${level}).`
-            : adminBypass
-              ? 'Yönetici hesabı — VIP şartı aranmaz.'
-              : enabled
-                ? 'Açık — odalara görünmeden giriyorsun.'
-                : 'Kapalı — odalarda görünürsün.'}
-        </p>
-      </div>
-      <button
-        type="button"
-        onClick={toggle}
-        disabled={saving || !unlocked}
-        className={`shrink-0 rounded-lg px-3.5 py-2 text-xs font-bold transition-colors disabled:opacity-40 ${enabled ? 'bg-emerald-500/15 text-emerald-400' : 'bg-primary text-primary-foreground'}`}
-      >
-        {saving ? '...' : enabled ? 'Kapat' : 'Aktif Et'}
-      </button>
-    </section>
+    </div>
   );
 }

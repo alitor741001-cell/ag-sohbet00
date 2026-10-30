@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronDown, EyeOff, KeyRound, Lock, Palette, ShieldCheck } from 'lucide-react';
+import { ChevronDown, KeyRound, Lock, Palette, ShieldCheck } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useToast } from '@/components/ui/use-toast';
 import ThemeModeSelector from '@/components/profile/ThemeModeSelector';
@@ -7,9 +7,8 @@ import HiddenUserCard from '@/components/profile/HiddenUserCard';
 import VipExtensionSettings from '@/components/profile/VipExtensionSettings';
 
 const ROW = 'rounded-2xl border border-white/12 bg-white/[0.04] px-3.5 py-3';
-const ICON_BOX = 'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/[0.06]';
 
-/** Profil eklentileri: tema, gizli hesap ve şifre — sade satırlar hâlinde. */
+/** Eklentiler: hareketli avatar, gizli profil, oda takibi, gizli kullanıcı, görünüm ve şifre. */
 export default function ProfileSettings({ user, onUpdated }) {
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
@@ -40,19 +39,25 @@ export default function ProfileSettings({ user, onUpdated }) {
 
   return (
     <div className="space-y-2.5">
+      <p className="px-1 text-[11px] font-bold uppercase tracking-wide text-white/35">Gizlilik ve Görünüm</p>
       <VipExtensionSettings />
+      <HiddenUserCard user={user} onUpdated={onUpdated} />
 
-      <Panel icon={Palette} title="Görünüm" subtitle="Uygulama temasını seç">
+      <p className="px-1 pt-3 text-[11px] font-bold uppercase tracking-wide text-white/35">Uygulama</p>
+      <div className={ROW}>
+        <div className="mb-3 flex items-center gap-3">
+          <Palette className="h-[18px] w-[18px] shrink-0 text-white/60" />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold text-white">Görünüm</p>
+            <p className="text-[11px] font-semibold text-white/45">Uygulama temasını seç</p>
+          </div>
+        </div>
         <ThemeModeSelector />
-      </Panel>
-
-      <Panel icon={EyeOff} title="Gizli Hesap" subtitle="Profilini diğer üyelerden sakla">
-        <HiddenUserCard user={user} onUpdated={onUpdated} />
-      </Panel>
+      </div>
 
       <div className={ROW}>
         <button type="button" onClick={() => setOpen((value) => !value)} className="flex w-full items-center gap-3 text-left">
-          <span className={ICON_BOX}><KeyRound className="h-[18px] w-[18px] text-white/75" /></span>
+          <KeyRound className="h-[18px] w-[18px] shrink-0 text-white/60" />
           <span className="min-w-0 flex-1">
             <span className="block text-sm font-bold text-white">Şifre Değiştir</span>
             <span className="block text-[11px] font-semibold text-white/45">Hesabının şifresini güncelle</span>
@@ -75,21 +80,6 @@ export default function ProfileSettings({ user, onUpdated }) {
           </form>
         )}
       </div>
-    </div>
-  );
-}
-
-function Panel({ icon: Icon, title, subtitle, children }) {
-  return (
-    <div className={ROW}>
-      <div className="mb-3 flex items-center gap-3">
-        <span className={ICON_BOX}><Icon className="h-[18px] w-[18px] text-white/75" /></span>
-        <span className="min-w-0 flex-1">
-          <span className="block text-sm font-bold text-white">{title}</span>
-          <span className="block text-[11px] font-semibold text-white/45">{subtitle}</span>
-        </span>
-      </div>
-      {children}
     </div>
   );
 }
