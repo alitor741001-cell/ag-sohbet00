@@ -88,6 +88,18 @@ export default function Profile() {
     loadSocial();
   }, []);
 
+  // Takip ve ziyaretçi sayaçları başka ekranda değişebilir: sayfaya dönüldüğünde
+  // tasarımdaki dört sayaç gerçek değerlerle tazelenir.
+  useEffect(() => {
+    const refresh = () => { if (document.visibilityState === 'visible') loadSocial(); };
+    document.addEventListener('visibilitychange', refresh);
+    window.addEventListener('focus', refresh);
+    return () => {
+      document.removeEventListener('visibilitychange', refresh);
+      window.removeEventListener('focus', refresh);
+    };
+  }, []);
+
   // Cüzdan canlıdır: oyun kazancı, hesaba gelen coin ve hediye harcaması bakiyeye
   // anında işler — kart 5 saniyelik yenilemeyi beklemez.
   useWalletCoinsLive(user?.id, (coins) => setWallet((prev) => ({ ...prev, coins })));
