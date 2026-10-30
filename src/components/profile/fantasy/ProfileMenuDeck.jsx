@@ -1,5 +1,4 @@
 import { useBorderWhiteCutout } from '@/lib/whiteCutout';
-import ProfileStatDeckRow from '@/components/profile/fantasy/ProfileStatDeckRow';
 
 // Yönetici tasarımı (en altta yönetim paneli) ve üye tasarımı (yönetim paneli yok).
 const ADMIN_IMAGE = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/7cf1dceb7_IMG_0491.jpg';
@@ -72,7 +71,6 @@ export default function ProfileMenuDeck({ admin = false, stats = {}, onAction })
       )}
       {src && (
         <div className="absolute inset-0">
-          <ProfileStatDeckRow stats={stats} onAction={onAction} />
           {rows.map((row) => (
             <div
               key={row.top}
