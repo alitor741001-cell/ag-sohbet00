@@ -32,6 +32,9 @@ export default function LegalPlatformGrid({ onYouTube }) {
           </button>
         ))}
       </div>
+      <p className="mt-2 text-[11px] leading-snug text-white/40">
+        Netflix hesabınızla Netflix'in kendi sayfasında açılır; Netflix uygulama içinde gömülmeye izin vermiyor.
+      </p>
     </section>
   );
 }

@@ -5,7 +5,6 @@ import { base44 } from '@/api/base44Client';
 import FilmSearchBar from '@/components/film/FilmSearchBar';
 import FilmSearchResults from '@/components/film/FilmSearchResults';
 import FilmPlayOverlay from '@/components/film/FilmPlayOverlay';
-import FilmPlayerPanel from '@/components/film/FilmPlayerPanel';
 import LegalPlatformGrid from '@/components/film/LegalPlatformGrid';
 
 /** Arama türüne göre sorgu sonu: oyuncu ve tür aramaları da film sonucu getirir. */
@@ -83,7 +82,6 @@ export default function FilmWatch() {
           searched={searched}
           onPick={setFilm}
         />
-        <FilmPlayerPanel />
         <LegalPlatformGrid onYouTube={() => runSearch(YOUTUBE_QUERY)} />
       </div>
 
