@@ -8,7 +8,6 @@ const BASIC_PATHS = [
   '/arkadaslar',
   '/ara',
   '/listem',
-  '/profil',
   '/kullanici',
   '/destek',
   '/bildirimler',

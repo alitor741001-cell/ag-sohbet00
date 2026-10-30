@@ -1,6 +1,6 @@
-// Alt menüde hafızada tutulan sekmeler (sıra: Ana Sayfa, Sohbet, Profil).
+// Alt menüde hafızada tutulan sekmeler (sıra: Ana Sayfa, Sohbet).
 // "Oda Kur" bir işlem ekranıdır: her açılışta taze başlar, hafızada tutulmaz.
-export const TAB_PATHS = ['/', '/arkadaslar', '/profil'];
+export const TAB_PATHS = ['/', '/arkadaslar'];
 
 /** Verilen yol bir sekme içindeyse sekmenin kök yolunu döndürür, aksi halde null. */
 export function matchTabPath(pathname) {

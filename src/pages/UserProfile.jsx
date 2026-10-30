@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import subscribeEntity from '@/components/data/entitySubscriptions';
 import { useCurrentUser } from '@/lib/useCurrentUser';
@@ -152,7 +152,7 @@ export default function UserProfile({ userId, roomIdOverride, onBack, onMessage,
             </div>
           )}
           {!accountState && <ProfileRoomActions userId={id} me={me} roomId={roomId} />}
-          {isSelf && <Link to="/profil" className="mt-5 bg-primary text-primary-foreground px-5 py-2 rounded-lg text-sm font-semibold">Profili Düzenle</Link>}
+
         </div>
       )}
     </div>

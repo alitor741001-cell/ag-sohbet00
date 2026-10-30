@@ -7,7 +7,6 @@ import { TabActivityContext } from '@/components/layout/TabActivityContext';
 const PAGES = {
   '/': lazy(() => import('@/pages/Home')),
   '/arkadaslar': lazy(() => import('@/pages/Friends')),
-  '/profil': lazy(() => import('@/pages/Profile')),
 };
 
 /**

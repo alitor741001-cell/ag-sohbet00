@@ -154,17 +154,6 @@ export default function FullUserProfile({
 
       <div className="flex items-center gap-2">
         {muted && <MicOff className="h-4 w-4" style={{ color: palette.accent }} />}
-        {isSelf && !hideSettings && (
-          <button
-            type="button"
-            onClick={() => { onClose?.(); navigate('/profil?tab=settings'); }}
-            aria-label="Profil ayarları"
-            className="flex h-7 w-7 items-center justify-center rounded-full border text-white"
-            style={{ borderColor: palette.soft, background: 'rgba(0,0,0,0.45)' }}
-          >
-            <Settings className="h-4 w-4" />
-          </button>
-        )}
       </div>
     </header>
   );

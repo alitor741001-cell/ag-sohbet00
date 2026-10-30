@@ -5,7 +5,6 @@ const loaders = {
   '/sesli-oda-kur': () => import('@/pages/VoiceRoomCreate'),
   '/sesli-oda': () => import('@/pages/VoiceRoom'),
   '/arkadaslar': () => import('@/pages/Friends'),
-  '/profil': () => import('@/pages/Profile'),
   '/bildirimler': () => import('@/pages/Notifications'),
   '/ajans': () => import('@/pages/AgencyPage'),
   '/ajans/kazanc': () => import('@/pages/agency/AgencyEarnings'),

@@ -1,4 +1,4 @@
-import { Home, MessageCircle, Gamepad2, User } from 'lucide-react';
+import { Home, MessageCircle, Gamepad2 } from 'lucide-react';
 import LiveChatButton from '@/components/layout/LiveChatButton';
 import UserSupportButton from '@/components/layout/UserSupportButton';
 
@@ -8,7 +8,6 @@ const ZONES = [
   { label: 'Ana Sayfa', path: '/', icon: Home },
   { label: 'Sohbet', path: '/arkadaslar?view=chats', activePath: '/arkadaslar', icon: MessageCircle },
   { label: 'Oyunlar', path: '/?oyunlar=1', icon: Gamepad2 },
-  { label: 'Profil', path: '/profil', icon: User },
 ];
 
 function isActive(z, pathname, search) {

@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Gamepad2, Home, MessageCircle, User } from 'lucide-react';
+import { Gamepad2, Home, MessageCircle } from 'lucide-react';
 import { useCurrentUser, membershipActive } from '@/lib/useCurrentUser';
 import useSocialBadges from '@/hooks/useSocialBadges';
 import useSupportBadge from '@/hooks/useSupportBadge';
@@ -14,13 +14,11 @@ const fullItems = [
   { label: 'Ana Sayfa', path: '/', icon: Home },
   { label: 'Sohbet', path: '/arkadaslar?view=chats', activePath: '/arkadaslar', icon: MessageCircle },
   { label: 'Oyunlar', path: '/?oyunlar=1', icon: Gamepad2 },
-  { label: 'Profil', path: '/profil', icon: User },
 ];
 
 const limitedItems = [
   { label: 'Ana Sayfa', path: '/', icon: Home },
   { label: 'Sohbet', path: '/arkadaslar?view=chats', activePath: '/arkadaslar', icon: MessageCircle },
-  { label: 'Profil', path: '/profil', icon: User },
 ];
 
 export default function BottomNav() {
@@ -35,8 +33,8 @@ export default function BottomNav() {
   // Klavye açılınca alt menü klavyenin üstüne kayar: en altta sabit kalır, arada kaybolmaz.
   const keyboardInset = useKeyboardInset();
   const baseItems = membershipActive(user) ? fullItems : limitedItems;
-  // Canlı destek düğmesi herkeste profil sekmesinin hemen solunda durur.
-  const items = [...baseItems.slice(0, -1), { dock: 'support' }, ...baseItems.slice(-1)];
+  // Canlı destek düğmesi herkeste menünün sonunda durur.
+  const items = [...baseItems, { dock: 'support' }];
 
   if (inVoiceRoom || location.pathname === '/vip') return null;
 

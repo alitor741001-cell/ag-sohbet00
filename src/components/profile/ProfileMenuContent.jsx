@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ChevronRight, Headphones, LogOut, Shield, User } from 'lucide-react';
+import { ChevronRight, Headphones, LogOut, Shield } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { Image } from '@/components/ui/image';
@@ -113,16 +113,6 @@ export default function ProfileMenuContent({ onClose, onOpenPanel }) {
             <ChevronRight className="w-4 h-4 text-white/30 shrink-0" />
           </Link>
         )}
-
-        <Link to="/profil" onClick={onClose} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors relative">
-          <div className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full bg-purple-500" />
-          <User className="w-5 h-5 text-white/70 shrink-0" />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-white">Profilim</p>
-            <p className="text-xs text-white/50">Hesap bilgilerinizi düzenleyin</p>
-          </div>
-          <ChevronRight className="w-4 h-4 text-white/30 shrink-0" />
-        </Link>
 
         <div className="my-0.5 border-t border-white/10" />
 

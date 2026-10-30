@@ -27,7 +27,6 @@ const WatchParty = lazy(() => import('@/pages/WatchParty'));
 const CreateRoom = lazy(() => import('@/pages/CreateRoom'));
 const VoiceRoomCreate = lazy(() => import('@/pages/VoiceRoomCreate'));
 const VoiceRoom = lazy(() => import('@/pages/VoiceRoom'));
-const Profile = lazy(() => import('@/pages/Profile'));
 const AgencyPage = lazy(() => import('@/pages/AgencyPage'));
 const Support = lazy(() => import('@/pages/SupportEntry'));
 const Notifications = lazy(() => import('@/pages/Notifications'));
@@ -122,7 +121,8 @@ const AuthenticatedApp = () => {
           <Route path="/arkadaslar/istekler" element={<FriendRequests />} />
           <Route path="/ajans/mesajlar" element={<AgencyMessages />} />
           <Route path="/bildirimler" element={<Notifications />} />
-          <Route path="/profil" element={<Profile />} />
+          {/* Profil kısmı kaldırıldı: eski bağlantılar ana sayfaya düşer. */}
+          <Route path="/profil" element={<Navigate to="/" replace />} />
           <Route path="/ajans" element={<AgencyPage />} />
           <Route path="/ajans/kazanc" element={<AgencyEarnings />} />
           <Route path="/ajans/kota-tablosu" element={<AgencyQuota />} />

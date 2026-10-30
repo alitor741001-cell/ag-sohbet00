@@ -25,7 +25,7 @@ export default function VipLevels() {
     {/* Tema zemini ekrana sabitlenir: sayfa kayarken görsel yukarı/aşağı, sağa/sola kaymaz. */}
     <div className="vip-world-fixed" aria-hidden="true" />
     <div className="relative z-10 mx-auto max-w-lg">
-      <VipPageHeader onBack={() => window.history.length > 1 ? navigate(-1) : navigate('/profil')} onBag={() => setBagOpen(true)} onHelp={() => setHelp(!help)} />
+      <VipPageHeader onBack={() => window.history.length > 1 ? navigate(-1) : navigate('/')} onBag={() => setBagOpen(true)} onHelp={() => setHelp(!help)} />
       {help && <p className="vip-glass m-3 rounded-xl p-4 text-xs leading-relaxed">VIP 5 başlangıç, VIP 12 en üst seviyedir. Seçtiğin VIP'i aşağıdaki sabit alandan Coins ile 30 günlük satın alabilirsin; varsa kalan süreye 30 gün eklenir. VIP 6: 7.200.000 Coins, VIP 7: 21.600.000 Coins. Çantandaki üyelikleri kullanma ve hediye etme seçenekleri korunur. Süre dolunca kozmetikler saklanır, kullanım hakları durur.</p>}
       <VipLevelHero theme={theme} levels={data.catalog.levels} onLevel={setLevel} />
       <VipCosmeticGrid theme={theme} features={data.catalog.features} onPreview={setPreview} avatar={user?.avatar} name={user?.username || user?.full_name} />

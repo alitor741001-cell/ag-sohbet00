@@ -1,8 +1,7 @@
 // Uygulama açıldıktan sonra en sık gidilen ekranlar arka planda hazırlanır.
-// Böylece sohbet, profil, destek ve profil kartı ilk dokunuşta beklemeden açılır.
+// Böylece sohbet, destek, odalar ve profil kartı ilk dokunuşta beklemeden açılır.
 const CHUNKS = [
   () => import('@/pages/Friends'),
-  () => import('@/pages/Profile'),
   () => import('@/pages/SupportEntry'),
   () => import('@/pages/OpenRooms'),
   () => import('@/components/profile/FullUserProfile'),

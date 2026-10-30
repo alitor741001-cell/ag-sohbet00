@@ -12,7 +12,7 @@ export default function RoutePreloader() {
     document.addEventListener('pointerover', onIntent, { passive: true });
     const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
     const warm = !connection?.saveData && !['slow-2g', '2g', '3g'].includes(connection?.effectiveType);
-    const queue = warm ? ['/', '/arkadaslar', '/profil', '/bildirimler'].filter(path => path !== window.location.pathname) : [];
+    const queue = warm ? ['/', '/arkadaslar', '/bildirimler'].filter(path => path !== window.location.pathname) : [];
     let cancelled = false, timer = 0, idle = 0;
     const next = () => {
       if (cancelled || !queue.length || document.visibilityState === 'hidden') return;

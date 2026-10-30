@@ -53,7 +53,7 @@ export default function LevelPage() {
 
   const goBack = () => {
     if (window.history.length > 1) navigate(-1);
-    else navigate('/profil');
+    else navigate('/');
   };
 
   return (

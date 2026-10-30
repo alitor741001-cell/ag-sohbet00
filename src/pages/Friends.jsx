@@ -133,7 +133,7 @@ export default function Friends() {
         <header className="sticky top-0 z-20 flex items-center gap-2 px-3 py-3 backdrop-blur-md" style={{ background: 'rgba(4,11,28,0.6)', borderBottom: '1px solid rgba(242,206,107,0.25)' }}>
           <button
             type="button"
-            onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/profil'))}
+            onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/'))}
             aria-label="Geri"
             className="flex h-9 w-9 items-center justify-center rounded-full border border-premium-gold/30 bg-white/5 text-[#ffeec2] active:scale-95"
           >
