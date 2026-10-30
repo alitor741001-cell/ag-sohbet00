@@ -21,7 +21,7 @@ const fmt = (n) => Number(n || 0).toLocaleString('tr-TR');
 const Val = ({ children, color = '#fff' }) => <span className="truncate text-[min(3.6vw,15px)] font-extrabold" style={{ color, textShadow: '0 1px 3px #000' }}>{children}</span>;
 
 export default function Profile() {
-  const { user, refresh } = useCurrentUser();
+  const { user, reload } = useCurrentUser();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { wallet, profile, vipCount, counts } = useProfileDesignData(user);
@@ -36,7 +36,7 @@ export default function Profile() {
   const isCaster = p.broadcaster_status === 'active' || !!p.agency_record_id;
   const locked = giftBoxLocked(user);
   const social = [['friends', 'Arkadaşlar', () => navigate('/arkadaslar')], ['following', 'Takip Edilenler'], ['followers', 'Takipçiler'], ['visitors', 'Ziyaretçiler']];
-  const sheets = { blocked: ['Engellenen Hesaplar', <BlockedUsers key="b" />], privacy: ['Gizlilik Politikası', <PrivacyPolicyBody key="p" />], settings: ['Ayarlar', <ProfileSettings key="s" user={user} onUpdated={refresh} />] };
+  const sheets = { blocked: ['Engellenen Hesaplar', <BlockedUsers key="b" />], privacy: ['Gizlilik Politikası', <PrivacyPolicyBody key="p" />], settings: ['Ayarlar', <ProfileSettings key="s" user={user} onUpdated={reload} />] };
 
   return (
     <div className="design-screen z-0 overflow-hidden touch-none bg-[#02030c]" style={{ height: 'calc(var(--design-height) - 4rem - env(safe-area-inset-bottom))' }}>

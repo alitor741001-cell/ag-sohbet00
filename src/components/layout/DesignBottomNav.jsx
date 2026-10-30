@@ -5,12 +5,13 @@ import { useCurrentUser } from '@/lib/useCurrentUser';
 import useSupportBadge from '@/hooks/useSupportBadge';
 import { useMessageRealtime } from '@/components/messages/MessageRealtimeProvider';
 
-// Düğme sırası: Ana Sayfa, Sohbet, Oyunlar, Canlı Destek.
+// Düğme sırası: Ana Sayfa, Sohbet, Oyunlar, Canlı Destek, Profil (tasarım görseliyle birebir).
 const ZONES = [
   { label: 'Ana Sayfa', to: '/', match: (p, s) => p === '/' && !s.includes('oyunlar=1') },
   { label: 'Sohbet', to: '/arkadaslar?view=chats', match: (p) => p.startsWith('/arkadaslar'), badge: 'chat' },
   { label: 'Oyunlar', to: '/?oyunlar=1', match: (p, s) => p === '/' && s.includes('oyunlar=1') },
   { label: 'Canlı Destek', to: '/destek', match: (p) => p === '/destek', badge: 'support' },
+  { label: 'Profil', to: '/profil', match: (p) => p === '/profil' },
 ];
 
 export const NAV_HEIGHT = 'clamp(92px, 33vw, 154px)';
