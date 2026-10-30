@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, LogOut, ShieldOff, User, Wand2 } from 'lucide-react';
+import { ChevronRight, LogOut, User, Wand2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import SettingsPageHeader from '@/components/profile/SettingsPageHeader';
@@ -34,15 +34,6 @@ export default function ProfileSettingsPage() {
             <span className="min-w-0 flex-1">
               <span className="block text-sm font-bold text-white">Eklentiler</span>
               <span className="block truncate text-[11px] text-white/45">Gizli profil, hareketli avatar, oda takibi, tema</span>
-            </span>
-            <ChevronRight className="h-4 w-4 shrink-0 text-white/30" />
-          </button>
-
-          <button type="button" onClick={() => navigate('/profil/engellenen')} className={ROW}>
-            <span className={ICON_BOX}><ShieldOff className="h-[18px] w-[18px] text-white/75" /></span>
-            <span className="min-w-0 flex-1">
-              <span className="block text-sm font-bold text-white">Engellenen Hesaplar</span>
-              <span className="block truncate text-[11px] text-white/45">Engellediğin üyeleri yönet</span>
             </span>
             <ChevronRight className="h-4 w-4 shrink-0 text-white/30" />
           </button>
