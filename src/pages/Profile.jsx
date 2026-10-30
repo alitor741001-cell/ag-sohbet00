@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
@@ -12,6 +12,7 @@ import SocialListDialog from '@/components/profile/social/SocialListDialog';
 import ProfileHeroCard from '@/components/profile/fantasy/ProfileHeroCard';
 import ProfileMenuDeck from '@/components/profile/fantasy/ProfileMenuDeck';
 import usePageScrollLock from '@/hooks/usePageScrollLock';
+import useProfileNavLift from '@/hooks/useProfileNavLift';
 import { isModerator } from '@/lib/roles';
 import { giftBoxLocked } from '@/lib/giftAccess';
 import PrivacyPolicyBody from '@/components/profile/PrivacyPolicyBody';
@@ -28,6 +29,9 @@ import useGiftSummaryLive from '@/hooks/useGiftSummaryLive';
 export default function Profile() {
   // Profil ekranı sabittir: sayfa kaymaz, tasarım yerinde durur.
   usePageScrollLock();
+  // Tasarımın alt kenarı alt menü çubuğunun çerçevesine oturur: ölçü çubuktan okunur.
+  const rootRef = useRef(null);
+  useProfileNavLift(rootRef);
   const { user, reload, setUser } = useCurrentUser();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -163,6 +167,7 @@ export default function Profile() {
   // cihazın görünür alanına kilitlenir — başlığın üstünde boş şerit kalmaz.
   return (
     <div
+      ref={rootRef}
       className="dark relative flex h-[calc(var(--app-height)-var(--profile-lift))] flex-col overflow-hidden text-white mt-[calc(-1*max(env(safe-area-inset-top),0.5rem))] lg:mt-0"
       style={{
         marginLeft: 'calc(-1 * env(safe-area-inset-left, 0px))',
@@ -184,7 +189,8 @@ export default function Profile() {
           />
         </div>
 
-      <div className="flex min-h-0 flex-1 flex-col px-4 pb-[env(safe-area-inset-bottom)]">
+      {/* Tasarım en altta boşluk bırakmaz: menü çubuğunun çerçevesine kadar iner. */}
+      <div className="flex min-h-0 flex-1 flex-col px-4 pb-0">
           <ProfileMenuDeck
             admin={isModerator(user)}
             stats={{
