@@ -1,13 +1,22 @@
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Clapperboard } from 'lucide-react';
-import FilmSearchBar from '@/components/film/FilmSearchBar';
+import FilmAppSearch from '@/components/film/FilmAppSearch';
+import FilmInlinePlayer from '@/components/film/FilmInlinePlayer';
 import FilmPlayerPanel from '@/components/film/FilmPlayerPanel';
 import LegalPlatformGrid from '@/components/film/LegalPlatformGrid';
-import { openInBrowser } from '@/lib/filmSearch';
 
-/** Film İzle: gerçek Google araması, yasal platformlar ve uygulama içi oynatıcı. */
+/** Film İzle: uygulama içi arama, uygulama içinde oynatma ve yasal platformlar. */
 export default function FilmWatch() {
   const navigate = useNavigate();
+  const [film, setFilm] = useState(null);
+  const playerRef = useRef(null);
+
+  // Film seçilince oynatıcı ekranın üstüne kaydırılır: film hemen görünür.
+  useEffect(() => {
+    if (film) playerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [film]);
+
   const goBack = () => {
     if (window.history.length > 1) navigate(-1);
     else navigate('/');
@@ -42,7 +51,10 @@ export default function FilmWatch() {
       </header>
 
       <div className="flex flex-col gap-5 pt-4">
-        <FilmSearchBar onSearch={(url) => openInBrowser(url)} />
+        <div ref={playerRef}>
+          <FilmInlinePlayer film={film} onClose={() => setFilm(null)} />
+        </div>
+        <FilmAppSearch onPick={setFilm} />
         <FilmPlayerPanel />
         <LegalPlatformGrid />
       </div>
