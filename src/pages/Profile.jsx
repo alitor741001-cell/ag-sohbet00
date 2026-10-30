@@ -10,11 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import useFriends from '@/hooks/useFriends';
 import SocialListDialog from '@/components/profile/social/SocialListDialog';
 import ProfileFixedHero from '@/components/profile/fantasy/ProfileFixedHero';
-import ProfileStatBar from '@/components/profile/fantasy/ProfileStatBar';
-import ProfileTwinCards from '@/components/profile/fantasy/ProfileTwinCards';
-import ProfileBalanceCards from '@/components/profile/fantasy/ProfileBalanceCards';
+import ProfileActionDeck from '@/components/profile/fantasy/ProfileActionDeck';
 import FantasyQuickBar from '@/components/profile/fantasy/FantasyQuickBar';
-import FantasyMenuBar from '@/components/profile/fantasy/FantasyMenuBar';
 import { giftBoxLocked } from '@/lib/giftAccess';
 import ProfileSettings from '@/components/profile/ProfileSettings';
 import BlockedUsers from '@/components/profile/BlockedUsers';
@@ -152,7 +149,6 @@ export default function Profile() {
   };
 
   if (!user) return <div className="dark min-h-screen p-6 text-white">Yükleniyor...</div>;
-  const elmasLocked = giftBoxLocked(user);
   const toggle = (key) => setOpenKey((current) => (current === key ? null : key));
   // Paket/abonelik sistemi kaldırıldı: üyelik süresi artık erişimi etkilemez.
 
@@ -171,18 +167,18 @@ export default function Profile() {
 
       <PullToRefresh onRefresh={() => { reload?.(); loadWallet(); loadSocial(); loadVipCount(); }}>
         <div className="space-y-3 px-4 pt-4">
-          <ProfileStatBar
-            friends={friendCount}
-            following={social.following}
-            followers={social.followers}
-            visitors={social.visitors}
-            onSelect={(key) => (key === 'friends' ? navigate('/arkadaslar?view=friends') : setSocialList(key))}
-          />
-          <ProfileBalanceCards coins={wallet?.coins ?? null} diamonds={elmasLocked ? null : (wallet?.month_score ?? null)} onCoins={() => setCoinShopOpen(true)} onDiamonds={openGiftBox} />
-          <ProfileTwinCards
-            vipCount={vipCount}
-            onVip={() => navigate('/vip')}
-            onWallet={() => setActivityOpen(true)}
+          <ProfileActionDeck
+            onAction={(key) => {
+              if (key === 'friends') navigate('/arkadaslar?view=friends');
+              else if (key === 'following' || key === 'followers' || key === 'visitors') setSocialList(key);
+              else if (key === 'coins') setCoinShopOpen(true);
+              else if (key === 'diamonds') openGiftBox();
+              else if (key === 'vip') navigate('/vip');
+              else if (key === 'giftHistory') setActivityOpen(true);
+              else if (key === 'admin') navigate('/admin');
+              else if (key === 'blocked') setBlockedOpen(true);
+              else if (key === 'settings') toggle('settings');
+            }}
           />
           <FantasyQuickBar
             onSelect={(key) => {
@@ -195,13 +191,6 @@ export default function Profile() {
           />
 
 
-
-          {/* Yönetim · Engellenen Hesaplar · Ayarlar: kristal şerit menü */}
-          <FantasyMenuBar
-            onAdmin={() => navigate('/admin')}
-            onBlocked={() => setBlockedOpen(true)}
-            onSettings={() => toggle('settings')}
-          />
 
           {openKey === 'settings' && (
             <div id="eklentiler" className="scroll-mt-24 space-y-3">
