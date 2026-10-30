@@ -93,7 +93,10 @@ export default function ProfileMenuDeck({ admin = false, stats = {}, onAction })
                     {row.valueStyle && value && (
                       <span
                         className={`absolute text-center ${row.valueStyle === 'nav' ? 'bottom-[4%] left-1/2 max-w-full -translate-x-1/2 overflow-hidden px-1' : 'bottom-[9%] left-[38%] right-[8%]'} ${VALUE_CLASS[row.valueStyle]} whitespace-nowrap`}
-                        style={row.valueStyle === 'amount' ? { fontSize: `min(14px, ${80 / Math.max(6, value.length)}cqw)` } : undefined}
+                        style={row.valueStyle === 'amount' ? {
+                          fontSize: `min(${action === 'diamonds' ? 12 : 14}px, ${(action === 'diamonds' ? 70 : 80) / Math.max(6, value.length)}cqw)`,
+                          ...(action === 'diamonds' ? { transform: 'translateX(-6%)' } : {}),
+                        } : undefined}
                       >
                         {value}
                       </span>
