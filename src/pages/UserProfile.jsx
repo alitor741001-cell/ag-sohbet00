@@ -19,6 +19,9 @@ import XpStatsCard from '@/components/xp/XpStatsCard';
 import { AccountStatusMark, ACCOUNT_MARKS, ACCOUNT_STATES, getAccountState } from '@/components/friends/AccountStatusAvatar';
 import { daysInApp } from '@/lib/xp';
 import usePageScrollLock from '@/hooks/usePageScrollLock';
+import useActiveRooms from '@/hooks/useActiveRooms';
+import { findLiveRoom } from '@/lib/liveRoom';
+import ProfileLiveLink from '@/components/profile/social/ProfileLiveLink';
 
 export default function UserProfile({ userId, roomIdOverride, onBack, onMessage, embedded = false }) {
   usePageScrollLock();
@@ -34,6 +37,8 @@ export default function UserProfile({ userId, roomIdOverride, onBack, onMessage,
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState('');
   const xpStats = useXp([id])[id];
+  const { rooms, getRoomId } = useActiveRooms();
+  const liveRoom = findLiveRoom(rooms, id, getRoomId(id));
 
   useEffect(() => {
     let active = true;
@@ -135,10 +140,13 @@ export default function UserProfile({ userId, roomIdOverride, onBack, onMessage,
           <div className="mt-4 w-full"><XpStatsCard stats={xpStats} days={daysInApp(profile.created_date)} compact /></div>
           {profile.title && <p className="text-base font-semibold text-gradient mt-1">{profile.title}</p>}
           {profile.username && profile.username !== profile.title && <p className="text-sm text-muted-foreground">@{profile.username}</p>}
-          <div className="mt-4 inline-flex items-center gap-2 bg-secondary/60 rounded-full pl-4 pr-1.5 py-1.5">
+          <div className="mt-4 flex max-w-full flex-wrap items-center justify-center gap-2">
+          <div className="inline-flex items-center gap-2 bg-secondary/60 rounded-full pl-4 pr-1.5 py-1.5">
             <Hash className="w-4 h-4 text-primary" />
             <span className="font-mono text-lg font-bold tracking-wider">{profile.member_id}</span>
             <button onClick={() => { navigator.clipboard?.writeText(profile.member_id || ''); toast({ title: 'Üye No kopyalandı' }); }} className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center shrink-0 active:scale-95 transition"><Copy className="w-4 h-4" /></button>
+          </div>
+          {!accountState && <ProfileLiveLink liveRoom={liveRoom} />}
           </div>
           <p className="text-xs text-muted-foreground mt-1">Üye No</p>
           {profile.created_date && <p className="text-xs text-muted-foreground mt-3">Katılım: {new Date(profile.created_date).toLocaleDateString('tr-TR')}</p>}

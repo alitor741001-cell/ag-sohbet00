@@ -1,7 +1,9 @@
 import useSocialList from '@/hooks/useSocialList';
-import { useUserProfile } from '@/lib/profileCard';
-import { ArrowLeft, Clock, Eye, HeartHandshake, Loader2, UserCheck } from 'lucide-react';
-import { Image } from '@/components/ui/image';
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, Eye, HeartHandshake, Loader2, UserCheck } from 'lucide-react';
+import useActiveRooms from '@/hooks/useActiveRooms';
+import { findLiveRoom } from '@/lib/liveRoom';
+import SocialPersonRow from '@/components/profile/social/SocialPersonRow';
 
 /** Ziyaret zamanı: 22.10.2026 · 02:14 */
 const formatVisit = (iso) => {
@@ -23,7 +25,8 @@ const TITLES = {
 /** Takip ve ziyaretçi listeleri: tam ekran açılır, geri butonuyla profile dönülür. */
 export default function SocialListDialog({ open, kind, onClose }) {
   const { items, loading, error, hasMore, loadMore, retry } = useSocialList(open, kind);
-  const { openUserProfile } = useUserProfile();
+  const navigate = useNavigate();
+  const { rooms, getRoomId } = useActiveRooms(open);
   const meta = TITLES[kind] || TITLES.visitors;
 
   if (!open) return null;
@@ -57,31 +60,14 @@ export default function SocialListDialog({ open, kind, onClose }) {
         ) : (
           <div className="mx-auto w-full max-w-[430px] space-y-1.5">
             {items.map((person) => (
-              <button
-                type="button"
+              <SocialPersonRow
                 key={person.id}
-                onClick={() => { onClose?.(); openUserProfile(person.id); }}
-                className="flex w-full text-left items-center gap-3 rounded-xl border border-[#f2ce6b]/25 bg-white/[0.04] p-2.5 active:scale-[0.99]"
-              >
-                {person.avatar ? (
-                  <Image src={person.avatar} className="h-10 w-10 shrink-0 overflow-hidden rounded-full border border-[#f2ce6b]/40" fittingType="fill" alt="" />
-                ) : (
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#2a1038] font-black text-[#f2ce6b]">
-                    {(person.name || '?')[0]}
-                  </span>
-                )}
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-bold text-white">{person.name}</span>
-                  <span className="block text-[10.5px] font-semibold text-white/45">
-                    {person.member_id ? `Üye No: ${person.member_id}` : 'Üye'}
-                  </span>
-                  {kind === 'visitors' && formatVisit(person.visited_at) && (
-                    <span className="mt-0.5 flex items-center gap-1 text-[10px] font-semibold text-[#f2ce6b]/80">
-                      <Clock className="h-3 w-3 shrink-0" /> {formatVisit(person.visited_at)}
-                    </span>
-                  )}
-                </span>
-              </button>
+                person={person}
+                visitTime={kind === 'visitors' ? formatVisit(person.visited_at) : ''}
+                liveRoom={findLiveRoom(rooms, person.id, getRoomId(person.id))}
+                onOpen={() => { onClose?.(); navigate(`/kullanici/${person.id}`); }}
+                onJoin={() => onClose?.()}
+              />
             ))}
             {hasMore && <button type="button" disabled={loading} onClick={loadMore} className="min-h-11 w-full rounded-xl border border-border bg-secondary py-2 text-sm text-secondary-foreground disabled:opacity-50">{loading ? 'Yükleniyor...' : 'Daha fazla göster'}</button>}
           </div>
