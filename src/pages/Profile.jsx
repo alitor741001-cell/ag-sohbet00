@@ -41,7 +41,15 @@ export default function Profile() {
   const [privacyOpen, setPrivacyOpen] = useState(false);
   // Takip ve ziyaretçi sayaçları ile açılan liste: takip edilenler, takipçiler, ziyaretçiler.
   const [social, setSocial] = useState({ friends: null, following: null, followers: null, visitors: null, visitors_unread: 0 });
-  const [socialList, setSocialList] = useState(null);
+  // Açık liste adres çubuğunda durur: profilden geri dönüldüğünde aynı liste yeniden açılır.
+  const [socialList, setSocialList] = useState(() => new URLSearchParams(window.location.search).get('liste'));
+  const openSocialList = (kind) => {
+    setSocialList(kind || null);
+    const params = new URLSearchParams(window.location.search);
+    if (kind) params.set('liste', kind); else params.delete('liste');
+    const query = params.toString();
+    navigate(`/profil${query ? `?${query}` : ''}`, { replace: true });
+  };
 
   const [activityOpen, setActivityOpen] = useState(false);
   const [vipBagOpen, setVipBagOpen] = useState(false);
@@ -204,8 +212,8 @@ export default function Profile() {
               diamonds: elmasLocked ? null : (wallet?.month_score ?? null),
             }}
             onAction={(key) => {
-              if (key === 'friends') setSocialList('friends');
-              else if (key === 'following' || key === 'followers' || key === 'visitors') setSocialList(key);
+              if (key === 'friends') openSocialList('friends');
+              else if (key === 'following' || key === 'followers' || key === 'visitors') openSocialList(key);
               else if (key === 'coins') setCoinShopOpen(true);
               else if (key === 'diamonds') openGiftBox();
               else if (key === 'vip') navigate('/vip');
@@ -237,7 +245,7 @@ export default function Profile() {
         onBack={() => { setCoinShopOpen(false); loadWallet(); }}
       />
 
-      <SocialListDialog open={!!socialList} kind={socialList} onClose={() => { setSocialList(null); loadSocial(); }} />
+      <SocialListDialog open={!!socialList} kind={socialList} onClose={() => { openSocialList(null); loadSocial(); }} />
 
       <Dialog open={privacyOpen} onOpenChange={(value) => !value && setPrivacyOpen(false)}>
         <DialogContent className="max-h-[88vh] max-w-2xl gap-0 border-[#7dd3fc]/30 bg-[linear-gradient(180deg,#0B2A52,#05122A)] p-0 text-white">

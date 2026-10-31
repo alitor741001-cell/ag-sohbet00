@@ -1,5 +1,5 @@
+import { useNavigate } from 'react-router-dom';
 import useSocialList from '@/hooks/useSocialList';
-import { useUserProfile } from '@/lib/profileCard';
 import { ArrowLeft, Eye, HeartHandshake, Loader2, UserCheck } from 'lucide-react';
 import useActiveRooms from '@/hooks/useActiveRooms';
 import { findLiveRoom } from '@/lib/liveRoom';
@@ -25,7 +25,7 @@ const TITLES = {
 /** Takip ve ziyaretçi listeleri: tam ekran açılır, geri butonuyla profile dönülür. */
 export default function SocialListDialog({ open, kind, onClose }) {
   const { items, loading, error, hasMore, loadMore, retry } = useSocialList(open, kind);
-  const { openUserProfile } = useUserProfile();
+  const navigate = useNavigate();
   const { rooms, getRoomId } = useActiveRooms(open);
   const meta = TITLES[kind] || TITLES.visitors;
 
@@ -65,7 +65,7 @@ export default function SocialListDialog({ open, kind, onClose }) {
                 person={person}
                 visitTime={kind === 'visitors' ? formatVisit(person.visited_at) : ''}
                 liveRoom={findLiveRoom(rooms, person.id, getRoomId(person.id))}
-                onOpen={() => { onClose?.(); openUserProfile(person.id); }}
+                onOpen={() => navigate(`/kullanici/${person.id}`)}
                 onJoin={() => onClose?.()}
               />
             ))}

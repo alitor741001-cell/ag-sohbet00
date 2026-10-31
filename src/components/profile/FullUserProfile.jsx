@@ -30,6 +30,7 @@ import useProfileFriendship from '@/hooks/useProfileFriendship';
 export default function FullUserProfile({
   open = true, userId, name, avatar, hidden = false, muted = false, self = false,
   theme = '', hideSettings = false, onClose, onMessage, onMention, tiles = [], footer = [], info = [], roomActions = null,
+  extra = null,
 }) {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -283,6 +284,7 @@ export default function FullUserProfile({
       full={full} onBack={() => setFull(false)} onOpenFull={() => setFull(true)}>
       <div className="space-y-3 px-4 pt-1">
         {header}
+        {extra}
         <div className="flex flex-col gap-3">{content}</div>
       </div>
     </FantasyProfileShell>
