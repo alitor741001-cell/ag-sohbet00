@@ -1,67 +1,60 @@
-import { useCutoutGrid } from '@/hooks/useCutoutSprites';
+import {
+  Ban, Briefcase, Building2, Coins, Crown, Eye, Gem, Gift,
+  LayoutDashboard, Settings, Shield, ShoppingBag, Trophy, UserPlus, Users, UsersRound,
+} from 'lucide-react';
 
-// Gönderilen tasarım sayfası: 4 satır, her satırda 4 düğme. Beyaz zemin kaldırılıp
-// düğmeler şeffaf PNG olarak eşit ızgaraya yerleştirilir.
-const IMAGE = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/f4ad103b6_IMG_0527.jpg';
-
+// Profil menüsü: tasarım görselleri kaldırıldı. Düğmeler sade, standart
+// arayüz düğmeleridir — ikon ve etiket, sade koyu yüzey üzerinde.
 const ROWS = [
-  ['friends', 'following', 'followers', 'visitors'],
-  ['coins', 'diamonds', 'vip', 'giftHistory'],
-  ['store', 'bag', 'level', 'agency'],
-  ['admin', 'blocked', 'privacy', 'settings'],
+  [
+    { key: 'friends', label: 'Arkadaşlar', icon: Users },
+    { key: 'following', label: 'Takip Edilenler', icon: UserPlus },
+    { key: 'followers', label: 'Takipçiler', icon: UsersRound },
+    { key: 'visitors', label: 'Ziyaretçiler', icon: Eye },
+  ],
+  [
+    { key: 'coins', label: 'Coins', icon: Coins },
+    { key: 'diamonds', label: 'Elmaslar', icon: Gem },
+    { key: 'vip', label: 'VIP', icon: Crown },
+    { key: 'giftHistory', label: 'Hediye Geçmişi', icon: Gift },
+  ],
+  [
+    { key: 'store', label: 'Alışveriş Merkezi', icon: ShoppingBag },
+    { key: 'bag', label: 'Çanta', icon: Briefcase },
+    { key: 'level', label: 'Seviye', icon: Trophy },
+    { key: 'agency', label: 'Ajans', icon: Building2 },
+  ],
+  [
+    { key: 'admin', label: 'Yönetici Paneli', icon: LayoutDashboard, adminOnly: true },
+    { key: 'blocked', label: 'Engellenen Hesaplar', icon: Ban },
+    { key: 'privacy', label: 'Gizlilik Politikası', icon: Shield },
+    { key: 'settings', label: 'Ayarlar', icon: Settings },
+  ],
 ];
 
-const LABELS = {
-  friends: 'Arkadaşlar',
-  following: 'Takip Edilenler',
-  followers: 'Takipçiler',
-  visitors: 'Ziyaretçiler',
-  coins: 'Coins',
-  diamonds: 'Elmaslar',
-  vip: 'VIP',
-  giftHistory: 'Hediye Geçmişi',
-  store: 'Alışveriş Merkezi',
-  bag: 'Çanta',
-  level: 'Seviye',
-  agency: 'Ajans',
-  admin: 'Yönetici Paneli',
-  blocked: 'Engellenen Hesaplar',
-  privacy: 'Gizlilik Politikası',
-  settings: 'Ayarlar',
-};
-
 /**
- * Profil menüsü: düğmeler dört satır, dört sütun ızgarada durur ve çentik kenarlarına
- * kadar yayılır. Satırlar mevcut yüksekliği eşit paylaşır; düğmeler kırpılmaz.
+ * Profil menüsü: sade düğmeler dört satır, dört sütun ızgarada durur ve
+ * çentik kenarlarına kadar yayılır. Satırlar mevcut yüksekliği eşit paylaşır.
  */
 export default function ProfileMenuDeck({ admin = false, onAction }) {
-  // Kırpma açık: hücrelerin şeffaf kenar boşlukları atılır, geriye yalnızca düğmenin
-  // kendisi kalır — düğmelerin üstünde ve altında tasarım parçası görünmez.
-  const tiles = useCutoutGrid(IMAGE, 4, 4, true);
-
   return (
-    <div className="grid min-h-0 flex-1 grid-rows-4">
-      {ROWS.map((row, rowIndex) => (
-        <div key={row.join('-')} className="grid min-h-0 grid-cols-4 items-center">
-          {row.map((action, colIndex) => {
-            const tile = tiles[rowIndex * 4 + colIndex];
-            if (action === 'admin' && !admin) return <div key={action} aria-hidden="true" />;
-            // Dış sütunlar ekranın kenarına yaslanır: arkadaşlar sola, ayarlar sağa doğru genişler.
-            const align = colIndex === 0 ? 'justify-start' : colIndex === 3 ? 'justify-end' : 'justify-center';
-            return (
+    <div className="grid min-h-0 flex-1 grid-rows-4 gap-1.5 px-2 py-1">
+      {ROWS.map((row) => (
+        <div key={row.map((item) => item.key).join('-')} className="grid min-h-0 grid-cols-4 gap-1.5">
+          {row.map(({ key, label, icon: Icon, adminOnly }) => (
+            adminOnly && !admin ? <div key={key} aria-hidden="true" /> : (
               <button
-                key={action}
+                key={key}
                 type="button"
-                onClick={() => onAction?.(action)}
-                aria-label={LABELS[action]}
-                className={`flex h-full w-full items-center ${align} transition-transform active:scale-95`}
+                onClick={() => onAction?.(key)}
+                aria-label={label}
+                className="flex min-h-0 flex-col items-center justify-center gap-1 rounded-xl border border-white/10 bg-white/5 px-1 text-center transition active:scale-95 active:border-primary/60 active:bg-primary/15"
               >
-                {tile ? (
-                  <img src={tile.src} alt="" draggable={false} className="pointer-events-none h-full w-full select-none object-contain" />
-                ) : null}
+                <Icon className="h-5 w-5 shrink-0 text-white/85" aria-hidden="true" />
+                <span className="line-clamp-2 text-[9px] font-semibold leading-[1.15] text-white/80">{label}</span>
               </button>
-            );
-          })}
+            )
+          ))}
         </div>
       ))}
     </div>
