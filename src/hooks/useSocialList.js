@@ -10,7 +10,7 @@ export default function useSocialList(open, kind) {
     const ticket = ++request.current;
     setLoading(true); setError('');
     try {
-      const payload = kind === 'visitors' ? { action: 'visitors', ...(next ? { cursor: next } : {}) } : { action: 'list', kind };
+      const payload = { ...(kind === 'visitors' ? { action: 'visitors' } : { action: 'list', kind }), ...(next ? { cursor: next } : {}) };
       let response;
       try {
         response = await base44.functions.invoke('social-service', payload);
@@ -21,6 +21,7 @@ export default function useSocialList(open, kind) {
         } else throw retry;
       }
       const { data } = response;
+      if (kind === 'visitors' && !next) window.dispatchEvent(new Event('visitors-read'));
       if (ticket !== request.current) return;
       setItems(previous => next ? [...new Map([...previous, ...(data.items || [])].map(person => [person.id, person])).values()] : data.items || []);
       setCursor(data.has_more ? data.next_cursor : null);

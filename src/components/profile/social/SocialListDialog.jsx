@@ -14,6 +14,7 @@ const formatVisit = (iso) => {
 };
 
 const TITLES = {
+  friends: { label: 'Arkadaşlarım', Icon: UserCheck },
   following: { label: 'Takip Edilenler', Icon: UserCheck },
   followers: { label: 'Takipçiler', Icon: HeartHandshake },
   visitors: { label: 'Ziyaretçiler', Icon: Eye },
@@ -82,7 +83,7 @@ export default function SocialListDialog({ open, kind, onClose }) {
                 </span>
               </button>
             ))}
-            {hasMore && <button type="button" disabled={loading} onClick={loadMore} className="min-h-11 w-full rounded-xl border border-border bg-secondary py-2 text-sm text-secondary-foreground disabled:opacity-50">{loading ? 'Yükleniyor...' : 'Daha fazla ziyaretçi'}</button>}
+            {hasMore && <button type="button" disabled={loading} onClick={loadMore} className="min-h-11 w-full rounded-xl border border-border bg-secondary py-2 text-sm text-secondary-foreground disabled:opacity-50">{loading ? 'Yükleniyor...' : 'Daha fazla göster'}</button>}
           </div>
         )}
       </div>

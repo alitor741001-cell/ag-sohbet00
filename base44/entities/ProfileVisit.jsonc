@@ -11,6 +11,10 @@
     "visited_at": {
       "type": "string",
       "format": "date-time"
+    },
+    "is_read": {
+      "type": "boolean",
+      "default": false
     }
   },
   "required": [

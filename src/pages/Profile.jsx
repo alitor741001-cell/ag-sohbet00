@@ -7,7 +7,7 @@ import { vipLevelOf } from '@/lib/userLevels';
 import { ART } from '@/lib/designArt';
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import useFriends from '@/hooks/useFriends';
+import useProfileSocialRefresh from '@/hooks/useProfileSocialRefresh';
 import SocialListDialog from '@/components/profile/social/SocialListDialog';
 import ProfileHeroCard from '@/components/profile/fantasy/ProfileHeroCard';
 import ProfileMenuDeck from '@/components/profile/fantasy/ProfileMenuDeck';
@@ -40,7 +40,7 @@ export default function Profile() {
   const [giftBoxOpen, setGiftBoxOpen] = useState(false);
   const [privacyOpen, setPrivacyOpen] = useState(false);
   // Takip ve ziyaretçi sayaçları ile açılan liste: takip edilenler, takipçiler, ziyaretçiler.
-  const [social, setSocial] = useState({ following: 0, followers: 0, visitors: 0 });
+  const [social, setSocial] = useState({ friends: null, following: null, followers: null, visitors: null, visitors_unread: 0 });
   const [socialList, setSocialList] = useState(null);
 
   const [activityOpen, setActivityOpen] = useState(false);
@@ -81,9 +81,11 @@ export default function Profile() {
   const loadSocial = () => {
     base44.functions.invoke('social-service', { action: 'stats' })
       .then((response) => setSocial({
+        friends: response.data?.friends ?? 0,
         following: response.data?.following ?? 0,
         followers: response.data?.followers ?? 0,
         visitors: response.data?.visitors ?? 0,
+        visitors_unread: response.data?.visitors_unread ?? 0,
       }))
       .catch(() => {});
   };
@@ -112,9 +114,7 @@ export default function Profile() {
   useWalletCoinsLive(user?.id, (coins) => setWallet((prev) => ({ ...prev, coins })));
   useGiftSummaryLive(user?.id, loadWallet);
 
-  // Arkadaş sayısı ortak arkadaşlık deposundan gelir.
-  const { relations } = useFriends();
-  const friendCount = relations.filter((relation) => relation.status === 'accepted').length;
+  useProfileSocialRefresh(user?.id, loadSocial);
 
 
   // Sayfa kendini 5 saniyede bir sessizce tazeler: bakiye canlı değerden okunur, böylece
@@ -195,7 +195,8 @@ export default function Profile() {
           <ProfileMenuDeck
             admin={isModerator(user)}
             stats={{
-              friends: friendCount,
+              friends: social.friends,
+              visitors_unread: social.visitors_unread,
               following: social.following,
               followers: social.followers,
               visitors: social.visitors,
@@ -203,7 +204,7 @@ export default function Profile() {
               diamonds: elmasLocked ? null : (wallet?.month_score ?? null),
             }}
             onAction={(key) => {
-              if (key === 'friends') navigate('/arkadaslar?view=friends');
+              if (key === 'friends') setSocialList('friends');
               else if (key === 'following' || key === 'followers' || key === 'visitors') setSocialList(key);
               else if (key === 'coins') setCoinShopOpen(true);
               else if (key === 'diamonds') openGiftBox();

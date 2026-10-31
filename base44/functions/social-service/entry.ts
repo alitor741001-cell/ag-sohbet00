@@ -52,16 +52,14 @@ export default async function (req) {
 
     if (action === 'list') {
       const targetId = String(body.user_id || me.id);
-      const kind = body.kind === 'following' ? 'following' : 'followers';
-      const rows = await db.Follow.filter(
-        kind === 'following' ? { follower_id: targetId } : { following_id: targetId },
-        '-created_date',
-        LIMIT
-      );
-      const ids = [...new Set(rows.map((row) => (kind === 'following' ? row.following_id : row.follower_id)).filter(Boolean))];
+      const kind = ['following', 'friends'].includes(body.kind) ? body.kind : 'followers';
+      if (body.cursor !== undefined && (typeof body.cursor !== 'string' || body.cursor.length > 2000)) return Response.json({ error: 'Geçersiz sayfa.' }, { status: 400 });
+      const query = kind === 'friends' ? { members: me.id, status: 'accepted' } : kind === 'following' ? { follower_id: targetId } : { following_id: targetId };
+      const page = await db[kind === 'friends' ? 'Friendship' : 'Follow'].filter(query, { sort: '-created_date', limit: 30, ...(body.cursor ? { cursor: body.cursor } : {}) });
+      const ids = [...new Set(page.items.map(row => kind === 'friends' ? (row.requester_id === me.id ? row.recipient_id : row.requester_id) : kind === 'following' ? row.following_id : row.follower_id).filter(Boolean))];
       const users = ids.length ? await db.User.filter({ id: { $in: ids } }, '-created_date', LIMIT) : [];
-      const byId = new Map(users.map((user) => [user.id, clean(user)]));
-      return Response.json({ items: ids.map((id) => byId.get(id)).filter(Boolean) });
+      const byId = new Map(users.map(user => [user.id, clean(user)]));
+      return Response.json({ items: ids.map(id => byId.get(id)).filter(Boolean), has_more: page.has_more, next_cursor: page.next_cursor });
     }
 
     if (action === 'visit') {
@@ -75,8 +73,8 @@ export default async function (req) {
       const stamp = last ? new Date(last.visited_at || last.updated_date || last.created_date).getTime() : 0;
       if (last && now - stamp < VISIT_WINDOW_MS) return Response.json({ ok: true, throttled: true });
       const visitedAt = new Date(now).toISOString();
-      if (last) await db.ProfileVisit.update(last.id, { visited_at: visitedAt });
-      else await db.ProfileVisit.create({ profile_id: profileId, visitor_id: me.id, visited_at: visitedAt });
+      if (last) await db.ProfileVisit.update(last.id, { visited_at: visitedAt, is_read: false });
+      else await db.ProfileVisit.create({ profile_id: profileId, visitor_id: me.id, visited_at: visitedAt, is_read: false });
       return Response.json({ ok: true });
     }
 
@@ -84,6 +82,7 @@ export default async function (req) {
       const [account, catalog] = await Promise.all([db.User.get(me.id), getVipCatalog(base44)]);
       if (!hasVipPrivilege(account, catalog, 'visitors')) return Response.json({ error: `Ziyaretçileri görmek için VIP ${catalog.features.find(feature => feature.key === 'visitors').minLevel} ve üzeri üyelik gerekli.` }, { status: 403 });
       if (body.cursor !== undefined && (typeof body.cursor !== 'string' || body.cursor.length > 2000)) return Response.json({ error: 'Geçersiz sayfa.' }, { status: 400 });
+      const openedAt = new Date().toISOString();
       const page = await db.ProfileVisit.filter({ profile_id: me.id }, { sort: '-visited_at', limit: 30, ...(body.cursor ? { cursor: body.cursor } : {}) });
       const rows = page.items;
       const seen = new Set();
@@ -96,6 +95,12 @@ export default async function (req) {
       const ids = ordered.map((row) => row.visitor_id);
       const users = ids.length ? await db.User.filter({ id: { $in: ids } }, '-created_date', LIMIT) : [];
       const byId = new Map(users.map((user) => [user.id, clean(user)]));
+      if (!body.cursor) {
+        let result;
+        do {
+          result = await db.ProfileVisit.updateMany({ profile_id: me.id, is_read: { $ne: true }, visited_at: { $lte: openedAt } }, { $set: { is_read: true } });
+        } while (result.has_more);
+      }
       return Response.json({
         has_more: page.has_more, next_cursor: page.next_cursor,
         items: ordered
@@ -109,16 +114,14 @@ export default async function (req) {
 
     if (action === 'stats') {
       const targetId = String(body.user_id || me.id);
-      const [following, followers, visitors] = await Promise.all([
+      const [following, followers, visitors, friends, visitorsUnread] = await Promise.all([
         db.Follow.count({ follower_id: targetId }),
         db.Follow.count({ following_id: targetId }),
-        db.ProfileVisit.count({ profile_id: targetId })
+        db.ProfileVisit.count({ profile_id: targetId }),
+        db.Friendship.count({ members: targetId, status: 'accepted' }),
+        targetId === me.id ? db.ProfileVisit.count({ profile_id: me.id, is_read: { $ne: true } }) : 0
       ]);
-      return Response.json({
-        following,
-        followers,
-        visitors
-      });
+      return Response.json({ following, followers, visitors, friends, visitors_unread: visitorsUnread });
     }
 
     return Response.json({ error: 'Geçersiz işlem' }, { status: 400 });

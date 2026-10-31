@@ -3,6 +3,7 @@ import {
   LayoutDashboard, Settings, Shield, ShoppingBag, Trophy, UserPlus, Users, UsersRound,
 } from 'lucide-react';
 import useCutoutRegions from '@/hooks/useCutoutRegions';
+import ProfileSocialCount from '@/components/profile/social/ProfileSocialCount';
 import { Image } from '@/components/ui/image';
 
 const ART = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/2ba8a9da7_IMG_0527.jpg';
@@ -46,7 +47,7 @@ const ROWS = [
  * Profil menüsü: sade düğmeler dört satır, dört sütun ızgarada durur ve
  * çentik kenarlarına kadar yayılır. Satırlar mevcut yüksekliği eşit paylaşır.
  */
-export default function ProfileMenuDeck({ admin = false, onAction }) {
+export default function ProfileMenuDeck({ admin = false, onAction, stats = {} }) {
   const images = useCutoutRegions(ART, REGIONS);
   return (
     <div className="grid min-h-0 w-full flex-1 grid-rows-4 gap-2 px-0 py-1">
@@ -61,7 +62,8 @@ export default function ProfileMenuDeck({ admin = false, onAction }) {
                 aria-label={label}
                 className="relative flex min-h-0 items-center justify-center transition active:scale-95"
               >
-                {images[rowIndex * 4 + colIndex] && <Image src={images[rowIndex * 4 + colIndex]} alt="" fittingType="fit" className="pointer-events-none absolute inset-0 h-full w-full select-none" />}
+                {images[rowIndex * 4 + colIndex] && <Image src={images[rowIndex * 4 + colIndex]} alt="" fittingType="fit" className={`pointer-events-none absolute inset-x-0 top-0 w-full select-none ${rowIndex === 0 ? 'h-[calc(100%_-_1.25rem)]' : 'h-full'}`} />}
+                {rowIndex === 0 && <ProfileSocialCount value={stats[key]} unread={key === 'visitors' ? stats.visitors_unread : 0} />}
                 <span className="sr-only">{label}</span>
               </button>
             )
