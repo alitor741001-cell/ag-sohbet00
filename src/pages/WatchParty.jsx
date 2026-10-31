@@ -505,7 +505,9 @@ export default function WatchParty() {
   }, [canMod, id, user?.id]);
 
   const onPlayPause = useCallback((playing) => updateRoom({ is_playing: playing }, true), [updateRoom]);
-  const onTimeUpdate = useCallback((t) => updateRoom({ current_time: t }), [updateRoom]);
+  // İlerleme bildirimi oynatma durumunu da tazeler: film gerçekten oynarken oda
+  // "duraklatıldı" durumunda kalmaz — izleyiciler filmi açan kişiyle aynı anda oynar.
+  const onTimeUpdate = useCallback((t) => updateRoom({ current_time: t, is_playing: true }), [updateRoom]);
   const onSeek = useCallback((t) => updateRoom({ current_time: t, is_playing: true }, true), [updateRoom]);
 
   // Odada oynayan YouTube videosu: tüm izleyiciler aynı videoyu senkron izler.
