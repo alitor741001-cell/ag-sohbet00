@@ -16,10 +16,13 @@ export function UserProfileProvider({ children }) {
   const { toast } = useToast();
   const [state, setState] = useState(null);
 
+  // Sade profil dokunuşu tam sayfa profili açar (/kullanici/:id). Yalnızca oda,
+  // destek ya da özel işlem seçenekleri verildiğinde kart katmanı kullanılır.
   const openUserProfile = useCallback((userId, options = {}) => {
     if (!userId) return;
+    if (Object.keys(options || {}).length === 0) { navigate(`/kullanici/${userId}`); return; }
     setState({ userId, options: options || {} });
-  }, []);
+  }, [navigate]);
 
   const closeUserProfile = useCallback(() => setState(null), []);
 
