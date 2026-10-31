@@ -1,5 +1,5 @@
 import { base44 } from '@/api/base44Client';
-import { createStreamOutput, ensureMicTrack } from '@/lib/callAudio';
+import { createStreamOutput, ensureMicTrack, releaseMic } from '@/lib/callAudio';
 import { membershipActive } from '@/lib/useCurrentUser';
 import answerVoiceTrack from '@/lib/answerVoiceTrack';
 
@@ -182,8 +182,21 @@ export class P2PVoiceRoom {
       void this.retryPlayback();
       if (this.micOn) void this.refreshMic();
     };
+    // Uygulama arka plandan döndüğünde mobil tarayıcı ses hatlarını ve kayıt kanalını
+    // dondurur: karşı taraf duyulmaz, mikrofon karşıya gitmez. Kısa bir aradan sonra
+    // hatlar ve mikrofon tazelenir — oda yeniden yüklenmeden ses geri gelir.
+    this.onVisible = () => {
+      if (document.visibilityState === 'hidden') { this.hiddenAt = Date.now(); return; }
+      const away = Date.now() - (this.hiddenAt || 0);
+      this.hiddenAt = 0;
+      // Sekme değişimi gibi kısa kesintilerde yalnızca bekleyen oynatma tazelenir.
+      if (away < 1000) { void this.retryPlayback(); return; }
+      this.lastReconnectAt = 0;
+      this.reconnect();
+      if (this.micDesired) void this.refreshMic({ force: true });
+    };
     this.onOnline = () => { this.lastReconnectAt = 0; this.reconnect(); };
-    document.addEventListener('visibilitychange', this.onResume);
+    document.addEventListener('visibilitychange', this.onVisible);
     window.addEventListener('pageshow', this.onResume);
     window.addEventListener('focus', this.onResume);
     window.addEventListener('online', this.onOnline);
@@ -192,7 +205,7 @@ export class P2PVoiceRoom {
   unbindLifecycle() {
     if (!this.lifecycleBound) return;
     this.lifecycleBound = false;
-    document.removeEventListener('visibilitychange', this.onResume);
+    document.removeEventListener('visibilitychange', this.onVisible);
     window.removeEventListener('pageshow', this.onResume);
     window.removeEventListener('focus', this.onResume);
     window.removeEventListener('online', this.onOnline);
@@ -545,9 +558,19 @@ export class P2PVoiceRoom {
     return true;
   }
 
-  // Arka plandan dönüşte iOS mikrofon kanalını sessize alır: kanal tazelenirse yayın geri gelir.
-  async refreshMic() {
-    if (!this.micDesired || this.isMicOn()) return;
+  // Arka plandan dönüşte iOS/Android mikrofon kanalını sessize alır: kanal tazelenirse yayın geri gelir.
+  async refreshMic({ force = false } = {}) {
+    if (!this.micDesired) return;
+    if (!force && this.isMicOn()) return;
+    // Zorunlu tazeleme: cihaz eski kayıt kanalını sessiz bırakır. Kanal bırakılıp
+    // yeniden alınır — yoksa mikrofon açık görünse de karşıya ses gitmez.
+    if (force) {
+      this.micRevision += 1;
+      this.micRequest = null;
+      this.micTrack = null;
+      this.micOn = false;
+      releaseMic();
+    }
     try { await this.setMicEnabled(true); }
     catch (error) {
       this.lastMicrophoneError = error?.code || error?.name || 'mic_failed';
