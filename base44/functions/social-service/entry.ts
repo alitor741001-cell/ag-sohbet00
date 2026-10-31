@@ -10,7 +10,19 @@ const clean = (user) => ({
   id: user.id,
   name: user.username || user.full_name || 'Kullanıcı',
   avatar: user.avatar || '',
-  member_id: user.member_id || ''
+  member_id: user.member_id || '',
+  // Liste kartındaki rozetler: N, VIP, Atış, Alış ve yayıncı rolü.
+  loaded_coins: user.loaded_coins || 0,
+  gift_sent_k: user.gift_sent_k || 0,
+  gift_received_k: user.gift_received_k || 0,
+  vip_level: user.vip_level || 0,
+  vip_expires_at: user.vip_expires_at || '',
+  broadcaster_status: user.broadcaster_status || '',
+  agency_record_id: user.agency_record_id || '',
+  agency_name: user.agency_name || '',
+  agency_role: user.agency_role || '',
+  owned_agency_id: user.owned_agency_id || '',
+  owned_agency_name: user.owned_agency_name || ''
 });
 
 export default async function (req) {

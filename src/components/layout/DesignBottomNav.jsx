@@ -33,7 +33,13 @@ export default function DesignBottomNav() {
       id="app-bottom-nav"
       aria-label="Ana menü"
       className="fixed inset-x-0 bottom-0 z-[60]"
-      style={{ paddingBottom: 'max(2px, calc(env(safe-area-inset-bottom, 0px) * 0.25))' }}
+      /* Çentik ve Android sistem çubuğu alanı korunur: düğmeler çentiğin içinde kalır,
+         sistem çubuğunun altına taşmaz. */
+      style={{
+        paddingBottom: 'max(4px, env(safe-area-inset-bottom, 0px))',
+        paddingLeft: 'env(safe-area-inset-left, 0px)',
+        paddingRight: 'env(safe-area-inset-right, 0px)',
+      }}
     >
       <div className="flex w-full items-end justify-between gap-0.5 px-0.5">
         {ZONES.map((zone, index) => {
