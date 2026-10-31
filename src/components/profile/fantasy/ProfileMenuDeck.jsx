@@ -2,6 +2,16 @@ import {
   Ban, Briefcase, Building2, Coins, Crown, Eye, Gem, Gift,
   LayoutDashboard, Settings, Shield, ShoppingBag, Trophy, UserPlus, Users, UsersRound,
 } from 'lucide-react';
+import useCutoutRegions from '@/hooks/useCutoutRegions';
+import { Image } from '@/components/ui/image';
+
+const ART = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/2ba8a9da7_IMG_0527.jpg';
+const X = [0, .32, .52, .72, 1];
+const Y = [0, .23, .46, .735, 1];
+const REGIONS = Array.from({ length: 16 }, (_, i) => ({
+  x: X[i % 4], y: Y[Math.floor(i / 4)],
+  w: X[i % 4 + 1] - X[i % 4], h: Y[Math.floor(i / 4) + 1] - Y[Math.floor(i / 4)],
+}));
 
 // Profil menüsü: tasarım görselleri kaldırıldı. Düğmeler sade, standart
 // arayüz düğmeleridir — ikon ve etiket, sade koyu yüzey üzerinde.
@@ -37,21 +47,22 @@ const ROWS = [
  * çentik kenarlarına kadar yayılır. Satırlar mevcut yüksekliği eşit paylaşır.
  */
 export default function ProfileMenuDeck({ admin = false, onAction }) {
+  const images = useCutoutRegions(ART, REGIONS);
   return (
-    <div className="grid min-h-0 flex-1 grid-rows-4 gap-1.5 px-2 py-1">
-      {ROWS.map((row) => (
+    <div className="grid min-h-0 w-full flex-1 grid-rows-4 gap-2 px-0 py-1">
+      {ROWS.map((row, rowIndex) => (
         <div key={row.map((item) => item.key).join('-')} className="grid min-h-0 grid-cols-4 gap-1.5">
-          {row.map(({ key, label, icon: Icon, adminOnly }) => (
+          {row.map(({ key, label, adminOnly }, colIndex) => (
             adminOnly && !admin ? <div key={key} aria-hidden="true" /> : (
               <button
                 key={key}
                 type="button"
                 onClick={() => onAction?.(key)}
                 aria-label={label}
-                className="flex min-h-0 flex-col items-center justify-center gap-1 rounded-xl border border-white/10 bg-white/5 px-1 text-center transition active:scale-95 active:border-primary/60 active:bg-primary/15"
+                className="relative flex min-h-0 items-center justify-center transition active:scale-95"
               >
-                <Icon className="h-5 w-5 shrink-0 text-white/85" aria-hidden="true" />
-                <span className="line-clamp-2 text-[9px] font-semibold leading-[1.15] text-white/80">{label}</span>
+                {images[rowIndex * 4 + colIndex] && <Image src={images[rowIndex * 4 + colIndex]} alt="" fittingType="fit" className="pointer-events-none absolute inset-0 h-full w-full select-none" />}
+                <span className="sr-only">{label}</span>
               </button>
             )
           ))}

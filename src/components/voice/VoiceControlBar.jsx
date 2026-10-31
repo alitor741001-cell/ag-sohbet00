@@ -7,7 +7,7 @@ const SPRITE = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/
 /** Alt kontrol çubuğu: şeffaf PNG düğmeler — altında beyaz zemin yok. */
 export default function VoiceControlBar({ micActive, deafened, gamesEnabled = true, privateUnread = 0, onToggleMic, onToggleSpeaker, onOpenGames, onOpenGifts, onOpenSettings, onOpenPrivateChat, onToggleChat }) {
   const barRef = useRef(null);
-  const sprites = useCutoutSprites(SPRITE, 7);
+  const sprites = useCutoutSprites(SPRITE, 7, true);
 
   // Çubuğun gerçek yüksekliği oda çerçevesine bildirilir: sohbet alanı tam butonların üstünde biter.
   useLayoutEffect(() => {
@@ -41,8 +41,8 @@ export default function VoiceControlBar({ micActive, deafened, gamesEnabled = tr
   const order = gamesEnabled ? [0, 1, 2, 3, 4, 5, 6] : [0, 1, 2, 3, 4, 6];
 
   return (
-    <div ref={barRef} className="voice-control-bar relative w-full shrink-0" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 4px)' }}>
-      <div className="flex w-full items-end justify-between gap-0.5 px-1.5">
+    <div ref={barRef} className="voice-control-bar relative w-full shrink-0" style={{ paddingBottom: 'max(2px, calc(env(safe-area-inset-bottom, 0px) * 0.25))' }}>
+      <div className="flex w-full items-end justify-between gap-0.5 px-0.5">
         {items.map((item, index) => {
           const sprite = sprites[order[index]];
           return (

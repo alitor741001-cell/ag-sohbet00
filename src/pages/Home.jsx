@@ -44,7 +44,7 @@ export default function Home() {
       )}
       <div className="relative flex h-full flex-col">
         {!games && (
-          <div className="shrink-0 -mt-2 pt-[env(safe-area-inset-top)]">
+          <div className="shrink-0 pt-[env(safe-area-inset-top)]">
             <HomeTopBar />
           </div>
         )}
