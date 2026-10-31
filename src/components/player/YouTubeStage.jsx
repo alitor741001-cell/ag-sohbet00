@@ -164,6 +164,29 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
   // Oynatıcı kurulduğunda / yeniden kurulduğunda kayıtlı seviye uygulanır.
   useEffect(() => { applyVolume(volume, muted); }, [volume, muted, ready]);
 
+  // Film odaya başladığında oynatıcıyı gerçekten oynatır. Tarayıcı sesli oynatmayı
+  // engellerse film sessiz başlatılır: izleyicide film duraklamış kalmaz, ses ilk
+  // dokunuşta ya da "Sesi aç" düğmesiyle geri gelir.
+  const forcePlay = () => {
+    const player = playerRef.current;
+    if (!player?.playVideo || !player?.getPlayerState) return;
+    const state = window.YT?.PlayerState;
+    const currentState = player.getPlayerState();
+    if (currentState === state?.PLAYING || currentState === state?.BUFFERING) return;
+    player.playVideo?.();
+    clearTimeout(autoplayTimerRef.current);
+    autoplayTimerRef.current = setTimeout(() => {
+      const active = playerRef.current;
+      if (!active?.getPlayerState) return;
+      const live = active.getPlayerState();
+      if (live === window.YT?.PlayerState?.PLAYING || live === window.YT?.PlayerState?.BUFFERING) return;
+      active.mute?.();
+      mutedForAutoplayRef.current = true;
+      setAutoplayMuted(true);
+      active.playVideo?.();
+    }, 700);
+  };
+
   // Ses, otomatik başlatma için kısıldıysa ekrana ilk dokunuşta açılır: bazı cihazlarda
   // "Sesi aç" düğmesi görülmediği için film sessiz kalıyordu.
   useEffect(() => {
@@ -212,24 +235,8 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
             setTimeout(() => { if (!cancelled) applyCaptions(captionsRef.current); }, 1200);
             // Film odaya açıldığında karşı taraf da başlasın: oynatma birkaç kez denenir,
             // sesli otomatik başlatma engellenirse sessiz başlatmaya geçilir.
-            const attemptPlay = (allowMute) => {
-              if (cancelled || !syncRef.current?.is_playing) return;
-              const player = playerRef.current;
-              if (!player?.getPlayerState) return;
-              const currentState = player.getPlayerState();
-              // Oynayan ya da yüklenen oynatıcıya yeniden oynatma isteği gönderilmez:
-              // istek filmi durdurup yeniden başlatıyordu.
-              if (currentState === window.YT?.PlayerState?.PLAYING || currentState === window.YT?.PlayerState?.BUFFERING) return;
-              // Tampon bekleyen oynatıcı sessize alınmaz: ses, gereksiz yere kapanmaz.
-              if (allowMute && player.getPlayerState?.() !== window.YT?.PlayerState?.BUFFERING) {
-                player.mute?.();
-                mutedForAutoplayRef.current = true;
-                setAutoplayMuted(true);
-              }
-              player.playVideo?.();
-            };
-            [[0, false], [700, false], [1600, true], [3200, true]].forEach(([delay, allowMute]) => {
-              setTimeout(() => { if (!cancelled) attemptPlay(allowMute); }, delay);
+            [[0], [700], [1600], [3200]].forEach(([delay]) => {
+              setTimeout(() => { if (!cancelled && syncRef.current?.is_playing) forcePlay(); }, delay);
             });
           },
           onError: () => setError('Bu video oynatılamıyor. Başka bir YouTube linki dene.'),
@@ -297,9 +304,11 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
       // Konum zorla hizalanmaz: sürekli sarma filmi durup yeniden başlatıyordu.
       if (!isTimeSource) {
         const base = baselineRef.current;
-        if (base.playing && player.getPlayerState?.() === state?.PAUSED && Date.now() > playNudgeRef.current) {
-          playNudgeRef.current = Date.now() + 3000;
-          player.playVideo?.();
+        // Yalnızca duraklamış oynatıcı değil, hiç başlamamış (CUED) oynatıcı da
+        // oynatılır: otomatik başlatma engellendiğinde film bu durumda kalıyordu.
+        if (base.playing && player.getPlayerState?.() !== state?.PLAYING && player.getPlayerState?.() !== state?.BUFFERING && Date.now() > playNudgeRef.current) {
+          playNudgeRef.current = Date.now() + 2500;
+          forcePlay();
         }
       }
     }, 1000);
@@ -335,20 +344,9 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
       // Film açan kişi başlattığı an karşı taraf da başlar.
       if (!playingNow && !buffering && Date.now() > playNudgeRef.current) {
         playNudgeRef.current = Date.now() + 1500;
-        player.playVideo?.();
         // Sesli oynatma tarayıcı tarafından engellenirse sessiz başlatılır; ses ilk
         // dokunuşta açılır, izleyici siyah ekranda beklemez.
-        clearTimeout(autoplayTimerRef.current);
-        autoplayTimerRef.current = setTimeout(() => {
-          const active = playerRef.current;
-          if (!active?.getPlayerState) return;
-          const activeState = active.getPlayerState();
-          if (activeState === window.YT?.PlayerState?.PLAYING || activeState === window.YT?.PlayerState?.BUFFERING) return;
-          active.mute?.();
-          mutedForAutoplayRef.current = true;
-          setAutoplayMuted(true);
-          active.playVideo?.();
-        }, 600);
+        forcePlay();
       }
     } else if (playingNow) {
       // Film açan kişi durdurduğu an karşı taraf da durur.

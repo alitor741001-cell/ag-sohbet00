@@ -1,10 +1,11 @@
 import { Room, RoomEvent, Track } from 'livekit-client';
 import { base44 } from '@/api/base44Client';
-import { createVoiceOutput } from '@/lib/callAudio';
+import { createVoiceOutput, ensureMicTrack, releaseMic } from '@/lib/callAudio';
 
 // Bağlantı ve mikrofon cevapsız kalırsa düğme kilitlenmez: süre sonunda bırakılır.
+// iOS izin penceresi açıkken istek hemen bırakılmaz: süre pencereye cevap vermeye yeter.
 const CONNECT_TIMEOUT_MS = 20000;
-const MIC_TIMEOUT_MS = 25000;
+const MIC_TIMEOUT_MS = 45000;
 
 const withTimeout = (promise, ms, code) => new Promise((resolve, reject) => {
   const timer = setTimeout(() => {
@@ -17,11 +18,6 @@ const withTimeout = (promise, ms, code) => new Promise((resolve, reject) => {
     (error) => { clearTimeout(timer); reject(error); },
   );
 });
-
-const audioPublication = (participant) => {
-  if (!participant?.getTrackPublication) return null;
-  return participant.getTrackPublication(Track.Source.Microphone) || null;
-};
 
 /**
  * LiveKit Cloud üzerinden sesli oda bağlantısı.
@@ -47,6 +43,9 @@ export class LiveKitVoiceRoom {
     this.lastMicrophoneError = null;
     this.micRequest = null;
     this.micDesired = false;
+    // iPhone: kanal uygulamanın kendi mikrofon altyapısından alınır ve LiveKit'e yayınlanır.
+    this.localMicTrack = null;
+    this.micPublication = null;
     this.listeners = [];
   }
 
@@ -182,10 +181,8 @@ export class LiveKitVoiceRoom {
   }
 
   isMicOn() {
-    const local = this.room?.localParticipant;
-    if (!local?.isMicrophoneEnabled) return false;
-    const media = audioPublication(local)?.track?.mediaStreamTrack;
-    return !!media && media.readyState === 'live' && !media.muted;
+    const track = this.localMicTrack;
+    return !!track && track.readyState === 'live' && track.enabled !== false && !!this.micPublication;
   }
 
   setMicEnabled(on) {
@@ -208,23 +205,44 @@ export class LiveKitVoiceRoom {
       throw notConnected;
     }
     const local = this.room.localParticipant;
+    // Kanal zaten açıksa yeniden istenmez: iPhone'da ikinci mikrofon isteği reddedilir.
+    if (this.isMicOn()) return true;
+    let track = this.localMicTrack;
+    if (!track || track.readyState !== 'live') {
+      try {
+        // iPhone: mikrofon uygulamanın kendi altyapısından alınır — ses oturumu kayıt
+        // kategorisine alınır, izin penceresi beklenir ve hata olursa yeniden denenir.
+        // LiveKit'in kendi isteği bu oturumda yanıtsız kalıp "tekrar dene" hatası veriyordu.
+        track = await ensureMicTrack();
+      } catch (error) {
+        this.localMicTrack = null;
+        this.lastMicrophoneError = error?.code || error?.name || 'mic_failed';
+        throw error;
+      }
+    }
+    this.localMicTrack = track;
+    if (!this.micDesired) { releaseMic(); return false; }
     try {
-      await withTimeout(local.setMicrophoneEnabled(true), MIC_TIMEOUT_MS, 'mic_timeout');
+      this.micPublication = await withTimeout(
+        local.publishTrack(track, { source: Track.Source.Microphone, name: 'microphone' }),
+        MIC_TIMEOUT_MS,
+        'mic_timeout',
+      );
     } catch (error) {
+      this.micPublication = null;
+      this.localMicTrack = null;
+      releaseMic();
       this.lastMicrophoneError = error?.code || error?.name || 'mic_failed';
       throw error;
     }
-    if (!this.micDesired) {
-      await local.setMicrophoneEnabled(false).catch(() => {});
-      return false;
-    }
-    const media = audioPublication(local)?.track?.mediaStreamTrack;
-    if (!media || media.readyState !== 'live' || media.muted) {
+    if (track.readyState !== 'live') {
       this.lastMicrophoneError = 'publish_unverified';
       const unverified = new Error('Mikrofon yayını doğrulanamadı.');
       unverified.code = 'publish_unverified';
       throw unverified;
     }
+    // Yayın sırasında mikrofon kapatıldıysa hemen geri alınır.
+    if (!this.micDesired) { this.stopMic(); return false; }
     this.emit();
     return true;
   }
@@ -233,7 +251,14 @@ export class LiveKitVoiceRoom {
     this.micDesired = false;
     this.micRequest = null;
     const local = this.room?.localParticipant;
-    if (local) local.setMicrophoneEnabled(false).catch(() => {});
+    const track = this.localMicTrack;
+    this.localMicTrack = null;
+    this.micPublication = null;
+    if (local && track) {
+      try { local.unpublishTrack(track)?.catch?.(() => {}); } catch (error) {}
+    }
+    // Kanal serbest bırakılır: iPhone'da açık kalan eski kanal yeni isteği reddediyordu.
+    if (track) releaseMic();
     this.emit();
   }
 
@@ -298,6 +323,10 @@ export class LiveKitVoiceRoom {
   close() {
     this.micDesired = false;
     this.micRequest = null;
+    const micTrack = this.localMicTrack;
+    this.localMicTrack = null;
+    this.micPublication = null;
+    if (micTrack) releaseMic();
     const room = this.room;
     if (room) {
       this.listeners.forEach(([event, handler]) => {

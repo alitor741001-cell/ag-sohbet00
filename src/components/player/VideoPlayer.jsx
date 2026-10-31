@@ -16,6 +16,10 @@ export default function VideoPlayer({ src, title, onTimeUpdate, onPlayPause, onS
   const [showSettings, setShowSettings] = useState(false);
   const [speed, setSpeed] = useState(1);
   const [buffering, setBuffering] = useState(false);
+  // Tarayıcı sesli otomatik başlatmayı engellerse film sessiz başlar: izleyicide film
+  // duraklamış kalmaz, ses ilk dokunuşta geri açılır.
+  const [autoplayMuted, setAutoplayMuted] = useState(false);
+  const mutedForAutoplayRef = useRef(false);
   const hideTimer = useRef(null);
   const lastSyncRef = useRef(0);
 
@@ -43,6 +47,27 @@ export default function VideoPlayer({ src, title, onTimeUpdate, onPlayPause, onS
     const v = videoRef.current; if (!v) return;
     v.currentTime = Math.max(0, Math.min(t, v.duration || 0));
   }, []);
+
+  // Odaya göre oynatmayı başlatır: sesli başlatma engellenirse sessiz devam eder.
+  const startPlayback = () => {
+    const v = videoRef.current; if (!v) return;
+    const attempt = v.play();
+    if (!attempt?.catch) return;
+    attempt.catch(() => {
+      v.muted = true;
+      mutedForAutoplayRef.current = true;
+      setAutoplayMuted(true);
+      v.play().catch(() => {});
+    });
+  };
+
+  // Sessiz başlayan filmin sesi ilk dokunuşta geri açılır.
+  const restoreAfterAutoplay = () => {
+    if (!mutedForAutoplayRef.current) return;
+    mutedForAutoplayRef.current = false;
+    setAutoplayMuted(false);
+    applyCurrentVolume();
+  };
 
   const skip = (delta) => {
     if (!isOwner) return;
@@ -73,9 +98,21 @@ export default function VideoPlayer({ src, title, onTimeUpdate, onPlayPause, onS
         v.playbackRate = speed;
       }
     }
-    if (syncState.is_playing && v.paused) v.play().catch(() => {});
+    if (syncState.is_playing && v.paused) startPlayback();
     if (!syncState.is_playing && !v.paused) v.pause();
   }, [syncState?.current_time, syncState?.is_playing, syncState?.last_sync]);
+
+  // İzleyicide film kendiliğinden duraklarsa sessizce devam eder: tarayıcı sesli
+  // oynatmayı engellediğinde film duraklamış kalmıyordu.
+  useEffect(() => {
+    if (isTimeSource) return;
+    const id = setInterval(() => {
+      const v = videoRef.current;
+      if (!v || !syncState?.is_playing) return;
+      if (v.paused && !v.ended) startPlayback();
+    }, 2000);
+    return () => clearInterval(id);
+  }, [isTimeSource, syncState?.is_playing]);
 
   // report time to room — yalnızca gerçek kaynak (sahip) bildirir
   useEffect(() => {
@@ -100,7 +137,7 @@ export default function VideoPlayer({ src, title, onTimeUpdate, onPlayPause, onS
       const target = syncState.current_time || 0;
       if (Math.abs(v.currentTime - target) > 1) seekTo(target);
     }
-    if (syncState?.is_playing) v.play().catch(() => {});
+    if (syncState?.is_playing) startPlayback();
   };
 
   const onTime = () => {
@@ -175,7 +212,7 @@ export default function VideoPlayer({ src, title, onTimeUpdate, onPlayPause, onS
 
   return (
     <div ref={containerRef} className="relative w-full h-full bg-black overflow-hidden group select-none"
-      onMouseMove={showCtrl} onClick={showCtrl} onPointerDown={resumeAudio}
+      onMouseMove={showCtrl} onClick={showCtrl} onPointerDown={() => { void resumeAudio(); restoreAfterAutoplay(); }}
       style={{ touchAction: isOwner ? 'manipulation' : 'none' }}>
       <video key={src} ref={videoRef} crossOrigin="anonymous" src={src} className="film-screen absolute inset-0 h-full w-full object-cover"
         onLoadedMetadata={onLoaded} onTimeUpdate={onTime} onPlay={handlePlay} onPause={handlePause}
@@ -210,6 +247,15 @@ export default function VideoPlayer({ src, title, onTimeUpdate, onPlayPause, onS
           {isTimeSource && <button onClick={togglePlay} aria-label={playing ? 'Duraklat' : 'Oynat'} className="flex h-11 w-11 items-center justify-center hover:bg-white/10 rounded-lg">{playing ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}</button>}
           {isTimeSource && <button onClick={() => skip(-10)} aria-label="10 saniye geri" className="flex h-11 w-11 items-center justify-center hover:bg-white/10 rounded-lg" title="10 sn geri"><Rewind className="w-5 h-5" /></button>}
           {isTimeSource && <button onClick={() => skip(10)} aria-label="10 saniye ileri" className="flex h-11 w-11 items-center justify-center hover:bg-white/10 rounded-lg" title="10 sn ileri"><FastForward className="w-5 h-5" /></button>}
+          {autoplayMuted && (
+            <button
+              type="button"
+              onClick={(event) => { event.stopPropagation(); restoreAfterAutoplay(); }}
+              className="rounded-lg bg-primary/90 px-2.5 py-1.5 text-[11px] font-extrabold text-primary-foreground"
+            >
+              Sesi aç
+            </button>
+          )}
           <div
             className="relative z-[80] pointer-events-auto"
             onClick={(event) => event.stopPropagation()}

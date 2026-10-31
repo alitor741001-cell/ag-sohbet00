@@ -120,8 +120,10 @@ async function acquireMic() {
  */
 // Yanıtsız kalan açma isteği düğmeyi kilitlemez: bu süre sonunda bırakılır ve
 // mikrofon temiz bir kanalla yeniden açılır (sayfa yenilemeye gerek kalmaz).
-const MIC_PENDING_STALE_MS = 10000;
-const MIC_OPEN_TIMEOUT_MS = 20000;
+// iPhone'da izin penceresi açıkken istek hemen bırakılmaz: kişi izni veremeden
+// istek kapanınca mikrofon açılmıyor ve "tekrar dene" hatası görünüyordu.
+const MIC_PENDING_STALE_MS = 45000;
+const MIC_OPEN_TIMEOUT_MS = 45000;
 
 export function ensureMicTrack({ fresh = false } = {}) {
   // Cihaz başka uygulamada kaldıysa ya da izin penceresi kapandıysa istek hiç

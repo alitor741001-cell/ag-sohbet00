@@ -28,7 +28,9 @@ const micPermissionGranted = async () => {
 const subscriptionError = '💎 Sesli odada konuşmak abonelik gerektirir — dinlemeye devam edebilirsin.';
 const friendlyMicError = (error) => {
   if (error?.code === 'subscription_required') return subscriptionError;
-  if (error?.code === 'mic_timeout') return 'Mikrofon yanıt vermedi. Tarayıcının mikrofon iznini kontrol edip tekrar dene.';
+  // iPhone izin penceresi açıkken istek bırakılmaz; pencere görülmeden kapatılan istek
+  // "tekrar dene" hatasına dönüşüyordu.
+  if (error?.code === 'mic_timeout') return '🎤 Mikrofon izni bekleniyor — çıkan izin penceresinde “İzin Ver”e dokun. Açılmazsa düğmeye tekrar bas.';
   if (error?.code === 'webrtc_unsupported') return '🎤 Bu cihazın tarayıcısı ses iletimini desteklemiyor — uygulamayı güncel Chrome veya Safari ile açmayı dene.';
   if (error?.name === 'NotAllowedError') return '🎤 Mikrofon izni verilmedi — diğerlerini duymaya devam edersin.';
   if (error?.name === 'NotReadableError') return '🎤 Mikrofon kullanılamıyor — diğerlerini duymaya devam edersin.';
@@ -152,17 +154,18 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
       refreshState();
     })();
     micPendingRef.current = request;
-    // Yanıtsız kalan deneme düğmeyi kilitlemez: 10 saniye sonra istek bırakılır,
-    // düğme yeniden basılabilir olur — uygulamayı kapatmak ya da sayfayı yenilemek gerekmez.
+    // Yanıtsız kalan deneme düğmeyi kilitlemez: izin penceresine cevap vermeye yetecek
+    // süreden sonra istek bırakılır, düğme yeniden basılabilir olur. Süre kısa
+    // tutulduğunda iPhone'da kişi izni veremeden istek kapanıyordu.
     const watchdog = window.setTimeout(() => {
       if (micPendingRef.current !== request) return;
       micPendingRef.current = null;
       mesh.abandonMicRequest?.();
       if (meshRef.current === mesh) {
         setRequesting(false);
-        setError('🎤 Mikrofon yanıt vermedi — mikrofon düğmesine yeniden dokun.');
+        setError('🎤 Mikrofon izni bekleniyor — çıkan izin penceresinde “İzin Ver”e dokun, sonra düğmeye tekrar bas.');
       }
-    }, 10000);
+    }, 45000);
     try { await request; }
     catch (err) {
       micDeniedRef.current = isPermissionError(err);
