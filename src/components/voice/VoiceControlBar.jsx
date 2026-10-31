@@ -61,7 +61,7 @@ export default function VoiceControlBar({ micActive, deafened, gamesEnabled = tr
                   draggable={false}
                   className="pointer-events-none select-none"
                   style={{
-                    height: 'clamp(40px, 12vw, 54px)',
+                    height: 'clamp(31px, 9.5vw, 43px)',
                     width: 'auto',
                     filter: item.key === 'mic' && micActive
                       ? 'brightness(1.2) drop-shadow(0 0 8px rgba(74,222,128,0.75))'
@@ -69,7 +69,7 @@ export default function VoiceControlBar({ micActive, deafened, gamesEnabled = tr
                   }}
                 />
               ) : (
-                <span aria-hidden="true" style={{ height: 'clamp(40px, 12vw, 54px)' }} />
+                <span aria-hidden="true" style={{ height: 'clamp(31px, 9.5vw, 43px)' }} />
               )}
               {item.badge && <PrivateChatBadge count={privateUnread} />}
               {item.key === 'mic' && micActive && <span className="absolute right-[30%] top-0 h-2 w-2 rounded-full bg-green-400" />}
