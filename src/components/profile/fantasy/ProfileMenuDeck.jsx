@@ -1,11 +1,14 @@
-import useCutoutSprites from '@/hooks/useCutoutSprites';
+import { useCutoutGrid } from '@/hooks/useCutoutSprites';
 
-// Dört satır, her satırda dört düğme: tasarımlar gönderilen sırayla alt alta durur.
-const GROUPS = [
-  { url: 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/1ecd0918b_IMG_0528.jpg', actions: ['friends', 'following', 'followers', 'visitors'] },
-  { url: 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/70ce294b8_IMG_0529.jpg', actions: ['coins', 'diamonds', 'vip', 'giftHistory'], amount: ['coins', 'diamonds'] },
-  { url: 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/ccb2e081e_IMG_0530.jpg', actions: ['store', 'bag', 'level', 'agency'] },
-  { url: 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/56b5f2183_IMG_0531.jpg', actions: ['admin', 'blocked', 'privacy', 'settings'], adminFirst: true },
+// Tek tasarım sayfası: 4 satır, her satırda 4 düğme. Düğmeler beyaz zeminlerinden
+// ayrılıp şeffaf PNG olarak yerleştirilir, aralarında boşluk bırakılır.
+const IMAGE = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/4922623d2_IMG_0527.jpg';
+
+const ROWS = [
+  ['friends', 'following', 'followers', 'visitors'],
+  ['coins', 'diamonds', 'vip', 'giftHistory'],
+  ['store', 'bag', 'level', 'agency'],
+  ['admin', 'blocked', 'privacy', 'settings'],
 ];
 
 const LABELS = {
@@ -27,75 +30,43 @@ const LABELS = {
   settings: 'Ayarlar',
 };
 
-const ROW_HEIGHT = 'clamp(52px, 15.5vw, 76px)';
-
-function formatValue(value, amount = false) {
-  if (value === null || value === undefined) return '';
-  const numeric = Number(value);
-  if (amount && Math.abs(numeric) >= 1_000_000) {
-    const unit = Math.abs(numeric) >= 1_000_000_000_000
-      ? { divisor: 1_000_000_000_000, label: 'Tn' }
-      : Math.abs(numeric) >= 1_000_000_000
-        ? { divisor: 1_000_000_000, label: 'Mr' }
-        : { divisor: 1_000_000, label: 'Mn' };
-    return `${(numeric / unit.divisor).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${unit.label}`;
-  }
-  return numeric.toLocaleString('tr-TR', amount
-    ? { minimumIntegerDigits: 6, useGrouping: false }
-    : undefined);
-}
+const ROW_HEIGHT = 'clamp(56px, 16.5vw, 84px)';
 
 /**
- * Profil menüsü: gönderilen tasarımlar dört satır olarak alt alta dizilir.
- * Her düğme kendi şeffaf PNG parçasıdır; satırlar ekran kenarından kenarına uzanır.
+ * Profil menüsü: düğmeler referans tasarımdaki düzende, aralarında boşluk olacak
+ * şekilde dört satır halinde dizilir. Yönetici düğmesi yalnızca yöneticilerde görünür;
+ * yerine boşluk bırakılır, diğer düğmeler yerinden kaymaz.
  */
-export default function ProfileMenuDeck({ admin = false, stats = {}, onAction }) {
-  const spriteRows = [
-    useCutoutSprites(GROUPS[0].url, 4),
-    useCutoutSprites(GROUPS[1].url, 4),
-    useCutoutSprites(GROUPS[2].url, 4),
-    useCutoutSprites(GROUPS[3].url, 4),
-  ];
+export default function ProfileMenuDeck({ admin = false, onAction }) {
+  const sprites = useCutoutGrid(IMAGE, 4, 4);
 
   return (
     <div className="-mx-4 flex min-h-0 w-[calc(100%+2rem)] flex-1 flex-col justify-center gap-1">
-      {GROUPS.map((group, rowIndex) => {
-        // Yönetici olmayan üyede ilk düğme (Yönetici Paneli) gösterilmez.
-        const skip = group.adminFirst && !admin ? 1 : 0;
-        const actions = group.actions.slice(skip);
-        const sprites = spriteRows[rowIndex];
-        return (
-          <div
-            key={group.url}
-            className="grid w-full items-center"
-            style={{ gridTemplateColumns: `repeat(${actions.length}, minmax(0, 1fr))`, height: ROW_HEIGHT }}
-          >
-            {actions.map((action, index) => {
-              const sprite = sprites[skip + index];
-              const amount = group.amount?.includes(action);
-              const value = formatValue(stats[action], amount);
-              return (
-                <button
-                  key={action}
-                  type="button"
-                  onClick={() => onAction?.(action)}
-                  aria-label={LABELS[action]}
-                  className="relative flex h-full w-full items-center justify-center transition-transform active:scale-95"
-                >
-                  {sprite ? (
-                    <img src={sprite.src} alt="" draggable={false} className="pointer-events-none h-full w-full select-none object-contain" />
-                  ) : null}
-                  {value && (
-                    <span className="pointer-events-none absolute right-1 top-0 rounded-full bg-black/70 px-1.5 text-[10px] font-extrabold tabular-nums text-amber-100 ring-1 ring-amber-300/40">
-                      {value}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        );
-      })}
+      {ROWS.map((row, rowIndex) => (
+        <div
+          key={row.join('-')}
+          className="grid w-full items-center gap-1"
+          style={{ gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', height: ROW_HEIGHT }}
+        >
+          {row.map((action, colIndex) => {
+            const sprite = sprites[rowIndex * 4 + colIndex];
+            if (action === 'admin' && !admin) return <div key={action} aria-hidden="true" />;
+            return (
+              <button
+                key={action}
+                type="button"
+                onClick={() => onAction?.(action)}
+                aria-label={LABELS[action]}
+                className="flex h-full w-full items-center justify-center transition-transform active:scale-95"
+              >
+                {sprite ? (
+                  <img src={sprite.src} alt="" draggable={false} className="pointer-events-none h-full w-full select-none object-contain" />
+                ) : null}
+              </button>
+            );
+          })}
+        </div>
+      ))}
     </div>
   );
 }

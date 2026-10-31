@@ -6,70 +6,75 @@ const cache = new Map();
 
 const isWhite = (r, g, b) => r > 232 && g > 232 && b > 232;
 
-function readPixels(image) {
+function toCanvas(image) {
   const canvas = document.createElement('canvas');
   canvas.width = image.naturalWidth;
   canvas.height = image.naturalHeight;
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(image, 0, 0);
-  return { canvas, ctx, px: ctx.getImageData(0, 0, canvas.width, canvas.height).data, w: canvas.width, h: canvas.height };
+  canvas.getContext('2d').drawImage(image, 0, 0);
+  return canvas;
 }
 
-// Düğmeler arasındaki boş (beyaz) şeritler bulunur: dilimler düğmenin gerçek sınırından kesilir.
-function detectRanges(image, count) {
-  const { px, w, h } = readPixels(image);
-  const density = new Array(w).fill(0);
-  for (let y = 0; y < h; y += 2) {
+// Her sütun ve satırdaki dolu piksel yoğunluğu: beyaz şeritler düğme aralarıdır.
+function densityOf(canvas) {
+  const w = canvas.width;
+  const h = canvas.height;
+  const px = canvas.getContext('2d').getImageData(0, 0, w, h).data;
+  const col = new Array(w).fill(0);
+  const row = new Array(h).fill(0);
+  for (let y = 0; y < h; y += 1) {
     for (let x = 0; x < w; x += 1) {
       const i = (y * w + x) * 4;
-      if (!isWhite(px[i], px[i + 1], px[i + 2])) density[x] += 1;
+      if (px[i + 3] === 0 || isWhite(px[i], px[i + 1], px[i + 2])) continue;
+      col[x] += 1;
+      row[y] += 1;
     }
   }
-  const minDensity = Math.max(2, Math.round(h / 200));
-  const active = density.map((value) => value > minDensity);
+  return { col, row };
+}
 
+// Dolu bölgeleri gruplar; küçük boşluklar aynı düğmeye aittir.
+function bands(density, total, count, minRatio = 0.02) {
+  const peak = Math.max(...density, 1);
+  const active = density.map((value) => value > Math.max(1, peak * 0.015));
+  const gap = Math.round(total * 0.006);
   const runs = [];
   let start = -1;
-  for (let x = 0; x <= w; x += 1) {
-    if (x < w && active[x]) {
-      if (start < 0) start = x;
+  for (let i = 0; i <= total; i += 1) {
+    if (i < total && active[i]) {
+      if (start < 0) start = i;
     } else if (start >= 0) {
-      runs.push([start, x - 1]);
+      runs.push([start, i - 1]);
       start = -1;
     }
   }
-
-  // Küçük boşluklar aynı düğmeye aittir: birleştirilir.
-  const gap = Math.round(w * 0.006);
   const merged = [];
   runs.forEach((run) => {
     const last = merged[merged.length - 1];
     if (last && run[0] - last[1] <= gap) last[1] = run[1];
     else merged.push([...run]);
   });
-
-  const usable = merged.filter(([left, right]) => right - left >= w * 0.02);
+  const usable = merged.filter(([left, right]) => right - left >= total * minRatio);
   if (usable.length !== count) {
-    const cell = Math.floor(w / count);
+    const cell = Math.floor(total / count);
     return Array.from({ length: count }, (_, index) => [index * cell, cell]);
   }
   return usable.map(([left, right]) => [left, right - left + 1]);
 }
 
-function cutCell(image, sx, sw) {
-  const h = image.naturalHeight;
-  const canvas = document.createElement('canvas');
-  canvas.width = sw;
-  canvas.height = h;
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(image, sx, 0, sw, h, 0, 0, sw, h);
-  const data = ctx.getImageData(0, 0, sw, h);
+function cutCanvas(canvas, sx, sy, sw, sh) {
+  const piece = document.createElement('canvas');
+  piece.width = sw;
+  piece.height = sh;
+  const ctx = piece.getContext('2d');
+  ctx.drawImage(canvas, sx, sy, sw, sh, 0, 0, sw, sh);
+  const data = ctx.getImageData(0, 0, sw, sh);
   const px = data.data;
 
-  const seen = new Uint8Array(sw * h);
+  // Kenarlardan başlayan beyaz zemin şeffaf yapılır; düğmenin içindeki beyaz korunur.
+  const seen = new Uint8Array(sw * sh);
   const stack = [];
-  for (let x = 0; x < sw; x += 1) { stack.push(x, (h - 1) * sw + x); }
-  for (let y = 0; y < h; y += 1) { stack.push(y * sw, y * sw + sw - 1); }
+  for (let x = 0; x < sw; x += 1) { stack.push(x, (sh - 1) * sw + x); }
+  for (let y = 0; y < sh; y += 1) { stack.push(y * sw, y * sw + sw - 1); }
   while (stack.length) {
     const p = stack.pop();
     if (seen[p]) continue;
@@ -81,13 +86,13 @@ function cutCell(image, sx, sw) {
     if (x > 0) stack.push(p - 1);
     if (x < sw - 1) stack.push(p + 1);
     if (p >= sw) stack.push(p - sw);
-    if (p < sw * (h - 1)) stack.push(p + sw);
+    if (p < sw * (sh - 1)) stack.push(p + sw);
   }
   ctx.putImageData(data, 0, 0);
 
   // Görünür alanın sınırları: düğmenin çevresindeki boşluk atılır.
-  let left = sw; let top = h; let right = -1; let bottom = -1;
-  for (let y = 0; y < h; y += 1) {
+  let left = sw; let top = sh; let right = -1; let bottom = -1;
+  for (let y = 0; y < sh; y += 1) {
     for (let x = 0; x < sw; x += 1) {
       if (px[(y * sw + x) * 4 + 3] > 8) {
         if (x < left) left = x;
@@ -101,38 +106,59 @@ function cutCell(image, sx, sw) {
 
   const cw = right - left + 1;
   const ch = bottom - top + 1;
-  const cropped = document.createElement('canvas');
-  cropped.width = cw;
-  cropped.height = ch;
-  cropped.getContext('2d').drawImage(canvas, left, top, cw, ch, 0, 0, cw, ch);
-  return { src: cropped.toDataURL('image/png') };
+  const out = document.createElement('canvas');
+  out.width = cw;
+  out.height = ch;
+  out.getContext('2d').drawImage(piece, left, top, cw, ch, 0, 0, cw, ch);
+  return { src: out.toDataURL('image/png') };
 }
 
-function build(image, count) {
-  return detectRanges(image, count).map(([sx, sw]) => cutCell(image, sx, sw));
+function buildGrid(image, cols, rows) {
+  const canvas = toCanvas(image);
+  const { col, row } = densityOf(canvas);
+  const rowBands = bands(row, canvas.height, rows);
+  const cells = [];
+  rowBands.forEach(([sy, sh]) => {
+    const piece = document.createElement('canvas');
+    piece.width = canvas.width;
+    piece.height = sh;
+    piece.getContext('2d').drawImage(canvas, 0, sy, canvas.width, sh, 0, 0, canvas.width, sh);
+    const colBands = bands(col, canvas.width, cols);
+    colBands.forEach(([sx, sw]) => cells.push(cutCanvas(piece, sx, 0, sw, sh)));
+  });
+  return cells;
 }
 
-/** Bir tasarım görselini şeffaf PNG düğmelere böler. */
-export default function useCutoutSprites(url, count) {
-  const [sprites, setSprites] = useState(() => cache.get(url) || []);
-
+function useSprites(key, load) {
+  const [sprites, setSprites] = useState(() => cache.get(key) || []);
   useEffect(() => {
-    if (cache.has(url)) { setSprites(cache.get(url)); return undefined; }
+    if (cache.has(key)) { setSprites(cache.get(key)); return undefined; }
     let alive = true;
     const image = new window.Image();
     image.crossOrigin = 'anonymous';
     image.onload = () => {
       try {
-        const result = build(image, count);
-        cache.set(url, result);
+        const result = load(image).filter(Boolean);
+        cache.set(key, result);
         if (alive) setSprites(result);
       } catch {
         if (alive) setSprites([]);
       }
     };
-    image.src = url;
+    image.src = key.split('|')[0];
     return () => { alive = false; };
-  }, [url, count]);
-
+  }, [key]);
   return sprites;
+}
+
+/** Tek satırlık tasarımı eşit düğmelere böler; düğmeler arasındaki boşluktan keser. */
+export default function useCutoutSprites(url, count) {
+  const key = `${url}|${count}x1`;
+  return useSprites(key, (image) => buildGrid(image, count, 1));
+}
+
+/** Çok satırlı tasarımı satır ve sütun boşluklarından kesip düğmelere böler. */
+export function useCutoutGrid(url, cols, rows) {
+  const key = `${url}|${cols}x${rows}`;
+  return useSprites(key, (image) => buildGrid(image, cols, rows));
 }
