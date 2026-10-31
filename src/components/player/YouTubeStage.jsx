@@ -92,6 +92,8 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
   const playNudgeRef = useRef(0);
   // Duraklatma bildirimi geciktirilir: anlık duraklama tüm odayı durdurmaz.
   const pauseTimerRef = useRef(null);
+  // Tarayıcı sesli oynatmayı engellerse film sessiz başlatılır: karşı taraf boş ekranda kalmaz.
+  const autoplayTimerRef = useRef(null);
 
   // Sessize alma yalnızca açık kullanıcı tercihiyle uygulanır, yüzde eşiği yoktur.
   const silent = muted;
@@ -239,7 +241,7 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
         },
       });
     });
-    return () => { cancelled = true; clearTimeout(pauseTimerRef.current); playerRef.current?.destroy?.(); playerRef.current = null; };
+    return () => { cancelled = true; clearTimeout(pauseTimerRef.current); clearTimeout(autoplayTimerRef.current); playerRef.current?.destroy?.(); playerRef.current = null; };
   }, [videoId]);
 
   useEffect(() => {
@@ -305,13 +307,31 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
     if (!player?.getCurrentTime) return;
     const state = window.YT?.PlayerState;
     const target = syncState?.current_time || 0;
+    const playingNow = player.getPlayerState?.() === state?.PLAYING;
     // Yalnızca belirgin sapmada hizalanır: film kendi akışında oynamaya devam eder.
-    if (Math.abs((player.getCurrentTime() || 0) - target) > SYNC_TOLERANCE) {
+    if (syncState?.is_playing && Math.abs((player.getCurrentTime() || 0) - target) > SYNC_TOLERANCE) {
       player.seekTo(target, true);
       seekGuardRef.current = Date.now() + 2000;
     }
-    // Duraklatma yalnızca oda gerçekten duraklatıldığında uygulanır.
-    if (!syncState?.is_playing && player.getPlayerState?.() === state?.PLAYING) {
+    if (syncState?.is_playing) {
+      // Film açan kişi başlattığı an karşı taraf da başlar.
+      if (!playingNow) {
+        player.playVideo?.();
+        // Sesli oynatma tarayıcı tarafından engellenirse sessiz başlatılır; ses ilk
+        // dokunuşta açılır, izleyici siyah ekranda beklemez.
+        clearTimeout(autoplayTimerRef.current);
+        autoplayTimerRef.current = setTimeout(() => {
+          const active = playerRef.current;
+          if (!active?.getPlayerState) return;
+          if (active.getPlayerState() === window.YT?.PlayerState?.PLAYING) return;
+          active.mute?.();
+          mutedForAutoplayRef.current = true;
+          setAutoplayMuted(true);
+          active.playVideo?.();
+        }, 600);
+      }
+    } else if (playingNow) {
+      // Film açan kişi durdurduğu an karşı taraf da durur.
       player.pauseVideo();
       seekGuardRef.current = Date.now() + 1500;
     }
