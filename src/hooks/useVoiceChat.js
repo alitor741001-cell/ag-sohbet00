@@ -3,7 +3,7 @@ import { unlockVoicePlayback } from '@/lib/callAudio';
 import { hasDirectCallAudioFocus, subscribeCallAudioFocus } from '@/lib/callAudioFocus';
 import { isRoomMinimized } from '@/lib/minimizedRoom';
 import { disposeOtherVoiceSessions, registerVoiceSession, takeVoiceSession } from '@/lib/roomVoiceSession';
-import { P2PVoiceRoom } from '@/lib/p2pVoiceRoom';
+import { LiveKitVoiceRoom } from '@/lib/livekitVoiceRoom';
 import shallowEqual from '@/components/data/shallowEqual';
 import useSeatMicConsent from '@/hooks/useSeatMicConsent';
 
@@ -184,7 +184,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
     // Küçültülmüş odadan dönüş: bağlantı ve mikrofon yayını hâlâ ayakta, yalnızca arayüz bağlanır.
     disposeOtherVoiceSessions(roomId);
     const resumed = takeVoiceSession(roomId);
-    const mesh = resumed?.room || new P2PVoiceRoom({
+    const mesh = resumed?.room || new LiveKitVoiceRoom({
       roomId,
       user,
       userId: user.id,
@@ -234,7 +234,9 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
         if (cancelled) return;
         console.error('[LiveKit] Connection failed', connectError);
         setConnectionState('disconnected');
-        setError('🌐 Ses bağlantısı kurulamadı.');
+        // Sunucudan gelen gerçek sebep gösterilir; bağlantı kurulmadıysa bağlıymış gibi davranılmaz.
+        const serverReason = connectError?.response?.data?.error;
+        setError(serverReason ? `🌐 ${serverReason}` : '🌐 Ses bağlantısı kurulamadı. Lütfen tekrar dene.');
       }
     })();
 
