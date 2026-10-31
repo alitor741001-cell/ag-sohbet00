@@ -72,6 +72,11 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
   const [captions, setCaptions] = useState(() => localStorage.getItem('filmkeyfi_captions') === 'true');
   const captionsRef = useRef(captions);
   captionsRef.current = captions;
+  // Tarayıcı sesli otomatik başlatmayı engellerse film sessiz başlatılır; görüntü
+  // karşı tarafta da oynar, ses kişi ekrana ilk dokunduğunda geri açılır.
+  const mutedForAutoplayRef = useRef(false);
+  // Ses, otomatik başlatma için kısıldıysa uyarı görünür: tek dokunuşla ses açılır.
+  const [autoplayMuted, setAutoplayMuted] = useState(false);
 
   // Sessize alma yalnızca açık kullanıcı tercihiyle uygulanır, yüzde eşiği yoktur.
   const silent = muted;
@@ -86,6 +91,7 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
 
   const changeVolume = (percent) => {
     const level = Math.round(Math.min(100, Math.max(0, Number(percent) || 0)));
+    mutedForAutoplayRef.current = false;
     setVolume(level);
     setMuted(level === 0);
     localStorage.setItem('filmkeyfi_player_volume', String(level / 100));
@@ -96,6 +102,7 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
   const toggleMute = () => {
     const next = !silent;
     const level = !next && volume === 0 ? 100 : volume;
+    mutedForAutoplayRef.current = false;
     setMuted(next);
     if (level !== volume) setVolume(level);
     localStorage.setItem('filmkeyfi_player_muted', String(next));
@@ -125,6 +132,24 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
     setCaptions(next);
     localStorage.setItem('filmkeyfi_captions', String(next));
     applyCaptions(next);
+  };
+
+  // Sessiz otomatik başlatma kullanıldıysa ses, kişi ekrana ilk dokunduğunda geri açılır.
+  const restoreAfterAutoplay = () => {
+    if (!mutedForAutoplayRef.current) return;
+    mutedForAutoplayRef.current = false;
+    setAutoplayMuted(false);
+    applyVolume(volume, silent);
+  };
+
+  // Karşı tarafta oynatma engellendiyse film bu düğmeyle başlar (oynatıcı kontrolleri gizli).
+  const startPlayback = () => {
+    const player = playerRef.current;
+    if (!player?.playVideo) return;
+    mutedForAutoplayRef.current = false;
+    setAutoplayMuted(false);
+    applyVolume(volume, silent);
+    player.playVideo();
   };
 
   // Oynatıcı kurulduğunda / yeniden kurulduğunda kayıtlı seviye uygulanır.
@@ -162,14 +187,23 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
             // gecikmeli yüklendiğinde kısa süre sonra tekrar denenir.
             applyCaptions(captionsRef.current);
             setTimeout(() => { if (!cancelled) applyCaptions(captionsRef.current); }, 1200);
-            const startIfNeeded = () => {
+            // Film odaya açıldığında karşı taraf da başlasın: oynatma birkaç kez denenir,
+            // sesli otomatik başlatma engellenirse sessiz başlatmaya geçilir.
+            const attemptPlay = (allowMute) => {
               if (cancelled || !syncRef.current?.is_playing) return;
-              const playerState = window.YT?.PlayerState;
-              if (event.target.getPlayerState?.() !== playerState?.PLAYING) event.target.playVideo();
+              const player = playerRef.current;
+              if (!player?.getPlayerState) return;
+              if (player.getPlayerState() === window.YT?.PlayerState?.PLAYING) return;
+              if (allowMute) {
+                player.mute?.();
+                mutedForAutoplayRef.current = true;
+                setAutoplayMuted(true);
+              }
+              player.playVideo?.();
             };
-            startIfNeeded();
-            // Tarayıcı ilk otomatik başlatmayı engellerse kısa süre sonra tekrar denenir.
-            setTimeout(startIfNeeded, 1200);
+            [[0, false], [700, false], [1600, true], [3200, true]].forEach(([delay, allowMute]) => {
+              setTimeout(() => { if (!cancelled) attemptPlay(allowMute); }, delay);
+            });
           },
           onError: () => setError('Bu video oynatılamıyor. Başka bir YouTube linki dene.'),
           onStateChange: (event) => {
@@ -303,6 +337,8 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
       ref={containerRef}
       className="relative h-full w-full overflow-hidden bg-black select-none"
       onMouseMove={showCtrl}
+      onPointerDown={restoreAfterAutoplay}
+      onTouchStart={restoreAfterAutoplay}
       onClick={() => {
         showCtrl();
         const player = playerRef.current;
@@ -318,6 +354,20 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
         </div>
       )}
       {error && <div className="absolute inset-0 flex items-center justify-center px-6 text-center text-sm text-amber-300">{error}</div>}
+
+      {/* İzleyicide otomatik başlatma engellendiğinde film tek dokunuşla başlar. */}
+      {!isOwner && ready && !error && syncState?.is_playing && !playing && (
+        <button
+          type="button"
+          onClick={(event) => { event.stopPropagation(); startPlayback(); }}
+          className="absolute inset-0 z-[58] flex flex-col items-center justify-center gap-2 bg-black/45"
+        >
+          <span className="flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-extrabold text-primary-foreground shadow-lg">
+            <Play className="h-5 w-5" /> Filmi başlat
+          </span>
+          <span className="text-[11px] font-semibold text-white/70">Oda sahibi filmi açtı — dokun ve izle</span>
+        </button>
+      )}
 
       <div
         className={`pointer-events-auto absolute inset-x-0 bottom-0 z-[60] bg-gradient-to-t from-black/90 to-transparent p-3 transition-opacity sm:p-4 ${(suppressControls || !showControls) ? 'pointer-events-none opacity-0' : 'opacity-100'}`}
@@ -337,6 +387,15 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
           <p className="mb-1 text-xs font-semibold text-white/60">YouTube sesi iPhone’da telefonun ses tuşlarıyla azaltılır.</p>
         )}
         <div className="flex items-center gap-1 text-white sm:gap-2">
+          {autoplayMuted && !silent && (
+            <button
+              type="button"
+              onClick={(event) => { event.stopPropagation(); restoreAfterAutoplay(); }}
+              className="rounded-lg bg-primary/90 px-2.5 py-1.5 text-[11px] font-extrabold text-primary-foreground"
+            >
+              Sesi aç
+            </button>
+          )}
           {isOwner && <button onClick={togglePlay} aria-label={playing ? 'Duraklat' : 'Oynat'} className="flex h-11 w-11 items-center justify-center rounded-lg hover:bg-white/10">{playing ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}</button>}
           {isOwner && <button onClick={() => skip(-10)} aria-label="10 saniye geri" className="flex h-11 w-11 items-center justify-center rounded-lg hover:bg-white/10" title="10 sn geri"><Rewind className="h-5 w-5" /></button>}
           {isOwner && <button onClick={() => skip(10)} aria-label="10 saniye ileri" className="flex h-11 w-11 items-center justify-center rounded-lg hover:bg-white/10" title="10 sn ileri"><FastForward className="h-5 w-5" /></button>}

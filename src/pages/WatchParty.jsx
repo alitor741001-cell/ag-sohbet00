@@ -184,7 +184,23 @@ export default function WatchParty() {
     const interval = window.setInterval(() => {
       if (document.visibilityState === 'hidden') return;
       base44.functions.invoke('room-presence', { action: 'get', room_id: id })
-        .then((res) => { const r = res.data?.room; if (r) setRoom((prev) => prev?.updated_date && r.updated_date && prev.updated_date > r.updated_date ? prev : r); })
+        .then((res) => {
+          const r = res.data?.room;
+          if (!r) return;
+          setRoom((prev) => {
+            if (!prev) return r;
+            // Gecikmiş bir yanıt taze veriyi ezmez; film değişikliği her koşulda uygulanır.
+            const prevAt = Date.parse(prev.updated_date || '') || 0;
+            const nextAt = Date.parse(r.updated_date || '') || 0;
+            return prevAt > nextAt ? prev : { ...prev, ...r };
+          });
+          // Oynatma durumu da tazelenir: oda sahibi film açtığında film karşı tarafta da açılır.
+          const last = lastSyncRef.current;
+          if (r.movie_id !== last.movie_id || r.is_playing !== last.is_playing || Math.abs((r.current_time || 0) - last.current_time) > 3) {
+            lastSyncRef.current = { is_playing: r.is_playing, current_time: r.current_time, movie_id: r.movie_id };
+            setSyncState({ is_playing: r.is_playing, current_time: r.current_time, last_sync: r.last_sync });
+          }
+        })
         .catch(() => {});
     }, 5000);
     return () => window.clearInterval(interval);
