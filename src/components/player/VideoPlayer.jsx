@@ -185,7 +185,7 @@ export default function VideoPlayer({ src, title, onTimeUpdate, onPlayPause, onS
       {buffering && <div className="absolute inset-0 flex items-center justify-center pointer-events-none"><div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>}
       {audioError && <div className="absolute left-3 right-3 top-14 z-50 rounded-lg border border-amber-500/60 bg-black/90 px-3 py-2 text-center text-xs text-amber-300">Ses sistemi: {audioError} (native kontrol kullanılıyor)</div>}
 
-      {isOwner && !playing && !buffering && !suppressControls && (
+      {isTimeSource && !playing && !buffering && !suppressControls && (
         <button onClick={togglePlay} aria-label={playing ? 'Duraklat' : 'Oynat'} className="absolute inset-0 flex items-center justify-center">
           <span className="w-20 h-20 rounded-full bg-primary/90 flex items-center justify-center hover:scale-110 transition-transform">
             <Play className="w-10 h-10 fill-white text-white ml-1" />
@@ -199,17 +199,17 @@ export default function VideoPlayer({ src, title, onTimeUpdate, onPlayPause, onS
 
       <div className={`absolute inset-x-0 z-[60] pointer-events-auto p-3 sm:p-4 bg-gradient-to-t from-black/90 to-transparent transition-opacity ${controlsRaised ? 'bottom-24' : 'bottom-0'} ${(suppressControls || !showControls) ? 'opacity-0 pointer-events-none' : 'opacity-100'}`} style={{ paddingBottom: controlsRaised ? undefined : 'calc(0.75rem + env(safe-area-inset-bottom))' }}>
         <div className="flex items-center gap-2 mb-2 text-white text-xs">
-          {isOwner && <span>{fmt(current)}</span>}
-          {isOwner && <div className="flex-1 h-1.5 bg-white/30 rounded-full cursor-pointer relative" onClick={moveBar}>
+          {isTimeSource && <span>{fmt(current)}</span>}
+          {isTimeSource && <div className="flex-1 h-1.5 bg-white/30 rounded-full cursor-pointer relative" onClick={moveBar}>
             <div className="absolute inset-y-0 left-0 bg-primary rounded-full" style={{ width: `${duration ? (current / duration) * 100 : 0}%` }} />
             <div className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-primary rounded-full -ml-1.5" style={{ left: `${duration ? (current / duration) * 100 : 0}%` }} />
           </div>}
-          {isOwner && <span>{fmt(duration)}</span>}
+          {isTimeSource && <span>{fmt(duration)}</span>}
         </div>
         <div className="flex flex-wrap items-center gap-1 text-white sm:gap-2">
-          {isOwner && <button onClick={togglePlay} aria-label={playing ? 'Duraklat' : 'Oynat'} className="flex h-11 w-11 items-center justify-center hover:bg-white/10 rounded-lg">{playing ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}</button>}
-          {isOwner && <button onClick={() => skip(-10)} aria-label="10 saniye geri" className="flex h-11 w-11 items-center justify-center hover:bg-white/10 rounded-lg" title="10 sn geri"><Rewind className="w-5 h-5" /></button>}
-          {isOwner && <button onClick={() => skip(10)} aria-label="10 saniye ileri" className="flex h-11 w-11 items-center justify-center hover:bg-white/10 rounded-lg" title="10 sn ileri"><FastForward className="w-5 h-5" /></button>}
+          {isTimeSource && <button onClick={togglePlay} aria-label={playing ? 'Duraklat' : 'Oynat'} className="flex h-11 w-11 items-center justify-center hover:bg-white/10 rounded-lg">{playing ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}</button>}
+          {isTimeSource && <button onClick={() => skip(-10)} aria-label="10 saniye geri" className="flex h-11 w-11 items-center justify-center hover:bg-white/10 rounded-lg" title="10 sn geri"><Rewind className="w-5 h-5" /></button>}
+          {isTimeSource && <button onClick={() => skip(10)} aria-label="10 saniye ileri" className="flex h-11 w-11 items-center justify-center hover:bg-white/10 rounded-lg" title="10 sn ileri"><FastForward className="w-5 h-5" /></button>}
           <div
             className="relative z-[80] pointer-events-auto"
             onClick={(event) => event.stopPropagation()}

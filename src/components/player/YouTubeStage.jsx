@@ -38,8 +38,8 @@ const IOS_VOLUME_LOCKED = /iPad|iPhone|iPod/.test(navigator.userAgent)
   || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
 // İzleyicide film kendi akışında oynar: oda ile aradaki küçük fark düzeltilmez.
-// Yalnızca belirgin sapmada hizalanır, böylece film durup baştan sarmaz.
-const SYNC_TOLERANCE = 6;
+// Yalnızca odanın filmi sardığı durumda (büyük fark) hizalanır, film durup baştan sarmaz.
+const SEEK_GAP = 12;
 
 
 /**
@@ -68,6 +68,8 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
   const [fullscreen, setFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [error, setError] = useState('');
+  // Oynatıcı hata verirse oynatıcı bu sayaçla yeniden kurulur.
+  const [reloadKey, setReloadKey] = useState(0);
   // Film sesi: herkes kendi cihazında kısıp açabilir, odaya yazılmaz. Ayar, doğrudan
   // oynatıcıdaki (useMediaVolume) altyapının kullandığı anahtarlarla cihazda saklanır.
   const [volume, setVolume] = useState(() => {
@@ -162,6 +164,20 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
   // Oynatıcı kurulduğunda / yeniden kurulduğunda kayıtlı seviye uygulanır.
   useEffect(() => { applyVolume(volume, muted); }, [volume, muted, ready]);
 
+  // Ses, otomatik başlatma için kısıldıysa ekrana ilk dokunuşta açılır: bazı cihazlarda
+  // "Sesi aç" düğmesi görülmediği için film sessiz kalıyordu.
+  useEffect(() => {
+    if (!autoplayMuted) return;
+    const resume = () => restoreAfterAutoplay();
+    document.addEventListener('pointerdown', resume, { once: true, capture: true });
+    document.addEventListener('touchstart', resume, { once: true, capture: true });
+    return () => {
+      document.removeEventListener('pointerdown', resume, { capture: true });
+      document.removeEventListener('touchstart', resume, { capture: true });
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoplayMuted]);
+
   // Video değişince oynatıcı yeniden kurulur ve odanın konumundan başlar.
   useEffect(() => {
     let cancelled = false;
@@ -200,7 +216,10 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
               if (cancelled || !syncRef.current?.is_playing) return;
               const player = playerRef.current;
               if (!player?.getPlayerState) return;
-              if (player.getPlayerState() === window.YT?.PlayerState?.PLAYING) return;
+              const currentState = player.getPlayerState();
+              // Oynayan ya da yüklenen oynatıcıya yeniden oynatma isteği gönderilmez:
+              // istek filmi durdurup yeniden başlatıyordu.
+              if (currentState === window.YT?.PlayerState?.PLAYING || currentState === window.YT?.PlayerState?.BUFFERING) return;
               // Tampon bekleyen oynatıcı sessize alınmaz: ses, gereksiz yere kapanmaz.
               if (allowMute && player.getPlayerState?.() !== window.YT?.PlayerState?.BUFFERING) {
                 player.mute?.();
@@ -242,7 +261,7 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
       });
     });
     return () => { cancelled = true; clearTimeout(pauseTimerRef.current); clearTimeout(autoplayTimerRef.current); playerRef.current?.destroy?.(); playerRef.current = null; };
-  }, [videoId]);
+  }, [videoId, reloadKey]);
 
   useEffect(() => {
     if (suppressControls) setShowControls(false);
@@ -274,20 +293,13 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
         lastReportRef.current = Date.now();
         onTimeUpdate(player.getCurrentTime());
       }
-      // İzleyici tarafı: oda oynatıyorsa film kendiliğinden duraklayıp kalmaz.
-      // Beklenen konumdan belirgin sapma varsa hizalanır, ufak farkta dokunulmaz.
+      // İzleyici tarafı: film kendiliğinden duraklarsa sessizce devam eder.
+      // Konum zorla hizalanmaz: sürekli sarma filmi durup yeniden başlatıyordu.
       if (!isTimeSource) {
         const base = baselineRef.current;
-        if (base.playing && Date.now() > seekGuardRef.current) {
-          const expected = base.time + (Date.now() - base.at) / 1000;
-          const drift = (player.getCurrentTime() || 0) - expected;
-          if (Math.abs(drift) > SYNC_TOLERANCE + 2) {
-            player.seekTo(expected, true);
-            seekGuardRef.current = Date.now() + 2500;
-          } else if (player.getPlayerState?.() === state?.PAUSED && Date.now() > playNudgeRef.current) {
-            playNudgeRef.current = Date.now() + 3000;
-            player.playVideo?.();
-          }
+        if (base.playing && player.getPlayerState?.() === state?.PAUSED && Date.now() > playNudgeRef.current) {
+          playNudgeRef.current = Date.now() + 3000;
+          player.playVideo?.();
         }
       }
     }, 1000);
@@ -307,15 +319,22 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
     if (!player?.getCurrentTime) return;
     const state = window.YT?.PlayerState;
     const target = syncState?.current_time || 0;
-    const playingNow = player.getPlayerState?.() === state?.PLAYING;
-    // Yalnızca belirgin sapmada hizalanır: film kendi akışında oynamaya devam eder.
-    if (syncState?.is_playing && Math.abs((player.getCurrentTime() || 0) - target) > SYNC_TOLERANCE) {
+    const playerState = player.getPlayerState?.();
+    const playingNow = playerState === state?.PLAYING;
+    // Yüklenmekte olan (tampon) oynatıcıya dokunulmaz: tekrar tekrar oynatma isteği
+    // filmi 2 saniyede bir durup yeniden başlatıyordu.
+    const buffering = playerState === state?.BUFFERING;
+    // Konum yalnızca büyük sapmada (oda sahibi filmi sardıysa) düzeltilir ve en fazla
+    // 6 saniyede bir: sürekli hizalama filmi durup yeniden başlatıyordu.
+    if (syncState?.is_playing && Date.now() > seekGuardRef.current
+      && Math.abs((player.getCurrentTime() || 0) - target) > SEEK_GAP) {
       player.seekTo(target, true);
-      seekGuardRef.current = Date.now() + 2000;
+      seekGuardRef.current = Date.now() + 6000;
     }
     if (syncState?.is_playing) {
       // Film açan kişi başlattığı an karşı taraf da başlar.
-      if (!playingNow) {
+      if (!playingNow && !buffering && Date.now() > playNudgeRef.current) {
+        playNudgeRef.current = Date.now() + 1500;
         player.playVideo?.();
         // Sesli oynatma tarayıcı tarafından engellenirse sessiz başlatılır; ses ilk
         // dokunuşta açılır, izleyici siyah ekranda beklemez.
@@ -323,7 +342,8 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
         autoplayTimerRef.current = setTimeout(() => {
           const active = playerRef.current;
           if (!active?.getPlayerState) return;
-          if (active.getPlayerState() === window.YT?.PlayerState?.PLAYING) return;
+          const activeState = active.getPlayerState();
+          if (activeState === window.YT?.PlayerState?.PLAYING || activeState === window.YT?.PlayerState?.BUFFERING) return;
           active.mute?.();
           mutedForAutoplayRef.current = true;
           setAutoplayMuted(true);
@@ -423,21 +443,26 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
           <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
         </div>
       )}
-      {error && <div className="absolute inset-0 flex items-center justify-center px-6 text-center text-sm text-amber-300">{error}</div>}
+      {error && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-6 text-center text-sm text-amber-300">
+          <p>{error}</p>
+          <button type="button" onClick={() => { setError(''); setReloadKey((n) => n + 1); }} className="rounded-lg bg-primary px-4 py-2 text-xs font-bold text-primary-foreground">Tekrar dene</button>
+        </div>
+      )}
 
       <div
         className={`pointer-events-auto absolute inset-x-0 bottom-0 z-[60] bg-gradient-to-t from-black/90 to-transparent p-3 transition-opacity sm:p-4 ${(suppressControls || !showControls) ? 'pointer-events-none opacity-0' : 'opacity-100'}`}
         style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom))' }}
       >
         <div className="mb-2 flex items-center gap-2 text-xs text-white">
-          {isOwner && <span>{fmt(current)}</span>}
-          {isOwner && (
+          {isTimeSource && <span>{fmt(current)}</span>}
+          {isTimeSource && (
             <div className="relative h-1.5 flex-1 cursor-pointer rounded-full bg-white/30" onClick={moveBar}>
               <div className="absolute inset-y-0 left-0 rounded-full bg-primary" style={{ width: `${duration ? (current / duration) * 100 : 0}%` }} />
               <div className="absolute top-1/2 -ml-1.5 h-3 w-3 -translate-y-1/2 rounded-full bg-primary" style={{ left: `${duration ? (current / duration) * 100 : 0}%` }} />
             </div>
           )}
-          {isOwner && <span>{fmt(duration)}</span>}
+          {isTimeSource && <span>{fmt(duration)}</span>}
         </div>
         {IOS_VOLUME_LOCKED && (
           <p className="mb-1 text-xs font-semibold text-white/60">YouTube sesi iPhone’da telefonun ses tuşlarıyla azaltılır.</p>
@@ -454,8 +479,8 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
           )}
           {/* Duraklatma yalnızca oda sahibinde: izleyicide durdurma düğmesi bulunmaz. */}
           {isTimeSource && <button onClick={togglePlay} aria-label={playing ? 'Duraklat' : 'Oynat'} className="flex h-11 w-11 items-center justify-center rounded-lg hover:bg-white/10">{playing ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}</button>}
-          {isOwner && <button onClick={() => skip(-10)} aria-label="10 saniye geri" className="flex h-11 w-11 items-center justify-center rounded-lg hover:bg-white/10" title="10 sn geri"><Rewind className="h-5 w-5" /></button>}
-          {isOwner && <button onClick={() => skip(10)} aria-label="10 saniye ileri" className="flex h-11 w-11 items-center justify-center rounded-lg hover:bg-white/10" title="10 sn ileri"><FastForward className="h-5 w-5" /></button>}
+          {isTimeSource && <button onClick={() => skip(-10)} aria-label="10 saniye geri" className="flex h-11 w-11 items-center justify-center rounded-lg hover:bg-white/10" title="10 sn geri"><Rewind className="h-5 w-5" /></button>}
+          {isTimeSource && <button onClick={() => skip(10)} aria-label="10 saniye ileri" className="flex h-11 w-11 items-center justify-center rounded-lg hover:bg-white/10" title="10 sn ileri"><FastForward className="h-5 w-5" /></button>}
           {IOS_VOLUME_LOCKED ? (
             <button
               type="button"
