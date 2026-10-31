@@ -58,7 +58,7 @@ export default function SocialListDialog({ open, kind, onClose }) {
         ) : items.length === 0 ? (
           !error && <p className="py-12 text-center text-sm font-semibold text-white/50">Henüz kimse yok.</p>
         ) : (
-          <div className="mx-auto w-full max-w-[430px] space-y-1.5">
+          <div className="mx-auto w-full max-w-[430px] divide-y divide-fantasy-gold/20">
             {items.map((person) => (
               <SocialPersonRow
                 key={person.id}

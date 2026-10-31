@@ -41,7 +41,8 @@ export default function VoiceControlBar({ micActive, deafened, gamesEnabled = tr
   const order = gamesEnabled ? [0, 1, 2, 3, 4, 5, 6] : [0, 1, 2, 3, 4, 6];
 
   return (
-    <div ref={barRef} className="voice-control-bar relative w-full shrink-0" style={{ paddingBottom: 'max(2px, calc(env(safe-area-inset-bottom, 0px) * 0.25))' }}>
+    <div ref={barRef} className="voice-control-bar relative w-full shrink-0" /* Sesli oda düğmeleri de ekranın en dibine, çentik hizasına kadar iner. */
+      style={{ paddingBottom: '0px' }}>
       <div className="flex w-full items-end justify-between gap-0.5 px-0.5">
         {items.map((item, index) => {
           const sprite = sprites[order[index]];

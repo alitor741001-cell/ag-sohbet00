@@ -62,7 +62,7 @@ export default function ProfileMenuDeck({ admin = false, onAction, stats = {} })
                 aria-label={label}
                 className="relative flex min-h-0 items-center justify-center transition active:scale-95"
               >
-                {images[rowIndex * 4 + colIndex] && <Image src={images[rowIndex * 4 + colIndex]} alt="" fittingType="fit" className={`pointer-events-none absolute inset-x-0 top-0 w-full select-none ${rowIndex === 0 ? 'h-[calc(100%_-_1.25rem)]' : 'h-full'}`} />}
+                {images[rowIndex * 4 + colIndex] && <Image src={images[rowIndex * 4 + colIndex]} alt="" fittingType="fit" className={`pointer-events-none absolute inset-x-0 top-0 w-full select-none scale-[0.93] ${rowIndex === 0 ? 'h-[calc(100%_-_1.25rem)]' : 'h-full'}`} />}
                 {rowIndex === 0 && <ProfileSocialCount value={stats[key]} unread={key === 'visitors' ? stats.visitors_unread : 0} />}
                 <span className="sr-only">{label}</span>
               </button>
