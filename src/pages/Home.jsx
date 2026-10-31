@@ -42,14 +42,19 @@ export default function Home() {
           <div className="absolute inset-x-0 bottom-0 h-6 bg-gradient-to-b from-transparent to-black" />
         </div>
       )}
-      <div className="relative flex h-full flex-col">
+      {/* Kaydırma alanı butonların üstünde biter: yayınlar, oyunlar ve özel mesaj
+          kartları alt menünün altından geçmez, yalnızca birkaç piksel altına taşar. */}
+      <div
+        className="relative flex h-full flex-col"
+        style={{ paddingBottom: `calc(${NAV_HEIGHT} - 10px)` }}
+      >
         {!games && (
           <div className="shrink-0 pt-[env(safe-area-inset-top)]">
             <HomeTopBar />
           </div>
         )}
         <div
-          className={`min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 pb-[calc(${NAV_HEIGHT}+0.75rem)] ${showEmpty ? 'pointer-events-none opacity-0' : ''}`}
+          className={`min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 pb-2 ${showEmpty ? 'pointer-events-none opacity-0' : ''}`}
           style={games ? { paddingTop: GAMES_TITLE_HEIGHT } : undefined}
         >
           <RoomDiscovery onContentChange={setHasContent} />
