@@ -8,7 +8,7 @@ import ProfileMemberId from '@/components/profile/ProfileMemberId';
 
 /** Sesli oda profil kartının üst bölümü: kart üstten profilin izasına kadar
     kırpılır, profil resmi isim yazısının hemen üstünde başlar. */
-export default function VoiceFantasyHero({ female, hidden, name, avatar, role, onClose, profile, memberId, copied, onCopyId, onOpenFull, full = false, onBack }) {
+export default function VoiceFantasyHero({ female, hidden, name, avatar, role, onClose, profile, memberId, copied, onCopyId, onOpenFull, full = false, onBack, liveLink = null }) {
   const card = !hidden && vipLook(profile, 'card');
   const nameTheme = !hidden && vipLook(profile, 'name');
   const background = card?.image || (female ? 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/13118d5f1_generated_image.png' : 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/0079dc925_generated_image.png');
@@ -21,7 +21,13 @@ export default function VoiceFantasyHero({ female, hidden, name, avatar, role, o
       {!hidden && <VipShowcase profile={profile} />}
       {role && <p className="mt-1 text-center text-[10px] font-bold tracking-widest text-fantasy-gold">{role}</p>}
       <h2 style={vipVars(nameTheme)} className={`mt-1 break-words text-center font-serif text-2xl font-bold ${nameTheme ? 'vip-tint' : 'text-fantasy-text'} ${nameTheme?.nameAnimated ? 'vip-name-animated' : ''}`}>{name}</h2>
-      {!hidden && <ProfileMemberId memberId={memberId} copied={copied} onCopyId={onCopyId} />}
+      {!hidden && (
+        <div className="relative">
+          <ProfileMemberId memberId={memberId} copied={copied} onCopyId={onCopyId} />
+          {/* Yayında: kimlik numarasının sağında durur, kişi yayından çıkınca kaybolur. */}
+          {liveLink && <div className="absolute right-0 top-0">{liveLink}</div>}
+        </div>
+      )}
     </div>
   </header>;
 }

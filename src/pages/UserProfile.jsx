@@ -25,7 +25,7 @@ export default function UserProfile() {
       open
       userId={id}
       onClose={goBack}
-      extra={liveRoom ? <div className="flex justify-center"><ProfileLiveLink liveRoom={liveRoom} /></div> : null}
+      liveLink={liveRoom ? <ProfileLiveLink liveRoom={liveRoom} /> : null}
     />
   );
 }

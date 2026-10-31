@@ -30,7 +30,7 @@ import useProfileFriendship from '@/hooks/useProfileFriendship';
 export default function FullUserProfile({
   open = true, userId, name, avatar, hidden = false, muted = false, self = false,
   theme = '', hideSettings = false, onClose, onMessage, onMention, tiles = [], footer = [], info = [], roomActions = null,
-  extra = null,
+  extra = null, liveLink = null,
 }) {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -273,14 +273,14 @@ export default function FullUserProfile({
     <VoiceFantasyCard profile={profile} hidden={hidden} name={shownName} avatar={banned ? ACCOUNT_STATES.banned.image : shownAvatar}
       role={roleLabel} palette={palette} room={room} userId={userId} isSelf={isSelf} onClose={onClose} onMessage={onMessage}
       statusContent={statusContent} moderation={!hidden && <ProfileModeration userId={userId} profile={profile} onChanged={setProfile} giftAction={adminGiftRow ? () => room.gift(userId) : null} />} memberId={memberId} genderLabel={genderLabel} age={age} badge={badge} giftInAdminRow={adminGiftRow}
-      joinDate={formatDate(profile?.created_date)} copied={copied} onCopyId={copyId}
+      joinDate={formatDate(profile?.created_date)} copied={copied} onCopyId={copyId} liveLink={liveLink}
       full={full} onBack={() => setFull(false)} onOpenFull={() => setFull(true)} />
   );
 
   return (
     <FantasyProfileShell profile={profile} female={profile?.gender === 'kadın'} hidden={hidden} name={shownName}
       avatar={banned ? ACCOUNT_STATES.banned.image : shownAvatar} role={roleLabel} onClose={onClose}
-      memberId={memberId} copied={copied} onCopyId={copyId} userId={userId} self={isSelf}
+      memberId={memberId} copied={copied} onCopyId={copyId} userId={userId} self={isSelf} liveLink={liveLink}
       full={full} onBack={() => setFull(false)} onOpenFull={() => setFull(true)}>
       <div className="space-y-3 px-4 pt-1">
         {header}
