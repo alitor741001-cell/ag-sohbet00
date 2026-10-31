@@ -191,7 +191,7 @@ export default function Profile() {
 
       {/* Tasarım en altta boşluk bırakmaz: menü çubuğunun çerçevesine kadar iner.
           Yanlarda boşluk yok: ilk ve son sütun düğmeleri ekran kenarına kadar uzanır. */}
-      <div className="flex min-h-0 flex-1 flex-col px-0.5 pb-0">
+      <div className="flex min-h-0 flex-1 flex-col px-0 pb-0">
           <ProfileMenuDeck
             admin={isModerator(user)}
             stats={{

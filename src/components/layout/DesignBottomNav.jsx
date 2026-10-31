@@ -15,7 +15,7 @@ const ZONES = [
 
 const SPRITE = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/81225dedf_IMG_0522.jpg';
 
-export const NAV_HEIGHT = 'clamp(74px, 21vw, 100px)';
+export const NAV_HEIGHT = 'clamp(88px, 25vw, 118px)';
 
 /** Ana menü: şeffaf PNG düğmeler — altında beyaz zemin yok. */
 export default function DesignBottomNav() {
@@ -33,7 +33,7 @@ export default function DesignBottomNav() {
       className="fixed inset-x-0 bottom-0 z-[60]"
       style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 4px)' }}
     >
-      <div className="flex w-full items-end justify-between gap-0.5 px-1.5">
+      <div className="flex w-full items-end justify-between gap-0.5 px-0.5">
         {ZONES.map((zone, index) => {
           const active = zone.match(pathname, search);
           const count = zone.badge ? counts[zone.badge] : 0;
@@ -53,13 +53,13 @@ export default function DesignBottomNav() {
                   draggable={false}
                   className="pointer-events-none select-none"
                   style={{
-                    height: 'clamp(33px, 10vw, 45px)',
+                    height: 'clamp(46px, 14vw, 62px)',
                     width: 'auto',
                     filter: active ? 'brightness(1.25) drop-shadow(0 0 10px rgba(255,255,255,0.35))' : 'none',
                   }}
                 />
               ) : (
-                <span aria-hidden="true" style={{ height: 'clamp(33px, 10vw, 45px)' }} />
+                <span aria-hidden="true" style={{ height: 'clamp(46px, 14vw, 62px)' }} />
               )}
               {count > 0 && (
                 <span className="absolute right-[16%] top-0 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#ef4343] px-1 text-[11px] font-bold leading-none text-white ring-2 ring-black/70">

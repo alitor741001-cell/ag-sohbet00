@@ -1,8 +1,8 @@
 import { useCutoutGrid } from '@/hooks/useCutoutSprites';
 
-// Tek tasarım sayfası: 4 satır, her satırda 4 düğme. Düğmeler arkasındaki tasarımdan
-// ayrılıp şeffaf PNG olarak eşit ızgaraya yerleştirilir.
-const IMAGE = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/a312c9cda_IMG_0527.jpg';
+// Gönderilen tasarım sayfası: 4 satır, her satırda 4 düğme. Beyaz zemin kaldırılıp
+// düğmeler şeffaf PNG olarak eşit ızgaraya yerleştirilir.
+const IMAGE = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/f4ad103b6_IMG_0527.jpg';
 
 const ROWS = [
   ['friends', 'following', 'followers', 'visitors'],
@@ -31,16 +31,16 @@ const LABELS = {
 };
 
 /**
- * Profil menüsü: düğmeler dört satır, dört sütun ızgarada durur ve kenarlara kadar yayılır.
- * Satırlar mevcut yüksekliği eşit paylaşır; düğmeler kırpılmaz, üst üste binmez.
+ * Profil menüsü: düğmeler dört satır, dört sütun ızgarada durur ve çentik kenarlarına
+ * kadar yayılır. Satırlar mevcut yüksekliği eşit paylaşır; düğmeler kırpılmaz.
  */
 export default function ProfileMenuDeck({ admin = false, onAction }) {
   const tiles = useCutoutGrid(IMAGE, 4, 4);
 
   return (
-    <div className="grid min-h-0 flex-1 grid-rows-4 gap-y-1.5 py-0.5">
+    <div className="grid min-h-0 flex-1 grid-rows-4">
       {ROWS.map((row, rowIndex) => (
-        <div key={row.join('-')} className="grid min-h-0 grid-cols-4 items-center gap-x-1">
+        <div key={row.join('-')} className="grid min-h-0 grid-cols-4 items-center">
           {row.map((action, colIndex) => {
             const tile = tiles[rowIndex * 4 + colIndex];
             if (action === 'admin' && !admin) return <div key={action} aria-hidden="true" />;
