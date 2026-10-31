@@ -53,13 +53,13 @@ export default function DesignBottomNav() {
                   draggable={false}
                   className="pointer-events-none select-none"
                   style={{
-                    height: 'clamp(33px, 10vw, 45px)',
+                    height: 'clamp(40px, 12vw, 54px)',
                     width: 'auto',
                     filter: active ? 'brightness(1.25) drop-shadow(0 0 10px rgba(255,255,255,0.35))' : 'none',
                   }}
                 />
               ) : (
-                <span aria-hidden="true" style={{ height: 'clamp(33px, 10vw, 45px)' }} />
+                <span aria-hidden="true" style={{ height: 'clamp(40px, 12vw, 54px)' }} />
               )}
               {count > 0 && (
                 <span className="absolute right-[16%] top-0 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#ef4343] px-1 text-[11px] font-bold leading-none text-white ring-2 ring-black/70">

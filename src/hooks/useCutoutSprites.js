@@ -1,8 +1,60 @@
 import { useEffect, useState } from 'react';
 
-// Tasarım görselindeki beyaz zemin şeffaf yapılır ve görsel eşit genişlikte
-// düğme dilimlerine ayrılır: her düğme kendi şeffaf PNG parçası olur.
+// Tasarım görselindeki beyaz zemin şeffaf yapılır ve görsel düğme dilimlerine ayrılır:
+// her düğme kendi şeffaf PNG parçası olur.
 const cache = new Map();
+
+const isWhite = (r, g, b) => r > 232 && g > 232 && b > 232;
+
+function readPixels(image) {
+  const canvas = document.createElement('canvas');
+  canvas.width = image.naturalWidth;
+  canvas.height = image.naturalHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(image, 0, 0);
+  return { canvas, ctx, px: ctx.getImageData(0, 0, canvas.width, canvas.height).data, w: canvas.width, h: canvas.height };
+}
+
+// Düğmeler arasındaki boş (beyaz) şeritler bulunur: dilimler düğmenin gerçek sınırından kesilir.
+function detectRanges(image, count) {
+  const { px, w, h } = readPixels(image);
+  const density = new Array(w).fill(0);
+  for (let y = 0; y < h; y += 2) {
+    for (let x = 0; x < w; x += 1) {
+      const i = (y * w + x) * 4;
+      if (!isWhite(px[i], px[i + 1], px[i + 2])) density[x] += 1;
+    }
+  }
+  const minDensity = Math.max(2, Math.round(h / 200));
+  const active = density.map((value) => value > minDensity);
+
+  const runs = [];
+  let start = -1;
+  for (let x = 0; x <= w; x += 1) {
+    if (x < w && active[x]) {
+      if (start < 0) start = x;
+    } else if (start >= 0) {
+      runs.push([start, x - 1]);
+      start = -1;
+    }
+  }
+
+  // Küçük boşluklar aynı düğmeye aittir: birleştirilir.
+  const gap = Math.round(w * 0.006);
+  const merged = [];
+  runs.forEach((run) => {
+    const last = merged[merged.length - 1];
+    if (last && run[0] - last[1] <= gap) last[1] = run[1];
+    else merged.push([...run]);
+  });
+
+  const usable = merged.filter(([left, right]) => right - left >= w * 0.02);
+  if (usable.length !== count) {
+    const cell = Math.floor(w / count);
+    return Array.from({ length: count }, (_, index) => [index * cell, cell]);
+  }
+  return usable.map(([left, right]) => [left, right - left + 1]);
+}
 
 function cutCell(image, sx, sw) {
   const h = image.naturalHeight;
@@ -14,8 +66,6 @@ function cutCell(image, sx, sw) {
   const data = ctx.getImageData(0, 0, sw, h);
   const px = data.data;
 
-  const isBg = (i) => px[i] > 232 && px[i + 1] > 232 && px[i + 2] > 232;
-
   const seen = new Uint8Array(sw * h);
   const stack = [];
   for (let x = 0; x < sw; x += 1) { stack.push(x, (h - 1) * sw + x); }
@@ -24,8 +74,9 @@ function cutCell(image, sx, sw) {
     const p = stack.pop();
     if (seen[p]) continue;
     seen[p] = 1;
-    if (!isBg(p * 4)) continue;
-    px[p * 4 + 3] = 0;
+    const i = p * 4;
+    if (!isWhite(px[i], px[i + 1], px[i + 2])) continue;
+    px[i + 3] = 0;
     const x = p % sw;
     if (x > 0) stack.push(p - 1);
     if (x < sw - 1) stack.push(p + 1);
@@ -54,17 +105,11 @@ function cutCell(image, sx, sw) {
   cropped.width = cw;
   cropped.height = ch;
   cropped.getContext('2d').drawImage(canvas, left, top, cw, ch, 0, 0, cw, ch);
-  return { src: cropped.toDataURL('image/png'), ratio: ch / cw };
+  return { src: cropped.toDataURL('image/png') };
 }
 
 function build(image, count) {
-  const w = image.naturalWidth;
-  const cell = Math.floor(w / count);
-  const sprites = [];
-  for (let i = 0; i < count; i += 1) {
-    sprites.push(cutCell(image, i * cell, cell));
-  }
-  return sprites;
+  return detectRanges(image, count).map(([sx, sw]) => cutCell(image, sx, sw));
 }
 
 /** Bir tasarım görselini şeffaf PNG düğmelere böler. */
