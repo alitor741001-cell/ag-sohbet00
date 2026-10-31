@@ -739,9 +739,9 @@ export default function WatchParty() {
           {voiceMode
             ? <p className="p-6 text-center text-sm text-muted-foreground">Sesli sohbet alanı açılıyor…</p>
             : ytId
-              ? <YouTubeStage videoId={ytId} syncState={syncState} isOwner={canMod} isTimeSource={isOwner} onPlayPause={onPlayPause} onTimeUpdate={onTimeUpdate} onSeek={onSeek} onEnded={() => { if (isOwner) setYtOpen(true); }} fullscreenRef={playerWrapRef} suppressControls={chatOpen || directOpen || !!profileTarget} onControlsChange={setStageControls} revealSignal={stageReveal} />
+              ? <YouTubeStage videoId={ytId} syncState={syncState} isOwner={canMod} isTimeSource={canMod} onPlayPause={onPlayPause} onTimeUpdate={onTimeUpdate} onSeek={onSeek} onEnded={() => { if (isOwner) setYtOpen(true); }} fullscreenRef={playerWrapRef} suppressControls={chatOpen || directOpen || !!profileTarget} onControlsChange={setStageControls} revealSignal={stageReveal} />
               : src
-                ? <VideoPlayer src={src} ducked={(voice.speakingIds || []).some((id) => id !== user?.id)} title={room.movie_title} syncState={syncState} isOwner={canMod} isTimeSource={isOwner} onPlayPause={onPlayPause} onTimeUpdate={onTimeUpdate} onSeek={onSeek} onEnded={() => { if (isOwner) setYtOpen(true); }} fullscreenRef={playerWrapRef} watermark={user} suppressControls={chatOpen || directOpen || !!profileTarget} onControlsChange={setStageControls} revealSignal={stageReveal} />
+                ? <VideoPlayer src={src} ducked={(voice.speakingIds || []).some((id) => id !== user?.id)} title={room.movie_title} syncState={syncState} isOwner={canMod} isTimeSource={canMod} onPlayPause={onPlayPause} onTimeUpdate={onTimeUpdate} onSeek={onSeek} onEnded={() => { if (isOwner) setYtOpen(true); }} fullscreenRef={playerWrapRef} watermark={user} suppressControls={chatOpen || directOpen || !!profileTarget} onControlsChange={setStageControls} revealSignal={stageReveal} />
                 : <RoomScreenLauncher onSearch={openFilmSearch} />}
 
           {/* YouTube çerçevesi dokunmayı yuttuğu için kaydırmayı bu katman yakalar. */}
