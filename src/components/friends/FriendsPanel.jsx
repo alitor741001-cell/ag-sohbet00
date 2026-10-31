@@ -52,7 +52,7 @@ export default function FriendsPanel({ relations, userId, invoke, onChat, isOnli
           const profile = profiles[friendId];
           const liveRoom = findLiveRoom(rooms, friendId, getRoomId ? getRoomId(friendId) : '');
           const accountState = getAccountState(profile, name);
-          const openCard = () => openUserProfile(friendId);
+          const openCard = () => navigate(`/kullanici/${friendId}`);
           return (
             <FriendRow
               key={r.id}
