@@ -216,7 +216,8 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
         try { carryMic = sessionStorage.getItem('voice_mic_carry') === '1'; sessionStorage.removeItem('voice_mic_carry'); } catch {}
         // İzin daha önce verildiyse mikrofon kendiliğinden açılır; henüz sorulmadıysa
         // mikrofon yalnızca kişi düğmeye bastığında, izin sorularak açılır.
-        const mayOpen = micGestureRef.current || await micPermissionGranted();
+        // İzin daha önce verilmişse (mikrofon bir kez açıldıysa) dokunuş beklemeden açılır.
+        const mayOpen = micGestureRef.current || micAllowedBefore() || await micPermissionGranted();
         if (!hasDirectCallAudioFocus() && !mutedByModeratorRef.current && voiceEnabledRef.current && mayOpen && (micWantedRef.current || carryMic)) {
           micWantedRef.current = true;
           setRequesting(true);

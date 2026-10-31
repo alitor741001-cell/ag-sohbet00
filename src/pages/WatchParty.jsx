@@ -96,9 +96,11 @@ export default function WatchParty() {
   // Dokunuşun başlangıç noktası: yalnızca kontrol düğmelerinin dışında başlayan hareketler kaydedilir.
   const touchStart = useRef(null);
   const seenRoomMessagesRef = useRef(new Set());
-  // Film odasında mikrofon kendiliğinden açılmaz: film sesi mikrofona kaçıp odada
-  // yankı yapmasın diye konuşmak isteyen kişi mikrofonu elle açar.
-  const [micRequested, setMicRequested] = useState(false);
+  // Sesli odadan film odasına geçişte mikrofon kapalı kalmaz: sesli odada açıksa
+  // burada da açılır. Odaya sıfırdan giren kişi mikrofonu yine elle açar.
+  const [micRequested, setMicRequested] = useState(() => {
+    try { return sessionStorage.getItem('voice_mic_carry') === '1'; } catch { return false; }
+  });
   const voice = useVoiceChat({ roomId: id, user, participants: room?.participants, voiceEnabled: !!room?.voice_enabled && voiceReady, micEnabled: micRequested });
   const { messages: directUnread } = useSocialBadges(user?.id);
 
