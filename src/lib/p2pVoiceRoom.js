@@ -41,6 +41,12 @@ const candidateInit = (candidate) => {
 
 // Eski sürümlerde connectionState yoktur: ICE durumu ile eşdeğer karar verilir.
 const pcConnected = (pc) => ['connected', 'completed'].includes(pc.connectionState || pc.iceConnectionState);
+
+// Konuşma dalgası yalnızca gerçekten ses varken çıkar. Seviye WebRTC istatistiklerinden
+// okunur: Web Audio kullanılmaz (iOS'ta mikrofonu susturuyor).
+const LEVEL_POLL_MS = 500;
+const SPEAKING_LEVEL = 0.02;
+const SPEAKING_HOLD_MS = 700;
 const pcFailed = (pc) => ['failed', 'closed'].includes(pc.connectionState || pc.iceConnectionState);
 
 // iOS Safari (iPad dahil): mikrofon sonradan eklenen ses hattında sessiz kalabiliyor.
@@ -111,6 +117,12 @@ export class P2PVoiceRoom {
     this.micRevision = 0;
     this.micRequest = null;
     this.micDesired = false;
+    // Konuşma tespiti: kişi bazlı ses seviyesi ve dalganın açık kaldığı an.
+    this.speakingUntil = {};
+    this.speakingSupported = false;
+    this.localLevelSeen = false;
+    this.speakingSignature = '';
+    this.levelTimer = null;
   }
 
   emit() {
@@ -155,6 +167,7 @@ export class P2PVoiceRoom {
       // bekleyen çıkışlar tazelenir, karşı tarafın sesi geri gelir.
       void this.retryPlayback();
     }, HEARTBEAT_MS);
+    this.startLevelPolling();
     this.emit();
   }
 
@@ -635,6 +648,61 @@ export class P2PVoiceRoom {
     this.emit();
   }
 
+  // Cihaz ses seviyesi bildiriyorsa dalga gerçek sese göre çıkar; bildirmiyorsa
+  // mikrofon durumu geçerli kalır (dalga hiç kaybolmaz).
+  isSpeaking(userId) {
+    if (!this.speakingSupported) return true;
+    return (this.speakingUntil[userId] || 0) > Date.now();
+  }
+
+  startLevelPolling() {
+    if (this.levelTimer) return;
+    this.levelTimer = window.setInterval(() => { void this.pollLevels(); }, LEVEL_POLL_MS);
+  }
+
+  stopLevelPolling() {
+    window.clearInterval(this.levelTimer);
+    this.levelTimer = null;
+  }
+
+  // Ses seviyesi eş hatlarının istatistiklerinden okunur: kimse konuşmuyorsa dalga çıkmaz.
+  async pollLevels() {
+    if (document.visibilityState === 'hidden') return;
+    const peers = [...this.peers.values()];
+    if (!peers.length) return;
+    let measured = false;
+    await Promise.all(peers.map(async (peer) => {
+      let reports;
+      try { reports = await peer.pc.getStats(); } catch (error) { return; }
+      if (!reports || typeof reports.forEach !== 'function') return;
+      const userId = this.remotePeers.find((item) => item.peerId === peer.id)?.userId || '';
+      reports.forEach((report) => {
+        const kind = report?.kind || report?.mediaType;
+        if (kind !== 'audio' || typeof report.audioLevel !== 'number') return;
+        if (report.type === 'inbound-rtp' && userId) {
+          measured = true;
+          if (report.audioLevel >= SPEAKING_LEVEL) this.speakingUntil[userId] = Date.now() + SPEAKING_HOLD_MS;
+        } else if (report.type === 'outbound-rtp') {
+          measured = true;
+          this.localLevelSeen = true;
+          if (report.audioLevel >= SPEAKING_LEVEL) this.speakingUntil[this.userId] = Date.now() + SPEAKING_HOLD_MS;
+        }
+      });
+    }));
+    if (!measured) return;
+    this.speakingSupported = true;
+    const now = Date.now();
+    const speakers = this.remotePeers
+      .filter((peer) => peer.userId && (this.speakingUntil[peer.userId] || 0) > now)
+      .map((peer) => peer.userId);
+    const signature = `${(this.speakingUntil[this.userId] || 0) > now ? 1 : 0}|${speakers.join(',')}`;
+    // Dalga durumu değişmedikçe arayüz yenilenmez.
+    if (signature !== this.speakingSignature) {
+      this.speakingSignature = signature;
+      this.emit();
+    }
+  }
+
   getSnapshot() {
     const micStates = {};
     const speakers = [];
@@ -643,15 +711,16 @@ export class P2PVoiceRoom {
       const on = peer.mic === true;
       if (peer.userId) {
         micStates[peer.userId] = on;
-        if (on) speakers.push(peer.userId);
+        // Dalga yalnızca ses gerçekten varken çıkar.
+        if (on && this.isSpeaking(peer.userId)) speakers.push(peer.userId);
       }
     });
     return {
       micStates,
       selfMicOn: this.isMicOn(),
-      // Web Audio iOS'ta mikrofonu sessize düşürdüğü için ses analizi yapılmaz:
-      // mikrofonu açık olan kişi konuşuyor sayılır.
-      localSpeaking: this.isMicOn(),
+      // Kendi dalga da gerçek sese göre çıkar. Cihaz kendi seviyesini bildirmiyorsa
+      // mikrofon açık olduğu sürece dalga görünür (eski davranış korunur).
+      localSpeaking: this.isMicOn() && (!this.speakingSupported || !this.localLevelSeen || this.isSpeaking(this.userId)),
       speakers,
       connectionState: this.connectionState,
       audioBlocked: this.audioBlocked,
@@ -672,6 +741,9 @@ export class P2PVoiceRoom {
     this.signalQueues.clear();
     window.clearInterval(this.heartbeat);
     this.heartbeat = null;
+    this.stopLevelPolling();
+    this.speakingUntil = {};
+    this.speakingSignature = '';
     this.unbindLifecycle();
     [...this.peers.keys()].forEach((peerId) => this.dropPeer(peerId));
     try { this.unsubscribe?.(); } catch (error) {}
