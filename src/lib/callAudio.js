@@ -44,6 +44,17 @@ const wait = (ms) => new Promise((resolve) => { setTimeout(resolve, ms); });
 // Kısıtları anlamayan eski tarayıcılar ve aygıtı henüz bırakmamış Android sürücüleri.
 const SIMPLIFY_ERRORS = ['NotSupportedError', 'OverconstrainedError', 'TypeError'];
 const DEVICE_BUSY_ERRORS = ['NotReadableError', 'TrackStartError', 'AbortError'];
+const IS_IOS = typeof navigator !== 'undefined'
+  && (/iPad|iPhone|iPod/.test(navigator.userAgent || '') || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
+
+// iOS Safari, ses oturumu 'playback' kategorisindeyken mikrofonu açmaz: istek
+// reddedilir ya da mikrofon sessiz kalır. Kayıt yapılabilen kategoriye geçilir;
+// kanal canlı olduğunda oturum yeniden 'auto'ya alınır (applySessionType).
+function prepareRecordingSession() {
+  const session = audioSession();
+  if (!session) return;
+  try { session.type = 'play-and-record'; } catch {}
+}
 
 /** Mikrofonu açar; eski/Android cihazlarda sık görülen hatalarda kendiliğinden yeniden dener. */
 async function openAudio(getMedia, constraints, attempt = 0) {
@@ -52,11 +63,16 @@ async function openAudio(getMedia, constraints, attempt = 0) {
   } catch (error) {
     const name = error?.name || '';
     const simplify = SIMPLIFY_ERRORS.includes(name);
-    if (!simplify && !DEVICE_BUSY_ERRORS.includes(name)) throw error;
+    // iOS'ta izin verilmiş olsa bile oynatma oturumu nedeniyle istek reddedilebilir:
+    // kayıt kategorisi tazelenip bir kez daha denenir (izin gerçekten yoksa tarayıcı
+    // yine anında reddeder, kullanıcıya ikinci kez soru sorulmaz).
+    const iosSession = IS_IOS && name === 'NotAllowedError';
+    if (!simplify && !DEVICE_BUSY_ERRORS.includes(name) && !iosSession) throw error;
     if (attempt >= 2) throw error;
+    if (iosSession) prepareRecordingSession();
     // Gelişmiş kısıtlar reddedildiyse sade istekle, aygıt meşgulse kısa bekleyip tekrar denenir.
-    if (!simplify) await wait(attempt === 0 ? 200 : 500);
-    return openAudio(getMedia, { audio: true }, attempt + 1);
+    if (!simplify && !iosSession) await wait(attempt === 0 ? 200 : 500);
+    return openAudio(getMedia, simplify ? { audio: true } : constraints, attempt + 1);
   }
 }
 
@@ -66,7 +82,11 @@ async function acquireMic() {
   const generation = micGeneration;
   // Android aynı giriş aygıtı hâlâ tutulurken ikinci kayıt isteğini reddedebilir.
   // Yeniden edinim gerekiyorsa eski (sessiz/askıda) kayıt önce serbest bırakılır.
-  releaseMicStream();
+  // iOS'ta kanalı önceden bırakmak ses oturumunu düşürür ve yeni istek reddedilir:
+  // orada eski kanal, yeni akış alındıktan sonra kapatılır.
+  if (!IS_IOS) releaseMicStream();
+  // iOS: oynatma kategorisindeki oturum mikrofonu açmaz — önce kayıt kategorisi.
+  prepareRecordingSession();
   // Android WebView'in eski ses sürücüleri işleme kısıtlarıyla açılamayabilir.
   const android = /Android/i.test(navigator.userAgent || '');
   const next = await openAudio(getMedia, { audio: android ? true : micOptions() });
@@ -201,7 +221,8 @@ function applySessionType() {
   // iOS: mikrofon kapalıyken 'playback' sesi kesin olarak hoparlöre verir —
   // dinleyen kişi sesi kulağa değil hoparlörden duyar. Mikrofon açıkken 'playback'
   // kaydı düşürebildiği için oturum varsayılanda bırakılır (mikrofon susmaz).
-  const microphoneLive = !!getRoomMicTrack();
+  // Mikrofon açılırken oturum 'playback'e çekilmez: çekilirse istek reddedilir.
+  const microphoneLive = !!getRoomMicTrack() || !!micPending;
   try {
     session.type = speakerOn ? (microphoneLive ? 'auto' : 'playback') : 'play-and-record';
     return true;
