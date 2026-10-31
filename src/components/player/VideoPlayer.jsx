@@ -22,6 +22,10 @@ export default function VideoPlayer({ src, title, onTimeUpdate, onPlayPause, onS
   const mutedForAutoplayRef = useRef(false);
   const hideTimer = useRef(null);
   const lastSyncRef = useRef(0);
+  // İzleyicide bekleyen duraklatma: kısa süreli bildirim filmi durdurmaz.
+  const pausePendingRef = useRef(null);
+  const syncPlayingRef = useRef(false);
+  syncPlayingRef.current = !!syncState?.is_playing;
 
   const fmt = (s) => {
     if (!isFinite(s)) return '0:00';
@@ -99,7 +103,17 @@ export default function VideoPlayer({ src, title, onTimeUpdate, onPlayPause, onS
       }
     }
     if (syncState.is_playing && v.paused) startPlayback();
-    if (!syncState.is_playing && !v.paused) v.pause();
+    if (syncState.is_playing) {
+      clearTimeout(pausePendingRef.current);
+    } else if (!v.paused) {
+      // Anlık "duraklatıldı" bildirimi filmi hemen durdurmaz: oda kısa süre içinde
+      // yeniden oynatıyorsa film kesilmez, izleyicide durup başlama olmaz.
+      clearTimeout(pausePendingRef.current);
+      pausePendingRef.current = setTimeout(() => {
+        if (syncPlayingRef.current) return;
+        videoRef.current?.pause?.();
+      }, 2200);
+    }
   }, [syncState?.current_time, syncState?.is_playing, syncState?.last_sync]);
 
   // İzleyicide film kendiliğinden duraklarsa sessizce devam eder: tarayıcı sesli

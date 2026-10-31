@@ -94,6 +94,8 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
   const playNudgeRef = useRef(0);
   // Duraklatma bildirimi geciktirilir: anlık duraklama tüm odayı durdurmaz.
   const pauseTimerRef = useRef(null);
+  // İzleyicide bekleyen duraklatma: kısa süreli bildirim filmi durdurmaz.
+  const localPauseRef = useRef(null);
   // Tarayıcı sesli oynatmayı engellerse film sessiz başlatılır: karşı taraf boş ekranda kalmaz.
   const autoplayTimerRef = useRef(null);
 
@@ -267,7 +269,7 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
         },
       });
     });
-    return () => { cancelled = true; clearTimeout(pauseTimerRef.current); clearTimeout(autoplayTimerRef.current); playerRef.current?.destroy?.(); playerRef.current = null; };
+    return () => { cancelled = true; clearTimeout(pauseTimerRef.current); clearTimeout(localPauseRef.current); clearTimeout(autoplayTimerRef.current); playerRef.current?.destroy?.(); playerRef.current = null; };
   }, [videoId, reloadKey]);
 
   useEffect(() => {
@@ -341,6 +343,8 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
       seekGuardRef.current = Date.now() + 6000;
     }
     if (syncState?.is_playing) {
+      // Bekleyen duraklatma iptal edilir: film yeniden oynuyorsa durdurulmaz.
+      clearTimeout(localPauseRef.current);
       // Film açan kişi başlattığı an karşı taraf da başlar.
       if (!playingNow && !buffering && Date.now() > playNudgeRef.current) {
         playNudgeRef.current = Date.now() + 1500;
@@ -349,9 +353,14 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
         forcePlay();
       }
     } else if (playingNow) {
-      // Film açan kişi durdurduğu an karşı taraf da durur.
-      player.pauseVideo();
-      seekGuardRef.current = Date.now() + 1500;
+      // Anlık "duraklatıldı" bildirimi filmi hemen durdurmaz: oda kısa süre içinde
+      // yeniden oynatıyorsa film kesilmez, izleyicide durup başlama olmaz.
+      clearTimeout(localPauseRef.current);
+      localPauseRef.current = setTimeout(() => {
+        if (syncRef.current?.is_playing) return;
+        playerRef.current?.pauseVideo?.();
+        seekGuardRef.current = Date.now() + 1500;
+      }, 2200);
     }
   }, [ready, isTimeSource, syncState?.current_time, syncState?.is_playing, syncState?.last_sync]);
 
