@@ -101,14 +101,15 @@ export default function VoiceChatDock({ messages = [], onSend, open, onCloseComp
   };
 
   return (
-    <div className="relative flex h-full min-h-0 shrink-0 flex-col justify-end">
+    // Panel kendi alanından taşmaz: mesajlar koltukların üstüne çıkmaz, yazma alanının altından kayar.
+    <div className="relative flex h-full min-h-0 shrink-0 flex-col justify-end overflow-hidden">
       {(visible.length > 0 || bigGiftNotices.length > 0) && (
         <div
           ref={scrollRef}
           onScroll={onScroll}
           onLoadCapture={onContentLoad}
           style={{ touchAction: 'pan-y' }}
-          className={`voice-chat-flow ${composerOpen ? 'max-h-[16vh]' : open ? 'max-h-[30vh]' : 'max-h-[22vh]'} shrink-0 overflow-y-auto overscroll-contain pb-0 [mask-image:linear-gradient(to_bottom,transparent,black_14%)] [-webkit-mask-image:linear-gradient(to_bottom,transparent,black_14%)]`}
+          className={`voice-chat-flow ${composerOpen ? 'max-h-[16vh]' : open ? 'max-h-[30vh]' : 'max-h-[22vh]'} min-h-0 shrink overflow-y-auto overscroll-contain pb-0 [mask-image:linear-gradient(to_bottom,transparent,black_14%)] [-webkit-mask-image:linear-gradient(to_bottom,transparent,black_14%)]`}
         >
           <div className="flex flex-col gap-1.5 pl-0.5 pr-4">
             {visible.map((message) => {
