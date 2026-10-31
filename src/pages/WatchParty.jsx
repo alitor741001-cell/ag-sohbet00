@@ -139,7 +139,10 @@ export default function WatchParty() {
   const isMod = user?.role === 'admin' || user?.role === 'moderator';
   // Yönetici hesabı da üyeler gibi davranır: filmi yalnızca oda sahibi ve odaya atanmış
   // moderatörler kontrol eder. Yönetici rolü tek başına film kontrolü vermez.
-  const canMod = isOwner || (room?.room_moderators || []).includes(user?.id);
+  // Film oynatmayı oda sahibi ve odaya atanmış moderatörler yönetir.
+  const canControl = isOwner || (room?.room_moderators || []).includes(user?.id);
+  // Oda ayarları ve kullanıcı işlemleri: yönetici her odada yetkilidir.
+  const canMod = canControl || isMod;
   // Oda LVL'i: odadakilerin seviyesi canlı izlenir — seviye atlayınca rozet anında değişir.
   const roomLevels = useRoomLevels([...(room?.participants || []).map((person) => person.user_id), ...(room?.seats || []).map((seat) => seat.user_id), room?.owner_id].filter(Boolean));
   // Sesli sohbet alanı açıkken film yerine sesli sohbet bölümü gösterilir.
@@ -492,7 +495,8 @@ export default function WatchParty() {
   };
 
   const updateRoom = useCallback(async (patch, immediate = false) => {
-    if (!canMod) return;
+    // Oynatma durumunu yalnızca film yetkilisi yazar: yönetici izlemekle filmi durdurmaz.
+    if (!canControl) return;
     if (!immediate && Date.now() - lastUpdateRef.current < 2000) return;
     lastUpdateRef.current = Date.now();
     const body = { ...patch, last_sync: new Date().toISOString() };
@@ -504,7 +508,7 @@ export default function WatchParty() {
     }
     await base44.functions.invoke('room-presence', { action: 'player-sync', room_id: id, ...body })
       .catch(() => base44.entities.Room.update(id, body).catch(() => {}));
-  }, [canMod, id, user?.id]);
+  }, [canControl, id, user?.id]);
 
   const onPlayPause = useCallback((playing) => updateRoom({ is_playing: playing }, true), [updateRoom]);
   // İlerleme bildirimi oynatma durumunu da tazeler: film gerçekten oynarken oda
@@ -741,9 +745,9 @@ export default function WatchParty() {
           {voiceMode
             ? <p className="p-6 text-center text-sm text-muted-foreground">Sesli sohbet alanı açılıyor…</p>
             : ytId
-              ? <YouTubeStage videoId={ytId} syncState={syncState} isOwner={canMod} isTimeSource={canMod} onPlayPause={onPlayPause} onTimeUpdate={onTimeUpdate} onSeek={onSeek} onEnded={() => { if (isOwner) setYtOpen(true); }} fullscreenRef={playerWrapRef} suppressControls={chatOpen || directOpen || !!profileTarget} onControlsChange={setStageControls} revealSignal={stageReveal} />
+              ? <YouTubeStage videoId={ytId} syncState={syncState} isOwner={canControl} isTimeSource={canControl} onPlayPause={onPlayPause} onTimeUpdate={onTimeUpdate} onSeek={onSeek} onEnded={() => { if (canControl) setYtOpen(true); }} fullscreenRef={playerWrapRef} suppressControls={chatOpen || directOpen || !!profileTarget} onControlsChange={setStageControls} revealSignal={stageReveal} />
               : src
-                ? <VideoPlayer src={src} ducked={(voice.speakingIds || []).some((id) => id !== user?.id)} title={room.movie_title} syncState={syncState} isOwner={canMod} isTimeSource={canMod} onPlayPause={onPlayPause} onTimeUpdate={onTimeUpdate} onSeek={onSeek} onEnded={() => { if (isOwner) setYtOpen(true); }} fullscreenRef={playerWrapRef} watermark={user} suppressControls={chatOpen || directOpen || !!profileTarget} onControlsChange={setStageControls} revealSignal={stageReveal} />
+                ? <VideoPlayer src={src} ducked={(voice.speakingIds || []).some((id) => id !== user?.id)} title={room.movie_title} syncState={syncState} isOwner={canControl} isTimeSource={canControl} onPlayPause={onPlayPause} onTimeUpdate={onTimeUpdate} onSeek={onSeek} onEnded={() => { if (canControl) setYtOpen(true); }} fullscreenRef={playerWrapRef} watermark={user} suppressControls={chatOpen || directOpen || !!profileTarget} onControlsChange={setStageControls} revealSignal={stageReveal} />
                 : <RoomScreenLauncher onSearch={openFilmSearch} />}
 
           {/* YouTube çerçevesi dokunmayı yuttuğu için kaydırmayı bu katman yakalar. */}
