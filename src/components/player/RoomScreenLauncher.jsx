@@ -1,20 +1,20 @@
 import { Clapperboard } from 'lucide-react';
-import { Link } from 'react-router-dom';
 
-/** Kaynak yokken ekranda çıkan tek seçim: Film İzle bölümü. */
-export default function RoomScreenLauncher() {
+/** Kaynak yokken ekranda çıkan tek seçim: odanın içinde açılan film arama paneli. */
+export default function RoomScreenLauncher({ onSearch }) {
   return (
     // z-[60]: ekranın üstündeki görünmez kaydırma katmanı (z-54) dokunmayı yutmasın.
     <div className="relative z-[60] flex h-full w-full flex-col items-center justify-center gap-4 bg-black px-6 text-center">
-      <Link
-        to="/film-izle"
+      <button
+        type="button"
+        onClick={onSearch}
         className="flex items-center gap-1.5 rounded-full border border-[#ef4343]/60 bg-black/80 px-4 py-2.5 text-[13px] font-extrabold text-white shadow-[0_0_18px_rgba(239,67,67,0.45)] backdrop-blur active:scale-95"
       >
         <Clapperboard className="h-4 w-4 text-[#ef4343]" />
-        Film İzle
-      </Link>
+        Film Ara
+      </button>
       <p className="max-w-xs text-[10px] leading-relaxed text-white/40">
-        Film adını yaz, yasal platformlarda izle.
+        Film adını yaz, odada tam ekran izle.
       </p>
     </div>
   );

@@ -703,7 +703,7 @@ export default function WatchParty() {
               ? <YouTubeStage videoId={ytId} syncState={syncState} isOwner={canMod} isTimeSource={isOwner} onPlayPause={onPlayPause} onTimeUpdate={onTimeUpdate} onSeek={onSeek} onEnded={() => { if (isOwner) setYtOpen(true); }} fullscreenRef={playerWrapRef} suppressControls={chatOpen || directOpen || !!profileTarget} onControlsChange={setStageControls} revealSignal={stageReveal} />
               : src
                 ? <VideoPlayer src={src} ducked={(voice.speakingIds || []).some((id) => id !== user?.id)} title={room.movie_title} syncState={syncState} isOwner={canMod} isTimeSource={isOwner} onPlayPause={onPlayPause} onTimeUpdate={onTimeUpdate} onSeek={onSeek} onEnded={() => { if (isOwner) setYtOpen(true); }} fullscreenRef={playerWrapRef} watermark={user} suppressControls={chatOpen || directOpen || !!profileTarget} onControlsChange={setStageControls} revealSignal={stageReveal} />
-                : <RoomScreenLauncher />}
+                : <RoomScreenLauncher onSearch={openFilmSearch} />}
 
           {/* YouTube çerçevesi dokunmayı yuttuğu için kaydırmayı bu katman yakalar. */}
           {!voiceMode && (
