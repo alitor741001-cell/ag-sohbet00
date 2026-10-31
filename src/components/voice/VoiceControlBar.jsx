@@ -1,15 +1,13 @@
 import { useLayoutEffect, useRef } from 'react';
-import useVoiceBarPng from '@/hooks/useVoiceBarPng';
-import { Image } from '@/components/ui/image';
 import PrivateChatBadge from '@/components/messages/PrivateChatBadge';
+import useCutoutSprites from '@/hooks/useCutoutSprites';
 
-const zone = (center, width = 12) => ({ position: 'absolute', left: `${center - width / 2}%`, top: '10%', width: `${width}%`, height: '80%' });
-const Off = () => <span className="pointer-events-none absolute left-1/2 top-[40%] h-[3px] w-3/4 -translate-x-1/2 -translate-y-1/2 rotate-45 rounded bg-destructive" />;
+const SPRITE = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/c4f7f986e_IMG_0523.jpg';
 
-/** Alt kontrol çubuğu: tasarım görseli, butonları görselin üzerindeki dokunma alanlarıdır. */
+/** Alt kontrol çubuğu: şeffaf PNG düğmeler — altında beyaz zemin yok. */
 export default function VoiceControlBar({ micActive, deafened, gamesEnabled = true, privateUnread = 0, onToggleMic, onToggleSpeaker, onOpenGames, onOpenGifts, onOpenSettings, onOpenPrivateChat, onToggleChat }) {
   const barRef = useRef(null);
-  const { src, ratio } = useVoiceBarPng();
+  const sprites = useCutoutSprites(SPRITE, 7);
 
   // Çubuğun gerçek yüksekliği oda çerçevesine bildirilir: sohbet alanı tam butonların üstünde biter.
   useLayoutEffect(() => {
@@ -29,17 +27,57 @@ export default function VoiceControlBar({ micActive, deafened, gamesEnabled = tr
     };
   }, []);
 
-  const btn = 'rounded-full active:bg-primary/20 transition-colors';
+  const items = [
+    { key: 'chat', label: 'Sohbet', onClick: onToggleChat },
+    { key: 'mic', label: 'Mikrofon', onClick: onToggleMic },
+    { key: 'sound', label: 'Ses', onClick: onToggleSpeaker },
+    { key: 'gift', label: 'Hediye', onClick: onOpenGifts },
+    { key: 'dm', label: 'Mesaj', onClick: onOpenPrivateChat, badge: true },
+    ...(gamesEnabled ? [{ key: 'games', label: 'Oyunlar', onClick: onOpenGames }] : []),
+    { key: 'settings', label: 'Ayarlar', onClick: onOpenSettings },
+  ];
+
+  // Görseldeki yedi düğme sırası korunur; oyunlar kapalıysa yalnızca altısı gösterilir.
+  const order = gamesEnabled ? [0, 1, 2, 3, 4, 5, 6] : [0, 1, 2, 3, 4, 6];
+
   return (
-    <div ref={barRef} className="voice-control-bar relative w-full shrink-0" style={{ aspectRatio: ratio || '3 / 1' }}>
-      {src && <Image src={src} alt="Alt menü" className="pointer-events-none absolute inset-0 h-full w-full select-none" fittingType="fit" />}
-      <button type="button" aria-label="Sohbet" onClick={onToggleChat} className={btn} style={zone(7.1)} />
-      <button type="button" aria-label="Mikrofon" aria-pressed={micActive} onClick={onToggleMic} className={btn} style={zone(21.4)}>{micActive && <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-primary" />}</button>
-      <button type="button" aria-label="Hoparlör" aria-pressed={!deafened} onClick={onToggleSpeaker} className={btn} style={zone(35.7)}>{deafened && <Off />}</button>
-      <button type="button" aria-label="Hediye gönder" onClick={onOpenGifts} className={btn} style={zone(50, 14)} />
-      <button type="button" aria-label="Özel sohbet" onClick={onOpenPrivateChat} className={btn} style={zone(64.3)}><PrivateChatBadge count={privateUnread} /></button>
-      {gamesEnabled && <button type="button" aria-label="Oyun merkezi" onClick={onOpenGames} className={btn} style={zone(78.6)} />}
-      <button type="button" aria-label="Oda ayarları" onClick={onOpenSettings} className={btn} style={zone(92.9)} />
+    <div ref={barRef} className="voice-control-bar relative w-full shrink-0" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 4px)' }}>
+      <div className="flex w-full items-end justify-between gap-0.5 px-1.5">
+        {items.map((item, index) => {
+          const sprite = sprites[order[index]];
+          return (
+            <button
+              key={item.key}
+              type="button"
+              aria-label={item.label}
+              aria-pressed={item.key === 'mic' ? micActive : item.key === 'sound' ? !deafened : undefined}
+              onClick={item.onClick}
+              className="relative flex flex-1 items-end justify-center transition-transform active:scale-95"
+            >
+              {sprite ? (
+                <img
+                  src={sprite.src}
+                  alt=""
+                  draggable={false}
+                  className="pointer-events-none select-none"
+                  style={{
+                    height: 'clamp(40px, 12vw, 54px)',
+                    width: 'auto',
+                    filter: item.key === 'mic' && micActive
+                      ? 'brightness(1.2) drop-shadow(0 0 8px rgba(74,222,128,0.75))'
+                      : 'none',
+                  }}
+                />
+              ) : (
+                <span aria-hidden="true" style={{ height: 'clamp(40px, 12vw, 54px)' }} />
+              )}
+              {item.badge && <PrivateChatBadge count={privateUnread} />}
+              {item.key === 'mic' && micActive && <span className="absolute right-[30%] top-0 h-2 w-2 rounded-full bg-green-400" />}
+              {item.key === 'sound' && deafened && <span className="absolute bottom-[34%] left-1/2 h-[2px] w-[46%] -translate-x-1/2 rotate-45 rounded bg-destructive" />}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
