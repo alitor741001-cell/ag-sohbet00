@@ -78,7 +78,7 @@ export default function CoinActivityPanel({ open, onClose }) {
         <div className="mx-auto w-full max-w-[430px]">
           <div className="mb-2.5 flex justify-center">
             <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] font-semibold text-white/45">
-              Sunucuda kalıcı liste • sıfırlanmaz
+              Her gece 24.00'da sıfırlanır • Türkiye saati
             </span>
           </div>
           {loading ? (

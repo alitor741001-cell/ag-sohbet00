@@ -1,19 +1,24 @@
 const KEY = 'filmkeyfi_visited_rooms_v1';
 const MAX = 30;
-// Son ziyaretçiler haftalık sıfırlanır: bir haftadan eski oda kayıtları listeden düşer.
-const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
-/** Cihazda tutulan oda geçmişi: son bir haftada girilen odalar en yeni önce listelenir. */
+// Türkiye saatiyle gece 24.00: ana sayfadaki son ziyaretçiler her gün sıfırlanır.
+const trDayStart = () => {
+  const tr = new Date(Date.now() + 3 * 60 * 60 * 1000);
+  tr.setUTCHours(0, 0, 0, 0);
+  return new Date(tr.getTime() - 3 * 60 * 60 * 1000).getTime();
+};
+
+/** Cihazda tutulan oda geçmişi: bugün girilen odalar en yeni önce listelenir. */
 export function readVisitedRooms() {
   try {
     const raw = window.localStorage.getItem(KEY);
     const list = raw ? JSON.parse(raw) : [];
     if (!Array.isArray(list)) return [];
-    const now = Date.now();
+    const dayStart = trDayStart();
     const fresh = list.filter((item) => {
       if (!item?.id) return false;
       const stamp = new Date(item.visited_at || 0).getTime();
-      return Number.isFinite(stamp) && now - stamp < WEEK_MS;
+      return Number.isFinite(stamp) && stamp >= dayStart;
     });
     if (fresh.length !== list.length) window.localStorage.setItem(KEY, JSON.stringify(fresh));
     return fresh;

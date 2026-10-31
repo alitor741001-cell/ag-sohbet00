@@ -6,6 +6,13 @@ const LIMIT = 200;
 // Aynı kişi kısa sürede tekrar bakarsa yeni ziyaret kaydı açılmaz: kayıt tazelenir.
 const VISIT_WINDOW_MS = 30 * 60 * 1000;
 
+// Türkiye saatiyle gece 24.00: ziyaretçi listesi her gün bu andan itibaren sıfırdan başlar.
+const trDayStart = () => {
+  const tr = new Date(Date.now() + 3 * 60 * 60 * 1000);
+  tr.setUTCHours(0, 0, 0, 0);
+  return new Date(tr.getTime() - 3 * 60 * 60 * 1000).toISOString();
+};
+
 const clean = (user) => ({
   id: user.id,
   name: user.username || user.full_name || 'Kullanıcı',
@@ -95,7 +102,7 @@ export default async function (req) {
       if (!hasVipPrivilege(account, catalog, 'visitors')) return Response.json({ error: `Ziyaretçileri görmek için VIP ${catalog.features.find(feature => feature.key === 'visitors').minLevel} ve üzeri üyelik gerekli.` }, { status: 403 });
       if (body.cursor !== undefined && (typeof body.cursor !== 'string' || body.cursor.length > 2000)) return Response.json({ error: 'Geçersiz sayfa.' }, { status: 400 });
       const openedAt = new Date().toISOString();
-      const page = await db.ProfileVisit.filter({ profile_id: me.id }, { sort: '-visited_at', limit: 30, ...(body.cursor ? { cursor: body.cursor } : {}) });
+      const page = await db.ProfileVisit.filter({ profile_id: me.id, visited_at: { $gte: trDayStart() } }, { sort: '-visited_at', limit: 30, ...(body.cursor ? { cursor: body.cursor } : {}) });
       const rows = page.items;
       const seen = new Set();
       const ordered = [];
@@ -129,9 +136,9 @@ export default async function (req) {
       const [following, followers, visitors, friends, visitorsUnread] = await Promise.all([
         db.Follow.count({ follower_id: targetId }),
         db.Follow.count({ following_id: targetId }),
-        db.ProfileVisit.count({ profile_id: targetId }),
+        db.ProfileVisit.count({ profile_id: targetId, visited_at: { $gte: trDayStart() } }),
         db.Friendship.count({ members: targetId, status: 'accepted' }),
-        targetId === me.id ? db.ProfileVisit.count({ profile_id: me.id, is_read: { $ne: true } }) : 0
+        targetId === me.id ? db.ProfileVisit.count({ profile_id: me.id, is_read: { $ne: true }, visited_at: { $gte: trDayStart() } }) : 0
       ]);
       return Response.json({ following, followers, visitors, friends, visitors_unread: visitorsUnread });
     }

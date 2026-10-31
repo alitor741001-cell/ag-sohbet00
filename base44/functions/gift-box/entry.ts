@@ -10,6 +10,13 @@ const ACTIONS = ['summary', 'activity', 'lookup', 'send', 'withdraw', 'convert',
 const MIN_CONVERT_DOLLARS = 1;
 const MIN_SEND_DOLLARS = 1;
 
+// Türkiye saatiyle gece 24.00: coin hareketleri her gün bu andan itibaren sıfırdan başlar.
+const trDayStart = () => {
+  const tr = new Date(Date.now() + 3 * 60 * 60 * 1000);
+  tr.setUTCHours(0, 0, 0, 0);
+  return new Date(tr.getTime() - 3 * 60 * 60 * 1000).toISOString();
+};
+
 export default async function (req: Request): Promise<Response> {
   try {
     const base44 = createClientFromRequest(req);
@@ -44,13 +51,15 @@ export default async function (req: Request): Promise<Response> {
     if (action === 'activity') {
       // Liste en yeni 60 kaydı gösterir; her kaynak da bu kadarıyla çekilir.
       const per = 60;
+      // Günlük sıfırlama: yalnızca bugünün (Türkiye saati) hareketleri listelenir.
+      const today = { $gte: trDayStart() };
       const [grants, sentGifts, receivedGifts, sentCoins, receivedCoins, conversions] = await Promise.all([
-        base44.asServiceRole.entities.CoinGrant.filter({ user_id: user.id }, '-created_date', per).catch(() => []),
-        base44.asServiceRole.entities.GiftSend.filter({ sender_id: user.id }, '-created_date', per).catch(() => []),
-        base44.asServiceRole.entities.GiftSend.filter({ recipient_id: user.id }, '-created_date', per).catch(() => []),
-        base44.asServiceRole.entities.GiftTransfer.filter({ kind: 'send', sender_id: user.id }, '-created_date', per).catch(() => []),
-        base44.asServiceRole.entities.GiftTransfer.filter({ kind: 'send', recipient_id: user.id }, '-created_date', per).catch(() => []),
-        base44.asServiceRole.entities.GiftTransfer.filter({ kind: 'convert', sender_id: user.id }, '-created_date', per).catch(() => []),
+        base44.asServiceRole.entities.CoinGrant.filter({ user_id: user.id, created_date: today }, '-created_date', per).catch(() => []),
+        base44.asServiceRole.entities.GiftSend.filter({ sender_id: user.id, created_date: today }, '-created_date', per).catch(() => []),
+        base44.asServiceRole.entities.GiftSend.filter({ recipient_id: user.id, created_date: today }, '-created_date', per).catch(() => []),
+        base44.asServiceRole.entities.GiftTransfer.filter({ kind: 'send', sender_id: user.id, created_date: today }, '-created_date', per).catch(() => []),
+        base44.asServiceRole.entities.GiftTransfer.filter({ kind: 'send', recipient_id: user.id, created_date: today }, '-created_date', per).catch(() => []),
+        base44.asServiceRole.entities.GiftTransfer.filter({ kind: 'convert', sender_id: user.id, created_date: today }, '-created_date', per).catch(() => []),
       ]);
 
       // Karşı tarafın profili (isim, fotoğraf, kimlik numarası) tek sorguda tamamlanır.
@@ -186,17 +195,26 @@ export default async function (req: Request): Promise<Response> {
         const kValue = Math.max(0, Number(record.k_value) || 0);
         entry.count += Math.max(1, Number(record.quantity) || 1);
         entry.total_k = Math.round((entry.total_k + kValue) * 100) / 100;
-        entry.items.push({
-          id: record.id,
-          gift_name: record.gift_name || 'Hediye',
-          gift_emoji: record.gift_emoji || '🎁',
-          gift_image_url: record.gift_image_url || '',
-          k_value: kValue,
-          count: Math.max(1, Number(record.recipient_count) || 1),
-          mode: record.mode || 'single',
-          room_id: record.room_id || '',
-          created_date: record.created_date,
-        });
+        // Aynı hediye tek satırda toplanır: yeni kayıt açılmaz, yalnızca miktarı büyür.
+        const itemKey = `${record.gift_name || 'Hediye'}|${kValue}`;
+        const existing = entry.items.find((item: any) => item.key === itemKey);
+        if (existing) {
+          existing.count += Math.max(1, Number(record.recipient_count) || 1);
+          if (String(record.created_date) > String(existing.created_date)) existing.created_date = record.created_date;
+        } else {
+          entry.items.push({
+            key: itemKey,
+            id: record.id,
+            gift_name: record.gift_name || 'Hediye',
+            gift_emoji: record.gift_emoji || '🎁',
+            gift_image_url: record.gift_image_url || '',
+            k_value: kValue,
+            count: Math.max(1, Number(record.recipient_count) || 1),
+            mode: record.mode || 'single',
+            room_id: record.room_id || '',
+            created_date: record.created_date,
+          });
+        }
       });
 
       const senders = [...grouped.values()];
