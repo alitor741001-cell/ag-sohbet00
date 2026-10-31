@@ -37,6 +37,10 @@ const fmt = (seconds) => {
 const IOS_VOLUME_LOCKED = /iPad|iPhone|iPod/.test(navigator.userAgent)
   || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
+// İzleyicide film kendi akışında oynar: oda ile aradaki küçük fark düzeltilmez.
+// Yalnızca belirgin sapmada hizalanır, böylece film durup baştan sarmaz.
+const SYNC_TOLERANCE = 6;
+
 
 /**
  * YouTube videosunu oda ekranında oynatır: ilerleme, geri/ileri sarma ve tam ekran
@@ -50,8 +54,12 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
   const lastReportRef = useRef(0);
   const syncRef = useRef(syncState);
   const ownerRef = useRef(isOwner);
+  // Odaya yalnızca zaman kaynağı yazar: izleyicinin oynatıcısındaki anlık durum
+  // değişimleri (otomatik başlatma, tampon) odayı duraklatmaz.
+  const sourceRef = useRef(isTimeSource);
   syncRef.current = syncState;
   ownerRef.current = isOwner;
+  sourceRef.current = isTimeSource;
 
   const [ready, setReady] = useState(false);
   const [playing, setPlaying] = useState(false);
@@ -77,6 +85,13 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
   const mutedForAutoplayRef = useRef(false);
   // Ses, otomatik başlatma için kısıldıysa uyarı görünür: tek dokunuşla ses açılır.
   const [autoplayMuted, setAutoplayMuted] = useState(false);
+  // Odadan gelen son konum: alındığı an saklanır, beklenen konum bu andan hesaplanır.
+  const baselineRef = useRef({ time: 0, playing: false, at: 0 });
+  // Hizalama sonrası kısa bekleme: art arda sarma/durdurma komutu verilmez.
+  const seekGuardRef = useRef(0);
+  const playNudgeRef = useRef(0);
+  // Duraklatma bildirimi geciktirilir: anlık duraklama tüm odayı durdurmaz.
+  const pauseTimerRef = useRef(null);
 
   // Sessize alma yalnızca açık kullanıcı tercihiyle uygulanır, yüzde eşiği yoktur.
   const silent = muted;
@@ -194,7 +209,8 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
               const player = playerRef.current;
               if (!player?.getPlayerState) return;
               if (player.getPlayerState() === window.YT?.PlayerState?.PLAYING) return;
-              if (allowMute) {
+              // Tampon bekleyen oynatıcı sessize alınmaz: ses, gereksiz yere kapanmaz.
+              if (allowMute && player.getPlayerState?.() !== window.YT?.PlayerState?.BUFFERING) {
                 player.mute?.();
                 mutedForAutoplayRef.current = true;
                 setAutoplayMuted(true);
@@ -210,10 +226,21 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
             const state = window.YT?.PlayerState;
             if (event.data === state?.PLAYING) {
               setPlaying(true);
-              if (ownerRef.current) onPlayPause?.(true);
+              clearTimeout(pauseTimerRef.current);
+              if (sourceRef.current) onPlayPause?.(true);
             } else if (event.data === state?.PAUSED) {
               setPlaying(false);
-              if (ownerRef.current) onPlayPause?.(false);
+              // Anlık duraklama (sarma, tampon, arka plan) odaya yazılmaz: duraklatma
+              // 700 ms sonra hâlâ geçerliyse bildirilir, karşı taraf boşuna durmaz.
+              if (sourceRef.current) {
+                clearTimeout(pauseTimerRef.current);
+                pauseTimerRef.current = setTimeout(() => {
+                  const active = playerRef.current;
+                  if (!active?.getPlayerState) return;
+                  if (active.getPlayerState() === window.YT?.PlayerState?.PLAYING) return;
+                  onPlayPause?.(false);
+                }, 700);
+              }
             } else if (event.data === state?.ENDED) {
               setPlaying(false);
               onEnded?.();
@@ -222,7 +249,7 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
         },
       });
     });
-    return () => { cancelled = true; playerRef.current?.destroy?.(); playerRef.current = null; };
+    return () => { cancelled = true; clearTimeout(pauseTimerRef.current); playerRef.current?.destroy?.(); playerRef.current = null; };
   }, [videoId]);
 
   useEffect(() => {
@@ -255,20 +282,49 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
         lastReportRef.current = Date.now();
         onTimeUpdate(player.getCurrentTime());
       }
+      // İzleyici tarafı: oda oynatıyorsa film kendiliğinden duraklayıp kalmaz.
+      // Beklenen konumdan belirgin sapma varsa hizalanır, ufak farkta dokunulmaz.
+      if (!isTimeSource) {
+        const base = baselineRef.current;
+        if (base.playing && Date.now() > seekGuardRef.current) {
+          const expected = base.time + (Date.now() - base.at) / 1000;
+          const drift = (player.getCurrentTime() || 0) - expected;
+          if (Math.abs(drift) > SYNC_TOLERANCE + 2) {
+            player.seekTo(expected, true);
+            seekGuardRef.current = Date.now() + 2500;
+          } else if (player.getPlayerState?.() === state?.PAUSED && Date.now() > playNudgeRef.current) {
+            playNudgeRef.current = Date.now() + 3000;
+            player.playVideo?.();
+          }
+        }
+      }
     }, 1000);
     return () => clearInterval(id);
   }, [ready, isTimeSource, onTimeUpdate]);
 
-  // Odadan gelen konuma göre hizalanır (oda sahibi zaman kaynağıdır).
+  // Odadan gelen konum: bildirimin alındığı an saklanır, beklenen konum o andan
+  // hesaplanır — aradaki gecikme filmi geri sarmaz. Küçük farklar düzeltilmez.
   useEffect(() => {
+    baselineRef.current = {
+      time: syncState?.current_time || 0,
+      playing: !!syncState?.is_playing,
+      at: Date.now(),
+    };
     if (!ready || isTimeSource) return;
     const player = playerRef.current;
     if (!player?.getCurrentTime) return;
     const state = window.YT?.PlayerState;
     const target = syncState?.current_time || 0;
-    if (Math.abs((player.getCurrentTime() || 0) - target) > 3) player.seekTo(target, true);
-    if (syncState?.is_playing && player.getPlayerState?.() !== state?.PLAYING) player.playVideo();
-    if (!syncState?.is_playing && player.getPlayerState?.() === state?.PLAYING) player.pauseVideo();
+    // Yalnızca belirgin sapmada hizalanır: film kendi akışında oynamaya devam eder.
+    if (Math.abs((player.getCurrentTime() || 0) - target) > SYNC_TOLERANCE) {
+      player.seekTo(target, true);
+      seekGuardRef.current = Date.now() + 2000;
+    }
+    // Duraklatma yalnızca oda gerçekten duraklatıldığında uygulanır.
+    if (!syncState?.is_playing && player.getPlayerState?.() === state?.PLAYING) {
+      player.pauseVideo();
+      seekGuardRef.current = Date.now() + 1500;
+    }
   }, [ready, isTimeSource, syncState?.current_time, syncState?.is_playing, syncState?.last_sync]);
 
   useEffect(() => {
@@ -282,8 +338,12 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
     const player = playerRef.current;
     if (!player?.getPlayerState) return;
     // Düğme oynatıcının gerçek durumuna göre çalışır: eski filmden kalan durum yanlış komut vermez.
-    if (player.getPlayerState() === window.YT?.PlayerState?.PLAYING) player.pauseVideo?.();
+    const playingNow = player.getPlayerState() === window.YT?.PlayerState?.PLAYING;
+    if (playingNow) player.pauseVideo?.();
     else player.playVideo?.();
+    // Yetkili kişi düğmeye bastığında oda da güncellenir; kendiliğinden durum
+    // değişimleri (tampon, otomatik başlatma) odaya yazılmaz.
+    if (!isTimeSource && onPlayPause) onPlayPause(!playingNow);
   };
 
   const skip = (delta) => {
