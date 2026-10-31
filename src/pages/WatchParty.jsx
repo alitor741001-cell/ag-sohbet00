@@ -137,7 +137,9 @@ export default function WatchParty() {
   const hasMembership = membershipActive(user);
   const isOwner = user?.id === room?.owner_id;
   const isMod = user?.role === 'admin' || user?.role === 'moderator';
-  const canMod = isOwner || isMod || (room?.room_moderators || []).includes(user?.id);
+  // Yönetici hesabı da üyeler gibi davranır: filmi yalnızca oda sahibi ve odaya atanmış
+  // moderatörler kontrol eder. Yönetici rolü tek başına film kontrolü vermez.
+  const canMod = isOwner || (room?.room_moderators || []).includes(user?.id);
   // Oda LVL'i: odadakilerin seviyesi canlı izlenir — seviye atlayınca rozet anında değişir.
   const roomLevels = useRoomLevels([...(room?.participants || []).map((person) => person.user_id), ...(room?.seats || []).map((seat) => seat.user_id), room?.owner_id].filter(Boolean));
   // Sesli sohbet alanı açıkken film yerine sesli sohbet bölümü gösterilir.
