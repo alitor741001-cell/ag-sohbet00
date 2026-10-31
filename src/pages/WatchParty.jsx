@@ -493,8 +493,16 @@ export default function WatchParty() {
     if (!canMod) return;
     if (!immediate && Date.now() - lastUpdateRef.current < 2000) return;
     lastUpdateRef.current = Date.now();
-    await base44.entities.Room.update(id, { ...patch, last_sync: new Date().toISOString() }).catch(() => {});
-  }, [canMod, id]);
+    const body = { ...patch, last_sync: new Date().toISOString() };
+    // Oda sahibi normal kullanıcı olduğunda doğrudan yazma kısıtlanabiliyordu:
+    // oynatma durumu yetkiyi sunucuda doğrulayan oda servisi üzerinden yazılır.
+    if (isModerator(user)) {
+      await base44.entities.Room.update(id, body).catch(() => {});
+      return;
+    }
+    await base44.functions.invoke('room-presence', { action: 'player-sync', room_id: id, ...body })
+      .catch(() => base44.entities.Room.update(id, body).catch(() => {}));
+  }, [canMod, id, user?.id]);
 
   const onPlayPause = useCallback((playing) => updateRoom({ is_playing: playing }, true), [updateRoom]);
   const onTimeUpdate = useCallback((t) => updateRoom({ current_time: t }), [updateRoom]);

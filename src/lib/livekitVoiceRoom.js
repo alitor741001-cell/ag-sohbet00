@@ -1,6 +1,7 @@
 import { Room, RoomEvent, Track } from 'livekit-client';
 import { base44 } from '@/api/base44Client';
 import { createVoiceOutput, ensureMicTrack, releaseMic } from '@/lib/callAudio';
+import { getMicNoiseSuppression } from '@/lib/micSource';
 
 // Bağlantı ve mikrofon cevapsız kalırsa düğme kilitlenmez: süre sonunda bırakılır.
 // iOS izin penceresi açıkken istek hemen bırakılmaz: süre pencereye cevap vermeye yeter.
@@ -106,6 +107,11 @@ export class LiveKitVoiceRoom {
     const output = createVoiceOutput(source, this.roomId, {
       startMuted: this.deafened || !this.outputsEnabled,
     });
+    // Hoparlör kapalıyken gelen ses de sessiz başlar; açıldığında geri gelir.
+    const remoteTrack = source.mediaStreamTrack;
+    if (remoteTrack) {
+      try { remoteTrack.enabled = !this.deafened && this.outputsEnabled; } catch (error) {}
+    }
     this.outputs.set(key, output);
     output.play()
       .then(() => { this.audioBlocked = false; this.emit(); })
@@ -144,7 +150,16 @@ export class LiveKitVoiceRoom {
       throw error;
     }
 
-    const room = new Room({ adaptiveStream: false, dynacast: false });
+    const room = new Room({
+      adaptiveStream: false,
+      dynacast: false,
+      // Gürültü engelleme ve yankı önleme LiveKit'in kendi ses yakalama ayarlarına da yazılır.
+      audioCaptureDefaults: {
+        echoCancellation: true,
+        noiseSuppression: getMicNoiseSuppression(),
+        autoGainControl: true,
+      },
+    });
     this.room = room;
     this.bind(room);
 
@@ -224,7 +239,13 @@ export class LiveKitVoiceRoom {
     if (!this.micDesired) { releaseMic(); return false; }
     try {
       this.micPublication = await withTimeout(
-        local.publishTrack(track, { source: Track.Source.Microphone, name: 'microphone' }),
+        local.publishTrack(track, {
+          source: Track.Source.Microphone,
+          name: 'microphone',
+          // LiveKit tarafında sessizlik bastırma ve paket kaybı onarımı açık.
+          dtx: true,
+          red: true,
+        }),
         MIC_TIMEOUT_MS,
         'mic_timeout',
       );
@@ -276,7 +297,16 @@ export class LiveKitVoiceRoom {
 
   setDeafened(on) {
     this.deafened = !!on;
-    this.outputs.forEach((output) => { output.muted = this.deafened || !this.outputsEnabled; });
+    // LiveKit: uzak ses yayınları cihazda gerçekten susturulur — element ve
+    // medya kanalı birlikte kapatılır, açıldığında ikisi de geri gelir.
+    this.outputs.forEach((output) => {
+      try { output.muted = this.deafened || !this.outputsEnabled; } catch (error) {}
+      const streams = output.element?.srcObject;
+      const audioTracks = streams?.getAudioTracks?.() || [];
+      audioTracks.forEach((audioTrack) => {
+        try { audioTrack.enabled = !this.deafened && this.outputsEnabled; } catch (error) {}
+      });
+    });
     if (!this.deafened) void this.retryPlayback();
     this.emit();
   }

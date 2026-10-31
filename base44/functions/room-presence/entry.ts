@@ -72,7 +72,7 @@ export default async function(req) {
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
     const body = await req.json();
     const { action, room_id, password, target_id } = body || {};
-    if (!room_id || !['get', 'join', 'leave', 'kick', 'ban', 'unban', 'set-password', 'set-name', 'set-announcement', 'set-category', 'toggle-hidden', 'enable-voice', 'toggle-voice', 'toggle-mute', 'toggle-chat', 'chat-ban', 'change-movie', 'share', 'assign-mod', 'remove-mod', 'delete-room', 'admin-room'].includes(action)) {
+    if (!room_id || !['get', 'join', 'leave', 'kick', 'ban', 'unban', 'set-password', 'set-name', 'set-announcement', 'set-category', 'toggle-hidden', 'enable-voice', 'toggle-voice', 'toggle-mute', 'toggle-chat', 'chat-ban', 'change-movie', 'player-sync', 'share', 'assign-mod', 'remove-mod', 'delete-room', 'admin-room'].includes(action)) {
       return Response.json({ error: 'invalid request' }, { status: 400 });
     }
     const name = user.username || user.full_name || 'Kullanıcı';
@@ -490,6 +490,18 @@ export default async function(req) {
         user_id: noteActor.user_id || '', user_name: noteName, user_avatar: noteActor.user_avatar || '',
         text: `${noteName} filmi değiştirdi: ${movie_title || 'Yeni Film'}`,
       });
+      return Response.json({ ok: true });
+    }
+
+    // Oynatma durumu (oynat/duraklat/sarma): oda sahibi ve yetkililer için sunucu
+    // tarafında yazılır — istemciden doğrudan yazma kısıtlanmış olsa da senkron bozulmaz.
+    if (action === 'player-sync') {
+      if (!canModRoom) return Response.json({ error: 'yetkisiz' }, { status: 403 });
+      const patch: Record<string, unknown> = { last_sync: new Date().toISOString() };
+      if (typeof body.is_playing === 'boolean') patch.is_playing = body.is_playing;
+      const time = Number(body.current_time);
+      if (Number.isFinite(time)) patch.current_time = Math.max(0, time);
+      await base44.asServiceRole.entities.Room.update(room_id, patch);
       return Response.json({ ok: true });
     }
 

@@ -87,9 +87,9 @@ async function acquireMic() {
   if (!IS_IOS) releaseMicStream();
   // iOS: oynatma kategorisindeki oturum mikrofonu açmaz — önce kayıt kategorisi.
   prepareRecordingSession();
-  // Android WebView'in eski ses sürücüleri işleme kısıtlarıyla açılamayabilir.
-  const android = /Android/i.test(navigator.userAgent || '');
-  const next = await openAudio(getMedia, { audio: android ? true : micOptions() });
+  // Gürültü engelleme ve yankı önleme her cihazda istenir; eski ses sürücüleri
+  // kısıtı reddederse openAudio sade istekle kendiliğinden yeniden dener.
+  const next = await openAudio(getMedia, { audio: micOptions() });
   if (generation !== micGeneration) {
     next.getTracks().forEach((track) => track.stop());
     throw new Error('arama sonlandı');
