@@ -49,8 +49,8 @@ export default function ChatPanel({ conversation, userId, onBack, online, embedd
   const [uploading, setUploading] = useState(false);
   const [lightbox, setLightbox] = useState(null);
   const { openUserProfile } = useUserProfile();
-  // Oda içindeki sohbette kart, uygulama içindeki sohbette tam sayfa profil açılır.
-  const openProfile = () => (embedded ? openUserProfile(friendId) : navigate(`/kullanici/${friendId}`));
+  // Profil dokunuşu her yerde aynı profil kartını açar (kadın/erkek renkli kart).
+  const openProfile = () => openUserProfile(friendId);
   const messagesRef = useRef(null);
   const chatRef = useRef(null);
   useChatViewport(chatRef, undefined, !embedded && tabActive);
