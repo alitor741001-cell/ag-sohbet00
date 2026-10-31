@@ -157,16 +157,6 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
     applyVolume(volume, silent);
   };
 
-  // Karşı tarafta oynatma engellendiyse film bu düğmeyle başlar (oynatıcı kontrolleri gizli).
-  const startPlayback = () => {
-    const player = playerRef.current;
-    if (!player?.playVideo) return;
-    mutedForAutoplayRef.current = false;
-    setAutoplayMuted(false);
-    applyVolume(volume, silent);
-    player.playVideo();
-  };
-
   // Oynatıcı kurulduğunda / yeniden kurulduğunda kayıtlı seviye uygulanır.
   useEffect(() => { applyVolume(volume, muted); }, [volume, muted, ready]);
 
@@ -415,20 +405,6 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
       )}
       {error && <div className="absolute inset-0 flex items-center justify-center px-6 text-center text-sm text-amber-300">{error}</div>}
 
-      {/* İzleyicide otomatik başlatma engellendiğinde film tek dokunuşla başlar. */}
-      {!isOwner && ready && !error && syncState?.is_playing && !playing && (
-        <button
-          type="button"
-          onClick={(event) => { event.stopPropagation(); startPlayback(); }}
-          className="absolute inset-0 z-[58] flex flex-col items-center justify-center gap-2 bg-black/45"
-        >
-          <span className="flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-extrabold text-primary-foreground shadow-lg">
-            <Play className="h-5 w-5" /> Filmi başlat
-          </span>
-          <span className="text-[11px] font-semibold text-white/70">Oda sahibi filmi açtı — dokun ve izle</span>
-        </button>
-      )}
-
       <div
         className={`pointer-events-auto absolute inset-x-0 bottom-0 z-[60] bg-gradient-to-t from-black/90 to-transparent p-3 transition-opacity sm:p-4 ${(suppressControls || !showControls) ? 'pointer-events-none opacity-0' : 'opacity-100'}`}
         style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom))' }}
@@ -456,7 +432,8 @@ export default function YouTubeStage({ videoId, syncState, isOwner, isTimeSource
               Sesi aç
             </button>
           )}
-          {isOwner && <button onClick={togglePlay} aria-label={playing ? 'Duraklat' : 'Oynat'} className="flex h-11 w-11 items-center justify-center rounded-lg hover:bg-white/10">{playing ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}</button>}
+          {/* Duraklatma yalnızca oda sahibinde: izleyicide durdurma düğmesi bulunmaz. */}
+          {isTimeSource && <button onClick={togglePlay} aria-label={playing ? 'Duraklat' : 'Oynat'} className="flex h-11 w-11 items-center justify-center rounded-lg hover:bg-white/10">{playing ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}</button>}
           {isOwner && <button onClick={() => skip(-10)} aria-label="10 saniye geri" className="flex h-11 w-11 items-center justify-center rounded-lg hover:bg-white/10" title="10 sn geri"><Rewind className="h-5 w-5" /></button>}
           {isOwner && <button onClick={() => skip(10)} aria-label="10 saniye ileri" className="flex h-11 w-11 items-center justify-center rounded-lg hover:bg-white/10" title="10 sn ileri"><FastForward className="h-5 w-5" /></button>}
           {IOS_VOLUME_LOCKED ? (
