@@ -34,8 +34,10 @@ export default async function (req: Request): Promise<Response> {
       base44.asServiceRole.entities.User.get(user.id).catch(() => null),
     ]);
     if (!room) return Response.json({ error: 'Oda bulunamadı.' }, { status: 404 });
-    // Sesli odalar ve sesli moda alınmış film odaları aynı ses altyapısını kullanır.
-    if (room.room_type !== 'voice' && room.voice_mode !== true) {
+    // Sesli odalar, sesli moda alınmış film odaları ve film odasında sesli sohbeti
+    // açılmış odalar aynı LiveKit altyapısını kullanır.
+    const voiceAllowed = room.room_type === 'voice' || room.voice_mode === true || room.voice_enabled === true;
+    if (!voiceAllowed) {
       return Response.json({ error: 'Bu odada sesli sohbet yok.' }, { status: 400 });
     }
     if (room.status === 'closed') return Response.json({ error: 'Oda kapatıldı.' }, { status: 403 });

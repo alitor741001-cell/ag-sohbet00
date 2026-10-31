@@ -101,7 +101,18 @@ export default function WatchParty() {
   const [micRequested, setMicRequested] = useState(() => {
     try { return sessionStorage.getItem('voice_mic_carry') === '1'; } catch { return false; }
   });
-  const voice = useVoiceChat({ roomId: id, user, participants: room?.participants, voiceEnabled: !!room?.voice_enabled && voiceReady, micEnabled: micRequested });
+  // Koltukta oturan kişi film odasında da konuşur: sesli odadan geçişte koltuk korunur,
+  // mikrofon bu yüzden kendiliğinden açılır (izni daha önce verildiyse).
+  const seatedNow = (Array.isArray(room?.seats) ? room.seats : []).some((seat) => seat.user_id === user?.id);
+  const voice = useVoiceChat({ roomId: id, user, participants: room?.participants, voiceEnabled: !!room?.voice_enabled && voiceReady, micEnabled: micRequested || seatedNow });
+
+  // Sesli odadan film odasına geçişte mikrofon izni yeniden sorulmaz: aynı odada az önce
+  // verilen onay devralınır, taşınan mikrofon isteği bağlantı kurulunca açılır.
+  useEffect(() => {
+    if (!micRequested) return;
+    voice.allowConsent?.();
+    try { sessionStorage.removeItem('voice_mic_carry'); } catch {}
+  }, [micRequested]); // eslint-disable-line react-hooks/exhaustive-deps
   const { messages: directUnread } = useSocialBadges(user?.id);
 
   const [roomNameEdit, setRoomNameEdit] = useState('');
@@ -509,9 +520,10 @@ export default function WatchParty() {
       await base44.functions.invoke('room-presence', { action: 'enable-voice', room_id: id });
       setMicRequested(true);
       setRoom(previous => previous ? { ...previous, voice_enabled: true } : previous);
-      // İzin dokunuşla istenir; verildikten sonra mikrofon açılır.
-      voice.requestMic();
-      toast({ title: 'Sesli sohbet açıldı', description: 'Mikrofon izni isteniyor…' });
+      // Mikrofon isteği burada ikinci bir bağlantı başlatmaz: ses bağlantısı kurulduğu
+      // an mikrofon kendiliğinden açılır — yeniden bağlanma ve hata mesajı olmaz.
+      voice.allowConsent?.();
+      toast({ title: 'Sesli sohbet açıldı', description: 'Mikrofon bağlantı kurulunca açılacak.' });
     } catch (e) {
       toast({ title: 'Mikrofon açılamadı', description: e.response?.data?.error || e.message, variant: 'destructive' });
     }
@@ -653,7 +665,6 @@ export default function WatchParty() {
   const src = movie?.video_url || movie?.hls_url || movie?.external_url || '';
   const chatEnabled = room.chat_enabled;
   // Koltukta oturmayan kişi için sohbet bölümü kilitlenir.
-  const seatedNow = (Array.isArray(room.seats) ? room.seats : []).some((seat) => seat.user_id === user?.id);
   const chatLocked = room.chat_seated_only === true && !seatedNow;
   const founderCanSeeAdmins = user?.display_role === 'founder';
   const visibleParticipants = (room.participants || []).filter((participant) => participant.user_id === room.owner_id || viewerProfiles[participant.user_id]?.role !== 'admin' || founderCanSeeAdmins);

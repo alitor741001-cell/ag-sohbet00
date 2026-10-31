@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { unlockVoicePlayback } from '@/lib/callAudio';
 import { hasDirectCallAudioFocus, subscribeCallAudioFocus } from '@/lib/callAudioFocus';
 import { isRoomMinimized } from '@/lib/minimizedRoom';
-import { disposeOtherVoiceSessions, registerVoiceSession, takeVoiceSession } from '@/lib/roomVoiceSession';
+import { disposeOtherVoiceSessions, offerVoiceHandoff, registerVoiceSession, takeVoiceSession } from '@/lib/roomVoiceSession';
 import { LiveKitVoiceRoom } from '@/lib/livekitVoiceRoom';
 import shallowEqual from '@/components/data/shallowEqual';
 import useSeatMicConsent from '@/hooks/useSeatMicConsent';
@@ -36,6 +36,16 @@ const friendlyMicError = (error) => {
 };
 const isPermissionError = (error) => error?.name === 'NotAllowedError' || error?.name === 'SecurityError';
 const sameList = (a, b) => a.length === b.length && a.every((value, index) => value === b[index]);
+// Aynı odanın diğer görünümü mü açık (film odası ↔ sesli oda)? Görünüm değişiminde ses
+// bağlantısı kapatılmaz: yeni görünüm aynı LiveKit oturumunu devralır, yeniden bağlanılmaz.
+const sameRoomViewOpen = (roomId) => {
+  if (!roomId) return false;
+  const path = window.location.pathname || '';
+  return path === `/oda/${roomId}` || path === `/sesli-oda/${roomId}`;
+};
+const rememberMicCarry = (on) => {
+  try { sessionStorage.setItem('voice_mic_carry', on ? '1' : '0'); } catch {}
+};
 
 export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnabled }) {
   const meshRef = useRef(null);
@@ -119,6 +129,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
       micDeniedRef.current = false;
       const stop = (async () => {
         mesh.stopMic();
+        rememberMicCarry(false);
         setActive(false);
         refreshState();
       })();
@@ -136,6 +147,8 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
       setLastMicrophoneError('');
       setActive(true);
       rememberMicAllowed();
+      // Mikrofon açıkken görünüm değişirse yeni görünümün de açması için niyet saklanır.
+      rememberMicCarry(true);
       refreshState();
     })();
     micPendingRef.current = request;
@@ -196,11 +209,20 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
     (async () => {
       try {
         if (resumed) {
+          // Devralınan oturum yeni görünümün durumunu besler: mikrofon, konuşan ve
+          // hoparlör göstergeleri LiveKit olaylarıyla anlık güncellenir.
+          mesh.onChange = () => refreshState();
           setConnectionState('connected');
           mesh.setOutputsEnabled(true);
           void retryAudio();
-          // Doğrudan arama sesi yeniden öncelik aldıysa mikrofon kapalı kalır.
-          if (!hasDirectCallAudioFocus() && !mutedByModeratorRef.current && voiceEnabledRef.current && micWantedRef.current) {
+          // Oturum devralındığında mikrofon yayındaysa kesilmez: olduğu gibi sürer.
+          if (mesh.isMicOn?.()) {
+            micWantedRef.current = true;
+            micAppliedRef.current = true;
+            setActive(true);
+            rememberMicCarry(true);
+          } else if (!hasDirectCallAudioFocus() && !mutedByModeratorRef.current && voiceEnabledRef.current && micWantedRef.current) {
+            // Doğrudan arama sesi yeniden öncelik aldıysa mikrofon kapalı kalır.
             await enableMic(mesh).catch(() => {});
           }
           refreshState();
@@ -294,6 +316,14 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
       if (isRoomMinimized(roomId)) {
         stopTransient();
         registerVoiceSession(roomId, { room: mesh, elements: mesh.audioElements(), stopTransient });
+        return;
+      }
+      // Film odası ↔ sesli oda geçişinde bağlantı kapatılmaz: LiveKit odası, mikrofon
+      // yayını ve oda sesi yaşamaya devam eder; yeni görünüm aynı oturumu devralır.
+      // Böylece geçişte "tekrar bağlanıyor" durumu oluşmaz ve mikrofon açık kalır.
+      if (sameRoomViewOpen(roomId)) {
+        stopTransient();
+        offerVoiceHandoff(roomId, { room: mesh, elements: mesh.audioElements(), stopTransient });
         return;
       }
       // Odalar arası geçişte mikrofon açıksa yeni odada da açık kalsın.
@@ -391,10 +421,15 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
       if (wasOn) {
         await enableMic(mesh, false);
       } else if (!mesh?.isConnected()) {
-        // Bağlantı yokken istek kaybolmaz: yeniden bağlanılır, mikrofon bağlanınca açılır.
+        // Bağlantı yokken istek kaybolmaz: istek saklanır, bağlantı kurulduğu an
+        // mikrofon kendiliğinden açılır. Kurulmakta olan bağlantı yeniden başlatılmaz.
         micWantedRef.current = true;
-        setError('🎤 Ses bağlantısı kuruluyor — mikrofon bağlanınca açılacak.');
-        setSessionKey((value) => value + 1);
+        if (mesh?.connectionState === 'connecting') {
+          setError('');
+        } else {
+          setError('🎤 Ses bağlantısı kuruluyor — mikrofon bağlanınca açılacak.');
+          setSessionKey((value) => value + 1);
+        }
       } else {
         // Mikrofon doğrudan bu dokunuşun içinde açılır, arka plan görevine devredilmez.
         await enableMic(mesh);
@@ -448,6 +483,9 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
     const mesh = meshRef.current;
     if (!mesh) { setError('🎤 Ses bağlantısı hazır değil — lütfen tekrar dene.'); return; }
     if (!mesh.isConnected()) {
+      // Kurulmakta olan bağlantı yeniden başlatılmaz: istek saklanır, bağlantı
+      // kurulduğu an mikrofon kendiliğinden açılır.
+      if (mesh.connectionState === 'connecting') { setError(''); return; }
       setError('🎤 Ses bağlantısı kuruluyor — mikrofon bağlanınca açılacak.');
       setSessionKey((value) => value + 1);
       return;
@@ -474,5 +512,5 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
     setError('');
   };
 
-  return { muted: !active, remoteMuted, deafened, localSpeaking, speakingIds, participantMicStates, active, error, micDenied, requesting, connectionState, audioBlocked, canSpeak, lastMicrophoneError, retryAudio, retryMic, requestMic, toggleMute, toggleDeafen, debug, voiceEnabled, micConsentRequired, declineMic };
+  return { muted: !active, remoteMuted, deafened, localSpeaking, speakingIds, participantMicStates, active, error, micDenied, requesting, connectionState, audioBlocked, canSpeak, lastMicrophoneError, retryAudio, retryMic, requestMic, toggleMute, toggleDeafen, debug, voiceEnabled, micConsentRequired, allowConsent: allowMicConsent, declineMic };
 }

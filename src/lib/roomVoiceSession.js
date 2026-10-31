@@ -14,14 +14,37 @@ export function registerVoiceSession(roomId, session) {
 /** Saklanan oturumu devral: arayüz yeniden bağlanırken bağlantı kesilmez. */
 export function takeVoiceSession(roomId) {
   if (!roomId) return null;
+  clearHandoff(roomId);
   const session = sessions.get(roomId) || null;
   sessions.delete(roomId);
   return session;
 }
 
+// Aynı odanın diğer görünümüne geçişte oturum devredilir. Yeni görünüm kısa süre
+// içinde devralmazsa oturum kendiliğinden kapanır: mikrofon arkada açık kalmaz.
+const handoffTimers = new Map();
+const HANDOFF_TTL_MS = 25000;
+
+function clearHandoff(roomId) {
+  const timer = handoffTimers.get(roomId);
+  if (timer) { clearTimeout(timer); handoffTimers.delete(roomId); }
+}
+
+export function offerVoiceHandoff(roomId, session, ttl = HANDOFF_TTL_MS) {
+  if (!roomId) return;
+  registerVoiceSession(roomId, session);
+  clearHandoff(roomId);
+  handoffTimers.set(roomId, setTimeout(() => {
+    handoffTimers.delete(roomId);
+    disposeVoiceSession(roomId);
+  }, ttl));
+}
+
 /** Odaya dönülmeyecekse oturumu tamamen kapat. */
 export function disposeVoiceSession(roomId) {
-  const session = takeVoiceSession(roomId);
+  clearHandoff(roomId);
+  const session = sessions.get(roomId) || null;
+  sessions.delete(roomId);
   if (session) closeSession(session);
 }
 
