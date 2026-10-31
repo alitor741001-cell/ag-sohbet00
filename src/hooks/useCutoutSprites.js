@@ -4,30 +4,58 @@ import { useEffect, useState } from 'react';
 // her düğme kendi şeffaf PNG parçası olur. Hücreler eşit olduğu için düğmeler eşit boyutta kalır.
 const cache = new Map();
 
-function isNearWhite(r, g, b) {
-  return r > 236 && g > 236 && b > 236;
+// Zemindeki renk düğmenin kendi köşesinden okunur: beyaz ya da açık desenli zemin
+// (arkadaşlar/ayarlar tasarımının arkası) ne olursa olsun kaldırılır.
+function backgroundTone(ctx, w, h) {
+  const corners = [
+    ctx.getImageData(0, 0, 1, 1).data,
+    ctx.getImageData(w - 1, 0, 1, 1).data,
+    ctx.getImageData(0, h - 1, 1, 1).data,
+    ctx.getImageData(w - 1, h - 1, 1, 1).data,
+  ];
+  return corners.reduce((best, current) => (current[0] + current[1] + current[2] > best[0] + best[1] + best[2] ? current : best), corners[0]);
 }
 
-// Hücrenin kenarlarından başlayan beyaz zemin şeffaf yapılır; düğmenin içindeki beyaz korunur.
+const differs = (px, i, tone, limit) => (
+  Math.abs(px[i] - tone[0]) > limit
+  || Math.abs(px[i + 1] - tone[1]) > limit
+  || Math.abs(px[i + 2] - tone[2]) > limit
+);
+
+// Hücrenin kenarlarından başlayan zemin şeffaf yapılır; düğmenin içindeki renkler korunur.
 function clearBackground(ctx, w, h) {
   const image = ctx.getImageData(0, 0, w, h);
   const px = image.data;
-  const seen = new Uint8Array(w * h);
+  const tone = backgroundTone(ctx, w, h);
+  const cleared = new Uint8Array(w * h);
   const stack = [];
   for (let x = 0; x < w; x += 1) stack.push(x, (h - 1) * w + x);
   for (let y = 0; y < h; y += 1) stack.push(y * w, y * w + w - 1);
   while (stack.length) {
     const p = stack.pop();
-    if (seen[p]) continue;
-    seen[p] = 1;
+    if (cleared[p]) continue;
+    cleared[p] = 1;
     const i = p * 4;
-    if (!isNearWhite(px[i], px[i + 1], px[i + 2])) continue;
+    if (differs(px, i, tone, 46)) continue;
     px[i + 3] = 0;
     const x = p % w;
     if (x > 0) stack.push(p - 1);
     if (x < w - 1) stack.push(p + 1);
     if (p >= w) stack.push(p - w);
     if (p < w * (h - 1)) stack.push(p + w);
+  }
+  // Kenar geçişlerinde kalan soluk iz de temizlenir: düğmenin çevresinde kutu görünmez.
+  for (let pass = 0; pass < 2; pass += 1) {
+    for (let p = 0; p < w * h; p += 1) {
+      if (px[p * 4 + 3] === 0) continue;
+      if (differs(px, p * 4, tone, 78)) continue;
+      const x = p % w;
+      const touched = (x > 0 && px[(p - 1) * 4 + 3] === 0)
+        || (x < w - 1 && px[(p + 1) * 4 + 3] === 0)
+        || (p >= w && px[(p - w) * 4 + 3] === 0)
+        || (p < w * (h - 1) && px[(p + w) * 4 + 3] === 0);
+      if (touched) px[p * 4 + 3] = 0;
+    }
   }
   ctx.putImageData(image, 0, 0);
 }
