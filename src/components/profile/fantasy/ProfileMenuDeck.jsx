@@ -35,7 +35,9 @@ const LABELS = {
  * kadar yayılır. Satırlar mevcut yüksekliği eşit paylaşır; düğmeler kırpılmaz.
  */
 export default function ProfileMenuDeck({ admin = false, onAction }) {
-  const tiles = useCutoutGrid(IMAGE, 4, 4);
+  // Kırpma açık: hücrelerin şeffaf kenar boşlukları atılır, geriye yalnızca düğmenin
+  // kendisi kalır — düğmelerin üstünde ve altında tasarım parçası görünmez.
+  const tiles = useCutoutGrid(IMAGE, 4, 4, true);
 
   return (
     <div className="grid min-h-0 flex-1 grid-rows-4">

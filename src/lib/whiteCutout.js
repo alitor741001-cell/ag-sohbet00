@@ -86,6 +86,47 @@ export function borderWhiteCutout(url, crop = { x: 0, y: 0, w: 1, h: 1 }) {
   return task;
 }
 
+const trimCache = new Map();
+
+/**
+ * Şeffaf kenar boşluklarını kırpar: düğme görseli hücresini tamamen doldurur,
+ * çevresinde tasarımdan kalan boş alan görünmez.
+ */
+export function trimTransparent(src) {
+  if (!src) return Promise.resolve('');
+  if (trimCache.has(src)) return trimCache.get(src);
+  const task = new Promise((resolve) => {
+    const img = new window.Image();
+    img.onerror = () => resolve(src);
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = img.width; c.height = img.height;
+      const ctx = c.getContext('2d', { willReadFrequently: true });
+      ctx.drawImage(img, 0, 0);
+      const { width: w, height: h } = c;
+      const p = ctx.getImageData(0, 0, w, h).data;
+      let minX = w; let minY = h; let maxX = -1; let maxY = -1;
+      for (let y = 0; y < h; y += 1) {
+        for (let x = 0; x < w; x += 1) {
+          if (p[(y * w + x) * 4 + 3] < 8) continue;
+          if (x < minX) minX = x;
+          if (x > maxX) maxX = x;
+          if (y < minY) minY = y;
+          if (y > maxY) maxY = y;
+        }
+      }
+      if (maxX < minX || maxY < minY) { resolve(src); return; }
+      const out = document.createElement('canvas');
+      out.width = maxX - minX + 1; out.height = maxY - minY + 1;
+      out.getContext('2d').drawImage(c, minX, minY, out.width, out.height, 0, 0, out.width, out.height);
+      resolve(out.toDataURL('image/png'));
+    };
+    img.src = src;
+  });
+  trimCache.set(src, task);
+  return task;
+}
+
 export function useBorderWhiteCutout(url, crop) {
   const [src, setSrc] = useState('');
   const sig = JSON.stringify(crop);
