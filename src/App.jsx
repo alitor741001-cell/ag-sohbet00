@@ -161,6 +161,8 @@ const AuthenticatedApp = () => {
           <Route path="coins" element={<AdminCoins />} />
           <Route path="vip" element={<AdminVip />} />
           <Route path="ajanslar" element={<AdminAgencies />} />
+          {/* Film İzle bölümü admin panelinde de açılır: kullanıcılarla aynı arama ve oynatma. */}
+          <Route path="film-izle" element={<FilmWatch />} />
           <Route path="filmler" element={<Navigate to="/admin" replace />} />
           <Route path="film-ekle" element={<Navigate to="/admin" replace />} />
           <Route path="kategoriler" element={<Navigate to="/admin" replace />} />
