@@ -1,69 +1,78 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Gamepad2, Headphones, Home, MessagesSquare, User } from 'lucide-react';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import useSupportBadge from '@/hooks/useSupportBadge';
 import { useMessageRealtime } from '@/components/messages/MessageRealtimeProvider';
+import useCutoutSprites from '@/hooks/useCutoutSprites';
 
-// Düğme sırası: Ana Sayfa, Sohbet, Oyunlar, Canlı Destek, Profil.
+// Düğme sırası: Ana Sayfa, Sohbet, Oyunlar, Canlı Destek, Profil (tasarım görseliyle birebir).
 const ZONES = [
-  { label: 'Ana Sayfa', to: '/', Icon: Home, match: (p, s) => p === '/' && !s.includes('oyunlar=1') },
-  { label: 'Sohbet', to: '/arkadaslar?view=chats', Icon: MessagesSquare, match: (p) => p.startsWith('/arkadaslar'), badge: 'chat' },
-  { label: 'Oyunlar', to: '/?oyunlar=1', Icon: Gamepad2, match: (p, s) => p === '/' && s.includes('oyunlar=1') },
-  { label: 'Destek', to: '/destek', Icon: Headphones, match: (p) => p === '/destek', badge: 'support' },
-  { label: 'Profil', to: '/profil', Icon: User, match: (p) => p === '/profil' },
+  { label: 'Ana Sayfa', to: '/', match: (p, s) => p === '/' && !s.includes('oyunlar=1') },
+  { label: 'Sohbet', to: '/arkadaslar?view=chats', match: (p) => p.startsWith('/arkadaslar'), badge: 'chat' },
+  { label: 'Oyunlar', to: '/?oyunlar=1', match: (p, s) => p === '/' && s.includes('oyunlar=1') },
+  { label: 'Canlı Destek', to: '/destek', match: (p) => p === '/destek', badge: 'support' },
+  { label: 'Profil', to: '/profil', match: (p) => p === '/profil' },
 ];
 
-export const NAV_HEIGHT = 'calc(66px + env(safe-area-inset-bottom, 0px))';
+const SPRITE = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/81225dedf_IMG_0522.jpg';
 
-/**
- * Ana menü: görsel dilim yok, hafif simge + etiket. Aktif sekme kırmızı ışıkla
- * işaretlenir; çubuk ekranın en dibine, çentik hizasına kadar iner.
- */
+export const NAV_HEIGHT = 'clamp(78px, 23vw, 108px)';
+
+/** Ana menü: şeffaf PNG düğmeler — altında beyaz zemin yok. */
 export default function DesignBottomNav() {
   const { pathname, search } = useLocation();
   const { user } = useCurrentUser();
   const support = useSupportBadge(user?.id);
   const { badges } = useMessageRealtime();
   const counts = { chat: badges?.messages || 0, support: support || 0 };
+  // Kırpma açık: düğme görselleri hücrelerinin boş kenarlarından arındırılır ve
+  // ekranda olabildiğince büyük görünür.
+  const sprites = useCutoutSprites(SPRITE, ZONES.length, true);
 
   return (
     <nav
       id="app-bottom-nav"
       aria-label="Ana menü"
-      className="fixed inset-x-0 bottom-0 z-[60] border-t border-border bg-[#0b0b0f]"
+      className="fixed inset-x-0 bottom-0 z-[60]"
+      /* Düğmeler ekranın en dibine, çentik hizasına kadar iner: altta boşluk kalmaz. */
       style={{
-        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+        paddingBottom: '0px',
         paddingLeft: 'env(safe-area-inset-left, 0px)',
         paddingRight: 'env(safe-area-inset-right, 0px)',
-        boxShadow: '0 -12px 28px -18px rgba(0,0,0,0.95)',
       }}
     >
-      <div className="mx-auto flex h-[66px] w-full max-w-[36rem] items-stretch">
-        {ZONES.map((zone) => {
+      <div className="flex w-full items-end justify-between gap-0.5 px-0.5">
+        {ZONES.map((zone, index) => {
           const active = zone.match(pathname, search);
           const count = zone.badge ? counts[zone.badge] : 0;
-          const Icon = zone.Icon;
+          const sprite = sprites[index];
           return (
             <Link
               key={zone.label}
               to={zone.to}
               aria-label={zone.label}
               aria-current={active ? 'page' : undefined}
-              className={`relative flex flex-1 flex-col items-center justify-center gap-1 transition-colors active:bg-white/5 ${active ? 'text-primary' : 'text-white/55'}`}
+              className="relative flex flex-1 items-end justify-center transition-transform active:scale-95"
             >
-              <span
-                aria-hidden="true"
-                className={`absolute top-0 h-[2px] w-8 rounded-full transition-opacity ${active ? 'bg-primary opacity-100' : 'opacity-0'}`}
-              />
-              <span className="relative">
-                <Icon className="h-[21px] w-[21px]" strokeWidth={active ? 2.4 : 1.9} />
-                {count > 0 && (
-                  <span className="absolute -right-2 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold leading-none text-primary-foreground ring-2 ring-[#0b0b0f]">
-                    {count > 99 ? '99+' : count}
-                  </span>
-                )}
-              </span>
-              <span className={`text-[9.5px] leading-none ${active ? 'font-black' : 'font-semibold'}`}>{zone.label}</span>
+              {sprite ? (
+                <img
+                  src={sprite.src}
+                  alt=""
+                  draggable={false}
+                  className="pointer-events-none select-none object-contain"
+                  style={{
+                    height: 'clamp(54px, 16.5vw, 74px)',
+                    width: '100%',
+                    filter: active ? 'brightness(1.25) drop-shadow(0 0 10px rgba(255,255,255,0.35))' : 'none',
+                  }}
+                />
+              ) : (
+                <span aria-hidden="true" style={{ height: 'clamp(54px, 16.5vw, 74px)', width: '100%' }} />
+              )}
+              {count > 0 && (
+                <span className="absolute right-[16%] top-0 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#ef4343] px-1 text-[11px] font-bold leading-none text-white ring-2 ring-black/70">
+                  {count > 99 ? '99+' : count}
+                </span>
+              )}
             </Link>
           );
         })}

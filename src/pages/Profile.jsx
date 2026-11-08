@@ -4,6 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
 import { vipLevelOf } from '@/lib/userLevels';
+import { ART } from '@/lib/designArt';
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import useProfileSocialRefresh from '@/hooks/useProfileSocialRefresh';
@@ -35,6 +36,7 @@ export default function Profile() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [wallet, setWallet] = useState(null);
+  const [vipCount, setVipCount] = useState(0);
   const [giftBoxOpen, setGiftBoxOpen] = useState(false);
   const [privacyOpen, setPrivacyOpen] = useState(false);
   // Takip ve ziyaretçi sayaçları ile açılan liste: takip edilenler, takipçiler, ziyaretçiler.
@@ -63,9 +65,24 @@ export default function Profile() {
     navigate('/profil/ayarlar', { replace: true });
   }, []);
 
+  const loadVipCount = () => {
+    base44.functions.invoke('vip-bag', { action: 'list' })
+      .then((response) => setVipCount((response.data?.items || []).length))
+      .catch(() => {});
+  };
+
   const loadWallet = () => {
     base44.functions.invoke('gift-box', { action: 'summary' })
       .then((response) => setWallet(response.data))
+      .catch(() => {});
+  };
+
+  // Profil açılışı tek çağrıda Supabase aynasından gelir: cüzdan ve VIP sayısı birlikte.
+  const loadSummary = () => {
+    base44.functions.invoke('profile-summary', {})
+      .then((response) => {
+        setVipCount(response.data?.vip_count ?? 0);
+      })
       .catch(() => {});
   };
 
@@ -82,7 +99,8 @@ export default function Profile() {
   };
 
   useEffect(() => {
-    // Açılışta yalnızca gerekli iki çağrı: cüzdan ve sayaçlar.
+    // Ayna hızlı açılış sağlar; bakiye hemen canlı değerle doğrulanır.
+    loadSummary();
     loadWallet();
     loadSocial();
   }, []);
@@ -106,6 +124,16 @@ export default function Profile() {
 
   useProfileSocialRefresh(user?.id, loadSocial);
 
+
+  // Sayfa kendini 5 saniyede bir sessizce tazeler: bakiye canlı değerden okunur, böylece
+  // hediye/oyun harcamaları ekranda eski tutarla kalmaz — yükleme göstergesi çıkmaz.
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'hidden') return;
+      loadWallet();
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     if (!user) return;
@@ -154,6 +182,10 @@ export default function Profile() {
         marginRight: 'calc(-1 * env(safe-area-inset-right, 0px))',
       }}
     >
+      {/* Profil zemini: ana sayfadaki tema görseli, çentik kenarlarına kadar uzanır. */}
+      <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10 overflow-hidden bg-black">
+        <img src={ART.pageBg} alt="" draggable={false} className="h-full w-full select-none object-cover" />
+      </div>
       <div className="flex min-h-0 w-full flex-1 flex-col pt-[env(safe-area-inset-top)]">
         <div className="mx-auto w-full max-w-[560px]">
           <ProfileHeroCard
@@ -165,8 +197,9 @@ export default function Profile() {
           />
         </div>
 
-      {/* Menü listesi kalan yüksekliği doldurur ve gerekirse kendi içinde kayar. */}
-      <div className="flex min-h-0 flex-1 flex-col pb-0">
+      {/* Tasarım en altta boşluk bırakmaz: menü çubuğunun çerçevesine kadar iner.
+          Yanlarda boşluk yok: ilk ve son sütun düğmeleri ekran kenarına kadar uzanır. */}
+      <div className="flex min-h-0 flex-1 flex-col px-0 pb-0">
           <ProfileMenuDeck
             admin={isModerator(user)}
             stats={{
@@ -204,7 +237,7 @@ export default function Profile() {
       {/* Kutu kapanınca bakiye canlı değerden tazelenir: kart eski tutarı göstermez. */}
       <GiftBoxPanel open={giftBoxOpen} onClose={() => { setGiftBoxOpen(false); loadWallet(); }} />
       <CoinActivityPanel open={activityOpen} onClose={() => setActivityOpen(false)} />
-      <VipBagPanel open={vipBagOpen} onClose={() => setVipBagOpen(false)} />
+      <VipBagPanel open={vipBagOpen} onClose={() => setVipBagOpen(false)} onChanged={loadVipCount} />
       <StorePanel open={storeOpen} onClose={() => { setStoreOpen(false); loadWallet(); }} onCoins={() => { setStoreOpen(false); setCoinShopOpen(true); }} />
       <CoinPurchasePanel
         open={coinShopOpen}

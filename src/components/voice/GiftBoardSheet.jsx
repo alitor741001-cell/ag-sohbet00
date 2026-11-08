@@ -4,6 +4,7 @@ import GiftBoardRow from '@/components/voice/GiftBoardRow';
 import GiftBoardFlames from '@/components/voice/GiftBoardFlames';
 import useMessageProfiles from '@/hooks/useMessageProfiles';
 import useBackDismiss from '@/hooks/useBackDismiss';
+import { ART } from '@/lib/designArt';
 
 const TABS = [
   { key: 'day', label: '24 SAATLİK', tone: 'fire' },
@@ -48,6 +49,14 @@ export default function GiftBoardSheet({ open, onClose, board, loading, onSelect
             paddingBottom: 'max(0.6rem, env(safe-area-inset-bottom))',
           }}
         >
+          <img
+            src={ART.pageBg}
+            alt=""
+            aria-hidden="true"
+            draggable={false}
+            className="pointer-events-none absolute inset-0 h-full w-full select-none object-cover"
+          />
+          <div className="pointer-events-none absolute inset-0 bg-black/30" aria-hidden="true" />
           <GiftBoardFlames />
 
           <button
