@@ -1,33 +1,33 @@
-import { ChevronRight, RotateCcw, Ticket, Video } from 'lucide-react';
+import { LogOut, RotateCcw, Video } from 'lucide-react';
 
-/** Alt panelin üst satırı: hediye ile PK puanı yükseltme ve tur bittiyse rövanş düğmesi. */
-export default function PkLiveNotice({ onOpenGifts, finished = false, onRematch, rematchBusy = false }) {
+/**
+ * Alt panelin üst satırı: canlı yayın notu ve tur bittiğinde
+ * "Maçtan ayrıl" ile "Rövanş" düğmeleri. Tek başına yayında düğmeler görünmez.
+ */
+export default function PkLiveNotice({ finished = false, onLeave, onRematch, rematchBusy = false }) {
   return (
     <div className="space-y-1">
-      <div className="flex items-center gap-1">
-        <button
-          type="button"
-          onClick={onOpenGifts}
-          className="flex min-w-0 flex-1 items-center gap-1.5 rounded-lg bg-amber-400/15 px-2 py-1 text-left active:scale-[0.99]"
-        >
-          <Ticket className="h-3.5 w-3.5 shrink-0 text-amber-300" />
-          <span className="min-w-0 flex-1 truncate text-[10px] font-bold text-amber-200">
-            Hediye gönder, PK puanını yükselt
-          </span>
-          <ChevronRight className="h-3 w-3 shrink-0 text-amber-200" />
-        </button>
-
-        {finished && onRematch && (
+      {finished && onLeave && (
+        <div className="flex items-center justify-end gap-1">
           <button
             type="button"
-            onClick={onRematch}
-            disabled={rematchBusy}
-            className="flex shrink-0 items-center gap-1 rounded-lg bg-fuchsia-500 px-2 py-1 text-[10px] font-black text-white active:scale-95 disabled:opacity-50"
+            onClick={onLeave}
+            className="flex shrink-0 items-center gap-1 rounded-lg bg-white/12 px-2 py-1 text-[10px] font-black text-white active:scale-95"
           >
-            <RotateCcw className="h-3 w-3" /> Rövanş
+            <LogOut className="h-3 w-3" /> Maçtan ayrıl
           </button>
-        )}
-      </div>
+          {onRematch && (
+            <button
+              type="button"
+              onClick={onRematch}
+              disabled={rematchBusy}
+              className="flex shrink-0 items-center gap-1 rounded-lg bg-fuchsia-500 px-2 py-1 text-[10px] font-black text-white active:scale-95 disabled:opacity-50"
+            >
+              <RotateCcw className="h-3 w-3" /> Rövanş
+            </button>
+          )}
+        </div>
+      )}
 
       <div className="flex items-center gap-1.5 rounded-lg bg-white/[0.06] px-2 py-1">
         <Video className="h-3 w-3 shrink-0 text-white/70" />

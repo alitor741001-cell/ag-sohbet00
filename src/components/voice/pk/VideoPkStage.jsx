@@ -11,7 +11,6 @@ import PkScoreBar from '@/components/voice/pk/PkScoreBar';
 import PkLiveChat from '@/components/voice/pk/PkLiveChat';
 import PkLiveNotice from '@/components/voice/pk/PkLiveNotice';
 import PkActionBar from '@/components/voice/pk/PkActionBar';
-import PkControlMenu from '@/components/voice/pk/PkControlMenu';
 import PkPeerSheet from '@/components/voice/pk/PkPeerSheet';
 import PkRankingSheet from '@/components/voice/pk/PkRankingSheet';
 import VoiceViewerSheet from '@/components/voice/VoiceViewerSheet';
@@ -30,7 +29,6 @@ export default function VideoPkStage({
   const { toast } = useToast();
   const { match, loaded, run, busy } = usePkMatch(roomId, open);
   const [inviteOpen, setInviteOpen] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [peer, setPeer] = useState(null);
   const [rankOpen, setRankOpen] = useState(false);
@@ -62,7 +60,7 @@ export default function VideoPkStage({
 
   // Yayın açılır açılmaz kamera yayına girer; odada açık bir yayın varsa ona katılınır.
   useEffect(() => {
-    if (!open) { autoRef.current = false; setInviteOpen(false); setMenuOpen(false); setViewerOpen(false); setPeer(null); setRankOpen(false); return; }
+    if (!open) { autoRef.current = false; setInviteOpen(false); setViewerOpen(false); setPeer(null); setRankOpen(false); return; }
     if (!loaded || autoRef.current) return;
     autoRef.current = true;
     if (active) return;
@@ -319,22 +317,14 @@ export default function VideoPkStage({
           </div>
         )}
 
-        {isPlayer && showFrames && (
-          <PkControlMenu
-            open={menuOpen}
-            onOpenChange={setMenuOpen}
-            onInvite={() => { setMenuOpen(false); setInviteOpen(true); }}
-            onLeave={leaveMatch}
-          />
-        )}
       </div>
 
       {showFrames && (
         <div className="flex shrink-0 flex-col rounded-t-2xl bg-[#141018]/95 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1.5 backdrop-blur">
           <PkLiveNotice
-            onOpenGifts={() => onOpenGifts?.()}
             finished={finished}
-            onRematch={isHost ? rematch : null}
+            onLeave={active?.guest_id ? leaveMatch : null}
+            onRematch={isHost && active?.guest_id ? rematch : null}
             rematchBusy={busy}
           />
 

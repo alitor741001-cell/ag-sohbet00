@@ -62,6 +62,18 @@ export default function PkActionBar({
           )}
         </div>
 
+        {/* Sıra: gül, hediye, kamera, mikrofon ve en sağ köşede davet. */}
+        <button type="button" onClick={onRose} aria-label="Gül gönder" className={iconClass}>
+          <span className="text-lg leading-none">🌹</span>
+        </button>
+        <button
+          type="button"
+          onClick={onGift}
+          aria-label="Hediye gönder"
+          className={`${iconClass} text-[#fe2c55]`}
+        >
+          <Gift className="h-5 w-5" />
+        </button>
         <button
           type="button"
           onClick={onToggleCamera}
@@ -82,21 +94,10 @@ export default function PkActionBar({
           type="button"
           onClick={onInvite}
           aria-label="Arkadaş davet et"
-          className={iconClass}
+          className={`${iconClass} ml-auto`}
           style={{ background: 'linear-gradient(135deg,#fe2c55,#25f4ee)' }}
         >
           <Users className="h-4 w-4" />
-        </button>
-        <button type="button" onClick={onRose} aria-label="Gül gönder" className={iconClass}>
-          <span className="text-lg leading-none">🌹</span>
-        </button>
-        <button
-          type="button"
-          onClick={onGift}
-          aria-label="Hediye gönder"
-          className={`${iconClass} text-[#fe2c55]`}
-        >
-          <Gift className="h-5 w-5" />
         </button>
       </form>
     </div>
