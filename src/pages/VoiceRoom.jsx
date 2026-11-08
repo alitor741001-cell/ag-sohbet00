@@ -1196,7 +1196,6 @@ export default function VoiceRoom() {
         onOpenMenu={() => setMenuOpen(true)}
         onExit={() => setExitOpen(true)}
         showMenu={canMod}
-        onOpenPk={() => setPkOpen(true)}
       />
 
       <VoiceStage
@@ -1325,6 +1324,7 @@ export default function VoiceRoom() {
         onExitVoiceMode={canMod ? exitVoiceMode : null}
         theme={room?.background}
         onTheme={changeTheme}
+        onOpenPk={() => setPkOpen(true)}
       />
       <AgencyCallComposer open={agencyCallOpen} onClose={() => setAgencyCallOpen(false)} roomId={id} status={agencyCallStatus} onSent={(data) => setAgencyCallStatus((prev) => ({ ...prev, ...data }))} />
 
@@ -1475,12 +1475,17 @@ export default function VoiceRoom() {
       <VideoPkStage
         open={pkOpen}
         onClose={() => setPkOpen(false)}
+        roomId={id}
+        roomName={room?.name}
         user={user}
         participants={participants}
         scores={scores}
         gifts={gifts}
         coins={coins}
         livekitRoom={voice.livekitRoom}
+        messages={messages}
+        onSendMessage={sendMessage}
+        voice={{ muted: voice.muted, toggleMute: voice.toggleMute }}
         onSendGift={(gift, ids) => {
           queueGiftSend(gift, ids).catch((error) => {
             toast({ title: 'Hediye gönderilemedi', description: error?.response?.data?.error || error.message, variant: 'destructive' });

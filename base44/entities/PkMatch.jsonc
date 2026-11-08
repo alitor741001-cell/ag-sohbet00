@@ -1,0 +1,100 @@
+{
+  "name": "PkMatch",
+  "type": "object",
+  "properties": {
+    "room_id": {
+      "type": "string"
+    },
+    "room_name": {
+      "type": "string",
+      "default": ""
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "invite",
+        "live",
+        "ended"
+      ],
+      "default": "invite",
+      "enumColors": [
+        "yellow",
+        "green",
+        "gray"
+      ]
+    },
+    "host_id": {
+      "type": "string"
+    },
+    "host_name": {
+      "type": "string",
+      "default": ""
+    },
+    "host_avatar": {
+      "type": "string",
+      "default": ""
+    },
+    "guest_id": {
+      "type": "string"
+    },
+    "guest_name": {
+      "type": "string",
+      "default": ""
+    },
+    "guest_avatar": {
+      "type": "string",
+      "default": ""
+    },
+    "accepted": {
+      "type": "boolean",
+      "default": false
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "ends_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "round_no": {
+      "type": "integer",
+      "default": 1
+    },
+    "muted": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "left_id": {
+      "type": "string",
+      "default": ""
+    }
+  },
+  "required": [
+    "room_id",
+    "status",
+    "host_id",
+    "guest_id"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Armchair, Eraser, Eye, EyeOff, Film, Hash, Lock, MessageSquareOff, Music, Palette, Play, ScrollText, Square, Unlock } from 'lucide-react';
+import { Armchair, Eraser, Eye, EyeOff, Film, Hash, Lock, MessageSquareOff, Music, Palette, Play, ScrollText, Square, Unlock, Video } from 'lucide-react';
 import BoardToggleRow from '@/components/voice/BoardToggleRow';
 import VoiceRoomThemePanel from '@/components/voice/VoiceRoomThemePanel';
 import SeatCountPicker from '@/components/voice/SeatCountPicker';
@@ -14,7 +14,7 @@ const Panel = ({ children, hint }) => (
 );
 
 /** "…" menüsü: yuvarlak ikon ızgarası — kilit, gizlilik, koltuk, sayaç, sohbet temizleme, sohbet yasağı ve kayıt defteri. */
-export default function VoiceRoomMenu({ open, onClose, room, isOwner, isAdmin, canMod, onSeatCount, onSetPassword, onToggleHidden, boardActive, onToggleBoard, onBoardSettings, onClearChat, onToggleChatBan, onOpenLog, onExitVoiceMode, musicPlaying, onOpenMusic, theme, onTheme }) {
+export default function VoiceRoomMenu({ open, onClose, room, isOwner, isAdmin, canMod, onSeatCount, onSetPassword, onToggleHidden, boardActive, onToggleBoard, onBoardSettings, onClearChat, onToggleChatBan, onOpenLog, onExitVoiceMode, musicPlaying, onOpenMusic, theme, onTheme, onOpenPk }) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [panel, setPanel] = useState(null);
@@ -79,6 +79,15 @@ export default function VoiceRoomMenu({ open, onClose, room, isOwner, isAdmin, c
             active={!!musicPlaying}
             tone="gold"
             onClick={() => { onClose(); onOpenMusic(); }}
+          />
+        )}
+        {/* Görüntülü PK: oda ayarlarının içinden açılır, davet gönderilir ve 5 dakikalık tur başlar. */}
+        {onOpenPk && (
+          <VoiceMenuTile
+            icon={Video}
+            label="Görüntülü PK"
+            tone="purple"
+            onClick={() => { onClose(); onOpenPk(); }}
           />
         )}
         {/* Oda sahibi ve yöneticiler sesli odayı istedikleri an film odasına çevirebilir. */}
