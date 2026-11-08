@@ -1,76 +1,70 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { RoomEvent, Track } from 'livekit-client';
 
 /**
- * Görüntülü PK kamerası: kişinin kendi kamerası açılır ve odadaki LiveKit bağlantısına
- * görüntü olarak yayınlanır. Karşı taraf da PK'ya girdiğinde iki kamera karşılıklı görünür.
+ * Görüntülü PK kamerası.
+ * - Yayın yapan tarafların kamerası LiveKit odasına görüntü olarak yayınlanır.
+ * - Sahne açık olduğu sürece karşı tarafların görüntüleri dinlenir: izleyiciler de
+ *   iki yayıncıyı görür (yalnızca yayıncılar kamera açar).
  * Ses akışına dokunulmaz: burada yalnızca görüntü yayınlanır.
- * Kendi görüntüsü aynalı gösterilir (TikTok gibi); yayına gönderilen görüntü aynalanmaz.
  */
-export default function usePkCamera({ active, livekitRoom, selfId }) {
-  const localVideoRef = useRef(null);
-  const publicationRef = useRef(null);
+export default function usePkCamera({ open, publish, livekitRoom, selfId }) {
   const [remoteTracks, setRemoteTracks] = useState([]);
+  const [localTrack, setLocalTrack] = useState(null);
   const [error, setError] = useState('');
   const [camOn, setCamOn] = useState(true);
 
+  // Karşı taraf görüntüleri: sahne açık olduğu sürece yeni gelen görüntüler eklenir.
   useEffect(() => {
-    if (!active) return undefined;
-    let cancelled = false;
-    let stream = null;
-    let videoTrack = null;
-    let publication = null;
-    setRemoteTracks([]);
-    setError('');
-    setCamOn(true);
+    if (!open || !livekitRoom) { setRemoteTracks([]); return undefined; }
 
-    // Karşı tarafların kameraları: gelen görüntü kimliğiyle birlikte tutulur.
-    const attach = (track, participant) => {
-      if (track?.kind !== Track.Kind.Video) return;
-      const identity = participant?.identity || '';
-      if (!identity || identity === selfId) return;
-      setRemoteTracks((prev) => {
-        const rest = prev.filter((item) => item.identity !== identity);
-        return [...rest, { identity, name: participant?.name || '', track }];
-      });
-    };
-    const detach = (track, _publication, participant) => {
-      if (track?.kind !== Track.Kind.Video) return;
-      const identity = participant?.identity || '';
-      setRemoteTracks((prev) => prev.filter((item) => item.identity !== identity));
-    };
-
-    if (livekitRoom) {
-      livekitRoom.on(RoomEvent.TrackSubscribed, attach);
-      livekitRoom.on(RoomEvent.TrackUnsubscribed, detach);
-      // PK açılmadan önce yayında olan kameralar da eklenir.
-      livekitRoom.remoteParticipants?.forEach((participant) => {
-        participant.trackPublications?.forEach((pub) => {
-          if (pub.track && pub.track.kind === Track.Kind.Video) attach(pub.track, participant);
+    const scan = () => {
+      const list = [];
+      livekitRoom.remoteParticipants?.forEach((participant, identity) => {
+        if (!identity || identity === selfId) return;
+        participant.trackPublications?.forEach((publication) => {
+          if (publication.kind !== Track.Kind.Video || !publication.track) return;
+          if (!publication.isSubscribed) return;
+          list.push({ identity, track: publication.track });
         });
       });
+      setRemoteTracks(list);
+    };
+
+    scan();
+    const events = [
+      RoomEvent.TrackSubscribed, RoomEvent.TrackUnsubscribed,
+      RoomEvent.TrackPublished, RoomEvent.TrackUnpublished,
+      RoomEvent.ParticipantConnected, RoomEvent.ParticipantDisconnected,
+    ];
+    events.forEach((event) => livekitRoom.on(event, scan));
+    return () => {
+      events.forEach((event) => livekitRoom.off?.(event, scan));
+      setRemoteTracks([]);
+    };
+  }, [open, livekitRoom, selfId]);
+
+  // Kendi kamerası: yalnızca yayıncı taraf açar; izleyici kamera yayınlamaz.
+  useEffect(() => {
+    const local = livekitRoom?.localParticipant;
+    if (!local) return undefined;
+    if (!open || !publish) {
+      setLocalTrack(null);
+      try { local.setCameraEnabled?.(false); } catch (cameraError) { /* yayın zaten kapalı */ }
+      return undefined;
     }
 
+    let cancelled = false;
+    setError('');
+    setCamOn(true);
     (async () => {
       try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'user', width: { ideal: 720 }, height: { ideal: 1280 } },
-          audio: false,
-        });
-        if (cancelled) { stream.getTracks().forEach((track) => track.stop()); return; }
-        if (localVideoRef.current) {
-          localVideoRef.current.srcObject = stream;
-          localVideoRef.current.play?.().catch(() => {});
-        }
-        videoTrack = stream.getVideoTracks()[0];
-        if (livekitRoom && videoTrack) {
-          try {
-            publication = await livekitRoom.localParticipant.publishTrack(videoTrack, { source: Track.Source.Camera });
-            publicationRef.current = publication;
-          } catch (publishError) {
-            console.warn('[PK] Kamera yayını başlatılamadı', publishError);
-          }
-        }
+        const published = await local.setCameraEnabled(true, { resolution: { width: 720, height: 1280, frameRate: 24 } });
+        if (cancelled) return;
+        const publication = published || local.getTrackPublication?.(Track.Source.Camera);
+        const track = publication?.videoTrack || publication?.track || null;
+        setLocalTrack(track || null);
+        if (!track) setError('Kamera açılamadı. Cihazının kamerasını kontrol et.');
       } catch (cameraError) {
         if (cancelled) return;
         setError(cameraError?.name === 'NotAllowedError' || cameraError?.name === 'SecurityError'
@@ -81,29 +75,23 @@ export default function usePkCamera({ active, livekitRoom, selfId }) {
 
     return () => {
       cancelled = true;
-      if (livekitRoom) {
-        livekitRoom.off?.(RoomEvent.TrackSubscribed, attach);
-        livekitRoom.off?.(RoomEvent.TrackUnsubscribed, detach);
-      }
-      publicationRef.current = null;
-      try { if (publication) livekitRoom?.localParticipant?.unpublishTrack?.(publication.track, true); } catch (error) {}
-      try { videoTrack?.stop?.(); } catch (error) {}
-      try { stream?.getTracks().forEach((track) => track.stop()); } catch (error) {}
-      if (localVideoRef.current) localVideoRef.current.srcObject = null;
-      setRemoteTracks([]);
+      setLocalTrack(null);
+      try { local.setCameraEnabled?.(false); } catch (cameraError) { /* bağlantı kapanmış olabilir */ }
     };
-  }, [active, livekitRoom, selfId]);
+  }, [open, publish, livekitRoom, selfId]);
 
   // Kamerayı kapatmak yayını susturur: karşı taraf kameranın kapalı olduğunu görür.
   const setCameraEnabled = useCallback((next) => {
     setCamOn(next);
     try {
-      if (next) publicationRef.current?.track?.unmute?.();
-      else publicationRef.current?.track?.mute?.();
-    } catch (error) {
-      console.warn('[PK] Kamera durumu değiştirilemedi', error);
+      const publication = livekitRoom?.localParticipant?.getTrackPublication?.(Track.Source.Camera);
+      const track = publication?.videoTrack || publication?.track;
+      if (next) track?.unmute?.();
+      else track?.mute?.();
+    } catch (cameraError) {
+      console.warn('[PK] Kamera durumu değiştirilemedi', cameraError);
     }
-  }, []);
+  }, [livekitRoom]);
 
-  return { localVideoRef, remoteTracks, error, camOn, setCameraEnabled, mirror: true };
+  return { localTrack, remoteTracks, error, camOn, setCameraEnabled };
 }

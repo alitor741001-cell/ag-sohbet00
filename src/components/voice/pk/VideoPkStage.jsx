@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Loader2, Trophy, UserPlus } from 'lucide-react';
 import { RoomEvent } from 'livekit-client';
 import usePkCamera from '@/hooks/usePkCamera';
@@ -25,7 +25,7 @@ const clock = (total) => `${String(Math.floor(total / 60)).padStart(2, '0')}:${S
  */
 export default function VideoPkStage({
   open, onClose, onLeft, roomId, roomName, user, participants = [], seatRows = [], moderators = [], ownerId,
-  scores = {}, gifts = [], livekitRoom, onSendGift, onOpenGifts, messages = [], onSendMessage, voice, roomActions = null,
+  gifts = [], livekitRoom, onSendGift, onOpenGifts, messages = [], onSendMessage, voice, roomActions = null,
 }) {
   const { toast } = useToast();
   const { openUserProfile } = useUserProfile();
@@ -35,7 +35,6 @@ export default function VideoPkStage({
   const [viewerOpen, setViewerOpen] = useState(false);
   const [rankOpen, setRankOpen] = useState(false);
   const [now, setNow] = useState(Date.now());
-  const baseRef = useRef({});
   const finishedRef = useRef('');
   const autoRef = useRef(false);
 
@@ -75,7 +74,9 @@ export default function VideoPkStage({
 
   // Yayın yapan tarafların kamerası açılır; izleyiciler kendi kameralarını yayınlamaz.
   const cameraOn = open && isPlayer && !!active && (active.status === 'live' || active.status === 'ended');
-  const { localVideoRef, remoteTracks, error, camOn, setCameraEnabled, mirror } = usePkCamera({ active: cameraOn, livekitRoom, selfId: user?.id });
+  const { localTrack, remoteTracks, error, camOn, setCameraEnabled } = usePkCamera({
+    open, publish: cameraOn, livekitRoom, selfId: user?.id,
+  });
 
   // Yayın sesi LiveKit üzerinden akar: yayın ekranı açıldığında yayıncının mikrofonu
   // kapalıysa açılır, böylece odadaki izleyiciler sesi duyar.
@@ -114,13 +115,20 @@ export default function VideoPkStage({
     run('finish', { id: match.id }).catch(() => null);
   }, [match?.id, timeUp, isHost, run]);
 
-  // Her tur kendi puanından başlar: önceki turun hediyeleri yeni tura taşınmaz.
-  useEffect(() => {
-    baseRef.current = {};
-    if (!match?.id || !user?.id) return;
-    baseRef.current[user.id] = Number(scores[user.id]) || 0;
-    if (opponentId) baseRef.current[opponentId] = Number(scores[opponentId]) || 0;
-  }, [match?.id, match?.round_no, opponentId, user?.id, scores]);
+  // Puanlar turun başından bu yana gelen hediyelerden okunur: hediye atıldığı an bara işler,
+  // önceki turun hediyeleri yeni tura taşınmaz.
+  const matchStart = active?.started_at ? new Date(active.started_at).getTime() : 0;
+  const giftScores = useMemo(() => {
+    const totals = {};
+    messages.forEach((message) => {
+      const target = message?.gift_to_id;
+      const k = Number(message?.gift_k) || 0;
+      if (!target || !k) return;
+      if (matchStart && message.created_date && new Date(message.created_date).getTime() < matchStart) return;
+      totals[target] = (totals[target] || 0) + k;
+    });
+    return totals;
+  }, [messages, matchStart]);
 
   // Kapatılan ses odadaki herkes için susar: izleyiciler ve karşı taraf duymaz.
   const mutedIds = useMemo(() => new Set(active?.muted || []), [active?.muted]);
@@ -140,12 +148,7 @@ export default function VideoPkStage({
     return () => { room.off?.(RoomEvent.TrackSubscribed, apply); };
   }, [livekitRoom, mutedIds]);
 
-  const scoreOf = useCallback((id) => {
-    if (!id) return 0;
-    const raw = Number(scores[id]) || 0;
-    const start = baseRef.current[id];
-    return start === undefined ? Math.max(0, raw) : Math.max(0, raw - start);
-  }, [scores]);
+  const scoreOf = (id) => (id ? (giftScores[id] || 0) * 1000 : 0);
 
   if (!open) return null;
 
@@ -307,9 +310,7 @@ export default function VideoPkStage({
                   muted={mutedIds.has(seat.id)}
                   mine={isMe}
                   camOn={camOn}
-                  mirror={mirror}
-                  localVideoRef={isMe ? localVideoRef : null}
-                  track={isMe ? null : remoteTracks.find((item) => item.identity === seat.id)?.track}
+                  track={isMe ? localTrack : remoteTracks.find((item) => item.identity === seat.id)?.track}
                   error={isMe ? error : ''}
                   onOpen={isMe ? null : () => openPerson(seat.id, seat.name, seat.avatar)}
                   footer={canInvite ? (

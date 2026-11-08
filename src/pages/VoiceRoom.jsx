@@ -1329,7 +1329,7 @@ export default function VoiceRoom() {
         onAllow={voice.requestMic}
         onDismiss={voice.declineMic}
       />
-      <RoomRocketFeature room={room} hidden={composerOpen} />
+      <RoomRocketFeature room={room} hidden={composerOpen} suppress={pkOpen} />
       <VoiceControlBar
         keyboardOpen={keyboardOpen}
         micActive={!voice.muted}
@@ -1540,7 +1540,6 @@ export default function VoiceRoom() {
         seatRows={seats}
         moderators={moderators}
         ownerId={room?.owner_id}
-        scores={scores}
         gifts={gifts}
         coins={coins}
         livekitRoom={voice.livekitRoom}

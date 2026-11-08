@@ -11,6 +11,7 @@ import useFriendPresence from '@/hooks/useFriendPresence';
 import useRoleCelebration from '@/hooks/useRoleCelebration';
 import RoleCelebrationOverlay from '@/components/role/RoleCelebrationOverlay';
 import GlobalAgencyCall from '@/components/voice/GlobalAgencyCall';
+import PkInviteOverlay from '@/components/voice/pk/PkInviteOverlay';
 import { triggerBanNotice } from '@/lib/banNotice';
 import { useToast } from '@/components/ui/use-toast';
 import MessageRealtimeProvider from '@/components/messages/MessageRealtimeProvider';
@@ -203,13 +204,13 @@ export default function AppLayout() {
 
   if (isRoom) {
     // Oda zeminini artık tema boyuyor: buradaki lacivert katman kapatıldı, alt şerit kalmaz.
-    return <MessageRealtimeProvider userId={user?.id}><div className="min-h-screen bg-transparent"><RoutePreloader /><RoleCelebrationOverlay /><GlobalAgencyCall /><Suspense fallback={null}><Outlet /></Suspense></div></MessageRealtimeProvider>;
+    return <MessageRealtimeProvider userId={user?.id}><div className="min-h-screen bg-transparent"><RoutePreloader /><RoleCelebrationOverlay /><GlobalAgencyCall /><PkInviteOverlay userId={user?.id} /><Suspense fallback={null}><Outlet /></Suspense></div></MessageRealtimeProvider>;
   }
   return (
     <MessageRealtimeProvider userId={user?.id}><div className={`min-h-screen w-full min-w-0 overflow-x-clip ${isDarkSurface ? 'relative isolate' : 'bg-background'}`} style={isDarkSurface ? { background: DARK_SURFACE_GRADIENT } : undefined}>
 
       <RoutePreloader />
-      <RoleCelebrationOverlay /><GlobalAgencyCall />
+      <RoleCelebrationOverlay /><GlobalAgencyCall /><PkInviteOverlay userId={user?.id} />
       {!hideNav && <Navbar />}
       {!hideNav && !hideTheme && <ThemeShell chats={isChatList} />}
       {/* Klavye kullanıcısı menüyü atlayıp doğrudan içeriğe geçebilir. */}

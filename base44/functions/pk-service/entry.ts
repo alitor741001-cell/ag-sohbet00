@@ -72,14 +72,7 @@ export default async function (req) {
           accepted: false,
           muted: [],
         });
-        await svc.Notification.create({
-          user_id: guestId,
-          title: 'Görüntülü yayın daveti',
-          body: `${user.full_name || 'Bir kullanıcı'} seni görüntülü yayınına davet etti.`,
-          type: 'pk_invite',
-          link: `/sesli-oda/${roomId}`,
-          ref_id: joined.id,
-        }).catch(() => null);
+        // Davet bildirim kaydına yazılmaz: davet edilen kişinin ekranına anlık kart olarak gelir.
         return Response.json({ match: joined });
       }
 
@@ -100,15 +93,6 @@ export default async function (req) {
         round_no: 1,
         muted: [],
       });
-
-      await svc.Notification.create({
-        user_id: guestId,
-        title: 'Görüntülü PK daveti',
-        body: `${user.full_name || 'Bir kullanıcı'} seni görüntülü PK'ya davet etti.`,
-        type: 'pk_invite',
-        link: `/sesli-oda/${roomId}`,
-        ref_id: match.id,
-      }).catch(() => null);
 
       return Response.json({ match });
     }
@@ -202,14 +186,6 @@ export default async function (req) {
         round_no: (Number(match.round_no) || 1) + 1,
         left_id: '',
       });
-      await svc.Notification.create({
-        user_id: match.guest_id,
-        title: 'Rövanş daveti',
-        body: `${match.host_name || 'Rakibin'} rövanş istiyor.`,
-        type: 'pk_invite',
-        link: `/sesli-oda/${match.room_id}`,
-        ref_id: match.id,
-      }).catch(() => null);
       return Response.json({ match: updated });
     }
 

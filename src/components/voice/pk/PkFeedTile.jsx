@@ -2,16 +2,26 @@ import { useEffect, useRef } from 'react';
 import { Gem, MicOff, VideoOff } from 'lucide-react';
 import formatCoinAmount from '@/components/voice/formatCoinAmount';
 
-/** Karşı tarafın kamerası: gelen görüntü olduğu gibi (aynasız) oynatılır. */
-function RemoteVideo({ track }) {
+/** Görüntü karesi: LiveKit görüntüsü öğeye bağlanır (yerel önizleme aynalı gösterilir). */
+function VideoFeed({ track, mirror }) {
   const ref = useRef(null);
   useEffect(() => {
-    if (!ref.current || !track) return undefined;
-    ref.current.srcObject = new MediaStream([track.mediaStreamTrack]);
-    ref.current.play?.().catch(() => {});
-    return () => { if (ref.current) ref.current.srcObject = null; };
+    const node = ref.current;
+    if (!node || !track) return undefined;
+    try { track.attach(node); } catch (attachError) { /* görüntü henüz hazır değil */ }
+    node.play?.().catch(() => {});
+    return () => { try { track.detach(node); } catch (detachError) { /* görüntü kapanmış */ } };
   }, [track]);
-  return <video ref={ref} autoPlay playsInline muted className="h-full w-full object-cover" />;
+  return (
+    <video
+      ref={ref}
+      autoPlay
+      playsInline
+      muted
+      className="h-full w-full object-cover"
+      style={mirror ? { transform: 'scaleX(-1)' } : undefined}
+    />
+  );
 }
 
 /**
@@ -20,25 +30,14 @@ function RemoteVideo({ track }) {
  * Ayna yalnızca kendi ön kamera önizlemesine uygulanır; karşı tarafın görüntüsü aynalanmaz.
  */
 export default function PkFeedTile({
-  name, avatar, score = 0, muted, mine = false, camOn = true, mirror = false,
-  localVideoRef, track, error, footer, onOpen,
+  name, avatar, score = 0, muted, mine = false, camOn = true,
+  track, error, footer, onOpen,
 }) {
-  const hasVideo = mine ? camOn && !error : !!track;
+  const hasVideo = mine ? camOn && !!track && !error : !!track;
 
   return (
     <div className="relative h-full min-w-0 flex-1 overflow-hidden bg-black">
-      {mine ? (
-        <video
-          ref={localVideoRef}
-          autoPlay
-          playsInline
-          muted
-          className={`h-full w-full object-cover ${hasVideo ? '' : 'opacity-0'}`}
-          style={mirror ? { transform: 'scaleX(-1)' } : undefined}
-        />
-      ) : track ? (
-        <RemoteVideo track={track} />
-      ) : null}
+      {track && <VideoFeed track={track} mirror={mine} />}
 
       {!hasVideo && (
         <span className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-gradient-to-b from-white/5 to-black/80 px-2 text-center">
