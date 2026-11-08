@@ -11,8 +11,8 @@ import PkScoreBar from '@/components/voice/pk/PkScoreBar';
 import PkLiveChat from '@/components/voice/pk/PkLiveChat';
 import PkLiveNotice from '@/components/voice/pk/PkLiveNotice';
 import PkActionBar from '@/components/voice/pk/PkActionBar';
-import PkPeerSheet from '@/components/voice/pk/PkPeerSheet';
 import PkRankingSheet from '@/components/voice/pk/PkRankingSheet';
+import { useUserProfile } from '@/lib/profileCard';
 import VoiceViewerSheet from '@/components/voice/VoiceViewerSheet';
 
 // Her tur 5 dakika sürer: kabul edildiği an süre başlar, süre bitince sonuç gelir.
@@ -24,13 +24,13 @@ const clock = (total) => `${String(Math.floor(total / 60)).padStart(2, '0')}:${S
  */
 export default function VideoPkStage({
   open, onClose, onLeft, roomId, roomName, user, participants = [], seatRows = [], moderators = [], ownerId,
-  scores = {}, gifts = [], livekitRoom, onSendGift, onOpenGifts, messages = [], onSendMessage, voice,
+  scores = {}, gifts = [], livekitRoom, onSendGift, onOpenGifts, messages = [], onSendMessage, voice, roomActions = null,
 }) {
   const { toast } = useToast();
+  const { openUserProfile } = useUserProfile();
   const { match, loaded, run, busy } = usePkMatch(roomId, open);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [viewerOpen, setViewerOpen] = useState(false);
-  const [peer, setPeer] = useState(null);
   const [rankOpen, setRankOpen] = useState(false);
   const [now, setNow] = useState(Date.now());
   const baseRef = useRef({});
@@ -41,6 +41,19 @@ export default function VideoPkStage({
   const isGuest = match?.guest_id === user?.id;
   const isPlayer = isHost || isGuest;
   const opponentId = isHost ? match?.guest_id : isGuest ? match?.host_id : '';
+
+  // Kamera karesi, izleyici listesi ve sıralama aynı gerçek profil kartını açar:
+  // kartta odadan atma, yöneticilik, mikrofon, engelleme gibi işlemler hazır gelir.
+  const openPerson = (targetId, name, avatar) => {
+    if (!targetId) return;
+    const person = participants.find((item) => item.user_id === targetId);
+    openUserProfile(targetId, {
+      roomActions,
+      name: name || person?.name,
+      avatar: avatar || person?.avatar,
+      hidden: !!(person?.hidden),
+    });
+  };
 
   const remaining = match?.ends_at ? Math.max(0, Math.ceil((new Date(match.ends_at).getTime() - now) / 1000)) : 0;
   const live = match?.status === 'live';
@@ -60,7 +73,7 @@ export default function VideoPkStage({
 
   // Yayın açılır açılmaz kamera yayına girer; odada açık bir yayın varsa ona katılınır.
   useEffect(() => {
-    if (!open) { autoRef.current = false; setInviteOpen(false); setViewerOpen(false); setPeer(null); setRankOpen(false); return; }
+    if (!open) { autoRef.current = false; setInviteOpen(false); setViewerOpen(false); setRankOpen(false); return; }
     if (!loaded || autoRef.current) return;
     autoRef.current = true;
     if (active) return;
@@ -274,7 +287,7 @@ export default function VideoPkStage({
                   localVideoRef={isMe ? localVideoRef : null}
                   track={isMe ? null : remoteTracks.find((item) => item.identity === seat.id)?.track}
                   error={isMe ? error : ''}
-                  onOpen={isMe ? null : () => setPeer({ id: seat.id, name: seat.name, avatar: seat.avatar, score: scoreOf(seat.id) })}
+                  onOpen={isMe ? null : () => openPerson(seat.id, seat.name, seat.avatar)}
                   footer={opponentSeat && isHost ? (
                     <button
                       type="button"
@@ -352,8 +365,12 @@ export default function VideoPkStage({
         </div>
       )}
 
-      <PkPeerSheet person={peer} onClose={() => setPeer(null)} />
-      <PkRankingSheet open={rankOpen} roomId={roomId} onClose={() => setRankOpen(false)} />
+      <PkRankingSheet
+        open={rankOpen}
+        roomId={roomId}
+        onClose={() => setRankOpen(false)}
+        onSelect={(person) => { setRankOpen(false); openPerson(person.user_id, person.name, person.avatar); }}
+      />
 
       {/* Katılanlar: sesli odadaki izleyici listesinin aynısı. */}
       <VoiceViewerSheet
@@ -364,10 +381,7 @@ export default function VideoPkStage({
         userId={user?.id}
         ownerId={ownerId}
         moderators={moderators}
-        onSelect={(id) => {
-          const person = participants.find((item) => item.user_id === id);
-          if (person) setPeer({ id: person.user_id, name: person.name, avatar: person.avatar });
-        }}
+        onSelect={(id) => { setViewerOpen(false); openPerson(id); }}
       />
     </div>
   );

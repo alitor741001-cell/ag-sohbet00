@@ -10,7 +10,7 @@ const MEDALS = ['🥇', '🥈', '🥉'];
  * Saatlik sıralama: bu odada son bir saatte en çok hediye alan kişiler.
  * Sıralama backend'den gelir; satıra dokununca kişinin profiline gidilir.
  */
-export default function PkRankingSheet({ open, roomId, onClose }) {
+export default function PkRankingSheet({ open, roomId, onClose, onSelect }) {
   const navigate = useNavigate();
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -65,7 +65,12 @@ export default function PkRankingSheet({ open, roomId, onClose }) {
             <button
               key={row.user_id}
               type="button"
-              onClick={() => { onClose?.(); navigate(`/kullanici/${row.user_id}`); }}
+              onClick={() => {
+                onClose?.();
+                // Verilen yerlerde kişinin profil kartı doğrudan açılır; yoksa profiline gidilir.
+                if (onSelect) onSelect({ user_id: row.user_id, name: row.name, avatar: row.avatar });
+                else navigate(`/kullanici/${row.user_id}`);
+              }}
               className="flex w-full items-center gap-2 rounded-xl bg-white/[0.06] px-2 py-1.5 text-left active:scale-[0.99]"
             >
               <span className="w-5 shrink-0 text-center text-[12px] font-black text-white/70">

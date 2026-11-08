@@ -1538,6 +1538,7 @@ export default function VoiceRoom() {
         onSendMessage={sendMessage}
         onOpenGifts={() => setGiftOpen(true)}
         voice={{ muted: voice.muted, toggleMute: voice.toggleMute }}
+        roomActions={roomProfileActions}
         onSendGift={(gift, ids) => {
           queueGiftSend(gift, ids).catch((error) => {
             toast({ title: 'Hediye gönderilemedi', description: error?.response?.data?.error || error.message, variant: 'destructive' });
