@@ -1,9 +1,7 @@
-import { LogOut, RotateCcw, Settings2, UserPlus, X } from 'lucide-react';
+import { LogOut, Settings2, UserPlus, X } from 'lucide-react';
 
-/** Sağ alt köşedeki menü: davet, rövanş ve yayından ayrılma işlemleri. */
-export default function PkControlMenu({
-  open, onOpenChange, onInvite, onLeave, finished, onRematch, busy,
-}) {
+/** Sağ alt köşedeki menü: davet ve yayından ayrılma işlemleri. */
+export default function PkControlMenu({ open, onOpenChange, onInvite, onLeave }) {
   return (
     <div className="pointer-events-none absolute inset-x-0 bottom-0 z-30 flex flex-col items-end gap-1.5 px-2 pb-1">
       {open && (
@@ -21,16 +19,6 @@ export default function PkControlMenu({
           >
             <UserPlus className="h-4 w-4 text-[#fe2c55]" /> Arkadaşlarını davet et
           </button>
-          {finished && onRematch && (
-            <button
-              type="button"
-              onClick={onRematch}
-              disabled={busy}
-              className="flex w-full items-center gap-2 px-2.5 py-2 text-left text-[11.5px] font-bold text-amber-200 active:bg-white/10 disabled:opacity-50"
-            >
-              <RotateCcw className="h-4 w-4" /> Rövanş başlat
-            </button>
-          )}
           <button
             type="button"
             onClick={onLeave}

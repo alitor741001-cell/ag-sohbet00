@@ -14,6 +14,7 @@ import PkActionBar from '@/components/voice/pk/PkActionBar';
 import PkControlMenu from '@/components/voice/pk/PkControlMenu';
 import PkPeerSheet from '@/components/voice/pk/PkPeerSheet';
 import PkRankingSheet from '@/components/voice/pk/PkRankingSheet';
+import VoiceViewerSheet from '@/components/voice/VoiceViewerSheet';
 
 // Her tur 5 dakika sürer: kabul edildiği an süre başlar, süre bitince sonuç gelir.
 const clock = (total) => `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
@@ -23,14 +24,14 @@ const clock = (total) => `${String(Math.floor(total / 60)).padStart(2, '0')}:${S
  * Üstte yayıncı kartı, ortada iki kamera, altta sohbet–hediye–skor bulunur.
  */
 export default function VideoPkStage({
-  open, onClose, roomId, roomName, user, participants = [], scores = {},
-  gifts = [], livekitRoom, onSendGift, onOpenGifts, messages = [], onSendMessage, voice,
+  open, onClose, onLeft, roomId, roomName, user, participants = [], seatRows = [], moderators = [], ownerId,
+  scores = {}, gifts = [], livekitRoom, onSendGift, onOpenGifts, messages = [], onSendMessage, voice,
 }) {
   const { toast } = useToast();
   const { match, loaded, run, busy } = usePkMatch(roomId, open);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [chatOpen, setChatOpen] = useState(true);
+  const [viewerOpen, setViewerOpen] = useState(false);
   const [peer, setPeer] = useState(null);
   const [rankOpen, setRankOpen] = useState(false);
   const [now, setNow] = useState(Date.now());
@@ -61,7 +62,7 @@ export default function VideoPkStage({
 
   // Yayın açılır açılmaz kamera yayına girer; odada açık bir yayın varsa ona katılınır.
   useEffect(() => {
-    if (!open) { autoRef.current = false; setInviteOpen(false); setMenuOpen(false); setPeer(null); setRankOpen(false); return; }
+    if (!open) { autoRef.current = false; setInviteOpen(false); setMenuOpen(false); setViewerOpen(false); setPeer(null); setRankOpen(false); return; }
     if (!loaded || autoRef.current) return;
     autoRef.current = true;
     if (active) return;
@@ -133,6 +134,9 @@ export default function VideoPkStage({
     : [];
   const leftScore = scoreOf(seats[0]?.id);
   const rightScore = scoreOf(seats[1]?.id);
+  // Karşı taraf: üst şeritte adı, fotoğrafı ve takip düğmesiyle görünür.
+  const rivalSeat = seats.find((seat) => seat.id && seat.id !== user?.id) || null;
+  const rival = rivalSeat ? { id: rivalSeat.id, name: rivalSeat.name, avatar: rivalSeat.avatar } : null;
 
   const elapsed = active?.started_at ? Math.max(0, Math.floor((now - new Date(active.started_at).getTime()) / 1000)) : 0;
   const timerText = !active ? '00:00' : solo || active.status === 'invite' ? clock(elapsed) : clock(live ? remaining : 0);
@@ -156,14 +160,16 @@ export default function VideoPkStage({
     }
   };
 
+  // Yayından ayrıl: karşılaşma kapanır, oda ekranına dönülür.
   const leaveMatch = async () => {
     if (match?.id) await run('leave', { id: match.id }).catch(() => null);
+    onLeft?.();
     onClose?.();
   };
 
-  // Yayını açan taraf için "Kapat" yayını bitirir; yalnızca seyreden kişi ekranı kapatır.
+  // Sağ üstteki X: yayındaki kişi için yayından ayrılma, izleyici için ekranı kapatma.
   const closeStage = () => {
-    if (isPlayer && active && active.status !== 'ended') { leaveMatch(); return; }
+    if (isPlayer && active) { leaveMatch(); return; }
     onClose?.();
   };
 
@@ -174,7 +180,6 @@ export default function VideoPkStage({
 
   const rematch = async () => {
     if (!match?.id) return;
-    setMenuOpen(false);
     await run('rematch', { id: match.id }).catch(() => null);
   };
 
@@ -198,13 +203,12 @@ export default function VideoPkStage({
       style={{ paddingTop: 'env(safe-area-inset-top)' }}
     >
       <PkLiveHeader
-        host={{ id: active?.host_id, name: active?.host_name, avatar: active?.host_avatar }}
+        person={rival || { id: user?.id, name: 'Sen', avatar: user?.avatar || '' }}
         user={user}
-        people={participants}
+        viewerCount={participants.length}
+        onOpenViewers={() => setViewerOpen(true)}
         galleryIndex={seats.length || 1}
         galleryTotal={Math.max(participants.length, seats.length, 1)}
-        chatOpen={chatOpen}
-        onToggleChat={() => setChatOpen((current) => !current)}
         onOpenRanking={() => setRankOpen(true)}
         onClose={closeStage}
       />
@@ -321,16 +325,18 @@ export default function VideoPkStage({
             onOpenChange={setMenuOpen}
             onInvite={() => { setMenuOpen(false); setInviteOpen(true); }}
             onLeave={leaveMatch}
-            finished={finished}
-            onRematch={rematch}
-            busy={busy}
           />
         )}
       </div>
 
       {showFrames && (
         <div className="flex shrink-0 flex-col rounded-t-2xl bg-[#141018]/95 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1.5 backdrop-blur">
-          <PkLiveNotice               onOpenGifts={() => onOpenGifts?.()} peopleCount={participants.length} />
+          <PkLiveNotice
+            onOpenGifts={() => onOpenGifts?.()}
+            finished={finished}
+            onRematch={isHost ? rematch : null}
+            rematchBusy={busy}
+          />
 
           {finished && (
             <p className="mt-1 flex items-center gap-1.5 rounded-lg bg-amber-400/12 px-2 py-1 text-[10.5px] font-black text-amber-200">
@@ -341,7 +347,7 @@ export default function VideoPkStage({
             </p>
           )}
 
-          {chatOpen && <PkLiveChat messages={messages} user={user} />}
+          <PkLiveChat messages={messages} user={user} />
 
           <PkActionBar
             onSend={onSendMessage}
@@ -358,6 +364,21 @@ export default function VideoPkStage({
 
       <PkPeerSheet person={peer} onClose={() => setPeer(null)} />
       <PkRankingSheet open={rankOpen} roomId={roomId} onClose={() => setRankOpen(false)} />
+
+      {/* Katılanlar: sesli odadaki izleyici listesinin aynısı. */}
+      <VoiceViewerSheet
+        open={viewerOpen}
+        onClose={() => setViewerOpen(false)}
+        participants={participants}
+        seats={seatRows}
+        userId={user?.id}
+        ownerId={ownerId}
+        moderators={moderators}
+        onSelect={(id) => {
+          const person = participants.find((item) => item.user_id === id);
+          if (person) setPeer({ id: person.user_id, name: person.name, avatar: person.avatar });
+        }}
+      />
     </div>
   );
 }

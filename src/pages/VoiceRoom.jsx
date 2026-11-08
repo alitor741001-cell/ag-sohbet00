@@ -117,6 +117,8 @@ export default function VoiceRoom() {
   const [gamesOpen, setGamesOpen] = useState(false);
   // Görüntülü yayın: kamera açılır, davet gönderilir, hediyeler ve yorumlar aynı ekranda durur.
   const [pkOpen, setPkOpen] = useState(false);
+  // Yayından ayrılan kişiye köşedeki "Yayın Aç" kısayolu bir daha gösterilmez.
+  const [pkButtonHidden, setPkButtonHidden] = useState(false);
   // Yayın alanı oda kartının hemen altında açılır: kart, izleyici, ayarlar ve çıkış düğmeleri görünür kalır.
   const topArtRef = useRef(null);
   const [topArtHeight, setTopArtHeight] = useState(0);
@@ -1225,7 +1227,7 @@ export default function VoiceRoom() {
       </div>
 
       {/* Görüntülü PK: oda kartının altında küçük düğme, tam ekran PK ekranını açar. */}
-      {joined && !pkOpen && (
+      {joined && !pkOpen && !pkButtonHidden && (
         <button
           type="button"
           onClick={() => setPkOpen(true)}
@@ -1518,11 +1520,15 @@ export default function VoiceRoom() {
       <VideoPkStage
         open={pkOpen}
         onClose={() => setPkOpen(false)}
+        onLeft={() => setPkButtonHidden(true)}
         topOffset={topArtHeight}
         roomId={id}
         roomName={room?.name}
         user={user}
         participants={participants}
+        seatRows={seats}
+        moderators={moderators}
+        ownerId={room?.owner_id}
         scores={scores}
         gifts={gifts}
         coins={coins}
