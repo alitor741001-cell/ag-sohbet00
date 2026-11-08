@@ -1,7 +1,9 @@
-import { ScrollText, ShieldOff } from 'lucide-react';
+import { ShieldOff } from 'lucide-react';
 import VoiceSheet from '@/components/voice/VoiceSheet';
 import SocialPersonBadges from '@/components/profile/social/SocialPersonBadges';
 import useMessageProfiles from '@/hooks/useMessageProfiles';
+import { Image } from '@/components/ui/image';
+import { HIDDEN_AVATAR_URL, isHiddenName } from '@/lib/hiddenUser';
 
 const formatTime = (value) => {
   if (!value) return '';
@@ -22,8 +24,12 @@ const banTimeLeft = (person) => {
 
 /** Kayıt defteri: yönetici işlemleri (koltuktan indirme, odadan atma) ve odadan atılanlar listesi. */
 export default function RoomLogSheet({ open, onClose, logs = [], bannedUsers = [], onUnban, onOpenProfile }) {
-  // Atılan kişilerin seviye ve VIP rozetleri odadaki profil kartıyla aynı yerden gelir.
-  const profiles = useMessageProfiles(open ? bannedUsers.map((person) => person.user_id).filter(Boolean) : []);
+  // İşlemi yapan ve hedef kişinin seviye/VIP rozetleri odadaki profil kartıyla aynı kaynaktan gelir.
+  const ids = [
+    ...bannedUsers.map((person) => person.user_id),
+    ...logs.flatMap((entry) => [entry.actor_id, entry.target_id]),
+  ].filter(Boolean);
+  const profiles = useMessageProfiles(open ? ids : []);
 
   return (
     <VoiceSheet open={open} onClose={onClose} title="Kayıt Defteri">
@@ -65,15 +71,34 @@ export default function RoomLogSheet({ open, onClose, logs = [], bannedUsers = [
           <p className="text-xs text-white/50">Henüz kayıt yok.</p>
         ) : (
           <div className="no-scrollbar max-h-[40vh] space-y-2 overflow-y-auto">
-            {logs.map((entry, index) => (
-              <div key={`${entry.created_at || 'log'}-${index}`} className="flex items-start gap-2 rounded-xl bg-black/30 px-3 py-2">
-                <ScrollText className="mt-0.5 h-3.5 w-3.5 shrink-0 text-white/40" />
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs leading-snug text-white/90">{entry.text}</p>
-                  {entry.created_at && <p className="mt-0.5 text-[10px] text-white/40">{formatTime(entry.created_at)}</p>}
-                </div>
-              </div>
-            ))}
+            {logs.map((entry, index) => {
+              // Kayıt satırı odadaki giriş bildirimi gibi görünür: profil, isim, rozetler ve zaman.
+              const hidden = isHiddenName(entry.actor_name);
+              const profile = profiles[entry.actor_id];
+              const name = hidden ? entry.actor_name : profile?.username || profile?.full_name || entry.actor_name || 'Yönetici';
+              const avatar = hidden ? HIDDEN_AVATAR_URL : profile?.avatar;
+              return (
+                <button
+                  key={`${entry.created_at || 'log'}-${index}`}
+                  type="button"
+                  disabled={!entry.actor_id || !onOpenProfile}
+                  onClick={() => onOpenProfile?.(entry.actor_id)}
+                  className="flex w-full items-start gap-2 rounded-xl bg-black/30 px-3 py-2 text-left active:scale-[0.99] disabled:active:scale-100"
+                >
+                  <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/20 bg-white/10">
+                    {avatar
+                      ? <Image src={avatar} alt="" referrerPolicy="no-referrer" fittingType="fill" className="h-full w-full" />
+                      : <span className="text-[11px] font-bold text-white/80">{name.trim().charAt(0) || '?'}</span>}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className={`block truncate text-[11px] font-bold ${hidden ? 'hidden-user-name' : 'text-white/90'}`}>{name}</span>
+                    <SocialPersonBadges person={profile} />
+                    <p className="mt-0.5 text-xs leading-snug text-white/80">{entry.text}</p>
+                    {entry.created_at && <p className="mt-0.5 text-[10px] text-white/40">{formatTime(entry.created_at)}</p>}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         )}
       </section>
