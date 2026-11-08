@@ -43,13 +43,9 @@ export default function ProfileHeroCard({ user, avatar, onAvatar, uploading, vip
 
   return (
     <section className="relative mx-auto w-full max-w-[430px] px-3 pt-2">
-      {/* Neon cam panel: ışıklar CSS ile çizilir, görsel yüklenmez. Dar ve düzenli durur. */}
-      <div className="relative overflow-hidden rounded-[22px] border border-primary/25 bg-[#0b0a12]/85 px-2.5 py-2 shadow-[0_0_40px_-20px_rgba(239,68,68,0.95),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur">
-        <span aria-hidden="true" className="pointer-events-none absolute -top-10 left-1/2 h-20 w-40 -translate-x-1/2 rounded-full bg-primary/30 blur-2xl" />
-        <span aria-hidden="true" className="pointer-events-none absolute -left-6 top-10 h-24 w-24 rounded-full bg-sky-500/25 blur-2xl" />
-        <span aria-hidden="true" className="pointer-events-none absolute -right-6 bottom-0 h-24 w-24 rounded-full bg-violet-500/25 blur-2xl" />
-        <span aria-hidden="true" className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-primary/80 to-transparent" />
-        <span aria-hidden="true" className="pointer-events-none absolute inset-x-6 bottom-0 h-px bg-gradient-to-r from-transparent via-amber-300/70 to-transparent" />
+      {/* Çerçevesiz başlık: panel, kenarlık ve gölge yok — bilgiler doğrudan görünür.
+          Satırlar tek hizada durur, üst alan aşağı doğru büyümez. */}
+      <div className="relative px-1 py-0.5">
 
         <div className="relative flex items-center gap-2.5">
           <div className="relative shrink-0">
