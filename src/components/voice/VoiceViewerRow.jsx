@@ -1,5 +1,6 @@
 import { MicOff } from 'lucide-react';
 import ProfileFrame from '@/components/ProfileFrame';
+import SocialPersonBadges from '@/components/profile/social/SocialPersonBadges';
 import useMessageProfiles from '@/hooks/useMessageProfiles';
 import { HIDDEN_AVATAR_URL, isHiddenName } from '@/lib/hiddenUser';
 
@@ -19,6 +20,7 @@ export default function VoiceViewerRow({ person, seat, isOwner, isMod, isAdmin, 
             <span className="shrink-0 rounded-full bg-[#F2CE6B]/15 px-1.5 py-px text-[9px] font-bold text-[#F2CE6B] ring-1 ring-[#F2CE6B]/40">Oda Sahibi</span>
           )}
         </span>
+        <SocialPersonBadges person={profile} />
         <span className="block text-[10px] text-fantasy-gold">{isMod || isAdmin ? 'Yönetici' : seat ? 'Koltukta' : 'İzleyici'}</span>
       </span>
       {(seat?.muted || person.muted) && <MicOff className="h-4 w-4 text-muted-foreground" />}

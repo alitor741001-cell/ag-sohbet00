@@ -1380,6 +1380,7 @@ export default function VoiceRoom() {
         logs={roomLogs}
         bannedUsers={bannedUsers}
         onUnban={unbanUser}
+        onOpenProfile={(targetId) => { setLogOpen(false); openRoomProfile(targetId); }}
       />
 
       {/* Oda paneli: oda kartına dokununca yarıdan açılır. */}

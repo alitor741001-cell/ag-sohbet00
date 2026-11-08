@@ -1,5 +1,7 @@
 import { ScrollText, ShieldOff } from 'lucide-react';
 import VoiceSheet from '@/components/voice/VoiceSheet';
+import SocialPersonBadges from '@/components/profile/social/SocialPersonBadges';
+import useMessageProfiles from '@/hooks/useMessageProfiles';
 
 const formatTime = (value) => {
   if (!value) return '';
@@ -19,7 +21,10 @@ const banTimeLeft = (person) => {
 };
 
 /** Kayıt defteri: yönetici işlemleri (koltuktan indirme, odadan atma) ve odadan atılanlar listesi. */
-export default function RoomLogSheet({ open, onClose, logs = [], bannedUsers = [], onUnban }) {
+export default function RoomLogSheet({ open, onClose, logs = [], bannedUsers = [], onUnban, onOpenProfile }) {
+  // Atılan kişilerin seviye ve VIP rozetleri odadaki profil kartıyla aynı yerden gelir.
+  const profiles = useMessageProfiles(open ? bannedUsers.map((person) => person.user_id).filter(Boolean) : []);
+
   return (
     <VoiceSheet open={open} onClose={onClose} title="Kayıt Defteri">
       <section className="rounded-2xl border border-white/10 bg-[#171720] p-3">
@@ -30,10 +35,17 @@ export default function RoomLogSheet({ open, onClose, logs = [], bannedUsers = [
           <div className="space-y-2">
             {bannedUsers.map((person) => (
               <div key={person.user_id} className="flex items-center gap-2 rounded-xl bg-black/30 px-3 py-2">
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm text-white">{person.name || 'Kullanıcı'}</p>
-                  <p className="text-[10px] text-white/50">{banTimeLeft(person)}</p>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => onOpenProfile?.(person.user_id)}
+                  className="min-w-0 flex-1 text-left active:scale-[0.99]"
+                >
+                  <p className="truncate text-sm text-white">
+                    {profiles[person.user_id]?.username || profiles[person.user_id]?.full_name || person.name || 'Kullanıcı'}
+                  </p>
+                  <SocialPersonBadges person={profiles[person.user_id]} />
+                  <p className="mt-0.5 text-[10px] text-white/50">{banTimeLeft(person)}</p>
+                </button>
                 <button
                   type="button"
                   onClick={() => onUnban?.(person.user_id)}
