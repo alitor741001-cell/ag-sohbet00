@@ -1,34 +1,53 @@
-import { Link } from 'react-router-dom';
-import useCutoutRegions from '@/hooks/useCutoutRegions';
-import { Image } from '@/components/ui/image';
-const ART = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/0664b7ff1_IMG_0536.jpg';
-const REGIONS = [{ x: 0, y: 0, w: 1, h: 1 }];
+import { Link, useLocation } from 'react-router-dom';
+import { Flame, Heart, Plus, Search } from 'lucide-react';
 
-// Görseldeki sıra: AG kalkanı, Sıcak, Takip, Ara, Oda Kur.
-const ZONES = [
-  { label: 'Sıcak', to: '/', x: 0, w: 30.5 },
-  { label: 'Takip', to: '/?takip=1', x: 30.5, w: 27.7 },
-  { label: 'Ara', to: '/arama', x: 58.2, w: 13.5 },
-  { label: 'Oda Kur', to: '/oda-kur', x: 71.7, w: 28.3 },
+// Ana sayfanın üst şeridi: solda marka, sağda dört neon düğme.
+const ITEMS = [
+  { key: 'hot', label: 'Sıcak', to: '/', Icon: Flame },
+  { key: 'follow', label: 'Takip', to: '/?takip=1', Icon: Heart },
+  { key: 'search', label: 'Ara', to: '/arama', Icon: Search },
+  { key: 'create', label: 'Oda Kur', to: '/oda-kur', Icon: Plus, accent: true },
 ];
 
-/** Ana sayfanın üst şeridi: tasarım görseli + görseldeki düğmelerin dokunma alanları. */
+/** Ana sayfanın üst menüsü: görsel yerine CSS ile çizilen hafif neon düğmeler. */
 export default function HomeTopBar() {
-  const [src] = useCutoutRegions(ART, REGIONS);
+  const { pathname, search } = useLocation();
+  const activeKey = pathname === '/'
+    ? (new URLSearchParams(search).get('takip') === '1' ? 'follow' : 'hot')
+    : '';
+
   return (
-    <div className="relative w-full" style={{ aspectRatio: '1008 / 172' }}>
-      <div className="absolute inset-0">
-        {src && <Image src={src} alt="" fittingType="fit" className="pointer-events-none absolute inset-0 h-full w-full" />}
-        {ZONES.map((zone) => (
-          <Link
-            key={zone.label}
-            to={zone.to}
-            aria-label={zone.label}
-            className="absolute rounded-full active:scale-95"
-            style={{ left: `${zone.x}%`, width: `${zone.w}%`, top: '6%', height: '88%' }}
-          />
-        ))}
-      </div>
-    </div>
+    <header className="flex items-center gap-2 px-3 pb-1.5 pt-2">
+      <Link
+        to="/"
+        aria-label="AG Sohbet ana sayfa"
+        className="flex h-9 shrink-0 items-center rounded-xl border border-primary/45 bg-[#120a0d]/80 px-2.5 text-[12px] font-black tracking-[0.14em] text-white shadow-[0_0_16px_-4px_rgba(239,68,68,0.9)] active:scale-95"
+      >
+        AG
+      </Link>
+
+      <nav aria-label="Ana sayfa menüsü" className="flex min-w-0 flex-1 gap-1.5">
+        {ITEMS.map(({ key, label, to, Icon, accent }) => {
+          const on = activeKey === key;
+          return (
+            <Link
+              key={key}
+              to={to}
+              aria-current={on ? 'page' : undefined}
+              className={
+                accent
+                  ? 'flex min-w-0 flex-1 items-center justify-center gap-1 rounded-full border border-primary/60 bg-gradient-to-b from-[#ef4343] to-[#a51d1d] px-1.5 py-1.5 text-[10.5px] font-black text-white shadow-[0_0_18px_-4px_rgba(239,68,68,1)] active:scale-95'
+                  : on
+                    ? 'flex min-w-0 flex-1 items-center justify-center gap-1 rounded-full border border-primary/50 bg-primary/15 px-1.5 py-1.5 text-[10.5px] font-black text-white shadow-[0_0_16px_-4px_rgba(239,68,68,0.9)] active:scale-95'
+                    : 'flex min-w-0 flex-1 items-center justify-center gap-1 rounded-full border border-white/10 bg-white/[0.05] px-1.5 py-1.5 text-[10.5px] font-bold text-white/70 active:scale-95'
+              }
+            >
+              <Icon aria-hidden="true" className="h-3.5 w-3.5 shrink-0" strokeWidth={2.4} />
+              <span className="truncate">{label}</span>
+            </Link>
+          );
+        })}
+      </nav>
+    </header>
   );
 }

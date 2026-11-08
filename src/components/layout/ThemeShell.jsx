@@ -1,14 +1,12 @@
 import DesignBottomNav from '@/components/layout/DesignBottomNav';
-import { ART } from '@/lib/designArt';
+import NeonBackdrop from '@/components/layout/NeonBackdrop';
 
-/** Tam ekran sayfa teması: sayfa zeminine tasarım görseli, altına ana menü şeridi yerleşir.
-    Özel mesajlarda da zemin görseli vardır; sayfanın alt kısmı siyah kalmaz. */
-export default function ThemeShell({ chats = false }) {
+/** Sayfa zemini: görsel indirmeyen neon ışıklar + alt menü.
+    Görsel tema kaldırıldı: sayfalar hızlı açılır, kaydırma akıcı kalır. */
+export default function ThemeShell() {
   return (
     <>
-      <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden bg-[#02030c]" aria-hidden="true">
-        <img src={ART.pageBg} alt="" draggable={false} className="h-full w-full select-none object-cover" />
-      </div>
+      <NeonBackdrop />
       <DesignBottomNav />
     </>
   );

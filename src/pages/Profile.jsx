@@ -4,7 +4,6 @@ import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
 import { vipLevelOf } from '@/lib/userLevels';
-import { ART } from '@/lib/designArt';
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import useProfileSocialRefresh from '@/hooks/useProfileSocialRefresh';
@@ -13,6 +12,7 @@ import ProfileHeroCard from '@/components/profile/fantasy/ProfileHeroCard';
 import ProfileMenuDeck from '@/components/profile/fantasy/ProfileMenuDeck';
 import usePageScrollLock from '@/hooks/usePageScrollLock';
 import { NAV_HEIGHT } from '@/components/layout/DesignBottomNav';
+import NeonBackdrop from '@/components/layout/NeonBackdrop';
 import { isModerator } from '@/lib/roles';
 import { giftBoxLocked } from '@/lib/giftAccess';
 import PrivacyPolicyBody from '@/components/profile/PrivacyPolicyBody';
@@ -21,7 +21,6 @@ import GiftBoxPanel from '@/components/profile/GiftBoxPanel';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
 import CoinActivityPanel from '@/components/profile/CoinActivityPanel';
 import VipBagPanel from '@/components/profile/VipBagPanel';
-import StorePanel from '@/components/store/StorePanel';
 import useWalletCoinsLive from '@/hooks/useWalletCoinsLive';
 import useGiftSummaryLive from '@/hooks/useGiftSummaryLive';
 
@@ -50,7 +49,6 @@ export default function Profile() {
 
   const [activityOpen, setActivityOpen] = useState(false);
   const [vipBagOpen, setVipBagOpen] = useState(false);
-  const [storeOpen, setStoreOpen] = useState(false);
   const [coinShopOpen, setCoinShopOpen] = useState(false);
 
   const [uploading, setUploading] = useState(false);
@@ -181,10 +179,8 @@ export default function Profile() {
         marginRight: 'calc(-1 * env(safe-area-inset-right, 0px))',
       }}
     >
-      {/* Profil zemini: ana sayfadaki tema görseli, çentik kenarlarına kadar uzanır. */}
-      <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10 overflow-hidden bg-black">
-        <img src={ART.pageBg} alt="" draggable={false} className="h-full w-full select-none object-cover" />
-      </div>
+      {/* Profil zemini: görsel indirmeyen neon ışıklar. */}
+      <NeonBackdrop />
       <div className="flex min-h-0 w-full flex-1 flex-col pt-[env(safe-area-inset-top)]">
         <div className="mx-auto w-full max-w-[560px]">
           <ProfileHeroCard
@@ -217,7 +213,6 @@ export default function Profile() {
               else if (key === 'diamonds') openGiftBox();
               else if (key === 'vip') navigate('/vip');
               else if (key === 'giftHistory') setActivityOpen(true);
-              else if (key === 'store') setStoreOpen(true);
               else if (key === 'bag') setVipBagOpen(true);
               else if (key === 'level') navigate('/seviye');
               else if (key === 'agency') navigate('/ajans');
@@ -237,7 +232,6 @@ export default function Profile() {
       <GiftBoxPanel open={giftBoxOpen} onClose={() => { setGiftBoxOpen(false); loadWallet(); }} />
       <CoinActivityPanel open={activityOpen} onClose={() => setActivityOpen(false)} />
       <VipBagPanel open={vipBagOpen} onClose={() => setVipBagOpen(false)} onChanged={loadVipCount} />
-      <StorePanel open={storeOpen} onClose={() => { setStoreOpen(false); loadWallet(); }} onCoins={() => { setStoreOpen(false); setCoinShopOpen(true); }} />
       <CoinPurchasePanel
         open={coinShopOpen}
         coins={wallet?.coins ?? null}
