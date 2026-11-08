@@ -11,6 +11,7 @@ import PkScoreBar from '@/components/voice/pk/PkScoreBar';
 import PkLiveChat from '@/components/voice/pk/PkLiveChat';
 import PkLiveNotice from '@/components/voice/pk/PkLiveNotice';
 import PkActionBar from '@/components/voice/pk/PkActionBar';
+import PkOwnerControls from '@/components/voice/pk/PkOwnerControls';
 import PkRankingSheet from '@/components/voice/pk/PkRankingSheet';
 import { useUserProfile } from '@/lib/profileCard';
 import VoiceViewerSheet from '@/components/voice/VoiceViewerSheet';
@@ -30,6 +31,7 @@ export default function VideoPkStage({
   const { openUserProfile } = useUserProfile();
   const { match, loaded, run, busy } = usePkMatch(roomId, open);
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [controlsOpen, setControlsOpen] = useState(false);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [rankOpen, setRankOpen] = useState(false);
   const [now, setNow] = useState(Date.now());
@@ -41,6 +43,10 @@ export default function VideoPkStage({
   const isGuest = match?.guest_id === user?.id;
   const isPlayer = isHost || isGuest;
   const opponentId = isHost ? match?.guest_id : isGuest ? match?.host_id : '';
+  // Yayın kontrolleri (kamera, mikrofon, davet) yalnızca oda sahibinde görünür;
+  // izleyiciler ve yöneticiler bu düğmelere ulaşamaz, yayın açamaz.
+  const roomOwner = !!ownerId && user?.id === ownerId;
+  const canManage = roomOwner || isHost;
 
   // Kamera karesi, izleyici listesi ve sıralama aynı gerçek profil kartını açar:
   // kartta odadan atma, yöneticilik, mikrofon, engelleme gibi işlemler hazır gelir.
@@ -85,12 +91,14 @@ export default function VideoPkStage({
 
   // Yayın açılır açılmaz kamera yayına girer; odada açık bir yayın varsa ona katılınır.
   useEffect(() => {
-    if (!open) { autoRef.current = false; setInviteOpen(false); setViewerOpen(false); setRankOpen(false); return; }
+    if (!open) { autoRef.current = false; setInviteOpen(false); setControlsOpen(false); setViewerOpen(false); setRankOpen(false); return; }
     if (!loaded || autoRef.current) return;
     autoRef.current = true;
     if (active) return;
+    // Yayını yalnızca oda sahibi açar; izleyici ve yönetici yalnız izler.
+    if (!canManage) return;
     run('broadcast', { room_id: roomId, room_name: roomName || '' }).catch(() => null);
-  }, [open, loaded, active, roomId, roomName, run]);
+  }, [open, loaded, active, roomId, roomName, run, canManage]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -211,21 +219,6 @@ export default function VideoPkStage({
   const sendGift = (gift) => {
     if (!giftTargetId) return;
     onSendGift?.(gift, [giftTargetId]);
-  };
-
-  // Paylaş: odanın bağlantısı arkadaşlarla paylaşılır; paylaşım yoksa bağlantı kopyalanır.
-  const shareRoom = async () => {
-    const url = `${window.location.origin}/sesli-oda/${roomId}`;
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: roomName || 'Sesli oda', url });
-        return;
-      }
-      await navigator.clipboard?.writeText(url);
-      toast({ title: 'Bağlantı kopyalandı', description: 'Arkadaşlarına gönderebilirsin.' });
-    } catch (err) {
-      /* kullanıcı paylaşımı kapattı */
-    }
   };
 
   const sendRose = () => {
@@ -373,16 +366,24 @@ export default function VideoPkStage({
 
           <PkActionBar
             onSend={onSendMessage}
-            onInvite={() => setInviteOpen(true)}
             onRose={sendRose}
             onGift={() => onOpenGifts?.()}
-            onShare={shareRoom}
-            camOn={camOn}
-            micMuted={iMuted}
-            onToggleCamera={toggleCamera}
-            onToggleMic={pressMic}
+            onOpenControls={canManage ? () => setControlsOpen(true) : null}
           />
         </div>
+      )}
+
+      {/* Yayın kontrolleri: kamera, mikrofon ve davet tek panelde — yalnızca oda sahibi. */}
+      {canManage && (
+        <PkOwnerControls
+          open={controlsOpen}
+          onClose={() => setControlsOpen(false)}
+          camOn={camOn}
+          micMuted={iMuted}
+          onToggleCamera={toggleCamera}
+          onToggleMic={pressMic}
+          onInvite={() => { setControlsOpen(false); setInviteOpen(true); }}
+        />
       )}
 
       <PkRankingSheet

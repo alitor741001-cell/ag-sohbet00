@@ -1237,7 +1237,7 @@ export default function VoiceRoom() {
       </div>
 
       {/* Görüntülü PK: oda kartının altında küçük düğme, tam ekran PK ekranını açar. */}
-      {joined && !pkOpen && !pkButtonHidden && (
+      {joined && isOwner && !pkOpen && !pkButtonHidden && (
         <button
           type="button"
           onClick={() => setPkOpen(true)}
@@ -1376,10 +1376,10 @@ export default function VoiceRoom() {
         onClearChat={clearChat}
         onToggleChatBan={toggleChatBan}
         onOpenLog={() => setLogOpen(true)}
-        onExitVoiceMode={canMod ? exitVoiceMode : null}
+        onExitVoiceMode={isOwner ? exitVoiceMode : null}
         theme={room?.background}
         onTheme={changeTheme}
-        onOpenPk={() => setPkOpen(true)}
+        onOpenPk={isOwner ? () => setPkOpen(true) : null}
       />
       <AgencyCallComposer open={agencyCallOpen} onClose={() => setAgencyCallOpen(false)} roomId={id} status={agencyCallStatus} onSent={(data) => setAgencyCallStatus((prev) => ({ ...prev, ...data }))} />
 

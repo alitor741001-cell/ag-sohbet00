@@ -90,8 +90,8 @@ export default function VoiceRoomMenu({ open, onClose, room, isOwner, isAdmin, c
             onClick={() => { onClose(); onOpenPk(); }}
           />
         )}
-        {/* Oda sahibi ve yöneticiler sesli odayı istedikleri an film odasına çevirebilir. */}
-        {canMod && onExitVoiceMode && (
+        {/* Odayı film odasına yalnızca oda sahibi çevirebilir; yöneticiler PK'yı iptal edemez. */}
+        {isOwner && onExitVoiceMode && (
           <VoiceMenuTile icon={Film} label="Film Odasına Geçir" tone="gold" onClick={() => { onClose(); onExitVoiceMode(); }} />
         )}
         {canMod && tiles.map((item) => (

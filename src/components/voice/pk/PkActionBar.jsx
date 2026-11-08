@@ -1,12 +1,11 @@
 import { useState } from 'react';
-import { Camera, CameraOff, Gift, Mic, MicOff, Send, Share2, Smile, Users } from 'lucide-react';
+import { Gift, Send, SlidersHorizontal, Smile } from 'lucide-react';
 
 const EMOJIS = ['❤️', '🔥', '😂', '👏'];
 
-/** Alt yazı alanı: yorum yazılır; kamera, mikrofon, davet, gül ve hediye düğmeleri en altta durur. */
-export default function PkActionBar({
-  onSend, onInvite, onRose, onGift, onShare, camOn = true, micMuted = false, onToggleCamera, onToggleMic, disabled,
-}) {
+/** Alt yazı alanı: yorum yazılır; gül ve hediye düğmeleriyle birlikte sağ altta
+ *  tek kare düğme durur — basınca kamera, mikrofon ve davet paneli açılır (yalnız oda sahibi). */
+export default function PkActionBar({ onSend, onRose, onGift, onOpenControls, disabled }) {
   const [text, setText] = useState('');
   const [emojiOpen, setEmojiOpen] = useState(false);
 
@@ -20,8 +19,6 @@ export default function PkActionBar({
   };
 
   const iconClass = 'flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white active:scale-95';
-  // Sağ alt köşedeki dört kare düğme: kamera, mikrofon, paylaş ve davet.
-  const squareClass = 'flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-white active:scale-95 sm:h-9 sm:w-9';
 
   return (
     <div className="shrink-0 pt-1">
@@ -76,42 +73,17 @@ export default function PkActionBar({
           <Gift className="h-5 w-5" />
         </button>
 
-        {/* Sağ alt köşe: iki sıra hâlinde dört kare düğme — kamera, mikrofon, paylaş, davet. */}
-        <div className="ml-auto grid shrink-0 grid-cols-2 gap-1">
+        {/* Sağ alt köşe: tek kare düğme — açtığı panelde kamera, mikrofon ve davet durur. */}
+        {onOpenControls && (
           <button
             type="button"
-            onClick={onToggleCamera}
-            aria-label={camOn ? 'Kamerayı kapat' : 'Kamerayı aç'}
-            className={`${squareClass} ${camOn ? 'bg-white/12 text-[#25f4ee]' : 'bg-red-500/20 text-red-300'}`}
+            onClick={onOpenControls}
+            aria-label="Yayın kontrolleri"
+            className="ml-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/12 text-white active:scale-95"
           >
-            {camOn ? <Camera className="h-4 w-4" /> : <CameraOff className="h-4 w-4" />}
+            <SlidersHorizontal className="h-4 w-4" />
           </button>
-          <button
-            type="button"
-            onClick={onToggleMic}
-            aria-label={micMuted ? 'Mikrofonu aç' : 'Mikrofonu kapat'}
-            className={`${squareClass} ${micMuted ? 'bg-red-500/20 text-red-300' : 'bg-white/12 text-[#25f4ee]'}`}
-          >
-            {micMuted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-          </button>
-          <button
-            type="button"
-            onClick={onShare}
-            aria-label="Yayını paylaş"
-            className={`${squareClass} bg-white/12 text-white`}
-          >
-            <Share2 className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            onClick={onInvite}
-            aria-label="Arkadaş davet et"
-            className={squareClass}
-            style={{ background: 'linear-gradient(135deg,#fe2c55,#25f4ee)' }}
-          >
-            <Users className="h-4 w-4" />
-          </button>
-        </div>
+        )}
       </form>
     </div>
   );
