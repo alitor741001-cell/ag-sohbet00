@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Loader2, Trophy, UserPlus } from 'lucide-react';
+import { LayoutGrid, Loader2, Trophy, UserPlus } from 'lucide-react';
 import { RoomEvent } from 'livekit-client';
 import usePkCamera from '@/hooks/usePkCamera';
 import usePkMatch from '@/hooks/usePkMatch';
@@ -251,6 +251,18 @@ export default function VideoPkStage({
       {showFrames && !!active?.guest_id && <PkScoreBar leftScore={leftScore} rightScore={rightScore} timerText={timerText} />}
 
       <div className="relative flex min-h-0 flex-1 flex-col">
+        {/* Yayın kontrolleri: kamera, mikrofon ve davet her durumda sağ üstteki kare düğmeden açılır. */}
+        {canManage && (
+          <button
+            type="button"
+            onClick={() => setControlsOpen(true)}
+            aria-label="Yayın kontrolleri"
+            className="absolute right-2 top-2 z-50 flex h-9 w-9 items-center justify-center rounded-xl bg-black/60 text-white ring-1 ring-white/25 backdrop-blur active:scale-95"
+          >
+            <LayoutGrid className="h-4 w-4" />
+          </button>
+        )}
+
         {inviteOpen && (
           <div className="absolute inset-2 z-40 flex flex-col rounded-2xl bg-[#0c0714]/97 p-1.5 ring-1 ring-fuchsia-400/30">
             <PkInvitePanel
@@ -370,7 +382,6 @@ export default function VideoPkStage({
             onSend={onSendMessage}
             onRose={sendRose}
             onGift={() => onOpenGifts?.()}
-            onOpenControls={canManage ? () => setControlsOpen(true) : null}
           />
         </div>
       )}
