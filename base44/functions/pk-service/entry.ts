@@ -225,6 +225,36 @@ export default async function (req) {
       return Response.json({ match: updated });
     }
 
+    // Saatlik sıralama: bu odada son bir saatte en çok hediye alan kişiler.
+    if (action === 'ranking') {
+      const roomId = String(body.room_id || '');
+      if (!roomId) return Response.json({ error: 'room_id gerekli' }, { status: 400 });
+      const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+      const result = await svc.GiftSend.aggregate({
+        query: { room_id: roomId, status: 'success', created_date: { $gte: since } },
+        groupBy: 'recipient_id',
+        sum: ['total_k'],
+      }).catch(() => ({ rows: [] }));
+
+      const rows = [...(result?.rows || [])]
+        .map((row) => ({ user_id: String(row.recipient_id || ''), score: Number(row.sum_total_k) || 0 }))
+        .filter((row) => !!row.user_id && row.score > 0)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 5);
+
+      const ranking = await Promise.all(rows.map(async (row) => {
+        const member = await svc.User.get(row.user_id).catch(() => null);
+        return {
+          user_id: row.user_id,
+          name: member?.full_name || 'Kullanıcı',
+          avatar: member?.avatar || '',
+          score: row.score,
+        };
+      }));
+
+      return Response.json({ ranking });
+    }
+
     return Response.json({ error: 'Bilinmeyen işlem' }, { status: 400 });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });

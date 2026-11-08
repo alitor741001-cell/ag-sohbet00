@@ -21,7 +21,7 @@ function RemoteVideo({ track }) {
  */
 export default function PkFeedTile({
   name, avatar, score = 0, muted, mine = false, camOn = true, mirror = false,
-  localVideoRef, track, error, footer,
+  localVideoRef, track, error, footer, onOpen,
 }) {
   const hasVideo = mine ? camOn && !error : !!track;
 
@@ -54,10 +54,15 @@ export default function PkFeedTile({
         <Gem className="h-2.5 w-2.5 text-cyan-300" /> {formatCoinAmount(score)}
       </span>
 
-      <div className="absolute inset-x-0 bottom-0 flex items-center gap-1 bg-gradient-to-t from-black/85 to-transparent px-1.5 pb-1.5 pt-5">
+      <button
+        type="button"
+        onClick={onOpen}
+        disabled={!onOpen}
+        className="absolute inset-x-0 bottom-0 flex items-center gap-1 bg-gradient-to-t from-black/85 to-transparent px-1.5 pb-1.5 pt-5 text-left active:opacity-80"
+      >
         {muted && <MicOff className="h-3 w-3 shrink-0 text-red-300" />}
         <span className="min-w-0 truncate text-[10.5px] font-black text-white">{name}</span>
-      </div>
+      </button>
 
       {footer && <div className="absolute bottom-1 right-1 flex items-center gap-1">{footer}</div>}
     </div>

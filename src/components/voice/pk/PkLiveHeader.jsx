@@ -7,7 +7,7 @@ import formatCoinAmount from '@/components/voice/formatCoinAmount';
  * PK ekranının üst şeridi: yayını açan kişinin kartı, takip düğmesi,
  * odadaki kişilerin avatarları ve sohbeti toplama / ekranı kapatma düğmeleri.
  */
-export default function PkLiveHeader({ host, user, people = [], galleryIndex = 1, galleryTotal = 1, chatOpen, onToggleChat, onClose }) {
+export default function PkLiveHeader({ host, user, people = [], galleryIndex = 1, galleryTotal = 1, chatOpen, onToggleChat, onOpenRanking, onClose }) {
   const hostId = host?.id;
   const mine = !!hostId && hostId === user?.id;
   const [social, setSocial] = useState({ following: false, followers: 0 });
@@ -105,9 +105,13 @@ export default function PkLiveHeader({ host, user, people = [], galleryIndex = 1
       </div>
 
       <div className="mt-1 flex items-center gap-1.5">
-        <span className="flex items-center gap-0.5 rounded-full bg-amber-400/15 px-1.5 py-0.5 text-[9.5px] font-black text-amber-200">
+        <button
+          type="button"
+          onClick={onOpenRanking}
+          className="flex items-center gap-0.5 rounded-full bg-amber-400/15 px-1.5 py-0.5 text-[9.5px] font-black text-amber-200 active:scale-95"
+        >
           <Trophy className="h-2.5 w-2.5" /> Saatlik Sıralama
-        </span>
+        </button>
         <span className="ml-auto rounded-md bg-white/12 px-1.5 py-0.5 text-[9.5px] font-black tabular-nums text-white/80">
           Galeri {galleryIndex}/{galleryTotal}
         </span>

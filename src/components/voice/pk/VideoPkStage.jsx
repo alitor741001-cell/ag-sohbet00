@@ -13,6 +13,8 @@ import PkLiveChat from '@/components/voice/pk/PkLiveChat';
 import PkLiveNotice from '@/components/voice/pk/PkLiveNotice';
 import PkActionBar from '@/components/voice/pk/PkActionBar';
 import PkControlMenu from '@/components/voice/pk/PkControlMenu';
+import PkPeerSheet from '@/components/voice/pk/PkPeerSheet';
+import PkRankingSheet from '@/components/voice/pk/PkRankingSheet';
 
 // Her tur 5 dakika sürer: kabul edildiği an süre başlar, süre bitince sonuç gelir.
 const clock = (total) => `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
@@ -32,6 +34,8 @@ export default function VideoPkStage({
   const [stripOpen, setStripOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(true);
+  const [peer, setPeer] = useState(null);
+  const [rankOpen, setRankOpen] = useState(false);
   const [now, setNow] = useState(Date.now());
   const baseRef = useRef({});
   const finishedRef = useRef('');
@@ -61,7 +65,7 @@ export default function VideoPkStage({
 
   // Yayın açılır açılmaz kamera yayına girer; odada açık bir yayın varsa ona katılınır.
   useEffect(() => {
-    if (!open) { autoRef.current = false; setInviteOpen(false); setStripOpen(false); setMenuOpen(false); return; }
+    if (!open) { autoRef.current = false; setInviteOpen(false); setStripOpen(false); setMenuOpen(false); setPeer(null); setRankOpen(false); return; }
     if (!loaded || autoRef.current) return;
     autoRef.current = true;
     if (active) return;
@@ -216,6 +220,7 @@ export default function VideoPkStage({
         galleryTotal={Math.max(participants.length, seats.length, 1)}
         chatOpen={chatOpen}
         onToggleChat={() => setChatOpen((current) => !current)}
+        onOpenRanking={() => setRankOpen(true)}
         onClose={closeStage}
       />
 
@@ -282,6 +287,7 @@ export default function VideoPkStage({
                   localVideoRef={isMe ? localVideoRef : null}
                   track={isMe ? null : remoteTracks.find((item) => item.identity === seat.id)?.track}
                   error={isMe ? error : ''}
+                  onOpen={isMe ? null : () => setPeer({ id: seat.id, name: seat.name, avatar: seat.avatar, score: scoreOf(seat.id) })}
                   footer={opponentSeat && isHost ? (
                     <button
                       type="button"
@@ -343,7 +349,7 @@ export default function VideoPkStage({
 
       {showFrames && (
         <div className="flex shrink-0 flex-col rounded-t-2xl bg-[#141018]/95 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1.5 backdrop-blur">
-          <PkLiveNotice onOpenGifts={() => setStripOpen(true)} peopleCount={participants.length} />
+          <PkLiveNotice               onOpenGifts={() => setStripOpen(true)} peopleCount={participants.length} />
 
           {finished && (
             <p className="mt-1 flex items-center gap-1.5 rounded-lg bg-amber-400/12 px-2 py-1 text-[10.5px] font-black text-amber-200">
@@ -377,6 +383,9 @@ export default function VideoPkStage({
           />
         </div>
       )}
+
+      <PkPeerSheet person={peer} onClose={() => setPeer(null)} />
+      <PkRankingSheet open={rankOpen} roomId={roomId} onClose={() => setRankOpen(false)} />
     </div>
   );
 }
