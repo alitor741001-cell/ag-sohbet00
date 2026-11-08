@@ -20,6 +20,7 @@ import VoiceControlBar from '@/components/voice/VoiceControlBar';
 import RoomRocketFeature from '@/components/voice/roomRocket/RoomRocketFeature';
 import VoiceChatDock from '@/components/voice/VoiceChatDock';
 import VoiceViewerSheet from '@/components/voice/VoiceViewerSheet';
+import VideoPkStage from '@/components/voice/pk/VideoPkStage';
 import VoiceSeatInvitePrompt from '@/components/voice/VoiceSeatInvitePrompt';
 import RoomProfileSheet from '@/components/voice/RoomProfileSheet';
 import VoiceRoomMenu from '@/components/voice/VoiceRoomMenu';
@@ -112,6 +113,8 @@ export default function VoiceRoom() {
   const [dmExpanded, setDmExpanded] = useState(false);
   const [exitOpen, setExitOpen] = useState(false);
   const [gamesOpen, setGamesOpen] = useState(false);
+  // Görüntülü PK: kamera açılır, rakip seçilir, hediyeler ve izleyiciler aynı ekranda durur.
+  const [pkOpen, setPkOpen] = useState(false);
   const [giftOpen, setGiftOpen] = useState(false);
   // Profil kartındaki "Bahset" isteği: yazma alanına @isim eklenir.
   const [mentionTarget, setMentionTarget] = useState(null);
@@ -1193,6 +1196,7 @@ export default function VoiceRoom() {
         onOpenMenu={() => setMenuOpen(true)}
         onExit={() => setExitOpen(true)}
         showMenu={canMod}
+        onOpenPk={() => setPkOpen(true)}
       />
 
       <VoiceStage
@@ -1465,6 +1469,23 @@ export default function VoiceRoom() {
         onToggleSwipe={swipe.toggleSwipe}
         onAgencyCall={agencyCallStatus?.eligible ? () => setAgencyCallOpen(true) : null}
         onShare={canMod ? () => setShareOpen(true) : null}
+      />
+
+      {/* Görüntülü PK: oda ekranının üstünde tam ekran açılır, oda arkada olduğu gibi kalır. */}
+      <VideoPkStage
+        open={pkOpen}
+        onClose={() => setPkOpen(false)}
+        user={user}
+        participants={participants}
+        scores={scores}
+        gifts={gifts}
+        coins={coins}
+        livekitRoom={voice.livekitRoom}
+        onSendGift={(gift, ids) => {
+          queueGiftSend(gift, ids).catch((error) => {
+            toast({ title: 'Hediye gönderilemedi', description: error?.response?.data?.error || error.message, variant: 'destructive' });
+          });
+        }}
       />
 
       {notice && joined && (

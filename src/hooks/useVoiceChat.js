@@ -85,6 +85,8 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
   const [everVoiceEnabled, setEverVoiceEnabled] = useState(voiceEnabled);
   // Arka plandan dönüşte bağlantı yeniden kurulur: oda ve koltuk kaydı değişmez.
   const [sessionKey, setSessionKey] = useState(0);
+  // Görüntülü PK kamerası aynı LiveKit odasına yayın yapar: oda nesnesi görünüme verilir.
+  const [livekitRoom, setLivekitRoom] = useState(null);
   // Mikrofonu kullanıcı kendisi kapatmadıysa arka plandan dönüşte kendiliğinden geri açılır.
   const micWantedRef = useRef(micEnabled !== false);
   const voiceEnabledRef = useRef(voiceEnabled);
@@ -215,6 +217,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
           // Devralınan oturum yeni görünümün durumunu besler: mikrofon, konuşan ve
           // hoparlör göstergeleri LiveKit olaylarıyla anlık güncellenir.
           mesh.onChange = () => refreshState();
+          setLivekitRoom(mesh.getRoom?.() || null);
           setConnectionState('connected');
           mesh.setOutputsEnabled(true);
           void retryAudio();
@@ -235,6 +238,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
         await mesh.connect();
         if (cancelled || hasDirectCallAudioFocus()) { mesh.close(); return; }
         setConnectionState('connected');
+        setLivekitRoom(mesh.getRoom?.() || null);
         setError('');
         void mesh.retryPlayback();
         let carryMic = false;
@@ -338,6 +342,7 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
       setSpeakingIds([]);
       setParticipantMicStates({});
       setConnectionState('disconnected');
+      setLivekitRoom(null);
       setDebug(initialDebug);
     };
   }, [enableMic, refreshState, retryAudio, roomId, user?.id, everVoiceEnabled, callAudioPaused, sessionKey]);
@@ -515,5 +520,5 @@ export function useVoiceChat({ roomId, user, participants, voiceEnabled, micEnab
     setError('');
   };
 
-  return { muted: !active, remoteMuted, deafened, localSpeaking, speakingIds, participantMicStates, active, error, micDenied, requesting, connectionState, audioBlocked, canSpeak, lastMicrophoneError, retryAudio, retryMic, requestMic, toggleMute, toggleDeafen, debug, voiceEnabled, micConsentRequired, allowConsent: allowMicConsent, declineMic };
+  return { muted: !active, remoteMuted, deafened, localSpeaking, speakingIds, participantMicStates, active, error, micDenied, requesting, connectionState, audioBlocked, canSpeak, lastMicrophoneError, retryAudio, retryMic, requestMic, toggleMute, toggleDeafen, debug, voiceEnabled, micConsentRequired, allowConsent: allowMicConsent, declineMic, livekitRoom };
 }

@@ -1,7 +1,7 @@
 import useKeyedImage from '@/hooks/useKeyedImage';
 import DesignArt from '@/components/layout/DesignArt';
 import { ART } from '@/lib/designArt';
-import { UserRound } from 'lucide-react';
+import { UserRound, Video } from 'lucide-react';
 import formatCoinAmount from '@/components/voice/formatCoinAmount';
 
 // Oda şeridi: beyaz fotoğraf penceresi şeffaf yapılır, oda fotoğrafı pencerenin arkasından görünür.
@@ -29,6 +29,7 @@ export default function RoomTopArt({
   onOpenMenu,
   onExit,
   showMenu = false,
+  onOpenPk,
 }) {
   const barArt = useKeyedImage(ART.roomBar, BAR_CROP);
   const pillArt = useKeyedImage(ART.roomGiftPill, PILL_CROP);
@@ -126,6 +127,16 @@ export default function RoomTopArt({
       </div>
 
       <div className="ml-auto mt-1 flex shrink-0 items-center gap-1">
+        {/* Görüntülü PK: sağ üstte, kamera açıp rakip seçilerek canlı PK yapılır. */}
+        <button
+          type="button"
+          onClick={onOpenPk}
+          aria-label="Görüntülü PK başlat"
+          className="flame-live flex h-8 shrink-0 items-center gap-1 rounded-xl border border-fuchsia-200/70 px-1.5 text-[10px] font-black text-white active:scale-95"
+          style={{ backgroundImage: 'linear-gradient(115deg,#ffb3f0 0%,#d946ef 45%,#7c0ea0 100%)', boxShadow: '0 0 16px -2px rgba(217,70,239,0.95)' }}
+        >
+          <Video className="h-3.5 w-3.5" strokeWidth={2.6} />PK
+        </button>
         {/* İzleyici sayısı: izleyici çemberinin soluna birleşik, küçük kırmızı çember. */}
         <button
           type="button"

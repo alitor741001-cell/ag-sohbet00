@@ -54,6 +54,11 @@ export class LiveKitVoiceRoom {
     try { this.onChange(); } catch {}
   }
 
+  /** Görüntülü PK gibi ek yayınlar için canlı LiveKit odası (yoksa null). */
+  getRoom() {
+    return this.room;
+  }
+
   bind(room) {
     const on = (event, handler) => {
       room.on(event, handler);
