@@ -1,9 +1,8 @@
-import { Camera, CameraOff, LogOut, Mic, MicOff, RotateCcw, Settings2, UserPlus, X } from 'lucide-react';
+import { LogOut, RotateCcw, Settings2, UserPlus, X } from 'lucide-react';
 
-/** Sağ alt köşedeki kontrol düğmesi: kamera, mikrofon ve davet işlemleri. */
+/** Sağ alt köşedeki menü: davet, rövanş ve yayından ayrılma işlemleri. */
 export default function PkControlMenu({
-  open, onOpenChange, camOn, onToggleCamera, micMuted, onToggleMic,
-  onInvite, onLeave, finished, onRematch, busy,
+  open, onOpenChange, onInvite, onLeave, finished, onRematch, busy,
 }) {
   return (
     <div className="pointer-events-none absolute inset-x-0 bottom-0 z-30 flex flex-col items-end gap-1.5 px-2 pb-1">
@@ -15,22 +14,6 @@ export default function PkControlMenu({
               <X className="h-3.5 w-3.5" />
             </button>
           </div>
-          <button
-            type="button"
-            onClick={onToggleCamera}
-            className="flex w-full items-center gap-2 px-2.5 py-2 text-left text-[11.5px] font-bold text-white active:bg-white/10"
-          >
-            {camOn ? <Camera className="h-4 w-4 text-[#25f4ee]" /> : <CameraOff className="h-4 w-4 text-red-400" />}
-            {camOn ? 'Kamerayı kapat' : 'Kamerayı aç'}
-          </button>
-          <button
-            type="button"
-            onClick={onToggleMic}
-            className="flex w-full items-center gap-2 px-2.5 py-2 text-left text-[11.5px] font-bold text-white active:bg-white/10"
-          >
-            {micMuted ? <MicOff className="h-4 w-4 text-red-400" /> : <Mic className="h-4 w-4 text-[#25f4ee]" />}
-            {micMuted ? 'Mikrofonu aç' : 'Mikrofonu kapat'}
-          </button>
           <button
             type="button"
             onClick={onInvite}

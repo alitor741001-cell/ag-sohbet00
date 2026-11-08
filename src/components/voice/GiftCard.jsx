@@ -44,8 +44,9 @@ export default function GiftCard({ gift, selected, onSelect }) {
       <span className={`w-full truncate text-center text-[10.5px] font-bold leading-tight ${selected ? 'text-[#ffcc00]' : 'text-white'}`}>
         {gift.name}
       </span>
-      <span className="flex items-center gap-0.5 text-[11px] font-black tabular-nums text-white/85">
-        <Coins className="h-3 w-3 shrink-0 text-[#ffc025]" /> {formatCoins((Number(gift.k_value) || 0) * K_UNIT)}
+      {/* Miktar her hediyede görünür: koyu zemin üzerinde tek satır, kesilmez. */}
+      <span className="relative z-10 mt-0.5 flex max-w-full items-center gap-0.5 whitespace-nowrap rounded-full bg-black/55 px-1.5 py-[1px] text-[10.5px] font-black tabular-nums leading-tight text-[#ffd166]">
+        <Coins className="h-2.5 w-2.5 shrink-0 text-[#ffc025]" /> {formatCoins((Number(gift.k_value) || 0) * K_UNIT)}
       </span>
     </button>
   );

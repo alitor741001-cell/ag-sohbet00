@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { Gift, Send, Share2, Smile, Users } from 'lucide-react';
+import { Camera, CameraOff, Gift, Mic, MicOff, Send, Smile, Users } from 'lucide-react';
 
 const EMOJIS = ['❤️', '🔥', '😂', '👏'];
 
-/** Alt yazı alanı: yorum yazılır, emoji, davet, gül, hediye ve paylaş düğmeleri bulunur. */
-export default function PkActionBar({ onSend, onInvite, onRose, onGift, onShare, shareCount = 0, disabled }) {
+/** Alt yazı alanı: yorum yazılır; kamera, mikrofon, davet, gül ve hediye düğmeleri en altta durur. */
+export default function PkActionBar({
+  onSend, onInvite, onRose, onGift, camOn = true, micMuted = false, onToggleCamera, onToggleMic, disabled,
+}) {
   const [text, setText] = useState('');
   const [emojiOpen, setEmojiOpen] = useState(false);
 
@@ -62,6 +64,22 @@ export default function PkActionBar({ onSend, onInvite, onRose, onGift, onShare,
 
         <button
           type="button"
+          onClick={onToggleCamera}
+          aria-label={camOn ? 'Kamerayı kapat' : 'Kamerayı aç'}
+          className={`${iconClass} ${camOn ? 'bg-white/12 text-[#25f4ee]' : 'bg-red-500/20 text-red-300'}`}
+        >
+          {camOn ? <Camera className="h-4 w-4" /> : <CameraOff className="h-4 w-4" />}
+        </button>
+        <button
+          type="button"
+          onClick={onToggleMic}
+          aria-label={micMuted ? 'Mikrofonu aç' : 'Mikrofonu kapat'}
+          className={`${iconClass} ${micMuted ? 'bg-red-500/20 text-red-300' : 'bg-white/12 text-[#25f4ee]'}`}
+        >
+          {micMuted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+        </button>
+        <button
+          type="button"
           onClick={onInvite}
           aria-label="Arkadaş davet et"
           className={iconClass}
@@ -79,10 +97,6 @@ export default function PkActionBar({ onSend, onInvite, onRose, onGift, onShare,
           className={`${iconClass} text-[#fe2c55]`}
         >
           <Gift className="h-5 w-5" />
-        </button>
-        <button type="button" onClick={onShare} aria-label="Paylaş" className={`${iconClass} text-white`}>
-          <Share2 className="h-4 w-4" />
-          {shareCount > 0 && <span className="ml-0.5 text-[9.5px] font-black tabular-nums">{shareCount}</span>}
         </button>
       </form>
     </div>

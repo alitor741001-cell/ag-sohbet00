@@ -1529,6 +1529,7 @@ export default function VoiceRoom() {
         livekitRoom={voice.livekitRoom}
         messages={messages}
         onSendMessage={sendMessage}
+        onOpenGifts={() => setGiftOpen(true)}
         voice={{ muted: voice.muted, toggleMute: voice.toggleMute }}
         onSendGift={(gift, ids) => {
           queueGiftSend(gift, ids).catch((error) => {

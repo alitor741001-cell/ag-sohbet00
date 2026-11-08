@@ -4,7 +4,6 @@ import { RoomEvent } from 'livekit-client';
 import usePkCamera from '@/hooks/usePkCamera';
 import usePkMatch from '@/hooks/usePkMatch';
 import { useToast } from '@/components/ui/use-toast';
-import PkGiftStrip from '@/components/voice/pk/PkGiftStrip';
 import PkFeedTile from '@/components/voice/pk/PkFeedTile';
 import PkInvitePanel from '@/components/voice/pk/PkInvitePanel';
 import PkLiveHeader from '@/components/voice/pk/PkLiveHeader';
@@ -25,13 +24,11 @@ const clock = (total) => `${String(Math.floor(total / 60)).padStart(2, '0')}:${S
  */
 export default function VideoPkStage({
   open, onClose, roomId, roomName, user, participants = [], scores = {},
-  gifts = [], coins, livekitRoom, onSendGift, messages = [], onSendMessage, voice,
+  gifts = [], livekitRoom, onSendGift, onOpenGifts, messages = [], onSendMessage, voice,
 }) {
   const { toast } = useToast();
   const { match, loaded, run, busy } = usePkMatch(roomId, open);
   const [inviteOpen, setInviteOpen] = useState(false);
-  const [target, setTarget] = useState('opponent');
-  const [stripOpen, setStripOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(true);
   const [peer, setPeer] = useState(null);
@@ -45,7 +42,6 @@ export default function VideoPkStage({
   const isGuest = match?.guest_id === user?.id;
   const isPlayer = isHost || isGuest;
   const opponentId = isHost ? match?.guest_id : isGuest ? match?.host_id : '';
-  const opponentName = (isHost ? match?.guest_name : match?.host_name) || 'Rakip';
 
   const remaining = match?.ends_at ? Math.max(0, Math.ceil((new Date(match.ends_at).getTime() - now) / 1000)) : 0;
   const live = match?.status === 'live';
@@ -65,7 +61,7 @@ export default function VideoPkStage({
 
   // Yayın açılır açılmaz kamera yayına girer; odada açık bir yayın varsa ona katılınır.
   useEffect(() => {
-    if (!open) { autoRef.current = false; setInviteOpen(false); setStripOpen(false); setMenuOpen(false); setPeer(null); setRankOpen(false); return; }
+    if (!open) { autoRef.current = false; setInviteOpen(false); setMenuOpen(false); setPeer(null); setRankOpen(false); return; }
     if (!loaded || autoRef.current) return;
     autoRef.current = true;
     if (active) return;
@@ -182,8 +178,8 @@ export default function VideoPkStage({
     await run('rematch', { id: match.id }).catch(() => null);
   };
 
-  // Hediye: seçilen tarafa gönderilir; tek kişilik yayında izleyici yayıncıya gönderir.
-  const giftTargetId = target === 'me' && isPlayer ? user?.id : (opponentId || active?.host_id || user?.id);
+  // Hediye: gül dışındaki hediyeler odanın hediye tahtasından gönderilir.
+  const giftTargetId = opponentId || active?.host_id || user?.id;
   const sendGift = (gift) => {
     if (!giftTargetId) return;
     onSendGift?.(gift, [giftTargetId]);
@@ -192,19 +188,8 @@ export default function VideoPkStage({
   const sendRose = () => {
     const rose = gifts.find((gift) => gift.model_kind === 'rose') || gifts.find((gift) => /gül|rose/i.test(gift.name || ''));
     if (rose) { sendGift(rose); return; }
-    setStripOpen(true);
-    toast({ title: 'Gül hediyesi bulunamadı', description: 'Hediye listesinden seçebilirsin.' });
-  };
-
-  const shareRoom = async () => {
-    const url = `${window.location.origin}/sesli-oda/${roomId}`;
-    try {
-      if (navigator.share) { await navigator.share({ title: roomName || 'Sesli oda', url }); return; }
-      await navigator.clipboard?.writeText(url);
-      toast({ title: 'Bağlantı kopyalandı', description: 'Arkadaşlarınla paylaşabilirsin.' });
-    } catch (shareError) {
-      // Paylaşım penceresi kapatıldı: yapılacak işlem yok.
-    }
+    onOpenGifts?.();
+    toast({ title: 'Gül hediyesi bulunamadı', description: 'Hediye tahtasından seçebilirsin.' });
   };
 
   return (
@@ -334,10 +319,6 @@ export default function VideoPkStage({
           <PkControlMenu
             open={menuOpen}
             onOpenChange={setMenuOpen}
-            camOn={camOn}
-            onToggleCamera={toggleCamera}
-            micMuted={iMuted}
-            onToggleMic={pressMic}
             onInvite={() => { setMenuOpen(false); setInviteOpen(true); }}
             onLeave={leaveMatch}
             finished={finished}
@@ -349,7 +330,7 @@ export default function VideoPkStage({
 
       {showFrames && (
         <div className="flex shrink-0 flex-col rounded-t-2xl bg-[#141018]/95 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1.5 backdrop-blur">
-          <PkLiveNotice               onOpenGifts={() => setStripOpen(true)} peopleCount={participants.length} />
+          <PkLiveNotice               onOpenGifts={() => onOpenGifts?.()} peopleCount={participants.length} />
 
           {finished && (
             <p className="mt-1 flex items-center gap-1.5 rounded-lg bg-amber-400/12 px-2 py-1 text-[10.5px] font-black text-amber-200">
@@ -362,24 +343,15 @@ export default function VideoPkStage({
 
           {chatOpen && <PkLiveChat messages={messages} user={user} />}
 
-          {stripOpen && (
-            <PkGiftStrip
-              gifts={gifts}
-              target={opponentId ? target : 'opponent'}
-              opponentName={opponentName}
-              coins={coins}
-              onTargetChange={setTarget}
-              onSend={sendGift}
-            />
-          )}
-
           <PkActionBar
             onSend={onSendMessage}
             onInvite={() => setInviteOpen(true)}
             onRose={sendRose}
-            onGift={() => setStripOpen((current) => !current)}
-            onShare={shareRoom}
-            shareCount={participants.length}
+            onGift={() => onOpenGifts?.()}
+            camOn={camOn}
+            micMuted={iMuted}
+            onToggleCamera={toggleCamera}
+            onToggleMic={pressMic}
           />
         </div>
       )}
