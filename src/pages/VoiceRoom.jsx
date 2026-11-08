@@ -21,6 +21,8 @@ import RoomRocketFeature from '@/components/voice/roomRocket/RoomRocketFeature';
 import VoiceChatDock from '@/components/voice/VoiceChatDock';
 import VoiceViewerSheet from '@/components/voice/VoiceViewerSheet';
 import VideoPkStage from '@/components/voice/pk/VideoPkStage';
+import usePkMatch from '@/hooks/usePkMatch';
+import { Video } from 'lucide-react';
 import VoiceSeatInvitePrompt from '@/components/voice/VoiceSeatInvitePrompt';
 import RoomProfileSheet from '@/components/voice/RoomProfileSheet';
 import VoiceRoomMenu from '@/components/voice/VoiceRoomMenu';
@@ -113,8 +115,30 @@ export default function VoiceRoom() {
   const [dmExpanded, setDmExpanded] = useState(false);
   const [exitOpen, setExitOpen] = useState(false);
   const [gamesOpen, setGamesOpen] = useState(false);
-  // Görüntülü PK: kamera açılır, rakip seçilir, hediyeler ve izleyiciler aynı ekranda durur.
+  // Görüntülü yayın: kamera açılır, davet gönderilir, hediyeler ve yorumlar aynı ekranda durur.
   const [pkOpen, setPkOpen] = useState(false);
+  // Yayın alanı oda kartının hemen altında açılır: kart, izleyici, ayarlar ve çıkış düğmeleri görünür kalır.
+  const topArtRef = useRef(null);
+  const [topArtHeight, setTopArtHeight] = useState(0);
+  const { match: pkMatch } = usePkMatch(id, joined && !pkOpen);
+
+  // Oda kartının gerçek yüksekliği ölçülür: yayın alanı tam altından başlar.
+  useEffect(() => {
+    const node = topArtRef.current;
+    if (!node) return undefined;
+    const apply = () => setTopArtHeight(Math.round(node.getBoundingClientRect().height));
+    apply();
+    const observer = new ResizeObserver(apply);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  // Davet alan kişi odaya girdiğinde yayın ekranı kendiliğinden açılır: kabul et / reddet kartı görünür.
+  useEffect(() => {
+    if (!pkMatch || pkOpen || pkMatch.status === 'ended') return;
+    if (pkMatch.guest_id !== user?.id || pkMatch.accepted) return;
+    setPkOpen(true);
+  }, [pkMatch, pkOpen, user?.id]);
   const [giftOpen, setGiftOpen] = useState(false);
   // Profil kartındaki "Bahset" isteği: yazma alanına @isim eklenir.
   const [mentionTarget, setMentionTarget] = useState(null);
@@ -1184,19 +1208,38 @@ export default function VoiceRoom() {
     <VoiceViewport className="z-[150]" onKeyboardChange={handleKeyboardChange}>
       <RoomBackground value={room?.background} cover={room?.cover_url} />
 
-      <RoomTopArt
-        room={room}
-        giftTotal={giftBoard?.all?.total || 0}
-        giftToday={giftBoard?.day?.total || 0}
-        onOpenGiftBoard={() => setGiftBoardOpen(true)}
-        onOpenRoom={() => setProfilePanelOpen(true)}
-        onFollow={followOwner}
-        viewerCount={participants.length}
-        onOpenViewers={() => setViewerOpen(true)}
-        onOpenMenu={() => setMenuOpen(true)}
-        onExit={() => setExitOpen(true)}
-        showMenu={canMod}
-      />
+      <div ref={topArtRef} className="shrink-0">
+        <RoomTopArt
+          room={room}
+          giftTotal={giftBoard?.all?.total || 0}
+          giftToday={giftBoard?.day?.total || 0}
+          onOpenGiftBoard={() => setGiftBoardOpen(true)}
+          onOpenRoom={() => setProfilePanelOpen(true)}
+          onFollow={followOwner}
+          viewerCount={participants.length}
+          onOpenViewers={() => setViewerOpen(true)}
+          onOpenMenu={() => setMenuOpen(true)}
+          onExit={() => setExitOpen(true)}
+          showMenu
+        />
+      </div>
+
+      {/* Görüntülü yayın: oda kartının altında küçük düğme, yayın ekranını açar. */}
+      {joined && !pkOpen && (
+        <button
+          type="button"
+          onClick={() => setPkOpen(true)}
+          aria-label="Görüntülü yayın aç"
+          className="flame-live absolute right-2 z-40 flex items-center gap-1 rounded-full border border-fuchsia-200/70 px-2.5 py-1.5 text-[10px] font-black text-white active:scale-95"
+          style={{
+            top: topArtHeight + 4,
+            backgroundImage: 'linear-gradient(115deg,#ffb3f0 0%,#d946ef 45%,#7c0ea0 100%)',
+            boxShadow: '0 0 16px -2px rgba(217,70,239,0.95)',
+          }}
+        >
+          <Video className="h-3.5 w-3.5" /> Yayın Aç
+        </button>
+      )}
 
       <VoiceStage
         scrollRef={swipeGesture.scrollRef}
@@ -1475,6 +1518,7 @@ export default function VoiceRoom() {
       <VideoPkStage
         open={pkOpen}
         onClose={() => setPkOpen(false)}
+        topOffset={topArtHeight}
         roomId={id}
         roomName={room?.name}
         user={user}

@@ -8,12 +8,14 @@ import pkApi from '@/lib/pkApi';
  */
 export default function usePkMatch(roomId, enabled = true) {
   const [match, setMatch] = useState(null);
+  const [loaded, setLoaded] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
     if (!roomId || !enabled) return;
     const page = await base44.entities.PkMatch.filter({ room_id: roomId }, { sort: '-created_date', limit: 1 });
     setMatch(page?.items?.[0] || null);
+    setLoaded(true);
   }, [roomId, enabled]);
 
   useEffect(() => {
@@ -43,5 +45,5 @@ export default function usePkMatch(roomId, enabled = true) {
     }
   }, [load]);
 
-  return { match, setMatch, load, run, busy };
+  return { match, setMatch, loaded, load, run, busy };
 }

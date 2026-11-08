@@ -1,5 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Clock3, LogOut, Mic, MicOff, RotateCcw, Sparkles, Trophy, Volume2, VolumeX, X } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';import { Clock3, Loader2, LogOut, Mic, MicOff, RotateCcw, Sparkles, Trophy, UserPlus, Video, Volume2, VolumeX } from 'lucide-react';
 import { RoomEvent } from 'livekit-client';
 import usePkCamera from '@/hooks/usePkCamera';
 import usePkMatch from '@/hooks/usePkMatch';
@@ -10,45 +9,58 @@ import PkComments from '@/components/voice/pk/PkComments';
 import PkInvitePanel from '@/components/voice/pk/PkInvitePanel';
 import formatCoinAmount from '@/components/voice/formatCoinAmount';
 
-// PK turu 5 dakika: "Başla" dendiği an süre başlar, süre bitince sonuç gelir.
+// Her tur 5 dakika sürer: kabul edildiği an süre başlar, süre bitince sonuç gelir.
 const PK_SECONDS = 300;
 const clock = (total) => `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
 
 /**
- * Görüntülü PK (TikTok düzeni): iki kare kamera yan yana, altında yorumlar,
- * hediye şeridi ve ses kontrolleri. Davet → kabul → Başla → 5 dakika → Rövanş.
+ * Görüntülü yayın: oda üst şeridinin hemen altında açılır; oda kartı, izleyici,
+ * ayarlar ve çıkış düğmeleri görünür kalır. Yayın açıkken davet gönderilir,
+ * davet edilen kişi kabul ederse yayına katılır, reddederse katılmaz.
  */
 export default function VideoPkStage({
-  open, onClose, roomId, roomName, user, participants = [], scores = {},
+  open, onClose, topOffset = 0, roomId, roomName, user, participants = [], scores = {},
   gifts = [], coins, livekitRoom, onSendGift, messages = [], onSendMessage, voice,
 }) {
   const { toast } = useToast();
-  const { match, run, busy } = usePkMatch(roomId, open);
+  const { match, loaded, run, busy } = usePkMatch(roomId, open);
+  const [inviteOpen, setInviteOpen] = useState(false);
   const [target, setTarget] = useState('opponent');
   const [now, setNow] = useState(Date.now());
-  const [secondsLeft, setSecondsLeft] = useState(PK_SECONDS);
   const baseRef = useRef({});
   const finishedRef = useRef('');
-  const startRef = useRef(0);
+  const autoRef = useRef(false);
 
   const isHost = match?.host_id === user?.id;
   const isGuest = match?.guest_id === user?.id;
+  const isPlayer = isHost || isGuest;
   const opponentId = isHost ? match?.guest_id : isGuest ? match?.host_id : '';
   const opponentName = (isHost ? match?.guest_name : match?.host_name) || 'Rakip';
-  const opponentAvatar = (isHost ? match?.guest_avatar : match?.host_avatar) || '';
 
   const remaining = match?.ends_at ? Math.max(0, Math.ceil((new Date(match.ends_at).getTime() - now) / 1000)) : 0;
   const live = match?.status === 'live';
-  const timeUp = live && remaining === 0;
+  const timeUp = live && !!match?.guest_id && remaining === 0;
   const finished = match?.status === 'ended' || timeUp;
   const staleEnded = match?.status === 'ended'
     && Date.now() - new Date(match.started_at || match.created_date || 0).getTime() > 10 * 60 * 1000;
   const active = match && !staleEnded ? match : null;
   const showFrames = !!active && active.status !== 'invite';
+  const solo = !!active && active.status === 'live' && !active.guest_id;
+  // Davet alan kişi: kabul edene kadar yayın kareleri yerine kabul/ret kartı görünür.
+  const incoming = !!active && active.guest_id === user?.id && !active.accepted;
 
-  // Kamera yalnızca PK'nın iki tarafında açılır: izleyiciler kendi kameralarını yayınlamaz.
-  const cameraOn = open && !!match && (isHost || isGuest) && (live || match.status === 'ended');
+  // Yayın yapan tarafların kamerası açılır; izleyiciler kendi kameralarını yayınlamaz.
+  const cameraOn = open && isPlayer && !!active && (active.status === 'live' || active.status === 'ended');
   const { localVideoRef, remoteTracks, error } = usePkCamera({ active: cameraOn, livekitRoom, selfId: user?.id });
+
+  // Yayın açılır açılmaz kamera yayına girer; odada açık bir yayın varsa ona katılınır.
+  useEffect(() => {
+    if (!open) { autoRef.current = false; setInviteOpen(false); return; }
+    if (!loaded || autoRef.current) return;
+    autoRef.current = true;
+    if (active) return;
+    run('broadcast', { room_id: roomId, room_name: roomName || '' }).catch(() => null);
+  }, [open, loaded, active, roomId, roomName, run]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -56,7 +68,7 @@ export default function VideoPkStage({
     return () => window.clearInterval(timer);
   }, [open]);
 
-  // Süre bitince karşılaşma kapanır (yalnızca bir kez, davet eden taraf yazar).
+  // Süre bitince tur kapanır (yalnızca bir kez, yayını açan taraf yazar).
   useEffect(() => {
     if (!match?.id || !timeUp || !isHost) return;
     if (finishedRef.current === match.id) return;
@@ -70,7 +82,6 @@ export default function VideoPkStage({
     if (!match?.id || !user?.id) return;
     baseRef.current[user.id] = Number(scores[user.id]) || 0;
     if (opponentId) baseRef.current[opponentId] = Number(scores[opponentId]) || 0;
-    startRef.current = Date.now();
   }, [match?.id, match?.round_no, opponentId, user?.id, scores]);
 
   // Kapatılan ses odadaki herkes için susar: izleyiciler ve karşı taraf duymaz.
@@ -98,20 +109,29 @@ export default function VideoPkStage({
     return start === undefined ? Math.max(0, raw) : Math.max(0, raw - start);
   }, [scores]);
 
-  const myScore = scoreOf(user?.id);
-  const opponentScore = scoreOf(opponentId);
-  const total = myScore + opponentScore;
-  const share = total > 0 ? Math.round((myScore / total) * 100) : 50;
-
-  useEffect(() => {
-    if (match?.status !== 'live' || !match?.ends_at) { setSecondsLeft(PK_SECONDS); return; }
-    setSecondsLeft(Math.max(0, Math.ceil((new Date(match.ends_at).getTime() - Date.now()) / 1000)));
-  }, [match?.status, match?.ends_at]);
-
   if (!open) return null;
 
   const iMuted = mutedIds.has(user?.id);
   const opponentMuted = !!opponentId && mutedIds.has(opponentId);
+
+  // İki kare: yayına katılanlar soldan sağa dizilir, izleyici yayıncıyı solda görür.
+  const seatOf = (id, hostSeat) => ({
+    id,
+    name: hostSeat ? (active?.host_name || 'Yayıncı') : (active?.guest_name || 'Konuk'),
+    avatar: hostSeat ? (active?.host_avatar || '') : (active?.guest_avatar || ''),
+  });
+  const seats = active
+    ? (isGuest
+      ? [seatOf(active.guest_id, false), seatOf(active.host_id, true)]
+      : [seatOf(active.host_id, true), seatOf(active.guest_id, false)])
+      .filter((seat) => !!seat.id)
+    : [];
+  const leftScore = scoreOf(seats[0]?.id);
+  const rightScore = scoreOf(seats[1]?.id);
+  const leftShare = leftScore + rightScore > 0 ? Math.round((leftScore / (leftScore + rightScore)) * 100) : 50;
+
+  const elapsed = active?.started_at ? Math.max(0, Math.floor((now - new Date(active.started_at).getTime()) / 1000)) : 0;
+  const timerText = !active ? '00:00' : solo || active.status === 'invite' ? clock(elapsed) : clock(live ? remaining : 0);
 
   const pressMic = async () => {
     if (!match?.id) return;
@@ -128,6 +148,8 @@ export default function VideoPkStage({
   const invite = async (person) => {
     try {
       await run('invite', { room_id: roomId, room_name: roomName || '', guest_id: person.user_id, guest_name: person.name });
+      setInviteOpen(false);
+      toast({ title: 'Davet gönderildi', description: `${person.name || 'Kullanıcı'} kabul ederse yayına katılır.` });
     } catch (inviteError) {
       toast({ title: 'Davet gönderilemedi', description: inviteError?.response?.data?.error || inviteError.message, variant: 'destructive' });
     }
@@ -138,57 +160,110 @@ export default function VideoPkStage({
     onClose?.();
   };
 
+  // Yayını açan taraf için "Kapat" yayını bitirir; yalnızca seyreden kişi ekranı kapatır.
+  const closeStage = () => {
+    if (isPlayer && active && active.status !== 'ended') { leaveMatch(); return; }
+    onClose?.();
+  };
+
+  const decline = async () => {
+    if (match?.id) await run('decline', { id: match.id }).catch(() => null);
+    onClose?.();
+  };
+
   const rematch = async () => {
     if (!match?.id) return;
     await run('rematch', { id: match.id }).catch(() => null);
   };
 
+  // Hediye: seçilen tarafa gönderilir; tek kişilik yayında izleyici yayıncıya gönderir.
+  const giftTargetId = target === 'me' && isPlayer ? user?.id : (opponentId || active?.host_id || user?.id);
   const sendGift = (gift) => {
-    const to = target === 'me' ? user?.id : opponentId;
-    if (!to) return;
-    onSendGift?.(gift, [to]);
+    if (!giftTargetId) return;
+    onSendGift?.(gift, [giftTargetId]);
   };
 
-  const inviteMode = !active ? 'pick' : active.status === 'invite' ? (isHost ? 'waiting' : isGuest ? 'incoming' : 'spectate') : null;
-
-  // İki kare: oyuncuysan solda sen, izleyiciysen solda davet eden taraf durur.
-  const seatOf = (id, hostSeat) => ({
-    id,
-    name: hostSeat ? (active?.host_name || 'Davet eden') : (active?.guest_name || 'Rakip'),
-    avatar: hostSeat ? (active?.host_avatar || '') : (active?.guest_avatar || ''),
-  });
-  const seats = active
-    ? (isGuest
-      ? [seatOf(active.guest_id, false), seatOf(active.host_id, true)]
-      : [seatOf(active.host_id, true), seatOf(active.guest_id, false)])
-    : [];
-  const leftScore = scoreOf(seats[0]?.id);
-  const rightScore = scoreOf(seats[1]?.id);
-  const leftShare = leftScore + rightScore > 0 ? Math.round((leftScore / (leftScore + rightScore)) * 100) : 50;
-
   return (
-    <div className="fixed inset-0 z-[190] flex flex-col bg-[#07040d] text-white">
-      <div aria-hidden="true" className="pointer-events-none absolute -top-24 left-1/2 h-56 w-56 -translate-x-1/2 rounded-full bg-fuchsia-600/40 blur-3xl" />
+    <div
+      className="absolute inset-x-0 bottom-0 z-[120] flex flex-col overflow-hidden bg-[#07040d] text-white"
+      style={{ top: topOffset }}
+    >
+      <div aria-hidden="true" className="pointer-events-none absolute -top-24 left-1/2 h-56 w-56 -translate-x-1/2 rounded-full bg-fuchsia-600/30 blur-3xl" />
 
-      <header className="relative flex shrink-0 items-center gap-2 px-3 pb-2" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 8px)' }}>
+      <header className="relative flex shrink-0 items-center gap-1.5 px-2 pb-1.5 pt-1.5">
         <span
-          className="flame-live flex items-center gap-1 rounded-xl border border-fuchsia-200/70 px-2 py-1 text-[11px] font-black"
+          className="flame-live flex items-center gap-1 rounded-xl border border-fuchsia-200/70 px-2 py-1 text-[10px] font-black"
           style={{ backgroundImage: 'linear-gradient(115deg,#ffb3f0 0%,#d946ef 45%,#7c0ea0 100%)', boxShadow: '0 0 16px -2px rgba(217,70,239,0.95)' }}
         >
-          <Sparkles className="h-3.5 w-3.5" /> PK
-          {Number(match?.round_no) > 1 && <span className="text-[9px]">· {match.round_no}. tur</span>}
+          <Sparkles className="h-3.5 w-3.5" /> Görüntülü Yayın
         </span>
-        <span className="flex items-center gap-1 rounded-lg bg-white/10 px-2 py-1 text-[12px] font-black tabular-nums">
+        <span className="flex items-center gap-1 rounded-lg bg-white/10 px-2 py-1 text-[11px] font-black tabular-nums">
           <Clock3 className="h-3 w-3 text-fuchsia-200" />
-          {showFrames ? clock(live ? remaining : 0) : '05:00'}
+          {timerText}
         </span>
-        <button type="button" onClick={onClose} aria-label="PK'yı kapat" className="ml-auto flex h-9 w-9 items-center justify-center rounded-full bg-white/10 active:scale-95">
-          <X className="h-5 w-5" />
+        {showFrames && isHost && (
+          <button
+            type="button"
+            onClick={() => setInviteOpen(true)}
+            className="ml-auto flex h-8 items-center gap-1 rounded-full bg-fuchsia-500 px-2.5 text-[10.5px] font-black text-white active:scale-95"
+          >
+            <UserPlus className="h-3.5 w-3.5" /> Davet
+          </button>
+        )}
+        {!showFrames && <span className="ml-auto" />}
+        <button
+          type="button"
+          onClick={closeStage}
+          className="flex h-8 shrink-0 items-center gap-1 rounded-full bg-white/10 px-2.5 text-[10.5px] font-black text-white/80 active:scale-95"
+        >
+          Kapat
         </button>
       </header>
 
       <div className="relative flex min-h-0 flex-1 flex-col gap-2 px-2 pb-1">
-        {showFrames && (
+        {inviteOpen && (
+          <div className="absolute inset-x-2 inset-y-0 z-20 flex flex-col rounded-2xl bg-[#0c0714]/97 p-1.5 ring-1 ring-fuchsia-400/30">
+            <PkInvitePanel
+              mode="pick"
+              match={active}
+              user={user}
+              participants={participants}
+              livekitRoom={livekitRoom}
+              busy={busy}
+              onInvite={invite}
+            />
+            <button
+              type="button"
+              onClick={() => setInviteOpen(false)}
+              className="mt-1 shrink-0 rounded-xl bg-white/10 py-2 text-[11px] font-black text-white/75 active:scale-95"
+            >
+              Kapat
+            </button>
+          </div>
+        )}
+
+        {incoming && (
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            <PkInvitePanel
+              mode="incoming"
+              match={active}
+              user={user}
+              participants={participants}
+              livekitRoom={livekitRoom}
+              busy={busy}
+              onAccept={() => run('accept', { id: active.id }).catch(() => null)}
+              onDecline={decline}
+            />
+          </div>
+        )}
+
+        {!incoming && !active && (
+          <div className="flex min-h-0 flex-1 items-center justify-center gap-2 text-[11.5px] font-semibold text-white/55">
+            <Loader2 className="h-4 w-4 animate-spin" /> Kamera yayına alınıyor…
+          </div>
+        )}
+
+        {!incoming && showFrames && (
           <>
             <div className="flex shrink-0 gap-1.5">
               {seats.map((seat, index) => {
@@ -208,19 +283,37 @@ export default function VideoPkStage({
                   />
                 );
               })}
+              {seats.length === 1 && isHost && (
+                <button
+                  type="button"
+                  onClick={() => setInviteOpen(true)}
+                  className="flex flex-1 flex-col items-center justify-center gap-1 rounded-2xl border border-dashed border-fuchsia-300/50 bg-white/[0.04] p-2 text-[10.5px] font-black text-fuchsia-200 active:scale-95"
+                >
+                  <UserPlus className="h-6 w-6" /> Davet et
+                  <span className="text-[9px] font-semibold text-white/45">Kabul eden yayına katılır</span>
+                </button>
+              )}
             </div>
 
-            <div className="shrink-0">
-              <div className="flex items-end justify-between px-1 text-[11px] font-black tabular-nums">
-                <span className="text-emerald-300">{formatCoinAmount(leftScore)}</span>
-                <span className="text-white/45">{active.round_no ? `${active.round_no}. tur` : 'PK'}</span>
-                <span className="text-fuchsia-300">{formatCoinAmount(rightScore)}</span>
+            {seats.length > 1 && (
+              <div className="shrink-0">
+                <div className="flex items-end justify-between px-1 text-[11px] font-black tabular-nums">
+                  <span className="text-emerald-300">{formatCoinAmount(leftScore)}</span>
+                  <span className="text-white/45">{active.round_no ? `${active.round_no}. tur` : 'Yayın'}</span>
+                  <span className="text-fuchsia-300">{formatCoinAmount(rightScore)}</span>
+                </div>
+                <div className="mt-1 flex h-2.5 overflow-hidden rounded-full bg-white/10">
+                  <span className="bg-gradient-to-r from-emerald-400 to-emerald-600 transition-[width] duration-500" style={{ width: `${leftShare}%` }} />
+                  <span className="flex-1 bg-gradient-to-r from-fuchsia-600 to-fuchsia-400" />
+                </div>
               </div>
-              <div className="mt-1 flex h-2.5 overflow-hidden rounded-full bg-white/10">
-                <span className="bg-gradient-to-r from-emerald-400 to-emerald-600 transition-[width] duration-500" style={{ width: `${leftShare}%` }} />
-                <span className="flex-1 bg-gradient-to-r from-fuchsia-600 to-fuchsia-400" />
-              </div>
-            </div>
+            )}
+
+            {seats.length === 1 && (
+              <p className="shrink-0 rounded-xl border border-white/10 bg-white/[0.04] px-2.5 py-1.5 text-center text-[10.5px] font-semibold text-white/55">
+                Yayındasın — davet gönderdiğin kişi kabul ederse yanında yayına katılır.
+              </p>
+            )}
 
             {finished && (
               <div className="shrink-0 rounded-2xl border border-amber-300/40 bg-amber-400/10 px-3 py-2">
@@ -238,44 +331,27 @@ export default function VideoPkStage({
           </>
         )}
 
-        {inviteMode && inviteMode !== 'spectate' && (
+        {!showFrames && !incoming && active && (
           <div className="min-h-0 flex-1 overflow-y-auto">
             <PkInvitePanel
-              mode={inviteMode}
+              mode="waiting"
               match={active}
               user={user}
               participants={participants}
               livekitRoom={livekitRoom}
               busy={busy}
-              onInvite={invite}
               onStart={() => run('start', { id: active.id }).catch(() => null)}
-              onCancel={() => run('finish', { id: active.id }).catch(() => null)}
-              onAccept={() => run('accept', { id: active.id }).catch(() => null)}
-              onDecline={() => run('decline', { id: active.id }).catch(() => null)}
+              onCancel={leaveMatch}
             />
           </div>
         )}
 
-        {inviteMode === 'spectate' && active && (
-          <div className="rounded-2xl border border-white/12 bg-white/[0.05] p-3 text-center">
-            <p className="text-[12px] font-black text-white">{active.host_name} → {active.guest_name}</p>
-            <p className="mt-1 text-[10.5px] font-semibold text-white/55">
-              {active.accepted ? 'PK birazdan başlıyor.' : 'Davet kabul edilince PK başlayacak.'}
-            </p>
-          </div>
-        )}
-
-        {showFrames && (
-          <PkComments
-            messages={messages}
-            user={user}
-            onSend={onSendMessage}
-            disabled={false}
-          />
+        {!incoming && showFrames && (
+          <PkComments messages={messages} user={user} onSend={onSendMessage} disabled={false} />
         )}
       </div>
 
-      {showFrames && (
+      {!incoming && showFrames && isPlayer && (
         <div className="shrink-0 px-2 pt-1.5">
           <div className="flex items-center gap-1.5">
             <button
@@ -286,14 +362,16 @@ export default function VideoPkStage({
             >
               {iMuted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />} Mikrofon
             </button>
-            <button
-              type="button"
-              onClick={pressOpponentAudio}
-              aria-pressed={opponentMuted}
-              className={`flex h-10 flex-1 items-center justify-center gap-1 rounded-xl text-[10.5px] font-black active:scale-95 ${opponentMuted ? 'bg-red-500/90 text-white' : 'bg-white/12 text-white/85'}`}
-            >
-              {opponentMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />} Rakip sesi
-            </button>
+            {opponentId && (
+              <button
+                type="button"
+                onClick={pressOpponentAudio}
+                aria-pressed={opponentMuted}
+                className={`flex h-10 flex-1 items-center justify-center gap-1 rounded-xl text-[10.5px] font-black active:scale-95 ${opponentMuted ? 'bg-red-500/90 text-white' : 'bg-white/12 text-white/85'}`}
+              >
+                {opponentMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />} Karşı ses
+              </button>
+            )}
             <button
               type="button"
               onClick={leaveMatch}
@@ -315,10 +393,10 @@ export default function VideoPkStage({
         </div>
       )}
 
-      {showFrames && (
+      {!incoming && showFrames && (
         <PkGiftStrip
           gifts={gifts}
-          target={target}
+          target={opponentId ? target : 'opponent'}
           opponentName={opponentName}
           coins={coins}
           onTargetChange={setTarget}
@@ -326,9 +404,9 @@ export default function VideoPkStage({
         />
       )}
 
-      {!showFrames && (
-        <p className="shrink-0 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] text-center text-[10px] font-semibold text-white/35">
-          PK 5 dakika sürer. Yorumlar ve hediyeler tur boyunca açık kalır.
+      {!showFrames && !incoming && (
+        <p className="flex shrink-0 items-center justify-center gap-1 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] text-center text-[10px] font-semibold text-white/35">
+          <Video className="h-3 w-3" /> Yayına katılan kişiyle kameralar yan yana görünür.
         </p>
       )}
     </div>

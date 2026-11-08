@@ -81,11 +81,11 @@ export default function VoiceRoomMenu({ open, onClose, room, isOwner, isAdmin, c
             onClick={() => { onClose(); onOpenMusic(); }}
           />
         )}
-        {/* Görüntülü PK: oda ayarlarının içinden açılır, davet gönderilir ve 5 dakikalık tur başlar. */}
+        {/* Görüntülü yayın: oda ayarlarının içinden de açılır, davet gönderilir ve kabul eden yayına katılır. */}
         {onOpenPk && (
           <VoiceMenuTile
             icon={Video}
-            label="Görüntülü PK"
+            label="Görüntülü Yayın"
             tone="purple"
             onClick={() => { onClose(); onOpenPk(); }}
           />
