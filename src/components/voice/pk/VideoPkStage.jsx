@@ -244,7 +244,8 @@ export default function VideoPkStage({
         onClose={closeStage}
       />
 
-      {showFrames && <PkScoreBar leftScore={leftScore} rightScore={rightScore} timerText={timerText} />}
+      {/* PK barı yalnızca gerçek bir eşleşme başladığında görünür: tek başına yayında gizli. */}
+      {showFrames && !!active?.guest_id && <PkScoreBar leftScore={leftScore} rightScore={rightScore} timerText={timerText} />}
 
       <div className="relative flex min-h-0 flex-1 flex-col">
         {inviteOpen && (
