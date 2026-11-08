@@ -29,7 +29,7 @@ const NAME_GRADIENT = {
 
 /** Ana sayfa keşfet ızgarasındaki oda kartı: moda göre sesli/film çerçevesi,
     büyük fotoğraf, şeritte oda ismi ve altta oda sahibinin adı. */
-function RoomDiscoveryCard({ room, owner, kind, filmTitle, friendInside }) {
+function RoomDiscoveryCard({ room, owner, kind, filmTitle, friendInside, pk = null }) {
   const { user } = useCurrentUser();
   const viewers = room.participants?.length || 0;
   // İçeride kimse yoksa oda kilitlidir: sahibi odaya girene kadar kimse içeri alınmaz.
@@ -67,6 +67,25 @@ function RoomDiscoveryCard({ room, owner, kind, filmTitle, friendInside }) {
         ) : (
           <span className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[#173a5e] to-[#0a1220]">
             {isVoice ? <Mic className="h-7 w-7 text-[#7ff0e6]/70" /> : <Film className="h-7 w-7 text-[#ffa63d]/70" />}
+          </span>
+        )}
+
+        {/* Sol üst: canlı PK yayını — iki yayıncının fotoğrafı ve PK etiketi. */}
+        {pk && (
+          <span className="absolute left-1 top-1 flex items-center gap-1 rounded-full border border-[#fe2c55]/80 bg-black/80 px-1 py-0.5">
+            <span className="text-[8px] font-black leading-none tracking-wide text-[#fe2c55]">PK</span>
+            <span className="flex items-center gap-0.5">
+              {[pk.host_avatar, pk.guest_avatar].filter(Boolean).map((avatar, index) => (
+                <Image
+                  key={`${avatar}-${index}`}
+                  src={avatar}
+                  alt=""
+                  className="h-3.5 w-3.5 overflow-hidden rounded-full ring-1 ring-black/80"
+                  fittingType="fill"
+                />
+              ))}
+            </span>
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#25f4ee]" />
           </span>
         )}
 

@@ -141,6 +141,16 @@ export default function VoiceRoom() {
     if (pkMatch.guest_id !== user?.id || pkMatch.accepted) return;
     setPkOpen(true);
   }, [pkMatch, pkOpen, user?.id]);
+
+  // Odaya giren izleyici canlı bir PK yayını varsa doğrudan yayına düşer.
+  // İzleyici yayını kapatırsa aynı karşılaşma için bir daha kendiliğinden açılmaz.
+  const pkAutoRef = useRef('');
+  useEffect(() => {
+    if (!pkMatch || pkOpen || pkMatch.status !== 'live' || !pkMatch.guest_id) return;
+    if (pkAutoRef.current === pkMatch.id) return;
+    pkAutoRef.current = pkMatch.id;
+    setPkOpen(true);
+  }, [pkMatch, pkOpen]);
   const [giftOpen, setGiftOpen] = useState(false);
   // Profil kartındaki "Bahset" isteği: yazma alanına @isim eklenir.
   const [mentionTarget, setMentionTarget] = useState(null);

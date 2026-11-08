@@ -14,6 +14,7 @@ import useMessageProfiles from '@/hooks/useMessageProfiles';
 import { readRoomList, writeRoomList } from '@/lib/roomListCache';
 import { fetchYouTubeTitle, isGenericTitle, youtubeIdFromMovieId } from '@/lib/youtubeTitle';
 import useTabActivity from '@/components/layout/TabActivityContext';
+import useLivePkRooms from '@/hooks/useLivePkRooms';
 
 // Oyunlar ayrı indirilir: ana sayfa paketi küçük kalır.
 const GamePanel = lazy(() => import('@/components/games/GamePanel'));
@@ -56,6 +57,8 @@ export default function RoomDiscovery({ shortcuts = null, onContentChange }) {
   const [gameOpen, setGameOpen] = useState(null);
   // Oyunlar yalnızca yayıncı/ajans üyesi hesaplara açıktır; ülke etiketiyle aynı kaynaktan çözülür.
   const gamesEnabled = broadcasterState(user).games;
+  // Canlı PK yayınları: bu odaların kartı sesli odalarla karışık, kendi rozetiyle görünür.
+  const pkRooms = useLivePkRooms(tabActive);
 
   // Adresteki oyun isteği sekmeyi açar; adres temizlenince ya da ayrıcalık kalkınca
   // oda listesine dönülür.
@@ -336,6 +339,7 @@ export default function RoomDiscovery({ shortcuts = null, onContentChange }) {
                 kind={kind}
                 filmTitle={kind === 'film' ? filmTitleFor(room) : ''}
                 friendInside={hasFriendInside(room)}
+                pk={pkRooms[room.id] || null}
               />
             );
           })}
