@@ -42,16 +42,16 @@ export default function ProfileHeroCard({ user, avatar, onAvatar, uploading, vip
   };
 
   return (
-    <section className="relative px-3 pt-4">
-      {/* Neon cam panel: ışıklar CSS ile çizilir, görsel yüklenmez. */}
-      <div className="relative overflow-hidden rounded-[26px] border border-primary/25 bg-[#0b0a12]/85 p-3.5 shadow-[0_0_40px_-20px_rgba(239,68,68,0.95),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur">
+    <section className="relative mx-auto w-full max-w-[430px] px-3 pt-2">
+      {/* Neon cam panel: ışıklar CSS ile çizilir, görsel yüklenmez. Dar ve düzenli durur. */}
+      <div className="relative overflow-hidden rounded-[22px] border border-primary/25 bg-[#0b0a12]/85 px-2.5 py-2 shadow-[0_0_40px_-20px_rgba(239,68,68,0.95),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur">
         <span aria-hidden="true" className="pointer-events-none absolute -top-10 left-1/2 h-20 w-40 -translate-x-1/2 rounded-full bg-primary/30 blur-2xl" />
         <span aria-hidden="true" className="pointer-events-none absolute -left-6 top-10 h-24 w-24 rounded-full bg-sky-500/25 blur-2xl" />
         <span aria-hidden="true" className="pointer-events-none absolute -right-6 bottom-0 h-24 w-24 rounded-full bg-violet-500/25 blur-2xl" />
         <span aria-hidden="true" className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-primary/80 to-transparent" />
         <span aria-hidden="true" className="pointer-events-none absolute inset-x-6 bottom-0 h-px bg-gradient-to-r from-transparent via-amber-300/70 to-transparent" />
 
-        <div className="relative flex items-center gap-3.5">
+        <div className="relative flex items-center gap-2.5">
           <div className="relative shrink-0">
             <span
               className="block rounded-full p-[3px]"
@@ -83,7 +83,7 @@ export default function ProfileHeroCard({ user, avatar, onAvatar, uploading, vip
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5">
               <h2
-                className="truncate text-lg font-extrabold text-white"
+                className="truncate text-base font-extrabold leading-tight text-white"
                 style={nameStyle}
               >
                 {name}
@@ -102,7 +102,7 @@ export default function ProfileHeroCard({ user, avatar, onAvatar, uploading, vip
               {copied ? <Check className="h-3.5 w-3.5 text-emerald-300" /> : <Copy className="h-3.5 w-3.5 text-cyan-200/80" />}
             </button>
 
-            <div className="mt-2 flex flex-wrap items-center gap-1.5">
+            <div className="no-scrollbar mt-1.5 flex flex-nowrap items-center gap-1 overflow-x-auto">
               {badges.n_level > 0 && (
                 <span className="flex h-6 items-center gap-1 rounded-md px-2 text-[10px] font-black text-white" style={{ background: N_BADGE_STYLE.background, border: `1px solid ${N_BADGE_STYLE.border}` }}>
                   <Shield className="h-3 w-3" strokeWidth={2.6} /> N{badges.n_level}
@@ -131,7 +131,7 @@ export default function ProfileHeroCard({ user, avatar, onAvatar, uploading, vip
           </div>
         </div>
 
-        <div className="relative mt-2.5"><ProfileAgencyBadges profile={user} /></div>
+        <div className="relative mt-1.5"><ProfileAgencyBadges profile={user} /></div>
 
         {picking && (
           <div className="relative mt-3 flex flex-col items-center gap-2">

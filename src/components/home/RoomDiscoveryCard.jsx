@@ -6,21 +6,29 @@ import { youtubeIdFromMovieId } from '@/lib/youtubeTitle';
 import { prefetchRoomCancel, prefetchRoomSoon } from '@/lib/roomPrefetch';
 import { rememberRoom } from '@/lib/visitedRooms';
 import { useCurrentUser } from '@/lib/useCurrentUser';
+import useKeyedImage from '@/hooks/useKeyedImage';
+import { ART } from '@/lib/designArt';
 
-/** Oda kategorisi kartın üstünde kendi ikonuyla gösterilir. */
+/** Oda kategorisi kartın sağ üstünde kendi ikonuyla gösterilir. */
 const CATEGORY_ICONS = { Sohbet: MessageSquare, DJ: Music, 'Eğlence': Sparkles, 'Parti': PartyPopper, Oyun: Gamepad2, 'Doğum Günü': Cake };
 
-// Oda ismi neon geçişli yazılır.
+// Kart çerçevesi: beyaz fotoğraf alanı ve isim şeritleri şeffaf yapılır,
+// veriler arkadan görünür ve çerçevenin üzerine yazılır.
+const CARD_CROP = { top: 0, height: 1, clearWhiteIslands: 'all', islandMin: 0.004 };
+const CARD_RATIO = 1078 / 1459;
+// Oda isminin plakası: her iki çerçevede de metin siyah zemin üstünde durur.
+const NAME_PLATE = { left: '21%', right: '9%', top: '67.2%', height: '7.6%', background: '#000', borderRadius: 4 };
+// Oda ismi görseldeki gibi soldan sağa camgöbeği → mor → turuncu geçişli yazılır.
 const NAME_GRADIENT = {
   backgroundImage: 'linear-gradient(90deg,#22f9ff 0%,#b900ff 38%,#ff7a00 68%,#fff83d 100%)',
   WebkitBackgroundClip: 'text',
   backgroundClip: 'text',
   color: 'transparent',
-  filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.9))',
+  filter: 'drop-shadow(0 1px 1px #000) drop-shadow(0 0 6px rgba(0,0,0,0.95))',
 };
 
-/** Ana sayfa ızgarasındaki oda kartı: kapak görseli, neon çerçeve, oda ismi ve sahibi.
-    Görsel kesme işlemi yapılmaz — kartlar anında çizilir, liste akıcı kayar. */
+/** Ana sayfa keşfet ızgarasındaki oda kartı: moda göre sesli/film çerçevesi,
+    büyük fotoğraf, şeritte oda ismi ve altta oda sahibinin adı. */
 function RoomDiscoveryCard({ room, owner, kind, filmTitle, friendInside }) {
   const { user } = useCurrentUser();
   const viewers = room.participants?.length || 0;
@@ -29,12 +37,13 @@ function RoomDiscoveryCard({ room, owner, kind, filmTitle, friendInside }) {
   const isVoice = kind === 'voice';
   const isHidden = room.hidden === true;
   const videoId = isVoice ? '' : youtubeIdFromMovieId(room.movie_id);
-  // Film kapağı: kenarında siyah bant olmayan (16:9) küçük görsel kullanılır.
+  // Film kapağı: kenarında siyah bant olmayan (16:9) küçük görsel kullanılır, çerçeve tamamen dolar.
   const cover = isVoice ? owner?.avatar : videoId ? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg` : '';
   const ownerName = owner?.username || owner?.full_name || room.owner_name || 'Kullanıcı';
   const category = room.category || '';
   const CategoryIcon = CATEGORY_ICONS[category] || null;
   const to = isVoice ? `/sesli-oda/${room.id}` : `/oda/${room.id}`;
+  const art = useKeyedImage(isVoice ? ART.cardVoice : ART.cardFilm, CARD_CROP);
 
   return (
     <Link
@@ -48,34 +57,26 @@ function RoomDiscoveryCard({ room, owner, kind, filmTitle, friendInside }) {
         rememberRoom(room);
       }}
       aria-disabled={locked || undefined}
-      className={`group relative flex flex-col overflow-hidden rounded-2xl border bg-gradient-to-b from-white/[0.07] to-[#0b0b13]/92 transition-transform active:scale-[0.98] ${isVoice
-        ? 'border-cyan-300/45 shadow-[0_16px_32px_-26px_rgba(0,0,0,1),0_0_22px_-10px_rgba(34,249,255,0.9)]'
-        : 'border-orange-300/45 shadow-[0_16px_32px_-26px_rgba(0,0,0,1),0_0_22px_-10px_rgba(255,138,43,0.9)]'}`}
+      className="relative block transition-transform active:scale-[0.98]"
+      style={{ aspectRatio: String(CARD_RATIO) }}
     >
-      {/* Kapak: sesli odada mavi ateş, film odasında turuncu-kırmızı ateş ışığı. */}
-      <span
-        aria-hidden="true"
-        className={`pointer-events-none absolute inset-x-0 top-0 h-16 ${isVoice
-          ? 'bg-[radial-gradient(ellipse_at_top,rgba(34,249,255,0.35),transparent_70%)]'
-          : 'bg-[radial-gradient(ellipse_at_top,rgba(255,138,43,0.38),transparent_70%)]'}`}
-      />
-
-      <div className="relative w-full overflow-hidden" style={{ aspectRatio: '4 / 3' }}>
+      {/* Fotoğraf penceresi: çerçevenin arkasında durur, pencereden görünür. */}
+      <div className="absolute overflow-hidden" style={{ left: '7.2%', top: '17.4%', width: '85.6%', height: '47.6%' }}>
         {cover ? (
           <Image src={cover} className="absolute inset-0 h-full w-full" fittingType="fill" alt="" />
         ) : (
-          <span className={`absolute inset-0 flex items-center justify-center bg-gradient-to-br ${isVoice ? 'from-[#1b2a4d] to-[#0a0f1c]' : 'from-[#3a1b1b] to-[#120a0a]'}`}>
+          <span className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[#173a5e] to-[#0a1220]">
             {isVoice ? <Mic className="h-7 w-7 text-[#7ff0e6]/70" /> : <Film className="h-7 w-7 text-[#ffa63d]/70" />}
           </span>
         )}
 
-        {/* Üst sağ: kategori ve arkadaş işareti. */}
+        {/* Sağ üst: kategori ve arkadaş işareti. */}
         {(category || friendInside) && (
           <span className="absolute right-1 top-1 flex max-w-[85%] flex-col items-end gap-1">
             {category && (
               <span
                 title={`Kategori: ${category}`}
-                className="flex items-center gap-1 rounded-full border border-white/25 bg-black/70 px-1.5 py-0.5 text-[8px] font-black text-white"
+                className="flex items-center gap-1 rounded-full border border-white/30 bg-black/70 px-1.5 py-0.5 text-[8px] font-black text-white"
               >
                 {CategoryIcon && <CategoryIcon className="h-2.5 w-2.5" />}
                 {category}
@@ -98,6 +99,7 @@ function RoomDiscoveryCard({ room, owner, kind, filmTitle, friendInside }) {
           </span>
         )}
 
+        {/* Alt şerit: izleyici sayısı. */}
         {!isHidden && (
           <span className="absolute bottom-1 right-1 flex items-center gap-0.5 rounded-full bg-black/70 px-1.5 py-0.5 text-[8.5px] font-extrabold tabular-nums text-white">
             {viewers}
@@ -114,23 +116,28 @@ function RoomDiscoveryCard({ room, owner, kind, filmTitle, friendInside }) {
         )}
       </div>
 
-      {/* Alt bilgi: oda ismi ve sahibi. */}
-      <div className="relative flex flex-col gap-0.5 px-2 py-1.5">
-        <span className="block truncate text-[11px] font-black leading-tight" style={NAME_GRADIENT}>
+      {art && (
+        <img
+          src={art}
+          alt=""
+          draggable={false}
+          className="pointer-events-none absolute inset-0 h-full w-full select-none object-contain"
+        />
+      )}
+
+      {/* Oda ismi: çerçevenin üstündeki siyah plaka — iki kart türünde de aynı görünür. */}
+      <span className="absolute flex items-center justify-center overflow-hidden px-1" style={{ ...NAME_PLATE }}>
+        <span className="block w-full truncate text-center text-[10px] font-black leading-none tracking-tight" style={NAME_GRADIENT}>
           {room.name}
         </span>
-        <span className="flex items-center justify-between gap-1">
-          <span className="truncate text-[9px] font-semibold text-white/60">{ownerName}</span>
-          <span className={`flex shrink-0 items-center gap-0.5 text-[9px] font-black uppercase tracking-wide ${isVoice ? 'text-[#5cd6ff]' : 'text-[#ffa45c]'}`}>
-            {isVoice ? <Mic className="h-2.5 w-2.5" /> : <Film className="h-2.5 w-2.5" />}
-            {isVoice ? 'Sesli' : 'Film'}
-          </span>
+      </span>
+
+      {/* Oda sahibi: “Sesli / Film” yazısının solunda. */}
+      <span className="absolute flex items-center justify-end overflow-hidden" style={{ left: '9%', right: '47%', top: '78%', height: '6%' }}>
+        <span className="truncate text-[8.5px] font-black leading-none text-white" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.95)' }}>
+          {ownerName}
         </span>
-      </div>
-      <span
-        aria-hidden="true"
-        className={`pointer-events-none absolute inset-x-3 bottom-0 h-px bg-gradient-to-r from-transparent to-transparent ${isVoice ? 'via-cyan-300/80' : 'via-amber-300/80'}`}
-      />
+      </span>
     </Link>
   );
 }
