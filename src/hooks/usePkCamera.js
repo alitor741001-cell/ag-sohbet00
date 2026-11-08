@@ -1,15 +1,18 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { RoomEvent, Track } from 'livekit-client';
 
 /**
  * Görüntülü PK kamerası: kişinin kendi kamerası açılır ve odadaki LiveKit bağlantısına
  * görüntü olarak yayınlanır. Karşı taraf da PK'ya girdiğinde iki kamera karşılıklı görünür.
  * Ses akışına dokunulmaz: burada yalnızca görüntü yayınlanır.
+ * Kendi görüntüsü aynalı gösterilir (TikTok gibi); yayına gönderilen görüntü aynalanmaz.
  */
 export default function usePkCamera({ active, livekitRoom, selfId }) {
   const localVideoRef = useRef(null);
+  const publicationRef = useRef(null);
   const [remoteTracks, setRemoteTracks] = useState([]);
   const [error, setError] = useState('');
+  const [camOn, setCamOn] = useState(true);
 
   useEffect(() => {
     if (!active) return undefined;
@@ -19,6 +22,7 @@ export default function usePkCamera({ active, livekitRoom, selfId }) {
     let publication = null;
     setRemoteTracks([]);
     setError('');
+    setCamOn(true);
 
     // Karşı tarafların kameraları: gelen görüntü kimliğiyle birlikte tutulur.
     const attach = (track, participant) => {
@@ -62,6 +66,7 @@ export default function usePkCamera({ active, livekitRoom, selfId }) {
         if (livekitRoom && videoTrack) {
           try {
             publication = await livekitRoom.localParticipant.publishTrack(videoTrack, { source: Track.Source.Camera });
+            publicationRef.current = publication;
           } catch (publishError) {
             console.warn('[PK] Kamera yayını başlatılamadı', publishError);
           }
@@ -80,6 +85,7 @@ export default function usePkCamera({ active, livekitRoom, selfId }) {
         livekitRoom.off?.(RoomEvent.TrackSubscribed, attach);
         livekitRoom.off?.(RoomEvent.TrackUnsubscribed, detach);
       }
+      publicationRef.current = null;
       try { if (publication) livekitRoom?.localParticipant?.unpublishTrack?.(publication.track, true); } catch (error) {}
       try { videoTrack?.stop?.(); } catch (error) {}
       try { stream?.getTracks().forEach((track) => track.stop()); } catch (error) {}
@@ -88,5 +94,16 @@ export default function usePkCamera({ active, livekitRoom, selfId }) {
     };
   }, [active, livekitRoom, selfId]);
 
-  return { localVideoRef, remoteTracks, error };
+  // Kamerayı kapatmak yayını susturur: karşı taraf kameranın kapalı olduğunu görür.
+  const setCameraEnabled = useCallback((next) => {
+    setCamOn(next);
+    try {
+      if (next) publicationRef.current?.track?.unmute?.();
+      else publicationRef.current?.track?.mute?.();
+    } catch (error) {
+      console.warn('[PK] Kamera durumu değiştirilemedi', error);
+    }
+  }, []);
+
+  return { localVideoRef, remoteTracks, error, camOn, setCameraEnabled, mirror: true };
 }

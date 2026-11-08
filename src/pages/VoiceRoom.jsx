@@ -1224,12 +1224,12 @@ export default function VoiceRoom() {
         />
       </div>
 
-      {/* Görüntülü yayın: oda kartının altında küçük düğme, yayın ekranını açar. */}
+      {/* Görüntülü PK: oda kartının altında küçük düğme, tam ekran PK ekranını açar. */}
       {joined && !pkOpen && (
         <button
           type="button"
           onClick={() => setPkOpen(true)}
-          aria-label="Görüntülü yayın aç"
+          aria-label="Görüntülü PK aç"
           className="flame-live absolute right-2 z-40 flex items-center gap-1 rounded-full border border-fuchsia-200/70 px-2.5 py-1.5 text-[10px] font-black text-white active:scale-95"
           style={{
             top: topArtHeight + 4,

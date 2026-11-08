@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Check, Clock3, Loader2, Video, X } from 'lucide-react';
+import { Check, Clock3, Loader2, Search, Video, X } from 'lucide-react';
 import { RoomEvent } from 'livekit-client';
+import { base44 } from '@/api/base44Client';
 import useFriends from '@/hooks/useFriends';
 
 const Row = ({ person, label, onPick, disabled, busy }) => (
@@ -30,7 +31,26 @@ const Row = ({ person, label, onPick, disabled, busy }) => (
 export default function PkInvitePanel({ mode, match, user, participants = [], livekitRoom, onInvite, onStart, onCancel, onAccept, onDecline, busy }) {
   const [tab, setTab] = useState('live');
   const [cams, setCams] = useState([]);
+  const [query, setQuery] = useState('');
+  const [found, setFound] = useState(null);
+  const [searching, setSearching] = useState(false);
   const { relations } = useFriends();
+
+  // Arkadaş listesinde olmayan kullanıcı da üye numarasıyla bulunup davet edilebilir.
+  const search = async () => {
+    const value = String(query || '').replace(/\D/g, '');
+    if (value.length < 6) return;
+    setSearching(true);
+    try {
+      const response = await base44.functions.invoke('friend-service', { action: 'search', member_id: value });
+      const person = response.data?.user;
+      setFound(person ? { ...person, user_id: person.id } : null);
+    } catch (error) {
+      setFound(null);
+    } finally {
+      setSearching(false);
+    }
+  };
 
   // Görüntülü yayın yapanlar: kamerası açık olan oda katılımcıları.
   useEffect(() => {
@@ -162,6 +182,37 @@ export default function PkInvitePanel({ mode, match, user, participants = [], li
   const list = tab === 'live' ? broadcasters : friends;
   return (
     <div className="flex min-h-0 flex-1 flex-col rounded-2xl border border-white/12 bg-white/[0.05]">
+      <div className="flex shrink-0 items-center gap-1 p-1.5">
+        <input
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          onKeyDown={(event) => { if (event.key === 'Enter') search(); }}
+          placeholder="Üye numarasıyla ara"
+          inputMode="numeric"
+          className="h-8 min-w-0 flex-1 rounded-lg bg-white/10 px-2 text-[11.5px] text-white outline-none placeholder:text-white/35"
+        />
+        <button
+          type="button"
+          onClick={search}
+          disabled={searching}
+          aria-label="Ara"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-fuchsia-500 text-white active:scale-95 disabled:opacity-50"
+        >
+          {searching ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Search className="h-3.5 w-3.5" />}
+        </button>
+      </div>
+
+      {found && (
+        <div className="shrink-0 border-b border-white/10 px-1 pb-1">
+          <Row
+            person={found}
+            label={found.member_id ? `Üye No: ${found.member_id}` : 'Aranan kullanıcı'}
+            disabled={busy}
+            onPick={(person) => onInvite?.(person)}
+          />
+        </div>
+      )}
+
       <div className="flex shrink-0 gap-1 p-1.5">
         <button
           type="button"
