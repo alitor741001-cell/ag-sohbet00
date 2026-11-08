@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import RoomDirectMessages from '@/components/player/RoomDirectMessages';
-import { ART } from '@/lib/designArt';
 
 // Hediye kartının (oda şeridinin altındaki elmas kartı) alt hizası panelin üst kenarıdır.
 const GIFT_PILL = '[data-room-gift-pill]';
@@ -42,8 +41,9 @@ export default function VoicePrivateChatSheet({ open, initialUserId, onClose, on
         className="relative flex w-full flex-col overflow-hidden"
         style={{
           height: `calc(100dvh - ${top}px)`,
-          // Oda teması yerine ana sayfanın zemin görseli: sohbetin arkası en alta kadar dolu kalır.
-          '--room-theme-image': `url("${ART.pageBg}")`,
+          // Tema görseli kaldırıldı: sohbet düz koyu yüzeyde açılır, açılış hafiftir.
+          backgroundColor: '#0b0b0f',
+          '--room-theme-image': 'none',
           '--room-theme-tint': 'none',
         }}
       >

@@ -1,6 +1,5 @@
 import { lazy, Suspense, useEffect } from 'react';
 import warmChunks from '@/lib/warmChunks';
-import { ART } from '@/lib/designArt';
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
@@ -76,7 +75,7 @@ const AuthenticatedApp = () => {
   // Show loading spinner while checking app public settings or auth
   // Açılışta marka ekranı gösterilmez: arka plan hazırlanırken ana sayfa doğrudan gelir.
   if (isLoadingPublicSettings || isLoadingAuth) {
-    return <div aria-hidden="true" className="app-design-backdrop fixed inset-0" style={{ backgroundImage: `url(${ART.pageBg})` }} />;
+    return <div aria-hidden="true" className="fixed inset-0 bg-background" />;
   }
 
   // Handle authentication errors
