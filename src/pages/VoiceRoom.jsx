@@ -1547,7 +1547,7 @@ export default function VoiceRoom() {
         messages={messages}
         onSendMessage={sendMessage}
         onOpenGifts={() => setGiftOpen(true)}
-        voice={{ muted: voice.muted, toggleMute: voice.toggleMute }}
+        voice={{ muted: voice.muted, toggleMute: voice.toggleMute, allowConsent: voice.allowConsent }}
         roomActions={roomProfileActions}
         onSendGift={(gift, ids) => {
           queueGiftSend(gift, ids).catch((error) => {

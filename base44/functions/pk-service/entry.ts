@@ -213,15 +213,33 @@ export default async function (req) {
       return Response.json({ match: updated });
     }
 
-    // Bitir / ayrıl: karşılaşma kapanır, rakibe rövanş seçeneği kalır.
-    if (action === 'finish' || action === 'leave') {
+    // Bitir: tur kapanır, rakibe rövanş seçeneği kalır.
+    if (action === 'finish') {
       const match = await getMatch(String(body.id || ''));
       if (!match) return Response.json({ error: 'PK bulunamadı' }, { status: 404 });
       if (!isPlayer(match)) return Response.json({ error: 'Yetki yok' }, { status: 403 });
-      const updated = await svc.PkMatch.update(match.id, {
-        status: 'ended',
-        left_id: action === 'leave' ? user.id : '',
-      });
+      const updated = await svc.PkMatch.update(match.id, { status: 'ended', left_id: '' });
+      return Response.json({ match: updated });
+    }
+
+    // Ayrıl: konuk ayrılırsa yayıncı tek başına yayında kalır; yayıncı ayrılırsa yayın kapanır.
+    if (action === 'leave') {
+      const match = await getMatch(String(body.id || ''));
+      if (!match) return Response.json({ error: 'PK bulunamadı' }, { status: 404 });
+      if (!isPlayer(match)) return Response.json({ error: 'Yetki yok' }, { status: 403 });
+
+      if (match.status === 'live' && match.guest_id === user.id) {
+        const cleared = await svc.PkMatch.update(match.id, {
+          guest_id: '',
+          guest_name: '',
+          guest_avatar: '',
+          accepted: false,
+          muted: [],
+        });
+        return Response.json({ match: cleared });
+      }
+
+      const updated = await svc.PkMatch.update(match.id, { status: 'ended', left_id: user.id });
       return Response.json({ match: updated });
     }
 

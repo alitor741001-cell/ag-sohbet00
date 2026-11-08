@@ -71,6 +71,18 @@ export default function VideoPkStage({
   const cameraOn = open && isPlayer && !!active && (active.status === 'live' || active.status === 'ended');
   const { localVideoRef, remoteTracks, error, camOn, setCameraEnabled, mirror } = usePkCamera({ active: cameraOn, livekitRoom, selfId: user?.id });
 
+  // Yayın sesi LiveKit üzerinden akar: yayın ekranı açıldığında yayıncının mikrofonu
+  // kapalıysa açılır, böylece odadaki izleyiciler sesi duyar.
+  const micAskedRef = useRef('');
+  useEffect(() => {
+    if (!cameraOn || !voice?.muted) return;
+    const key = active?.id || '';
+    if (!key || micAskedRef.current === key) return;
+    micAskedRef.current = key;
+    voice?.allowConsent?.();
+    voice?.toggleMute?.();
+  }, [cameraOn, active?.id, voice]);
+
   // Yayın açılır açılmaz kamera yayına girer; odada açık bir yayın varsa ona katılınır.
   useEffect(() => {
     if (!open) { autoRef.current = false; setInviteOpen(false); setViewerOpen(false); setRankOpen(false); return; }
@@ -285,10 +297,13 @@ export default function VideoPkStage({
         )}
 
         {!incoming && showFrames && (
+          /* Yalnız yayındayken tek kare ekranın tamamını kaplar; davet düğmesi karenin
+             üstünde küçük bir düğme olarak durur. Konuk gelince iki kare yan yana açılır. */
           <div className="flex min-h-0 flex-1 gap-0.5">
             {seats.map((seat, index) => {
               const isMe = seat.id === user?.id;
               const opponentSeat = !isMe && seat.id === opponentId;
+              const canInvite = isHost && (opponentSeat || (seats.length === 1 && isMe));
               return (
                 <PkFeedTile
                   key={seat.id || index}
@@ -303,30 +318,19 @@ export default function VideoPkStage({
                   track={isMe ? null : remoteTracks.find((item) => item.identity === seat.id)?.track}
                   error={isMe ? error : ''}
                   onOpen={isMe ? null : () => openPerson(seat.id, seat.name, seat.avatar)}
-                  footer={opponentSeat && isHost ? (
+                  footer={canInvite ? (
                     <button
                       type="button"
                       onClick={() => setInviteOpen(true)}
                       aria-label="Yayına davet et"
-                      className="flex h-6 w-6 items-center justify-center rounded-full bg-white/15 text-white ring-1 ring-white/30 active:scale-95"
+                      className="flex h-8 w-8 items-center justify-center rounded-full bg-fuchsia-500/85 text-white ring-1 ring-white/40 active:scale-95"
                     >
-                      <UserPlus className="h-3.5 w-3.5" />
+                      <UserPlus className="h-4 w-4" />
                     </button>
                   ) : null}
                 />
               );
             })}
-
-            {seats.length === 1 && (
-              <button
-                type="button"
-                onClick={() => setInviteOpen(true)}
-                className="flex min-h-0 flex-1 flex-col items-center justify-center gap-1 bg-white/[0.04] text-[10.5px] font-black text-fuchsia-200 active:scale-95"
-              >
-                <UserPlus className="h-6 w-6" /> Davet et
-                <span className="px-2 text-center text-[9px] font-semibold text-white/45">Kabul eden yayına katılır</span>
-              </button>
-            )}
           </div>
         )}
 

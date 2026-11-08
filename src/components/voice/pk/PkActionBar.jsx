@@ -21,7 +21,7 @@ export default function PkActionBar({
 
   const iconClass = 'flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white active:scale-95';
   // Sağ alt köşedeki dört kare düğme: kamera, mikrofon, paylaş ve davet.
-  const squareClass = 'flex h-8 w-8 items-center justify-center rounded-xl text-white active:scale-95';
+  const squareClass = 'flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-white active:scale-95 sm:h-9 sm:w-9';
 
   return (
     <div className="shrink-0 pt-1">
