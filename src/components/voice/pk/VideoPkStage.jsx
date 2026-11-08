@@ -45,7 +45,10 @@ export default function VideoPkStage({
   // Yayın kontrolleri (kamera, mikrofon, davet) yalnızca oda sahibinde görünür;
   // izleyiciler ve yöneticiler bu düğmelere ulaşamaz, yayın açamaz.
   const roomOwner = !!ownerId && user?.id === ownerId;
+  // Davet gönderme ve yayını yönetme oda sahibinde; kamera/mikrofon kontrolleri
+  // yayındaki herkesin kendine özel (davet edilen kişi de kendi kamerasını yönetir).
   const canManage = roomOwner || isHost;
+  const hasControls = roomOwner || isPlayer;
 
   // Kamera karesi, izleyici listesi ve sıralama aynı gerçek profil kartını açar:
   // kartta odadan atma, yöneticilik, mikrofon, engelleme gibi işlemler hazır gelir.
@@ -252,7 +255,7 @@ export default function VideoPkStage({
 
       <div className="relative flex min-h-0 flex-1 flex-col">
         {/* Yayın kontrolleri: kamera, mikrofon ve davet her durumda sağ üstteki kare düğmeden açılır. */}
-        {canManage && (
+        {hasControls && (
           <button
             type="button"
             onClick={() => setControlsOpen(true)}
@@ -387,12 +390,13 @@ export default function VideoPkStage({
       )}
 
       {/* Yayın kontrolleri: kamera, mikrofon ve davet tek panelde — yalnızca oda sahibi. */}
-      {canManage && (
+      {hasControls && (
         <PkOwnerControls
           open={controlsOpen}
           onClose={() => setControlsOpen(false)}
           camOn={camOn}
           micMuted={iMuted}
+          canInvite={canManage}
           onToggleCamera={toggleCamera}
           onToggleMic={pressMic}
           onInvite={() => { setControlsOpen(false); setInviteOpen(true); }}

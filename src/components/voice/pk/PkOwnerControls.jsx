@@ -3,11 +3,11 @@ import VoiceSheet from '@/components/voice/VoiceSheet';
 
 /** Yayıncı kontrolleri: kamera, mikrofon ve davet tek panelde toplanır.
  *  Yalnızca oda sahibi görür; izleyiciler ve yöneticiler bu düğmelere ulaşamaz. */
-export default function PkOwnerControls({ open, onClose, camOn = true, micMuted = false, onToggleCamera, onToggleMic, onInvite }) {
+export default function PkOwnerControls({ open, onClose, camOn = true, micMuted = false, canInvite = true, onToggleCamera, onToggleMic, onInvite }) {
   const tiles = [
     { key: 'cam', label: camOn ? 'Kamerayı kapat' : 'Kamerayı aç', icon: camOn ? Camera : CameraOff, onClick: onToggleCamera },
     { key: 'mic', label: micMuted ? 'Mikrofonu aç' : 'Mikrofonu kapat', icon: micMuted ? MicOff : Mic, onClick: onToggleMic },
-    { key: 'invite', label: 'Yayına davet et', icon: UserPlus, onClick: onInvite },
+    ...(canInvite ? [{ key: 'invite', label: 'Yayına davet et', icon: UserPlus, onClick: onInvite }] : []),
   ];
 
   return (
