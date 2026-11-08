@@ -1337,3 +1337,14 @@ html.no-bounce, html.no-bounce body { overscroll-behavior: none; }
     padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 0.5rem) !important;
   }
 }
+
+/* === RENKLİ ATEŞ DÜĞMELERİ === */
+/* Her düğme kendi renginde hafifçe parlar ve titrer: mavi ateş, sarı ateş, turuncu ateş. */
+@keyframes fire-flicker {
+  0%, 100% { filter: brightness(1); }
+  32% { filter: brightness(1.2); }
+  58% { filter: brightness(0.96); }
+  80% { filter: brightness(1.12); }
+}
+.fire-flicker { animation: fire-flicker 2.8s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .fire-flicker { animation: none; } }

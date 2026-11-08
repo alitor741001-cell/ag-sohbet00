@@ -5,13 +5,23 @@ import useSupportBadge from '@/hooks/useSupportBadge';
 import { useMessageRealtime } from '@/components/messages/MessageRealtimeProvider';
 
 // Düğme sırası: Ana Sayfa, Sohbet, Oyunlar, Canlı Destek, Profil.
+// Her düğme kendi renginde yanar: turuncu, mavi, mor, yeşil ve pembe ateş.
 const ZONES = [
-  { label: 'Ana Sayfa', short: 'Ana Sayfa', Icon: Home, to: '/', match: (p, s) => p === '/' && !s.includes('oyunlar=1') },
-  { label: 'Sohbet', short: 'Sohbet', Icon: MessageCircle, to: '/arkadaslar?view=chats', match: (p) => p.startsWith('/arkadaslar'), badge: 'chat' },
-  { label: 'Oyunlar', short: 'Oyunlar', Icon: Gamepad2, to: '/?oyunlar=1', match: (p, s) => p === '/' && s.includes('oyunlar=1') },
-  { label: 'Canlı Destek', short: 'Destek', Icon: Headphones, to: '/destek', match: (p) => p === '/destek', badge: 'support' },
-  { label: 'Profil', short: 'Profil', Icon: User, to: '/profil', match: (p) => p === '/profil' },
+  { label: 'Ana Sayfa', short: 'Ana Sayfa', Icon: Home, to: '/', match: (p, s) => p === '/' && !s.includes('oyunlar=1'), tone: 'orange' },
+  { label: 'Sohbet', short: 'Sohbet', Icon: MessageCircle, to: '/arkadaslar?view=chats', match: (p) => p.startsWith('/arkadaslar'), badge: 'chat', tone: 'cyan' },
+  { label: 'Oyunlar', short: 'Oyunlar', Icon: Gamepad2, to: '/?oyunlar=1', match: (p, s) => p === '/' && s.includes('oyunlar=1'), tone: 'violet' },
+  { label: 'Canlı Destek', short: 'Destek', Icon: Headphones, to: '/destek', match: (p) => p === '/destek', badge: 'support', tone: 'emerald' },
+  { label: 'Profil', short: 'Profil', Icon: User, to: '/profil', match: (p) => p === '/profil', tone: 'pink' },
 ];
+
+// Renk tonları: ikon rengi, seçili kapsül ve seçili ikon ışıması.
+const TONES = {
+  orange: { icon: 'text-[#ffa45c]', onIcon: 'text-white drop-shadow-[0_0_8px_rgba(255,138,43,0.95)]', pill: 'border-orange-300/55 bg-orange-500/20 shadow-[0_0_20px_-2px_rgba(255,138,43,0.85),inset_0_1px_0_rgba(255,255,255,0.14)]' },
+  cyan: { icon: 'text-[#5cd6ff]', onIcon: 'text-white drop-shadow-[0_0_8px_rgba(79,195,255,0.95)]', pill: 'border-sky-300/55 bg-sky-500/20 shadow-[0_0_20px_-2px_rgba(79,195,255,0.85),inset_0_1px_0_rgba(255,255,255,0.14)]' },
+  violet: { icon: 'text-[#c69bff]', onIcon: 'text-white drop-shadow-[0_0_8px_rgba(185,0,255,0.95)]', pill: 'border-violet-300/55 bg-violet-500/20 shadow-[0_0_20px_-2px_rgba(185,0,255,0.85),inset_0_1px_0_rgba(255,255,255,0.14)]' },
+  emerald: { icon: 'text-[#5cf0a8]', onIcon: 'text-white drop-shadow-[0_0_8px_rgba(34,197,94,0.95)]', pill: 'border-emerald-300/55 bg-emerald-500/20 shadow-[0_0_20px_-2px_rgba(34,197,94,0.85),inset_0_1px_0_rgba(255,255,255,0.14)]' },
+  pink: { icon: 'text-[#ff87b7]', onIcon: 'text-white drop-shadow-[0_0_8px_rgba(255,92,138,0.95)]', pill: 'border-pink-300/55 bg-pink-500/20 shadow-[0_0_20px_-2px_rgba(255,92,138,0.85),inset_0_1px_0_rgba(255,255,255,0.14)]' },
+};
 
 // Çubuğun yüksekliği sabittir: sayfalar (ana sayfa, profil) içeriklerini bu ölçüye göre
 // bitirir, alt menü hiçbir düğmenin üstüne binmez.
@@ -19,9 +29,9 @@ const BAR_HEIGHT = 'clamp(56px, 15vw, 68px)';
 export const NAV_HEIGHT = `calc(${BAR_HEIGHT} + 14px)`;
 
 /**
- * Ana menü: koyu cam bar üzerinde ikonlu düğmeler.
- * Seçili düğme kırmızı neon bir kapsülle yanar. Görsel işleme yoktur: açılışta
- * hiçbir görsel kesilmez, menü ilk boyamada hazır durur.
+ * Ana menü: koyu cam bar üzerinde renkli ikonlu düğmeler.
+ * Seçili düğme kendi renginde neon bir kapsülle yanar. Görsel işleme yoktur:
+ * açılışta hiçbir görsel kesilmez, menü ilk boyamada hazır durur.
  */
 export default function DesignBottomNav() {
   const { pathname, search } = useLocation();
@@ -49,6 +59,7 @@ export default function DesignBottomNav() {
           const active = zone.match(pathname, search);
           const count = zone.badge ? counts[zone.badge] : 0;
           const Icon = zone.Icon;
+          const t = TONES[zone.tone] || TONES.orange;
           return (
             <Link
               key={zone.label}
@@ -58,22 +69,17 @@ export default function DesignBottomNav() {
               className="relative flex min-w-0 flex-1 flex-col items-center justify-center gap-[2px] rounded-[17px] pb-1 transition-transform active:scale-95"
             >
               {active && (
-                <span
-                  aria-hidden="true"
-                  className="pointer-events-none absolute inset-0 rounded-[17px] border border-primary/45 bg-primary/15 shadow-[0_0_20px_-2px_rgba(239,68,68,0.75),inset_0_1px_0_rgba(255,255,255,0.12)]"
-                />
+                <span aria-hidden="true" className={`pointer-events-none absolute inset-0 rounded-[17px] border ${t.pill}`} />
               )}
               <Icon
                 aria-hidden="true"
-                className={active
-                  ? 'relative h-[19px] w-[19px] shrink-0 text-white drop-shadow-[0_0_7px_rgba(239,68,68,0.9)]'
-                  : 'relative h-[19px] w-[19px] shrink-0 text-white/55'}
-                strokeWidth={active ? 2.6 : 2.1}
+                className={`relative h-[19px] w-[19px] shrink-0 ${active ? t.onIcon : t.icon}`}
+                strokeWidth={active ? 2.6 : 2.2}
               />
               <span
                 className={active
                   ? 'relative max-w-full truncate px-0.5 text-[8px] font-bold uppercase tracking-[0.04em] text-white'
-                  : 'relative max-w-full truncate px-0.5 text-[8px] font-semibold uppercase tracking-[0.04em] text-white/50'}
+                  : 'relative max-w-full truncate px-0.5 text-[8px] font-semibold uppercase tracking-[0.04em] text-white/60'}
               >
                 {zone.short}
               </span>
@@ -85,8 +91,8 @@ export default function DesignBottomNav() {
             </Link>
           );
         })}
-        {/* Çubuğun üstündeki ince ışık çizgisi: cam yüzey hissi. */}
-        <span aria-hidden="true" className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
+        {/* Çubuğun üstündeki renkli ışık çizgisi: cam yüzey hissi. */}
+        <span aria-hidden="true" className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-orange-400/70 to-transparent" />
       </div>
     </nav>
   );

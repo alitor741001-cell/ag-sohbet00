@@ -48,10 +48,17 @@ function RoomDiscoveryCard({ room, owner, kind, filmTitle, friendInside }) {
         rememberRoom(room);
       }}
       aria-disabled={locked || undefined}
-      className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#0b0b13]/85 shadow-[0_16px_32px_-26px_rgba(0,0,0,1)] transition-transform active:scale-[0.98]"
+      className={`group relative flex flex-col overflow-hidden rounded-2xl border bg-gradient-to-b from-white/[0.07] to-[#0b0b13]/92 transition-transform active:scale-[0.98] ${isVoice
+        ? 'border-cyan-300/45 shadow-[0_16px_32px_-26px_rgba(0,0,0,1),0_0_22px_-10px_rgba(34,249,255,0.9)]'
+        : 'border-orange-300/45 shadow-[0_16px_32px_-26px_rgba(0,0,0,1),0_0_22px_-10px_rgba(255,138,43,0.9)]'}`}
     >
-      {/* Kapak: sıcak kırmızı-pembe ışık kartın üstünde durur. */}
-      <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-[radial-gradient(ellipse_at_top,rgba(239,68,68,0.35),transparent_70%)]" />
+      {/* Kapak: sesli odada mavi ateş, film odasında turuncu-kırmızı ateş ışığı. */}
+      <span
+        aria-hidden="true"
+        className={`pointer-events-none absolute inset-x-0 top-0 h-16 ${isVoice
+          ? 'bg-[radial-gradient(ellipse_at_top,rgba(34,249,255,0.35),transparent_70%)]'
+          : 'bg-[radial-gradient(ellipse_at_top,rgba(255,138,43,0.38),transparent_70%)]'}`}
+      />
 
       <div className="relative w-full overflow-hidden" style={{ aspectRatio: '4 / 3' }}>
         {cover ? (
@@ -114,13 +121,16 @@ function RoomDiscoveryCard({ room, owner, kind, filmTitle, friendInside }) {
         </span>
         <span className="flex items-center justify-between gap-1">
           <span className="truncate text-[9px] font-semibold text-white/60">{ownerName}</span>
-          <span className="flex shrink-0 items-center gap-0.5 text-[9px] font-black uppercase tracking-wide text-primary/90">
+          <span className={`flex shrink-0 items-center gap-0.5 text-[9px] font-black uppercase tracking-wide ${isVoice ? 'text-[#5cd6ff]' : 'text-[#ffa45c]'}`}>
             {isVoice ? <Mic className="h-2.5 w-2.5" /> : <Film className="h-2.5 w-2.5" />}
             {isVoice ? 'Sesli' : 'Film'}
           </span>
         </span>
       </div>
-      <span aria-hidden="true" className="pointer-events-none absolute inset-x-3 bottom-0 h-px bg-gradient-to-r from-transparent via-primary/70 to-transparent" />
+      <span
+        aria-hidden="true"
+        className={`pointer-events-none absolute inset-x-3 bottom-0 h-px bg-gradient-to-r from-transparent to-transparent ${isVoice ? 'via-cyan-300/80' : 'via-amber-300/80'}`}
+      />
     </Link>
   );
 }

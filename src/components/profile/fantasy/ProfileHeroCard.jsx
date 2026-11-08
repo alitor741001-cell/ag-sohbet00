@@ -20,6 +20,16 @@ export default function ProfileHeroCard({ user, avatar, onAvatar, uploading, vip
   const badges = badgesFromUser(user);
   const male = user.gender === 'erkek';
   const female = !!user.gender && !male;
+  // İsim renkli yazılır: mavi-mor-turuncu-sarı ateş geçişi. Kırmızı VIP isimde korunur.
+  const nameStyle = isRedNameVip(vipLevel)
+    ? { color: '#ef4444', textShadow: '0 0 10px rgba(239,68,68,0.9)' }
+    : {
+      backgroundImage: 'linear-gradient(90deg,#4fc3ff 0%,#b900ff 38%,#ff9a3c 68%,#fff83d 100%)',
+      WebkitBackgroundClip: 'text',
+      backgroundClip: 'text',
+      color: 'transparent',
+      filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.9))',
+    };
 
   const copyId = async () => {
     try {
@@ -36,7 +46,10 @@ export default function ProfileHeroCard({ user, avatar, onAvatar, uploading, vip
       {/* Neon cam panel: ışıklar CSS ile çizilir, görsel yüklenmez. */}
       <div className="relative overflow-hidden rounded-[26px] border border-primary/25 bg-[#0b0a12]/85 p-3.5 shadow-[0_0_40px_-20px_rgba(239,68,68,0.95),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur">
         <span aria-hidden="true" className="pointer-events-none absolute -top-10 left-1/2 h-20 w-40 -translate-x-1/2 rounded-full bg-primary/30 blur-2xl" />
+        <span aria-hidden="true" className="pointer-events-none absolute -left-6 top-10 h-24 w-24 rounded-full bg-sky-500/25 blur-2xl" />
+        <span aria-hidden="true" className="pointer-events-none absolute -right-6 bottom-0 h-24 w-24 rounded-full bg-violet-500/25 blur-2xl" />
         <span aria-hidden="true" className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-primary/80 to-transparent" />
+        <span aria-hidden="true" className="pointer-events-none absolute inset-x-6 bottom-0 h-px bg-gradient-to-r from-transparent via-amber-300/70 to-transparent" />
 
         <div className="relative flex items-center gap-3.5">
           <div className="relative shrink-0">
@@ -59,8 +72,8 @@ export default function ProfileHeroCard({ user, avatar, onAvatar, uploading, vip
                 type="button"
                 onClick={() => setPicking(true)}
                 aria-label="Profil fotoğrafını düzenle"
-                className="absolute -right-1 top-0 z-20 flex h-7 w-7 items-center justify-center rounded-full border border-primary/70 text-white active:scale-95"
-                style={{ background: 'linear-gradient(135deg, #ef4343, #8f1020)', boxShadow: '0 0 14px rgba(239,68,68,0.7)' }}
+                className="absolute -right-1 top-0 z-20 flex h-7 w-7 items-center justify-center rounded-full border border-sky-200/80 text-white active:scale-95"
+                style={{ background: 'linear-gradient(135deg, #4fc3ff, #6b21d6)', boxShadow: '0 0 14px rgba(107,33,214,0.85)' }}
               >
                 <Camera className="h-3.5 w-3.5" />
               </button>
@@ -71,7 +84,7 @@ export default function ProfileHeroCard({ user, avatar, onAvatar, uploading, vip
             <div className="flex items-center gap-1.5">
               <h2
                 className="truncate text-lg font-extrabold text-white"
-                style={isRedNameVip(vipLevel) ? { color: '#ef4444', textShadow: '0 0 10px rgba(239,68,68,0.9)' } : { textShadow: '0 0 10px rgba(255,255,255,0.35)' }}
+                style={nameStyle}
               >
                 {name}
               </h2>
@@ -83,10 +96,10 @@ export default function ProfileHeroCard({ user, avatar, onAvatar, uploading, vip
             <button
               type="button"
               onClick={copyId}
-              className="mt-1 flex items-center gap-1.5 rounded-full border border-white/12 bg-white/[0.06] px-2 py-[3px] text-[11px] font-semibold text-white/80 active:scale-95"
+              className="mt-1 flex items-center gap-1.5 rounded-full border border-cyan-300/45 bg-gradient-to-r from-cyan-500/25 to-violet-500/25 px-2 py-[3px] text-[11px] font-bold text-cyan-50 shadow-[0_0_12px_-4px_rgba(79,195,255,0.9)] active:scale-95"
             >
               ID:{user.member_id || '—'}
-              {copied ? <Check className="h-3.5 w-3.5 text-primary" /> : <Copy className="h-3.5 w-3.5 text-white/55" />}
+              {copied ? <Check className="h-3.5 w-3.5 text-emerald-300" /> : <Copy className="h-3.5 w-3.5 text-cyan-200/80" />}
             </button>
 
             <div className="mt-2 flex flex-wrap items-center gap-1.5">
