@@ -46,7 +46,8 @@ export default function Home() {
           kartları alt menünün altından geçmez, yalnızca birkaç piksel altına taşar. */}
       <div
         className="relative flex h-full flex-col"
-        style={{ paddingBottom: `calc(${NAV_HEIGHT} - 10px)` }}
+        // Alt menü güvenli alanın içine oturur: kaydırma alanı menünün ve çenenin üstünde biter.
+        style={{ paddingBottom: `calc(${NAV_HEIGHT} - 10px + env(safe-area-inset-bottom, 0px))` }}
       >
         {!games && (
           <div className="shrink-0 pt-[env(safe-area-inset-top)]">

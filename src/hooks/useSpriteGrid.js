@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react';
 import { borderWhiteCutout, trimTransparent } from '@/lib/whiteCutout';
 
-// 4x4 tasarım görselini körlemesine eşit parçalara bölmek düğmeleri kesiyordu.
-// Burada görselin gerçek boşlukları bulunur: önce satırlar, sonra sütunlar.
-// Düğme sınırları iki düğme arasındaki beyaz boşluğun ortasından geçer, böylece
-// hiçbir düğme kırpılmaz; sonra her hücrenin beyaz zemini şeffaf yapılır.
+// 4x4 tasarım görselini eşit parçalara bölmek düğmeleri kesiyordu. Burada sınırlar
+// görseldeki gerçek beyaz boşluklardan (oluk) bulunur: düğmeler arasındaki en boş
+// sütun/satır sınırdır, böylece hiçbir düğme kırpılmaz.
 
 const cache = new Map();
-const MAX_WIDTH = 1100;
+const MAX_WIDTH = 1200;
 const ROWS = 4;
 const COLS = 4;
 
@@ -27,28 +26,24 @@ const isStrong = (p, i) => {
   return max - min > 45 || max < 150;
 };
 
-function countRuns(values, w, threshold) {
-  const runs = [];
-  let start = -1;
-  for (let i = 0; i <= w; i += 1) {
-    const on = i < w && values[i] >= threshold;
-    if (on && start < 0) start = i;
-    if (!on && start >= 0) { runs.push({ start, end: i }); start = -1; }
-  }
-  return runs.filter((run) => run.end - run.start > w * 0.03);
+// Bir eksende içeriğin başladığı/bittiği aralığı ve boşlukları ölçer.
+function contentSpan(profile, threshold) {
+  let first = -1; let last = -1;
+  profile.forEach((value, i) => {
+    if (value > threshold) { if (first < 0) first = i; last = i; }
+  });
+  return { first: Math.max(first, 0), last: Math.max(last, 0) };
 }
 
-function mergeTo(runs, max) {
-  const list = runs.slice();
-  while (list.length > max) {
-    let at = 0; let gap = Infinity;
-    for (let i = 0; i < list.length - 1; i += 1) {
-      const g = list[i + 1].start - list[i].end;
-      if (g < gap) { gap = g; at = i; }
-    }
-    list.splice(at, 2, { start: list[at].start, end: list[at + 1].end });
+// Verilen aralıkta en boş çizgiyi (düğmeler arası beyaz boşluk) bulur.
+function gutterBetween(profile, from, to) {
+  let best = Math.round((from + to) / 2);
+  let bestValue = Infinity;
+  for (let i = Math.max(1, from); i < Math.min(profile.length - 1, to); i += 1) {
+    const value = profile[i];
+    if (value < bestValue) { bestValue = value; best = i; }
   }
-  return list;
+  return best;
 }
 
 function analyze(img) {
@@ -63,42 +58,34 @@ function analyze(img) {
   const strong = new Uint8Array(w * h);
   for (let i = 0, px = 0; i < p.length; i += 4, px += 1) strong[px] = isStrong(p, i) ? 1 : 0;
 
-  // Satır bantları
-  const rowCount = new Array(h).fill(0);
+  const col = new Array(w).fill(0);
+  const row = new Array(h).fill(0);
   for (let y = 0; y < h; y += 1) {
-    let sum = 0;
-    for (let x = 0; x < w; x += 1) sum += strong[y * w + x];
-    rowCount[y] = sum;
-  }
-  const rowRuns = countRuns(rowCount, h, Math.max(2, Math.round(w * 0.01)));
-  const bands = mergeTo(rowRuns, ROWS);
-  if (bands.length < ROWS) return null;
-
-  // Sütunlar: en çok düğme veren banttan ölçülür, tüm satırlara aynı sınırlar uygulanır
-  let cols = [];
-  bands.forEach((band) => {
-    const counts = new Array(w).fill(0);
-    for (let y = band.start; y < band.end; y += 1) {
-      for (let x = 0; x < w; x += 1) counts[x] += strong[y * w + x];
+    for (let x = 0; x < w; x += 1) {
+      if (strong[y * w + x]) { col[x] += 1; row[y] += 1; }
     }
-    const threshold = Math.max(2, Math.round((band.end - band.start) * 0.25));
-    const runs = mergeTo(countRuns(counts, w, threshold), COLS);
-    if (runs.length > cols.length) cols = runs;
-  });
-  if (cols.length < COLS) return null;
-
-  const xBounds = [0];
-  for (let i = 0; i < cols.length - 1; i += 1) {
-    xBounds.push(Math.round((cols[i].end + cols[i + 1].start) / 2));
   }
-  xBounds.push(w);
-  const yBounds = [0];
-  for (let i = 0; i < bands.length - 1; i += 1) {
-    yBounds.push(Math.round((bands[i].end + bands[i + 1].start) / 2));
-  }
-  yBounds.push(h);
 
-  // Boş hücreler: içinde hiç düğme pikseli olmayanlar
+  const axisBounds = (profile, size, count) => {
+    const { first, last } = contentSpan(profile, 1);
+    const span = Math.max(last - first, count);
+    const bounds = [0];
+    for (let i = 1; i < count; i += 1) {
+      const expected = first + (span * i) / count;
+      const window = span * 0.16;
+      bounds.push(gutterBetween(profile, Math.round(expected - window), Math.round(expected + window)));
+    }
+    bounds.push(size);
+    // Sıralı ve artan olmalı
+    for (let i = 1; i < bounds.length - 1; i += 1) {
+      if (bounds[i] <= bounds[i - 1] + 2) bounds[i] = bounds[i - 1] + 3;
+    }
+    return bounds;
+  };
+
+  const xBounds = axisBounds(col, w, COLS);
+  const yBounds = axisBounds(row, h, ROWS);
+
   const filled = [];
   for (let r = 0; r < ROWS; r += 1) {
     filled.push([]);
@@ -107,7 +94,7 @@ function analyze(img) {
       for (let y = yBounds[r]; y < yBounds[r + 1]; y += 1) {
         for (let x = xBounds[c]; x < xBounds[c + 1]; x += 1) sum += strong[y * w + x];
       }
-      filled[r].push(sum > 12);
+      filled[r].push(sum > 40);
     }
   }
 
@@ -119,7 +106,7 @@ function analyze(img) {
 }
 
 /**
- * Tasarım görselini gerçek düğme sınırlarından bölüp her hücreyi şeffaf PNG yapar.
+ * Tasarım görselini gerçek düğme boşluklarından bölüp her hücreyi şeffaf PNG yapar.
  * Dönen değer satır satır görsel listesidir; boş hücre null olur.
  */
 export default function useSpriteGrid(url) {
@@ -132,7 +119,6 @@ export default function useSpriteGrid(url) {
     loadImage(url)
       .then((img) => {
         const grid = analyze(img);
-        if (!grid) return null;
         const tasks = [];
         for (let r = 0; r < ROWS; r += 1) {
           for (let c = 0; c < COLS; c += 1) {

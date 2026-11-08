@@ -33,9 +33,10 @@ export default function DesignBottomNav() {
       id="app-bottom-nav"
       aria-label="Ana menü"
       className="fixed inset-x-0 bottom-0 z-[60]"
-      /* Düğmeler ekranın en dibine, çentik hizasına kadar iner: altta boşluk kalmaz. */
+      /* Düğmeler güvenli alanın içinde durur: çentik, çene çubuğu ve sistem
+          hareket çubuğunun altında kalmaz, tüm telefonlarda tam görünür. */
       style={{
-        paddingBottom: '0px',
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
         paddingLeft: 'env(safe-area-inset-left, 0px)',
         paddingRight: 'env(safe-area-inset-right, 0px)',
       }}

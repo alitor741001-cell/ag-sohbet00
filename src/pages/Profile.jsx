@@ -176,7 +176,8 @@ export default function Profile() {
   return (
     <div
       ref={rootRef}
-      className="dark relative flex h-[calc(var(--app-height)-var(--profile-lift))] flex-col overflow-hidden text-white mt-[calc(-1*max(env(safe-area-inset-top),0.5rem))] lg:mt-0"
+      /* İçerik çentiğin altından başlar: başlık ve düğmeler çentiğin içinde kalmaz. */
+      className="dark relative flex h-[calc(var(--app-height)-var(--profile-lift))] flex-col overflow-hidden text-white"
       style={{
         marginLeft: 'calc(-1 * env(safe-area-inset-left, 0px))',
         marginRight: 'calc(-1 * env(safe-area-inset-right, 0px))',
