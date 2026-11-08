@@ -75,13 +75,19 @@ export const AuthProvider = ({ children }) => {
         setAuthChecked(true);
       });
 
+      // Ek ayar servisi açılış sırasını beklemez: arka planda tamamlanır, geldiğinde uygulanır.
+      base44.functions.invoke('public-settings', {})
+        .then((ps) => setPublicSettings(ps.data || ps))
+        .catch(() => {});
+
       try {
-        const [appSettings] = await Promise.all([
+        // Ayarlar isteği yavaş kalırsa uygulama beklemez: 2,5 saniyede varsayılanlarla
+        // açılır, gelen ayarlar arkada uygulanır.
+        const appSettings = await Promise.race([
           appClient.get(`/prod/public-settings/by-id/${appParams.appId}`),
-          base44.functions.invoke('public-settings', {})
-            .then((ps) => setPublicSettings(ps.data || ps)).catch(() => {}),
+          new Promise((resolve) => { window.setTimeout(() => resolve(null), 2500); }),
         ]);
-        setAppPublicSettings(appSettings);
+        if (appSettings) setAppPublicSettings(appSettings);
         await authPromise;
         setIsLoadingPublicSettings(false);
       } catch (appError) {

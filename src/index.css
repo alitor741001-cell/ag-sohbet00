@@ -855,10 +855,6 @@
   }
 }
 
-/* Profil ekranı alt menünün üstünde biter: tasarımın en alt satırı (engellenen
-   hesaplar, gizlilik, ayarlar) menünün altında kalmaz, okunur. */
-:root { --profile-lift: clamp(64px, 22vw, 116px); }
-
 /* Cihazın gerçek görünür yüksekliği. Ölçü açılışta ve her döndürmede JavaScript ile
    piksel olarak yazılır; dvh/svh birimini desteklemeyen eski iOS ve Android
    sürümlerinde de uygulama cihazın kendi ekran boyutunu kaplar. */

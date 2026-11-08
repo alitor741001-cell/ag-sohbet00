@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useCurrentUser } from '@/lib/useCurrentUser';
@@ -12,7 +12,7 @@ import SocialListDialog from '@/components/profile/social/SocialListDialog';
 import ProfileHeroCard from '@/components/profile/fantasy/ProfileHeroCard';
 import ProfileMenuDeck from '@/components/profile/fantasy/ProfileMenuDeck';
 import usePageScrollLock from '@/hooks/usePageScrollLock';
-import useProfileNavLift from '@/hooks/useProfileNavLift';
+import { NAV_HEIGHT } from '@/components/layout/DesignBottomNav';
 import { isModerator } from '@/lib/roles';
 import { giftBoxLocked } from '@/lib/giftAccess';
 import PrivacyPolicyBody from '@/components/profile/PrivacyPolicyBody';
@@ -29,9 +29,6 @@ import useGiftSummaryLive from '@/hooks/useGiftSummaryLive';
 export default function Profile() {
   // Profil ekranı sabittir: sayfa kaymaz, tasarım yerinde durur.
   usePageScrollLock();
-  // Tasarımın alt kenarı alt menü çubuğunun çerçevesine oturur: ölçü çubuktan okunur.
-  const rootRef = useRef(null);
-  useProfileNavLift(rootRef);
   const { user, reload, setUser } = useCurrentUser();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -175,10 +172,11 @@ export default function Profile() {
   // cihazın görünür alanına kilitlenir — başlığın üstünde boş şerit kalmaz.
   return (
     <div
-      ref={rootRef}
-      /* İçerik çentiğin altından başlar: başlık ve düğmeler çentiğin içinde kalmaz. */
-      className="dark relative flex h-[calc(var(--app-height)-var(--profile-lift))] flex-col overflow-hidden text-white"
+      /* İçerik çentiğin altından başlar: başlık ve düğmeler çentiğin içinde kalmaz.
+         Alt kenar, alt menü çubuğunun tam üstünde biter: menü düğmelerin üstüne binmez. */
+      className="dark relative flex flex-col overflow-hidden text-white"
       style={{
+        height: `calc(var(--app-height) - ${NAV_HEIGHT} - env(safe-area-inset-bottom, 0px))`,
         marginLeft: 'calc(-1 * env(safe-area-inset-left, 0px))',
         marginRight: 'calc(-1 * env(safe-area-inset-right, 0px))',
       }}
