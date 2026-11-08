@@ -201,6 +201,21 @@ export default function VideoPkStage({
     onSendGift?.(gift, [giftTargetId]);
   };
 
+  // Paylaş: odanın bağlantısı arkadaşlarla paylaşılır; paylaşım yoksa bağlantı kopyalanır.
+  const shareRoom = async () => {
+    const url = `${window.location.origin}/sesli-oda/${roomId}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: roomName || 'Sesli oda', url });
+        return;
+      }
+      await navigator.clipboard?.writeText(url);
+      toast({ title: 'Bağlantı kopyalandı', description: 'Arkadaşlarına gönderebilirsin.' });
+    } catch (err) {
+      /* kullanıcı paylaşımı kapattı */
+    }
+  };
+
   const sendRose = () => {
     const rose = gifts.find((gift) => gift.model_kind === 'rose') || gifts.find((gift) => /gül|rose/i.test(gift.name || ''));
     if (rose) { sendGift(rose); return; }
@@ -357,6 +372,7 @@ export default function VideoPkStage({
             onInvite={() => setInviteOpen(true)}
             onRose={sendRose}
             onGift={() => onOpenGifts?.()}
+            onShare={shareRoom}
             camOn={camOn}
             micMuted={iMuted}
             onToggleCamera={toggleCamera}

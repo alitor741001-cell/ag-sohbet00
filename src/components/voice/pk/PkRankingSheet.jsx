@@ -30,8 +30,9 @@ export default function PkRankingSheet({ open, roomId, onClose, onSelect }) {
 
   return (
     <div className="absolute inset-0 z-50 flex items-end bg-black/60" onClick={onClose}>
+      {/* Kart ekranın yarısı kadar açılır: alt kısımdaki yayın ve sohbet görünür kalır. */}
       <div
-        className="w-full rounded-t-2xl bg-[#17121e] p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] ring-1 ring-white/12"
+        className="flex h-[50vh] max-h-[50vh] w-full flex-col rounded-t-2xl bg-[#17121e] p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] ring-1 ring-white/12"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex items-center gap-1.5">
@@ -60,7 +61,7 @@ export default function PkRankingSheet({ open, roomId, onClose, onSelect }) {
           </p>
         )}
 
-        <div className="mt-1.5 space-y-1">
+        <div className="mt-1.5 min-h-0 flex-1 space-y-1 overflow-y-auto overscroll-contain">
           {rows.map((row, index) => (
             <button
               key={row.user_id}

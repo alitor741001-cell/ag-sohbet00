@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { Camera, CameraOff, Gift, Mic, MicOff, Send, Smile, Users } from 'lucide-react';
+import { Camera, CameraOff, Gift, Mic, MicOff, Send, Share2, Smile, Users } from 'lucide-react';
 
 const EMOJIS = ['❤️', '🔥', '😂', '👏'];
 
 /** Alt yazı alanı: yorum yazılır; kamera, mikrofon, davet, gül ve hediye düğmeleri en altta durur. */
 export default function PkActionBar({
-  onSend, onInvite, onRose, onGift, camOn = true, micMuted = false, onToggleCamera, onToggleMic, disabled,
+  onSend, onInvite, onRose, onGift, onShare, camOn = true, micMuted = false, onToggleCamera, onToggleMic, disabled,
 }) {
   const [text, setText] = useState('');
   const [emojiOpen, setEmojiOpen] = useState(false);
@@ -20,6 +20,8 @@ export default function PkActionBar({
   };
 
   const iconClass = 'flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white active:scale-95';
+  // Sağ alt köşedeki dört kare düğme: kamera, mikrofon, paylaş ve davet.
+  const squareClass = 'flex h-8 w-8 items-center justify-center rounded-xl text-white active:scale-95';
 
   return (
     <div className="shrink-0 pt-1">
@@ -38,7 +40,7 @@ export default function PkActionBar({
         </div>
       )}
 
-      <form onSubmit={submit} className="flex items-center gap-1">
+      <form onSubmit={submit} className="flex items-end gap-1">
         <div className="flex h-9 min-w-0 flex-1 items-center rounded-full bg-white/12 pl-3 pr-1">
           <input
             value={text}
@@ -62,7 +64,6 @@ export default function PkActionBar({
           )}
         </div>
 
-        {/* Sıra: gül, hediye, kamera, mikrofon ve en sağ köşede davet. */}
         <button type="button" onClick={onRose} aria-label="Gül gönder" className={iconClass}>
           <span className="text-lg leading-none">🌹</span>
         </button>
@@ -74,31 +75,43 @@ export default function PkActionBar({
         >
           <Gift className="h-5 w-5" />
         </button>
-        <button
-          type="button"
-          onClick={onToggleCamera}
-          aria-label={camOn ? 'Kamerayı kapat' : 'Kamerayı aç'}
-          className={`${iconClass} ${camOn ? 'bg-white/12 text-[#25f4ee]' : 'bg-red-500/20 text-red-300'}`}
-        >
-          {camOn ? <Camera className="h-4 w-4" /> : <CameraOff className="h-4 w-4" />}
-        </button>
-        <button
-          type="button"
-          onClick={onToggleMic}
-          aria-label={micMuted ? 'Mikrofonu aç' : 'Mikrofonu kapat'}
-          className={`${iconClass} ${micMuted ? 'bg-red-500/20 text-red-300' : 'bg-white/12 text-[#25f4ee]'}`}
-        >
-          {micMuted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-        </button>
-        <button
-          type="button"
-          onClick={onInvite}
-          aria-label="Arkadaş davet et"
-          className={`${iconClass} ml-auto`}
-          style={{ background: 'linear-gradient(135deg,#fe2c55,#25f4ee)' }}
-        >
-          <Users className="h-4 w-4" />
-        </button>
+
+        {/* Sağ alt köşe: iki sıra hâlinde dört kare düğme — kamera, mikrofon, paylaş, davet. */}
+        <div className="ml-auto grid shrink-0 grid-cols-2 gap-1">
+          <button
+            type="button"
+            onClick={onToggleCamera}
+            aria-label={camOn ? 'Kamerayı kapat' : 'Kamerayı aç'}
+            className={`${squareClass} ${camOn ? 'bg-white/12 text-[#25f4ee]' : 'bg-red-500/20 text-red-300'}`}
+          >
+            {camOn ? <Camera className="h-4 w-4" /> : <CameraOff className="h-4 w-4" />}
+          </button>
+          <button
+            type="button"
+            onClick={onToggleMic}
+            aria-label={micMuted ? 'Mikrofonu aç' : 'Mikrofonu kapat'}
+            className={`${squareClass} ${micMuted ? 'bg-red-500/20 text-red-300' : 'bg-white/12 text-[#25f4ee]'}`}
+          >
+            {micMuted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+          </button>
+          <button
+            type="button"
+            onClick={onShare}
+            aria-label="Yayını paylaş"
+            className={`${squareClass} bg-white/12 text-white`}
+          >
+            <Share2 className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={onInvite}
+            aria-label="Arkadaş davet et"
+            className={squareClass}
+            style={{ background: 'linear-gradient(135deg,#fe2c55,#25f4ee)' }}
+          >
+            <Users className="h-4 w-4" />
+          </button>
+        </div>
       </form>
     </div>
   );
