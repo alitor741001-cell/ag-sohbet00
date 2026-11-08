@@ -1,70 +1,61 @@
-import useSpriteGrid from '@/hooks/useSpriteGrid';
-import ProfileSocialCount from '@/components/profile/social/ProfileSocialCount';
+import {
+  Users, UserPlus, UserCheck, Eye, Coins, Gem, Crown, Gift,
+  ShoppingBag, Trophy, Castle, Store, Settings, UserX, ShieldCheck, LayoutGrid,
+} from 'lucide-react';
+import ProfileMenuTile from '@/components/profile/ProfileMenuTile';
 
-// Profil menüsü tasarımı: 4x4 düğme. Görsel, kendi düğme sınırlarından bölünür ve
-// beyaz zemin şeffaf yapılır — düğmeler tam görünür, kesilmez.
-const ART = 'https://base44.app/api/apps/6a77d66e4da6de214628ee62/files/mp/public/6a77d66e4da6de214628ee62/ba865902d_profile_menu_grid.jpg';
-
-// Satırlar tasarımdaki sırayla: görseldeki düğme hangi işlevi açıyorsa o eşlenir.
+// Profil menüsü: 4x4 ızgara, cam yüzeyli renkli düğmeler (eski görsel tasarım kaldırıldı).
 const ROWS = [
   [
-    { key: 'friends', label: 'Arkadaşlar' },
-    { key: 'following', label: 'Takip Edilenler' },
-    { key: 'followers', label: 'Takipçiler' },
-    { key: 'visitors', label: 'Ziyaretçiler' },
+    { key: 'friends', label: 'Arkadaşlar', Icon: Users, tone: 'sky' },
+    { key: 'following', label: 'Takip Edilenler', Icon: UserPlus, tone: 'violet' },
+    { key: 'followers', label: 'Takipçiler', Icon: UserCheck, tone: 'pink' },
+    { key: 'visitors', label: 'Ziyaretçiler', Icon: Eye, tone: 'cyan' },
   ],
   [
-    { key: 'coins', label: 'Coins' },
-    { key: 'diamonds', label: 'Elmaslar' },
-    { key: 'vip', label: 'VIP' },
-    { key: 'giftHistory', label: 'Hediye Geçmişi' },
+    { key: 'coins', label: 'Coins', Icon: Coins, tone: 'amber' },
+    { key: 'diamonds', label: 'Elmaslar', Icon: Gem, tone: 'cyan' },
+    { key: 'vip', label: 'VIP', Icon: Crown, tone: 'rose' },
+    { key: 'giftHistory', label: 'Hediye Geçmişi', Icon: Gift, tone: 'purple' },
   ],
   [
-    { key: 'bag', label: 'Çanta' },
-    { key: 'level', label: 'Seviye' },
-    { key: 'agency', label: 'Ajans' },
-    { key: 'store', label: 'Alışveriş Merkezi' },
+    { key: 'bag', label: 'Çanta', Icon: ShoppingBag, tone: 'emerald' },
+    { key: 'level', label: 'Seviye', Icon: Trophy, tone: 'amber' },
+    { key: 'agency', label: 'Ajans', Icon: Castle, tone: 'indigo' },
+    { key: 'store', label: 'Alışveriş Merkezi', Icon: Store, tone: 'teal' },
   ],
   [
-    { key: 'admin', label: 'Yönetici Paneli', adminOnly: true },
-    { key: 'blocked', label: 'Engellenen Hesaplar' },
-    { key: 'privacy', label: 'Gizlilik Politikası' },
-    { key: 'settings', label: 'Ayarlar' },
+    { key: 'admin', label: 'Yönetici Paneli', Icon: LayoutGrid, tone: 'slate', adminOnly: true },
+    { key: 'blocked', label: 'Engellenen Hesaplar', Icon: UserX, tone: 'red' },
+    { key: 'privacy', label: 'Gizlilik Politikası', Icon: ShieldCheck, tone: 'blue' },
+    { key: 'settings', label: 'Ayarlar', Icon: Settings, tone: 'zinc' },
   ],
 ];
 
 /**
- * Profil menüsü: tasarım düğmeleri dört satır, dört sütun ızgarada durur ve
- * çentik kenarlarına kadar yayılır. Satırlar mevcut yüksekliği eşit paylaşır.
+ * Profil menüsü: satırlar mevcut yüksekliği eşit paylaşır, düğmeler her telefonda
+ * güvenli alanın içinde kalır ve ekran genişliğine göre ölçeklenir.
  */
 export default function ProfileMenuDeck({ admin = false, onAction, stats = {} }) {
-  const tiles = useSpriteGrid(ART);
   return (
-    <div className="grid min-h-0 w-full flex-1 grid-rows-4 gap-2 px-0 py-1">
-      {ROWS.map((row, rowIndex) => (
+    <div className="grid min-h-0 w-full flex-1 grid-rows-4 gap-1.5 px-0.5 py-1">
+      {ROWS.map((row) => (
         <div key={row.map((item) => item.key).join('-')} className="grid min-h-0 grid-cols-4 gap-1.5">
-          {row.map(({ key, label, adminOnly }, colIndex) => {
-            const src = tiles?.[rowIndex]?.[colIndex];
-            if (!src || (adminOnly && !admin)) return <div key={key} aria-hidden="true" />;
-            return (
-              <button
-                key={key}
-                type="button"
-                onClick={() => onAction?.(key)}
-                aria-label={label}
-                className="relative flex min-h-0 min-w-0 items-center justify-center transition active:scale-95"
-              >
-                <img
-                  src={src}
-                  alt=""
-                  draggable={false}
-                  className="pointer-events-none h-full w-full select-none object-contain"
+          {row.map(({ key, label, Icon, tone, adminOnly }) => (
+            adminOnly && !admin
+              ? <div key={key} aria-hidden="true" />
+              : (
+                <ProfileMenuTile
+                  key={key}
+                  label={label}
+                  Icon={Icon}
+                  tone={tone}
+                  value={stats[key]}
+                  unread={key === 'visitors' ? stats.visitors_unread : 0}
+                  onClick={() => onAction?.(key)}
                 />
-                {rowIndex === 0 && <ProfileSocialCount value={stats[key]} unread={key === 'visitors' ? stats.visitors_unread : 0} />}
-                <span className="sr-only">{label}</span>
-              </button>
-            );
-          })}
+              )
+          ))}
         </div>
       ))}
     </div>

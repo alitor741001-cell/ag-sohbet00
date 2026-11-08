@@ -15,7 +15,9 @@ const ZONES = [
 
 const SPRITE = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/81225dedf_IMG_0522.jpg';
 
-export const NAV_HEIGHT = 'clamp(78px, 23vw, 108px)';
+export const NAV_HEIGHT = 'clamp(66px, 19vw, 90px)';
+// Düğme yüksekliği: ana sayfanın alt menüsü biraz daha kompakt durur.
+const BUTTON_HEIGHT = 'clamp(44px, 13.5vw, 60px)';
 
 /** Ana menü: şeffaf PNG düğmeler — altında beyaz zemin yok. */
 export default function DesignBottomNav() {
@@ -61,13 +63,13 @@ export default function DesignBottomNav() {
                   draggable={false}
                   className="pointer-events-none select-none object-contain"
                   style={{
-                    height: 'clamp(54px, 16.5vw, 74px)',
+                    height: BUTTON_HEIGHT,
                     width: '100%',
                     filter: active ? 'brightness(1.25) drop-shadow(0 0 10px rgba(255,255,255,0.35))' : 'none',
                   }}
                 />
               ) : (
-                <span aria-hidden="true" style={{ height: 'clamp(54px, 16.5vw, 74px)', width: '100%' }} />
+                <span aria-hidden="true" style={{ height: BUTTON_HEIGHT, width: '100%' }} />
               )}
               {count > 0 && (
                 <span className="absolute right-[16%] top-0 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#ef4343] px-1 text-[11px] font-bold leading-none text-white ring-2 ring-black/70">
