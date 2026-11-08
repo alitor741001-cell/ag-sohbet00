@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { LayoutGrid, Loader2, Trophy, UserPlus } from 'lucide-react';
+import { Camera, CameraOff, LayoutGrid, Loader2, Mic, MicOff, Trophy, UserPlus } from 'lucide-react';
 import { RoomEvent } from 'livekit-client';
 import usePkCamera from '@/hooks/usePkCamera';
 import usePkMatch from '@/hooks/usePkMatch';
@@ -45,10 +45,9 @@ export default function VideoPkStage({
   // Yayın kontrolleri (kamera, mikrofon, davet) yalnızca oda sahibinde görünür;
   // izleyiciler ve yöneticiler bu düğmelere ulaşamaz, yayın açamaz.
   const roomOwner = !!ownerId && user?.id === ownerId;
-  // Davet gönderme ve yayını yönetme oda sahibinde; kamera/mikrofon kontrolleri
-  // yayındaki herkesin kendine özel (davet edilen kişi de kendi kamerasını yönetir).
+  // Davet gönderme ve yayını başlatma oda sahibinde; kamera/mikrofon kendi yayınına ait —
+  // davet edilen kişi de kendi kamerasını ve mikrofonunu yönetir.
   const canManage = roomOwner || isHost;
-  const hasControls = roomOwner || isPlayer;
 
   // Kamera karesi, izleyici listesi ve sıralama aynı gerçek profil kartını açar:
   // kartta odadan atma, yöneticilik, mikrofon, engelleme gibi işlemler hazır gelir.
@@ -254,8 +253,8 @@ export default function VideoPkStage({
       {showFrames && !!active?.guest_id && <PkScoreBar leftScore={leftScore} rightScore={rightScore} timerText={timerText} />}
 
       <div className="relative flex min-h-0 flex-1 flex-col">
-        {/* Yayın kontrolleri: kamera, mikrofon ve davet her durumda sağ üstteki kare düğmeden açılır. */}
-        {hasControls && (
+        {/* Davet: oda sahibi sağ üstteki kare düğmeden yayına davet gönderir. */}
+        {roomOwner && (
           <button
             type="button"
             onClick={() => setControlsOpen(true)}
@@ -359,6 +358,28 @@ export default function VideoPkStage({
           </div>
         )}
 
+        {/* Kendi yayın kontrolleri: kamera ve mikrofon sağ altta, her yayıncının kendine özel. */}
+        {isPlayer && showFrames && (
+          <div className="absolute bottom-2 right-2 z-50 flex flex-col gap-2">
+            <button
+              type="button"
+              onClick={toggleCamera}
+              aria-label={camOn ? 'Kamerayı kapat' : 'Kamerayı aç'}
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-black/65 text-white ring-1 ring-white/25 backdrop-blur active:scale-95"
+            >
+              {camOn ? <Camera className="h-5 w-5" /> : <CameraOff className="h-5 w-5 text-red-300" />}
+            </button>
+            <button
+              type="button"
+              onClick={pressMic}
+              aria-label={iMuted ? 'Mikrofonu aç' : 'Mikrofonu kapat'}
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-black/65 text-white ring-1 ring-white/25 backdrop-blur active:scale-95"
+            >
+              {iMuted ? <MicOff className="h-5 w-5 text-red-300" /> : <Mic className="h-5 w-5" />}
+            </button>
+          </div>
+        )}
+
       </div>
 
       {showFrames && (
@@ -390,7 +411,7 @@ export default function VideoPkStage({
       )}
 
       {/* Yayın kontrolleri: kamera, mikrofon ve davet tek panelde — yalnızca oda sahibi. */}
-      {hasControls && (
+      {roomOwner && (
         <PkOwnerControls
           open={controlsOpen}
           onClose={() => setControlsOpen(false)}

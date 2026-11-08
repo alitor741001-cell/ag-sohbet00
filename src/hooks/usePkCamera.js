@@ -23,8 +23,14 @@ export default function usePkCamera({ open, publish, livekitRoom, selfId }) {
       livekitRoom.remoteParticipants?.forEach((participant, identity) => {
         if (!identity || identity === selfId) return;
         participant.trackPublications?.forEach((publication) => {
-          if (publication.kind !== Track.Kind.Video || !publication.track) return;
-          if (!publication.isSubscribed) return;
+          if (publication.kind !== Track.Kind.Video) return;
+          // Görüntü yayını her cihazda açıkça abone edilir: eski Android ve iOS
+          // cihazlarda kendiliğinden abone olmayan yayınlar karşı tarafta siyah kalıyordu.
+          if (!publication.isSubscribed) {
+            try { publication.setSubscribed?.(true); } catch (subscribeError) { /* yayın hazır değil */ }
+            return;
+          }
+          if (!publication.track) return;
           list.push({ identity, track: publication.track });
         });
       });
@@ -59,7 +65,24 @@ export default function usePkCamera({ open, publish, livekitRoom, selfId }) {
     setCamOn(true);
     (async () => {
       try {
-        const published = await local.setCameraEnabled(true, { resolution: { width: 720, height: 1280, frameRate: 24 } });
+        // Tek katman H.264 yayın: eski iOS ve eski Android cihazlar bu kodeği
+        // donanımla çözer, karşı taraf görüntüyü siyah ekran yerine görür.
+        let published;
+        try {
+          published = await local.setCameraEnabled(
+            true,
+            { resolution: { width: 720, height: 1280, frameRate: 24 }, facingMode: 'user' },
+            { simulcast: false, videoCodec: 'h264' },
+          );
+        } catch (highError) {
+          // H.264 ya da yüksek çözünürlük desteklenmiyorsa tarayıcının kendi kodeğiyle,
+          // daha küçük kareyle yeniden denenir.
+          published = await local.setCameraEnabled(
+            true,
+            { resolution: { width: 480, height: 640, frameRate: 15 }, facingMode: 'user' },
+            { simulcast: false },
+          );
+        }
         if (cancelled) return;
         const publication = published || local.getTrackPublication?.(Track.Source.Camera);
         const track = publication?.videoTrack || publication?.track || null;

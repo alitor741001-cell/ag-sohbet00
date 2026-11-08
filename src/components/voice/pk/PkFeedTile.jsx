@@ -8,9 +8,25 @@ function VideoFeed({ track, mirror }) {
   useEffect(() => {
     const node = ref.current;
     if (!node || !track) return undefined;
+    // Eski iOS ve Android tarayıcıları satır içi oynatmayı yalnızca bu özniteliklerle
+    // kabul eder; ayrıca oynatma engellenirse birkaç kez sessizce yeniden denenir.
+    try { node.setAttribute('playsinline', 'true'); } catch (playsinlineError) { /* yok sayılır */ }
+    try { node.setAttribute('webkit-playsinline', 'true'); } catch (webKitError) { /* yok sayılır */ }
+    node.muted = true;
+    const play = () => { try { node.play?.().catch(() => {}); } catch (playError) { /* henüz hazır değil */ } };
     try { track.attach(node); } catch (attachError) { /* görüntü henüz hazır değil */ }
-    node.play?.().catch(() => {});
-    return () => { try { track.detach(node); } catch (detachError) { /* görüntü kapanmış */ } };
+    play();
+    node.addEventListener('loadedmetadata', play);
+    node.addEventListener('loadeddata', play);
+    node.addEventListener('canplay', play);
+    const timers = [150, 600, 1500, 3000].map((ms) => window.setTimeout(play, ms));
+    return () => {
+      timers.forEach((timer) => window.clearTimeout(timer));
+      node.removeEventListener('loadedmetadata', play);
+      node.removeEventListener('loadeddata', play);
+      node.removeEventListener('canplay', play);
+      try { track.detach(node); } catch (detachError) { /* görüntü kapanmış */ }
+    };
   }, [track]);
   return (
     <video

@@ -38,7 +38,9 @@ export default function Notifications({ onBack, embedded = false }) {
 
   const load = () => {
     if (!user) return;
-    base44.entities.Notification.filter({ user_id: user.id }, '-created_date', 50).then((r) => { setItems(r); setLoading(false); }).catch(() => setLoading(false));
+    // PK davetleri bildirim listesine düşmez: davet doğrudan görüntü ekranına kart olarak gelir.
+    const keep = (rows) => rows.filter((row) => !/^pk/i.test(String(row?.type || '')));
+    base44.entities.Notification.filter({ user_id: user.id }, '-created_date', 50).then((r) => { setItems(keep(r)); setLoading(false); }).catch(() => setLoading(false));
   };
   const loadInvites = () => {
     if (!user) return;
@@ -54,6 +56,7 @@ export default function Notifications({ onBack, embedded = false }) {
       const data = event.data;
       const id = data?.id || event.id;
       if (data?.user_id && data.user_id !== user.id) return;
+      if (/^pk/i.test(String(data?.type || ''))) return;
       setItems((current) => {
         if (event.type === 'create') return [data, ...current.filter((item) => item.id !== id)].slice(0, 50);
         if (event.type === 'update') return current.map((item) => (item.id === id ? { ...item, ...data } : item));
