@@ -1,13 +1,15 @@
-import { LogOut, Play, RotateCcw, Video } from 'lucide-react';
+import { LogOut, Play, RotateCcw, Video, X } from 'lucide-react';
 
 /**
  * Alt panelin üst satırı: maç başlamadan "Maçı Başlat", maç bittiğinde
  * "Maçtan ayrıl" ve "Rövanş" düğmeleri. Tek başına yayında düğmeler görünmez.
  */
 export default function PkLiveNotice({
-  started = false, finished = false, canStart = false, guestName = '', pendingName = '',
-  onStart, onLeave, onRematch, rematchBusy = false, startBusy = false,
+  started = false, finished = false, canStart = false, guestName = '', pendingName = '', expired = false,
+  onStart, onLeave, onRematch, onCancel, rematchBusy = false, startBusy = false, cancelBusy = false,
 }) {
+  // Davet yanıtı beklenirken yalnızca iptal düğmesi görünür: kamera düzeni değişmez.
+  const waiting = !started && !finished && (!!pendingName || expired);
   return (
     <div className="space-y-1">
       {finished ? (
@@ -43,15 +45,27 @@ export default function PkLiveNotice({
       ) : (
         <div className="flex items-center gap-1.5 rounded-lg bg-white/[0.06] px-2 py-1">
           <Video className="h-3 w-3 shrink-0 text-white/70" />
-          <p className="min-w-0 truncate text-[9.5px] font-semibold leading-snug text-white/70">
+          <p className="min-w-0 flex-1 truncate text-[9.5px] font-semibold leading-snug text-white/70">
             {started
               ? 'PK maçı başladı! Yayıncına destek ol, hediye gönder.'
-              : guestName
-                ? `${guestName} davetini kabul etti — “Maçı Başlat” ile turu aç.`
+              : expired
+                ? 'Davet zaman aşımına uğradı.'
                 : pendingName
                   ? `${pendingName} daveti bekleniyor…`
-                  : 'Görüntülü yayın açık. Rakip davet edebilirsin.'}
+                  : guestName
+                    ? `${guestName} davetini kabul etti — tur başlıyor.`
+                    : 'Görüntülü yayın açık. Rakip davet edebilirsin.'}
           </p>
+          {waiting && onCancel && (
+            <button
+              type="button"
+              onClick={onCancel}
+              disabled={cancelBusy}
+              className="flex shrink-0 items-center gap-1 rounded-md bg-white/12 px-2 py-1 text-[9.5px] font-black text-white/80 active:scale-95 disabled:opacity-50"
+            >
+              <X className="h-3 w-3" /> İptal
+            </button>
+          )}
         </div>
       )}
     </div>

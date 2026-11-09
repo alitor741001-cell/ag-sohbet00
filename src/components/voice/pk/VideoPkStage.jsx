@@ -74,6 +74,11 @@ export default function VideoPkStage({
   const solo = !!active && active.status === 'live' && !guestPresent;
   // Davet alan kişi: yayın akışının üzerinde kabul/ret kartı görünür.
   const incoming = !!active && active.guest_id === user?.id && !active.accepted;
+  // Kamera düzeni yalnızca davet kabul edildiğinde çift kareye geçer; beklerken tek kamera kalır.
+  const paired = !!active?.accepted && guestPresent;
+  // Davet 10 dakika içinde yanıtlanmazsa düşer: yeni davet gönderilebilir.
+  const inviteExpired = !!active && !!active.guest_id && !active.accepted
+    && now - new Date(active.created_date || 0).getTime() > 10 * 60 * 1000;
 
   // Yayını açan taraf kendi kamerasını yayınlar; davet edilen kişi kabul edince yayına girer.
   const cameraOn = open && !!active && (active.status === 'live' || active.status === 'ended')
@@ -136,6 +141,16 @@ export default function VideoPkStage({
   useEffect(() => {
     if (match?.settled) refreshStreak();
   }, [match?.settled, refreshStreak]);
+
+  // Davet kabul edildiğinde yayını açan tarafa haber verilir; ekran çift kameraya geçer.
+  const acceptedRef = useRef(false);
+  useEffect(() => {
+    const accepted = !!match?.accepted;
+    const was = acceptedRef.current;
+    acceptedRef.current = accepted;
+    if (!accepted || was || !isHost) return;
+    toast({ title: 'Davet kabul edildi', description: `${match?.guest_name || 'Rakip'} PK yayınına katıldı.` });
+  }, [match?.accepted, match?.guest_name, isHost, toast]);
 
   // Maçtan ayrılan tarafın yayın ekranı kapanır: kişi sesli odada kalmaya devam eder.
   const wasPlayerRef = useRef(false);
@@ -215,11 +230,12 @@ export default function VideoPkStage({
     name: hostSeat ? (active?.host_name || 'Yayıncı') : (active?.guest_name || 'Konuk'),
     avatar: hostSeat ? (active?.host_avatar || '') : (active?.guest_avatar || ''),
   });
+  // Bekleyen davette yalnızca kendi kameram görünür; karşı taraf kabul edince ikinci kare açılır.
   const seats = active
     ? (isGuest
-      ? [seatOf(active.guest_id, false), seatOf(active.host_id, true)]
-      : [seatOf(active.host_id, true), seatOf(active.guest_id, false)])
-      .filter((seat) => !!seat.id)
+      ? [seatOf(active.guest_id, false), paired ? seatOf(active.host_id, true) : null]
+      : [seatOf(active.host_id, true), paired ? seatOf(active.guest_id, false) : null])
+      .filter((seat) => !!seat?.id)
     : [];
   const leftScore = scoreOf(seats[0]?.id);
   const rightScore = scoreOf(seats[1]?.id);
@@ -268,6 +284,11 @@ export default function VideoPkStage({
     if (!isHost) onClose?.();
   };
 
+  // Daveti iptal et: yayın hiç kesilmez, ekran tek kişilik kamera görünümünde kalır.
+  const cancelInvite = async () => {
+    if (match?.id) await run('leave', { id: match.id }).catch(() => null);
+  };
+
   // Sağ üstteki X: yayını açan için yayın da kapanır, diğerleri için yalnız ekran kapanır.
   const closeStage = async () => {
     if (isHost && match?.id) await run('leave', { id: match.id, end: true }).catch(() => null);
@@ -295,7 +316,8 @@ export default function VideoPkStage({
   };
 
   // Hediye: gül dışındaki hediyeler odanın hediye tahtasından gönderilir.
-  const giftTargetId = opponentId || active?.host_id || user?.id;
+  // Hediye yalnızca rakip kabul ettikten sonra karşı tarafa gider; beklerken yayıncının kendisine.
+  const giftTargetId = (paired ? opponentId : '') || active?.host_id || user?.id;
   const sendGift = (gift) => {
     if (!giftTargetId) return;
     onSendGift?.(gift, [giftTargetId]);
@@ -327,7 +349,7 @@ export default function VideoPkStage({
       />
 
       {/* Skor barı ve süre yalnızca maç sırasında ve sonuç ekranında görünür. */}
-      {showFrames && guestPresent && (started || finished) && (
+      {showFrames && paired && (started || finished) && (
         <PkScoreBar leftScore={leftScore} rightScore={rightScore} timerText={timerText} />
       )}
 
@@ -433,9 +455,12 @@ export default function VideoPkStage({
           <PkLiveNotice
             started={started && !finished}
             finished={finished}
-            canStart={isPlayer && guestPresent && !!active?.accepted && !started}
-            guestName={active?.accepted ? (active?.guest_name || '') : ''}
-            pendingName={!active?.accepted ? (active?.guest_name || '') : ''}
+            canStart={isPlayer && paired && !started}
+            guestName={paired ? (active?.guest_name || '') : ''}
+            pendingName={!paired && !inviteExpired ? (active?.guest_name || '') : ''}
+            expired={!paired && inviteExpired}
+            onCancel={isPlayer && !paired && guestPresent ? cancelInvite : null}
+            cancelBusy={busy}
             onStart={startMatch}
             startBusy={busy}
             onLeave={isPlayer && (guestPresent || finished) ? leaveMatch : null}

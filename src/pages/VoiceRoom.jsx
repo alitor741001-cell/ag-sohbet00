@@ -135,18 +135,11 @@ export default function VoiceRoom() {
     return () => observer.disconnect();
   }, []);
 
-  // Davet alan kişi odaya girdiğinde yayın ekranı kendiliğinden açılır: kabul et / reddet kartı görünür.
-  useEffect(() => {
-    if (!pkMatch || pkOpen || pkMatch.status === 'ended') return;
-    if (pkMatch.guest_id !== user?.id || pkMatch.accepted) return;
-    setPkOpen(true);
-  }, [pkMatch, pkOpen, user?.id]);
-
-  // Odaya giren izleyici canlı bir PK yayını varsa doğrudan yayına düşer.
-  // İzleyici yayını kapatırsa aynı karşılaşma için bir daha kendiliğinden açılmaz.
+  // Davet kartı kişinin kendi ekranına düşer. PK ekranı yalnızca davet kabul edildikten sonra açılır;
+  // davet beklerken herkes kendi tek kişilik yayınında kalır.
   const pkAutoRef = useRef('');
   useEffect(() => {
-    if (!pkMatch || pkOpen || pkMatch.status !== 'live' || !pkMatch.guest_id) return;
+    if (!pkMatch || pkOpen || pkMatch.status !== 'live' || !pkMatch.guest_id || !pkMatch.accepted) return;
     if (pkAutoRef.current === pkMatch.id) return;
     pkAutoRef.current = pkMatch.id;
     setPkOpen(true);

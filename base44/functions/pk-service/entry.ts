@@ -185,17 +185,18 @@ export default async function (req) {
         return Response.json({ match: ended });
       }
 
-      // Kabul eden kişi yayına katılır; 5 dakikalık tur "Maçı Başlat" ile başlar.
-      if (match.status === 'live') {
-        const joined = await svc.PkMatch.update(match.id, { accepted: true, started: false, ends_at: freshEnd });
-        return Response.json({ match: joined });
-      }
+      // Kabul eden kişi yayına katılır: çift kamera açılır ve 5 dakikalık tur bu anda başlar.
       const updated = await svc.PkMatch.update(match.id, {
-        accepted: true,
-        started: false,
         status: 'live',
+        accepted: true,
+        started: true,
+        settled: false,
         started_at: now.toISOString(),
         ends_at: freshEnd,
+        host_score: 0,
+        guest_score: 0,
+        winner_id: '',
+        left_id: '',
         muted: [],
       });
       return Response.json({ match: updated });
