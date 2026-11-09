@@ -189,7 +189,7 @@ export default function PkInvitePanel({ mode, match, user, participants = [], li
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           onKeyDown={(event) => { if (event.key === 'Enter') search(); }}
-          placeholder="Üye numarasıyla ara"
+          placeholder="Üye no ile herkesi davet et"
           inputMode="numeric"
           className="h-8 min-w-0 flex-1 rounded-lg bg-white/10 px-2 text-[11.5px] text-white outline-none placeholder:text-white/35"
         />
@@ -252,7 +252,7 @@ export default function PkInvitePanel({ mode, match, user, participants = [], li
       </div>
 
       <p className="shrink-0 border-t border-white/10 px-2 py-1.5 text-[9.5px] font-semibold text-white/40">
-        Davet gönderdiğin kişi kabul edince “Maçı Başlat” ile 5 dakikalık PK başlar.
+        Davet gönderdiğin kişi kabul edince 5 dakikalık PK kendiliğinden başlar.
       </p>
     </div>
   );

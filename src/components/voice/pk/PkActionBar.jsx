@@ -1,11 +1,14 @@
 import { useState } from 'react';
-import { Gift, Send, SlidersHorizontal, Smile } from 'lucide-react';
+import { Gift, Mic, MicOff, Send, SlidersHorizontal, Smile, Video, VideoOff } from 'lucide-react';
 
 const EMOJIS = ['❤️', '🔥', '😂', '👏'];
 
 /** Alt yazı alanı: yorum yazılır; gül ve hediye düğmeleriyle birlikte sağ altta
  *  tek kare düğme durur — basınca kamera, mikrofon ve davet paneli açılır (yalnız oda sahibi). */
-export default function PkActionBar({ onSend, onRose, onGift, onOpenControls, disabled }) {
+export default function PkActionBar({
+  onSend, onRose, onGift, onOpenControls, disabled,
+  micOn = true, onMic, camOn = true, onCam,
+}) {
   const [text, setText] = useState('');
   const [emojiOpen, setEmojiOpen] = useState(false);
 
@@ -72,6 +75,28 @@ export default function PkActionBar({ onSend, onRose, onGift, onOpenControls, di
         >
           <Gift className="h-5 w-5" />
         </button>
+
+        {/* Hediye kutusunun hemen yanında mikrofon ve kamera: herkes kendi yayınını yönetir. */}
+        {onMic && (
+          <button
+            type="button"
+            onClick={onMic}
+            aria-label={micOn ? 'Mikrofonu kapat' : 'Mikrofonu aç'}
+            className={iconClass}
+          >
+            {micOn ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5 text-[#fe2c55]" />}
+          </button>
+        )}
+        {onCam && (
+          <button
+            type="button"
+            onClick={onCam}
+            aria-label={camOn ? 'Kamerayı kapat' : 'Kamerayı aç'}
+            className={iconClass}
+          >
+            {camOn ? <Video className="h-5 w-5" /> : <VideoOff className="h-5 w-5 text-[#fe2c55]" />}
+          </button>
+        )}
 
         {/* Sağ alt köşe: tek kare düğme — açtığı panelde kamera, mikrofon ve davet durur. */}
         {onOpenControls && (

@@ -26,7 +26,9 @@ export default function PkInviteOverlay({ userId }) {
   const go = async () => {
     try {
       await accept();
-      if (invite.room_id) navigate(`/sesli-oda/${invite.room_id}`);
+      // Kişi zaten davet edenin odasındaysa yerinden edilmez: PK ekranı olduğu yerde açılır.
+      const target = invite.room_id ? `/sesli-oda/${invite.room_id}` : '';
+      if (target && window.location.pathname !== target) navigate(target);
     } catch (error) { fail(error); }
   };
 

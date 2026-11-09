@@ -83,7 +83,7 @@ export default function VideoPkStage({
   // Yayını açan taraf kendi kamerasını yayınlar; davet edilen kişi kabul edince yayına girer.
   const cameraOn = open && !!active && (active.status === 'live' || active.status === 'ended')
     && (isHost || (isGuest && !!active.accepted));
-  const { localTrack, remoteTracks, error, camOn } = usePkCamera({
+  const { localTrack, remoteTracks, error, camOn, setCameraEnabled } = usePkCamera({
     open, publish: cameraOn, livekitRoom, selfId: user?.id,
   });
 
@@ -264,16 +264,18 @@ export default function VideoPkStage({
   })();
 
   const invite = async (person) => {
-    if (active?.guest_id) {
+    // Rakip kabul ettikten sonra davet değiştirilmez; bekleyen davet başka birine yönlendirilebilir.
+    if (active?.guest_id && active?.accepted) {
       toast({ title: 'Zaten bir rakip var', description: 'Önce mevcut rakiple maçı bitir ya da ayrıl.' });
       return;
     }
     try {
       await run('invite', { room_id: roomId, room_name: roomName || '', guest_id: person.user_id, guest_name: person.name });
       setInviteOpen(false);
-      toast({ title: 'PK daveti gönderildi', description: `${person.name || 'Kullanıcı'} kabul ederse maçı başlatabilirsin.` });
+      toast({ title: 'PK daveti gönderildi', description: `${person.name || 'Kullanıcı'} kabul ederse PK başlar.` });
     } catch (inviteError) {
-      toast({ title: 'Davet gönderilemedi', description: inviteError?.response?.data?.error || inviteError.message, variant: 'destructive' });
+      const reason = inviteError?.response?.data?.error || inviteError?.data?.error || inviteError.message;
+      toast({ title: 'Davet gönderilemedi', description: reason, variant: 'destructive' });
     }
   };
 
@@ -371,7 +373,7 @@ export default function VideoPkStage({
                   name={isMe ? 'Sen' : seat.name}
                   avatar={seat.avatar}
                   score={scoreOf(seat.id)}
-                  muted={mutedIds.has(seat.id)}
+                  muted={mutedIds.has(seat.id) || (isMe && !!voice?.muted)}
                   mine={isMe}
                   camOn={camOn}
                   track={isMe ? localTrack : remoteTracks.find((item) => item.identity === seat.id)?.track}
@@ -385,7 +387,7 @@ export default function VideoPkStage({
         )}
 
         {/* PK daveti: tek kişilik yayında sağ üstte küçük düğme, davet paneli tam ekran açılır. */}
-        {showFrames && canManage && !guestPresent && (
+        {showFrames && canManage && !paired && (
           <button
             type="button"
             onClick={() => setInviteOpen(true)}
@@ -481,6 +483,10 @@ export default function VideoPkStage({
             onSend={onSendMessage}
             onRose={sendRose}
             onGift={() => onOpenGifts?.()}
+            micOn={!voice?.muted}
+            onMic={voice?.toggleMute ? () => voice.toggleMute() : null}
+            camOn={camOn}
+            onCam={cameraOn ? () => setCameraEnabled(!camOn) : null}
           />
         </div>
       )}

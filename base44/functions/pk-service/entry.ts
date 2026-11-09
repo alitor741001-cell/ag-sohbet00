@@ -108,6 +108,21 @@ export default async function (req) {
       if (guestId === user.id) return Response.json({ error: 'Kendine davet gönderemezsin' }, { status: 400 });
 
       const guest = await svc.User.get(guestId).catch(() => null);
+
+      // Davet edilen kişi başkasıyla PK'daysa davet gönderilmez: yayıncıya kiminle olduğu bildirilir.
+      const busyRows = await svc.PkMatch.filter({ status: 'live', accepted: true }, '-created_date', 50).catch(() => []);
+      const busy = (Array.isArray(busyRows) ? busyRows : busyRows?.items || []).find((row) => (
+        row.host_id !== user.id
+        && (row.guest_id === guestId || (row.host_id === guestId && !!row.guest_id))
+      ));
+      if (busy) {
+        const busyName = busy.guest_id === guestId ? busy.guest_name : busy.host_name;
+        const rivalName = busy.guest_id === guestId ? busy.host_name : busy.guest_name;
+        return Response.json({
+          error: `${busyName || 'Bu kişi'} şu an ${rivalName || 'başka biri'} ile PK'da.`,
+        }, { status: 409 });
+      }
+
       const open = await svc.PkMatch.filter({ room_id: roomId, status: { $in: ['invite', 'live'] } }, '-created_date', 20);
 
       // Aynı kişiye ikinci bir aktif davet gönderilmez: bekleyen davet olduğu gibi döner.
