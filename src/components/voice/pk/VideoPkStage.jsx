@@ -481,7 +481,7 @@ export default function VideoPkStage({
             </p>
           )}
 
-          <PkLiveChat messages={messages} user={user} />
+          <PkLiveChat messages={messages} user={user} onOpenProfile={(targetId) => openPerson(targetId)} />
 
           <PkActionBar
             onSend={onSendMessage}
