@@ -8,15 +8,15 @@ export const pkChatRoomId = (matchId) => `pk-${matchId}`;
 
 /**
  * Görüntülü PK sohbeti: iki tarafın mesajları maç kaydıyla birlikte tutulur.
- * Mesaj yazma sunucudan geçer (yalnızca tur içindeki iki kişi yazabilir).
+ * Akış yalnızca maç değiştiğinde tazelenir; panel kapanıp açıldığında mesajlar silinmez,
+ * böylece yazışmalar her zaman görülebilir.
  */
-export default function usePkChat(matchId, enabled = true) {
+export default function usePkChat(matchId) {
   const [messages, setMessages] = useState([]);
   const [sending, setSending] = useState(false);
 
   useEffect(() => {
-    setMessages([]);
-    if (!matchId || !enabled) return undefined;
+    if (!matchId) return undefined;
     const roomId = pkChatRoomId(matchId);
     let cancelled = false;
 
@@ -39,7 +39,7 @@ export default function usePkChat(matchId, enabled = true) {
     });
 
     return () => { cancelled = true; off?.(); };
-  }, [matchId, enabled]);
+  }, [matchId]);
 
   const send = useCallback(async (value) => {
     const text = String(value || '').trim();

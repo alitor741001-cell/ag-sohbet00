@@ -29,7 +29,7 @@ const ActionButton = ({ Icon, label, onClick, disabled, active = true, tone = 'd
 export default function VideoPkBar({
   inviteCount = 0, onOpenInbox, onOpenInvite, inviteDisabled, inviteLabel = 'PK Davet Et',
   micOn, onMic, camOn, onCam, onGift, giftDisabled, onExit, inMatch,
-  onChat, chatOpen = false, chatDisabled = false,
+  onChat, chatOpen = false, chatDisabled = false, exitDisabled = false,
 }) {
   return (
     <div
@@ -90,7 +90,7 @@ export default function VideoPkBar({
           disabled={giftDisabled}
           tone="pink"
         />
-        <ActionButton Icon={LogOut} label={inMatch ? 'PK’dan ayrıl' : 'Çıkış'} onClick={onExit} />
+        <ActionButton Icon={LogOut} label="Maçtan ayrıl" onClick={onExit} disabled={exitDisabled} />
       </div>
     </div>
   );

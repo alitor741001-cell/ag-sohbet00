@@ -48,7 +48,8 @@ export default function useVideoPk(user) {
     // Son lobi kaydı ret bilgisini taşır: davet reddedildiyse kayıt kapalı ve davet edilenle işaretlidir.
     setLastHosted(latest);
     const guestList = guestRows?.items?.filter((row) => row.guest_id === user.id) || [];
-    setJoined(guestList.find((row) => row.accepted && row.status === 'live') || null);
+    // Turdan kendi ayrılan kişi aynı maça geri bağlanmaz: yeni davet kabul edilince eşleşir.
+    setJoined(guestList.find((row) => row.accepted && row.status === 'live' && row.left_id !== user.id) || null);
     setLastGuest(guestList[0] || null);
     setInvites((incoming?.items || []).filter((row) => row.guest_id === user.id));
     setLoaded(true);

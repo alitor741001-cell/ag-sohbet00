@@ -47,8 +47,11 @@ export default function VideoPkPage() {
   const isGuest = active?.guest_id === user?.id;
   const paired = !!active?.accepted && !!active?.guest_id;
   const live = paired && active?.status === 'live';
-  // Sohbet, tur açıkken (lobide de) yazılabilir; tur kapanınca kapanır.
-  const chatMatchId = active && active.status !== 'ended' ? active.id : '';
+  // Sohbet son maçın akışını saklar: turdan ayrılınca da yazışma okunabilir kalır.
+  const [chatMatchId, setChatMatchId] = useState('');
+  useEffect(() => { if (active?.id) setChatMatchId(active.id); }, [active?.id]);
+  // Yalnızca açık olan turda yazılabilir; geçmiş tur okunur.
+  const chatWritable = !!active?.id && active.id === chatMatchId && active.status !== 'ended';
   const rival = paired
     ? {
       id: isHost ? active.guest_id : active.host_id,
@@ -59,10 +62,13 @@ export default function VideoPkPage() {
 
   // Rakip ayrıldığında tur sessizce bitmez: tek kamera görünümüne dönülür ve haber verilir.
   const wasPaired = useRef(false);
+  // Kendi ayrıldığımızda "rakip ayrıldı" uyarısı çıkmaz.
+  const leavingSelf = useRef(false);
   useEffect(() => {
     if (live) { wasPaired.current = true; return; }
     if (!wasPaired.current) return;
     wasPaired.current = false;
+    if (leavingSelf.current) { leavingSelf.current = false; return; }
     if (!active?.settled) toast({ title: 'Rakip ayrıldı', description: 'PK turu tek kamera görünümüne döndü.' });
   }, [live, active?.settled, toast]);
 
@@ -193,8 +199,10 @@ export default function VideoPkPage() {
     }
   };
 
+  // Maçtan ayrıl: sayfadan çıkılmaz, tek kamera görünümüne dönülür.
   const leaveMatch = async () => {
-    if (active?.status === 'live' && active?.id) {
+    leavingSelf.current = true;
+    if (paired && active?.id) {
       await run('leave', { id: active.id, end: !!isHost }).catch(() => null);
     }
     setGiftOpen(false);
@@ -344,7 +352,8 @@ export default function VideoPkPage() {
         chatDisabled={!chatMatchId}
         onGift={() => setGiftOpen(true)}
         giftDisabled={!live || !!active?.settled}
-        onExit={live ? leaveMatch : exitPage}
+        onExit={leaveMatch}
+        exitDisabled={!live}
         inMatch={live}
       />
 
@@ -372,6 +381,7 @@ export default function VideoPkPage() {
         hostId={active?.host_id}
         user={user}
         viewers={viewers}
+        readOnly={!chatWritable}
       />
       <PkGiftSheet open={giftOpen} onClose={() => setGiftOpen(false)} onSend={sendGift} busy={busy} />
     </div>
