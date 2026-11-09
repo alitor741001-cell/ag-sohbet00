@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useRef, useState } from 'react';
+import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import PullToRefresh from '@/components/home/PullToRefresh';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
@@ -9,9 +9,11 @@ import Navbar from '@/components/layout/Navbar';
 import ThemeShell from '@/components/layout/ThemeShell';
 import useFriendPresence from '@/hooks/useFriendPresence';
 import useRoleCelebration from '@/hooks/useRoleCelebration';
-import RoleCelebrationOverlay from '@/components/role/RoleCelebrationOverlay';
-import GlobalAgencyCall from '@/components/voice/GlobalAgencyCall';
-import PkInviteOverlay from '@/components/voice/pk/PkInviteOverlay';
+import useDeferredMount from '@/hooks/useDeferredMount';
+// Açılış katmanları ilk boyamayı beklemez: uygulama açıldıktan sonra yüklenir.
+const RoleCelebrationOverlay = lazy(() => import('@/components/role/RoleCelebrationOverlay'));
+const GlobalAgencyCall = lazy(() => import('@/components/voice/GlobalAgencyCall'));
+const PkInviteOverlay = lazy(() => import('@/components/voice/pk/PkInviteOverlay'));
 import { triggerBanNotice } from '@/lib/banNotice';
 import { useToast } from '@/components/ui/use-toast';
 import MessageRealtimeProvider from '@/components/messages/MessageRealtimeProvider';
@@ -32,6 +34,8 @@ export default function AppLayout() {
   const { user, loading } = useCurrentUser();
   useFriendPresence(user, true);
   useRoleCelebration();
+  // Açılış katmanları ilk boyamadan sonra devreye girer: uygulama beklemeden açılır.
+  const overlaysReady = useDeferredMount(1200);
   // Supabase aynası: canlı veri oturum açıkken kendiliğinden eşitlenir.
   const { publicSettings } = useAuth();
   const { toast } = useToast();
@@ -202,15 +206,24 @@ export default function AppLayout() {
     }
   }, [user?.id]);
 
+  // Rol kutlaması, ajans çağrısı ve PK daveti ilk ekrandan sonra hazırlanır.
+  const overlays = overlaysReady ? (
+    <Suspense fallback={null}>
+      <RoleCelebrationOverlay />
+      <GlobalAgencyCall />
+      <PkInviteOverlay userId={user?.id} />
+    </Suspense>
+  ) : null;
+
   if (isRoom) {
     // Oda zeminini artık tema boyuyor: buradaki lacivert katman kapatıldı, alt şerit kalmaz.
-    return <MessageRealtimeProvider userId={user?.id}><div className="min-h-screen bg-transparent"><RoutePreloader /><RoleCelebrationOverlay /><GlobalAgencyCall /><PkInviteOverlay userId={user?.id} /><Suspense fallback={null}><Outlet /></Suspense></div></MessageRealtimeProvider>;
+    return <MessageRealtimeProvider userId={user?.id}><div className="min-h-screen bg-transparent"><RoutePreloader />{overlays}<Suspense fallback={null}><Outlet /></Suspense></div></MessageRealtimeProvider>;
   }
   return (
     <MessageRealtimeProvider userId={user?.id}><div className={`min-h-screen w-full min-w-0 overflow-x-clip ${isDarkSurface ? 'relative isolate' : 'bg-background'}`} style={isDarkSurface ? { background: DARK_SURFACE_GRADIENT } : undefined}>
 
       <RoutePreloader />
-      <RoleCelebrationOverlay /><GlobalAgencyCall /><PkInviteOverlay userId={user?.id} />
+      {overlays}
       {!hideNav && <Navbar />}
       {!hideNav && !hideTheme && <ThemeShell chats={isChatList} />}
       {/* Klavye kullanıcısı menüyü atlayıp doğrudan içeriğe geçebilir. */}

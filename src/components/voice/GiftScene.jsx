@@ -1,7 +1,10 @@
+import { lazy, Suspense } from 'react';
 import { formatK, tierForK, toneColor } from '@/lib/giftTone';
 import ProfileFrame from '@/components/ProfileFrame';
 import VoiceSeatScore from '@/components/voice/VoiceSeatScore';
-import Gift3DStage from '@/components/voice/three/Gift3DStage';
+// 3D hediye motoru (three.js) yalnızca klibi olmayan hediye oynarken indirilir:
+// odaya giren herkes yüzlerce kilobaytlık motoru beklemez.
+const Gift3DStage = lazy(() => import('@/components/voice/three/Gift3DStage'));
 import GiftClipStage from '@/components/voice/GiftClipStage';
 import GiftVideoStage from '@/components/voice/GiftVideoStage';
 import { giftClipFor, giftVideoFor } from '@/lib/giftClips';
@@ -32,7 +35,7 @@ export default function GiftScene({ alert, tiers = [], gifts = [] }) {
       ) : clip ? (
         <GiftClipStage frames={clip} color={color} />
       ) : (
-        <>
+        <Suspense fallback={null}>
           <Gift3DStage
             gift={{
               name: alert.giftName,
@@ -42,7 +45,7 @@ export default function GiftScene({ alert, tiers = [], gifts = [] }) {
             color={color}
             className="absolute inset-0 opacity-30"
           />
-        </>
+        </Suspense>
       )}
 
       <div className="absolute inset-x-0 bottom-[16%] flex flex-col items-center gap-1.5">
