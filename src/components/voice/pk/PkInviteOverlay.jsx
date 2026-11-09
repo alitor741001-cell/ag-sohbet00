@@ -37,7 +37,7 @@ export default function PkInviteOverlay({ userId }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[600] flex items-center justify-center bg-black/85 px-6 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[900] flex items-center justify-center bg-black/85 px-6 backdrop-blur-sm">
       <div className="room-notif-in w-full max-w-sm rounded-3xl border border-fuchsia-300/40 bg-gradient-to-b from-[#220d2c] to-[#12060f] p-5 text-center shadow-[0_0_50px_-12px_rgba(217,70,239,0.95)]">
         <span className="mx-auto flex h-16 w-16 items-center justify-center overflow-hidden rounded-full ring-2 ring-fuchsia-400/70">
           {invite.host_avatar

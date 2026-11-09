@@ -14,6 +14,8 @@ import PkLiveNotice from '@/components/voice/pk/PkLiveNotice';
 import PkActionBar from '@/components/voice/pk/PkActionBar';
 import PkRankingSheet from '@/components/voice/pk/PkRankingSheet';
 import formatCoinAmount from '@/components/voice/formatCoinAmount';
+import BigGiftStage from '@/components/voice/BigGiftStage';
+import useBigGiftAlerts from '@/hooks/useBigGiftAlerts';
 import { useUserProfile } from '@/lib/profileCard';
 import VoiceViewerSheet from '@/components/voice/VoiceViewerSheet';
 
@@ -34,6 +36,8 @@ export default function VideoPkStage({
   const { openUserProfile } = useUserProfile();
   const { match, loaded, run, busy } = usePkMatch(roomId, open);
   const { streak, refresh: refreshStreak } = usePkStreak(user?.id);
+  // Büyük hediye videosu PK ekranının üstünde oynar: sesli odadaki gibi kartta görünür, arkada gizlenmez.
+  const bigGift = useBigGiftAlerts();
   const [inviteOpen, setInviteOpen] = useState(false);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [rankOpen, setRankOpen] = useState(false);
@@ -422,7 +426,7 @@ export default function VideoPkStage({
 
         {/* Davet edilen kişi: yayın akışı arkada kalır, kart ortada açılır. */}
         {incoming && (
-          <div className="absolute inset-0 z-[55] flex items-center justify-center bg-black/60 px-4 backdrop-blur-[2px]">
+          <div className="absolute inset-0 z-[300] flex items-center justify-center bg-black/60 px-4 backdrop-blur-[2px]">
             <PkInvitePanel
               mode="incoming"
               match={active}
@@ -509,6 +513,9 @@ export default function VideoPkStage({
         moderators={moderators}
         onSelect={(id) => { setViewerOpen(false); openPerson(id); }}
       />
+
+      {/* Hediye videosu: sesli odadaki gibi PK kartının üstünde, ekranda görünür. */}
+      <BigGiftStage alert={bigGift} gifts={gifts} />
     </div>
   );
 }

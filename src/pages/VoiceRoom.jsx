@@ -22,7 +22,6 @@ import VoiceChatDock from '@/components/voice/VoiceChatDock';
 import VoiceViewerSheet from '@/components/voice/VoiceViewerSheet';
 import VideoPkStage from '@/components/voice/pk/VideoPkStage';
 import usePkMatch from '@/hooks/usePkMatch';
-import { Video } from 'lucide-react';
 import VoiceSeatInvitePrompt from '@/components/voice/VoiceSeatInvitePrompt';
 import RoomProfileSheet from '@/components/voice/RoomProfileSheet';
 import VoiceRoomMenu from '@/components/voice/VoiceRoomMenu';
@@ -117,8 +116,6 @@ export default function VoiceRoom() {
   const [gamesOpen, setGamesOpen] = useState(false);
   // Görüntülü yayın: kamera açılır, davet gönderilir, hediyeler ve yorumlar aynı ekranda durur.
   const [pkOpen, setPkOpen] = useState(false);
-  // Yayından ayrılan kişiye köşedeki "Yayın Aç" kısayolu bir daha gösterilmez.
-  const [pkButtonHidden, setPkButtonHidden] = useState(false);
   // Yayın alanı oda kartının hemen altında açılır: kart, izleyici, ayarlar ve çıkış düğmeleri görünür kalır.
   const topArtRef = useRef(null);
   const [topArtHeight, setTopArtHeight] = useState(0);
@@ -1229,23 +1226,6 @@ export default function VoiceRoom() {
         />
       </div>
 
-      {/* Görüntülü PK: oda kartının altında küçük düğme, tam ekran PK ekranını açar. */}
-      {joined && isOwner && !pkOpen && !pkButtonHidden && (
-        <button
-          type="button"
-          onClick={() => setPkOpen(true)}
-          aria-label="Görüntülü PK aç"
-          className="flame-live absolute right-2 z-40 flex items-center gap-1 rounded-full border border-fuchsia-200/70 px-2.5 py-1.5 text-[10px] font-black text-white active:scale-95"
-          style={{
-            top: topArtHeight + 4,
-            backgroundImage: 'linear-gradient(115deg,#ffb3f0 0%,#d946ef 45%,#7c0ea0 100%)',
-            boxShadow: '0 0 16px -2px rgba(217,70,239,0.95)',
-          }}
-        >
-          <Video className="h-3.5 w-3.5" /> Yayın Aç
-        </button>
-      )}
-
       <VoiceStage
         scrollRef={swipeGesture.scrollRef}
         handlers={swipeGesture.handlers}
@@ -1507,7 +1487,8 @@ export default function VoiceRoom() {
       />
 
       <GiftScene key={overlayAlert?.key} alert={giftEffects && !bigGift && !gameOpen ? overlayAlert : null} tiers={tiers} gifts={gifts} />
-      {giftEffects && !gameOpen && <BigGiftStage alert={bigGift} gifts={gifts} />}
+      {/* PK ekranı açıkken büyük hediye videosu PK kartının üstünde oynar; burada ikinci kez oynamaz. */}
+      {giftEffects && !gameOpen && !pkOpen && <BigGiftStage alert={bigGift} gifts={gifts} />}
 
       <GiftEffectsSheet
         open={settingsOpen}
@@ -1524,7 +1505,6 @@ export default function VoiceRoom() {
       <VideoPkStage
         open={pkOpen}
         onClose={() => setPkOpen(false)}
-        onLeft={() => setPkButtonHidden(true)}
         topOffset={topArtHeight}
         roomId={id}
         roomName={room?.name}
