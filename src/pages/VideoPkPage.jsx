@@ -351,10 +351,6 @@ export default function VideoPkPage() {
       <VideoPkBar
         inviteCount={invites.length}
         invites={invites}
-        onAcceptInvite={acceptInvite}
-        onDeclineInvite={declineInvite}
-        busy={busy}
-        onOpenProfile={openUserProfile}
         onOpenInbox={() => setInboxOpen(true)}
         onOpenInvite={() => setInviteOpen(true)}
         inviteDisabled={paired || busy}
