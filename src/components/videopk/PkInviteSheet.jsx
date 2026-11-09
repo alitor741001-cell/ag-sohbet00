@@ -3,24 +3,31 @@ import { Loader2, Search, UserPlus, X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import useFriends from '@/hooks/useFriends';
 
-const PersonRow = ({ person, busy, onPick }) => (
-  <button
-    type="button"
-    disabled={busy}
-    onClick={() => onPick?.(person)}
-    className="flex w-full items-center gap-2.5 rounded-xl px-2 py-2 text-left active:scale-[0.99] disabled:opacity-50"
-  >
-    {person.avatar
-      ? <img src={person.avatar} alt="" className="h-9 w-9 rounded-full object-cover ring-1 ring-white/20" />
-      : <span className="h-9 w-9 rounded-full bg-white/15" />}
-    <span className="min-w-0 flex-1">
-      <span className="block truncate text-[12.5px] font-bold text-white">{person.name || 'Kullanıcı'}</span>
-      <span className="block truncate text-[10px] font-semibold text-white/45">Görüntülü PK daveti gönder</span>
-    </span>
-    <span className="flex shrink-0 items-center gap-1 rounded-full bg-fuchsia-500 px-2.5 py-1 text-[10px] font-black text-white">
+const PersonRow = ({ person, busy, onPick, onOpenProfile }) => (
+  <div className="flex w-full items-center gap-2 rounded-xl px-2 py-2">
+    {/* Sol taraf profile gider: sesli odadaki profil kartı açılır. */}
+    <button
+      type="button"
+      onClick={() => onOpenProfile?.(person.user_id)}
+      className="flex min-w-0 flex-1 items-center gap-2.5 text-left active:scale-[0.99]"
+    >
+      {person.avatar
+        ? <img src={person.avatar} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover ring-1 ring-white/20" />
+        : <span className="h-9 w-9 shrink-0 rounded-full bg-white/15" />}
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-[12.5px] font-bold text-white">{person.name || 'Kullanıcı'}</span>
+        <span className="block truncate text-[10px] font-semibold text-white/45">Profili gör · PK daveti gönder</span>
+      </span>
+    </button>
+    <button
+      type="button"
+      disabled={busy}
+      onClick={() => onPick?.(person)}
+      className="flex shrink-0 items-center gap-1 rounded-full bg-fuchsia-500 px-2.5 py-1 text-[10px] font-black text-white active:scale-95 disabled:opacity-50"
+    >
       <UserPlus className="h-3 w-3" /> Davet
-    </span>
-  </button>
+    </button>
+  </div>
 );
 
 /** PK davet et: arkadaş listesi ve üye numarasıyla arama. Davet gönderilince sayfa değişmez. */

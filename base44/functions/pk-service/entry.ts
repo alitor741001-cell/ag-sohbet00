@@ -499,6 +499,28 @@ export default async function (req) {
       });
     }
 
+    // PK sohbeti: tur içindeki iki kişi yazar; mesaj maç kimliğiyle saklanır, her iki tarafta da görünür.
+    if (action === 'chat-send') {
+      const match = await getMatch(String(body.id || ''));
+      if (!match) return Response.json({ error: 'PK bulunamadı' }, { status: 404 });
+      if (!isPlayer(match)) return Response.json({ error: 'Bu sohbete yazamazsın' }, { status: 403 });
+      if (match.status === 'ended') return Response.json({ error: 'PK turu kapandı' }, { status: 400 });
+
+      const text = String(body.text || '').trim().slice(0, 300);
+      if (!text) return Response.json({ error: 'Mesaj boş olamaz' }, { status: 400 });
+
+      const message = await svc.RoomMessage.create({
+        room_id: `pk-${match.id}`,
+        user_id: user.id,
+        user_name: user.full_name || 'Kullanıcı',
+        user_avatar: user.avatar || '',
+        text,
+        type: 'user',
+      });
+
+      return Response.json({ message });
+    }
+
     return Response.json({ error: 'Bilinmeyen işlem' }, { status: 400 });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });

@@ -1,4 +1,4 @@
-import { Inbox, Mic, MicOff, Video, VideoOff, Gift, LogOut, UserPlus } from 'lucide-react';
+import { Inbox, Mic, MicOff, Video, VideoOff, Gift, LogOut, UserPlus, MessageSquare } from 'lucide-react';
 
 const ActionButton = ({ Icon, label, onClick, disabled, active = true, tone = 'default' }) => {
   const tones = {
@@ -29,6 +29,7 @@ const ActionButton = ({ Icon, label, onClick, disabled, active = true, tone = 'd
 export default function VideoPkBar({
   inviteCount = 0, onOpenInbox, onOpenInvite, inviteDisabled, inviteLabel = 'PK Davet Et',
   micOn, onMic, camOn, onCam, onGift, giftDisabled, onExit, inMatch,
+  onChat, chatOpen = false, chatDisabled = false,
 }) {
   return (
     <div
@@ -74,6 +75,13 @@ export default function VideoPkBar({
           label={camOn ? 'Kamerayı kapat' : 'Kamerayı aç'}
           onClick={onCam}
           active={camOn}
+        />
+        <ActionButton
+          Icon={MessageSquare}
+          label="PK sohbeti"
+          onClick={onChat}
+          disabled={chatDisabled}
+          tone={chatOpen ? 'pink' : 'default'}
         />
         <ActionButton
           Icon={Gift}

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, Trophy, X } from 'lucide-react';
+import { Eye, Loader2, Trophy, X } from 'lucide-react';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { useToast } from '@/components/ui/use-toast';
 import VideoPkStage from '@/components/videopk/VideoPkStage';
@@ -8,8 +8,11 @@ import VideoPkBar from '@/components/videopk/VideoPkBar';
 import PkInviteSheet from '@/components/videopk/PkInviteSheet';
 import PkInboxSheet from '@/components/videopk/PkInboxSheet';
 import PkGiftSheet from '@/components/videopk/PkGiftSheet';
+import PkChat from '@/components/videopk/PkChat';
 import useVideoPk, { PK_INVITE_TTL_MS, videoLobbyId } from '@/hooks/useVideoPk';
 import usePkLiveKit from '@/hooks/usePkLiveKit';
+import usePkViewers from '@/hooks/usePkViewers';
+import { useUserProfile } from '@/lib/profileCard';
 import formatCoinAmount from '@/components/voice/formatCoinAmount';
 
 const TOUR_SECONDS = 5 * 60;
@@ -25,12 +28,16 @@ export default function VideoPkPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const backRoom = new URLSearchParams(window.location.search).get('oda');
+  const { openUserProfile } = useUserProfile();
+  // İzleyiciler: PK hangi sesli odadan açıldıysa o odada kalan dinleyiciler.
+  const viewers = usePkViewers(backRoom);
 
   const { lobby, joined, active, invites, declined, loaded, busy, run, ensureLobby } = useVideoPk(user);
   const [now, setNow] = useState(Date.now());
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inboxOpen, setInboxOpen] = useState(false);
   const [giftOpen, setGiftOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
   const lobbyStarted = useRef(false);
   const declinedRef = useRef('');
   const expiredRef = useRef('');
@@ -40,6 +47,8 @@ export default function VideoPkPage() {
   const isGuest = active?.guest_id === user?.id;
   const paired = !!active?.accepted && !!active?.guest_id;
   const live = paired && active?.status === 'live';
+  // Sohbet, tur açıkken (lobide de) yazılabilir; tur kapanınca kapanır.
+  const chatMatchId = active && active.status !== 'ended' ? active.id : '';
   const rival = paired
     ? {
       id: isHost ? active.guest_id : active.host_id,
@@ -236,6 +245,13 @@ export default function VideoPkPage() {
             {rival ? `Rakip: ${rival.name || 'Kullanıcı'}` : 'Sesli odadan bağımsız · davet göndererek başla'}
           </p>
         </div>
+        {backRoom && (
+          <span className="flex shrink-0 items-center gap-1 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-black text-white/85">
+            <Eye className="h-3.5 w-3.5" />
+            {viewers}
+            <span className="text-[10px] font-semibold text-white/60">izleyici</span>
+          </span>
+        )}
         <button
           type="button"
           onClick={exitPage}
@@ -283,7 +299,7 @@ export default function VideoPkPage() {
         timerText={timerText}
         live={live}
         peerStatus={status}
-        onOpenRival={null}
+        onOpenRival={rival?.id ? () => openUserProfile(rival.id) : null}
       />
 
       {/* Tur sonucu: iki tarafta da aynı skor ve aynı kazanan görünür. */}
@@ -323,6 +339,9 @@ export default function VideoPkPage() {
         onMic={() => setMicEnabled(!micOn)}
         camOn={camOn}
         onCam={() => setCameraEnabled(!camOn)}
+        onChat={() => setChatOpen(true)}
+        chatOpen={chatOpen}
+        chatDisabled={!chatMatchId}
         onGift={() => setGiftOpen(true)}
         giftDisabled={!live || !!active?.settled}
         onExit={live ? leaveMatch : exitPage}
@@ -335,6 +354,7 @@ export default function VideoPkPage() {
         user={user}
         busy={busy}
         onInvite={invite}
+        onOpenProfile={openUserProfile}
       />
       <PkInboxSheet
         open={inboxOpen}
@@ -343,6 +363,15 @@ export default function VideoPkPage() {
         busy={busy}
         onAccept={acceptInvite}
         onDecline={declineInvite}
+        onOpenProfile={openUserProfile}
+      />
+      <PkChat
+        open={chatOpen}
+        onClose={() => setChatOpen(false)}
+        matchId={chatMatchId}
+        hostId={active?.host_id}
+        user={user}
+        viewers={viewers}
       />
       <PkGiftSheet open={giftOpen} onClose={() => setGiftOpen(false)} onSend={sendGift} busy={busy} />
     </div>
