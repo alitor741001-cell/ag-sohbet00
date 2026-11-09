@@ -7,7 +7,7 @@ import { PK_INVITE_TTL_MS } from '@/hooks/useVideoPk';
  */
 export default function PkInlineInvite({ invite, more = 0, busy = false, onAccept, onDecline, onOpenProfile, onOpenAll }) {
   if (!invite) return null;
-  const expired = Date.now() - new Date(invite.created_date || 0).getTime() > PK_INVITE_TTL_MS;
+  const expired = Date.now() - new Date(invite.invited_at || invite.created_date || 0).getTime() > PK_INVITE_TTL_MS;
   const name = invite.host_name || 'Kullanıcı';
 
   return (

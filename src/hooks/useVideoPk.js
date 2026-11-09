@@ -96,8 +96,9 @@ export default function useVideoPk(user) {
     || (lastHosted && lastHosted.status === 'ended' && lastHosted.settled ? lastHosted : null)
     || (lastGuest && lastGuest.status === 'ended' && lastGuest.settled ? lastGuest : null);
   const pendingInvites = invites;
+  // Süre davetin gönderildiği andan sayılır: yayın kaydının oluşturulma zamanı eski olabilir.
   const expiredInvite = pendingInvites.find((row) => (
-    Date.now() - new Date(row.created_date || 0).getTime() > PK_INVITE_TTL_MS
+    Date.now() - new Date(row.invited_at || row.created_date || 0).getTime() > PK_INVITE_TTL_MS
   )) || null;
   // Davet reddedildi: kayıt ret veren kişiyle kapatılır, davet sahibi bunu görür.
   const declined = lastHosted

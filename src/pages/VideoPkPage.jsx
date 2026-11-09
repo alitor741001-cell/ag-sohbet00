@@ -109,7 +109,7 @@ export default function VideoPkPage() {
 
   // Bekleyen davet zaman aşımına uğrarsa sahibine bildirilir ve davet kapatılır.
   const pending = active && active.guest_id && !active.accepted ? active : null;
-  const pendingExpired = !!pending && now - new Date(pending.created_date || 0).getTime() > PK_INVITE_TTL_MS;
+  const pendingExpired = !!pending && now - new Date(pending.invited_at || pending.created_date || 0).getTime() > PK_INVITE_TTL_MS;
   useEffect(() => {
     if (!pending || !pendingExpired || !isHost) return;
     if (expiredRef.current === pending.id) return;
@@ -168,8 +168,11 @@ export default function VideoPkPage() {
   const acceptInvite = async (inviteRecord) => {
     try {
       await run('accept', { id: inviteRecord.id });
+      // Kabul edildiği an çift kamera açılır: kamera ve mikrofon kendiliğinden devreye girer.
       setInboxOpen(false);
       startAudio();
+      setCameraEnabled(true);
+      setMicEnabled(true);
       toast({ title: 'PK başladı', description: `${inviteRecord.host_name || 'Rakip'} ile çift kamera açıldı.` });
     } catch (acceptError) {
       toast({

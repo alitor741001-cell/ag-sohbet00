@@ -20,7 +20,7 @@ export default function PkInboxSheet({ open, onClose, invites = [], onAccept, on
           {invites.length === 0 ? (
             <p className="py-6 text-center text-[11.5px] text-white/50">Şu an gelen PK daveti yok.</p>
           ) : invites.map((invite) => {
-            const expired = Date.now() - new Date(invite.created_date || 0).getTime() > PK_INVITE_TTL_MS;
+            const expired = Date.now() - new Date(invite.invited_at || invite.created_date || 0).getTime() > PK_INVITE_TTL_MS;
             return (
               <div key={invite.id} className="mb-1.5 rounded-2xl bg-white/[0.06] p-2.5 ring-1 ring-white/10">
                 {/* Davet eden kişiye dokununca sesli odadaki profil kartı açılır. */}

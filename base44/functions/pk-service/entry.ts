@@ -148,6 +148,8 @@ export default async function (req) {
           guest_name: guest?.full_name || String(body.guest_name || 'Kullanıcı'),
           guest_avatar: guest?.avatar || '',
           accepted: false,
+          // Davetin kendi gönderilme anı: yayın kaydı eski olsa da davet yeni sayılır.
+          invited_at: new Date().toISOString(),
           muted: [],
         });
         // Davet bildirim kaydına yazılmaz: davet edilen kişinin ekranına anlık kart olarak gelir.
@@ -169,6 +171,7 @@ export default async function (req) {
         guest_name: guest?.full_name || String(body.guest_name || 'Kullanıcı'),
         guest_avatar: guest?.avatar || '',
         accepted: false,
+        invited_at: new Date().toISOString(),
         round_no: 1,
         muted: [],
       });
@@ -230,6 +233,7 @@ export default async function (req) {
         accepted: true,
         started: true,
         settled: false,
+        invited_at: '',
         started_at: now.toISOString(),
         ends_at: freshEnd,
         host_score: 0,
@@ -427,6 +431,7 @@ export default async function (req) {
         accepted: false,
         started: false,
         settled: false,
+        invited_at: '',
         left_id: '',
         host_score: 0,
         guest_score: 0,
