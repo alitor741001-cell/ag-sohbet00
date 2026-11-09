@@ -47,7 +47,7 @@ function VideoFeed({ track, mirror }) {
  */
 export default function PkFeedTile({
   name, avatar, score = 0, muted, mine = false, camOn = true,
-  track, error, footer, onOpen,
+  track, error, footer, onOpen, burst = null,
 }) {
   const hasVideo = mine ? camOn && !!track && !error : !!track;
 
@@ -68,6 +68,15 @@ export default function PkFeedTile({
       <span className="absolute left-1.5 top-1.5 flex items-center gap-0.5 rounded-md bg-black/55 px-1.5 py-0.5 text-[9.5px] font-black tabular-nums text-white ring-1 ring-white/20">
         <Gem className="h-2.5 w-2.5 text-cyan-300" /> {formatCoinAmount(score)}
       </span>
+
+      {/* Gelen hediye görseli: kamerayı kapatmadan kısa süreli parlar. */}
+      {burst && (
+        <span key={burst.key} className="gift-burst pointer-events-none absolute inset-x-0 top-9 z-20 flex justify-center">
+          {burst.imageUrl
+            ? <img src={burst.imageUrl} alt="" className="h-20 w-20 object-contain drop-shadow-[0_0_14px_rgba(250,204,21,0.9)]" />
+            : <span className="text-4xl leading-none drop-shadow-[0_0_14px_rgba(250,204,21,0.9)]">{burst.emoji || '🎁'}</span>}
+        </span>
+      )}
 
       <button
         type="button"

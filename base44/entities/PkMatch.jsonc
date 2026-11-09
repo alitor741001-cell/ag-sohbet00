@@ -49,6 +49,14 @@
       "type": "boolean",
       "default": false
     },
+    "started": {
+      "type": "boolean",
+      "default": false
+    },
+    "settled": {
+      "type": "boolean",
+      "default": false
+    },
     "started_at": {
       "type": "string",
       "format": "date-time"
@@ -60,6 +68,18 @@
     "round_no": {
       "type": "integer",
       "default": 1
+    },
+    "host_score": {
+      "type": "number",
+      "default": 0
+    },
+    "guest_score": {
+      "type": "number",
+      "default": 0
+    },
+    "winner_id": {
+      "type": "string",
+      "default": ""
     },
     "muted": {
       "type": "array",

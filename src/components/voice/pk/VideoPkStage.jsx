@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Camera, CameraOff, LayoutGrid, Loader2, Mic, MicOff, Trophy, UserPlus } from 'lucide-react';
+import { Loader2, Trophy, UserPlus } from 'lucide-react';
 import { RoomEvent } from 'livekit-client';
 import usePkCamera from '@/hooks/usePkCamera';
 import usePkMatch from '@/hooks/usePkMatch';
+import usePkStreak from '@/hooks/usePkStreak';
 import { useToast } from '@/components/ui/use-toast';
 import PkFeedTile from '@/components/voice/pk/PkFeedTile';
 import PkInvitePanel from '@/components/voice/pk/PkInvitePanel';
@@ -11,27 +12,29 @@ import PkScoreBar from '@/components/voice/pk/PkScoreBar';
 import PkLiveChat from '@/components/voice/pk/PkLiveChat';
 import PkLiveNotice from '@/components/voice/pk/PkLiveNotice';
 import PkActionBar from '@/components/voice/pk/PkActionBar';
-import PkOwnerControls from '@/components/voice/pk/PkOwnerControls';
 import PkRankingSheet from '@/components/voice/pk/PkRankingSheet';
+import formatCoinAmount from '@/components/voice/formatCoinAmount';
 import { useUserProfile } from '@/lib/profileCard';
 import VoiceViewerSheet from '@/components/voice/VoiceViewerSheet';
 
-// Her tur 5 dakika sürer: kabul edildiği an süre başlar, süre bitince sonuç gelir.
+// Her tur 5 dakika sürer: "Maçı Başlat" denince süre başlar, süre bitince sonuç gelir.
 const clock = (total) => `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+const TOUR_SECONDS = 5 * 60;
 
 /**
- * Görüntülü PK ekranı: sesli odanın üstünde tam ekran açılır, oda bağlantısı arkada korunur.
- * Üstte yayıncı kartı, ortada iki kamera, altta sohbet–hediye–skor bulunur.
+ * Görüntülü PK ekranı: sesli odanın üstünde açılır, oda bağlantısı arkada korunur.
+ * Yayıncıların kamera/mikrofon yayını kendiliğinden çalışır; ekranda elle kamera,
+ * mikrofon veya davet düğmesi yoktur.
  */
 export default function VideoPkStage({
   open, onClose, onLeft, roomId, roomName, user, participants = [], seatRows = [], moderators = [], ownerId,
-  gifts = [], livekitRoom, onSendGift, onOpenGifts, messages = [], onSendMessage, voice, roomActions = null,
+  gifts = [], coins = 0, livekitRoom, onSendGift, onOpenGifts, messages = [], onSendMessage, voice, roomActions = null,
 }) {
   const { toast } = useToast();
   const { openUserProfile } = useUserProfile();
   const { match, loaded, run, busy } = usePkMatch(roomId, open);
+  const { streak, refresh: refreshStreak } = usePkStreak(user?.id);
   const [inviteOpen, setInviteOpen] = useState(false);
-  const [controlsOpen, setControlsOpen] = useState(false);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [rankOpen, setRankOpen] = useState(false);
   const [now, setNow] = useState(Date.now());
@@ -42,15 +45,10 @@ export default function VideoPkStage({
   const isGuest = match?.guest_id === user?.id;
   const isPlayer = isHost || isGuest;
   const opponentId = isHost ? match?.guest_id : isGuest ? match?.host_id : '';
-  // Yayın kontrolleri (kamera, mikrofon, davet) yalnızca oda sahibinde görünür;
-  // izleyiciler ve yöneticiler bu düğmelere ulaşamaz, yayın açamaz.
   const roomOwner = !!ownerId && user?.id === ownerId;
-  // Davet gönderme ve yayını başlatma oda sahibinde; kamera/mikrofon kendi yayınına ait —
-  // davet edilen kişi de kendi kamerasını ve mikrofonunu yönetir.
+  // Davet yalnızca yayını açan taraftan gönderilir.
   const canManage = roomOwner || isHost;
 
-  // Kamera karesi, izleyici listesi ve sıralama aynı gerçek profil kartını açar:
-  // kartta odadan atma, yöneticilik, mikrofon, engelleme gibi işlemler hazır gelir.
   const openPerson = (targetId, name, avatar) => {
     if (!targetId) return;
     const person = participants.find((item) => item.user_id === targetId);
@@ -63,25 +61,28 @@ export default function VideoPkStage({
   };
 
   const remaining = match?.ends_at ? Math.max(0, Math.ceil((new Date(match.ends_at).getTime() - now) / 1000)) : 0;
+  const started = !!match?.started;
   const live = match?.status === 'live';
-  const timeUp = live && !!match?.guest_id && remaining === 0;
+  const timeUp = live && started && !!match?.guest_id && remaining === 0;
   const finished = match?.status === 'ended' || timeUp;
+  // Sonuç ekranı kullanıcı rövanş başlatana ya da maçtan ayrılana kadar açık kalır.
   const staleEnded = match?.status === 'ended'
-    && Date.now() - new Date(match.started_at || match.created_date || 0).getTime() > 10 * 60 * 1000;
+    && Date.now() - new Date(match.started_at || match.created_date || 0).getTime() > 30 * 60 * 1000;
   const active = match && !staleEnded ? match : null;
   const showFrames = !!active && active.status !== 'invite';
-  const solo = !!active && active.status === 'live' && !active.guest_id;
-  // Davet alan kişi: kabul edene kadar yayın kareleri yerine kabul/ret kartı görünür.
+  const guestPresent = !!active?.guest_id;
+  const solo = !!active && active.status === 'live' && !guestPresent;
+  // Davet alan kişi: yayın akışının üzerinde kabul/ret kartı görünür.
   const incoming = !!active && active.guest_id === user?.id && !active.accepted;
 
-  // Yayın yapan tarafların kamerası açılır; izleyiciler kendi kameralarını yayınlamaz.
-  const cameraOn = open && isPlayer && !!active && (active.status === 'live' || active.status === 'ended');
-  const { localTrack, remoteTracks, error, camOn, setCameraEnabled } = usePkCamera({
+  // Yayını açan taraf kendi kamerasını yayınlar; davet edilen kişi kabul edince yayına girer.
+  const cameraOn = open && !!active && (active.status === 'live' || active.status === 'ended')
+    && (isHost || (isGuest && !!active.accepted));
+  const { localTrack, remoteTracks, error, camOn } = usePkCamera({
     open, publish: cameraOn, livekitRoom, selfId: user?.id,
   });
 
-  // Yayın sesi LiveKit üzerinden akar: yayın ekranı açıldığında yayıncının mikrofonu
-  // kapalıysa açılır, böylece odadaki izleyiciler sesi duyar.
+  // Yayın sesi LiveKit üzerinden akar: yayın açıldığında mikrofon kapalıysa açılır.
   const micAskedRef = useRef('');
   useEffect(() => {
     if (!cameraOn || !voice?.muted) return;
@@ -94,11 +95,10 @@ export default function VideoPkStage({
 
   // Yayın açılır açılmaz kamera yayına girer; odada açık bir yayın varsa ona katılınır.
   useEffect(() => {
-    if (!open) { autoRef.current = false; setInviteOpen(false); setControlsOpen(false); setViewerOpen(false); setRankOpen(false); return; }
+    if (!open) { autoRef.current = false; setInviteOpen(false); setViewerOpen(false); setRankOpen(false); return; }
     if (!loaded || autoRef.current) return;
     autoRef.current = true;
     if (active) return;
-    // Yayını yalnızca oda sahibi açar; izleyici ve yönetici yalnız izler.
     if (!canManage) return;
     run('broadcast', { room_id: roomId, room_name: roomName || '' }).catch(() => null);
   }, [open, loaded, active, roomId, roomName, run, canManage]);
@@ -109,16 +109,44 @@ export default function VideoPkStage({
     return () => window.clearInterval(timer);
   }, [open]);
 
-  // Süre bitince tur kapanır (yalnızca bir kez, yayını açan taraf yazar).
+  // Süre bitince tur sunucuda bir kez kapatılır: sonuç ve galibiyet serisi orada işlenir.
+  // Yayını açan taraf hemen kapatır; karşı taraf yalnızca yayıncı işlemediyse devreye girer.
   useEffect(() => {
-    if (!match?.id || !timeUp || !isHost) return;
-    if (finishedRef.current === match.id) return;
-    finishedRef.current = match.id;
-    run('finish', { id: match.id }).catch(() => null);
-  }, [match?.id, timeUp, isHost, run]);
+    if (!match?.id || !isPlayer || match.settled || !match.started) return undefined;
+    if (match.status !== 'live' || !match.guest_id || !match.ends_at) return undefined;
+    const endsAt = new Date(match.ends_at).getTime();
+    let stopped = false;
 
-  // Puanlar turun başından bu yana gelen hediyelerden okunur: hediye atıldığı an bara işler,
-  // önceki turun hediyeleri yeni tura taşınmaz.
+    const attempt = () => {
+      if (stopped || Date.now() < endsAt) return;
+      const key = `${match.id}:${match.round_no}`;
+      if (isHost) {
+        if (finishedRef.current === key) return;
+        finishedRef.current = key;
+      }
+      run('finish', { id: match.id }).then(() => refreshStreak()).catch(() => null);
+    };
+
+    attempt();
+    const timer = window.setInterval(attempt, 5000);
+    return () => { stopped = true; window.clearInterval(timer); };
+  }, [match?.id, match?.settled, match?.started, match?.status, match?.ends_at, match?.round_no, match?.guest_id, isPlayer, isHost, run, refreshStreak]);
+
+  // Sonuç işlendiğinde galibiyet serisi tazelenir.
+  useEffect(() => {
+    if (match?.settled) refreshStreak();
+  }, [match?.settled, refreshStreak]);
+
+  // Maçtan ayrılan tarafın yayın ekranı kapanır: kişi sesli odada kalmaya devam eder.
+  const wasPlayerRef = useRef(false);
+  useEffect(() => { if (isPlayer) wasPlayerRef.current = true; }, [isPlayer]);
+  useEffect(() => {
+    if (!open || !loaded || isPlayer || !wasPlayerRef.current) return;
+    wasPlayerRef.current = false;
+    onClose?.();
+  }, [open, loaded, isPlayer, onClose]);
+
+  // Tur skoru: tutar tur başlangıcından sonra gelen hediyelerden okunur; rövanşta sıfırlanır.
   const matchStart = active?.started_at ? new Date(active.started_at).getTime() : 0;
   const giftScores = useMemo(() => {
     const totals = {};
@@ -131,6 +159,26 @@ export default function VideoPkStage({
     });
     return totals;
   }, [messages, matchStart]);
+
+  // Hediye görselleri: gerçek hediye kataloğundan alınır, kısa süre kamera üzerinde parlar.
+  const giftBursts = useMemo(() => {
+    const byId = new Map();
+    gifts.forEach((gift) => { if (gift?.id) byId.set(gift.id, gift); });
+    const map = {};
+    messages.forEach((message) => {
+      const target = message?.gift_to_id;
+      if (!target) return;
+      const at = message.created_date ? new Date(message.created_date).getTime() : 0;
+      if (now - at > 4500) return;
+      const art = byId.get(message.gift || message.gift_id);
+      map[target] = {
+        key: message.id || `${target}-${at}`,
+        emoji: message.gift_emoji || art?.emoji || '🎁',
+        imageUrl: message.gift_image_url || art?.image_url || '',
+      };
+    });
+    return map;
+  }, [messages, now, gifts]);
 
   // Kapatılan ses odadaki herkes için susar: izleyiciler ve karşı taraf duymaz.
   const mutedIds = useMemo(() => new Set(active?.muted || []), [active?.muted]);
@@ -150,13 +198,18 @@ export default function VideoPkStage({
     return () => { room.off?.(RoomEvent.TrackSubscribed, apply); };
   }, [livekitRoom, mutedIds]);
 
-  const scoreOf = (id) => (id ? (giftScores[id] || 0) * 1000 : 0);
-
   if (!open) return null;
 
-  const iMuted = mutedIds.has(user?.id);
+  // Tur bittiğinde son skorlar sunucudan okunur; oyun sırasında hediyelerden canlı hesaplanır.
+  const scoreOf = (id) => {
+    if (!id) return 0;
+    if (finished && match?.settled) {
+      const raw = id === active?.host_id ? match.host_score : match.guest_score;
+      return (Number(raw) || 0) * 1000;
+    }
+    return (giftScores[id] || 0) * 1000;
+  };
 
-  // İki kare: yayına katılanlar soldan sağa dizilir, izleyici yayıncıyı solda görür.
   const seatOf = (id, hostSeat) => ({
     id,
     name: hostSeat ? (active?.host_name || 'Yayıncı') : (active?.guest_name || 'Konuk'),
@@ -170,42 +223,56 @@ export default function VideoPkStage({
     : [];
   const leftScore = scoreOf(seats[0]?.id);
   const rightScore = scoreOf(seats[1]?.id);
-  // Karşı taraf: üst şeritte adı, fotoğrafı ve takip düğmesiyle görünür.
   const rivalSeat = seats.find((seat) => seat.id && seat.id !== user?.id) || null;
   const rival = rivalSeat ? { id: rivalSeat.id, name: rivalSeat.name, avatar: rivalSeat.avatar } : null;
 
   const elapsed = active?.started_at ? Math.max(0, Math.floor((now - new Date(active.started_at).getTime()) / 1000)) : 0;
-  const timerText = !active ? '00:00' : solo || active.status === 'invite' ? clock(elapsed) : clock(live ? remaining : 0);
+  const timerText = !active
+    ? '00:00'
+    : finished
+      ? '00:00'
+      : started
+        ? clock(remaining)
+        : solo
+          ? clock(elapsed)
+          : clock(TOUR_SECONDS);
 
-  const pressMic = async () => {
-    if (!match?.id) return;
-    const next = !iMuted;
-    if (!!voice?.muted !== next) voice?.toggleMute?.();
-    run('mute', { id: match.id, target_id: user.id, muted: next }).catch(() => null);
-  };
-
-  const toggleCamera = () => setCameraEnabled(!camOn);
+  const resultText = (() => {
+    if (!finished) return '';
+    const first = seats[0];
+    const second = seats[1];
+    if (!second) return 'Tek kişilik yayın';
+    if (leftScore === rightScore) return `Berabere · ${formatCoinAmount(leftScore)} — ${formatCoinAmount(rightScore)}`;
+    const winner = leftScore > rightScore ? first : second;
+    return `${winner?.name || 'Yayıncı'} turu kazandı · ${formatCoinAmount(leftScore)} — ${formatCoinAmount(rightScore)}`;
+  })();
 
   const invite = async (person) => {
+    if (active?.guest_id) {
+      toast({ title: 'Zaten bir rakip var', description: 'Önce mevcut rakiple maçı bitir ya da ayrıl.' });
+      return;
+    }
     try {
       await run('invite', { room_id: roomId, room_name: roomName || '', guest_id: person.user_id, guest_name: person.name });
       setInviteOpen(false);
-      toast({ title: 'Davet gönderildi', description: `${person.name || 'Kullanıcı'} kabul ederse yayına katılır.` });
+      toast({ title: 'PK daveti gönderildi', description: `${person.name || 'Kullanıcı'} kabul ederse maçı başlatabilirsin.` });
     } catch (inviteError) {
       toast({ title: 'Davet gönderilemedi', description: inviteError?.response?.data?.error || inviteError.message, variant: 'destructive' });
     }
   };
 
-  // Yayından ayrıl: karşılaşma kapanır, oda ekranına dönülür.
+  // "Maçtan ayrıl": yalnızca PK oturumu kapanır. Yayını açan kişi tek kişilik yayında kalır,
+  // ayrılan rakip odaya döner; sesli oda bağlantısı hiç kesilmez.
   const leaveMatch = async () => {
     if (match?.id) await run('leave', { id: match.id }).catch(() => null);
-    onLeft?.();
-    onClose?.();
+    if (!isHost) onClose?.();
   };
 
-  // Sağ üstteki X: yayındaki kişi için yayından ayrılma, izleyici için ekranı kapatma.
-  const closeStage = () => {
-    if (isPlayer && active) { leaveMatch(); return; }
+  // Sağ üstteki X: yayını açan için yayın da kapanır, diğerleri için yalnız ekran kapanır.
+  const closeStage = async () => {
+    if (isHost && match?.id) await run('leave', { id: match.id, end: true }).catch(() => null);
+    else if (isPlayer && match?.id) await run('leave', { id: match.id }).catch(() => null);
+    if (isPlayer) onLeft?.();
     onClose?.();
   };
 
@@ -214,9 +281,17 @@ export default function VideoPkStage({
     onClose?.();
   };
 
+  const startMatch = async () => {
+    if (!match?.id) return;
+    await run('start', { id: match.id }).catch((startError) => {
+      toast({ title: 'Maç başlatılamadı', description: startError?.response?.data?.error || startError.message, variant: 'destructive' });
+    });
+  };
+
   const rematch = async () => {
     if (!match?.id) return;
     await run('rematch', { id: match.id }).catch(() => null);
+    refreshStreak();
   };
 
   // Hediye: gül dışındaki hediyeler odanın hediye tahtasından gönderilir.
@@ -241,6 +316,8 @@ export default function VideoPkStage({
       <PkLiveHeader
         person={rival || { id: user?.id, name: 'Sen', avatar: user?.avatar || '' }}
         user={user}
+        coins={coins}
+        pkStreak={streak}
         viewerCount={participants.length}
         onOpenViewers={() => setViewerOpen(true)}
         galleryIndex={seats.length || 1}
@@ -249,24 +326,57 @@ export default function VideoPkStage({
         onClose={closeStage}
       />
 
-      {/* PK barı yalnızca gerçek bir eşleşme başladığında görünür: tek başına yayında gizli. */}
-      {showFrames && !!active?.guest_id && <PkScoreBar leftScore={leftScore} rightScore={rightScore} timerText={timerText} />}
+      {/* Skor barı ve süre yalnızca maç sırasında ve sonuç ekranında görünür. */}
+      {showFrames && guestPresent && (started || finished) && (
+        <PkScoreBar leftScore={leftScore} rightScore={rightScore} timerText={timerText} />
+      )}
 
       <div className="relative flex min-h-0 flex-1 flex-col">
-        {/* Davet: oda sahibi sağ üstteki kare düğmeden yayına davet gönderir. */}
-        {roomOwner && (
+        {!active && (
+          <div className="flex min-h-0 flex-1 items-center justify-center gap-2 text-[11.5px] font-semibold text-white/55">
+            <Loader2 className="h-4 w-4 animate-spin" /> Kamera yayına alınıyor…
+          </div>
+        )}
+
+        {/* İki kare: rakip geldiğinde iki kamera yan yana açılır, ayrılınca tek kareye döner. */}
+        {showFrames && (
+          <div className="flex min-h-0 flex-1 gap-0.5">
+            {seats.map((seat, index) => {
+              const isMe = seat.id === user?.id;
+              return (
+                <PkFeedTile
+                  key={seat.id || index}
+                  name={isMe ? 'Sen' : seat.name}
+                  avatar={seat.avatar}
+                  score={scoreOf(seat.id)}
+                  muted={mutedIds.has(seat.id)}
+                  mine={isMe}
+                  camOn={camOn}
+                  track={isMe ? localTrack : remoteTracks.find((item) => item.identity === seat.id)?.track}
+                  error={isMe ? error : ''}
+                  burst={giftBursts[seat.id] || null}
+                  onOpen={isMe ? null : () => openPerson(seat.id, seat.name, seat.avatar)}
+                />
+              );
+            })}
+          </div>
+        )}
+
+        {/* PK daveti: tek kişilik yayında sağ üstte küçük düğme, davet paneli tam ekran açılır. */}
+        {showFrames && canManage && !guestPresent && (
           <button
             type="button"
-            onClick={() => setControlsOpen(true)}
-            aria-label="Yayın kontrolleri"
-            className="absolute right-2 top-2 z-50 flex h-9 w-9 items-center justify-center rounded-xl bg-black/60 text-white ring-1 ring-white/25 backdrop-blur active:scale-95"
+            onClick={() => setInviteOpen(true)}
+            aria-label="PK daveti gönder"
+            className="flame-live absolute right-2 top-2 z-50 flex items-center gap-1 rounded-full border border-fuchsia-200/70 px-2.5 py-1.5 text-[10px] font-black text-white active:scale-95"
+            style={{ backgroundImage: 'linear-gradient(115deg,#ffb3f0 0%,#d946ef 45%,#7c0ea0 100%)' }}
           >
-            <LayoutGrid className="h-4 w-4" />
+            <UserPlus className="h-3.5 w-3.5" /> PK Davet
           </button>
         )}
 
         {inviteOpen && (
-          <div className="absolute inset-2 z-40 flex flex-col rounded-2xl bg-[#0c0714]/97 p-1.5 ring-1 ring-fuchsia-400/30">
+          <div className="absolute inset-2 z-[60] flex flex-col rounded-2xl bg-[#0c0714]/97 p-1.5 ring-1 ring-fuchsia-400/30">
             <PkInvitePanel
               mode="pick"
               match={active}
@@ -286,8 +396,9 @@ export default function VideoPkStage({
           </div>
         )}
 
+        {/* Davet edilen kişi: yayın akışı arkada kalır, kart ortada açılır. */}
         {incoming && (
-          <div className="min-h-0 flex-1 overflow-y-auto p-3">
+          <div className="absolute inset-0 z-[55] flex items-center justify-center bg-black/60 px-4 backdrop-blur-[2px]">
             <PkInvitePanel
               mode="incoming"
               match={active}
@@ -301,49 +412,7 @@ export default function VideoPkStage({
           </div>
         )}
 
-        {!incoming && !active && (
-          <div className="flex min-h-0 flex-1 items-center justify-center gap-2 text-[11.5px] font-semibold text-white/55">
-            <Loader2 className="h-4 w-4 animate-spin" /> Kamera yayına alınıyor…
-          </div>
-        )}
-
-        {!incoming && showFrames && (
-          /* Yalnız yayındayken tek kare ekranın tamamını kaplar; davet düğmesi karenin
-             üstünde küçük bir düğme olarak durur. Konuk gelince iki kare yan yana açılır. */
-          <div className="flex min-h-0 flex-1 gap-0.5">
-            {seats.map((seat, index) => {
-              const isMe = seat.id === user?.id;
-              const opponentSeat = !isMe && seat.id === opponentId;
-              const canInvite = isHost && (opponentSeat || (seats.length === 1 && isMe));
-              return (
-                <PkFeedTile
-                  key={seat.id || index}
-                  name={isMe ? 'Sen' : seat.name}
-                  avatar={seat.avatar}
-                  score={scoreOf(seat.id)}
-                  muted={mutedIds.has(seat.id)}
-                  mine={isMe}
-                  camOn={camOn}
-                  track={isMe ? localTrack : remoteTracks.find((item) => item.identity === seat.id)?.track}
-                  error={isMe ? error : ''}
-                  onOpen={isMe ? null : () => openPerson(seat.id, seat.name, seat.avatar)}
-                  footer={canInvite ? (
-                    <button
-                      type="button"
-                      onClick={() => setInviteOpen(true)}
-                      aria-label="Yayına davet et"
-                      className="flex h-8 w-8 items-center justify-center rounded-full bg-fuchsia-500/85 text-white ring-1 ring-white/40 active:scale-95"
-                    >
-                      <UserPlus className="h-4 w-4" />
-                    </button>
-                  ) : null}
-                />
-              );
-            })}
-          </div>
-        )}
-
-        {!showFrames && !incoming && active && (
+        {!showFrames && active && !incoming && (
           <div className="min-h-0 flex-1 overflow-y-auto p-3">
             <PkInvitePanel
               mode="waiting"
@@ -352,51 +421,32 @@ export default function VideoPkStage({
               participants={participants}
               livekitRoom={livekitRoom}
               busy={busy}
-              onStart={() => run('start', { id: active.id }).catch(() => null)}
+              onStart={startMatch}
               onCancel={leaveMatch}
             />
           </div>
         )}
-
-        {/* Kendi yayın kontrolleri: kamera ve mikrofon sağ altta, her yayıncının kendine özel. */}
-        {isPlayer && showFrames && (
-          <div className="absolute bottom-2 right-2 z-50 flex flex-col gap-2">
-            <button
-              type="button"
-              onClick={toggleCamera}
-              aria-label={camOn ? 'Kamerayı kapat' : 'Kamerayı aç'}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-black/65 text-white ring-1 ring-white/25 backdrop-blur active:scale-95"
-            >
-              {camOn ? <Camera className="h-5 w-5" /> : <CameraOff className="h-5 w-5 text-red-300" />}
-            </button>
-            <button
-              type="button"
-              onClick={pressMic}
-              aria-label={iMuted ? 'Mikrofonu aç' : 'Mikrofonu kapat'}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-black/65 text-white ring-1 ring-white/25 backdrop-blur active:scale-95"
-            >
-              {iMuted ? <MicOff className="h-5 w-5 text-red-300" /> : <Mic className="h-5 w-5" />}
-            </button>
-          </div>
-        )}
-
       </div>
 
       {showFrames && (
         <div className="flex shrink-0 flex-col rounded-t-2xl bg-[#141018]/95 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1.5 backdrop-blur">
           <PkLiveNotice
+            started={started && !finished}
             finished={finished}
-            onLeave={active?.guest_id ? leaveMatch : null}
-            onRematch={isHost && active?.guest_id ? rematch : null}
+            canStart={isPlayer && guestPresent && !!active?.accepted && !started}
+            guestName={active?.accepted ? (active?.guest_name || '') : ''}
+            pendingName={!active?.accepted ? (active?.guest_name || '') : ''}
+            onStart={startMatch}
+            startBusy={busy}
+            onLeave={isPlayer && (guestPresent || finished) ? leaveMatch : null}
+            onRematch={isPlayer && finished && guestPresent ? rematch : null}
             rematchBusy={busy}
           />
 
           {finished && (
             <p className="mt-1 flex items-center gap-1.5 rounded-lg bg-amber-400/12 px-2 py-1 text-[10.5px] font-black text-amber-200">
               <Trophy className="h-3.5 w-3.5 shrink-0" />
-              {leftScore === rightScore
-                ? 'Berabere — rövanşla devam et'
-                : `${leftScore > rightScore ? seats[0]?.name : seats[1]?.name} turu kazandı${match?.left_id ? ' (ayrılma)' : ''}`}
+              <span className="min-w-0 truncate">{resultText}</span>
             </p>
           )}
 
@@ -408,20 +458,6 @@ export default function VideoPkStage({
             onGift={() => onOpenGifts?.()}
           />
         </div>
-      )}
-
-      {/* Yayın kontrolleri: kamera, mikrofon ve davet tek panelde — yalnızca oda sahibi. */}
-      {roomOwner && (
-        <PkOwnerControls
-          open={controlsOpen}
-          onClose={() => setControlsOpen(false)}
-          camOn={camOn}
-          micMuted={iMuted}
-          canInvite={canManage}
-          onToggleCamera={toggleCamera}
-          onToggleMic={pressMic}
-          onInvite={() => { setControlsOpen(false); setInviteOpen(true); }}
-        />
       )}
 
       <PkRankingSheet

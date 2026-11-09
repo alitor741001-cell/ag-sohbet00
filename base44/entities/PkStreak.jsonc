@@ -1,0 +1,54 @@
+{
+  "name": "PkStreak",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "user_name": {
+      "type": "string",
+      "default": ""
+    },
+    "streak": {
+      "type": "integer",
+      "default": 0
+    },
+    "best_streak": {
+      "type": "integer",
+      "default": 0
+    },
+    "wins": {
+      "type": "integer",
+      "default": 0
+    },
+    "losses": {
+      "type": "integer",
+      "default": 0
+    },
+    "draws": {
+      "type": "integer",
+      "default": 0
+    }
+  },
+  "required": [
+    "user_id"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

@@ -119,7 +119,7 @@ export default function PkInvitePanel({ mode, match, user, participants = [], li
             onClick={onStart}
             className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-xl bg-emerald-500 text-[12px] font-black text-black active:scale-95 disabled:opacity-40"
           >
-            <Video className="h-4 w-4" /> Başla (5 dk)
+            <Video className="h-4 w-4" /> Maçı Başlat
           </button>
           <button
             type="button"
@@ -138,17 +138,19 @@ export default function PkInvitePanel({ mode, match, user, participants = [], li
     const hostName = match?.host_name || 'Rakip';
     const rematch = Number(match?.round_no) > 1;
     return (
-      <div className="rounded-2xl border border-fuchsia-300/40 bg-fuchsia-500/10 p-3">
-        <div className="flex items-center gap-2">
+      <div className="room-notif-in w-full max-w-[19rem] rounded-3xl border border-fuchsia-300/40 bg-gradient-to-b from-[#220d2c]/98 to-[#12060f]/98 p-4 text-center shadow-[0_0_46px_-12px_rgba(217,70,239,0.95)]">
+        <span className="mx-auto flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-white/10 ring-2 ring-fuchsia-400/70">
           {match?.host_avatar
-            ? <img src={match.host_avatar} alt="" className="h-12 w-12 rounded-full object-cover ring-2 ring-fuchsia-400/70" />
-            : <span className="h-12 w-12 rounded-full bg-white/15" />}
-          <div className="min-w-0">
-            <p className="truncate text-[13px] font-black text-white">{hostName}</p>
-            <p className="text-[10.5px] font-semibold text-white/60">{rematch ? 'Rövanş istiyor' : 'Seni görüntülü PK’ya davet etti'}</p>
-          </div>
-        </div>
-        <div className="mt-2.5 flex gap-1.5">
+            ? <img src={match.host_avatar} alt="" className="h-full w-full object-cover" />
+            : <Video className="h-7 w-7 text-fuchsia-300" />}
+        </span>
+        <p className="mt-2 text-[10px] font-black uppercase tracking-[0.14em] text-fuchsia-300">Görüntülü PK daveti</p>
+        <p className="mt-0.5 truncate text-[14px] font-black text-white">{hostName}</p>
+        <p className="mt-0.5 text-[11px] font-semibold text-white/60">
+          {rematch ? 'Rövanş istiyor' : 'Seni görüntülü yayınına davet etti'}
+          {match?.room_name ? ` · ${match.room_name}` : ''}
+        </p>
+        <div className="mt-3 flex gap-2">
           {match?.accepted ? (
             <p className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-xl bg-white/10 px-3 text-[11.5px] font-black text-emerald-300">
               <Check className="h-4 w-4" /> Kabul edildi — başlatılması bekleniyor
@@ -250,7 +252,7 @@ export default function PkInvitePanel({ mode, match, user, participants = [], li
       </div>
 
       <p className="shrink-0 border-t border-white/10 px-2 py-1.5 text-[9.5px] font-semibold text-white/40">
-        Davet gönderdiğin kişi kabul edince “Başla” ile 5 dakikalık PK başlar.
+        Davet gönderdiğin kişi kabul edince “Maçı Başlat” ile 5 dakikalık PK başlar.
       </p>
     </div>
   );

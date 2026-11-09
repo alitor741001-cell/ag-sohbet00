@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Heart, Loader2, Trophy, UserCheck, UserPlus, Users, X } from 'lucide-react';
+import { Gem, Heart, Loader2, Trophy, UserCheck, UserPlus, Users, X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import formatCoinAmount from '@/components/voice/formatCoinAmount';
 
@@ -9,6 +9,7 @@ import formatCoinAmount from '@/components/voice/formatCoinAmount';
  */
 export default function PkLiveHeader({
   person, user, viewerCount = 0, onOpenViewers, onOpenRanking, onClose, galleryIndex = 1, galleryTotal = 1,
+  coins = 0, pkStreak = 0,
 }) {
   const personId = person?.id;
   const mine = !personId || personId === user?.id;
@@ -90,11 +91,17 @@ export default function PkLiveHeader({
         </div>
       </div>
 
-      <div className="mt-1 flex items-center gap-1.5">
+      <div className="mt-1 flex items-center gap-1.5 overflow-hidden">
+        {/* Elmas ve PK galibiyet serisi yan yana: seri hesaba bağlı saklanır. */}
+        <span className="flex shrink-0 items-center gap-1 rounded-full bg-black/45 px-1.5 py-0.5 text-[9.5px] font-black tabular-nums text-white">
+          <Gem className="h-2.5 w-2.5 text-cyan-300" /> {formatCoinAmount(coins)}
+          <span className="text-white/30">|</span>
+          <Trophy className="h-2.5 w-2.5 text-amber-300" /> PK {pkStreak}
+        </span>
         <button
           type="button"
           onClick={onOpenRanking}
-          className="flex items-center gap-0.5 rounded-full bg-amber-400/15 px-1.5 py-0.5 text-[9.5px] font-black text-amber-200 active:scale-95"
+          className="flex shrink-0 items-center gap-0.5 rounded-full bg-amber-400/15 px-1.5 py-0.5 text-[9.5px] font-black text-amber-200 active:scale-95"
         >
           <Trophy className="h-2.5 w-2.5" /> Saatlik Sıralama
         </button>
