@@ -13,7 +13,6 @@ import useDeferredMount from '@/hooks/useDeferredMount';
 // Açılış katmanları ilk boyamayı beklemez: uygulama açıldıktan sonra yüklenir.
 const RoleCelebrationOverlay = lazy(() => import('@/components/role/RoleCelebrationOverlay'));
 const GlobalAgencyCall = lazy(() => import('@/components/voice/GlobalAgencyCall'));
-const PkInviteOverlay = lazy(() => import('@/components/voice/pk/PkInviteOverlay'));
 import { triggerBanNotice } from '@/lib/banNotice';
 import { useToast } from '@/components/ui/use-toast';
 import MessageRealtimeProvider from '@/components/messages/MessageRealtimeProvider';
@@ -211,7 +210,6 @@ export default function AppLayout() {
     <Suspense fallback={null}>
       <RoleCelebrationOverlay />
       <GlobalAgencyCall />
-      <PkInviteOverlay userId={user?.id} />
     </Suspense>
   ) : null;
 

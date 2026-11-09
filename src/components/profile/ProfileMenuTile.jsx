@@ -17,23 +17,23 @@ export default function ProfileMenuTile({ label, Icon, tone = 'sky', value, unre
       <span aria-hidden="true" className={cn('pointer-events-none absolute -inset-[1px] rounded-[18px] opacity-70 blur-[6px]', t.neon)} />
       <span
         className={cn(
-          'relative flex min-h-0 w-full flex-1 flex-col items-center justify-center gap-[2px] overflow-hidden rounded-[16px] border bg-gradient-to-br px-1 py-1.5 text-center',
+          'relative flex min-h-0 w-full flex-1 flex-col items-center justify-center gap-[1px] overflow-hidden rounded-[14px] border bg-gradient-to-br px-1 py-1 text-center',
           t.border,
           t.surface,
         )}
       >
         {/* Köşedeki büyük filigran ikon: kartın görsel dokusu */}
-        <Icon aria-hidden="true" className="pointer-events-none absolute -right-1.5 -top-1.5 h-9 w-9 opacity-[0.16]" strokeWidth={1.6} />
+        <Icon aria-hidden="true" className="pointer-events-none absolute -right-1 -top-1 h-8 w-8 opacity-[0.16]" strokeWidth={1.6} />
         <span aria-hidden="true" className="pointer-events-none absolute inset-x-2 top-0 h-px bg-gradient-to-r from-transparent via-white/60 to-transparent" />
 
         <span
           aria-hidden="true"
-          className="relative flex h-[26px] w-[26px] items-center justify-center rounded-full border border-white/40 bg-white/20 text-white shadow-[0_3px_10px_-4px_rgba(0,0,0,0.95)] backdrop-blur-sm"
+          className="relative flex h-[20px] w-[20px] items-center justify-center rounded-full border border-white/40 bg-white/20 text-white shadow-[0_3px_10px_-4px_rgba(0,0,0,0.95)] backdrop-blur-sm"
         >
-          <Icon className="h-[14px] w-[14px] drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]" strokeWidth={2.5} />
+          <Icon className="h-[11px] w-[11px] drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]" strokeWidth={2.5} />
         </span>
 
-        <span className="relative line-clamp-2 px-0.5 text-[8.5px] font-extrabold uppercase leading-[1.12] tracking-[0.02em] text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
+        <span className="relative line-clamp-2 px-0.5 text-[7.5px] font-extrabold uppercase leading-[1.1] tracking-[0.01em] text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
           {label}
         </span>
 

@@ -20,8 +20,7 @@ import VoiceControlBar from '@/components/voice/VoiceControlBar';
 import RoomRocketFeature from '@/components/voice/roomRocket/RoomRocketFeature';
 import VoiceChatDock from '@/components/voice/VoiceChatDock';
 import VoiceViewerSheet from '@/components/voice/VoiceViewerSheet';
-import VideoPkStage from '@/components/voice/pk/VideoPkStage';
-import usePkMatch from '@/hooks/usePkMatch';
+
 import VoiceSeatInvitePrompt from '@/components/voice/VoiceSeatInvitePrompt';
 import RoomProfileSheet from '@/components/voice/RoomProfileSheet';
 import VoiceRoomMenu from '@/components/voice/VoiceRoomMenu';
@@ -114,12 +113,8 @@ export default function VoiceRoom() {
   const [dmExpanded, setDmExpanded] = useState(false);
   const [exitOpen, setExitOpen] = useState(false);
   const [gamesOpen, setGamesOpen] = useState(false);
-  // Görüntülü yayın: kamera açılır, davet gönderilir, hediyeler ve yorumlar aynı ekranda durur.
-  const [pkOpen, setPkOpen] = useState(false);
-  // Yayın alanı oda kartının hemen altında açılır: kart, izleyici, ayarlar ve çıkış düğmeleri görünür kalır.
   const topArtRef = useRef(null);
   const [topArtHeight, setTopArtHeight] = useState(0);
-  const { match: pkMatch } = usePkMatch(id, joined && !pkOpen);
 
   // Oda kartının gerçek yüksekliği ölçülür: yayın alanı tam altından başlar.
   useEffect(() => {
@@ -132,15 +127,6 @@ export default function VoiceRoom() {
     return () => observer.disconnect();
   }, []);
 
-  // Davet kartı kişinin kendi ekranına düşer. PK ekranı yalnızca davet kabul edildikten sonra açılır;
-  // davet beklerken herkes kendi tek kişilik yayınında kalır.
-  const pkAutoRef = useRef('');
-  useEffect(() => {
-    if (!pkMatch || pkOpen || pkMatch.status !== 'live' || !pkMatch.guest_id || !pkMatch.accepted) return;
-    if (pkAutoRef.current === pkMatch.id) return;
-    pkAutoRef.current = pkMatch.id;
-    setPkOpen(true);
-  }, [pkMatch, pkOpen]);
   const [giftOpen, setGiftOpen] = useState(false);
   // Profil kartındaki "Bahset" isteği: yazma alanına @isim eklenir.
   const [mentionTarget, setMentionTarget] = useState(null);
@@ -637,6 +623,19 @@ export default function VoiceRoom() {
     if (seated) await base44.functions.invoke('voice-room', { action: 'seat-leave', room_id: id }).catch(() => {});
     await base44.functions.invoke('room-presence', { action: 'leave', room_id: id }).catch(() => {});
     navigate('/');
+  }, [id, seated, navigate]);
+
+  // Görüntülü PK ayrı bir sayfada çalışır: buradan çıkılırken sesli oda tamamen kapatılır.
+  // Koltuk sesleri kesilir, oda bağlantısı bırakılır; geri dönüldüğünde odaya yeniden girilir.
+  const openVideoPk = useCallback(async () => {
+    endRoomVisit(id);
+    joinedRef.current = false;
+    sawSelfRef.current = false;
+    setJoined(false);
+    if (getMinimizedRoom()?.id === id) clearMinimizedRoom();
+    if (seated) await base44.functions.invoke('voice-room', { action: 'seat-leave', room_id: id }).catch(() => {});
+    await base44.functions.invoke('room-presence', { action: 'leave', room_id: id }).catch(() => {});
+    navigate(`/goruntulu-pk?oda=${id}`);
   }, [id, seated, navigate]);
 
   // Odayı küçült: oda ve koltuk korunur, sağ alttaki balondan odalar gezilebilir.
@@ -1302,7 +1301,7 @@ export default function VoiceRoom() {
         onAllow={voice.requestMic}
         onDismiss={voice.declineMic}
       />
-      <RoomRocketFeature room={room} hidden={composerOpen} suppress={pkOpen} />
+      <RoomRocketFeature room={room} hidden={composerOpen} suppress={false} />
       <VoiceControlBar
         keyboardOpen={keyboardOpen}
         micActive={!voice.muted}
@@ -1352,7 +1351,7 @@ export default function VoiceRoom() {
         onExitVoiceMode={isOwner ? exitVoiceMode : null}
         theme={room?.background}
         onTheme={changeTheme}
-        onOpenPk={isOwner ? () => setPkOpen(true) : null}
+        onOpenPk={openVideoPk}
       />
       <AgencyCallComposer open={agencyCallOpen} onClose={() => setAgencyCallOpen(false)} roomId={id} status={agencyCallStatus} onSent={(data) => setAgencyCallStatus((prev) => ({ ...prev, ...data }))} />
 
@@ -1488,7 +1487,7 @@ export default function VoiceRoom() {
 
       <GiftScene key={overlayAlert?.key} alert={giftEffects && !bigGift && !gameOpen ? overlayAlert : null} tiers={tiers} gifts={gifts} />
       {/* PK ekranı açıkken büyük hediye videosu PK kartının üstünde oynar; burada ikinci kez oynamaz. */}
-      {giftEffects && !gameOpen && !pkOpen && <BigGiftStage alert={bigGift} gifts={gifts} />}
+      {giftEffects && !gameOpen && <BigGiftStage alert={bigGift} gifts={gifts} />}
 
       <GiftEffectsSheet
         open={settingsOpen}
@@ -1499,33 +1498,6 @@ export default function VoiceRoom() {
         onToggleSwipe={swipe.toggleSwipe}
         onAgencyCall={agencyCallStatus?.eligible ? () => setAgencyCallOpen(true) : null}
         onShare={canMod ? () => setShareOpen(true) : null}
-      />
-
-      {/* Görüntülü PK: oda ekranının üstünde tam ekran açılır, oda arkada olduğu gibi kalır. */}
-      <VideoPkStage
-        open={pkOpen}
-        onClose={() => setPkOpen(false)}
-        topOffset={topArtHeight}
-        roomId={id}
-        roomName={room?.name}
-        user={user}
-        participants={participants}
-        seatRows={seats}
-        moderators={moderators}
-        ownerId={room?.owner_id}
-        gifts={gifts}
-        coins={coins}
-        livekitRoom={voice.livekitRoom}
-        messages={messages}
-        onSendMessage={sendMessage}
-        onOpenGifts={() => setGiftOpen(true)}
-        voice={{ muted: voice.muted, toggleMute: voice.toggleMute, allowConsent: voice.allowConsent }}
-        roomActions={roomProfileActions}
-        onSendGift={(gift, ids) => {
-          queueGiftSend(gift, ids).catch((error) => {
-            toast({ title: 'Hediye gönderilemedi', description: error?.response?.data?.error || error.message, variant: 'destructive' });
-          });
-        }}
       />
 
       {notice && joined && (

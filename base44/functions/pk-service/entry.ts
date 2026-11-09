@@ -69,9 +69,11 @@ export default async function (req) {
     if (action === 'broadcast') {
       const roomId = String(body.room_id || '');
       if (!roomId) return Response.json({ error: 'room_id gerekli' }, { status: 400 });
+      // 'video' = sesli odadan bağımsız görüntülü PK sayfası; 'room' = odanın içindeki eski yayın.
+      const mode = body.mode === 'video' ? 'video' : 'room';
 
       const open = await svc.PkMatch.filter({ room_id: roomId, status: { $in: ['invite', 'live'] } }, '-created_date', 20);
-      const mine = open.find((item) => item.host_id === user.id && item.status === 'live');
+      const mine = open.find((item) => item.host_id === user.id && item.status === 'live' && (item.mode || 'room') === mode);
       if (mine) return Response.json({ match: mine });
 
       // Aynı odada tek yayın olur: odadaki eski davetler ve karşılaşmalar kapanır.
@@ -81,6 +83,7 @@ export default async function (req) {
       const match = await svc.PkMatch.create({
         room_id: roomId,
         room_name: String(body.room_name || ''),
+        mode,
         status: 'live',
         started: false,
         settled: false,
@@ -157,6 +160,7 @@ export default async function (req) {
       const match = await svc.PkMatch.create({
         room_id: roomId,
         room_name: String(body.room_name || ''),
+        mode: body.mode === 'video' ? 'video' : 'room',
         status: 'invite',
         host_id: user.id,
         host_name: user.full_name || 'Kullanıcı',
@@ -184,6 +188,18 @@ export default async function (req) {
       const now = new Date();
       const freshEnd = new Date(now.getTime() + PK_DURATION_MS).toISOString();
 
+      // Görüntülü PK'da ret: davet sahibi durumu görsün diye davet reddeden kişiyle kapatılır.
+      if (action === 'decline' && (match.mode || 'room') === 'video') {
+        const ended = await svc.PkMatch.update(match.id, {
+          status: 'ended',
+          accepted: false,
+          started: false,
+          settled: false,
+          left_id: user.id,
+        });
+        return Response.json({ match: ended });
+      }
+
       // Reddeden kişi yayına katılmaz; yayın açıksa yayın sahibi yayında kalır.
       if (action === 'decline') {
         if (match.status === 'live') {
@@ -198,6 +214,14 @@ export default async function (req) {
         }
         const ended = await svc.PkMatch.update(match.id, { status: 'ended', left_id: user.id });
         return Response.json({ match: ended });
+      }
+
+      // Kabul eden kişinin kendi görüntülü PK lobisi kapanır: aynı anda iki oturumda olunmaz.
+      if ((match.mode || 'room') === 'video') {
+        const own = await svc.PkMatch.filter({ host_id: user.id, status: { $in: ['invite', 'live'] } }, '-created_date', 10).catch(() => []);
+        await Promise.all((Array.isArray(own) ? own : own?.items || [])
+          .filter((row) => row.id !== match.id)
+          .map((row) => svc.PkMatch.update(row.id, { status: 'ended' }).catch(() => null)));
       }
 
       // Kabul eden kişi yayına katılır: çift kamera açılır ve 5 dakikalık tur bu anda başlar.
@@ -296,7 +320,10 @@ export default async function (req) {
         return Response.json({ match });
       }
 
-      const scores = await scoresOf(match);
+      // Görüntülü PK'da skor her hediye gönderiminde sunucuda işlenir: herkes aynı sayıyı görür.
+      const scores = (match.mode || 'room') === 'video'
+        ? { host: Number(match.host_score) || 0, guest: match.guest_id ? (Number(match.guest_score) || 0) : 0 }
+        : await scoresOf(match);
       const played = !!match.started && !!match.guest_id;
       const winnerId = scores.host === scores.guest ? '' : scores.host > scores.guest ? match.host_id : match.guest_id;
 
@@ -386,6 +413,90 @@ export default async function (req) {
       }));
 
       return Response.json({ ranking });
+    }
+
+    // Daveti iptal et: davet edilen kişi listeden düşer, yayın tek kamera olarak devam eder.
+    if (action === 'cancel-invite') {
+      const match = await getMatch(String(body.id || ''));
+      if (!match) return Response.json({ error: 'PK bulunamadı' }, { status: 404 });
+      if (!isPlayer(match)) return Response.json({ error: 'Yetki yok' }, { status: 403 });
+      const cleared = await svc.PkMatch.update(match.id, {
+        guest_id: '',
+        guest_name: '',
+        guest_avatar: '',
+        accepted: false,
+        started: false,
+        settled: false,
+        left_id: '',
+        host_score: 0,
+        guest_score: 0,
+        winner_id: '',
+      });
+      return Response.json({ match: cleared });
+    }
+
+    // Görüntülü PK hediyesi: coin bakiyeden düşer, puan maç kaydına yazılır.
+    // Skor tek yerde (veritabanında) tutulduğu için her iki tarafta aynı sayı görünür.
+    if (action === 'gift') {
+      const match = await getMatch(String(body.id || ''));
+      if (!match) return Response.json({ error: 'PK bulunamadı' }, { status: 404 });
+      if (!isPlayer(match)) return Response.json({ error: 'Yetki yok' }, { status: 403 });
+      if (!match.guest_id || !match.accepted) return Response.json({ error: 'PK başlamadan hediye gönderilemez' }, { status: 400 });
+
+      const targetId = String(body.target_id || '');
+      if (targetId !== match.host_id && targetId !== match.guest_id) {
+        return Response.json({ error: 'Geçersiz katılımcı' }, { status: 400 });
+      }
+      const giftRecord = await svc.Gift.get(String(body.gift_id || '')).catch(() => null);
+      if (!giftRecord || giftRecord.active === false) return Response.json({ error: 'Hediye bulunamadı' }, { status: 404 });
+
+      const kValue = Math.max(0, Number(giftRecord.k_value) || 0);
+      const cost = Math.round(kValue * 1000);
+
+      const rows = await svc.GameWallet.filter({ user_id: user.id }, '-created_date', 1).catch(() => []);
+      const wallet = (Array.isArray(rows) ? rows[0] : null)
+        || await svc.GameWallet.create({
+          user_id: user.id,
+          user_name: user.full_name || '',
+          coins: user.role === 'admin' ? 500000 : 100000,
+          admin_granted: user.role === 'admin',
+        });
+      const coins = Math.max(0, Number(wallet.coins) || 0);
+      if (coins < cost) {
+        return Response.json({ error: 'Yetersiz K bakiyesi.', needed_k: kValue, available_k: coins / 1000 }, { status: 400 });
+      }
+      await svc.GameWallet.update(wallet.id, { coins: coins - cost });
+      const nextCoins = coins - cost;
+
+      const patch = targetId === match.host_id
+        ? { host_score: (Number(match.host_score) || 0) + kValue }
+        : { guest_score: (Number(match.guest_score) || 0) + kValue };
+      const updated = await svc.PkMatch.update(match.id, patch);
+
+      await svc.GiftSend.create({
+        request_id: crypto.randomUUID(),
+        quantity: 1,
+        room_id: match.room_id,
+        sender_id: user.id,
+        sender_name: user.full_name || '',
+        recipient_id: targetId,
+        recipient_name: targetId === match.host_id ? match.host_name : match.guest_name,
+        gift_id: giftRecord.id,
+        gift_name: giftRecord.name,
+        gift_emoji: giftRecord.emoji || '🎁',
+        gift_image_url: giftRecord.image_url || '',
+        k_value: kValue,
+        total_k: kValue,
+        recipient_count: 1,
+        mode: 'single',
+        status: 'success',
+      }).catch(() => null);
+
+      return Response.json({
+        match: updated,
+        coins: nextCoins,
+        gift: { name: giftRecord.name, emoji: giftRecord.emoji || '🎁', image_url: giftRecord.image_url || '', k_value: kValue },
+      });
     }
 
     return Response.json({ error: 'Bilinmeyen işlem' }, { status: 400 });

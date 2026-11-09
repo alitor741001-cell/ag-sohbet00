@@ -9,6 +9,18 @@
       "type": "string",
       "default": ""
     },
+    "mode": {
+      "type": "string",
+      "enum": [
+        "room",
+        "video"
+      ],
+      "default": "room",
+      "enumColors": [
+        "gray",
+        "pink"
+      ]
+    },
     "status": {
       "type": "string",
       "enum": [

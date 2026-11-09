@@ -26,6 +26,36 @@ export default async function (req: Request): Promise<Response> {
     }
 
     const body = await req.json().catch(() => ({}));
+
+    // Görüntülü PK: sesli odadan bağımsız, yalnızca maçın iki tarafına açık ayrı bir
+    // LiveKit odası verilir. Oda kimliği maç kimliğinden türetilir: her PK oturumu tektir.
+    const pkMatchId = typeof body?.pk_match_id === 'string' ? body.pk_match_id : '';
+    if (pkMatchId) {
+      const match = await base44.asServiceRole.entities.PkMatch.get(pkMatchId).catch(() => null);
+      if (!match) return Response.json({ error: 'PK oturumu bulunamadı.' }, { status: 404 });
+      if (match.host_id !== user.id && match.guest_id !== user.id) {
+        return Response.json({ error: 'Bu PK oturumunun katılımcısı değilsin.' }, { status: 403 });
+      }
+
+      const pkName = user.full_name || 'Kullanıcı';
+      const pkToken = new AccessToken(LIVEKIT_API_KEY, LIVEKIT_API_SECRET, {
+        identity: user.id,
+        name: pkName,
+        ttl: TOKEN_TTL_SECONDS,
+        metadata: JSON.stringify({ role: 'pk' }),
+      });
+      const pkRoom = `pk_${match.id}`;
+      pkToken.addGrant({
+        roomJoin: true,
+        room: pkRoom,
+        canPublish: true,
+        canSubscribe: true,
+        canPublishData: false,
+      });
+
+      return Response.json({ token: await pkToken.toJwt(), url: LIVEKIT_URL, room: pkRoom, identity: user.id, name: pkName });
+    }
+
     const roomId = typeof body?.room_id === 'string' ? body.room_id : '';
     if (!roomId) return Response.json({ error: 'Oda belirtilmedi.' }, { status: 400 });
 

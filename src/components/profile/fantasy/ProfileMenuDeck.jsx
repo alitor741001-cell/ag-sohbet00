@@ -51,7 +51,7 @@ const COLS = { 3: 'grid-cols-3', 4: 'grid-cols-4' };
  */
 export default function ProfileMenuDeck({ admin = false, onAction, stats = {} }) {
   return (
-    <div className="grid min-h-0 w-full flex-1 grid-rows-4 gap-1.5 px-0.5 py-1">
+    <div className="grid min-h-0 w-full flex-1 grid-rows-4 gap-1.5 px-1.5 py-1.5">
       {ROWS.map((row) => (
         <div key={row.items.map((item) => item.key).join('-')} className={`grid min-h-0 gap-1.5 ${COLS[row.cols]}`}>
           {row.items.map(({ key, label, Icon, tone, adminOnly }) => (
