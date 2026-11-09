@@ -7,6 +7,7 @@ import VideoPkStage from '@/components/videopk/VideoPkStage';
 import VideoPkBar from '@/components/videopk/VideoPkBar';
 import PkInviteSheet from '@/components/videopk/PkInviteSheet';
 import PkInboxSheet from '@/components/videopk/PkInboxSheet';
+import PkViewerSheet from '@/components/videopk/PkViewerSheet';
 import PkGiftSheet from '@/components/videopk/PkGiftSheet';
 import PkChat from '@/components/videopk/PkChat';
 import useVideoPk, { PK_INVITE_TTL_MS, videoLobbyId } from '@/hooks/useVideoPk';
@@ -30,12 +31,14 @@ export default function VideoPkPage() {
   const backRoom = new URLSearchParams(window.location.search).get('oda');
   const { openUserProfile } = useUserProfile();
   // İzleyiciler: PK hangi sesli odadan açıldıysa o odada kalan dinleyiciler.
-  const viewers = usePkViewers(backRoom);
+  const viewerPeople = usePkViewers(backRoom);
+  const viewers = viewerPeople.length;
 
   const { lobby, joined, active, invites, declined, loaded, busy, run, ensureLobby } = useVideoPk(user);
   const [now, setNow] = useState(Date.now());
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inboxOpen, setInboxOpen] = useState(false);
+  const [viewerOpen, setViewerOpen] = useState(false);
   const [giftOpen, setGiftOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const lobbyStarted = useRef(false);
@@ -254,11 +257,16 @@ export default function VideoPkPage() {
           </p>
         </div>
         {backRoom && (
-          <span className="flex shrink-0 items-center gap-1 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-black text-white/85">
+          <button
+            type="button"
+            onClick={() => setViewerOpen(true)}
+            aria-label="İzleyiciler"
+            className="flex shrink-0 items-center gap-1 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-black text-white/85 active:scale-95"
+          >
             <Eye className="h-3.5 w-3.5" />
             {viewers}
             <span className="text-[10px] font-semibold text-white/60">izleyici</span>
-          </span>
+          </button>
         )}
         <button
           type="button"
@@ -372,6 +380,12 @@ export default function VideoPkPage() {
         busy={busy}
         onAccept={acceptInvite}
         onDecline={declineInvite}
+        onOpenProfile={openUserProfile}
+      />
+      <PkViewerSheet
+        open={viewerOpen}
+        onClose={() => setViewerOpen(false)}
+        people={viewerPeople}
         onOpenProfile={openUserProfile}
       />
       <PkChat

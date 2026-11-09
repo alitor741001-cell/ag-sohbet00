@@ -66,7 +66,7 @@ export default function RoomLogSheet({ open, onClose, logs = [], bannedUsers = [
       </section>
 
       <section className="mt-4 rounded-2xl border border-white/10 bg-[#171720] p-3">
-        <p className="mb-2 text-xs font-bold uppercase tracking-wide text-white/60">İşlem Kayıtları</p>
+        <p className="mb-2 text-xs font-bold uppercase tracking-wide text-white/75">İşlem Kayıtları</p>
         {logs.length === 0 ? (
           <p className="text-xs text-white/50">Henüz kayıt yok.</p>
         ) : (
@@ -91,10 +91,10 @@ export default function RoomLogSheet({ open, onClose, logs = [], bannedUsers = [
                       : <span className="text-[11px] font-bold text-white/80">{name.trim().charAt(0) || '?'}</span>}
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className={`block truncate text-[11px] font-bold ${hidden ? 'hidden-user-name' : 'text-white/90'}`}>{name}</span>
+                    <span className={`block truncate text-[12px] font-black ${hidden ? 'hidden-user-name' : 'text-white'}`}>{name}</span>
                     <SocialPersonBadges person={profile} />
-                    <p className="mt-0.5 text-xs leading-snug text-white/80">{entry.text}</p>
-                    {entry.created_at && <p className="mt-0.5 text-[10px] text-white/40">{formatTime(entry.created_at)}</p>}
+                    <p className="mt-0.5 text-[12.5px] font-semibold leading-snug text-white">{entry.text}</p>
+                    {entry.created_at && <p className="mt-0.5 text-[10.5px] text-white/60">{formatTime(entry.created_at)}</p>}
                   </span>
                 </button>
               );
@@ -103,7 +103,7 @@ export default function RoomLogSheet({ open, onClose, logs = [], bannedUsers = [
         )}
       </section>
 
-      <p className="mt-3 pb-4 text-center text-[10px] leading-tight text-white/45">
+      <p className="mt-3 pb-4 text-center text-[10.5px] leading-tight text-white/60">
         Koltuktan indirme ve odadan atma işlemleri sohbet paneline değil buraya kaydedilir.
       </p>
     </VoiceSheet>
