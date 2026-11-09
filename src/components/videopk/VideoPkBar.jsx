@@ -1,4 +1,5 @@
 import { Inbox, Mic, MicOff, Video, VideoOff, Gift, LogOut, UserPlus, MessageSquare } from 'lucide-react';
+import PkInlineInvite from '@/components/videopk/PkInlineInvite';
 
 const ActionButton = ({ Icon, label, onClick, disabled, active = true, tone = 'default' }) => {
   const tones = {
@@ -30,6 +31,8 @@ export default function VideoPkBar({
   inviteCount = 0, onOpenInbox, onOpenInvite, inviteDisabled, inviteLabel = 'PK Davet Et',
   micOn, onMic, camOn, onCam, onGift, giftDisabled, onExit, inMatch,
   onChat, chatOpen = false, chatDisabled = false, exitDisabled = false,
+  // Gelen davetler doğrudan davet onay düğmesinin yerine düşer.
+  invites = [], onAcceptInvite, onDeclineInvite, busy = false, onOpenProfile,
 }) {
   return (
     <div
@@ -37,19 +40,26 @@ export default function VideoPkBar({
       style={{ paddingBottom: 'max(0.6rem, env(safe-area-inset-bottom))' }}
     >
       <div className="flex items-center gap-2">
-        <button
-          type="button"
-          onClick={onOpenInbox}
-          className="relative flex h-11 flex-1 items-center justify-center gap-1.5 rounded-xl border border-white/15 bg-white/[0.07] text-[11.5px] font-black text-white active:scale-[0.98]"
-        >
-          <Inbox className="h-4 w-4" />
-          PK Davet Onayı
-          {inviteCount > 0 && (
-            <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-black text-white ring-2 ring-[#120a18]">
-              {inviteCount > 9 ? '9+' : inviteCount}
-            </span>
-          )}
-        </button>
+        {invites.length > 0 ? (
+          <PkInlineInvite
+            invite={invites[0]}
+            more={invites.length - 1}
+            busy={busy}
+            onAccept={onAcceptInvite}
+            onDecline={onDeclineInvite}
+            onOpenProfile={onOpenProfile}
+            onOpenAll={onOpenInbox}
+          />
+        ) : (
+          <button
+            type="button"
+            onClick={onOpenInbox}
+            className="relative flex h-11 flex-1 items-center justify-center gap-1.5 rounded-xl border border-white/15 bg-white/[0.07] text-[11.5px] font-black text-white active:scale-[0.98]"
+          >
+            <Inbox className="h-4 w-4" />
+            PK Davet Onayı
+          </button>
+        )}
 
         <button
           type="button"
