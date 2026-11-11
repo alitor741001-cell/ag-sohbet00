@@ -1,0 +1,44 @@
+/* PK teması: sol mavi, sağ kırmızı neon zemin; ortada AG logosu, yanlarda dev P ve K harfleri. */
+.pk-theme {
+  background:
+    radial-gradient(ellipse at 18% 40%, rgba(37, 99, 235, 0.55), transparent 60%),
+    radial-gradient(ellipse at 82% 40%, rgba(220, 38, 38, 0.55), transparent 60%),
+    linear-gradient(90deg, #06123a 0%, #0a0a1a 50%, #3a0610 100%);
+  box-shadow: inset 0 0 0 1.5px rgba(251, 191, 36, 0.55), inset 0 0 28px rgba(0, 0, 0, 0.6);
+}
+.pk-theme-split {
+  position: absolute;
+  top: -10%;
+  bottom: -10%;
+  left: 50%;
+  width: 3px;
+  transform: translateX(-50%) skewX(-14deg);
+  background: linear-gradient(180deg, transparent, #fde68a, #fff, #fde68a, transparent);
+  box-shadow: 0 0 14px 3px rgba(253, 230, 138, 0.7);
+  animation: pk-theme-split 2.6s ease-in-out infinite;
+}
+.pk-theme-ag {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 46%;
+  max-width: 180px;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  opacity: 0.16;
+  filter: drop-shadow(0 0 18px rgba(251, 191, 36, 0.8));
+}
+.pk-theme-word {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 7rem;
+  font-weight: 900;
+  font-style: italic;
+  line-height: 1;
+  opacity: 0.12;
+}
+.pk-theme-word-left { left: 4%; color: #60a5fa; text-shadow: 0 0 24px #2563eb; }
+.pk-theme-word-right { right: 4%; color: #f87171; text-shadow: 0 0 24px #dc2626; }
+@keyframes pk-theme-split { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .pk-theme-split { animation: none; } }

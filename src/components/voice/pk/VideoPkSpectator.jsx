@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import usePkLiveKit from '@/hooks/usePkLiveKit';
 import PkFeedTile from '@/components/voice/pk/PkFeedTile';
 import PkScoreBar from '@/components/voice/pk/PkScoreBar';
+import PkThemeBackdrop from '@/components/voice/pk/PkThemeBackdrop';
 
 const clock = (total) => `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
 
@@ -25,7 +26,8 @@ export default function VideoPkSpectator({ match, user, onOpenProfile }) {
   ];
 
   return (
-    <div className="shrink-0 px-2 pb-1.5" onClick={startAudio}>
+    <div className="relative isolate mx-1 shrink-0 px-1 pb-1.5 pt-1" onClick={startAudio}>
+      <PkThemeBackdrop />
       <PkScoreBar leftScore={sides[0].score} rightScore={sides[1].score} timerText={timerText} />
       <div className="mt-1 flex items-stretch gap-1.5" style={{ height: 'clamp(104px, 24vh, 176px)' }}>
         {sides.map((side, index) => (

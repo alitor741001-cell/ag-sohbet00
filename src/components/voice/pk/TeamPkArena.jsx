@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import { Crown, Star } from 'lucide-react';
 import TeamPkSide from '@/components/voice/pk/TeamPkSide';
 import TeamPkShots from '@/components/voice/pk/TeamPkShots';
+import PkThemeBackdrop from '@/components/voice/pk/PkThemeBackdrop';
 import '@/components/voice/pk/teamPkArena.css';
 
 /**
@@ -22,7 +23,8 @@ export default function TeamPkArena({ match, seats, renderSeat, footer, width = 
   const leader = blue === red ? '' : blue > red ? 'blue' : 'red';
 
   return (
-    <div className="team-pk-arena relative w-full rounded-[18px] p-1">
+    <div className="team-pk-arena relative isolate w-full rounded-[18px] p-1">
+      <PkThemeBackdrop />
       <div className="relative flex w-full items-stretch gap-1">
         <TeamPkSide tone="blue" indices={[1, 2, 3, 4]} seats={seats} renderSeat={renderSeat} size={size} space={space} hit={hit === 'blue'} armed={leader === 'blue'} />
         <div className="relative flex min-w-0 flex-1 flex-col items-center">

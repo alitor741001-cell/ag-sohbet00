@@ -6,6 +6,7 @@ import useVideoPk from '@/hooks/useVideoPk';
 import usePkLiveKit from '@/hooks/usePkLiveKit';
 import PkFeedTile from '@/components/voice/pk/PkFeedTile';
 import PkScoreBar from '@/components/voice/pk/PkScoreBar';
+import PkThemeBackdrop from '@/components/voice/pk/PkThemeBackdrop';
 import PkInviteSheet from '@/components/videopk/PkInviteSheet';
 import PkActionCard from '@/components/voice/pk/PkActionCard';
 import PkFollowChip from '@/components/voice/pk/PkFollowChip';
@@ -268,7 +269,8 @@ export default function VideoPkLayer({ open, onOpen, onClose, roomId, user, onOp
   return (
     <>
       {open && (
-        <div className="shrink-0 px-2 pb-1.5" onClick={startAudio}>
+        <div className="relative isolate mx-1 shrink-0 px-1 pb-1.5 pt-1" onClick={startAudio}>
+          <PkThemeBackdrop />
           <PkScoreBar leftScore={myScore} rightScore={rivalScore} timerText={timerText} />
 
           {/* İki kare kamera yan yana: solda kendi görüntün, sağda rakip.
