@@ -251,38 +251,45 @@ export default function VideoPkLayer({ open, onOpen, onClose, roomId, user, onOp
             </div>
           </div>
 
-          {/* PK kontrolleri: mevcut şeridin üzerine binmez, kendi satırında durur.
-              Sağ altta tek kare düğme: PK daveti buradan gönderilir. */}
-          <div className="mt-1.5 flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={finishPk}
-              disabled={busy}
-              className="flex h-9 flex-1 items-center justify-center gap-1 rounded-xl bg-white/12 text-[11px] font-black text-white active:scale-[0.98] disabled:opacity-45"
-            >
-              <PhoneOff className="h-3.5 w-3.5" /> Bitir
-            </button>
-            {incoming && (
-              <button
-                type="button"
-                onClick={() => acceptInvite(incoming)}
-                className="flex h-9 items-center gap-1 rounded-xl bg-emerald-500 px-2.5 text-[11px] font-black text-black active:scale-[0.98]"
-              >
-                Gelen davet
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={() => setInviteOpen(true)}
-              disabled={paired || busy}
-              aria-label="PK davet et"
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-fuchsia-500 text-white active:scale-[0.98] disabled:opacity-45"
-            >
-              <UserPlus className="h-4 w-4" />
-            </button>
-          </div>
-
           {error && <p className="mt-1 text-center text-[10px] font-semibold text-amber-300">{error}</p>}
+        </div>
+      )}
+
+      {/* PK kontrolleri: odanın alt çubuğunun hemen üstünde sabit durur. Hiçbir katman önüne
+          geçmez ve ekrana dokunmayı beklemeden her zaman görünür — boş alana basınca yanlış
+          düğmeye basılmaz. Sağ alttaki kare düğme PK davetini açar. */}
+      {open && (
+        <div
+          className="fixed inset-x-2 z-[230] flex items-center gap-1.5 rounded-2xl border border-white/12 bg-[#170d22]/97 p-1.5 shadow-[0_10px_30px_-12px_rgba(0,0,0,0.9)]"
+          style={{ bottom: 'calc(var(--keyboard-height, 0px) + max(var(--voice-bar-height, 64px), 64px) + 0.5rem)' }}
+          onClick={startAudio}
+        >
+          <button
+            type="button"
+            onClick={finishPk}
+            disabled={busy}
+            className="flex h-9 flex-1 items-center justify-center gap-1 rounded-xl bg-white/14 text-[11px] font-black text-white active:scale-[0.98] disabled:opacity-45"
+          >
+            <PhoneOff className="h-3.5 w-3.5" /> Bitir
+          </button>
+          {incoming && (
+            <button
+              type="button"
+              onClick={() => acceptInvite(incoming)}
+              className="flex h-9 items-center gap-1 rounded-xl bg-emerald-500 px-2.5 text-[11px] font-black text-black active:scale-[0.98]"
+            >
+              Gelen davet
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => setInviteOpen(true)}
+            disabled={paired || busy}
+            aria-label="PK davet et"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-fuchsia-500 text-white active:scale-[0.98] disabled:opacity-45"
+          >
+            <UserPlus className="h-4 w-4" />
+          </button>
         </div>
       )}
 
@@ -290,7 +297,7 @@ export default function VideoPkLayer({ open, onOpen, onClose, roomId, user, onOp
       {incoming && (
         <div
           className="fixed inset-x-2 z-[240] rounded-2xl border border-fuchsia-400/40 bg-[#1c0f26]/97 p-2.5 shadow-[0_12px_40px_-12px_rgba(217,70,239,0.85)]"
-          style={{ bottom: 'calc(env(safe-area-inset-bottom) + 5.5rem)' }}
+          style={{ bottom: 'calc(var(--keyboard-height, 0px) + max(var(--voice-bar-height, 64px), 64px) + 3.6rem)' }}
         >
           <div className="flex items-center gap-2">
             <button type="button" onClick={() => onOpenProfile?.(incoming.host_id)} className="shrink-0 active:scale-95">
