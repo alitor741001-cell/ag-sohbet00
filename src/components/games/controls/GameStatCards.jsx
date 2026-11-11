@@ -1,19 +1,26 @@
 import React from 'react';
-import ReferenceArt from '@/components/games/controls/ReferenceArt';
+import { Coins, Crown, Layers, Wallet } from 'lucide-react';
 import FitGameText from '@/components/games/controls/FitGameText';
+import '@/components/games/controls/referenceControls.css';
 
+const FALLBACK = [Wallet, Layers, Crown, Coins];
+
+/** Kazanç ve bakiye kartları: her biri kendi renginde parlayan cam kart; kazanç gelince kart nabız atar. */
 export default function GameStatCards({ items }) {
   return (
     <div className="ref-stats">
-      {items.map((item, index) => (
-        <span key={item.key} className="ref-stat">
-          <ReferenceArt name={`stat${index % 4}`} />
-          <span className="ref-stat-copy">
-            <FitGameText as="strong">{item.label}</FitGameText>
-            <FitGameText as="b">{item.value}</FitGameText>
+      {items.map((item, index) => {
+        const Icon = item.icon || FALLBACK[index % 4];
+        return (
+          <span key={item.key} className="ref-stat pc-glass" data-win={item.win ? '1' : undefined}>
+            <span className="ref-stat-icon"><Icon strokeWidth={2.6} /></span>
+            <span className="ref-stat-copy">
+              <FitGameText as="strong">{item.label}</FitGameText>
+              <FitGameText as="b">{item.value}</FitGameText>
+            </span>
           </span>
-        </span>
-      ))}
+        );
+      })}
     </div>
   );
 }

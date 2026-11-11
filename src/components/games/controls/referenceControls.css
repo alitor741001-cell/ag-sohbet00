@@ -1,49 +1,80 @@
-.ref-art { position:absolute; inset:0; display:block; overflow:hidden; pointer-events:none; }
-.ref-art .ref-art-sheet { position:absolute; max-width:none; margin:0; }
-.ref-art-sheet img { object-fit:fill; }
+/* === OYUN ALT KONTROLLERİ: siyah cam gövde, altın kenar, renkli neon vurgular === */
 .ref-fit-text { display:block; width:100%; max-width:100%; min-width:0; overflow:hidden; box-sizing:border-box; white-space:nowrap; flex-shrink:0; }
 .ref-fit-text-inner { display:inline-block; max-width:none; white-space:pre; vertical-align:top; }
-.ref-stats { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:1%; width:100%; max-width:27rem; }
-.ref-stat { position:relative; min-width:0; aspect-ratio:245/132; container-type:inline-size; }
-.ref-stat-copy { position:absolute; left:34%; right:5%; top:19%; height:54%; display:flex; min-width:0; flex-direction:column; justify-content:center; align-items:center; overflow:hidden; padding-inline:1%; box-sizing:border-box; background:linear-gradient(180deg,#0b0a10,#08090d); border-radius:6%; color:#fff; }
-.ref-stat-copy strong { font:900 clamp(4.5px,6.1cqw,15px)/1.2 system-ui,sans-serif; letter-spacing:.06em; text-align:center; color:#efd67b; white-space:nowrap; }
-.ref-stat:nth-child(2) .ref-stat-copy strong { color:#e9baff; }
-.ref-stat:nth-child(3) .ref-stat-copy strong { color:#e6ddff; }
-.ref-stat-copy b { font:900 clamp(7px,13cqw,32px)/1.4 system-ui,sans-serif; font-variant-numeric:tabular-nums; white-space:nowrap; }
-.ref-actions { display:grid; grid-template-columns:555fr 425fr; gap:1.5%; width:100%; }
-.ref-banner { position:relative; display:block; padding:0; border:0; min-width:0; background:transparent; aspect-ratio:555/165; cursor:pointer; container-type:inline-size; }
-.ref-banner-coins { aspect-ratio:425/161; }
-.ref-banner-copy { position:absolute; top:22%; left:41%; right:10%; bottom:23%; display:flex; min-width:0; flex-direction:column; align-items:center; justify-content:center; overflow:hidden; padding-inline:1%; box-sizing:border-box; text-align:center; background:linear-gradient(110deg,#110e08,#0b0909); border-radius:5%; color:#ffe28b; }
-.ref-banner-copy strong { font:900 clamp(5px,5cqw,25px)/1.3 system-ui,sans-serif; white-space:nowrap; letter-spacing:.03em; }
-.ref-banner-copy b { font:900 clamp(7px,7.5cqw,39px)/1.25 system-ui,sans-serif; font-variant-numeric:tabular-nums; white-space:nowrap; }
-.ref-banner-coins .ref-banner-copy { left:37%; right:18%; top:23%; bottom:24%; background:#090810; }
-.ref-banner-coins .ref-banner-copy strong { color:#e8d8ff; }
-.gctl-deck.ref-deck { container-type:inline-size; position:relative; display:block; flex:none; width:100%; max-width:27rem; aspect-ratio:988/200; padding:0; border:0; border-radius:0; background:transparent; box-shadow:none; overflow:visible; }
+
+/* Ortak gövde: koyu cam + altın çift kenar. */
+.pc-glass {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.1), rgba(255,255,255,0) 42%),
+    linear-gradient(180deg, #1b1424, #07060b) padding-box,
+    linear-gradient(180deg, #ffe7a3, #b7791f 55%, #ffe7a3) border-box;
+  border: 1.5px solid transparent;
+  box-shadow: 0 6px 16px -10px #000, inset 0 -6px 12px rgba(0,0,0,.55);
+}
+
+/* --- KAZANÇ / BİLGİ KARTLARI --- */
+.ref-stats { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:5px; width:100%; max-width:27rem; }
+.ref-stat { --tone: 45 95% 60%; position:relative; min-width:0; display:flex; align-items:center; gap:5px; padding:5px 6px; border-radius:14px; overflow:hidden; container-type:inline-size; }
+.ref-stat::before { content:''; position:absolute; inset:0; background:radial-gradient(90% 120% at 0% 0%, hsl(var(--tone) / .35), transparent 65%); pointer-events:none; }
+.ref-stat:nth-child(2) { --tone: 275 85% 68%; }
+.ref-stat:nth-child(3) { --tone: 150 75% 52%; }
+.ref-stat:nth-child(4) { --tone: 200 90% 60%; }
+.ref-stat-icon { position:relative; flex-shrink:0; display:grid; place-items:center; width:22px; height:22px; border-radius:9999px; color:#0b0710; background:radial-gradient(circle at 35% 30%, #fff, hsl(var(--tone)) 55%, hsl(var(--tone) / .6)); box-shadow:0 0 10px hsl(var(--tone) / .8); }
+.ref-stat-icon svg { width:12px; height:12px; }
+.ref-stat-copy { position:relative; display:flex; min-width:0; flex:1; flex-direction:column; align-items:flex-start; overflow:hidden; }
+.ref-stat-copy strong { font:800 clamp(6px,9cqw,10px)/1.15 system-ui,sans-serif; letter-spacing:.05em; color:hsl(var(--tone)); }
+.ref-stat-copy b { font:900 clamp(9px,15cqw,15px)/1.2 system-ui,sans-serif; font-variant-numeric:tabular-nums; color:#fff; }
+/* Kazanç geldiğinde kart parlar. */
+.ref-stat[data-win="1"] { animation: pc-win 1.1s ease-in-out infinite; }
+.ref-stat[data-win="1"] .ref-stat-copy b { color:#bbf7d0; text-shadow:0 0 8px hsl(var(--tone)); }
+
+/* --- EYLEM SIRASI: çevirme hakkı + coin yükle --- */
+.ref-actions { display:grid; grid-template-columns:1.35fr 1fr; gap:6px; width:100%; }
+.ref-banner { position:relative; display:flex; align-items:center; gap:7px; min-width:0; padding:6px 10px; border-radius:16px; cursor:pointer; overflow:hidden; text-align:left; container-type:inline-size; }
+.ref-banner-icon { flex-shrink:0; display:grid; place-items:center; width:28px; height:28px; border-radius:9999px; color:#1a0d00; background:radial-gradient(circle at 35% 30%, #fff8d6, #fbbf24 55%, #b45309); box-shadow:0 0 12px rgba(251,191,36,.75); }
+.ref-banner-icon svg { width:15px; height:15px; }
+.ref-banner-coins .ref-banner-icon { color:#12001f; background:radial-gradient(circle at 35% 30%, #fbe7ff, #c084fc 55%, #6b21a8); box-shadow:0 0 12px rgba(192,132,252,.75); }
+.ref-banner-copy { display:flex; min-width:0; flex:1; flex-direction:column; overflow:hidden; color:#ffe28b; }
+.ref-banner-copy strong { font:800 clamp(7px,6cqw,11px)/1.2 system-ui,sans-serif; letter-spacing:.04em; }
+.ref-banner-copy b { font:900 clamp(9px,9cqw,16px)/1.2 system-ui,sans-serif; font-variant-numeric:tabular-nums; color:#fff; }
+.ref-banner-coins .ref-banner-copy { color:#e9d5ff; }
+.ref-banner-shine { position:absolute; inset:0; background:linear-gradient(100deg, transparent 30%, rgba(255,255,255,.18) 50%, transparent 70%); animation: pc-shine 4.5s ease-in-out infinite; pointer-events:none; }
+
+/* --- BAHİS + SPIN MASASI --- */
+.gctl-deck.ref-deck { position:relative; display:flex; align-items:center; gap:6px; flex:none; width:100%; max-width:27rem; padding:6px 8px; border-radius:20px; overflow:visible;
+  background:linear-gradient(180deg, rgba(255,255,255,.1), rgba(255,255,255,0) 42%), linear-gradient(180deg,#1b1424,#07060b) padding-box, linear-gradient(180deg,#ffe7a3,#b7791f 55%,#ffe7a3) border-box;
+  border:1.5px solid transparent; box-shadow:0 6px 16px -10px #000, inset 0 -6px 12px rgba(0,0,0,.55); }
 .gctl-deck.ref-deck::before,.gctl-deck.ref-deck::after { display:none; }
-.ref-bet-controls { position:static; }
-.ref-bet-hotspots { position:absolute; left:9.2%; top:22%; width:36%; height:58%; }
-.ref-hotspot { position:absolute; display:block; padding:0; border:0; background:transparent; border-radius:50%; cursor:pointer; }
-.ref-step-minus { left:6.8%; top:19%; width:17%; height:56%; }
-.ref-step-plus { right:6.8%; top:19%; width:17%; height:56%; }
-.ref-bet-value.ref-fit-text { position:absolute; left:42%; top:41%; width:24%; height:40%; display:grid; place-items:center; text-align:center; background:#080909; color:#fff; font:900 clamp(10px,3vw,26px)/1 system-ui,sans-serif; font-variant-numeric:tabular-nums; white-space:nowrap; }
-.ref-max-hotspot { left:47.6%; top:17%; width:12.8%; height:69%; }
-.ref-auto-hotspot { left:62%; top:18%; width:13.3%; height:69%; }
-.ref-spin-hotspot { left:77.3%; top:3%; width:20.8%; height:96%; }
-.ref-spin-controls { display:contents; }
-.ref-stop-label { position:absolute; left:20%; right:20%; top:55%; height:24%; display:grid; place-items:center; background:#06421e; color:#fff; font:900 clamp(10px,3.2vw,28px)/1 system-ui,sans-serif; }
+.ref-bet-controls { display:flex; align-items:center; gap:6px; flex:1; min-width:0; }
+.ref-bet-pill { display:flex; align-items:center; flex:1; min-width:0; height:40px; padding:0 3px; border-radius:9999px; background:#050407; box-shadow:inset 0 2px 6px rgba(0,0,0,.9), 0 0 0 1px rgba(251,191,36,.45); }
+.ref-bet-label { display:block; font:800 8px/1 system-ui,sans-serif; letter-spacing:.12em; color:#fbbf24; text-align:center; }
+.ref-bet-center { flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; gap:2px; }
+.ref-bet-value.ref-fit-text { text-align:center; color:#fff; font:900 14px/1 system-ui,sans-serif; font-variant-numeric:tabular-nums; }
+.ref-round { flex-shrink:0; display:grid; place-items:center; border-radius:9999px; cursor:pointer; font:900 11px/1 system-ui,sans-serif; color:#fff; border:0; }
+.ref-step { width:32px; height:32px; font-size:18px; background:linear-gradient(180deg,#3b2a52,#140c1f); box-shadow:inset 0 1px 0 rgba(255,255,255,.3), 0 0 0 1px rgba(192,132,252,.6); }
+.ref-max { width:42px; height:42px; letter-spacing:.04em; color:#1a0d00; background:radial-gradient(circle at 35% 25%, #fff6cf, #f59e0b 60%, #92400e); box-shadow:0 0 12px rgba(245,158,11,.6), inset 0 -3px 6px rgba(0,0,0,.35); }
+.ref-spin-controls { display:flex; align-items:center; gap:6px; flex-shrink:0; }
+.ref-auto { width:42px; height:42px; font-size:9.5px; background:radial-gradient(circle at 35% 25%, #dbeafe, #3b82f6 60%, #1e3a8a); box-shadow:0 0 12px rgba(59,130,246,.6), inset 0 -3px 6px rgba(0,0,0,.35); }
+.ref-auto[aria-pressed="true"] { box-shadow:0 0 0 2px #fde68a, 0 0 18px rgba(96,165,250,.95); }
+.ref-spin { position:relative; width:62px; height:62px; margin:-12px 0; font-size:13px; letter-spacing:.06em; text-shadow:0 1px 2px rgba(0,0,0,.6);
+  background:radial-gradient(circle at 35% 25%, #d1fae5, #10b981 55%, #065f46);
+  box-shadow:0 0 0 3px #fde68a, 0 0 0 5px #92400e, 0 0 22px rgba(16,185,129,.8), inset 0 -5px 10px rgba(0,0,0,.35);
+  animation: pc-spin-glow 1.9s ease-in-out infinite; }
+.ref-spin[data-stop="1"] { background:radial-gradient(circle at 35% 25%, #fee2e2, #ef4444 55%, #7f1d1d); box-shadow:0 0 0 3px #fde68a, 0 0 0 5px #92400e, 0 0 22px rgba(239,68,68,.85); }
 .ref-extra { position:absolute; right:0; bottom:100%; }
-.ref-hotspot[aria-pressed="true"] { box-shadow:0 0 0 2px #ffdc70,0 0 14px #ffc847; }
-.ref-hotspot:disabled { cursor:default; background:#0006; }
-.ref-hotspot:active:not(:disabled),.ref-banner:active:not(:disabled),.ref-choice:active:not(:disabled) { filter:brightness(1.12); }
-.ref-hotspot:focus-visible,.ref-banner:focus-visible,.ref-choice:focus-visible { outline:2px solid #ffe096; outline-offset:2px; }
+.ref-round:disabled { cursor:default; filter:grayscale(.6) brightness(.6); animation:none; }
+.ref-round:active:not(:disabled),.ref-banner:active:not(:disabled),.ref-choice:active:not(:disabled) { transform:scale(.94); filter:brightness(1.15); }
+.ref-round:focus-visible,.ref-banner:focus-visible,.ref-choice:focus-visible { outline:2px solid #ffe096; outline-offset:2px; }
 .ref-banner:disabled,.ref-choice:disabled { opacity:.55; cursor:default; }
-.ref-choice.ref-choice.ref-choice { position:relative; isolation:isolate; display:inline-flex; align-items:center; justify-content:center; min-width:0; min-height:40px; padding:8px 16px; border:0; border-radius:0; background:transparent; color:#ffe59c; box-shadow:none; font:900 11px/1.2 system-ui,sans-serif; cursor:pointer; }
+
+/* --- SEÇİM DÜĞMESİ (okey, futbol) --- */
+.ref-choice.ref-choice.ref-choice { position:relative; display:inline-flex; align-items:center; justify-content:center; min-width:0; min-height:38px; padding:6px 14px; border-radius:9999px; color:#ffe59c; font:900 11px/1.2 system-ui,sans-serif; cursor:pointer;
+  background:linear-gradient(180deg,#22182e,#08060c) padding-box, linear-gradient(180deg,#ffe7a3,#b7791f) border-box; border:1.5px solid transparent; box-shadow:0 4px 12px -6px #000, inset 0 1px 0 rgba(255,255,255,.15); }
 .ref-choice.ref-choice::before,.ref-choice.ref-choice::after { display:none; }
-.ref-choice .ref-art { z-index:-1; }
-.ref-choice-text { position:relative; display:flex; width:100%; min-height:20px; align-items:center; justify-content:center; gap:5px; background:#090909; padding:3px 0; border-radius:999px; }
-.ref-choice .ref-art::after { content:''; position:absolute; inset:17% 7%; border-radius:999px; background:#090909; }
+.ref-choice-text { position:relative; display:flex; width:100%; align-items:center; justify-content:center; gap:5px; }
 .ref-choice-text svg { flex-shrink:0; }
-.ref-choice[aria-pressed="true"],.ref-choice[data-on="1"] { filter:brightness(1.3); }
+.ref-choice[aria-pressed="true"],.ref-choice[data-on="1"] { color:#1a0d00; background:linear-gradient(180deg,#fde68a,#f59e0b) padding-box, linear-gradient(180deg,#fff,#b45309) border-box; box-shadow:0 0 14px rgba(251,191,36,.7); }
+
 .ref-chip-layout { display:flex; flex-direction:column; width:100%; gap:8px; }
 .ref-chip-top { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); align-items:center; gap:8px; }
 .ref-chip-stake { color:#ffe59c; font-size:11px; font-weight:900; text-align:center; }
@@ -51,4 +82,9 @@
 .ref-chip-list > * { flex:1; padding-inline:2px; }
 .ref-chip-actions { display:flex; justify-content:flex-end; gap:6px; }
 .ref-slot-console { position:relative; z-index:10; display:flex; flex-direction:column; align-items:center; gap:8px; padding:8px 12px max(.75rem,env(safe-area-inset-bottom)); }
-.ref-slot-console > .ref-banner { width:45%; max-width:12rem; aspect-ratio:425/161; }
+.ref-slot-console > .ref-banner { width:55%; max-width:14rem; }
+
+@keyframes pc-win { 0%,100% { box-shadow:0 0 0 1px hsl(var(--tone) / .5), 0 0 8px hsl(var(--tone) / .4); } 50% { box-shadow:0 0 0 1px hsl(var(--tone)), 0 0 20px hsl(var(--tone) / .9); } }
+@keyframes pc-shine { 0% { transform:translateX(-120%); } 55%,100% { transform:translateX(120%); } }
+@keyframes pc-spin-glow { 0%,100% { filter:brightness(1); } 50% { filter:brightness(1.18); } }
+@media (prefers-reduced-motion: reduce) { .ref-stat[data-win="1"], .ref-banner-shine, .ref-spin { animation:none; } }
