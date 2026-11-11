@@ -1,4 +1,5 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate, useParams } from 'react-router-dom';
 import RoomTopArt from '@/components/voice/RoomTopArt';
 import { base44 } from '@/api/base44Client';
@@ -1556,10 +1557,13 @@ export default function VoiceRoom() {
         emptyText="Paylaşabileceğin arkadaş yok."
       />
 
-      {gamesOpen && gamesEnabled && (
+      {/* Oyun ana sayfadaki gibi gövdeye taşınan ayrı katmanda açılır: oda katmanı
+          oyunu kırpmaz, coin ve kazanç yazıları ekranda tam görünür. */}
+      {gamesOpen && gamesEnabled && createPortal(
         <Suspense fallback={null}>
           <GamePanel open={gamesOpen} onClose={() => setGamesOpen(false)} roomId={id} />
-        </Suspense>
+        </Suspense>,
+        document.body,
       )}
 
       <GiftBoard
