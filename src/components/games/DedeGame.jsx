@@ -3,7 +3,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import '@/styles/dede.css';
 import '@/styles/gameControls.css';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
-import DedeTopBar from '@/components/games/dede/DedeTopBar';
+import DedeZeusHeader from '@/components/games/dede/DedeZeusHeader';
+import DedeLeaderSheet from '@/components/games/dede/DedeLeaderSheet';
+import useDedeLeaders from '@/components/games/dede/useDedeLeaders';
 import DedeStorm from '@/components/games/dede/DedeStorm';
 import useDedeVisibleOrbs from '@/components/games/dede/useDedeVisibleOrbs';
 import '@/components/games/dede/dedeWizard.css';
@@ -34,6 +36,8 @@ export default function DedeGame({ onExit, onBack, roomId }) {
   const [flash, setFlash] = useState(0);
   const [prize, setPrize] = useState(null);
   const [helpOpen, setHelpOpen] = useState(false);
+  const [leadersOpen, setLeadersOpen] = useState(false);
+  const { leaders, reload: reloadLeaders } = useDedeLeaders();
   // Kazanç yazısının kapanma sayacı: yeni tur başlasa da çalışmaya devam eder.
   const flashTimer = useRef(null);
 
@@ -63,12 +67,12 @@ export default function DedeGame({ onExit, onBack, roomId }) {
   return (
     <div className="dede-sky relative flex h-full min-h-0 w-full flex-col overflow-hidden">
       <span aria-hidden="true" className="dede-rays" />
-      <DedeTopBar
-        onBack={onBack}
-        onHelp={() => setHelpOpen(true)}
-        spins={game.sessionSpins}
+      <DedeZeusHeader
+        coins={game.coins}
+        leader={leaders.total || leaders.week || leaders.today}
         compact={inRoom}
-        stats={{ bet: game.bet, coins: game.coins, totalWon: game.totalWon, win: game.win, multiplier: game.multiplier }}
+        onLeaders={() => { reloadLeaders(); setLeadersOpen(true); }}
+        onHelp={() => setHelpOpen(true)}
       />
 
       <main className="relative z-10 flex min-h-0 flex-1 flex-col items-center gap-1 px-0 py-1">
@@ -129,6 +133,7 @@ export default function DedeGame({ onExit, onBack, roomId }) {
       {/* Coin bakiyesine dokununca uygulamanın coin mağazası açılır. */}
       <CoinPurchasePanel open={coinOpen} coins={game.coins} onBack={() => setCoinOpen(false)} />
       <GameHelpSheet game="dede" open={helpOpen} onClose={() => setHelpOpen(false)} />
+      <DedeLeaderSheet open={leadersOpen} leaders={leaders} onClose={() => setLeadersOpen(false)} />
 
       <DedeWinOverlay open={!!prize} amount={prize?.amount || 0} onAccept={() => setPrize(null)} />
 

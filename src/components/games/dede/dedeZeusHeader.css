@@ -1,0 +1,57 @@
+/* Görsel 1024x576: tüm konumlar genişliğe (cqw) göre verilir, görsel üstten hizalı kırpılır. */
+.dzh {
+  container-type: inline-size;
+  position: relative;
+  flex-shrink: 0;
+  width: 100%;
+  height: 56.25cqw;
+  max-height: 34vh;
+  overflow: hidden;
+  border-bottom: 2px solid #f0c060;
+  box-shadow: 0 10px 24px -14px rgba(0, 0, 0, 0.9);
+}
+.dzh-compact { height: 40cqw; max-height: 24vh; }
+.dzh-art { position: absolute; left: 0; top: 0; width: 100%; height: auto; pointer-events: none; user-select: none; }
+.dzh-coins {
+  position: absolute;
+  left: 10.2cqw;
+  top: 2.4cqw;
+  width: 13.4cqw;
+  height: 4.4cqw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  white-space: nowrap;
+  font-size: 2.6cqw;
+  font-weight: 900;
+  color: #ffe9a8;
+  text-shadow: 0 1px 0 #6b3a05, 0 0 6px rgba(255, 200, 80, 0.8);
+}
+.dzh-badge { position: absolute; left: 1cqw; top: 7cqw; width: 14.6cqw; height: 18cqw; border-radius: 30%; }
+.dzh-avatar {
+  position: absolute;
+  left: 3.1cqw;
+  top: 7.3cqw;
+  width: 8.4cqw;
+  height: 8.4cqw;
+  overflow: hidden;
+  border-radius: 9999px;
+  background: #3a0f52;
+  box-shadow: 0 0 0 0.3cqw #ffe39a;
+}
+.dzh-initial { display: flex; height: 100%; align-items: center; justify-content: center; font-size: 3.6cqw; font-weight: 900; color: #ffd76a; }
+.dzh-help {
+  position: absolute;
+  right: 2cqw;
+  top: 2cqw;
+  width: 7cqw;
+  height: 7cqw;
+  max-width: 2.4rem;
+  max-height: 2.4rem;
+  padding: 1.2cqw;
+  border-radius: 9999px;
+  color: #fff7e6;
+  background: radial-gradient(circle at 35% 28%, #f7d492, #c0812f 58%, #7a4511);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 3px 8px rgba(30, 10, 0, 0.6);
+}

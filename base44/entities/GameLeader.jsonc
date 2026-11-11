@@ -1,0 +1,54 @@
+{
+  "name": "GameLeader",
+  "type": "object",
+  "properties": {
+    "game": {
+      "type": "string"
+    },
+    "period": {
+      "type": "string"
+    },
+    "user_id": {
+      "type": "string"
+    },
+    "user_name": {
+      "type": "string",
+      "default": ""
+    },
+    "user_avatar": {
+      "type": "string",
+      "default": ""
+    },
+    "won": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "game",
+    "period",
+    "user_id"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
