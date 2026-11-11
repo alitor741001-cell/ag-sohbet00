@@ -13,7 +13,7 @@ import VoiceViewport from '@/components/voice/VoiceViewport';
 import RoomBackground from '@/components/voice/RoomBackground';
 import { useToast } from '@/components/ui/use-toast';
 import VoiceStage from '@/components/voice/VoiceStage';
-import { resizeSeats } from '@/components/voice/seatLayout';
+import { resizeSeats, VIDEO_PK_SEAT_OPTIONS } from '@/components/voice/seatLayout';
 import { isHiddenName } from '@/lib/hiddenUser';
 import useVoiceRoomMessages from '@/hooks/useVoiceRoomMessages';
 import VoiceControlBar from '@/components/voice/VoiceControlBar';
@@ -660,7 +660,36 @@ export default function VoiceRoom() {
   }, [id, seated, navigate]);
 
   // Görüntülü PK sayfadan ayrılmadan açılır: sesli oda, koltuklar ve mikrofonlar aynen çalışır.
-  const openVideoPk = useCallback(() => setPkOpen((value) => !value), []);
+  // PK'da yalnızca 1, 2 veya 8 koltuk düzeni geçerli: başka bir düzen açıksa 8'e çekilir,
+  // sığmayanlar koltuktan inip izleyiciye düşer.
+  const fitSeatsForVideoPk = useCallback(() => {
+    const current = (room?.seats || []).length;
+    if (VIDEO_PK_SEAT_OPTIONS.includes(current)) return;
+    toast({
+      title: 'Koltuk düzeni değişti',
+      description: `Görüntülü PK'da koltuk düzeni ${VIDEO_PK_SEAT_OPTIONS.join(', ')} olabilir. 8 koltuğa geçildi, sığmayanlar izleyiciye düşer.`,
+    });
+    changeSeatCount(8);
+  }, [room?.seats, changeSeatCount, toast]);
+
+  const openVideoPk = useCallback(() => {
+    const next = !pkOpen;
+    setPkOpen(next);
+    if (next) fitSeatsForVideoPk();
+  }, [pkOpen, fitSeatsForVideoPk]);
+
+  const enableVideoPk = useCallback(() => {
+    setPkOpen(true);
+    fitSeatsForVideoPk();
+  }, [fitSeatsForVideoPk]);
+
+  // Görüntülü PK açıkken koltuk modu yalnızca 1, 2 veya 8 seçilebilir.
+  const blockSeatCount = useCallback(() => {
+    toast({
+      title: 'Bu koltuk modu kapalı',
+      description: `Görüntülü PK'da yalnızca ${VIDEO_PK_SEAT_OPTIONS.join(', ')} koltuk düzeni seçilebilir.`,
+    });
+  }, [toast]);
 
   // Normal PK başlat: koltuk sayısı 9 değilse önce 9'a çekilir, sonra 5 dakikalık tur başlar.
   const startTeamPk = useCallback(async () => {
@@ -1270,7 +1299,7 @@ export default function VoiceRoom() {
       {/* Görüntülü PK alanı odanın üstüne gömülür; koltuklar hemen altında aynen kalır. */}
       <VideoPkLayer
         open={pkOpen}
-        onOpen={() => setPkOpen(true)}
+        onOpen={enableVideoPk}
         onClose={() => setPkOpen(false)}
         roomId={id}
         user={user}
@@ -1415,6 +1444,8 @@ export default function VoiceRoom() {
         theme={room?.background}
         onTheme={changeTheme}
         onOpenPk={canMod ? openVideoPk : null}
+        seatAllowed={pkOpen ? VIDEO_PK_SEAT_OPTIONS : null}
+        onSeatBlocked={blockSeatCount}
         teamPkActive={!!teamPk.match}
         onTeamPk={canMod ? (teamPk.match ? stopTeamPk : startTeamPk) : null}
       />

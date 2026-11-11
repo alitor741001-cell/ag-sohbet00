@@ -14,7 +14,7 @@ const Panel = ({ children, hint }) => (
 );
 
 /** "…" menüsü: yuvarlak ikon ızgarası — kilit, gizlilik, koltuk, sayaç, sohbet temizleme, sohbet yasağı ve kayıt defteri. */
-export default function VoiceRoomMenu({ open, onClose, room, isOwner, isAdmin, canMod, onSeatCount, onSetPassword, onToggleHidden, boardActive, onToggleBoard, onBoardSettings, onClearChat, onToggleChatBan, onOpenLog, onExitVoiceMode, musicPlaying, onOpenMusic, theme, onTheme, onOpenPk, onTeamPk, teamPkActive }) {
+export default function VoiceRoomMenu({ open, onClose, room, isOwner, isAdmin, canMod, onSeatCount, onSetPassword, onToggleHidden, boardActive, onToggleBoard, onBoardSettings, onClearChat, onToggleChatBan, onOpenLog, onExitVoiceMode, musicPlaying, onOpenMusic, theme, onTheme, onOpenPk, onTeamPk, teamPkActive, seatAllowed = null, onSeatBlocked }) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [panel, setPanel] = useState(null);
@@ -119,8 +119,12 @@ export default function VoiceRoomMenu({ open, onClose, room, isOwner, isAdmin, c
       {!canMod && <p className="mt-4 rounded-xl border border-[#FFD700]/30 bg-black/70 p-3 text-xs text-white/60">Oda ayarlarını yalnızca oda sahibi ve yöneticiler değiştirebilir.</p>}
 
       {canMod && panel === 'seats' && (
-        <Panel hint={`Şu an ${room?.seat_count || 0} koltuk açık. Sığmayanlar izleyiciye düşer.`}>
-          <SeatCountPicker compact value={room?.seat_count} onChange={onSeatCount} />
+        <Panel hint={
+          seatAllowed
+            ? `Görüntülü PK'da koltuk düzeni ${seatAllowed.join(', ')} olabilir. Sığmayanlar izleyiciye düşer.`
+            : `Şu an ${room?.seat_count || 0} koltuk açık. Sığmayanlar izleyiciye düşer.`
+        }>
+          <SeatCountPicker compact value={room?.seat_count} onChange={onSeatCount} allowed={seatAllowed} onBlocked={onSeatBlocked} />
         </Panel>
       )}
 
