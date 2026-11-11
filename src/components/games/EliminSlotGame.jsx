@@ -6,6 +6,7 @@ import '@/styles/gameControls.css';
 import { Image } from '@/components/ui/image';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
 import GameCoinBar from '@/components/games/shared/GameCoinBar';
+import GameIllustratedHeader from '@/components/games/shared/GameIllustratedHeader';
 import EliminJackpotBar from './elimin/EliminJackpotBar';
 import EliminGrid from './elimin/EliminGrid';
 import EliminHud from './elimin/EliminHud';
@@ -86,41 +87,7 @@ export default function EliminSlotGame({ onExit, onBack }) {
       </div>
       <span className="el-aurora" aria-hidden="true" />
 
-      <header className="el-head">
-        <button type="button" onClick={onBack} aria-label="Oyun listesine dön" className="gctl-pill gctl-icon">
-          <ChevronLeft className="h-5 w-5" />
-        </button>
-
-        <div className="el-brand">
-          <Image
-            src={ELIMIN_EMBLEM}
-            alt=""
-            aria-hidden="true"
-            className="el-logo"
-            fittingType="fill"
-            originWidth={ELIMIN_EMBLEM_SIZE}
-            originHeight={ELIMIN_EMBLEM_SIZE}
-            quality={80}
-          />
-          <span className="el-brand-text">
-            <p className="el-title">ELİMİNSLOT</p>
-            <p className="el-tagline">MEYVE SLOTU · {LINES} SATIR</p>
-          </span>
-        </div>
-
-        <button type="button" onClick={() => setHelpOpen(true)} aria-label="Nasıl oynanır" className="gctl-pill gctl-icon">
-          <HelpCircle className="h-5 w-5" />
-        </button>
-        <button
-          type="button"
-          onClick={game.toggleSound}
-          aria-label={game.sound ? 'Sesi kapat' : 'Sesi aç'}
-          className={`gctl-pill gctl-icon ${game.sound ? 'gctl-pill-on' : ''}`}
-        >
-          {game.sound ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
-        </button>
-
-      </header>
+      <GameIllustratedHeader game="elimin" title="ELİMİNSLOT" tagline={`MEYVE SLOTU · ${LINES} SATIR`} onBack={onBack} onHelp={() => setHelpOpen(true)} sound={game.sound} onSound={game.toggleSound} />
 
       <main className="el-main">
         {/* Ortada jackpot, sağda sandık ve oyuncu rozeti. */}

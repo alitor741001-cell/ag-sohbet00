@@ -5,6 +5,7 @@ import '@/styles/gameControls.css';
 import GameHelpSheet from './help/GameHelpSheet';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
 import GameCoinBar from '@/components/games/shared/GameCoinBar';
+import GameIllustratedHeader from '@/components/games/shared/GameIllustratedHeader';
 import { Image } from '@/components/ui/image';
 import useSekerGame from './seker/useSekerGame';
 import SekerGrid from './seker/SekerGrid';
@@ -58,29 +59,7 @@ export default function SekerGame({ onExit, onBack }) {
     <div className="seker-sky relative flex h-full min-h-0 w-full flex-col overflow-hidden">
       <span aria-hidden="true" className="seker-rays" />
 
-      <header className="relative z-10 flex shrink-0 items-center gap-2 px-3 pt-[max(0.5rem,env(safe-area-inset-top))]">
-        <button type="button" onClick={onBack} aria-label="Oyun listesine dön" className="gctl-pill gctl-icon">
-          <ChevronLeft className="h-5 w-5" />
-        </button>
-        <div className="flex min-w-0 flex-1 items-center justify-center gap-2">
-          <Image src={SEKER_LOGO} alt="" aria-hidden="true" className="seker-logo" fittingType="fill" quality={80} />
-          <span className="min-w-0 text-left">
-            <p className="seker-title text-lg leading-none">ŞEKER</p>
-            <p className="mt-0.5 text-[9px] font-black tracking-[0.14em] text-[#ffe0a8]/75">
-              AYNI ŞEKERDEN 10+ ÖDER
-            </p>
-          </span>
-        </div>
-        <button
-          type="button"
-          onClick={() => setHelpOpen(true)}
-          aria-label="Nasıl oynanır"
-          className="gctl-pill gctl-icon"
-        >
-          <HelpCircle className="h-5 w-5" />
-        </button>
-
-      </header>
+      <GameIllustratedHeader game="seker" title="ŞEKER" tagline="AYNI ŞEKERDEN 10+ ÖDER" onBack={onBack} onHelp={() => setHelpOpen(true)} />
 
       <main className="relative z-10 flex min-h-0 flex-1 flex-col items-center gap-1 px-0 pb-1 pt-0">
         {/* Çerçeve her zaman ekran genişliğini kaplar; üstten boşluksuz başlar. */}

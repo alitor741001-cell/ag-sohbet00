@@ -4,6 +4,7 @@ import '@/styles/zar.css';
 import '@/styles/zar2.css';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
 import GameCoinBar from '@/components/games/shared/GameCoinBar';
+import GameIllustratedHeader from '@/components/games/shared/GameIllustratedHeader';
 import GameWinReadout from '@/components/games/shared/GameWinReadout';
 import GameHelpSheet from '@/components/games/help/GameHelpSheet';
 import { useCurrentUser } from '@/lib/useCurrentUser';
@@ -78,13 +79,7 @@ export default function ZarGame({ onExit, onBack }) {
 
   return (
     <div className="zr2 relative flex h-full min-h-0 w-full flex-col overflow-hidden">
-      <header className="zr2-top">
-        <button type="button" onClick={onBack} aria-label="Oyun listesine dön" className="zr2-sq">
-          <ChevronLeft className="h-5 w-5" />
-        </button>
-        <span className="zr2-round">Tur:{game.round?.round_no || '—'}</span>
-
-      </header>
+      <GameIllustratedHeader game="zar" title="ZAR" onBack={onBack} round={game.round?.round_no || '—'} />
 
       <main className="zr2-stage">
         <div className="zr2-side-right">

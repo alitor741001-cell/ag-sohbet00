@@ -693,10 +693,10 @@ export default function VoiceRoom() {
   }, [toast]);
 
   // Normal PK başlat: koltuk sayısı 9 değilse önce 9'a çekilir, sonra 5 dakikalık tur başlar.
-  const startTeamPk = useCallback(async () => {
+  const startTeamPk = useCallback(async (begin = false) => {
     if ((room?.seats || []).length !== 9) await changeSeatCount(9);
     try {
-      const response = await base44.functions.invoke('voice-room', { room_id: id, action: 'team-pk-start' });
+      const response = await base44.functions.invoke('voice-room', { room_id: id, action: begin === true ? 'team-pk-start' : 'team-pk-open' });
       if (response?.data?.team_pk) teamPk.setMatch(response.data.team_pk);
     } catch (error) {
       toast({ title: 'Normal PK başlatılamadı', description: error?.response?.data?.error || error.message, variant: 'destructive' });
@@ -1336,7 +1336,7 @@ export default function VoiceRoom() {
           accent: seatAccent,
           gifted,
           teamPkFooter: teamPk.match && seats.length === 9
-            ? <TeamPkBar match={teamPk.match} canMod={canMod} onRestart={startTeamPk} onStop={stopTeamPk} />
+            ? <TeamPkBar match={teamPk.match} canMod={canMod} onRestart={() => startTeamPk(true)} onStop={stopTeamPk} />
             : null,
           teamPkMatch: teamPk.match,
         }}
@@ -1449,7 +1449,8 @@ export default function VoiceRoom() {
         seatAllowed={pkOpen ? VIDEO_PK_SEAT_OPTIONS : null}
         onSeatBlocked={blockSeatCount}
         teamPkActive={!!teamPk.match}
-        onTeamPk={canMod ? (teamPk.match ? stopTeamPk : startTeamPk) : null}
+        teamPkStarted={!!teamPk.match?.started_at}
+        onTeamPk={canMod ? (teamPk.match ? (teamPk.match.started_at ? stopTeamPk : () => startTeamPk(true)) : startTeamPk) : null}
       />
       <AgencyCallComposer open={agencyCallOpen} onClose={() => setAgencyCallOpen(false)} roomId={id} status={agencyCallStatus} onSent={(data) => setAgencyCallStatus((prev) => ({ ...prev, ...data }))} />
 

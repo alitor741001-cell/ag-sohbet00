@@ -4,6 +4,7 @@ import '@/styles/fruit.css';
 import '@/styles/gameControls.css';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
 import GameCoinBar from '@/components/games/shared/GameCoinBar';
+import GameIllustratedHeader from '@/components/games/shared/GameIllustratedHeader';
 import useFruitGame from './fruit/useFruitGame';
 import FruitReels from './fruit/FruitReels';
 import FruitHud from './fruit/FruitHud';
@@ -53,26 +54,7 @@ export default function FruitGame({ onExit, onBack }) {
     <div className="fruit-sky relative flex h-full min-h-0 w-full flex-col overflow-hidden">
       <span aria-hidden="true" className="fruit-rays" />
 
-      <header className="relative z-10 flex shrink-0 items-center gap-2 px-3 pt-[max(0.5rem,env(safe-area-inset-top))]">
-        <button type="button" onClick={onBack} aria-label="Oyun listesine dön" className="gctl-pill gctl-icon">
-          <ChevronLeft className="h-5 w-5" />
-        </button>
-        <div className="min-w-0 flex-1 text-center">
-          <p className="fruit-bubble-text text-lg">MEYVE</p>
-          <p className="text-[9px] font-black tracking-[0.14em] text-[#ffe0a8]/75">
-            SEMBOLLER EKRANIN HER YERİNDE ÖDER
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => setHelpOpen(true)}
-          aria-label="Nasıl oynanır"
-          className="gctl-pill gctl-icon"
-        >
-          <HelpCircle className="h-5 w-5" />
-        </button>
-
-      </header>
+      <GameIllustratedHeader game="fruit" title="MEYVE" tagline="SEMBOLLER EKRANIN HER YERİNDE ÖDER" onBack={onBack} onHelp={() => setHelpOpen(true)} />
 
       <main className="relative z-10 flex min-h-0 flex-1 flex-col items-center gap-1 px-0 pb-1 pt-0">
         {/* Çerçeve her zaman ekran genişliğini kaplar; üstten boşluksuz başlar. */}

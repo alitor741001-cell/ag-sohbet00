@@ -14,7 +14,7 @@ const Panel = ({ children, hint }) => (
 );
 
 /** "…" menüsü: yuvarlak ikon ızgarası — kilit, gizlilik, koltuk, sayaç, sohbet temizleme, sohbet yasağı ve kayıt defteri. */
-export default function VoiceRoomMenu({ open, onClose, room, isOwner, isAdmin, canMod, onSeatCount, onSetPassword, onToggleHidden, boardActive, onToggleBoard, onBoardSettings, onClearChat, onToggleChatBan, onOpenLog, onExitVoiceMode, musicPlaying, onOpenMusic, theme, onTheme, onOpenPk, onTeamPk, teamPkActive, seatAllowed = null, onSeatBlocked }) {
+export default function VoiceRoomMenu({ open, onClose, room, isOwner, isAdmin, canMod, onSeatCount, onSetPassword, onToggleHidden, boardActive, onToggleBoard, onBoardSettings, onClearChat, onToggleChatBan, onOpenLog, onExitVoiceMode, musicPlaying, onOpenMusic, theme, onTheme, onOpenPk, onTeamPk, teamPkActive, teamPkStarted, seatAllowed = null, onSeatBlocked }) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [panel, setPanel] = useState(null);
@@ -94,7 +94,7 @@ export default function VoiceRoomMenu({ open, onClose, room, isOwner, isAdmin, c
         {onTeamPk && (
           <VoiceMenuTile
             icon={Swords}
-            label={teamPkActive ? "PK'yı kapat" : 'Normal PK'}
+            label={teamPkActive ? (teamPkStarted ? 'Maçı bitir' : 'Başlat') : 'Normal PK'}
             active={!!teamPkActive}
             tone="blue"
             onClick={() => { onClose(); onTeamPk(); }}

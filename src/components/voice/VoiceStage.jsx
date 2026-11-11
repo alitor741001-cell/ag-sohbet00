@@ -38,7 +38,7 @@ export default function VoiceStage({ scrollRef, handlers, room, hiddenAnnounce, 
   const fitsStage = (gridMeasured?.height || 0) <= (areaMeasured?.height || 0) + 1;
   // 24/30 koltukta sahne hiç kırpılmaz: alt satır sohbet alanının üstüne taşsa da görünür kalır.
   // Hiçbir düzende sahne kaymaz ve kırpılmaz: koltuklar sabit durur, temanın üstünde görünür.
-  const scrollable = false;
+  const scrollable = !fitsStage;
 
   // Koltukların altında kalan boşluk sohbet alanına bildirilir: mesajlar tam koltukların alt
   // hizasından başlar. Koltukların boyutu ve yeri değişmez — yalnızca sohbet yukarı taşar.
@@ -70,7 +70,7 @@ export default function VoiceStage({ scrollRef, handlers, room, hiddenAnnounce, 
         {...handlers}
         // Sayı tahtası açıkken süre kartı koltukların hemen altına oturur; sahnenin alt boşluğu
         // ona devredilir, koltuklar için ayrılan yer değişmez.
-        className={`voice-stage relative z-20 min-h-0 flex-1 ${nine ? 'px-1' : 'px-3'} pt-4 ${scrollable ? 'overflow-y-auto overflow-x-hidden' : 'overflow-visible'} ${grid.boardActive ? 'pb-0' : 'pb-4'}`}
+        className={`voice-stage relative z-20 min-h-0 flex-1 px-1 pt-4 ${scrollable ? 'overflow-y-auto overflow-x-hidden' : 'overflow-visible'} ${grid.boardActive ? 'pb-0' : 'pb-4'}`}
       >
         <div ref={boxRef} className="flex h-full min-h-0 flex-col items-center">
           {room?.password && (

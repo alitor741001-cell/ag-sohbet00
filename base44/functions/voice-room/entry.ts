@@ -341,19 +341,24 @@ export default async function (req: Request): Promise<Response> {
 
     // Hediye tahtası için K bakiyesi
     // Normal PK: üstte sunucu, solda mavi 4 koltuk, sağda kırmızı 4 koltuk. Yalnızca yöneticiler açar/kapatır.
-    if (action === 'team-pk-start') {
+    if (action === 'team-pk-open' || action === 'team-pk-start') {
       if (!canMod) return Response.json({ error: 'yetkisiz' }, { status: 403 });
       if (seats.length !== 9) return Response.json({ error: 'Normal PK için koltuk sayısı 9 olmalı.' }, { status: 400 });
+      const current = await loadTeamPk(base44, room_id);
+      const opening = action === 'team-pk-open';
+      if (opening && current) return Response.json({ ok: true, team_pk: current });
+      if (!opening && current?.started_at && new Date(current.ends_at).getTime() > Date.now()) {
+        return Response.json({ ok: true, team_pk: current });
+      }
       const now = Date.now();
       const patch = {
-        room_id, active: true, started_at: new Date(now).toISOString(), ends_at: new Date(now + TEAM_PK_MS).toISOString(),
-        blue_score: 0, red_score: 0, started_by: user.id,
+        room_id, active: true, blue_score: 0, red_score: 0, started_by: user.id,
+        ...(!opening ? { started_at: new Date(now).toISOString(), ends_at: new Date(now + TEAM_PK_MS).toISOString() } : {}),
       };
-      const current = await loadTeamPk(base44, room_id);
       const match = current
         ? await base44.asServiceRole.entities.TeamPkMatch.update(current.id, patch)
         : await base44.asServiceRole.entities.TeamPkMatch.create(patch);
-      say(`${shownName} normal PK başlattı.`);
+      say(opening ? `${shownName} normal PK alanını açtı.` : `${shownName} normal PK başlattı.`);
       return Response.json({ ok: true, team_pk: match });
     }
     if (action === 'team-pk-stop') {
@@ -445,7 +450,7 @@ export default async function (req: Request): Promise<Response> {
       if (seats.length === 9) {
         waitUntil((async () => {
           const teamPk = await loadTeamPk(base44, room_id);
-          if (!teamPk || Date.now() > new Date(teamPk.ends_at).getTime()) return;
+          if (!teamPk?.started_at || !teamPk.ends_at || Date.now() >= new Date(teamPk.ends_at).getTime()) return;
           const gain = kValue * quantity;
           let blue = 0;
           let red = 0;

@@ -5,6 +5,7 @@ import '@/styles/gameControls.css';
 import { Image } from '@/components/ui/image';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
 import GameCoinBar from '@/components/games/shared/GameCoinBar';
+import GameIllustratedHeader from '@/components/games/shared/GameIllustratedHeader';
 import SekerliGrid from './sekerli/SekerliGrid';
 import SekerliTopPanel from './sekerli/SekerliTopPanel';
 import SekerliHud from './sekerli/SekerliHud';
@@ -38,35 +39,7 @@ export default function SekerliMeyveGame({ onExit, onBack }) {
       </div>
       <span className="sl-aurora" aria-hidden="true" />
 
-      <header className="sl-head">
-        <button type="button" onClick={onBack} aria-label="Oyun listesine dön" className="gctl-pill gctl-icon">
-          <ChevronLeft className="h-5 w-5" />
-        </button>
-        <div className="sl-brand">
-          <Image src={SEKERLI_LOGO} alt="" aria-hidden="true" className="sl-logo" fittingType="fill" quality={80} />
-          <span className="sl-brand-text">
-            <p className="sl-title">ŞEKERLİ MEYVE</p>
-            <p className="sl-tagline">TAKLA ZİNCİRİ · {LINES} SATIR</p>
-          </span>
-        </div>
-        <button
-          type="button"
-          onClick={game.toggleSound}
-          aria-label={game.sound ? 'Sesi kapat' : 'Sesi aç'}
-          className={`gctl-pill gctl-icon ${game.sound ? 'gctl-pill-on' : ''}`}
-        >
-          {game.sound ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
-        </button>
-        <button
-          type="button"
-          onClick={() => setHelpOpen(true)}
-          aria-label="Nasıl oynanır"
-          className="gctl-pill gctl-icon"
-        >
-          <HelpCircle className="h-5 w-5" />
-        </button>
-
-      </header>
+      <GameIllustratedHeader game="sekerli" title="ŞEKERLİ MEYVE" tagline={`TAKLA ZİNCİRİ · ${LINES} SATIR`} onBack={onBack} onHelp={() => setHelpOpen(true)} sound={game.sound} onSound={game.toggleSound} />
 
       <main className="sl-main">
         <SekerliTopPanel win={game.spinWin} multiplier={game.multiplier} active={game.phase !== 'idle'} />

@@ -1,7 +1,5 @@
-import { useCallback, useState } from 'react';
-import { Crown, Star } from 'lucide-react';
+import { Star } from 'lucide-react';
 import TeamPkSide from '@/components/voice/pk/TeamPkSide';
-import TeamPkShots from '@/components/voice/pk/TeamPkShots';
 import PkThemeBackdrop from '@/components/voice/pk/PkThemeBackdrop';
 import '@/components/voice/pk/teamPkArena.css';
 
@@ -11,38 +9,23 @@ import '@/components/voice/pk/teamPkArena.css';
  * takım rakibe ateş eder; önde olan takım silahıyla 5 saniyede bir ateş eder.
  */
 export default function TeamPkArena({ match, seats, renderSeat, footer, width = 360 }) {
-  const [hit, setHit] = useState('');
-  const onHit = useCallback((side) => {
-    setHit(side);
-    window.setTimeout(() => setHit(''), 750);
-  }, []);
-  const size = width >= 440 ? 'sm' : 'xs';
-  const space = Math.max(44, Math.round(width * 0.15));
-  const blue = Number(match?.blue_score) || 0;
-  const red = Number(match?.red_score) || 0;
-  const leader = blue === red ? '' : blue > red ? 'blue' : 'red';
+  const size = width >= 640 ? 'lg' : 'md';
+  const space = width >= 640 ? 96 : 72;
 
   return (
     <div className="team-pk-arena relative isolate w-full rounded-[18px] p-1">
       <PkThemeBackdrop />
-      <div className="relative flex w-full items-stretch gap-1">
-        <TeamPkSide tone="blue" indices={[1, 2, 3, 4]} seats={seats} renderSeat={renderSeat} size={size} space={space} hit={hit === 'blue'} armed={leader === 'blue'} />
-        <div className="relative flex min-w-0 flex-1 flex-col items-center">
-          <span className="team-pk-host-label flex items-center gap-1 whitespace-nowrap rounded-full px-1.5 py-0.5 text-[10px] font-black tracking-wide">
+      <div className="relative flex w-full flex-col items-center gap-2">
+        <div className="flex flex-col items-center">
+          <span className="team-pk-host-label flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-black">
             <Star className="h-2.5 w-2.5 fill-current" /> SUNUCU <Star className="h-2.5 w-2.5 fill-current" />
           </span>
-          <div className="relative mt-1 flex flex-col items-center">
-            <span className="team-pk-platform pointer-events-none absolute left-1/2 top-[30px] h-5 w-20 -translate-x-1/2" />
-            <div className="relative z-10">{renderSeat(0, size === 'sm' ? 'md' : 'sm', space + 20)}</div>
-          </div>
-          <div className="flex min-h-0 flex-1 items-center justify-center py-1">
-            <span className="team-pk-floor-crown flex h-9 w-16 items-center justify-center">
-              <Crown className="h-5 w-5" />
-            </span>
-          </div>
+          {renderSeat(0, size, space)}
         </div>
-        <TeamPkSide tone="red" indices={[5, 6, 7, 8]} seats={seats} renderSeat={renderSeat} size={size} space={space} hit={hit === 'red'} armed={leader === 'red'} />
-        <TeamPkShots blue={blue} red={red} leader={leader} onHit={onHit} />
+        <div className="flex w-full items-stretch gap-1">
+          <TeamPkSide tone="blue" indices={[1, 2, 3, 4]} renderSeat={renderSeat} size={size} space={space} />
+          <TeamPkSide tone="red" indices={[5, 6, 7, 8]} renderSeat={renderSeat} size={size} space={space} />
+        </div>
       </div>
       {footer}
     </div>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { RotateCcw, X } from 'lucide-react';
+import { Play, RotateCcw, X } from 'lucide-react';
 import PkScoreBar from '@/components/voice/pk/PkScoreBar';
 import '@/components/voice/pk/teamPkArena.css';
 
@@ -14,10 +14,11 @@ export default function TeamPkBar({ match, canMod, onRestart, onStop }) {
     const timer = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(timer);
   }, []);
-  const remaining = Math.max(0, Math.ceil((new Date(match.ends_at).getTime() - now) / 1000));
+  const started = !!match.started_at && !!match.ends_at;
+  const remaining = started ? Math.max(0, Math.ceil((new Date(match.ends_at).getTime() - now) / 1000)) : 300;
   const blue = (Number(match.blue_score) || 0) * 1000;
   const red = (Number(match.red_score) || 0) * 1000;
-  const finished = remaining === 0;
+  const finished = started && remaining === 0;
   const result = blue === red ? 'Berabere' : blue > red ? 'Mavi takım kazandı' : 'Kırmızı takım kazandı';
 
   return (
@@ -35,8 +36,8 @@ export default function TeamPkBar({ match, canMod, onRestart, onStop }) {
             </button>
           )}
           {canMod && (
-            <button type="button" onClick={onStop} className="flex h-7 items-center gap-1 rounded-full bg-white/15 px-2.5 text-[10.5px] font-black text-white ring-1 ring-white/30 active:scale-95">
-              <X className="h-3 w-3" /> PK'yı kapat
+            <button type="button" onClick={started ? onStop : onRestart} className="flex h-7 items-center gap-1 rounded-full bg-white/15 px-2.5 text-[10.5px] font-black text-white ring-1 ring-white/30 active:scale-95">
+              {started ? <X className="h-3 w-3" /> : <Play className="h-3 w-3" />} {started ? 'Maçı bitir' : 'Başlat'}
             </button>
           )}
         </div>
