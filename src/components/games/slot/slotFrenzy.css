@@ -131,6 +131,36 @@
   background: conic-gradient(#ef4444 0 60deg, #f59e0b 0 120deg, #22c55e 0 180deg, #3b82f6 0 240deg, #a855f7 0 300deg, #ec4899 0);
   animation: sfz-spin 6s linear infinite;
 }
+.sfz-pools { margin-top: 6px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; }
+.sfz-pool {
+  --tone: 145 75% 52%;
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 3px 2px 4px;
+  border-radius: 10px;
+  background:
+    linear-gradient(180deg, hsl(var(--tone) / .45), hsl(var(--tone) / .08) 60%, rgba(10, 4, 26, .9)) padding-box,
+    linear-gradient(180deg, #fde68a, #b7791f 55%, #fde68a) border-box;
+  border: 1.5px solid transparent;
+  box-shadow: 0 0 12px -3px hsl(var(--tone) / .9), inset 0 1px 0 rgba(255, 255, 255, .3);
+}
+.sfz-pool::after {
+  content: '';
+  position: absolute;
+  inset: 0 0 55% 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .22), transparent);
+  pointer-events: none;
+}
+.sfz-pool-mini { --tone: 145 75% 52%; }
+.sfz-pool-big { --tone: 205 95% 60%; }
+.sfz-pool-mega { --tone: 280 90% 66%; }
+.sfz-pool-xmega { --tone: 350 95% 62%; }
+.sfz-pool-label { font-size: 2.7cqw; font-weight: 900; letter-spacing: .12em; color: hsl(var(--tone)); text-shadow: 0 0 6px hsl(var(--tone) / .8); }
+.sfz-pool-value { max-width: 100%; overflow: hidden; white-space: nowrap; font-size: 3.6cqw; font-weight: 900; font-variant-numeric: tabular-nums; color: #fff7d6; text-shadow: 0 1px 0 rgba(0, 0, 0, .7); }
 @keyframes sfz-spin { to { transform: rotate(360deg); } }
 @keyframes sfz-pop { from { transform: scale(.85); opacity: .4; } to { transform: scale(1); opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .sfz-jp-wheel, .sfz-jp-value { animation: none; } }

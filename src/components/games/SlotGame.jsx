@@ -109,7 +109,7 @@ export default function SlotGame({ onExit, onBack, roomId }) {
         <SlotFrenzyHeader onHelp={() => setHelpOpen(true)}>
           <WinnerTicker height={tickerHeight} />
         </SlotFrenzyHeader>
-        <SlotJackpotBar pools={game.pools} freeSpins={game.freeSpins} topGap={panelGap} />
+        <SlotJackpotBar pools={game.pools} topGap={panelGap} />
       </div>
 
       <button
@@ -129,8 +129,8 @@ export default function SlotGame({ onExit, onBack, roomId }) {
             <div className="absolute inset-x-0" style={{ height, top: -headOffset }}>
               {/* Eski kabin görseli yerine altın çerçeveli, mor-lacivert makara paneli. */}
               <div
-                className="absolute rounded-2xl border-2 border-amber-400/80 bg-[linear-gradient(180deg,#1e0b3d,#0b0620)] shadow-[0_0_24px_rgba(245,158,11,0.35),inset_0_0_18px_rgba(192,38,211,0.35)]"
-                style={{ left: '1%', width: '98%', top: '33.2%', height: '45.6%' }}
+                className="absolute rounded-[20px] border-[5px] border-amber-400 bg-[linear-gradient(180deg,#1e0b3d,#0b0620)] shadow-[0_0_30px_rgba(245,158,11,0.55),inset_0_0_0_2px_rgba(253,230,138,0.7),inset_0_0_22px_rgba(192,38,211,0.45)]"
+                style={{ left: '0%', width: '100%', top: '31.6%', height: '48.6%' }}
               />
 
               {/* Tur sırasında her makaranın sembolleri değişerek aşağı doğru kayar. */}
