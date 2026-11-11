@@ -15,7 +15,7 @@ export default function GameStatCards({ items }) {
           <span key={item.key} className="ref-stat pc-glass" data-win={item.win ? '1' : undefined}>
             <span className="ref-stat-icon"><Icon strokeWidth={2.6} /></span>
             <span className="ref-stat-copy">
-              <FitGameText as="strong">{item.label}</FitGameText>
+              <FitGameText as="strong">{item.key === 'win' ? 'WIN / KAZANÇ' : item.label}</FitGameText>
               <FitGameText as="b">{item.value}</FitGameText>
             </span>
           </span>

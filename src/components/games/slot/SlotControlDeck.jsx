@@ -40,7 +40,7 @@ export default function SlotControlDeck({
         </div>
 
         <div className="sfz-metric-well">
-          <span className="sfz-metric-label">WIN</span>
+          <span className="sfz-metric-label">WIN / KAZANÇ</span>
           <FitGameText as="strong" className="sfz-metric-gold">
             {format(win)}
           </FitGameText>

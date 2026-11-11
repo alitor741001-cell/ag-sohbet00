@@ -91,7 +91,7 @@ export default function SekerliMeyveGame({ onExit, onBack }) {
         <SekerliHud
           coins={game.coins}
           bet={game.bet}
-          win={game.win}
+          win={game.busy ? game.spinWin : game.win}
           totalWon={game.totalWon}
           busy={game.busy}
           onCoins={() => setCoinOpen(true)}

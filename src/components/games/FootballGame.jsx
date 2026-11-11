@@ -5,6 +5,7 @@ import '@/styles/gameControls.css';
 import { Image } from '@/components/ui/image';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
 import GameStatCards from '@/components/games/controls/GameStatCards';
+import GameWinReadout from '@/components/games/shared/GameWinReadout';
 import FutbolHeader from './futbol/FutbolHeader';
 import FutbolPitch from './futbol/FutbolPitch';
 import FutbolStakeDock from './futbol/FutbolStakeDock';
@@ -112,6 +113,7 @@ export default function FootballGame({ onExit, onBack }) {
 
         <FutbolResults history={game.history} />
 
+        <GameWinReadout amount={game.payout} />
         <FutbolStakeDock
           selected={game.selected}
           disabled={drawing || game.busy || game.status !== 'ready'}

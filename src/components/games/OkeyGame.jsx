@@ -12,6 +12,7 @@ import OkeyTopBar from './okey/OkeyTopBar';
 import OkeyWaitRoom from './okey/OkeyWaitRoom';
 import useOkeyGame from './okey/useOkeyGame';
 import ReferenceChoiceButton from '@/components/games/controls/ReferenceChoiceButton';
+import GameWinReadout from '@/components/games/shared/GameWinReadout';
 import OkeyExitChoice from '@/components/games/okey/OkeyExitChoice';
 import useBackDismiss from '@/hooks/useBackDismiss';
 
@@ -185,6 +186,7 @@ export default function OkeyGame({ variant = 'okey101', onExit, onBack }) {
         />
       )}
 
+      {table && <GameWinReadout amount={table.status === 'finished' && table.winner_id === table.seats?.[seat]?.user_id ? table.win_amount : 0} />}
       {game.error && table ? <p className="okey-toast">{game.error}</p> : null}
 
       {table ? <OkeyResultOverlay table={table} mySeat={seat} onLeave={game.actions.leave} /> : null}

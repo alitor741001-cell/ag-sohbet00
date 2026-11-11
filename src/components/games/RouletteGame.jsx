@@ -3,6 +3,7 @@ import { ChevronLeft, Lightbulb } from 'lucide-react';
 import '@/styles/roulette.css';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
 import GameCoinBar from '@/components/games/shared/GameCoinBar';
+import GameWinReadout from '@/components/games/shared/GameWinReadout';
 import useRouletteGame from './roulette/useRouletteGame';
 import useRouletteBoard from './roulette/useRouletteBoard';
 import useTableBets from './shared/useTableBets';
@@ -113,6 +114,7 @@ export default function RouletteGame({ onExit, onBack }) {
       </main>
 
       <footer className="rl2-footer">
+        <GameWinReadout amount={game.payout} />
         <RouletteChipRow
           coins={game.available}
           chip={game.chip}

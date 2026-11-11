@@ -5,7 +5,7 @@ export const ART_HEIGHT = 1545;
 
 // Görselin kendi üst jackpot paneli, hemen altındaki sayaç/rozet/ilerleme şeridi ve alt
 // kontrol alanı kırpılır: ortada jackpot yazısı kalmaz, üstteki kendi konsolumuz kalır.
-export const ART_HEAD_HEIGHT = 435;
+export const ART_HEAD_HEIGHT = 516;
 export const ART_VIEW_HEIGHT = 1215;
 
 // Görünen yükseklik: kırpılan bölgeler çıktıktan sonra kalan oyun ekranı.

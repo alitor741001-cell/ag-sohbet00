@@ -13,6 +13,7 @@ import AviatorBetCard from './aviator/AviatorBetCard';
 import betSlot from './aviator/useBetSlot';
 import GameHelpSheet from './help/GameHelpSheet';
 import RocketWinOverlay from '@/components/games/rocket/RocketWinOverlay';
+import GameWinReadout from '@/components/games/shared/GameWinReadout';
 
 /** Aviator: uçak havalanır, çarpan yükselir; uçak uçup gitmeden önce çek. */
 export default function CrashRocketGame({ onExit, onBack }) {
@@ -33,6 +34,7 @@ export default function CrashRocketGame({ onExit, onBack }) {
         <AviatorStage game={game}>
           <AviatorPlayers bets={game.bets} />
         </AviatorStage>
+        <GameWinReadout amount={game.bets.reduce((sum, bet) => sum + (bet.user_id === game.me && bet.status === 'cashed' ? bet.payout || 0 : 0), 0)} />
         <div className="grid shrink-0 grid-cols-2 gap-2">
           <AviatorBetCard color="red" slot={betSlot(game, 1)} onAutoSet={(v) => game.setAutoTarget(1, v)} />
           <AviatorBetCard color="green" slot={betSlot(game, 2)} onAutoSet={(v) => game.setAutoTarget(2, v)} />

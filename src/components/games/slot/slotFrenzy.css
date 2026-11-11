@@ -7,8 +7,8 @@
   background:
     radial-gradient(90% 75% at 50% 10%, rgba(126, 34, 206, 0.55) 0%, transparent 70%),
     linear-gradient(180deg, #2d0b59 0%, #1c0b3b 52%, #13092b 100%);
-  padding-bottom: 4px;
-  border-bottom: 2px solid #58359e;
+  padding-bottom: 0;
+  border-bottom: 0;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.65);
 }
 

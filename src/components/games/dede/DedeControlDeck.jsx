@@ -13,7 +13,7 @@ export default function DedeControlDeck({ game, onCoins }) {
   const affordable = game.coins >= game.sessionPrice;
   return (
     <footer className="dede-reference-deck">
-      <div className="dede-reference-win"><span>WIN</span><FitGameText as="strong">{formatCoins(game.win)}</FitGameText></div>
+      <div className="dede-reference-win"><span>WIN / KAZANÇ</span><FitGameText as="strong">{formatCoins(game.win)}</FitGameText></div>
       <div className="dede-reference-center">
         <button type="button" className="dede-reference-buy" disabled={busy || active || disabled} onClick={affordable ? game.buySession : onCoins} aria-label={affordable ? '15 çevirme paketi satın al' : 'Coin yükle'}>
           <span className="dede-reference-crown" aria-hidden="true">♛</span>

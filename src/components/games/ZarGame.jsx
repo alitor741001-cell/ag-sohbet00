@@ -4,6 +4,7 @@ import '@/styles/zar.css';
 import '@/styles/zar2.css';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
 import GameCoinBar from '@/components/games/shared/GameCoinBar';
+import GameWinReadout from '@/components/games/shared/GameWinReadout';
 import GameHelpSheet from '@/components/games/help/GameHelpSheet';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { SHAKE_HIDE_MS, outcomeName, formatCoins } from './zar/zarConfig';
@@ -123,6 +124,7 @@ export default function ZarGame({ onExit, onBack }) {
       </main>
 
       <footer className="rl2-footer zr2-footer">
+        <GameWinReadout amount={game.payout} />
         <ZarChipRow
           coins={game.available}
           chip={game.chip}

@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import GameHelpSheet from './help/GameHelpSheet';
 import { useSize } from '@/hooks/use-size';
 import { useCurrentUser } from '@/lib/useCurrentUser';
-import { ART_HEAD_HEIGHT, ART_HEIGHT, ART_VISIBLE_HEIGHT, ART_WIDTH } from './slot/slotLayout';
+import { ART_HEAD_HEIGHT, ART_HEIGHT, ART_VISIBLE_HEIGHT } from './slot/slotLayout';
 import useSlotGame from './slot/useSlotGame';
 import SlotReels from './slot/SlotReels';
 import SlotWinLines from './slot/SlotWinLines';
@@ -14,8 +14,7 @@ import SlotControlDeck from './slot/SlotControlDeck';
 import { tierOfBet } from './slot/slotConfig';
 import { eliminSound, unlockAudio } from './elimin/eliminSound';
 
-// Görsel alanı doldururken en fazla bu oranda kırpılır; panelde siyah boşluk kalmaz.
-const MAX_CROP = 1.06;
+// Üst havuz paneli makara çerçevesine doğrudan bitişir.
 // Kademe uyarısı oyun ekranının üst kenarından bu kadar aşağıda durur.
 const BADGE_TOP = 8;
 const WIN_FLASH_MS = 2400;
@@ -65,14 +64,12 @@ export default function SlotGame({ onExit, onBack, roomId }) {
   // Görsel, kendi üst jackpot paneli ile alt kontrol alanı arasında gösterilir.
   const areaWidth = size?.width || 0;
   const areaHeight = size?.height || 0;
-  const fit = Math.min(areaWidth / ART_WIDTH, areaHeight / ART_VISIBLE_HEIGHT);
-  const cover = Math.max(areaWidth / ART_WIDTH, areaHeight / ART_VISIBLE_HEIGHT);
-  const scale = Math.min(cover || 0, (fit || 0) * MAX_CROP);
-  const width = ART_WIDTH * scale;
-  const height = ART_HEIGHT * scale;
-  // Görselin görünen yüksekliği ve üstten kırpılan payı.
-  const viewHeight = ART_VISIBLE_HEIGHT * scale;
-  const headOffset = ART_HEAD_HEIGHT * scale;
+  // Çerçeve kalan alanı doldurur: oran sınırlaması üstte boş şerit bırakmaz.
+  const scaleY = areaHeight / ART_VISIBLE_HEIGHT;
+  const width = areaWidth;
+  const height = ART_HEIGHT * scaleY;
+  const viewHeight = areaHeight;
+  const headOffset = ART_HEAD_HEIGHT * scaleY;
   const ready = game.status === 'ready';
   // Bahis kademesi: kademe atlayınca üstte kırmızı uyarı çıkar.
   const tier = tierOfBet(game.bet, game.lines);
