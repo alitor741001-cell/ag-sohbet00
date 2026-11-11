@@ -1,4 +1,7 @@
 /* Oyun kimliğine bağlı alt kontrol tasarımları. İşlevler ve bahis kuralları değişmez. */
+/* Oyunun kendi geri düğmesi gizlenir: en üstteki oyun menüsünün geri düğmesi yeterlidir. */
+.game-controls-themed button[aria-label="Oyun listesine dön"],
+.game-controls-themed .av-header button[aria-label="Geri"] { display: none !important; }
 .game-controls-themed[data-game] { --control-accent: var(--slot-gold); --control-companion: var(--slot-purple); --control-surface: var(--slot-surface); --control-radius: 12px; }
 .game-controls-themed[data-game="dede-olympus"] { --control-accent: var(--premium-gold-light); --control-companion: var(--level-violet); --control-radius: 5px 17px; }
 .game-controls-themed[data-game="seker"] { --control-accent: var(--fantasy-princess); --control-companion: var(--slot-cyan, var(--score-blue)); --control-radius: 24px; }

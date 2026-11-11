@@ -24,6 +24,18 @@ export default function GamePanel({ open, onClose, roomId, initialGame = null, f
   useBackDismiss(open, onClose);
   usePageScrollLock(open && broadcasterState(user).games);
   const timerRef = useRef(null);
+  // Sesli odadaki toplam hediye kartının alt kenarı: oyun paneli buradan başlar.
+  const [roomTop, setRoomTop] = useState(0);
+  useEffect(() => {
+    if (!open || !roomId) return undefined;
+    const measure = () => {
+      const pill = document.querySelector('[data-room-gift-pill]');
+      setRoomTop(pill ? Math.max(0, Math.round(pill.getBoundingClientRect().bottom + 4)) : 0);
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [open, roomId]);
 
   useEffect(() => () => window.clearTimeout(timerRef.current), []);
 
@@ -69,18 +81,20 @@ export default function GamePanel({ open, onClose, roomId, initialGame = null, f
 
   // Oyun merkezi yarım panel olarak açılır; oyun seçilince (veya fullList ile) tüm ekrana yayılır.
   const full = !!selected || fullList;
+  const inRoom = full && !!roomId;
 
   return (
     <div className="fixed inset-0 z-[185] flex flex-col justify-end">
       {!full && (
         <button type="button" aria-label="Oyun panelini kapat" onClick={onClose} className="absolute inset-0 bg-black/70 backdrop-blur-[2px]" />
       )}
-      {/* Tam ekran değil: panel ekranın alt bölümünü kaplar, üstteki koltuklar görünür kalır. */}
-      {full && <div aria-hidden="true" className="absolute inset-0 bg-black/45 backdrop-blur-[1px]" />}
+      {/* Sesli odada panel, toplam hediye kartının hemen altına kadar açılır; ana sayfada tam ekrandır. */}
+      {inRoom && <div aria-hidden="true" className="absolute inset-0 bg-black/45 backdrop-blur-[1px]" />}
       <div
+        style={inRoom ? { height: `calc(100% - ${roomTop}px)` } : undefined}
         className={
           full
-            ? 'relative flex h-[68%] w-full flex-col overflow-hidden rounded-t-[26px] bg-slot text-slot-text ring-1 ring-[#F2CE6B]/40'
+            ? `relative flex h-full w-full flex-col overflow-hidden bg-slot text-slot-text ${inRoom ? 'rounded-t-[26px] ring-1 ring-[#F2CE6B]/40' : ''}`
             /* Yükseklik önce eski cihazlar için vh, destekleyenlerde dvh ile ölçülür. */
             : 'animate-sheet-up relative flex h-[60vh] supports-[height:100dvh]:h-[60dvh] w-full flex-col overflow-hidden rounded-t-[26px] bg-gradient-to-b from-[#2C1512] to-[#150A0A] text-slot-text ring-1 ring-[#F2CE6B]/40'
         }

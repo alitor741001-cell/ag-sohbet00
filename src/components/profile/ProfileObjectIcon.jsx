@@ -1,4 +1,3 @@
-import { Image } from '@/components/ui/image';
 import useProfileIconPng from '@/hooks/useProfileIconPng';
 
 const BASE = 'https://base44.app/api/apps/6a77d66e4da6de214628ee62/files/mp/public/6a77d66e4da6de214628ee62';
@@ -23,12 +22,11 @@ const ART = {
 export default function ProfileObjectIcon({ kind, Icon }) {
   const original = ART[kind];
   const source = original ? (original.startsWith('https://') ? original : `${BASE}/${original}`) : '';
-  const bagPng = useProfileIconPng(kind === 'bag' ? source : '');
-  const transparent = kind === 'bag' ? bagPng : source;
+  // Tüm ikonlar çanta ikonu gibi işlenir: kenara bağlı beyaz kare zemin temizlenir.
+  const transparent = useProfileIconPng(source);
   return (
     <span className="relative flex h-[46px] w-[58px] shrink-0 items-center justify-center" aria-hidden="true">
-      {transparent ? <Image src={transparent} alt="" fittingType="fit"
-        className="h-full w-full" blurPlaceholder={false} />
+      {transparent ? <img src={transparent} alt="" className="h-full w-full object-contain" />
         : <Icon className="h-8 w-8 text-premium-gold-light" />}
     </span>
   );

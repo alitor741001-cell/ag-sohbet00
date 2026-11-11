@@ -43,7 +43,7 @@ export default function useProfileIconPng(src) {
   const [result, setResult] = useState(null);
   useEffect(() => {
     let active = true;
-    if (src) prepare(src).then(url => active && setResult({ src, url })).catch(() => active && setResult(null));
+    if (src) prepare(src).then(url => active && setResult({ src, url })).catch(() => active && setResult({ src, url: src }));
     return () => { active = false; };
   }, [src]);
   return result?.src === src ? result.url : '';
