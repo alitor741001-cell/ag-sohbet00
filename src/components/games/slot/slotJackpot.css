@@ -1,0 +1,99 @@
+/* Slot havuz panosu: koyu kadife zemin, altın çerçeveli büyük jackpot ve renkli havuz kapsülleri. */
+.sjp {
+  container-type: inline-size;
+  padding: 6px 8px 8px;
+  background:
+    radial-gradient(120% 140% at 50% -30%, rgba(168, 85, 247, 0.45), transparent 60%),
+    linear-gradient(180deg, #170c2b, #0a0616);
+  box-shadow: inset 0 -8px 18px rgba(0, 0, 0, 0.7), 0 1px 0 rgba(251, 191, 36, 0.35);
+}
+.sjp-main {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-radius: 16px;
+  padding: 3px 10px 5px;
+  background:
+    linear-gradient(180deg, #2a1240, #12081f) padding-box,
+    linear-gradient(180deg, #fde68a, #d97706 55%, #fde68a) border-box;
+  border: 2px solid transparent;
+  animation: sjp-breathe 2.6s ease-in-out infinite;
+}
+.sjp-main-shine {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.28) 50%, transparent 70%);
+  animation: sjp-shine 4s ease-in-out infinite;
+  pointer-events: none;
+}
+.sjp-main-label {
+  font-size: 2.6cqw;
+  font-weight: 900;
+  letter-spacing: 0.3em;
+  color: #fde68a;
+  text-shadow: 0 0 6px rgba(251, 191, 36, 0.8);
+}
+.sjp-main-value {
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  font-weight: 900;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+  background: linear-gradient(180deg, #fffbe6, #fcd34d 45%, #f59e0b);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.7));
+}
+.sjp-row {
+  margin-top: 6px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 5px;
+}
+.sjp-pool {
+  --tone: 210 90% 60%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-radius: 9999px;
+  padding: 2px 4px 3px;
+  background: linear-gradient(180deg, hsl(var(--tone) / 0.35), rgba(0, 0, 0, 0.75));
+  border: 1px solid hsl(var(--tone) / 0.8);
+  box-shadow: 0 0 10px -2px hsl(var(--tone) / 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+.sjp-mini { --tone: 145 70% 50%; }
+.sjp-big { --tone: 200 90% 58%; }
+.sjp-mega { --tone: 275 85% 65%; }
+.sjp-xmega { --tone: 350 90% 60%; }
+.sjp-pool-label {
+  font-size: 2.1cqw;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  color: hsl(var(--tone));
+}
+.sjp-pool-value {
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  font-weight: 900;
+  line-height: 1.1;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 6px hsl(var(--tone));
+}
+@keyframes sjp-breathe {
+  0%, 100% { box-shadow: 0 0 10px -2px rgba(251, 191, 36, 0.55); }
+  50% { box-shadow: 0 0 22px 0 rgba(251, 191, 36, 0.9); }
+}
+@keyframes sjp-shine {
+  0% { transform: translateX(-120%); }
+  55%, 100% { transform: translateX(120%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sjp-main, .sjp-main-shine { animation: none; }
+}
