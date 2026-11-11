@@ -1,4 +1,4 @@
-import { ArrowLeftRight, Building2, Gem, Handshake, MailOpen, Mic2, Sparkles, Wallet } from 'lucide-react';
+import { ArrowLeftRight, Building2, Gem, Handshake, MailOpen, Mic2, Sparkles } from 'lucide-react';
 
 /**
  * Ajans bölümleri: her rol için ayrı sayfa bağlantıları.
@@ -6,7 +6,6 @@ import { ArrowLeftRight, Building2, Gem, Handshake, MailOpen, Mic2, Sparkles, Wa
  */
 const AGENCY_SECTIONS = {
   owner: [
-    { key: 'kazanc', label: 'Kazançlarım', path: '/ajans/kazanc', icon: Wallet },
     { key: 'yayincilar', label: 'Yayıncı Paneli', path: '/ajans/yayincilar', icon: Mic2 },
     { key: 'asistanlar', label: 'Asistanlar', path: '/ajans/asistanlar', icon: Handshake },
     { key: 'kota', label: 'Kota Tablosu', path: '/ajans/kota-tablosu', icon: Gem },
@@ -16,7 +15,6 @@ const AGENCY_SECTIONS = {
   ],
   assistant: [
     { key: 'yayincilar', label: 'Yayıncılarım', path: '/ajans/yayincilar', icon: Mic2 },
-    { key: 'kazanc', label: 'Kazançlarım', path: '/ajans/kazanc', icon: Wallet },
     { key: 'kota', label: 'Kota Tablosu', path: '/ajans/kota-tablosu', icon: Gem },
     { key: 'davetler', label: 'Davetler', path: '/ajans/davetler', icon: MailOpen },
     { key: 'ajansim', label: 'Ajansım', path: '/ajans/ajansim', icon: Building2 },

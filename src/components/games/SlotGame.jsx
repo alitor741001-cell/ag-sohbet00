@@ -106,12 +106,10 @@ export default function SlotGame({ onExit, onBack, roomId }) {
         {width > 0 && (
           <div className="relative overflow-hidden" style={{ width, height: viewHeight }}>
             <div className="absolute inset-x-0" style={{ height, top: -headOffset }}>
-              {/* Altın çerçeveli, mor-lacivert makara paneli. */}
+              {/* Altın çerçeveli makara paneli: makara penceresini tam sarar, üstte boşluk kalmaz. */}
               <div
-                className="absolute rounded-[26px] border-[6px] border-amber-400 bg-[linear-gradient(180deg,#1e0b3d,#0b0620)] shadow-[0_0_34px_rgba(245,158,11,0.6),inset_0_0_0_2px_rgba(253,230,138,0.75),inset_0_0_26px_rgba(192,38,211,0.5)]"
-                style={inRoom
-                  ? { left: '-3%', width: '106%', top: '28.6%', height: '53.8%' }
-                  : { left: '-1%', width: '102%', top: '28.9%', height: '53.4%' }}
+                className="absolute rounded-[18px] border-[5px] border-amber-400 bg-[linear-gradient(180deg,#1e0b3d,#0b0620)] shadow-[0_0_34px_rgba(245,158,11,0.6),inset_0_0_0_2px_rgba(253,230,138,0.75),inset_0_0_26px_rgba(192,38,211,0.5)]"
+                style={{ left: '1.6%', width: '96.8%', top: '33.4%', height: '44.9%' }}
               />
 
               {/* Tur sırasında her makaranın sembolleri değişerek aşağı doğru kayar. */}

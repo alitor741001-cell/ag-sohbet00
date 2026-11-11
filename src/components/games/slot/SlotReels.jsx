@@ -26,7 +26,7 @@ export default function SlotReels({ spinning, stopping, slow, grid, wins }) {
   }, [spinning]);
   const shown = grid || PREVIEW_GRID;
   return <>
-    <div aria-hidden="true" className="pointer-events-none absolute overflow-hidden" style={SLOT_LAYOUT.reelWindow}>
+    <div aria-hidden="true" className="pointer-events-none absolute overflow-hidden" style={{ ...SLOT_LAYOUT.reelWindow, borderRadius: '0.85rem' }}>
       <span className="slot-reel-bed absolute inset-0" />
 
       {spinning && strips.length ? strips.map((random, index) => (

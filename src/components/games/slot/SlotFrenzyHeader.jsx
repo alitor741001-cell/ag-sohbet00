@@ -41,7 +41,7 @@ export default function SlotFrenzyHeader({
         </div>
 
         <div className="sfz-arch">
-          <span className="sfz-brand-text">SLOT FRENZY</span>
+          <span className="sfz-brand-text">SLOT</span>
         </div>
 
         <div className="sfz-right-orbs">

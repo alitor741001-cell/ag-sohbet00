@@ -7,7 +7,6 @@ const loaders = {
   '/arkadaslar': () => import('@/pages/Friends'),
   '/bildirimler': () => import('@/pages/Notifications'),
   '/ajans': () => import('@/pages/AgencyPage'),
-  '/ajans/kazanc': () => import('@/pages/agency/AgencyEarnings'),
   '/ajans/kota-tablosu': () => import('@/pages/agency/AgencyQuota'),
   '/ajans/yayincilar': () => import('@/pages/agency/AgencyBroadcasters'),
   '/ajans/asistanlar': () => import('@/pages/agency/AgencyAssistants'),

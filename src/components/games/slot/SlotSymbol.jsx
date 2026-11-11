@@ -17,7 +17,7 @@ export default function SlotSymbol({ symbol, top, height, win }) {
   const move = win && MOVE.includes(symbol);
   const anim = win && !move ? 'slot-win-blink' : '';
   return (
-    <span className={`absolute left-0 flex w-full items-center justify-center p-[7%] ${anim}`} style={{ top, height }}>
+    <span className={`absolute left-0 flex w-full items-center justify-center p-[2%] ${anim}`} style={{ top, height }}>
       {/* Dönerken anında görünmesi için temizlenmiş görsel doğrudan, beklemeden çizilir. */}
       <img
         src={art}
@@ -30,7 +30,7 @@ export default function SlotSymbol({ symbol, top, height, win }) {
       />
       {/* Kart sabit kalır; sadece içteki hayvan kısmı kopya katmanda hareket eder. */}
       {move && (
-        <span className="absolute inset-[7%] flex items-center justify-center" style={{ transform: 'scale(1.28)', clipPath: 'inset(16% round 12%)' }}>
+        <span className="absolute inset-[2%] flex items-center justify-center" style={{ transform: 'scale(1.28)', clipPath: 'inset(16% round 12%)' }}>
           <img src={art} alt="" draggable={false} className="slot-win-move aspect-square h-full max-w-full object-contain" />
         </span>
       )}
