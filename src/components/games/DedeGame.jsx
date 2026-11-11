@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Zap } from 'lucide-react';
+
 import '@/styles/dede.css';
 import '@/styles/gameControls.css';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
@@ -9,15 +9,14 @@ import useDedeVisibleOrbs from '@/components/games/dede/useDedeVisibleOrbs';
 import '@/components/games/dede/dedeWizard.css';
 import useDedeGame from './dede/useDedeGame';
 import DedeReels from './dede/DedeReels';
-import DedeHud from './dede/DedeHud';
+import DedeControlDeck from '@/components/games/dede/DedeControlDeck';
 import GameHelpSheet from './help/GameHelpSheet';
-import GameBetBar from './controls/GameBetBar';
-import GameSpinButton from './controls/GameSpinButton';
+
 import DedeWinOverlay from './dede/DedeWinOverlay';
-import DedeMultiplierCircle from './dede/DedeMultiplierCircle';
+
 import DedeOrbMerge from './dede/DedeOrbMerge';
 
-import { DEDE_LINES, formatCoins } from './dede/dedeConfig';
+import { formatCoins } from './dede/dedeConfig';
 
 const WIN_FLASH_MS = 2400;
 
@@ -34,7 +33,7 @@ export default function DedeGame({ onExit, onBack }) {
   const [helpOpen, setHelpOpen] = useState(false);
   // Kazanç yazısının kapanma sayacı: yeni tur başlasa da çalışmaya devam eder.
   const flashTimer = useRef(null);
-  const ready = game.status === 'ready';
+
 
 
   // Tur sonucu: büyük kazançta kutlama ekranı, küçük kazançta kısa parıltı.
@@ -90,46 +89,12 @@ export default function DedeGame({ onExit, onBack }) {
           </div>
         </div>
 
-        <DedeHud
-          coins={game.coins}
-          bet={game.bet}
-          lines={DEDE_LINES}
-          win={game.win}
-          totalWon={game.totalWon}
-          busy={game.spinning}
-          onCoins={() => setCoinOpen(true)}
-          onSession={game.buySession}
-          sessionPrice={game.sessionPrice}
-          sessionSpins={game.sessionSpins}
-          sessionSize={game.sessionSize}
-        />
+
 
         {game.status === 'loading' && <p className="text-[11px] font-bold text-[#ffe9a8]">Oyun yükleniyor...</p>}
       </main>
 
-      <footer className="relative z-10 flex shrink-0 flex-col items-center gap-2 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-1">
-        <div className="gctl-deck ref-deck">
-          <GameBetBar
-            bet={game.bet}
-            lines={DEDE_LINES}
-            disabled={game.spinning || game.intro}
-            onStep={game.changeBet}
-            onMax={game.maxBet}
-            format={formatCoins}
-          />
-          <GameSpinButton
-            spinning={game.spinning}
-            disabled={!ready || game.intro}
-            auto={game.auto}
-            icon={Zap}
-            onSpin={game.spin}
-            onStop={game.stop}
-            onAuto={game.toggleAuto}
-            /* Biriken çarpan çemberi: inen küreler burada birikmiş çarpanla birleşir. */
-            extra={<DedeMultiplierCircle multiplier={game.multiplier} orbs={game.orbs} />}
-          />
-        </div>
-      </footer>
+      <DedeControlDeck game={game} onCoins={() => setCoinOpen(true)} />
 
       {flash > 0 && !game.spinning && !prize && game.sessionResult === null && (
         <p

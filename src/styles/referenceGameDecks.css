@@ -1,0 +1,62 @@
+/* İki yüklenen referanstaki geometri: mor slot konsolu ve Olympos altın konsolu. */
+.game-quick-nav { position:relative; z-index:30; display:flex; flex:none; align-items:center; gap:18px; padding:8px 12px; padding-top:calc(8px + env(safe-area-inset-top,0px)); background:hsl(var(--arcade-plum)); }
+.game-quick-back { display:grid; flex:none; place-items:center; width:40px; height:40px; border-radius:50%; background:hsl(var(--slot-text)/.1); color:hsl(var(--slot-text)); }
+.game-quick-list { display:flex; flex:1; min-width:0; gap:12px; align-items:center; overflow-x:auto; padding:3px; }
+.game-quick-orb { display:block; flex:none; width:43px; height:43px; padding:2px; overflow:hidden; border:2px solid transparent; border-radius:50%; opacity:.55; background:hsl(var(--slot-text)/.15); }
+.game-quick-orb[aria-current="page"] { opacity:1; border-color:hsl(var(--arcade-gold)); box-shadow:0 0 0 2px hsl(var(--arcade-violet)); }
+.game-quick-orb:focus-visible { outline:2px solid hsl(var(--arcade-cream)); outline-offset:2px; }
+
+.slot-reference-deck { position:relative; z-index:10; flex:none; width:100%; padding:0 8px max(5px,env(safe-area-inset-bottom)); background:linear-gradient(hsl(var(--arcade-violet)),hsl(var(--arcade-plum)) 24%); border-top:4px ridge hsl(var(--arcade-pink)); color:hsl(var(--slot-text)); font-weight:900; }
+.slot-reference-metrics { display:grid; grid-template-columns:.48fr 1fr 1.25fr .95fr; align-items:start; column-gap:4px; }
+.slot-reference-metrics > div { text-align:center; min-width:0; padding:3px 1px 4px; display:flex; flex-direction:column; align-items:center; line-height:1.05; }
+.slot-reference-metrics span { font-size:clamp(10px,3.1vw,15px); color:hsl(var(--arcade-pink)); }
+.slot-reference-metrics strong { font-size:clamp(17px,5vw,25px); line-height:1.1; color:hsl(var(--arcade-cream)); text-shadow:0 2px 0 hsl(var(--arcade-brass)); }
+.slot-reference-metrics .slot-reference-lines { align-self:end; }
+.slot-reference-lines span { color:hsl(var(--slot-text)); }
+.slot-reference-total,.slot-reference-win { min-height:49px; border:2px solid hsl(var(--arcade-violet)); border-top:0; border-radius:0 0 38% 38%; background:linear-gradient(hsl(var(--arcade-violet)/.4),hsl(var(--arcade-plum))); box-shadow:0 3px 4px hsl(var(--arcade-pink)/.25); }
+.slot-reference-auto { margin-top:5px; min-height:34px; padding:3px; border:3px ridge hsl(var(--arcade-cream)); border-radius:22px; color:hsl(var(--slot-orange)); font-size:clamp(11px,3.1vw,16px); font-weight:1000; background:linear-gradient(hsl(var(--arcade-cream)),hsl(var(--arcade-gold)) 60%,hsl(var(--slot-orange))); box-shadow:inset 0 2px 2px hsl(var(--slot-text)),0 2px 3px hsl(var(--arcade-plum)); }
+.slot-reference-auto[aria-pressed="true"] { outline:2px solid hsl(var(--arcade-lime)); }
+.slot-reference-bottom { display:grid; grid-template-columns:1.35fr 1fr .86fr; align-items:center; gap:9px; padding-top:3px; }
+.slot-reference-balance { position:relative; display:flex; align-items:center; gap:5px; min-width:0; min-height:35px; padding:4px 8px; border:2px solid hsl(var(--arcade-pink)/.35); border-radius:24px; background:hsl(var(--arcade-plum)/.8); }
+.slot-reference-balance > strong { flex:1; font-size:14px; }
+.slot-reference-balance > svg:first-child { flex:none; color:hsl(var(--arcade-gold)); }
+.slot-reference-balance small { position:absolute; top:-8px; right:12px; background:hsl(var(--slot-green-deep)); font-size:9px; border-radius:5px; padding:1px 3px; }
+.slot-reference-bet { display:flex; align-items:stretch; min-height:43px; overflow:hidden; border-radius:25px; border:3px ridge hsl(var(--arcade-silver)); background:hsl(var(--arcade-plum)); }
+.slot-reference-bet > button { flex:none; width:24%; display:grid; place-items:center; color:hsl(var(--arcade-plum)); background:linear-gradient(hsl(var(--slot-text)),hsl(var(--arcade-silver)),hsl(var(--slot-text))); }
+.slot-reference-bet > div { flex:1; min-width:0; text-align:center; display:flex; flex-direction:column; justify-content:center; }
+.slot-reference-bet strong { font-size:20px; line-height:1; color:hsl(var(--arcade-pink)); }
+.slot-reference-max { color:hsl(var(--arcade-pink)); font-size:8px; line-height:1.1; }
+.slot-reference-start { min-height:58px; margin-top:-12px; border:3px ridge hsl(var(--arcade-cream)); border-radius:20px; background:linear-gradient(hsl(var(--arcade-cream)/.8),hsl(var(--arcade-lime)) 45%,hsl(var(--slot-green-deep))); color:hsl(var(--arcade-cream)); text-shadow:0 2px 1px hsl(var(--slot-green-deep)); font-size:20px; box-shadow:inset 0 0 0 4px hsl(var(--arcade-lime)/.8),inset 0 7px 2px hsl(var(--slot-text)/.4); }
+
+.dede-reference-deck { position:relative; z-index:10; flex:none; color:hsl(var(--arcade-cream)); font-weight:900; padding:0 8px max(5px,env(safe-area-inset-bottom)); background:radial-gradient(ellipse at 50% 55%,hsl(var(--arcade-cream)),transparent 55%),repeating-linear-gradient(155deg,hsl(var(--arcade-gold)/.1) 0 3px,transparent 3px 9px),linear-gradient(hsl(var(--arcade-brass)),hsl(var(--arcade-cream)) 44%,hsl(var(--arcade-wood))); }
+.dede-reference-win { position:relative; display:flex; align-items:center; justify-content:center; gap:12px; height:43px; border:4px ridge hsl(var(--arcade-gold)); border-radius:20px; background:linear-gradient(hsl(var(--arcade-wine)),hsl(var(--arcade-plum))); box-shadow:inset 0 0 0 2px hsl(var(--arcade-pink)/.4); color:hsl(var(--arcade-gold)); text-shadow:0 2px hsl(var(--arcade-brass)); }
+.dede-reference-win::before,.dede-reference-win::after { content:'❖'; position:absolute; top:8px; color:hsl(var(--arcade-gold)); font-size:21px; }
+.dede-reference-win::before { left:-7px; }.dede-reference-win::after { right:-7px; }
+.dede-reference-win > span { font-size:19px; }.dede-reference-win > strong { max-width:60%; font-size:31px; line-height:1; }
+.dede-reference-balance { display:flex; align-items:center; justify-content:center; gap:6px; width:48%; min-height:18px; margin:0 auto; border:2px ridge hsl(var(--arcade-gold)); border-top:0; border-radius:0 0 20px 20px; background:linear-gradient(hsl(var(--arcade-pink)),hsl(var(--arcade-violet))); font-size:11px; }
+.dede-reference-balance span { margin-left:6px; }
+.dede-reference-center { display:grid; grid-template-columns:1fr 1.5fr 1fr; gap:12px; align-items:end; padding:5px 3px 7px; }
+.dede-reference-buy { position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:86px; line-height:1.05; border:5px ridge hsl(var(--arcade-gold)); border-radius:24px 24px 8px 8px; background:linear-gradient(hsl(var(--arcade-violet)),hsl(var(--score-blue)/.6)); box-shadow:0 0 0 2px hsl(var(--arcade-brass)),inset 0 0 0 2px hsl(var(--arcade-cream)); color:hsl(var(--slot-text)); padding:5px 2px; }
+.dede-reference-crown { position:absolute; top:-18px; left:0; right:0; font-size:30px; color:hsl(var(--arcade-gold)); text-shadow:0 2px 1px hsl(var(--arcade-brass)); }
+.dede-reference-buy > span:not(.dede-reference-crown) { font-size:clamp(10px,2.8vw,15px); }
+.dede-reference-buy > strong { max-width:100%; font-size:24px; color:hsl(var(--arcade-gold)); }
+.dede-reference-spin { position:relative; align-self:end; min-height:68px; width:100%; padding:6px; border:7px ridge hsl(var(--arcade-gold)); border-radius:34px 34px 15px 15px; background:linear-gradient(hsl(var(--arcade-cream)),hsl(var(--arcade-brass))); box-shadow:0 0 0 2px hsl(var(--arcade-brass)),inset 0 0 0 2px hsl(var(--arcade-cream)),0 5px 0 hsl(var(--arcade-brass)); }
+.dede-reference-spin::before,.dede-reference-spin::after { position:absolute; bottom:0; content:'❧'; font-size:38px; color:hsl(var(--arcade-gold)); text-shadow:0 1px hsl(var(--arcade-brass)); }
+.dede-reference-spin::before { left:-19px; transform:rotate(-65deg); }.dede-reference-spin::after { right:-19px; transform:rotate(65deg) scaleX(-1); }
+.dede-reference-spin > span { display:grid; place-items:center; min-height:43px; border:4px ridge hsl(var(--arcade-emerald)); clip-path:polygon(14% 0,86% 0,100% 22%,100% 78%,86% 100%,14% 100%,0 78%,0 22%); background:linear-gradient(140deg,hsl(var(--arcade-cream)/.65),hsl(var(--arcade-emerald)) 35%,hsl(var(--slot-bg)) 50%,hsl(var(--arcade-emerald)) 64%,hsl(var(--slot-green))); font-size:clamp(22px,6vw,33px); color:hsl(var(--arcade-cream)); text-shadow:0 3px hsl(var(--arcade-brass)); }
+.dede-reference-scroll { position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:90px; padding:4px; border:5px ridge hsl(var(--arcade-wood)); border-radius:9px; background:linear-gradient(90deg,hsl(var(--arcade-brass)/.3),hsl(var(--arcade-cream)),hsl(var(--arcade-brass)/.3)); color:hsl(var(--arcade-brass)); }
+.dede-reference-scroll::before,.dede-reference-scroll::after { content:''; position:absolute; left:-8px; right:-8px; height:9px; border:2px ridge hsl(var(--arcade-wood)); border-radius:8px; background:linear-gradient(hsl(var(--arcade-cream)),hsl(var(--arcade-wood))); }
+.dede-reference-scroll::before { top:-5px; }.dede-reference-scroll::after { bottom:-5px; }
+.dede-reference-scroll > span { font-size:8px; text-align:center; }.dede-reference-scroll > strong { width:100%; text-align:center; font-size:11px; }
+.dede-reference-scroll .dede-mult-circle { width:32px; height:32px; margin:3px 0; opacity:1; }
+.dede-reference-toolbar { display:grid; grid-template-columns:1fr 42px 1.35fr 42px .8fr; align-items:center; gap:4px; padding:4px; border:4px ridge hsl(var(--arcade-wood)); border-radius:12px; background:repeating-linear-gradient(0deg,transparent 0 5px,hsl(var(--arcade-brass)/.12) 5px 6px),linear-gradient(hsl(var(--arcade-cream)),hsl(var(--arcade-wood))); }
+.dede-reference-auto,.dede-reference-max { min-height:30px; padding:2px; border:4px ridge hsl(var(--arcade-gold)); border-radius:18px; background:linear-gradient(hsl(var(--arcade-cream)),hsl(var(--slot-orange))); color:hsl(var(--arcade-brass)); font-size:clamp(9px,2.6vw,13px); }
+.dede-reference-auto[aria-pressed="true"] { box-shadow:0 0 0 2px hsl(var(--arcade-emerald)); }
+.dede-reference-step { display:grid; place-items:center; width:39px; height:39px; border:5px ridge hsl(var(--arcade-silver)); border-radius:50%; background:linear-gradient(hsl(var(--slot-text)),hsl(var(--arcade-silver)),hsl(var(--muted-foreground))); color:hsl(var(--muted-foreground)); box-shadow:0 2px 2px hsl(var(--arcade-brass)); }
+.dede-reference-step svg { width:23px; height:23px; stroke-width:4; }
+.dede-reference-bet { display:flex; min-width:0; flex-direction:column; align-items:center; justify-content:center; border:2px ridge hsl(var(--arcade-cream)); border-radius:7px; padding:4px 2px; background:linear-gradient(hsl(var(--arcade-wood)),hsl(var(--slot-bg))); }
+.dede-reference-bet > strong { width:100%; text-align:center; font-size:17px; line-height:1; }.dede-reference-bet > span { color:hsl(var(--slot-orange)); font-size:8px; margin-top:3px; }
+.slot-reference-deck button:disabled,.dede-reference-deck button:disabled { opacity:.55; cursor:not-allowed; }
+.slot-reference-deck button:focus-visible,.dede-reference-deck button:focus-visible { outline:2px solid hsl(var(--slot-text)); outline-offset:2px; }
+@media (min-width:600px) { .slot-reference-deck,.dede-reference-deck { padding-inline:max(8px,calc((100% - 600px)/2)); }.dede-reference-center { gap:18px; } }
+@media (max-height:600px) and (orientation:landscape) { .game-quick-nav { padding-block:3px; }.game-quick-orb { width:32px; height:32px; }.game-quick-back { width:30px; height:30px; }.dede-reference-center { padding-block:3px; }.dede-reference-buy,.dede-reference-scroll { min-height:58px; }.dede-reference-spin { min-height:50px; }.dede-reference-win { height:32px; }.dede-reference-scroll .dede-mult-circle { height:22px; width:22px; } }

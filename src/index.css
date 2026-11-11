@@ -1366,3 +1366,17 @@ html.no-bounce, html.no-bounce body { overscroll-behavior: none; }
 @media (prefers-reduced-motion: reduce) {
   .flame-live { animation: none; background-size: 100% 100% !important; }
 }
+
+:root, .dark {
+  --arcade-plum: 269 78% 11%;
+  --arcade-violet: 283 86% 43%;
+  --arcade-pink: 302 94% 69%;
+  --arcade-gold: 43 96% 62%;
+  --arcade-cream: 46 100% 85%;
+  --arcade-brass: 31 66% 32%;
+  --arcade-wood: 30 41% 36%;
+  --arcade-silver: 240 9% 82%;
+  --arcade-lime: 91 91% 42%;
+  --arcade-emerald: 151 94% 25%;
+  --arcade-wine: 336 85% 24%;
+}

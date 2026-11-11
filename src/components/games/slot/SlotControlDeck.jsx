@@ -1,28 +1,26 @@
-import React from 'react';
-import GameBetBar from '@/components/games/controls/GameBetBar';
-import GameSpinButton from '@/components/games/controls/GameSpinButton';
-import GameStatCards from '@/components/games/controls/GameStatCards';
-import ReferenceCoinButton from '@/components/games/controls/ReferenceCoinButton';
-import FreeSpinBadge from '@/components/games/slot/FreeSpinBadge';
+import { ChevronRight, Coins, Minus, Plus } from 'lucide-react';
+import FitGameText from '@/components/games/controls/FitGameText';
+import '@/styles/referenceGameDecks.css';
 
-const format = (value) => new Intl.NumberFormat('tr-TR').format(Math.max(0, Math.round(value || 0)));
-
+const format = value => new Intl.NumberFormat('tr-TR').format(Math.max(0, Math.round(value || 0)));
 export default function SlotControlDeck({ coins, bet, lines, win, freeSpins, auto, spinning, ready, onStep, onMax, onAuto, onSpin, onStop, onCoins }) {
-  const items = [
-    { key: 'coins', label: 'COİN BAKİYESİ', value: format(coins) },
-    { key: 'lines', label: 'HAT', value: format(lines) },
-    { key: 'win', label: 'KAZANÇ', value: format(win) },
-    { key: 'stake', label: 'TOPLAM BAHİS', value: format(bet * lines) },
-  ];
   return (
-    <div className="ref-slot-console">
-      <GameStatCards items={items} />
-      <ReferenceCoinButton coins={coins} onClick={onCoins} format={format} />
-      <FreeSpinBadge count={freeSpins} />
-      <div className="gctl-deck ref-deck">
-        <GameBetBar bet={bet} disabled={spinning} maxDisabled={!ready} onStep={onStep} onMax={onMax} format={format} />
-        <GameSpinButton spinning={spinning} disabled={!ready} spinDisabled={!ready} auto={auto} onAuto={onAuto} onSpin={onSpin} onStop={onStop} />
+    <footer className="slot-reference-deck">
+      <div className="slot-reference-metrics">
+        <div className="slot-reference-lines"><span>Çizgiler</span><strong>{lines}</strong></div>
+        <div className="slot-reference-total"><span>Toplam Coinler</span><FitGameText as="strong">{format(bet * lines)}</FitGameText></div>
+        <div className="slot-reference-win"><span>Kazanç</span><FitGameText as="strong">{format(win)}</FitGameText></div>
+        <button type="button" className="slot-reference-auto" disabled={!ready} onClick={onAuto} aria-pressed={auto}>Otomatik</button>
       </div>
-    </div>
+      <div className="slot-reference-bottom">
+        <button type="button" onClick={onCoins} className="slot-reference-balance" aria-label="Coin yükle"><Coins size={21} /><FitGameText as="strong">{format(coins)}</FitGameText><ChevronRight />{freeSpins > 0 && <small>{freeSpins} FREE</small>}</button>
+        <div className="slot-reference-bet">
+          <button type="button" disabled={spinning} onClick={() => onStep(-1)} aria-label="Bahsi azalt"><Minus size={18} /></button>
+          <div><FitGameText as="strong">{format(bet)}</FitGameText><button type="button" disabled={!ready || spinning} onClick={onMax} className="slot-reference-max">MAX</button></div>
+          <button type="button" disabled={spinning} onClick={() => onStep(1)} aria-label="Bahsi artır"><Plus size={18} /></button>
+        </div>
+        <button type="button" className="slot-reference-start" disabled={!spinning && !ready} onClick={spinning ? onStop : onSpin}>{spinning ? 'Dur' : 'Baş'}</button>
+      </div>
+    </footer>
   );
 }

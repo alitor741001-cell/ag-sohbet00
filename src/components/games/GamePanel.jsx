@@ -3,6 +3,7 @@ import { ChevronLeft, Gamepad2, Play } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import { GAMES } from '@/components/games/gameCatalog';
 import GameContent from '@/components/games/GameContent';
+import GameQuickNav from '@/components/games/GameQuickNav';
 import usePageScrollLock from '@/hooks/usePageScrollLock';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { broadcasterState } from '@/lib/broadcaster';
@@ -132,7 +133,12 @@ export default function GamePanel({ open, onClose, roomId, initialGame = null, f
 
         {selected && (
           <div className={`game-layer bg-slot ${phase === 'opening' ? 'game-zoom-in' : phase === 'closing' ? 'game-zoom-out' : ''}`}>
-            <GameContent selected={selected} onExit={onClose} onBack={closeGame} roomId={roomId} />
+            <div className="flex h-full min-h-0 flex-col">
+              <GameQuickNav selected={selected} onSelect={openGame} onBack={onClose} />
+              <div className="relative min-h-0 flex-1 overflow-hidden">
+                <GameContent key={selected} selected={selected} onExit={onClose} onBack={closeGame} roomId={roomId} />
+              </div>
+            </div>
           </div>
         )}
 
