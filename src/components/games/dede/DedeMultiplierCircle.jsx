@@ -5,14 +5,14 @@ import React from 'react';
  * ızgaradaki yerine göre sıraya girer ve çemberin solunda kendi yerinde listelenir;
  * patlayan küreler de aynı sırada kalır, üst üste binmez.
  */
-export default function DedeMultiplierCircle({ multiplier, orbs }) {
+export default function DedeMultiplierCircle({ multiplier, orbs, compact = false }) {
   const landed = [...(orbs || [])].sort((a, b) => (a.reel - b.reel) || (a.row - b.row));
   const total = multiplier > 0 ? multiplier : 1;
 
   return (
     <div className="dede-mult-wrap">
       {/* İnen ve patlayan küreler indikleri sırayla burada durur. */}
-      {landed.length > 0 && (
+      {!compact && landed.length > 0 && (
         <span className="dede-mult-list" aria-hidden="true">
           {landed.map((orb, index) => (
             <span

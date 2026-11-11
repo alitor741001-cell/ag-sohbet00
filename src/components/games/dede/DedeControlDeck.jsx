@@ -22,7 +22,7 @@ export default function DedeControlDeck({ game, onCoins }) {
         </button>
         <button type="button" className="dede-reference-spin" disabled={!game.spinning && disabled} onClick={game.spinning ? game.stop : game.spin} aria-label={game.spinning ? 'Durdur' : 'Çevir'}><span>{game.spinning ? 'STOP' : 'SPIN'}</span></button>
         <div className="dede-reference-scroll">
-          <DedeTray symbols={tray.symbols} orbs={tray.orbs} />
+          <DedeTray symbols={tray.symbols} orbs={[]} />
         </div>
       </div>
       <div className="dede-reference-toolbar">

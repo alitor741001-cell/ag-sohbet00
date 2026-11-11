@@ -74,10 +74,9 @@ export default function FruitGame({ onExit, onBack }) {
 
       </header>
 
-      <main className="relative z-10 flex min-h-0 flex-1 flex-col items-center gap-1 px-0 py-1">
-        {/* Izgara ekranın kalan tüm alanını kaplar: kartlar olabildiğince büyük durur. */}
-        {/* Çerçeve her zaman ekran genişliğini kaplar; alan kısaysa yalnız yüksekliği kısalır. */}
-        <div className="flex min-h-0 w-full flex-1 items-center justify-center [container-type:size]">
+      <main className="relative z-10 flex min-h-0 flex-1 flex-col items-center gap-1 px-0 pb-1 pt-0">
+        {/* Çerçeve her zaman ekran genişliğini kaplar; üstten boşluksuz başlar. */}
+        <div className="flex min-h-0 w-full flex-1 items-start justify-center [container-type:size]">
           <div className="fruit-frame flex h-[min(100cqh,100cqw)] w-full max-w-[46rem] p-1 sm:p-2">
             <FruitReels
               spinning={game.spinning}
@@ -136,12 +135,13 @@ export default function FruitGame({ onExit, onBack }) {
         </div>
       </footer>
 
-      {flash > 0 && !game.spinning && !prize && game.sessionResult === null && (
+      {/* Kazanç tutarı: tur bitince kaybolmaz, sonraki çevirmeye kadar görünür kalır. */}
+      {(flash || game.win) > 0 && !game.spinning && !prize && game.sessionResult === null && (
         <p
-          key={flash}
+          key={flash || game.win}
           className="fruit-float-win pointer-events-none absolute left-1/2 top-[46%] z-20 rounded-full border border-[#ffe9b8]/80 bg-black/75 px-4 py-1.5 font-mono text-base font-black text-[#ffd35c]"
         >
-          KAZANÇ {formatCoins(flash)}
+          KAZANÇ {formatCoins(flash || game.win)}
         </p>
       )}
 

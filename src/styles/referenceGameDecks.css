@@ -1,5 +1,5 @@
 /* İki yüklenen referanstaki geometri: mor slot konsolu ve Olympos altın konsolu. */
-.game-quick-nav { position:relative; z-index:30; display:flex; flex:none; align-items:center; gap:18px; padding:8px 12px; padding-top:calc(8px + env(safe-area-inset-top,0px)); background:hsl(var(--arcade-plum)); }
+.game-quick-nav { position:relative; z-index:30; display:flex; flex:none; align-items:center; gap:18px; padding:4px 12px; padding-top:calc(4px + env(safe-area-inset-top,0px)); background:hsl(var(--arcade-plum)); }
 .game-quick-back { display:grid; flex:none; place-items:center; width:40px; height:40px; border-radius:50%; background:hsl(var(--slot-text)/.1); color:hsl(var(--slot-text)); }
 .game-quick-list { display:flex; flex:1; min-width:0; gap:12px; align-items:center; overflow-x:auto; padding:3px; }
 .game-quick-orb { display:block; flex:none; width:43px; height:43px; padding:2px; overflow:hidden; border:2px solid transparent; border-radius:50%; opacity:.55; background:hsl(var(--slot-text)/.15); }

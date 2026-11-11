@@ -22,8 +22,9 @@
 .ref-stat-icon { position:relative; flex-shrink:0; display:grid; place-items:center; width:22px; height:22px; border-radius:9999px; color:#0b0710; background:radial-gradient(circle at 35% 30%, #fff, hsl(var(--tone)) 55%, hsl(var(--tone) / .6)); box-shadow:0 0 10px hsl(var(--tone) / .8); }
 .ref-stat-icon svg { width:12px; height:12px; }
 .ref-stat-copy { position:relative; display:flex; min-width:0; flex:1; flex-direction:column; align-items:flex-start; overflow:hidden; }
-.ref-stat-copy strong { font:800 clamp(6px,9cqw,10px)/1.15 system-ui,sans-serif; letter-spacing:.05em; color:hsl(var(--tone)); }
-.ref-stat-copy b { font:900 clamp(9px,15cqw,15px)/1.2 system-ui,sans-serif; font-variant-numeric:tabular-nums; color:#fff; }
+.ref-stat-copy strong { font:800 clamp(7px,10cqw,11px)/1.15 system-ui,sans-serif; letter-spacing:.05em; color:hsl(var(--tone)); }
+/* Kazanç tutarı kartın en okunur bilgisi: iri, parlak ve gölgeli yazılır. */
+.ref-stat-copy b { font:900 clamp(12px,18cqw,19px)/1.15 system-ui,sans-serif; font-variant-numeric:tabular-nums; color:#fff; text-shadow:0 0 10px hsl(var(--tone) / .9), 0 1px 0 rgba(0,0,0,.55); }
 /* Kazanç geldiğinde kart parlar. */
 .ref-stat[data-win="1"] { animation: pc-win 1.1s ease-in-out infinite; }
 .ref-stat[data-win="1"] .ref-stat-copy b { color:#bbf7d0; text-shadow:0 0 8px hsl(var(--tone)); }

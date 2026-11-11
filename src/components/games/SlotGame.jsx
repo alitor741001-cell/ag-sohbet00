@@ -141,12 +141,13 @@ export default function SlotGame({ onExit, onBack, roomId }) {
                 </p>
               )}
 
-              {flash > 0 && !game.spinning && !prize && (
+              {/* Kazanç tutarı: tur bitince kaybolmaz, sonraki çevirmeye kadar görünür kalır. */}
+              {(flash || game.win) > 0 && !game.spinning && !prize && (
                 <p
-                  key={flash}
+                  key={flash || game.win}
                   className="game-win-float pointer-events-none absolute left-1/2 top-[54%] z-10 rounded-full border border-slot-gold/60 bg-black/70 px-3 py-1 font-mono text-sm font-black text-slot-gold"
                 >
-                  WIN {format(flash)}
+                  WIN {format(flash || game.win)}
                 </p>
               )}
 

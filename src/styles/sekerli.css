@@ -92,7 +92,7 @@
   flex-direction: column;
   align-items: center;
   gap: 0.45rem;
-  padding: 0.35rem 0.25rem 0;
+  padding: 0;
 }
 
 .sl-stage {
@@ -102,7 +102,7 @@
   flex: 1 1 0;
   container-type: size;
   overflow: hidden;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   gap: 0.6rem;
 }

@@ -94,7 +94,7 @@
   flex-direction: column;
   align-items: center;
   gap: .45rem;
-  padding: .35rem .25rem 0;
+  padding: 0;
   /* Çok kısa ekranlarda içerik kırpılmaz: taşarsa kaydırılır. */
   overflow-y: auto;
 }
@@ -106,7 +106,7 @@
   flex: 1 1 0;
   container-type: size;
   overflow: hidden;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   gap: .6rem;
 }

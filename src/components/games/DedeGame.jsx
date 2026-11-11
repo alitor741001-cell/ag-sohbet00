@@ -18,6 +18,8 @@ import DedeWinOverlay from './dede/DedeWinOverlay';
 import { WIN_CARD_THRESHOLD } from '@/components/games/shared/winCard';
 
 import DedeOrbMerge from './dede/DedeOrbMerge';
+import DedeMultiplierCircle from './dede/DedeMultiplierCircle';
+import useDedeTray from './dede/useDedeTray';
 
 import { formatCoins } from './dede/dedeConfig';
 
@@ -29,6 +31,8 @@ export default function DedeGame({ onExit, onBack, roomId }) {
   // Sesli oda içinde oyun yarım panelde açılır: üst bar kısalır, çerçeve ekranı kaplar.
   const inRoom = !!roomId;
   const strikeOrbs = useDedeVisibleOrbs(game.grid, game.rolling);
+  // Tur boyunca inen ve patlayan çarpanlar sağ üstteki çemberde birikir.
+  const tray = useDedeTray(game);
   // Kazanan nesnelerle aynı dizilimde çarpan varsa mavi; yalnızca çarpan inmesi kırmızı.
   const hasExplodingSymbols = (game.wins || []).some(win => !win.scatter && win.cells?.length > 0);
   const strikeTone = hasExplodingSymbols && (strikeOrbs.length > 0 || (game.orbs || []).length > 0) ? 'blue' : 'red';
@@ -109,6 +113,10 @@ export default function DedeGame({ onExit, onBack, roomId }) {
                 explode={game.explode}
               />
               <DedeStorm orbs={strikeOrbs} spinKey={game.spinKey} rolling={game.rolling} grid={game.grid} tone={strikeTone} />
+              {/* Sağ üst çember: biriken çarpan tek yerde toplanır. */}
+              <span className="pointer-events-none absolute right-1 top-1 z-30">
+                <DedeMultiplierCircle multiplier={game.multiplier} orbs={tray.orbs} compact />
+              </span>
             </div>
           </div>
         </div>
@@ -120,12 +128,13 @@ export default function DedeGame({ onExit, onBack, roomId }) {
 
       <DedeControlDeck game={game} onCoins={() => setCoinOpen(true)} />
 
-      {flash > 0 && !game.spinning && !prize && game.sessionResult === null && (
+      {/* Kazanç tutarı: tur bitince kaybolmaz, sonraki çevirmeye kadar görünür kalır. */}
+      {(flash || game.win) > 0 && !game.spinning && !prize && game.sessionResult === null && (
         <p
-          key={flash}
+          key={flash || game.win}
           className="dede-float-win pointer-events-none absolute left-1/2 top-[48%] z-20 w-max rounded-full border border-[#ffe9a8]/80 bg-black/75 px-4 py-1.5 font-mono text-base font-black text-[#ffd35c]"
         >
-          KAZANÇ {formatCoins(flash)}
+          KAZANÇ {formatCoins(flash || game.win)}
         </p>
       )}
 
