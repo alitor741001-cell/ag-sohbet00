@@ -107,7 +107,13 @@ export default function usePkLiveKit({ matchId, enabled, selfId }) {
         setMicOn(true);
         scanRemote(instance);
         // Karşı taraf kamerasını/mikrofonunu kapatınca durum kısa sürede yansısın.
-        infoTimer = window.setInterval(() => scanRemote(instance), 2500);
+        // Mikrofon PK boyunca açık kalır: ses karşı tarafa ve odaya kesintisiz gider.
+        infoTimer = window.setInterval(() => {
+          scanRemote(instance);
+          if (instance.localParticipant?.isMicrophoneEnabled === false) {
+            instance.localParticipant.setMicrophoneEnabled(true).catch(() => null);
+          }
+        }, 2500);
       } catch (connectError) {
         if (cancelled) return;
         setStatus('error');

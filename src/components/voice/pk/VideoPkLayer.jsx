@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Track } from 'livekit-client';
-import { Loader2, Mic, MicOff, PhoneOff, Play, RotateCcw, UserPlus, Video, VideoOff, Volume2, VolumeX, WifiOff, X } from 'lucide-react';
+import { Loader2, Mic, PhoneOff, Play, RotateCcw, UserPlus, Video, VideoOff, Volume2, VolumeX, WifiOff, X } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import useVideoPk from '@/hooks/useVideoPk';
 import usePkLiveKit from '@/hooks/usePkLiveKit';
@@ -54,7 +54,7 @@ export default function VideoPkLayer({ open, onOpen, onClose, roomId, user, onOp
 
   const {
     room, localTrack, remoteTracks, remoteInfo, status, error,
-    camOn, setCameraEnabled, micOn, setMicEnabled, startAudio,
+    camOn, setCameraEnabled, micOn, startAudio,
   } = usePkLiveKit({
     matchId: open ? active?.id : null,
     // Kamera yalnızca alan açıkken ve tur sürerken yayınlanır; tur bitince kaynak serbest bırakılır.
@@ -293,14 +293,10 @@ export default function VideoPkLayer({ open, onOpen, onClose, roomId, user, onOp
                     >
                       {camOn ? <Video className="h-3.5 w-3.5" /> : <VideoOff className="h-3.5 w-3.5" />}
                     </button>
-                    <button
-                      type="button"
-                      onClick={(event) => { event.stopPropagation(); setMicEnabled(!micOn); }}
-                      aria-label={micOn ? 'Mikrofonu kapat' : 'Mikrofonu aç'}
-                      className={`flex h-6 w-6 items-center justify-center rounded-full ring-1 active:scale-95 ${micOn ? 'bg-black/60 text-white ring-white/25' : 'bg-red-500/85 text-white ring-white/30'}`}
-                    >
-                      {micOn ? <Mic className="h-3.5 w-3.5" /> : <MicOff className="h-3.5 w-3.5" />}
-                    </button>
+                    {/* Mikrofon kapatılamaz: ses PK koltuğundan oda sistemine gider. */}
+                    <span className="flex h-6 items-center gap-0.5 rounded-full bg-black/60 px-1.5 text-[8.5px] font-black text-emerald-300 ring-1 ring-white/25">
+                      <Mic className="h-3 w-3" /> PK
+                    </span>
                   </>
                 )}
               />

@@ -366,7 +366,9 @@ export default function VoiceRoom() {
 
   // Görüntülü PK canlıyken kişi koltuğa oturmuş gibi odaya bağlanır: mikrofonu odaya
   // gider, odadaki herkes onu duyar; kendisi de odayı ve rakibini duyar.
-  const pkLive = !!pkMatch && pkMatch.status === 'live' && !!pkMatch.started
+  // PK koltuğu: maçın tarafı olan kişi süre başlamamış olsa da koltuğa oturmuş sayılır —
+  // mikrofonu oda sistemine açılır, odadaki herkes ve rakip sesini duyar.
+  const pkLive = !!pkMatch && pkMatch.status === 'live'
     && (pkMatch.host_id === user?.id || pkMatch.guest_id === user?.id);
 
   const voice = useVoiceChat({
