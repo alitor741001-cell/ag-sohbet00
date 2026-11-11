@@ -15,7 +15,7 @@ const STEPS = [
 const STEP_MS = 2400;
 
 /** Dede üst barı: altın kemerli ince şerit — çevirme hakkı, başlık ve sırayla gelen değerler. */
-export default function DedeTopBar({ onBack, onHelp, spins = 0, stats }) {
+export default function DedeTopBar({ onBack, onHelp, spins = 0, stats, compact = false }) {
   const [step, setStep] = useState(0);
 
   useEffect(() => {
@@ -27,8 +27,7 @@ export default function DedeTopBar({ onBack, onHelp, spins = 0, stats }) {
   const value = current.key === 'multiplier' ? `x${stats?.multiplier || 0}` : format(stats?.[current.key]);
 
   return (
-    <header className="dtb">
-      <span aria-hidden="true" className="dtb-arches" />
+    <header className={`dtb${compact ? ' dtb-compact' : ''}`}>
       <div className="dtb-row">
         <button type="button" onClick={onBack} aria-label="Oyun listesine dön" className="dtb-orb">
           <ChevronLeft className="h-5 w-5" />

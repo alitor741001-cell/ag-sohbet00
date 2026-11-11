@@ -22,8 +22,10 @@ import { formatCoins } from './dede/dedeConfig';
 const WIN_FLASH_MS = 2400;
 
 /** DEDE: Olympos'un çarpan küreleri. 6x5 ızgarada semboller patlar, yenileri düşer. */
-export default function DedeGame({ onExit, onBack }) {
+export default function DedeGame({ onExit, onBack, roomId }) {
   const game = useDedeGame();
+  // Sesli oda içinde oyun yarım panelde açılır: üst bar kısalır, çerçeve ekranı kaplar.
+  const inRoom = !!roomId;
   const strikeOrbs = useDedeVisibleOrbs(game.grid, game.rolling);
   // Kazanan nesnelerle aynı dizilimde çarpan varsa mavi; yalnızca çarpan inmesi kırmızı.
   const hasExplodingSymbols = (game.wins || []).some(win => !win.scatter && win.cells?.length > 0);
@@ -65,13 +67,20 @@ export default function DedeGame({ onExit, onBack }) {
         onBack={onBack}
         onHelp={() => setHelpOpen(true)}
         spins={game.sessionSpins}
+        compact={inRoom}
         stats={{ bet: game.bet, coins: game.coins, totalWon: game.totalWon, win: game.win, multiplier: game.multiplier }}
       />
 
       <main className="relative z-10 flex min-h-0 flex-1 flex-col items-center gap-1 px-0 py-1">
         {/* Izgara ekranın kalan tüm alanını kaplar: madalyonlar olabildiğince büyük durur. */}
         <div className="flex min-h-0 w-full flex-1 items-center justify-center">
-          <div className="dede-frame flex aspect-[6/5] max-h-full w-full max-w-[54rem] p-1.5 sm:p-2">
+          <div
+            className={
+              inRoom
+                ? 'dede-frame flex h-full w-full p-1'
+                : 'dede-frame flex aspect-[6/5] max-h-full w-full max-w-[54rem] p-1.5 sm:p-2'
+            }
+          >
             <div className="relative flex min-h-0 w-full">
               <DedeReels
                 rolling={game.rolling}

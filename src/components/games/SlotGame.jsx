@@ -41,7 +41,9 @@ export default function SlotGame({ onExit, onBack, roomId }) {
   const flashTimer = useRef(null);
   const areaRef = useRef(null);
   const size = useSize(areaRef);
-  const tickerHeight = TICKER_ROW_HEIGHT * TICKER_ROWS;
+  // Sesli oda içinde oyun yarım panelde açılır: üst sahne kısalır, oyun alanı genişler.
+  const inRoom = !!roomId;
+  const tickerHeight = TICKER_ROW_HEIGHT * (inRoom ? 2 : TICKER_ROWS);
   // Jackpot panelinin altında kalan boşluk: görsel, alanı yükseklik olarak
   // dolduramadığı için artan pay panelin üst dolgusuna eklenir ve panel
   // makinenin üst kenarına kadar iner.
@@ -106,10 +108,10 @@ export default function SlotGame({ onExit, onBack, roomId }) {
 
       {/* Üst: kazanan şeridi ve kendi jackpot konsolumuz. */}
       <div className="relative z-10 shrink-0">
-        <SlotFrenzyHeader onHelp={() => setHelpOpen(true)}>
+        <SlotFrenzyHeader onHelp={() => setHelpOpen(true)} compact={inRoom}>
           <WinnerTicker height={tickerHeight} />
         </SlotFrenzyHeader>
-        <SlotJackpotBar pools={game.pools} topGap={panelGap} />
+        <SlotJackpotBar pools={game.pools} topGap={inRoom ? 0 : panelGap} compact={inRoom} />
       </div>
 
       <button
@@ -130,7 +132,9 @@ export default function SlotGame({ onExit, onBack, roomId }) {
               {/* Eski kabin görseli yerine altın çerçeveli, mor-lacivert makara paneli. */}
               <div
                 className="absolute rounded-[26px] border-[6px] border-amber-400 bg-[linear-gradient(180deg,#1e0b3d,#0b0620)] shadow-[0_0_34px_rgba(245,158,11,0.6),inset_0_0_0_2px_rgba(253,230,138,0.75),inset_0_0_26px_rgba(192,38,211,0.5)]"
-                style={{ left: '-1%', width: '102%', top: '28.9%', height: '53.4%' }}
+                style={inRoom
+                  ? { left: '-3%', width: '106%', top: '28.6%', height: '53.8%' }
+                  : { left: '-1%', width: '102%', top: '28.9%', height: '53.4%' }}
               />
 
               {/* Tur sırasında her makaranın sembolleri değişerek aşağı doğru kayar. */}

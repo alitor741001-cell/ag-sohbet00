@@ -58,6 +58,12 @@
 }
 .sfz-orb:active { transform: scale(.94); }
 .sfz-orb-l { left: 4%; }
+/* Sesli odada yarım panel: üst sahne kısalır, oyun alanı genişler. */
+.sfz-compact { padding-bottom: 4px; }
+.sfz-compact .sfz-arch { width: 58%; padding: 2px 0 4px; }
+.sfz-compact .sfz-title span { font-size: 5.6cqw; }
+.sfz-compact .sfz-orb { height: 2rem; width: 2rem; top: calc(env(safe-area-inset-top) + 4px); }
+.sfz-compact .sfz-board { margin: 3px 7% 0; }
 .sfz-board {
   position: relative;
   margin: 6px 10% 0;
@@ -134,6 +140,8 @@
 /* Tek havuz barı: dar plaka, havuzlar sırayla gelip gider. */
 .sfz-jp-narrow { padding: 3px 0 2px; }
 .sfz-jp-narrow .sfz-jp-plate { height: 13cqw; }
+.sfz-jp-narrow.is-compact { padding: 1px 0; }
+.sfz-jp-narrow.is-compact .sfz-jp-plate { height: 14cqw; }
 .sfz-jp-step { animation: sfz-step-in .5s ease-out both; }
 .sfz-jp-plate.is-grand {
   background: linear-gradient(180deg, #6b1f7a, #2a0a3f);

@@ -1,24 +1,9 @@
-/* Dede üst barı: mor-mürdüm zemin, altın kemer deseni, ince değer şeridi. */
+/* Dede üst barı: zeminsiz ince şerit — oyunun kendi arka planı görünür. */
 .dtb {
   container-type: inline-size;
   position: relative;
   flex-shrink: 0;
-  overflow: hidden;
   padding-top: max(0.4rem, env(safe-area-inset-top));
-  background:
-    radial-gradient(70% 130% at 50% -30%, rgba(255, 222, 168, 0.26), transparent 62%),
-    linear-gradient(180deg, #4c1a66, #33104a 58%, #1d0830);
-  border-bottom: 1px solid rgba(240, 192, 96, 0.5);
-  box-shadow: 0 16px 30px -24px rgba(0, 0, 0, 0.95), inset 0 1px 0 rgba(255, 255, 255, 0.14);
-}
-.dtb-arches {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.16;
-  background: repeating-linear-gradient(90deg, transparent 0 8%, #ffe6b8 8% 11%, transparent 11% 20%);
-  -webkit-mask-image: linear-gradient(180deg, #000, transparent 90%);
-  mask-image: linear-gradient(180deg, #000, transparent 90%);
 }
 .dtb-row { position: relative; z-index: 1; display: flex; align-items: center; gap: 0.4rem; padding: 0 0.6rem; }
 .dtb-orb {
@@ -77,6 +62,12 @@
 }
 .dtb-ribbon-label { font-size: 3.2cqw; font-weight: 900; letter-spacing: 0.1em; color: #ffd76a; }
 .dtb-ribbon-value { font-size: 4.4cqw; font-weight: 900; font-variant-numeric: tabular-nums; color: #fff8e1; }
+/* Sesli odada yarım panel: üst bar kısalır, oyun alanı genişler. */
+.dtb-compact { padding-top: max(0.2rem, env(safe-area-inset-top)); }
+.dtb-compact .dtb-orb { height: 1.9rem; width: 1.9rem; }
+.dtb-compact .dtb-title-text { font-size: 4cqw; }
+.dtb-compact .dtb-ribbon { margin: 0.2rem 0.5rem 0.25rem; height: 7.4cqw; min-height: 1.5rem; }
+.dtb-compact .dtb-ribbon-value { font-size: 3.9cqw; }
 @keyframes dtb-step-in {
   from { opacity: 0; transform: translateY(4px) scale(0.97); }
   to { opacity: 1; transform: none; }

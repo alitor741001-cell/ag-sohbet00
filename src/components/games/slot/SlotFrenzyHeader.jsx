@@ -3,9 +3,9 @@ import { HelpCircle } from 'lucide-react';
 import './slotFrenzy.css';
 
 /** Slot üst sahnesi: mor kadife perdeler, kemerli "FRENZY JACKPOT" başlığı ve kazanan panosu. */
-export default function SlotFrenzyHeader({ onHelp, children }) {
+export default function SlotFrenzyHeader({ onHelp, children, compact = false }) {
   return (
-    <div className="sfz relative shrink-0 pt-[env(safe-area-inset-top)]">
+    <div className={`sfz relative shrink-0 pt-[env(safe-area-inset-top)]${compact ? ' sfz-compact' : ''}`}>
       <span aria-hidden="true" className="sfz-curtain sfz-curtain-l" />
       <span aria-hidden="true" className="sfz-curtain sfz-curtain-r" />
       <div className="sfz-arch">

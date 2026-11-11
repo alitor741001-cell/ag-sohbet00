@@ -14,7 +14,7 @@ const STEPS = [
 const STEP_MS = 2400;
 
 /** Tek havuz barı: dar plaka, havuzlar sırayla gelir, toplam havuz altın vurguyla görünür. */
-export default function SlotJackpotBar({ pools, topGap = 0 }) {
+export default function SlotJackpotBar({ pools, topGap = 0, compact = false }) {
   const [step, setStep] = useState(0);
 
   useEffect(() => {
@@ -27,7 +27,7 @@ export default function SlotJackpotBar({ pools, topGap = 0 }) {
 
   return (
     <div className="relative shrink-0" style={{ paddingTop: `${topGap}px` }}>
-      <div className="sfz-jp sfz-jp-narrow mx-auto w-full max-w-[15.5rem]">
+      <div className={`sfz-jp sfz-jp-narrow mx-auto w-full ${compact ? 'is-compact max-w-[12.5rem]' : 'max-w-[15.5rem]'}`}>
         <div key={current.key} className={`sfz-jp-plate sfz-jp-step ${grand ? 'is-grand' : ''}`}>
           <span className="sfz-jp-label">{current.label}</span>
           <span className="sfz-jp-value">{format(pools?.[current.key])}</span>
