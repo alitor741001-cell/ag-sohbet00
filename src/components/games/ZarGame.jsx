@@ -12,6 +12,7 @@ import ZarTimerBand from './zar/ZarTimerBand';
 import useZarGame from './zar/useZarGame';
 import useZarBoard from './zar/useZarBoard';
 import useZarBets from './zar/useZarBets';
+import useTableBets from './shared/useTableBets';
 import ZarChipRow from './zar/ZarChipRow';
 import ZarHistory from './zar/ZarHistory';
 import ZarShaker from './zar/ZarShaker';
@@ -54,6 +55,17 @@ export default function ZarGame({ onExit, onBack }) {
   // Turun tutarları: alanlara yatırılan miktarlar profilsiz olarak herkese görünür.
   const { user } = useCurrentUser();
   const { chips, totals } = useZarBets(game.round?.round_no || 0, user?.id);
+  // Bahis sürerken masaya konan jetonlar canlı masadan, sonuç kesinleşince
+  // ZarBet kayıtlarından okunur: iki ekran da aynı tutarları görür.
+  const liveTable = useTableBets('zar', game.round?.round_no || 0, user?.id);
+  const tableChips = { ...chips };
+  Object.entries(liveTable.chips).forEach(([zone, list]) => {
+    tableChips[zone] = [...(tableChips[zone] || []), ...list];
+  });
+  const tableTotals = { ...totals };
+  Object.entries(liveTable.totals).forEach(([zone, amount]) => {
+    tableTotals[zone] = (tableTotals[zone] || 0) + amount;
+  });
 
 
   // Tur sonucu: kazanç ödenmişse kutlama ekranı açılır.
@@ -95,8 +107,8 @@ export default function ZarGame({ onExit, onBack }) {
             </div>
             <ZarTable
               bets={game.bets}
-              zoneTotals={totals}
-              chips={chips}
+              zoneTotals={tableTotals}
+              chips={tableChips}
               disabled={!betting}
               revealed={revealed}
               outcome={outcome}

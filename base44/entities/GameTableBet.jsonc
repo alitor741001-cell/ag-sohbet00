@@ -1,0 +1,77 @@
+{
+  "name": "GameTableBet",
+  "type": "object",
+  "properties": {
+    "game": {
+      "type": "string",
+      "enum": [
+        "roulette",
+        "zar",
+        "futbol"
+      ],
+      "enumColors": [
+        "pink",
+        "purple",
+        "green"
+      ]
+    },
+    "round_no": {
+      "type": "integer",
+      "default": 0
+    },
+    "user_id": {
+      "type": "string"
+    },
+    "user_name": {
+      "type": "string",
+      "default": ""
+    },
+    "user_avatar": {
+      "type": "string",
+      "default": ""
+    },
+    "bets": {
+      "type": "array",
+      "default": [],
+      "items": {
+        "type": "object",
+        "properties": {
+          "block": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number",
+            "default": 0
+          }
+        }
+      }
+    },
+    "total": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "game",
+    "round_no",
+    "user_id"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

@@ -12,6 +12,8 @@ import FutbolResults from './futbol/FutbolResults';
 import FutbolMenu from './futbol/FutbolMenu';
 import FutbolWinOverlay from './futbol/FutbolWinOverlay';
 import useFutbolGame from './futbol/useFutbolGame';
+import useTableBets from './shared/useTableBets';
+import { useCurrentUser } from '@/lib/useCurrentUser';
 import { FUTBOL_BACKDROP } from './futbol/futbolAssets';
 import { TEAMS, formatClock, formatCoins } from './futbol/futbolConfig';
 
@@ -51,6 +53,9 @@ export default function FootballGame({ onExit, onBack }) {
   );
 
   const roundNo = game.round?.round_no || 0;
+  // Kartlara konan jetonlar herkese görünür: ana sayfadaki ve odadaki oyuncu aynı masayı görür.
+  const { user } = useCurrentUser();
+  const tableChips = useTableBets('futbol', roundNo, user?.id).chips;
   const mineOnWinner = shownWinner ? stats[shownWinner]?.mine ?? 0 : 0;
   const hasPicks = game.teams.some((team) => (team.mine || 0) > 0);
   const clock = formatClock(game.left);
@@ -86,6 +91,7 @@ export default function FootballGame({ onExit, onBack }) {
         <FutbolPitch
           teams={TEAMS}
           stats={stats}
+          chips={tableChips}
           hot={hot}
           totalPot={totalPot}
           selected={game.selected}

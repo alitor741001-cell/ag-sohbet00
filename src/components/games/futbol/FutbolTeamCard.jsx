@@ -5,7 +5,7 @@ import { FUTBOL_CREST_SIZE } from './futbolAssets';
 import { compactCoins } from './futbolConfig';
 
 /** Takım kartı: arma, altta çarpan, mavi popülerlik barı ve kendi bahsim. */
-function FutbolTeamCard({ team, stats, selected, landed, share, onSelect, style }) {
+function FutbolTeamCard({ team, stats, chips, selected, landed, share, onSelect, style }) {
   const open = stats?.open !== false;
   const pot = stats?.pot ?? 0;
   const mine = stats?.mine ?? 0;
@@ -50,6 +50,16 @@ function FutbolTeamCard({ team, stats, selected, landed, share, onSelect, style 
         <span className="fut-pill fut-pill-mine">
           <User className="h-3 w-3" />
           {compactCoins(mine)}
+        </span>
+      )}
+      {/* Diğer oyuncuların karttaki jetonları: masa herkese aynı görünür. */}
+      {Array.isArray(chips) && chips.length > 0 && (
+        <span className="fut-chips">
+          {chips.slice(0, 3).map((chip, index) => (
+            <span key={`${chip.user_id}-${index}`} className="fut-chip-other">
+              {compactCoins(chip.stake)}
+            </span>
+          ))}
         </span>
       )}
       {!open && <span className="fut-pill fut-pill-lock">KAPALI</span>}

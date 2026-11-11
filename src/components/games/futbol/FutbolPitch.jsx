@@ -11,6 +11,7 @@ import { TEAM_MAP, TEAMS, RING_SLOTS, RING_STYLES } from './futbolConfig';
 export default function FutbolPitch({
   teams,
   stats,
+  chips,
   totalPot,
   selected,
   onSelect,
@@ -40,6 +41,7 @@ export default function FutbolPitch({
             key={team.id}
             team={team}
             stats={stats[team.id]}
+            chips={chips?.[team.id] || []}
             selected={selected === team.id}
             landed={revealed === team.id}
             share={totalPot > 0 ? (stats[team.id]?.pot || 0) / totalPot : 0}

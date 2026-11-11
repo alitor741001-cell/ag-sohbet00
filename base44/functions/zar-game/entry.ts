@@ -5,6 +5,7 @@ import { START_COINS, loadWallet } from '../../shared/gameWallet.ts';
 import { ensureRound, liveHistory, mirrorRoundView, roundForBet, roundView, walletView } from '../../shared/zarRound.ts';
 import { mirrorRecord } from '../../shared/supabaseMirror.ts';
 import { recordLeaderWin } from '../../shared/gameLeaders.ts';
+import { clearRoundTableBets, publishTableBets } from '../../shared/gameTable.ts';
 
 export default async function (req) {
   try {
@@ -24,6 +25,13 @@ export default async function (req) {
     if (action === 'tick') {
       const round = await ensureRound(base44);
       return Response.json({ now: Date.now(), round: roundView(round) });
+    }
+
+    // Masaya konan jetonlar: oyuncunun masası yayınlanır, karşı taraf anında görür.
+    if (action === 'table') {
+      const round = await ensureRound(base44);
+      await publishTableBets(base44, 'zar', round.round_no, user, body.bets);
+      return Response.json({ ok: true, round_no: round.round_no });
     }
 
     // Bahis, zarların açıldığı an geçerli olan turun numarasına ödenir.
@@ -87,6 +95,8 @@ export default async function (req) {
         };
       });
       const created = await base44.asServiceRole.entities.ZarBet.bulkCreate(rows).catch(() => null);
+      // Sonuç kesinleşti: canlı masa kapanır, jetonlar ZarBet kayıtlarından okunur.
+      waitUntil(clearRoundTableBets(base44, 'zar', round.round_no).catch(() => null));
       // Bakiye ve masa bahisleri aynaya da yazılır: iki altyapı aynı oyunu taşır.
       waitUntil(mirrorRecord(base44, 'GameWallet', updated).catch(() => null));
       if (result.payout > 0) waitUntil(recordLeaderWin(base44, 'zar', user, result.payout).catch(() => null));

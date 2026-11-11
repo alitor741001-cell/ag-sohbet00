@@ -27,20 +27,46 @@ function poolKeyForTotalBet(totalBet) {
   return 'mega';
 }
 
+// Havuzlar ortaktır: tek kayıttan okunur, bütün oyuncular aynı rakamı görür.
+const POOLS_KEY = 'slot_pools';
+
 // Havuz tutarları: kayıtlı değer yoksa taban değerden başlar.
-function poolValues(wallet) {
+function poolValues(stored) {
+  const source = stored || {};
   return POOL_KEYS.reduce((pools, key) => {
-    pools[key] = wallet[`pool_${key}`] ?? POOL_BASE[key];
+    const value = Math.round(Number(source[key]));
+    pools[key] = Number.isFinite(value) && value >= 0 ? value : POOL_BASE[key];
     return pools;
   }, {});
+}
+
+// Ortak havuz kaydı: ana sayfadaki ve odadaki oyun aynı kaydı okur.
+async function loadPools(base44) {
+  const found = await base44.asServiceRole.entities.AppConfig
+    .filter({ key: POOLS_KEY }, '-created_date', 1)
+    .catch(() => null);
+  let stored = {};
+  try {
+    stored = JSON.parse(found?.[0]?.value || '{}');
+  } catch (error) {
+    stored = {};
+  }
+  return { id: found?.[0]?.id || '', pools: poolValues(stored) };
+}
+
+// Turun havuz değişimi ortak kayda yazılır.
+async function savePools(base44, id, pools) {
+  const value = JSON.stringify(pools);
+  if (id) return base44.asServiceRole.entities.AppConfig.update(id, { value }).catch(() => null);
+  return base44.asServiceRole.entities.AppConfig.create({ key: POOLS_KEY, value }).catch(() => null);
 }
 
 // Jackpot havuzu: diğer havuzlarda birikenlerin toplamıdır.
 function jackpotTotal(pools) {
   return POOL_KEYS.reduce((sum, key) => sum + pools[key], 0);
 }
-function walletView(wallet, isAdmin = false) {
-  const pools = poolValues(wallet);
+function walletView(wallet, isAdmin = false, storedPools = null) {
+  const pools = poolValues(storedPools);
   const jackpot = jackpotTotal(pools);
   return {
     coins: wallet.coins ?? START_COINS,
@@ -128,6 +154,8 @@ export default async function (req) {
     const wallet = await loadWallet(base44, user);
     // Yönetici hesabında coin sınırı yoktur.
     const isAdmin = user.role === 'admin';
+    // Havuzlar ortak kayıttan gelir: her oyuncuda aynı jackpot rakamları görünür.
+    const poolRecord = await loadPools(base44);
 
     // Kazanç geçmişi: kullanıcının son turları ve toplam kazancı.
     if (action === 'history') {
@@ -154,7 +182,7 @@ export default async function (req) {
     if (action === 'bet') {
       const bet = clampBet(body.bet, BET_LEVELS, wallet.bet ?? DEFAULT_BET);
       const updated = await base44.asServiceRole.entities.GameWallet.update(wallet.id, { bet });
-      return Response.json({ ...walletView(updated, isAdmin), grid: null, wins: [], win: 0 });
+      return Response.json({ ...walletView(updated, isAdmin, poolRecord.pools), grid: null, wins: [], win: 0 });
     }
 
     if (action === 'spin') {
@@ -184,7 +212,7 @@ export default async function (req) {
       // Havuz, turun sonucuyla işler: kaybedilen turda bahsin tamamı havuza eklenir,
       // kazanan turda ödenen kazancın tamamı havuzdan düşülür (bahis mahsup edilmez).
       // Havuz sıfırın altına inmez.
-      const pools = poolValues(wallet);
+      const pools = { ...poolRecord.pools };
       const poolKey = poolKeyForTotalBet(stake);
       const poolDelta = total > 0 ? -total : cost;
       if (poolKey && poolDelta !== 0) pools[poolKey] = Math.max(0, pools[poolKey] + poolDelta);
@@ -218,6 +246,8 @@ export default async function (req) {
 
       // Supabase aynası: bakiye ve havuzlar iki altyapıda birden güncel kalır.
       waitUntil(mirrorRecord(base44, 'GameWallet', updated));
+      // Ortak havuz kaydı güncellenir: diğer oyuncular da aynı rakamı görür.
+      waitUntil(savePools(base44, poolRecord.id, pools).catch(() => null));
       if (total > 0) waitUntil(recordLeaderWin(base44, 'slot', user, total).catch(() => null));
 
       // Tur, kazanç geçmişine işlenir.
@@ -236,7 +266,7 @@ export default async function (req) {
       });
 
       return Response.json({
-        ...walletView(updated, isAdmin),
+        ...walletView(updated, isAdmin, pools),
         grid,
         wins: result.wins,
         win: total,
@@ -249,7 +279,7 @@ export default async function (req) {
       });
     }
 
-    return Response.json({ ...walletView(wallet, isAdmin), grid: null, wins: [], win: 0 });
+    return Response.json({ ...walletView(wallet, isAdmin, poolRecord.pools), grid: null, wins: [], win: 0 });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

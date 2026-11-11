@@ -5,6 +5,8 @@ import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
 import GameCoinBar from '@/components/games/shared/GameCoinBar';
 import useRouletteGame from './roulette/useRouletteGame';
 import useRouletteBoard from './roulette/useRouletteBoard';
+import useTableBets from './shared/useTableBets';
+import { useCurrentUser } from '@/lib/useCurrentUser';
 import GameHelpSheet from './help/GameHelpSheet';
 import RouletteWheel from './roulette/RouletteWheel';
 import RouletteTopFive from './roulette/RouletteTopFive';
@@ -39,6 +41,9 @@ export default function RouletteGame({ onExit, onBack }) {
   const landedNumber = spinning ? game.round?.number ?? null : null;
   // Tur sıralaması her turda yenilenir.
   const board = useRouletteBoard(game.round?.round_no ?? 0);
+  // Masadaki diğer oyuncuların jetonları: odadaki ve ana sayfadaki herkes aynı masayı görür.
+  const { user } = useCurrentUser();
+  const others = useTableBets('roulette', game.round?.round_no ?? 0, user?.id).chips;
 
   // Çark yerine oturunca top kazanan cebe oturur, cep büyütülür ve sonra çark geri çekilir.
   useEffect(() => {
@@ -94,6 +99,7 @@ export default function RouletteGame({ onExit, onBack }) {
         <RouletteRoundBar phase={game.phase} countdown={game.countdown} />
         <RouletteTable
           bets={game.bets}
+          others={others}
           disabled={!betting}
           onPlace={game.placeBet}
           resultNumber={settled ? landedNumber : null}

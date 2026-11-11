@@ -14,6 +14,7 @@ import {
 } from '../../shared/futbolRound.ts';
 import { mirrorRecord } from '../../shared/supabaseMirror.ts';
 import { recordLeaderWin } from '../../shared/gameLeaders.ts';
+import { clearUserTableBets, publishTableBets } from '../../shared/gameTable.ts';
 import { waitUntil } from 'base44:runtime';
 
 const potOf = (pots, teamId) => (pots || []).find((pot) => pot.team_id === teamId)?.coins ?? 0;
@@ -186,6 +187,18 @@ export default async function (req) {
       waitUntil(mirrorRecord(base44, 'GameWallet', updated).catch(() => null));
       if (pick) waitUntil(mirrorRecord(base44, 'FootballPick', pick).catch(() => null));
 
+      // Kartlara konan jetonlar herkese görünür: oyuncunun masası yayınlanır.
+      const picksAfter = existing
+        ? mineRows.map((row) => (row.id === existing.id ? { ...row, stake: (row.stake || 0) + stake } : row))
+        : [...mineRows, pick];
+      waitUntil(publishTableBets(
+        base44,
+        'futbol',
+        record.round_no,
+        user,
+        picksAfter.map((row) => ({ block: row.team_id, amount: row.stake })),
+      ).catch(() => null));
+
       return Response.json({
         ...walletView(updated),
         now: Date.now(),
@@ -217,6 +230,8 @@ export default async function (req) {
         picks_count: Math.max(0, (record.picks_count ?? 0) - mineRows.length),
       });
       waitUntil(mirrorRecord(base44, 'GameWallet', updated).catch(() => null));
+      // Seçimler geri çekildi: masadaki jetonlar da kalkar.
+      waitUntil(clearUserTableBets(base44, 'futbol', user.id).catch(() => null));
 
       return Response.json({
         ...walletView(updated),

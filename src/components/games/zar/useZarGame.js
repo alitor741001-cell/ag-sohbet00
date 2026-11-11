@@ -251,6 +251,21 @@ export default function useZarGame() {
       .finally(() => { busyRef.current = false; });
   }, [phase, round, applyRound, applyWallet]);
 
+  // Masadaki jetonlar karşı tarafa da görünür: bahis değiştikçe masa yayınlanır.
+  const tableRound = round?.round_no || 0;
+  const tableSentAt = useRef(0);
+  useEffect(() => {
+    if (!betting || !tableRound) return undefined;
+    const placed = Object.entries(bets).map(([block, amount]) => ({ block, amount }));
+    // Hızlı jeton dizilişinde de masa en geç 1,2 saniyede bir yayınlanır.
+    const wait = Date.now() - tableSentAt.current > 1200 ? 80 : 350;
+    const timer = setTimeout(() => {
+      tableSentAt.current = Date.now();
+      zarRequests({ action: 'table', round_no: tableRound, bets: placed }).catch(() => {});
+    }, wait);
+    return () => clearTimeout(timer);
+  }, [betting, tableRound, bets]);
+
   // Geri sayım ve şerit ilerlemesi turun sunucu saatinden hesaplanır.
   let countdown = null;
   let progress = 0;

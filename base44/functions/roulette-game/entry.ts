@@ -4,6 +4,7 @@ import { START_COINS, loadWallet } from '../../shared/gameWallet.ts';
 import { ensureRound, liveHistory, mirrorRoundView, roundForSpin, roundView } from '../../shared/rouletteRound.ts';
 import { mirrorRecord } from '../../shared/supabaseMirror.ts';
 import { recordLeaderWin } from '../../shared/gameLeaders.ts';
+import { publishTableBets } from '../../shared/gameTable.ts';
 import { waitUntil } from 'base44:runtime';
 
 // Oyun ekranının gördüğü bakiye bilgisi.
@@ -36,6 +37,13 @@ export default async function (req) {
     if (action === 'tick') {
       const round = await ensureRound(base44);
       return Response.json({ now: Date.now(), round: roundView(round) });
+    }
+
+    // Masaya konan jetonlar: oyuncunun masası yayınlanır, karşı taraf anında görür.
+    if (action === 'table') {
+      const round = await ensureRound(base44);
+      await publishTableBets(base44, 'roulette', round.round_no, user, body.bets);
+      return Response.json({ ok: true, round_no: round.round_no });
     }
 
     // Bahis, çarkın döndüğü an geçerli olan turun numarasına ödenir.
