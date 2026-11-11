@@ -12,15 +12,15 @@ export const DEFAULT_BET = 100;
 // turlar tek tek ücret almaz ve kendiliğinden çevrilir.
 export const SESSION_SPINS = 15;
 const SESSION_PRICE: Record<number, number> = {
-  10: 2000000,
-  20: 5000000,
-  50: 15000000,
-  100: 25000000,
-  250: 50000000,
-  500: 75000000,
-  1000: 100000000,
-  2500: 100000000,
-  5000: 100000000,
+  10: 2000,
+  20: 5000,
+  50: 10000,
+  100: 25000,
+  250: 50000,
+  500: 70000,
+  1000: 100000,
+  2500: 150000,
+  5000: 200000,
 };
 
 export function sessionPrice(bet: number): number {
