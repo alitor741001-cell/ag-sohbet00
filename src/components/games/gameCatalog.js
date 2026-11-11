@@ -15,7 +15,6 @@ import {
   OKEY_COVER_HEIGHT,
   OKEY_COVER_WIDTH,
 } from './okey/okeyAssets';
-import { ZAR_COVER, ZAR_COVER_HEIGHT, ZAR_COVER_WIDTH } from './zar/zarAssets';
 
 export const SEKERLI_MEYVE_ID = 'sekerli-meyve';
 export const SLOT_ID = 'slot-frenzy';
@@ -29,14 +28,11 @@ export const ELIMIN_ID = 'elimin-slot';
 export const OKEY_ID = 'okey-101';
 // Klasik OKEY: 14 taşlı sürüm, ayrı masa ve ayrı lobi.
 export const OKEY_CLASSIC_ID = 'okey';
-// ZAR: üç zarlı bahis masası (küçük, büyük, kaplan).
-export const ZAR_ID = 'zar';
 
 // Oyun merkezi kartları: kapak görseli durur, dokununca oyun açılır.
 export const GAMES = [
   { id: OKEY_ID, title: '101 OKEY', cover: OKEY_COVER, originWidth: OKEY_COVER_WIDTH, originHeight: OKEY_COVER_HEIGHT },
   { id: OKEY_CLASSIC_ID, title: 'OKEY', cover: OKEY_CLASSIC_COVER, originWidth: OKEY_CLASSIC_COVER_WIDTH, originHeight: OKEY_CLASSIC_COVER_HEIGHT },
-  { id: ZAR_ID, title: 'ZAR', cover: ZAR_COVER, originWidth: ZAR_COVER_WIDTH, originHeight: ZAR_COVER_HEIGHT },
   { id: ELIMIN_ID, title: 'ELİMİNSLOT', cover: ELIMIN_COVER, originWidth: ELIMIN_COVER_WIDTH, originHeight: ELIMIN_COVER_HEIGHT },
   { id: FUTBOL_ID, title: 'ALTIN GOL', cover: FUTBOL_COVER, originWidth: FUTBOL_COVER_WIDTH, originHeight: FUTBOL_COVER_HEIGHT },
   { id: SEKERLI_MEYVE_ID, title: 'ŞEKERLİ MEYVE', cover: SEKERLI_COVER, originWidth: SEKERLI_COVER_WIDTH, originHeight: SEKERLI_COVER_HEIGHT },

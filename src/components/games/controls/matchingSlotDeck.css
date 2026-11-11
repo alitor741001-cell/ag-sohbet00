@@ -1,0 +1,28 @@
+/* Konsol geometrisi bütün oyunlarda SLOT ile aynıdır; sadece yüzey teması değişir. */
+[data-console-theme] { --deck-tone: var(--arcade-violet); --deck-surface: var(--arcade-plum); --deck-edge: var(--arcade-pink); }
+[data-console-theme="fruit"] { --deck-tone: var(--arcade-wine); --deck-surface: var(--fantasy-rose-surface); --deck-edge: var(--premium-gold-light); }
+[data-console-theme="seker"] { --deck-tone: var(--support-bubble); --deck-surface: var(--support-surface); --deck-edge: var(--fantasy-princess); }
+[data-console-theme="sekerli"] { --deck-tone: var(--arcade-violet); --deck-surface: var(--arcade-plum); --deck-edge: var(--fantasy-princess); }
+[data-console-theme="elimin"] { --deck-tone: var(--arcade-violet); --deck-surface: var(--arcade-plum); --deck-edge: var(--arcade-gold); }
+.matched-slot-console { position: relative; z-index: 15; flex-shrink: 0; width: 100%; background: hsl(var(--deck-surface)); }
+.sfz-deck[data-console-theme] {
+  background: linear-gradient(180deg, hsl(var(--deck-tone)), hsl(var(--deck-surface)));
+  border-top-color: hsl(var(--deck-edge));
+  box-shadow: inset 0 2px 6px hsl(var(--deck-edge) / .28), 0 -6px 18px hsl(var(--slot-bg) / .65);
+}
+.sfz-deck[data-console-theme] :is(.sfz-metric-well, .sfz-bet-capsule, .sfz-cat-pill) {
+  border-color: hsl(var(--deck-edge) / .65);
+  background: linear-gradient(180deg, hsl(var(--deck-surface)), hsl(var(--slot-bg)));
+}
+.sfz-deck[data-console-theme] :is(.sfz-metric-label, .sfz-bet-label) { color: hsl(var(--slot-text) / .85); }
+.sfz-cat-pill .sfz-cat-avatar { flex-shrink: 0; }
+.sfz-cat-count { min-width: 0; flex: 1; padding-inline: 3px; text-align: center; }
+.sfz-free-count { color: hsl(var(--slot-gold)); font-size: 10px; font-weight: 800; line-height: 1.15; }
+.matched-slot-console > .ref-actions { width: 100%; padding: 4px 8px; }
+.game-controls-themed[data-game] .matched-slot-console > .ref-actions .ref-banner {
+  width: 100%; min-height: 38px; border: 1px solid hsl(var(--deck-edge) / .65) !important;
+  border-radius: 12px; background: linear-gradient(180deg, hsl(var(--deck-tone)), hsl(var(--deck-surface)));
+  box-shadow: inset 0 1px 2px hsl(var(--slot-text) / .2);
+}
+.game-controls-themed[data-game] .matched-slot-console :is(.ref-banner-copy, .ref-banner-copy b) { color: hsl(var(--slot-text)); }
+.game-controls-themed[data-game] .matched-slot-console .ref-banner-icon { color: hsl(var(--deck-edge)); background: hsl(var(--deck-surface)); }

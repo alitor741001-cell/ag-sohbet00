@@ -1,14 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { ChevronLeft, HelpCircle, Play, Volume2, VolumeX } from 'lucide-react';
 import '@/styles/sekerli.css';
 import '@/styles/gameControls.css';
 import { Image } from '@/components/ui/image';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
-import GameCoinBar from '@/components/games/shared/GameCoinBar';
+import MatchingSlotDeck from '@/components/games/controls/MatchingSlotDeck';
 import GameIllustratedHeader from '@/components/games/shared/GameIllustratedHeader';
 import SekerliGrid from './sekerli/SekerliGrid';
 import SekerliTopPanel from './sekerli/SekerliTopPanel';
-import SekerliHud from './sekerli/SekerliHud';
 import SekerliWinOverlay from './sekerli/SekerliWinOverlay';
 import GameHelpSheet from './help/GameHelpSheet';
 import useSekerliGame from './sekerli/useSekerliGame';
@@ -16,8 +14,6 @@ import useCountUp from './sekerli/useCountUp';
 import { LINES, formatCredits, formatMult } from './sekerli/sekerliConfig';
 import { SEKERLI_ART, SEKERLI_BACKDROP, SEKERLI_LOGO } from './sekerli/sekerliAssets';
 import { warmSymbolTiles } from '@/lib/symbolTile';
-import GameBetBar from './controls/GameBetBar';
-import GameSpinButton from './controls/GameSpinButton';
 import GameTurnBadge from './controls/GameTurnBadge';
 
 /**
@@ -30,7 +26,6 @@ export default function SekerliMeyveGame({ onExit, onBack }) {
   const [coinOpen, setCoinOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const shownWin = useCountUp(game.spinWin, 420);
-  const ready = game.status === 'ready';
 
   return (
     <div className="sl-sky">
@@ -61,47 +56,16 @@ export default function SekerliMeyveGame({ onExit, onBack }) {
 
         <GameTurnBadge sessionSpins={game.sessionSpins} accent="border-[#ffd21f]/80 text-[#ffe9b8]" />
 
-        <SekerliHud
-          coins={game.coins}
-          bet={game.bet}
-          win={game.busy ? game.spinWin : game.win}
-          totalWon={game.totalWon}
-          busy={game.busy}
-          onCoins={() => setCoinOpen(true)}
-          onSession={game.buySession}
-          sessionPrice={game.sessionPrice}
-          sessionSpins={game.sessionSpins}
-          sessionSize={game.sessionSize}
-        />
+
 
         {game.status === 'loading' && <p className="sl-message">Oyun yükleniyor...</p>}
         {game.message && <p className="sl-message">{game.message}</p>}
       </main>
 
-      <footer className="sl-foot">
-        <div className="gctl-deck ref-deck">
-          <GameBetBar
-            bet={game.bet}
-            lines={LINES}
-            disabled={game.busy}
-            onStep={game.changeBet}
-            onMax={game.maxBet}
-            format={formatCredits}
-          />
-          <GameSpinButton
-            spinning={game.busy && !game.prize}
-            disabled={!ready}
-            auto={game.auto}
-            icon={Play}
-            onSpin={game.spin}
-            onStop={game.stop}
-            onAuto={game.toggleAuto}
-          />
-        </div>
-      </footer>
+      <MatchingSlotDeck game={game} theme="sekerli" lines={LINES} win={game.busy ? game.spinWin : game.win}
+        spinning={game.busy && !game.prize} busy={game.busy} onCoins={() => setCoinOpen(true)} />
 
       {/* Coin bakiyesine dokununca uygulamanın coin mağazası açılır. */}
-      <GameCoinBar coins={game.coins} onClick={() => setCoinOpen(true)} />
       <CoinPurchasePanel open={coinOpen} coins={game.coins} onBack={() => setCoinOpen(false)} />
       <GameHelpSheet game="sekerli" open={helpOpen} onClose={() => setHelpOpen(false)} />
 

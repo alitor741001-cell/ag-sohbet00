@@ -1,21 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ChevronLeft, HelpCircle, Play, Volume2, VolumeX } from 'lucide-react';
 import '@/styles/elimin.css';
 import '@/styles/eliminExtras.css';
 import '@/styles/gameControls.css';
 import { Image } from '@/components/ui/image';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
-import GameCoinBar from '@/components/games/shared/GameCoinBar';
+import MatchingSlotDeck from '@/components/games/controls/MatchingSlotDeck';
 import GameIllustratedHeader from '@/components/games/shared/GameIllustratedHeader';
 import EliminJackpotBar from './elimin/EliminJackpotBar';
 import EliminGrid from './elimin/EliminGrid';
-import EliminHud from './elimin/EliminHud';
 import EliminRulesSheet from './elimin/EliminRulesSheet';
 import EliminWinOverlay from './elimin/EliminWinOverlay';
 import { WIN_CARD_THRESHOLD } from '@/components/games/shared/winCard';
 import GameTurnBadge from './controls/GameTurnBadge';
-import GameBetBar from './controls/GameBetBar';
-import GameSpinButton from './controls/GameSpinButton';
 import useEliminGame from './elimin/useEliminGame';
 import useCountUp from './sekerli/useCountUp';
 import { warmSymbolTiles } from '@/lib/symbolTile';
@@ -37,7 +33,6 @@ export default function EliminSlotGame({ onExit, onBack }) {
   // Kazanç yazısının kapanma sayacı: yeni tur başlasa da çalışmaya devam eder.
   const flashTimer = useRef(null);
   const shownWin = useCountUp(game.win, 420);
-  const ready = game.status === 'ready';
 
   // Sandık barı dolduğunda sandığa basılır: tutar bakiyeye eklenir, kutlama ekranı açılır.
   const handleCollect = async () => {
@@ -129,48 +124,17 @@ export default function EliminSlotGame({ onExit, onBack }) {
           />
         </div>
 
-        <EliminHud
-          coins={game.coins}
-          bet={game.bet}
-          win={shownWin}
-          totalWon={game.totalWon}
-          busy={game.spinning}
-          onCoins={() => setCoinOpen(true)}
-          onSession={game.buySession}
-          sessionPrice={game.sessionPrice}
-          sessionSpins={game.sessionSpins}
-          sessionSize={game.sessionSize}
-        />
+
 
         {game.status === 'loading' && <p className="el-note">Oyun yükleniyor...</p>}
         {game.status === 'error' && <p className="el-note el-note-alert">Bağlantı kurulamadı, tekrar deniyorum...</p>}
         {game.message && <p className="el-note el-note-alert">{game.message}</p>}
       </main>
 
-      <footer className="el-foot">
-        <div className="gctl-deck ref-deck">
-          <GameBetBar
-            bet={game.bet}
-            lines={LINES}
-            disabled={game.spinning}
-            onStep={game.changeBet}
-            onMax={game.maxBet}
-            format={formatCoins}
-          />
-          <GameSpinButton
-            spinning={game.spinning}
-            disabled={!ready}
-            auto={game.auto}
-            icon={Play}
-            onSpin={game.spin}
-            onStop={game.stop}
-            onAuto={game.toggleAuto}
-          />
-        </div>
-      </footer>
+      <MatchingSlotDeck game={game} theme="elimin" lines={LINES} win={shownWin}
+        spinning={game.spinning} onCoins={() => setCoinOpen(true)} />
 
       {/* Coin bakiyesine dokununca uygulamanın coin mağazası açılır. */}
-      <GameCoinBar coins={game.coins} onClick={() => setCoinOpen(true)} />
       <CoinPurchasePanel open={coinOpen} coins={game.coins} onBack={() => setCoinOpen(false)} />
       <EliminRulesSheet open={helpOpen} onClose={() => setHelpOpen(false)} />
       <EliminWinOverlay

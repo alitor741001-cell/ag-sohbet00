@@ -2,7 +2,7 @@ import { lazy, Suspense } from 'react';
 import GameAmbience from '@/components/games/GameAmbience';
 import '@/styles/gameControlThemes.css';
 import '@/components/games/controls/slotStyleControls.css';
-import { DEDE_ID, ELIMIN_ID, FRUIT_ID, FUTBOL_ID, GAMES, OKEY_CLASSIC_ID, OKEY_ID, ROCKET_ID, ROULETTE_ID, SEKERLI_MEYVE_ID, SEKER_ID, SLOT_ID, ZAR_ID } from '@/components/games/gameCatalog';
+import { DEDE_ID, ELIMIN_ID, FRUIT_ID, FUTBOL_ID, GAMES, OKEY_CLASSIC_ID, OKEY_ID, ROCKET_ID, ROULETTE_ID, SEKERLI_MEYVE_ID, SEKER_ID, SLOT_ID } from '@/components/games/gameCatalog';
 import GameLeaderBadge from '@/components/games/leaders/GameLeaderBadge';
 
 // Kazanan listesi tutulan oyunlar ve sunucudaki adları.
@@ -13,7 +13,6 @@ const LEADER_KEYS = {
   [SEKERLI_MEYVE_ID]: 'sekerli',
   [ELIMIN_ID]: 'elimin',
   [ROULETTE_ID]: 'roulette',
-  [ZAR_ID]: 'zar',
   [ROCKET_ID]: 'rocket',
   [FUTBOL_ID]: 'futbol',
 };
@@ -30,7 +29,6 @@ const games = {
   [FRUIT_ID]: lazy(() => import('@/components/games/FruitGame')),
   [ELIMIN_ID]: lazy(() => import('@/components/games/EliminSlotGame')),
   [ROULETTE_ID]: lazy(() => import('@/components/games/RouletteGame')),
-  [ZAR_ID]: lazy(() => import('@/components/games/ZarGame')),
   [SEKER_ID]: lazy(() => import('@/components/games/SekerGame')),
 };
 export default function GameContent({ selected, onExit, onBack, roomId }) {

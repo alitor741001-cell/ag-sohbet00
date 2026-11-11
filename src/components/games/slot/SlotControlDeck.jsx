@@ -3,6 +3,7 @@ import { ChevronRight, Minus, Plus } from 'lucide-react';
 import FitGameText from '@/components/games/controls/FitGameText';
 import compactCoins from '@/lib/compactCoins';
 import './slotFrenzy.css';
+import '@/components/games/controls/matchingSlotDeck.css';
 
 const format = (value) => new Intl.NumberFormat('tr-TR').format(Math.max(0, Math.round(value || 0)));
 
@@ -22,14 +23,17 @@ export default function SlotControlDeck({
   onSpin,
   onStop,
   onCoins,
+  theme = 'slot',
+  betDisabled = spinning,
 }) {
   return (
-    <footer className="sfz-deck">
+    <footer className="sfz-deck" data-console-theme={theme}>
       {/* Üst gösterge sırası: LINES 50 | TOTAL BET 500 | WIN 0 */}
       <div className="sfz-deck-top">
         <div className="sfz-metric-lines">
           <span className="sfz-metric-label">LINES</span>
           <strong className="sfz-metric-pink">{lines}</strong>
+          {freeSpins > 0 && <span className="sfz-free-count">{freeSpins} BEDAVA TUR</span>}
         </div>
 
         <div className="sfz-metric-well">
@@ -64,7 +68,7 @@ export default function SlotControlDeck({
             🐱
           </span>
           <span className="sfz-cat-count">
-            {freeSpins > 0 ? freeSpins : compactCoins(coins ?? 0)}
+            <FitGameText>{coins == null ? '—' : compactCoins(coins)}</FitGameText>
           </span>
           <ChevronRight className="h-4 w-4 shrink-0 text-[#f5d0fe]" strokeWidth={3} />
         </button>
@@ -74,7 +78,7 @@ export default function SlotControlDeck({
           <div className="sfz-bet-capsule">
             <button
               type="button"
-              disabled={spinning}
+              disabled={betDisabled}
               onClick={() => onStep(-1)}
               aria-label="Bahsi azalt"
               className="sfz-bet-side is-minus"
@@ -91,7 +95,7 @@ export default function SlotControlDeck({
 
             <button
               type="button"
-              disabled={spinning}
+              disabled={betDisabled}
               onClick={() => onStep(1)}
               aria-label="Bahsi artır"
               className="sfz-bet-side is-plus"
@@ -102,7 +106,7 @@ export default function SlotControlDeck({
 
           <button
             type="button"
-            disabled={!ready || spinning}
+            disabled={!ready || betDisabled}
             onClick={onMax}
             className="sfz-max-pill"
           >

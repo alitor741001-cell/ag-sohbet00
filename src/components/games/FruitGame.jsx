@@ -1,15 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ChevronLeft, HelpCircle, Play } from 'lucide-react';
 import '@/styles/fruit.css';
 import '@/styles/gameControls.css';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
-import GameCoinBar from '@/components/games/shared/GameCoinBar';
+import MatchingSlotDeck from '@/components/games/controls/MatchingSlotDeck';
 import GameIllustratedHeader from '@/components/games/shared/GameIllustratedHeader';
 import useFruitGame from './fruit/useFruitGame';
 import FruitReels from './fruit/FruitReels';
-import FruitHud from './fruit/FruitHud';
-import GameBetBar from './controls/GameBetBar';
-import GameSpinButton from './controls/GameSpinButton';
+
 import GameHelpSheet from './help/GameHelpSheet';
 import GameTurnBadge from './controls/GameTurnBadge';
 import FruitWinOverlay from './fruit/FruitWinOverlay';
@@ -27,7 +24,6 @@ export default function FruitGame({ onExit, onBack }) {
   const [helpOpen, setHelpOpen] = useState(false);
   // Kazanç yazısının kapanma sayacı: yeni tur başlasa da çalışmaya devam eder.
   const flashTimer = useRef(null);
-  const ready = game.status === 'ready';
 
   // Tur sonucu: büyük kazançta kutlama ekranı, küçük kazançta kısa parıltı.
   useEffect(() => {
@@ -78,44 +74,13 @@ export default function FruitGame({ onExit, onBack }) {
           accent="border-[#f0c46a]/80 text-[#ffe9b8]"
         />
 
-        <FruitHud
-          coins={game.coins}
-          bet={game.bet}
-          lines={FRUIT_LINES}
-          win={game.win}
-          totalWon={game.totalWon}
-          busy={game.spinning}
-          onCoins={() => setCoinOpen(true)}
-          onSession={game.buySession}
-          sessionPrice={game.sessionPrice}
-          sessionSpins={game.sessionSpins}
-          sessionSize={game.sessionSize}
-        />
+
 
         {game.status === 'loading' && <p className="text-[11px] font-bold text-[#ffe9b8]">Oyun yükleniyor...</p>}
       </main>
 
-      <footer className="relative z-10 flex shrink-0 flex-col items-center gap-2 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-1">
-        <div className="gctl-deck ref-deck">
-          <GameBetBar
-            bet={game.bet}
-            lines={FRUIT_LINES}
-            disabled={game.spinning}
-            onStep={game.changeBet}
-            onMax={game.maxBet}
-            format={formatCoins}
-          />
-          <GameSpinButton
-            spinning={game.spinning}
-            disabled={!ready}
-            auto={game.auto}
-            icon={Play}
-            onSpin={game.spin}
-            onStop={game.stop}
-            onAuto={game.toggleAuto}
-          />
-        </div>
-      </footer>
+      <MatchingSlotDeck game={game} theme="fruit" lines={FRUIT_LINES} win={game.win}
+        spinning={game.spinning} onCoins={() => setCoinOpen(true)} />
 
       {/* Kazanç tutarı: tur bitince kaybolmaz, sonraki çevirmeye kadar görünür kalır. */}
       {(flash || game.win) > 0 && !game.spinning && !prize && game.sessionResult === null && (
@@ -134,7 +99,6 @@ export default function FruitGame({ onExit, onBack }) {
       )}
 
       {/* Coin bakiyesine dokununca uygulamanın coin mağazası açılır. */}
-      <GameCoinBar coins={game.coins} onClick={() => setCoinOpen(true)} />
       <CoinPurchasePanel open={coinOpen} coins={game.coins} onBack={() => setCoinOpen(false)} />
       <GameHelpSheet game="fruit" open={helpOpen} onClose={() => setHelpOpen(false)} />
 

@@ -1,17 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ChevronLeft, HelpCircle, Play } from 'lucide-react';
 import '@/styles/seker.css';
 import '@/styles/gameControls.css';
 import GameHelpSheet from './help/GameHelpSheet';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
-import GameCoinBar from '@/components/games/shared/GameCoinBar';
+import MatchingSlotDeck from '@/components/games/controls/MatchingSlotDeck';
 import GameIllustratedHeader from '@/components/games/shared/GameIllustratedHeader';
 import { Image } from '@/components/ui/image';
 import useSekerGame from './seker/useSekerGame';
 import SekerGrid from './seker/SekerGrid';
-import SekerHud from './seker/SekerHud';
-import GameBetBar from './controls/GameBetBar';
-import GameSpinButton from './controls/GameSpinButton';
+
 import GameTurnBadge from './controls/GameTurnBadge';
 import SekerWinOverlay from './seker/SekerWinOverlay';
 import { WIN_CARD_THRESHOLD } from '@/components/games/shared/winCard';
@@ -30,7 +27,6 @@ export default function SekerGame({ onExit, onBack }) {
   const [helpOpen, setHelpOpen] = useState(false);
   // Kazanç yazısının kapanma sayacı: yeni tur başlasa da çalışmaya devam eder.
   const flashTimer = useRef(null);
-  const ready = game.status === 'ready';
   // Şekerlerin zemini oyun açılırken bir kez silinir: makara dönerken hepsi hazırdır.
   useEffect(() => { warmSymbolTiles(Object.values(SEKER_ART)); }, []);
 
@@ -83,44 +79,13 @@ export default function SekerGame({ onExit, onBack }) {
           accent="border-[#ff7ac6]/80 text-[#ffd9ef]"
         />
 
-        <SekerHud
-          coins={game.coins}
-          bet={game.bet}
-          lines={SEKER_LINES}
-          win={game.win}
-          totalWon={game.totalWon}
-          busy={game.spinning}
-          onCoins={() => setCoinOpen(true)}
-          onSession={game.buySession}
-          sessionPrice={game.sessionPrice}
-          sessionSpins={game.sessionSpins}
-          sessionSize={game.sessionSize}
-        />
+
 
         {game.status === 'loading' && <p className="text-[11px] font-bold text-[#ffe9b8]">Oyun yükleniyor...</p>}
       </main>
 
-      <footer className="relative z-10 flex shrink-0 flex-col items-center gap-2 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-1">
-        <div className="gctl-deck ref-deck">
-          <GameBetBar
-            bet={game.bet}
-            lines={SEKER_LINES}
-            disabled={game.spinning}
-            onStep={game.changeBet}
-            onMax={game.maxBet}
-            format={formatCoins}
-          />
-          <GameSpinButton
-            spinning={game.spinning}
-            disabled={!ready}
-            auto={game.auto}
-            icon={Play}
-            onSpin={game.spin}
-            onStop={game.stop}
-            onAuto={game.toggleAuto}
-          />
-        </div>
-      </footer>
+      <MatchingSlotDeck game={game} theme="seker" lines={SEKER_LINES} win={game.win}
+        spinning={game.spinning} onCoins={() => setCoinOpen(true)} />
 
       {/* Kazanç tutarı: tur bitince kaybolmaz, sonraki çevirmeye kadar görünür kalır. */}
       {(flash || game.win) > 0 && !game.spinning && !prize && game.sessionResult === null && (
@@ -139,7 +104,6 @@ export default function SekerGame({ onExit, onBack }) {
       )}
 
       {/* Coin bakiyesine dokununca uygulamanın coin mağazası açılır. */}
-      <GameCoinBar coins={game.coins} onClick={() => setCoinOpen(true)} />
       <CoinPurchasePanel open={coinOpen} coins={game.coins} onBack={() => setCoinOpen(false)} />
       <GameHelpSheet game="seker" open={helpOpen} onClose={() => setHelpOpen(false)} />
 
