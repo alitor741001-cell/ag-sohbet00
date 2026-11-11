@@ -5,7 +5,7 @@ import useCutoutSprites from '@/hooks/useCutoutSprites';
 const SPRITE = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/c4f7f986e_IMG_0523.jpg';
 
 /** Alt kontrol çubuğu: şeffaf PNG düğmeler — altında beyaz zemin yok. */
-export default function VoiceControlBar({ micActive, deafened, gamesEnabled = true, privateUnread = 0, onToggleMic, onToggleSpeaker, onOpenGames, onOpenGifts, onOpenSettings, onOpenPrivateChat, onToggleChat }) {
+export default function VoiceControlBar({ micActive, micVisible = true, deafened, gamesEnabled = true, privateUnread = 0, onToggleMic, onToggleSpeaker, onOpenGames, onOpenGifts, onOpenSettings, onOpenPrivateChat, onToggleChat }) {
   const barRef = useRef(null);
   const sprites = useCutoutSprites(SPRITE, 7, true);
 
@@ -51,14 +51,19 @@ export default function VoiceControlBar({ micActive, deafened, gamesEnabled = tr
       <div className="flex w-full items-end justify-between gap-0.5 px-0.5">
         {items.map((item, index) => {
           const sprite = sprites[order[index]];
+          // Mikrofon yalnızca koltukta oturan kişiye görünür: koltuk boşken düğme yerinde
+          // durur ama görünmez, böylece diğer düğmelerin sırası ve yeri kaymaz.
+          const hidden = item.key === 'mic' && !micVisible;
           return (
             <button
               key={item.key}
               type="button"
               aria-label={item.label}
+              aria-hidden={hidden || undefined}
+              disabled={hidden}
               aria-pressed={item.key === 'mic' ? micActive : item.key === 'sound' ? !deafened : undefined}
               onClick={item.onClick}
-              className="relative flex flex-1 items-end justify-center transition-transform active:scale-95"
+              className={`relative flex flex-1 items-end justify-center transition-transform active:scale-95 ${hidden ? 'pointer-events-none invisible' : ''}`}
             >
               {sprite ? (
                 <img

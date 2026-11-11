@@ -1337,6 +1337,7 @@ export default function VoiceRoom() {
       <VoiceControlBar
         keyboardOpen={keyboardOpen}
         micActive={!voice.muted}
+        micVisible={seated}
         deafened={voice.deafened}
         chatOpen={chatOpen}
         onToggleMic={handleMic}
