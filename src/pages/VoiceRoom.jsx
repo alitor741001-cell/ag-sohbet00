@@ -146,6 +146,8 @@ export default function VoiceRoom() {
   const [giftBoardLoading, setGiftBoardLoading] = useState(false);
   const [giftId, setGiftId] = useState(null);
   const [selectedIds, setSelectedIds] = useState([]);
+  // Açık görüntülü PK maçı: tarafları hediye tahtasında alıcı olarak listelenir.
+  const [pkMatch, setPkMatch] = useState(null);
   const [gifted, setGifted] = useState({});
 
   const [keyboardOpen, setKeyboardOpen] = useState(false);
@@ -308,13 +310,23 @@ export default function VoiceRoom() {
     seats.forEach((seat) => {
       if (seat.user_id && !map.has(seat.user_id)) map.set(seat.user_id, { user_id: seat.user_id, name: seat.name || 'Kullanıcı', avatar: seat.avatar || '' });
     });
+    // Görüntülü PK açıksa maç tarafları da listede çıkar: seçilen kişiye giden hediye PK barına işler.
+    [pkMatch?.host_id, pkMatch?.guest_id].forEach((pkId) => {
+      if (!pkId || pkId === user?.id || map.has(pkId)) return;
+      const isHostSide = pkId === pkMatch.host_id;
+      map.set(pkId, {
+        user_id: pkId,
+        name: (isHostSide ? pkMatch.host_name : pkMatch.guest_name) || 'Kullanıcı',
+        avatar: (isHostSide ? pkMatch.host_avatar : pkMatch.guest_avatar) || '',
+      });
+    });
     // Kendisi hiç koltukta/katılımcı listesinde görünmüyorsa yine de seçilebilir ve listenin başında durur.
     const self = user?.id
       ? (map.get(user.id) || { user_id: user.id, name: user.full_name || 'Kullanıcı', avatar: '' })
       : null;
     const others = [...map.values()].filter((person) => person.user_id !== user?.id);
     return self ? [{ ...self, me: true }, ...others] : others;
-  }, [seats, participants, user?.id, user?.full_name]);
+  }, [seats, participants, pkMatch, user?.id, user?.full_name]);
 
   // Seçim rengi: seçilen hediyenin K seviyesi belirler.
   const selectedGift = useMemo(() => gifts.find((item) => item.id === giftId) || null, [gifts, giftId]);
@@ -1226,6 +1238,7 @@ export default function VoiceRoom() {
         roomId={id}
         user={user}
         onOpenProfile={openRoomProfile}
+        onMatchChange={setPkMatch}
       />
 
       <VoiceStage

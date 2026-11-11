@@ -17,7 +17,7 @@ const errorText = (error) => error?.response?.data?.error || error?.message || '
  * İki kamera yan yana kare olarak durur; koltuklar, sohbet ve mikrofonlar aynen çalışmaya devam eder.
  * Puanlar sunucudaki maç kaydından okunur — hediye gönderildikçe iki tarafta gerçek zamanlı ilerler.
  */
-export default function VideoPkLayer({ open, onOpen, onClose, roomId, user, onOpenProfile }) {
+export default function VideoPkLayer({ open, onOpen, onClose, roomId, user, onOpenProfile, onMatchChange }) {
   const { toast } = useToast();
   const { active, invites, loaded, busy, run, ensureLobby } = useVideoPk(user, { poll: open });
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -48,6 +48,11 @@ export default function VideoPkLayer({ open, onOpen, onClose, roomId, user, onOp
     enabled: open && !!active?.id && (isHost || isGuest),
     selfId: user?.id,
   });
+
+  // Maç bilgisi odaya bildirilir: hediye tahtasında PK tarafları da alıcı olarak çıkar.
+  useEffect(() => {
+    onMatchChange?.(open ? active : null);
+  }, [open, active, onMatchChange]);
 
   // Alan açıldığında kişinin kendi kamerası açılır; davet bu lobiye düşer.
   useEffect(() => {

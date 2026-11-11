@@ -359,6 +359,14 @@ export default async function (req: Request): Promise<Response> {
       seats.forEach((seat) => { if (seat.user_id) people.set(seat.user_id, seat.name || 'Kullanıcı'); });
       (room.participants || []).forEach((person) => { if (person.user_id) people.set(person.user_id, person.name || 'Kullanıcı'); });
 
+      // Görüntülü PK açıksa maç tarafları da hediye alabilir; aldıkları hediye PK puanına işler.
+      const pkRows = await base44.asServiceRole.entities.PkMatch.filter({ room_id, status: 'live' }, '-created_date', 5).catch(() => []);
+      const pkMatch = (Array.isArray(pkRows) ? pkRows : []).find((row) => !!row.host_id) || null;
+      if (pkMatch) {
+        if (pkMatch.host_id) people.set(pkMatch.host_id, pkMatch.host_name || 'Kullanıcı');
+        if (pkMatch.accepted && pkMatch.guest_id) people.set(pkMatch.guest_id, pkMatch.guest_name || 'Kullanıcı');
+      }
+
       // Kişi kendine de hediye gönderebilir.
       const ids = Array.isArray(target_ids) ? target_ids.filter((value) => typeof value === 'string' && value) : [];
       const recipients = [...new Set(ids)].slice(0, 30)
@@ -384,6 +392,19 @@ export default async function (req: Request): Promise<Response> {
       if (delivery.busy) return Response.json({ error: 'Gönderim sırada.', retry_after_ms: 700 }, { status: 429 });
       if (delivery.insufficient) return Response.json({ error: 'Yetersiz K bakiyesi.', needed_k: totalK, available_k: delivery.coins / 1000 }, { status: 400 });
       waitUntil(mirrorGiftDelivery(base44, delivery));
+      // PK barı hediyeyle birlikte ilerler: puan maç kaydına yazılır, iki tarafta da aynı sayı görünür.
+      if (pkMatch && pkMatch.accepted && pkMatch.guest_id) {
+        const gain = kValue * quantity;
+        let hostScore = Number(pkMatch.host_score) || 0;
+        let guestScore = Number(pkMatch.guest_score) || 0;
+        recipients.forEach((person) => {
+          if (person.user_id === pkMatch.host_id) hostScore += gain;
+          if (person.user_id === pkMatch.guest_id) guestScore += gain;
+        });
+        if (hostScore !== (Number(pkMatch.host_score) || 0) || guestScore !== (Number(pkMatch.guest_score) || 0)) {
+          waitUntil(base44.asServiceRole.entities.PkMatch.update(pkMatch.id, { host_score: hostScore, guest_score: guestScore }).catch(() => null));
+        }
+      }
       if (delivery.first) waitUntil(giftAftercare(base44, { user, room: delivery.room, gift: giftRecord, recipients, quantity, name: shownName, avatar: shownAvatar, hidden: hiddenUser, me, progression: delivery.progression }).catch(error => console.error('Hediye kota/duyuru eşitlemesi:', error)));
       return Response.json({
         ok: true, gift: { id: giftRecord.id, name: giftRecord.name, emoji: giftRecord.emoji || '🎁', image_url: giftRecord.image_url || '', k_value: giftRecord.k_value },
