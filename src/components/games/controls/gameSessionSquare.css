@@ -1,0 +1,17 @@
+.sfz-left-stack { display: flex; min-width: 0; flex-direction: column; align-items: stretch; gap: 5px; }
+.sfz-left-stack > .sfz-cat-pill { width: 100%; }
+.game-session-square {
+  position: relative; display: flex; width: 100%; aspect-ratio: 1;
+  flex-direction: column; align-items: center; justify-content: center;
+  padding: 13px 2px 3px; border: 4px ridge hsl(var(--arcade-gold));
+  border-radius: 16px 16px 8px 8px; line-height: 1.05;
+  background: linear-gradient(180deg, hsl(var(--slot-gold)), hsl(var(--slot-orange)));
+  color: hsl(var(--slot-bg));
+  box-shadow: 0 0 0 1px hsl(var(--arcade-brass)), inset 0 0 0 1px hsl(var(--arcade-cream));
+}
+.game-session-crown { position: absolute; top: -10px; left: 0; right: 0; text-align: center; font-size: 24px; color: hsl(var(--arcade-gold)); text-shadow: 0 2px 1px hsl(var(--arcade-brass)); }
+.game-session-square > span:not(.game-session-crown) { font-size: clamp(10px, 2.7cqw, 15px); font-weight: 800; }
+.game-session-square > strong { width: 100%; font-size: clamp(18px, 5cqw, 24px); font-weight: 900; }
+.game-session-square:disabled { opacity: .55; cursor: not-allowed; }
+.game-session-square:focus-visible { outline: 2px solid hsl(var(--slot-text)); outline-offset: 2px; }
+@supports not (aspect-ratio: 1) { .game-session-square { min-height: 80px; } }

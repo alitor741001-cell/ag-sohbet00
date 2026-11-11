@@ -25,6 +25,7 @@ export default function SlotControlDeck({
   onCoins,
   theme = 'slot',
   betDisabled = spinning,
+  leftAccessory,
 }) {
   return (
     <footer className="sfz-deck" data-console-theme={theme}>
@@ -56,7 +57,9 @@ export default function SlotControlDeck({
 
       {/* Alt kontrol sırası: Sol kedi/coin hapı + Orta BET ve MAX + Sağ AUTO ve yüksek SPIN */}
       <div className="sfz-deck-main">
-        {/* Sol alt: mavi parlayan kedi ikonlu bakiye/hak hapı */}
+        {/* Sol alt: paket kutusu ve mevcut coin bakiyesi. */}
+        <div className={leftAccessory ? 'sfz-left-stack' : 'min-w-0 [&>.sfz-cat-pill]:w-full'}>
+        {leftAccessory}
         <button
           type="button"
           onClick={onCoins}
@@ -72,6 +75,7 @@ export default function SlotControlDeck({
           </span>
           <ChevronRight className="h-4 w-4 shrink-0 text-[#f5d0fe]" strokeWidth={3} />
         </button>
+        </div>
 
         {/* Orta sütun: BET [- 10 +] kapsülü ve altında gümüş MAX hapı */}
         <div className="sfz-bet-stack">
