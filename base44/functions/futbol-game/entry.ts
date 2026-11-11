@@ -13,6 +13,7 @@ import {
   todayKey,
 } from '../../shared/futbolRound.ts';
 import { mirrorRecord } from '../../shared/supabaseMirror.ts';
+import { recordLeaderWin } from '../../shared/gameLeaders.ts';
 import { waitUntil } from 'base44:runtime';
 
 const potOf = (pots, teamId) => (pots || []).find((pot) => pot.team_id === teamId)?.coins ?? 0;
@@ -73,6 +74,7 @@ async function settleMine(base44, user, record, wallet) {
   }
 
   waitUntil(mirrorRecord(base44, 'GameWallet', updated).catch(() => null));
+  if (total > 0) waitUntil(recordLeaderWin(base44, 'futbol', user, total).catch(() => null));
   return { wallet: updated, last };
 }
 

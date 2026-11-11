@@ -4,6 +4,7 @@ import { MAX_STAKE, sanitizeBets, settle } from '../../shared/zarEngine.ts';
 import { START_COINS, loadWallet } from '../../shared/gameWallet.ts';
 import { ensureRound, liveHistory, mirrorRoundView, roundForBet, roundView, walletView } from '../../shared/zarRound.ts';
 import { mirrorRecord } from '../../shared/supabaseMirror.ts';
+import { recordLeaderWin } from '../../shared/gameLeaders.ts';
 
 export default async function (req) {
   try {
@@ -88,6 +89,7 @@ export default async function (req) {
       const created = await base44.asServiceRole.entities.ZarBet.bulkCreate(rows).catch(() => null);
       // Bakiye ve masa bahisleri aynaya da yazılır: iki altyapı aynı oyunu taşır.
       waitUntil(mirrorRecord(base44, 'GameWallet', updated).catch(() => null));
+      if (result.payout > 0) waitUntil(recordLeaderWin(base44, 'zar', user, result.payout).catch(() => null));
       if (created) waitUntil(mirrorRecord(base44, 'ZarBet', created).catch(() => null));
 
       return Response.json({

@@ -13,7 +13,6 @@ export default function EliminHud({ coins, bet, win, totalWon, busy, onCoins, on
     { key: 'coins', label: 'COIN BAKİYEM', value: formatCoins(coins), icon: Star },
     { key: 'stake', label: 'TOPLAM BAHİS', value: formatCoins(bet * LINES), icon: Clapperboard },
     { key: 'win', label: 'KAZANÇ', value: formatCoins(win), icon: Crown, win: win > 0 },
-    { key: 'total', label: 'TOPLAM KAZANÇ', value: formatCoins(totalWon), icon: Coins },
   ];
 
   return (

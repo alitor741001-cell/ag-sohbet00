@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ChevronLeft } from 'lucide-react';
 import SlotFrenzyHeader from './slot/SlotFrenzyHeader';
 import GameHelpSheet from './help/GameHelpSheet';
 import { Image } from '@/components/ui/image';
@@ -114,14 +113,6 @@ export default function SlotGame({ onExit, onBack, roomId }) {
         <SlotJackpotBar pools={game.pools} topGap={inRoom ? 0 : panelGap} compact={inRoom} />
       </div>
 
-      <button
-        type="button"
-        onClick={onBack}
-        aria-label="Oyun listesine dön"
-        className="absolute left-2 top-[env(safe-area-inset-top)] z-20 mt-2 flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm active:scale-95"
-      >
-        <ChevronLeft className="h-5 w-5" />
-      </button>
 
 
       {/* Oyun ekranı: görselin kırpılan iki paneli arasında kalan kısım alta yaslanır. */}

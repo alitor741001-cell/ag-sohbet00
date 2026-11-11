@@ -13,7 +13,6 @@ export default function SekerliHud({ coins, bet, win, totalWon, busy, onCoins, o
     { key: 'coins', label: 'COIN BAKİYEM', value: formatCredits(coins), icon: Star },
     { key: 'stake', label: 'TOPLAM BAHİS', value: formatCredits(bet * LINES), icon: Clapperboard },
     { key: 'win', label: 'KAZANÇ', value: formatCredits(win), icon: Crown, win: win > 0 },
-    { key: 'total', label: 'TOPLAM KAZANÇ', value: formatCredits(totalWon), icon: Coins },
   ];
 
   return (

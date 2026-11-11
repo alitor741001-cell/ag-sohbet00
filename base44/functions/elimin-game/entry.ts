@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import { waitUntil } from 'base44:runtime';
 import { mirrorRecord } from '../../shared/supabaseMirror.ts';
+import { recordLeaderWin } from '../../shared/gameLeaders.ts';
 import { personalGameResult } from '../../shared/personalGameOdds.ts';
 import {
   BET_LEVELS,
@@ -143,6 +144,7 @@ export default async function (req: Request) {
       });
       // Supabase aynası: bakiye iki altyapıda birden güncel kalır.
       waitUntil(mirrorRecord(base44, 'GameWallet', updated));
+      if (amount > 0) waitUntil(recordLeaderWin(base44, 'elimin', user, amount).catch(() => null));
       return Response.json({ ...walletView(updated), grid: null, steps: [], win: 0, chest_win: amount });
     }
 
@@ -210,6 +212,7 @@ export default async function (req: Request) {
 
       // Supabase aynası: bakiye iki altyapıda birden güncel kalır.
       waitUntil(mirrorRecord(base44, 'GameWallet', updated));
+      if (payout > 0) waitUntil(recordLeaderWin(base44, 'elimin', user, payout).catch(() => null));
 
       return Response.json({
         ...walletView(updated),

@@ -13,7 +13,7 @@
 }
 
 /* --- KAZANÇ / BİLGİ KARTLARI --- */
-.ref-stats { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:5px; width:100%; max-width:27rem; }
+.ref-stats { display:grid; grid-auto-flow:column; grid-auto-columns:minmax(0,1fr); gap:5px; width:100%; max-width:27rem; }
 .ref-stat { --tone: 45 95% 60%; position:relative; min-width:0; display:flex; align-items:center; gap:5px; padding:5px 6px; border-radius:14px; overflow:hidden; container-type:inline-size; }
 .ref-stat::before { content:''; position:absolute; inset:0; background:radial-gradient(90% 120% at 0% 0%, hsl(var(--tone) / .35), transparent 65%); pointer-events:none; }
 .ref-stat:nth-child(2) { --tone: 275 85% 68%; }

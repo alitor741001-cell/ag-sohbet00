@@ -3,6 +3,7 @@ import { MAX_STAKE, sanitizeBets, settle } from '../../shared/rouletteEngine.ts'
 import { START_COINS, loadWallet } from '../../shared/gameWallet.ts';
 import { ensureRound, liveHistory, mirrorRoundView, roundForSpin, roundView } from '../../shared/rouletteRound.ts';
 import { mirrorRecord } from '../../shared/supabaseMirror.ts';
+import { recordLeaderWin } from '../../shared/gameLeaders.ts';
 import { waitUntil } from 'base44:runtime';
 
 // Oyun ekranının gördüğü bakiye bilgisi.
@@ -90,6 +91,7 @@ export default async function (req) {
       }).catch(() => null);
       // Supabase aynası: bakiye ve tur kaydı iki altyapıda birden güncel kalır.
       waitUntil(mirrorRecord(base44, 'GameWallet', updated));
+      if (result.payout > 0) waitUntil(recordLeaderWin(base44, 'roulette', user, result.payout).catch(() => null));
       if (recorded) waitUntil(mirrorRecord(base44, 'RouletteSpin', recorded));
 
       return Response.json({

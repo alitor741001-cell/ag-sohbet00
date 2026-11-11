@@ -1,7 +1,21 @@
 import { lazy, Suspense } from 'react';
 import GameAmbience from '@/components/games/GameAmbience';
 import '@/styles/gameControlThemes.css';
-import { DEDE_ID, ELIMIN_ID, FRUIT_ID, FUTBOL_ID, OKEY_CLASSIC_ID, OKEY_ID, ROCKET_ID, ROULETTE_ID, SEKERLI_MEYVE_ID, SEKER_ID, ZAR_ID } from '@/components/games/gameCatalog';
+import { DEDE_ID, ELIMIN_ID, FRUIT_ID, FUTBOL_ID, GAMES, OKEY_CLASSIC_ID, OKEY_ID, ROCKET_ID, ROULETTE_ID, SEKERLI_MEYVE_ID, SEKER_ID, SLOT_ID, ZAR_ID } from '@/components/games/gameCatalog';
+import GameLeaderBadge from '@/components/games/leaders/GameLeaderBadge';
+
+// Kazanan listesi tutulan oyunlar ve sunucudaki adları.
+const LEADER_KEYS = {
+  [SLOT_ID]: 'slot',
+  [FRUIT_ID]: 'fruit',
+  [SEKER_ID]: 'seker',
+  [SEKERLI_MEYVE_ID]: 'sekerli',
+  [ELIMIN_ID]: 'elimin',
+  [ROULETTE_ID]: 'roulette',
+  [ZAR_ID]: 'zar',
+  [ROCKET_ID]: 'rocket',
+  [FUTBOL_ID]: 'futbol',
+};
 
 const SlotGame = lazy(() => import('@/components/games/SlotGame'));
 const OkeyGame = lazy(() => import('@/components/games/OkeyGame'));
@@ -25,6 +39,8 @@ export default function GameContent({ selected, onExit, onBack, roomId }) {
     <Suspense fallback={<div className="flex h-full flex-col items-center justify-center gap-4 bg-slot text-slot-text" role="status"><p>Oyun yükleniyor...</p><button type="button" onClick={onExit} className="min-h-11 rounded-xl border border-slot-gold/40 px-4">Geri dön</button></div>}>
       <div className="game-controls-themed relative h-full w-full" data-game={selected}>
         <Game onExit={onExit} onBack={onBack} roomId={roomId} variant={variant} />
+        {/* Dede rozeti kendi üst görselinde durur; okeyde coin kazancı olmadığı için liste yok. */}
+        {LEADER_KEYS[selected] && <GameLeaderBadge game={LEADER_KEYS[selected]} title={GAMES.find((item) => item.id === selected)?.title || ''} />}
         <GameAmbience />
       </div>
     </Suspense>

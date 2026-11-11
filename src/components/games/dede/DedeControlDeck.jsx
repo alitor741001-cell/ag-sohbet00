@@ -3,6 +3,7 @@ import DedeMultiplierCircle from '@/components/games/dede/DedeMultiplierCircle';
 import FitGameText from '@/components/games/controls/FitGameText';
 import { DEDE_LINES, formatCoins } from '@/components/games/dede/dedeConfig';
 import '@/styles/referenceGameDecks.css';
+import compactCoins from '@/lib/compactCoins';
 
 export default function DedeControlDeck({ game, onCoins }) {
   const busy = game.spinning || game.intro;
@@ -12,7 +13,7 @@ export default function DedeControlDeck({ game, onCoins }) {
   return (
     <footer className="dede-reference-deck">
       <div className="dede-reference-win"><span>WIN</span><FitGameText as="strong">{formatCoins(game.win)}</FitGameText></div>
-      <button type="button" className="dede-reference-balance" onClick={onCoins} aria-label="Coin bakiyesi, coin yükle"><Coins size={14} /> {formatCoins(game.coins)} <span>›</span></button>
+      <button type="button" className="dede-reference-balance" onClick={onCoins} aria-label="Coin bakiyesi, coin yükle"><Coins size={14} /> {compactCoins(game.coins)} <span>›</span></button>
       <div className="dede-reference-center">
         <button type="button" className="dede-reference-buy" disabled={busy || active || disabled} onClick={affordable ? game.buySession : onCoins} aria-label={affordable ? '15 çevirme paketi satın al' : 'Coin yükle'}>
           <span className="dede-reference-crown" aria-hidden="true">♛</span>
@@ -22,7 +23,6 @@ export default function DedeControlDeck({ game, onCoins }) {
         <button type="button" className="dede-reference-spin" disabled={!game.spinning && disabled} onClick={game.spinning ? game.stop : game.spin} aria-label={game.spinning ? 'Durdur' : 'Çevir'}><span>{game.spinning ? 'STOP' : 'SPIN'}</span></button>
         <div className="dede-reference-scroll">
           <span>ÇARPAN</span><DedeMultiplierCircle multiplier={game.multiplier} orbs={game.orbs} />
-          <span>TOPLAM KAZANÇ</span><FitGameText as="strong">{formatCoins(game.totalWon)}</FitGameText>
         </div>
       </div>
       <div className="dede-reference-toolbar">

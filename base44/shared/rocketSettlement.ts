@@ -1,5 +1,6 @@
 import { withLimitRetry } from './retryLimit.ts';
 import { mirrorRecord } from './supabaseMirror.ts';
+import { recordLeaderWin } from './gameLeaders.ts';
 import { waitUntil } from 'base44:runtime';
 
 // Conditional updates make retries safe across concurrent function instances.
@@ -11,7 +12,7 @@ export async function creditRocketBet(base44, bet) {
   if (!wallet) throw new Error('Oyun cüzdanı bulunamadı.');
   // The receipt and increment are committed together: an interrupted response
   // can be retried without paying twice or overwriting the other slot's payout.
-  await withLimitRetry(() => base44.asServiceRole.entities.GameWallet.updateMany(
+  const paid = await withLimitRetry(() => base44.asServiceRole.entities.GameWallet.updateMany(
     { id: wallet.id, rocket_paid_bets: { $ne: bet.id } },
     {
       $inc: {
@@ -23,6 +24,11 @@ export async function creditRocketBet(base44, bet) {
     }
   ));
   await withLimitRetry(() => base44.asServiceRole.entities.RocketBet.update(bet.id, { payout_credited: true }));
+  // Kazanan listesi: yalnızca bu istekte ödenen bahis bir kez işlenir.
+  if (paid?.updated && !bet.cancelled && bet.payout > 0) {
+    const person = { id: bet.user_id, full_name: bet.user_name, avatar: bet.user_avatar };
+    waitUntil(recordLeaderWin(base44, 'rocket', person, bet.payout).catch(() => null));
+  }
   // Supabase aynası: nakde çevrilen bahis son haliyle arka planda yazılır.
   waitUntil(mirrorRecord(base44, 'RocketBet', { ...bet, payout_credited: true }));
   return { ...bet, payout_credited: true };

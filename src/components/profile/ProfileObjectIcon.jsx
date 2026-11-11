@@ -25,8 +25,9 @@ export default function ProfileObjectIcon({ kind, Icon }) {
   // Tüm ikonlar çanta ikonu gibi işlenir: kenara bağlı beyaz kare zemin temizlenir.
   const transparent = useProfileIconPng(source);
   return (
-    <span className="relative flex h-[46px] w-[58px] shrink-0 items-center justify-center" aria-hidden="true">
-      {transparent ? <img src={transparent} alt="" className="h-full w-full object-contain" />
+    <span className="relative flex h-[46px] w-[58px] shrink-0 items-center justify-center overflow-hidden" aria-hidden="true">
+      {/* Görsellerin kenarındaki ince beyaz kare çerçeve, büyütülüp kırpılarak dışarıda bırakılır. */}
+      {transparent ? <img src={transparent} alt="" className="h-full w-full scale-[1.35] object-contain" />
         : <Icon className="h-8 w-8 text-premium-gold-light" />}
     </span>
   );

@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import { waitUntil } from 'base44:runtime';
 import { mirrorRecord } from '../../shared/supabaseMirror.ts';
+import { recordLeaderWin } from '../../shared/gameLeaders.ts';
 import { personalGameResult } from '../../shared/personalGameOdds.ts';
 import { BET_LEVELS, LINES, spinSekerli } from '../../shared/sekerliEngine.ts';
 import {
@@ -93,6 +94,7 @@ export default async function (req) {
 
       // Supabase aynası: bakiye iki altyapıda birden güncel kalır.
       waitUntil(mirrorRecord(base44, 'GameWallet', updated));
+      if (win > 0) waitUntil(recordLeaderWin(base44, 'sekerli', user, win).catch(() => null));
 
       return Response.json({
         ...walletView(updated),

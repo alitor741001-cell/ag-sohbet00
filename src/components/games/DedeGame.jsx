@@ -4,8 +4,8 @@ import '@/styles/dede.css';
 import '@/styles/gameControls.css';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
 import DedeZeusHeader from '@/components/games/dede/DedeZeusHeader';
-import DedeLeaderSheet from '@/components/games/dede/DedeLeaderSheet';
-import useDedeLeaders from '@/components/games/dede/useDedeLeaders';
+import GameLeaderSheet from '@/components/games/leaders/GameLeaderSheet';
+import useGameLeaders from '@/components/games/leaders/useGameLeaders';
 import DedeStorm from '@/components/games/dede/DedeStorm';
 import useDedeVisibleOrbs from '@/components/games/dede/useDedeVisibleOrbs';
 import '@/components/games/dede/dedeWizard.css';
@@ -37,7 +37,7 @@ export default function DedeGame({ onExit, onBack, roomId }) {
   const [prize, setPrize] = useState(null);
   const [helpOpen, setHelpOpen] = useState(false);
   const [leadersOpen, setLeadersOpen] = useState(false);
-  const { leaders, reload: reloadLeaders } = useDedeLeaders();
+  const { leaders, top: leader, reload: reloadLeaders } = useGameLeaders('dede');
   // Kazanç yazısının kapanma sayacı: yeni tur başlasa da çalışmaya devam eder.
   const flashTimer = useRef(null);
 
@@ -69,22 +69,16 @@ export default function DedeGame({ onExit, onBack, roomId }) {
       <span aria-hidden="true" className="dede-rays" />
       <DedeZeusHeader
         coins={game.coins}
-        leader={leaders.total || leaders.week || leaders.today}
+        leader={leader}
         compact={inRoom}
         onLeaders={() => { reloadLeaders(); setLeadersOpen(true); }}
         onHelp={() => setHelpOpen(true)}
       />
 
-      <main className="relative z-10 flex min-h-0 flex-1 flex-col items-center gap-1 px-0 py-1">
-        {/* Izgara ekranın kalan tüm alanını kaplar: madalyonlar olabildiğince büyük durur. */}
-        <div className="flex min-h-0 w-full flex-1 items-center justify-center">
-          <div
-            className={
-              inRoom
-                ? 'dede-frame flex h-full w-full p-1'
-                : 'dede-frame flex aspect-[6/5] max-h-full w-full max-w-[54rem] p-1.5 sm:p-2'
-            }
-          >
+      {/* Izgara üst görselin alt kısmına doğru yükselir: görselin altı çerçevenin arkasında kalır. */}
+      <main className={`relative z-10 flex min-h-0 flex-1 flex-col items-center gap-1 px-0 pb-1 ${inRoom ? '-mt-[6vw]' : '-mt-[11vw] sm:-mt-16'}`}>
+        <div className="flex min-h-0 w-full flex-1 items-stretch justify-center">
+          <div className="dede-frame flex h-full w-full max-w-[54rem] p-1 sm:p-2">
             <div className="relative flex min-h-0 w-full">
               <DedeReels
                 rolling={game.rolling}
@@ -133,7 +127,7 @@ export default function DedeGame({ onExit, onBack, roomId }) {
       {/* Coin bakiyesine dokununca uygulamanın coin mağazası açılır. */}
       <CoinPurchasePanel open={coinOpen} coins={game.coins} onBack={() => setCoinOpen(false)} />
       <GameHelpSheet game="dede" open={helpOpen} onClose={() => setHelpOpen(false)} />
-      <DedeLeaderSheet open={leadersOpen} leaders={leaders} onClose={() => setLeadersOpen(false)} />
+      <GameLeaderSheet open={leadersOpen} title="Dede" leaders={leaders} onClose={() => setLeadersOpen(false)} />
 
       <DedeWinOverlay open={!!prize} amount={prize?.amount || 0} onAccept={() => setPrize(null)} />
 

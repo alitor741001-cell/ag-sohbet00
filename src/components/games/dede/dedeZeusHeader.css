@@ -14,10 +14,10 @@
 .dzh-art { position: absolute; left: 0; top: 0; width: 100%; height: auto; pointer-events: none; user-select: none; }
 .dzh-coins {
   position: absolute;
-  left: 10.2cqw;
-  top: 2.4cqw;
+  left: 9.8cqw;
+  top: 2cqw;
   width: 13.4cqw;
-  height: 4.4cqw;
+  height: 4.6cqw;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -29,18 +29,17 @@
   text-shadow: 0 1px 0 #6b3a05, 0 0 6px rgba(255, 200, 80, 0.8);
 }
 .dzh-badge { position: absolute; left: 1cqw; top: 7cqw; width: 14.6cqw; height: 18cqw; border-radius: 30%; }
+/* Profil, rozetteki boş çemberin tam ortasına oturur ve çemberden küçük kalır: dışa taşmaz. */
 .dzh-avatar {
-  position: absolute;
-  left: 3.1cqw;
-  top: 7.3cqw;
+  position: absolute !important;
+  left: 8.2cqw;
+  top: 16cqw;
   width: 8.4cqw;
   height: 8.4cqw;
-  overflow: hidden;
-  border-radius: 9999px;
-  background: #3a0f52;
-  box-shadow: 0 0 0 0.3cqw #ffe39a;
+  transform: translate(-50%, -50%);
+  font-size: 3.6cqw;
+  pointer-events: none;
 }
-.dzh-initial { display: flex; height: 100%; align-items: center; justify-content: center; font-size: 3.6cqw; font-weight: 900; color: #ffd76a; }
 .dzh-help {
   position: absolute;
   right: 2cqw;

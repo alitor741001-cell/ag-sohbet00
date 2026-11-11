@@ -2,7 +2,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import { waitUntil } from 'base44:runtime';
 import { mirrorRecord } from '../../shared/supabaseMirror.ts';
 import { personalGameResult } from '../../shared/personalGameOdds.ts';
-import { loadLeaders, recordLeaderWin } from '../../shared/gameLeaders.ts';
+import { recordLeaderWin } from '../../shared/gameLeaders.ts';
 import { BET_LEVELS, BIG_WIN_MULTIPLE, LINES, SCATTER_MIN, playDede } from '../../shared/dedeEngine.ts';
 import {
   DEFAULT_BET,
@@ -46,11 +46,6 @@ export default async function (req) {
 
     const body = await req.json().catch(() => ({}));
     const action = body.action || 'state';
-
-    // Kazananlar: bugün, bu hafta ve toplamda en çok kazanan.
-    if (action === 'leaders') {
-      return Response.json(await loadLeaders(base44, 'dede', 'total_won_dede'));
-    }
 
     const wallet = await loadWallet(base44, user);
 
