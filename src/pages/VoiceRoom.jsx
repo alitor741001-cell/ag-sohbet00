@@ -364,12 +364,17 @@ export default function VoiceRoom() {
     setMinimizedRoom({ id, name: info.name || 'Sesli oda', owner_id: info.owner_id, owner_name: info.owner_name, path: `/sesli-oda/${id}` });
   }, [id]);
 
+  // Görüntülü PK canlıyken kişi koltuğa oturmuş gibi odaya bağlanır: mikrofonu odaya
+  // gider, odadaki herkes onu duyar; kendisi de odayı ve rakibini duyar.
+  const pkLive = !!pkMatch && pkMatch.status === 'live' && !!pkMatch.started
+    && (pkMatch.host_id === user?.id || pkMatch.guest_id === user?.id);
+
   const voice = useVoiceChat({
     roomId: id,
     user,
     participants,
     voiceEnabled: joined && !!room?.voice_enabled,
-    micEnabled: seated,
+    micEnabled: seated || pkLive,
   });
   useEffect(() => { if (voice.micDenied) setMicGuideDismissed(false); }, [voice.micDenied]);
 
@@ -1239,6 +1244,7 @@ export default function VoiceRoom() {
         user={user}
         onOpenProfile={openRoomProfile}
         onMatchChange={setPkMatch}
+        onPkAudio={voice.requestMic}
       />
 
       <VoiceStage

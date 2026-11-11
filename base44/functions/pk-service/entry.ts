@@ -79,7 +79,6 @@ export default async function (req) {
       // Aynı odada tek yayın olur: odadaki eski davetler ve karşılaşmalar kapanır.
       await Promise.all(open.map((item) => svc.PkMatch.update(item.id, { status: 'ended' }).catch(() => null)));
 
-      const startedAt = new Date();
       const match = await svc.PkMatch.create({
         room_id: roomId,
         room_name: String(body.room_name || ''),
@@ -94,8 +93,11 @@ export default async function (req) {
         guest_name: '',
         guest_avatar: '',
         accepted: false,
-        started_at: startedAt.toISOString(),
-        ends_at: new Date(startedAt.getTime() + PK_DURATION_MS).toISOString(),
+        // Tur süresi "PK Başla" karşılıklı onaylanınca başlar: lobide sayaç işlemez.
+        started_at: '',
+        ends_at: '',
+        start_request_at: '',
+        start_request_by: '',
         round_no: 1,
         muted: [],
       });
@@ -188,9 +190,6 @@ export default async function (req) {
         return Response.json({ error: 'Davet artık geçerli değil' }, { status: 400 });
       }
 
-      const now = new Date();
-      const freshEnd = new Date(now.getTime() + PK_DURATION_MS).toISOString();
-
       // Görüntülü PK'da ret: davet sahibi durumu görsün diye davet reddeden kişiyle kapatılır.
       if (action === 'decline' && (match.mode || 'room') === 'video') {
         const ended = await svc.PkMatch.update(match.id, {
@@ -227,15 +226,19 @@ export default async function (req) {
           .map((row) => svc.PkMatch.update(row.id, { status: 'ended' }).catch(() => null)));
       }
 
-      // Kabul eden kişi yayına katılır: çift kamera açılır ve 5 dakikalık tur bu anda başlar.
+      // Kabul eden kişi yayına katılır: iki taraf birbirini görür, tur HENÜZ başlamaz.
+      // Tur, "PK Başla" isteği karşı taraftan da onaylanınca başlar.
       const updated = await svc.PkMatch.update(match.id, {
         status: 'live',
         accepted: true,
-        started: true,
+        started: false,
         settled: false,
         invited_at: '',
-        started_at: now.toISOString(),
-        ends_at: freshEnd,
+        started_at: '',
+        ends_at: '',
+        start_request_at: '',
+        start_request_by: '',
+        start_declined_at: '',
         host_score: 0,
         guest_score: 0,
         winner_id: '',
@@ -245,7 +248,36 @@ export default async function (req) {
       return Response.json({ match: updated });
     }
 
-    // Maçı başlat: 5 dakikalık süre bu anda başlar, iki taraf da başlatabilir.
+    // "PK Başla" isteği: tur hemen başlamaz, karşı tarafa kabul/red kartı düşer.
+    if (action === 'request-start') {
+      const match = await getMatch(String(body.id || ''));
+      if (!match) return Response.json({ error: 'PK bulunamadı' }, { status: 404 });
+      if (!isPlayer(match)) return Response.json({ error: 'Yetki yok' }, { status: 403 });
+      if (!match.guest_id || !match.accepted) return Response.json({ error: 'Rakip henüz hazır değil' }, { status: 400 });
+      if (match.started && match.status === 'live') return Response.json({ match });
+
+      const requested = await svc.PkMatch.update(match.id, {
+        start_request_at: new Date().toISOString(),
+        start_request_by: user.id,
+        start_declined_at: '',
+      });
+      return Response.json({ match: requested });
+    }
+
+    // Başlatma isteğini reddet / geri çek: istek kapanır, tur başlamaz.
+    if (action === 'decline-start') {
+      const match = await getMatch(String(body.id || ''));
+      if (!match) return Response.json({ error: 'PK bulunamadı' }, { status: 404 });
+      if (!isPlayer(match)) return Response.json({ error: 'Yetki yok' }, { status: 403 });
+      const cleared = await svc.PkMatch.update(match.id, {
+        start_request_at: '',
+        start_request_by: '',
+        start_declined_at: new Date().toISOString(),
+      });
+      return Response.json({ match: cleared });
+    }
+
+    // Turu başlat: karşı tarafın başlatma isteği kabul edilince 5 dakikalık süre başlar.
     if (action === 'start') {
       const match = await getMatch(String(body.id || ''));
       if (!match) return Response.json({ error: 'PK bulunamadı' }, { status: 404 });
@@ -253,6 +285,10 @@ export default async function (req) {
       if (!match.guest_id) return Response.json({ error: 'Maç için rakip gerekiyor' }, { status: 400 });
       if (!match.accepted) return Response.json({ error: 'Rakip daveti henüz kabul etmedi' }, { status: 400 });
       if (match.started && match.status === 'live') return Response.json({ match });
+      // Turu başlatan taraf, isteği gönderen taraf olamaz: karşılıklı onay gerekir.
+      if (match.start_request_by === user.id) {
+        return Response.json({ error: 'Karşı tarafın onayı bekleniyor' }, { status: 400 });
+      }
 
       const startedAt = new Date();
       const updated = await svc.PkMatch.update(match.id, {
@@ -261,6 +297,9 @@ export default async function (req) {
         settled: false,
         started_at: startedAt.toISOString(),
         ends_at: new Date(startedAt.getTime() + PK_DURATION_MS).toISOString(),
+        start_request_at: '',
+        start_request_by: '',
+        start_declined_at: '',
         host_score: 0,
         guest_score: 0,
         winner_id: '',
@@ -313,6 +352,11 @@ export default async function (req) {
         muted: [],
         round_no: (Number(match.round_no) || 1) + 1,
         invited_at: new Date().toISOString(),
+        started_at: '',
+        ends_at: '',
+        start_request_at: '',
+        start_request_by: '',
+        start_declined_at: '',
         host_score: 0,
         guest_score: 0,
         winner_id: '',

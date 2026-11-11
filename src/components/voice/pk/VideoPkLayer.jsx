@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { Track } from 'livekit-client';
-import { Loader2, Mic, MicOff, PhoneOff, RotateCcw, UserPlus, Video, VideoOff, Volume2, VolumeX, WifiOff } from 'lucide-react';
+import { Loader2, Mic, MicOff, PhoneOff, Play, RotateCcw, UserPlus, Video, VideoOff, Volume2, VolumeX, WifiOff } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import useVideoPk from '@/hooks/useVideoPk';
 import usePkLiveKit from '@/hooks/usePkLiveKit';
 import PkFeedTile from '@/components/voice/pk/PkFeedTile';
 import PkScoreBar from '@/components/voice/pk/PkScoreBar';
 import PkInviteSheet from '@/components/videopk/PkInviteSheet';
+import PkActionCard from '@/components/voice/pk/PkActionCard';
 
 
 const clock = (total) => `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
@@ -17,7 +18,7 @@ const errorText = (error) => error?.response?.data?.error || error?.message || '
  * İki kamera yan yana kare olarak durur; koltuklar, sohbet ve mikrofonlar aynen çalışmaya devam eder.
  * Puanlar sunucudaki maç kaydından okunur — hediye gönderildikçe iki tarafta gerçek zamanlı ilerler.
  */
-export default function VideoPkLayer({ open, onOpen, onClose, roomId, user, onOpenProfile, onMatchChange }) {
+export default function VideoPkLayer({ open, onOpen, onClose, roomId, user, onOpenProfile, onMatchChange, onPkAudio }) {
   const { toast } = useToast();
   const { active, invites, loaded, busy, run, ensureLobby } = useVideoPk(user, { poll: open });
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -34,8 +35,15 @@ export default function VideoPkLayer({ open, onOpen, onClose, roomId, user, onOp
 
   const isHost = active?.host_id === user?.id;
   const isGuest = active?.guest_id === user?.id;
+  // Eşleşme: rakip daveti kabul etti. Tur, "PK Başla" karşılıklı onaylanınca başlar.
   const paired = !!active?.accepted && !!active?.guest_id && active?.status === 'live';
+  const live = paired && !!active?.started;
+  const ready = paired && !active?.started;
   const pendingInvite = active && active.guest_id && !active.accepted && isHost ? active : null;
+  // Başlatma isteği: gönderen taraf onay bekler, karşı tarafa kabul/red kartı düşer.
+  const startPending = ready && !!active?.start_request_at;
+  const startIncoming = startPending && !!active?.start_request_by && active.start_request_by !== user?.id;
+  const startOutgoing = startPending && active?.start_request_by === user?.id;
   const rival = paired
     ? {
       id: isHost ? active.guest_id : active.host_id,
@@ -76,12 +84,12 @@ export default function VideoPkLayer({ open, onOpen, onClose, roomId, user, onOp
 
   // Süre dolunca tur kendiliğinden biter: sonuç iki tarafta da aynı kayıttan okunur.
   useEffect(() => {
-    if (!open || !paired || !endsAt || now < endsAt) return;
+    if (!open || !live || !endsAt || now < endsAt) return;
     const key = `${active?.id}:${active?.round_no}`;
     if (autoEndRef.current === key) return;
     autoEndRef.current = key;
     run('finish', { id: active.id }).catch(() => null);
-  }, [open, paired, endsAt, now, active?.id, active?.round_no, run]);
+  }, [open, live, endsAt, now, active?.id, active?.round_no, run]);
 
   // Tur karşı tarafça bitirildiyse alan kendiliğinden kapanır; tek kişilik lobi
   // başka bir PK yüzünden kapandıysa sessizce yeniden açılır.
@@ -145,8 +153,13 @@ export default function VideoPkLayer({ open, onOpen, onClose, roomId, user, onOp
       // Önce kabul yazılır, sonra alan açılır: lobi açma isteği maçı kapatmaz.
       await run('accept', { id: invite.id });
       if (!open) onOpen?.();
+      // Sesli odaya koltuğa oturmuş gibi bağlan: mikrofon odaya açılır.
+      onPkAudio?.();
       startAudio();
-      toast({ title: 'PK başladı', description: `${invite.host_name || 'Rakip'} ile kameralar bağlanıyor.` });
+      toast({
+        title: 'Rakip bağlandı',
+        description: 'Hazır olduğunda “PK Başla”ya bas; karşı taraf onaylayınca tur başlar.',
+      });
     } catch (acceptError) {
       toast({ title: 'Davet kabul edilemedi', description: errorText(acceptError), variant: 'destructive' });
     }
@@ -155,6 +168,52 @@ export default function VideoPkLayer({ open, onOpen, onClose, roomId, user, onOp
   const declineInvite = async (invite) => {
     await run('decline', { id: invite.id }).catch(() => null);
     toast({ title: 'Davet reddedildi', description: `${invite.host_name || 'Kullanıcı'} bilgilendirilecek.` });
+  };
+
+  // "PK Başla": tur hemen başlamaz, rakibe kabul/red kartı gönderilir.
+  const requestStart = async () => {
+    if (!active?.id) return;
+    try {
+      // Dokunuş anında oda mikrofonu açılır: ses koltuğa oturmuş gibi odaya gider.
+      onPkAudio?.();
+      startAudio();
+      await run('request-start', { id: active.id });
+      toast({ title: 'Başlatma isteği gönderildi', description: `${rival?.name || 'Rakip'} kabul edince PK başlar.` });
+    } catch (startError) {
+      toast({ title: 'İstek gönderilemedi', description: errorText(startError), variant: 'destructive' });
+    }
+  };
+
+  // Gelen başlatma isteğini kabul et: 5 dakikalık tur bu anda başlar.
+  const acceptStart = async () => {
+    if (!active?.id) return;
+    try {
+      onPkAudio?.();
+      startAudio();
+      await run('start', { id: active.id });
+      toast({ title: 'PK başladı', description: 'Odadaki herkes sesini duyar; tur 5 dakika sürer.' });
+    } catch (startError) {
+      toast({ title: 'PK başlatılamadı', description: errorText(startError), variant: 'destructive' });
+    }
+  };
+
+  // İsteği reddet ya da geri çek: tur başlamaz, iki taraf hazır kalır.
+  const clearStart = async () => {
+    if (!active?.id) return;
+    await run('decline-start', { id: active.id }).catch(() => null);
+  };
+
+  const cancelInvite = async () => {
+    if (!active?.id) return;
+    await run('cancel-invite', { id: active.id }).catch(() => null);
+  };
+
+  // Lobiden çık: tek kişilik yayın da eşleşme de kapanır, katman kapanır.
+  const closeLobby = async () => {
+    const id = active?.id;
+    if (id) await run('leave', { id, end: true }).catch(() => null);
+    setInviteOpen(false);
+    onClose?.();
   };
 
   // PK'yi bitir: tur sunucuda sonuçlandırılır, kamera ve mikrofon serbest bırakılır,
@@ -196,8 +255,9 @@ export default function VideoPkLayer({ open, onOpen, onClose, roomId, user, onOp
 
   const myScore = (Number(isHost ? active?.host_score : active?.guest_score) || 0) * 1000;
   const rivalScore = (Number(isHost ? active?.guest_score : active?.host_score) || 0) * 1000;
-  // Sayaç geriye doğru iner: tur 5 dakikadır.
-  const remaining = paired && endsAt ? Math.max(0, Math.ceil((endsAt - now) / 1000)) : 0;
+  // Sayaç geriye doğru iner: tur 5 dakikadır. Süre bitince 00:00'da durur, bar yerinde kalır.
+  const remaining = live && endsAt ? Math.max(0, Math.ceil((endsAt - now) / 1000)) : 0;
+  const timerText = finishedMatch ? '00:00' : live ? clock(remaining) : clock(300);
   const resultText = active?.winner_id
     ? (active.winner_id === user?.id ? 'Kazandın' : 'Kaybettin')
     : 'Berabere';
@@ -208,7 +268,7 @@ export default function VideoPkLayer({ open, onOpen, onClose, roomId, user, onOp
     <>
       {open && (
         <div className="shrink-0 px-2 pb-1.5" onClick={startAudio}>
-          <PkScoreBar leftScore={myScore} rightScore={rivalScore} timerText={clock(paired ? remaining : 300)} />
+          <PkScoreBar leftScore={myScore} rightScore={rivalScore} timerText={timerText} />
 
           {/* İki kare kamera yan yana: solda kendi görüntün, sağda rakip.
               Yükseklik ekrana göre sınırlanır: altındaki buton satırı her cihazda görünür kalır. */}
@@ -348,9 +408,9 @@ export default function VideoPkLayer({ open, onOpen, onClose, roomId, user, onOp
                   Kapat
                 </button>
               </>
-            ) : (
+            ) : live ? (
               <>
-                {/* Bitir belirgin kırmızı durur; kazara bitmemesi için iki dokunuş ister. */}
+                {/* Tur sürerken Bitir belirgin kırmızı durur; kazara bitmemesi için iki dokunuş ister. */}
                 <button
                   type="button"
                   onClick={() => {
@@ -381,6 +441,51 @@ export default function VideoPkLayer({ open, onOpen, onClose, roomId, user, onOp
                   </button>
                 )}
               </>
+            ) : ready ? (
+              <>
+                {/* PK hemen başlamaz: bu düğme rakibe kabul/red kartı gönderir. */}
+                <button
+                  type="button"
+                  onClick={startOutgoing ? clearStart : requestStart}
+                  disabled={busy}
+                  className={`flex h-10 flex-1 items-center justify-center gap-1.5 rounded-xl text-[11.5px] font-black active:scale-[0.98] disabled:opacity-45 ${
+                    startOutgoing
+                      ? 'bg-white/14 text-white'
+                      : 'bg-gradient-to-r from-emerald-500 to-green-400 text-black shadow-[0_8px_22px_-8px_rgba(16,185,129,0.95)]'
+                  }`}
+                >
+                  <Play className="h-4 w-4" /> {startOutgoing ? 'Rakip onayı bekleniyor' : 'PK Başla'}
+                </button>
+                <button
+                  type="button"
+                  onClick={closeLobby}
+                  disabled={busy}
+                  className="h-10 shrink-0 rounded-xl bg-white/14 px-3 text-[11px] font-black text-white active:scale-[0.98] disabled:opacity-45"
+                >
+                  Vazgeç
+                </button>
+              </>
+            ) : (
+              <>
+                {/* Tek kişilik lobi: rakip gelene kadar kapatılabilir. */}
+                <button
+                  type="button"
+                  onClick={closeLobby}
+                  disabled={busy}
+                  className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-xl bg-white/14 text-[11.5px] font-black text-white active:scale-[0.98] disabled:opacity-45"
+                >
+                  <PhoneOff className="h-4 w-4" /> Kapat
+                </button>
+                {incoming && (
+                  <button
+                    type="button"
+                    onClick={() => acceptInvite(incoming)}
+                    className="flex h-10 items-center gap-1 rounded-xl bg-emerald-500 px-2.5 text-[11px] font-black text-black active:scale-[0.98]"
+                  >
+                    Gelen davet
+                  </button>
+                )}
+              </>
             )}
           </div>
 
@@ -388,41 +493,64 @@ export default function VideoPkLayer({ open, onOpen, onClose, roomId, user, onOp
         </div>
       )}
 
-      {/* Gelen davet: süre sınırı yok, kullanıcı yanıtlayana kadar bekler. */}
-      {incoming && (
+      {/* Davet ve başlatma isteği kartları: şık, tek yerde üst üste durur. */}
+      {(incoming || startIncoming || pendingInvite || startOutgoing) && (
         <div
-          className="fixed inset-x-2 z-[240] rounded-2xl border border-fuchsia-400/40 bg-[#1c0f26]/97 p-2.5 shadow-[0_12px_40px_-12px_rgba(217,70,239,0.85)]"
+          className="fixed inset-x-2 z-[240] flex flex-col gap-2"
           style={{ bottom: 'calc(var(--keyboard-height, 0px) + max(var(--voice-bar-height, 64px), 64px) + 3.6rem)' }}
         >
-          <div className="flex items-center gap-2">
-            <button type="button" onClick={() => onOpenProfile?.(incoming.host_id)} className="shrink-0 active:scale-95">
-              {incoming.host_avatar
-                ? <img src={incoming.host_avatar} alt="" className="h-9 w-9 rounded-full object-cover ring-2 ring-fuchsia-400/60" />
-                : <span className="block h-9 w-9 rounded-full bg-white/15" />}
-            </button>
-            <div className="min-w-0 flex-1">
-              <p className="text-[9.5px] font-black uppercase tracking-wide text-fuchsia-300">
-                {Number(incoming.round_no) > 1 ? 'Rövanş isteği · görüntülü PK' : 'Görüntülü PK daveti'}
-              </p>
-              <p className="truncate text-[12.5px] font-bold text-white">{incoming.host_name || 'Kullanıcı'}</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => declineInvite(incoming)}
-              disabled={busy}
-              className="h-8 shrink-0 rounded-xl bg-white/12 px-2.5 text-[10.5px] font-black text-white active:scale-95 disabled:opacity-50"
-            >
-              REDDET
-            </button>
-            <button
-              type="button"
-              onClick={() => acceptInvite(incoming)}
-              disabled={busy}
-              className="h-8 shrink-0 rounded-xl bg-emerald-500 px-2.5 text-[10.5px] font-black text-black active:scale-95 disabled:opacity-50"
-            >
-              KABUL ET
-            </button>
-          </div>
+          {incoming && (
+            <PkActionCard
+              title={Number(incoming.round_no) > 1 ? 'Rövanş isteği · görüntülü PK' : 'Görüntülü PK daveti'}
+              name={incoming.host_name || 'Kullanıcı'}
+              avatar={incoming.host_avatar}
+              note="Kabul edersen kameralar bağlanır."
+              primaryLabel="KABUL ET"
+              onPrimary={() => acceptInvite(incoming)}
+              secondaryLabel="REDDET"
+              onSecondary={() => declineInvite(incoming)}
+              onOpenProfile={incoming.host_id ? () => onOpenProfile?.(incoming.host_id) : undefined}
+              busy={busy}
+            />
+          )}
+
+          {pendingInvite && (
+            <PkActionCard
+              title="PK daveti gönderildi"
+              name={pendingInvite.guest_name || 'Kullanıcı'}
+              avatar={pendingInvite.guest_avatar}
+              note="Davet edilen kişinin yanıtı bekleniyor."
+              primaryLabel="İPTAL"
+              onPrimary={cancelInvite}
+              busy={busy}
+            />
+          )}
+
+          {startIncoming && (
+            <PkActionCard
+              title="PK başlatmak istiyor"
+              name={(isHost ? active?.guest_name : active?.host_name) || 'Rakip'}
+              avatar={isHost ? active?.guest_avatar : active?.host_avatar}
+              note="Kabul edince 5 dakikalık tur başlar."
+              primaryLabel="KABUL ET"
+              onPrimary={acceptStart}
+              secondaryLabel="REDDET"
+              onSecondary={clearStart}
+              busy={busy}
+            />
+          )}
+
+          {startOutgoing && (
+            <PkActionCard
+              title="Başlatma onayı bekleniyor"
+              name={(isHost ? active?.guest_name : active?.host_name) || 'Rakip'}
+              avatar={isHost ? active?.guest_avatar : active?.host_avatar}
+              note="Rakip kabul eder etmez tur başlayacak."
+              primaryLabel="İSTEĞİ GERİ ÇEK"
+              onPrimary={clearStart}
+              busy={busy}
+            />
+          )}
         </div>
       )}
 

@@ -81,6 +81,18 @@
       "type": "string",
       "format": "date-time"
     },
+    "start_request_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "start_request_by": {
+      "type": "string",
+      "default": ""
+    },
+    "start_declined_at": {
+      "type": "string",
+      "format": "date-time"
+    },
     "round_no": {
       "type": "integer",
       "default": 1
