@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Track } from 'livekit-client';
-import { Loader2, Mic, MicOff, PhoneOff, UserPlus, Video, VideoOff, Volume2, VolumeX, WifiOff } from 'lucide-react';
+import { Loader2, Mic, MicOff, PhoneOff, RotateCcw, UserPlus, Video, VideoOff, Volume2, VolumeX, WifiOff } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import useVideoPk from '@/hooks/useVideoPk';
 import usePkLiveKit from '@/hooks/usePkLiveKit';
@@ -26,6 +26,8 @@ export default function VideoPkLayer({ open, onOpen, onClose, roomId, user, onOp
   const openedRef = useRef(false);
   const endedRef = useRef('');
   const leavingRef = useRef('');
+  // Süre dolduğunda turun bir kez kapatılması için.
+  const autoEndRef = useRef('');
 
   const isHost = active?.host_id === user?.id;
   const isGuest = active?.guest_id === user?.id;
@@ -44,10 +46,15 @@ export default function VideoPkLayer({ open, onOpen, onClose, roomId, user, onOp
     camOn, setCameraEnabled, micOn, setMicEnabled, startAudio,
   } = usePkLiveKit({
     matchId: open ? active?.id : null,
-    // Kamera yalnızca alan açıkken yayınlanır; kapatılınca kaynak serbest bırakılır.
-    enabled: open && !!active?.id && (isHost || isGuest),
+    // Kamera yalnızca alan açıkken ve tur sürerken yayınlanır; tur bitince kaynak serbest bırakılır.
+    enabled: open && !!active?.id && active?.status === 'live' && (isHost || isGuest),
     selfId: user?.id,
   });
+
+  // Tur 5 dakika sürer: kalan süre sunucudaki bitiş anından okunur.
+  const endsAt = active?.ends_at ? new Date(active.ends_at).getTime() : 0;
+  // Biten tur: sonuç ekranı kaybolmaz, iki taraf da rövanş isteyebilir.
+  const finishedMatch = open && active?.status === 'ended' && active?.settled && active?.guest_id ? active : null;
 
   // Maç bilgisi odaya bildirilir: hediye tahtasında PK tarafları da alıcı olarak çıkar.
   useEffect(() => {
@@ -58,16 +65,29 @@ export default function VideoPkLayer({ open, onOpen, onClose, roomId, user, onOp
   useEffect(() => {
     if (!open) { openedRef.current = false; return; }
     if (!loaded || !user?.id || openedRef.current) return;
+    // Biten tur varsa yeni lobi açılmaz: kişi önce rövanşa karar verir.
+    if (finishedMatch) return;
     openedRef.current = true;
     ensureLobby(roomId).catch(() => null);
-  }, [open, loaded, user?.id, roomId, ensureLobby]);
+  }, [open, loaded, user?.id, roomId, ensureLobby, finishedMatch]);
+
+  // Süre dolunca tur kendiliğinden biter: sonuç iki tarafta da aynı kayıttan okunur.
+  useEffect(() => {
+    if (!open || !paired || !endsAt || now < endsAt) return;
+    const key = `${active?.id}:${active?.round_no}`;
+    if (autoEndRef.current === key) return;
+    autoEndRef.current = key;
+    run('finish', { id: active.id }).catch(() => null);
+  }, [open, paired, endsAt, now, active?.id, active?.round_no, run]);
 
   // Tur karşı tarafça bitirildiyse alan kendiliğinden kapanır; tek kişilik lobi
   // başka bir PK yüzünden kapandıysa sessizce yeniden açılır.
   useEffect(() => {
     if (!open || active?.status !== 'ended' || endedRef.current === active.id) return;
     endedRef.current = active.id;
-    if (active.settled || active.guest_id) { onClose?.(); return; }
+    // Sonuçlanan tur ekranda kalır: rövanş bu ekrandan istenir.
+    if (active.settled) return;
+    if (active.guest_id) { onClose?.(); return; }
     ensureLobby(roomId).catch(() => null);
   }, [open, active, onClose, ensureLobby, roomId]);
 
@@ -138,18 +158,44 @@ export default function VideoPkLayer({ open, onOpen, onClose, roomId, user, onOp
   // oda olduğu gibi (koltuklar, sohbet, mikrofonlar) çalışmaya devam eder.
   const finishPk = async () => {
     const id = active?.id;
+    const hadRival = !!active?.guest_id;
     if (id) {
       await run('finish', { id, force: true }).catch(() => null);
-      await run('leave', { id, end: true }).catch(() => null);
+      // Rakip varsa sonuç ekranı açık kalır (rövanş buradan istenir); yoksa lobi tümüyle kapanır.
+      if (!hadRival) await run('leave', { id, end: true }).catch(() => null);
     }
     setInviteOpen(false);
+    if (!hadRival) onClose?.();
+  };
+
+  // Rövanş: aynı rakibe yeni tur isteği gider, karşı taraf kabul edince 5 dakikalık tur başlar.
+  const sendRematch = async () => {
+    const id = finishedMatch?.id || active?.id;
+    if (!id) return;
+    try {
+      await run('rematch', { id });
+      toast({
+        title: 'Rövanş isteği gönderildi',
+        description: `${rival?.name || active?.guest_name || 'Rakip'} kabul edince tur yeniden başlar.`,
+      });
+    } catch (rematchError) {
+      toast({ title: 'Rövanş isteği gönderilemedi', description: errorText(rematchError), variant: 'destructive' });
+    }
+  };
+
+  const closeFinished = async () => {
+    const id = finishedMatch?.id;
+    if (id) await run('leave', { id, end: true }).catch(() => null);
     onClose?.();
   };
 
   const myScore = (Number(isHost ? active?.host_score : active?.guest_score) || 0) * 1000;
   const rivalScore = (Number(isHost ? active?.guest_score : active?.host_score) || 0) * 1000;
-  const startedAt = active?.started_at ? new Date(active.started_at).getTime() : 0;
-  const elapsed = paired && startedAt ? Math.max(0, Math.floor((now - startedAt) / 1000)) : 0;
+  // Sayaç geriye doğru iner: tur 5 dakikadır.
+  const remaining = paired && endsAt ? Math.max(0, Math.ceil((endsAt - now) / 1000)) : 0;
+  const resultText = active?.winner_id
+    ? (active.winner_id === user?.id ? 'Kazandın' : 'Kaybettin')
+    : 'Berabere';
 
   const incoming = invites[0] || null;
 
@@ -157,11 +203,12 @@ export default function VideoPkLayer({ open, onOpen, onClose, roomId, user, onOp
     <>
       {open && (
         <div className="shrink-0 px-2 pb-1.5" onClick={startAudio}>
-          <PkScoreBar leftScore={myScore} rightScore={rivalScore} timerText={clock(elapsed)} />
+          <PkScoreBar leftScore={myScore} rightScore={rivalScore} timerText={clock(paired ? remaining : 300)} />
 
-          {/* İki kare kamera yan yana: solda kendi görüntün, sağda rakip. */}
-          <div className="mt-1 flex items-stretch gap-1.5">
-            <div className="relative aspect-square w-1/2 min-w-0 overflow-hidden rounded-2xl bg-black ring-1 ring-white/12">
+          {/* İki kare kamera yan yana: solda kendi görüntün, sağda rakip.
+              Yükseklik ekrana göre sınırlanır: altındaki buton satırı her cihazda görünür kalır. */}
+          <div className="mt-1 flex items-stretch gap-1.5" style={{ height: 'clamp(104px, 24vh, 176px)' }}>
+            <div className="relative h-full w-1/2 min-w-0 overflow-hidden rounded-2xl bg-black ring-1 ring-white/12">
               <PkFeedTile
                 name={user?.full_name || 'Sen'}
                 avatar={user?.avatar}
@@ -194,7 +241,7 @@ export default function VideoPkLayer({ open, onOpen, onClose, roomId, user, onOp
               />
             </div>
 
-            <div className="relative aspect-square w-1/2 min-w-0 overflow-hidden rounded-2xl bg-black ring-1 ring-white/12">
+            <div className="relative h-full w-1/2 min-w-0 overflow-hidden rounded-2xl bg-black ring-1 ring-white/12">
               {paired ? (
                 <>
                   <PkFeedTile
@@ -225,6 +272,16 @@ export default function VideoPkLayer({ open, onOpen, onClose, roomId, user, onOp
                     </span>
                   )}
                 </>
+              ) : finishedMatch ? (
+                <div className="flex h-full flex-col items-center justify-center gap-1 px-2 text-center">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-fuchsia-500/15 ring-1 ring-fuchsia-400/40">
+                    <UserPlus className="h-4 w-4 text-fuchsia-300" />
+                  </span>
+                  <p className="truncate text-[11px] font-black text-white">
+                    {(isHost ? finishedMatch.guest_name : finishedMatch.host_name) || 'Rakip'}
+                  </p>
+                  <p className="text-[9.5px] font-bold text-amber-300">Tur bitti</p>
+                </div>
               ) : (
                 <div className="flex h-full flex-col items-center justify-center gap-1.5 px-2 text-center">
                   <span className="flex h-9 w-9 items-center justify-center rounded-full bg-fuchsia-500/15 ring-1 ring-fuchsia-400/40">
@@ -251,45 +308,69 @@ export default function VideoPkLayer({ open, onOpen, onClose, roomId, user, onOp
             </div>
           </div>
 
-          {error && <p className="mt-1 text-center text-[10px] font-semibold text-amber-300">{error}</p>}
-        </div>
-      )}
-
-      {/* PK kontrolleri: odanın alt çubuğunun hemen üstünde sabit durur. Hiçbir katman önüne
-          geçmez ve ekrana dokunmayı beklemeden her zaman görünür — boş alana basınca yanlış
-          düğmeye basılmaz. Sağ alttaki kare düğme PK davetini açar. */}
-      {open && (
-        <div
-          className="fixed inset-x-2 z-[230] flex items-center gap-1.5 rounded-2xl border border-white/12 bg-[#170d22]/97 p-1.5 shadow-[0_10px_30px_-12px_rgba(0,0,0,0.9)]"
-          style={{ bottom: 'calc(var(--keyboard-height, 0px) + max(var(--voice-bar-height, 64px), 64px) + 0.5rem)' }}
-          onClick={startAudio}
-        >
-          <button
-            type="button"
-            onClick={finishPk}
-            disabled={busy}
-            className="flex h-9 flex-1 items-center justify-center gap-1 rounded-xl bg-white/14 text-[11px] font-black text-white active:scale-[0.98] disabled:opacity-45"
-          >
-            <PhoneOff className="h-3.5 w-3.5" /> Bitir
-          </button>
-          {incoming && (
-            <button
-              type="button"
-              onClick={() => acceptInvite(incoming)}
-              className="flex h-9 items-center gap-1 rounded-xl bg-emerald-500 px-2.5 text-[11px] font-black text-black active:scale-[0.98]"
-            >
-              Gelen davet
-            </button>
+          {/* Tur sonucu: kazanan ve skor, karelerin hemen altında yazar. */}
+          {finishedMatch && (
+            <p className="mt-1 flex items-center justify-center gap-1.5 text-center text-[10.5px] font-black text-amber-300">
+              <span>{resultText}</span>
+              <span className="text-white/70">{Math.round(myScore / 1000)} — {Math.round(rivalScore / 1000)}</span>
+            </p>
           )}
-          <button
-            type="button"
-            onClick={() => setInviteOpen(true)}
-            disabled={paired || busy}
-            aria-label="PK davet et"
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-fuchsia-500 text-white active:scale-[0.98] disabled:opacity-45"
-          >
-            <UserPlus className="h-4 w-4" />
-          </button>
+
+          {/* Kontroller karelerin hemen altında ayrı satırda durur: Bitir solda, davet sağda.
+              Tur bittiyse yerine Rövanş ve Kapat çıkar. */}
+          <div className="mt-1.5 flex items-center gap-1.5">
+            {finishedMatch ? (
+              <>
+                <button
+                  type="button"
+                  onClick={sendRematch}
+                  disabled={busy}
+                  className="flex h-9 flex-1 items-center justify-center gap-1 rounded-xl bg-fuchsia-500 text-[11px] font-black text-white active:scale-[0.98] disabled:opacity-45"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" /> Rövanş
+                </button>
+                <button
+                  type="button"
+                  onClick={closeFinished}
+                  disabled={busy}
+                  className="h-9 shrink-0 rounded-xl bg-white/14 px-3 text-[11px] font-black text-white active:scale-[0.98] disabled:opacity-45"
+                >
+                  Kapat
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={finishPk}
+                  disabled={busy}
+                  className="flex h-9 flex-1 items-center justify-center gap-1 rounded-xl bg-white/14 text-[11px] font-black text-white active:scale-[0.98] disabled:opacity-45"
+                >
+                  <PhoneOff className="h-3.5 w-3.5" /> Bitir
+                </button>
+                {incoming && (
+                  <button
+                    type="button"
+                    onClick={() => acceptInvite(incoming)}
+                    className="flex h-9 items-center gap-1 rounded-xl bg-emerald-500 px-2.5 text-[11px] font-black text-black active:scale-[0.98]"
+                  >
+                    Gelen davet
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setInviteOpen(true)}
+                  disabled={paired || busy}
+                  aria-label="PK davet et"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-fuchsia-500 text-white active:scale-[0.98] disabled:opacity-45"
+                >
+                  <UserPlus className="h-4 w-4" />
+                </button>
+              </>
+            )}
+          </div>
+
+          {error && <p className="mt-1 text-center text-[10px] font-semibold text-amber-300">{error}</p>}
         </div>
       )}
 
@@ -306,7 +387,9 @@ export default function VideoPkLayer({ open, onOpen, onClose, roomId, user, onOp
                 : <span className="block h-9 w-9 rounded-full bg-white/15" />}
             </button>
             <div className="min-w-0 flex-1">
-              <p className="text-[9.5px] font-black uppercase tracking-wide text-fuchsia-300">Görüntülü PK daveti</p>
+              <p className="text-[9.5px] font-black uppercase tracking-wide text-fuchsia-300">
+                {Number(incoming.round_no) > 1 ? 'Rövanş isteği · görüntülü PK' : 'Görüntülü PK daveti'}
+              </p>
               <p className="truncate text-[12.5px] font-bold text-white">{incoming.host_name || 'Kullanıcı'}</p>
             </div>
             <button

@@ -286,29 +286,39 @@ export default async function (req) {
       return Response.json({ match: updated });
     }
 
-    // Rövanş: aynı iki kişi arasında skorlar sıfırlanır, yeni 5 dakikalık tur hemen başlar.
+    // Rövanş: aynı iki kişi arasında yeni 5 dakikalık tur için karşı tarafa onay isteği gider.
+    // Maç yeniden davet durumuna döner; karşı taraf kabul edince tur başlar.
     if (action === 'rematch') {
       const match = await getMatch(String(body.id || ''));
       if (!match) return Response.json({ error: 'PK bulunamadı' }, { status: 404 });
       if (!isPlayer(match)) return Response.json({ error: 'Yetki yok' }, { status: 403 });
       if (!match.guest_id) return Response.json({ error: 'Rövanş için rakip gerekiyor' }, { status: 400 });
 
-      const startedAt = new Date();
-      const updated = await svc.PkMatch.update(match.id, {
-        status: 'live',
-        started: true,
-        accepted: true,
+      // İsteği gönderen taraf yayının sahibi olur: onay her zaman karşı tarafa düşer.
+      const callerIsHost = match.host_id === user.id;
+      const hostSide = callerIsHost
+        ? { host_id: match.host_id, host_name: match.host_name, host_avatar: match.host_avatar }
+        : { host_id: match.guest_id, host_name: match.guest_name, host_avatar: match.guest_avatar };
+      const guestSide = callerIsHost
+        ? { guest_id: match.guest_id, guest_name: match.guest_name, guest_avatar: match.guest_avatar }
+        : { guest_id: match.host_id, guest_name: match.host_name, guest_avatar: match.host_avatar };
+
+      const invited = await svc.PkMatch.update(match.id, {
+        ...hostSide,
+        ...guestSide,
+        status: 'invite',
+        started: false,
+        accepted: false,
         settled: false,
         muted: [],
         round_no: (Number(match.round_no) || 1) + 1,
-        started_at: startedAt.toISOString(),
-        ends_at: new Date(startedAt.getTime() + PK_DURATION_MS).toISOString(),
+        invited_at: new Date().toISOString(),
         host_score: 0,
         guest_score: 0,
         winner_id: '',
         left_id: '',
       });
-      return Response.json({ match: updated });
+      return Response.json({ match: invited });
     }
 
     // Bitir: sonuç sunucuda hesaplanır, galibiyet serisi bir kez işlenir ve ekran sonuçta kalır.
