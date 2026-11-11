@@ -13,6 +13,7 @@ import RouletteTable from './roulette/RouletteTable';
 import RouletteChipRow from './roulette/RouletteChipRow';
 import RouletteRoundBar from './roulette/RouletteRoundBar';
 import RouletteWinOverlay from './roulette/RouletteWinOverlay';
+import { formatCoins } from './roulette/rouletteConfig';
 import { WIN_CARD_THRESHOLD } from '@/components/games/shared/winCard';
 import RoulettePlayers from './roulette/RoulettePlayers';
 import '@/styles/roulette2.css';
@@ -122,6 +123,13 @@ export default function RouletteGame({ onExit, onBack }) {
       {game.message && !coinOpen && !prize && (
         <p className="rl-message absolute left-1/2 top-[46%] z-20 w-max max-w-[90%] -translate-x-1/2 rounded-full px-3 py-1.5 text-center text-[11px] font-bold">
           {game.message}
+        </p>
+      )}
+
+      {/* Tur kazancı: küçük kazançlar da tur bitince kaybolmaz, sonraki tura kadar yazılı kalır. */}
+      {game.payout > 0 && !prize && (
+        <p className="rl-message absolute left-1/2 top-[56%] z-20 w-max max-w-[90%] -translate-x-1/2 rounded-full px-3 py-1.5 text-center text-[12px] font-black">
+          KAZANÇ {formatCoins(game.payout)}
         </p>
       )}
 

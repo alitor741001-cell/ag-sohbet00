@@ -6,7 +6,7 @@ import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
 import GameCoinBar from '@/components/games/shared/GameCoinBar';
 import GameHelpSheet from '@/components/games/help/GameHelpSheet';
 import { useCurrentUser } from '@/lib/useCurrentUser';
-import { SHAKE_HIDE_MS, outcomeName } from './zar/zarConfig';
+import { SHAKE_HIDE_MS, outcomeName, formatCoins } from './zar/zarConfig';
 import ZarDie from './zar/ZarDie';
 import ZarTimerBand from './zar/ZarTimerBand';
 import useZarGame from './zar/useZarGame';
@@ -127,6 +127,13 @@ export default function ZarGame({ onExit, onBack }) {
       {game.message && !coinOpen && !prize && (
         <p className="zar-message absolute left-1/2 top-[46%] z-20 w-max max-w-[90%] -translate-x-1/2 rounded-full px-3 py-1.5 text-center text-[11px] font-bold">
           {game.message}
+        </p>
+      )}
+
+      {/* Tur kazancı: küçük kazançlar da tur bitince kaybolmaz, sonraki tura kadar yazılı kalır. */}
+      {game.payout > 0 && !prize && (
+        <p className="zar-message absolute left-1/2 top-[56%] z-20 w-max max-w-[90%] -translate-x-1/2 rounded-full px-3 py-1.5 text-center text-[12px] font-black">
+          KAZANÇ {formatCoins(game.payout)}
         </p>
       )}
 

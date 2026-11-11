@@ -1,20 +1,17 @@
 import React from 'react';
-import { HelpCircle, FileClock, Volume2, VolumeX } from 'lucide-react';
+import { HelpCircle, Volume2, VolumeX } from 'lucide-react';
 import WinnerTicker, { TICKER_ROW_HEIGHT } from './WinnerTicker';
 import './slotFrenzy.css';
 
 const format = (value) => new Intl.NumberFormat('tr-TR').format(Math.max(0, Math.round(value || 0)));
 
-/** SLOT FRENZY üst sahnesi: mor kadife kemer, kazananlar panosu, sandık/kupon rozeti ve 5'li Jackpot konsolu. */
+/** SLOT FRENZY üst sahnesi: mor kadife kemer, kazananlar panosu ve 5'li Jackpot konsolu. */
 export default function SlotFrenzyHeader({
   pools,
-  freeSpins = 0,
   sound = true,
   compact = false,
   onHelp,
-  onLeaders,
   onSound,
-  onCoins,
 }) {
   const tickerHeight = TICKER_ROW_HEIGHT * (compact ? 2 : 3);
   const jackpot = format(pools?.jackpot ?? 26978691);
@@ -41,14 +38,6 @@ export default function SlotFrenzyHeader({
           >
             <HelpCircle className="h-5 w-5" strokeWidth={2.8} />
           </button>
-          <button
-            type="button"
-            onClick={onLeaders}
-            aria-label="Kazanan geçmişi"
-            className="sfz-round-btn"
-          >
-            <FileClock className="h-5 w-5" strokeWidth={2.5} />
-          </button>
         </div>
 
         <div className="sfz-arch">
@@ -67,31 +56,10 @@ export default function SlotFrenzyHeader({
         </div>
       </div>
 
-      {/* Orta kısım: Kazanan şeridi kutusu + sağda Çılgın Slot kuponu ve GIFT hazine sandığı */}
+      {/* Orta kısım: kazanan şeridi panosu */}
       <div className="sfz-mid-wrap">
         <div className="sfz-ticker-box">
           <WinnerTicker height={tickerHeight} />
-        </div>
-
-        <div className="sfz-side-stack">
-          <div className="sfz-ticket-pill" title="Çılgın Slot">
-            <div className="sfz-ticket-top">
-              <span className="sfz-ticket-icon" aria-hidden="true">🎟️</span>
-              <span className="sfz-ticket-mul">x{Math.max(0, Math.round(freeSpins || 0))}</span>
-            </div>
-            <span className="sfz-ticket-sub">Çılgın Slot</span>
-          </div>
-
-          <button
-            type="button"
-            onClick={onCoins}
-            aria-label="Hediye ve Coin"
-            className="sfz-chest-btn"
-          >
-            <span className="sfz-chest-glow" aria-hidden="true" />
-            <span className="sfz-chest-art" aria-hidden="true">👑💎</span>
-            <span className="sfz-chest-ribbon">GIFT</span>
-          </button>
         </div>
       </div>
 

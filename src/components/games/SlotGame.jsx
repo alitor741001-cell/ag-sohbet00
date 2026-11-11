@@ -12,8 +12,6 @@ import SlotFrenzyHeader from './slot/SlotFrenzyHeader';
 import SlotTierAlert from './slot/SlotTierAlert';
 import SlotControlDeck from './slot/SlotControlDeck';
 import { tierOfBet } from './slot/slotConfig';
-import GameLeaderSheet from './leaders/GameLeaderSheet';
-import useGameLeaders from './leaders/useGameLeaders';
 import { eliminSound, unlockAudio } from './elimin/eliminSound';
 
 // Görsel alanı doldururken en fazla bu oranda kırpılır; panelde siyah boşluk kalmaz.
@@ -31,11 +29,9 @@ export default function SlotGame({ onExit, onBack, roomId }) {
   const game = useSlotGame({ roomId });
   const [coinOpen, setCoinOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
-  const [leadersOpen, setLeadersOpen] = useState(false);
   const [sound, setSound] = useState(true);
   const [flash, setFlash] = useState(0);
   const [prize, setPrize] = useState(null);
-  const { leaders, reload: reloadLeaders } = useGameLeaders('slot');
   // Kazanç yazısının kapanma sayacı: yeni tur başlasa da çalışmaya devam eder.
   const flashTimer = useRef(null);
   const areaRef = useRef(null);
@@ -99,13 +95,10 @@ export default function SlotGame({ onExit, onBack, roomId }) {
       {/* Üst: SLOT FRENZY kemeri, kazananlar panosu, sandık/kupon ve 5'li Jackpot konsolu */}
       <SlotFrenzyHeader
         pools={game.pools}
-        freeSpins={game.freeSpins}
         sound={sound}
         compact={inRoom}
         onHelp={() => setHelpOpen(true)}
-        onLeaders={() => { reloadLeaders(); setLeadersOpen(true); }}
         onSound={() => setSound((prev) => !prev)}
-        onCoins={() => setCoinOpen(true)}
       />
 
       {/* Oyun ekranı: görselin kırpılan iki paneli arasında kalan kısım alta yaslanır. */}
@@ -189,7 +182,6 @@ export default function SlotGame({ onExit, onBack, roomId }) {
       />
 
       <GameHelpSheet game="slot" open={helpOpen} onClose={() => setHelpOpen(false)} />
-      <GameLeaderSheet open={leadersOpen} title="Slot Frenzy" leaders={leaders} onClose={() => setLeadersOpen(false)} />
     </div>
   );
 }

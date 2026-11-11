@@ -136,7 +136,7 @@
   display: flex;
   align-items: stretch;
   gap: 6px;
-  margin: 4px 3% 0 9%;
+  margin: 4px 3% 0;
 }
 
 .sfz-ticker-box {
@@ -149,95 +149,6 @@
   box-shadow:
     inset 0 0 18px rgba(0, 0, 0, 0.75),
     0 0 12px rgba(124, 58, 237, 0.35);
-}
-
-.sfz-side-stack {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: space-between;
-  gap: 4px;
-  width: 4.8rem;
-  flex-shrink: 0;
-}
-
-/* Turuncu-altın Çılgın Slot kupon rozeti */
-.sfz-ticket-pill {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 3px 6px;
-  border-radius: 9999px;
-  border: 2px solid #fde68a;
-  background: linear-gradient(180deg, #fbbf24 0%, #d97706 60%, #92400e 100%);
-  box-shadow:
-    inset 0 1px 1px rgba(255, 255, 255, 0.65),
-    0 3px 8px rgba(0, 0, 0, 0.55);
-  line-height: 1.05;
-}
-.sfz-ticket-top {
-  display: flex;
-  align-items: center;
-  gap: 3px;
-}
-.sfz-ticket-icon {
-  font-size: 12px;
-}
-.sfz-ticket-mul {
-  font-size: 11px;
-  font-weight: 900;
-  color: #ffffff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
-}
-.sfz-ticket-sub {
-  font-size: 8px;
-  font-weight: 800;
-  color: #fffbeb;
-  white-space: nowrap;
-}
-
-/* Sağ alttaki hazine sandığı ve GIFT kurdelesi */
-.sfz-chest-btn {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
-  width: 4.2rem;
-  height: 3.1rem;
-  border-radius: 12px;
-  border: 1.5px solid rgba(253, 224, 71, 0.75);
-  background: radial-gradient(circle at 50% 35%, rgba(251, 191, 36, 0.35), rgba(88, 28, 135, 0.85) 75%);
-  box-shadow: 0 0 14px rgba(251, 191, 36, 0.45);
-  padding-bottom: 2px;
-}
-.sfz-chest-glow {
-  position: absolute;
-  inset: -4px;
-  border-radius: 14px;
-  background: radial-gradient(circle, rgba(250, 204, 21, 0.35) 0%, transparent 70%);
-  pointer-events: none;
-}
-.sfz-chest-art {
-  font-size: 16px;
-  line-height: 1;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.7));
-}
-.sfz-chest-ribbon {
-  margin-top: 1px;
-  width: 92%;
-  border-radius: 6px;
-  border: 1px solid #fde047;
-  background: linear-gradient(180deg, #fb923c 0%, #ea580c 55%, #9a3412 100%);
-  font-size: 9px;
-  font-weight: 900;
-  letter-spacing: 0.06em;
-  color: #7c2d12;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45);
-  text-align: center;
-  line-height: 1.25;
 }
 
 /* === Alt Jackpot Konsolu: colossal / big | Jackpot | mega / mini === */
@@ -365,9 +276,6 @@
 }
 .sfz-stage.is-compact .sfz-mid-wrap {
   margin-top: 2px;
-}
-.sfz-stage.is-compact .sfz-chest-btn {
-  height: 2.3rem;
 }
 
 /* ============================================================================
