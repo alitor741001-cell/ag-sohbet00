@@ -29,7 +29,7 @@
 .ref-stat[data-win="1"] .ref-stat-copy b { color:#bbf7d0; text-shadow:0 0 8px hsl(var(--tone)); }
 
 /* --- EYLEM SIRASI: çevirme hakkı + coin yükle --- */
-.ref-actions { display:grid; grid-template-columns:1.35fr 1fr; gap:6px; width:100%; }
+.ref-actions { display:grid; grid-template-columns:1fr; gap:6px; width:72%; margin-inline:auto; }
 .ref-banner { position:relative; display:flex; align-items:center; gap:7px; min-width:0; padding:6px 10px; border-radius:16px; cursor:pointer; overflow:hidden; text-align:left; container-type:inline-size; }
 .ref-banner-icon { flex-shrink:0; display:grid; place-items:center; width:28px; height:28px; border-radius:9999px; color:#1a0d00; background:radial-gradient(circle at 35% 30%, #fff8d6, #fbbf24 55%, #b45309); box-shadow:0 0 12px rgba(251,191,36,.75); }
 .ref-banner-icon svg { width:15px; height:15px; }

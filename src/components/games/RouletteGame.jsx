@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ChevronLeft, Lightbulb } from 'lucide-react';
 import '@/styles/roulette.css';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
+import GameCoinBar from '@/components/games/shared/GameCoinBar';
 import useRouletteGame from './roulette/useRouletteGame';
 import useRouletteBoard from './roulette/useRouletteBoard';
 import GameHelpSheet from './help/GameHelpSheet';
@@ -125,6 +126,7 @@ export default function RouletteGame({ onExit, onBack }) {
       )}
 
       {/* Coin bakiyesine dokununca uygulamanın coin mağazası açılır. */}
+      <GameCoinBar coins={game.available} onClick={() => setCoinOpen(true)} />
       <CoinPurchasePanel open={coinOpen} coins={game.available} onBack={() => setCoinOpen(false)} />
       <GameHelpSheet game="roulette" open={helpOpen} onClose={() => setHelpOpen(false)} />
 

@@ -4,6 +4,7 @@ import '@/styles/sekerli.css';
 import '@/styles/gameControls.css';
 import { Image } from '@/components/ui/image';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
+import GameCoinBar from '@/components/games/shared/GameCoinBar';
 import SekerliGrid from './sekerli/SekerliGrid';
 import SekerliTopPanel from './sekerli/SekerliTopPanel';
 import SekerliHud from './sekerli/SekerliHud';
@@ -127,6 +128,7 @@ export default function SekerliMeyveGame({ onExit, onBack }) {
       </footer>
 
       {/* Coin bakiyesine dokununca uygulamanın coin mağazası açılır. */}
+      <GameCoinBar coins={game.coins} onClick={() => setCoinOpen(true)} />
       <CoinPurchasePanel open={coinOpen} coins={game.coins} onBack={() => setCoinOpen(false)} />
       <GameHelpSheet game="sekerli" open={helpOpen} onClose={() => setHelpOpen(false)} />
 

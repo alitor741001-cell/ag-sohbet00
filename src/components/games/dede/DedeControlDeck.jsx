@@ -1,11 +1,12 @@
-import { Minus, Plus, Coins } from 'lucide-react';
-import DedeMultiplierCircle from '@/components/games/dede/DedeMultiplierCircle';
+import { Minus, Plus } from 'lucide-react';
+import DedeTray from '@/components/games/dede/DedeTray';
+import useDedeTray from '@/components/games/dede/useDedeTray';
 import FitGameText from '@/components/games/controls/FitGameText';
 import { DEDE_LINES, formatCoins } from '@/components/games/dede/dedeConfig';
 import '@/styles/referenceGameDecks.css';
-import compactCoins from '@/lib/compactCoins';
 
 export default function DedeControlDeck({ game, onCoins }) {
+  const tray = useDedeTray(game);
   const busy = game.spinning || game.intro;
   const disabled = game.status !== 'ready' || game.intro;
   const active = game.sessionSpins > 0;
@@ -13,7 +14,6 @@ export default function DedeControlDeck({ game, onCoins }) {
   return (
     <footer className="dede-reference-deck">
       <div className="dede-reference-win"><span>WIN</span><FitGameText as="strong">{formatCoins(game.win)}</FitGameText></div>
-      <button type="button" className="dede-reference-balance" onClick={onCoins} aria-label="Coin bakiyesi, coin yükle"><Coins size={14} /> {compactCoins(game.coins)} <span>›</span></button>
       <div className="dede-reference-center">
         <button type="button" className="dede-reference-buy" disabled={busy || active || disabled} onClick={affordable ? game.buySession : onCoins} aria-label={affordable ? '15 çevirme paketi satın al' : 'Coin yükle'}>
           <span className="dede-reference-crown" aria-hidden="true">♛</span>
@@ -22,7 +22,7 @@ export default function DedeControlDeck({ game, onCoins }) {
         </button>
         <button type="button" className="dede-reference-spin" disabled={!game.spinning && disabled} onClick={game.spinning ? game.stop : game.spin} aria-label={game.spinning ? 'Durdur' : 'Çevir'}><span>{game.spinning ? 'STOP' : 'SPIN'}</span></button>
         <div className="dede-reference-scroll">
-          <span>ÇARPAN</span><DedeMultiplierCircle multiplier={game.multiplier} orbs={game.orbs} />
+          <DedeTray symbols={tray.symbols} orbs={tray.orbs} />
         </div>
       </div>
       <div className="dede-reference-toolbar">

@@ -3,6 +3,7 @@ import { ChevronLeft, Lightbulb } from 'lucide-react';
 import '@/styles/zar.css';
 import '@/styles/zar2.css';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
+import GameCoinBar from '@/components/games/shared/GameCoinBar';
 import GameHelpSheet from '@/components/games/help/GameHelpSheet';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { SHAKE_HIDE_MS, outcomeName } from './zar/zarConfig';
@@ -130,6 +131,7 @@ export default function ZarGame({ onExit, onBack }) {
       )}
 
       {/* Coin bakiyesine dokununca uygulamanın coin mağazası açılır. */}
+      <GameCoinBar coins={game.available} onClick={() => setCoinOpen(true)} />
       <CoinPurchasePanel open={coinOpen} coins={game.available} onBack={() => setCoinOpen(false)} />
       <GameHelpSheet game="zar" open={helpOpen} onClose={() => setHelpOpen(false)} />
 

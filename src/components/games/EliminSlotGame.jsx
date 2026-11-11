@@ -5,6 +5,7 @@ import '@/styles/eliminExtras.css';
 import '@/styles/gameControls.css';
 import { Image } from '@/components/ui/image';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
+import GameCoinBar from '@/components/games/shared/GameCoinBar';
 import EliminJackpotBar from './elimin/EliminJackpotBar';
 import EliminGrid from './elimin/EliminGrid';
 import EliminHud from './elimin/EliminHud';
@@ -199,6 +200,7 @@ export default function EliminSlotGame({ onExit, onBack }) {
       </footer>
 
       {/* Coin bakiyesine dokununca uygulamanın coin mağazası açılır. */}
+      <GameCoinBar coins={game.coins} onClick={() => setCoinOpen(true)} />
       <CoinPurchasePanel open={coinOpen} coins={game.coins} onBack={() => setCoinOpen(false)} />
       <EliminRulesSheet open={helpOpen} onClose={() => setHelpOpen(false)} />
       <EliminWinOverlay

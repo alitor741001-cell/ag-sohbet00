@@ -4,6 +4,7 @@ import '@/styles/seker.css';
 import '@/styles/gameControls.css';
 import GameHelpSheet from './help/GameHelpSheet';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
+import GameCoinBar from '@/components/games/shared/GameCoinBar';
 import { Image } from '@/components/ui/image';
 import useSekerGame from './seker/useSekerGame';
 import SekerGrid from './seker/SekerGrid';
@@ -158,6 +159,7 @@ export default function SekerGame({ onExit, onBack }) {
       )}
 
       {/* Coin bakiyesine dokununca uygulamanın coin mağazası açılır. */}
+      <GameCoinBar coins={game.coins} onClick={() => setCoinOpen(true)} />
       <CoinPurchasePanel open={coinOpen} coins={game.coins} onBack={() => setCoinOpen(false)} />
       <GameHelpSheet game="seker" open={helpOpen} onClose={() => setHelpOpen(false)} />
 

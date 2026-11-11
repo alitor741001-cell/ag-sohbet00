@@ -71,14 +71,16 @@ export default function DedeGame({ onExit, onBack, roomId }) {
         coins={game.coins}
         leader={leader}
         compact={inRoom}
+        onCoins={() => setCoinOpen(true)}
         onLeaders={() => { reloadLeaders(); setLeadersOpen(true); }}
         onHelp={() => setHelpOpen(true)}
       />
 
       {/* Izgara üst görselin alt kısmına doğru yükselir: görselin altı çerçevenin arkasında kalır. */}
-      <main className={`relative z-10 flex min-h-0 flex-1 flex-col items-center gap-1 px-0 pb-1 ${inRoom ? '-mt-[1vw]' : '-mt-[18vw] sm:-mt-24'}`}>
+      <main className={`relative z-10 flex min-h-0 flex-1 flex-col items-center gap-1 px-0 pb-1 ${inRoom ? '-mt-[5vw]' : '-mt-[22vw] sm:-mt-28'}`}>
         <div className="flex min-h-0 w-full flex-1 items-stretch justify-center">
-          <div className="dede-frame flex h-full w-full max-w-[54rem] p-1 sm:p-2">
+          {/* Çerçeve yanlara taşacak kadar geniş: ekran kenarına kadar uzanır. */}
+          <div className="dede-frame -mx-1 flex h-full w-[calc(100%+0.5rem)] max-w-[56rem] p-0.5 sm:p-1.5">
             <div className="relative flex min-h-0 w-full">
               <DedeReels
                 rolling={game.rolling}

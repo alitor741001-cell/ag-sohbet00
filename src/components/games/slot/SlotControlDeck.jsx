@@ -1,4 +1,4 @@
-import { ChevronRight, Coins, Minus, Plus } from 'lucide-react';
+import { Minus, Plus } from 'lucide-react';
 import FitGameText from '@/components/games/controls/FitGameText';
 import '@/styles/referenceGameDecks.css';
 
@@ -13,8 +13,8 @@ export default function SlotControlDeck({ coins, bet, lines, win, freeSpins, aut
         <button type="button" className="slot-reference-auto" disabled={!ready} onClick={onAuto} aria-pressed={auto}>Otomatik</button>
       </div>
       <div className="slot-reference-bottom">
-        <button type="button" onClick={onCoins} className="slot-reference-balance" aria-label="Coin yükle"><Coins size={21} /><FitGameText as="strong">{format(coins)}</FitGameText><ChevronRight />{freeSpins > 0 && <small>{freeSpins} FREE</small>}</button>
         <div className="slot-reference-bet">
+          {freeSpins > 0 && <small className="slot-reference-free">{freeSpins} FREE</small>}
           <button type="button" disabled={spinning} onClick={() => onStep(-1)} aria-label="Bahsi azalt"><Minus size={18} /></button>
           <div><FitGameText as="strong">{format(bet)}</FitGameText><button type="button" disabled={!ready || spinning} onClick={onMax} className="slot-reference-max">MAX</button></div>
           <button type="button" disabled={spinning} onClick={() => onStep(1)} aria-label="Bahsi artır"><Plus size={18} /></button>

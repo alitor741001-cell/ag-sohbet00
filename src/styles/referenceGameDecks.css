@@ -16,7 +16,8 @@
 .slot-reference-total,.slot-reference-win { min-height:49px; border:2px solid hsl(var(--arcade-violet)); border-top:0; border-radius:0 0 38% 38%; background:linear-gradient(hsl(var(--arcade-violet)/.4),hsl(var(--arcade-plum))); box-shadow:0 3px 4px hsl(var(--arcade-pink)/.25); }
 .slot-reference-auto { margin-top:5px; min-height:34px; padding:3px; border:3px ridge hsl(var(--arcade-cream)); border-radius:22px; color:hsl(var(--slot-orange)); font-size:clamp(11px,3.1vw,16px); font-weight:1000; background:linear-gradient(hsl(var(--arcade-cream)),hsl(var(--arcade-gold)) 60%,hsl(var(--slot-orange))); box-shadow:inset 0 2px 2px hsl(var(--slot-text)),0 2px 3px hsl(var(--arcade-plum)); }
 .slot-reference-auto[aria-pressed="true"] { outline:2px solid hsl(var(--arcade-lime)); }
-.slot-reference-bottom { display:grid; grid-template-columns:1.35fr 1fr .86fr; align-items:center; gap:9px; padding-top:3px; }
+.slot-reference-free { position:absolute; top:-8px; left:50%; transform:translateX(-50%); z-index:1; background:hsl(var(--slot-green-deep)); font-size:9px; border-radius:5px; padding:1px 3px; }
+.slot-reference-bottom { display:grid; grid-template-columns:1.6fr .86fr; align-items:center; gap:9px; padding-top:3px; }
 .slot-reference-balance { position:relative; display:flex; align-items:center; gap:5px; min-width:0; min-height:35px; padding:4px 8px; border:2px solid hsl(var(--arcade-pink)/.35); border-radius:24px; background:hsl(var(--arcade-plum)/.8); }
 .slot-reference-balance > strong { flex:1; font-size:14px; }
 .slot-reference-balance > svg:first-child { flex:none; color:hsl(var(--arcade-gold)); }
@@ -61,4 +62,4 @@
 .slot-reference-deck button:disabled,.dede-reference-deck button:disabled { opacity:.55; cursor:not-allowed; }
 .slot-reference-deck button:focus-visible,.dede-reference-deck button:focus-visible { outline:2px solid hsl(var(--slot-text)); outline-offset:2px; }
 @media (min-width:600px) { .slot-reference-deck,.dede-reference-deck { padding-inline:max(8px,calc((100% - 600px)/2)); }.dede-reference-center { gap:18px; } }
-@media (max-height:600px) and (orientation:landscape) { .game-quick-nav { padding-block:3px; }.game-quick-orb { width:32px; height:32px; }.game-quick-back { width:30px; height:30px; }.dede-reference-center { padding-block:3px; }.dede-reference-buy,.dede-reference-scroll { min-height:58px; }.dede-reference-spin { min-height:50px; }.dede-reference-win { height:32px; }.dede-reference-scroll .dede-mult-circle { height:22px; width:22px; } }
+@media (max-height:600px) and (orientation:landscape) { .game-quick-nav { padding-top:calc(3px + env(safe-area-inset-top,0px)); padding-bottom:3px; padding-left:max(12px,env(safe-area-inset-left)); padding-right:max(12px,env(safe-area-inset-right)); }.game-quick-orb { width:32px; height:32px; }.game-quick-back { width:30px; height:30px; }.dede-reference-center { padding-block:3px; }.dede-reference-buy,.dede-reference-scroll { min-height:58px; }.dede-reference-spin { min-height:50px; }.dede-reference-win { height:32px; }.dede-reference-scroll .dede-mult-circle { height:22px; width:22px; } }

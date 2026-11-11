@@ -12,22 +12,8 @@
 }
 .dzh-compact { height: 40cqw; max-height: 24vh; }
 .dzh-art { position: absolute; left: 0; top: 0; width: 100%; height: auto; pointer-events: none; user-select: none; }
-.dzh-coins {
-  position: absolute;
-  left: 9.8cqw;
-  top: 2cqw;
-  width: 13.4cqw;
-  height: 4.6cqw;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  white-space: nowrap;
-  font-size: 2.6cqw;
-  font-weight: 900;
-  color: #ffe9a8;
-  text-shadow: 0 1px 0 #6b3a05, 0 0 6px rgba(255, 200, 80, 0.8);
-}
+/* Coin barı diğer oyunlardaki gibi sol üstte, NO:1 rozetinin sağında durur. */
+.dzh-coinbar { left: 16.5cqw; top: 2cqw; }
 .dzh-badge { position: absolute; left: 1cqw; top: 7cqw; width: 14.6cqw; height: 18cqw; border-radius: 30%; }
 /* Profil, rozetteki boş çemberin tam ortasına oturur ve çemberden küçük kalır: dışa taşmaz. */
 .dzh-avatar {

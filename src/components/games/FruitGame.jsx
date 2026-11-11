@@ -3,6 +3,7 @@ import { ChevronLeft, HelpCircle, Play } from 'lucide-react';
 import '@/styles/fruit.css';
 import '@/styles/gameControls.css';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
+import GameCoinBar from '@/components/games/shared/GameCoinBar';
 import useFruitGame from './fruit/useFruitGame';
 import FruitReels from './fruit/FruitReels';
 import FruitHud from './fruit/FruitHud';
@@ -150,6 +151,7 @@ export default function FruitGame({ onExit, onBack }) {
       )}
 
       {/* Coin bakiyesine dokununca uygulamanın coin mağazası açılır. */}
+      <GameCoinBar coins={game.coins} onClick={() => setCoinOpen(true)} />
       <CoinPurchasePanel open={coinOpen} coins={game.coins} onBack={() => setCoinOpen(false)} />
       <GameHelpSheet game="fruit" open={helpOpen} onClose={() => setHelpOpen(false)} />
 
