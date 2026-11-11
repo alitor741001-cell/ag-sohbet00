@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Track } from 'livekit-client';
-import { Loader2, Mic, MicOff, PhoneOff, Play, RotateCcw, UserPlus, Video, VideoOff, Volume2, VolumeX, WifiOff } from 'lucide-react';
+import { Loader2, Mic, MicOff, PhoneOff, Play, RotateCcw, UserPlus, Video, VideoOff, Volume2, VolumeX, WifiOff, X } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import useVideoPk from '@/hooks/useVideoPk';
 import usePkLiveKit from '@/hooks/usePkLiveKit';
@@ -403,9 +403,10 @@ export default function VideoPkLayer({ open, onOpen, onClose, roomId, user, onOp
                   type="button"
                   onClick={closeFinished}
                   disabled={busy}
-                  className="h-9 shrink-0 rounded-xl bg-white/14 px-3 text-[11px] font-black text-white active:scale-[0.98] disabled:opacity-45"
+                  aria-label="Kapat"
+                  className="flex h-8 shrink-0 items-center gap-0.5 rounded-xl bg-white/16 px-2 text-[10.5px] font-black text-white ring-1 ring-white/30 active:scale-[0.97] disabled:opacity-45"
                 >
-                  Kapat
+                  <X className="h-3.5 w-3.5" /> Kapat
                 </button>
               </>
             ) : live ? (
@@ -440,6 +441,16 @@ export default function VideoPkLayer({ open, onOpen, onClose, roomId, user, onOp
                     Gelen davet
                   </button>
                 )}
+                {/* Küçük Kapat: tur sürerken de her zaman görünür kalır. */}
+                <button
+                  type="button"
+                  onClick={closeLobby}
+                  disabled={busy}
+                  aria-label="Kapat"
+                  className="flex h-8 shrink-0 items-center gap-0.5 rounded-xl bg-white/16 px-2 text-[10.5px] font-black text-white ring-1 ring-white/30 active:scale-[0.97] disabled:opacity-45"
+                >
+                  <X className="h-3.5 w-3.5" /> Kapat
+                </button>
               </>
             ) : ready ? (
               <>
@@ -460,9 +471,10 @@ export default function VideoPkLayer({ open, onOpen, onClose, roomId, user, onOp
                   type="button"
                   onClick={closeLobby}
                   disabled={busy}
-                  className="h-10 shrink-0 rounded-xl bg-white/14 px-3 text-[11px] font-black text-white active:scale-[0.98] disabled:opacity-45"
+                  aria-label="Kapat"
+                  className="flex h-8 shrink-0 items-center gap-0.5 rounded-xl bg-white/16 px-2 text-[10.5px] font-black text-white ring-1 ring-white/30 active:scale-[0.97] disabled:opacity-45"
                 >
-                  Vazgeç
+                  <X className="h-3.5 w-3.5" /> Kapat
                 </button>
               </>
             ) : (
