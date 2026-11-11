@@ -12,19 +12,19 @@ export const DEFAULT_BET = 100;
 // turlar tek tek ücret almaz ve kendiliğinden çevrilir.
 export const SESSION_SPINS = 15;
 const SESSION_PRICE: Record<number, number> = {
-  10: 5000,
-  20: 10000,
-  50: 25000,
-  100: 50000,
-  250: 150000,
-  500: 300000,
-  1000: 750000,
-  2500: 1000000,
-  5000: 1500000,
+  10: 2000000,
+  20: 5000000,
+  50: 15000000,
+  100: 25000000,
+  250: 50000000,
+  500: 75000000,
+  1000: 100000000,
+  2500: 100000000,
+  5000: 100000000,
 };
 
 export function sessionPrice(bet: number): number {
-  return SESSION_PRICE[bet] ?? Math.round(bet * 1000);
+  return SESSION_PRICE[bet] ?? SESSION_PRICE[10];
 }
 // Eski sürümden kalan devasa bakiyeler bu sınırın üzerindeyse normale çekilir.
 const LEGACY_MAX_COINS = 1000000000;

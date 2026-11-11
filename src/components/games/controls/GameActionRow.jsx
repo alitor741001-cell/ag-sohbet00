@@ -13,10 +13,10 @@ export default function GameActionRow({ coins, sessionPrice, sessionSpins, sessi
 
   const title = active
     ? `ÇEVRİLİYOR · ${sessionSpins}`
-    : affordable ? `${sessionSize} ÇEVRİME HAKKI` : 'YETERSİZ COIN';
+    : `${sessionSize} ÇEVİRME PAKETİ`;
   const sub = active
     ? `${sessionSpins} TUR KALDI`
-    : affordable ? `${format(sessionPrice)} COIN` : 'COIN YÜKLE';
+    : `${Math.round((sessionPrice || 0) / 1000)}K COIN`;
 
   return (
     <div className="ref-actions">

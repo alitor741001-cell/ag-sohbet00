@@ -1,0 +1,70 @@
+/* Oyun kimliğine bağlı alt kontrol tasarımları. İşlevler ve bahis kuralları değişmez. */
+.game-controls-themed[data-game] { --control-accent: var(--slot-gold); --control-companion: var(--slot-purple); --control-surface: var(--slot-surface); --control-radius: 12px; }
+.game-controls-themed[data-game="dede-olympus"] { --control-accent: var(--premium-gold-light); --control-companion: var(--level-violet); --control-radius: 5px 17px; }
+.game-controls-themed[data-game="seker"] { --control-accent: var(--fantasy-princess); --control-companion: var(--slot-cyan, var(--score-blue)); --control-radius: 24px; }
+.game-controls-themed[data-game="fruit-sweet"] { --control-accent: var(--slot-green); --control-companion: var(--slot-orange); --control-radius: 24px 7px; }
+.game-controls-themed[data-game="sekerli-meyve"] { --control-accent: var(--score-blue); --control-companion: var(--score-pink); --control-radius: 9px; }
+.game-controls-themed[data-game="elimin-slot"] { --control-accent: var(--slot-orange); --control-companion: var(--slot-red); --control-radius: 4px; }
+.game-controls-themed[data-game="slot-frenzy"] { --control-accent: var(--premium-gold-light); --control-companion: var(--slot-red); --control-radius: 8px; }
+.game-controls-themed[data-game="roulette"] { --control-accent: var(--slot-green); --control-companion: var(--premium-gold); --control-radius: 22px; }
+.game-controls-themed[data-game="zar"] { --control-accent: var(--slot-red); --control-companion: var(--score-orange); --control-radius: 7px; }
+.game-controls-themed[data-game="crash-rocket"] { --control-accent: var(--score-blue); --control-companion: var(--slot-red); --control-radius: 3px 14px; }
+.game-controls-themed[data-game="altin-gol"] { --control-accent: var(--slot-green); --control-companion: var(--slot-gold); --control-radius: 3px; }
+.game-controls-themed[data-game="okey-101"] { --control-accent: var(--slot-green); --control-companion: var(--premium-gold); --control-radius: 7px; }
+.game-controls-themed[data-game="okey"] { --control-accent: var(--cabinet-ink); --control-companion: var(--score-blue); --control-radius: 5px; }
+
+.game-controls-themed.game-controls-themed[data-game] :is(.ref-banner, .gctl-deck.ref-deck) {
+  border: 1px solid hsl(var(--control-accent) / .65);
+  border-radius: var(--control-radius);
+  background: linear-gradient(155deg, hsl(var(--control-accent) / .18), hsl(var(--control-surface)) 62%);
+  box-shadow: inset 0 1px 0 hsl(var(--slot-text) / .16), inset 0 -4px 0 hsl(var(--slot-bg) / .6), 0 4px 12px hsl(var(--slot-bg) / .7);
+}
+.game-controls-themed.game-controls-themed[data-game] .ref-bet-pill { border-radius: var(--control-radius); background: hsl(var(--slot-bg) / .85); box-shadow: inset 0 2px 5px hsl(var(--slot-bg)), 0 0 0 1px hsl(var(--control-accent) / .4); }
+.game-controls-themed.game-controls-themed[data-game] :is(.ref-step, .ref-max, .ref-auto) { border-radius: var(--control-radius); background: linear-gradient(155deg, hsl(var(--control-companion) / .75), hsl(var(--slot-surface))); color: hsl(var(--slot-text)); border: 1px solid hsl(var(--control-accent) / .45); box-shadow: inset 0 1px 0 hsl(var(--slot-text) / .22), inset 0 -3px 0 hsl(var(--slot-bg) / .45); }
+.game-controls-themed.game-controls-themed[data-game] .ref-spin { border-radius: var(--control-radius); margin: -7px 0; background: linear-gradient(155deg, hsl(var(--control-accent)), hsl(var(--control-accent) / .35)); color: hsl(var(--slot-text)); border: 2px solid hsl(var(--control-accent)); box-shadow: inset 0 2px 0 hsl(var(--slot-text) / .3), inset 0 -5px 0 hsl(var(--slot-bg) / .5), 0 0 13px hsl(var(--control-accent) / .4); animation: none; }
+.game-controls-themed.game-controls-themed[data-game] .ref-spin[data-stop="1"] { background: hsl(var(--slot-red)); border-color: hsl(var(--slot-text) / .6); }
+.game-controls-themed.game-controls-themed[data-game] :is(.ref-banner-copy, .ref-bet-label) { color: hsl(var(--control-accent)); }
+.game-controls-themed.game-controls-themed[data-game] .ref-banner-icon { background: linear-gradient(135deg, hsl(var(--control-accent)), hsl(var(--control-companion))); color: hsl(var(--slot-text)); box-shadow: none; border-radius: var(--control-radius); }
+.game-controls-themed.game-controls-themed[data-game] .ref-banner-coins { border-color: hsl(var(--control-companion) / .7); }
+.game-controls-themed.game-controls-themed[data-game] .ref-banner-shine { animation: none; opacity: .35; }
+.game-controls-themed.game-controls-themed[data-game] .ref-choice.ref-choice { border-radius: var(--control-radius); color: hsl(var(--slot-text)); background: linear-gradient(160deg, hsl(var(--control-accent) / .32), hsl(var(--slot-surface))); border: 1px solid hsl(var(--control-accent) / .7); box-shadow: inset 0 1px 0 hsl(var(--slot-text) / .2), inset 0 -3px 0 hsl(var(--slot-bg) / .6); }
+.game-controls-themed.game-controls-themed[data-game] .ref-choice:is([aria-pressed="true"], [data-on="1"]) { background: hsl(var(--control-accent)); color: hsl(var(--slot-bg)); }
+
+/* Dede: tapınak kabartması ve sütun köşeleri. */
+.game-controls-themed[data-game="dede-olympus"] .ref-deck { border-inline-width: 4px !important; }
+.game-controls-themed[data-game="dede-olympus"] .ref-spin { clip-path: polygon(15% 0,85% 0,100% 15%,100% 85%,85% 100%,15% 100%,0 85%,0 15%); }
+/* Şeker: parlak şeker kapsülleri. */
+.game-controls-themed.game-controls-themed[data-game="seker"] .ref-spin { border-radius: 50%; box-shadow: inset 0 0 0 4px hsl(var(--slot-text) / .25), inset 0 -6px 0 hsl(var(--control-companion) / .6); }
+.game-controls-themed[data-game="seker"] .ref-banner { border-style: double !important; border-width: 3px !important; }
+/* Meyve: yaprak biçimli düğmeler ve meyve sapı çizgisi. */
+.game-controls-themed[data-game="fruit-sweet"] .ref-spin { border-radius: 48% 12% 48% 12% !important; }
+.game-controls-themed[data-game="fruit-sweet"] .ref-banner { border-bottom-width: 4px !important; }
+/* Şekerli meyve: bilet formu, kesikli kenarlar. */
+.game-controls-themed[data-game="sekerli-meyve"] .ref-banner { border-style: dashed !important; }
+.game-controls-themed[data-game="sekerli-meyve"] .ref-spin { border-radius: 16px 4px 16px 4px !important; }
+/* Elimin: ağır metal, kalkan ve perçinli paneller. */
+.game-controls-themed[data-game="elimin-slot"] .ref-deck { border-bottom-width: 5px !important; }
+.game-controls-themed[data-game="elimin-slot"] .ref-spin { clip-path: polygon(0 0,100% 0,100% 75%,50% 100%,0 75%); }
+/* Slot: klasik art-deco konsol. */
+.game-controls-themed[data-game="slot-frenzy"] .ref-deck { outline: 1px solid hsl(var(--premium-gold) / .35); outline-offset: 3px; }
+.game-controls-themed[data-game="slot-frenzy"] .ref-spin { border-radius: 50% !important; border-width: 4px !important; }
+
+/* Rulet ve zar: aynı işlevler, iki ayrı kumanda düzeni. */
+.game-controls-themed[data-game] .rl2-footer-bar { border: 1px solid hsl(var(--control-accent) / .6); border-radius: var(--control-radius); padding: 7px; background: hsl(var(--slot-surface) / .96); }
+.game-controls-themed.game-controls-themed[data-game] :is(.rl2-repeat, .rl2-clear, .rl2-balance) { border-radius: var(--control-radius); border: 1px solid hsl(var(--control-accent) / .65); background: linear-gradient(160deg, hsl(var(--control-accent) / .3), hsl(var(--slot-bg))); color: hsl(var(--slot-text)); box-shadow: inset 0 -3px 0 hsl(var(--slot-bg) / .7); }
+.game-controls-themed[data-game="roulette"] .rl2-actions { flex-direction: column; }
+.game-controls-themed[data-game="roulette"] .rl2-footer-bar { border-top: 3px double hsl(var(--premium-gold)); }
+.game-controls-themed.game-controls-themed[data-game="zar"] .rl2-repeat { clip-path: polygon(8% 0,92% 0,100% 50%,92% 100%,8% 100%,0 50%); border-radius: 0; }
+.game-controls-themed[data-game="zar"] .rl2-footer-bar { border-bottom-width: 4px; }
+
+/* Roket: havacılık kumandası, açılı metal gövde. */
+.game-controls-themed.game-controls-themed[data-game="crash-rocket"] .av-panel { border-radius: var(--control-radius); border: 1px solid hsl(var(--score-blue) / .6); background: linear-gradient(145deg, hsl(var(--score-blue) / .12), hsl(var(--slot-bg))); box-shadow: inset 0 2px 0 hsl(var(--score-blue) / .25); }
+.game-controls-themed.game-controls-themed[data-game="crash-rocket"] .av-btn { border-radius: 3px 15px; border-inline-width: 4px; box-shadow: inset 0 -5px 0 hsl(var(--slot-bg) / .5); }
+.game-controls-themed.game-controls-themed[data-game="crash-rocket"] .av-round { border-radius: 4px; border: 1px solid hsl(var(--score-blue) / .6); background: hsl(var(--slot-panel)); }
+/* Futbol: saha şeritleri ve maç bileti. */
+.game-controls-themed[data-game="altin-gol"] .fut-dock { border-top: 3px double hsl(var(--slot-text) / .6); padding-top: 8px; }
+.game-controls-themed.game-controls-themed[data-game="altin-gol"] .fut-stakes .ref-choice { min-height: 44px; border-left-width: 4px; border-bottom-width: 3px; background: repeating-linear-gradient(90deg,hsl(var(--slot-green) / .25) 0 12px,hsl(var(--slot-green) / .12) 12px 24px),hsl(var(--slot-surface)); }
+/* 101: yeşil keçe ve altın kenar. Klasik okey: fildişi taş düğmeler. */
+.game-controls-themed.game-controls-themed[data-game="okey-101"] .okey-strip .ref-choice { border-top: 3px solid hsl(var(--premium-gold)); border-radius: 7px 7px 2px 2px; }
+.game-controls-themed.game-controls-themed[data-game="okey"] .okey-strip .ref-choice { background: linear-gradient(hsl(var(--cabinet-ink)),hsl(var(--premium-gold-light) / .8)); color: hsl(var(--slot-bg)); border-bottom: 4px solid hsl(var(--score-blue)); border-radius: 4px; }
+.game-controls-themed[data-game] button:focus-visible { outline: 2px solid hsl(var(--control-accent)); outline-offset: 2px; }

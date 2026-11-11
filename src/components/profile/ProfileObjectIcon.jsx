@@ -3,27 +3,28 @@ import useProfileIconPng from '@/hooks/useProfileIconPng';
 
 const BASE = 'https://base44.app/api/apps/6a77d66e4da6de214628ee62/files/mp/public/6a77d66e4da6de214628ee62';
 const ART = {
-  friends: '5ecc6805d_profile-friends.png',
-  following: '0714fdc03_profile-following.png',
-  followers: '29e877214_profile-followers.png',
-  visitors: '1530f7f11_profile-visitors.png',
-  coins: '01db6705b_profile-coins.png',
-  diamonds: '97700644c_profile-diamonds.png',
-  vip: '5cc3c6f93_profile-vip.png',
-  giftHistory: '27cab5553_profile-giftHistory.png',
+  friends: 'b04d2b4c8_profile-friends-transparent.png',
+  following: '26da6315c_profile-following-transparent.png',
+  followers: 'e2dd97a68_profile-followers-transparent.png',
+  visitors: 'ae4a68d22_profile-visitors-transparent.png',
+  coins: 'a8f766a19_profile-coins-transparent.png',
+  diamonds: '5229849a2_profile-diamonds-transparent.png',
+  vip: 'c5c9872f1_profile-vip-transparent.png',
+  giftHistory: '235682cea_profile-giftHistory-transparent.png',
   bag: 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/794fc8e2c_generated_5e65fe31.png',
-  level: '6b6acb18d_profile-level.png',
-  agency: '261cedf45_profile-agency.png',
-  admin: 'a09a8db87_profile-admin.png',
-  blocked: '7a2a6fda4_profile-blocked.png',
-  privacy: '92dbfc0f6_profile-privacy.png',
-  settings: 'dc5eb8926_profile-settings.png',
+  level: '1076423d1_profile-level-transparent.png',
+  agency: '9fb9dc552_profile-agency-transparent.png',
+  admin: '4938f7ada_profile-admin-transparent.png',
+  blocked: '391dae8dc_profile-blocked-transparent.png',
+  privacy: '57c5670e1_profile-privacy-transparent.png',
+  settings: '328b8d808_profile-settings-transparent.png',
 };
 
 export default function ProfileObjectIcon({ kind, Icon }) {
   const original = ART[kind];
   const source = original ? (original.startsWith('https://') ? original : `${BASE}/${original}`) : '';
-  const transparent = useProfileIconPng(source);
+  const bagPng = useProfileIconPng(kind === 'bag' ? source : '');
+  const transparent = kind === 'bag' ? bagPng : source;
   return (
     <span className="relative flex h-[46px] w-[58px] shrink-0 items-center justify-center" aria-hidden="true">
       {transparent ? <Image src={transparent} alt="" fittingType="fit"
