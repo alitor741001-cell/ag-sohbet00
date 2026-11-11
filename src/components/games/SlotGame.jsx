@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import SlotFrenzyHeader from './slot/SlotFrenzyHeader';
+import { HelpCircle } from 'lucide-react';
 import GameHelpSheet from './help/GameHelpSheet';
 import { Image } from '@/components/ui/image';
 import { useSize } from '@/hooks/use-size';
@@ -106,13 +106,20 @@ export default function SlotGame({ onExit, onBack, roomId }) {
         <div className="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_20%_80%,#c026d3_0%,transparent_40%),radial-gradient(circle_at_80%_70%,#f59e0b_0%,transparent_35%)]" />
       </div>
 
-      {/* Üst: kazanan şeridi ve kendi jackpot konsolumuz. */}
-      <div className="relative z-10 shrink-0">
-        <SlotFrenzyHeader onHelp={() => setHelpOpen(true)} compact={inRoom}>
-          <WinnerTicker height={tickerHeight} />
-        </SlotFrenzyHeader>
-        <SlotJackpotBar pools={game.pools} topGap={inRoom ? 0 : panelGap} compact={inRoom} />
+      {/* Üst: kazanan şeridi ve jackpot konsolu. */}
+      <div className="relative z-10 shrink-0 pt-[env(safe-area-inset-top)]">
+        <WinnerTicker height={tickerHeight} />
+        <SlotJackpotBar pools={game.pools} topGap={inRoom ? 0 : panelGap} />
       </div>
+
+      <button
+        type="button"
+        onClick={() => setHelpOpen(true)}
+        aria-label="Nasıl oynanır"
+        className="absolute right-2 top-[env(safe-area-inset-top)] z-20 mt-2 flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm active:scale-95"
+      >
+        <HelpCircle className="h-5 w-5" />
+      </button>
 
 
 
