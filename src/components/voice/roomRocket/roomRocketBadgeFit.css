@@ -1,0 +1,24 @@
+/* Roket rozeti: biraz küçük; ilerleme sayısı rozetin içinde kalan, roket seviyesinin
+   rengine boyanmış bir hapın içinde durur — çentikten dışarı taşmaz.
+   Seçiciler iki kez yazılır: roomRocket.css'den sonra yüklense de bu kurallar geçerlidir. */
+.room-rocket-badge.room-rocket-badge {
+  --rocket-tone: 214 90% 55%;
+  width: clamp(40px, 10%, 58px);
+  height: clamp(68px, 19vw, 100px);
+  margin-bottom: 22px;
+}
+.room-rocket-badge.room-rocket-badge[data-level="2"] { --rocket-tone: 275 85% 60%; }
+.room-rocket-badge.room-rocket-badge[data-level="3"] { --rocket-tone: 330 90% 58%; }
+.room-rocket-badge.room-rocket-badge[data-level="4"] { --rocket-tone: 42 95% 52%; }
+.room-rocket-badge .room-rocket-badge-image { height: calc(100% - 16px); }
+.room-rocket-badge .room-rocket-progress {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0 0.3em;
+  border-radius: 9999px;
+  font-size: clamp(8px, 2.1vw, 10px);
+  line-height: 15px;
+  background: linear-gradient(180deg, hsl(var(--rocket-tone)), hsl(var(--rocket-tone) / 0.7));
+  box-shadow: 0 0 8px hsl(var(--rocket-tone) / 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}

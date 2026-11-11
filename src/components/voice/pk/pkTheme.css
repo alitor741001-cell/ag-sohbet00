@@ -40,5 +40,19 @@
 }
 .pk-theme-word-left { left: 4%; color: #60a5fa; text-shadow: 0 0 24px #2563eb; }
 .pk-theme-word-right { right: 4%; color: #f87171; text-shadow: 0 0 24px #dc2626; }
+/* Tam ekran PK teması: oda zemininin tamamı; logo ve harfler büyür, ışık yavaşça nefes alır. */
+.pk-theme-full {
+  box-shadow: none;
+  background:
+    radial-gradient(ellipse at 10% 30%, rgba(37, 99, 235, 0.75), transparent 55%),
+    radial-gradient(ellipse at 90% 30%, rgba(220, 38, 38, 0.75), transparent 55%),
+    radial-gradient(ellipse at 50% 100%, rgba(251, 191, 36, 0.18), transparent 50%),
+    linear-gradient(100deg, #031247 0%, #0b1a6b 30%, #0a0614 50%, #6b0a16 70%, #3d030b 100%);
+}
+.pk-theme-full .pk-theme-split { width: 4px; }
+.pk-theme-full .pk-theme-ag { top: 46%; width: 72%; max-width: 380px; opacity: 0.22; animation: pk-theme-glow 4s ease-in-out infinite; }
+.pk-theme-full .pk-theme-word { font-size: 14rem; opacity: 0.1; }
+@keyframes pk-theme-glow { 0%, 100% { opacity: 0.18; } 50% { opacity: 0.3; } }
+@media (prefers-reduced-motion: reduce) { .pk-theme-full .pk-theme-ag { animation: none; } }
 @keyframes pk-theme-split { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .pk-theme-split { animation: none; } }

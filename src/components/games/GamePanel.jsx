@@ -7,6 +7,7 @@ import usePageScrollLock from '@/hooks/usePageScrollLock';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { broadcasterState } from '@/lib/broadcaster';
 import useBackDismiss from '@/hooks/useBackDismiss';
+import '@/styles/gameCards.css';
 
 // Sinematik geçişin toplam süresi.
 const TRANSITION_MS = 220;
@@ -99,28 +100,29 @@ export default function GamePanel({ open, onClose, roomId, initialGame = null, f
 
             {/* Panelde sadece oyunun logosu durur: dokununca oyun açılır.
                 Kartlar alt alta değil, eşit genişlikte yan yana durur. */}
-            <div className="grid min-h-0 flex-1 grid-cols-2 content-start gap-3 sm:grid-cols-3 lg:grid-cols-4 overflow-y-auto p-3">
+            <div className="grid min-h-0 flex-1 grid-cols-3 content-start gap-x-3 gap-y-4 sm:grid-cols-4 lg:grid-cols-5 overflow-y-auto p-3">
               {GAMES.map((game) => (
                 <button
                   key={game.id}
                   type="button"
                   onClick={() => openGame(game.id)}
-                  className="group relative block w-full overflow-hidden rounded-2xl border border-slot-gold/40 active:scale-[0.99]"
+                  className="group flex w-full flex-col items-center gap-1.5 active:scale-95"
                 >
-                  <Image
-                    src={game.cover}
-                    alt={game.title}
-                    className="aspect-square media-box-square w-full"
-                    fittingType="fit"
-                    originWidth={game.originWidth}
-                    originHeight={game.originHeight}
-                    quality={92}
-                  />
-                  <span className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-1.5 bg-black/70 px-2 py-1.5">
-                    <span className="min-w-0 flex-1 truncate text-[11px] font-black tracking-wide text-slot-gold">{game.title}</span>
-                    <span className="flex shrink-0 items-center gap-1 text-[10px] font-black text-white">
-                      <Play className="h-3 w-3" /> OYNA
-                    </span>
+                  {/* Oyun logosu altın halkalı çemberin içinde durur. */}
+                  <span className="game-orb relative block w-[86%] overflow-hidden rounded-full">
+                    <Image
+                      src={game.cover}
+                      alt={game.title}
+                      className="aspect-square media-box-square w-full rounded-full"
+                      fittingType="fill"
+                      originWidth={game.originWidth}
+                      originHeight={game.originHeight}
+                      quality={92}
+                    />
+                  </span>
+                  <span className="flex w-full items-center justify-center gap-1 truncate text-[11px] font-black tracking-wide text-slot-gold">
+                    <Play className="h-2.5 w-2.5 shrink-0 fill-current" />
+                    <span className="truncate">{game.title}</span>
                   </span>
                 </button>
               ))}

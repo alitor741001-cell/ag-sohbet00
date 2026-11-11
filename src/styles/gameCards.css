@@ -74,4 +74,13 @@
 .gd-card-value-muted { color: rgba(255, 246, 221, 0.55); text-shadow: none; }
 .gd-card-win .gd-card-value { color: #ffd35c; text-shadow: 0 0 14px rgba(255, 190, 60, 0.95); }
 
+/* Oyun merkezi: çember oyun kartı — çift altın halka ve dönen ışıltı. */
+.game-orb {
+  padding: 3px;
+  background: conic-gradient(from 0deg, #fff1b8, #d4a017, #7a4f05, #f2ce6b, #fff1b8);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.7), 0 0 16px -2px rgba(242, 206, 107, 0.7), inset 0 0 8px rgba(0, 0, 0, 0.6);
+}
+.game-orb > * { box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.6); }
+.group:active .game-orb { box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.7), 0 0 24px 2px rgba(239, 68, 68, 0.8); }
+
 /* Coin paket kartının stilleri src/styles/coinShop.css içinde (cs- önekli). */

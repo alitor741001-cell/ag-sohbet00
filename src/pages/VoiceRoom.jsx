@@ -1278,7 +1278,7 @@ export default function VoiceRoom() {
   // alttaki kontrol çubuğu (mik/hoparlör) hep aynı yerde durur.
   return (
     <VoiceViewport className="z-[150]" onKeyboardChange={handleKeyboardChange}>
-      <RoomBackground value={room?.background} cover={room?.cover_url} />
+      <RoomBackground value={room?.background} cover={room?.cover_url} pk={pkOpen || !!roomPk || !!teamPk.match} />
 
       <div ref={topArtRef} className="shrink-0">
         <RoomTopArt
