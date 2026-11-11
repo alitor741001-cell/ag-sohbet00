@@ -25,6 +25,8 @@ import VoiceSeatInvitePrompt from '@/components/voice/VoiceSeatInvitePrompt';
 import RoomProfileSheet from '@/components/voice/RoomProfileSheet';
 import VoiceRoomMenu from '@/components/voice/VoiceRoomMenu';
 import VideoPkLayer from '@/components/voice/pk/VideoPkLayer';
+import VideoPkSpectator from '@/components/voice/pk/VideoPkSpectator';
+import useRoomPkMatch from '@/hooks/useRoomPkMatch';
 import VoiceSeatSheet from '@/components/voice/VoiceSeatSheet';
 import InviteSheet from '@/components/voice/InviteSheet';
 import MicPermissionGuide from '@/components/voice/MicPermissionGuide';
@@ -148,6 +150,7 @@ export default function VoiceRoom() {
   const [selectedIds, setSelectedIds] = useState([]);
   // Açık görüntülü PK maçı: tarafları hediye tahtasında alıcı olarak listelenir.
   const [pkMatch, setPkMatch] = useState(null);
+  const roomPk = useRoomPkMatch(id);
   const [gifted, setGifted] = useState({});
 
   const [keyboardOpen, setKeyboardOpen] = useState(false);
@@ -376,7 +379,9 @@ export default function VoiceRoom() {
     user,
     participants,
     voiceEnabled: joined && !!room?.voice_enabled,
-    micEnabled: seated || pkLive,
+    // PK sırasında ses PK bağlantısından gider (rakip ve odadaki izleyiciler duyar);
+    // mikrofon iki yerde birden açılmaz, yoksa telefon birini sessize alır.
+    micEnabled: seated && !pkLive,
   });
   useEffect(() => { if (voice.micDenied) setMicGuideDismissed(false); }, [voice.micDenied]);
 
@@ -1246,8 +1251,11 @@ export default function VoiceRoom() {
         user={user}
         onOpenProfile={openRoomProfile}
         onMatchChange={setPkMatch}
-        onPkAudio={voice.requestMic}
       />
+      {/* Odadaki diğer kullanıcılar canlı PK'yı anında görür ve iki tarafın sesini duyar. */}
+      {!pkOpen && roomPk && roomPk.host_id !== user?.id && roomPk.guest_id !== user?.id && (
+        <VideoPkSpectator match={roomPk} user={user} onOpenProfile={openRoomProfile} />
+      )}
 
       <VoiceStage
         scrollRef={swipeGesture.scrollRef}

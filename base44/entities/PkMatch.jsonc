@@ -9,6 +9,10 @@
       "type": "string",
       "default": ""
     },
+    "guest_room_id": {
+      "type": "string",
+      "default": ""
+    },
     "mode": {
       "type": "string",
       "enum": [

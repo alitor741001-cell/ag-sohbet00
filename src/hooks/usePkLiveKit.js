@@ -7,7 +7,21 @@ import { base44 } from '@/api/base44Client';
  * Sesli oda bağlantısıyla hiçbir bağı yoktur — yalnızca bu maçın iki tarafı bağlanır.
  * Davet kabul edilene kadar bağlantı kurulmaz (enabled=false): karşı tarafın kamerası açılmaz.
  */
-export default function usePkLiveKit({ matchId, enabled, selfId }) {
+// Karşı tarafın sesi gizli bir ses öğesine bağlanır: bağlanmayan ses parçası hiç çalmaz.
+const attachAudio = (track) => {
+  if (!track || track.kind !== Track.Kind.Audio || track.attachedElements?.length) return;
+  const element = track.attach();
+  element.setAttribute('playsinline', 'true');
+  element.style.display = 'none';
+  document.body.appendChild(element);
+  element.play?.().catch(() => {});
+};
+const detachAudio = (track) => {
+  if (!track || track.kind !== Track.Kind.Audio) return;
+  try { track.detach().forEach((element) => element.remove()); } catch (detachError) { /* zaten ayrıldı */ }
+};
+
+export default function usePkLiveKit({ matchId, enabled, selfId, viewer = false }) {
   const [room, setRoom] = useState(null);
   const [localTrack, setLocalTrack] = useState(null);
   const [remoteTracks, setRemoteTracks] = useState([]);
@@ -25,11 +39,19 @@ export default function usePkLiveKit({ matchId, enabled, selfId }) {
     let info = { cameraEnabled: false, micEnabled: false };
     instance.remoteParticipants?.forEach((participant, identity) => {
       if (!identity || identity === selfId) return;
+      // İzleyiciler yayın yapmaz: rakip durumunu bozmasınlar.
+      if (String(participant.metadata || '').includes('"viewer"')) return;
       info = {
         cameraEnabled: participant.isCameraEnabled !== false && participant.getTrackPublication?.(Track.Source.Camera)?.isMuted !== true,
         micEnabled: participant.isMicrophoneEnabled !== false,
       };
       participant.trackPublications?.forEach((publication) => {
+        if (publication.kind === Track.Kind.Audio) {
+          if (!publication.isSubscribed) {
+            try { publication.setSubscribed?.(true); } catch (subscribeError) { /* yayın hazır değil */ }
+          } else attachAudio(publication.track);
+          return;
+        }
         if (publication.kind !== Track.Kind.Video) return;
         if (!publication.isSubscribed) {
           try { publication.setSubscribed?.(true); } catch (subscribeError) { /* yayın hazır değil */ }
@@ -72,6 +94,13 @@ export default function usePkLiveKit({ matchId, enabled, selfId }) {
     events.forEach((event) => {
       instance.on(event, event === RoomEvent.Disconnected ? onDisconnected : onTracks);
     });
+    const onAudioIn = (track) => attachAudio(track);
+    const onAudioOut = (track) => detachAudio(track);
+    instance.on(RoomEvent.TrackSubscribed, onAudioIn);
+    instance.on(RoomEvent.TrackUnsubscribed, onAudioOut);
+    const detachAll = () => instance.remoteParticipants?.forEach((participant) => {
+      participant.trackPublications?.forEach((publication) => detachAudio(publication.track));
+    });
 
     (async () => {
       try {
@@ -84,6 +113,12 @@ export default function usePkLiveKit({ matchId, enabled, selfId }) {
         setStatus('connected');
         // Ses, dokunmayla açılan sayfada serbest bırakılır; engellenirse sessizce beklenir.
         instance.startAudio?.().catch(() => {});
+        // İzleyici yayın yapmaz: yalnızca iki tarafın görüntüsünü ve sesini alır.
+        if (viewer) {
+          scanRemote(instance);
+          infoTimer = window.setInterval(() => scanRemote(instance), 2500);
+          return;
+        }
 
         // Kamera: tek katman H.264, karşı taraf görüntüyü her cihazda görür.
         try {
@@ -125,6 +160,9 @@ export default function usePkLiveKit({ matchId, enabled, selfId }) {
       cancelled = true;
       if (infoTimer) window.clearInterval(infoTimer);
       events.forEach((event) => instance.off?.(event, event === RoomEvent.Disconnected ? onDisconnected : onTracks));
+      instance.off?.(RoomEvent.TrackSubscribed, onAudioIn);
+      instance.off?.(RoomEvent.TrackUnsubscribed, onAudioOut);
+      detachAll();
       try { instance.disconnect(); } catch (disconnectError) { /* bağlantı zaten kapalı */ }
       roomRef.current = null;
       setRoom(null);
@@ -132,7 +170,7 @@ export default function usePkLiveKit({ matchId, enabled, selfId }) {
       setRemoteTracks([]);
       setStatus('idle');
     };
-  }, [matchId, enabled, selfId, scanRemote]);
+  }, [matchId, enabled, selfId, viewer, scanRemote]);
 
   // Kamera aç/kapat: yayın susturulur, karşı taraf kapalı olduğunu görür.
   const setCameraEnabled = useCallback((next) => {

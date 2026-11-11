@@ -33,8 +33,10 @@ export default async function (req: Request): Promise<Response> {
     if (pkMatchId) {
       const match = await base44.asServiceRole.entities.PkMatch.get(pkMatchId).catch(() => null);
       if (!match) return Response.json({ error: 'PK oturumu bulunamadı.' }, { status: 404 });
-      if (match.host_id !== user.id && match.guest_id !== user.id) {
-        return Response.json({ error: 'Bu PK oturumunun katılımcısı değilsin.' }, { status: 403 });
+      // Katılımcı olmayanlar izleyici olarak bağlanır: görüntüyü ve sesi alır, yayın yapamaz.
+      const isPkPlayer = match.host_id === user.id || match.guest_id === user.id;
+      if (!isPkPlayer && match.status !== 'live') {
+        return Response.json({ error: 'Bu PK yayında değil.' }, { status: 403 });
       }
 
       const pkName = user.full_name || 'Kullanıcı';
@@ -42,13 +44,13 @@ export default async function (req: Request): Promise<Response> {
         identity: user.id,
         name: pkName,
         ttl: TOKEN_TTL_SECONDS,
-        metadata: JSON.stringify({ role: 'pk' }),
+        metadata: JSON.stringify({ role: isPkPlayer ? 'pk' : 'viewer' }),
       });
       const pkRoom = `pk_${match.id}`;
       pkToken.addGrant({
         roomJoin: true,
         room: pkRoom,
-        canPublish: true,
+        canPublish: isPkPlayer,
         canSubscribe: true,
         canPublishData: false,
       });

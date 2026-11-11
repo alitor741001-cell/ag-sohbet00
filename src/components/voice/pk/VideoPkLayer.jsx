@@ -151,10 +151,8 @@ export default function VideoPkLayer({ open, onOpen, onClose, roomId, user, onOp
   const acceptInvite = async (invite) => {
     try {
       // Önce kabul yazılır, sonra alan açılır: lobi açma isteği maçı kapatmaz.
-      await run('accept', { id: invite.id });
+      await run('accept', { id: invite.id, room_id: roomId });
       if (!open) onOpen?.();
-      // Sesli odaya koltuğa oturmuş gibi bağlan: mikrofon odaya açılır.
-      onPkAudio?.();
       startAudio();
       toast({
         title: 'Rakip bağlandı',

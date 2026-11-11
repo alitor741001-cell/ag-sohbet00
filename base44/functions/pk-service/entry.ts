@@ -244,6 +244,8 @@ export default async function (req) {
         winner_id: '',
         left_id: '',
         muted: [],
+        // Kabul edenin bulunduğu oda: o odadaki izleyiciler de PK'yı görür.
+        guest_room_id: typeof body.room_id === 'string' ? body.room_id.slice(0, 80) : '',
       });
       return Response.json({ match: updated });
     }
