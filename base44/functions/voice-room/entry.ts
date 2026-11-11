@@ -360,8 +360,14 @@ export default async function (req: Request): Promise<Response> {
       (room.participants || []).forEach((person) => { if (person.user_id) people.set(person.user_id, person.name || 'Kullanıcı'); });
 
       // Görüntülü PK açıksa maç tarafları da hediye alabilir; aldıkları hediye PK puanına işler.
-      const pkRows = await base44.asServiceRole.entities.PkMatch.filter({ room_id, status: 'live' }, '-created_date', 5).catch(() => []);
-      const pkMatch = (Array.isArray(pkRows) ? pkRows : []).find((row) => !!row.host_id) || null;
+      // Maç iki odadan birinde olabilir: davet edenin odası (room_id) ya da kabul edenin odası (guest_room_id).
+      // Rakibin odasında atılan hediye de böylece PK barına işler.
+      const pkRows = await base44.asServiceRole.entities.PkMatch.filter(
+        { status: 'live', $or: [{ room_id }, { guest_room_id: room_id }] }, '-created_date', 10,
+      ).catch(() => []);
+      const pkList = Array.isArray(pkRows) ? pkRows : [];
+      const pkMatch = pkList.find((row) => !!row.host_id && row.accepted && !!row.guest_id)
+        || pkList.find((row) => !!row.host_id) || null;
       if (pkMatch) {
         if (pkMatch.host_id) people.set(pkMatch.host_id, pkMatch.host_name || 'Kullanıcı');
         if (pkMatch.accepted && pkMatch.guest_id) people.set(pkMatch.guest_id, pkMatch.guest_name || 'Kullanıcı');

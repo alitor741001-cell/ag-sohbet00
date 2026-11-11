@@ -47,7 +47,7 @@ function VideoFeed({ track, mirror }) {
  */
 export default function PkFeedTile({
   name, avatar, score = 0, muted, mine = false, camOn = true,
-  track, error, footer, onOpen, burst = null,
+  track, error, footer, onOpen, burst = null, nameAction = null,
 }) {
   const hasVideo = mine ? camOn && !!track && !error : !!track;
 
@@ -78,15 +78,18 @@ export default function PkFeedTile({
         </span>
       )}
 
-      <button
-        type="button"
-        onClick={onOpen}
-        disabled={!onOpen}
-        className="absolute inset-x-0 bottom-0 flex items-center gap-1 bg-gradient-to-t from-black/85 to-transparent px-1.5 pb-1.5 pt-5 text-left active:opacity-80"
-      >
-        {muted && <MicOff className="h-3 w-3 shrink-0 text-red-300" />}
-        <span className="min-w-0 truncate text-[10.5px] font-black text-white">{name}</span>
-      </button>
+      <div className={`absolute inset-x-0 bottom-0 flex items-center gap-1 bg-gradient-to-t from-black/85 to-transparent px-1.5 pb-1.5 pt-5 ${footer ? 'pr-9' : ''}`}>
+        <button
+          type="button"
+          onClick={onOpen}
+          disabled={!onOpen}
+          className="flex min-w-0 items-center gap-1 text-left active:opacity-80"
+        >
+          {muted && <MicOff className="h-3 w-3 shrink-0 text-red-300" />}
+          <span className="min-w-0 truncate text-[10.5px] font-black text-white">{name}</span>
+        </button>
+        {nameAction}
+      </div>
 
       {footer && <div className="absolute bottom-1 right-1 flex items-center gap-1">{footer}</div>}
     </div>

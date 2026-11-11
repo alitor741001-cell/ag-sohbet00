@@ -150,6 +150,9 @@ export default function VoiceRoom() {
   const [selectedIds, setSelectedIds] = useState([]);
   // Açık görüntülü PK maçı: tarafları hediye tahtasında alıcı olarak listelenir.
   const [pkMatch, setPkMatch] = useState(null);
+  // PK mikrofonu: alt çubuktaki düğme PK sırasında bu kontrolü kullanır.
+  const pkMicToggleRef = useRef(null);
+  const [pkMicOn, setPkMicOn] = useState(true);
   const roomPk = useRoomPkMatch(id);
   const [gifted, setGifted] = useState({});
 
@@ -693,6 +696,8 @@ export default function VoiceRoom() {
 
   const handleMic = async () => {
     voice.retryAudio();
+    // Görüntülü PK sırasında mikrofon koltuğa oturtmaz: yalnızca PK mikrofonu açılır/kapanır.
+    if (pkLive) { pkMicToggleRef.current?.(); return; }
     // Abonelik yoksa koltuk işgal edilmez: uyarı gösterilir, kullanıcı dinleyici kalır.
     if (voice.canSpeak === false) { voice.requestMic(); return; }
     // Koltukta değilken mikrofona basınca ilk boş koltuğa oturulur ve mikrofon kendiliğinden açılır.
@@ -1005,10 +1010,10 @@ export default function VoiceRoom() {
   });
 
   // Koltuk, sohbet satırı ve izleyici listesi aynı merkezi profil kartını açar.
-  const openRoomProfile = useLatestCallback((targetId) => {
+  const openRoomProfile = useLatestCallback((targetId, extra) => {
     if (!targetId) return;
     const person = participants.find((item) => item.user_id === targetId) || seats.find((item) => item.user_id === targetId);
-    openUserProfile(targetId, { roomActions: roomProfileActions, name: person?.name, avatar: person?.avatar, hidden: !!person?.hidden || isHiddenName(person?.name) });
+    openUserProfile(targetId, { roomActions: roomProfileActions, name: person?.name, avatar: person?.avatar, hidden: !!person?.hidden || isHiddenName(person?.name), ...(extra || {}) });
   });
 
   const toggleGiftPerson = useCallback((userId) => {
@@ -1251,6 +1256,8 @@ export default function VoiceRoom() {
         user={user}
         onOpenProfile={openRoomProfile}
         onMatchChange={setPkMatch}
+        micControlRef={pkMicToggleRef}
+        onMicChange={setPkMicOn}
       />
       {/* Odadaki diğer kullanıcılar canlı PK'yı anında görür ve iki tarafın sesini duyar. */}
       {!pkOpen && roomPk && roomPk.host_id !== user?.id && roomPk.guest_id !== user?.id && (
@@ -1336,8 +1343,8 @@ export default function VoiceRoom() {
       <RoomRocketFeature room={room} hidden={composerOpen} suppress={false} />
       <VoiceControlBar
         keyboardOpen={keyboardOpen}
-        micActive={!voice.muted}
-        micVisible={seated}
+        micActive={pkLive ? pkMicOn : !voice.muted}
+        micVisible={seated || pkLive}
         deafened={voice.deafened}
         chatOpen={chatOpen}
         onToggleMic={handleMic}
