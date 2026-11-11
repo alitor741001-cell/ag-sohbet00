@@ -1,27 +1,23 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { HelpCircle } from 'lucide-react';
 import GameHelpSheet from './help/GameHelpSheet';
-import { Image } from '@/components/ui/image';
 import { useSize } from '@/hooks/use-size';
 import { useCurrentUser } from '@/lib/useCurrentUser';
-import { SLOT_ART } from './slotAssets';
 import { ART_HEAD_HEIGHT, ART_HEIGHT, ART_VISIBLE_HEIGHT, ART_WIDTH } from './slot/slotLayout';
 import useSlotGame from './slot/useSlotGame';
 import SlotReels from './slot/SlotReels';
 import SlotWinLines from './slot/SlotWinLines';
 import SlotWinOverlay from './slot/SlotWinOverlay';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
-import GameCoinBar from '@/components/games/shared/GameCoinBar';
-import WinnerTicker, { TICKER_ROW_HEIGHT } from './slot/WinnerTicker';
-import SlotJackpotBar from './slot/SlotJackpotBar';
+import SlotFrenzyHeader from './slot/SlotFrenzyHeader';
 import SlotTierAlert from './slot/SlotTierAlert';
 import SlotControlDeck from './slot/SlotControlDeck';
 import { tierOfBet } from './slot/slotConfig';
+import GameLeaderSheet from './leaders/GameLeaderSheet';
+import useGameLeaders from './leaders/useGameLeaders';
+import { eliminSound, unlockAudio } from './elimin/eliminSound';
 
 // Görsel alanı doldururken en fazla bu oranda kırpılır; panelde siyah boşluk kalmaz.
 const MAX_CROP = 1.06;
-// Kazanan şeridinde görünen satır sayısı: şerit aşağı doğru bir satır daha uzar.
-const TICKER_ROWS = 4;
 // Kademe uyarısı oyun ekranının üst kenarından bu kadar aşağıda durur.
 const BADGE_TOP = 8;
 const WIN_FLASH_MS = 2400;
@@ -35,25 +31,26 @@ export default function SlotGame({ onExit, onBack, roomId }) {
   const game = useSlotGame({ roomId });
   const [coinOpen, setCoinOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
+  const [leadersOpen, setLeadersOpen] = useState(false);
+  const [sound, setSound] = useState(true);
   const [flash, setFlash] = useState(0);
   const [prize, setPrize] = useState(null);
+  const { leaders, reload: reloadLeaders } = useGameLeaders('slot');
   // Kazanç yazısının kapanma sayacı: yeni tur başlasa da çalışmaya devam eder.
   const flashTimer = useRef(null);
   const areaRef = useRef(null);
   const size = useSize(areaRef);
   // Sesli oda içinde oyun yarım panelde açılır: üst sahne kısalır, oyun alanı genişler.
   const inRoom = !!roomId;
-  const tickerHeight = TICKER_ROW_HEIGHT * (inRoom ? 2 : TICKER_ROWS);
-  // Jackpot panelinin altında kalan boşluk: görsel, alanı yükseklik olarak
-  // dolduramadığı için artan pay panelin üst dolgusuna eklenir ve panel
-  // makinenin üst kenarına kadar iner.
-  const fillRef = useRef(0);
-  const [panelGap, setPanelGap] = useState(0);
 
   // Her turun sonucu: büyük kazançta kutlama ekranı, küçük kazançta kısa parıltı.
   useEffect(() => {
     window.clearTimeout(flashTimer.current);
     if (!game.spins) return undefined;
+    if (sound && game.win > 0) {
+      if (game.win >= PRIZE_THRESHOLD) eliminSound.bigWin();
+      else eliminSound.win();
+    }
     if (game.win >= PRIZE_THRESHOLD) {
       setPrize({ amount: game.win, jackpot: game.jackpotHit });
       return undefined;
@@ -68,21 +65,6 @@ export default function SlotGame({ onExit, onBack, roomId }) {
 
   // Oyun kapanırken bekleyen sayaç temizlenir.
   useEffect(() => () => window.clearTimeout(flashTimer.current), []);
-
-  // Boşluk ölçümü taban yükseklik üzerinden yapılır: panel uzadıkça oyun alanı
-  // kısaldığı için ölçülen değer kendini tekrar etmez, tek ölçümde oturur.
-  useEffect(() => {
-    const areaW = size?.width || 0;
-    const areaH = size?.height || 0;
-    if (!areaW || !areaH) return;
-    const baseH = areaH + fillRef.current;
-    const cover = Math.max(areaW / ART_WIDTH, baseH / ART_VISIBLE_HEIGHT);
-    const fitScale = Math.min(areaW / ART_WIDTH, baseH / ART_VISIBLE_HEIGHT);
-    const scale = Math.min(cover, fitScale * MAX_CROP);
-    const gap = Math.max(0, Math.round(baseH - ART_VISIBLE_HEIGHT * scale));
-    fillRef.current = gap;
-    setPanelGap(gap);
-  }, [size?.width, size?.height]);
 
   // Görsel, kendi üst jackpot paneli ile alt kontrol alanı arasında gösterilir.
   const areaWidth = size?.width || 0;
@@ -99,6 +81,14 @@ export default function SlotGame({ onExit, onBack, roomId }) {
   // Bahis kademesi: kademe atlayınca üstte kırmızı uyarı çıkar.
   const tier = tierOfBet(game.bet, game.lines);
 
+  const handleSpin = () => {
+    if (sound) {
+      unlockAudio();
+      eliminSound.spin();
+    }
+    game.spin();
+  };
+
   return (
     <div className="relative flex h-full min-h-0 w-full flex-col overflow-hidden bg-slot">
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -106,29 +96,24 @@ export default function SlotGame({ onExit, onBack, roomId }) {
         <div className="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_20%_80%,#c026d3_0%,transparent_40%),radial-gradient(circle_at_80%_70%,#f59e0b_0%,transparent_35%)]" />
       </div>
 
-      {/* Üst: kazanan şeridi ve jackpot konsolu. */}
-      <div className="relative z-10 shrink-0 pt-[env(safe-area-inset-top)]">
-        <WinnerTicker height={tickerHeight} />
-        <SlotJackpotBar pools={game.pools} topGap={inRoom ? 0 : panelGap} />
-      </div>
-
-      <button
-        type="button"
-        onClick={() => setHelpOpen(true)}
-        aria-label="Nasıl oynanır"
-        className="absolute right-2 top-[env(safe-area-inset-top)] z-20 mt-2 flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm active:scale-95"
-      >
-        <HelpCircle className="h-5 w-5" />
-      </button>
-
-
+      {/* Üst: SLOT FRENZY kemeri, kazananlar panosu, sandık/kupon ve 5'li Jackpot konsolu */}
+      <SlotFrenzyHeader
+        pools={game.pools}
+        freeSpins={game.freeSpins}
+        sound={sound}
+        compact={inRoom}
+        onHelp={() => setHelpOpen(true)}
+        onLeaders={() => { reloadLeaders(); setLeadersOpen(true); }}
+        onSound={() => setSound((prev) => !prev)}
+        onCoins={() => setCoinOpen(true)}
+      />
 
       {/* Oyun ekranı: görselin kırpılan iki paneli arasında kalan kısım alta yaslanır. */}
       <div ref={areaRef} className="relative flex min-h-0 flex-1 items-end justify-center overflow-hidden">
         {width > 0 && (
           <div className="relative overflow-hidden" style={{ width, height: viewHeight }}>
             <div className="absolute inset-x-0" style={{ height, top: -headOffset }}>
-              {/* Eski kabin görseli yerine altın çerçeveli, mor-lacivert makara paneli. */}
+              {/* Altın çerçeveli, mor-lacivert makara paneli. */}
               <div
                 className="absolute rounded-[26px] border-[6px] border-amber-400 bg-[linear-gradient(180deg,#1e0b3d,#0b0620)] shadow-[0_0_34px_rgba(245,158,11,0.6),inset_0_0_0_2px_rgba(253,230,138,0.75),inset_0_0_26px_rgba(192,38,211,0.5)]"
                 style={inRoom
@@ -170,7 +155,7 @@ export default function SlotGame({ onExit, onBack, roomId }) {
         <SlotTierAlert tier={tier} top={BADGE_TOP} />
       </div>
 
-      {/* Alt kontrol paneli: görselin kendi kontrol alanının yerini alır. */}
+      {/* Alt kontrol paneli */}
       <SlotControlDeck
         coins={game.coins}
         bet={game.bet}
@@ -183,7 +168,7 @@ export default function SlotGame({ onExit, onBack, roomId }) {
         onStep={game.changeBet}
         onMax={game.maxBet}
         onAuto={game.toggleAuto}
-        onSpin={game.spin}
+        onSpin={handleSpin}
         onStop={game.stop}
         onCoins={() => setCoinOpen(true)}
       />
@@ -196,7 +181,6 @@ export default function SlotGame({ onExit, onBack, roomId }) {
         onAccept={() => setPrize(null)}
       />
 
-      <GameCoinBar coins={game.coins} onClick={() => setCoinOpen(true)} />
       {/* Coin kutusuna dokununca uygulamanın coin mağazası açılır. */}
       <CoinPurchasePanel
         open={coinOpen}
@@ -205,6 +189,7 @@ export default function SlotGame({ onExit, onBack, roomId }) {
       />
 
       <GameHelpSheet game="slot" open={helpOpen} onClose={() => setHelpOpen(false)} />
+      <GameLeaderSheet open={leadersOpen} title="Slot Frenzy" leaders={leaders} onClose={() => setLeadersOpen(false)} />
     </div>
   );
 }

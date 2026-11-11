@@ -1,5 +1,5 @@
 import React from 'react';
-import { Megaphone } from 'lucide-react';
+import { Volume2 } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import SlotSymbolIcon from './SlotSymbolIcon';
 import useBigWins from './useBigWins';
@@ -21,9 +21,9 @@ const symbolsOf = (winner) => {
 
 function TickerRow({ winner }) {
   return (
-    <li className="flex h-[26px] items-center gap-1.5 px-2">
-      <Megaphone className="h-3.5 w-3.5 shrink-0 text-white/90" />
-      <span className="relative h-5 w-5 shrink-0 overflow-hidden rounded-full bg-slot ring-1 ring-slot-gold/50">
+    <li className="flex h-[26px] items-center gap-1.5 px-2 text-[10px]">
+      <Volume2 className="h-3.5 w-3.5 shrink-0 text-[#9f85e8]" />
+      <span className="relative h-5 w-5 shrink-0 overflow-hidden rounded-full bg-slot ring-1 ring-[#a78bfa]/70">
         {winner.avatar ? (
           <Image src={winner.avatar} alt="" className="h-full w-full" fittingType="fill" quality={60} />
         ) : (
@@ -32,16 +32,16 @@ function TickerRow({ winner }) {
           </span>
         )}
       </span>
-      <span className="max-w-[4.5rem] truncate text-[10px] font-black text-[#c4b5fd]">{winner.name || 'Kullanıcı'}</span>
-      <span className="shrink-0 text-[10px] font-black text-[#c4b5fd]">ve kazandı</span>
-      <span className="flex shrink-0 items-center gap-px">
+      <span className="max-w-[4.6rem] truncate font-black text-[#c084fc]">{winner.name || 'Kullanıcı'}</span>
+      <span className="shrink-0 font-semibold text-[#b8a5e3]">şanslı çekilişten</span>
+      <span className="flex shrink-0 items-center gap-0.5">
         {symbolsOf(winner).map((symbol, index) => (
-          <SlotSymbolIcon key={`${symbol}-${index}`} symbol={symbol} size={13} />
+          <SlotSymbolIcon key={`${symbol}-${index}`} symbol={symbol} size={14} />
         ))}
       </span>
-      <span className="shrink-0 text-[10px] font-black text-[#c4b5fd]">Kazanç</span>
-      <span className="flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full bg-amber-400 text-[8px] font-black text-amber-900">$</span>
-      <span className="shrink-0 font-mono text-[11px] font-black text-[#ff8a4c]">{format(winner.won)}</span>
+      <span className="shrink-0 font-semibold text-[#b8a5e3]">havuzdan</span>
+      <span className="shrink-0 font-mono text-[11px] font-black text-[#fb923c]">{format(winner.won)}</span>
+      <span className="shrink-0 font-semibold text-[#b8a5e3]">kazandı.</span>
     </li>
   );
 }
@@ -73,7 +73,7 @@ export default function WinnerTicker({ height = VISIBLE_ROWS * TICKER_ROW_HEIGHT
           </ul>
         </div>
       ) : (
-        <p className="flex h-full items-center justify-center px-2 text-center text-[10px] font-bold text-white/70">
+        <p className="flex h-full items-center justify-center px-2 text-center text-[10px] font-bold text-[#c4b5fd]">
           {status === 'loading' ? 'Kazananlar yükleniyor...' : '20.000+ coin kazananlar burada görünür.'}
         </p>
       )}
