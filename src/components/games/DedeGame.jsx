@@ -82,6 +82,15 @@ export default function DedeGame({ onExit, onBack, roomId }) {
           {/* Çerçeve yanlara taşacak kadar geniş: ekran kenarına kadar uzanır. */}
           <div className="dede-frame -mx-1 flex h-full w-[calc(100%+0.5rem)] max-w-[56rem] p-0.5 sm:p-1.5">
             <div className="relative flex min-h-0 w-full">
+              {/* Kalan çevirme hakkı: ızgaranın üstünde sabit durur, çevirme sürerken de görünür. */}
+              {game.sessionSpins > 0 && (
+                <p
+                  key={game.sessionSpins}
+                  className="pointer-events-none absolute left-1/2 top-1 z-30 w-max -translate-x-1/2 whitespace-nowrap rounded-full border border-[#ffe9a8]/80 bg-black/75 px-3 py-1 text-[10px] font-black tracking-[0.12em] text-[#ffd35c] shadow-[0_0_14px_-2px_rgba(255,200,80,0.8)]"
+                >
+                  KALAN <span className="font-mono text-sm text-white">{game.sessionSpins}</span> ÇEVİRME
+                </p>
+              )}
               <DedeReels
                 rolling={game.rolling}
                 landing={game.landing}

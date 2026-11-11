@@ -17,17 +17,25 @@
   box-shadow: 0 0 14px 3px rgba(253, 230, 138, 0.7);
   animation: pk-theme-split 2.6s ease-in-out infinite;
 }
-.pk-theme-ag {
+/* Ortadaki dev PK yazısı: P mavi, K kırmızı; aralarında ince altın çizgi ışığı. */
+.pk-theme-pk {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 46%;
-  max-width: 180px;
-  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.02em;
   transform: translate(-50%, -50%);
-  opacity: 0.16;
-  filter: drop-shadow(0 0 18px rgba(251, 191, 36, 0.8));
+  font-size: 4.6rem;
+  font-weight: 900;
+  font-style: italic;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  opacity: 0.5;
 }
+.pk-theme-pk > b { display: block; }
+.pk-theme-pk-blue { color: #3b82f6; text-shadow: 0 0 14px rgba(37, 99, 235, 0.9), 0 0 34px rgba(37, 99, 235, 0.7), 0 4px 0 #0b2a6b; }
+.pk-theme-pk-red { color: #ef4444; text-shadow: 0 0 14px rgba(220, 38, 38, 0.9), 0 0 34px rgba(220, 38, 38, 0.7), 0 4px 0 #6b0a16; }
 .pk-theme-word {
   position: absolute;
   top: 50%;
@@ -50,9 +58,9 @@
     linear-gradient(100deg, #031247 0%, #0b1a6b 30%, #0a0614 50%, #6b0a16 70%, #3d030b 100%);
 }
 .pk-theme-full .pk-theme-split { width: 4px; }
-.pk-theme-full .pk-theme-ag { top: 46%; width: 72%; max-width: 380px; opacity: 0.22; animation: pk-theme-glow 4s ease-in-out infinite; }
+.pk-theme-full .pk-theme-pk { top: 46%; font-size: 11rem; opacity: 0.6; animation: pk-theme-glow 4s ease-in-out infinite; }
 .pk-theme-full .pk-theme-word { font-size: 14rem; opacity: 0.1; }
-@keyframes pk-theme-glow { 0%, 100% { opacity: 0.18; } 50% { opacity: 0.3; } }
-@media (prefers-reduced-motion: reduce) { .pk-theme-full .pk-theme-ag { animation: none; } }
+@keyframes pk-theme-glow { 0%, 100% { opacity: 0.45; } 50% { opacity: 0.75; } }
+@media (prefers-reduced-motion: reduce) { .pk-theme-full .pk-theme-pk { animation: none; } }
 @keyframes pk-theme-split { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .pk-theme-split { animation: none; } }

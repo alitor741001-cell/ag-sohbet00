@@ -46,7 +46,8 @@ export default function AppLayout() {
   // Özel sohbet listesi tema görselini kullanır; açık sohbet, arkadaş listesi, istekler,
   // bildirimler ve ajans mesajları kendi opak zemininde tam ekran çalışır.
   const isChatList = pathname === '/arkadaslar' && new URLSearchParams(search).get('view') === 'chats' && !new URLSearchParams(search).get('chat');
-  const hideTheme = pathname === '/arkadaslar/istekler' || pathname === '/bildirimler' || pathname === '/ajans/mesajlar' || (pathname === '/arkadaslar' && !isChatList);
+  // Profil alt sayfaları tam sayfa açılır: alt menü görünmez, kendi geri düğmesi vardır.
+  const hideTheme = pathname === '/arkadaslar/istekler' || pathname === '/bildirimler' || pathname === '/ajans/mesajlar' || (pathname === '/arkadaslar' && !isChatList) || pathname.startsWith('/profil/');
   // Sabit başlıklı sayfalarda sayfa aşağı çekilerek kaymaz: başlık ve geri düğmesi yerinde kalır.
   const stillPage = pathname.startsWith('/ajans') || pathname === '/arkadaslar/istekler' || pathname === '/bildirimler' || pathname === '/arama' || pathname === '/vip' || pathname === '/seviye' || pathname === '/destek' || pathname === '/profil';
   const [refreshKey, setRefreshKey] = useState(0);
