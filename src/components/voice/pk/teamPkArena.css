@@ -86,6 +86,13 @@
 @keyframes team-shot-flash { 0% { opacity: 1; transform: scale(0.4); } 100% { opacity: 0; transform: scale(1.4); } }
 @keyframes team-shot-burst { 0% { opacity: 0; transform: scale(0.3); } 30% { opacity: 1; } 100% { opacity: 0; transform: scale(1.7); } }
 
+/* Silah: 5 saniyede bir geri teper ve namlu ucu parlar (otomatik ateşle aynı aralık). */
+.team-pk-gun { filter: drop-shadow(0 0 4px rgba(251, 191, 36, 0.9)); }
+.team-pk-gun svg { animation: team-pk-gun-recoil 5s ease-out infinite; }
+.team-pk-gun-flash { opacity: 0; animation: team-pk-gun-flash 5s ease-out infinite; }
+@keyframes team-pk-gun-recoil { 0%, 8%, 100% { transform: translateX(0) rotate(0); } 2% { transform: translateX(-3px) rotate(-12deg); } }
+@keyframes team-pk-gun-flash { 0%, 6%, 100% { opacity: 0; transform: scale(1); } 1% { opacity: 1; transform: scale(2.4); } }
+
 @media (prefers-reduced-motion: reduce) {
-  .team-pk-platform, .team-pk-side.is-hit { animation: none; }
+  .team-pk-platform, .team-pk-side.is-hit, .team-pk-gun svg, .team-pk-gun-flash { animation: none; }
 }

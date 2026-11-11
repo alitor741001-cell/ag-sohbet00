@@ -21,9 +21,9 @@ export default function TeamPkBar({ match, canMod, onRestart, onStop }) {
   const result = blue === red ? 'Berabere' : blue > red ? 'Mavi takım kazandı' : 'Kırmızı takım kazandı';
 
   return (
-    <div className="mt-2 w-full px-0.5">
-      <div className="relative pb-4">
-        <div className="team-pk-bar-track flex h-8 overflow-hidden rounded-full">
+    <div className="mt-1 w-full px-0.5">
+      <div className="relative pb-3.5">
+        <div className="team-pk-bar-track flex h-7 overflow-hidden rounded-full">
           <span className="team-pk-bar-blue flex items-center pl-3 text-sm font-black tabular-nums text-white transition-[width] duration-500" style={{ width: `${left}%` }}>
             {formatCoinAmount(blue)}
           </span>
@@ -32,7 +32,7 @@ export default function TeamPkBar({ match, canMod, onRestart, onStop }) {
           </span>
         </div>
         <div className="absolute left-1/2 top-0 flex -translate-x-1/2 flex-col items-center">
-          <span className="team-pk-badge flex h-8 items-center gap-1 rounded-lg px-2 text-xs font-black">
+          <span className="team-pk-badge flex h-7 items-center gap-1 rounded-lg px-2 text-xs font-black">
             <Swords className="h-3.5 w-3.5" /> PK <Swords className="h-3.5 w-3.5" />
           </span>
           <span className="team-pk-badge -mt-0.5 flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-black tabular-nums text-white">

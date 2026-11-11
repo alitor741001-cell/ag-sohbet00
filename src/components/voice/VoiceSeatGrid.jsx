@@ -111,7 +111,7 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
     };
     return (
       <div ref={wrapRef} className="w-full">
-        <TeamPkArena match={teamPkMatch} renderSeat={renderSeat} footer={teamPkFooter} width={width} heightBudget={heightBudget} />
+        <TeamPkArena match={teamPkMatch} seats={seats} renderSeat={renderSeat} footer={teamPkFooter} width={width} />
       </div>
     );
   }
