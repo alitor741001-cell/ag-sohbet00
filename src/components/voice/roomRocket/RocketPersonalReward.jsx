@@ -14,22 +14,16 @@ export default function RocketPersonalReward({ level, award, roomId, onAccept })
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const accept = async () => {
-    if (busy.current || !award.paid) return;
+    if (busy.current) return;
     busy.current = true;
     setSaving(true);
     setError('');
-    try {
-      // Payout is already idempotently credited by the server. Accept only
-      // confirms the existing balance; it must never add the award again.
-      const { data } = await base44.functions.invoke('voice-room', { action: 'gift-state', room_id: roomId });
-      if (!data.ok || !Number.isFinite(data.coins)) throw new Error('Bakiye alınamadı.');
-      publishWalletCoins(user.id, data.coins);
-      onAccept();
-    } catch {
-      setError('Bakiye yenilenemedi. Kabul Et’e tekrar bas.');
-      busy.current = false;
-      setSaving(false);
-    }
+    // Ödül sunucuda bir kez yazılır; Kabul Et yalnızca bakiyeyi tazeler ve kartı kapatır.
+    // Bakiye okunamazsa da kart kapanır: ekranda takılı kalmaz, bakiye arka planda güncellenir.
+    const response = await base44.functions.invoke('voice-room', { action: 'gift-state', room_id: roomId }).catch(() => null);
+    const coins = response?.data?.coins;
+    if (response?.data?.ok && Number.isFinite(coins) && user?.id) publishWalletCoins(user.id, coins);
+    onAccept();
   };
   return <div className="rocket-personal-reward">
     <div className="rocket-personal-vehicle">
@@ -41,7 +35,7 @@ export default function RocketPersonalReward({ level, award, roomId, onAccept })
       <output className="rocket-personal-amount" aria-label={`${award.amount} coin kazandın`}>{award.amount.toLocaleString('tr-TR')} <span>COIN</span></output>
       {award.vip > 0 && <p className="rocket-personal-vip">+ VIP{award.vip} hediye</p>}
       <p className="rocket-personal-status" role="status">{error || (!award.paid ? 'Ödülün bakiyene ekleniyor…' : 'Ödülün coin bakiyene aktarıldı.')}</p>
-      <button type="button" className="rocket-personal-accept" onClick={accept} disabled={!award.paid || saving} aria-busy={saving}>
+      <button type="button" className="rocket-personal-accept" onClick={accept} disabled={saving} aria-busy={saving}>
         {saving && <Loader2 className="h-5 w-5 animate-spin" />}{saving ? 'BAKİYE YENİLENİYOR…' : 'KABUL ET'}
       </button>
     </div>

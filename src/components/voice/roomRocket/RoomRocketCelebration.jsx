@@ -14,7 +14,7 @@ export default function RoomRocketCelebration({ event, roomId, onComplete }) {
   const hasAward = !!event.my_award;
   useBackDismiss(true, onComplete);
   const finishLaunch = () => { if (hasAward) setPhase('reward'); else done.current(); };
-  return <Dialog open onOpenChange={open => { if (!open && phase === 'reward' && event.my_award?.paid) onComplete(); }}><DialogPortal>
+  return <Dialog open onOpenChange={open => { if (!open && phase === 'reward') onComplete(); }}><DialogPortal>
     <Content className="rocket-celebration font-body" onPointerDownOutside={e => e.preventDefault()}>
       <DialogTitle className="sr-only">{phase === 'launch' ? `LVL ${event.level} roketi patladı!` : `${event.my_award.amount} coin kazandın!`}</DialogTitle>
       <DialogDescription className="sr-only">{phase === 'launch' ? 'Roket havalanıyor.' : 'Ödül bakiyene eklendikten sonra Kabul Et ile kapat.'}</DialogDescription>
