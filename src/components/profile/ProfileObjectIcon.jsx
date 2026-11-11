@@ -1,4 +1,5 @@
 import { Image } from '@/components/ui/image';
+import useProfileIconPng from '@/hooks/useProfileIconPng';
 
 const BASE = 'https://base44.app/api/apps/6a77d66e4da6de214628ee62/files/mp/public/6a77d66e4da6de214628ee62';
 const ART = {
@@ -10,7 +11,7 @@ const ART = {
   diamonds: '97700644c_profile-diamonds.png',
   vip: '5cc3c6f93_profile-vip.png',
   giftHistory: '27cab5553_profile-giftHistory.png',
-  bag: '071ea84e2_profile-bag.png',
+  bag: 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/794fc8e2c_generated_5e65fe31.png',
   level: '6b6acb18d_profile-level.png',
   agency: '261cedf45_profile-agency.png',
   admin: 'a09a8db87_profile-admin.png',
@@ -20,8 +21,14 @@ const ART = {
 };
 
 export default function ProfileObjectIcon({ kind, Icon }) {
-  return ART[kind] ? (
-    <Image src={`${BASE}/${ART[kind]}`} alt="" aria-hidden="true" fittingType="fit"
-      className="relative h-[34px] w-[40px] shrink-0" blurPlaceholder={false} />
-  ) : <Icon aria-hidden="true" className="relative h-6 w-6 shrink-0 text-premium-gold-light" />;
+  const original = ART[kind];
+  const source = original ? (original.startsWith('https://') ? original : `${BASE}/${original}`) : '';
+  const transparent = useProfileIconPng(source);
+  return (
+    <span className="relative flex h-[46px] w-[58px] shrink-0 items-center justify-center" aria-hidden="true">
+      {transparent ? <Image src={transparent} alt="" fittingType="fit"
+        className="h-full w-full" blurPlaceholder={false} />
+        : <Icon className="h-8 w-8 text-premium-gold-light" />}
+    </span>
+  );
 }

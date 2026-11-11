@@ -13,7 +13,7 @@ export default function ProfileMenuTile({ label, Icon, artworkKey, tone = 'sky',
       onClick={onClick}
       aria-label={label}
       className={cn(
-        'group relative flex h-[64px] min-w-0 flex-col items-center justify-center gap-[3px] overflow-hidden rounded-2xl border bg-gradient-to-b from-white/[0.09] to-black/60 px-1 text-center shadow-[0_6px_14px_-8px_rgba(0,0,0,0.9)] backdrop-blur-md transition active:scale-[0.94]',
+        'group relative flex h-[80px] min-w-0 flex-col items-center justify-center gap-[3px] overflow-hidden rounded-2xl border bg-gradient-to-b from-white/[0.09] to-black/60 px-1 text-center shadow-[0_6px_14px_-8px_rgba(0,0,0,0.9)] backdrop-blur-md transition active:scale-[0.94]',
         t.border,
       )}
     >
