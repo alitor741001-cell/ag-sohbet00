@@ -13,6 +13,7 @@ import DedeControlDeck from '@/components/games/dede/DedeControlDeck';
 import GameHelpSheet from './help/GameHelpSheet';
 
 import DedeWinOverlay from './dede/DedeWinOverlay';
+import { WIN_CARD_THRESHOLD } from '@/components/games/shared/winCard';
 
 import DedeOrbMerge from './dede/DedeOrbMerge';
 
@@ -42,8 +43,8 @@ export default function DedeGame({ onExit, onBack }) {
     if (!game.spins) return undefined;
     // Çevirme hakkı sürerken ara kutlama yapılmaz; sonuç tur bitince gösterilir.
     if (game.sessionSpins > 0) return undefined;
-    if (game.bigWin > 0) {
-      setPrize({ amount: game.bigWin });
+    if (game.win >= WIN_CARD_THRESHOLD) {
+      setPrize({ amount: game.win });
       return undefined;
     }
     // Kazanç yoksa yazı hemen silinir; varsa kısa süre görünüp kendiliğinden kapanır.
@@ -65,7 +66,7 @@ export default function DedeGame({ onExit, onBack }) {
       <main className="relative z-10 flex min-h-0 flex-1 flex-col items-center gap-1 px-0 py-1">
         {/* Izgara ekranın kalan tüm alanını kaplar: madalyonlar olabildiğince büyük durur. */}
         <div className="flex min-h-0 w-full flex-1 items-center justify-center">
-          <div className="dede-frame flex aspect-square max-h-full w-full max-w-[46rem] p-1 sm:p-2">
+          <div className="dede-frame flex aspect-[5/4] max-h-full w-full max-w-[54rem] p-1 sm:p-2">
             <div className="relative flex min-h-0 w-full">
               <DedeReels
                 rolling={game.rolling}

@@ -16,6 +16,7 @@ import ZarHistory from './zar/ZarHistory';
 import ZarShaker from './zar/ZarShaker';
 import ZarTable from './zar/ZarTable';
 import ZarWinOverlay from './zar/ZarWinOverlay';
+import { WIN_CARD_THRESHOLD } from '@/components/games/shared/winCard';
 
 /** ZAR: üç zarla oynanan Küçük / Büyük / Kaplan masası.
     Tur kendi kendine döner: 20 saniye bahis, sonra zarlar kase içinde çalkalanır
@@ -57,7 +58,7 @@ export default function ZarGame({ onExit, onBack }) {
   // Tur sonucu: kazanç ödenmişse kutlama ekranı açılır.
   // Kutlama ekranı da kase kalkıp zarlar açıldıktan sonra belirir.
   useEffect(() => {
-    if (!game.result || !game.result.payout || !revealed) return;
+    if (!game.result || game.result.payout < WIN_CARD_THRESHOLD || !revealed) return;
     setPrize({ amount: game.result.payout, dice: game.result.dice, sum: game.result.sum, outcome: game.result.outcome });
   }, [game.result, revealed]);
 

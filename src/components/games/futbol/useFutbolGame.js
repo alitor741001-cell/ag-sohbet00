@@ -4,6 +4,7 @@ import { sekerliSound as gameSound, unlockAudio } from '@/lib/sekerliAudio';
 import subscribeEntity from '@/components/data/entitySubscriptions';
 import useWalletCoinsLive from '@/hooks/useWalletCoinsLive';
 import { useCurrentUser } from '@/lib/useCurrentUser';
+import { WIN_CARD_THRESHOLD } from '@/components/games/shared/winCard';
 
 // Tur durumu tazelenir; geri sayım yerel saatle akar.
 const POLL_MS = 8000;
@@ -77,7 +78,7 @@ export default function useFutbolGame() {
     const last = data.last;
     if (last?.round_no && last.round_no !== seenResultRef.current) {
       seenResultRef.current = last.round_no;
-      if (last.payout > 0) {
+      if (last.payout >= WIN_CARD_THRESHOLD) {
         setPrize({ amount: last.payout, stake: last.stake || 0, winner: last.winner_id || '' });
         if (soundRef.current) gameSound.big();
       }

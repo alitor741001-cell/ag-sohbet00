@@ -11,6 +11,7 @@ import GameSpinButton from './controls/GameSpinButton';
 import GameHelpSheet from './help/GameHelpSheet';
 import GameTurnBadge from './controls/GameTurnBadge';
 import FruitWinOverlay from './fruit/FruitWinOverlay';
+import { WIN_CARD_THRESHOLD } from '@/components/games/shared/winCard';
 import { FRUIT_LINES, formatCoins } from './fruit/fruitConfig';
 
 const WIN_FLASH_MS = 2400;
@@ -32,8 +33,8 @@ export default function FruitGame({ onExit, onBack }) {
     if (!game.spins) return undefined;
     // Çevirme hakkı sürerken ara kutlama yapılmaz; sonuç tur bitince gösterilir.
     if (game.sessionSpins > 0) return undefined;
-    if (game.bigWin > 0) {
-      setPrize({ amount: game.bigWin });
+    if (game.win >= WIN_CARD_THRESHOLD) {
+      setPrize({ amount: game.win });
       return undefined;
     }
     // Kazanç yoksa yazı hemen silinir; varsa kısa süre görünüp kendiliğinden kapanır.

@@ -13,13 +13,11 @@ export default function ProfileMenuTile({ label, Icon, artworkKey, tone = 'sky',
       onClick={onClick}
       aria-label={label}
       className={cn(
-        'group relative flex h-[80px] min-w-0 flex-col items-center justify-center gap-[3px] overflow-hidden rounded-2xl border bg-gradient-to-b from-white/[0.09] to-black/60 px-1 text-center shadow-[0_6px_14px_-8px_rgba(0,0,0,0.9)] backdrop-blur-md transition active:scale-[0.94]',
-        t.border,
+        'group relative flex h-[80px] min-w-0 flex-col items-center justify-center gap-[3px] overflow-hidden rounded-2xl bg-gradient-to-b from-white/[0.09] to-black/60 px-1 text-center shadow-[0_6px_14px_-8px_rgba(0,0,0,0.9)] backdrop-blur-md transition active:scale-[0.94]',
       )}
     >
       {/* Arkadaki renk ışığı ve alttaki ince neon çizgi */}
       <span aria-hidden="true" className={cn('pointer-events-none absolute -top-6 left-1/2 h-12 w-12 -translate-x-1/2 rounded-full opacity-60 blur-xl', t.glow)} />
-      <span aria-hidden="true" className={cn('pointer-events-none absolute inset-x-3 bottom-0 h-[2px] rounded-full', t.line)} />
 
       <ProfileObjectIcon kind={artworkKey} Icon={Icon} />
 

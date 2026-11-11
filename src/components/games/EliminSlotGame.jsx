@@ -10,6 +10,7 @@ import EliminGrid from './elimin/EliminGrid';
 import EliminHud from './elimin/EliminHud';
 import EliminRulesSheet from './elimin/EliminRulesSheet';
 import EliminWinOverlay from './elimin/EliminWinOverlay';
+import { WIN_CARD_THRESHOLD } from '@/components/games/shared/winCard';
 import GameTurnBadge from './controls/GameTurnBadge';
 import GameBetBar from './controls/GameBetBar';
 import GameSpinButton from './controls/GameSpinButton';
@@ -55,8 +56,8 @@ export default function EliminSlotGame({ onExit, onBack }) {
       });
       return undefined;
     }
-    if (game.bigWin > 0) {
-      setPrize({ amount: game.bigWin });
+    if (game.win >= WIN_CARD_THRESHOLD) {
+      setPrize({ amount: game.win });
       return undefined;
     }
     // Kazanç yoksa yazı hemen silinir; varsa kısa süre görünüp kendiliğinden kapanır.

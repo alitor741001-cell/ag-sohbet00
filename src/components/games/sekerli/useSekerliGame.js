@@ -7,6 +7,7 @@ import useBetQueue from '@/hooks/useBetQueue';
 import useWalletCoinsLive from '@/hooks/useWalletCoinsLive';
 import { useCurrentUser } from '@/lib/useCurrentUser';
 import { landWait } from '@/components/games/reels/reelMotion';
+import { WIN_CARD_THRESHOLD } from '@/components/games/shared/winCard';
 
 // Tur zamanlamaları: kazanan parlaması, patlama ve düşme.
 const WIN_HOLD_MS = 780;
@@ -258,7 +259,7 @@ export default function useSekerliGame() {
       setWin(sessionWinRef.current);
 
       // Çevirme hakkı sürerken ara kutlama yapılmaz; sonuç tur bitince gösterilir.
-      const tier = inSession ? null : tierFor(won, totalBet);
+      const tier = inSession || won < WIN_CARD_THRESHOLD ? null : tierFor(won, totalBet);
       if (tier) {
         setPrize({ amount: won, label: tier.label, tone: tier.tone, multiplier: won / totalBet });
         if (soundRef.current) sekerliSound.big();

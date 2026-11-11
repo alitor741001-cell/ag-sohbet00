@@ -8,7 +8,7 @@ const NORMAL = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/
 const SESSION = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/4c6d32b81_IMG_0319.jpg';
 const format = value => new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 }).format(Math.max(0, Math.round(value || 0)));
 
-export default function GameWinArtwork({ open, amount, title = 'TEBRİKLER!', subtitle, session, action, onAccept, detail }) {
+export default function GameWinArtwork({ open, amount, title = 'TEBRİKLER!', subtitle, session, action, onAccept, detail, art }) {
   const button = useRef(null);
   const finished = session ?? title.includes('BİTTİ');
   const award = !finished && title.includes('HAKKI');
@@ -23,6 +23,12 @@ export default function GameWinArtwork({ open, amount, title = 'TEBRİKLER!', su
   if (!open) return null;
   return createPortal(<div className="game-win-artwork font-body" role="dialog" aria-modal="true" aria-label={finished ? '15 çevirme hakkı bitti, toplam kazanç' : title}
     onKeyDown={event => { if (event.key === 'Escape') onAccept?.(); if (event.key === 'Tab') { event.preventDefault(); button.current?.focus(); } }}>
+    {/* Gerçekçi kutlama: arkadan dönen altın ışınlar ve yükselen coinler. */}
+    <span className="game-win-artwork-rays" aria-hidden="true" />
+    <span className="game-win-artwork-coins" aria-hidden="true">
+      {Array.from({ length: 10 }, (_, index) => <i key={index} style={{ '--coin': index }} />)}
+    </span>
+    {art && <img className="game-win-artwork-jackpot" src={art} alt="Jackpot" />}
     <div className={`game-win-artwork-frame ${finished ? 'game-win-artwork-session' : ''}`}>
       <TransparentWinArt src={finished ? SESSION : NORMAL} session={finished} award={award} />
       {award && <span className="game-win-artwork-award-label">ÜCRETSİZ ÇEVİRME</span>}

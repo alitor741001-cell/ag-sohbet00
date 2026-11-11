@@ -12,6 +12,7 @@ import RouletteTable from './roulette/RouletteTable';
 import RouletteChipRow from './roulette/RouletteChipRow';
 import RouletteRoundBar from './roulette/RouletteRoundBar';
 import RouletteWinOverlay from './roulette/RouletteWinOverlay';
+import { WIN_CARD_THRESHOLD } from '@/components/games/shared/winCard';
 import RoulettePlayers from './roulette/RoulettePlayers';
 import '@/styles/roulette2.css';
 
@@ -57,7 +58,7 @@ export default function RouletteGame({ onExit, onBack }) {
 
   // Tur sonucu: kazanç ödenmişse kutlama ekranı açılır.
   useEffect(() => {
-    if (!game.result || !game.result.payout) return;
+    if (!game.result || game.result.payout < WIN_CARD_THRESHOLD) return;
     setPrize({ amount: game.result.payout, number: game.result.number });
   }, [game.result]);
 

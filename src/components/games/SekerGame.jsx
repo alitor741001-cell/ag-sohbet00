@@ -12,6 +12,7 @@ import GameBetBar from './controls/GameBetBar';
 import GameSpinButton from './controls/GameSpinButton';
 import GameTurnBadge from './controls/GameTurnBadge';
 import SekerWinOverlay from './seker/SekerWinOverlay';
+import { WIN_CARD_THRESHOLD } from '@/components/games/shared/winCard';
 import { SEKER_ART, SEKER_LOGO } from './seker/sekerAssets';
 import { warmSymbolTiles } from '@/lib/symbolTile';
 import { SEKER_LINES, formatCoins } from './seker/sekerConfig';
@@ -37,8 +38,8 @@ export default function SekerGame({ onExit, onBack }) {
     if (!game.spins) return undefined;
     // Çevirme hakkı sürerken ara kutlama yapılmaz; sonuç tur bitince gösterilir.
     if (game.sessionSpins > 0) return undefined;
-    if (game.bigWin > 0) {
-      setPrize({ amount: game.bigWin });
+    if (game.win >= WIN_CARD_THRESHOLD) {
+      setPrize({ amount: game.win });
       return undefined;
     }
     // Kazanç yoksa yazı hemen silinir; varsa kısa süre görünüp kendiliğinden kapanır.

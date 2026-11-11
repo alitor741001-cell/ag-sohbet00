@@ -313,31 +313,38 @@
   0% { transform: scale(0.8); opacity: 0.95; }
   100% { transform: scale(1.6); opacity: 0; }
 }
-/* İnen küre jetonu: yukarıdan gelir, çemberin ortasına düşüp kaybolur. */
-.dede-mult-chip {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  z-index: 2;
-  pointer-events: none;
+/* İnen küreler: çemberin solunda indikleri sırayla listelenir, üst üste binmez. */
+.dede-mult-wrap {
+  display: flex;
+  min-width: 0;
+  max-width: 100%;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.3rem;
 }
-.dede-mult-chip-inner {
-  display: block;
+.dede-mult-list {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.12rem;
+  overflow: hidden;
+}
+.dede-mult-chip {
   border-radius: 9999px;
   border: 1px solid #fff6d0;
-  padding: 0.05rem 0.4rem;
-  font-size: 0.72rem;
+  padding: 0.05rem 0.3rem;
+  font-size: 0.6rem;
   font-weight: 900;
+  line-height: 1.15;
   white-space: nowrap;
   color: #2a0c02;
   background: linear-gradient(180deg, #ffe9a8, #ffbe2e);
-  box-shadow: 0 0 14px rgba(255, 190, 60, 0.85);
-  animation: dede-mult-chip-in 0.62s cubic-bezier(0.35, 0.05, 0.6, 0.95) both;
+  box-shadow: 0 0 10px rgba(255, 190, 60, 0.7);
+  animation: dede-mult-chip-in 0.3s ease-out both;
 }
 @keyframes dede-mult-chip-in {
-  0% { transform: translate(-50%, -170%) scale(0.85); opacity: 0; }
-  25% { opacity: 1; }
-  100% { transform: translate(-50%, -50%) scale(0.45); opacity: 0; }
+  0% { transform: scale(0.5); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
 }
 
 

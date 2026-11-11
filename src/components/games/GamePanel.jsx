@@ -75,10 +75,12 @@ export default function GamePanel({ open, onClose, roomId, initialGame = null, f
       {!full && (
         <button type="button" aria-label="Oyun panelini kapat" onClick={onClose} className="absolute inset-0 bg-black/70 backdrop-blur-[2px]" />
       )}
+      {/* Tam ekran değil: panel ekranın alt bölümünü kaplar, üstteki koltuklar görünür kalır. */}
+      {full && <div aria-hidden="true" className="absolute inset-0 bg-black/45 backdrop-blur-[1px]" />}
       <div
         className={
           full
-            ? 'relative flex h-full w-full flex-col overflow-hidden bg-slot text-slot-text'
+            ? 'relative flex h-[68%] w-full flex-col overflow-hidden rounded-t-[26px] bg-slot text-slot-text ring-1 ring-[#F2CE6B]/40'
             /* Yükseklik önce eski cihazlar için vh, destekleyenlerde dvh ile ölçülür. */
             : 'animate-sheet-up relative flex h-[60vh] supports-[height:100dvh]:h-[60dvh] w-full flex-col overflow-hidden rounded-t-[26px] bg-gradient-to-b from-[#2C1512] to-[#150A0A] text-slot-text ring-1 ring-[#F2CE6B]/40'
         }
