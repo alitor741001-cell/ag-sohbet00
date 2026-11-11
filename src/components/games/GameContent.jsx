@@ -1,4 +1,5 @@
 import { lazy, Suspense } from 'react';
+import GameAmbience from '@/components/games/GameAmbience';
 import { DEDE_ID, ELIMIN_ID, FRUIT_ID, FUTBOL_ID, OKEY_CLASSIC_ID, OKEY_ID, ROCKET_ID, ROULETTE_ID, SEKERLI_MEYVE_ID, SEKER_ID, ZAR_ID } from '@/components/games/gameCatalog';
 
 const SlotGame = lazy(() => import('@/components/games/SlotGame'));
@@ -21,7 +22,10 @@ export default function GameContent({ selected, onExit, onBack, roomId }) {
   const variant = selected === OKEY_CLASSIC_ID ? 'okey' : 'okey101';
   return (
     <Suspense fallback={<div className="flex h-full flex-col items-center justify-center gap-4 bg-slot text-slot-text" role="status"><p>Oyun yükleniyor...</p><button type="button" onClick={onExit} className="min-h-11 rounded-xl border border-slot-gold/40 px-4">Geri dön</button></div>}>
-      <Game onExit={onExit} onBack={onBack} roomId={roomId} variant={variant} />
+      <div className="relative h-full w-full">
+        <Game onExit={onExit} onBack={onBack} roomId={roomId} variant={variant} />
+        <GameAmbience />
+      </div>
     </Suspense>
   );
 }
