@@ -48,7 +48,7 @@ export default function DedeGame({ onExit, onBack, roomId }) {
     window.clearTimeout(flashTimer.current);
     if (!game.spins) return undefined;
     // Çevirme hakkı sürerken ara kutlama yapılmaz; sonuç tur bitince gösterilir.
-    if (game.sessionSpins > 0) return undefined;
+    if (game.sessionSpins > 0 || game.sessionResult !== null) return undefined;
     if (game.win >= WIN_CARD_THRESHOLD) {
       setPrize({ amount: game.win });
       return undefined;

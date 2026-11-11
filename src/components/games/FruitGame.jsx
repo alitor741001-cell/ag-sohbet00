@@ -33,7 +33,7 @@ export default function FruitGame({ onExit, onBack }) {
     window.clearTimeout(flashTimer.current);
     if (!game.spins) return undefined;
     // Çevirme hakkı sürerken ara kutlama yapılmaz; sonuç tur bitince gösterilir.
-    if (game.sessionSpins > 0) return undefined;
+    if (game.sessionSpins > 0 || game.sessionResult !== null) return undefined;
     if (game.win >= WIN_CARD_THRESHOLD) {
       setPrize({ amount: game.win });
       return undefined;
@@ -76,8 +76,9 @@ export default function FruitGame({ onExit, onBack }) {
 
       <main className="relative z-10 flex min-h-0 flex-1 flex-col items-center gap-1 px-0 py-1">
         {/* Izgara ekranın kalan tüm alanını kaplar: kartlar olabildiğince büyük durur. */}
-        <div className="flex min-h-0 w-full flex-1 items-center justify-center">
-          <div className="fruit-frame flex aspect-square max-h-full w-full max-w-[46rem] p-1 sm:p-2">
+        {/* Çerçeve her zaman ekran genişliğini kaplar; alan kısaysa yalnız yüksekliği kısalır. */}
+        <div className="flex min-h-0 w-full flex-1 items-center justify-center [container-type:size]">
+          <div className="fruit-frame flex h-[min(100cqh,100cqw)] w-full max-w-[46rem] p-1 sm:p-2">
             <FruitReels
               spinning={game.spinning}
               stopping={game.stopping}

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Coins, Trophy, Users } from 'lucide-react';
+import { Trophy, Users } from 'lucide-react';
 import '@/styles/futbol.css';
 import '@/styles/gameControls.css';
 import { Image } from '@/components/ui/image';
@@ -58,7 +58,6 @@ export default function FootballGame({ onExit, onBack }) {
 
   // Üst metrikler: roulette'teki kartların aynısı.
   const statItems = [
-    { key: 'coins', label: 'COIN BAKİYEM', value: formatCoins(game.coins), icon: Coins },
     { key: 'today', label: 'BUGÜNÜN ÖDÜLLERİ', value: formatCoins(game.today), icon: Trophy, win: game.today > 0 },
     { key: 'picks', label: 'TUR SEÇİMİ', value: formatCoins(game.picksCount), icon: Users },
   ];

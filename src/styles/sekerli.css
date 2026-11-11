@@ -629,8 +629,10 @@
 /* Kap yüksekliği birimi desteklenen cihazlarda çerçeve, alanın kendi yüksekliğine göre
    ölçülür: ekran ne kadar kısaysa tahta o kadar küçülür. */
 @supports (container-type: size) {
-  .sl-frame { width: min(100%, 100cqh); }
+  /* Çerçeve ekran genişliğini kaplar; alan kısaysa yalnız yüksekliği kısalır. */
+  .sl-frame { width: 100%; aspect-ratio: auto; height: min(100cqh, 100cqw); }
 }
+.sl-main { padding-left: 0; padding-right: 0; }
 
 /* Kare oranını bilmeyen eski sürümlerde tahta ekrandan hesaplanan ölçüyle kareye yakın kalır. */
 @supports not (aspect-ratio: 1) {

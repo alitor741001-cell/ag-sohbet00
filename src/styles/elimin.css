@@ -658,8 +658,10 @@
 /* Kap yüksekliği birimi desteklenen cihazlarda çerçeve, alanın kendi yüksekliğine göre
    ölçülür: ekran ne kadar kısaysa tahta o kadar küçülür. */
 @supports (container-type: size) {
-  .el-frame { width: min(100%, 100cqh); }
+  /* Çerçeve ekran genişliğini kaplar; alan kısaysa yalnız yüksekliği kısalır. */
+  .el-frame { width: 100%; aspect-ratio: auto; height: min(100cqh, 100cqw); }
 }
+.el-main { padding-left: 0; padding-right: 0; }
 
 /* Kare oranını (aspect-ratio) bilmeyen eski sürümlerde tahta ve sembol kutuları
    ekrandan hesaplanan ölçüyle kareye en yakın biçimde kalır. */

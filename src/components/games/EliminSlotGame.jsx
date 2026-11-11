@@ -57,6 +57,8 @@ export default function EliminSlotGame({ onExit, onBack }) {
       });
       return undefined;
     }
+    // Çevirme hakkı sürerken ve bittiği anda ayrı kart açılmaz: tek toplam kart gösterilir.
+    if (game.sessionSpins > 0 || game.sessionResult !== null) return undefined;
     if (game.win >= WIN_CARD_THRESHOLD) {
       setPrize({ amount: game.win });
       return undefined;

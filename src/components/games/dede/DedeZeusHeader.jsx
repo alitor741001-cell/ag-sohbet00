@@ -1,6 +1,6 @@
 import React from 'react';
 import { HelpCircle } from 'lucide-react';
-import GameCoinBar from '@/components/games/shared/GameCoinBar';
+import compactCoins from '@/lib/compactCoins';
 import LeaderAvatar from '@/components/games/leaders/LeaderAvatar';
 import './dedeZeusHeader.css';
 
@@ -11,7 +11,7 @@ export default function DedeZeusHeader({ coins, leader, compact, onLeaders, onHe
   return (
     <header className={`dzh ${compact ? 'dzh-compact' : ''}`}>
       <img src={DEDE_HEADER_ART} alt="" className="dzh-art" draggable={false} />
-      <GameCoinBar coins={coins} onClick={onCoins} className="dzh-coinbar" />
+      <span className="dzh-coins tabular-nums">{compactCoins(coins)}</span>
       <button type="button" onClick={onLeaders} aria-label="Kazananları gör" className="dzh-badge" />
       <LeaderAvatar leader={leader} className="dzh-avatar" />
       <button type="button" onClick={onHelp} aria-label="Nasıl oynanır" className="dzh-help">
