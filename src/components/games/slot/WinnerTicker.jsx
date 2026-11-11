@@ -32,15 +32,16 @@ function TickerRow({ winner }) {
           </span>
         )}
       </span>
-      <span className="max-w-[4rem] truncate text-[10px] font-bold text-white">{winner.name || 'Kullanıcı'}</span>
+      <span className="max-w-[4.5rem] truncate text-[10px] font-black text-[#c4b5fd]">{winner.name || 'Kullanıcı'}</span>
+      <span className="shrink-0 text-[10px] font-black text-[#c4b5fd]">ve kazandı</span>
       <span className="flex shrink-0 items-center gap-px">
         {symbolsOf(winner).map((symbol, index) => (
-          <SlotSymbolIcon key={`${symbol}-${index}`} symbol={symbol} size={12} />
+          <SlotSymbolIcon key={`${symbol}-${index}`} symbol={symbol} size={13} />
         ))}
       </span>
-      <span className="shrink-0 text-[9px] text-white/75">havuzdan</span>
-      <span className="shrink-0 font-mono text-[11px] font-black text-slot-orange">{format(winner.won)}</span>
-      <span className="shrink-0 text-[9px] text-white/75">kazandı</span>
+      <span className="shrink-0 text-[10px] font-black text-[#c4b5fd]">Kazanç</span>
+      <span className="flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full bg-amber-400 text-[8px] font-black text-amber-900">$</span>
+      <span className="shrink-0 font-mono text-[11px] font-black text-[#ff8a4c]">{format(winner.won)}</span>
     </li>
   );
 }
@@ -60,7 +61,7 @@ export default function WinnerTicker({ height = VISIBLE_ROWS * TICKER_ROW_HEIGHT
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none relative w-full overflow-hidden border-b-2 border-slot-gold/40 bg-black/70 backdrop-blur-sm"
+      className="pointer-events-none relative w-full overflow-hidden"
       style={{ height }}
     >
       {loop.length ? (

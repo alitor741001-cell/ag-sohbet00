@@ -1,0 +1,148 @@
+/* Dede üst sahnesi: referanstaki pastel tapınak gökyüzü, altın düğmeler ve jackpot plakası. */
+.dede-top {
+  container-type: inline-size;
+  min-height: clamp(13rem, 58cqw, 19rem);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background:
+    radial-gradient(60% 50% at 50% 30%, rgba(255, 232, 200, .55), transparent 70%),
+    linear-gradient(180deg, #8d6fa8 0%, #c79bb0 45%, #e7c2b3 70%, #b98aa6 100%);
+}
+.dede-top-temple {
+  position: absolute;
+  inset: 22% 8% 32%;
+  pointer-events: none;
+  opacity: .35;
+  background:
+    linear-gradient(180deg, transparent 0 14%, #f6e7da 14% 20%, transparent 20%),
+    repeating-linear-gradient(90deg, transparent 0 5%, #f6e7da 5% 8%, transparent 8% 13%);
+  clip-path: polygon(50% 0, 100% 14%, 100% 100%, 0 100%, 0 14%);
+  filter: blur(1.5px);
+}
+.dede-top-orb {
+  display: flex;
+  height: 2.5rem;
+  width: 2.5rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  color: #fff7e6;
+  background: radial-gradient(circle at 35% 30%, #f2c27a, #c0812f 55%, #7a4511);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, .5), 0 0 0 2px rgba(255, 232, 170, .55), 0 4px 10px rgba(60, 20, 0, .45);
+}
+.dede-top-orb:active { transform: scale(.94); }
+.dede-top-pill {
+  display: flex;
+  min-width: 7.5rem;
+  align-items: center;
+  gap: .5rem;
+  border-radius: 9999px;
+  padding: .25rem .6rem .25rem .25rem;
+  font-weight: 900;
+  color: #fff;
+  background: linear-gradient(180deg, #6b4733, #3d2418);
+  box-shadow: inset 0 0 0 2px rgba(255, 220, 160, .35);
+}
+.dede-top-crown {
+  display: flex;
+  height: 1.7rem;
+  width: 1.7rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  color: #fff;
+  background: conic-gradient(#ef4444, #f59e0b, #22c55e, #3b82f6, #a855f7, #ef4444);
+}
+.dede-top-rank { position: absolute; left: 3%; top: calc(max(.5rem, env(safe-area-inset-top)) + 3.2rem); z-index: 10; display: flex; flex-direction: column; align-items: center; }
+.dede-top-rank-ring {
+  display: block;
+  height: 3.4rem;
+  width: 3.4rem;
+  overflow: hidden;
+  border-radius: 9999px;
+  border: 3px solid #e6b450;
+  background: #f6dfa4;
+  box-shadow: 0 0 0 2px #8a5a13, 0 0 14px rgba(255, 200, 80, .7);
+}
+.dede-top-rank-no {
+  margin-top: -.4rem;
+  border-radius: 9999px;
+  padding: 0 .4rem;
+  font-size: .75rem;
+  font-weight: 900;
+  color: #fff6d6;
+  background: linear-gradient(180deg, #e6b450, #8a5a13);
+  text-shadow: 0 1px 0 #4a2a05;
+}
+/* Dede karakteri sahnenin ortasında durur. */
+.dede-top .dede-wizard { left: 50%; right: auto; top: calc(max(.25rem, env(safe-area-inset-top)) + 1rem); bottom: 4.6rem; width: 40%; max-width: 12rem; transform: translateX(-50%); }
+.dede-top-banner {
+  position: relative;
+  z-index: 10;
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  padding: .15rem .75rem;
+  font-size: 4.6cqw;
+  font-weight: 900;
+  color: #c0262d;
+  background: linear-gradient(90deg, transparent, rgba(255, 236, 228, .82) 15%, rgba(255, 236, 228, .82) 85%, transparent);
+}
+.dede-top-banner-n { font-size: 5cqw; }
+.dede-top-banner-icon { height: 9cqw; width: 9cqw; flex-shrink: 0; border-radius: 8px; box-shadow: 0 0 0 2px #e6b450; }
+
+.djp { position: relative; z-index: 10; display: grid; grid-template-columns: 1fr 1.05fr 1fr; align-items: end; gap: 2px; padding: 6px 0 4px; }
+.djp-side { display: flex; flex-direction: column; gap: 3px; }
+.djp-cell {
+  display: flex;
+  align-items: center;
+  gap: .3rem;
+  height: 6.6cqw;
+  padding: 0 .4rem;
+  background: linear-gradient(180deg, #4b1d64, #26093a);
+  border: 1.5px solid #d9a441;
+  clip-path: polygon(0 0, 92% 0, 100% 50%, 92% 100%, 0 100%);
+}
+.djp-cell-r { justify-content: flex-end; clip-path: polygon(8% 0, 100% 0, 100% 100%, 8% 100%, 0 50%); }
+.djp-label { font-size: 2.6cqw; font-weight: 900; }
+.djp-value { font-size: 3.8cqw; font-weight: 900; color: #fff3d0; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; }
+.djp-blue { color: #8fb8ff; } .djp-pink { color: #ff8fc0; } .djp-green { color: #6ee7a0; } .djp-gold { color: #ffd36b; }
+.djp-center {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .35rem;
+  height: 10cqw;
+  background: linear-gradient(180deg, #5a2378, #2a0a3f);
+  border: 2px solid #f0c060;
+  clip-path: polygon(8% 0, 92% 0, 100% 100%, 0 100%);
+}
+.djp-script {
+  position: absolute;
+  top: -1.2cqw;
+  left: 50%;
+  transform: translate(-50%, -60%) rotate(-4deg);
+  font-family: 'Brush Script MT', 'Segoe Script', cursive;
+  font-size: 7cqw;
+  font-style: italic;
+  font-weight: 900;
+  color: #ffd76a;
+  text-shadow: 0 2px 0 #8a4b07, 0 0 8px rgba(255, 190, 60, .8);
+  white-space: nowrap;
+}
+.djp-center-label { font-size: 2.6cqw; font-weight: 900; color: #ffe7a8; }
+.djp-center-value {
+  font-size: 5.6cqw;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  background: linear-gradient(180deg, #fffbe6, #fcd34d 50%, #f59e0b);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.djp-script { z-index: 2; }

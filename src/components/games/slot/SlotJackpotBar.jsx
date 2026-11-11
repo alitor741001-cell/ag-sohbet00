@@ -1,40 +1,38 @@
-import React from 'react';
-import '@/components/games/slot/slotJackpot.css';
+import React, { useEffect, useState } from 'react';
+import './slotFrenzy.css';
 
 const format = (value) => new Intl.NumberFormat('tr-TR').format(Math.max(0, Math.round(value || 0)));
 
-// Küçük havuzlar: her biri kendi renginde parlayan cam kapsül.
+// Plakada sırayla gösterilen havuzlar.
 const POOLS = [
-  { key: 'mini', label: 'MINI', tone: 'mini' },
-  { key: 'big', label: 'BIG', tone: 'big' },
-  { key: 'mega', label: 'MEGA', tone: 'mega' },
-  { key: 'xmega', label: 'XMEGA', tone: 'xmega' },
+  { key: 'mini', label: 'MINI' },
+  { key: 'big', label: 'BIG' },
+  { key: 'mega', label: 'MEGA' },
+  { key: 'xmega', label: 'XMEGA' },
+  { key: 'jackpot', label: 'GRAND' },
 ];
+const CYCLE_MS = 3000;
 
-// Rakam uzadıkça yazı küçülür: kutunun dışına asla taşmaz.
-const fit = (text, base, room) => `min(${base}cqw, ${(room / Math.max(text.length, 1)).toFixed(2)}cqw)`;
+/** Referans tasarımdaki "Jackpot" plakası: havuzlar sırayla döner, altında ücretsiz çevirme şeridi. */
+export default function SlotJackpotBar({ pools, freeSpins = 0, topGap = 0 }) {
+  const [index, setIndex] = useState(0);
+  useEffect(() => {
+    const timer = window.setInterval(() => setIndex((value) => (value + 1) % POOLS.length), CYCLE_MS);
+    return () => window.clearInterval(timer);
+  }, []);
+  const pool = POOLS[index];
 
-/** Oyunun üst konsolu: ortada büyük altın JACKPOT, altında dört renkli havuz kapsülü. */
-export default function SlotJackpotBar({ pools, topGap = 0 }) {
-  const jackpot = format(pools?.jackpot);
   return (
     <div className="relative shrink-0" style={{ paddingTop: `${topGap}px` }}>
-      <div className="sjp mx-auto w-full max-w-2xl">
-        <div className="sjp-main">
-          <span className="sjp-main-shine" aria-hidden="true" />
-          <span className="sjp-main-label">★ JACKPOT ★</span>
-          <span className="sjp-main-value" style={{ fontSize: fit(jackpot, 8, 120) }}>{jackpot}</span>
+      <div className="sfz-jp mx-auto w-full max-w-2xl">
+        <span className="sfz-jp-script">Jackpot</span>
+        <div className="sfz-jp-plate">
+          <span className="sfz-jp-label">{pool.label}</span>
+          <span key={pool.key} className="sfz-jp-value">{format(pools?.[pool.key])}</span>
         </div>
-        <div className="sjp-row">
-          {POOLS.map((pool) => {
-            const text = format(pools?.[pool.key]);
-            return (
-              <div key={pool.key} className={`sjp-pool sjp-${pool.tone}`}>
-                <span className="sjp-pool-label">{pool.label}</span>
-                <span className="sjp-pool-value" style={{ fontSize: fit(text, 3.6, 30) }}>{text}</span>
-              </div>
-            );
-          })}
+        <div className="sfz-jp-row">
+          <span className="sfz-jp-track">Ücretsiz çevirme: {freeSpins}</span>
+          <span aria-hidden="true" className="sfz-jp-wheel" />
         </div>
       </div>
     </div>

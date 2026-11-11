@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ChevronLeft, HelpCircle } from 'lucide-react';
+import { ChevronLeft } from 'lucide-react';
+import SlotFrenzyHeader from './slot/SlotFrenzyHeader';
 import GameHelpSheet from './help/GameHelpSheet';
 import { Image } from '@/components/ui/image';
 import { useSize } from '@/hooks/use-size';
@@ -104,9 +105,11 @@ export default function SlotGame({ onExit, onBack, roomId }) {
       </div>
 
       {/* Üst: kazanan şeridi ve kendi jackpot konsolumuz. */}
-      <div className="relative z-10 shrink-0 pt-[env(safe-area-inset-top)]">
-        <WinnerTicker height={tickerHeight} />
-        <SlotJackpotBar pools={game.pools} tier={tier} topGap={panelGap} />
+      <div className="relative z-10 shrink-0">
+        <SlotFrenzyHeader onHelp={() => setHelpOpen(true)}>
+          <WinnerTicker height={tickerHeight} />
+        </SlotFrenzyHeader>
+        <SlotJackpotBar pools={game.pools} freeSpins={game.freeSpins} topGap={panelGap} />
       </div>
 
       <button
@@ -116,14 +119,6 @@ export default function SlotGame({ onExit, onBack, roomId }) {
         className="absolute left-2 top-[env(safe-area-inset-top)] z-20 mt-2 flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm active:scale-95"
       >
         <ChevronLeft className="h-5 w-5" />
-      </button>
-      <button
-        type="button"
-        onClick={() => setHelpOpen(true)}
-        aria-label="Nasıl oynanır"
-        className="absolute right-14 top-[env(safe-area-inset-top)] z-20 mt-2 flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm active:scale-95"
-      >
-        <HelpCircle className="h-5 w-5" />
       </button>
 
 
