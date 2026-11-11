@@ -19,7 +19,13 @@ import { isAgOfficial } from '../../shared/agOfficial.ts';
 const SEAT_OPTIONS = [1, 2, 5, 8, 9, 12, 15, 24, 30];
 // Bu değerin (coin) üzerindeki hediyeler bütün sesli odalara duyurulur.
 const BIG_GIFT_SCORE = 1000000;
-const ACTIONS = ['seat-take', 'seat-leave', 'seat-lock', 'seat-mute', 'seat-kick', 'set-seat-count', 'invite', 'seat-invite', 'seat-invite-clear', 'gift-state', 'gift-send', 'gift-finalize', 'gift-board', 'number-board-open', 'number-board-close', 'number-step', 'number-reset', 'number-settings', 'chat-ban', 'music-state', 'music-set', 'music-control', 'music-library', 'music-remove', 'music-add'];
+const ACTIONS = ['seat-take', 'seat-leave', 'seat-lock', 'seat-mute', 'seat-kick', 'set-seat-count', 'invite', 'seat-invite', 'seat-invite-clear', 'gift-state', 'gift-send', 'gift-finalize', 'gift-board', 'number-board-open', 'number-board-close', 'number-step', 'number-reset', 'number-settings', 'chat-ban', 'music-state', 'music-set', 'music-control', 'music-library', 'music-remove', 'music-add', 'team-pk-start', 'team-pk-stop'];
+// Normal (takım) PK turu 5 dakika sürer.
+const TEAM_PK_MS = 5 * 60 * 1000;
+const loadTeamPk = async (base44: any, roomId: string) => {
+  const rows = await base44.asServiceRole.entities.TeamPkMatch.filter({ room_id: roomId, active: true }, '-updated_date', 1).catch(() => []);
+  return Array.isArray(rows) && rows.length ? rows[0] : null;
+};
 
 const emptySeat = (index, locked = false) => ({
   index, user_id: '', name: '', avatar: '', frame: '', frame_scale: 100, locked, muted: false,
@@ -334,6 +340,29 @@ export default async function (req: Request): Promise<Response> {
     }
 
     // Hediye tahtası için K bakiyesi
+    // Normal PK: üstte sunucu, solda mavi 4 koltuk, sağda kırmızı 4 koltuk. Yalnızca yöneticiler açar/kapatır.
+    if (action === 'team-pk-start') {
+      if (!canMod) return Response.json({ error: 'yetkisiz' }, { status: 403 });
+      if (seats.length !== 9) return Response.json({ error: 'Normal PK için koltuk sayısı 9 olmalı.' }, { status: 400 });
+      const now = Date.now();
+      const patch = {
+        room_id, active: true, started_at: new Date(now).toISOString(), ends_at: new Date(now + TEAM_PK_MS).toISOString(),
+        blue_score: 0, red_score: 0, started_by: user.id,
+      };
+      const current = await loadTeamPk(base44, room_id);
+      const match = current
+        ? await base44.asServiceRole.entities.TeamPkMatch.update(current.id, patch)
+        : await base44.asServiceRole.entities.TeamPkMatch.create(patch);
+      say(`${shownName} normal PK başlattı.`);
+      return Response.json({ ok: true, team_pk: match });
+    }
+    if (action === 'team-pk-stop') {
+      if (!canMod) return Response.json({ error: 'yetkisiz' }, { status: 403 });
+      const current = await loadTeamPk(base44, room_id);
+      if (current) await base44.asServiceRole.entities.TeamPkMatch.update(current.id, { active: false });
+      return Response.json({ ok: true });
+    }
+
     if (action === 'gift-state') {
       const coins = await giftBalance(base44, { id: user.id, role: me?.role || user.role });
       return Response.json({ ok: true, coins });
@@ -410,6 +439,27 @@ export default async function (req: Request): Promise<Response> {
         if (hostScore !== (Number(pkMatch.host_score) || 0) || guestScore !== (Number(pkMatch.guest_score) || 0)) {
           waitUntil(base44.asServiceRole.entities.PkMatch.update(pkMatch.id, { host_score: hostScore, guest_score: guestScore }).catch(() => null));
         }
+      }
+      // Normal PK: sol 4 koltuk (1-4) mavi, sağ 4 koltuk (5-8) kırmızı takıma puan yazar.
+      // Üstteki sunucu koltuğuna (0) atılan hediyeler bara işlemez.
+      if (seats.length === 9) {
+        waitUntil((async () => {
+          const teamPk = await loadTeamPk(base44, room_id);
+          if (!teamPk || Date.now() > new Date(teamPk.ends_at).getTime()) return;
+          const gain = kValue * quantity;
+          let blue = 0;
+          let red = 0;
+          recipients.forEach((person) => {
+            const index = seats.findIndex((seat) => seat.user_id === person.user_id);
+            if (index >= 1 && index <= 4) blue += gain;
+            if (index >= 5 && index <= 8) red += gain;
+          });
+          if (!blue && !red) return;
+          await base44.asServiceRole.entities.TeamPkMatch.update(teamPk.id, {
+            blue_score: (Number(teamPk.blue_score) || 0) + blue,
+            red_score: (Number(teamPk.red_score) || 0) + red,
+          });
+        })().catch(() => null));
       }
       if (delivery.first) waitUntil(giftAftercare(base44, { user, room: delivery.room, gift: giftRecord, recipients, quantity, name: shownName, avatar: shownAvatar, hidden: hiddenUser, me, progression: delivery.progression }).catch(error => console.error('Hediye kota/duyuru eşitlemesi:', error)));
       return Response.json({

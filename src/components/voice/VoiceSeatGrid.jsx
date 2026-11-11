@@ -12,7 +12,7 @@ import { useSize } from '@/hooks/use-size';
  * Koltuk boyutu ölçülen genişliğe göre seçilir: dar telefonlarda da satır yana taşmaz,
  * geniş ekranlarda koltuklar gereksiz küçülmez.
  */
-export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerId, moderators = [], speakingIds = [], localSpeaking, participantMicStates = {}, localMicMuted, onSelectSeat, boardActive, scores = {}, accent = '#ef4444', gifted = {}, maxHeight }) {
+export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerId, moderators = [], speakingIds = [], localSpeaking, participantMicStates = {}, localMicMuted, onSelectSeat, boardActive, scores = {}, accent = '#ef4444', gifted = {}, maxHeight, teamPkFooter = null }) {
   const wrapRef = useRef(null);
   const profiles = useMessageProfiles(seats.map((seat) => seat?.user_id).filter(Boolean));
   const seatCosmetics = useSeatCosmetics(seats);
@@ -77,6 +77,58 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
   // Üstteki tek çerçeve artık büyütülmez: bir beden küçülüp diğer koltuklarla aynı boyda
   // durur, böylece satır yüksekliği hiç değişmez ve koltuklar yerinden oynamaz.
   const topSize = size;
+
+  // Normal PK düzeni: üstte tek sunucu koltuğu, altta solda mavi, sağda kırmızı kare içinde 2x2 koltuk.
+  if (teamPkFooter && seats.length === 9) {
+    const boxSeat = (available - 10) / 2 / 2 - 10;
+    const teamSize = boxSeat >= 68 ? 'md' : boxSeat >= 52 ? 'sm' : 'xs';
+    const renderSeat = (index, seatSize, space) => {
+      const seat = seats[index];
+      const occupied = !!seat?.user_id;
+      const micMuted = Boolean(seat?.muted || (occupied && (seat.user_id === userId ? localMicMuted === true : participantMicStates[seat.user_id] === false)));
+      return (
+        <div key={index} data-seat-index={index} className="flex flex-col items-center">
+          <VoiceSeat
+            index={index}
+            seat={seat}
+            profile={occupied ? profiles[seat.user_id] : null}
+            cosmeticChoice={occupied ? seatCosmetics[seat.user_id] : null}
+            musicPlaying={occupied && seat.user_id === musicOwnerId}
+            size={seatSize}
+            nameSpace={space}
+            isSelf={occupied && seat.user_id === userId}
+            isOwner={occupied && seat.user_id === ownerId}
+            isMod={occupied && moderators.includes(seat.user_id)}
+            speaking={occupied && (seat.user_id === userId ? localSpeaking : speakingIds.includes(seat.user_id))}
+            onSelect={onSeatClick}
+            accent={accent}
+            gifted={occupied ? gifted[seat.user_id] : undefined}
+            micMuted={micMuted}
+            boardActive={false}
+            score={0}
+          />
+        </div>
+      );
+    };
+    const teamSpace = { xs: 42, sm: 52, md: 68 }[teamSize] + 6;
+    const team = (indices, tone) => (
+      <div className={`grid flex-1 grid-cols-2 justify-items-center gap-x-1 gap-y-1.5 rounded-2xl border-2 p-1.5 ${tone}`}>
+        {indices.map((index) => renderSeat(index, teamSize, teamSpace))}
+      </div>
+    );
+    return (
+      <div ref={wrapRef} className="w-full">
+        <div className="flex w-full flex-col items-center gap-1.5">
+          {renderSeat(0, teamSize === 'xs' ? 'sm' : 'md', available)}
+          <div className="flex w-full items-stretch gap-2.5">
+            {team([1, 2, 3, 4], 'border-blue-500/80 bg-blue-600/20 shadow-[0_0_16px_-6px_rgba(59,130,246,0.9)]')}
+            {team([5, 6, 7, 8], 'border-red-500/80 bg-red-600/20 shadow-[0_0_16px_-6px_rgba(239,68,68,0.9)]')}
+          </div>
+          {teamPkFooter}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div ref={wrapRef} className="w-full">

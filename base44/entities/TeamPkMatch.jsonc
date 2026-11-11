@@ -1,0 +1,54 @@
+{
+  "name": "TeamPkMatch",
+  "type": "object",
+  "properties": {
+    "room_id": {
+      "type": "string"
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "ends_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "blue_score": {
+      "type": "number",
+      "default": 0
+    },
+    "red_score": {
+      "type": "number",
+      "default": 0
+    },
+    "started_by": {
+      "type": "string",
+      "default": ""
+    }
+  },
+  "required": [
+    "room_id"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

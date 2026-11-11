@@ -27,6 +27,8 @@ import VoiceRoomMenu from '@/components/voice/VoiceRoomMenu';
 import VideoPkLayer from '@/components/voice/pk/VideoPkLayer';
 import VideoPkSpectator from '@/components/voice/pk/VideoPkSpectator';
 import useRoomPkMatch from '@/hooks/useRoomPkMatch';
+import useTeamPk from '@/hooks/useTeamPk';
+import TeamPkBar from '@/components/voice/pk/TeamPkBar';
 import VoiceSeatSheet from '@/components/voice/VoiceSeatSheet';
 import InviteSheet from '@/components/voice/InviteSheet';
 import MicPermissionGuide from '@/components/voice/MicPermissionGuide';
@@ -154,6 +156,8 @@ export default function VoiceRoom() {
   const pkMicToggleRef = useRef(null);
   const [pkMicOn, setPkMicOn] = useState(true);
   const roomPk = useRoomPkMatch(id);
+  // Normal PK: üstte sunucu, solda mavi, sağda kırmızı 4'er koltuk; bar koltukların altında.
+  const teamPk = useTeamPk(id);
   const [gifted, setGifted] = useState({});
 
   const [keyboardOpen, setKeyboardOpen] = useState(false);
@@ -657,6 +661,22 @@ export default function VoiceRoom() {
 
   // Görüntülü PK sayfadan ayrılmadan açılır: sesli oda, koltuklar ve mikrofonlar aynen çalışır.
   const openVideoPk = useCallback(() => setPkOpen((value) => !value), []);
+
+  // Normal PK başlat: koltuk sayısı 9 değilse önce 9'a çekilir, sonra 5 dakikalık tur başlar.
+  const startTeamPk = useCallback(async () => {
+    if ((room?.seats || []).length !== 9) await changeSeatCount(9);
+    try {
+      const response = await base44.functions.invoke('voice-room', { room_id: id, action: 'team-pk-start' });
+      if (response?.data?.team_pk) teamPk.setMatch(response.data.team_pk);
+    } catch (error) {
+      toast({ title: 'Normal PK başlatılamadı', description: error?.response?.data?.error || error.message, variant: 'destructive' });
+    }
+  }, [id, room?.seats, changeSeatCount, teamPk.setMatch, toast]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const stopTeamPk = useCallback(async () => {
+    teamPk.setMatch(null);
+    await base44.functions.invoke('voice-room', { room_id: id, action: 'team-pk-stop' }).catch(() => null);
+  }, [id, teamPk.setMatch]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Odayı küçült: oda ve koltuk korunur, sağ alttaki balondan odalar gezilebilir.
   const minimizeRoom = useCallback(() => {
@@ -1243,7 +1263,7 @@ export default function VoiceRoom() {
           onOpenViewers={() => setViewerOpen(true)}
           onOpenMenu={() => setMenuOpen(true)}
           onExit={() => setExitOpen(true)}
-          showMenu
+          showMenu={canMod}
         />
       </div>
 
@@ -1285,6 +1305,9 @@ export default function VoiceRoom() {
           scores,
           accent: seatAccent,
           gifted,
+          teamPkFooter: teamPk.match && seats.length === 9
+            ? <TeamPkBar match={teamPk.match} canMod={canMod} onRestart={startTeamPk} onStop={stopTeamPk} />
+            : null,
         }}
       />
 
@@ -1391,7 +1414,9 @@ export default function VoiceRoom() {
         onExitVoiceMode={isOwner ? exitVoiceMode : null}
         theme={room?.background}
         onTheme={changeTheme}
-        onOpenPk={openVideoPk}
+        onOpenPk={canMod ? openVideoPk : null}
+        teamPkActive={!!teamPk.match}
+        onTeamPk={canMod ? (teamPk.match ? stopTeamPk : startTeamPk) : null}
       />
       <AgencyCallComposer open={agencyCallOpen} onClose={() => setAgencyCallOpen(false)} roomId={id} status={agencyCallStatus} onSent={(data) => setAgencyCallStatus((prev) => ({ ...prev, ...data }))} />
 

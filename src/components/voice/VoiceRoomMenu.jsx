@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Armchair, Eraser, Eye, EyeOff, Film, Hash, Lock, MessageSquareOff, Music, Palette, Play, ScrollText, Square, Unlock, Video } from 'lucide-react';
+import { Armchair, Eraser, Eye, EyeOff, Film, Hash, Lock, MessageSquareOff, Music, Palette, Play, ScrollText, Square, Swords, Unlock, Video } from 'lucide-react';
 import BoardToggleRow from '@/components/voice/BoardToggleRow';
 import VoiceRoomThemePanel from '@/components/voice/VoiceRoomThemePanel';
 import SeatCountPicker from '@/components/voice/SeatCountPicker';
@@ -14,7 +14,7 @@ const Panel = ({ children, hint }) => (
 );
 
 /** "…" menüsü: yuvarlak ikon ızgarası — kilit, gizlilik, koltuk, sayaç, sohbet temizleme, sohbet yasağı ve kayıt defteri. */
-export default function VoiceRoomMenu({ open, onClose, room, isOwner, isAdmin, canMod, onSeatCount, onSetPassword, onToggleHidden, boardActive, onToggleBoard, onBoardSettings, onClearChat, onToggleChatBan, onOpenLog, onExitVoiceMode, musicPlaying, onOpenMusic, theme, onTheme, onOpenPk }) {
+export default function VoiceRoomMenu({ open, onClose, room, isOwner, isAdmin, canMod, onSeatCount, onSetPassword, onToggleHidden, boardActive, onToggleBoard, onBoardSettings, onClearChat, onToggleChatBan, onOpenLog, onExitVoiceMode, musicPlaying, onOpenMusic, theme, onTheme, onOpenPk, onTeamPk, teamPkActive }) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [panel, setPanel] = useState(null);
@@ -88,6 +88,16 @@ export default function VoiceRoomMenu({ open, onClose, room, isOwner, isAdmin, c
             label="Görüntülü PK"
             tone="purple"
             onClick={() => { onClose(); onOpenPk(); }}
+          />
+        )}
+        {/* Normal PK: üstte sunucu, solda mavi, sağda kırmızı 4'er koltuk. */}
+        {onTeamPk && (
+          <VoiceMenuTile
+            icon={Swords}
+            label={teamPkActive ? "PK'yı kapat" : 'Normal PK'}
+            active={!!teamPkActive}
+            tone="blue"
+            onClick={() => { onClose(); onTeamPk(); }}
           />
         )}
         {/* Odayı film odasına yalnızca oda sahibi çevirebilir; yöneticiler PK'yı iptal edemez. */}

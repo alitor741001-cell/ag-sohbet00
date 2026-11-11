@@ -12,7 +12,9 @@ const FACES = {
  * İki barın birleştiği uçta 3D hareketli yüzler durur ve bar ilerledikçe birlikte kayar:
  * önde olan taraf güler, geride kalan taraf ağlar.
  */
-export default function PkScoreBar({ leftScore = 0, rightScore = 0, timerText = '00:00' }) {
+const PINK_CYAN = { left: 'linear-gradient(90deg,#fe2c55,#ff5b7a)', right: 'linear-gradient(270deg,#25f4ee,#8ffaf6)', rightText: 'text-black/80' };
+
+export default function PkScoreBar({ leftScore = 0, rightScore = 0, timerText = '00:00', colors = PINK_CYAN }) {
   const total = leftScore + rightScore;
   const left = total > 0 ? Math.min(92, Math.max(8, Math.round((leftScore / total) * 100))) : 50;
   const leading = leftScore === rightScore ? '' : leftScore > rightScore ? 'left' : 'right';
@@ -26,13 +28,13 @@ export default function PkScoreBar({ leftScore = 0, rightScore = 0, timerText = 
         <div className="flex h-7 overflow-hidden rounded-full bg-white/10">
           <span
             className="flex items-center gap-1 pl-2.5 pr-6 text-[11.5px] font-black tabular-nums text-white transition-[width] duration-500"
-            style={{ width: `${left}%`, background: 'linear-gradient(90deg,#fe2c55,#ff5b7a)' }}
+            style={{ width: `${left}%`, background: colors.left }}
           >
             {formatCoinAmount(leftScore)}
           </span>
           <span
-            className="flex flex-1 items-center justify-end gap-1 pl-6 pr-2.5 text-[11.5px] font-black tabular-nums text-black/80"
-            style={{ background: 'linear-gradient(270deg,#25f4ee,#8ffaf6)' }}
+            className={`flex flex-1 items-center justify-end gap-1 pl-6 pr-2.5 text-[11.5px] font-black tabular-nums ${colors.rightText}`}
+            style={{ background: colors.right }}
           >
             {formatCoinAmount(rightScore)}
           </span>

@@ -3,7 +3,7 @@
 .rocket-personal-image{width:100%;height:100%;filter:drop-shadow(0 0 16px hsl(var(--slot-gold)/.28));animation:rocket-personal-float 3s ease-in-out infinite}
 @keyframes rocket-personal-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
 @media(prefers-reduced-motion:reduce){.rocket-personal-image{animation:none}}
-.rocket-personal-card{width:100%;padding:10px 8px 8px;border:0;border-radius:0;background:transparent;box-shadow:none;text-shadow:0 2px 6px hsl(var(--slot-bg)/.85)}
+.rocket-personal-card{width:100%;padding:14px 12px 12px;border:1px solid hsl(var(--slot-gold)/.6);border-radius:20px;background:linear-gradient(160deg,hsl(var(--slot-panel)),hsl(var(--slot-bg)));box-shadow:0 18px 40px -16px hsl(var(--slot-bg)),0 0 22px -8px hsl(var(--slot-gold)/.7);text-shadow:0 2px 6px hsl(var(--slot-bg)/.85)}
 .rocket-personal-level{margin:0;font-size:11px;font-weight:800;letter-spacing:.18em;color:hsl(var(--slot-gold))}
 .rocket-personal-heading{margin:8px 0 12px;font-family:var(--font-heading);font-size:clamp(28px,8vw,38px);font-weight:900;line-height:1.1}
 .rocket-personal-amount{display:flex;align-items:baseline;justify-content:center;flex-wrap:wrap;gap:8px;font-size:clamp(30px,9vw,44px);font-weight:900;line-height:1.2;font-variant-numeric:tabular-nums;color:hsl(var(--slot-gold));overflow-wrap:anywhere}
