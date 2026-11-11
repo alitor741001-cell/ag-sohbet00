@@ -5,6 +5,7 @@ import { Image } from '@/components/ui/image';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
 import MatchingSlotDeck from '@/components/games/controls/MatchingSlotDeck';
 import GameIllustratedHeader from '@/components/games/shared/GameIllustratedHeader';
+import GameFullThemeBackdrop from '@/components/games/shared/GameFullThemeBackdrop';
 import SekerliGrid from './sekerli/SekerliGrid';
 import SekerliTopPanel from './sekerli/SekerliTopPanel';
 import SekerliWinOverlay from './sekerli/SekerliWinOverlay';
@@ -29,10 +30,7 @@ export default function SekerliMeyveGame({ onExit, onBack }) {
 
   return (
     <div className="sl-sky">
-      <div className="sl-backdrop">
-        <Image src={SEKERLI_BACKDROP} alt="" aria-hidden="true" className="h-full w-full" fittingType="fill" quality={70} />
-      </div>
-      <span className="sl-aurora" aria-hidden="true" />
+      <GameFullThemeBackdrop game="sekerli" />
 
       <GameIllustratedHeader game="sekerli" title="ŞEKERLİ MEYVE" tagline={`TAKLA ZİNCİRİ · ${LINES} SATIR`} onBack={onBack} onHelp={() => setHelpOpen(true)} sound={game.sound} onSound={game.toggleSound} />
 

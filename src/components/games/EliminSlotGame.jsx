@@ -6,6 +6,7 @@ import { Image } from '@/components/ui/image';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
 import MatchingSlotDeck from '@/components/games/controls/MatchingSlotDeck';
 import GameIllustratedHeader from '@/components/games/shared/GameIllustratedHeader';
+import GameFullThemeBackdrop from '@/components/games/shared/GameFullThemeBackdrop';
 import EliminJackpotBar from './elimin/EliminJackpotBar';
 import EliminGrid from './elimin/EliminGrid';
 import EliminRulesSheet from './elimin/EliminRulesSheet';
@@ -77,10 +78,7 @@ export default function EliminSlotGame({ onExit, onBack }) {
 
   return (
     <div className="el-sky">
-      <div className="el-backdrop" aria-hidden="true">
-        <Image src={ELIMIN_BACKDROP} alt="" className="h-full w-full" fittingType="fill" quality={70} />
-      </div>
-      <span className="el-aurora" aria-hidden="true" />
+      <GameFullThemeBackdrop game="elimin" />
 
       <GameIllustratedHeader game="elimin" title="ELİMİNSLOT" tagline={`MEYVE SLOTU · ${LINES} SATIR`} onBack={onBack} onHelp={() => setHelpOpen(true)} sound={game.sound} onSound={game.toggleSound} />
 

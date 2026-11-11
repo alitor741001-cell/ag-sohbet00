@@ -1,13 +1,7 @@
 import { ChevronLeft, HelpCircle, Volume2, VolumeX } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 
-const artwork = {
-  seker: 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/7a1458704_generated_image.png',
-  fruit: 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/d1d39e654_generated_image.png',
-  sekerli: 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/2a569ce68_generated_image.png',
-  zar: 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/2f604548c_generated_image.png',
-  elimin: 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/f19ef531c_generated_image.png',
-};
+import artwork from '@/components/games/shared/gameThemeArtwork';
 
 /** Görsel başlık: oyunun mevcut geri, yardım ve ses kontrollerini korur. */
 export default function GameIllustratedHeader({ game, title, tagline, onBack, onHelp, sound, onSound, round }) {

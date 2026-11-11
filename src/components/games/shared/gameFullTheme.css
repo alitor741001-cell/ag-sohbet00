@@ -1,0 +1,16 @@
+/* Üst görselin teması bütün oyun alanını ve alt konsolu kaplar. */
+.game-full-theme-art { z-index: 0; }
+.game-controls-themed[data-game] .matched-slot-console {
+  background: transparent;
+}
+.game-controls-themed[data-game] .matched-slot-console .sfz-deck[data-console-theme] {
+  background: hsl(var(--slot-bg) / .26);
+  border-top-color: hsl(var(--deck-edge) / .65);
+  box-shadow: inset 0 1px 3px hsl(var(--slot-text) / .14);
+}
+.game-controls-themed[data-game] .matched-slot-console .sfz-deck[data-console-theme] :is(.sfz-metric-well, .sfz-bet-capsule, .sfz-cat-pill) {
+  background: hsl(var(--slot-bg) / .58);
+}
+.game-controls-themed[data-game] .matched-slot-console[data-console-theme] > .ref-actions .ref-banner {
+  background: hsl(var(--slot-bg) / .48);
+}

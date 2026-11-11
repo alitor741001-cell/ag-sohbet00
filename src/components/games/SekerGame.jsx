@@ -5,6 +5,7 @@ import GameHelpSheet from './help/GameHelpSheet';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
 import MatchingSlotDeck from '@/components/games/controls/MatchingSlotDeck';
 import GameIllustratedHeader from '@/components/games/shared/GameIllustratedHeader';
+import GameFullThemeBackdrop from '@/components/games/shared/GameFullThemeBackdrop';
 import { Image } from '@/components/ui/image';
 import useSekerGame from './seker/useSekerGame';
 import SekerGrid from './seker/SekerGrid';
@@ -53,7 +54,7 @@ export default function SekerGame({ onExit, onBack }) {
 
   return (
     <div className="seker-sky relative flex h-full min-h-0 w-full flex-col overflow-hidden">
-      <span aria-hidden="true" className="seker-rays" />
+      <GameFullThemeBackdrop game="seker" />
 
       <GameIllustratedHeader game="seker" title="ŞEKER" tagline="AYNI ŞEKERDEN 10+ ÖDER" onBack={onBack} onHelp={() => setHelpOpen(true)} />
 

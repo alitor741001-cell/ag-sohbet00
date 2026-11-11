@@ -4,6 +4,7 @@ import '@/styles/gameControls.css';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
 import MatchingSlotDeck from '@/components/games/controls/MatchingSlotDeck';
 import GameIllustratedHeader from '@/components/games/shared/GameIllustratedHeader';
+import GameFullThemeBackdrop from '@/components/games/shared/GameFullThemeBackdrop';
 import useFruitGame from './fruit/useFruitGame';
 import FruitReels from './fruit/FruitReels';
 
@@ -48,7 +49,7 @@ export default function FruitGame({ onExit, onBack }) {
 
   return (
     <div className="fruit-sky relative flex h-full min-h-0 w-full flex-col overflow-hidden">
-      <span aria-hidden="true" className="fruit-rays" />
+      <GameFullThemeBackdrop game="fruit" />
 
       <GameIllustratedHeader game="fruit" title="MEYVE" tagline="SEMBOLLER EKRANIN HER YERİNDE ÖDER" onBack={onBack} onHelp={() => setHelpOpen(true)} />
 
