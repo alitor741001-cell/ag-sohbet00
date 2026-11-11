@@ -1,16 +1,12 @@
 import React from 'react';
 import { RotateCcw, Trash2 } from 'lucide-react';
-import { CHIP_LEVELS, CHIP_LABELS, formatCoins } from './zarConfig';
+import { CHIP_LEVELS, CHIP_LABELS } from './zarConfig';
 import ZarCatChip from './ZarCatChip';
 
 /** Alt bar: bakiye (sol alt), kedi jetonlar (orta), TEKRAR / TEMİZLE (sağ köşe). */
 export default function ZarChipRow({ coins, chip, stake, canRepeat, disabled, onChip, onRepeat, onClear, onCoins }) {
   return (
     <div className="rl2-footer-bar">
-      <button type="button" onClick={onCoins} className="rl2-balance" aria-label="Coin yükle">
-        <span className="rl2-coin" aria-hidden="true" />
-        {formatCoins(coins)}
-      </button>
       <div className="rl2-chips">
         {CHIP_LEVELS.map((level) => (
           <button
