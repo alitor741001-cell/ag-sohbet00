@@ -1,10 +1,11 @@
 import { cn } from '@/lib/utils';
+import ProfileObjectIcon from '@/components/profile/ProfileObjectIcon';
 
 /**
  * Profil menüsü düğmesi: kompakt koyu cam kart. Üstte kendi renginde parlayan ikon küresi,
  * altında etiket ve varsa sayı; kartın alt kenarında rengin ince ışık çizgisi durur.
  */
-export default function ProfileMenuTile({ label, Icon, tone = 'sky', value, unread = 0, onClick }) {
+export default function ProfileMenuTile({ label, Icon, artworkKey, tone = 'sky', value, unread = 0, onClick }) {
   const t = TONES[tone] || TONES.sky;
   return (
     <button
@@ -20,12 +21,7 @@ export default function ProfileMenuTile({ label, Icon, tone = 'sky', value, unre
       <span aria-hidden="true" className={cn('pointer-events-none absolute -top-6 left-1/2 h-12 w-12 -translate-x-1/2 rounded-full opacity-60 blur-xl', t.glow)} />
       <span aria-hidden="true" className={cn('pointer-events-none absolute inset-x-3 bottom-0 h-[2px] rounded-full', t.line)} />
 
-      <span
-        aria-hidden="true"
-        className={cn('relative flex h-[26px] w-[26px] items-center justify-center rounded-full bg-gradient-to-br text-white ring-1 ring-white/40', t.orb)}
-      >
-        <Icon className="h-[14px] w-[14px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]" strokeWidth={2.4} />
-      </span>
+      <ProfileObjectIcon kind={artworkKey} Icon={Icon} />
 
       <span className="relative line-clamp-1 w-full px-0.5 text-[8.5px] font-bold leading-tight tracking-wide text-white/90">
         {label}

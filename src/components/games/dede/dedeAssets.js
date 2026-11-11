@@ -13,16 +13,17 @@ export const DEDE_STAFF_VIDEO = 'https://media.base44.com/videos/public/6a77d66e
 
 // Sembol kartları: gönderilen referans tasarımdaki nesnelerin birebir aynısı —
 // taç, kum saati, yüzük, kupa, elmas ve yakut yıldız; bonus kartı Zeus kabartmasıdır.
+const SYMBOL_BASE = 'https://base44.app/api/apps/6a77d66e4da6de214628ee62/files/mp/public/6a77d66e4da6de214628ee62';
 export const DEDE_ART = {
-  crown: `${MEDIA_BASE}/7aed271c8_generated_image.png`,
-  amethyst: `${MEDIA_BASE}/d9abd22fb_generated_image.png`,
-  gem: `${MEDIA_BASE}/9fea3d8be_generated_image.png`,
-  topaz: `${MEDIA_BASE}/745f0ef6d_generated_image.png`,
-  ring: `${MEDIA_BASE}/dc7c06c4d_generated_image.png`,
-  hour: `${MEDIA_BASE}/0d9f641fd_generated_image.png`,
-  chalice: `${MEDIA_BASE}/247ba5e9c_generated_image.png`,
-  bolt: `${MEDIA_BASE}/9a487d745_generated_image.png`,
-  dede: `${MEDIA_BASE}/1191e9e17_generated_image.png`,
+  crown: `${SYMBOL_BASE}/b9e0c75ad_dede-crown.png`,
+  amethyst: `${SYMBOL_BASE}/54ffa8f51_dede-amethyst.png`,
+  gem: `${SYMBOL_BASE}/13d34d931_dede-gem.png`,
+  topaz: `${SYMBOL_BASE}/c91fb7fcf_dede-topaz.png`,
+  ring: `${SYMBOL_BASE}/abb150778_dede-ring.png`,
+  hour: `${SYMBOL_BASE}/40eba4798_dede-hour.png`,
+  chalice: `${SYMBOL_BASE}/188ae19ca_dede-chalice.png`,
+  bolt: `${SYMBOL_BASE}/57292ad22_dede-bolt.png`,
+  dede: `${SYMBOL_BASE}/377bec11a_dede-dede.png`,
 };
 
 export const DEDE_ART_SIZE = 1024;

@@ -63,6 +63,7 @@ export default function ProfileMenuDeck({ admin = false, onAction, stats = {} })
                 <ProfileMenuTile
                   key={key}
                   label={label}
+                  artworkKey={key}
                   Icon={Icon}
                   tone={tone}
                   value={stats[key]}

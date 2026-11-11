@@ -109,9 +109,9 @@
   position: absolute;
   inset: 0;
   display: block;
-  overflow: hidden;
-  border-radius: 16%;
-  box-shadow: 0 0 0 1px rgba(255, 226, 150, 0.35), 0 6px 14px -8px rgba(0, 0, 0, 0.95);
+  overflow: visible;
+  border-radius: 0;
+  box-shadow: none;
   /* İçindeki yazılar karenin ölçüsüne göre ölçeklenir. */
   container-type: inline-size;
 }
@@ -160,11 +160,11 @@
   display: block;
   width: 100%;
   height: 100%;
-  border-radius: 16%;
+  border-radius: 0;
 }
-.dede-art img { object-fit: contain; border-radius: 16%; }
-/* Skatter: dede madalyonu altın halkayla parlar. */
-.dede-badge-dede { box-shadow: 0 0 0 2px rgba(255, 214, 102, 0.95), 0 0 20px rgba(255, 205, 90, 0.95); }
+.dede-art img { object-fit: contain; border-radius: 0; }
+/* Özgün siluetler, kare çerçeve ve kırpma olmadan korunur. */
+.dede-badge-dede { filter: drop-shadow(0 0 3px rgba(255, 205, 90, .6)); }
 
 /* Küme kazanan karo parlar; patlama anında küçülüp kaybolur. */
 .dede-badge-win { animation: dede-win 0.9s ease-in-out infinite; }
