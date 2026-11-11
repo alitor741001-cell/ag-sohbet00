@@ -1,42 +1,36 @@
 import React, { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import TransparentWinArt from '@/components/games/shared/TransparentWinArt';
 import useBackDismiss from '@/hooks/useBackDismiss';
-import '@/components/games/shared/gameWinArtwork.css';
+import { WIN_THEMES } from '@/components/games/shared/winThemes';
+import '@/components/games/shared/gameWinCard.css';
 
-const NORMAL = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/8d3eaf690_IMG_0320.jpg';
-const SESSION = 'https://media.base44.com/images/public/6a77d66e4da6de214628ee62/4c6d32b81_IMG_0319.jpg';
 const format = value => new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 }).format(Math.max(0, Math.round(value || 0)));
 
-export default function GameWinArtwork({ open, amount, title = 'TEBRİKLER!', subtitle, session, action, onAccept, detail, art }) {
+/** Dede kartıyla aynı yapı: oyunun kapağı madalyonda, oyunun renkleri ve simgeleri. */
+export default function GameWinArtwork({ game = 'slot', open, amount, title, subtitle, action, onAccept, detail, art }) {
   const button = useRef(null);
-  const finished = session ?? title.includes('BİTTİ');
-  const award = !finished && title.includes('HAKKI');
-  const value = `${format(amount)}${award ? ' TUR' : ''}`;
+  const theme = WIN_THEMES[game] || WIN_THEMES.slot;
+  const Icon = theme.icon;
+  const heading = title || theme.title;
+  const turns = heading.includes('HAKKI') && !heading.includes('BİTTİ');
   useBackDismiss(open, onAccept);
-  useEffect(() => {
-    if (!open) return;
-    const previous = document.activeElement;
-    button.current?.focus({ preventScroll: true });
-    return () => previous?.isConnected && previous.focus?.({ preventScroll: true });
-  }, [open]);
+  useEffect(() => { if (open) button.current?.focus({ preventScroll: true }); }, [open]);
   if (!open) return null;
-  return createPortal(<div className="game-win-artwork font-body" role="dialog" aria-modal="true" aria-label={finished ? '15 çevirme hakkı bitti, toplam kazanç' : title}
-    onKeyDown={event => { if (event.key === 'Escape') onAccept?.(); if (event.key === 'Tab') { event.preventDefault(); button.current?.focus(); } }}>
-    {/* Gerçekçi kutlama: arkadan dönen altın ışınlar ve yükselen coinler. */}
-    <span className="game-win-artwork-rays" aria-hidden="true" />
-    <span className="game-win-artwork-coins" aria-hidden="true">
-      {Array.from({ length: 10 }, (_, index) => <i key={index} style={{ '--coin': index }} />)}
-    </span>
-    {art && <img className="game-win-artwork-jackpot" src={art} alt="Jackpot" />}
-    <div className={`game-win-artwork-frame ${finished ? 'game-win-artwork-session' : ''}`}>
-      <TransparentWinArt src={finished ? SESSION : NORMAL} session={finished} award={award} />
-      {award && <span className="game-win-artwork-award-label">ÜCRETSİZ ÇEVİRME</span>}
-      <output className="game-win-artwork-amount" aria-label={award ? 'Kazanılan tur' : 'Toplam coin kazancı'} style={{ fontSize: `${Math.min(finished ? 11 : 12, 98 / value.length)}cqw` }}>{value}</output>
-      {(detail || (award && subtitle)) && <div className="game-win-artwork-detail">{detail || subtitle}</div>}
-      <button ref={button} type="button" className="game-win-artwork-accept" onClick={onAccept} aria-label={award ? action || 'Başla' : 'Kabul et'}>
-        {award ? <span className="game-win-artwork-action-label">{action || 'BAŞLA'}</span> : <span className="sr-only">KABUL ET</span>}
-      </button>
-    </div>
-  </div>, document.body);
+  const style = { '--gwc-top': theme.top, '--gwc-bottom': theme.bottom, '--gwc-glow': theme.glow, '--gwc-accent': theme.accent };
+  return createPortal(
+    <div className="gwc font-body" style={style} role="dialog" aria-modal="true" aria-label={heading}>
+      <span className="gwc-glow" aria-hidden="true" />
+      {[0, 1, 2, 3].map((index) => <Icon key={index} className={`gwc-icon gwc-icon-${index}`} aria-hidden="true" />)}
+      <div className="gwc-card">
+        <span className="gwc-medal" style={{ backgroundImage: `url(${theme.cover})` }} aria-hidden="true" />
+        <p className="gwc-title">{heading}</p>
+        <p className="gwc-sub">{subtitle || 'KAZANDINIZ'}</p>
+        {art && <img className="gwc-art" src={art} alt="Jackpot" />}
+        <output className="gwc-amount tabular-nums">{format(amount)}{turns ? ' TUR' : ''}</output>
+        {detail && <div className="gwc-detail">{detail}</div>}
+        <button ref={button} type="button" onClick={onAccept} className="gwc-btn">{action || (turns ? 'BAŞLA' : 'TOPLA')}</button>
+      </div>
+    </div>,
+    document.body,
+  );
 }

@@ -76,7 +76,7 @@ export default function DedeGame({ onExit, onBack, roomId }) {
       />
 
       {/* Izgara üst görselin alt kısmına doğru yükselir: görselin altı çerçevenin arkasında kalır. */}
-      <main className={`relative z-10 flex min-h-0 flex-1 flex-col items-center gap-1 px-0 pb-1 ${inRoom ? '-mt-[6vw]' : '-mt-[11vw] sm:-mt-16'}`}>
+      <main className={`relative z-10 flex min-h-0 flex-1 flex-col items-center gap-1 px-0 pb-1 ${inRoom ? '-mt-[1vw]' : '-mt-[18vw] sm:-mt-24'}`}>
         <div className="flex min-h-0 w-full flex-1 items-stretch justify-center">
           <div className="dede-frame flex h-full w-full max-w-[54rem] p-1 sm:p-2">
             <div className="relative flex min-h-0 w-full">

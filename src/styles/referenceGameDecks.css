@@ -29,10 +29,12 @@
 .slot-reference-start { min-height:58px; margin-top:-12px; border:3px ridge hsl(var(--arcade-cream)); border-radius:20px; background:linear-gradient(hsl(var(--arcade-cream)/.8),hsl(var(--arcade-lime)) 45%,hsl(var(--slot-green-deep))); color:hsl(var(--arcade-cream)); text-shadow:0 2px 1px hsl(var(--slot-green-deep)); font-size:20px; box-shadow:inset 0 0 0 4px hsl(var(--arcade-lime)/.8),inset 0 7px 2px hsl(var(--slot-text)/.4); }
 
 .dede-reference-deck { position:relative; z-index:10; flex:none; color:hsl(var(--arcade-cream)); font-weight:900; padding:0 8px max(5px,env(safe-area-inset-bottom)); background:radial-gradient(ellipse at 50% 55%,hsl(var(--arcade-cream)),transparent 55%),repeating-linear-gradient(155deg,hsl(var(--arcade-gold)/.1) 0 3px,transparent 3px 9px),linear-gradient(hsl(var(--arcade-brass)),hsl(var(--arcade-cream)) 44%,hsl(var(--arcade-wood))); }
-.dede-reference-win { position:relative; display:flex; align-items:center; justify-content:center; gap:12px; height:43px; border:4px ridge hsl(var(--arcade-gold)); border-radius:20px; background:linear-gradient(hsl(var(--arcade-wine)),hsl(var(--arcade-plum))); box-shadow:inset 0 0 0 2px hsl(var(--arcade-pink)/.4); color:hsl(var(--arcade-gold)); text-shadow:0 2px hsl(var(--arcade-brass)); }
+.dede-reference-win { position:relative; display:flex; align-items:center; justify-content:center; gap:8px; width:52%; margin:0 auto; height:36px; border:4px ridge hsl(var(--arcade-gold)); border-radius:20px; background:linear-gradient(hsl(var(--arcade-wine)),hsl(var(--arcade-plum))); box-shadow:inset 0 0 0 2px hsl(var(--arcade-pink)/.4); color:hsl(var(--arcade-gold)); text-shadow:0 2px hsl(var(--arcade-brass)); }
 .dede-reference-win::before,.dede-reference-win::after { content:'❖'; position:absolute; top:8px; color:hsl(var(--arcade-gold)); font-size:21px; }
 .dede-reference-win::before { left:-7px; }.dede-reference-win::after { right:-7px; }
-.dede-reference-win > span { font-size:19px; }.dede-reference-win > strong { max-width:60%; font-size:31px; line-height:1; }
+.dede-reference-win > span { font-size:14px; }.dede-reference-win > strong { max-width:65%; font-size:22px; line-height:1; }
+/* Slot kazanç barı: kendi sütununda daraltılıp ortalanır. */
+.slot-reference-metrics .slot-reference-win { width:74%; justify-self:center; }
 .dede-reference-balance { display:flex; align-items:center; justify-content:center; gap:6px; width:48%; min-height:18px; margin:0 auto; border:2px ridge hsl(var(--arcade-gold)); border-top:0; border-radius:0 0 20px 20px; background:linear-gradient(hsl(var(--arcade-pink)),hsl(var(--arcade-violet))); font-size:11px; }
 .dede-reference-balance span { margin-left:6px; }
 .dede-reference-center { display:grid; grid-template-columns:1fr 1.5fr 1fr; gap:12px; align-items:end; padding:5px 3px 7px; }

@@ -19,5 +19,5 @@ export default function RocketWinOverlay({ game }) {
     seen.current.add(key);
     if (amount > 0) setPrize({ amount });
   }, [game.status, game.me, game.round, game.phase, game.bets]);
-  return <GameWinArtwork open={!!prize} amount={prize?.amount || 0} onAccept={() => setPrize(null)} />;
+  return <GameWinArtwork game="rocket" open={!!prize} amount={prize?.amount || 0} onAccept={() => setPrize(null)} />;
 }
