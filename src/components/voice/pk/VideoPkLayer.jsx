@@ -1,14 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { Track } from 'livekit-client';
-import { Gift, Loader2, Mic, MicOff, PhoneOff, UserPlus, Video, VideoOff, Volume2, VolumeX, WifiOff } from 'lucide-react';
+import { Loader2, Mic, MicOff, PhoneOff, UserPlus, Video, VideoOff, Volume2, VolumeX, WifiOff } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import useVideoPk from '@/hooks/useVideoPk';
 import usePkLiveKit from '@/hooks/usePkLiveKit';
 import PkFeedTile from '@/components/voice/pk/PkFeedTile';
 import PkScoreBar from '@/components/voice/pk/PkScoreBar';
 import PkInviteSheet from '@/components/videopk/PkInviteSheet';
-import PkGiftSheet from '@/components/videopk/PkGiftSheet';
-import formatCoinAmount from '@/components/voice/formatCoinAmount';
+
 
 const clock = (total) => `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
 const errorText = (error) => error?.response?.data?.error || error?.message || 'İşlem yapılamadı';
@@ -22,7 +21,6 @@ export default function VideoPkLayer({ open, onOpen, onClose, roomId, user, onOp
   const { toast } = useToast();
   const { active, invites, loaded, busy, run, ensureLobby } = useVideoPk(user, { poll: open });
   const [inviteOpen, setInviteOpen] = useState(false);
-  const [giftOpen, setGiftOpen] = useState(false);
   const [rivalMuted, setRivalMuted] = useState(false);
   const [now, setNow] = useState(Date.now());
   const openedRef = useRef(false);
@@ -131,16 +129,6 @@ export default function VideoPkLayer({ open, onOpen, onClose, roomId, user, onOp
     toast({ title: 'Davet reddedildi', description: `${invite.host_name || 'Kullanıcı'} bilgilendirilecek.` });
   };
 
-  const sendGift = async (gift) => {
-    if (!active?.id || !rival?.id) return;
-    try {
-      const data = await run('gift', { id: active.id, target_id: rival.id, gift_id: gift.id });
-      toast({ title: `${gift.name} gönderildi`, description: `Yeni bakiye: ${formatCoinAmount(data?.coins || 0)} coin` });
-    } catch (giftError) {
-      toast({ title: 'Hediye gönderilemedi', description: errorText(giftError), variant: 'destructive' });
-    }
-  };
-
   // PK'yi bitir: tur sunucuda sonuçlandırılır, kamera ve mikrofon serbest bırakılır,
   // oda olduğu gibi (koltuklar, sohbet, mikrofonlar) çalışmaya devam eder.
   const finishPk = async () => {
@@ -149,7 +137,6 @@ export default function VideoPkLayer({ open, onOpen, onClose, roomId, user, onOp
       await run('finish', { id, force: true }).catch(() => null);
       await run('leave', { id, end: true }).catch(() => null);
     }
-    setGiftOpen(false);
     setInviteOpen(false);
     onClose?.();
   };
@@ -259,23 +246,16 @@ export default function VideoPkLayer({ open, onOpen, onClose, roomId, user, onOp
             </div>
           </div>
 
-          {/* PK kontrolleri: mevcut şeridin üzerine binmez, kendi satırında durur. */}
+          {/* PK kontrolleri: mevcut şeridin üzerine binmez, kendi satırında durur.
+              Sağ altta tek kare düğme: PK daveti buradan gönderilir. */}
           <div className="mt-1.5 flex items-center gap-1.5">
             <button
               type="button"
-              onClick={() => setInviteOpen(true)}
-              disabled={paired || busy}
-              className="flex h-9 flex-1 items-center justify-center gap-1 rounded-xl bg-fuchsia-500 text-[11px] font-black text-white active:scale-[0.98] disabled:opacity-45"
+              onClick={finishPk}
+              disabled={busy}
+              className="flex h-9 flex-1 items-center justify-center gap-1 rounded-xl bg-white/12 text-[11px] font-black text-white active:scale-[0.98] disabled:opacity-45"
             >
-              <UserPlus className="h-3.5 w-3.5" /> Davet Et
-            </button>
-            <button
-              type="button"
-              onClick={() => setGiftOpen(true)}
-              disabled={!paired || busy}
-              className="flex h-9 flex-1 items-center justify-center gap-1 rounded-xl bg-amber-400 text-[11px] font-black text-black active:scale-[0.98] disabled:opacity-45"
-            >
-              <Gift className="h-3.5 w-3.5" /> Hediye
+              <PhoneOff className="h-3.5 w-3.5" /> Bitir
             </button>
             {incoming && (
               <button
@@ -288,11 +268,12 @@ export default function VideoPkLayer({ open, onOpen, onClose, roomId, user, onOp
             )}
             <button
               type="button"
-              onClick={finishPk}
-              disabled={busy}
-              className="flex h-9 items-center justify-center gap-1 rounded-xl bg-white/12 px-3 text-[11px] font-black text-white active:scale-[0.98] disabled:opacity-45"
+              onClick={() => setInviteOpen(true)}
+              disabled={paired || busy}
+              aria-label="PK davet et"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-fuchsia-500 text-white active:scale-[0.98] disabled:opacity-45"
             >
-              <PhoneOff className="h-3.5 w-3.5" /> Bitir
+              <UserPlus className="h-4 w-4" />
             </button>
           </div>
 
@@ -344,7 +325,6 @@ export default function VideoPkLayer({ open, onOpen, onClose, roomId, user, onOp
         onInvite={sendInvite}
         onOpenProfile={onOpenProfile}
       />
-      <PkGiftSheet open={giftOpen} onClose={() => setGiftOpen(false)} onSend={sendGift} busy={busy} />
     </>
   );
 }
