@@ -24,6 +24,7 @@ import VoiceViewerSheet from '@/components/voice/VoiceViewerSheet';
 import VoiceSeatInvitePrompt from '@/components/voice/VoiceSeatInvitePrompt';
 import RoomProfileSheet from '@/components/voice/RoomProfileSheet';
 import VoiceRoomMenu from '@/components/voice/VoiceRoomMenu';
+import VideoPkLayer from '@/components/voice/pk/VideoPkLayer';
 import VoiceSeatSheet from '@/components/voice/VoiceSeatSheet';
 import InviteSheet from '@/components/voice/InviteSheet';
 import MicPermissionGuide from '@/components/voice/MicPermissionGuide';
@@ -133,6 +134,8 @@ export default function VoiceRoom() {
   // Coin yetmediğinde hediye kutusu açılıp doğrudan coin yükleme ekranı gösterilir (sayaç sinyali).
   const [coinsRequest, setCoinsRequest] = useState(0);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  // Görüntülü PK: odanın üstünde açılıp kapanır, sayfadan çıkılmaz.
+  const [pkOpen, setPkOpen] = useState(false);
   const [micGuideDismissed, setMicGuideDismissed] = useState(false);
 
   const [logOpen, setLogOpen] = useState(false);
@@ -625,18 +628,8 @@ export default function VoiceRoom() {
     navigate('/');
   }, [id, seated, navigate]);
 
-  // Görüntülü PK ayrı bir sayfada çalışır: buradan çıkılırken sesli oda tamamen kapatılır.
-  // Koltuk sesleri kesilir, oda bağlantısı bırakılır; geri dönüldüğünde odaya yeniden girilir.
-  const openVideoPk = useCallback(async () => {
-    endRoomVisit(id);
-    joinedRef.current = false;
-    sawSelfRef.current = false;
-    setJoined(false);
-    if (getMinimizedRoom()?.id === id) clearMinimizedRoom();
-    if (seated) await base44.functions.invoke('voice-room', { action: 'seat-leave', room_id: id }).catch(() => {});
-    await base44.functions.invoke('room-presence', { action: 'leave', room_id: id }).catch(() => {});
-    navigate(`/goruntulu-pk?oda=${id}`);
-  }, [id, seated, navigate]);
+  // Görüntülü PK sayfadan ayrılmadan açılır: sesli oda, koltuklar ve mikrofonlar aynen çalışır.
+  const openVideoPk = useCallback(() => setPkOpen((value) => !value), []);
 
   // Odayı küçült: oda ve koltuk korunur, sağ alttaki balondan odalar gezilebilir.
   const minimizeRoom = useCallback(() => {
@@ -1224,6 +1217,16 @@ export default function VoiceRoom() {
           showMenu
         />
       </div>
+
+      {/* Görüntülü PK alanı odanın üstüne gömülür; koltuklar hemen altında aynen kalır. */}
+      <VideoPkLayer
+        open={pkOpen}
+        onOpen={() => setPkOpen(true)}
+        onClose={() => setPkOpen(false)}
+        roomId={id}
+        user={user}
+        onOpenProfile={openRoomProfile}
+      />
 
       <VoiceStage
         scrollRef={swipeGesture.scrollRef}

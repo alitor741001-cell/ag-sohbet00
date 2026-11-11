@@ -56,7 +56,7 @@ export default function PkFeedTile({
       {track && <VideoFeed track={track} mirror={mine} />}
 
       {!hasVideo && (
-        <span className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-gradient-to-b from-white/5 to-black/80 px-2 text-center">
+        <span className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-black bg-gradient-to-b from-white/5 to-black px-2 text-center">
           {avatar
             ? <img src={avatar} alt="" className="h-16 w-16 rounded-full object-cover ring-2 ring-white/40" />
             : <VideoOff className="h-8 w-8 text-white/35" />}

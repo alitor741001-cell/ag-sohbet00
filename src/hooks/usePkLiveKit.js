@@ -15,13 +15,20 @@ export default function usePkLiveKit({ matchId, enabled, selfId }) {
   const [error, setError] = useState('');
   const [camOn, setCamOn] = useState(true);
   const [micOn, setMicOn] = useState(true);
+  // Karşı tarafın kamera/mikrofon durumu: kapalıysa "Kamera kapalı" görünür.
+  const [remoteInfo, setRemoteInfo] = useState({ cameraEnabled: false, micEnabled: false });
   const roomRef = useRef(null);
 
   const scanRemote = useCallback((instance) => {
     if (!instance) return;
     const list = [];
+    let info = { cameraEnabled: false, micEnabled: false };
     instance.remoteParticipants?.forEach((participant, identity) => {
       if (!identity || identity === selfId) return;
+      info = {
+        cameraEnabled: participant.isCameraEnabled !== false && participant.getTrackPublication?.(Track.Source.Camera)?.isMuted !== true,
+        micEnabled: participant.isMicrophoneEnabled !== false,
+      };
       participant.trackPublications?.forEach((publication) => {
         if (publication.kind !== Track.Kind.Video) return;
         if (!publication.isSubscribed) {
@@ -33,6 +40,7 @@ export default function usePkLiveKit({ matchId, enabled, selfId }) {
       });
     });
     setRemoteTracks(list);
+    setRemoteInfo(info);
   }, [selfId]);
 
   // Bağlantı: maç ve kabul varsa kurulur, sayfadan çıkıldığında tamamen kapatılır.
@@ -41,10 +49,12 @@ export default function usePkLiveKit({ matchId, enabled, selfId }) {
       setStatus('idle');
       setLocalTrack(null);
       setRemoteTracks([]);
+      setRemoteInfo({ cameraEnabled: false, micEnabled: false });
       return undefined;
     }
 
     let cancelled = false;
+    let infoTimer = null;
     const instance = new Room({ adaptiveStream: true, dynacast: true });
     roomRef.current = instance;
     setStatus('connecting');
@@ -53,6 +63,7 @@ export default function usePkLiveKit({ matchId, enabled, selfId }) {
     const events = [
       RoomEvent.TrackSubscribed, RoomEvent.TrackUnsubscribed,
       RoomEvent.TrackPublished, RoomEvent.TrackUnpublished,
+      RoomEvent.TrackMuted, RoomEvent.TrackUnmuted,
       RoomEvent.ParticipantConnected, RoomEvent.ParticipantDisconnected,
       RoomEvent.Disconnected,
     ];
@@ -95,6 +106,8 @@ export default function usePkLiveKit({ matchId, enabled, selfId }) {
         await instance.localParticipant.setMicrophoneEnabled(true).catch(() => null);
         setMicOn(true);
         scanRemote(instance);
+        // Karşı taraf kamerasını/mikrofonunu kapatınca durum kısa sürede yansısın.
+        infoTimer = window.setInterval(() => scanRemote(instance), 2500);
       } catch (connectError) {
         if (cancelled) return;
         setStatus('error');
@@ -104,6 +117,7 @@ export default function usePkLiveKit({ matchId, enabled, selfId }) {
 
     return () => {
       cancelled = true;
+      if (infoTimer) window.clearInterval(infoTimer);
       events.forEach((event) => instance.off?.(event, event === RoomEvent.Disconnected ? onDisconnected : onTracks));
       try { instance.disconnect(); } catch (disconnectError) { /* bağlantı zaten kapalı */ }
       roomRef.current = null;
@@ -135,5 +149,5 @@ export default function usePkLiveKit({ matchId, enabled, selfId }) {
     roomRef.current?.startAudio?.().catch(() => {});
   }, []);
 
-  return { room, localTrack, remoteTracks, status, error, camOn, setCameraEnabled, micOn, setMicEnabled, startAudio };
+  return { room, localTrack, remoteTracks, remoteInfo, status, error, camOn, setCameraEnabled, micOn, setMicEnabled, startAudio };
 }

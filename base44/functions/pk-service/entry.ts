@@ -319,8 +319,9 @@ export default async function (req) {
       // Aynı maç ikinci kez işlenmez: seri yanlışlıkla artmaz.
       if (match.settled) return Response.json({ match });
       // Sonucu önce yayını açan taraf yazar; karşı taraf 4 saniye sonra devreye girer.
+      // "PK'yi Bitir" ile açıkça kapatıldığında (force) iki taraf da sonucu hemen yazabilir.
       const endsAt = match.ends_at ? new Date(match.ends_at).getTime() : 0;
-      if (match.host_id !== user.id && endsAt && Date.now() < endsAt + 4000) {
+      if (body.force !== true && match.host_id !== user.id && endsAt && Date.now() < endsAt + 4000) {
         return Response.json({ match });
       }
 

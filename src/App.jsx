@@ -28,7 +28,6 @@ const CreateRoom = lazy(() => import('@/pages/CreateRoom'));
 const VoiceRoomCreate = lazy(() => import('@/pages/VoiceRoomCreate'));
 const VoiceRoom = lazy(() => import('@/pages/VoiceRoom'));
 // Görüntülü PK sesli odadan bağımsız kendi tam ekran sayfasında çalışır.
-const VideoPkPage = lazy(() => import('@/pages/VideoPkPage'));
 const AgencyPage = lazy(() => import('@/pages/AgencyPage'));
 const Support = lazy(() => import('@/pages/SupportEntry'));
 const Notifications = lazy(() => import('@/pages/Notifications'));
@@ -153,8 +152,8 @@ const AuthenticatedApp = () => {
           <Route path="/odeme/basarisiz" element={<Navigate to="/" replace />} />
           <Route path="/bakim" element={<MaintenanceMode />} />
         </Route>
-        {/* Görüntülü PK: alt menü ve oda katmanları olmadan tam ekran açılır. */}
-        <Route path="/goruntulu-pk" element={<VideoPkPage />} />
+        {/* Görüntülü PK artık sesli odanın içinde açılır: eski tam ekran bağlantıları odaya döner. */}
+        <Route path="/goruntulu-pk" element={<Navigate to="/" replace />} />
         <Route path="/admin" element={<AdminLayout />}>
           {/* Dashboard kaldırıldı: panel doğrudan kullanıcı yönetimiyle açılır.
               Roller ve Çerçeveler sayfası da kaldırıldı: eski bağlantılar buraya düşer. */}

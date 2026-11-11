@@ -13,7 +13,7 @@ export const videoLobbyId = (userId) => `video-${userId}`;
  * Görüntülü PK oturumu: kişinin kendi lobisi, gelen davetler ve kabul edilmiş maç.
  * Kayıt değiştiğinde herkes aynı durumu görür (realtime + yedek yoklama).
  */
-export default function useVideoPk(user) {
+export default function useVideoPk(user, { poll = true } = {}) {
   const [lobby, setLobby] = useState(null);
   const [lastHosted, setLastHosted] = useState(null);
   const [joined, setJoined] = useState(null);
@@ -22,6 +22,8 @@ export default function useVideoPk(user) {
   const [loaded, setLoaded] = useState(false);
   const [busy, setBusy] = useState(false);
   const lobbyRef = useRef(null);
+  // Kabul edilmiş maç: yeni lobi açılmaz, yoksa maç kapanırdı.
+  const joinedRef = useRef(null);
 
   const load = useCallback(async () => {
     if (!user?.id) return;
@@ -49,7 +51,9 @@ export default function useVideoPk(user) {
     setLastHosted(latest);
     const guestList = guestRows?.items?.filter((row) => row.guest_id === user.id) || [];
     // Turdan kendi ayrılan kişi aynı maça geri bağlanmaz: yeni davet kabul edilince eşleşir.
-    setJoined(guestList.find((row) => row.accepted && row.status === 'live' && row.left_id !== user.id) || null);
+    const activeJoined = guestList.find((row) => row.accepted && row.status === 'live' && row.left_id !== user.id) || null;
+    joinedRef.current = activeJoined;
+    setJoined(activeJoined);
     setLastGuest(guestList[0] || null);
     setInvites((incoming?.items || []).filter((row) => row.guest_id === user.id));
     setLoaded(true);
@@ -59,11 +63,14 @@ export default function useVideoPk(user) {
     if (!user?.id) return undefined;
     load().catch(() => null);
     const off = subscribeEntity('PkMatch', () => { load().catch(() => null); });
-    const timer = window.setInterval(() => {
-      if (document.visibilityState !== 'hidden') load().catch(() => null);
-    }, 4000);
-    return () => { off?.(); window.clearInterval(timer); };
-  }, [user?.id, load]);
+    // Yedek yoklama yalnızca PK alanı açıkken çalışır: odadaki herkesi yormaz.
+    const timer = poll
+      ? window.setInterval(() => {
+        if (document.visibilityState !== 'hidden') load().catch(() => null);
+      }, 5000)
+      : null;
+    return () => { off?.(); if (timer) window.clearInterval(timer); };
+  }, [user?.id, load, poll]);
 
   const run = useCallback(async (action, payload = {}) => {
     setBusy(true);
@@ -76,12 +83,19 @@ export default function useVideoPk(user) {
     }
   }, [load]);
 
-  // Sayfaya girildiğinde kişinin kendi tek kameralı lobisi açılır; davet bu lobiye düşer.
-  const ensureLobby = useCallback(async () => {
+  // Görüntülü PK alanı açıldığında kişinin tek kameralı lobisi açılır; davet bu lobiye düşer.
+  // Başka odadan kalan bir lobi varsa kapatılır: aynı anda iki oturum açık kalmaz.
+  const ensureLobby = useCallback(async (roomId) => {
     if (!user?.id) return null;
-    if (lobbyRef.current?.status === 'live') return lobbyRef.current;
+    // Kabul edilmiş bir maç varsa yeni lobi açılmaz: maçın kendisi bu ekranda oynanır.
+    if (joinedRef.current) return joinedRef.current;
+    const current = lobbyRef.current;
+    if (current && current.status !== 'ended' && (!roomId || current.room_id === roomId)) return current;
+    if (current && current.status !== 'ended' && roomId && current.room_id !== roomId) {
+      await pkApi('leave', { id: current.id, end: true }).catch(() => null);
+    }
     const data = await pkApi('broadcast', {
-      room_id: videoLobbyId(user.id),
+      room_id: roomId || videoLobbyId(user.id),
       room_name: user.full_name || 'Görüntülü PK',
       mode: 'video',
     });
