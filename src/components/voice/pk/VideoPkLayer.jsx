@@ -21,6 +21,9 @@ export default function VideoPkLayer({ open, onOpen, onClose, roomId, user, onOp
   const { toast } = useToast();
   const { active, invites, loaded, busy, run, ensureLobby } = useVideoPk(user, { poll: open });
   const [inviteOpen, setInviteOpen] = useState(false);
+  // Boş alana dokununca PK kazara bitmez: Bitir iki dokunuşla çalışır.
+  const [confirmFinish, setConfirmFinish] = useState(false);
+  const confirmTimerRef = useRef(0);
   const [rivalMuted, setRivalMuted] = useState(false);
   const [now, setNow] = useState(Date.now());
   const openedRef = useRef(false);
@@ -157,6 +160,8 @@ export default function VideoPkLayer({ open, onOpen, onClose, roomId, user, onOp
   // PK'yi bitir: tur sunucuda sonuçlandırılır, kamera ve mikrofon serbest bırakılır,
   // oda olduğu gibi (koltuklar, sohbet, mikrofonlar) çalışmaya devam eder.
   const finishPk = async () => {
+    window.clearTimeout(confirmTimerRef.current);
+    setConfirmFinish(false);
     const id = active?.id;
     const hadRival = !!active?.guest_id;
     if (id) {
@@ -283,7 +288,12 @@ export default function VideoPkLayer({ open, onOpen, onClose, roomId, user, onOp
                   <p className="text-[9.5px] font-bold text-amber-300">Tur bitti</p>
                 </div>
               ) : (
-                <div className="flex h-full flex-col items-center justify-center gap-1.5 px-2 text-center">
+                // Rakip karesine dokununca davet sayfası açılır.
+                <button
+                  type="button"
+                  onClick={() => setInviteOpen(true)}
+                  className="flex h-full w-full flex-col items-center justify-center gap-1.5 px-2 text-center active:scale-[0.99]"
+                >
                   <span className="flex h-9 w-9 items-center justify-center rounded-full bg-fuchsia-500/15 ring-1 ring-fuchsia-400/40">
                     <UserPlus className="h-4 w-4 text-fuchsia-300" />
                   </span>
@@ -291,7 +301,7 @@ export default function VideoPkLayer({ open, onOpen, onClose, roomId, user, onOp
                   <p className="text-[9.5px] leading-snug text-white/50">
                     {pendingInvite
                       ? `${pendingInvite.guest_name || 'Davet edilen kişi'} · yanıt bekleniyor`
-                      : 'Davet Et ile birini çağır'}
+                      : 'Davet için buraya dokun'}
                   </p>
                   {status === 'connecting' && (
                     <p className="flex items-center gap-1 text-[9px] font-semibold text-white/45">
@@ -303,7 +313,7 @@ export default function VideoPkLayer({ open, onOpen, onClose, roomId, user, onOp
                       <WifiOff className="h-2.5 w-2.5" /> Bağlantı kesildi
                     </p>
                   )}
-                </div>
+                </button>
               )}
             </div>
           </div>
@@ -316,7 +326,7 @@ export default function VideoPkLayer({ open, onOpen, onClose, roomId, user, onOp
             </p>
           )}
 
-          {/* Kontroller karelerin hemen altında ayrı satırda durur: Bitir solda, davet sağda.
+          {/* Kontroller karelerin hemen altında ayrı satırda durur.
               Tur bittiyse yerine Rövanş ve Kapat çıkar. */}
           <div className="mt-1.5 flex items-center gap-1.5">
             {finishedMatch ? (
@@ -340,32 +350,36 @@ export default function VideoPkLayer({ open, onOpen, onClose, roomId, user, onOp
               </>
             ) : (
               <>
+                {/* Bitir belirgin kırmızı durur; kazara bitmemesi için iki dokunuş ister. */}
                 <button
                   type="button"
-                  onClick={finishPk}
+                  onClick={() => {
+                    if (!confirmFinish) {
+                      setConfirmFinish(true);
+                      window.clearTimeout(confirmTimerRef.current);
+                      confirmTimerRef.current = window.setTimeout(() => setConfirmFinish(false), 4000);
+                      return;
+                    }
+                    finishPk();
+                  }}
                   disabled={busy}
-                  className="flex h-9 flex-1 items-center justify-center gap-1 rounded-xl bg-white/14 text-[11px] font-black text-white active:scale-[0.98] disabled:opacity-45"
+                  className={`flex h-10 flex-1 items-center justify-center gap-1.5 rounded-xl text-[11.5px] font-black text-white transition active:scale-[0.98] disabled:opacity-45 ${
+                    confirmFinish
+                      ? 'bg-rose-600 ring-2 ring-rose-300'
+                      : 'bg-gradient-to-r from-rose-600 to-red-500 shadow-[0_8px_22px_-8px_rgba(244,63,94,0.95)]'
+                  }`}
                 >
-                  <PhoneOff className="h-3.5 w-3.5" /> Bitir
+                  <PhoneOff className="h-4 w-4" /> {confirmFinish ? 'Bitirmek için tekrar dokun' : 'PK’yi Bitir'}
                 </button>
                 {incoming && (
                   <button
                     type="button"
                     onClick={() => acceptInvite(incoming)}
-                    className="flex h-9 items-center gap-1 rounded-xl bg-emerald-500 px-2.5 text-[11px] font-black text-black active:scale-[0.98]"
+                    className="flex h-10 items-center gap-1 rounded-xl bg-emerald-500 px-2.5 text-[11px] font-black text-black active:scale-[0.98]"
                   >
                     Gelen davet
                   </button>
                 )}
-                <button
-                  type="button"
-                  onClick={() => setInviteOpen(true)}
-                  disabled={paired || busy}
-                  aria-label="PK davet et"
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-fuchsia-500 text-white active:scale-[0.98] disabled:opacity-45"
-                >
-                  <UserPlus className="h-4 w-4" />
-                </button>
               </>
             )}
           </div>
