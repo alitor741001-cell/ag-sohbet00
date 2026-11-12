@@ -1,0 +1,31 @@
+/* Konsol butonları oyunun arka plan temasıyla aynı renk ailesini kullanır:
+   her oyun kendi --deck-tone / --deck-surface / --deck-edge değerleriyle boyanır. */
+.sfz-deck[data-console-theme] {
+  --btn-tone: var(--deck-tone, var(--arcade-violet));
+  --btn-surface: var(--deck-surface, var(--arcade-plum));
+  --btn-edge: var(--deck-edge, var(--arcade-pink));
+}
+.sfz-deck[data-console-theme] .sfz-bet-side,
+.sfz-deck[data-console-theme] .sfz-max-pill {
+  color: hsl(var(--slot-text));
+  border-color: hsl(var(--btn-edge) / .75);
+  background: linear-gradient(180deg, hsl(var(--btn-tone) / .85), hsl(var(--btn-surface) / .9));
+  box-shadow: inset 0 1px 2px hsl(var(--slot-text) / .35), 0 0 10px hsl(var(--btn-edge) / .35);
+}
+.sfz-deck[data-console-theme] .sfz-auto-btn {
+  color: hsl(var(--slot-text));
+  text-shadow: 0 1px 2px hsl(var(--slot-bg) / .8);
+  border-color: hsl(var(--btn-edge) / .85);
+  background: linear-gradient(180deg, hsl(var(--btn-edge) / .9) 0%, hsl(var(--btn-tone) / .9) 60%, hsl(var(--btn-surface) / .95) 100%);
+  box-shadow: inset 0 3px 4px hsl(var(--slot-text) / .35), inset 0 -3px 6px hsl(var(--slot-bg) / .5), 0 0 14px hsl(var(--btn-edge) / .45);
+}
+.sfz-deck[data-console-theme] .sfz-auto-btn.is-active {
+  box-shadow: 0 0 0 2px hsl(var(--slot-green)), 0 0 16px hsl(var(--slot-green) / .85), inset 0 3px 4px hsl(var(--slot-text) / .35);
+}
+.sfz-deck[data-console-theme] .sfz-spin-btn:not(.is-stop) {
+  color: hsl(var(--slot-text));
+  text-shadow: 0 2px 2px hsl(var(--slot-bg) / .7);
+  border-color: hsl(var(--btn-edge));
+  background: radial-gradient(circle at 50% 25%, hsl(var(--btn-edge)) 0%, hsl(var(--btn-tone)) 55%, hsl(var(--btn-surface)) 100%);
+  box-shadow: inset 0 4px 6px hsl(var(--slot-text) / .4), inset 0 -5px 10px hsl(var(--slot-bg) / .55), 0 0 18px hsl(var(--btn-edge) / .55);
+}

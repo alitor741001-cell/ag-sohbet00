@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef } from 'react';
 import { Lock } from 'lucide-react';
 import VoiceSeatGrid from '@/components/voice/VoiceSeatGrid';
+import FitSeatsToHeight from '@/components/voice/FitSeatsToHeight';
 import VoiceBoardTimer from '@/components/voice/VoiceBoardTimer';
 import HiddenUserMarquee from '@/components/voice/HiddenUserMarquee';
 import { useSize } from '@/hooks/use-size';
@@ -82,7 +83,9 @@ export default function VoiceStage({ scrollRef, handlers, room, hiddenAnnounce, 
               böylece alttaki koltukların rakam şeritleri kırpılmaz. */}
           <div ref={areaRef} className="flex w-full min-h-0 flex-1 flex-col items-center">
             <div ref={gridBoxRef} className="flex w-full flex-col items-center">
-              <VoiceSeatGrid {...grid} maxHeight={gridMaxHeight} />
+              <FitSeatsToHeight maxHeight={gridMaxHeight}>
+                <VoiceSeatGrid {...grid} maxHeight={gridMaxHeight} />
+              </FitSeatsToHeight>
             </div>
           </div>
           <HiddenUserMarquee active={hiddenAnnounce.active} name={hiddenAnnounce.name} />

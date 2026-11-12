@@ -3,6 +3,7 @@ import { ChevronRight, Minus, Plus } from 'lucide-react';
 import FitGameText from '@/components/games/controls/FitGameText';
 import compactCoins from '@/lib/compactCoins';
 import './slotFrenzy.css';
+import './themedDeckButtons.css';
 import '@/components/games/controls/matchingSlotDeck.css';
 
 const format = (value) => new Intl.NumberFormat('tr-TR').format(Math.max(0, Math.round(value || 0)));
