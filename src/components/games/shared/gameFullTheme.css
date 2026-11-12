@@ -32,5 +32,5 @@
 }
 .game-controls-themed.game-controls-themed[data-game] .matched-slot-console .sfz-cat-count {
   min-width: 2.2rem;
-  font-size: 14px;
+  font-size: clamp(15px, 4.4vw, 19px);
 }

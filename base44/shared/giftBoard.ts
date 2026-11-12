@@ -55,7 +55,7 @@ const withProfiles = async (base44: any, entries: any[]) => {
     const hidden = isHiddenUser(profile);
     return {
       ...entry,
-      name: hidden ? hiddenDisplayName(profile) : (profile?.username || profile?.full_name || entry.name || 'Kullanıcı'),
+      name: hidden ? hiddenDisplayName(profile) : (profile?.username || entry.name || 'Kullanıcı'),
       avatar: hidden ? HIDDEN_AVATAR_URL : (profile?.avatar || ''),
       hidden,
     };

@@ -21,7 +21,7 @@ export async function rocketProfiles(base44, rows) {
   return rows.map(row => {
     const person = map.get(row.user_id);
     const hidden = isHiddenUser(person);
-    return { ...row, name: hidden ? hiddenDisplayName(person) : person?.username || person?.full_name || 'Kullanıcı', avatar: hidden ? HIDDEN_AVATAR_URL : person?.avatar || '', unavailable: !person };
+    return { ...row, name: hidden ? hiddenDisplayName(person) : person?.username || 'Kullanıcı', avatar: hidden ? HIDDEN_AVATAR_URL : person?.avatar || '', unavailable: !person };
   });
 }
 

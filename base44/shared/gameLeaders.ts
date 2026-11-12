@@ -41,10 +41,17 @@ export async function loadLeaders(base44, game) {
     db.filter({ game, period: week }, '-won', LIST_SIZE),
     base44.asServiceRole.entities.GameWallet.filter({ [field]: { $gt: 0 } }, `-${field}`, LIST_SIZE),
   ]);
+  // Günlük, haftalık ve toplam listede herkes uygulamadaki kullanıcı adıyla görünür.
+  const ids = [...new Set([...today, ...weekly, ...wallets].map((row) => row.user_id).filter(Boolean))];
   const people = await base44.asServiceRole.entities.User
-    .filter({ id: { $in: wallets.map((wallet) => wallet.user_id) } })
+    .filter({ id: { $in: ids } })
     .catch(() => []);
   const byId = new Map(people.map((person) => [person.id, person]));
+  const named = (row) => {
+    const entry = view(row);
+    const person = byId.get(row.user_id);
+    return { ...entry, name: person?.username || entry.name, avatar: person?.avatar || entry.avatar };
+  };
   const total = wallets.map((wallet) => {
     const person = byId.get(wallet.user_id);
     return {
@@ -54,5 +61,5 @@ export async function loadLeaders(base44, game) {
       won: wallet[field] ?? 0,
     };
   });
-  return { today: today.map(view), week: weekly.map(view), total };
+  return { today: today.map(named), week: weekly.map(named), total };
 }
