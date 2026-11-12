@@ -20,6 +20,8 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
   const measured = useSize(wrapRef);
   const width = measured?.width || 360;
   const rows = useMemo(() => responsiveSeatRows(seats.length, width), [seats.length, width]);
+  // En kalabalık satır tam genişliğe yayılır; kalan satırlar ortalanır.
+  const widestRow = useMemo(() => rows.reduce((max, row) => Math.max(max, row.length), 1), [rows]);
   const onSeatClick = useCallback((index) => onSelectSeat(index), [onSelectSeat]);
   // Kapasite değişince koltuk boyutu değişmez; yalnızca satır sayısı değişir.
   const size = width >= 640 ? 'lg' : 'md';
@@ -71,7 +73,7 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
       <div className="flex w-full flex-col items-center" style={{ rowGap }}>
         {rows.map((row, rowIndex) => (
           <div key={rowIndex} className="flex w-full flex-col gap-1">
-            <div className={`flex w-full items-start ${row.length === 1 ? 'justify-center' : 'justify-start'}`} style={{ columnGap: gap }}>
+            <div className={`flex w-full items-start ${row.length >= 3 && row.length === widestRow ? 'justify-between' : 'justify-center'}`} style={{ columnGap: gap }}>
               {row.map((index) => {
                 const seat = seats[index];
                 const occupied = !!seat?.user_id;
@@ -106,6 +108,8 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
           </div>
         ))}
       </div>
+      {/* Normal PK açıkken "Başlat" barı her koltuk sayısında görünür. */}
+      {teamPkFooter}
     </div>
   );
 }

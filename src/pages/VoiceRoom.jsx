@@ -1335,7 +1335,7 @@ export default function VoiceRoom() {
           scores,
           accent: seatAccent,
           gifted,
-          teamPkFooter: teamPk.match && seats.length === 9
+          teamPkFooter: teamPk.match
             ? <TeamPkBar match={teamPk.match} canMod={canMod} onRestart={() => startTeamPk(true)} onStop={stopTeamPk} />
             : null,
           teamPkMatch: teamPk.match,

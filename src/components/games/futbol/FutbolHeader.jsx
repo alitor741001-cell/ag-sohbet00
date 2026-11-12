@@ -11,25 +11,6 @@ export default function FutbolHeader({ roundNo, sound, onSound, onMenu, onCoins,
         <button type="button" onClick={onBack} aria-label="Oyun listesine dön" className="gctl-pill gctl-icon">
           <ChevronLeft className="h-5 w-5" />
         </button>
-        <button
-          type="button"
-          onClick={onSound}
-          aria-label={sound ? 'Sesi kapat' : 'Sesi aç'}
-          className={`gctl-pill gctl-icon ${sound ? 'gctl-pill-on' : ''}`}
-        >
-          {sound ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
-        </button>
-
-        {/* Nasıl oynanır: oyunun kural menüsünü açar. */}
-        <button
-          type="button"
-          onClick={onMenu}
-          aria-label="Nasıl oynanır"
-          className="gctl-pill gctl-icon"
-        >
-          <HelpCircle className="h-5 w-5" />
-        </button>
-
         <button type="button" onClick={onMenu} aria-label="Nasıl oynanır" className="fut-brand">
           <Image src={FUTBOL_LOGO} alt="" aria-hidden="true" className="fut-logo" fittingType="fill" quality={80} />
           <span className="fut-brand-text">
@@ -42,6 +23,24 @@ export default function FutbolHeader({ roundNo, sound, onSound, onMenu, onCoins,
           <Coins className="h-5 w-5" />
         </button>
 
+        {/* Ses ve yardım düğmeleri sağ uçta: çentiğin altında kalmaz. */}
+        <button
+          type="button"
+          onClick={onSound}
+          aria-label={sound ? 'Sesi kapat' : 'Sesi aç'}
+          className={`gctl-pill gctl-icon ${sound ? 'gctl-pill-on' : ''}`}
+        >
+          {sound ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
+        </button>
+
+        <button
+          type="button"
+          onClick={onMenu}
+          aria-label="Nasıl oynanır"
+          className="gctl-pill gctl-icon"
+        >
+          <HelpCircle className="h-5 w-5" />
+        </button>
       </div>
 
       <p className="fut-round">MEVCUT TUR {roundNo}</p>

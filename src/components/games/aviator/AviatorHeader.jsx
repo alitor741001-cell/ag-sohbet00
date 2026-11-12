@@ -8,7 +8,7 @@ import { format } from '../rocket/rocketConfig';
 /** Üst bar: logo, tıklanabilir coin bakiyesi, ? yardım ve menü (ses dahil). */
 export default function AviatorHeader({ coins, sound, onCoins, onBack, onExit, onLedger, onHelp }) {
   return (
-    <header className="av-header flex items-center gap-2 px-3 pb-2 pt-[max(0.6rem,env(safe-area-inset-top))]">
+    <header className="av-header flex items-center gap-2 pb-2 pl-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))] pt-[max(0.6rem,env(safe-area-inset-top))]">
       {(onBack || onExit) && (
         <GameIconButton label="Geri" onClick={onBack || onExit}>
           <ChevronLeft className="h-4 w-4" />

@@ -29,21 +29,13 @@ export default function SlotFrenzyHeader({
 
       {/* Üst kemer: SLOT FRENZY başlığı ve sol/sağ yuvarlak butonlar */}
       <div className="sfz-top-row">
-        <div className="sfz-left-orbs">
-          <button
-            type="button"
-            onClick={onHelp}
-            aria-label="Nasıl oynanır"
-            className="sfz-round-btn"
-          >
-            <HelpCircle className="h-5 w-5" strokeWidth={2.8} />
-          </button>
-        </div>
+        <div className="sfz-left-orbs" />
 
         <div className="sfz-arch">
           <span className="sfz-brand-text">SLOT</span>
         </div>
 
+        {/* Yardım ve ses düğmeleri her oyunda sağ üstte durur. */}
         <div className="sfz-right-orbs">
           <button
             type="button"
@@ -52,6 +44,14 @@ export default function SlotFrenzyHeader({
             className="sfz-round-btn"
           >
             {sound ? <Volume2 className="h-5 w-5" strokeWidth={2.6} /> : <VolumeX className="h-5 w-5" strokeWidth={2.6} />}
+          </button>
+          <button
+            type="button"
+            onClick={onHelp}
+            aria-label="Nasıl oynanır"
+            className="sfz-round-btn"
+          >
+            <HelpCircle className="h-5 w-5" strokeWidth={2.8} />
           </button>
         </div>
       </div>
