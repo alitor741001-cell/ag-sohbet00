@@ -6,6 +6,10 @@ import '@/styles/gameControlThemes.css';
 import '@/components/games/controls/slotStyleControls.css';
 import { DEDE_ID, ELIMIN_ID, FRUIT_ID, FUTBOL_ID, GAMES, OKEY_CLASSIC_ID, OKEY_ID, ROCKET_ID, ROULETTE_ID, SEKERLI_MEYVE_ID, SLOT_ID } from '@/components/games/gameCatalog';
 import GameLeaderBadge from '@/components/games/leaders/GameLeaderBadge';
+import '@/components/games/controls/premiumDeck.css';
+
+// Yeni şık alt butonları kullanan oyunlar.
+const PREMIUM_DECK = [DEDE_ID, ELIMIN_ID, SEKERLI_MEYVE_ID, FRUIT_ID, ROULETTE_ID];
 
 // Kazanan listesi tutulan oyunlar ve sunucudaki adları.
 const LEADER_KEYS = {
@@ -52,7 +56,7 @@ function GameLoader({ selected, attempt, ...props }) {
 export default function GameContent({ selected, onExit, onBack, roomId }) {
   const variant = selected === OKEY_CLASSIC_ID ? 'okey' : 'okey101';
   return (
-    <div className="game-controls-themed game-slot-controls relative h-full w-full" data-game={selected}>
+    <div className="game-controls-themed game-slot-controls relative h-full w-full" data-game={selected} data-premium-deck={PREMIUM_DECK.includes(selected) ? '' : undefined}>
       <GameErrorBoundary key={selected} onExit={onExit}>
         {(attempt) => (
           <GameLoader selected={selected} attempt={attempt} onExit={onExit} onBack={onBack} roomId={roomId} variant={variant} />

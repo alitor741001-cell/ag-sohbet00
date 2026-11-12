@@ -12,6 +12,13 @@
   background: linear-gradient(180deg, #1a1206 0%, #050302 55%, #120c04 100%);
   box-shadow: inset 0 0 0 1px #6b3a05, inset 0 2px 6px rgba(0, 0, 0, 0.9), 0 0 10px -2px rgba(255, 200, 80, 0.7);
   cursor: pointer;
+  container-type: inline-size;
+}
+/* Dar sütunda jeton küçülür ve ok gizlenir: rakam büyük ve okunur kalır. */
+@container (max-width: 130px) {
+  .gold-coin-bar-coin { height: 24px; margin: 0 0 0 2px; border-width: 1.5px; }
+  .gold-coin-bar-arrow { display: none; }
+  .gold-coin-bar-count { padding-inline: 3px 2px; font-size: 17px; }
 }
 .gold-coin-bar:active { filter: brightness(1.35); }
 .gold-coin-bar-coin {

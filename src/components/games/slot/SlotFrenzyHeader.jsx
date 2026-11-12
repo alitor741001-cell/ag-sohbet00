@@ -13,7 +13,7 @@ export default function SlotFrenzyHeader({
   onHelp,
   onSound,
 }) {
-  const tickerHeight = TICKER_ROW_HEIGHT * (compact ? 2 : 3);
+  const tickerHeight = TICKER_ROW_HEIGHT * (compact ? 3 : 5);
   const jackpot = format(pools?.jackpot ?? 26978691);
   const colossal = format(pools?.xmega ?? 18885084);
   const mega = format(pools?.mega ?? 4046804);

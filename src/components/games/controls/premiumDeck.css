@@ -1,0 +1,114 @@
+/* AG premium alt butonlar: koyu cam yüzey, ince altın kenar, kırmızı neon SPIN.
+   Dede, Elimin Slot, Şekerli Meyve, Meyve ve Rulet aynı şık konsol dilini kullanır;
+   butonların yaptığı işler değişmez, yalnız görünüm yenilenir. */
+.game-slot-controls.game-controls-themed.game-controls-themed[data-game][data-premium-deck] {
+  --pd-glass: linear-gradient(180deg, hsl(var(--anthracite-raised) / .92), hsl(var(--anthracite) / .96));
+  --pd-gold: linear-gradient(180deg, hsl(var(--premium-gold-light)), hsl(var(--premium-gold)) 55%, hsl(var(--premium-gold-deep)));
+  --pd-red: radial-gradient(circle at 50% 22%, hsl(0 95% 72%) 0%, hsl(var(--premium-red)) 48%, hsl(var(--premium-red-deep)) 100%);
+  --pd-rim: hsl(var(--premium-gold) / .75);
+  --pd-shadow: 0 6px 14px -6px rgba(0, 0, 0, .9), inset 0 1px 0 hsl(var(--premium-gold-light) / .35);
+}
+
+/* Yuvalar: bahis kapsülü, metrik kutuları, toplam bahis ve konsol zeminleri. */
+.game-slot-controls.game-controls-themed.game-controls-themed[data-game][data-premium-deck] :is(.sfz-bet-capsule, .sfz-metric-well, .dede-reference-bet, .dede-reference-win) {
+  border: 1.5px solid var(--pd-rim);
+  background: hsl(var(--anthracite) / .72);
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, .85), 0 0 12px -4px hsl(var(--premium-gold) / .6);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.game-slot-controls.game-controls-themed.game-controls-themed[data-game][data-premium-deck] :is(.dede-reference-win, .dede-reference-spin)::before,
+.game-slot-controls.game-controls-themed.game-controls-themed[data-game][data-premium-deck] :is(.dede-reference-win, .dede-reference-spin)::after { content: none; }
+.game-slot-controls.game-controls-themed.game-controls-themed[data-game][data-premium-deck] :is(.dede-reference-deck, .rl2-footer-bar) {
+  border: 1px solid hsl(var(--premium-gold) / .35);
+  background: linear-gradient(180deg, hsl(var(--anthracite) / .55), hsl(var(--anthracite) / .88));
+  box-shadow: inset 0 1px 0 hsl(var(--premium-gold) / .2), 0 -8px 24px -14px hsl(var(--premium-red) / .7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Yazılar: altın ve okunaklı. */
+.game-slot-controls.game-controls-themed.game-controls-themed[data-game][data-premium-deck] :is(.sfz-bet-val, .sfz-metric-pink, .sfz-metric-gold) {
+  background: linear-gradient(180deg, #fff7d6, hsl(var(--premium-gold-light)) 55%, hsl(var(--premium-gold)));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, .8));
+}
+.game-slot-controls.game-controls-themed.game-controls-themed[data-game][data-premium-deck] :is(.sfz-bet-label, .sfz-metric-label, .dede-reference-bet > span, .dede-reference-win > span) {
+  color: hsl(var(--premium-gold-light) / .85);
+  letter-spacing: .12em;
+}
+.game-slot-controls.game-controls-themed.game-controls-themed[data-game][data-premium-deck] :is(.dede-reference-bet > strong, .dede-reference-win > strong) { color: hsl(var(--premium-gold-light)); }
+
+/* Küçük düğmeler: koyu cam, altın ikon (artı/eksi, temizle). */
+.game-slot-controls.game-controls-themed.game-controls-themed[data-game][data-premium-deck] :is(.sfz-bet-side, .dede-reference-step, .rl2-clear) {
+  border: 1.5px solid var(--pd-rim);
+  color: hsl(var(--premium-gold-light));
+  background: var(--pd-glass);
+  box-shadow: var(--pd-shadow);
+  text-shadow: none;
+}
+
+/* MAX: dolu altın hap. */
+.game-slot-controls.game-controls-themed.game-controls-themed[data-game][data-premium-deck] :is(.sfz-max-pill, .dede-reference-max) {
+  border: 1.5px solid hsl(var(--premium-gold-light));
+  border-radius: 9999px;
+  color: hsl(var(--anthracite));
+  background: var(--pd-gold);
+  box-shadow: 0 0 12px -2px hsl(var(--premium-gold) / .8), inset 0 1px 0 rgba(255, 255, 255, .7);
+  font-weight: 900;
+  letter-spacing: .12em;
+  text-shadow: none;
+}
+
+/* AUTO / Otomatik / Satın al: altın kenarlı koyu cam, açıkken yeşil ışık. */
+.game-slot-controls.game-controls-themed.game-controls-themed[data-game][data-premium-deck] :is(.sfz-auto-btn, .dede-reference-auto, .dede-reference-buy) {
+  border: 1.5px solid var(--pd-rim);
+  border-radius: 16px;
+  color: hsl(var(--premium-gold-light));
+  background: var(--pd-glass);
+  box-shadow: var(--pd-shadow), 0 0 14px -6px hsl(var(--premium-gold) / .8);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .8);
+  letter-spacing: .06em;
+}
+.game-slot-controls.game-controls-themed.game-controls-themed[data-game][data-premium-deck] .dede-reference-buy > strong { color: hsl(var(--slot-text)); }
+.game-slot-controls.game-controls-themed.game-controls-themed[data-game][data-premium-deck] :is(.sfz-auto-btn.is-active, .dede-reference-auto[aria-pressed="true"]) {
+  color: hsl(var(--slot-text));
+  border-color: hsl(var(--slot-green));
+  background: linear-gradient(180deg, hsl(var(--slot-green) / .55), hsl(var(--anthracite)));
+  box-shadow: 0 0 0 1px hsl(var(--slot-green) / .6), 0 0 16px hsl(var(--slot-green) / .7);
+}
+
+/* SPIN ve REPEAT: altın halkalı kırmızı neon; STOP koyu kırmızı. */
+.game-slot-controls.game-controls-themed.game-controls-themed[data-game][data-premium-deck] :is(.sfz-spin-btn, .sfz-spin-btn:not(.is-stop), .dede-reference-spin, .rl2-repeat) {
+  border: 2px solid hsl(var(--premium-gold-light));
+  color: hsl(var(--slot-text));
+  background: var(--pd-red);
+  box-shadow: 0 0 0 2px hsl(var(--premium-gold-deep) / .9), 0 0 22px -2px hsl(var(--premium-red) / .9), inset 0 3px 6px rgba(255, 255, 255, .35), inset 0 -6px 10px rgba(0, 0, 0, .45);
+  text-shadow: 0 2px 3px rgba(0, 0, 0, .7);
+  letter-spacing: .08em;
+  animation: premium-spin-glow 2.4s ease-in-out infinite;
+}
+.game-slot-controls.game-controls-themed.game-controls-themed[data-game][data-premium-deck] .dede-reference-spin > span {
+  border: 0;
+  clip-path: none;
+  background: transparent;
+  color: hsl(var(--slot-text));
+  text-shadow: 0 2px 3px rgba(0, 0, 0, .7);
+}
+.game-slot-controls.game-controls-themed.game-controls-themed[data-game][data-premium-deck] .sfz-spin-btn.is-stop {
+  border-color: hsl(var(--slot-text) / .8);
+  background: linear-gradient(180deg, hsl(var(--premium-red-deep)), hsl(var(--anthracite)));
+  animation: none;
+}
+.game-slot-controls.game-controls-themed.game-controls-themed[data-game][data-premium-deck] .sfz-btn-gloss { opacity: .45; }
+.game-slot-controls.game-controls-themed.game-controls-themed[data-game][data-premium-deck] :is(button):disabled { filter: saturate(.55); opacity: .6; animation: none; }
+
+@keyframes premium-spin-glow {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.18); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .game-slot-controls.game-controls-themed.game-controls-themed[data-game][data-premium-deck] :is(.sfz-spin-btn, .dede-reference-spin, .rl2-repeat) { animation: none; }
+}
