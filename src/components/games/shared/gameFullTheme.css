@@ -1,5 +1,9 @@
-/* Üst görselin teması bütün oyun alanını ve alt konsolu kaplar. */
-.game-full-theme-art { z-index: 0; }
+/* Üst görselin teması bütün ekranı kaplar: alt konsolun ve butonların altına kadar uzanır. */
+.game-full-theme-art {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+}
 
 /* Tema alt konsolun da arkasından geçer: konsol zemini saydam kalır. */
 .game-controls-themed.game-controls-themed[data-game] .matched-slot-console {

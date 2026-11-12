@@ -7,7 +7,6 @@ import MatchingSlotDeck from '@/components/games/controls/MatchingSlotDeck';
 import GameIllustratedHeader from '@/components/games/shared/GameIllustratedHeader';
 import GameFullThemeBackdrop from '@/components/games/shared/GameFullThemeBackdrop';
 import SekerliGrid from './sekerli/SekerliGrid';
-import SekerliTopPanel from './sekerli/SekerliTopPanel';
 import SekerliWinOverlay from './sekerli/SekerliWinOverlay';
 import GameHelpSheet from './help/GameHelpSheet';
 import useSekerliGame from './sekerli/useSekerliGame';
@@ -35,8 +34,6 @@ export default function SekerliMeyveGame({ onExit, onBack }) {
       <GameIllustratedHeader game="sekerli" title="ŞEKERLİ MEYVE" tagline={`TAKLA ZİNCİRİ · ${LINES} SATIR`} onBack={onBack} onHelp={() => setHelpOpen(true)} sound={game.sound} onSound={game.toggleSound} />
 
       <main className="sl-main">
-        <SekerliTopPanel win={game.spinWin} multiplier={game.multiplier} active={game.phase !== 'idle'} />
-
         <div className="sl-stage">
           <div className={`sl-frame ${game.phase === 'spin' ? 'sl-frame-live' : ''}`}>
             <span className="sl-frame-shine" aria-hidden="true" />

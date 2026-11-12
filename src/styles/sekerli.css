@@ -102,7 +102,7 @@
   flex: 1 1 0;
   container-type: size;
   overflow: hidden;
-  align-items: flex-start;
+  align-items: stretch;
   justify-content: center;
   gap: 0.6rem;
 }
@@ -179,11 +179,13 @@
   flex: none;
   /* Eski iOS ve Android sürümlerinde kap yüksekliği birimi (cqh) bulunmaz:
      çerçeve ekran yüksekliğine göre ölçülür, ızgara yine tahtayı doldurur. */
-  width: min(100%, 100vh);
-  max-width: 46rem;
-  aspect-ratio: 1;
-  max-height: 100%;
-  border-radius: 1.7rem;
+  /* Çerçeve sahnenin tamamını kaplar: kenarlarda boşluk kalmaz. */
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  aspect-ratio: auto;
+  border-radius: 1.1rem;
   padding: 0.45rem;
   background-image: repeating-linear-gradient(
     118deg,
@@ -629,8 +631,8 @@
 /* Kap yüksekliği birimi desteklenen cihazlarda çerçeve, alanın kendi yüksekliğine göre
    ölçülür: ekran ne kadar kısaysa tahta o kadar küçülür. */
 @supports (container-type: size) {
-  /* Çerçeve ekran genişliğini kaplar; alan kısaysa yalnız yüksekliği kısalır. */
-  .sl-frame { width: 100%; aspect-ratio: auto; height: min(100cqh, 100cqw); }
+  /* Çerçeve alanın hem genişliğini hem yüksekliğini doldurur. */
+  .sl-frame { width: 100%; aspect-ratio: auto; height: 100cqh; }
 }
 .sl-main { padding-left: 0; padding-right: 0; }
 
