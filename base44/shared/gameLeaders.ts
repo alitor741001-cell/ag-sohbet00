@@ -1,19 +1,11 @@
 // Oyun kazanan tabloları: günlük ve haftalık kazançlar kullanıcı başına toplanır.
-const TZ = 'Europe/Istanbul';
+// Dönemler sesli oda hediye sıralamasıyla aynı takvimden gelir.
+import { trDayKey as dayKey, trWeekKey as weekKey } from './leaderPeriods.ts';
+
 const LIST_SIZE = 50;
 
 // Kazanan listesi tutulan oyunlar: toplam kazanç cüzdandaki total_won_<oyun> alanından gelir.
 export const LEADER_GAMES = ['slot', 'dede', 'fruit', 'seker', 'sekerli', 'elimin', 'roulette', 'zar', 'rocket', 'futbol'];
-
-const dayKey = (date = new Date()) => date.toLocaleDateString('sv-SE', { timeZone: TZ });
-
-// Haftanın pazartesi günü: haftalık tablo her pazartesi sıfırlanır.
-function weekKey(date = new Date()) {
-  const local = new Date(`${dayKey(date)}T00:00:00Z`);
-  const shift = (local.getUTCDay() + 6) % 7;
-  local.setUTCDate(local.getUTCDate() - shift);
-  return local.toISOString().slice(0, 10);
-}
 
 const periods = () => [`d:${dayKey()}`, `w:${weekKey()}`];
 

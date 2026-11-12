@@ -7,6 +7,7 @@
 
 import { HIDDEN_AVATAR_URL, hiddenDisplayName, isHiddenUser } from './vip.ts';
 import { dayStartIso } from './giftBox.ts';
+import { trWeekStartIso } from './leaderPeriods.ts';
 
 const K_UNIT = 1000;
 // Oda başına okunacak en fazla hediye kaydı.
@@ -92,8 +93,8 @@ export async function giftBoard(base44: any, roomId: string) {
     return !!created && created >= dayFloor;
   });
 
-  // Haftalık liste: bugün dahil son 7 gün (Türkiye saatiyle gün başından itibaren).
-  const weekFloor = dayStartIso(new Date(Date.now() - 6 * 24 * 60 * 60 * 1000));
+  // Haftalık liste: 7 günlük dönem (oyun tablolarıyla aynı takvim); dönem bitince kendiliğinden sıfırlanır.
+  const weekFloor = trWeekStartIso();
   const weekly = records.filter((record) => {
     const created = String(record?.created_date || '').slice(0, 19);
     return !!created && created >= weekFloor;

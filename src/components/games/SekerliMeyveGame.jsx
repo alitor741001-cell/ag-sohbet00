@@ -58,7 +58,8 @@ export default function SekerliMeyveGame({ onExit, onBack }) {
       </main>
 
       <MatchingSlotDeck game={game} theme="sekerli" lines={LINES} win={game.busy ? game.spinWin : game.win}
-        spinning={game.busy && !game.prize} busy={game.busy} onCoins={() => setCoinOpen(true)} />
+        spinning={game.busy && !game.prize} busy={game.busy} onCoins={() => setCoinOpen(true)}
+        coinBar={<GoldCoinBar coins={game.coins} onCoins={() => setCoinOpen(true)} />} />
 
       {/* Coin bakiyesine dokununca uygulamanın coin mağazası açılır. */}
       <CoinPurchasePanel open={coinOpen} coins={game.coins} onBack={() => setCoinOpen(false)} />

@@ -27,6 +27,8 @@ export default function SlotControlDeck({
   theme = 'slot',
   betDisabled = spinning,
   leftAccessory,
+  // Verilirse sol alttaki kedi/coin hapı yerine bu coin barı gösterilir.
+  coinBar,
 }) {
   return (
     <footer className="sfz-deck" data-console-theme={theme}>
@@ -61,7 +63,7 @@ export default function SlotControlDeck({
         {/* Sol alt: paket kutusu ve mevcut coin bakiyesi. */}
         <div className={leftAccessory ? 'sfz-left-stack' : 'min-w-0 [&>.sfz-cat-pill]:w-full'}>
         {leftAccessory}
-        <button
+        {coinBar || <button
           type="button"
           onClick={onCoins}
           className="sfz-cat-pill"
@@ -75,7 +77,7 @@ export default function SlotControlDeck({
             <FitGameText>{coins == null ? '—' : compactCoins(coins)}</FitGameText>
           </span>
           <ChevronRight className="h-4 w-4 shrink-0 text-[#f5d0fe]" strokeWidth={3} />
-        </button>
+        </button>}
         </div>
 
         {/* Orta sütun: BET [- 10 +] kapsülü ve altında gümüş MAX hapı */}
