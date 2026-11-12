@@ -32,8 +32,7 @@ function TickerRow({ winner }) {
           </span>
         )}
       </span>
-      <span className="max-w-[4.6rem] truncate font-black text-[#c084fc]">{winner.name || 'Kullanıcı'}</span>
-      <span className="shrink-0 font-semibold text-[#b8a5e3]">şanslı çekilişten</span>
+      <span className="min-w-0 max-w-[9rem] truncate font-black text-[#c084fc]">{winner.name || 'Kullanıcı'}</span>
       <span className="flex shrink-0 items-center gap-0.5">
         {symbolsOf(winner).map((symbol, index) => (
           <SlotSymbolIcon key={`${symbol}-${index}`} symbol={symbol} size={14} />
