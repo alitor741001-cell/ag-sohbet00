@@ -139,6 +139,24 @@ export function scaleSteps(steps, ratio) {
   }));
 }
 
+/** Turun türü ve coin değeri: önce satın alınan hak, sonra bedava tur, yoksa ücretli tur. */
+export function spinKind(state, { sessionTurns, freeTurns, stake, sessionFallback }) {
+  const inSession = sessionTurns > 0;
+  const inFree = !inSession && freeTurns > 0;
+  const value = inSession ? (state.session_value || sessionFallback) : inFree ? (state.free_value || stake) : stake;
+  return { inSession, inFree, isFree: inSession || inFree, value };
+}
+
+/** Tur sonrası hak değerleri ve bedava seri kazancı; seri bitince temizlenir. */
+export function nextBonusState(state, { kind, payout, sessionLeft, freeLeft, freeBefore, granted }) {
+  if (sessionLeft <= 0 && freeLeft <= 0) return {};
+  const next: Record<string, number> = { bonus_won: kind.isFree ? (state.bonus_won || 0) + payout : 0 };
+  if (sessionLeft > 0) next.session_value = kind.inSession ? kind.value : state.session_value;
+  // Yeni verilen bedava turlar, onları veren turun değerini taşır.
+  if (freeLeft > 0) next.free_value = granted && freeBefore <= 0 ? kind.value : (state.free_value || kind.value);
+  return next;
+}
+
 /** Cüzdandaki oyun durumu: hak değerleri ve bedava seri kazancı. */
 export function poolState(wallet, game) {
   return { ...(wallet?.pool_state?.[game] || {}) };
