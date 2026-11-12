@@ -13,7 +13,8 @@ export const BET_LEVELS = [10, 20, 50, 100, 250, 500, 1000, 2500, 5000];
 
 // Ödeme oranı: tablodaki her kazanca uygulanır. Meyve oyunu slot oyunuyla
 // aynı ekonomiye sahiptir (tur başına ortalama ~%82 geri dönüş).
-export const PAYOUT_RATE = 0.6;
+// Gerçekçi denge: kazançlar bahsin birkaç katını nadiren aşar (eski oran 0,6 fazla veriyordu).
+export const PAYOUT_RATE = 0.4;
 
 // Toplam bahsin bu katı ve üzeri kazançlar "büyük kazanç" sayılır.
 export const BIG_WIN_MULTIPLE = 10;

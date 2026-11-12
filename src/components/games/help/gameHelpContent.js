@@ -3,7 +3,7 @@
 // legend.pays değerleri bahis katıdır; başlıklar dizilim/küme kademeleridir.
 import { SLOT_SYMBOL_ART } from '../slotAssets';
 import { FRUIT_SYMBOLS } from '../fruit/fruitConfig';
-import { DEDE_ORB_ART } from '../dede/dedeAssets';
+import { DEDE_ORB_ART, DEDE_ORB_VALUES } from '../dede/dedeAssets';
 import { DEDE_SYMBOLS } from '../dede/dedeConfig';
 import { SEKERLI_ART } from '../sekerli/sekerliAssets';
 import { SYMBOLS as SEKERLI_SYMBOLS } from '../sekerli/sekerliConfig';
@@ -68,8 +68,8 @@ const FRUIT_LEGEND = {
 };
 
 // DEDE: küme kademeleri 8-9, 10-11 ve 12+; ayrıca çarpan jetonları.
-const ORB_LEGEND = Object.entries(DEDE_ORB_ART).map(([value, art]) => ({
-  art,
+const ORB_LEGEND = DEDE_ORB_VALUES.map((value) => ({
+  art: DEDE_ORB_ART[value],
   name: `${value}x Çarpan`,
   tag: 'JETON',
   desc: `Tur kazancını ${value} katına çıkarır; aynı turda birden fazlası katlanır.`,

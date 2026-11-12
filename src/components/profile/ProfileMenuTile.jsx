@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils';
 import ProfileObjectIcon from '@/components/profile/ProfileObjectIcon';
+import profileNumber from '@/lib/profileNumber';
 
 /**
  * Profil menüsü düğmesi: kompakt koyu cam kart. Üstte kendi renginde parlayan ikon küresi,
@@ -27,7 +28,7 @@ export default function ProfileMenuTile({ label, Icon, artworkKey, tone = 'sky',
 
       {(typeof value === 'number') && (
         <span className="relative text-[9.5px] font-black leading-none text-white tabular-nums">
-          {value.toLocaleString('tr-TR')}
+          {['coins', 'diamonds'].includes(artworkKey) ? profileNumber(value) : value.toLocaleString('tr-TR')}
         </span>
       )}
 

@@ -30,12 +30,20 @@ export const DEDE_ART_SIZE = 1024;
 
 // Çarpan küreleri: kanatlı küre tasarımı. Değer görsele gömülü değildir;
 // kürenin ortasına yazıyla bindirilir, böylece her kademe aynı tasarımı kullanır.
-// Renkler: yeşil 3x · 4x · 30x · 100x, mavi 20x, kırmızı 50x ve 500x.
+// Renkler: yeşil 2x · 3x · 8x · 15x, mavi 5x, kırmızı 10x ve 25x.
+export const DEDE_ORB_VALUES = [2, 3, 5, 8, 10, 15, 25];
 const DEDE_ORB_GREEN = `${MEDIA_BASE}/3c61310b9_generated_image.png`;
 const DEDE_ORB_BLUE = `${MEDIA_BASE}/fce0e88b9_generated_image.png`;
 const DEDE_ORB_RED = `${MEDIA_BASE}/70cefb55e_generated_image.png`;
 export const DEDE_ORB_ART = {
+  2: DEDE_ORB_GREEN,
   3: DEDE_ORB_GREEN,
+  5: DEDE_ORB_BLUE,
+  8: DEDE_ORB_GREEN,
+  10: DEDE_ORB_RED,
+  15: DEDE_ORB_GREEN,
+  25: DEDE_ORB_RED,
+  // Eski kademeler: önceki turlardan kalan kayıtlar da görünür kalır.
   4: DEDE_ORB_GREEN,
   20: DEDE_ORB_BLUE,
   30: DEDE_ORB_GREEN,

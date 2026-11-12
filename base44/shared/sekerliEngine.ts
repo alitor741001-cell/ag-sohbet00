@@ -59,7 +59,7 @@ export const PAYLINES = [
 ];
 
 // Takla zinciri çarpanı: her yeni kazanç dalgasında bir kademe yükselir.
-export const CASCADE_MULT = [1, 1, 2, 3, 5];
+export const CASCADE_MULT = [1, 1, 1, 2, 2];
 
 export function randomSymbol() {
   return BAG[Math.floor(Math.random() * BAG.length)];

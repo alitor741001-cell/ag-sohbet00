@@ -18,7 +18,7 @@ const baseline = {
 // Line-game rates have the statistical precision of their baseline calibration.
 export async function personalGameResult(base44, user, game, draw, isWin) {
   if (!(game in baseline)) throw new Error('Geçersiz oyun oranı');
-  const multiplier = await isAgOfficial(base44, user) ? 1.5 : 0.75;
+  const multiplier = await isAgOfficial(base44, user) ? 1.5 : 0.6;
   const target = Math.min(1, baseline[game] * multiplier);
   const hit = Math.random() < target;
   for (let attempt = 0; attempt < 256; attempt += 1) {

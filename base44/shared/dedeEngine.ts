@@ -13,13 +13,13 @@ export const LINES = 20;
 export const BET_LEVELS = [10, 20, 50, 100, 250, 500, 1000, 2500, 5000];
 
 // Ödeme oranı: tablodaki her kazanca uygulanır; oyun slot ve meyve ile aynı ekonomiye sahiptir.
-export const PAYOUT_RATE = 0.6;
+export const PAYOUT_RATE = 0.4;
 
 // Toplam bahsin bu katı ve üzeri kazançlar "büyük kazanç" sayılır.
 export const BIG_WIN_MULTIPLE = 10;
 
 // Tur başına kazanç tavanı (bahis katı): dev çarpanlar bakiyeyi uçurmasın.
-export const MAX_WIN_MULTIPLE = 2000;
+export const MAX_WIN_MULTIPLE = 500;
 
 // Küme ödemesi: ekranda en az bu kadar aynı sembol olunca öder.
 export const CLUSTER_MIN = 8;
@@ -53,14 +53,15 @@ const FREE_SCATTER_WEIGHT = 2;
 
 // Çarpan jetonları: [değer, ağırlık]. Kademeler: 3x, 4x, 20x, 30x, 50x, 100x, 500x.
 // Yeşil jetonlar (3x, 4x, 30x, 100x) eskisinden seyrektir; mavi 20x ile kırmızı 50x/500x çok daha seyrek iner.
+// Düşürülmüş kademeler: 2x, 3x, 5x, 8x, 10x, 15x, 25x — dev çarpanlar artık gelmez.
 const ORB_VALUES = [
-  [3, 300],
-  [4, 200],
-  [20, 24],
-  [30, 24],
-  [50, 8],
-  [100, 3],
-  [500, 1],
+  [2, 300],
+  [3, 200],
+  [5, 24],
+  [8, 24],
+  [10, 8],
+  [15, 3],
+  [25, 1],
 ];
 
 // Jeton bir kareyi sembol gibi kaplar: kare başına inme şansı (ilk ızgara, tumbler, satın alınan tur).
