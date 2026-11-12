@@ -29,10 +29,10 @@ export const POOL_DEFAULTS = {
 // rb/qb: ücretli tur başına ham geri dönüş ve verilen bedava tur sayısı;
 // rf/qf: bedava tur başına aynı değerler. Motor ödemeleri değişirse yeniden ölçülmelidir.
 const CALIBRATION = {
-  fruit: { rb: 1.12, qb: 0.118, rf: 1.12, qf: 0.118 },
+  fruit: { rb: 1.108, qb: 0.118, rf: 1.108, qf: 0.118 },
   sekerli: { rb: 0.8136, qb: 0, rf: 0.8136, qf: 0 },
   elimin: { rb: 0.478, qb: 0.0167, rf: 0.478, qf: 0.0167 },
-  dede: { rb: 0.8136, qb: 0.054, rf: 2.118, qf: 0.054 },
+  dede: { rb: 0.8015, qb: 0.054, rf: 2.086, qf: 0.054 },
 };
 
 const num = (value, fallback) => (Number.isFinite(Number(value)) ? Number(value) : fallback);
