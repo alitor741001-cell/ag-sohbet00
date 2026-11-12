@@ -37,6 +37,7 @@ export default class GameErrorBoundary extends React.Component {
       );
     }
     if (failed) return null;
-    return <React.Fragment key={attempt}>{this.props.children}</React.Fragment>;
+    const { children } = this.props;
+    return <React.Fragment key={attempt}>{typeof children === 'function' ? children(attempt) : children}</React.Fragment>;
   }
 }

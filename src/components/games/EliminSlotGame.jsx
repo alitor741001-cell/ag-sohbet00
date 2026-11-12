@@ -5,6 +5,7 @@ import '@/styles/gameControls.css';
 import { Image } from '@/components/ui/image';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
 import MatchingSlotDeck from '@/components/games/controls/MatchingSlotDeck';
+import GoldCoinBar from '@/components/games/shared/GoldCoinBar';
 import GameIllustratedHeader from '@/components/games/shared/GameIllustratedHeader';
 import GameFullThemeBackdrop from '@/components/games/shared/GameFullThemeBackdrop';
 import EliminJackpotBar from './elimin/EliminJackpotBar';
@@ -130,7 +131,8 @@ export default function EliminSlotGame({ onExit, onBack }) {
       </main>
 
       <MatchingSlotDeck game={game} theme="elimin" lines={LINES} win={shownWin}
-        spinning={game.spinning} onCoins={() => setCoinOpen(true)} />
+        spinning={game.spinning} onCoins={() => setCoinOpen(true)}
+        coinBar={<GoldCoinBar coins={game.coins} onCoins={() => setCoinOpen(true)} />} />
 
       {/* Coin bakiyesine dokununca uygulamanın coin mağazası açılır. */}
       <CoinPurchasePanel open={coinOpen} coins={game.coins} onBack={() => setCoinOpen(false)} />

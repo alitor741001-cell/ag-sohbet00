@@ -11,6 +11,7 @@ import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
 import SlotFrenzyHeader from './slot/SlotFrenzyHeader';
 import SlotTierAlert from './slot/SlotTierAlert';
 import SlotControlDeck from './slot/SlotControlDeck';
+import GoldCoinBar from '@/components/games/shared/GoldCoinBar';
 import { tierOfBet } from './slot/slotConfig';
 import { eliminSound, unlockAudio } from './elimin/eliminSound';
 
@@ -159,6 +160,7 @@ export default function SlotGame({ onExit, onBack, roomId }) {
         onSpin={handleSpin}
         onStop={game.stop}
         onCoins={() => setCoinOpen(true)}
+        coinBar={<GoldCoinBar coins={game.coins} onCoins={() => setCoinOpen(true)} />}
       />
 
       <SlotWinOverlay

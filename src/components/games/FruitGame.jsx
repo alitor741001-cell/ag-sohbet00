@@ -3,6 +3,7 @@ import '@/styles/fruit.css';
 import '@/styles/gameControls.css';
 import CoinPurchasePanel from '@/components/voice/CoinPurchasePanel';
 import MatchingSlotDeck from '@/components/games/controls/MatchingSlotDeck';
+import GoldCoinBar from '@/components/games/shared/GoldCoinBar';
 import GameIllustratedHeader from '@/components/games/shared/GameIllustratedHeader';
 import GameFullThemeBackdrop from '@/components/games/shared/GameFullThemeBackdrop';
 import useFruitGame from './fruit/useFruitGame';
@@ -81,7 +82,8 @@ export default function FruitGame({ onExit, onBack }) {
       </main>
 
       <MatchingSlotDeck game={game} theme="fruit" lines={FRUIT_LINES} win={game.win}
-        spinning={game.spinning} onCoins={() => setCoinOpen(true)} />
+        spinning={game.spinning} onCoins={() => setCoinOpen(true)}
+        coinBar={<GoldCoinBar coins={game.coins} onCoins={() => setCoinOpen(true)} />} />
 
       {/* Kazanç tutarı: tur bitince kaybolmaz, sonraki çevirmeye kadar görünür kalır. */}
       {(flash || game.win) > 0 && !game.spinning && !prize && game.sessionResult === null && (
