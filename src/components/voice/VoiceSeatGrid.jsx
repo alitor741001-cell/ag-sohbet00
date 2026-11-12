@@ -29,14 +29,14 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
   const seatCell = (available - (widestRow - 1) * gap) / widestRow;
   const size = seatCell >= 84 ? 'lg' : seatCell >= 67 ? 'md' : seatCell >= 48 ? 'sm' : 'xs';
   const topSize = size;
-  const featureTop = seats.length === 9;
+  const featureTop = seats.length === 13;
   const rowGap = 12;
   const cellHeight = { xs: 42, sm: 52, md: 68, lg: 88 }[size];
   // Boş/dolu koltuk aynı alanı ayırır; katılım ve isim yüklenmesi satırı oynatmaz.
   const rowHeight = cellHeight + (boardActive ? 34 : 22);
 
   // Normal PK düzeni: ortada sunucu, solda mavi, sağda kırmızı 4'er koltuk; her koltukta sayı şeridi.
-  if (teamPkFooter && seats.length === 9) {
+  if (teamPkFooter && seats.length === 13) {
     const renderSeat = (index, seatSize, space) => {
       const seat = seats[index];
       const occupied = !!seat?.user_id;

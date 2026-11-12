@@ -1,5 +1,5 @@
 // Sesli oda koltuk düzeni — sabit kapasiteler (tekli koltuk dahil).
-export const SEAT_OPTIONS = [1, 2, 5, 8, 9, 12, 15, 24];
+export const SEAT_OPTIONS = [1, 2, 5, 8, 9, 12, 13, 15, 24];
 
 // Görüntülü PK açıkken geçerli olan koltuk düzenleri: bunun dışındaki modlar seçilemez.
 export const VIDEO_PK_SEAT_OPTIONS = [1, 2, 8];
@@ -14,6 +14,8 @@ const LAYOUTS = {
   6: [2, 4],
   8: [4, 4],
   9: [1, 4, 4],
+  // Normal PK düzeni: sunucu + her takımda 3+3 koltuk.
+  13: [1, 6, 6],
   12: [2, 5, 5],
   15: [5, 5, 5],
   20: [5, 5, 5, 5],

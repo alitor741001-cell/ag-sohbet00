@@ -16,7 +16,7 @@ import { HIDDEN_AVATAR_URL, hiddenDisplayName, isHiddenDisplayName, isHiddenUser
 import { upsertRoomNotice } from '../../shared/roomNotice.ts';
 import { isAgOfficial } from '../../shared/agOfficial.ts';
 
-const SEAT_OPTIONS = [1, 2, 5, 8, 9, 12, 15, 24, 30];
+const SEAT_OPTIONS = [1, 2, 5, 8, 9, 12, 13, 15, 24, 30];
 // Bu değerin (coin) üzerindeki hediyeler bütün sesli odalara duyurulur.
 const BIG_GIFT_SCORE = 1000000;
 const ACTIONS = ['seat-take', 'seat-leave', 'seat-lock', 'seat-mute', 'seat-kick', 'set-seat-count', 'invite', 'seat-invite', 'seat-invite-clear', 'gift-state', 'gift-send', 'gift-finalize', 'gift-board', 'number-board-open', 'number-board-close', 'number-step', 'number-reset', 'number-settings', 'chat-ban', 'music-state', 'music-set', 'music-control', 'music-library', 'music-remove', 'music-add', 'team-pk-open', 'team-pk-start', 'team-pk-stop'];
@@ -340,10 +340,11 @@ export default async function (req: Request): Promise<Response> {
     }
 
     // Hediye tahtası için K bakiyesi
-    // Normal PK: üstte sunucu, solda mavi 4 koltuk, sağda kırmızı 4 koltuk. Yalnızca yöneticiler açar/kapatır.
+    // Normal PK: üstte sunucu, solda mavi 6 koltuk (3+3), sağda kırmızı 6 koltuk (3+3).
+    // Yalnızca yöneticiler açar/kapatır.
     if (action === 'team-pk-open' || action === 'team-pk-start') {
       if (!canMod) return Response.json({ error: 'yetkisiz' }, { status: 403 });
-      if (seats.length !== 9) return Response.json({ error: 'Normal PK için koltuk sayısı 9 olmalı.' }, { status: 400 });
+      if (seats.length !== 13) return Response.json({ error: 'Normal PK için koltuk sayısı 13 olmalı.' }, { status: 400 });
       const current = await loadTeamPk(base44, room_id);
       const opening = action === 'team-pk-open';
       if (opening && current) return Response.json({ ok: true, team_pk: current });
@@ -445,19 +446,20 @@ export default async function (req: Request): Promise<Response> {
           waitUntil(base44.asServiceRole.entities.PkMatch.update(pkMatch.id, { host_score: hostScore, guest_score: guestScore }).catch(() => null));
         }
       }
-      // Normal PK: sol 4 koltuk (1-4) mavi, sağ 4 koltuk (5-8) kırmızı takıma puan yazar.
+      // Normal PK: sunucu dışındaki koltuklar ikiye bölünür — ilk yarı mavi, ikinci yarı kırmızı.
       // Üstteki sunucu koltuğuna (0) atılan hediyeler bara işlemez.
-      if (seats.length === 9) {
+      if (seats.length === 13) {
         waitUntil((async () => {
           const teamPk = await loadTeamPk(base44, room_id);
           if (!teamPk?.started_at || !teamPk.ends_at || Date.now() >= new Date(teamPk.ends_at).getTime()) return;
           const gain = kValue * quantity;
+          const half = Math.floor((seats.length - 1) / 2);
           let blue = 0;
           let red = 0;
           recipients.forEach((person) => {
             const index = seats.findIndex((seat) => seat.user_id === person.user_id);
-            if (index >= 1 && index <= 4) blue += gain;
-            if (index >= 5 && index <= 8) red += gain;
+            if (index >= 1 && index <= half) blue += gain;
+            if (index > half) red += gain;
           });
           if (!blue && !red) return;
           await base44.asServiceRole.entities.TeamPkMatch.update(teamPk.id, {

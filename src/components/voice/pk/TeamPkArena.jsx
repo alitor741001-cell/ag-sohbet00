@@ -24,8 +24,8 @@ export default function TeamPkArena({ match, seats, renderSeat, footer, width = 
           {renderSeat(0, size, space)}
         </div>
         <div className="flex w-full items-stretch justify-between gap-3">
-          <TeamPkSide tone="blue" indices={[1, 2, 3, 4]} renderSeat={renderSeat} size={size} space={space} />
-          <TeamPkSide tone="red" indices={[5, 6, 7, 8]} renderSeat={renderSeat} size={size} space={space} />
+          <TeamPkSide tone="blue" indices={[1, 2, 3, 4, 5, 6]} renderSeat={renderSeat} size={size} space={space} />
+          <TeamPkSide tone="red" indices={[7, 8, 9, 10, 11, 12]} renderSeat={renderSeat} size={size} space={space} />
         </div>
       </div>
       {footer}

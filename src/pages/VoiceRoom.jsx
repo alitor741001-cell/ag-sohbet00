@@ -161,6 +161,19 @@ export default function VoiceRoom() {
   const teamPk = useTeamPk(id);
   const [gifted, setGifted] = useState({});
 
+  // Aynı anda tek panel açık kalır: yeni bir panel açılırken önceki kendiliğinden kapanır.
+  const closeSheets = useCallback(() => {
+    setMenuOpen(false);
+    setGiftBoardOpen(false);
+    setViewerOpen(false);
+    setProfilePanelOpen(false);
+    setLogOpen(false);
+    setMusicOpen(false);
+    setGiftOpen(false);
+    setSettingsOpen(false);
+    setSeatIndex(null);
+  }, []);
+
   const [keyboardOpen, setKeyboardOpen] = useState(false);
   const handleKeyboardChange = useCallback((open) => {
     setKeyboardOpen(open);
@@ -673,16 +686,23 @@ export default function VoiceRoom() {
     changeSeatCount(8);
   }, [room?.seats, changeSeatCount, toast]);
 
+  // Görüntülü PK açılırken normal PK kapanır: iki PK alanı aynı anda açık kalmaz.
   const openVideoPk = useCallback(() => {
     const next = !pkOpen;
     setPkOpen(next);
-    if (next) fitSeatsForVideoPk();
-  }, [pkOpen, fitSeatsForVideoPk]);
+    if (next) {
+      if (teamPk.match) stopTeamPk();
+      closeSheets();
+      fitSeatsForVideoPk();
+    }
+  }, [pkOpen, fitSeatsForVideoPk, teamPk.match, closeSheets]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const enableVideoPk = useCallback(() => {
     setPkOpen(true);
+    if (teamPk.match) stopTeamPk();
+    closeSheets();
     fitSeatsForVideoPk();
-  }, [fitSeatsForVideoPk]);
+  }, [fitSeatsForVideoPk, teamPk.match, closeSheets]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Görüntülü PK açıkken koltuk modu yalnızca 1, 2 veya 8 seçilebilir.
   const blockSeatCount = useCallback(() => {
@@ -692,16 +712,19 @@ export default function VoiceRoom() {
     });
   }, [toast]);
 
-  // Normal PK başlat: koltuk sayısı 9 değilse önce 9'a çekilir, sonra 5 dakikalık tur başlar.
+  // Normal PK başlat: koltuk sayısı 13 değilse önce 13'e çekilir, sonra 5 dakikalık tur başlar.
+  // Görüntülü PK açıksa kapanır: iki PK alanı aynı anda açık kalmaz.
   const startTeamPk = useCallback(async (begin = false) => {
-    if ((room?.seats || []).length !== 9) await changeSeatCount(9);
+    if (pkOpen) setPkOpen(false);
+    closeSheets();
+    if ((room?.seats || []).length !== 13) await changeSeatCount(13);
     try {
       const response = await base44.functions.invoke('voice-room', { room_id: id, action: begin === true ? 'team-pk-start' : 'team-pk-open' });
       if (response?.data?.team_pk) teamPk.setMatch(response.data.team_pk);
     } catch (error) {
       toast({ title: 'Normal PK başlatılamadı', description: error?.response?.data?.error || error.message, variant: 'destructive' });
     }
-  }, [id, room?.seats, changeSeatCount, teamPk.setMatch, toast]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [id, room?.seats, changeSeatCount, teamPk.setMatch, toast, pkOpen, closeSheets]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const stopTeamPk = useCallback(async () => {
     teamPk.setMatch(null);
@@ -1049,7 +1072,8 @@ export default function VoiceRoom() {
 
   useEffect(() => () => window.clearTimeout(giftFlashRef.current), []);
 
-  const openGifts = useCallback(() => setGiftOpen(true), []);
+  // Hediye kutusu açılırken diğer paneller kapanır: aynı anda tek panel açık kalır.
+  const openGifts = useCallback(() => { closeSheets(); setGiftOpen(true); }, [closeSheets]);
   const closeGifts = useCallback(() => setGiftOpen(false), []);
 
   // Hediye tahtası açıkken profiller çoklu seçilir — kişi kendini de seçebilir.
@@ -1286,13 +1310,13 @@ export default function VoiceRoom() {
           room={room}
           giftTotal={giftBoard?.all?.total || 0}
           giftToday={giftBoard?.day?.total || 0}
-          onOpenGiftBoard={() => setGiftBoardOpen(true)}
-          onOpenRoom={() => setProfilePanelOpen(true)}
+          onOpenGiftBoard={() => { closeSheets(); setGiftBoardOpen(true); }}
+          onOpenRoom={() => { closeSheets(); setProfilePanelOpen(true); }}
           onFollow={followOwner}
           viewerCount={participants.length}
-          onOpenViewers={() => setViewerOpen(true)}
-          onOpenMenu={() => setMenuOpen(true)}
-          onExit={() => setExitOpen(true)}
+          onOpenViewers={() => { closeSheets(); setViewerOpen(true); }}
+          onOpenMenu={() => { closeSheets(); setMenuOpen(true); }}
+          onExit={() => { closeSheets(); setExitOpen(true); }}
           showMenu={canMod}
         />
       </div>
@@ -1409,7 +1433,7 @@ export default function VoiceRoom() {
         settingsOpen={settingsOpen}
         onOpenGames={() => setGamesOpen(true)}
         onOpenGifts={openGifts}
-        onOpenSettings={() => setSettingsOpen((value) => !value)}
+        onOpenSettings={() => { if (!settingsOpen) closeSheets(); setSettingsOpen((value) => !value); }}
         privateUnread={directUnread}
         onOpenPrivateChat={() => setDmOpen(true)}
         onToggleChat={() => {
@@ -1428,7 +1452,7 @@ export default function VoiceRoom() {
         open={menuOpen}
         onClose={() => setMenuOpen(false)}
         musicPlaying={!!music.music?.is_playing}
-        onOpenMusic={canMod ? () => { setMusicBubble(true); setMusicOpen(true); } : null}
+        onOpenMusic={canMod ? () => { closeSheets(); setMusicBubble(true); setMusicOpen(true); } : null}
         room={room}
         isOwner={isOwner}
         isAdmin={user?.role === 'admin'}
@@ -1441,7 +1465,7 @@ export default function VoiceRoom() {
         onBoardSettings={saveBoardSettings}
         onClearChat={clearChat}
         onToggleChatBan={toggleChatBan}
-        onOpenLog={() => setLogOpen(true)}
+        onOpenLog={() => { closeSheets(); setLogOpen(true); }}
         onExitVoiceMode={isOwner ? exitVoiceMode : null}
         theme={room?.background}
         onTheme={changeTheme}
@@ -1486,7 +1510,7 @@ export default function VoiceRoom() {
         sheetOpen={musicOpen}
         onCloseSheet={() => setMusicOpen(false)}
         controllerVisible={canMod && musicBubble && !!music.music && !musicOpen && !menuOpen}
-        onOpenList={() => setMusicOpen(true)}
+        onOpenList={() => { closeSheets(); setMusicOpen(true); }}
         isMod={canMod}
         onControl={music.control}
         onPlayNext={music.playNext}
