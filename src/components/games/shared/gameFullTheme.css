@@ -1,16 +1,32 @@
 /* Üst görselin teması bütün oyun alanını ve alt konsolu kaplar. */
 .game-full-theme-art { z-index: 0; }
-.game-controls-themed[data-game] .matched-slot-console {
+
+/* Tema alt konsolun da arkasından geçer: konsol zemini saydam kalır. */
+.game-controls-themed.game-controls-themed[data-game] .matched-slot-console {
   background: transparent;
 }
-.game-controls-themed[data-game] .matched-slot-console .sfz-deck[data-console-theme] {
-  background: hsl(var(--slot-bg) / .26);
-  border-top-color: hsl(var(--deck-edge) / .65);
-  box-shadow: inset 0 1px 3px hsl(var(--slot-text) / .14);
+.game-controls-themed.game-controls-themed[data-game] .matched-slot-console .sfz-deck[data-console-theme] {
+  background: linear-gradient(180deg, hsl(var(--slot-bg) / .10), hsl(var(--slot-bg) / .40));
+  border-top-color: hsl(var(--deck-edge) / .55);
+  box-shadow: inset 0 1px 3px hsl(var(--slot-text) / .12);
+  backdrop-filter: blur(1.5px);
+  -webkit-backdrop-filter: blur(1.5px);
 }
-.game-controls-themed[data-game] .matched-slot-console .sfz-deck[data-console-theme] :is(.sfz-metric-well, .sfz-bet-capsule, .sfz-cat-pill) {
-  background: hsl(var(--slot-bg) / .58);
+
+/* Buton yuvaları da temayı gösterir: sadece hafif bir karartma kalır. */
+.game-controls-themed.game-controls-themed[data-game] .matched-slot-console .sfz-deck[data-console-theme] :is(.sfz-metric-well, .sfz-bet-capsule, .sfz-cat-pill) {
+  background: hsl(var(--slot-bg) / .30);
 }
-.game-controls-themed[data-game] .matched-slot-console[data-console-theme] > .ref-actions .ref-banner {
-  background: hsl(var(--slot-bg) / .48);
+
+/* Coin bakiyesi okunur genişlikte kalır. */
+.game-controls-themed.game-controls-themed[data-game] .matched-slot-console .sfz-deck-main {
+  grid-template-columns: 1.3fr 1.1fr .7fr .9fr;
+}
+.game-controls-themed.game-controls-themed[data-game] .matched-slot-console .sfz-cat-pill {
+  gap: 4px;
+  padding-inline: 6px 8px;
+}
+.game-controls-themed.game-controls-themed[data-game] .matched-slot-console .sfz-cat-count {
+  min-width: 2.2rem;
+  font-size: 14px;
 }
