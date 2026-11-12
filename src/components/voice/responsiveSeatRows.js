@@ -1,11 +1,10 @@
 import { seatIndexRows } from '@/components/voice/seatLayout';
 
-/** Reflow only rows whose smallest usable seats cannot fit the available width. */
-export default function responsiveSeatRows(count, width) {
-  const rows = seatIndexRows(count);
-  const cell = width >= 640 ? 88 : 68;
-  const columns = Math.max(1, Math.floor((Math.max(0, width - 4) + 12) / (cell + 12)));
-  if (rows.every(row => row.length <= columns)) return rows;
-  return Array.from({ length: Math.ceil(count / columns) }, (_, row) =>
-    Array.from({ length: Math.min(columns, count - row * columns) }, (_, col) => row * columns + col));
+/**
+ * Koltuk dizilimi sabittir: 2 → tek sıra, 5 → 1+4, 8 → 4+4, 9 → 1+4+4,
+ * 12 → 2+5+5, 15 → 5+5+5, 24 → 6+6+6+6. Satırlar ekran genişliğine göre
+ * bölünmez; dar ekranda koltuk boyutu küçülür, dizilim aynı kalır.
+ */
+export default function responsiveSeatRows(count) {
+  return seatIndexRows(count);
 }

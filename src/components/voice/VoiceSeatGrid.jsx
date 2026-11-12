@@ -23,13 +23,14 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
   // En kalabalık satır tam genişliğe yayılır; kalan satırlar ortalanır.
   const widestRow = useMemo(() => rows.reduce((max, row) => Math.max(max, row.length), 1), [rows]);
   const onSeatClick = useCallback((index) => onSelectSeat(index), [onSelectSeat]);
-  // Kapasite değişince koltuk boyutu değişmez; yalnızca satır sayısı değişir.
-  const size = width >= 640 ? 'lg' : 'md';
+  // Satır dizilimi sabit; koltuk boyutu en kalabalık satıra sığacak şekilde seçilir.
+  const available = width - 4;
+  const gap = widestRow >= 5 ? 2 : 12;
+  const seatCell = (available - (widestRow - 1) * gap) / widestRow;
+  const size = seatCell >= 84 ? 'lg' : seatCell >= 67 ? 'md' : seatCell >= 48 ? 'sm' : 'xs';
   const topSize = size;
   const featureTop = seats.length === 9;
-  const gap = 12;
   const rowGap = 12;
-  const available = width - 4;
 
   // Normal PK düzeni: ortada sunucu, solda mavi, sağda kırmızı 4'er koltuk; her koltukta sayı şeridi.
   if (teamPkFooter && seats.length === 9) {

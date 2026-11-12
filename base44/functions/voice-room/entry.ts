@@ -19,7 +19,7 @@ import { isAgOfficial } from '../../shared/agOfficial.ts';
 const SEAT_OPTIONS = [1, 2, 5, 8, 9, 12, 15, 24, 30];
 // Bu değerin (coin) üzerindeki hediyeler bütün sesli odalara duyurulur.
 const BIG_GIFT_SCORE = 1000000;
-const ACTIONS = ['seat-take', 'seat-leave', 'seat-lock', 'seat-mute', 'seat-kick', 'set-seat-count', 'invite', 'seat-invite', 'seat-invite-clear', 'gift-state', 'gift-send', 'gift-finalize', 'gift-board', 'number-board-open', 'number-board-close', 'number-step', 'number-reset', 'number-settings', 'chat-ban', 'music-state', 'music-set', 'music-control', 'music-library', 'music-remove', 'music-add', 'team-pk-start', 'team-pk-stop'];
+const ACTIONS = ['seat-take', 'seat-leave', 'seat-lock', 'seat-mute', 'seat-kick', 'set-seat-count', 'invite', 'seat-invite', 'seat-invite-clear', 'gift-state', 'gift-send', 'gift-finalize', 'gift-board', 'number-board-open', 'number-board-close', 'number-step', 'number-reset', 'number-settings', 'chat-ban', 'music-state', 'music-set', 'music-control', 'music-library', 'music-remove', 'music-add', 'team-pk-open', 'team-pk-start', 'team-pk-stop'];
 // Normal (takım) PK turu 5 dakika sürer.
 const TEAM_PK_MS = 30 * 60 * 1000;
 const loadTeamPk = async (base44: any, roomId: string) => {
