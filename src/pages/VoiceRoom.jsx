@@ -233,8 +233,8 @@ export default function VoiceRoom() {
   // Sohbetteki etiketler (@isim) odadaki görünen adla eşleşir: kişi kendine yapılan etiketi görür.
   const myRoomName = useMemo(() => {
     const self = [...participants, ...seats].find((person) => person?.user_id === user?.id);
-    return self?.name || user?.full_name || '';
-  }, [participants, seats, user?.id, user?.full_name]);
+    return self?.name || user?.username || '';
+  }, [participants, seats, user?.id, user?.username]);
   // Oda LVL'i: odadakilerin seviyesi canlı izlenir — seviye atlayınca rozet anında değişir.
   const mySeatIndex = seats.findIndex((seat) => seat.user_id === user?.id);
   const seated = mySeatIndex >= 0;
@@ -346,7 +346,7 @@ export default function VoiceRoom() {
     });
     // Kendisi hiç koltukta/katılımcı listesinde görünmüyorsa yine de seçilebilir ve listenin başında durur.
     const self = user?.id
-      ? (map.get(user.id) || { user_id: user.id, name: user.full_name || 'Kullanıcı', avatar: '' })
+      ? (map.get(user.id) || { user_id: user.id, name: user.username || 'Kullanıcı', avatar: '' })
       : null;
     const others = [...map.values()].filter((person) => person.user_id !== user?.id);
     return self ? [{ ...self, me: true }, ...others] : others;

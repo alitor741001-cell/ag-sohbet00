@@ -1,0 +1,4 @@
+/* Sığdırılan yazı her oyunda tek satırda kalır: coin, BET ve WIN rakamları alt alta
+   kırılmaz. Kurallar bileşenle birlikte yüklenir; oyun hangi girişten açılırsa açılsın geçerlidir. */
+.ref-fit-text { display: block; width: 100%; max-width: 100%; min-width: 0; overflow: hidden; box-sizing: border-box; white-space: nowrap; flex-shrink: 0; }
+.ref-fit-text-inner { display: inline-block; max-width: none; white-space: pre; vertical-align: top; }

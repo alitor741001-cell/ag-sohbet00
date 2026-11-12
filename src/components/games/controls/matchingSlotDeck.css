@@ -17,6 +17,25 @@
 }
 .sfz-deck[data-console-theme] :is(.sfz-metric-label, .sfz-bet-label) { color: hsl(var(--slot-text) / .85); }
 .sfz-cat-pill .sfz-cat-avatar { flex-shrink: 0; }
+/* Coin bakiyesi Dede'deki gibi: tek satır, altın rakam ve sıcak gölge. */
+.sfz-deck .sfz-cat-count { color: #ffe9a8; font-weight: 900; line-height: 1; white-space: nowrap; font-variant-numeric: tabular-nums; text-shadow: 0 1px 0 #6b3a05, 0 0 6px rgba(255, 200, 80, .8); }
+/* Izgara sütunları içerik yüzünden genişlemez: SPIN, BET ve coin alanı ekranın dışına itilmez. */
+.sfz-deck-top > *, .sfz-deck-main > * { min-width: 0; }
+.sfz-bet-label, .sfz-bet-val, .sfz-metric-label { white-space: nowrap; }
+.sfz-bet-capsule { position: relative; z-index: 1; }
+/* 15 Çevirme kutusu her ekran boyutunda görünür kalır: küçülmez, diğer düğmelerin altında kalmaz. */
+.sfz-left-stack > .game-session-square { position: relative; z-index: 2; flex-shrink: 0; min-height: 64px; }
+@media (max-width: 360px) {
+  .sfz-deck { padding-inline: 5px; }
+  .sfz-deck-main, .sfz-deck-top { gap: 4px; }
+  .sfz-bet-side { width: 24%; }
+  .sfz-cat-pill { padding-inline: 4px 5px; }
+  .sfz-cat-pill .sfz-cat-avatar { width: 22px; height: 22px; font-size: 13px; }
+}
+/* Yatay telefonlarda konsol kısa ekrana sığar: kutu kare kalır ama taşmaz. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .sfz-left-stack > .game-session-square { max-height: 26vh; min-height: 56px; aspect-ratio: auto; }
+}
 .sfz-cat-count { min-width: 0; flex: 1; padding-inline: 3px; text-align: center; }
 .sfz-free-count { color: hsl(var(--slot-gold)); font-size: 10px; font-weight: 800; line-height: 1.15; }
 .matched-slot-console > .ref-actions { width: 100%; padding: 4px 8px; }

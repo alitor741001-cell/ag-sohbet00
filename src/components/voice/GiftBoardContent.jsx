@@ -65,7 +65,7 @@ export default function GiftBoardContent({
           {user?.avatar ? (
             <img src={user.avatar} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" draggable={false} />
           ) : (
-            <span className="text-[11px] font-black text-white">{(user?.full_name || '?').trim().charAt(0).toUpperCase()}</span>
+            <span className="text-[11px] font-black text-white">{(user?.username || '?').trim().charAt(0).toUpperCase()}</span>
           )}
         </span>
         <div className="no-scrollbar flex min-w-0 flex-1 gap-1.5 overflow-x-auto pb-1">

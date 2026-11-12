@@ -134,7 +134,7 @@ export default function DedeGame({ onExit, onBack, roomId }) {
           key={flash || game.win}
           className="dede-float-win pointer-events-none absolute left-1/2 top-[48%] z-20 w-max rounded-full border border-[#ffe9a8]/80 bg-black/75 px-4 py-1.5 font-mono text-base font-black text-[#ffd35c]"
         >
-          KAZANÇ {formatCoins(flash || game.win)}
+          WIN {formatCoins(flash || game.win)}
         </p>
       )}
 

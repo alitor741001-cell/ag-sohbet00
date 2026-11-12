@@ -170,7 +170,7 @@ export default async function (req) {
         : await base44.asServiceRole.entities.FootballPick.create({
             round_no: record.round_no,
             user_id: user.id,
-            user_name: user.full_name || '',
+            user_name: user.username || '',
             user_avatar: user.avatar || '',
             team_id: teamId,
             stake,

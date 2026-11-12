@@ -5,6 +5,7 @@ import { base44 } from '@/api/base44Client';
 import subscribeEntity from '@/components/data/entitySubscriptions';
 import { useCurrentUser, membershipActive } from '@/lib/useCurrentUser';
 import { useAuth } from '@/lib/AuthContext';
+import UsernameGate from '@/components/auth/UsernameGate';
 import Navbar from '@/components/layout/Navbar';
 import ThemeShell from '@/components/layout/ThemeShell';
 import useFriendPresence from '@/hooks/useFriendPresence';
@@ -207,12 +208,17 @@ export default function AppLayout() {
   }, [user?.id]);
 
   // Rol kutlaması, ajans çağrısı ve PK daveti ilk ekrandan sonra hazırlanır.
-  const overlays = overlaysReady ? (
-    <Suspense fallback={null}>
-      <RoleCelebrationOverlay />
-      <GlobalAgencyCall />
-    </Suspense>
-  ) : null;
+  const overlays = (
+    <>
+      <UsernameGate user={user} />
+      {overlaysReady && (
+        <Suspense fallback={null}>
+          <RoleCelebrationOverlay />
+          <GlobalAgencyCall />
+        </Suspense>
+      )}
+    </>
+  );
 
   if (isRoom) {
     // Oda zeminini artık tema boyuyor: buradaki lacivert katman kapatıldı, alt şerit kalmaz.

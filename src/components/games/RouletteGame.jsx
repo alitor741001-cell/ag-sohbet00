@@ -137,7 +137,7 @@ export default function RouletteGame({ onExit, onBack }) {
       {/* Tur kazancı: küçük kazançlar da tur bitince kaybolmaz, sonraki tura kadar yazılı kalır. */}
       {game.payout > 0 && !prize && (
         <p className="rl-message absolute left-1/2 top-[56%] z-20 w-max max-w-[90%] -translate-x-1/2 rounded-full px-3 py-1.5 text-center text-[12px] font-black">
-          KAZANÇ {formatCoins(game.payout)}
+          WIN {formatCoins(game.payout)}
         </p>
       )}
 

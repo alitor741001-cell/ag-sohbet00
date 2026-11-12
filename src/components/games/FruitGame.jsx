@@ -89,7 +89,7 @@ export default function FruitGame({ onExit, onBack }) {
           key={flash || game.win}
           className="fruit-float-win pointer-events-none absolute left-1/2 top-[46%] z-20 rounded-full border border-[#ffe9b8]/80 bg-black/75 px-4 py-1.5 font-mono text-base font-black text-[#ffd35c]"
         >
-          KAZANÇ {formatCoins(flash || game.win)}
+          WIN {formatCoins(flash || game.win)}
         </p>
       )}
 

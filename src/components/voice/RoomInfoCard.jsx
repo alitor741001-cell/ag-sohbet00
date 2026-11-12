@@ -10,7 +10,7 @@ export default function RoomInfoCard({ room, onOpen, viewerCount = 0, onOpenView
   const ids = useMemo(() => ownerId ? [ownerId] : [], [ownerId]);
   const profile = useMessageProfiles(ids)[ownerId] || {};
   const ownerHidden = isHiddenName(room?.owner_name);
-  const ownerName = ownerHidden ? room.owner_name : profile.username || room?.owner_name || profile.full_name || 'Kullanıcı';
+  const ownerName = ownerHidden ? room.owner_name : profile.username || room?.owner_name || 'Kullanıcı';
   const ownerMemberId = !ownerHidden && profile.member_id && profile.member_id !== '-' ? String(profile.member_id) : '';
   const memberId = room?.room_number ? String(room.room_number) : ownerMemberId;
   const roomName = room?.name || 'Oda';

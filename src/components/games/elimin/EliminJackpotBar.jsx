@@ -23,7 +23,7 @@ function Chest() {
 export default function EliminJackpotBar({ jackpot, chests = 0, chestValue = 0, bet, busy, onCollect }) {
   const { user } = useCurrentUser();
   const avatar = user?.avatar_url || user?.avatar || '';
-  const initials = (user?.full_name || '?').trim().slice(0, 1).toUpperCase();
+  const initials = (user?.username || '?').trim().slice(0, 1).toUpperCase();
   const filled = Math.min(CHEST_MAX, Math.max(0, chests || 0));
   const full = filled >= CHEST_MAX;
 

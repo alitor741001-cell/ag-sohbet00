@@ -39,7 +39,7 @@ export default async function (req: Request): Promise<Response> {
         return Response.json({ error: 'Bu PK yayında değil.' }, { status: 403 });
       }
 
-      const pkName = user.full_name || 'Kullanıcı';
+      const pkName = user.username || 'Kullanıcı';
       const pkToken = new AccessToken(LIVEKIT_API_KEY, LIVEKIT_API_SECRET, {
         identity: user.id,
         name: pkName,

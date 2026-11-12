@@ -23,7 +23,7 @@ export async function recordLeaderWin(base44, game, person, won) {
   const db = base44.asServiceRole.entities.GameLeader;
   await Promise.all(periods().map(async (period) => {
     const [row] = await db.filter({ game, period, user_id: person.id }, '-created_date', 1);
-    const profile = { user_name: person.full_name || person.username || '', user_avatar: person.avatar || '' };
+    const profile = { user_name: person.username || '', user_avatar: person.avatar || '' };
     if (row) await db.update(row.id, { ...profile, won: (row.won ?? 0) + won });
     else await db.create({ game, period, user_id: person.id, ...profile, won });
   }));
@@ -49,7 +49,7 @@ export async function loadLeaders(base44, game) {
     const person = byId.get(wallet.user_id);
     return {
       user_id: wallet.user_id,
-      name: person?.full_name || person?.username || wallet.user_name || 'Kullanıcı',
+      name: person?.username || wallet.user_name || 'Kullanıcı',
       avatar: person?.avatar || '',
       won: wallet[field] ?? 0,
     };

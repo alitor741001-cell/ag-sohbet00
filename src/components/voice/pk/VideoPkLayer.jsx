@@ -278,7 +278,7 @@ export default function VideoPkLayer({ open, onOpen, onClose, roomId, user, onOp
           <div className="mt-1 flex items-stretch gap-1.5" style={{ height: 'clamp(104px, 24vh, 176px)' }}>
             <div className="relative h-full w-1/2 min-w-0 overflow-hidden rounded-2xl bg-black ring-1 ring-white/12">
               <PkFeedTile
-                name={user?.full_name || 'Sen'}
+                name={user?.username || 'Sen'}
                 avatar={user?.avatar}
                 score={myScore}
                 mine

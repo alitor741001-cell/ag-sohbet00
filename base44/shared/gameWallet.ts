@@ -59,7 +59,7 @@ export async function loadWallet(base44, user) {
   }
   return base44.asServiceRole.entities.GameWallet.create({
     user_id: user.id,
-    user_name: user.full_name || '',
+    user_name: user.username || '',
     coins: isAdmin ? ADMIN_COINS : START_COINS,
     admin_granted: isAdmin,
     bet: DEFAULT_BET,

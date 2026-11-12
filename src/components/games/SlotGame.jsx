@@ -165,7 +165,7 @@ export default function SlotGame({ onExit, onBack, roomId }) {
         open={!!prize}
         jackpot={!!prize?.jackpot}
         amount={prize?.amount || 0}
-        winner={user?.full_name || user?.username || ''}
+        winner={user?.username || ''}
         onAccept={() => setPrize(null)}
       />
 

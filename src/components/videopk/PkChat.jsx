@@ -61,7 +61,7 @@ export default function PkChat({ open, onClose, matchId, hostId, user, viewers =
             profile={profiles[message.user_id]}
             ownerId={hostId}
             currentUserId={user?.id}
-            currentUserName={user?.full_name || ''}
+            currentUserName={user?.username || ''}
             onOpenProfile={openUserProfile}
           />
         ))}

@@ -41,7 +41,7 @@ export default function SekerliMeyveGame({ onExit, onBack }) {
               <SekerliGrid game={game} />
               {game.showWin && game.spinWin > 0 && (
                 <p key={game.spinWin} className="sl-center-win">
-                  KAZANÇ {formatCredits(shownWin)}
+                  WIN {formatCredits(shownWin)}
                   {game.multiplier > 1 && <span className="sl-center-mult">{formatMult(game.multiplier)}</span>}
                 </p>
               )}

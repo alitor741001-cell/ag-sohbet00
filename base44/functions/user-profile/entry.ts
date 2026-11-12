@@ -23,7 +23,8 @@ export default async function(req) {
       : 'active';
 
     const toProfile = (u) => ({
-      username: u.username || '', full_name: u.full_name || '', avatar: u.avatar || '', avatar_video: u.avatar_video || '',
+      // Hesaptaki gerçek ad yalnızca kişinin kendisine ve yöneticiye döner.
+      username: u.username || '', full_name: (u.id === user.id || user.role === 'admin') ? (u.full_name || '') : '', avatar: u.avatar || '', avatar_video: u.avatar_video || '',
       member_id: u.member_id || '-', role: u.role || '', display_role: u.display_role || '',
       custom_role: u.custom_role || null, profile_frame: u.profile_frame || '',
       profile_frame_scale: u.profile_frame_scale || 100,

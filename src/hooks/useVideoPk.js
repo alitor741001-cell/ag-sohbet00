@@ -96,7 +96,7 @@ export default function useVideoPk(user, { poll = true } = {}) {
     }
     const data = await pkApi('broadcast', {
       room_id: roomId || videoLobbyId(user.id),
-      room_name: user.full_name || 'Görüntülü PK',
+      room_name: user.username || 'Görüntülü PK',
       mode: 'video',
     });
     if (data?.match) { lobbyRef.current = data.match; setLobby(data.match); }

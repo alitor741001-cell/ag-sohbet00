@@ -1,4 +1,5 @@
 import React, { useLayoutEffect, useRef } from 'react';
+import './fitGameText.css';
 
 /** Keeps the complete label or amount inside its available width. */
 export default function FitGameText({ as: Tag = 'span', children, className = '', ...props }) {

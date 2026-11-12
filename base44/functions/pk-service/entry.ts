@@ -87,7 +87,7 @@ export default async function (req) {
         started: false,
         settled: false,
         host_id: user.id,
-        host_name: user.full_name || 'Kullanıcı',
+        host_name: user.username || 'Kullanıcı',
         host_avatar: user.avatar || '',
         guest_id: '',
         guest_name: '',
@@ -147,7 +147,7 @@ export default async function (req) {
       if (broadcasting) {
         const joined = await svc.PkMatch.update(broadcasting.id, {
           guest_id: guestId,
-          guest_name: guest?.full_name || String(body.guest_name || 'Kullanıcı'),
+          guest_name: guest?.username || String(body.guest_name || 'Kullanıcı'),
           guest_avatar: guest?.avatar || '',
           accepted: false,
           // Davetin kendi gönderilme anı: yayın kaydı eski olsa da davet yeni sayılır.
@@ -167,10 +167,10 @@ export default async function (req) {
         mode: body.mode === 'video' ? 'video' : 'room',
         status: 'invite',
         host_id: user.id,
-        host_name: user.full_name || 'Kullanıcı',
+        host_name: user.username || 'Kullanıcı',
         host_avatar: user.avatar || '',
         guest_id: guestId,
-        guest_name: guest?.full_name || String(body.guest_name || 'Kullanıcı'),
+        guest_name: guest?.username || String(body.guest_name || 'Kullanıcı'),
         guest_avatar: guest?.avatar || '',
         accepted: false,
         invited_at: new Date().toISOString(),
@@ -467,7 +467,7 @@ export default async function (req) {
         const member = await svc.User.get(row.user_id).catch(() => null);
         return {
           user_id: row.user_id,
-          name: member?.full_name || 'Kullanıcı',
+          name: member?.username || 'Kullanıcı',
           avatar: member?.avatar || '',
           score: row.score,
         };
@@ -519,7 +519,7 @@ export default async function (req) {
       const wallet = (Array.isArray(rows) ? rows[0] : null)
         || await svc.GameWallet.create({
           user_id: user.id,
-          user_name: user.full_name || '',
+          user_name: user.username || '',
           coins: user.role === 'admin' ? 500000 : 100000,
           admin_granted: user.role === 'admin',
         });
@@ -540,7 +540,7 @@ export default async function (req) {
         quantity: 1,
         room_id: match.room_id,
         sender_id: user.id,
-        sender_name: user.full_name || '',
+        sender_name: user.username || '',
         recipient_id: targetId,
         recipient_name: targetId === match.host_id ? match.host_name : match.guest_name,
         gift_id: giftRecord.id,
@@ -574,7 +574,7 @@ export default async function (req) {
       const message = await svc.RoomMessage.create({
         room_id: `pk-${match.id}`,
         user_id: user.id,
-        user_name: user.full_name || 'Kullanıcı',
+        user_name: user.username || 'Kullanıcı',
         user_avatar: user.avatar || '',
         text,
         type: 'user',

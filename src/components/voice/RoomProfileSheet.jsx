@@ -36,11 +36,11 @@ export default function RoomProfileSheet({ open, onClose, room, user, moderators
         <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/15 bg-white/10">
           {user?.avatar
             ? <Image src={user.avatar} alt="" className="h-full w-full" fittingType="fill" draggable={false} />
-            : <span className="text-sm font-bold text-white/80">{(user?.full_name || 'P').trim().charAt(0)}</span>}
+            : <span className="text-sm font-bold text-white/80">{(user?.username || 'P').trim().charAt(0)}</span>}
         </span>
         <span className="min-w-0 flex-1">
           <span className="block text-[11px] font-bold uppercase tracking-wide text-white/50">Profilim</span>
-          <span className="block truncate text-sm font-bold text-white">{user?.full_name || 'Profilim'}</span>
+          <span className="block truncate text-sm font-bold text-white">{user?.username || 'Profilim'}</span>
         </span>
       </div>
 

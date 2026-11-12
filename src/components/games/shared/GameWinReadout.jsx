@@ -6,7 +6,7 @@ const format = (amount) => new Intl.NumberFormat('tr-TR').format(Math.max(0, Mat
 export default function GameWinReadout({ amount = 0 }) {
   return (
     <div className="game-win-readout" aria-live="polite" aria-atomic="true">
-      <span>WIN / KAZANÇ</span>
+      <span>WIN</span>
       <FitGameText as="strong">{format(amount)} COIN</FitGameText>
     </div>
   );
