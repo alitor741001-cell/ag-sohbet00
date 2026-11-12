@@ -8,13 +8,15 @@
         "dede",
         "elimin",
         "fruit",
-        "sekerli"
+        "sekerli",
+        "slot"
       ],
       "enumColors": [
         "purple",
         "green",
         "pink",
-        "yellow"
+        "yellow",
+        "blue"
       ]
     },
     "cut_pct": {

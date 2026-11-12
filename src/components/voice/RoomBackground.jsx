@@ -35,7 +35,7 @@ export default function RoomBackground({ value, cover, pk = false, teamPk = fals
         {THEME_IMAGE && <Image src={THEME_IMAGE} alt="" fittingType="fill" className="absolute inset-0 h-full w-full object-cover" />}
         {/* PK açıkken tüm oda zemini AG logolu mavi-kırmızı PK temasına döner. */}
         {pk && <PkThemeBackdrop full />}
-        {teamPk && <div className="absolute inset-0 bg-gradient-to-r from-premium-red-deep via-slot to-slot-blue/40" />}
+        {teamPk && <div className="team-pk-room-theme absolute inset-0"><span className="team-pk-room-lettering"><b>P</b><b>K</b></span></div>}
       </div>
     </>
   );

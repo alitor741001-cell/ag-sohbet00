@@ -1,5 +1,5 @@
 // Havuz ayar alanları: etiket, birim ve açıklama.
-export const GAME_NAMES = { dede: 'Dede', elimin: 'Elimin Slot', fruit: 'Meyve', sekerli: 'Şekerli Meyve' };
+export const GAME_NAMES = { slot: 'Slot', dede: 'Dede', elimin: 'Elimin Slot', fruit: 'Meyve', sekerli: 'Şekerli Meyve' };
 
 export const POOL_FIELDS = [
   { key: 'cut_pct', label: 'Havuz kesintisi', unit: '%' },

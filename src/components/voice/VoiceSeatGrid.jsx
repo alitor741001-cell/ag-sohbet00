@@ -67,7 +67,7 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
     };
     return (
       <div ref={wrapRef} className="w-full">
-        <TeamPkArena seats={seats} renderSeat={renderSeat} onSelectSeat={onSeatClick} footer={teamPkFooter} width={width} />
+        <TeamPkArena seats={seats} renderSeat={renderSeat} onSelectSeat={onSeatClick} footer={teamPkFooter} width={width} maxHeight={maxHeight} />
       </div>
     );
   }

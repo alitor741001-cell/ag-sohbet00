@@ -20,8 +20,7 @@ const navGroups = [
   {
     items: [
       { to: '/', label: 'Ana Sayfa', icon: Home },
-      // Film odalarındaki film arama/oynatma bölümü admin hesabında da aynı yerden açılır.
-      { to: '/admin/film-izle', label: 'Film İzle', icon: Film },
+
     ],
   },
   {

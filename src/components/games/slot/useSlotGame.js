@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import gameRequest from '@/lib/gameRequest';
-import { BET_LEVELS, LINES, MAX_BET, MIN_BET } from './slotConfig';
+import { BET_LEVELS, LINES } from './slotConfig';
 import useBetQueue from '@/hooks/useBetQueue';
 import useWalletCoinsLive from '@/hooks/useWalletCoinsLive';
 import { useCurrentUser } from '@/lib/useCurrentUser';
@@ -22,6 +22,7 @@ export default function useSlotGame({ roomId } = {}) {
   const [pools, setPools] = useState(null);
   const [freeSpins, setFreeSpins] = useState(0);
   const [bet, setBet] = useState(100);
+  const [betLevels, setBetLevels] = useState(BET_LEVELS);
   const [lines, setLines] = useState(LINES);
   const [spins, setSpins] = useState(0);
   const [jackpots, setJackpots] = useState({ mega: 0, grand: 0, minor: 0, major: 0, mini: 0 });
@@ -75,6 +76,7 @@ export default function useSlotGame({ roomId } = {}) {
     if (data.pools) setPools(data.pools);
     if (typeof data.free_spins === 'number') setFreeSpins(data.free_spins);
     if (typeof data.bet === 'number') setBet(data.bet);
+    if (Array.isArray(data.bet_levels) && data.bet_levels.length) setBetLevels(data.bet_levels);
     if (typeof data.lines === 'number') setLines(data.lines);
     if (typeof data.spins === 'number') setSpins(data.spins);
     if (data.jackpots) setJackpots(data.jackpots);
@@ -174,19 +176,19 @@ export default function useSlotGame({ roomId } = {}) {
 
   const changeBet = useCallback((direction) => {
     if (busyRef.current) return;
-    const index = BET_LEVELS.indexOf(bet);
-    const nextIndex = Math.min(BET_LEVELS.length - 1, Math.max(0, (index < 0 ? 0 : index) + direction));
-    const next = BET_LEVELS[nextIndex];
+    const index = betLevels.indexOf(bet);
+    const nextIndex = Math.min(betLevels.length - 1, Math.max(0, (index < 0 ? 0 : index) + direction));
+    const next = betLevels[nextIndex];
     if (next === bet) return;
     saveBet(next);
-  }, [bet, saveBet]);
+  }, [bet, betLevels, saveBet]);
 
   const maxBet = useCallback(() => {
     if (busyRef.current) return;
-    const affordable = noLimit ? MAX_BET : BET_LEVELS.filter((value) => value * lines <= coins).pop() || MIN_BET;
+    const affordable = noLimit ? betLevels[betLevels.length - 1] : betLevels.filter((value) => value * lines <= coins).pop() || betLevels[0];
     if (affordable === bet) return;
     saveBet(affordable);
-  }, [bet, coins, lines, noLimit, saveBet]);
+  }, [bet, betLevels, coins, lines, noLimit, saveBet]);
 
   const toggleAuto = useCallback(() => setAuto((value) => !value), []);
 

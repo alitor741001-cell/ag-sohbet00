@@ -5,6 +5,8 @@ import { recordLeaderWin } from '../../shared/gameLeaders.ts';
 import { personalGameResult } from '../../shared/personalGameOdds.ts';
 import { LINES, BET_LEVELS, BIG_WIN_MULTIPLE, spinReels, evaluateGrid } from '../../shared/slotEngine.ts';
 import { DEFAULT_BET, START_COINS, clampBet, loadWallet, nearestBet } from '../../shared/gameWallet.ts';
+import { allowedLevels, commitPool, loadPool, nextBonusState, poolState, settle, spinKind, withPoolState } from '../../shared/gamePool.ts';
+import { slotPoolRules, slotPaidWins, alignSlotPools } from '../../shared/slotPool.ts';
 
 // Bu tutar ve üzeri kazançlar büyük kazanç tablosuna girer.
 const BIG_WIN_TABLE_MIN = 20000;
@@ -65,14 +67,15 @@ async function savePools(base44, id, pools) {
 function jackpotTotal(pools) {
   return POOL_KEYS.reduce((sum, key) => sum + pools[key], 0);
 }
-function walletView(wallet, isAdmin = false, storedPools = null) {
+function walletView(wallet, isAdmin = false, storedPools = null, levels = BET_LEVELS) {
   const pools = poolValues(storedPools);
   const jackpot = jackpotTotal(pools);
   return {
     coins: wallet.coins ?? START_COINS,
     unlimited: false,
     no_limit: false,
-    bet: nearestBet(wallet.bet ?? DEFAULT_BET, BET_LEVELS),
+    bet: nearestBet(wallet.bet ?? DEFAULT_BET, levels),
+    bet_levels: levels,
     lines: LINES,
     spins: wallet.spins ?? 0,
     grand: jackpot,
@@ -153,7 +156,9 @@ export default async function (req) {
 
     // Ortak havuz rakamları: cüzdan okunmadan, bütün oyunculara aynı kayıttan.
     if (action === 'pools') {
-      const { pools } = await loadPools(base44);
+      const stored = await loadPools(base44);
+      const pool = await loadPool(base44, 'slot');
+      const pools = alignSlotPools(stored.pools, pool.balance);
       const jackpot = jackpotTotal(pools);
       return Response.json({ grand: jackpot, pools: { jackpot, ...pools } });
     }
@@ -163,6 +168,9 @@ export default async function (req) {
     const isAdmin = user.role === 'admin';
     // Havuzlar ortak kayıttan gelir: her oyuncuda aynı jackpot rakamları görünür.
     const poolRecord = await loadPools(base44);
+    const pool = await loadPool(base44, 'slot');
+    poolRecord.pools = alignSlotPools(poolRecord.pools, pool.balance);
+    const levels = allowedLevels(slotPoolRules(pool, true), BET_LEVELS, LINES);
 
     // Kazanç geçmişi: kullanıcının son turları ve toplam kazancı.
     if (action === 'history') {
@@ -187,16 +195,19 @@ export default async function (req) {
     }
 
     if (action === 'bet') {
-      const bet = clampBet(body.bet, BET_LEVELS, wallet.bet ?? DEFAULT_BET);
+      const bet = clampBet(body.bet, levels, nearestBet(wallet.bet ?? DEFAULT_BET, levels));
       const updated = await base44.asServiceRole.entities.GameWallet.update(wallet.id, { bet });
-      return Response.json({ ...walletView(updated, isAdmin, poolRecord.pools), grid: null, wins: [], win: 0 });
+      return Response.json({ ...walletView(updated, isAdmin, poolRecord.pools, levels), grid: null, wins: [], win: 0 });
     }
 
     if (action === 'spin') {
-      const bet = clampBet(body.bet, BET_LEVELS, wallet.bet ?? DEFAULT_BET);
+      const bet = clampBet(body.bet, levels, nearestBet(wallet.bet ?? DEFAULT_BET, levels));
       const stake = bet * LINES;
       // Ücretsiz çevirme hakkı varsa tur bedava oynanır.
       const isFree = (wallet.free_spins ?? 0) > 0;
+      const state = poolState(wallet, 'slot');
+      const kind = spinKind(state, { sessionTurns: 0, freeTurns: wallet.free_spins ?? 0, stake, sessionFallback: stake });
+      const rules = slotPoolRules(pool, stake > JACKPOT_MIN_STAKE);
       const cost = isFree ? 0 : stake;
       const coins = wallet.coins ?? START_COINS;
       if (!isFree && coins < cost) return Response.json({ error: 'Yetersiz coin.' }, { status: 400 });
@@ -211,18 +222,25 @@ export default async function (req) {
       const jackpotHit = stake > JACKPOT_MIN_STAKE
         && grid.flat().filter((symbol) => symbol === 'jackpot').length >= JACKPOT_SYMBOLS;
       const jackpotPayout = jackpotHit ? bet * JACKPOT_MULTIPLE : 0;
-      const total = result.total + jackpotPayout;
+      const rawTotal = result.total + jackpotPayout;
+      const paid = settle(pool, rules, { value: kind.value, rawMultiple: rawTotal / stake, free: isFree, bonusWon: isFree ? state.bonus_won || 0 : 0, paid: cost });
+      const total = paid.payout;
+      const display = slotPaidWins(result.wins, jackpotPayout, total, rawTotal);
       // Ücretsiz çevirme: 3 'free' sembolü gelince 3 hak verilir, sonraki turlar bedava.
       const freeCount = grid.flat().filter((symbol) => symbol === 'free').length;
       const freeTrigger = freeCount >= FREE_SYMBOLS;
       const freeSpins = Math.max(0, (wallet.free_spins ?? 0) - (isFree ? 1 : 0)) + (freeTrigger ? FREE_SPINS : 0);
-      // Havuz, turun sonucuyla işler: kaybedilen turda bahsin tamamı havuza eklenir,
-      // kazanan turda ödenen kazancın tamamı havuzdan düşülür (bahis mahsup edilmez).
-      // Havuz sıfırın altına inmez.
+      // Ekrandaki alt havuzlar, tek ödeme fonunun dağılımıdır; ikinci bir ödeme yapılmaz.
       const pools = { ...poolRecord.pools };
       const poolKey = poolKeyForTotalBet(stake);
-      const poolDelta = total > 0 ? -total : cost;
-      if (poolKey && poolDelta !== 0) pools[poolKey] = Math.max(0, pools[poolKey] + poolDelta);
+      pools[poolKey] += Math.round(cost * rules.rtp / 100);
+      let debit = total;
+      for (const key of [poolKey, ...POOL_KEYS.filter(key => key !== poolKey)]) {
+        const amount = Math.min(debit, pools[key]);
+        pools[key] -= amount;
+        debit -= amount;
+      }
+      await commitPool(base44, pool, rules, { paid: cost, payout: total, tier: paid.tier, spin: true });
       // Jackpot havuzu: bütün havuzlarda birikenlerin toplamı.
       const grand = jackpotTotal(pools);
       const bigWin = stake > 0 && total >= stake * BIG_WIN_MULTIPLE;
@@ -245,6 +263,7 @@ export default async function (req) {
         pool_mega: pools.mega,
         pool_xmega: pools.xmega,
         free_spins: freeSpins,
+        pool_state: withPoolState(wallet, 'slot', nextBonusState(state, { kind, payout: total, sessionLeft: 0, freeLeft: freeSpins, freeBefore: wallet.free_spins ?? 0, granted: freeTrigger })),
         spins: (wallet.spins ?? 0) + 1,
         total_won: (wallet.total_won ?? 0) + total,
         total_won_slot: (wallet.total_won_slot ?? 0) + total,
@@ -269,15 +288,15 @@ export default async function (req) {
         win: total,
         coins_after: updated.coins ?? 0,
         big_win: bigWin,
-        jackpot: jackpotPayout,
+        jackpot: display.jackpot,
       });
 
       return Response.json({
-        ...walletView(updated, isAdmin, pools),
+        ...walletView(updated, isAdmin, pools, levels),
         grid,
-        wins: result.wins,
+        wins: display.wins,
         win: total,
-        jackpot: jackpotPayout,
+        jackpot: display.jackpot,
         jackpot_hit: jackpotHit,
         free_trigger: freeTrigger,
         cost,
@@ -286,7 +305,7 @@ export default async function (req) {
       });
     }
 
-    return Response.json({ ...walletView(wallet, isAdmin, poolRecord.pools), grid: null, wins: [], win: 0 });
+    return Response.json({ ...walletView(wallet, isAdmin, poolRecord.pools, levels), grid: null, wins: [], win: 0 });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

@@ -6,7 +6,7 @@
 // Kazanma ihtimali hiçbir koşulda değiştirilmez: sonuç önce tamamen rastgele üretilir,
 // ardından herkese aynı ve önceden ilan edilmiş katsayı ve sınırlar uygulanır.
 
-export const POOL_GAMES = ['dede', 'elimin', 'fruit', 'sekerli'];
+export const POOL_GAMES = ['dede', 'elimin', 'fruit', 'sekerli', 'slot'];
 
 export const POOL_DEFAULTS = {
   cut_pct: 5,
@@ -29,6 +29,7 @@ export const POOL_DEFAULTS = {
 // rb/qb: ücretli tur başına ham geri dönüş ve verilen bedava tur sayısı;
 // rf/qf: bedava tur başına aynı değerler. Motor ödemeleri değişirse yeniden ölçülmelidir.
 const CALIBRATION = {
+  slot: { rb: 0.8635792713341551, qb: 0.013054424681241569, rf: 0.8635792713341551, qf: 0.013054424681241569 },
   fruit: { rb: 1.108, qb: 0.118, rf: 1.108, qf: 0.118 },
   sekerli: { rb: 0.8136, qb: 0, rf: 0.8136, qf: 0 },
   elimin: { rb: 0.478, qb: 0.0167, rf: 0.478, qf: 0.0167 },
@@ -38,11 +39,11 @@ const CALIBRATION = {
 const num = (value, fallback) => (Number.isFinite(Number(value)) ? Number(value) : fallback);
 
 /** Havuz kaydının ayarları: eksik alanlar varsayılandan gelir. */
-export function poolRules(pool) {
+export function poolRules(pool, calibration = null) {
   const pick = (key) => num(pool?.[key], POOL_DEFAULTS[key]);
   const cut = Math.min(100, Math.max(0, pick('cut_pct')));
   const rtp = Math.min(100 - cut, Math.max(0, pick('rtp_pct')));
-  const cal = CALIBRATION[pool?.game] || CALIBRATION.fruit;
+  const cal = calibration || CALIBRATION[pool?.game] || CALIBRATION.fruit;
   const target = rtp / 100;
   return {
     cut,
@@ -78,11 +79,17 @@ export function winTier(rules, payout, value) {
 }
 
 /** Oyunun havuz kaydı: yoksa varsayılanlarla açılır. */
-export async function loadPool(base44, game) {
+export async function loadPool(base44, game, initial = {}) {
   const db = base44.asServiceRole.entities.GamePool;
   const [found] = await db.filter({ game }, 'created_date', 1);
   if (found) return found;
-  return db.create({ game, ...POOL_DEFAULTS, reserve: 0, house_total: 0, total_bet: 0, total_paid: 0, spins: 0 });
+  if (game === 'slot' && initial.balance === undefined) {
+    const [config] = await base44.asServiceRole.entities.AppConfig.filter({ key: 'slot_pools' }, '-created_date', 1);
+    let values = {};
+    try { values = JSON.parse(config?.value || '{}'); } catch { values = {}; }
+    initial = { ...initial, balance: ['mini', 'big', 'mega', 'xmega'].reduce((sum, key) => sum + Math.max(0, (Number.isFinite(Number(values[key])) ? Number(values[key]) : ({ mini: 5000, big: 25000, mega: 250000, xmega: 400000 }[key]))), 0) };
+  }
+  return db.create({ game, ...POOL_DEFAULTS, ...(game === 'slot' ? { min_stake: 500, max_stake: 500000 } : {}), ...initial, reserve: 0, house_total: 0, total_bet: 0, total_paid: 0, spins: 0 });
 }
 
 /**
