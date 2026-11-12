@@ -151,6 +151,13 @@ export default async function (req) {
       return Response.json({ winners, me: user.id, min: BIG_WIN_TABLE_MIN });
     }
 
+    // Ortak havuz rakamları: cüzdan okunmadan, bütün oyunculara aynı kayıttan.
+    if (action === 'pools') {
+      const { pools } = await loadPools(base44);
+      const jackpot = jackpotTotal(pools);
+      return Response.json({ grand: jackpot, pools: { jackpot, ...pools } });
+    }
+
     const wallet = await loadWallet(base44, user);
     // Yönetici hesabında coin sınırı yoktur.
     const isAdmin = user.role === 'admin';

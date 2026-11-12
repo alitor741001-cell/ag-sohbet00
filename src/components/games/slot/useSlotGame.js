@@ -11,6 +11,8 @@ const SETTLE_MS = 1600;
 // Bu tur sayısından sonra turların bir kısmı yavaş döner.
 const SLOW_AFTER_SPINS = 4;
 const SLOW_CHANCE = 0.3;
+// Ortak jackpot havuzlarının tazelenme aralığı.
+const POOL_REFRESH_MS = 6000;
 
 export default function useSlotGame({ roomId } = {}) {
   const [status, setStatus] = useState('loading');
@@ -93,6 +95,18 @@ export default function useSlotGame({ roomId } = {}) {
       });
     return () => { cancelled = true; };
   }, [applyState]);
+
+  // Ortak havuz rakamları düzenli tazelenir: her oyuncu aynı anda aynı rakamı görür.
+  useEffect(() => {
+    const refresh = () => {
+      if (document.visibilityState === 'hidden' || busyRef.current) return;
+      gameRequest('slot-game', { action: 'pools' })
+        .then((response) => { if (response?.data?.pools) setPools(response.data.pools); })
+        .catch(() => null);
+    };
+    const timer = window.setInterval(refresh, POOL_REFRESH_MS);
+    return () => window.clearInterval(timer);
+  }, []);
 
   const spin = useCallback(async () => {
     if (busyRef.current || status !== 'ready') return;

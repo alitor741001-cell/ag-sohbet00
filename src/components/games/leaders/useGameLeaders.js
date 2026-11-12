@@ -22,7 +22,7 @@ export default function useGameLeaders(game) {
     return () => window.clearInterval(timer);
   }, [load]);
 
-  // Rozette görünen kişi: toplamda en çok kazanan, yoksa haftanın ya da günün birincisi.
-  const top = leaders.total[0] || leaders.week[0] || leaders.today[0] || null;
+  // Rozette görünen kişi: bugünün (Türkiye saatiyle) en çok kazananı; her gün yenilenir.
+  const top = leaders.today[0] || null;
   return { leaders, top, reload: load };
 }

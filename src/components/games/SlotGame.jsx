@@ -36,8 +36,6 @@ export default function SlotGame({ onExit, onBack, roomId }) {
   const flashTimer = useRef(null);
   const areaRef = useRef(null);
   const size = useSize(areaRef);
-  // Sesli oda içinde oyun yarım panelde açılır: üst sahne kısalır, oyun alanı genişler.
-  const inRoom = !!roomId;
 
   // Her turun sonucu: büyük kazançta kutlama ekranı, küçük kazançta kısa parıltı.
   useEffect(() => {
@@ -94,7 +92,6 @@ export default function SlotGame({ onExit, onBack, roomId }) {
       <SlotFrenzyHeader
         pools={game.pools}
         sound={sound}
-        compact={inRoom}
         onHelp={() => setHelpOpen(true)}
         onSound={() => setSound((prev) => !prev)}
       />

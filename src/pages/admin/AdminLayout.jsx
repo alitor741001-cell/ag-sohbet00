@@ -30,6 +30,7 @@ const navGroups = [
       { to: '/admin/hediyeler', label: 'Hediyeler', icon: Gift },
       { to: '/admin/coins', label: 'Coins Yükle', icon: Coins },
       { to: '/admin/vip', label: 'VIP Merkezi', icon: Sparkles },
+      { to: '/admin/oyun-havuzlari', label: 'Oyun Havuzları', icon: Coins },
     ],
   },
   {

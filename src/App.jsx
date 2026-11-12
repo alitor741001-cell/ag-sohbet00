@@ -61,6 +61,7 @@ const AdminSecurity = lazy(() => import('@/pages/admin/AdminSecurity'));
 const AdminGifts = lazy(() => import('@/pages/admin/AdminGifts'));
 const AdminCoins = lazy(() => import('@/pages/admin/AdminCoins'));
 const AdminVip = lazy(() => import('@/pages/admin/AdminVip'));
+const AdminGamePools = lazy(() => import('@/pages/admin/AdminGamePools'));
 const AdminAgencies = lazy(() => import('@/pages/admin/AdminAgencies'));
 const AgencyQuota = lazy(() => import('@/pages/agency/AgencyQuota'));
 const AgencyBroadcasters = lazy(() => import('@/pages/agency/AgencyBroadcasters'));
@@ -161,6 +162,7 @@ const AuthenticatedApp = () => {
           <Route path="hediyeler" element={<AdminGifts />} />
           <Route path="coins" element={<AdminCoins />} />
           <Route path="vip" element={<AdminVip />} />
+          <Route path="oyun-havuzlari" element={<AdminGamePools />} />
           <Route path="ajanslar" element={<AdminAgencies />} />
           {/* Film İzle bölümü admin panelinde de açılır: kullanıcılarla aynı arama ve oynatma. */}
           <Route path="film-izle" element={<FilmWatch />} />
