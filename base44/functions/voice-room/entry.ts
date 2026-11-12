@@ -340,11 +340,11 @@ export default async function (req: Request): Promise<Response> {
     }
 
     // Hediye tahtası için K bakiyesi
-    // Normal PK: üstte sunucu, solda mavi 6 koltuk (3+3), sağda kırmızı 6 koltuk (3+3).
+    // Normal PK: sunucu + solda kırmızı dört, sağda mavi dört koltuk.
     // Yalnızca yöneticiler açar/kapatır.
     if (action === 'team-pk-open' || action === 'team-pk-start') {
       if (!canMod) return Response.json({ error: 'yetkisiz' }, { status: 403 });
-      if (seats.length !== 13) return Response.json({ error: 'Normal PK için koltuk sayısı 13 olmalı.' }, { status: 400 });
+      if (seats.length !== 9) return Response.json({ error: 'Normal PK için sunucu dahil 9 koltuk olmalı.' }, { status: 400 });
       const current = await loadTeamPk(base44, room_id);
       const opening = action === 'team-pk-open';
       if (opening && current) return Response.json({ ok: true, team_pk: current });
@@ -446,20 +446,21 @@ export default async function (req: Request): Promise<Response> {
           waitUntil(base44.asServiceRole.entities.PkMatch.update(pkMatch.id, { host_score: hostScore, guest_score: guestScore }).catch(() => null));
         }
       }
-      // Normal PK: sunucu dışındaki koltuklar ikiye bölünür — ilk yarı mavi, ikinci yarı kırmızı.
-      // Üstteki sunucu koltuğuna (0) atılan hediyeler bara işlemez.
-      if (seats.length === 13) {
+      // Referans düzeni: solda 1,2,5,6 kırmızı; sağda 3,4,7,8 mavi.
+      // Sunucu (0) takım puanına dahil değildir.
+      if (seats.length === 9) {
         waitUntil((async () => {
           const teamPk = await loadTeamPk(base44, room_id);
           if (!teamPk?.started_at || !teamPk.ends_at || Date.now() >= new Date(teamPk.ends_at).getTime()) return;
           const gain = kValue * quantity;
-          const half = Math.floor((seats.length - 1) / 2);
+          const blueSeats = [3, 4, 7, 8];
+          const redSeats = [1, 2, 5, 6];
           let blue = 0;
           let red = 0;
           recipients.forEach((person) => {
             const index = seats.findIndex((seat) => seat.user_id === person.user_id);
-            if (index >= 1 && index <= half) blue += gain;
-            if (index > half) red += gain;
+            if (blueSeats.includes(index)) blue += gain;
+            if (redSeats.includes(index)) red += gain;
           });
           if (!blue && !red) return;
           await base44.asServiceRole.entities.TeamPkMatch.update(teamPk.id, {

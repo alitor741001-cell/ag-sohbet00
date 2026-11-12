@@ -36,7 +36,7 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
   const rowHeight = cellHeight + (boardActive ? 34 : 22);
 
   // Normal PK düzeni: ortada sunucu, solda mavi, sağda kırmızı 4'er koltuk; her koltukta sayı şeridi.
-  if (teamPkFooter && seats.length === 13) {
+  if (teamPkFooter && seats.length === 9) {
     const renderSeat = (index, seatSize, space) => {
       const seat = seats[index];
       const occupied = !!seat?.user_id;
@@ -67,7 +67,7 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
     };
     return (
       <div ref={wrapRef} className="w-full">
-        <TeamPkArena match={teamPkMatch} seats={seats} renderSeat={renderSeat} footer={teamPkFooter} width={width} />
+        <TeamPkArena seats={seats} renderSeat={renderSeat} onSelectSeat={onSeatClick} footer={teamPkFooter} width={width} />
       </div>
     );
   }

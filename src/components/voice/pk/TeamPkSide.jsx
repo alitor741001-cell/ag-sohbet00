@@ -1,19 +1,22 @@
-import { Crown } from 'lucide-react';
+import { Lock, Plus } from 'lucide-react';
 
-/** Takım paneli: kemerli neon çerçeve, taç başlık ve 2x2 koltuk (profil + sayı şeridi). Önde olan takımın profillerinde silah durur. */
-export default function TeamPkSide({ tone, indices, renderSeat, size, space, hit, armed, seats = [] }) {
-  const blue = tone === 'blue';
+/** Boş kartlar da mevcut koltuk seçme/kilitleme akışını açar. */
+export default function TeamPkSide({ tone, indices, renderSeat, onSelectSeat, size, space, seats = [] }) {
   return (
-    <div className={`team-pk-side team-pk-side-${tone} ${hit ? 'is-hit' : ''} flex min-w-0 flex-1 flex-col items-center rounded-b-2xl rounded-t-[22px] border-2 px-0.5 pb-1 pt-0.5`}>
-      <Crown className="team-pk-side-crown h-3.5 w-3.5" />
-      <span className="text-[10px] font-black leading-none tracking-wide">{blue ? 'MAVİ' : 'KIRMIZI'} KOLTUKLAR</span>
-      <div className="mt-2 grid w-full grid-cols-3 justify-items-center gap-x-1.5 gap-y-3">
-        {indices.map((index, position) => (
-          <div key={index} className={`relative ${indices.length % 3 === 1 && position === indices.length - 1 ? 'col-start-2' : ''}`}>
-            {renderSeat(index, size, space)}
-          </div>
-        ))}
-      </div>
+    <div className="team-pk-side" data-tone={tone}>
+      {indices.map((index) => (
+        <div key={index} className="team-pk-seat-card">
+          <span className="team-pk-card-lines" aria-hidden="true" />
+          {seats[index]?.user_id ? (
+            <div className="team-pk-card-person">{renderSeat(index, size, space)}</div>
+          ) : (
+            <button type="button" onClick={() => onSelectSeat(index)} className="team-pk-empty" aria-label={`${index}. koltuk${seats[index]?.locked ? ', kilitli' : ''}`}>
+              <span className="team-pk-diamond">{seats[index]?.locked ? <Lock /> : <Plus />}</span>
+              <span className="team-pk-card-number">{index}</span>
+            </button>
+          )}
+        </div>
+      ))}
     </div>
   );
 }

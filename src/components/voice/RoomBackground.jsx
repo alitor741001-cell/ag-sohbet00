@@ -6,7 +6,7 @@ import { backgroundOf, backgroundCss } from '@/lib/roomBackgrounds';
 import PkThemeBackdrop from '@/components/voice/pk/PkThemeBackdrop';
 
 /** Sesli odanın zemini: oda menüsünden seçilen tema. */
-export default function RoomBackground({ value, cover, pk = false }) {
+export default function RoomBackground({ value, cover, pk = false, teamPk = false }) {
   const ref = useRef(null);
   const THEME_IMAGE = backgroundOf(value)?.image || cover || '';
   const THEME_TINT = backgroundCss(value);
@@ -35,6 +35,7 @@ export default function RoomBackground({ value, cover, pk = false }) {
         {THEME_IMAGE && <Image src={THEME_IMAGE} alt="" fittingType="fill" className="absolute inset-0 h-full w-full object-cover" />}
         {/* PK açıkken tüm oda zemini AG logolu mavi-kırmızı PK temasına döner. */}
         {pk && <PkThemeBackdrop full />}
+        {teamPk && <div className="absolute inset-0 bg-gradient-to-r from-premium-red-deep via-slot to-slot-blue/40" />}
       </div>
     </>
   );

@@ -712,12 +712,12 @@ export default function VoiceRoom() {
     });
   }, [toast]);
 
-  // Normal PK başlat: koltuk sayısı 13 değilse önce 13'e çekilir, sonra 5 dakikalık tur başlar.
+  // Normal PK: sunucu dahil 9 koltuk, iki takımda dörder kişi.
   // Görüntülü PK açıksa kapanır: iki PK alanı aynı anda açık kalmaz.
   const startTeamPk = useCallback(async (begin = false) => {
     if (pkOpen) setPkOpen(false);
     closeSheets();
-    if ((room?.seats || []).length !== 13) await changeSeatCount(13);
+    if ((room?.seats || []).length !== 9) await changeSeatCount(9);
     try {
       const response = await base44.functions.invoke('voice-room', { room_id: id, action: begin === true ? 'team-pk-start' : 'team-pk-open' });
       if (response?.data?.team_pk) teamPk.setMatch(response.data.team_pk);
@@ -1306,7 +1306,7 @@ export default function VoiceRoom() {
   // alttaki kontrol çubuğu (mik/hoparlör) hep aynı yerde durur.
   return (
     <VoiceViewport className="z-[150]" onKeyboardChange={handleKeyboardChange}>
-      <RoomBackground value={room?.background} cover={room?.cover_url} pk={pkOpen || !!roomPk || !!teamPk.match} />
+      <RoomBackground value={room?.background} cover={room?.cover_url} pk={pkOpen || !!roomPk} teamPk={!!teamPk.match} />
 
       <div ref={topArtRef} className="relative z-10 shrink-0">
         <RoomTopArt
