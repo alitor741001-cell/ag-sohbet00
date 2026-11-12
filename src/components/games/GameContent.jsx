@@ -3,14 +3,13 @@ import GameAmbience from '@/components/games/GameAmbience';
 import GameErrorBoundary from '@/components/games/GameErrorBoundary';
 import '@/styles/gameControlThemes.css';
 import '@/components/games/controls/slotStyleControls.css';
-import { DEDE_ID, ELIMIN_ID, FRUIT_ID, FUTBOL_ID, GAMES, OKEY_CLASSIC_ID, OKEY_ID, ROCKET_ID, ROULETTE_ID, SEKERLI_MEYVE_ID, SEKER_ID, SLOT_ID } from '@/components/games/gameCatalog';
+import { DEDE_ID, ELIMIN_ID, FRUIT_ID, FUTBOL_ID, GAMES, OKEY_CLASSIC_ID, OKEY_ID, ROCKET_ID, ROULETTE_ID, SEKERLI_MEYVE_ID, SLOT_ID } from '@/components/games/gameCatalog';
 import GameLeaderBadge from '@/components/games/leaders/GameLeaderBadge';
 
 // Kazanan listesi tutulan oyunlar ve sunucudaki adları.
 const LEADER_KEYS = {
   [SLOT_ID]: 'slot',
   [FRUIT_ID]: 'fruit',
-  [SEKER_ID]: 'seker',
   [SEKERLI_MEYVE_ID]: 'sekerli',
   [ELIMIN_ID]: 'elimin',
   [ROULETTE_ID]: 'roulette',
@@ -30,7 +29,6 @@ const games = {
   [FRUIT_ID]: lazy(() => import('@/components/games/FruitGame')),
   [ELIMIN_ID]: lazy(() => import('@/components/games/EliminSlotGame')),
   [ROULETTE_ID]: lazy(() => import('@/components/games/RouletteGame')),
-  [SEKER_ID]: lazy(() => import('@/components/games/SekerGame')),
 };
 export default function GameContent({ selected, onExit, onBack, roomId }) {
   const Game = games[selected] || SlotGame;

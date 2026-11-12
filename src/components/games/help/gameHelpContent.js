@@ -97,25 +97,6 @@ const DEDE_LEGEND = {
   ],
 };
 
-// ŞEKER: küme kademeleri 10-11, 12-13 ve 14+ (sekerEngine ile aynı).
-const SEKER_LEGEND = {
-  headings: ['10-11', '12-13', '14+'],
-  note: 'Değerler bahis katıdır; küme ekranda kaç şeker varsa ona göre öder.',
-  rows: [
-    { seker: 'flower', name: 'Mor Çiçek', desc: 'En yüksek ödemeli şeker.', pays: [144, 450, 1440] },
-    { seker: 'sphere', name: 'Mavi Top', pays: [90, 270, 900] },
-    { seker: 'bean', name: 'Kırmızı Fasulye', pays: [72, 216, 630] },
-    { seker: 'oval', name: 'Turuncu Şeker', pays: [54, 162, 450] },
-    { seker: 'square', name: 'Yeşil Küp', pays: [36, 108, 324] },
-    { seker: 'drop', name: 'Sarı Damla', pays: [18, 54, 162] },
-    {
-      seker: 'golden',
-      name: 'Altın Şeker',
-      tag: 'BONUS',
-      desc: '4 ve üzeri gelince 10 bedava tur kazandırır; kendi kümesinde de öder.',
-    },
-  ],
-};
 
 // ŞEKERLİ MEYVE: satır ödemesi, soldan sağa 3/4/5 sembol için bahis katsayısı.
 const SEKERLI_LEGEND = {
@@ -261,23 +242,6 @@ export const GAME_HELP = {
     note: 'Çarpan jetonları tur sonunda toplanır ve tur kazancıyla çarpılır.',
   },
 
-  seker: {
-    title: 'ŞEKER',
-    tagline: 'KÜME SLOTU · 20 SATIR',
-    rules: [
-      'Toplam bahis = bahis x 20 satır.',
-      'Aynı şekerden 10 ve üzeri gelince küme öder; yan yana olması gerekmez.',
-      'Altın Şeker bonus öder: 4 ve üzeri altın şeker 10 bedava tur kazandırır.',
-      'Bedava turlarda bahis alınmaz ve turlar sırayla çevrilir.',
-    ],
-    legend: SEKER_LEGEND,
-    facts: [
-      'Küme kademeleri: 10-11, 12-13 ve 14+ şeker.',
-      'AUTO açıkken turlar kendiliğinden çevrilir.',
-      'Toplam bahsin 10 katını geçen tur büyük kazanç sayılır.',
-    ],
-    note: 'Şekerler ekranın her yerinde sayılır; kazanç tur sonunda bakiyene eklenir.',
-  },
 
   sekerli: {
     title: 'ŞEKERLİ MEYVE',

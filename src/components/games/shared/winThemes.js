@@ -1,7 +1,6 @@
-import { CircleDot, Candy, Cherry, Crown, Dice5, Gem, Grape, Rocket, Sparkles, Trophy } from 'lucide-react';
+import { CircleDot, Cherry, Crown, Dice5, Gem, Grape, Rocket, Sparkles, Trophy } from 'lucide-react';
 import { GAME_COVER } from '@/components/games/slotAssets';
 import { FRUIT_COVER } from '@/components/games/fruit/fruitAssets';
-import { SEKER_COVER } from '@/components/games/seker/sekerAssets';
 import { SEKERLI_COVER } from '@/components/games/sekerli/sekerliAssets';
 import { ELIMIN_COVER } from '@/components/games/elimin/eliminAssets';
 import { ROULETTE_COVER } from '@/components/games/roulette/rouletteAssets';
@@ -14,7 +13,6 @@ import { OKEY_COVER } from '@/components/games/okey/okeyAssets';
 export const WIN_THEMES = {
   slot: { cover: GAME_COVER, icon: Sparkles, title: 'SLOT ÖDÜLÜ', top: '#4c1a66', bottom: '#1d0830', glow: 'rgba(192,38,211,0.5)', accent: '#f0abfc' },
   fruit: { cover: FRUIT_COVER, icon: Cherry, title: 'MEYVE ÖDÜLÜ', top: '#1f5a1a', bottom: '#0b2a0a', glow: 'rgba(132,204,22,0.45)', accent: '#fed7aa' },
-  seker: { cover: SEKER_COVER, icon: Candy, title: 'ŞEKER ÖDÜLÜ', top: '#7a1a5a', bottom: '#2d0822', glow: 'rgba(244,114,182,0.5)', accent: '#fbcfe8' },
   sekerli: { cover: SEKERLI_COVER, icon: Grape, title: 'ŞEKERLİ MEYVE ÖDÜLÜ', top: '#6b1030', bottom: '#26040f', glow: 'rgba(251,113,133,0.5)', accent: '#fecdd3' },
   elimin: { cover: ELIMIN_COVER, icon: Gem, title: 'ELİMİNSLOT ÖDÜLÜ', top: '#0e4d5c', bottom: '#04202a', glow: 'rgba(34,211,238,0.45)', accent: '#a5f3fc' },
   roulette: { cover: ROULETTE_COVER, icon: CircleDot, title: 'RULET ÖDÜLÜ', top: '#6b0f12', bottom: '#1c0405', glow: 'rgba(239,68,68,0.45)', accent: '#bbf7d0' },

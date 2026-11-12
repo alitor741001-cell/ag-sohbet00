@@ -1,14 +1,6 @@
 import React from 'react';
 import { Image } from '@/components/ui/image';
-import useSymbolTile from '@/lib/symbolTile';
-import { SEKER_SYMBOLS } from '@/components/games/seker/sekerConfig';
 import '@/styles/gameHelp.css';
-
-/** Şeker: taş listesinde oyundaki gibi zemini silinmiş şeker görseli. */
-function SekerShape({ id }) {
-  const art = useSymbolTile(SEKER_SYMBOLS[id]?.art || '');
-  return <Image src={art} alt="" className="gh-sym-art" fittingType="fit" blurPlaceholder={false} quality={80} />;
-}
 
 /** Taş listesi: her taşın görseli, adı, bahis katı ve ne işe yaradığı tek satırda görünür. */
 export default function HelpSymbolGrid({ legend }) {
@@ -30,8 +22,6 @@ export default function HelpSymbolGrid({ legend }) {
                   blurPlaceholder={false}
                   quality={80}
                 />
-              ) : row.seker ? (
-                <SekerShape id={row.seker} />
               ) : (
                 <span className="gh-sym-badge">{row.badge}</span>
               )}

@@ -15,6 +15,7 @@ import { LINES, formatCredits, formatMult } from './sekerli/sekerliConfig';
 import { SEKERLI_ART, SEKERLI_BACKDROP, SEKERLI_LOGO } from './sekerli/sekerliAssets';
 import { warmSymbolTiles } from '@/lib/symbolTile';
 import GameTurnBadge from './controls/GameTurnBadge';
+import GoldCoinBar from '@/components/games/shared/GoldCoinBar';
 
 /**
  * ŞEKERLİ MEYVE: 5x4 takla zincirli şeker slotu.
