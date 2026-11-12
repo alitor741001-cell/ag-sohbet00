@@ -8,8 +8,9 @@ import { useSize } from '@/hooks/use-size';
 export default function FitSeatsToHeight({ maxHeight, children }) {
   const innerRef = useRef(null);
   const natural = useSize(innerRef);
-  const height = natural?.height || 0;
-  const scale = maxHeight && height > maxHeight ? Math.max(0.5, maxHeight / height) : 1;
+  // Offset ölçüsü transformdan etkilenmez; ilk ölçüm ile observer aynı geometridedir.
+  const height = innerRef.current?.offsetHeight || natural?.height || 0;
+  const scale = maxHeight > 0 && height > 0 ? Math.min(1, Math.max(1, maxHeight - 8) / height) : 1;
 
   return (
     <div className="w-full" style={scale < 1 ? { height: height * scale } : undefined}>

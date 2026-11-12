@@ -16,6 +16,7 @@
    ekranın dibinde siyah şerit kalmaz. Sayfa düzenine yer eklemez. */
 .room-bg-layer {
   position: fixed;
+  z-index: 0;
   /* Katman ekranın dört yanından taşar: çentik, alt güvenli alan ve tarayıcı
      araç çubuğu boşluklarında da tema görseli devam eder, lacivert şerit kalmaz. */
   top: -80px;
@@ -45,6 +46,7 @@
 }
 
 .voice-viewport {
+  isolation: isolate;
   top: var(--viewport-offset, 0px);
   /* Zemin temanın kendisidir: butonların altındaki dolgu ve alt güvenli alan dahil
      görünen her piksel tema görseliyle boyanır; seçim yoksa gece mavisi kalır. */
@@ -273,8 +275,12 @@
   }
 }
 .voice-viewport:not(.voice-private-chat) .voice-chat-dock {
-  height: calc(var(--visual-viewport-height, 100vh) * .24);
+  height: max(64px, calc(var(--visual-viewport-height, 100vh) * .24));
   min-height: 64px;
+}
+/* Klavyede sohbet mutlak konuma geçer, ayrılan alan kalır: sahne büyüyüp küçülmez. */
+.voice-viewport[data-keyboard="open"]:not(.voice-private-chat) .voice-stage {
+  margin-bottom: max(64px, calc(var(--visual-viewport-height, 100vh) * .24));
 }
 .voice-viewport[data-keyboard="open"]:not(.voice-private-chat) .voice-chat-dock {
   position: absolute;

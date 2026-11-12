@@ -9,13 +9,14 @@ import '@/components/voice/pk/teamPkArena.css';
  * takım rakibe ateş eder; önde olan takım silahıyla 5 saniyede bir ateş eder.
  */
 export default function TeamPkArena({ match, seats, renderSeat, footer, width = 360 }) {
-  const size = width >= 640 ? 'lg' : 'md';
-  const space = width >= 640 ? 96 : 72;
+  const cellWidth = (width - 28) / 4;
+  const size = cellWidth >= 88 ? 'lg' : cellWidth >= 68 ? 'md' : cellWidth >= 52 ? 'sm' : 'xs';
+  const space = { xs: 42, sm: 52, md: 68, lg: 88 }[size];
 
   return (
     <div className="team-pk-arena relative isolate w-full rounded-[18px] p-1">
       <PkThemeBackdrop />
-      <div className="relative flex w-full flex-col items-center gap-2">
+      <div className="relative z-10 flex w-full flex-col items-center gap-2">
         <div className="flex flex-col items-center">
           <span className="team-pk-host-label flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-black">
             <Star className="h-2.5 w-2.5 fill-current" /> SUNUCU <Star className="h-2.5 w-2.5 fill-current" />

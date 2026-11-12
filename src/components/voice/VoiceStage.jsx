@@ -27,19 +27,7 @@ export default function VoiceStage({ scrollRef, handlers, room, hiddenAnnounce, 
   const keyboardOpen = areaRef.current?.closest?.('.voice-viewport')?.dataset.keyboard === 'open';
   if (!keyboardOpen && areaMeasured?.height) steadyHeight.current = areaMeasured.height;
   const gridMaxHeight = keyboardOpen && steadyHeight.current ? steadyHeight.current : areaMeasured?.height;
-  // Kalabalık düzende (15/20 koltuk) satırlar sahneye sığmazsa sahne kendi içinde kayar.
-  const total = grid.seats?.length || 0;
-  const dense = total >= 15;
-  // 30 mikrofon: koltuklar küçülerek ekrana sığar, sahne kaymaz — düzen sabit durur.
-  const many = total >= 20;
-  // 9'lu düzende koltuklar sahnenin iki kenarına yanaşır: yan boşluk kısalır.
-  const nine = total === 9;
-  // Sahne yalnızca içerik gerçekten sığmadığında kaydırılır; sığdığında kaydırma yoktur,
-  // böylece koltuklar aşağı yukarı oynamaz.
-  const fitsStage = (gridMeasured?.height || 0) <= (areaMeasured?.height || 0) + 1;
-  // 24/30 koltukta sahne hiç kırpılmaz: alt satır sohbet alanının üstüne taşsa da görünür kalır.
-  // Hiçbir düzende sahne kaymaz ve kırpılmaz: koltuklar sabit durur, temanın üstünde görünür.
-  const scrollable = !fitsStage;
+  // Izgara kalan yüksekliğe sığdırılır; sahne hiçbir koltuk düzeninde kaydırılmaz.
 
   // Koltukların altında kalan boşluk sohbet alanına bildirilir: mesajlar tam koltukların alt
   // hizasından başlar. Koltukların boyutu ve yeri değişmez — yalnızca sohbet yukarı taşar.
@@ -71,7 +59,7 @@ export default function VoiceStage({ scrollRef, handlers, room, hiddenAnnounce, 
         {...handlers}
         // Sayı tahtası açıkken süre kartı koltukların hemen altına oturur; sahnenin alt boşluğu
         // ona devredilir, koltuklar için ayrılan yer değişmez.
-        className={`voice-stage relative z-20 min-h-0 flex-1 px-1 pt-4 ${scrollable ? 'overflow-y-auto overflow-x-hidden' : 'overflow-visible'} ${grid.boardActive ? 'pb-0' : 'pb-4'}`}
+        className={`voice-stage relative z-20 min-h-0 flex-1 overflow-visible px-1 pt-4 ${grid.boardActive ? 'pb-0' : 'pb-4'}`}
       >
         <div ref={boxRef} className="flex h-full min-h-0 flex-col items-center">
           {room?.password && (

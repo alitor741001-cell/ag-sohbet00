@@ -31,6 +31,9 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
   const topSize = size;
   const featureTop = seats.length === 9;
   const rowGap = 12;
+  const cellHeight = { xs: 42, sm: 52, md: 68, lg: 88 }[size];
+  // Boş/dolu koltuk aynı alanı ayırır; katılım ve isim yüklenmesi satırı oynatmaz.
+  const rowHeight = cellHeight + (boardActive ? 34 : 22);
 
   // Normal PK düzeni: ortada sunucu, solda mavi, sağda kırmızı 4'er koltuk; her koltukta sayı şeridi.
   if (teamPkFooter && seats.length === 9) {
@@ -39,7 +42,7 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
       const occupied = !!seat?.user_id;
       const micMuted = Boolean(seat?.muted || (occupied && (seat.user_id === userId ? localMicMuted === true : participantMicStates[seat.user_id] === false)));
       return (
-        <div key={index} data-seat-index={index} className="flex flex-col items-center">
+        <div key={index} data-seat-index={index} className="flex flex-col items-center" style={{ minHeight: ({ xs: 42, sm: 52, md: 68, lg: 88 }[seatSize] || 68) + 34 }}>
           <VoiceSeat
             index={index}
             seat={seat}
@@ -74,7 +77,7 @@ export default function VoiceSeatGrid({ seats = [], musicOwnerId, userId, ownerI
       <div className="flex w-full flex-col items-center" style={{ rowGap }}>
         {rows.map((row, rowIndex) => (
           <div key={rowIndex} className="flex w-full flex-col gap-1">
-            <div className={`flex w-full items-start ${row.length >= 3 && row.length === widestRow ? 'justify-between' : 'justify-center'}`} style={{ columnGap: gap }}>
+            <div className={`flex w-full items-start ${row.length >= 3 && row.length === widestRow ? 'justify-between' : 'justify-center'}`} style={{ columnGap: gap, minHeight: rowHeight }}>
               {row.map((index) => {
                 const seat = seats[index];
                 const occupied = !!seat?.user_id;

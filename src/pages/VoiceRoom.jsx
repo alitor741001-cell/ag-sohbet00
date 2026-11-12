@@ -54,7 +54,7 @@ import RoomMusicLayer from '@/components/voice/RoomMusicLayer';
 import { takeRoomPrefetch } from '@/lib/roomPrefetch';
 import { rememberRoom } from '@/lib/visitedRooms';
 import useRoomSwipeNav from '@/hooks/useRoomSwipeNav';
-import useChatDockToSeat from '@/hooks/useChatDockToSeat';
+
 import useVerticalSwipe from '@/hooks/useVerticalSwipe';
 import useOfflineExit from '@/hooks/useOfflineExit';
 import useGameOpen from '@/hooks/useGameOpen';
@@ -204,7 +204,7 @@ export default function VoiceRoom() {
   const seats = useMemo(() => (Array.isArray(room?.seats) ? room.seats : []), [room?.seats]);
   // Sohbet alanı 7 numaralı koltuğun hizasına kadar uzar.
   const chatDockRef = useRef(null);
-  const chatDockHeight = useChatDockToSeat(chatDockRef, 6, seats.length);
+  // Sohbet alanı ekran oranıyla sabittir; koltuk ölçümüne geri besleme yapmaz.
   const myInvite = useMemo(
     () => (Array.isArray(room?.seat_invites) ? room.seat_invites.find((item) => item.user_id === user?.id) : null),
     [room?.seat_invites, user?.id]
@@ -1281,7 +1281,7 @@ export default function VoiceRoom() {
     <VoiceViewport className="z-[150]" onKeyboardChange={handleKeyboardChange}>
       <RoomBackground value={room?.background} cover={room?.cover_url} pk={pkOpen || !!roomPk || !!teamPk.match} />
 
-      <div ref={topArtRef} className="shrink-0">
+      <div ref={topArtRef} className="relative z-10 shrink-0">
         <RoomTopArt
           room={room}
           giftTotal={giftBoard?.all?.total || 0}
@@ -1347,7 +1347,7 @@ export default function VoiceRoom() {
       <div
         ref={chatDockRef}
         className={`voice-chat-dock min-h-0 shrink-0 ${composerOpen ? 'is-composing' : ''}`}
-        style={chatDockHeight ? { height: `${chatDockHeight}px` } : undefined}
+
       >
       <VoiceChatDock
         messages={messages}
