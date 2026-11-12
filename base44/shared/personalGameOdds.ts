@@ -16,9 +16,13 @@ const baseline = {
 // Choose hit/miss first, then sample a complete natural outcome conditionally.
 // This scales probability, not win/loss odds or the amount paid per winning hit.
 // Line-game rates have the statistical precision of their baseline calibration.
-export async function personalGameResult(base44, user, game, draw, isWin) {
+// normalMultiplier: havuz sistemine bağlı oyunlarda 1 geçilir; normal oyuncu sonucu
+// hiçbir koşullama olmadan tamamen rastgele alır.
+export async function personalGameResult(base44, user, game, draw, isWin, normalMultiplier = 0.6) {
   if (!(game in baseline)) throw new Error('Geçersiz oyun oranı');
-  const multiplier = await isAgOfficial(base44, user) ? 1.5 : 0.6;
+  const official = await isAgOfficial(base44, user);
+  if (!official && normalMultiplier === 1) return draw();
+  const multiplier = official ? 1.5 : normalMultiplier;
   const target = Math.min(1, baseline[game] * multiplier);
   const hit = Math.random() < target;
   for (let attempt = 0; attempt < 256; attempt += 1) {

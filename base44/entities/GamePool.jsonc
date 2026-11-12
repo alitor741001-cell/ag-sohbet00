@@ -1,0 +1,122 @@
+{
+  "name": "GamePool",
+  "type": "object",
+  "properties": {
+    "game": {
+      "type": "string",
+      "enum": [
+        "dede",
+        "elimin",
+        "fruit",
+        "sekerli"
+      ],
+      "enumColors": [
+        "purple",
+        "green",
+        "pink",
+        "yellow"
+      ]
+    },
+    "cut_pct": {
+      "type": "number",
+      "default": 5
+    },
+    "rtp_pct": {
+      "type": "number",
+      "default": 94
+    },
+    "small_max": {
+      "type": "number",
+      "default": 2
+    },
+    "medium_max": {
+      "type": "number",
+      "default": 10
+    },
+    "big_max": {
+      "type": "number",
+      "default": 50
+    },
+    "max_win": {
+      "type": "number",
+      "default": 500
+    },
+    "free_limit": {
+      "type": "number",
+      "default": 500
+    },
+    "min_stake": {
+      "type": "number",
+      "default": 200
+    },
+    "max_stake": {
+      "type": "number",
+      "default": 100000
+    },
+    "balance": {
+      "type": "number",
+      "default": 10000000
+    },
+    "reserve": {
+      "type": "number",
+      "default": 0
+    },
+    "house_total": {
+      "type": "number",
+      "default": 0
+    },
+    "total_bet": {
+      "type": "number",
+      "default": 0
+    },
+    "total_paid": {
+      "type": "number",
+      "default": 0
+    },
+    "spins": {
+      "type": "integer",
+      "default": 0
+    },
+    "wins_small": {
+      "type": "integer",
+      "default": 0
+    },
+    "wins_medium": {
+      "type": "integer",
+      "default": 0
+    },
+    "wins_big": {
+      "type": "integer",
+      "default": 0
+    },
+    "wins_huge": {
+      "type": "integer",
+      "default": 0
+    }
+  },
+  "required": [
+    "game"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

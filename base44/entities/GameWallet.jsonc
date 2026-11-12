@@ -121,6 +121,10 @@
       "type": "integer",
       "default": 0
     },
+    "pool_state": {
+      "type": "object",
+      "default": {}
+    },
     "lines": {
       "type": "number",
       "default": 50
