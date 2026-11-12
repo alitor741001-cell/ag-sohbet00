@@ -5,16 +5,16 @@ import '@/components/voice/pk/teamPkArena.css';
 
 /**
  * Normal PK sahnesi: ortada sunucu koltuğu ve taç zemini, solda mavi, sağda kırmızı
- * 2x2 koltuk; her koltuğun altında aldığı hediyelerin sayı şeridi. Hediye gelince
- * takım rakibe ateş eder; önde olan takım silahıyla 5 saniyede bir ateş eder.
+ * üç sütunlu koltuk düzeni; mevcut koltuklar ve takım üyelikleri korunur.
+ * Her koltuğun altında aldığı hediyelerin sayı şeridi bulunur.
  */
 export default function TeamPkArena({ match, seats, renderSeat, footer, width = 360 }) {
-  const cellWidth = (width - 28) / 4;
+  const cellWidth = (width - 48) / 6;
   const size = cellWidth >= 88 ? 'lg' : cellWidth >= 68 ? 'md' : cellWidth >= 52 ? 'sm' : 'xs';
   const space = { xs: 42, sm: 52, md: 68, lg: 88 }[size];
 
   return (
-    <div className="team-pk-arena relative isolate w-full rounded-[18px] p-1">
+    <div className="team-pk-arena relative isolate w-full">
       <PkThemeBackdrop />
       <div className="relative z-10 flex w-full flex-col items-center gap-2">
         <div className="flex flex-col items-center">
@@ -23,7 +23,7 @@ export default function TeamPkArena({ match, seats, renderSeat, footer, width = 
           </span>
           {renderSeat(0, size, space)}
         </div>
-        <div className="flex w-full items-stretch gap-1">
+        <div className="flex w-full items-stretch justify-between gap-3">
           <TeamPkSide tone="blue" indices={[1, 2, 3, 4]} renderSeat={renderSeat} size={size} space={space} />
           <TeamPkSide tone="red" indices={[5, 6, 7, 8]} renderSeat={renderSeat} size={size} space={space} />
         </div>

@@ -4,8 +4,12 @@
     radial-gradient(ellipse at 50% 22%, rgba(251, 191, 36, 0.16), transparent 58%),
     linear-gradient(90deg, rgba(37, 99, 235, 0.14), transparent 30%, transparent 70%, rgba(220, 38, 38, 0.14)),
     linear-gradient(180deg, rgba(4, 5, 18, 0.78), rgba(8, 4, 10, 0.84));
-  border: 1.5px solid rgba(251, 191, 36, 0.75);
-  box-shadow: 0 0 18px -4px rgba(251, 191, 36, 0.75), inset 0 0 24px rgba(0, 0, 0, 0.65);
+  border: 0;
+  box-shadow: none;
+}
+.team-pk-arena > .pk-theme {
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .team-pk-side { position: relative; }
