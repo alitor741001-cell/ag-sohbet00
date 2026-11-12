@@ -350,7 +350,7 @@ export default function VoiceRoom() {
       : null;
     const others = [...map.values()].filter((person) => person.user_id !== user?.id);
     return self ? [{ ...self, me: true }, ...others] : others;
-  }, [seats, participants, pkMatch, user?.id, user?.full_name]);
+  }, [seats, participants, pkMatch, user?.id, user?.username]);
 
   // Seçim rengi: seçilen hediyenin K seviyesi belirler.
   const selectedGift = useMemo(() => gifts.find((item) => item.id === giftId) || null, [gifts, giftId]);
@@ -771,6 +771,9 @@ export default function VoiceRoom() {
     voice.retryAudio();
     // Görüntülü PK sırasında mikrofon koltuğa oturtmaz: yalnızca PK mikrofonu açılır/kapanır.
     if (pkLive) { pkMicToggleRef.current?.(); return; }
+    // Görüntülü PK alanı açıkken koltukta olmayan kişi mikrofona basınca hiçbir koltuğa
+    // yerleştirilmez: yalnızca PK mikrofonu açılır/kapanır, oturmak için koltuğa dokunulur.
+    if ((pkOpen || pkMatch) && !seated) { pkMicToggleRef.current?.(); return; }
     // Abonelik yoksa koltuk işgal edilmez: uyarı gösterilir, kullanıcı dinleyici kalır.
     if (voice.canSpeak === false) { voice.requestMic(); return; }
     // Koltukta değilken mikrofona basınca ilk boş koltuğa oturulur ve mikrofon kendiliğinden açılır.

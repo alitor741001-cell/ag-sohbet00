@@ -56,7 +56,7 @@ export default function ChatPanel({ conversation, userId, onBack, online, embedd
   const chatRef = useRef(null);
   useChatViewport(chatRef, undefined, !embedded && tabActive);
   const { onScroll, onContentLoad, followLatest, preservePosition } = useFollowMessages(messagesRef, allMessages, conversation?.id);
-  const { signalTyping, stopTyping } = useDmTyping(conversation?.id, userId, currentUser?.full_name, tabActive);
+  const { signalTyping, stopTyping } = useDmTyping(conversation?.id, userId, currentUser?.username, tabActive);
   const touchStart = useRef({ x: 0, y: 0 });
   // Klavye açılınca tam ekran sohbet klavyenin üstüne kayar: gönder tuşları hep en altta kalır.
   const keyboardInset = useKeyboardInset();

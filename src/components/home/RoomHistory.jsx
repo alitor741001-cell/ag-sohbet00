@@ -89,8 +89,8 @@ export default function RoomHistory({ version = 0, onChange, rooms = [], filmTit
           };
           const profile = profiles[entry.owner_id];
           const owner = {
-            username: profile?.username || profile?.full_name || entry.owner_name || '',
-            full_name: profile?.full_name || entry.owner_name || '',
+            username: profile?.username || entry.owner_name || '',
+            full_name: '',
             avatar: profile?.avatar || entry.owner_avatar || '',
           };
           return (

@@ -106,7 +106,7 @@ export default function PkInviteSheet({ open, onClose, user, onInvite, busy }) {
     try {
       const response = await base44.functions.invoke('friend-service', { action: 'search', member_id: value });
       const person = response.data?.user;
-      setFound(person ? { user_id: person.id, name: person.full_name, avatar: person.avatar } : null);
+      setFound(person ? { user_id: person.id, name: person.username || 'Kullanıcı', avatar: person.avatar } : null);
     } catch (error) {
       setFound(null);
     } finally {
